@@ -24,8 +24,7 @@ const { BrowserTabList, BrowserAddonList, sendShutdownEvent } =
  * * @param aConnection DebuggerServerConnection
  *        The conection to the client.
  */
-function createRootActor(aConnection)
-{
+function createRootActor(aConnection) {
   let parameters = {
     tabList: new MobileTabList(aConnection),
     addonList: new BrowserAddonList(aConnection),
@@ -51,8 +50,7 @@ function createRootActor(aConnection)
  * @see BrowserTabList for more a extensive description of how tab list objects
  *      work.
  */
-function MobileTabList(aConnection)
-{
+function MobileTabList(aConnection) {
   BrowserTabList.call(this, aConnection);
 }
 

@@ -57,10 +57,10 @@ function send_test_message(scope, type) {
 }
 
 function get_dispatcher(scope) {
-  if (scope === 'global') {
+  if (scope === "global") {
     return EventDispatcher.instance;
   }
-  if (scope === 'window') {
+  if (scope === "window") {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     return EventDispatcher.for(win);
   }

@@ -50,8 +50,8 @@ class GeckoViewSettings extends GeckoViewModule {
       this._isSafeBrowsingInit = true;
     }
     if (aUse != this._useTrackingProtection) {
-      this.messageManager.loadFrameScript('data:,' +
-        'docShell.useTrackingProtection = ' + aUse,
+      this.messageManager.loadFrameScript("data:," +
+        "docShell.useTrackingProtection = " + aUse,
         true
       );
       this._useTrackingProtection = aUse;

@@ -9,8 +9,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, 'Services', // jshint ignore:line
-                                  'resource://gre/modules/Services.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, "Services", // jshint ignore:line
+                                  "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "notificationStorage",
                                    "@mozilla.org/notificationStorage;1",
                                    "nsINotificationStorage");
@@ -31,7 +31,7 @@ PersistentNotificationHandler.prototype = {
     }
     const persistentInfo = JSON.parse(data);
 
-    if (topic === 'persistent-notification-click') {
+    if (topic === "persistent-notification-click") {
       notificationStorage.getByID(persistentInfo.origin, persistentInfo.id, {
         handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope) {
           serviceWorkerManager.sendNotificationClickEvent(
@@ -50,7 +50,7 @@ PersistentNotificationHandler.prototype = {
           notificationStorage.delete(persistentInfo.origin, persistentInfo.id);
         }
       });
-    } else if (topic === 'persistent-notification-close') {
+    } else if (topic === "persistent-notification-close") {
       notificationStorage.getByID(persistentInfo.origin, persistentInfo.id, {
         handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope) {
           serviceWorkerManager.sendNotificationCloseEvent(

@@ -20,7 +20,7 @@ var windowListener = {
       if (domWindow) {
         domWindow.addEventListener("scroll", function(e) {
           let message = {
-            type: 'Robocop:Scroll',
+            type: "Robocop:Scroll",
             y: XPCNativeWrapper.unwrap(e.target).documentElement.scrollTop,
             height: XPCNativeWrapper.unwrap(e.target).documentElement.scrollHeight,
             cheight: XPCNativeWrapper.unwrap(e.target).documentElement.clientHeight,

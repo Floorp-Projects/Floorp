@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
@@ -32,7 +32,7 @@ var WebsiteMetadata = {
       }
 
       let msg = {
-        type: 'Website:Metadata',
+        type: "Website:Metadata",
         location: doc.location.href,
         hasImage: metadata.image_url && metadata.image_url !== "",
         metadata: JSON.stringify(metadata),
@@ -48,7 +48,7 @@ var WebsiteMetadata = {
 // #################################################################################################
 
 function makeUrlAbsolute(context, relative) {
-    var a = context.doc.createElement('a');
+    var a = context.doc.createElement("a");
     a.href = relative;
     return a.href;
 }
@@ -94,8 +94,8 @@ function buildRuleset(name, rules, processors) {
 }
 
 const descriptionRules = [
-  ['meta[property="og:description"]', node => node.element.getAttribute('content')],
-  ['meta[name="description"]', node => node.element.getAttribute('content')],
+  ['meta[property="og:description"]', node => node.element.getAttribute("content")],
+  ['meta[name="description"]', node => node.element.getAttribute("content")],
 ];
 
 const metadataRules = {
@@ -112,13 +112,13 @@ const metadataRules = {
 
   icon_url: {
     rules: [
-      ['link[rel="apple-touch-icon"]', node => node.element.getAttribute('href')],
-      ['link[rel="apple-touch-icon-precomposed"]', node => node.element.getAttribute('href')],
-      ['link[rel="icon"]', node => node.element.getAttribute('href')],
-      ['link[rel="fluid-icon"]', node => node.element.getAttribute('href')],
-      ['link[rel="shortcut icon"]', node => node.element.getAttribute('href')],
-      ['link[rel="Shortcut Icon"]', node => node.element.getAttribute('href')],
-      ['link[rel="mask-icon"]', node => node.element.getAttribute('href')],
+      ['link[rel="apple-touch-icon"]', node => node.element.getAttribute("href")],
+      ['link[rel="apple-touch-icon-precomposed"]', node => node.element.getAttribute("href")],
+      ['link[rel="icon"]', node => node.element.getAttribute("href")],
+      ['link[rel="fluid-icon"]', node => node.element.getAttribute("href")],
+      ['link[rel="shortcut icon"]', node => node.element.getAttribute("href")],
+      ['link[rel="Shortcut Icon"]', node => node.element.getAttribute("href")],
+      ['link[rel="mask-icon"]', node => node.element.getAttribute("href")],
     ],
     processors: [
       (icon_url, context) => makeUrlAbsolute(context, icon_url)
@@ -127,11 +127,11 @@ const metadataRules = {
 
   image_url: {
     rules: [
-      ['meta[property="og:image:secure_url"]', node => node.element.getAttribute('content')],
-      ['meta[property="og:image:url"]', node => node.element.getAttribute('content')],
-      ['meta[property="og:image"]', node => node.element.getAttribute('content')],
-      ['meta[property="twitter:image"]', node => node.element.getAttribute('content')],
-      ['meta[name="thumbnail"]', node => node.element.getAttribute('content')],
+      ['meta[property="og:image:secure_url"]', node => node.element.getAttribute("content")],
+      ['meta[property="og:image:url"]', node => node.element.getAttribute("content")],
+      ['meta[property="og:image"]', node => node.element.getAttribute("content")],
+      ['meta[property="twitter:image"]', node => node.element.getAttribute("content")],
+      ['meta[name="thumbnail"]', node => node.element.getAttribute("content")],
     ],
     processors: [
       (image_url, context) => makeUrlAbsolute(context, image_url)
@@ -140,38 +140,38 @@ const metadataRules = {
 
   keywords: {
     rules: [
-      ['meta[name="keywords"]', node => node.element.getAttribute('content')],
+      ['meta[name="keywords"]', node => node.element.getAttribute("content")],
     ],
     processors: [
-      (keywords) => keywords.split(',').map((keyword) => keyword.trim()),
+      (keywords) => keywords.split(",").map((keyword) => keyword.trim()),
     ]
   },
 
   title: {
     rules: [
-      ['meta[property="og:title"]', node => node.element.getAttribute('content')],
-      ['meta[property="twitter:title"]', node => node.element.getAttribute('content')],
-      ['meta[name="hdl"]', node => node.element.getAttribute('content')],
-      ['title', node => node.element.text],
+      ['meta[property="og:title"]', node => node.element.getAttribute("content")],
+      ['meta[property="twitter:title"]', node => node.element.getAttribute("content")],
+      ['meta[name="hdl"]', node => node.element.getAttribute("content")],
+      ["title", node => node.element.text],
     ],
   },
 
   type: {
     rules: [
-      ['meta[property="og:type"]', node => node.element.getAttribute('content')],
+      ['meta[property="og:type"]', node => node.element.getAttribute("content")],
     ],
   },
 
   url: {
     rules: [
-      ['meta[property="og:url"]', node => node.element.getAttribute('content')],
-      ['link[rel="canonical"]', node => node.element.getAttribute('href')],
+      ['meta[property="og:url"]', node => node.element.getAttribute("content")],
+      ['link[rel="canonical"]', node => node.element.getAttribute("href")],
     ],
   },
 
   provider: {
     rules: [
-      ['meta[property="og:site_name"]', node => node.element.getAttribute('content')]
+      ['meta[property="og:site_name"]', node => node.element.getAttribute("content")]
     ]
   },
 };
@@ -220,7 +220,7 @@ function best(iterable, by, isBetter) {
         },
         iterable);
     if (isFirst) {
-        throw new Error('Tried to call best() on empty iterable');
+        throw new Error("Tried to call best() on empty iterable");
     }
     return bestSoFar;
 }
@@ -266,7 +266,7 @@ function ruleset(...rules) {
 
             // Introduce the whole DOM into the KB as flavor 'dom' to get
             // things started:
-            const nonterminals = [[{tree}, 'dom']];  // [[node, flavor], [node, flavor], ...]
+            const nonterminals = [[{tree}, "dom"]];  // [[node, flavor], [node, flavor], ...]
 
             // While there are new facts, run the applicable rules over them to
             // generate even newer facts. Repeat until everything's fully
@@ -385,7 +385,7 @@ function knowledgebase() {
 // new facts that result.
 function resultsOf(rule, node, flavor, kb) {
     // If more types of rule pop up someday, do fancier dispatching here.
-    return rule.source.flavor === 'flavor' ? resultsOfFlavorRule(rule, node, flavor) : resultsOfDomRule(rule, node, kb);
+    return rule.source.flavor === "flavor" ? resultsOfFlavorRule(rule, node, flavor) : resultsOfDomRule(rule, node, kb);
 }
 
 
@@ -403,7 +403,7 @@ function *resultsOfDomRule(rule, specialDomNode, kb) {
                 fact.element = element;
             }
             if (fact.flavor === undefined) {
-                throw new Error('Rankers of dom() rules must return a flavor in each fact. Otherwise, there is no way for that fact to be used later.');
+                throw new Error("Rankers of dom() rules must return a flavor in each fact. Otherwise, there is no way for that fact to be used later.");
             }
             yield fact;
         }
@@ -469,8 +469,8 @@ function *explicitFacts(rankerResult) {
 // ...)
 function dom(selector) {
     return {
-        flavor: 'dom',
-        inputFlavor: 'dom',
+        flavor: "dom",
+        inputFlavor: "dom",
         selector
     };
 }
@@ -479,7 +479,7 @@ function dom(selector) {
 // Return a condition that discriminates on nodes of the knowledgebase by flavor.
 function flavor(inputFlavor) {
     return {
-        flavor: 'flavor',
+        flavor: "flavor",
         inputFlavor
     };
 }

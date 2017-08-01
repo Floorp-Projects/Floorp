@@ -15,7 +15,7 @@ Linkifier.prototype = {
     let cleanedText = "";
     for (let i = 0; i < aNumberText.length; i++) {
       let c = aNumberText.charAt(i);
-      if ((c >= '0' && c <= '9') || c == '+')  // assuming there is only the leading '+'.
+      if ((c >= "0" && c <= "9") || c == "+")  // assuming there is only the leading '+'.
         cleanedText += c;
     }
     anchorNode.setAttribute("href", "tel:" + cleanedText);
@@ -75,12 +75,12 @@ Linkifier.prototype = {
     }
 
     let filterNode = function(node) {
-      if (node.parentNode.tagName != 'A' &&
-         node.parentNode.tagName != 'SCRIPT' &&
-         node.parentNode.tagName != 'NOSCRIPT' &&
-         node.parentNode.tagName != 'STYLE' &&
-         node.parentNode.tagName != 'APPLET' &&
-         node.parentNode.tagName != 'TEXTAREA')
+      if (node.parentNode.tagName != "A" &&
+         node.parentNode.tagName != "SCRIPT" &&
+         node.parentNode.tagName != "NOSCRIPT" &&
+         node.parentNode.tagName != "STYLE" &&
+         node.parentNode.tagName != "APPLET" &&
+         node.parentNode.tagName != "TEXTAREA")
         return NodeFilter.FILTER_ACCEPT;
       return NodeFilter.FILTER_REJECT;
     }

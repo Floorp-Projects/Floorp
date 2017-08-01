@@ -261,8 +261,7 @@ var Logins = {
     let headerText = document.getElementById("edit-login-header-text");
     if (login.hostname && (login.hostname != "")) {
       headerText.textContent = login.hostname;
-    }
-    else {
+    } else {
       headerText.textContent = gStringBundle.GetStringFromName("editLogin.fallbackTitle");
     }
 
