@@ -7,7 +7,6 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
-const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {insertPinned} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
@@ -17,15 +16,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
 
 const TOP_SITES_SHOWMORE_LENGTH = 12;
 const UPDATE_TIME = 15 * 60 * 1000; // 15 minutes
+const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
 
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this.lastUpdated = 0;
   }
-  init() {
+  refreshDefaults(sites) {
+    // Clear out the array of any previous defaults
+    DEFAULT_TOP_SITES.length = 0;
+
     // Add default sites if any based on the pref
-    let sites = new Prefs().get("default.sites");
     if (sites) {
       for (const url of sites.split(",")) {
         DEFAULT_TOP_SITES.push({
@@ -110,9 +112,6 @@ this.TopSitesFeed = class TopSitesFeed {
   onAction(action) {
     let realRows;
     switch (action.type) {
-      case at.INIT:
-        this.init();
-        break;
       case at.NEW_TAB_LOAD:
         // Only check against real rows returned from history, not default ones.
         realRows = this.store.getState().TopSites.rows.filter(row => !row.isDefault);
@@ -129,6 +128,14 @@ this.TopSitesFeed = class TopSitesFeed {
         break;
       case at.PLACES_HISTORY_CLEARED:
         this.refresh();
+        break;
+      case at.PREF_CHANGED:
+        if (action.data.name === DEFAULT_SITES_PREF) {
+          this.refreshDefaults(action.data.value);
+        }
+        break;
+      case at.PREFS_INITIAL_VALUES:
+        this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);
         break;
       case at.TOP_SITES_PIN:
         this.pin(action);

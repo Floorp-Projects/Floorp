@@ -16,21 +16,21 @@ const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
 const STORIES_NOW_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours
 const SECTION_ID = "TopStories";
+const FEED_PREF = "feeds.section.topstories";
+const SECTION_OPTIONS_PREF = "feeds.section.topstories.options";
 
 this.TopStoriesFeed = class TopStoriesFeed {
-  constructor() {
-    this.storiesLastUpdated = 0;
-    this.topicsLastUpdated = 0;
-  }
 
   init() {
     try {
+      this.storiesLastUpdated = 0;
+      this.topicsLastUpdated = 0;
+
       const prefs = new Prefs();
-      const options = JSON.parse(prefs.get("feeds.section.topstories.options"));
+      const options = JSON.parse(prefs.get(SECTION_OPTIONS_PREF));
       const apiKey = this._getApiKeyFromPref(options.api_key_pref);
-      const locale = Services.locale.getRequestedLocale();
-      this.stories_endpoint = this._produceFinalEndpointUrl(options.stories_endpoint, apiKey, locale);
-      this.topics_endpoint = this._produceFinalEndpointUrl(options.topics_endpoint, apiKey, locale);
+      this.stories_endpoint = this._produceFinalEndpointUrl(options.stories_endpoint, apiKey);
+      this.topics_endpoint = this._produceFinalEndpointUrl(options.topics_endpoint, apiKey);
 
       this.read_more_endpoint = options.read_more_endpoint;
       this.stories_referrer = options.stories_referrer;
@@ -90,7 +90,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
               "description": s.excerpt,
               "image": this._normalizeUrl(s.image_src),
               "referrer": this.stories_referrer,
-              "url": s.dedupe_url
+              "url": s.dedupe_url,
+              "eTLD": this._addETLD(s.dedupe_url)
             }));
           return items;
         })
@@ -140,17 +141,14 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return new Prefs().get(apiKeyPref) || Services.prefs.getCharPref(apiKeyPref);
   }
 
-  _produceFinalEndpointUrl(url, apiKey, locale) {
+  _produceFinalEndpointUrl(url, apiKey) {
     if (!url) {
       return url;
     }
     if (url.includes("$apiKey") && !apiKey) {
       throw new Error(`An API key was specified but none configured: ${url}`);
     }
-    if (url.includes("$locale") && !locale) {
-      throw new Error(`A locale was specified but none detected: ${url}`);
-    }
-    return url.replace("$apiKey", apiKey).replace("$locale", locale);
+    return url.replace("$apiKey", apiKey);
   }
 
   // Need to remove parenthesis from image URLs as React will otherwise
@@ -160,6 +158,14 @@ this.TopStoriesFeed = class TopStoriesFeed {
       return url.replace(/\(/g, "%28").replace(/\)/g, "%29");
     }
     return url;
+  }
+
+  _addETLD(url) {
+    try {
+      return Services.eTLD.getPublicSuffix(Services.io.newURI(url));
+    } catch (err) {
+      return "";
+    }
   }
 
   onAction(action) {
@@ -179,7 +185,12 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.uninit();
         break;
       case at.FEED_INIT:
-        if (action.data === "feeds.section.topstories") {
+        if (action.data === FEED_PREF) {
+          this.init();
+        }
+        break;
+      case at.PREF_CHANGED:
+        if (action.data.name === SECTION_OPTIONS_PREF) {
           this.init();
         }
         break;
@@ -190,4 +201,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
 this.STORIES_UPDATE_TIME = STORIES_UPDATE_TIME;
 this.TOPICS_UPDATE_TIME = TOPICS_UPDATE_TIME;
 this.SECTION_ID = SECTION_ID;
-this.EXPORTED_SYMBOLS = ["TopStoriesFeed", "STORIES_UPDATE_TIME", "TOPICS_UPDATE_TIME", "SECTION_ID"];
+this.FEED_PREF = FEED_PREF;
+this.SECTION_OPTIONS_PREF = SECTION_OPTIONS_PREF;
+this.EXPORTED_SYMBOLS = ["TopStoriesFeed", "STORIES_UPDATE_TIME", "TOPICS_UPDATE_TIME", "SECTION_ID", "FEED_PREF", "SECTION_OPTIONS_PREF"];
