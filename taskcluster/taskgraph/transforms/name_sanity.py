@@ -21,8 +21,11 @@ def make_label(config, jobs):
     for job in jobs:
         dep_job = job['dependent-task']
         attr = dep_job.attributes.get
+
         if attr('locale', job.get('locale')):
             template = "{kind}-{locale}-{build_platform}/{build_type}"
+        elif attr('l10n_chunk'):
+            template = "{kind}-{build_platform}-{l10n_chunk}/{build_type}"
         else:
             template = "{kind}-{build_platform}/{build_type}"
         job['label'] = template.format(
@@ -30,6 +33,7 @@ def make_label(config, jobs):
             build_platform=attr('build_platform'),
             build_type=attr('build_type'),
             locale=attr('locale', job.get('locale', '')),  # Locale can be absent
+            l10n_chunk=attr('l10n_chunk', '')  # Can be empty
         )
 
         yield job
