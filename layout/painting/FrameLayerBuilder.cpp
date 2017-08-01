@@ -4104,7 +4104,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     if (itemClip.HasClip()) {
       itemContent.IntersectRect(itemContent, itemClip.GetClipRect());
       clipRect = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(itemClip.GetClipRect()));
-      if (!prerenderedTransform) {
+      if (!prerenderedTransform && !IsScrollThumbLayer(item)) {
         itemDrawRect.IntersectRect(itemDrawRect, clipRect.ToUnknownRect());
       }
       clipRect.MoveBy(ViewAs<ParentLayerPixel>(mParameters.mOffset));

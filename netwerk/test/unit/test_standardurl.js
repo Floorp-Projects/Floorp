@@ -520,6 +520,11 @@ add_test(function test_idna_host() {
   equal(url.asciiHostPort, "xn--lt-uia.example.org:8080");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query#etc");
 
+  url.ref = ""; // SetRef calls InvalidateCache()
+  equal(url.spec, "http://user:password@ält.example.org:8080/path?query");
+  equal(url.displaySpec, "http://user:password@ält.example.org:8080/path?query");
+  equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
+
   // We also check that the default behaviour changes once we filp the pref
   gPrefs.setBoolPref("network.standard-url.punycode-host", true);
 
@@ -538,6 +543,11 @@ add_test(function test_idna_host() {
   equal(url.asciiHost, "xn--lt-uia.example.org");
   equal(url.asciiHostPort, "xn--lt-uia.example.org:8080");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query#etc");
+
+  url.ref = ""; // SetRef calls InvalidateCache()
+  equal(url.spec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
+  equal(url.displaySpec, "http://user:password@ält.example.org:8080/path?query");
+  equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
 
   run_next_test();
 });

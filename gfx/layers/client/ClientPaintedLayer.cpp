@@ -70,6 +70,12 @@ ClientPaintedLayer::CanRecordLayer(ReadbackProcessor* aReadback)
     return false;
   }
 
+  // Component alpha layers aren't supported yet since we have to
+  // hold onto both the front/back buffer of a texture client.
+  if (GetSurfaceMode() == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
+    return false;
+  }
+
   return GetAncestorMaskLayerCount() == 0;
 }
 

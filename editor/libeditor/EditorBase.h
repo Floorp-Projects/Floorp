@@ -7,10 +7,10 @@
 #define mozilla_EditorBase_h
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"         // for StyleSheet
-#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"            // for WeakPtr
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
@@ -432,9 +432,6 @@ protected:
   already_AddRefed<mozilla::InsertTextTransaction>
     CreateTxnForInsertText(const nsAString& aStringToInsert, Text& aTextNode,
                            int32_t aOffset);
-
-  already_AddRefed<SetTextTransaction>
-    CreateTxnForSetText(const nsAString& aString, Text& aTextNode);
 
   /**
    * Never returns null.
@@ -1136,7 +1133,7 @@ protected:
   // Name of placeholder transaction.
   nsIAtom* mPlaceholderName;
   // Saved selection state for placeholder transaction batching.
-  mozilla::UniquePtr<SelectionState> mSelState;
+  mozilla::Maybe<SelectionState> mSelState;
   // IME composition this is not null between compositionstart and
   // compositionend.
   RefPtr<TextComposition> mComposition;

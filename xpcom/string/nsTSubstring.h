@@ -526,6 +526,9 @@ public:
     return *this;
   }
 
+  // Adopt a heap-allocated char sequence for this string; is Voided if aData
+  // is null. Useful for e.g. converting an strdup'd C string into an
+  // nsCString. See also getter_Copies(), which is a useful wrapper.
   void NS_FASTCALL Adopt(char_type* aData, size_type aLength = size_type(-1));
 
 

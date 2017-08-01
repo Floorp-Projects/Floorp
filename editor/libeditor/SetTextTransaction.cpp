@@ -14,7 +14,6 @@
 #include "nsAString.h"                  // nsAString parameter
 #include "nsDebug.h"                    // for NS_ASSERTION, etc.
 #include "nsError.h"                    // for NS_OK, etc.
-#include "nsQueryObject.h"              // for do_QueryObject
 
 namespace mozilla {
 
@@ -31,24 +30,7 @@ SetTextTransaction::SetTextTransaction(Text& aTextNode,
 {
 }
 
-SetTextTransaction::~SetTextTransaction()
-{
-}
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(SetTextTransaction, EditTransactionBase,
-                                   mEditorBase,
-                                   mTextNode)
-
-NS_IMPL_ADDREF_INHERITED(SetTextTransaction, EditTransactionBase)
-NS_IMPL_RELEASE_INHERITED(SetTextTransaction, EditTransactionBase)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SetTextTransaction)
-  if (aIID.Equals(NS_GET_IID(SetTextTransaction))) {
-    foundInterface = static_cast<nsITransaction*>(this);
-  } else
-NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
-
-
-NS_IMETHODIMP
+nsresult
 SetTextTransaction::DoTransaction()
 {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
@@ -79,30 +61,6 @@ SetTextTransaction::DoTransaction()
   mRangeUpdater->SelAdjDeleteText(mTextNode, 0, mPreviousData.Length());
   mRangeUpdater->SelAdjInsertText(*mTextNode, 0, mStringToSet);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SetTextTransaction::UndoTransaction()
-{
-  return mTextNode->SetData(mPreviousData);
-}
-
-NS_IMETHODIMP
-SetTextTransaction::Merge(nsITransaction* aTransaction,
-                          bool* aDidMerge)
-{
-  // Set out param default value
-  *aDidMerge = false;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SetTextTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("SetTextTransaction: ");
-  aString += mStringToSet;
   return NS_OK;
 }
 

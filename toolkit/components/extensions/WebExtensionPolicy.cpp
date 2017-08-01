@@ -52,15 +52,6 @@ static const char kBackgroundPageHTMLEnd[] = "\n\
   <body>\n\
 </html>";
 
-class EscapeHTML final : public nsAdoptingCString
-{
-public:
-  explicit EscapeHTML(const nsACString& str)
-    : nsAdoptingCString(nsEscapeHTML(str.BeginReading()))
-  {}
-};
-
-
 static inline ExtensionPolicyService&
 EPS()
 {
@@ -258,7 +249,8 @@ WebExtensionPolicy::BackgroundPageHTML() const
   result.AppendLiteral(kBackgroundPageHTMLStart);
 
   for (auto& script : mBackgroundScripts.Value()) {
-    EscapeHTML escaped{NS_ConvertUTF16toUTF8(script)};
+    nsCString escaped;
+    escaped.Adopt(nsEscapeHTML(NS_ConvertUTF16toUTF8(script).get()));
 
     result.AppendPrintf(kBackgroundPageHTMLScript, escaped.get());
   }
