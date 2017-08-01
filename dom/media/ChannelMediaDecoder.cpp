@@ -48,15 +48,6 @@ ChannelMediaDecoder::ResourceCallback::GetMediaOwner() const
 }
 
 void
-ChannelMediaDecoder::ResourceCallback::SetInfinite(bool aInfinite)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    mDecoder->SetInfinite(aInfinite);
-  }
-}
-
-void
 ChannelMediaDecoder::ResourceCallback::NotifyNetworkError()
 {
   MOZ_ASSERT(NS_IsMainThread());
