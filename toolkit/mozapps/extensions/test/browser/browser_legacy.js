@@ -111,7 +111,7 @@ add_task(async function() {
   // The legacy category does not watch for new installs since new
   // legacy extensions cannot be installed while legacy extensions
   // are disabled, so manually refresh it here.
-  await mgrWin.gLegacyView.refresh();
+  await mgrWin.gLegacyView.refreshVisibility();
 
   // Make sure we re-render the extensions list, after that we should
   // still just have the original two entries.
@@ -156,7 +156,7 @@ add_task(async function() {
   });
 
   // The entry on the left side should now read "Unsupported"
-  await mgrWin.gLegacyView.refresh();
+  await mgrWin.gLegacyView.refreshVisibility();
   is(catItem.disabled, false, "Legacy category is visible");
   is(catItem.getAttribute("name"), get_string("type.unsupported.name"),
      "Category label with unsigned extensions is correct");
@@ -186,7 +186,7 @@ add_task(async function() {
   });
 
   // The name of the pane should go back to "Legacy Extensions"
-  await mgrWin.gLegacyView.refresh();
+  await mgrWin.gLegacyView.refreshVisibility();
   is(catItem.disabled, false, "Legacy category is visible");
   is(catItem.getAttribute("name"), get_string("type.legacy.name"),
      "Category label with no unsigned extensions is correct");
