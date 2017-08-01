@@ -11,8 +11,9 @@ test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX)
 	$(MKSHLIB) $(LDFLAGS) $< -nostartfiles
 	@echo ===
 	@echo === If you get failures below, please file a bug describing the error
-	@echo === and your environment \(compiler and linker versions\), and use
-	@echo === --disable-elf-hack until this is fixed.
+	@echo === and your environment \(compiler and linker versions\), and
+	@echo === provide the pre-elfhacked library as an attachment.
+	@echo === Use --disable-elf-hack until this is fixed.
 	@echo ===
 	# Fail if the library doesn't have $(DT_TYPE) .dynamic info
 	$(TOOLCHAIN_PREFIX)readelf -d $@ | grep '($(DT_TYPE))'
