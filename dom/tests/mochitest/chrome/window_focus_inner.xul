@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<window onfocus='dostuff()' xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' style='-moz-user-focus: normal;'>
+<script>
+  function dostuff() {
+    setTimeout(function() {
+      document.documentElement.focus();
+      document.removeChild(document.documentElement);
+      window.opener.focus();
+     }, 100);
+    }
+</script>
+</window>
