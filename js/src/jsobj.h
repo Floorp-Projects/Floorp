@@ -1441,11 +1441,13 @@ FreezeObject(JSContext* cx, HandleObject obj)
 extern bool
 TestIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level, bool* resultp);
 
-extern bool
-SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor, MutableHandleValue pctor);
+extern MOZ_MUST_USE JSObject*
+SpeciesConstructor(JSContext* cx, HandleObject obj, HandleObject defaultCtor,
+                   bool (*isDefaultSpecies)(JSContext*, JSFunction*));
 
-extern bool
-SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey, MutableHandleValue pctor);
+extern MOZ_MUST_USE JSObject*
+SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
+                   bool (*isDefaultSpecies)(JSContext*, JSFunction*));
 
 extern bool
 GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj);
