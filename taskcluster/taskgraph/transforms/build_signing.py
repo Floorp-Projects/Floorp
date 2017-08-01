@@ -42,8 +42,6 @@ def make_signing_description(config, jobs):
             dep_job.attributes.get('build_platform'),
             dep_job.attributes.get('nightly')
         )
-        label = dep_job.label.replace("build-", "signing-")
-        job['label'] = label
 
         yield job
 
