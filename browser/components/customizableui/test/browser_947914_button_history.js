@@ -5,10 +5,11 @@
 "use strict";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check history button existence and functionality");
+  CustomizableUI.addWidgetToArea("history-panelmenu", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  registerCleanupFunction(() => CustomizableUI.reset());
 
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   info("Menu panel was opened");
 
   let historyButton = document.getElementById("history-panelmenu");
@@ -20,8 +21,8 @@ add_task(async function() {
   await promise;
   ok(historyPanel.getAttribute("current"), "History Panel is in view");
 
-  let panelHiddenPromise = promisePanelHidden(window);
-  PanelUI.hide();
+  let panelHiddenPromise = promiseOverflowHidden(window);
+  document.getElementById("widget-overflow").hidePopup();
   await panelHiddenPromise
   info("Menu panel was closed");
 });
