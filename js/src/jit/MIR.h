@@ -7489,6 +7489,42 @@ class MFromCodePoint
     ALLOW_CLONE(MFromCodePoint)
 };
 
+class MStringConvertCase
+  : public MUnaryInstruction,
+    public StringPolicy<0>::Data
+{
+  public:
+    enum Mode { LowerCase, UpperCase };
+
+  private:
+    Mode mode_;
+
+    MStringConvertCase(MDefinition* string, Mode mode)
+      : MUnaryInstruction(string), mode_(mode)
+    {
+        setResultType(MIRType::String);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(StringConvertCase)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, string))
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins) && ins->toStringConvertCase()->mode() == mode();
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+    bool possiblyCalls() const override {
+        return true;
+    }
+    Mode mode() const {
+        return mode_;
+    }
+};
+
 class MSinCos
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>::Data

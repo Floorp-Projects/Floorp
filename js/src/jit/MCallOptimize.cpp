@@ -228,6 +228,10 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineStrFromCodePoint(callInfo);
       case InlinableNative::StringCharAt:
         return inlineStrCharAt(callInfo);
+      case InlinableNative::StringToLowerCase:
+        return inlineStringConvertCase(callInfo, MStringConvertCase::LowerCase);
+      case InlinableNative::StringToUpperCase:
+        return inlineStringConvertCase(callInfo, MStringConvertCase::UpperCase);
 
       // String intrinsics.
       case InlinableNative::IntrinsicStringReplaceString:
@@ -1967,6 +1971,27 @@ IonBuilder::inlineStrCharAt(CallInfo& callInfo)
     MFromCharCode* string = MFromCharCode::New(alloc(), charCode);
     current->add(string);
     current->push(string);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineStringConvertCase(CallInfo& callInfo, MStringConvertCase::Mode mode)
+{
+    if (callInfo.argc() != 0 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    if (getInlineReturnType() != MIRType::String)
+        return InliningStatus_NotInlined;
+    if (callInfo.thisArg()->type() != MIRType::String)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    auto* ins = MStringConvertCase::New(alloc(), callInfo.thisArg(), mode);
+    current->add(ins);
+    current->push(ins);
     return InliningStatus_Inlined;
 }
 
