@@ -809,18 +809,18 @@ var ensureSig = function(classname_or_signature) {
 var wrap = function(obj, classSig) {
   if (!classSig) { return obj; }
   // don't wrap primitive types.
-  if (classSig.charAt(0)!=='L' &&
-      classSig.charAt(0)!=='[') { return obj; }
-  var proto = registry[classSig][PREFIX+'proto'];
+  if (classSig.charAt(0) !== 'L' &&
+      classSig.charAt(0) !== '[') { return obj; }
+  var proto = registry[classSig][PREFIX + 'proto'];
   return new proto(obj);
 };
 var unwrap = function(obj, opt_jenv, opt_ctype) {
-  if (obj && typeof(obj)==='object' && (PREFIX+'obj') in obj) {
-    return obj[PREFIX+'obj'];
+  if (obj && typeof(obj) === 'object' && (PREFIX + 'obj') in obj) {
+    return obj[PREFIX + 'obj'];
   } else if (opt_jenv && opt_ctype) {
     if (opt_ctype !== jobject)
       return opt_ctype(obj); // cast to given primitive ctype
-    if (typeof(obj)==='string')
+    if (typeof(obj) === 'string')
       return unwrap(JNINewString(opt_jenv, obj)); // create Java String
   }
   return obj;
@@ -873,7 +873,7 @@ function JNIClassObj(jenv, classSig) {
     // Classes get the leading & trailing chars stripped; primitives
     // have to be looked up via their wrapper type.
     var prim = function(ty) {
-        var jcls = jenvpp().FindClass(jenv, "java/lang/"+ty);
+        var jcls = jenvpp().FindClass(jenv, "java/lang/" + ty);
         var jfld = jenvpp().GetStaticFieldID(jenv, jcls, "TYPE",
                                              "Ljava/lang/Class;");
         return jenvpp().GetStaticObjectField(jenv, jcls, jfld);
@@ -901,7 +901,7 @@ function JNIClassSig(jenv, jcls) {
   // API is weird.  Make sure we're using slashes not dots
   name = name.replace(/\./g, '/');
   // special case primitives, arrays
-  if (name.charAt(0)==='[') return name;
+  if (name.charAt(0) === '[') return name;
   switch (name) {
   case 'void': return 'V';
   case 'boolean': return 'Z';
@@ -923,7 +923,7 @@ function JNIClassSig(jenv, jcls) {
 //    obj['toString()Ljava/lang/String'].call(obj);
 var overloadFunc = function(basename) {
   return function() {
-    return this[basename+'('+arguments.length+')'].apply(this, arguments);
+    return this[basename + '(' + arguments.length + ')'].apply(this, arguments);
   };
 };
 
@@ -952,13 +952,13 @@ function JNILoadClass(jenv, classSig, opt_props) {
       jsuper = JNIClassSig(jenv, jsuper);
     }
 
-    registry[classSig] = Object.create(jsuper?ensureLoaded(jenv, jsuper):null);
-    registry[classSig][PREFIX+'obj'] = jcls; // global ref, persistent.
-    registry[classSig][PREFIX+'proto'] =
-      function(o) { this[PREFIX+'obj'] = o; };
-    registry[classSig][PREFIX+'proto'].prototype =
+    registry[classSig] = Object.create(jsuper ? ensureLoaded(jenv, jsuper) : null);
+    registry[classSig][PREFIX + 'obj'] = jcls; // global ref, persistent.
+    registry[classSig][PREFIX + 'proto'] =
+      function(o) { this[PREFIX + 'obj'] = o; };
+    registry[classSig][PREFIX + 'proto'].prototype =
       Object.create(jsuper ?
-                    ensureLoaded(jenv, jsuper)[PREFIX+'proto'].prototype :
+                    ensureLoaded(jenv, jsuper)[PREFIX + 'proto'].prototype :
                     null);
     // Add a __cast__ method to the wrapper corresponding to the class
     registry[classSig].__cast__ = function(obj) {
@@ -967,26 +967,26 @@ function JNILoadClass(jenv, classSig, opt_props) {
 
     // make wrapper accessible via the classes object.
     var path = sig2type(classSig).toLowerCase();
-    if (classSig.charAt(0)==='L') {
-      path = classSig.substring(1, classSig.length-1);
+    if (classSig.charAt(0) === 'L') {
+      path = classSig.substring(1, classSig.length - 1);
     }
-    if (classSig.charAt(0)!=='[') {
+    if (classSig.charAt(0) !== '[') {
       var root = classes, i;
       var parts = path.split('/');
-      for (i = 0; i < parts.length-1; i++) {
+      for (i = 0; i < parts.length - 1; i++) {
         if (!Object.hasOwnProperty.call(root, parts[i])) {
           root[parts[i]] = Object.create(null);
         }
         root = root[parts[i]];
       }
-      root[parts[parts.length-1]] = registry[classSig];
+      root[parts[parts.length - 1]] = registry[classSig];
     }
   }
 
   var r = registry[classSig];
-  var rpp = r[PREFIX+'proto'].prototype;
+  var rpp = r[PREFIX + 'proto'].prototype;
 
-  if (classSig.charAt(0)==='[') {
+  if (classSig.charAt(0) === '[') {
     // add 'length' field for arrays
     Object.defineProperty(rpp, 'length', {
       get: function() {
@@ -1001,7 +1001,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
     if (!Object.hasOwnProperty.call(registry[elemSig], 'array'))
       registry[elemSig].array = r;
 
-    if (elemSig.charAt(0)==='L' || elemSig.charAt(0)==='[') {
+    if (elemSig.charAt(0) === 'L' || elemSig.charAt(0) === '[') {
       var elemClass = unwrap(registry[elemSig]);
 
       rpp.get = function(idx) {
@@ -1013,12 +1013,12 @@ function JNILoadClass(jenv, classSig, opt_props) {
                                        unwrap(value, jenv, jobject));
       };
       rpp.getElements = function(start, len) {
-        var i, r=[];
-        for (i=0; i<len; i++) { r.push(this.get(start+i)); }
+        var i, r = [];
+        for (i = 0; i < len; i++) { r.push(this.get(start + i)); }
         return r;
       };
       rpp.setElements = function(start, vals) {
-        vals.forEach((v, i) => { this.set(start+i, v); });
+        vals.forEach((v, i) => { this.set(start + i, v); });
       };
       r.new = function(length) {
         return wrap(jenvpp().NewObjectArray(jenv, length, elemClass, null),
@@ -1026,9 +1026,9 @@ function JNILoadClass(jenv, classSig, opt_props) {
       };
     } else {
       var ty = sig2type(elemSig), ctype = sig2ctype(elemSig);
-      var constructor = "New"+ty+"Array";
-      var getter = "Get"+ty+"ArrayRegion";
-      var setter = "Set"+ty+"ArrayRegion";
+      var constructor = "New" + ty + "Array";
+      var getter = "Get" + ty + "ArrayRegion";
+      var setter = "Set" + ty + "ArrayRegion";
       rpp.get = function(idx) { return this.getElements(idx, 1)[0]; };
       rpp.set = function(idx, val) { this.setElements(idx, [val]); };
       rpp.getElements = function(start, len) {
@@ -1052,7 +1052,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
   (props.static_fields || []).forEach(function(fld) {
     var jfld = jenvpp().GetStaticFieldID(jenv, jcls, fld.name, fld.sig);
     var ty = sig2type(fld.sig), nm = fld.sig;
-    var getter = "GetStatic"+ty+"Field", setter = "SetStatic"+ty+"Field";
+    var getter = "GetStatic" + ty + "Field", setter = "SetStatic" + ty + "Field";
     ensureLoaded(jenv, nm);
     var props =  {
       get: function() {
@@ -1071,17 +1071,17 @@ function JNILoadClass(jenv, classSig, opt_props) {
   (props.static_methods || []).forEach(function(mtd) {
     var jmtd = jenvpp().GetStaticMethodID(jenv, jcls, mtd.name, mtd.sig);
     var argctypes = mtd.sig.match(sigRegex()).map(s => sig2ctype(s));
-    var returnSig = mtd.sig.substring(mtd.sig.indexOf(')')+1);
+    var returnSig = mtd.sig.substring(mtd.sig.indexOf(')') + 1);
     var ty = sig2type(returnSig), nm = returnSig;
-    var call = "CallStatic"+ty+"Method";
+    var call = "CallStatic" + ty + "Method";
     ensureLoaded(jenv, nm);
     r[mtd.name] = rpp[mtd.name] = overloadFunc(mtd.name);
-    r[mtd.name + mtd.sig] = r[mtd.name+'('+(argctypes.length-1)+')'] =
+    r[mtd.name + mtd.sig] = r[mtd.name + '(' + (argctypes.length - 1) + ')'] =
     // add static methods to object instances, too.
-    rpp[mtd.name + mtd.sig] = rpp[mtd.name+'('+(argctypes.length-1)+')'] = function() {
+    rpp[mtd.name + mtd.sig] = rpp[mtd.name + '(' + (argctypes.length - 1) + ')'] = function() {
       var i, j = jenvpp();
       var args = [jenv, jcls, jmtd];
-      for (i=0; i<arguments.length; i++) {
+      for (i = 0; i < arguments.length; i++) {
         args.push(unwrap(arguments[i], jenv, argctypes[i]));
       }
       return wrap(j[call].apply(j, args), nm);
@@ -1091,13 +1091,13 @@ function JNILoadClass(jenv, classSig, opt_props) {
     mtd.name = "<init>";
     var jmtd = jenvpp().GetMethodID(jenv, jcls, mtd.name, mtd.sig);
     var argctypes = mtd.sig.match(sigRegex()).map(s => sig2ctype(s));
-    var returnSig = mtd.sig.substring(mtd.sig.indexOf(')')+1);
+    var returnSig = mtd.sig.substring(mtd.sig.indexOf(')') + 1);
 
     r.new = overloadFunc('new');
-    r['new'+mtd.sig] = r['new('+(argctypes.length-1)+')'] = function() {
+    r['new' + mtd.sig] = r['new(' + (argctypes.length - 1) + ')'] = function() {
       var i, j = jenvpp();
       var args = [jenv, jcls, jmtd];
-      for (i=0; i<arguments.length; i++) {
+      for (i = 0; i < arguments.length; i++) {
         args.push(unwrap(arguments[i], jenv, argctypes[i]));
       }
       return wrap(j.NewObject.apply(j, args), classSig);
@@ -1106,7 +1106,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
   (props.fields || []).forEach(function(fld) {
     var jfld = jenvpp().GetFieldID(jenv, jcls, fld.name, fld.sig);
     var ty = sig2type(fld.sig), nm = fld.sig;
-    var getter = "Get"+ty+"Field", setter = "Set"+ty+"Field";
+    var getter = "Get" + ty + "Field", setter = "Set" + ty + "Field";
     ensureLoaded(jenv, nm);
     Object.defineProperty(rpp, fld.name, {
       get: function() {
@@ -1122,15 +1122,15 @@ function JNILoadClass(jenv, classSig, opt_props) {
   (props.methods || []).forEach(function(mtd) {
     var jmtd = jenvpp().GetMethodID(jenv, jcls, mtd.name, mtd.sig);
     var argctypes = mtd.sig.match(sigRegex()).map(s => sig2ctype(s));
-    var returnSig = mtd.sig.substring(mtd.sig.indexOf(')')+1);
+    var returnSig = mtd.sig.substring(mtd.sig.indexOf(')') + 1);
     var ty = sig2type(returnSig), nm = returnSig;
-    var call = "Call"+ty+"Method";
+    var call = "Call" + ty + "Method";
     ensureLoaded(jenv, nm);
     rpp[mtd.name] = overloadFunc(mtd.name);
-    rpp[mtd.name + mtd.sig] = rpp[mtd.name+'('+(argctypes.length-1)+')'] = function() {
+    rpp[mtd.name + mtd.sig] = rpp[mtd.name + '(' + (argctypes.length - 1) + ')'] = function() {
       var i, j = jenvpp();
       var args = [jenv, unwrap(this), jmtd];
-      for (i=0; i<arguments.length; i++) {
+      for (i = 0; i < arguments.length; i++) {
         args.push(unwrap(arguments[i], jenv, argctypes[i]));
       }
       return wrap(j[call].apply(j, args), nm);

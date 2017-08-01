@@ -28,9 +28,5 @@ module.exports = {
     "no-unused-vars": "off",
     "object-shorthand": "off",
     "quotes": "off", // [2, "double"]
-    "space-before-blocks": "off",
-    "space-before-function-paren": "off",
-    "space-infix-ops": "off",
-    "spaced-comment": "off",
   }
 };

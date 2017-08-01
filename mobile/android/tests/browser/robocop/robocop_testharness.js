@@ -58,7 +58,7 @@ function testOneFile(uri) {
 
   // Output from head.js is fed, line by line, to this function.  We
   // send any such output back to the Java Robocop harness.
-  testScope.dump = function (str) {
+  testScope.dump = function(str) {
     let message = { type: "Robocop:Java",
                     innerType: "progress",
                     message: str,

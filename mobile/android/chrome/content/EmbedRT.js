@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
 var EmbedRT = {
   _scopes: {},
 
-  onEvent: function (event, data, callback) {
+  onEvent: function(event, data, callback) {
     switch (event) {
       case "GeckoView:ImportScript":
         this.importScript(data.scriptURL);

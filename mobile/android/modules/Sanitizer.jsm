@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*globals LoadContextInfo, FormHistory, Accounts */
+/* globals LoadContextInfo, FormHistory, Accounts */
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -33,7 +33,7 @@ this.EXPORTED_SYMBOLS = ["Sanitizer"];
 
 function Sanitizer() {}
 Sanitizer.prototype = {
-  clearItem: function (aItemName)
+  clearItem: function(aItemName)
   {
     let item = this.items[aItemName];
     let canClear = item.canClear;
@@ -49,7 +49,7 @@ Sanitizer.prototype = {
 
   items: {
     cache: {
-      clear: function ()
+      clear: function()
       {
         return new Promise(function(resolve, reject) {
           let refObj = {};
@@ -78,7 +78,7 @@ Sanitizer.prototype = {
     },
 
     cookies: {
-      clear: function ()
+      clear: function()
       {
         return new Promise(function(resolve, reject) {
           let refObj = {};
@@ -138,7 +138,7 @@ Sanitizer.prototype = {
     },
 
     offlineApps: {
-      clear: function ()
+      clear: function()
       {
         return new Promise(function(resolve, reject) {
           var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
@@ -158,7 +158,7 @@ Sanitizer.prototype = {
     },
 
     history: {
-      clear: function ()
+      clear: function()
       {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
@@ -188,7 +188,7 @@ Sanitizer.prototype = {
     },
 
     openTabs: {
-      clear: function ()
+      clear: function()
       {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_OPENWINDOWS", refObj);
@@ -212,7 +212,7 @@ Sanitizer.prototype = {
     },
 
     searchHistory: {
-      clear: function ()
+      clear: function()
       {
         return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearHistory", clearSearchHistory: true })
           .catch(e => Cu.reportError("Java-side search history clearing failed: " + e))
@@ -225,7 +225,7 @@ Sanitizer.prototype = {
     },
 
     formdata: {
-      clear: function ()
+      clear: function()
       {
         return new Promise(function(resolve, reject) {
           let refObj = {};
@@ -238,7 +238,7 @@ Sanitizer.prototype = {
         });
       },
 
-      canClear: function (aCallback)
+      canClear: function(aCallback)
       {
         let count = 0;
         let countDone = {
@@ -297,7 +297,7 @@ Sanitizer.prototype = {
     },
 
     passwords: {
-      clear: function ()
+      clear: function()
       {
         return new Promise(function(resolve, reject) {
           Services.logins.removeAllLogins();
@@ -313,7 +313,7 @@ Sanitizer.prototype = {
     },
 
     sessions: {
-      clear: function ()
+      clear: function()
       {
         return new Promise(function(resolve, reject) {
           let refObj = {};
@@ -338,7 +338,7 @@ Sanitizer.prototype = {
     },
 
     syncedTabs: {
-      clear: function ()
+      clear: function()
       {
         return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearSyncedTabs" })
           .catch(e => Cu.reportError("Java-side synced tabs clearing failed: " + e));
