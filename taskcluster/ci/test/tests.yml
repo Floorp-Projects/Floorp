@@ -1818,7 +1818,6 @@ web-platform-tests-reftests:
             macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     mozharness:
-    mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
         config:
