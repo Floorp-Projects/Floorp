@@ -170,16 +170,16 @@ public:
    * if any.  If found, then this method also unregisters the style contexts
    * for any display:contents and display:none descendants of aContent.
    */
-  void ClearUndisplayedContentIn(nsIContent* aContent,
-                                 nsIContent* aParentContent);
+  void UnregisterDisplayNoneStyleFor(nsIContent* aContent,
+                                     nsIContent* aParentContent);
 
   /**
    * Unregister the style context for the display:contents content, aContent,
    * if any.  If found, then this method also unregisters the style contexts
    * for any display:contents and display:none descendants of aContent.
    */
-  void ClearDisplayContentsIn(nsIContent* aContent,
-                              nsIContent* aParentContent);
+  void UnregisterDisplayContentsStyleFor(nsIContent* aContent,
+                                         nsIContent* aParentContent);
 
 
   // Functions for manipulating the frame model

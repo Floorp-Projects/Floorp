@@ -243,8 +243,8 @@ nsFrameManager::ChangeStyleContextInMap(UndisplayedMap* aMap,
 }
 
 void
-nsFrameManager::ClearUndisplayedContentIn(nsIContent* aContent,
-                                          nsIContent* aParentContent)
+nsFrameManager::UnregisterDisplayNoneStyleFor(nsIContent* aContent,
+                                              nsIContent* aParentContent)
 {
 #ifdef DEBUG_UNDISPLAYED_MAP
   static int i = 0;
@@ -305,8 +305,8 @@ nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
   for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
     auto parent = child->GetParent();
     if (parent != aParentContent) {
-      ClearUndisplayedContentIn(child, parent);
-      ClearDisplayContentsIn(child, parent);
+      UnregisterDisplayNoneStyleFor(child, parent);
+      UnregisterDisplayContentsStyleFor(child, parent);
     }
   }
 }
@@ -330,8 +330,8 @@ nsFrameManager::GetAllRegisteredDisplayContentsStylesIn(nsIContent* aParentConte
 }
 
 void
-nsFrameManager::ClearDisplayContentsIn(nsIContent* aContent,
-                                       nsIContent* aParentContent)
+nsFrameManager::UnregisterDisplayContentsStyleFor(nsIContent* aContent,
+                                                  nsIContent* aParentContent)
 {
 #ifdef DEBUG_DISPLAY_CONTENTS_MAP
   static int i = 0;
