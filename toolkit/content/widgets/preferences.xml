@@ -33,19 +33,19 @@
       <method name="_constructAfterChildren">
       <body>
       <![CDATA[
-      // This method will be called after each one of the child
+      // This method will be called after the last of the child
       // <preference> elements is constructed. Its purpose is to propagate
-      // the values to the associated form elements
+      // the values to the associated form elements. Sometimes the code for
+      // some <preference> initializers depend on other <preference> elements
+      // being initialized so we wait and call updateElements on all of them
+      // once the last one has been constructed. See bugs 997570 and 992185.
 
       var elements = this.getElementsByTagName("preference");
       for (let element of elements) {
-        if (!element._constructed) {
-          return;
-        }
-      }
-      for (let element of elements) {
         element.updateElements();
       }
+
+      this._constructAfterChildrenCalled = true;
       ]]>
       </body>
       </method>
@@ -112,6 +112,25 @@
           ]]>
         </getter>
       </property>
+
+      <!-- We want to call _constructAfterChildren after all child
+           <preference> elements have been constructed. To do this, we get
+           and store the node list of all child <preference> elements in the
+           constructor, and maintain a count which is incremented in the
+           constructor of <preference>. _constructAfterChildren is called
+           when the count matches the length of the list. -->
+      <field name="_constructedChildrenCount">0</field>
+      <field name="_preferenceChildren">null</field>
+      <!-- Some <preference> elements are added dynamically after
+           _constructAfterChildren has already been called - we want to
+           avoid looping over all of them again in this case so we remember
+           if we already called it. -->
+      <field name="_constructAfterChildrenCalled">false</field>
+      <constructor>
+      <![CDATA[
+        this._preferenceChildren = this.getElementsByTagName("preference");
+      ]]>
+      </constructor>
     </implementation>
   </binding>
 
@@ -119,8 +138,6 @@
     <implementation>
       <constructor>
       <![CDATA[
-        this._constructed = true;
-
         // if the element has been inserted without the name attribute set,
         // we have nothing to do here
         if (!this.name)
@@ -153,9 +170,21 @@
 
           // Don't use the value setter here, we don't want updateElements to be prematurely fired.
           this._value = preference ? preference.value : this.valueFromPreferences;
-        } else
+        } else {
           this._value = this.valueFromPreferences;
-        this.preferences._constructAfterChildren();
+        }
+        if (this.preferences._constructAfterChildrenCalled) {
+          // This <preference> was added after _constructAfterChildren() was already called.
+          // We can directly call updateElements().
+          this.updateElements();
+          return;
+        }
+        this.preferences._constructedChildrenCount++;
+        if (this.preferences._constructedChildrenCount ==
+            this.preferences._preferenceChildren.length) {
+          // This is the last <preference>, time to updateElements() on all of them.
+          this.preferences._constructAfterChildren();
+        }
       ]]>
       </constructor>
       <destructor>

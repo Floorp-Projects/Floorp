@@ -8,8 +8,6 @@ const { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "extend",
-  "sdk/util/object", true);
 loader.lazyRequireGetter(this, "Class",
   "sdk/core/heritage", true);
 loader.lazyRequireGetter(this, "EventTarget",
@@ -183,7 +181,7 @@ exports.PerformanceRecorder = Class({
     // expecting a recording very soon.
     events.emit(this, "console-profile-start");
 
-    yield this.startRecording(extend({}, getPerformanceRecordingPrefs(), {
+    yield this.startRecording(Object.assign({}, getPerformanceRecordingPrefs(), {
       console: true,
       label: profileLabel
     }));
@@ -349,7 +347,7 @@ exports.PerformanceRecorder = Class({
       if (this._memory.getState() === "detached") {
         this._memory.attach();
       }
-      let recordingOptions = extend(mapRecordingOptions("memory", options), {
+      let recordingOptions = Object.assign(mapRecordingOptions("memory", options), {
         drainAllocationsTimeout: DRAIN_ALLOCATIONS_TIMEOUT
       });
       memoryStart = this._memory.startRecordingAllocations(recordingOptions);
@@ -480,7 +478,7 @@ exports.PerformanceRecorder = Class({
       allocationSettings = this._memory.getAllocationsSettings();
     }
 
-    return extend({}, allocationSettings, this._profiler.getStartOptions());
+    return Object.assign({}, allocationSettings, this._profiler.getStartOptions());
   },
 
   toString: () => "[object PerformanceRecorder]"

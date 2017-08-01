@@ -24,7 +24,6 @@ const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
 const events = require("sdk/event/core");
-const object = require("sdk/util/object");
 const nodeConstants = require("devtools/shared/dom-node-constants.js");
 loader.lazyRequireGetter(this, "CommandUtils",
   "devtools/client/shared/developer-toolbar", true);
@@ -124,7 +123,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
 
     // Shallow copy of the form.  We could just store a reference, but
     // eventually we'll want to update some of the data.
-    this._form = object.merge(form);
+    this._form = Object.assign({}, form);
     this._form.attrs = this._form.attrs ? this._form.attrs.slice() : [];
 
     if (form.parent) {
@@ -772,7 +771,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
           continue;
         }
 
-        let emittedMutation = object.merge(change, { target: targetFront });
+        let emittedMutation = Object.assign(change, { target: targetFront });
 
         if (change.type === "childList" ||
             change.type === "nativeAnonymousChildList") {
