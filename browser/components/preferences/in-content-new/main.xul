@@ -507,12 +507,12 @@
                 label="&advancedFonts.label;"
                 accesskey="&advancedFonts.accesskey;"
                 searchkeywords="&fontsDialog.title;
-                                &language.label;
-                                &size.label;
-                                &proportional.label;
-                                &serif.label;
-                                &sans-serif.label;
-                                &monospace.label;
+                                &fonts.label;
+                                &size2.label;
+                                &proportional2.label;
+                                &serif2.label;
+                                &sans-serif2.label;
+                                &monospace2.label;
                                 &font.langGroup.latin;
                                 &font.langGroup.japanese;
                                 &font.langGroup.trad-chinese;
@@ -542,13 +542,13 @@
                                 &font.langGroup.kannada;
                                 &font.langGroup.sinhala;
                                 &font.langGroup.tibetan;
-                                &minSize.label;
+                                &minSize2.label;
                                 &minSize.none;
                                 &useDefaultFontSerif.label;
                                 &useDefaultFontSansSerif.label;
                                 &allowPagesToUseOwn.label;
                                 &languages.customize.Fallback2.grouplabel;
-                                &languages.customize.Fallback2.label;
+                                &languages.customize.Fallback3.label;
                                 &languages.customize.Fallback2.desc;
                                 &languages.customize.Fallback.auto;
                                 &languages.customize.Fallback.arabic;
@@ -581,10 +581,13 @@
                                 &overrideDefaultPageColors.always.label;
                                 &overrideDefaultPageColors.auto.label;
                                 &overrideDefaultPageColors.never.label;
+                                &color;
+                                &textColor2.label;
+                                &backgroundColor2.label;
                                 &useSystemColors.label;
                                 &underlineLinks.label;
-                                &linkColor.label;
-                                &visitedLinkColor.label;"/>
+                                &linkColor2.label;
+                                &visitedLinkColor2.label;"/>
       </hbox>
     </hbox>
   </vbox>
@@ -603,7 +606,7 @@
               label="&chooseButton.label;"
               accesskey="&chooseButton.accesskey;"
               searchkeywords="&languages.customize.Header;
-                              &languages.customize.description;
+                              &languages.customize2.description;
                               &languages.customize.moveUp.label;
                               &languages.customize.moveDown.label;
                               &languages.customize.deleteButton.label;
@@ -770,7 +773,7 @@
               label="&updateHistory2.label;"
               accesskey="&updateHistory2.accesskey;"
               preference="app.update.disable_button.showUpdateHistory"
-              searchkeywords="&history.title; &history.intro;"/>
+              searchkeywords="&history.title; &history2.intro;"/>
     </vbox>
 #endif
   </hbox>
@@ -992,17 +995,18 @@
                               &noProxyTypeRadio.label;
                               &WPADTypeRadio.label;
                               &systemTypeRadio.label;
-                              &manualTypeRadio.label;
-                              &http.label;
-                              &ssl.label;
-                              &ftp.label;
-                              &socks.label;
+                              &manualTypeRadio2.label;
+                              &http2.label;
+                              &ssl2.label;
+                              &ftp2.label;
+                              &port2.label;
+                              &socks2.label;
                               &socks4.label;
                               &socks5.label;
-                              &noproxy.label;
+                              &noproxy2.label;
                               &noproxyExplain.label;
                               &shareproxy.label;
-                              &autoTypeRadio.label;
+                              &autoTypeRadio2.label;
                               &reload.label;
                               &autologinproxy.label;
                               &socksRemoteDNS.label2;"/>

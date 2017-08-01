@@ -10,11 +10,11 @@
 <!ENTITY certmgr.tab.ca                       "Authorities">
 <!ENTITY certmgr.tab.orphan2                  "Others">
 
-<!ENTITY certmgr.mine                         "You have certificates from these organizations that identify you:">
-<!ENTITY certmgr.others                       "You have certificates on file that identify these people:">
-<!ENTITY certmgr.websites2                    "You have certificates on file that identify these servers:">
-<!ENTITY certmgr.cas                          "You have certificates on file that identify these certificate authorities:">
-<!ENTITY certmgr.orphans                      "You have certificates on file that do not fit in any of the other categories:">
+<!ENTITY certmgr.mine2                        "You have certificates from these organizations that identify you">
+<!ENTITY certmgr.others2                      "You have certificates on file that identify these people">
+<!ENTITY certmgr.websites3                    "You have certificates on file that identify these servers">
+<!ENTITY certmgr.cas2                         "You have certificates on file that identify these certificate authorities">
+<!ENTITY certmgr.orphans2                     "You have certificates on file that do not fit in any of the other categories">
 
 <!ENTITY certmgr.detail.general_tab.title     "General">
 <!ENTITY certmgr.detail.general_tab.accesskey "G">

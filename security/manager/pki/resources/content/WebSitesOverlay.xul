@@ -7,24 +7,24 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<overlay id="WebSitesOverlay" 
-         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
-         xmlns:cert="http://netscape.com/rdf-cert#" 
+<overlay id="WebSitesOverlay"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:cert="http://netscape.com/rdf-cert#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="webCerts">
-    <description>&certmgr.websites2;</description>
+    <description>&certmgr.websites3;</description>
     <separator class="thin"/>
     <tree id="server-tree" flex="1" enableColumnDrag="true"
               onselect="websites_enableButtons()">
       <treecols>
-        <treecol id="certcol" label="&certmgr.certname;" primary="true" 
+        <treecol id="certcol" label="&certmgr.certname;" primary="true"
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
-        <treecol id="sitecol" label="&certmgr.certserver;" 
+        <treecol id="sitecol" label="&certmgr.certserver;"
                  persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
-        <treecol id="lifetimecol" label="&certmgr.override_lifetime;" 
+        <treecol id="lifetimecol" label="&certmgr.override_lifetime;"
                  persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
         <treecol id="expiredcol" label="&certmgr.expires;"

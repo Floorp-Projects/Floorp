@@ -253,7 +253,7 @@ var gPrivacyPane = {
       bundlePrefs.getString("savedLoginsExceptions_desc2"),
     ]);
     appendSearchKeywords("showPasswords", [
-      signonBundle.getString("loginsDescriptionAll"),
+      signonBundle.getString("loginsDescriptionAll2"),
     ]);
     appendSearchKeywords("trackingProtectionExceptions", [
       bundlePrefs.getString("trackingprotectionpermissionstitle"),

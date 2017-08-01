@@ -8,17 +8,17 @@
 <!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <overlay id="OthersOverlay"
-         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
-         xmlns:cert="http://netscape.com/rdf-cert#" 
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:cert="http://netscape.com/rdf-cert#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="othersCerts">
-    <description>&certmgr.others;</description>
+    <description>&certmgr.others2;</description>
     <separator class="thin"/>
     <tree id="email-tree" flex="1"
               onselect="email_enableButtons()">
       <treecols>
-        <treecol id="certcol" label="&certmgr.certname;" primary="true" 
+        <treecol id="certcol" label="&certmgr.certname;" primary="true"
                      flex="1"/>
         <splitter class="tree-splitter"/>
         <treecol id="emailcol" label="&certmgr.email;"

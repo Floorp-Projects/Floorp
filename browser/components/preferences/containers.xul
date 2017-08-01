@@ -31,14 +31,14 @@
 
   <vbox class="contentPane largeDialogContainer" flex="1" hidden="true" id="containers-content">
     <hbox align="start">
-      <label id="nameLabel" control="name" accesskey="&name.accesskey;">&name.label;</label>
+      <label id="nameLabel" control="name" accesskey="&name2.accesskey;">&name2.label;</label>
       <textbox id="name" placeholder="&name.placeholder;" flex="1" onkeyup="gContainersManager.checkForm();" />
     </hbox>
     <hbox align="center" id="iconWrapper">
-      <label id="iconLabel" control="icon" accesskey="&icon.accesskey;">&icon.label;</label>
+      <label id="iconLabel" control="icon" accesskey="&icon2.accesskey;">&icon2.label;</label>
     </hbox>
     <hbox align="center" id="colorWrapper">
-      <label id="colorLabel" control="color" accesskey="&color.accesskey;">&color.label;</label>
+      <label id="colorLabel" control="color" accesskey="&color2.accesskey;">&color2.label;</label>
     </hbox>
   </vbox>
   <vbox>
