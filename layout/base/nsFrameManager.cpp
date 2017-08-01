@@ -210,8 +210,8 @@ nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
 }
 
 void
-nsFrameManager::SetUndisplayedContent(nsIContent* aContent,
-                                      nsStyleContext* aStyleContext)
+nsFrameManager::RegisterDisplayNoneStyleFor(nsIContent* aContent,
+                                            nsStyleContext* aStyleContext)
 {
   if (!mDisplayNoneMap) {
     mDisplayNoneMap = new UndisplayedMap;
@@ -314,8 +314,8 @@ nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
 //----------------------------------------------------------------------
 
 void
-nsFrameManager::SetDisplayContents(nsIContent* aContent,
-                                   nsStyleContext* aStyleContext)
+nsFrameManager::RegisterDisplayContentsStyleFor(nsIContent* aContent,
+                                                nsStyleContext* aStyleContext)
 {
   if (!mDisplayContentsMap) {
     mDisplayContentsMap = new UndisplayedMap;

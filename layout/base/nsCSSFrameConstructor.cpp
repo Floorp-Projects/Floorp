@@ -2606,7 +2606,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                "Scrollbars should have been propagated to the viewport");
 
   if (MOZ_UNLIKELY(display->mDisplay == StyleDisplay::None)) {
-    SetUndisplayedContent(aDocElement, styleContext);
+    RegisterDisplayNoneStyleFor(aDocElement, styleContext);
     return nullptr;
   }
 
@@ -5833,7 +5833,7 @@ nsCSSFrameConstructor::SetAsUndisplayedContent(nsFrameConstructorState& aState,
 
   if (aState.mCreatingExtraFrames) {
     MOZ_ASSERT(GetUndisplayedContent(aContent),
-               "should have called SetUndisplayedContent earlier");
+               "should have called RegisterDisplayNoneStyleFor earlier");
     return;
   }
   aList.AppendUndisplayedItem(aContent, aStyleContext);
@@ -6078,7 +6078,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     if (!GetDisplayContentsStyleFor(aContent)) {
       MOZ_ASSERT(styleContext->GetPseudo() || !isGeneratedContent,
                  "Should have had pseudo type");
-      aState.mFrameManager->SetDisplayContents(aContent, styleContext);
+      aState.mFrameManager->RegisterDisplayContentsStyleFor(aContent,
+                                                            styleContext);
     } else {
       aState.mFrameManager->ChangeDisplayContents(aContent, styleContext);
     }
