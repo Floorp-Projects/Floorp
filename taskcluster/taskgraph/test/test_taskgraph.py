@@ -24,7 +24,7 @@ class TestTaskGraph(unittest.TestCase):
             'b': Task(kind='test', label='b',
                       attributes={},
                       task={'task': 'def'},
-                      optimizations=[['seta']],
+                      optimization={'seta': None},
                       # note that this dep is ignored, superseded by that
                       # from the taskgraph's edges
                       dependencies={'first': 'a'}),
@@ -41,7 +41,7 @@ class TestTaskGraph(unittest.TestCase):
                 'attributes': {'attr': 'a-task', 'kind': 'test'},
                 'task': {'taskdef': True},
                 'dependencies': {'edgelabel': 'b'},
-                'optimizations': [],
+                'optimization': None,
             },
             'b': {
                 'kind': 'test',
@@ -49,7 +49,7 @@ class TestTaskGraph(unittest.TestCase):
                 'attributes': {'kind': 'test'},
                 'task': {'task': 'def'},
                 'dependencies': {},
-                'optimizations': [['seta']],
+                'optimization': {'seta': None},
             }
         })
 
@@ -60,14 +60,14 @@ class TestTaskGraph(unittest.TestCase):
                 label='a',
                 attributes={},
                 dependencies={'prereq': 'b'},  # must match edges, below
-                optimizations=[['seta']],
+                optimization={'seta': None},
                 task={'task': 'def'}),
             'b': Task(
                 kind='pre',
                 label='b',
                 attributes={},
                 dependencies={},
-                optimizations=[['seta']],
+                optimization={'seta': None},
                 task={'task': 'def2'}),
         }, graph=Graph(nodes={'a', 'b'}, edges={('a', 'b', 'prereq')}))
 

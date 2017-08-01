@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import requests
+from collections import defaultdict
 
 from .graph import Graph
 from . import files_changed
@@ -45,17 +46,13 @@ def optimize_task_graph(target_task_graph, params, do_not_optimize, existing_tas
 
 def optimize_task(task, params):
     """
-    Optimize a single task by running its optimizations in order until one
-    succeeds.
+    Run the optimization for a given task
     """
-    for opt in task.optimizations:
-        opt_type, args = opt[0], opt[1:]
-        opt_fn = _optimizations[opt_type]
-        opt_result = opt_fn(task, params, *args)
-        if opt_result:
-            return opt_result
-
-    return False
+    if not task.optimization:
+        return False
+    opt_type, arg = task.optimization.items()[0]
+    opt_fn = _optimizations[opt_type]
+    return opt_fn(task, params, arg)
 
 
 def annotate_task_graph(target_task_graph, params, do_not_optimize,
@@ -71,6 +68,7 @@ def annotate_task_graph(target_task_graph, params, do_not_optimize,
 
     # set .optimized for all tasks, and .task_id for optimized tasks
     # with replacements
+    opt_counts = defaultdict(lambda: {'away': 0, 'replaced': 0})
     for label in target_task_graph.graph.visit_postorder():
         task = target_task_graph.tasks[label]
         named_task_dependencies = named_links_dict.get(label, {})
@@ -85,19 +83,23 @@ def annotate_task_graph(target_task_graph, params, do_not_optimize,
 
         # if this task is blacklisted, don't even consider optimizing
         replacement_task_id = None
+        opt_by = None
         if label in do_not_optimize:
             optimized = False
         # Let's check whether this task has been created before
         elif existing_tasks is not None and label in existing_tasks:
             optimized = True
             replacement_task_id = existing_tasks[label]
+            opt_by = "existing_tasks"
         # otherwise, examine the task itself (which may be an expensive operation)
         else:
             opt_result = optimize_task(task, params)
 
             # use opt_result to determine values for optimized, replacement_task_id
             optimized = bool(opt_result)
-            replacement_task_id = opt_result if opt_result and opt_result is not True else None
+            if optimized:
+                opt_by = task.optimization.keys()[0]
+                replacement_task_id = opt_result if opt_result is not True else None
 
         task.optimized = optimized
         task.task_id = replacement_task_id
@@ -106,14 +108,25 @@ def annotate_task_graph(target_task_graph, params, do_not_optimize,
 
         if optimized:
             if replacement_task_id:
+                opt_counts[opt_by]['replaced'] += 1
                 logger.debug("optimizing `{}`, replacing with task `{}`"
                              .format(label, replacement_task_id))
             else:
+                opt_counts[opt_by]['away'] += 1
                 logger.debug("optimizing `{}` away".format(label))
                 # note: any dependent tasks will fail when they see this
+
+    for opt_by in sorted(opt_counts):
+        counts = opt_counts[opt_by]
+        if counts['away'] and not counts['replaced']:
+            msg = "optimized away {} tasks for {}: ".format(counts['away'], opt_by)
+        elif counts['replaced'] and not counts['away']:
+            msg = "optimized {} tasks, replacing with other tasks, for {}: ".format(
+                counts['away'], opt_by)
         else:
-            if replacement_task_id:
-                raise Exception("{}: optimize_task returned False with a taskId".format(label))
+            msg = "optimized {} tasks for {}, replacing {} and optimizing {} away".format(
+                sum(counts.values()), opt_by, counts['replaced'], counts['away'])
+        logger.info(msg)
 
 
 def get_subgraph(annotated_task_graph, named_links_dict, label_to_taskid):
@@ -168,21 +181,22 @@ def optimization(name):
 
 
 @optimization('index-search')
-def opt_index_search(task, params, index_path):
-    try:
-        task_id = find_task_id(
-            index_path,
-            use_proxy=bool(os.environ.get('TASK_ID')))
-
-        return task_id or True
-    except requests.exceptions.HTTPError:
-        pass
+def opt_index_search(task, params, index_paths):
+    for index_path in index_paths:
+        try:
+            task_id = find_task_id(
+                index_path,
+                use_proxy=bool(os.environ.get('TASK_ID')))
+            return task_id
+        except requests.exceptions.HTTPError:
+            # 404 will end up here and go on to the next index path
+            pass
 
     return False
 
 
 @optimization('seta')
-def opt_seta(task, params):
+def opt_seta(task, params, _):
     bbb_task = False
 
     # for bbb tasks we need to send in the buildbot buildername
