@@ -336,6 +336,7 @@ public class BrowserContract {
 
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
+        public static final String HISTORY_GUID = "history_guid"; // sync GUID to merge with the PageMetadata table.
 
         public static final String REMOTE_VISITS_COUNT = "remoteVisitCount";
         public static final String REMOTE_DATE_LAST_VISITED = "remoteDateLastVisited";
