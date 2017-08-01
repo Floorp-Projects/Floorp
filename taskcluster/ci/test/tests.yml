@@ -25,6 +25,50 @@ awsy:
                 default:
                     - awsy/linux_config.py
 
+awsy-stylo:
+    description: "Are we slim yet for Stylo parallel"
+    suite: awsy
+    treeherder-symbol: tc-SY-stylo(sy)
+    docker-image: {"in-tree": "desktop1604-test"}
+    max-run-time: 7200
+    e10s: true
+    instance-size: xlarge
+    allow-software-gl-layers: false
+    mozharness:
+        script: awsy_script.py
+        config:
+            by-test-platform:
+                # Do not run on Windows until
+                # bug 1385027 (stylo tests on win) is fixed.
+                #windows10-64-stylo/opt:
+                #    - awsy/taskcluster_windows_config.py
+                macosx64-stylo/opt:
+                    - awsy/macosx_config.py
+                linux64-stylo/opt:
+                    - awsy/linux_config.py
+        extra-options:
+            - --enable-stylo
+
+awsy-stylo-sequential:
+    description: "Are we slim yet for Stylo sequential"
+    suite: awsy
+    treeherder-symbol: tc-SY-stylo-seq(sy)
+    docker-image: {"in-tree": "desktop1604-test"}
+    max-run-time: 7200
+    e10s: true
+    instance-size: xlarge
+    allow-software-gl-layers: false
+    mozharness:
+        script: awsy_script.py
+        config:
+            # Only run on Linux64.
+            by-test-platform:
+                linux64-stylo-sequential/opt:
+                    - awsy/linux_config.py
+        extra-options:
+            - --enable-stylo
+            - --single-stylo-traversal
+
 cppunit:
     description: "CPP Unit Tests"
     suite: cppunittest
