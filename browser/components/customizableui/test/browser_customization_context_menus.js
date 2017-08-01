@@ -14,7 +14,6 @@ const overflowPanel = document.getElementById("widget-overflow");
 // Right-click on the home button should
 // show a context menu with options to move it.
 add_task(async function home_button_context() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", true]]});
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let homeButton = document.getElementById("home-button");

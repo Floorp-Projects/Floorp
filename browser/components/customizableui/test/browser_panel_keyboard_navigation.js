@@ -9,7 +9,6 @@ const kHelpButtonId = "appMenu-help-button";
 let gHelperInstance;
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", true]]});
   gHelperInstance = new PanelMultiView(PanelUI.panel, true);
 });
 
