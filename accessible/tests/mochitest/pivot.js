@@ -116,7 +116,7 @@ function VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets, aPivotMoveMetho
                   prettyName(position));
 
     SimpleTest.is(aEvent.isFromUserInput, aIsFromUserInput,
-                  "Expected user input is " + aIsFromUserInput + '\n');
+                  "Expected user input is " + aIsFromUserInput + "\n");
 
     if (aTextOffsets) {
       SimpleTest.is(aDocAcc.virtualCursor.startOffset, aTextOffsets[0],
@@ -157,14 +157,14 @@ VCChangedChecker.getPreviousPosAndOffset =
 };
 
 VCChangedChecker.methodReasonMap = {
-  'moveNext': nsIAccessiblePivot.REASON_NEXT,
-  'movePrevious': nsIAccessiblePivot.REASON_PREV,
-  'moveFirst': nsIAccessiblePivot.REASON_FIRST,
-  'moveLast': nsIAccessiblePivot.REASON_LAST,
-  'setTextRange': nsIAccessiblePivot.REASON_TEXT,
-  'moveNextByText': nsIAccessiblePivot.REASON_TEXT,
-  'movePreviousByText': nsIAccessiblePivot.REASON_TEXT,
-  'moveToPoint': nsIAccessiblePivot.REASON_POINT
+  "moveNext": nsIAccessiblePivot.REASON_NEXT,
+  "movePrevious": nsIAccessiblePivot.REASON_PREV,
+  "moveFirst": nsIAccessiblePivot.REASON_FIRST,
+  "moveLast": nsIAccessiblePivot.REASON_LAST,
+  "setTextRange": nsIAccessiblePivot.REASON_TEXT,
+  "moveNextByText": nsIAccessiblePivot.REASON_TEXT,
+  "movePreviousByText": nsIAccessiblePivot.REASON_TEXT,
+  "moveToPoint": nsIAccessiblePivot.REASON_POINT
 };
 
 /**
@@ -221,13 +221,13 @@ function setVCPosInvoker(aDocAcc, aPivotMoveMethod, aRule, aIdOrNameOrAcc,
     if (aPivotMoveMethod && aRule) {
       var moved = false;
       switch (aPivotMoveMethod) {
-        case 'moveFirst':
-        case 'moveLast':
+        case "moveFirst":
+        case "moveLast":
           moved = aDocAcc.virtualCursor[aPivotMoveMethod](aRule,
             aIsFromUserInput === undefined ? true : aIsFromUserInput);
           break;
-        case 'moveNext':
-        case 'movePrevious':
+        case "moveNext":
+        case "movePrevious":
           moved = aDocAcc.virtualCursor[aPivotMoveMethod](aRule,
             aDocAcc.virtualCursor.position, false,
             aIsFromUserInput === undefined ? true : aIsFromUserInput);
@@ -343,7 +343,7 @@ function moveVCCoordInvoker(aDocAcc, aX, aY, aIgnoreNoMatch,
 
   if (expectMove) {
     this.eventSeq = [
-      new VCChangedChecker(aDocAcc, aIdOrNameOrAcc, null, 'moveToPoint', true)
+      new VCChangedChecker(aDocAcc, aIdOrNameOrAcc, null, "moveToPoint", true)
     ];
   } else {
     this.eventSeq = [];

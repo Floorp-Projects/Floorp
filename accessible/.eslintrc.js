@@ -10,7 +10,6 @@ module.exports = {
     // removed (and hence enabled) at some stage.
     "brace-style": "off",
     "consistent-return": "off",
-    "quotes": "off",
     "object-shorthand": "off",
     "space-before-function-paren": "off",
     "space-infix-ops": "off",

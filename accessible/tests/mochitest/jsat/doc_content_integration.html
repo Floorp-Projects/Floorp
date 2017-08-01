@@ -4,61 +4,61 @@
   <title>Traversal Rule test document</title>
   <meta charset="utf-8" />
   <script>
-    var frameContents = '<html>' +
-      '<head><title>such app</title></head>' +
-      '<body>' +
-      '<h1>wow</h1>' +
-      '<ul>' +
+    var frameContents = "<html>" +
+      "<head><title>such app</title></head>" +
+      "<body>" +
+      "<h1>wow</h1>" +
+      "<ul>" +
       '<li><label><input type="checkbox">many option</label></li>' +
-      '</ul>' +
+      "</ul>" +
       '<label for="r">much range</label>' +
       '<input min="0" max="10" value="5" type="range" id="r">' +
-      '</body>' +
-      '</html>';
+      "</body>" +
+      "</html>";
 
     function showAlert() {
-      document.getElementById('alert').hidden = false;
+      document.getElementById("alert").hidden = false;
     }
 
     function hideAlert() {
-      document.getElementById('alert').hidden = true;
+      document.getElementById("alert").hidden = true;
     }
 
     function ariaShowBack() {
-      document.getElementById('back').setAttribute('aria-hidden', false);
+      document.getElementById("back").setAttribute("aria-hidden", false);
     }
 
     function ariaHideBack() {
-      document.getElementById('back').setAttribute('aria-hidden', true);
+      document.getElementById("back").setAttribute("aria-hidden", true);
     }
 
     function ariaShowIframe() {
-      document.getElementById('iframe').setAttribute('aria-hidden', false);
+      document.getElementById("iframe").setAttribute("aria-hidden", false);
     }
 
     function ariaHideIframe() {
-      document.getElementById('iframe').setAttribute('aria-hidden', true);
+      document.getElementById("iframe").setAttribute("aria-hidden", true);
     }
 
     function renameFruit() {
-      document.getElementById('fruit').setAttribute('aria-label', 'banana');
+      document.getElementById("fruit").setAttribute("aria-label", "banana");
     }
 
     function renameSlider() {
-      document.getElementById('slider').setAttribute(
-        'aria-label', 'mover');
+      document.getElementById("slider").setAttribute(
+        "aria-label", "mover");
     }
 
     function changeSliderValue() {
-      document.getElementById('slider').setAttribute('aria-valuenow', '5');
-      document.getElementById('slider').setAttribute(
-        'aria-valuetext', 'medium');
+      document.getElementById("slider").setAttribute("aria-valuenow", "5");
+      document.getElementById("slider").setAttribute(
+        "aria-valuetext", "medium");
     }
 
     function toggleLight() {
-      var lightSwitch = document.getElementById('light');
-      lightSwitch.setAttribute('aria-checked',
-        lightSwitch.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
+      var lightSwitch = document.getElementById("light");
+      lightSwitch.setAttribute("aria-checked",
+        lightSwitch.getAttribute("aria-checked") === "true" ? "false" : "true");
     }
 
   </script>

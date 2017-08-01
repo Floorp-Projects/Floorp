@@ -30,12 +30,12 @@
 
       this.invoke = function prependAppend_invoke()
       {
-        var checkbox = document.createElement('input');
-        checkbox.setAttribute('type', 'checkbox');
+        var checkbox = document.createElement("input");
+        checkbox.setAttribute("type", "checkbox");
         getNode(aContainer).insertBefore(checkbox, getNode(aContainer).firstChild);
 
-        var button = document.createElement('input');
-        button.setAttribute('type', 'button');
+        var button = document.createElement("input");
+        button.setAttribute("type", "button");
         getNode(aContainer).appendChild(button);
       }
 

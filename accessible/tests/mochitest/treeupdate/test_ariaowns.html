@@ -581,15 +581,15 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, () => {
-          let doc = getNode('t9_container').contentDocument;
-          return doc && doc.getElementById('container');
+          let doc = getNode("t9_container").contentDocument;
+          return doc && doc.getElementById("container");
         })
       ];
 
       this.invoke = () => {
         // The \ before the final /script avoids the script from being terminated
         // by the html parser.
-        getNode('t9_container').src = `data:text/html,
+        getNode("t9_container").src = `data:text/html,
           <html><body></body>
           <script>
             let el = document.createElement('div');
@@ -608,7 +608,7 @@
               ] }
             ] }
           ] };
-        testAccessibleTree('t9_container', tree);
+        testAccessibleTree("t9_container", tree);
       }
 
       this.getID = () => {
@@ -620,14 +620,14 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, () => {
-          let doc = getNode('t9_container').contentDocument;
-          return doc && doc.getElementById('input');
+          let doc = getNode("t9_container").contentDocument;
+          return doc && doc.getElementById("input");
         })
       ];
 
       this.invoke = () => {
-        let doc = getNode('t9_container').contentDocument;
-        doc.body.setAttribute('aria-owns', 'input');
+        let doc = getNode("t9_container").contentDocument;
+        doc.body.setAttribute("aria-owns", "input");
       }
 
       this.finalCheck = () => {
@@ -650,14 +650,14 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, () => {
-          return getNode('t9_container').contentDocument;
+          return getNode("t9_container").contentDocument;
         })
       ];
 
       this.invoke = () => {
         // trigger a tree update.
-        let doc = getNode('t9_container').contentDocument;
-        doc.body.appendChild(document.createElement('p'));
+        let doc = getNode("t9_container").contentDocument;
+        doc.body.appendChild(document.createElement("p"));
       }
 
       this.finalCheck = () => {
@@ -683,7 +683,7 @@
     function test10_removeARIAOwner()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getAccessible('t10_owner'))
+        new invokerChecker(EVENT_HIDE, getAccessible("t10_owner"))
       ];
 
       this.invoke = () => {
@@ -693,25 +693,25 @@
               { ENTRY: [] } // t10_child
             ] }
           ] };
-        testAccessibleTree('t10_container', tree);
+        testAccessibleTree("t10_container", tree);
 
-        getNode('t10_owner').remove();
+        getNode("t10_owner").remove();
       }
 
       this.getID = () => {
-        return 'Put aria owned child back when aria owner removed';
+        return "Put aria owned child back when aria owner removed";
       }
     }
 
     function test10_finishTest()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, 't10_container')
+        new invokerChecker(EVENT_REORDER, "t10_container")
       ];
 
       this.invoke = () => {
         // trigger a tree update.
-        getNode('t10_container').append(document.createElement('p'));
+        getNode("t10_container").append(document.createElement("p"));
       }
 
       this.finalCheck = () => {
@@ -720,8 +720,8 @@
             // { ENTRY: [] }, // t10_child
             { PARAGRAPH: [] }
           ] };
-        testAccessibleTree('t10_container', tree);
-        todo(false, 'Input accessible has be moved back in the tree');
+        testAccessibleTree("t10_container", tree);
+        todo(false, "Input accessible has be moved back in the tree");
       }
 
       this.getID = () => {

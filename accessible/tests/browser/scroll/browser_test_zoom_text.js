@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 /* import-globals-from ../../mochitest/layout.js */
-loadScripts({ name: 'layout.js', dir: MOCHITESTS_DIR });
+loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
 
 async function runTests(browser, accDoc) {
-  loadFrameScripts(browser, { name: 'layout.js', dir: MOCHITESTS_DIR });
+  loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
 
   let paragraph = findAccessibleChildByID(accDoc, "paragraph", [nsIAccessibleText]);
   let offset = 64; // beginning of 4th stanza

@@ -1,7 +1,7 @@
 var Cu = Components.utils;
 const PREF_UTTERANCE_ORDER = "accessibility.accessfu.utterance";
 
-Cu.import('resource://gre/modules/accessibility/Utils.jsm');
+Cu.import("resource://gre/modules/accessibility/Utils.jsm");
 Cu.import("resource://gre/modules/accessibility/OutputGenerator.jsm", this);
 
 /**
@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/accessibility/OutputGenerator.jsm", this);
 function testContextOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID, aGenerator) {
   var accessible = getAccessible(aAccOrElmOrID);
   var oldAccessible = aOldAccOrElmOrID !== null ?
-    getAccessible(aOldAccOrElmOrID || 'root') : null;
+    getAccessible(aOldAccOrElmOrID || "root") : null;
   var context = new PivotContext(accessible, oldAccessible);
   var output = aGenerator.genForContext(context);
 
@@ -104,7 +104,7 @@ function testOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID, aOutputKind) {
 function testHints(expected, aAccOrElmOrID, aOldAccOrElmOrID) {
   var accessible = getAccessible(aAccOrElmOrID);
   var oldAccessible = aOldAccOrElmOrID !== null ?
-  getAccessible(aOldAccOrElmOrID || 'root') : null;
+  getAccessible(aOldAccOrElmOrID || "root") : null;
   var context = new PivotContext(accessible, oldAccessible);
   var hints = context.interactionHints;
 
