@@ -1978,12 +1978,9 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   extraArgs.push_back(idStr);
   extraArgs.push_back(IsForBrowser() ? "-isForBrowser" : "-notForBrowser");
 
-  char boolBuf[1024];
-  char intBuf[1024];
-  char strBuf[1024];
-  nsFixedCString boolPrefs(boolBuf, 1024, 0);
-  nsFixedCString intPrefs(intBuf, 1024, 0);
-  nsFixedCString stringPrefs(strBuf, 1024, 0);
+  nsAutoCStringN<1024> boolPrefs;
+  nsAutoCStringN<1024> intPrefs;
+  nsAutoCStringN<1024> stringPrefs;
 
   size_t prefsLen;
   ContentPrefs::GetContentPrefs(&prefsLen);
