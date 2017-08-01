@@ -24,6 +24,9 @@ function getBrowser(sidebar) {
     return Promise.resolve(browser);
   }
 
+  let stack = document.createElementNS(XUL_NS, "stack");
+  stack.setAttribute("flex", "1");
+
   browser = document.createElementNS(XUL_NS, "browser");
   browser.setAttribute("id", "webext-panels-browser");
   browser.setAttribute("type", "content");
@@ -50,7 +53,9 @@ function getBrowser(sidebar) {
   } else {
     readyPromise = Promise.resolve();
   }
-  document.documentElement.appendChild(browser);
+
+  stack.appendChild(browser);
+  document.documentElement.appendChild(stack);
 
   return readyPromise.then(() => {
     browser.messageManager.loadFrameScript("chrome://browser/content/content.js", false);
@@ -67,6 +72,20 @@ function getBrowser(sidebar) {
     return browser;
   });
 }
+
+// Stub tabbrowser implementation for use by the tab-modal alert code.
+var gBrowser = {
+  getTabForBrowser(browser) {
+    return null;
+  },
+
+  getTabModalPromptBox(browser) {
+    if (!browser.tabModalPromptBox) {
+      browser.tabModalPromptBox = new TabModalPromptBox(browser);
+    }
+    return browser.tabModalPromptBox;
+  },
+};
 
 function loadWebPanel() {
   let sidebarURI = new URL(location);
