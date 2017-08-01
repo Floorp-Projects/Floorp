@@ -8187,6 +8187,25 @@ CodeGenerator::visitFromCodePoint(LFromCodePoint* lir)
     masm.bind(done);
 }
 
+typedef JSString* (*StringToLowerCaseFn)(JSContext*, HandleString);
+static const VMFunction StringToLowerCaseInfo =
+    FunctionInfo<StringToLowerCaseFn>(js::StringToLowerCase, "StringToLowerCase");
+
+typedef JSString* (*StringToUpperCaseFn)(JSContext*, HandleString);
+static const VMFunction StringToUpperCaseInfo =
+    FunctionInfo<StringToUpperCaseFn>(js::StringToUpperCase, "StringToUpperCase");
+
+void
+CodeGenerator::visitStringConvertCase(LStringConvertCase* lir)
+{
+    pushArg(ToRegister(lir->string()));
+
+    if (lir->mir()->mode() == MStringConvertCase::LowerCase)
+        callVM(StringToLowerCaseInfo, lir);
+    else
+        callVM(StringToUpperCaseInfo, lir);
+}
+
 void
 CodeGenerator::visitSinCos(LSinCos *lir)
 {
