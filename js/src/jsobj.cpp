@@ -4056,34 +4056,77 @@ JSObject::maybeConstructorDisplayAtom() const
     return displayAtomFromObjectGroup(*group());
 }
 
-bool
-js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor, MutableHandleValue pctor)
+// ES 2016 7.3.20.
+MOZ_MUST_USE JSObject*
+js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleObject defaultCtor,
+                       bool (*isDefaultSpecies)(JSContext*, JSFunction*))
 {
-    HandlePropertyName shName = cx->names().SpeciesConstructor;
-    RootedValue func(cx);
-    if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, shName, 2, &func))
-        return false;
+    // Step 1 (implicit).
 
-    FixedInvokeArgs<2> args(cx);
+    // Fast-path for steps 2 - 8. Applies if all of the following conditions
+    // are met:
+    // - obj.constructor can be retrieved without side-effects.
+    // - obj.constructor[[@@species]] can be retrieved without side-effects.
+    // - obj.constructor[[@@species]] is the builtin's original @@species
+    //   getter.
+    RootedValue ctor(cx);
+    bool ctorGetSucceeded = GetPropertyPure(cx, obj, NameToId(cx->names().constructor),
+                                            ctor.address());
+    if (ctorGetSucceeded && ctor.isObject() && &ctor.toObject() == defaultCtor) {
+        RootedObject ctorObj(cx, &ctor.toObject());
+        RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+        JSFunction* getter;
+        if (GetGetterPure(cx, ctorObj, speciesId, &getter) && getter &&
+            isDefaultSpecies(cx, getter))
+        {
+            return defaultCtor;
+        }
+    }
 
-    args[0].setObject(*obj);
-    args[1].set(defaultCtor);
+    // Step 2.
+    if (!ctorGetSucceeded && !GetProperty(cx, obj, obj, cx->names().constructor, &ctor))
+        return nullptr;
 
-    if (!Call(cx, func, UndefinedHandleValue, args, pctor))
-        return false;
+    // Step 3.
+    if (ctor.isUndefined())
+        return defaultCtor;
 
-    pctor.set(args.rval());
-    return true;
+    // Step 4.
+    if (!ctor.isObject()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                                  "object's 'constructor' property");
+        return nullptr;
+    }
+
+    // Step 5.
+    RootedObject ctorObj(cx, &ctor.toObject());
+    RootedValue s(cx);
+    RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+    if (!GetProperty(cx, ctorObj, ctor, speciesId, &s))
+        return nullptr;
+
+    // Step 6.
+    if (s.isNullOrUndefined())
+        return defaultCtor;
+
+    // Step 7.
+    if (IsConstructor(s))
+        return &s.toObject();
+
+    // Step 8.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
+                              "[Symbol.species] property of object's constructor");
+    return nullptr;
 }
 
-bool
+MOZ_MUST_USE JSObject*
 js::SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
-                       MutableHandleValue pctor)
+                       bool (*isDefaultSpecies)(JSContext*, JSFunction*))
 {
     if (!GlobalObject::ensureConstructor(cx, cx->global(), ctorKey))
-        return false;
-    RootedValue defaultCtor(cx, cx->global()->getConstructor(ctorKey));
-    return SpeciesConstructor(cx, obj, defaultCtor, pctor);
+        return nullptr;
+    RootedObject defaultCtor(cx, &cx->global()->getConstructor(ctorKey).toObject());
+    return SpeciesConstructor(cx, obj, defaultCtor, isDefaultSpecies);
 }
 
 bool
