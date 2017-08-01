@@ -39,6 +39,13 @@ PaintedLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
     return false;
   }
   mTextureOnWhite = mHost->AcquireTextureSourceOnWhite();
+  return true;
+}
+
+nsIntRegion
+PaintedLayerMLGPU::GetRenderRegion()
+{
+  nsIntRegion region;
 
 #ifndef MOZ_IGNORE_PAINT_WILL_RESAMPLE
   // Note: we don't set PaintWillResample on our ContentTextureHost. The old
@@ -49,12 +56,15 @@ PaintedLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
   // behavior), we might break up the visible region again. If that turns
   // out to be a problem, we can factor this into ForEachDrawRect instead.
   if (MayResample()) {
-    LayerIntRegion visible = Move(GetShadowVisibleRegion());
-    visible = visible.GetBounds();
-    SetShadowVisibleRegion(Move(visible));
-  }
+    region = GetShadowVisibleRegion().GetBounds().ToUnknownRect();
+  } else
 #endif
-  return true;
+  {
+    region = GetShadowVisibleRegion().ToUnknownRegion();
+  }
+
+  region.AndWith(gfx::IntRect(region.GetBounds().TopLeft(), mTexture->GetSize()));
+  return region;
 }
 
 bool
