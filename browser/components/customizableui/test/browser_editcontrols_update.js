@@ -153,27 +153,25 @@ add_task(async function test_panelui_customize_to_toolbar() {
   window.resizeTo(originalWidth, window.outerHeight);
   await waitForCondition(() => !navbar.hasAttribute("overflowing"));
 
-  if (gPhotonStructure) {
-    CustomizableUI.addWidgetToArea("edit-controls", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
-    // updateEditUIVisibility should be called when customization happens but isn't. See bug 1359790.
-    updateEditUIVisibility();
+  CustomizableUI.addWidgetToArea("edit-controls", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  // updateEditUIVisibility should be called when customization happens but isn't. See bug 1359790.
+  updateEditUIVisibility();
 
-    overridePromise = expectCommandUpdate(isMac ? 1 : 0);
-    gURLBar.select();
-    await overridePromise;
+  overridePromise = expectCommandUpdate(isMac ? 1 : 0);
+  gURLBar.select();
+  await overridePromise;
 
-    // Check that we get an update if we select content while the panel is open.
-    overridePromise = expectCommandUpdate(1);
-    await navbar.overflowable.show();
-    gURLBar.select();
-    await overridePromise;
+  // Check that we get an update if we select content while the panel is open.
+  overridePromise = expectCommandUpdate(1);
+  await navbar.overflowable.show();
+  gURLBar.select();
+  await overridePromise;
 
-    // And that we don't (except on mac) when the panel is hidden.
-    kOverflowPanel.hidePopup();
-    overridePromise = expectCommandUpdate(isMac ? 1 : 0);
-    gURLBar.select();
-    await overridePromise;
-  }
+  // And that we don't (except on mac) when the panel is hidden.
+  kOverflowPanel.hidePopup();
+  overridePromise = expectCommandUpdate(isMac ? 1 : 0);
+  gURLBar.select();
+  await overridePromise;
 });
 
 // Test updating when the edit-controls are moved to the palette.
