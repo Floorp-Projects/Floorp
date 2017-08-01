@@ -14,6 +14,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/dom/Selection.h"
 #include "InputData.h"
 
 namespace IPC
