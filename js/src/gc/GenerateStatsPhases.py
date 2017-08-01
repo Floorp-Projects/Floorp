@@ -140,7 +140,6 @@ PhaseKindGraphRoots = [
         PhaseKind("SWEEP_SCOPE", "Sweep Scope", 59),
         PhaseKind("SWEEP_REGEXP_SHARED", "Sweep RegExpShared", 61),
         PhaseKind("SWEEP_SHAPE", "Sweep Shape", 36),
-        PhaseKind("SWEEP_JITCODE", "Sweep JIT code", 37),
         PhaseKind("FINALIZE_END", "Finalize End Callback", 38),
         PhaseKind("DESTROY", "Deallocate", 39),
         JoinParallelTasksPhaseKind
