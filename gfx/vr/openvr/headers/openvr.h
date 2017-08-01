@@ -315,6 +315,7 @@ enum ETrackedDeviceProperty
 	Prop_DriverDirectModeSendsVsyncEvents_Bool	= 2043,
 	Prop_DisplayDebugMode_Bool					= 2044,
 	Prop_GraphicsAdapterLuid_Uint64				= 2045,
+	Prop_DriverProvidedChaperonePath_String		= 2048,
 
 	// Properties that are unique to TrackedDeviceClass_Controller
 	Prop_AttachedDeviceId_String				= 3000,
@@ -464,6 +465,8 @@ enum EVREventType
 	VREvent_WatchdogWakeUpRequested		= 109,
 	VREvent_LensDistortionChanged		= 110,
 	VREvent_PropertyChanged				= 111,
+	VREvent_WirelessDisconnect			= 112,
+	VREvent_WirelessReconnect			= 113,
 
 	VREvent_ButtonPress					= 200, // data is controller
 	VREvent_ButtonUnpress				= 201, // data is controller
@@ -1543,6 +1546,7 @@ namespace vr
 		VRApplicationError_OldApplicationQuitting = 112, 
 		VRApplicationError_TransitionAborted = 113,
 		VRApplicationError_IsTemplate = 114, // error when you try to call LaunchApplication() on a template type app (use LaunchTemplateApplication)
+		VRApplicationError_SteamVRIsExiting = 115,
 
 		VRApplicationError_BufferTooSmall = 200,		// The provided buffer was too small to fit the requested data
 		VRApplicationError_PropertyNotSet = 201,		// The requested property was not set
@@ -1573,6 +1577,7 @@ namespace vr
 		VRApplicationProperty_IsTemplate_Bool			= 61,
 		VRApplicationProperty_IsInstanced_Bool			= 62,
 		VRApplicationProperty_IsInternal_Bool			= 63,
+		VRApplicationProperty_WantsCompositorPauseInStandby_Bool = 64,
 
 		VRApplicationProperty_LastLaunchTime_Uint64		= 70,
 	};
@@ -1922,6 +1927,7 @@ namespace vr
 	static const char * const k_pch_Power_TurnOffControllersTimeout_Float = "turnOffControllersTimeout";
 	static const char * const k_pch_Power_ReturnToWatchdogTimeout_Float = "returnToWatchdogTimeout";
 	static const char * const k_pch_Power_AutoLaunchSteamVROnButtonPress = "autoLaunchSteamVROnButtonPress";
+	static const char * const k_pch_Power_PauseCompositorOnStandby_Bool = "pauseCompositorOnStandby";
 
 	//-----------------------------------------------------------------------------
 	// dashboard keys
