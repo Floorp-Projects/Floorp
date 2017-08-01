@@ -28,7 +28,11 @@ overrider.set({
   fetch() {},
   Preferences: FakePrefs,
   Services: {
-    locale: {getRequestedLocale() {}},
+    locale: {
+      getAppLocalesAsLangTags() {},
+      getRequestedLocale() {},
+      negotiateLanguages() {}
+    },
     urlFormatter: {formatURL: str => str},
     mm: {
       addMessageListener: (msg, cb) => cb(),
@@ -41,6 +45,7 @@ overrider.set({
     },
     prefs: {
       addObserver() {},
+      prefHasUserValue() {},
       removeObserver() {},
       getStringPref() {},
       getBoolPref() {},
@@ -53,7 +58,9 @@ overrider.set({
         };
       }
     },
-    tm: {dispatchToMainThread: cb => cb()}
+    tm: {dispatchToMainThread: cb => cb()},
+    eTLD: {getPublicSuffix() {}},
+    io: {NewURI() {}}
   },
   XPCOMUtils: {
     defineLazyModuleGetter() {},
