@@ -7,6 +7,8 @@
 
 interface nsIPrincipal;
 
+typedef unsigned long long nsViewID;
+
 [builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
 interface nsITabParent : nsISupports
 {
@@ -75,4 +77,20 @@ interface nsITabParent : nsISupports
    * an onbeforeunload event handler.
    */
   readonly attribute boolean hasBeforeUnload;
+
+  /**
+   * Notify APZ to start autoscrolling.
+   * (aAnchorX, aAnchorY) are the coordinates of the autoscroll anchor,
+   * in LayoutDevice coordinates relative to the screen. aScrollId and 
+   * aPresShellId identify the scroll frame that content chose to scroll.
+   */
+  void startApzAutoscroll(in float aAnchorX, in float aAnchorY,
+                          in nsViewID aScrollId, in uint32_t aPresShellId);
+
+  /**
+   * Notify APZ to stop autoscrolling.
+   * aScrollId and aPresShellId identify the scroll frame that is being
+   * autoscrolled.
+   */
+  void stopApzAutoscroll(in nsViewID aScrollId, in uint32_t aPresShellId);
 };

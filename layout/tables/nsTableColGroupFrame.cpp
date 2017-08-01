@@ -299,7 +299,7 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
         nsStyleContext* psc = colFrame->GetParentStyleContext(&providerFrame);
         if (psc->IsGecko()) {
           // This check code is useful only in Gecko-backed style system.
-          if (static_cast<nsStyleContext*>(colFrame->StyleContext()->GetParent()) == psc) {
+          if (colFrame->StyleContext()->AsGecko()->GetParent() == psc->AsGecko()) {
             NS_ASSERTION(col->StyleContext() == colFrame->StyleContext() &&
                          col->GetContent() == colFrame->GetContent(),
                          "How did that happen??");

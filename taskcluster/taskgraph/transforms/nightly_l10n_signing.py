@@ -64,7 +64,7 @@ def make_signing_description(config, jobs):
                     'format': 'gpg',
                 }, {
                     'artifacts': ['public/build/{locale}/target.complete.mar'],
-                    'format': 'mar',
+                    'format': 'mar_sha384',
                 }
             ]
         else:

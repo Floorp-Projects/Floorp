@@ -259,7 +259,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   attribute boolean isFirstPaint;
 
-  void getPresShellId(out uint32_t aPresShellId);
+  uint32_t getPresShellId();
 
   /**
    * Following modifiers are for sent*Event() except sendNative*Event().

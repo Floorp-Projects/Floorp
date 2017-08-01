@@ -2087,13 +2087,20 @@ nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
     }
   }
 
+  ViewID id = ScrollIdForRootScrollFrame(aPresContext);
+  aLayer->SetFixedPositionData(id, anchor, sides);
+}
+
+FrameMetrics::ViewID
+nsLayoutUtils::ScrollIdForRootScrollFrame(nsPresContext* aPresContext)
+{
   ViewID id = FrameMetrics::NULL_SCROLL_ID;
   if (nsIFrame* rootScrollFrame = aPresContext->PresShell()->GetRootScrollFrame()) {
     if (nsIContent* content = rootScrollFrame->GetContent()) {
       id = FindOrCreateIDFor(content);
     }
   }
-  aLayer->SetFixedPositionData(id, anchor, sides);
+  return id;
 }
 
 bool

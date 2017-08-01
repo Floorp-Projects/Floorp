@@ -32,8 +32,8 @@ struct nsCSSValuePairList;
 struct nsRuleData;
 
 namespace mozilla {
-  class GeckoStyleContext;
-}
+class GeckoStyleContext;
+} // namespace mozilla
 
 struct nsInheritedStyleData
 {
@@ -992,7 +992,7 @@ public:
   #undef STYLE_STRUCT_INHERITED
 
   static bool
-    HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
+    HasAuthorSpecifiedRules(mozilla::GeckoStyleContext* aStyleContext,
                             uint32_t ruleTypeMask,
                             bool aAuthorColorsAllowed);
 
@@ -1010,7 +1010,13 @@ public:
   // Expose this so media queries can use it
   static nscoord CalcLengthWithInitialFont(nsPresContext* aPresContext,
                                            const nsCSSValue& aValue);
+
   // Expose this so nsTransformFunctions can use it.
+  //
+  // FIXME(emilio): This can enter here with a Servo style context, which will
+  // mostly be fine except for our handling of rem units, I think.
+  //
+  // Ditto in SpecifiedCalcToComputedCalc.
   static nscoord CalcLength(const nsCSSValue& aValue,
                             nsStyleContext* aStyleContext,
                             nsPresContext* aPresContext,

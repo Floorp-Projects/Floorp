@@ -2,59 +2,42 @@
  * Async utility function for ensuring that no unexpected uninterruptible
  * reflows occur during some period of time in a window.
  *
- * The helper works by running a JS function before each event is
- * dispatched that attempts to dirty the layout tree - the idea being
- * that this puts us in the "worst case scenario" so that any JS
- * that attempts to query for layout or style information will cause
- * a reflow to fire. We also dirty the layout tree after each reflow
- * occurs, for good measure.
- *
- * This sounds good in theory, but it's trickier in practice due to
- * various optimizations in our Layout engine. The default function
- * for dirtying the layout tree adds a margin to the first element
- * child it finds in the window to a maximum of 3px, and then goes
- * back to 0px again and loops.
- *
- * This is not sufficient for reflows that we expect to happen within
- * scrollable frames, as Gecko is able to side-step reflowing the
- * contents of a scrollable frame if outer frames are dirtied. Because
- * of this, it's currently possible to override the default node to
- * dirty with one more appropriate for the test.
- *
- * It is also theoretically possible for enough events to fire between
- * reflows such that the before and after state of the layout tree is
- * exactly the same, meaning that no reflow is required, which opens
- * us up to missing expected reflows. This seems to be possible in
- * theory, but hasn't yet shown up in practice - it's just something
- * to be aware of.
- *
- * Bug 1363361 has been filed for a more reliable way of dirtying layout.
- *
  * @param testFn (async function)
  *        The async function that will exercise the browser activity that is
  *        being tested for reflows.
- * @param expectedStacks (Array, optional)
- *        An Array of Arrays representing stacks.
+ *
+ *        The testFn will be passed a single argument, which is a frame dirtying
+ *        function that can be called if the test needs to trigger frame
+ *        dirtying outside of the normal mechanism.
+ * @param expectedReflows (Array, optional)
+ *        An Array of Objects representing reflows.
  *
  *        Example:
  *
  *        [
- *          // This reflow is caused by lorem ipsum
- *          [
- *            "select@chrome://global/content/bindings/textbox.xml",
- *            "focusAndSelectUrlBar@chrome://browser/content/browser.js",
- *            "openLinkIn@chrome://browser/content/utilityOverlay.js",
- *            "openUILinkIn@chrome://browser/content/utilityOverlay.js",
- *            "BrowserOpenTab@chrome://browser/content/browser.js",
- *          ],
+ *          {
+ *            // This reflow is caused by lorem ipsum
+ *            stack: [
+ *              "select@chrome://global/content/bindings/textbox.xml",
+ *              "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+ *              "openLinkIn@chrome://browser/content/utilityOverlay.js",
+ *              "openUILinkIn@chrome://browser/content/utilityOverlay.js",
+ *              "BrowserOpenTab@chrome://browser/content/browser.js",
+ *            ],
+ *            // We expect this particular reflow to happen 2 times
+ *            times: 2,
+ *          },
  *
- *          // This reflow is caused by lorem ipsum
- *          [
- *            "get_scrollPosition@chrome://global/content/bindings/scrollbox.xml",
- *            "_fillTrailingGap@chrome://browser/content/tabbrowser.xml",
- *            "_handleNewTab@chrome://browser/content/tabbrowser.xml",
- *            "onxbltransitionend@chrome://browser/content/tabbrowser.xml",
- *          ],
+ *          {
+ *            // This reflow is caused by lorem ipsum. We expect this reflow
+ *            // to only happen once, so we can omit the "times" property.
+ *            stack: [
+ *              "get_scrollPosition@chrome://global/content/bindings/scrollbox.xml",
+ *              "_fillTrailingGap@chrome://browser/content/tabbrowser.xml",
+ *              "_handleNewTab@chrome://browser/content/tabbrowser.xml",
+ *              "onxbltransitionend@chrome://browser/content/tabbrowser.xml",
+ *            ],
+ *          }
  *
  *        ]
  *
@@ -66,7 +49,7 @@
  * @param window (browser window, optional)
  *        The browser window to monitor. Defaults to the current window.
  */
-async function withReflowObserver(testFn, expectedStacks = [], win = window) {
+async function withReflowObserver(testFn, expectedReflows = [], win = window) {
   let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIDOMWindowUtils);
   let dirtyFrameFn = () => {
@@ -81,9 +64,14 @@ async function withReflowObserver(testFn, expectedStacks = [], win = window) {
   let els = Cc["@mozilla.org/eventlistenerservice;1"]
               .getService(Ci.nsIEventListenerService);
 
-  // We're going to remove the stacks one by one as we see them so that
+  // We're going to remove the reflows one by one as we see them so that
   // we can check for expected, unseen reflows, so let's clone the array.
-  expectedStacks = expectedStacks.slice(0);
+  // While we're at it, for reflows that omit the "times" property, default
+  // it to 1.
+  expectedReflows = expectedReflows.slice(0);
+  expectedReflows.forEach(r => {
+    r.times = r.times || 1;
+  });
 
   let observer = {
     reflow(start, end) {
@@ -104,12 +92,14 @@ async function withReflowObserver(testFn, expectedStacks = [], win = window) {
         return;
       }
 
-      let index = expectedStacks.findIndex(stack => path.startsWith(stack.join("|")));
+      let index = expectedReflows.findIndex(reflow => path.startsWith(reflow.stack.join("|")));
 
       if (index != -1) {
         Assert.ok(true, "expected uninterruptible reflow: '" +
                   JSON.stringify(pathWithLineNumbers, null, "\t") + "'");
-        expectedStacks.splice(index, 1);
+        if (--expectedReflows[index].times == 0) {
+          expectedReflows.splice(index, 1);
+        }
       } else {
         Assert.ok(false, "unexpected uninterruptible reflow \n" +
                          JSON.stringify(pathWithLineNumbers, null, "\t") + "\n");
@@ -135,15 +125,15 @@ async function withReflowObserver(testFn, expectedStacks = [], win = window) {
 
   try {
     dirtyFrameFn();
-    await testFn();
+    await testFn(dirtyFrameFn);
   } finally {
-    for (let remainder of expectedStacks) {
+    for (let remainder of expectedReflows) {
       Assert.ok(false,
-                `Unused expected reflow: ${JSON.stringify(remainder, null, "\t")}.\n` +
+                `Unused expected reflow: ${JSON.stringify(remainder.stack, null, "\t")}\n` +
+                `This reflow was supposed to be hit ${remainder.times} more time(s).\n` +
                 "This is probably a good thing - just remove it from the " +
                 "expected list.");
     }
-
 
     els.removeListenerForAllEvents(win, dirtyFrameFn, true);
     docShell.removeWeakReflowObserver(observer);

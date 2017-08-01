@@ -1562,17 +1562,16 @@ html|*.addon-webext-perm-list {
   height: 14px;
   vertical-align: bottom;
   margin-bottom: 1px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .addon-addon-icon {
-  list-style-image: url("chrome://browser/skin/menuPanel.svg");
-  -moz-image-region: rect(0px, 288px, 32px, 256px);
+  list-style-image: url("chrome://browser/skin/addons.svg");
 }
 
 .addon-toolbar-icon {
   list-style-image: url("chrome://browser/skin/menu.svg");
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
 }
 
 /* Notification icon box */
