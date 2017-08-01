@@ -198,7 +198,7 @@ private:
 
 template<typename T,
          JSObject* UnwrapArray(JSObject*),
-         T* GetData(JSObject*, bool* isShared, const JS::AutoRequireNoGC&),
+         T* GetData(JSObject*, bool* isShared, const JS::AutoCheckCannotGC&),
          void GetLengthAndDataAndSharedness(JSObject*, uint32_t*, bool*, T**),
          JSObject* CreateNew(JSContext*, uint32_t)>
 struct TypedArray
