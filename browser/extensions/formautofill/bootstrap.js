@@ -42,8 +42,14 @@ function onMaybeOpenPopup(evt) {
 
 function startup() {
   if (Services.prefs.getStringPref("extensions.formautofill.available") != "on") {
+    Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
     return;
   }
+
+  // This pref is used for web contents to detect the autocomplete feature.
+  // When it's true, "element.autocomplete" will return tokens we currently
+  // support -- otherwise it'll return an empty string.
+  Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
 
   // Listen for the autocomplete popup message to lazily append our stylesheet related to the popup.
   Services.mm.addMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
