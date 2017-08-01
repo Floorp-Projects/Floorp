@@ -206,16 +206,16 @@ Handler::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
   }
 
 #if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
-  // Now the OBJREF has been written, so seek back to its beginning (the
-  // position that we saved earlier).
-  seekTo.QuadPart = objrefPos.QuadPart;
-  hr = pStm->Seek(seekTo, STREAM_SEEK_SET, nullptr);
+  // Obtain the current stream position which is the end of the OBJREF
+  ULARGE_INTEGER endPos;
+  hr = pStm->Seek(seekTo, STREAM_SEEK_CUR, &endPos);
   if (FAILED(hr)) {
     return hr;
   }
 
   // Now strip out the handler.
-  if (!StripHandlerFromOBJREF(WrapNotNull(pStm))) {
+  if (!StripHandlerFromOBJREF(WrapNotNull(pStm), objrefPos.QuadPart,
+                              endPos.QuadPart)) {
     return E_FAIL;
   }
 

@@ -17,13 +17,17 @@ namespace mscom {
 /**
  * Given a buffer containing a serialized proxy to an interface with a handler,
  * this function strips out the handler and converts it to a standard one.
- * @param aStream IStream whose pointer is positioned at the beginning of the
- *                OBJREF to be stripped. There should be nothing else written
- *                to the stream past the current OBJREF.
+ * @param aStream IStream containing a serialized proxy.
+ *                There should be nothing else written to the stream past the
+ *                current OBJREF.
+ * @param aStart  Absolute position of the beginning of the OBJREF.
+ * @param aEnd    Absolute position of the end of the OBJREF.
  * @return true if the handler was successfully stripped, otherwise false.
  */
 bool
-StripHandlerFromOBJREF(NotNull<IStream*> aStream);
+StripHandlerFromOBJREF(NotNull<IStream*> aStream,
+                       const uint64_t aStart,
+                       const uint64_t aEnd);
 
 } // namespace mscom
 } // namespace mozilla
