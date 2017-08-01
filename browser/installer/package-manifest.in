@@ -839,3 +839,13 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/fix_linux_stack.py
 #endif
 #endif
+
+; Background Hang Monitor
+@RESPATH@/components/backgroundhangmonitor.xpt
+
+; NOTE: This must match the config checks in
+; /toolkit/components/backgroundhangmonitor/moz.build.
+#if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN)
+@RESPATH@/components/BHRTelemetryService.js
+@RESPATH@/components/BHRTelemetryService.manifest
+#endif
