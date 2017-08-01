@@ -93,7 +93,7 @@
   fill-opacity: 0;
 }
 
-.onboarding-close-btn:hover::before {
+.onboarding-close-btn:-moz-any(:hover, :active, :focus, :-moz-focusring)::before {
   fill-opacity: 0.1;
 }
 
