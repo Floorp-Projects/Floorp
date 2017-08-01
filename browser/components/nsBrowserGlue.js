@@ -478,13 +478,10 @@ BrowserGlue.prototype = {
         // an engine, and that newly added engines are visible.
         if (data == "engine-added" || data == "engine-removed") {
           let engineName = subject.QueryInterface(Ci.nsISearchEngine).name;
-          let Preferences =
-            Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
-          let pref = Preferences.get("browser.search.hiddenOneOffs");
+          let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
           let hiddenList = pref ? pref.split(",") : [];
           hiddenList = hiddenList.filter(x => x !== engineName);
-          Preferences.set("browser.search.hiddenOneOffs",
-                          hiddenList.join(","));
+          Services.prefs.setStringPref("browser.search.hiddenOneOffs", hiddenList.join(","));
         }
         break;
       case "flash-plugin-hang":

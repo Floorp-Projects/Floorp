@@ -204,8 +204,8 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   // Chardet is initialized here even if it turns out to be useless
   // to make the chardet refcount its observer (nsHtml5StreamParser)
   // on the main thread.
-  const nsAdoptingCString& detectorName =
-    Preferences::GetLocalizedCString("intl.charset.detector");
+  nsAutoCString detectorName;
+  Preferences::GetLocalizedCString("intl.charset.detector", detectorName);
   if (!detectorName.IsEmpty()) {
     nsAutoCString detectorContractID;
     detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);

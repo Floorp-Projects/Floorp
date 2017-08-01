@@ -8,7 +8,6 @@ const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Experiments",
                                   "resource:///modules/experiments/Experiments.jsm");
@@ -24,16 +23,6 @@ const PREF_EXPERIMENTS_ENABLED  = "experiments.enabled";
 const PREF_ACTIVE_EXPERIMENT    = "experiments.activeExperiment"; // whether we have an active experiment
 const DELAY_INIT_MS             = 30 * 1000;
 
-XPCOMUtils.defineLazyGetter(
-  this, "gPrefs", () => {
-    return new Preferences();
-  });
-
-XPCOMUtils.defineLazyGetter(
-  this, "gActiveExperiment", () => {
-    return gPrefs.get(PREF_ACTIVE_EXPERIMENT);
-  });
-
 function ExperimentsService() {
   this._initialized = false;
   this._delayedInitTimer = null;
@@ -46,7 +35,7 @@ ExperimentsService.prototype = {
   get _experimentsEnabled() {
     // We can enable experiments if either unified Telemetry or FHR is on, and the user
     // has opted into Telemetry.
-    return gPrefs.get(PREF_EXPERIMENTS_ENABLED, false) &&
+    return Services.prefs.getBoolPref(PREF_EXPERIMENTS_ENABLED, false) &&
            TelemetryUtils.isTelemetryEnabled;
   },
 
@@ -82,7 +71,7 @@ ExperimentsService.prototype = {
           Services.obs.addObserver(this, "sessionstore-state-finalized");
           Services.obs.addObserver(this, "EM-loaded");
 
-          if (gActiveExperiment) {
+          if (Services.prefs.getBoolPref(PREF_ACTIVE_EXPERIMENT, false)) {
             this._initialized = true;
             Experiments.instance(); // for side effects
           }

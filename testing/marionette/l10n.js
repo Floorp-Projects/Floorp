@@ -50,7 +50,7 @@ l10n.localizeEntity = function(urls, id) {
   let locations = [];
   urls.forEach((url, index) => {
     locations.push(`<!ENTITY % dtd_${index} SYSTEM "${url}">%dtd_${index};`);
-  })
+  });
 
   // Use the DOM parser to resolve the entity and extract its real value
   let header = `<?xml version="1.0"?><!DOCTYPE elem [${locations.join("")}]>`;

@@ -148,7 +148,7 @@ ExtensionPolicyService::BaseCSP(nsAString& aBaseCSP) const
 {
   nsresult rv;
 
-  rv = Preferences::GetString("extensions.webextensions.base-content-security-policy", &aBaseCSP);
+  rv = Preferences::GetString("extensions.webextensions.base-content-security-policy", aBaseCSP);
   if (NS_FAILED(rv)) {
     aBaseCSP.AssignLiteral(DEFAULT_BASE_CSP);
   }
@@ -159,7 +159,7 @@ ExtensionPolicyService::DefaultCSP(nsAString& aDefaultCSP) const
 {
   nsresult rv;
 
-  rv = Preferences::GetString("extensions.webextensions.default-content-security-policy", &aDefaultCSP);
+  rv = Preferences::GetString("extensions.webextensions.default-content-security-policy", aDefaultCSP);
   if (NS_FAILED(rv)) {
     aDefaultCSP.AssignLiteral(DEFAULT_DEFAULT_CSP);
   }

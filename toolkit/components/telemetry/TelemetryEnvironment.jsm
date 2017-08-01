@@ -13,7 +13,6 @@ const myScope = this;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/ObjectUtils.jsm");
@@ -258,6 +257,7 @@ const GFX_FEATURES_READY_TOPIC = "gfx-features-ready";
 const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
 const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
+const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 /**
  * Enforces the parameter to a boolean value.
@@ -999,28 +999,40 @@ EnvironmentCache.prototype = {
   _getPrefData() {
     let prefData = {};
     for (let [pref, policy] of this._watchedPrefs.entries()) {
+      let prefType = Services.prefs.getPrefType(pref);
+
       if (policy.what == TelemetryEnvironment.RECORD_DEFAULTPREF_VALUE) {
         // For default prefs, make sure they exist
-        if (!Preferences.has(pref)) {
+        if (prefType == Ci.nsIPrefBranch.PREF_INVALID) {
           continue;
         }
-      } else if (!Preferences.isSet(pref)) {
+      } else if (!Services.prefs.prefHasUserValue(pref)) {
         // For user prefs, make sure they are set
         continue;
       }
 
       // Check the policy for the preference and decide if we need to store its value
       // or whether it changed from the default value.
-      let prefValue = undefined;
+      let prefValue;
       if (policy.what == TelemetryEnvironment.RECORD_PREF_STATE) {
         prefValue = "<user-set>";
+      } else if (prefType == Ci.nsIPrefBranch.PREF_STRING) {
+        prefValue = Services.prefs.getStringPref(pref);
+      } else if (prefType == Ci.nsIPrefBranch.PREF_BOOL) {
+        prefValue = Services.prefs.getBoolPref(pref);
+      } else if (prefType == Ci.nsIPrefBranch.PREF_INT) {
+        prefValue = Services.prefs.getIntPref(pref);
+      } else if (prefType == Ci.nsIPrefBranch.PREF_INVALID) {
+        prefValue = null;
       } else {
-        prefValue = Preferences.get(pref, null);
+        throw new Error(`Unexpected preference type ("${prefType}") for "${pref}".`);
       }
       prefData[pref] = prefValue;
     }
     return prefData;
   },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
 
   /**
    * Start watching the preferences.
@@ -1030,7 +1042,7 @@ EnvironmentCache.prototype = {
 
     for (let [pref, options] of this._watchedPrefs) {
       if (!("requiresRestart" in options) || !options.requiresRestart) {
-        Preferences.observe(pref, this._onPrefChanged, this);
+        Services.prefs.addObserver(pref, this, true);
       }
     }
   },
@@ -1050,7 +1062,7 @@ EnvironmentCache.prototype = {
 
     for (let [pref, options] of this._watchedPrefs) {
       if (!("requiresRestart" in options) || !options.requiresRestart) {
-        Preferences.ignore(pref, this._onPrefChanged, this);
+        Services.prefs.removeObserver(pref, this);
       }
     }
   },
@@ -1122,6 +1134,11 @@ EnvironmentCache.prototype = {
         // The default browser check could take some time, so just call it after
         // the session was restored.
         this._updateDefaultBrowser();
+        break;
+      case PREF_CHANGED_TOPIC:
+        if (this._watchedPrefs.has(aData)) {
+          this._onPrefChanged();
+        }
         break;
     }
   },
@@ -1245,7 +1262,7 @@ EnvironmentCache.prototype = {
       vendor: Services.appinfo.vendor || null,
       platformVersion: Services.appinfo.platformVersion || null,
       xpcomAbi: Services.appinfo.XPCOMABI,
-      hotfixVersion: Preferences.get(PREF_HOTFIX_LASTVERSION, null),
+      hotfixVersion: Services.prefs.getStringPref(PREF_HOTFIX_LASTVERSION, null),
     };
 
     // Add |architecturesInBinary| only for Mac Universal builds.
@@ -1317,16 +1334,16 @@ EnvironmentCache.prototype = {
     } catch (e) {}
 
     this._currentEnvironment.settings = {
-      blocklistEnabled: Preferences.get(PREF_BLOCKLIST_ENABLED, true),
+      blocklistEnabled: Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true),
       e10sEnabled: Services.appinfo.browserTabsRemoteAutostart,
       e10sMultiProcesses: Services.appinfo.maxWebProcessCount,
-      e10sCohort: Preferences.get(PREF_E10S_COHORT, "unknown"),
+      e10sCohort: Services.prefs.getStringPref(PREF_E10S_COHORT, "unknown"),
       telemetryEnabled: Utils.isTelemetryEnabled,
       locale: getBrowserLocale(),
       update: {
         channel: updateChannel,
-        enabled: Preferences.get(PREF_UPDATE_ENABLED, true),
-        autoDownload: Preferences.get(PREF_UPDATE_AUTODOWNLOAD, true),
+        enabled: Services.prefs.getBoolPref(PREF_UPDATE_ENABLED, true),
+        autoDownload: Services.prefs.getBoolPref(PREF_UPDATE_AUTODOWNLOAD, true),
       },
       userPrefs: this._getPrefData(),
       sandbox: this._getSandboxData(),
@@ -1392,11 +1409,11 @@ EnvironmentCache.prototype = {
    */
   _getPartner() {
     let partnerData = {
-      distributionId: Preferences.get(PREF_DISTRIBUTION_ID, null),
-      distributionVersion: Preferences.get(PREF_DISTRIBUTION_VERSION, null),
-      partnerId: Preferences.get(PREF_PARTNER_ID, null),
-      distributor: Preferences.get(PREF_DISTRIBUTOR, null),
-      distributorChannel: Preferences.get(PREF_DISTRIBUTOR_CHANNEL, null),
+      distributionId: Services.prefs.getStringPref(PREF_DISTRIBUTION_ID, null),
+      distributionVersion: Services.prefs.getStringPref(PREF_DISTRIBUTION_VERSION, null),
+      partnerId: Services.prefs.getStringPref(PREF_PARTNER_ID, null),
+      distributor: Services.prefs.getStringPref(PREF_DISTRIBUTOR, null),
+      distributorChannel: Services.prefs.getStringPref(PREF_DISTRIBUTOR_CHANNEL, null),
     };
 
     // Get the PREF_APP_PARTNER_BRANCH branch and append its children to partner data.

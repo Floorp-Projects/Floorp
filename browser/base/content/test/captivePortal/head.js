@@ -64,7 +64,7 @@ async function focusWindowAndWaitForPortalUI(aLongRecheck, win) {
   // so use a delay threshold of -1 to simulate a long recheck (so that any
   // amount of time is considered excessive), and a very large threshold to
   // simulate a short recheck.
-  Preferences.set("captivedetect.portalRecheckDelayMS", aLongRecheck ? -1 : 1000000);
+  Services.prefs.setIntPref("captivedetect.portalRecheckDelayMS", aLongRecheck ? -1 : 1000000);
 
   if (!win) {
     win = await BrowserTestUtils.openNewBrowserWindow();

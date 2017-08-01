@@ -8,7 +8,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
@@ -35,11 +34,11 @@ MozSelfSupportInterface.prototype = {
   },
 
   get healthReportDataSubmissionEnabled() {
-    return Preferences.get(PREF_FHR_UPLOAD_ENABLED, false);
+    return Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED, false);
   },
 
   set healthReportDataSubmissionEnabled(enabled) {
-    Preferences.set(PREF_FHR_UPLOAD_ENABLED, enabled);
+    Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, enabled);
   },
 
   resetPref(name) {

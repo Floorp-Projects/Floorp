@@ -1605,7 +1605,9 @@ static nsresult pref_InitInitialObjects()
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     prerelease = true;
 #else
-    if (Preferences::GetDefaultCString(kChannelPref).EqualsLiteral("beta")) {
+    nsAutoCString prefValue;
+    Preferences::GetDefaultCString(kChannelPref, prefValue);
+    if (prefValue.EqualsLiteral("beta")) {
       prerelease = true;
     }
 #endif
@@ -1666,87 +1668,47 @@ Preferences::GetFloat(const char* aPref, float* aResult)
 }
 
 // static
-nsAdoptingCString
-Preferences::GetCString(const char* aPref)
-{
-  nsAdoptingCString result;
-  PREF_CopyCharPref(aPref, getter_Copies(result), false);
-  return result;
-}
-
-// static
-nsAdoptingString
-Preferences::GetString(const char* aPref)
-{
-  nsAdoptingString result;
-  GetString(aPref, &result);
-  return result;
-}
-
-// static
 nsresult
-Preferences::GetCString(const char* aPref, nsACString* aResult)
+Preferences::GetCString(const char* aPref, nsACString& aResult)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsAutoCString result;
-  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), false);
+  char* result;
+  nsresult rv = PREF_CopyCharPref(aPref, &result, false);
   if (NS_SUCCEEDED(rv)) {
-    *aResult = result;
+    aResult.Adopt(result);
   }
   return rv;
 }
 
 // static
 nsresult
-Preferences::GetString(const char* aPref, nsAString* aResult)
+Preferences::GetString(const char* aPref, nsAString& aResult)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
   nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), false);
   if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(result, *aResult);
+    CopyUTF8toUTF16(result, aResult);
   }
   return rv;
 }
 
 // static
-nsAdoptingCString
-Preferences::GetLocalizedCString(const char* aPref)
-{
-  nsAdoptingCString result;
-  GetLocalizedCString(aPref, &result);
-  return result;
-}
-
-// static
-nsAdoptingString
-Preferences::GetLocalizedString(const char* aPref)
-{
-  nsAdoptingString result;
-  GetLocalizedString(aPref, &result);
-  return result;
-}
-
-// static
 nsresult
-Preferences::GetLocalizedCString(const char* aPref, nsACString* aResult)
+Preferences::GetLocalizedCString(const char* aPref, nsACString& aResult)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
   nsAutoString result;
-  nsresult rv = GetLocalizedString(aPref, &result);
+  nsresult rv = GetLocalizedString(aPref, result);
   if (NS_SUCCEEDED(rv)) {
-    CopyUTF16toUTF8(result, *aResult);
+    CopyUTF16toUTF8(result, aResult);
   }
   return rv;
 }
 
 // static
 nsresult
-Preferences::GetLocalizedString(const char* aPref, nsAString* aResult)
+Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
   nsresult rv = sRootBranch->GetComplexValue(aPref,
@@ -1754,7 +1716,7 @@ Preferences::GetLocalizedString(const char* aPref, nsAString* aResult)
                                              getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
-    prefLocalString->GetData(getter_Copies(*aResult));
+    prefLocalString->GetData(getter_Copies(aResult));
   }
   return rv;
 }
@@ -2198,28 +2160,26 @@ Preferences::GetDefaultInt(const char* aPref, int32_t* aResult)
 
 // static
 nsresult
-Preferences::GetDefaultCString(const char* aPref, nsACString* aResult)
+Preferences::GetDefaultCString(const char* aPref, nsACString& aResult)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsAutoCString result;
-  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), true);
+  char* result;
+  nsresult rv = PREF_CopyCharPref(aPref, &result, true);
   if (NS_SUCCEEDED(rv)) {
-    *aResult = result;
+    aResult.Adopt(result);
   }
   return rv;
 }
 
 // static
 nsresult
-Preferences::GetDefaultString(const char* aPref, nsAString* aResult)
+Preferences::GetDefaultString(const char* aPref, nsAString& aResult)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
   nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), true);
   if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(result, *aResult);
+    CopyUTF8toUTF16(result, aResult);
   }
   return rv;
 }
@@ -2227,12 +2187,12 @@ Preferences::GetDefaultString(const char* aPref, nsAString* aResult)
 // static
 nsresult
 Preferences::GetDefaultLocalizedCString(const char* aPref,
-                                        nsACString* aResult)
+                                        nsACString& aResult)
 {
   nsAutoString result;
-  nsresult rv = GetDefaultLocalizedString(aPref, &result);
+  nsresult rv = GetDefaultLocalizedString(aPref, result);
   if (NS_SUCCEEDED(rv)) {
-    CopyUTF16toUTF8(result, *aResult);
+    CopyUTF16toUTF8(result, aResult);
   }
   return rv;
 }
@@ -2240,7 +2200,7 @@ Preferences::GetDefaultLocalizedCString(const char* aPref,
 // static
 nsresult
 Preferences::GetDefaultLocalizedString(const char* aPref,
-                                       nsAString* aResult)
+                                       nsAString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
@@ -2250,45 +2210,9 @@ Preferences::GetDefaultLocalizedString(const char* aPref,
                                         getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
-    prefLocalString->GetData(getter_Copies(*aResult));
+    prefLocalString->GetData(getter_Copies(aResult));
   }
   return rv;
-}
-
-// static
-nsAdoptingString
-Preferences::GetDefaultString(const char* aPref)
-{
-  nsAdoptingString result;
-  GetDefaultString(aPref, &result);
-  return result;
-}
-
-// static
-nsAdoptingCString
-Preferences::GetDefaultCString(const char* aPref)
-{
-  nsAdoptingCString result;
-  PREF_CopyCharPref(aPref, getter_Copies(result), true);
-  return result;
-}
-
-// static
-nsAdoptingString
-Preferences::GetDefaultLocalizedString(const char* aPref)
-{
-  nsAdoptingString result;
-  GetDefaultLocalizedString(aPref, &result);
-  return result;
-}
-
-// static
-nsAdoptingCString
-Preferences::GetDefaultLocalizedCString(const char* aPref)
-{
-  nsAdoptingCString result;
-  GetDefaultLocalizedCString(aPref, &result);
-  return result;
 }
 
 // static

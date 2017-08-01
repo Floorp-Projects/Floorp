@@ -933,7 +933,9 @@ nsObjectLoadingContent::BuildParametersArray()
     mCachedAttributes.AppendElement(param);
   }
 
-  nsAdoptingCString wmodeOverride = Preferences::GetCString("plugins.force.wmode");
+  nsAutoCString wmodeOverride;
+  Preferences::GetCString("plugins.force.wmode", wmodeOverride);
+
   for (uint32_t i = 0; i < mCachedAttributes.Length(); i++) {
     if (!wmodeOverride.IsEmpty() && mCachedAttributes[i].mName.EqualsIgnoreCase("wmode")) {
       CopyASCIItoUTF16(wmodeOverride, mCachedAttributes[i].mValue);
@@ -3368,8 +3370,8 @@ nsObjectLoadingContent::FavorFallbackMode(bool aIsPluginClickToPlay) {
     return false;
   }
 
-  nsCString prefString;
-  if (NS_SUCCEEDED(Preferences::GetCString(kPrefFavorFallbackMode, &prefString))) {
+  nsAutoCString prefString;
+  if (NS_SUCCEEDED(Preferences::GetCString(kPrefFavorFallbackMode, prefString))) {
     if (aIsPluginClickToPlay &&
         prefString.EqualsLiteral("follow-ctp")) {
       return true;
@@ -3395,8 +3397,8 @@ nsObjectLoadingContent::HasGoodFallback() {
   }
 
   nsTArray<nsCString> rulesList;
-  nsCString prefString;
-  if (NS_SUCCEEDED(Preferences::GetCString(kPrefFavorFallbackRules, &prefString))) {
+  nsAutoCString prefString;
+  if (NS_SUCCEEDED(Preferences::GetCString(kPrefFavorFallbackRules, prefString))) {
       ParseString(prefString, ',', rulesList);
   }
 

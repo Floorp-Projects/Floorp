@@ -40,7 +40,7 @@ const dumpv =
 const Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
 
 const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",
-  "nsIScriptableInputStream", "init");
+    "nsIScriptableInputStream", "init");
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport"];
 

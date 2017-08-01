@@ -282,6 +282,7 @@ namespace jit {
     _(IsTypedArray)                                                         \
     _(IsObject)                                                             \
     _(HasClass)                                                             \
+    _(ObjectClassToString)                                                  \
     _(CopySign)                                                             \
     _(Rotate)                                                               \
     _(NewDerivedTypedObject)                                                \

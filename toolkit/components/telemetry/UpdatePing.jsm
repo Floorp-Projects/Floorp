@@ -8,7 +8,6 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm", this);
-Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -30,7 +29,7 @@ this.EXPORTED_SYMBOLS = ["UpdatePing"];
 this.UpdatePing = {
   earlyInit() {
     this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, "UpdatePing::");
-    this._enabled = Preferences.get(TelemetryUtils.Preferences.UpdatePing, false);
+    this._enabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.UpdatePing, false);
 
     this._log.trace("init - enabled: " + this._enabled);
 

@@ -298,6 +298,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitIsTypedArray(MIsTypedArray* ins);
     void visitIsObject(MIsObject* ins);
     void visitHasClass(MHasClass* ins);
+    void visitObjectClassToString(MObjectClassToString* ins);
     void visitWasmAddOffset(MWasmAddOffset* ins);
     void visitWasmLoadTls(MWasmLoadTls* ins);
     void visitWasmBoundsCheck(MWasmBoundsCheck* ins);

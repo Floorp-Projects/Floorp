@@ -334,7 +334,7 @@ void
 nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
 {
   nsAutoString colorStr;
-  nsresult rv = Preferences::GetString(prefName, &colorStr);
+  nsresult rv = Preferences::GetString(prefName, colorStr);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -388,7 +388,7 @@ void
 nsXPLookAndFeel::InitColorFromPref(int32_t i)
 {
   nsAutoString colorStr;
-  nsresult rv = Preferences::GetString(sColorPrefs[i], &colorStr);
+  nsresult rv = Preferences::GetString(sColorPrefs[i], colorStr);
   if (NS_FAILED(rv) || colorStr.IsEmpty()) {
     return;
   }

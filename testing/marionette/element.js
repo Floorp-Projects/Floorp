@@ -1027,5 +1027,5 @@ element.isBooleanAttribute = function(el, attr) {
   if (!boolEls.hasOwnProperty(el.localName)) {
     return false;
   }
-  return boolEls[el.localName].includes(attr)
+  return boolEls[el.localName].includes(attr);
 };

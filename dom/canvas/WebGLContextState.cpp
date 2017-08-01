@@ -307,7 +307,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
                 nsAutoString ret;
                 if (overridePref) {
-                    nsresult res = Preferences::GetString(overridePref, &ret);
+                    nsresult res = Preferences::GetString(overridePref, ret);
                     if (NS_SUCCEEDED(res) && ret.Length() > 0)
                         hasRetVal = true;
                 }

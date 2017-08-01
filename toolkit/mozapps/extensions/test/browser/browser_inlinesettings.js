@@ -3,7 +3,6 @@
  */
 
 // Tests various aspects of the details view
-Components.utils.import("resource://gre/modules/Preferences.jsm");
 
 var gManagerWindow;
 var gCategoryUtilities;
@@ -252,7 +251,7 @@ add_test(function() {
     EventUtils.synthesizeKey("/", {}, gManagerWindow);
     is(input.value, "bar\u03DE/", "Text box should have updated value");
     is(gManagerWindow.document.getBindingParent(gManagerWindow.document.activeElement), input, "Search box should not have focus");
-    is(Preferences.get("extensions.inlinesettings1.string", "wrong"), "bar\u03DE/", "String pref should have been updated");
+    is(Services.prefs.getStringPref("extensions.inlinesettings1.string", "wrong"), "bar\u03DE/", "String pref should have been updated");
 
     ok(!settings[4].hasAttribute("first-row"), "Not the first row");
     input = settings[4].firstElementChild;
@@ -297,7 +296,7 @@ add_test(function() {
       is(MockFilePicker.mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
       is(input.value, testFile.path, "Label value should match file chosen");
       is(input.tooltipText, testFile.path, "Label tooltip should match file chosen");
-      is(Preferences.get("extensions.inlinesettings1.file", "wrong"), testFile.path, "File pref should match file chosen");
+      is(Services.prefs.getStringPref("extensions.inlinesettings1.file", "wrong"), testFile.path, "File pref should match file chosen");
 
       MockFilePicker.setFiles([curProcD]);
       MockFilePicker.returnValue = Ci.nsIFilePicker.returnCancel;
@@ -310,7 +309,7 @@ add_test(function() {
       is(MockFilePicker.mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
       is(input.value, testFile.path, "Label value should not have changed");
       is(input.tooltipText, testFile.path, "Label tooltip should not have changed");
-      is(Preferences.get("extensions.inlinesettings1.file", "wrong"), testFile.path, "File pref should not have changed");
+      is(Services.prefs.getStringPref("extensions.inlinesettings1.file", "wrong"), testFile.path, "File pref should not have changed");
 
       ok(!settings[7].hasAttribute("first-row"), "Not the first row");
       button = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "button");
@@ -329,7 +328,7 @@ add_test(function() {
       is(MockFilePicker.mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
       is(input.value, testFile.path, "Label value should match file chosen");
       is(input.tooltipText, testFile.path, "Label tooltip should match file chosen");
-      is(Preferences.get("extensions.inlinesettings1.directory", "wrong"), testFile.path, "Directory pref should match file chosen");
+      is(Services.prefs.getStringPref("extensions.inlinesettings1.directory", "wrong"), testFile.path, "Directory pref should match file chosen");
 
       MockFilePicker.setFiles([curProcD]);
       MockFilePicker.returnValue = Ci.nsIFilePicker.returnCancel;
@@ -342,7 +341,7 @@ add_test(function() {
       is(MockFilePicker.mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
       is(input.value, testFile.path, "Label value should not have changed");
       is(input.tooltipText, testFile.path, "Label tooltip should not have changed");
-      is(Preferences.get("extensions.inlinesettings1.directory", "wrong"), testFile.path, "Directory pref should not have changed");
+      is(Services.prefs.getStringPref("extensions.inlinesettings1.directory", "wrong"), testFile.path, "Directory pref should not have changed");
 
       var unsizedInput = gManagerWindow.document.getAnonymousElementByAttribute(settings[2], "anonid", "input");
       var sizedInput = gManagerWindow.document.getAnonymousElementByAttribute(settings[8], "anonid", "input");
@@ -401,9 +400,9 @@ add_test(function() {
     is(radios[1].selected, true, "Correct radio button should be selected");
     isnot(radios[2].selected, true, "Correct radio button should be selected");
     EventUtils.synthesizeMouseAtCenter(radios[0], { clickCount: 1 }, gManagerWindow);
-    is(Preferences.get("extensions.inlinesettings3.radioString", "wrong"), "india", "Radio pref should have been updated");
+    is(Services.prefs.getStringPref("extensions.inlinesettings3.radioString", "wrong"), "india", "Radio pref should have been updated");
     EventUtils.synthesizeMouseAtCenter(radios[2], { clickCount: 1 }, gManagerWindow);
-    is(Preferences.get("extensions.inlinesettings3.radioString", "wrong"), "kilo \u338F", "Radio pref should have been updated");
+    is(Services.prefs.getStringPref("extensions.inlinesettings3.radioString", "wrong"), "kilo \u338F", "Radio pref should have been updated");
 
     ok(!settings[3].hasAttribute("first-row"), "Not the first row");
     Services.prefs.setIntPref("extensions.inlinesettings3.menulist", 8);
@@ -609,7 +608,7 @@ add_test(function() {
   Services.prefs.setBoolPref("extensions.inlinesettings1.bool", false);
   Services.prefs.setIntPref("extensions.inlinesettings1.boolint", 1);
   Services.prefs.setIntPref("extensions.inlinesettings1.integer", 12);
-  Preferences.set("extensions.inlinesettings1.string", "bar\u03DE/");
+  Services.prefs.setStringPref("extensions.inlinesettings1.string", "bar\u03DE/");
   Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF9900");
   Services.prefs.setCharPref("extensions.inlinesettings1.file", profD.path);
   Services.prefs.setCharPref("extensions.inlinesettings1.directory", profD.path);
@@ -661,7 +660,7 @@ add_test(function() {
   // change the tests above.
   Services.prefs.setBoolPref("extensions.inlinesettings3.radioBool", false);
   Services.prefs.setIntPref("extensions.inlinesettings3.radioInt", 6);
-  Preferences.set("extensions.inlinesettings3.radioString", "kilo \u338F");
+  Services.prefs.setStringPref("extensions.inlinesettings3.radioString", "kilo \u338F");
   Services.prefs.setIntPref("extensions.inlinesettings3.menulist", 9);
 
   var addon = get_addon_element(gManagerWindow, "inlinesettings3@tests.mozilla.org");

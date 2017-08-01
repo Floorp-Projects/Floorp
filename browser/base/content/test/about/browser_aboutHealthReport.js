@@ -7,16 +7,16 @@ const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/te
 const HTTPS_BASE = "https://example.com/browser/browser/base/content/test/about/";
 
 const TELEMETRY_LOG_PREF = "toolkit.telemetry.log.level";
-const telemetryOriginalLogPref = Preferences.get(TELEMETRY_LOG_PREF, null);
+const telemetryOriginalLogPref = Services.prefs.getStringPref(TELEMETRY_LOG_PREF, null);
 
 const originalReportUrl = Services.prefs.getCharPref("datareporting.healthreport.about.reportUrl");
 
 registerCleanupFunction(function() {
   // Ensure we don't pollute prefs for next tests.
   if (telemetryOriginalLogPref) {
-    Preferences.set(TELEMETRY_LOG_PREF, telemetryOriginalLogPref);
+    Services.prefs.setStringPref(TELEMETRY_LOG_PREF, telemetryOriginalLogPref);
   } else {
-    Preferences.reset(TELEMETRY_LOG_PREF);
+    Services.prefs.clearUserPref(TELEMETRY_LOG_PREF);
   }
 
   try {
@@ -58,10 +58,10 @@ var gTests = [
 {
   desc: "Test the remote commands",
   async setup() {
-    Preferences.set(TELEMETRY_LOG_PREF, "Trace");
+    Services.prefs.setStringPref(TELEMETRY_LOG_PREF, "Trace");
     await setupPingArchive();
-    Preferences.set("datareporting.healthreport.about.reportUrl",
-                    HTTPS_BASE + "healthreport_testRemoteCommands.html");
+    Services.prefs.setCharPref("datareporting.healthreport.about.reportUrl",
+                               HTTPS_BASE + "healthreport_testRemoteCommands.html");
   },
   run(iframe) {
     return new Promise((resolve, reject) => {
