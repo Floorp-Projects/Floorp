@@ -22,34 +22,56 @@ const {TelemetryFeed} = Cu.import("resource://activity-stream/lib/TelemetryFeed.
 const {TopSitesFeed} = Cu.import("resource://activity-stream/lib/TopSitesFeed.jsm", {});
 const {TopStoriesFeed} = Cu.import("resource://activity-stream/lib/TopStoriesFeed.jsm", {});
 
+const DEFAULT_SITES = new Map([
+  // This first item is the global list fallback for any unexpected geos
+  ["", "https://www.youtube.com/,https://www.facebook.com/,https://www.wikipedia.org/,https://www.reddit.com/,https://www.amazon.com/,https://twitter.com/"],
+  ["US", "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/"],
+  ["CA", "https://www.youtube.com/,https://www.facebook.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://www.amazon.ca/,https://twitter.com/"],
+  ["DE", "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.de/,https://www.ebay.de/,https://www.wikipedia.org/,https://www.reddit.com/"],
+  ["PL", "https://www.youtube.com/,https://www.facebook.com/,https://allegro.pl/,https://www.wikipedia.org/,https://www.olx.pl/,https://www.wykop.pl/"],
+  ["RU", "https://vk.com/,https://www.youtube.com/,https://ok.ru/,https://www.avito.ru/,https://www.aliexpress.com/,https://www.wikipedia.org/"],
+  ["GB", "https://www.youtube.com/,https://www.facebook.com/,https://www.reddit.com/,https://www.amazon.co.uk/,https://www.bbc.co.uk/,https://www.ebay.co.uk/"],
+  ["FR", "https://www.youtube.com/,https://www.facebook.com/,https://www.wikipedia.org/,https://www.amazon.fr/,https://www.leboncoin.fr/,https://twitter.com/"]
+]);
+const GEO_PREF = "browser.search.region";
 const REASON_ADDON_UNINSTALL = 6;
 
-// For now, we only want to show top stories by default to the following locales
-const showTopStoriesByDefault = ["en-US", "en-CA"].includes(Services.locale.getRequestedLocale());
-// Sections, keyed by section id
-const SECTIONS = new Map([
-  ["topstories", {
-    feed: TopStoriesFeed,
-    prefTitle: "Fetches content recommendations from a configurable content provider",
-    showByDefault: showTopStoriesByDefault
-  }]
-]);
-
-const SECTION_FEEDS_CONFIG = Array.from(SECTIONS.entries()).map(entry => {
-  const id = entry[0];
-  const {feed: Feed, prefTitle, showByDefault: value} = entry[1];
-  return {
-    name: `section.${id}`,
-    factory: () => new Feed(),
-    title: prefTitle || `${id} section feed`,
-    value
-  };
-});
-
+// Configure default Activity Stream prefs with a plain `value` or a `getValue`
+// that computes a value. A `value_local_dev` is used for development defaults.
 const PREFS_CONFIG = new Map([
   ["default.sites", {
     title: "Comma-separated list of default top sites to fill in behind visited sites",
-    value: "https://www.facebook.com/,https://www.youtube.com/,https://www.amazon.com/,https://www.yahoo.com/,https://www.ebay.com/,https://twitter.com/"
+    getValue: ({geo}) => DEFAULT_SITES.get(DEFAULT_SITES.has(geo) ? geo : "")
+  }],
+  ["feeds.section.topstories.options", {
+    title: "Configuration options for top stories feed",
+    // This is a dynamic pref as it depends on the feed being shown or not
+    getValue: args => JSON.stringify({
+      api_key_pref: "extensions.pocket.oAuthConsumerKey",
+      // Use the opposite value as what default value the feed would have used
+      hidden: !PREFS_CONFIG.get("feeds.section.topstories").getValue(args),
+      learn_more_endpoint: "https://getpocket.com/firefox_learnmore?src=ff_newtab",
+      provider_description: "pocket_feedback_body",
+      provider_icon: "pocket",
+      provider_name: "Pocket",
+      read_more_endpoint: "https://getpocket.com/explore/trending?src=ff_new_tab",
+      stories_endpoint: `https://getpocket.com/v3/firefox/global-recs?consumer_key=$apiKey&locale_lang=${args.locale}`,
+      stories_referrer: "https://getpocket.com/recommendations",
+      survey_link: "https://www.surveymonkey.com/r/newtabffx",
+      topics_endpoint: `https://getpocket.com/v3/firefox/trending-topics?consumer_key=$apiKey&locale_lang=${args.locale}`
+    })
+  }],
+  ["migrationExpired", {
+    title: "Boolean flag that decides whether to show the migration message or not.",
+    value: false
+  }],
+  ["migrationLastShownDate", {
+    title: "Timestamp when migration message was last shown. In seconds.",
+    value: 0
+  }],
+  ["migrationRemainingDays", {
+    title: "Number of days to show the manual migration message",
+    value: 4
   }],
   ["showSearch", {
     title: "Show the Search bar on the New Tab page",
@@ -72,43 +94,21 @@ const PREFS_CONFIG = new Map([
   ["telemetry.ping.endpoint", {
     title: "Telemetry server endpoint",
     value: "https://tiles.services.mozilla.com/v4/links/activity-stream"
-  }],
-  ["feeds.section.topstories.options", {
-    title: "Configuration options for top stories feed",
-    value: `{
-      "stories_endpoint": "https://getpocket.com/v3/firefox/global-recs?consumer_key=$apiKey&locale_lang=$locale",
-      "stories_referrer": "https://getpocket.com/recommendations",
-      "topics_endpoint": "https://getpocket.com/v3/firefox/trending-topics?consumer_key=$apiKey&locale_lang=$locale",
-      "read_more_endpoint": "https://getpocket.com/explore/trending?src=ff_new_tab",
-      "learn_more_endpoint": "https://getpocket.com/firefox_learnmore?src=ff_newtab",
-      "survey_link": "https://www.surveymonkey.com/r/newtabffx",
-      "api_key_pref": "extensions.pocket.oAuthConsumerKey",
-      "provider_name": "Pocket",
-      "provider_icon": "pocket",
-      "provider_description": "pocket_feedback_body",
-      "hidden": ${!showTopStoriesByDefault}
-    }`
-  }],
-  ["migrationExpired", {
-    title: "Boolean flag that decides whether to show the migration message or not.",
-    value: false
-  }],
-  ["migrationRemainingDays", {
-    title: "Number of days to show the manual migration message",
-    value: 4
-  }],
-  ["migrationLastShownDate", {
-    title: "Timestamp when migration message was last shown. In seconds.",
-    value: 0
   }]
 ]);
 
-const FEEDS_CONFIG = new Map();
-for (const {name, factory, title, value} of SECTION_FEEDS_CONFIG.concat([
+// Array of each feed's FEEDS_CONFIG factory and values to add to PREFS_CONFIG
+const FEEDS_DATA = [
   {
     name: "localization",
     factory: () => new LocalizationFeed(),
     title: "Initialize strings and detect locale for Activity Stream",
+    value: true
+  },
+  {
+    name: "migration",
+    factory: () => new ManualMigration(),
+    title: "Manual migration wizard",
     value: true
   },
   {
@@ -128,6 +128,20 @@ for (const {name, factory, title, value} of SECTION_FEEDS_CONFIG.concat([
     factory: () => new PrefsFeed(PREFS_CONFIG),
     title: "Preferences",
     value: true
+  },
+  {
+    name: "section.topstories",
+    factory: () => new TopStoriesFeed(),
+    title: "Fetches content recommendations from a configurable content provider",
+    // Dynamically determine if Pocket should be shown for a geo / locale
+    getValue: ({geo, locale}) => {
+      const locales = ({
+        "US": ["en-US", "en-GB", "en-ZA"],
+        "CA": ["en-US", "en-GB", "en-ZA"],
+        "DE": ["de", "de-DE", "de-AT", "de-CH"]
+      })[geo];
+      return !!locales && locales.includes(locale);
+    }
   },
   {
     name: "snippets",
@@ -152,17 +166,14 @@ for (const {name, factory, title, value} of SECTION_FEEDS_CONFIG.concat([
     factory: () => new TopSitesFeed(),
     title: "Queries places and gets metadata for Top Sites section",
     value: true
-  },
-  {
-    name: "migration",
-    factory: () => new ManualMigration(),
-    title: "Manual migration wizard",
-    value: true
   }
-])) {
-  const pref = `feeds.${name}`;
-  FEEDS_CONFIG.set(pref, factory);
-  PREFS_CONFIG.set(pref, {title, value});
+];
+
+const FEEDS_CONFIG = new Map();
+for (const config of FEEDS_DATA) {
+  const pref = `feeds.${config.name}`;
+  FEEDS_CONFIG.set(pref, config.factory);
+  PREFS_CONFIG.set(pref, config);
 }
 
 this.ActivityStream = class ActivityStream {
@@ -183,15 +194,22 @@ this.ActivityStream = class ActivityStream {
     this._defaultPrefs = new DefaultPrefs(PREFS_CONFIG);
   }
   init() {
+    this._updateDynamicPrefs();
     this._defaultPrefs.init();
+
     this.store.init(this.feeds);
     this.store.dispatch({
       type: at.INIT,
       data: {version: this.options.version}
     });
+
     this.initialized = true;
   }
   uninit() {
+    if (this.geo === "") {
+      Services.prefs.removeObserver(GEO_PREF, this);
+    }
+
     this.store.dispatch({type: at.UNINIT});
     this.store.uninit();
 
@@ -205,7 +223,50 @@ this.ActivityStream = class ActivityStream {
       this._defaultPrefs.reset();
     }
   }
+  _updateDynamicPrefs() {
+    // Save the geo pref if we have it
+    if (Services.prefs.prefHasUserValue(GEO_PREF)) {
+      this.geo = Services.prefs.getStringPref(GEO_PREF);
+    } else if (this.geo !== "") {
+      // Watch for geo changes and use a dummy value for now
+      Services.prefs.addObserver(GEO_PREF, this);
+      this.geo = "";
+    }
+
+    this.locale = Services.locale.getRequestedLocale();
+
+    // Update the pref config of those with dynamic values
+    for (const pref of PREFS_CONFIG.keys()) {
+      const prefConfig = PREFS_CONFIG.get(pref);
+      if (!prefConfig.getValue) {
+        continue;
+      }
+
+      const newValue = prefConfig.getValue({
+        geo: this.geo,
+        locale: this.locale
+      });
+
+      // If there's an existing value and it has changed, that means we need to
+      // overwrite the default with the new value.
+      if (prefConfig.value !== undefined && prefConfig.value !== newValue) {
+        this._defaultPrefs.setDefaultPref(pref, newValue);
+      }
+
+      prefConfig.value = newValue;
+    }
+  }
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "nsPref:changed":
+        // We should only expect one geo change, so update and stop observing
+        if (data === GEO_PREF) {
+          this._updateDynamicPrefs();
+          Services.prefs.removeObserver(GEO_PREF, this);
+        }
+        break;
+    }
+  }
 };
 
-this.PREFS_CONFIG = PREFS_CONFIG;
-this.EXPORTED_SYMBOLS = ["ActivityStream", "SECTIONS"];
+this.EXPORTED_SYMBOLS = ["ActivityStream", "PREFS_CONFIG"];
