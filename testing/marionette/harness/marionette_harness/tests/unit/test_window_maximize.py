@@ -60,11 +60,11 @@ class TestWindowMaximize(MarionetteTestCase):
         self.assertIsInstance(rect["y"], int)
 
     def test_maximize(self):
-        rect = self.marionette.maximize_window()
-        self.assert_window_rect(rect)
-        size = self.marionette.window_size
-        self.assertEqual(size, rect)
-        self.assert_window_maximized(size)
+        maximize_resp = self.marionette.maximize_window()
+        self.assert_window_rect(maximize_resp)
+        window_rect_resp = self.marionette.window_rect
+        self.assertEqual(maximize_resp, window_rect_resp)
+        self.assert_window_maximized(maximize_resp)
 
     def test_maximize_twice_restores(self):
         maximized = self.marionette.maximize_window()
