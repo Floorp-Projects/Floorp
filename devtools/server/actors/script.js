@@ -17,7 +17,6 @@ const { assert, dumpn } = DevToolsUtils;
 const promise = require("promise");
 const xpcInspector = require("xpcInspector");
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
-const object = require("sdk/util/object");
 const { threadSpec } = require("devtools/shared/specs/script");
 
 const { resolve, reject, all } = promise;
@@ -2040,7 +2039,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   }
 });
 
-ThreadActor.prototype.requestTypes = object.merge(ThreadActor.prototype.requestTypes, {
+Object.assign(ThreadActor.prototype.requestTypes, {
   "attach": ThreadActor.prototype.onAttach,
   "detach": ThreadActor.prototype.onDetach,
   "reconfigure": ThreadActor.prototype.onReconfigure,

@@ -70,7 +70,6 @@ FormAutofillPreferences.prototype = {
     let formAutofillGroup;
     let addressAutofill = document.createElementNS(XUL_NS, "hbox");
     let addressAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
-    let spacer = document.createElementNS(XUL_NS, "spacer");
     let savedAddressesBtn = document.createElementNS(XUL_NS, "button");
 
     if (this.useOldOrganization) {
@@ -105,11 +104,10 @@ FormAutofillPreferences.prototype = {
       addressAutofillCheckbox.setAttribute("checked", true);
     }
 
-    spacer.flex = 1;
+    addressAutofillCheckbox.flex = 1;
 
     formAutofillGroup.appendChild(addressAutofill);
     addressAutofill.appendChild(addressAutofillCheckbox);
-    addressAutofill.appendChild(spacer);
     addressAutofill.appendChild(savedAddressesBtn);
   },
 

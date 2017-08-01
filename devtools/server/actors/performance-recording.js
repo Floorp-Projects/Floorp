@@ -7,7 +7,6 @@
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { performanceRecordingSpec } = require("devtools/shared/specs/performance-recording");
 
-loader.lazyRequireGetter(this, "merge", "sdk/util/object", true);
 loader.lazyRequireGetter(this, "RecordingUtils",
   "devtools/shared/performance/recording-utils");
 loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
@@ -19,7 +18,8 @@ loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
  *
  * @see devtools/shared/shared/performance.js for documentation.
  */
-const PerformanceRecordingActor = ActorClassWithSpec(performanceRecordingSpec, merge({
+const PerformanceRecordingActor = ActorClassWithSpec(performanceRecordingSpec,
+Object.assign({
   form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
@@ -142,7 +142,6 @@ const PerformanceRecordingActor = ActorClassWithSpec(performanceRecordingSpec, m
       }
     }
   },
-
 }, PerformanceRecordingCommon));
 
 exports.PerformanceRecordingActor = PerformanceRecordingActor;

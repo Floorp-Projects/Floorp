@@ -7,7 +7,6 @@
  * Utility functions for collapsing markers into a waterfall.
  */
 
-const { extend } = require("sdk/util/object");
 const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
 
 /**
@@ -19,7 +18,7 @@ const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/ma
  * @return object
  */
 function createParentNode(marker) {
-  return extend(marker, { submarkers: [] });
+  return Object.assign({}, marker, { submarkers: [] });
 }
 
 /**
@@ -56,7 +55,7 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
     if (collapsible) {
       extendedProps.submarkers = [];
     }
-    curr = extend(curr, extendedProps);
+    Object.assign(curr, extendedProps);
 
     // If not nestible, just push it inside the root node. Additionally,
     // markers originating outside the main thread are considered to be
