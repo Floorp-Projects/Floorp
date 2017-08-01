@@ -65,6 +65,7 @@ class GeckoInputConnection
     private String mIMETypeHint = "";
     private String mIMEModeHint = "";
     private String mIMEActionHint = "";
+    private boolean mInPrivateBrowsing;
     private boolean mFocused;
 
     private String mCurrentInputMethod = "";
@@ -609,6 +610,10 @@ class GeckoInputConnection
             outAttrs.actionLabel = mIMEActionHint;
         }
 
+        if (mInPrivateBrowsing) {
+            outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
+        }
+
         Context context = getView().getContext();
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         if (Math.min(metrics.widthPixels, metrics.heightPixels) > INLINE_IME_MIN_DISPLAY_SIZE) {
@@ -938,7 +943,8 @@ class GeckoInputConnection
     }
 
     @Override
-    public void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint) {
+    public void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint,
+                                 boolean inPrivateBrowsing) {
         // For some input type we will use a widget to display the ui, for those we must not
         // display the ime. We can display a widget for date and time types and, if the sdk version
         // is 11 or greater, for datetime/month/week as well.
@@ -965,6 +971,7 @@ class GeckoInputConnection
         mIMETypeHint = (typeHint == null) ? "" : typeHint;
         mIMEModeHint = (modeHint == null) ? "" : modeHint;
         mIMEActionHint = (actionHint == null) ? "" : actionHint;
+        mInPrivateBrowsing = inPrivateBrowsing;
 
         // These fields are reset here and will be updated when restartInput is called below
         mUpdateRequest = null;
