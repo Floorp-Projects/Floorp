@@ -199,7 +199,7 @@ class PageAction {
     this.tabContext.shutdown();
     this.hide();
   }
-};
+}
 
 this.pageAction = class extends ExtensionAPI {
   onManifestEntry(entryName) {

@@ -230,7 +230,7 @@ SharedPreferencesImpl.prototype = Object.freeze({
 
     if (msg.scope !== this._scope ||
         ((this._scope === Scope.PROFILE) && (msg.profileName !== this._profileName)) ||
-        ((this._scope === Scope.GLOBAL)  && (msg.branch !== this._branch))) {
+        ((this._scope === Scope.GLOBAL) && (msg.branch !== this._branch))) {
       return;
     }
 

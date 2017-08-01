@@ -228,24 +228,21 @@ InternalPrompt.prototype = {
     // also, the nsIPrompt flavor has 5 args instead of 6.
     if (typeof arguments[2] == "object")
       return this.nsIPrompt_prompt.apply(this, arguments);
-    else
-      return this.nsIAuthPrompt_prompt.apply(this, arguments);
+    return this.nsIAuthPrompt_prompt.apply(this, arguments);
   },
 
   promptUsernameAndPassword: function promptUsernameAndPassword() {
     // Both have 6 args, so use types.
     if (typeof arguments[2] == "object")
       return this.nsIPrompt_promptUsernameAndPassword.apply(this, arguments);
-    else
-      return this.nsIAuthPrompt_promptUsernameAndPassword.apply(this, arguments);
+    return this.nsIAuthPrompt_promptUsernameAndPassword.apply(this, arguments);
   },
 
   promptPassword: function promptPassword() {
     // Both have 5 args, so use types.
     if (typeof arguments[2] == "object")
       return this.nsIPrompt_promptPassword.apply(this, arguments);
-    else
-      return this.nsIAuthPrompt_promptPassword.apply(this, arguments);
+    return this.nsIAuthPrompt_promptPassword.apply(this, arguments);
   },
 
   /* ----------  nsIPrompt  ---------- */

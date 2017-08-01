@@ -297,7 +297,7 @@ var WebrtcUI = {
 
     let uri = aContentWindow.document.documentURIObject;
     let host = uri.host;
-    let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name  + "'" : host;
+    let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name + "'" : host;
     let message = Strings.browser.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
 
     let options = { inputs: [] };

@@ -59,7 +59,7 @@ function visitObserver(subject, topic, data) {
   let uri = subject.QueryInterface(Ci.nsIURI);
   do_print("Observer: " + uri.spec);
   gVisitURLs.push(uri.spec);
-};
+}
 
 // Track the <browser> where the tests are happening
 var gBrowser;
