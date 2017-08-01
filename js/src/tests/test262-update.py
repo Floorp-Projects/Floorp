@@ -316,7 +316,7 @@ def process_test262(test262Dir, test262OutDir, strictTests):
     explicitIncludes = {}
     explicitIncludes["intl402"] = ["testBuiltInObject.js"]
     explicitIncludes[os.path.join("built-ins", "DataView")] = ["byteConversionValues.js"]
-    explicitIncludes[os.path.join("built-ins", "Promise")] = ["PromiseHelper.js"]
+    explicitIncludes[os.path.join("built-ins", "Promise")] = ["promiseHelper.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArray")] = ["byteConversionValues.js",
         "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
