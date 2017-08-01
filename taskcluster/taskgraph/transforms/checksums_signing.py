@@ -45,6 +45,7 @@ def validate(config, jobs):
 def make_checksums_signing_description(config, jobs):
     for job in jobs:
         dep_job = job['dependent-task']
+        attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
         treeherder.setdefault('symbol', 'tc-cs(N)')
@@ -55,7 +56,15 @@ def make_checksums_signing_description(config, jobs):
         treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')
 
-        label = job.get('label', "checksumssigning-{}".format(dep_job.label))
+        label = job['label']
+        description = (
+            "Signing of Checksums file for locale '{locale}' for build '"
+            "{build_platform}/{build_type}'".format(
+                locale=attributes.get('locale', 'en-US'),
+                build_platform=attributes.get('build_platform'),
+                build_type=attributes.get('build_type')
+            )
+        )
         dependencies = {"beetmover": dep_job.label}
 
         attributes = copy_attributes_from_dependent_job(dep_job)
@@ -76,8 +85,7 @@ def make_checksums_signing_description(config, jobs):
         signing_cert_scope = get_signing_cert_scope(config)
         task = {
             'label': label,
-            'description': "Checksum signing {} ".format(
-                dep_job.task["metadata"]["description"]),
+            'description': description,
             'worker-type': "scriptworker-prov-v1/signing-linux-v1",
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': upstream_artifacts,
