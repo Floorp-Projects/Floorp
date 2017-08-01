@@ -4399,7 +4399,7 @@ nsNavHistoryResult::GetSkipTags(bool *aSkipTags)
 NS_IMETHODIMP
 nsNavHistoryResult::GetSkipDescendantsOnItemRemoval(bool *aSkipDescendantsOnItemRemoval)
 {
-  *aSkipDescendantsOnItemRemoval = false;
+  *aSkipDescendantsOnItemRemoval = true;
   return NS_OK;
 }
 
