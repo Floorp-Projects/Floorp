@@ -248,3 +248,8 @@ toolbar[brighttext] #pocket-button {
     width: 16px;
   }
 }
+
+#pageAction-panel-pocket,
+#pageAction-urlbar-pocket {
+  list-style-image: url("chrome://pocket-shared/skin/pocket.svg");
+}

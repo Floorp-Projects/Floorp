@@ -393,3 +393,7 @@ user_pref("extensions.screenshots.system-disabled", true);
 // The maintenance can take a relatively long time which may cause unnecessary
 // intermittents and slow down tests.
 user_pref("places.database.lastMaintenance", 7258114800);
+
+// Disable the Pocket page action and enable the CUI widget until bug 1385418 is
+// fixed.
+user_pref("extensions.pocket.disablePageAction", true);
