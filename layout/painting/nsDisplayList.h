@@ -1555,7 +1555,7 @@ private:
   // nsDisplayList class is defined below this class, so we can't use it here.
   nsDisplayList*                 mScrollInfoItemsForHoisting;
   nsTArray<ActiveScrolledRoot*>  mActiveScrolledRoots;
-  nsTArray<DisplayItemClipChain*> mClipChainsToDestroy;
+  AutoTArray<DisplayItemClipChain*, 128> mClipChainsToDestroy;
   nsTArray<nsDisplayItem*> mTemporaryItems;
   const ActiveScrolledRoot*      mActiveScrolledRootForRootScrollframe;
   nsDisplayListBuilderMode       mMode;
