@@ -478,6 +478,9 @@ private:
       , aaMode(mozilla::gfx::AntialiasMode::SUBPIXEL)
       , patternTransformChanged(false)
       , mBlendOpacity(0.0f)
+#ifdef DEBUG
+      , mContentChanged(false)
+#endif
     {}
 
     mozilla::gfx::CompositionOp op;
@@ -509,6 +512,8 @@ private:
     Matrix mBlendMaskTransform;
 #ifdef DEBUG
     bool mWasPushedForBlendBack;
+    // Whether the content of this AzureState changed after construction.
+    bool mContentChanged;
 #endif
   };
 
