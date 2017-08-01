@@ -1601,6 +1601,20 @@ PresShell::GetSelection(RawSelectionType aRawSelectionType,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(Selection*)
+PresShell::GetSelection(RawSelectionType aRawSelectionType)
+{
+  if (!mSelection) {
+    return nullptr;
+  }
+
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  nsISelection* selection =
+    frameSelection->GetSelection(ToSelectionType(aRawSelectionType));
+
+  return static_cast<Selection*>(selection);
+}
+
 Selection*
 PresShell::GetCurrentSelection(SelectionType aSelectionType)
 {
