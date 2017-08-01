@@ -464,12 +464,12 @@ protected:
   // State-watching manager.
   WatchManager<MediaDecoder> mWatchManager;
 
-  double ExplicitDuration() { return mExplicitDuration.Ref().ref(); }
+  double ExplicitDuration() { return mExplicitDuration.ref(); }
 
   void SetExplicitDuration(double aValue)
   {
     MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-    mExplicitDuration.Set(Some(aValue));
+    mExplicitDuration = Some(aValue);
 
     // We Invoke DurationChanged explicitly, rather than using a watcher, so
     // that it takes effect immediately, rather than at the end of the current task.
@@ -714,7 +714,7 @@ protected:
 
   // Media duration set explicitly by JS. At present, this is only ever present
   // for MSE.
-  Canonical<Maybe<double>> mExplicitDuration;
+  Maybe<double> mExplicitDuration;
 
   // Set to one of the valid play states.
   // This can only be changed on the main thread while holding the decoder
@@ -767,10 +767,6 @@ public:
   AbstractCanonical<bool>* CanonicalLooping()
   {
     return &mLooping;
-  }
-  AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration()
-  {
-    return &mExplicitDuration;
   }
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
   AbstractCanonical<bool>* CanonicalLogicallySeeking()

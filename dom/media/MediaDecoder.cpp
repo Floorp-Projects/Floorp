@@ -380,7 +380,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_CANONICAL(mVolume, aInit.mVolume)
   , INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch)
   , INIT_CANONICAL(mLooping, aInit.mLooping)
-  , INIT_CANONICAL(mExplicitDuration, Maybe<double>())
   , INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING)
   , INIT_CANONICAL(mLogicallySeeking, false)
   , INIT_CANONICAL(mSameOriginMedia, false)
@@ -1162,8 +1161,8 @@ MediaDecoder::DurationChanged()
 
   // Use the explicit duration if we have one.
   // Otherwise use the duration mirrored from MDSM.
-  if (mExplicitDuration.Ref().isSome()) {
-    mDuration = mExplicitDuration.Ref().ref();
+  if (mExplicitDuration.isSome()) {
+    mDuration = mExplicitDuration.ref();
   } else if (mStateMachineDuration.Ref().isSome()) {
     mDuration = mStateMachineDuration.Ref().ref().ToSeconds();
   }
@@ -1179,9 +1178,8 @@ MediaDecoder::DurationChanged()
 
   // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=28822 for a discussion
   // of whether we should fire durationchange on explicit infinity.
-  if (mFiredMetadataLoaded
-      && (!mozilla::IsInfinite<double>(mDuration)
-          || mExplicitDuration.Ref().isSome())) {
+  if (mFiredMetadataLoaded &&
+      (!mozilla::IsInfinite<double>(mDuration) || mExplicitDuration.isSome())) {
     GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }
 
