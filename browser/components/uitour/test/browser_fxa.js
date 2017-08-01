@@ -42,8 +42,7 @@ var tests = [
     await showMenuPromise("appMenu");
     await showHighlightPromise("accountStatus");
     let highlight = document.getElementById("UITourHighlightContainer");
-    let photon = Services.prefs.getBoolPref("browser.photon.structure.enabled");
-    let expectedTarget = photon ? "appMenu-fxa-avatar" : "PanelUI-fxa-avatar";
+    let expectedTarget = "appMenu-fxa-avatar";
     is(highlight.popupBoxObject.anchorNode.id, expectedTarget, "Anchored on avatar");
     is(highlight.getAttribute("targetName"), "accountStatus", "Correct highlight target");
   }),
