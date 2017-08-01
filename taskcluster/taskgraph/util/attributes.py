@@ -19,7 +19,7 @@ RELEASE_PROJECTS = {
     'mozilla-release',
 }
 
-_OPTIONAL_ATTRIBUTES = ('nightly', 'signed')
+_OPTIONAL_ATTRIBUTES = ('nightly', 'signed', 'l10n_chunk')
 
 
 def attrmatch(attributes, **kwargs):
