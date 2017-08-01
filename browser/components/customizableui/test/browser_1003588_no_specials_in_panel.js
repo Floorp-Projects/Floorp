@@ -20,7 +20,7 @@ function simulateItemDragAndEnd(aToDrag, aTarget) {
 }
 
 add_task(async function checkNoAddingToPanel() {
-  let area = gPhotonStructure ? CustomizableUI.AREA_FIXED_OVERFLOW_PANEL : CustomizableUI.AREA_PANEL;
+  let area = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
   let previousPlacements = getAreaWidgetIds(area);
   CustomizableUI.addWidgetToArea("separator", area);
   CustomizableUI.addWidgetToArea("spring", area);
@@ -62,7 +62,7 @@ add_task(async function checkAddingToToolbar() {
 
 add_task(async function checkDragging() {
   let startArea = CustomizableUI.AREA_NAVBAR;
-  let targetArea = gPhotonStructure ? CustomizableUI.AREA_FIXED_OVERFLOW_PANEL : CustomizableUI.AREA_PANEL;
+  let targetArea = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
   let startingToolbarPlacements = getAreaWidgetIds(startArea);
   let startingTargetPlacements = getAreaWidgetIds(targetArea);
 
@@ -81,12 +81,10 @@ add_task(async function checkDragging() {
 
   await startCustomizing();
   let existingSpecial = null;
-  if (gPhotonStructure) {
-    existingSpecial = gCustomizeMode.visiblePalette.querySelector("toolbarspring");
-    ok(existingSpecial, "Should have a flexible space in the palette by default in photon");
-  }
+  existingSpecial = gCustomizeMode.visiblePalette.querySelector("toolbarspring");
+  ok(existingSpecial, "Should have a flexible space in the palette by default in photon");
   for (let id of elementsToMove) {
-    simulateItemDragAndEnd(document.getElementById(id), PanelUI.contents);
+    simulateItemDragAndEnd(document.getElementById(id), document.getElementById(targetArea));
   }
 
   assertAreaPlacements(startArea, placementsWithSpecials);
