@@ -4531,6 +4531,19 @@ class LValueToString : public LInstructionHelper<1, BOX_PIECES, 1>
     }
 };
 
+// Convert a value to an object.
+class LValueToObject : public LInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(ValueToObject)
+
+    explicit LValueToObject(const LBoxAllocation& input) {
+        setBoxOperand(Input, input);
+    }
+
+    static const size_t Input = 0;
+};
+
 // Convert a value to an object or null pointer.
 class LValueToObjectOrNull : public LInstructionHelper<1, BOX_PIECES, 0>
 {
