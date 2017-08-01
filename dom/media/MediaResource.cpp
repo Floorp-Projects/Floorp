@@ -1569,6 +1569,10 @@ MediaResourceIndex::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     return rv;
   }
   mOffset += *aBytes;
+  if (mOffset < 0) {
+    // Very unlikely overflow; just return to position 0.
+    mOffset = 0;
+  }
   return NS_OK;
 }
 
@@ -1597,6 +1601,10 @@ MediaResourceIndex::ReadAt(int64_t aOffset,
   }
 
   const int64_t endOffset = aOffset + aCount;
+  if (aOffset < 0 || endOffset < aOffset) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   const int64_t lastBlockOffset = CacheOffsetContaining(endOffset - 1);
 
   if (mCachedBytes != 0 && mCachedOffset + mCachedBytes >= aOffset &&
@@ -1909,6 +1917,9 @@ MediaResourceIndex::UncachedReadAt(int64_t aOffset,
                                    uint32_t* aBytes) const
 {
   *aBytes = 0;
+  if (aOffset < 0) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
   if (aCount != 0) {
     for (;;) {
       uint32_t bytesRead = 0;
@@ -1925,6 +1936,10 @@ MediaResourceIndex::UncachedReadAt(int64_t aOffset,
         break;
       }
       aOffset += bytesRead;
+      if (aOffset < 0) {
+        // Very unlikely overflow.
+        return NS_ERROR_FAILURE;
+      }
       aBuffer += bytesRead;
     }
   }
@@ -1940,6 +1955,9 @@ MediaResourceIndex::UncachedRangedReadAt(int64_t aOffset,
 {
   *aBytes = 0;
   uint32_t count = aRequestedCount + aExtraCount;
+  if (aOffset < 0 || count < aRequestedCount) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
   if (count != 0) {
     for (;;) {
       uint32_t bytesRead = 0;
@@ -1957,6 +1975,10 @@ MediaResourceIndex::UncachedRangedReadAt(int64_t aOffset,
         break;
       }
       aOffset += bytesRead;
+      if (aOffset < 0) {
+        // Very unlikely overflow.
+        return NS_ERROR_FAILURE;
+      }
       aBuffer += bytesRead;
     }
   }
@@ -1985,6 +2007,9 @@ MediaResourceIndex::Seek(int32_t aWhence, int64_t aOffset)
       return NS_ERROR_FAILURE;
   }
 
+  if (aOffset < 0) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
   mOffset = aOffset;
 
   return NS_OK;
