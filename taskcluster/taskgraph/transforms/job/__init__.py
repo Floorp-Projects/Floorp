@@ -27,6 +27,7 @@ from voluptuous import (
     Extra,
     Optional,
     Required,
+    Exclusive,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,13 +60,14 @@ job_description_schema = Schema({
     Optional('index'): task_description_schema['index'],
     Optional('run-on-projects'): task_description_schema['run-on-projects'],
     Optional('coalesce'): task_description_schema['coalesce'],
-    Optional('optimizations'): task_description_schema['optimizations'],
+    Exclusive('optimization', 'optimization'): task_description_schema['optimization'],
     Optional('needs-sccache'): task_description_schema['needs-sccache'],
 
-    # The "when" section contains descriptions of the circumstances
-    # under which this task should be included in the task graph.  This
-    # will be converted into an element in the `optimizations` list.
-    Optional('when'): Any({
+    # The "when" section contains descriptions of the circumstances under which
+    # this task should be included in the task graph.  This will be converted
+    # into an optimization, so it cannot be specified in a job description that
+    # also gives 'optimization'.
+    Exclusive('when', 'optimization'): Any({
         # This task only needs to be run if a file matching one of the given
         # patterns has changed in the push.  The patterns use the mozpack
         # match function (python/mozbuild/mozpack/path.py).
@@ -103,10 +105,11 @@ def validate(config, jobs):
 def rewrite_when_to_optimization(config, jobs):
     for job in jobs:
         when = job.pop('when', {})
-        files_changed = when.get('files-changed')
-        if not files_changed:
+        if not when:
             yield job
             continue
+
+        files_changed = when.get('files-changed')
 
         # add some common files
         files_changed.extend([
@@ -118,7 +121,7 @@ def rewrite_when_to_optimization(config, jobs):
                 job['worker']['docker-image']['in-tree']))
 
         # "only when files changed" implies "skip if files have not changed"
-        job.setdefault('optimizations', []).append(['skip-unless-changed', files_changed])
+        job['optimization'] = {'skip-unless-changed': files_changed}
 
         assert 'when' not in job
         yield job
