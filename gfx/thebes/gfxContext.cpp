@@ -827,7 +827,6 @@ gfxContext::Paint(gfxFloat alpha)
 void
 gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
 {
-  Save();
   mDT->PushLayer(content == gfxContentType::COLOR, aOpacity, aMask, aMaskTransform);
 }
 
@@ -853,8 +852,6 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, S
                                  mDT->GetOpaqueRect().Contains(clipExtents)) &&
                                 !mDT->GetUserData(&sDontUseAsSourceKey);
 
-  Save();
-
   if (pushOpaqueWithCopiedBG) {
     mDT->PushLayer(true, aOpacity, aMask, aMaskTransform, IntRect(), true);
   } else {
@@ -866,7 +863,6 @@ void
 gfxContext::PopGroupAndBlend()
 {
   mDT->PopLayer();
-  Restore();
 }
 
 #ifdef MOZ_DUMP_PAINTING
