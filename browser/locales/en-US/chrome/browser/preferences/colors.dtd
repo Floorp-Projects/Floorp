@@ -14,17 +14,17 @@
 <!ENTITY  overrideDefaultPageColors.never.label  "Never">
 
 <!ENTITY  color                           "Text and Background">
-<!ENTITY  textColor.label                 "Text:">
-<!ENTITY  textColor.accesskey             "T">
-<!ENTITY  backgroundColor.label           "Background:">
-<!ENTITY  backgroundColor.accesskey       "B">
+<!ENTITY  textColor2.label                "Text">
+<!ENTITY  textColor2.accesskey            "T">
+<!ENTITY  backgroundColor2.label          "Background">
+<!ENTITY  backgroundColor2.accesskey      "B">
 <!ENTITY  useSystemColors.label           "Use system colors">
 <!ENTITY  useSystemColors.accesskey       "s">
 
 <!ENTITY  underlineLinks.label            "Underline links">
 <!ENTITY  underlineLinks.accesskey        "U">
 <!ENTITY  links                           "Link Colors">
-<!ENTITY  linkColor.label                 "Unvisited Links:">
-<!ENTITY  linkColor.accesskey             "L">
-<!ENTITY  visitedLinkColor.label          "Visited Links:">
-<!ENTITY  visitedLinkColor.accesskey      "V">
+<!ENTITY  linkColor2.label                "Unvisited Links">
+<!ENTITY  linkColor2.accesskey            "L">
+<!ENTITY  visitedLinkColor2.label         "Visited Links">
+<!ENTITY  visitedLinkColor2.accesskey     "V">
