@@ -519,16 +519,8 @@ private:
     return mDuration.Ref().ref();
   }
 
-  // Recomputes the canonical duration from various sources.
-  void RecomputeDuration();
-
-
   // FrameID which increments every time a frame is pushed to our queue.
   FrameID mCurrentFrameID;
-
-  // The highest timestamp that our position has reached. Monotonically
-  // increasing.
-  Watchable<media::TimeUnit> mObservedDuration;
 
   // Media Fragment end time.
   media::TimeUnit mFragmentEndTime = media::TimeUnit::Invalid();
@@ -669,9 +661,6 @@ private:
 private:
   // The buffered range. Mirrored from the decoder thread.
   Mirror<media::TimeIntervals> mBuffered;
-
-  // The duration explicitly set by JS, mirrored from the main thread.
-  Mirror<Maybe<double>> mExplicitDuration;
 
   // The current play state, mirrored from the main thread.
   Mirror<MediaDecoder::PlayState> mPlayState;
