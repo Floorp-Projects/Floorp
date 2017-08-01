@@ -5,14 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'actor-registry-utils.js',
-    'audionodes.json',
-    'automation-timeline.js',
-    'css-grid-utils.js',
-    'make-debugger.js',
-    'map-uri-to-addon-id.js',
-    'shapes-geometry-utils.js',
-    'stack.js',
-    'TabSources.js',
-    'walker-search.js',
+    'listeners.js',
+    'utils.js',
+    'worker-listeners.js',
 )
