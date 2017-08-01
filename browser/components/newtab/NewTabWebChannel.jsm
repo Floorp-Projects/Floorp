@@ -5,7 +5,6 @@ this.EXPORTED_SYMBOLS = ["NewTabWebChannel"];
 const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
                                   "resource:///modules/NewTabPrefsProvider.jsm");
@@ -245,9 +244,9 @@ NewTabWebChannelImpl.prototype = {
    * Sets up the internal state
    */
   setupState() {
-    this._prefs.enabled = Preferences.get(PREF_ENABLED, false);
+    this._prefs.enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
 
-    let mode = Preferences.get(PREF_MODE, "production");
+    let mode = Services.prefs.getStringPref(PREF_MODE, "production");
     if (!(mode in NewTabRemoteResources.MODE_CHANNEL_MAP)) {
       mode = "production";
     }

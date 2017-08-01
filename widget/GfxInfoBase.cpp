@@ -206,8 +206,9 @@ GetPrefValueForFeature(int32_t aFeature, int32_t& aValue, nsACString& aFailureId
 
   nsCString failureprefname(prefname);
   failureprefname += ".failureid";
-  nsAdoptingCString failureValue = Preferences::GetCString(failureprefname.get());
-  if (failureValue) {
+  nsAutoCString failureValue;
+  nsresult rv = Preferences::GetCString(failureprefname.get(), failureValue);
+  if (NS_SUCCEEDED(rv)) {
     aFailureId = failureValue.get();
   } else {
     aFailureId = "FEATURE_FAILURE_BLACKLIST_PREF";
@@ -245,7 +246,7 @@ static bool
 GetPrefValueForDriverVersion(nsCString& aVersion)
 {
   return NS_SUCCEEDED(Preferences::GetCString(SUGGESTED_VERSION_PREF,
-                                              &aVersion));
+                                              aVersion));
 }
 
 static void

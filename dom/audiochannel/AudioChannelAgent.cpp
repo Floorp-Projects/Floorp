@@ -118,9 +118,10 @@ AudioChannelAgent::FindCorrectWindow(nsPIDOMWindowInner* aWindow)
     return NS_OK;
   }
 
-  nsAdoptingCString systemAppUrl =
-    mozilla::Preferences::GetCString("b2g.system_startup_url");
-  if (!systemAppUrl) {
+  nsAutoCString systemAppUrl;
+  nsresult rv =
+    mozilla::Preferences::GetCString("b2g.system_startup_url", systemAppUrl);
+  if (NS_FAILED(rv)) {
     return NS_OK;
   }
 

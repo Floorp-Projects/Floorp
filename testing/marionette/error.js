@@ -243,7 +243,7 @@ class WebDriverError extends Error {
       error: this.status,
       message: this.message || "",
       stacktrace: this.stack || "",
-    }
+    };
   }
 
   /**

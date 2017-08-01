@@ -1642,7 +1642,8 @@ nsScriptSecurityManager::EnsureFileURIWhitelist()
     //
 
     mFileURIWhitelist.emplace();
-    auto policies = mozilla::Preferences::GetCString("capability.policy.policynames");
+    nsAutoCString policies;
+    mozilla::Preferences::GetCString("capability.policy.policynames", policies);
     for (uint32_t base = SkipPast<IsWhitespaceOrComma>(policies, 0), bound = 0;
          base < policies.Length();
          base = SkipPast<IsWhitespaceOrComma>(policies, bound))
@@ -1655,7 +1656,9 @@ nsScriptSecurityManager::EnsureFileURIWhitelist()
         nsCString checkLoadURIPrefName = NS_LITERAL_CSTRING("capability.policy.") +
                                          policyName +
                                          NS_LITERAL_CSTRING(".checkloaduri.enabled");
-        if (!Preferences::GetString(checkLoadURIPrefName.get()).LowerCaseEqualsLiteral("allaccess")) {
+        nsAutoString value;
+        nsresult rv = Preferences::GetString(checkLoadURIPrefName.get(), value);
+        if (NS_FAILED(rv) || !value.LowerCaseEqualsLiteral("allaccess")) {
             continue;
         }
 
@@ -1663,7 +1666,8 @@ nsScriptSecurityManager::EnsureFileURIWhitelist()
         nsCString domainPrefName = NS_LITERAL_CSTRING("capability.policy.") +
                                    policyName +
                                    NS_LITERAL_CSTRING(".sites");
-        auto siteList = Preferences::GetCString(domainPrefName.get());
+        nsAutoCString siteList;
+        Preferences::GetCString(domainPrefName.get(), siteList);
         AddSitesToFileURIWhitelist(siteList);
     }
 
