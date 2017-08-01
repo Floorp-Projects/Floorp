@@ -39,13 +39,13 @@ class TestWindowMaximize(MarionetteTestCase):
         self.assertGreaterEqual(
             actual["width"], self.max["width"] - delta,
             msg="Window width is not within {delta} px of availWidth: "
-                "current width {expected} should be greater than max width {max}"
-                .format(delta=delta, expected=actual["width"], max=self.max["width"] - delta))
+                "current width {current} should be greater than or equal to max width {max}"
+                .format(delta=delta, current=actual["width"], max=self.max["width"] - delta))
         self.assertGreaterEqual(
-            actual["height"], self.max["height"],
+            actual["height"], self.max["height"] - delta,
             msg="Window height is not within {delta} px of availHeight: "
-                "current height {expected} should be greater than max width {max}"
-                .format(delta=delta, expected=actual["height"], max=self.max["height"] - delta))
+                "current height {current} should be greater than or equal to max height {max}"
+                .format(delta=delta, current=actual["height"], max=self.max["height"] - delta))
 
     def assert_window_restored(self, actual):
         self.assertEqual(self.original_size["width"], actual["width"])
