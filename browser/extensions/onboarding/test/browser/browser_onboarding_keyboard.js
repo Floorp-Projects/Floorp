@@ -4,19 +4,29 @@
 
  "use strict";
 
-function assertTourList(browser, args) {
-  return ContentTask.spawn(browser, args, ({ tourId, focusedId }) => {
-    let doc = content.document;
-    let items = [...doc.querySelectorAll(".onboarding-tour-item")];
-    items.forEach(item => is(item.getAttribute("aria-selected"),
-      item.id === tourId ? "true" : "false",
-      "Active item should have aria-selected set to true and inactive to false"));
-    let focused = doc.getElementById(focusedId);
-    is(focused, doc.activeElement, `Focus should be set on ${focusedId}`);
+function assertOverlayState(browser, args) {
+  return ContentTask.spawn(browser, args, ({ tourId, focusedId, visible }) => {
+    let { document: doc, window} = content;
+    if (tourId) {
+      let items = [...doc.querySelectorAll(".onboarding-tour-item")];
+      items.forEach(item => is(item.getAttribute("aria-selected"),
+        item.id === tourId ? "true" : "false",
+        "Active item should have aria-selected set to true and inactive to false"));
+    }
+    if (focusedId) {
+      let focused = doc.getElementById(focusedId);
+      is(focused, doc.activeElement, `Focus should be set on ${focusedId}`);
+    }
+    if (visible !== undefined) {
+      let overlay = doc.getElementById("onboarding-overlay");
+      is(window.getComputedStyle(overlay).getPropertyValue("display"),
+        visible ? "block" : "none",
+        `Onboarding overlay should be ${visible ? "visible" : "invisible"}`);
+    }
   });
 }
 
-const TEST_DATA = [
+const TOUR_LIST_TEST_DATA = [
   { key: "VK_DOWN", expected: { tourId: TOUR_IDs[1], focusedId: TOUR_IDs[1] }},
   { key: "VK_DOWN", expected: { tourId: TOUR_IDs[2], focusedId: TOUR_IDs[2] }},
   { key: "VK_DOWN", expected: { tourId: TOUR_IDs[3], focusedId: TOUR_IDs[3] }},
@@ -31,6 +41,19 @@ const TEST_DATA = [
   { key: "VK_TAB", options: { shiftKey: true }, expected: { tourId: TOUR_IDs[5], focusedId: TOUR_IDs[3] }},
   // VK_SPACE does not work well with EventUtils#synthesizeKey use " " instead
   { key: " ", expected: { tourId: TOUR_IDs[3], focusedId: TOUR_IDs[3] }}
+];
+
+const BUTTONS_TEST_DATA = [
+  { key: " ", expected: { focusedId: TOUR_IDs[0], visible: true }},
+  { key: "VK_ESCAPE", expected: { focusedId: "onboarding-overlay-button", visible: false }},
+  { key: "VK_RETURN", expected: { focusedId: TOUR_IDs[0], visible: true }},
+  { key: "VK_TAB", options: { shiftKey: true }, expected: { focusedId: "onboarding-overlay-close-btn", visible: true }},
+  { key: " ", expected: { focusedId: "onboarding-overlay-button", visible: false }},
+  { key: "VK_RETURN", expected: { focusedId: TOUR_IDs[0], visible: true }},
+  { key: "VK_TAB", options: { shiftKey: true }, expected: { focusedId: "onboarding-overlay-close-btn", visible: true }},
+  { key: "VK_TAB", expected: { focusedId: TOUR_IDs[0], visible: true }},
+  { key: "VK_TAB", options: { shiftKey: true }, expected: { focusedId: "onboarding-overlay-close-btn", visible: true }},
+  { key: "VK_RETURN", expected: { focusedId: "onboarding-overlay-button", visible: false }}
 ];
 
 add_task(async function test_tour_list_keyboard_navigation() {
@@ -49,13 +72,35 @@ add_task(async function test_tour_list_keyboard_navigation() {
   info("Set initial focus on the currently active tab");
   await ContentTask.spawn(tab.linkedBrowser, {}, () =>
     content.document.querySelector(".onboarding-active").focus());
-  await assertTourList(tab.linkedBrowser,
+  await assertOverlayState(tab.linkedBrowser,
                        { tourId: TOUR_IDs[0], focusedId: TOUR_IDs[0] });
 
-  for (let { key, options = {}, expected } of TEST_DATA) {
+  for (let { key, options = {}, expected } of TOUR_LIST_TEST_DATA) {
     info(`Pressing ${key} to select ${expected.tourId} and have focus on ${expected.focusedId}`);
     await BrowserTestUtils.synthesizeKey(key, options, tab.linkedBrowser);
-    await assertTourList(tab.linkedBrowser, expected);
+    await assertOverlayState(tab.linkedBrowser, expected);
+  }
+
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_buttons_keyboard_navigation() {
+  resetOnboardingDefaultState();
+
+  info("Wait for onboarding overlay loaded");
+  let tab = await openTab(ABOUT_HOME_URL);
+  await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
+
+  info("Set keyboard focus on the onboarding overlay button");
+  await ContentTask.spawn(tab.linkedBrowser, {}, () =>
+    content.document.getElementById("onboarding-overlay-button").focus());
+  await assertOverlayState(tab.linkedBrowser,
+    { focusedId: "onboarding-overlay-button", visible: false });
+
+  for (let { key, options = {}, expected } of BUTTONS_TEST_DATA) {
+    info(`Pressing ${key} to have ${expected.visible ? "visible" : "invisible"} overlay and have focus on ${expected.focusedId}`);
+    await BrowserTestUtils.synthesizeKey(key, options, tab.linkedBrowser);
+    await assertOverlayState(tab.linkedBrowser, expected);
   }
 
   await BrowserTestUtils.removeTab(tab);
