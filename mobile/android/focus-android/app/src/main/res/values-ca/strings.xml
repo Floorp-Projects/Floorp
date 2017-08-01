@@ -9,6 +9,7 @@
   <string name="menu_share">Comparteix…</string>
   <string name="menu_open_with_default_browser">Obre amb el %1$s</string>
   <string name="menu_open_with_a_browser">Obre amb…</string>
+  <string name="menu_add_to_home_screen">Afegeix a la pantalla d\'inici</string>
   <string name="menu_settings">Paràmetres</string>
   <string name="menu_about">Quant a</string>
   <string name="menu_help">Ajuda</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Comparteix mitjançant</string>
   <string name="notification_erase_text">Esborra l\'historial de navegació</string>
   <string name="notification_action_open">Obre</string>
+  <string name="notification_action_erase_and_open">Esborra i obre</string>
   <string name="shortcut_erase_short_label">Esborra</string>
   <string name="shortcut_erase_long_label">Esborra l\'historial de navegació</string>
   <string name="text_selection_search_action">Cerca privada</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Bloca altres elements de seguiment de contingut</string>
   <string name="preference_privacy_block_content_summary">Pot causar problemes amb alguns vídeos i pàgines web</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
+  <string name="preference_privacy_stealth_summary">Amaga les pàgines web en canviar d\'aplicacions</string>
   <string name="preference_category_performance">Rendiment</string>
   <string name="preference_performance_block_webfonts">Bloca tipus de lletra web</string>
   <string name="preference_performance_block_webfonts_summary">Pot fer que no es vegin algunes icones o imatges</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Omet</string>
   <string name="firstrun_next_button">Següent</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Afegeix a la pantalla d\'inici</string>
+  <string name="dialog_addtohomescreen_action_add">Afegeix</string>
+  <string name="dialog_addtohomescreen_action_cancel">Cancel·la</string>
 </resources>

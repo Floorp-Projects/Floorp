@@ -9,6 +9,7 @@
   <string name="menu_share">Dela…</string>
   <string name="menu_open_with_default_browser">Öppna med %1$s</string>
   <string name="menu_open_with_a_browser">Öppna med…</string>
+  <string name="menu_add_to_home_screen">Lägg till på startskärmen</string>
   <string name="menu_settings">Inställningar</string>
   <string name="menu_about">Om</string>
   <string name="menu_help">Hjälp</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Dela via</string>
   <string name="notification_erase_text">Radera webbhistorik</string>
   <string name="notification_action_open">Öppna</string>
+  <string name="notification_action_erase_and_open">Radera och öppna</string>
   <string name="shortcut_erase_short_label">Radera</string>
   <string name="shortcut_erase_long_label">Radera webbhistorik</string>
   <string name="text_selection_search_action">Sök privat</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Blockera andra innehållstrackers</string>
   <string name="preference_privacy_block_content_summary">Kan få vissa videor och webbsidor att sluta fungera</string>
   <string name="preference_privacy_secure_mode">Dolt läge</string>
+  <string name="preference_privacy_stealth_summary">Dölj webbsidor när du byter appar</string>
   <string name="preference_category_performance">Prestanda</string>
   <string name="preference_performance_block_webfonts">Blockera webbtypsnitt</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultera i att ikoner eller bilder saknas</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Hoppa över</string>
   <string name="firstrun_next_button">Nästa</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Lägg till på startskärmen</string>
+  <string name="dialog_addtohomescreen_action_add">Lägg till</string>
+  <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
 </resources>

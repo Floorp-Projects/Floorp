@@ -9,6 +9,7 @@
   <string name="menu_share">Поделиться…</string>
   <string name="menu_open_with_default_browser">Открыть в %1$s</string>
   <string name="menu_open_with_a_browser">Открыть в…</string>
+  <string name="menu_add_to_home_screen">Добавить на домашний экран</string>
   <string name="menu_settings">Параметры</string>
   <string name="menu_about">О программе</string>
   <string name="menu_help">Справка</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Поделиться через</string>
   <string name="notification_erase_text">Удалить историю веб-сёрфинга</string>
   <string name="notification_action_open">Открыть</string>
+  <string name="notification_action_erase_and_open">Удалить и открыть</string>
   <string name="shortcut_erase_short_label">Удалить</string>
   <string name="shortcut_erase_long_label">Удалить историю веб-сёрфинга</string>
   <string name="text_selection_search_action">Искать приватно</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Блокировать другие трекеры содержимого</string>
   <string name="preference_privacy_block_content_summary">Может нарушить работу некоторых видео и веб-страниц</string>
   <string name="preference_privacy_secure_mode">Невидимка</string>
+  <string name="preference_privacy_stealth_summary">Скрыть веб-страницы при переключении приложений</string>
   <string name="preference_category_performance">Производительность</string>
   <string name="preference_performance_block_webfonts">Блокировать веб-шрифты</string>
   <string name="preference_performance_block_webfonts_summary">Может привести к отсутствию значков или изображений</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Пропустить</string>
   <string name="firstrun_next_button">Далее</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Добавить на домашний экран</string>
+  <string name="dialog_addtohomescreen_action_add">Добавить</string>
+  <string name="dialog_addtohomescreen_action_cancel">Отмена</string>
 </resources>

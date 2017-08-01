@@ -9,6 +9,7 @@
   <string name="menu_share">Dźělić…</string>
   <string name="menu_open_with_default_browser">Z %1$s wočinić</string>
   <string name="menu_open_with_a_browser">Wočinić z…</string>
+  <string name="menu_add_to_home_screen">Startowej wobrazowce přidać</string>
   <string name="menu_settings">Nastajenja</string>
   <string name="menu_about">Wo</string>
   <string name="menu_help">Pomoc</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Dźělić přez</string>
   <string name="notification_erase_text">Přehladowansku historiju zhašeć</string>
   <string name="notification_action_open">Wočinić</string>
+  <string name="notification_action_erase_and_open">Zhašeć a wočinić</string>
   <string name="shortcut_erase_short_label">Zhašeć</string>
   <string name="shortcut_erase_long_label">Přehladowansku historiju zhašeć</string>
   <string name="text_selection_search_action">Priwatnje pytać</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Druhe wobsahowe přesćěhowaki blokować</string>
   <string name="preference_privacy_block_content_summary">Haći snano někotrym widejam a webstronam</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
+  <string name="preference_privacy_stealth_summary">Webstrony schować, hdyž so nałoženja přepinaja</string>
   <string name="preference_category_performance">Wukon</string>
   <string name="preference_performance_block_webfonts">Webpisma blokować</string>
   <string name="preference_performance_block_webfonts_summary">Móže k tomu wjesć, zo symbole abo wobrazy faluja</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Přeskočić</string>
   <string name="firstrun_next_button">Dale</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Startowej wobrazowce přidać</string>
+  <string name="dialog_addtohomescreen_action_add">Přidać</string>
+  <string name="dialog_addtohomescreen_action_cancel">Přetorhnyć</string>
 </resources>

@@ -9,6 +9,7 @@
   <string name="menu_share">Udostępnij…</string>
   <string name="menu_open_with_default_browser">Otwórz za pomocą „%1$s”</string>
   <string name="menu_open_with_a_browser">Otwórz za pomocą…</string>
+  <string name="menu_add_to_home_screen">Dodaj do ekranu głównego</string>
   <string name="menu_settings">Ustawienia</string>
   <string name="menu_about">O programie</string>
   <string name="menu_help">Pomoc</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Udostępnij przez</string>
   <string name="notification_erase_text">Usuń historię przeglądania</string>
   <string name="notification_action_open">Otwórz</string>
+  <string name="notification_action_erase_and_open">Usuń i otwórz</string>
   <string name="shortcut_erase_short_label">Usuń historię</string>
   <string name="shortcut_erase_long_label">Usuń historię przeglądania</string>
   <string name="text_selection_search_action">Wyszukaj prywatnie</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Blokowanie pozostałych śledzących</string>
   <string name="preference_privacy_block_content_summary">Może uniemożliwiać oglądanie niektórych filmów i stron</string>
   <string name="preference_privacy_secure_mode">Tryb ukryty</string>
+  <string name="preference_privacy_stealth_summary">Ukrywanie stron podczas przełączania aplikacji</string>
   <string name="preference_category_performance">Wydajność</string>
   <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
   <string name="preference_performance_block_webfonts_summary">Może spowodować, że niektóre ikony lub obrazy będą niewidoczne</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Pomiń</string>
   <string name="firstrun_next_button">Dalej</string>
   <string name="content_blocking_disabled">—</string>
+  <string name="dialog_addtohomescreen_title">Dodaj do ekranu głównego</string>
+  <string name="dialog_addtohomescreen_action_add">Dodaj</string>
+  <string name="dialog_addtohomescreen_action_cancel">Anuluj</string>
 </resources>

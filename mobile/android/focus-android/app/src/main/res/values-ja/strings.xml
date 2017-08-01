@@ -9,6 +9,7 @@
   <string name="menu_share">共有...</string>
   <string name="menu_open_with_default_browser">%1$s で開く</string>
   <string name="menu_open_with_a_browser">他のアプリで開く...</string>
+  <string name="menu_add_to_home_screen">ホーム画面に追加</string>
   <string name="menu_settings">設定</string>
   <string name="menu_about">製品情報</string>
   <string name="menu_help">ヘルプ</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">共有方法を選択</string>
   <string name="notification_erase_text">閲覧履歴を消去</string>
   <string name="notification_action_open">開く</string>
+  <string name="notification_action_erase_and_open">消去して開く</string>
   <string name="shortcut_erase_short_label">消去</string>
   <string name="shortcut_erase_long_label">閲覧履歴を消去</string>
   <string name="text_selection_search_action">プライベートに検索</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
   <string name="preference_privacy_block_content_summary">動画やウェブページが正常に表示されない場合があります</string>
   <string name="preference_privacy_secure_mode">ステルス</string>
+  <string name="preference_privacy_stealth_summary">アプリ切り替え時にウェブページを隠す</string>
   <string name="preference_category_performance">パフォーマンス</string>
   <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
   <string name="preference_performance_block_webfonts_summary">アイコンや画像が正常に表示されない場合があります</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">スキップ</string>
   <string name="firstrun_next_button">次へ</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">ホーム画面に追加</string>
+  <string name="dialog_addtohomescreen_action_add">追加</string>
+  <string name="dialog_addtohomescreen_action_cancel">キャンセル</string>
 </resources>

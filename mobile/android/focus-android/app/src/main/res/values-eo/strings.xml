@@ -9,6 +9,7 @@
   <string name="menu_share">Dividi…</string>
   <string name="menu_open_with_default_browser">Malfermi per %1$s</string>
   <string name="menu_open_with_a_browser">Malfermi per…</string>
+  <string name="menu_add_to_home_screen">Aldoni al hejmekrano</string>
   <string name="menu_settings">Agordoj</string>
   <string name="menu_about">Pri</string>
   <string name="menu_help">Helpo</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Dividi per</string>
   <string name="notification_erase_text">Forviŝi retuman historion</string>
   <string name="notification_action_open">Malfermi</string>
+  <string name="notification_action_erase_and_open">Forigi kaj malfermi</string>
   <string name="shortcut_erase_short_label">Forviŝi</string>
   <string name="shortcut_erase_long_label">Forviŝi retuman historion</string>
   <string name="text_selection_search_action">Serĉi private</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
   <string name="preference_privacy_block_content_summary">Tio povas misfunkciigi kelkajn filmetojn kaj retpaĝojn</string>
   <string name="preference_privacy_secure_mode">Kaŝreĝimo</string>
+  <string name="preference_privacy_stealth_summary">Kaŝi retpaĝojn dum ŝanĝo de programo</string>
   <string name="preference_category_performance">Efikeco</string>
   <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
   <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Ignori</string>
   <string name="firstrun_next_button">Sekva</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Aldoni al hejmekrano</string>
+  <string name="dialog_addtohomescreen_action_add">Aldoni</string>
+  <string name="dialog_addtohomescreen_action_cancel">Nuligi</string>
 </resources>

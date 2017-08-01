@@ -9,6 +9,7 @@
   <string name="menu_share">Diele…</string>
   <string name="menu_open_with_default_browser">Iepenje mei %1$s</string>
   <string name="menu_open_with_a_browser">Iepenje mei…</string>
+  <string name="menu_add_to_home_screen">Tafoegje oan startskerm</string>
   <string name="menu_settings">Ynstellingen</string>
   <string name="menu_about">Oer</string>
   <string name="menu_help">Help</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Diele fia</string>
   <string name="notification_erase_text">Navigaasjeskiednis wiskje</string>
   <string name="notification_action_open">Iepenje</string>
+  <string name="notification_action_erase_and_open">Wiskje en iepenje</string>
   <string name="shortcut_erase_short_label">Wiskje</string>
   <string name="shortcut_erase_long_label">Navigaasjeskiednis wiskje</string>
   <string name="text_selection_search_action">Privee sykje</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Oare ynhâldstrackers blokkearje</string>
   <string name="preference_privacy_block_content_summary">Kin guon fideo’s en websiden fersteure</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
+  <string name="preference_privacy_stealth_summary">Websiden ferstopje by wikseljen fan apps</string>
   <string name="preference_category_performance">Prestaasjes</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkearje</string>
   <string name="preference_performance_block_webfonts_summary">Kin ta ûntbrekkende piktogrammen of ôfbyldingen liede</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Oerslaan</string>
   <string name="firstrun_next_button">Folgjende</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Tafoegje oan startskerm</string>
+  <string name="dialog_addtohomescreen_action_add">Tafoegje</string>
+  <string name="dialog_addtohomescreen_action_cancel">Annulearje</string>
 </resources>

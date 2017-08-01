@@ -9,6 +9,7 @@
   <string name="menu_share">Zdieľať…</string>
   <string name="menu_open_with_default_browser">Otvoriť pomocou %1$s</string>
   <string name="menu_open_with_a_browser">Otvoriť pomocou…</string>
+  <string name="menu_add_to_home_screen">Pridať na úvodnú obrazovku</string>
   <string name="menu_settings">Nastavenia</string>
   <string name="menu_about">O aplikácii</string>
   <string name="menu_help">Pomocník</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Zdieľať cez</string>
   <string name="notification_erase_text">Vymazať históriu prehliadania</string>
   <string name="notification_action_open">Otvoriť</string>
+  <string name="notification_action_erase_and_open">Vymazať a otvoriť</string>
   <string name="shortcut_erase_short_label">Vymazať</string>
   <string name="shortcut_erase_long_label">Vymazať históriu</string>
   <string name="text_selection_search_action">Súkromné vyhľadávanie</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Blokovať ostatné sledovacie prvky</string>
   <string name="preference_privacy_block_content_summary">Toto môže rozbiť niektoré videá a webové stránky</string>
   <string name="preference_privacy_secure_mode">Nenápadnosť</string>
+  <string name="preference_privacy_stealth_summary">Pri zobrazení nedávnych aplikácii sa náhľad webových stránok skryje</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovať webové písma</string>
   <string name="preference_performance_block_webfonts_summary">Niektoré ikony alebo obrázky sa nemusia zobrazovať</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Preskočiť</string>
   <string name="firstrun_next_button">Ďalej</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Pridať na úvodnú obrazovku</string>
+  <string name="dialog_addtohomescreen_action_add">Pridať</string>
+  <string name="dialog_addtohomescreen_action_cancel">Zrušiť</string>
 </resources>

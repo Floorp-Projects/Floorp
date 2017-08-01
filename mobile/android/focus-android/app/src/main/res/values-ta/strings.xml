@@ -9,6 +9,7 @@
   <string name="menu_share">பகிர்…</string>
   <string name="menu_open_with_default_browser">%1$s மூலம் திற</string>
   <string name="menu_open_with_a_browser">செயலிகள் மூலம் திற…</string>
+  <string name="menu_add_to_home_screen">முகப்பு திரைக்கு சேர்</string>
   <string name="menu_settings">அமைவுகள்</string>
   <string name="menu_about">போக்கசு பற்றி</string>
   <string name="menu_help">உதவி</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">தோன்றும் செயலிகளின் வழி பகிர்க</string>
   <string name="notification_erase_text">உலாவல் வரலாற்றை அழி</string>
   <string name="notification_action_open">திற</string>
+  <string name="notification_action_erase_and_open">துடைத்து திற</string>
   <string name="shortcut_erase_short_label">அகற்று</string>
   <string name="shortcut_erase_long_label">உலாவல் வரலாற்றை அகற்று</string>
   <string name="text_selection_search_action">அந்தரங்க நிலையில் உலாவு</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">உள்ளடக்க பின்தொடரிகளைத் தடு</string>
   <string name="preference_privacy_block_content_summary">சில காணொளிகளும் வலைப்பக்கங்களும் முறியலாம்</string>
   <string name="preference_privacy_secure_mode">போரியல்</string>
+  <string name="preference_privacy_stealth_summary">செயலிகளில் மாறும்பொழுது வலைப்பக்கங்களை மறை</string>
   <string name="preference_category_performance">செயல்திறன்</string>
   <string name="preference_performance_block_webfonts">இணைய எழுத்துருக்களைத் தடு</string>
   <string name="preference_performance_block_webfonts_summary">சின்னம் (அ) படங்கள் காணாமல் போகலாம்</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">தாவு</string>
   <string name="firstrun_next_button">அடுத்தது</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">முகப்பு திரைக்கு சேர்</string>
+  <string name="dialog_addtohomescreen_action_add">சேர்</string>
+  <string name="dialog_addtohomescreen_action_cancel">ரத்து</string>
 </resources>

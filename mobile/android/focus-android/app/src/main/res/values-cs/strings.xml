@@ -9,6 +9,7 @@
   <string name="menu_share">Sdílet…</string>
   <string name="menu_open_with_default_browser">Otevřít pomocí %1$s</string>
   <string name="menu_open_with_a_browser">Otevřít pomocí…</string>
+  <string name="menu_add_to_home_screen">Přidat na domovskou obrazovku</string>
   <string name="menu_settings">Nastavení</string>
   <string name="menu_about">O nás</string>
   <string name="menu_help">Nápověda</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Sdílet přes</string>
   <string name="notification_erase_text">Vymazat historii prohlížení</string>
   <string name="notification_action_open">Otevřít</string>
+  <string name="notification_action_erase_and_open">Vymazat a otevřít</string>
   <string name="shortcut_erase_short_label">Vymazat</string>
   <string name="shortcut_erase_long_label">Vymazat historii prohlížení</string>
   <string name="text_selection_search_action">Vyhledávejte soukromě</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Blokovat ostatní sledující prvky</string>
   <string name="preference_privacy_block_content_summary">Může rozbít některá videa a webové stránky</string>
   <string name="preference_privacy_secure_mode">Nenápadnost</string>
+  <string name="preference_privacy_stealth_summary">Skrýt webové stránky při přepínání aplikací</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
   <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Přeskočit</string>
   <string name="firstrun_next_button">Další</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Přidat na domovskou obrazovku</string>
+  <string name="dialog_addtohomescreen_action_add">Přidat</string>
+  <string name="dialog_addtohomescreen_action_cancel">Zrušit</string>
 </resources>

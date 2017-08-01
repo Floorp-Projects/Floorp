@@ -9,6 +9,7 @@
   <string name="menu_share">شارك…</string>
   <string name="menu_open_with_default_browser">افتح في %1$s</string>
   <string name="menu_open_with_a_browser">افتح في…</string>
+  <string name="menu_add_to_home_screen">أضِف إلى شاشة البداية</string>
   <string name="menu_settings">الإعدادات</string>
   <string name="menu_about">عن</string>
   <string name="menu_help">مساعدة</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">شارك عبر</string>
   <string name="notification_erase_text">امسح تأريخ التصفح</string>
   <string name="notification_action_open">افتح</string>
+  <string name="notification_action_erase_and_open">امسح و افتح</string>
   <string name="shortcut_erase_short_label">امسح</string>
   <string name="shortcut_erase_long_label">امسح تأريخ التصفح</string>
   <string name="text_selection_search_action">ابحث مع الحفاظ على الخصوصية</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">احجب متعقبات المحتوى الأخرى</string>
   <string name="preference_privacy_block_content_summary">قد يعطل بعض الڤديو و صفحات الوب</string>
   <string name="preference_privacy_secure_mode">التخفّي</string>
+  <string name="preference_privacy_stealth_summary">أخفِ صفحات الوب عند الانتقال بين التطبيقات</string>
   <string name="preference_category_performance">الأداء</string>
   <string name="preference_performance_block_webfonts">احجب خطوط الوب</string>
   <string name="preference_performance_block_webfonts_summary">قد يسبب اختفاء بعض الأيقونات أو الصور</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">تخطّ</string>
   <string name="firstrun_next_button">التالي</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">أضِف إلى شاشة البداية</string>
+  <string name="dialog_addtohomescreen_action_add">أضِف</string>
+  <string name="dialog_addtohomescreen_action_cancel">ألغِ</string>
 </resources>

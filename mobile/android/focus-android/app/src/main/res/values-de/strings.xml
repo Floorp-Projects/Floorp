@@ -9,6 +9,7 @@
   <string name="menu_share">Teilen …</string>
   <string name="menu_open_with_default_browser">Öffnen mit %1$s</string>
   <string name="menu_open_with_a_browser">Öffnen mit …</string>
+  <string name="menu_add_to_home_screen">Zum Startbildschirm hinzufügen</string>
   <string name="menu_settings">Einstellungen</string>
   <string name="menu_about">Über</string>
   <string name="menu_help">Hilfe</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Teilen über</string>
   <string name="notification_erase_text">Browser-Chronik löschen</string>
   <string name="notification_action_open">Öffnen</string>
+  <string name="notification_action_erase_and_open">Löschen und öffnen</string>
   <string name="shortcut_erase_short_label">Löschen</string>
   <string name="shortcut_erase_long_label">Browser-Chronik löschen</string>
   <string name="text_selection_search_action">Privat Suchen</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Andere Inhaltsverfolgung blockieren</string>
   <string name="preference_privacy_block_content_summary">Kann einige Videos und Webseiten stören</string>
   <string name="preference_privacy_secure_mode">Tarnung</string>
+  <string name="preference_privacy_stealth_summary">Webseiten beim Wechseln von Apps verstecken</string>
   <string name="preference_category_performance">Leistung</string>
   <string name="preference_performance_block_webfonts">Web-Schriftarten blockieren</string>
   <string name="preference_performance_block_webfonts_summary">Kann zu fehlenden Symbolen oder Grafiken führen</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Überspringen</string>
   <string name="firstrun_next_button">Weiter</string>
   <string name="content_blocking_disabled">–</string>
+  <string name="dialog_addtohomescreen_title">Zum Startbildschirm hinzufügen</string>
+  <string name="dialog_addtohomescreen_action_add">Hinzufügen</string>
+  <string name="dialog_addtohomescreen_action_cancel">Abbrechen</string>
 </resources>

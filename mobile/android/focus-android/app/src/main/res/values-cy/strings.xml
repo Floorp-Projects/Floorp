@@ -9,6 +9,7 @@
   <string name="menu_share">Rhannu…</string>
   <string name="menu_open_with_default_browser">Agor gyda %1$s</string>
   <string name="menu_open_with_a_browser">Agor gyda…</string>
+  <string name="menu_add_to_home_screen">Ychwanegu i\'r sgrin Cartref</string>
   <string name="menu_settings">Gosodiadau</string>
   <string name="menu_about">Ynghylch</string>
   <string name="menu_help">Cymorth</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Rhannu drwy</string>
   <string name="notification_erase_text">Dileu\'r hanes pori</string>
   <string name="notification_action_open">Agor</string>
+  <string name="notification_action_erase_and_open">Dileu ac Agor</string>
   <string name="shortcut_erase_short_label">Dileu</string>
   <string name="shortcut_erase_long_label">Dileu\'r hanes pori</string>
   <string name="text_selection_search_action">Chwilio\'n Breifat</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Rhwystro tracwyr cynnwys eraill</string>
   <string name="preference_privacy_block_content_summary">Gall dorri rhai fideos a thudalennau Gwe</string>
   <string name="preference_privacy_secure_mode">Dirgel</string>
+  <string name="preference_privacy_stealth_summary">Cuddio tudalennau gwe wrth agor apiau</string>
   <string name="preference_category_performance">Perfformiad</string>
   <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
   <string name="preference_performance_block_webfonts_summary">Gall olygu colli eiconau neu ddelweddau</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Hepgor</string>
   <string name="firstrun_next_button">Nesaf</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Ychwanegu i\'r sgrin Cartref</string>
+  <string name="dialog_addtohomescreen_action_add">Ychwanegu</string>
+  <string name="dialog_addtohomescreen_action_cancel">Diddymu</string>
 </resources>

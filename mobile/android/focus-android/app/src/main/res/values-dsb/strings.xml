@@ -9,6 +9,7 @@
   <string name="menu_share">Źěliś…</string>
   <string name="menu_open_with_default_browser">Z %1$s wócyniś</string>
   <string name="menu_open_with_a_browser">Wócyniś z…</string>
+  <string name="menu_add_to_home_screen">Startowej wobrazowce pśidaś</string>
   <string name="menu_settings">Nastajenja</string>
   <string name="menu_about">Wó</string>
   <string name="menu_help">Pomoc</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Źěliś pśez</string>
   <string name="notification_erase_text">Pśeglědowańsku historiju lašowaś</string>
   <string name="notification_action_open">Wócyniś</string>
+  <string name="notification_action_erase_and_open">Lašowaś a wócyniś</string>
   <string name="shortcut_erase_short_label">Lašowaś</string>
   <string name="shortcut_erase_long_label">Pśeglědowańsku historiju lašowaś</string>
   <string name="text_selection_search_action">Priwatnje pytaś</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Druge wopśimjeśowe pśeslědowaki blokěrowaś</string>
   <string name="preference_privacy_block_content_summary">Kazy snaź někotare wideo a webboki</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
+  <string name="preference_privacy_stealth_summary">Webboki schowaś, gaž se nałoženja pśešaltuju</string>
   <string name="preference_category_performance">Wugbaśe</string>
   <string name="preference_performance_block_webfonts">Webpisma blokěrowaś</string>
   <string name="preference_performance_block_webfonts_summary">Móžo k tomu wjasć, až symbole abo wobraze feluju</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Pśeskócyś</string>
   <string name="firstrun_next_button">Dalej</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Startowej wobrazowce pśidaś</string>
+  <string name="dialog_addtohomescreen_action_add">Pśidaś</string>
+  <string name="dialog_addtohomescreen_action_cancel">Pśetergnuś</string>
 </resources>

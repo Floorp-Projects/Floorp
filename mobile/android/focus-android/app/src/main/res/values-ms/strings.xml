@@ -9,6 +9,7 @@
   <string name="menu_share">Kongsi…</string>
   <string name="menu_open_with_default_browser">Buka dengan %1$s</string>
   <string name="menu_open_with_a_browser">Buka dengan…</string>
+  <string name="menu_add_to_home_screen">Tambah ke Skrin Halaman utama</string>
   <string name="menu_settings">Tetapan</string>
   <string name="menu_about">Perihal</string>
   <string name="menu_help">Bantuan</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Kongsi via</string>
   <string name="notification_erase_text">Padam sejarah pelayaran</string>
   <string name="notification_action_open">Buka</string>
+  <string name="notification_action_erase_and_open">Buang dan Buka</string>
   <string name="shortcut_erase_short_label">Padam</string>
   <string name="shortcut_erase_long_label">Padam sejarah pelayaran</string>
   <string name="text_selection_search_action">Cari secara Rahsia</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Sekat penjejak kandungan lain</string>
   <string name="preference_privacy_block_content_summary">Boleh mengganggu beberapa video dan laman Web</string>
   <string name="preference_privacy_secure_mode">Halimunan</string>
+  <string name="preference_privacy_stealth_summary">Sorok laman web apabila bertukar aplikasi</string>
   <string name="preference_category_performance">Prestasi</string>
   <string name="preference_performance_block_webfonts">Sekat fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Boleh menyebabkan imej atau ikon hilang</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Langkau</string>
   <string name="firstrun_next_button">Seterusnya</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Tambah ke Skrin Halaman utama</string>
+  <string name="dialog_addtohomescreen_action_add">Tambah</string>
+  <string name="dialog_addtohomescreen_action_cancel">Batal</string>
 </resources>

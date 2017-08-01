@@ -9,6 +9,7 @@
   <string name="menu_share">Compartir…</string>
   <string name="menu_open_with_default_browser">Abrir con %1$s</string>
   <string name="menu_open_with_a_browser">Abrir con…</string>
+  <string name="menu_add_to_home_screen">Agregar a pantalla de inicio</string>
   <string name="menu_settings">Configuración</string>
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Compartir vía</string>
   <string name="notification_erase_text">Borrar historial de navegación</string>
   <string name="notification_action_open">Abrir</string>
+  <string name="notification_action_erase_and_open">Borrar y abrir</string>
   <string name="shortcut_erase_short_label">Borrar</string>
   <string name="shortcut_erase_long_label">Borrar historial de navegación</string>
   <string name="text_selection_search_action">Búsqueda privada</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Bloquear otros rastreadores de contenidos</string>
   <string name="preference_privacy_block_content_summary">Algunos videos y páginas web pueden fallar</string>
   <string name="preference_privacy_secure_mode">Cautela</string>
+  <string name="preference_privacy_stealth_summary">Ocultar páginas web al intercambiar aplicaciones</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear tipografía web</string>
   <string name="preference_performance_block_webfonts_summary">Puede resultar en que falten iconos o imágenes</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Saltar</string>
   <string name="firstrun_next_button">Siguiente</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Agregar a pantalla de inicio</string>
+  <string name="dialog_addtohomescreen_action_add">Agregar</string>
+  <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
 </resources>

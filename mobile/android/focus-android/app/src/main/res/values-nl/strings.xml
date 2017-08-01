@@ -9,6 +9,7 @@
   <string name="menu_share">Delen…</string>
   <string name="menu_open_with_default_browser">Openen met %1$s</string>
   <string name="menu_open_with_a_browser">Openen met…</string>
+  <string name="menu_add_to_home_screen">Toevoegen aan startscherm</string>
   <string name="menu_settings">Instellingen</string>
   <string name="menu_about">Over</string>
   <string name="menu_help">Help</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Delen via</string>
   <string name="notification_erase_text">Navigatiegeschiedenis wissen</string>
   <string name="notification_action_open">Openen</string>
+  <string name="notification_action_erase_and_open">Wissen en openen</string>
   <string name="shortcut_erase_short_label">Wissen</string>
   <string name="shortcut_erase_long_label">Navigatiegeschiedenis wissen</string>
   <string name="text_selection_search_action">Privé zoeken</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Andere inhoudstrackers blokkeren</string>
   <string name="preference_privacy_block_content_summary">Kan sommige video’s en webpagina’s verstoren</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
+  <string name="preference_privacy_stealth_summary">Webpagina’s verbergen bij wisselen van apps</string>
   <string name="preference_category_performance">Prestaties</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkeren</string>
   <string name="preference_performance_block_webfonts_summary">Kan tot ontbrekende pictogrammen of afbeeldingen leiden</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Overslaan</string>
   <string name="firstrun_next_button">Volgende</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Toevoegen aan startscherm</string>
+  <string name="dialog_addtohomescreen_action_add">Toevoegen</string>
+  <string name="dialog_addtohomescreen_action_cancel">Annuleren</string>
 </resources>

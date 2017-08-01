@@ -9,6 +9,7 @@
   <string name="menu_share">Compartilhar…</string>
   <string name="menu_open_with_default_browser">Abrir com %1$s</string>
   <string name="menu_open_with_a_browser">Abrir com…</string>
+  <string name="menu_add_to_home_screen">Adicionar à tela inicial</string>
   <string name="menu_settings">Configurações</string>
   <string name="menu_about">Sobre</string>
   <string name="menu_help">Ajuda</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Compartilhar via</string>
   <string name="notification_erase_text">Apagar o histórico de navegação</string>
   <string name="notification_action_open">Abrir</string>
+  <string name="notification_action_erase_and_open">Apagar e Abrir</string>
   <string name="shortcut_erase_short_label">Apagar</string>
   <string name="shortcut_erase_long_label">Apagar o histórico de navegação</string>
   <string name="text_selection_search_action">Pesquisa privativa</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Bloquear outros rastreadores</string>
   <string name="preference_privacy_block_content_summary">Pode quebrar alguns vídeos e páginas Web</string>
   <string name="preference_privacy_secure_mode">Furtividade</string>
+  <string name="preference_privacy_stealth_summary">Esconder páginas web quando trocar aplicativo</string>
   <string name="preference_category_performance">Desempenho</string>
   <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
   <string name="preference_performance_block_webfonts_summary">Pode resultar em falta de ícones ou imagens</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Pular</string>
   <string name="firstrun_next_button">Próximo</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Adicionar à tela inicial</string>
+  <string name="dialog_addtohomescreen_action_add">Adicionar</string>
+  <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
 </resources>

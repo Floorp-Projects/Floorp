@@ -9,6 +9,7 @@
   <string name="menu_share">Del …</string>
   <string name="menu_open_with_default_browser">Åpne med %1$s</string>
   <string name="menu_open_with_a_browser">Åpne med …</string>
+  <string name="menu_add_to_home_screen">Legg til på startskjermen</string>
   <string name="menu_settings">Innstillinger</string>
   <string name="menu_about">Om</string>
   <string name="menu_help">Hjelp</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Del via</string>
   <string name="notification_erase_text">Slett nettleserhistorikk</string>
   <string name="notification_action_open">Åpne</string>
+  <string name="notification_action_erase_and_open">Slett og åpne</string>
   <string name="shortcut_erase_short_label">Slett</string>
   <string name="shortcut_erase_long_label">Slett nettleserhistorikk</string>
   <string name="text_selection_search_action">Søk privat</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Blokker andre innholdssporere</string>
   <string name="preference_privacy_block_content_summary">Kan ødelegge noen videoer og nettsider</string>
   <string name="preference_privacy_secure_mode">Usynlig</string>
+  <string name="preference_privacy_stealth_summary">Skjul nettsider når du bytter appar</string>
   <string name="preference_category_performance">Ytelse</string>
   <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilder mangler</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Hopp over</string>
   <string name="firstrun_next_button">Neste</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Legg til på startskjermen</string>
+  <string name="dialog_addtohomescreen_action_add">Legg til</string>
+  <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
 </resources>

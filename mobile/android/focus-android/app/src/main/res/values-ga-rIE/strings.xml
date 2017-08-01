@@ -9,6 +9,7 @@
   <string name="menu_share">Comhroinn…</string>
   <string name="menu_open_with_default_browser">Oscail le %1$s</string>
   <string name="menu_open_with_a_browser">Oscail le…</string>
+  <string name="menu_add_to_home_screen">Cuir leis an scáileán Baile</string>
   <string name="menu_settings">Socruithe</string>
   <string name="menu_about">Maidir leis</string>
   <string name="menu_help">Cabhair</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Comhroinn trí</string>
   <string name="notification_erase_text">Glan an stair bhrabhsála</string>
   <string name="notification_action_open">Oscail</string>
+  <string name="notification_action_erase_and_open">Scrios agus Oscail</string>
   <string name="shortcut_erase_short_label">Glan</string>
   <string name="shortcut_erase_long_label">Glan an stair bhrabhsála</string>
   <string name="text_selection_search_action">Cuardach Príobháideach</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Cuir cosc ar lorgairí ábhair eile</string>
   <string name="preference_privacy_block_content_summary">Seans go mbrisfidh seo físeáin agus leathanaigh Ghréasáin áirithe</string>
   <string name="preference_privacy_secure_mode">Mód Rúnda</string>
+  <string name="preference_privacy_stealth_summary">Folaigh leathanaigh Ghréasáin agus an aip á hathrú</string>
   <string name="preference_category_performance">Feidhmíocht</string>
   <string name="preference_performance_block_webfonts">Cuir cosc ar chlónna Gréasáin</string>
   <string name="preference_performance_block_webfonts_summary">D\'fhéadfadh go mbeadh deilbhíní nó íomhánna ar iarraidh</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Ná bac leis</string>
   <string name="firstrun_next_button">Ar Aghaidh</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Cuir leis an scáileán Baile</string>
+  <string name="dialog_addtohomescreen_action_add">Cuir Leis</string>
+  <string name="dialog_addtohomescreen_action_cancel">Cealaigh</string>
 </resources>

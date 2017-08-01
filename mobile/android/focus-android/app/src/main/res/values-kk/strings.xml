@@ -9,6 +9,7 @@
   <string name="menu_share">Бөлісу…</string>
   <string name="menu_open_with_default_browser">%1$s көмегімен ашу</string>
   <string name="menu_open_with_a_browser">Көмегімен ашу…</string>
+  <string name="menu_add_to_home_screen">Үй экранына қосу</string>
   <string name="menu_settings">Баптаулар</string>
   <string name="menu_about">Осы туралы</string>
   <string name="menu_help">Көмек</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Арқылы бөлісу</string>
   <string name="notification_erase_text">Шолу тарихын өшіру</string>
   <string name="notification_action_open">Ашу</string>
+  <string name="notification_action_erase_and_open">Өшіру және ашу</string>
   <string name="shortcut_erase_short_label">Өшіру</string>
   <string name="shortcut_erase_long_label">Шолу тарихын өшіру</string>
   <string name="text_selection_search_action">Жеке шолыңыз</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Басқа құрама трекерлерін блоктау</string>
   <string name="preference_privacy_block_content_summary">Кейбір видео және веб парақтарының жұмысына кері әсерін тигізуі мүмкін</string>
   <string name="preference_privacy_secure_mode">Жасырын</string>
+  <string name="preference_privacy_stealth_summary">Қолданбаларды ауыстыру кезінде веб парақтарды жасыру</string>
   <string name="preference_category_performance">Өнімділік</string>
   <string name="preference_performance_block_webfonts">Веб қаріптерін блоктау</string>
   <string name="preference_performance_block_webfonts_summary">Жоқ болып тұрған таңбашалар немесе суреттерге әкеп соғуы мүмкін</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Аттап кету</string>
   <string name="firstrun_next_button">Келесі</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Үй экранына қосу</string>
+  <string name="dialog_addtohomescreen_action_add">Қосу</string>
+  <string name="dialog_addtohomescreen_action_cancel">Бас тарту</string>
 </resources>

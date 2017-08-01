@@ -9,6 +9,7 @@
   <string name="menu_share">اشتراک‌گذاری…</string>
   <string name="menu_open_with_default_browser">باز کردن با %1$s</string>
   <string name="menu_open_with_a_browser">باز کردن با…</string>
+  <string name="menu_add_to_home_screen">افزودن به صفحه‌ی خانه</string>
   <string name="menu_settings">تنظیمات</string>
   <string name="menu_about">درباره</string>
   <string name="menu_help">راهنما</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">اشتراک‌گذاری از طریق</string>
   <string name="notification_erase_text">پاک کردن تاریخچهٔ مرورگر</string>
   <string name="notification_action_open">باز کردن</string>
+  <string name="notification_action_erase_and_open">حذف و باز کن</string>
   <string name="shortcut_erase_short_label">پاک کردن</string>
   <string name="shortcut_erase_long_label">پاک کردن تاریخچهٔ مرورگر</string>
   <string name="text_selection_search_action">جست‌وجو ناشناس</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">مسدود کردن سایر ردیاب‌های محتوا</string>
   <string name="preference_privacy_block_content_summary">ممکن است بعضی از ویدئوها یا صفحات وب را دچار مشکل کند</string>
   <string name="preference_privacy_secure_mode">حالت پنهان</string>
+  <string name="preference_privacy_stealth_summary">هنگام تعویض برنامه‌ها صفحه‌های وب را مخفی کن</string>
   <string name="preference_category_performance">کارایی</string>
   <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
   <string name="preference_performance_block_webfonts_summary">ممکن است باعث بارگیری نشدن برخی از شمایل‌ها و تصاویر بشود</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">رد کردن</string>
   <string name="firstrun_next_button">بعدی</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">افزودن به صفحه‌ی خانه</string>
+  <string name="dialog_addtohomescreen_action_add">افزودن</string>
+  <string name="dialog_addtohomescreen_action_cancel">انصراف</string>
 </resources>

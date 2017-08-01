@@ -9,6 +9,7 @@
   <string name="menu_share">Partager…</string>
   <string name="menu_open_with_default_browser">Ouvrir avec %1$s</string>
   <string name="menu_open_with_a_browser">Ouvrir avec…</string>
+  <string name="menu_add_to_home_screen">Ajouter à l’écran d’accueil</string>
   <string name="menu_settings">Paramètres</string>
   <string name="menu_about">À propos</string>
   <string name="menu_help">Aide</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Partager avec</string>
   <string name="notification_erase_text">Effacer l’historique de navigation</string>
   <string name="notification_action_open">Ouvrir</string>
+  <string name="notification_action_erase_and_open">Effacer et ouvrir</string>
   <string name="shortcut_erase_short_label">Effacer</string>
   <string name="shortcut_erase_long_label">Effacer l’historique de navigation</string>
   <string name="text_selection_search_action">Faire une recherche privée</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Bloquer les autres traqueurs de contenu</string>
   <string name="preference_privacy_block_content_summary">Peut empêcher certaines vidéos et pages web de s’afficher correctement</string>
   <string name="preference_privacy_secure_mode">Mode furtif</string>
+  <string name="preference_privacy_stealth_summary">Masquer les pages web lorsque vous changez d’application</string>
   <string name="preference_category_performance">Performances</string>
   <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
   <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Ignorer</string>
   <string name="firstrun_next_button">Suivant</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Ajouter à l’écran d’accueil</string>
+  <string name="dialog_addtohomescreen_action_add">Ajouter</string>
+  <string name="dialog_addtohomescreen_action_cancel">Annuler</string>
 </resources>

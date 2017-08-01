@@ -9,6 +9,7 @@
   <string name="menu_share">Paylaş…</string>
   <string name="menu_open_with_default_browser">%1$s ile aç</string>
   <string name="menu_open_with_a_browser">Birlikte aç…</string>
+  <string name="menu_add_to_home_screen">Ana ekrana ekle</string>
   <string name="menu_settings">Ayarlar</string>
   <string name="menu_about">Hakkında</string>
   <string name="menu_help">Yardım</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Paylaş</string>
   <string name="notification_erase_text">Gezinti geçmişini sil</string>
   <string name="notification_action_open">Aç</string>
+  <string name="notification_action_erase_and_open">Sil ve aç</string>
   <string name="shortcut_erase_short_label">Sil</string>
   <string name="shortcut_erase_long_label">Gezinti geçmişini sil</string>
   <string name="text_selection_search_action">Gizli arama</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Diğer içerik takipçilerini engelle</string>
   <string name="preference_privacy_block_content_summary">Bazı videolar ve web sayfaları bozulabilir</string>
   <string name="preference_privacy_secure_mode">Görünmezlik</string>
+  <string name="preference_privacy_stealth_summary">Uygulama değiştirirken web sayfalarını gizle</string>
   <string name="preference_category_performance">Performans</string>
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
   <string name="preference_performance_block_webfonts_summary">Simge ve resimlerin görünmemesine yol açabilir</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Geç</string>
   <string name="firstrun_next_button">İleri</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Ana ekrana ekle</string>
+  <string name="dialog_addtohomescreen_action_add">Ekle</string>
+  <string name="dialog_addtohomescreen_action_cancel">İptal</string>
 </resources>
