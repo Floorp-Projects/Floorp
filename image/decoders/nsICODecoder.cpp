@@ -163,10 +163,15 @@ nsICODecoder::ReadDirEntry(const char* aData)
     e.mBytesInRes  = LittleEndian::readUint32(aData + 8);
     e.mImageOffset = offset;
     e.mSize        = IntSize(e.mWidth, e.mHeight);
-    if (e.mWidth == 0 || e.mHeight == 0) {
-      mUnsizedDirEntries.AppendElement(e);
-    } else {
-      mDirEntries.AppendElement(e);
+
+    // Only accept entries with sufficient resource data to actually contain
+    // some image data.
+    if (e.mBytesInRes > BITMAPINFOSIZE) {
+      if (e.mWidth == 0 || e.mHeight == 0) {
+        mUnsizedDirEntries.AppendElement(e);
+      } else {
+        mDirEntries.AppendElement(e);
+      }
     }
   }
 
