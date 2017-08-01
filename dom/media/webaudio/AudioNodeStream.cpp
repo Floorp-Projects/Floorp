@@ -275,6 +275,26 @@ AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& 
 }
 
 void
+AudioNodeStream::SetBuffer(AudioChunk&& aBuffer)
+{
+  class Message final : public ControlMessage
+  {
+  public:
+    Message(AudioNodeStream* aStream, AudioChunk&& aBuffer)
+      : ControlMessage(aStream), mBuffer(aBuffer)
+    {}
+    void Run() override
+    {
+      static_cast<AudioNodeStream*>(mStream)->Engine()->
+        SetBuffer(Move(mBuffer));
+    }
+    AudioChunk mBuffer;
+  };
+
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, Move(aBuffer)));
+}
+
+void
 AudioNodeStream::SetRawArrayData(nsTArray<float>& aData)
 {
   class Message final : public ControlMessage
