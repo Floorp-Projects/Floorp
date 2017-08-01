@@ -176,114 +176,6 @@ const CustomizableWidgets = [
       }
     },
     onViewShowing(aEvent) {
-      // Populate our list of history
-      const kMaxResults = 15;
-      let doc = aEvent.target.ownerDocument;
-      let win = doc.defaultView;
-
-      if (AppConstants.MOZ_PHOTON_THEME && win.gPhotonStructure) {
-        // For the Photon panelview we're going to do something different!
-        this.onPhotonViewShowing(aEvent);
-        return;
-      }
-
-      let options = PlacesUtils.history.getNewQueryOptions();
-      options.excludeQueries = true;
-      options.queryType = options.QUERY_TYPE_HISTORY;
-      options.sortingMode = options.SORT_BY_DATE_DESCENDING;
-      options.maxResults = kMaxResults;
-      let query = PlacesUtils.history.getNewQuery();
-
-      let items = doc.getElementById("PanelUI-historyItems");
-      // Clear previous history items.
-      while (items.firstChild) {
-        items.firstChild.remove();
-      }
-
-      // Get all statically placed buttons to supply them with keyboard shortcuts.
-      let staticButtons = items.parentNode.getElementsByTagNameNS(kNSXUL, "toolbarbutton");
-      for (let i = 0, l = staticButtons.length; i < l; ++i)
-        CustomizableUI.addShortcut(staticButtons[i]);
-
-      aEvent.detail.addBlocker(new Promise((resolve, reject) => {
-        PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                           .asyncExecuteLegacyQueries([query], 1, options, {
-          handleResult(aResultSet) {
-            let onItemCommand = function(aItemCommandEvent) {
-              // Only handle the click event for middle clicks, we're using the command
-              // event otherwise.
-              if (aItemCommandEvent.type == "click" &&
-                  aItemCommandEvent.button != 1) {
-                return;
-              }
-              let item = aItemCommandEvent.target;
-              win.openUILink(item.getAttribute("targetURI"), aItemCommandEvent);
-              CustomizableUI.hidePanelForNode(item);
-            };
-            let fragment = doc.createDocumentFragment();
-            let row;
-            while ((row = aResultSet.getNextRow())) {
-              let uri = row.getResultByIndex(1);
-              let title = row.getResultByIndex(2);
-
-              let item = doc.createElementNS(kNSXUL, "toolbarbutton");
-              item.setAttribute("label", title || uri);
-              item.setAttribute("targetURI", uri);
-              item.setAttribute("class", "subviewbutton");
-              item.addEventListener("command", onItemCommand);
-              item.addEventListener("click", onItemCommand);
-              item.setAttribute("image", "page-icon:" + uri);
-              fragment.appendChild(item);
-            }
-            items.appendChild(fragment);
-          },
-          handleError(aError) {
-            log.debug("History view tried to show but had an error: " + aError);
-            reject();
-          },
-          handleCompletion(aReason) {
-            log.debug("History view is being shown!");
-            resolve();
-          },
-        });
-      }));
-
-      let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
-      while (recentlyClosedTabs.firstChild) {
-        recentlyClosedTabs.firstChild.remove();
-      }
-
-      let recentlyClosedWindows = doc.getElementById("PanelUI-recentlyClosedWindows");
-      while (recentlyClosedWindows.firstChild) {
-        recentlyClosedWindows.firstChild.remove();
-      }
-
-      let utils = RecentlyClosedTabsAndWindowsMenuUtils;
-      let tabsFragment = utils.getTabsFragment(doc.defaultView, "toolbarbutton", true,
-                                               "menuRestoreAllTabsSubview.label");
-      let separator = doc.getElementById("PanelUI-recentlyClosedTabs-separator");
-      let elementCount = tabsFragment.childElementCount;
-      separator.hidden = !elementCount;
-      while (--elementCount >= 0) {
-        let element = tabsFragment.children[elementCount];
-        CustomizableUI.addShortcut(element);
-        element.classList.add("subviewbutton", "cui-withicon");
-      }
-      recentlyClosedTabs.appendChild(tabsFragment);
-
-      let windowsFragment = utils.getWindowsFragment(doc.defaultView, "toolbarbutton", true,
-                                                     "menuRestoreAllWindowsSubview.label");
-      separator = doc.getElementById("PanelUI-recentlyClosedWindows-separator");
-      elementCount = windowsFragment.childElementCount;
-      separator.hidden = !elementCount;
-      while (--elementCount >= 0) {
-        let element = windowsFragment.children[elementCount];
-        CustomizableUI.addShortcut(element);
-        element.classList.add("subviewbutton", "cui-withicon");
-      }
-      recentlyClosedWindows.appendChild(windowsFragment);
-    },
-    onPhotonViewShowing(event) {
       if (this._panelMenuView)
         return;
 
@@ -304,23 +196,6 @@ const CustomizableWidgets = [
       // When the popup is hidden (thus the panelmultiview node as well), make
       // sure to stop listening to PlacesDatabase updates.
       panelview.panelMultiView.addEventListener("PanelMultiViewHidden", this);
-    },
-    onCreated(aNode) {
-      // Skip this for the Photon panelview.
-      let doc = aNode.ownerDocument;
-      if (AppConstants.MOZ_PHOTON_THEME && doc.defaultView.gPhotonStructure)
-        return;
-
-      // Middle clicking recently closed items won't close the panel - cope:
-      let onRecentlyClosedClick = function(aEvent) {
-        if (aEvent.button == 1) {
-          CustomizableUI.hidePanelForNode(this);
-        }
-      };
-      let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
-      let recentlyClosedWindows = doc.getElementById("PanelUI-recentlyClosedWindows");
-      recentlyClosedTabs.addEventListener("click", onRecentlyClosedClick);
-      recentlyClosedWindows.addEventListener("click", onRecentlyClosedClick);
     },
     onViewHiding(aEvent) {
       log.debug("History view is being hidden!");

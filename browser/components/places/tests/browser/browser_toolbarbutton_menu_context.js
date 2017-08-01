@@ -9,8 +9,7 @@ add_task(async function testPopup() {
   info("Checking popup context menu before moving the bookmarks button");
   await checkPopupContextMenu();
   let pos = CustomizableUI.getPlacementOfWidget("bookmarks-menu-button").position;
-  let target = gPhotonStructure ? CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-                                : CustomizableUI.AREA_PANEL;
+  let target = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
   CustomizableUI.addWidgetToArea("bookmarks-menu-button", target);
   CustomizableUI.addWidgetToArea("bookmarks-menu-button", CustomizableUI.AREA_NAVBAR, pos);
   info("Checking popup context menu after moving the bookmarks button");
