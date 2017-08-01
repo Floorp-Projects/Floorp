@@ -390,10 +390,6 @@ class Session(object):
         self.send_command("DELETE", url)
 
         self.session_id = None
-        self.timeouts = None
-        self.window = None
-        self.find = None
-        self.extension = None
 
     def send_command(self, method, url, body=None):
         """
