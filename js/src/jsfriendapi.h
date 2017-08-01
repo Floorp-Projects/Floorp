@@ -818,7 +818,7 @@ StringHasLatin1Chars(JSString* s)
 }
 
 MOZ_ALWAYS_INLINE const JS::Latin1Char*
-GetLatin1LinearStringChars(const JS::AutoRequireNoGC& nogc, JSLinearString* linear)
+GetLatin1LinearStringChars(const JS::AutoCheckCannotGC& nogc, JSLinearString* linear)
 {
     MOZ_ASSERT(LinearStringHasLatin1Chars(linear));
 
@@ -830,7 +830,7 @@ GetLatin1LinearStringChars(const JS::AutoRequireNoGC& nogc, JSLinearString* line
 }
 
 MOZ_ALWAYS_INLINE const char16_t*
-GetTwoByteLinearStringChars(const JS::AutoRequireNoGC& nogc, JSLinearString* linear)
+GetTwoByteLinearStringChars(const JS::AutoCheckCannotGC& nogc, JSLinearString* linear)
 {
     MOZ_ASSERT(!LinearStringHasLatin1Chars(linear));
 
@@ -860,13 +860,13 @@ FlatStringToLinearString(JSFlatString* s)
 }
 
 MOZ_ALWAYS_INLINE const JS::Latin1Char*
-GetLatin1AtomChars(const JS::AutoRequireNoGC& nogc, JSAtom* atom)
+GetLatin1AtomChars(const JS::AutoCheckCannotGC& nogc, JSAtom* atom)
 {
     return GetLatin1LinearStringChars(nogc, AtomToLinearString(atom));
 }
 
 MOZ_ALWAYS_INLINE const char16_t*
-GetTwoByteAtomChars(const JS::AutoRequireNoGC& nogc, JSAtom* atom)
+GetTwoByteAtomChars(const JS::AutoCheckCannotGC& nogc, JSAtom* atom)
 {
     return GetTwoByteLinearStringChars(nogc, AtomToLinearString(atom));
 }
@@ -1954,7 +1954,7 @@ GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isShare
 } // namespace js
 
 JS_FRIEND_API(uint8_t*)
-JS_GetSharedArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetSharedArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /*
  * Unwrap Typed arrays all at once. Return nullptr without throwing if the
@@ -2052,7 +2052,7 @@ JS_ArrayBufferHasData(JSObject* obj);
  * its use from code that also interacts with SharedArrayBuffer.
  */
 extern JS_FRIEND_API(uint8_t*)
-JS_GetArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /**
  * Check whether the obj is ArrayBufferObject and memory mapped. Note that this
@@ -2129,30 +2129,30 @@ JS_GetArrayBufferViewByteOffset(JSObject* obj);
  */
 
 extern JS_FRIEND_API(int8_t*)
-JS_GetInt8ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetInt8ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint8_t*)
-JS_GetUint8ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetUint8ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint8_t*)
-JS_GetUint8ClampedArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetUint8ClampedArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(int16_t*)
-JS_GetInt16ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetInt16ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint16_t*)
-JS_GetUint16ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetUint16ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(int32_t*)
-JS_GetInt32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetInt32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint32_t*)
-JS_GetUint32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetUint32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(float*)
-JS_GetFloat32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetFloat32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(double*)
-JS_GetFloat64ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetFloat64ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /**
  * Same as above, but for any kind of ArrayBufferView. Prefer the type-specific
  * versions when possible.
  */
 extern JS_FRIEND_API(void*)
-JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /**
  * Return the ArrayBuffer or SharedArrayBuffer underlying an ArrayBufferView.
@@ -2229,7 +2229,7 @@ JS_GetDataViewByteLength(JSObject* obj);
  * otherwise to false.
  */
 JS_FRIEND_API(void*)
-JS_GetDataViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
+JS_GetDataViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 namespace js {
 
