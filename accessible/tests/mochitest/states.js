@@ -1,13 +1,13 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Helper functions for accessible states testing.
 //
 // requires:
 //   common.js
 //   role.js
 //
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // State constants
 
 // const STATE_BUSY is defined in common.js
@@ -56,7 +56,7 @@ const EXT_STATE_VERTICAL = nsIAccessibleStates.EXT_STATE_VERTICAL;
 const kOrdinalState = false;
 const kExtraState = 1;
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Test functions
 
 /**
@@ -77,7 +77,7 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
 {
   var [state, extraState] = getStates(aAccOrElmOrID);
   var role = getRole(aAccOrElmOrID);
-  var id = prettyName(aAccOrElmOrID) + (aTestName ? " [" + aTestName + "]": "");
+  var id = prettyName(aAccOrElmOrID) + (aTestName ? " [" + aTestName + "]" : "");
 
   // Primary test.
   if (aState) {
@@ -189,7 +189,7 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
   try {
     children = acc.children;
   } catch (e) {}
-  ok(children, "Could not get children for " + aAccOrElmOrID +"!");
+  ok(children, "Could not get children for " + aAccOrElmOrID + "!");
 
   if (children) {
     for (var i = 0; i < children.length; i++) {
@@ -205,7 +205,7 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
 function testIsDefunct(aAccessible, aTestName)
 {
   var id = prettyName(aAccessible) + (aTestName ? " [" + aTestName + "]" : "");
-  var [/*state*/, extraState] = getStates(aAccessible);
+  var [/* state*/, extraState] = getStates(aAccessible);
   isState(extraState & EXT_STATE_DEFUNCT, EXT_STATE_DEFUNCT, true,
           "no defuct state for " + id + "!");
 }
@@ -238,7 +238,7 @@ function hasState(aAccOrElmOrID, aState, aExtraState)
     (aExtraState ? exstate & aExtraState : true);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Private implementation details
 
 /**

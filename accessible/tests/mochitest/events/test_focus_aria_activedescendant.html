@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
           src="../events.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true; // debugging
+    // gA11yEventDumpToConsole = true; // debugging
 
     function changeARIAActiveDescendant(aID, aItemID)
     {
@@ -76,7 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       gQueue.push(new changeARIAActiveDescendant("combobox", "combobox_option2"));
 
       todo(false, "No focus for inserted element, bug 687011");
-      //gQueue.push(new insertItemNFocus("listbox", "item4"));
+      // gQueue.push(new insertItemNFocus("listbox", "item4"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

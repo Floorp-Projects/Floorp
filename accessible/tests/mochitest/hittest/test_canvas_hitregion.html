@@ -22,16 +22,16 @@
       var metrics = context.measureText(element.parentNode.textContent);
       context.beginPath();
       context.strokeStyle = "black";
-      context.rect(x-5, y-5, 10, 10);
+      context.rect(x - 5, y - 5, 10, 10);
       context.stroke();
       if (element.checked) {
         context.fillStyle = "black";
         context.fill();
       }
-      context.fillText(element.parentNode.textContent, x+5, y);
+      context.fillText(element.parentNode.textContent, x + 5, y);
 
       context.beginPath();
-      context.rect(x-7, y-7, 12 + metrics.width+2, 14);
+      context.rect(x - 7, y - 7, 12 + metrics.width + 2, 14);
 
       if (document.activeElement == element)
         context.drawFocusIfNeeded(element);

@@ -98,7 +98,7 @@ function reloadButton()
   return browserWindow().document.getElementById("urlbar-reload-button");
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // private section
 
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -130,7 +130,7 @@ function openBrowserWindowIntl()
                       "_blank", params,
                       gBrowserContext.startURL);
 
-  whenDelayedStartupFinished(browserWindow(), function () {
+  whenDelayedStartupFinished(browserWindow(), function() {
     addA11yLoadEvent(startBrowserTests, browserWindow());
   });
 }

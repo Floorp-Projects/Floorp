@@ -1,6 +1,6 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Constants
 
 const PREFILTER_INVISIBLE = nsIAccessibleTraversalRule.PREFILTER_INVISIBLE;
@@ -15,7 +15,7 @@ const WORD_BOUNDARY = nsIAccessiblePivot.WORD_BOUNDARY;
 const NS_ERROR_NOT_IN_TREE = 0x80780026;
 const NS_ERROR_INVALID_ARG = 0x80070057;
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Traversal rules
 
 /**
@@ -69,7 +69,7 @@ var ObjectTraversalRule =
   QueryInterface: XPCOMUtils.generateQI([nsIAccessibleTraversalRule])
 };
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Virtual state invokers and checkers
 
 /**
@@ -418,7 +418,7 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aModalRoot, aSequence)
   // No further more matches for given rule, expect no virtual cursor changes.
   aQueue.push(new setVCPosInvoker(aDocAcc, "moveNext", aRule, false));
 
-  for (var i = aSequence.length-2; i >= 0; i--) {
+  for (var i = aSequence.length - 2; i >= 0; i--) {
     var invoker =
       new setVCPosInvoker(aDocAcc, "movePrevious", aRule, aSequence[i]);
     aQueue.push(invoker);

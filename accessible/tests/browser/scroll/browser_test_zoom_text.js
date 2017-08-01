@@ -13,7 +13,7 @@ async function runTests(browser, accDoc) {
   let paragraph = findAccessibleChildByID(accDoc, "paragraph", [nsIAccessibleText]);
   let offset = 64; // beginning of 4th stanza
 
-  let [x /*,y*/] = getPos(paragraph);
+  let [x /* ,y*/] = getPos(paragraph);
   let [docX, docY] = getPos(accDoc);
 
   paragraph.scrollSubstringToPoint(offset, offset,
@@ -26,7 +26,7 @@ async function runTests(browser, accDoc) {
 
   paragraph = findAccessibleChildByID(accDoc, "paragraph2", [nsIAccessibleText]);
   offset = 52; // // beginning of 4th stanza
-  [x /*,y*/] = getPos(paragraph);
+  [x /* ,y*/] = getPos(paragraph);
   paragraph.scrollSubstringToPoint(offset, offset,
                                    COORDTYPE_SCREEN_RELATIVE, docX, docY);
   testTextPos(paragraph, offset, [x, docY], COORDTYPE_SCREEN_RELATIVE);

@@ -53,7 +53,7 @@
 
         // Note: always test against valuetext first because the existence of
         // aria-valuetext takes precedence over aria-valuenow in gecko.
-        is(acc.value, (aValuetext != undefined)? aValuetext : aValuenow,
+        is(acc.value, (aValuetext != undefined) ? aValuetext : aValuenow,
             "Wrong value of " + prettyName(aNodeOrID));
       }
 
@@ -99,7 +99,7 @@
       this.check = function changeProgressValue_check()
       {
         var acc = getAccessible(this.DOMNode);
-        is(acc.value, aValue+"%", "Wrong value for " + prettyName(aID));
+        is(acc.value, aValue + "%", "Wrong value for " + prettyName(aID));
       }
 
       this.getID = function changeProgressValue_getID()
@@ -152,8 +152,8 @@
       }
     }
 
-    //enableLogging("DOMEvents");
-    //gA11yEventDumpToConsole = true;
+    // enableLogging("DOMEvents");
+    // gA11yEventDumpToConsole = true;
     function doTests()
     {
       // Test initial values
