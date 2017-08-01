@@ -162,6 +162,7 @@ FrameBuilder::ProcessContainerLayer(ContainerLayer* aContainer,
   gfx::IntRect boundingBox = layer->GetClippedBoundingBox(aView, Nothing());
   const gfx::IntRect& invalidRect = aView->GetInvalidRect();
   if (boundingBox.IsEmpty() || !invalidRect.Intersects(boundingBox)) {
+    AL_LOG("Culling ContainerLayer %p that does not need painting\n", aContainer);
     return false;
   }
 

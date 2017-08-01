@@ -7,8 +7,8 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 
 const ONBOARDING_CSS_URL = "resource://onboarding/onboarding.css";
 const ABOUT_HOME_URL = "about:home";
@@ -450,14 +450,14 @@ class Onboarding {
       });
     });
     for (let [name, callback] of this._prefsObserved) {
-      Preferences.observe(name, callback);
+      Services.prefs.addObserver(name, callback);
     }
   }
 
   _clearPrefObserver() {
     if (this._prefsObserved) {
       for (let [name, callback] of this._prefsObserved) {
-        Preferences.ignore(name, callback);
+        Services.prefs.removeObserver(name, callback);
       }
       this._prefsObserved = null;
     }
@@ -561,7 +561,7 @@ class Onboarding {
   }
 
   isTourCompleted(tourId) {
-    return Preferences.get(`browser.onboarding.tour.${tourId}.completed`, false);
+    return Services.prefs.getBoolPref(`browser.onboarding.tour.${tourId}.completed`, false);
   }
 
   setToursCompleted(tourIds) {
@@ -588,12 +588,12 @@ class Onboarding {
   }
 
   _muteNotificationOnFirstSession() {
-    if (Preferences.isSet("browser.onboarding.notification.tour-ids-queue")) {
+    if (Services.prefs.prefHasUserValue("browser.onboarding.notification.tour-ids-queue")) {
       // There is a queue. We had prompted before, this must not be the 1st session.
       return false;
     }
 
-    let muteDuration = Preferences.get("browser.onboarding.notification.mute-duration-on-first-session-ms");
+    let muteDuration = Services.prefs.getIntPref("browser.onboarding.notification.mute-duration-on-first-session-ms");
     if (muteDuration == 0) {
       // Don't mute when this is set to 0 on purpose.
       return false;
@@ -601,7 +601,7 @@ class Onboarding {
 
     // Reuse the `last-time-of-changing-tour-sec` to save the time that
     // we try to prompt on the 1st session.
-    let lastTime = 1000 * Preferences.get("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
+    let lastTime = 1000 * Services.prefs.getIntPref("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
     if (lastTime <= 0) {
       sendMessageToChrome("set-prefs", [{
         name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
@@ -613,14 +613,14 @@ class Onboarding {
   }
 
   _isTimeForNextTourNotification() {
-    let promptCount = Preferences.get("browser.onboarding.notification.prompt-count", 0);
-    let maxCount = Preferences.get("browser.onboarding.notification.max-prompt-count-per-tour");
+    let promptCount = Services.prefs.getIntPref("browser.onboarding.notification.prompt-count", 0);
+    let maxCount = Services.prefs.getIntPref("browser.onboarding.notification.max-prompt-count-per-tour");
     if (promptCount >= maxCount) {
       return true;
     }
 
-    let lastTime = 1000 * Preferences.get("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
-    let maxTime = Preferences.get("browser.onboarding.notification.max-life-time-per-tour-ms");
+    let lastTime = 1000 * Services.prefs.getIntPref("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
+    let maxTime = Services.prefs.getIntPref("browser.onboarding.notification.max-life-time-per-tour-ms");
     if (lastTime && Date.now() - lastTime >= maxTime) {
       return true;
     }
@@ -648,8 +648,8 @@ class Onboarding {
 
   _getNotificationQueue() {
     let queue = "";
-    if (Preferences.isSet("browser.onboarding.notification.tour-ids-queue")) {
-      queue = Preferences.get("browser.onboarding.notification.tour-ids-queue");
+    if (Services.prefs.prefHasUserValue("browser.onboarding.notification.tour-ids-queue")) {
+      queue = Services.prefs.getStringPref("browser.onboarding.notification.tour-ids-queue");
     } else {
       // For each tour, it only gets 2 chances to prompt with notification
       // (each chance includes 8 impressions or 5-days max life time)
@@ -669,7 +669,7 @@ class Onboarding {
   }
 
   showNotification() {
-    if (Preferences.get("browser.onboarding.notification.finished", false)) {
+    if (Services.prefs.getBoolPref("browser.onboarding.notification.finished", false)) {
       return;
     }
 
@@ -734,7 +734,7 @@ class Onboarding {
         value: queue.join(",")
       });
     } else {
-      let promptCount = Preferences.get(PROMPT_COUNT_PREF, 0);
+      let promptCount = Services.prefs.getIntPref(PROMPT_COUNT_PREF, 0);
       params.push({
         name: PROMPT_COUNT_PREF,
         value: promptCount + 1

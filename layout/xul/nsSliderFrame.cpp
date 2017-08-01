@@ -457,6 +457,9 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       // Restore the saved clip so it applies to the thumb container layer.
       thumbContentsClipState.Restore();
 
+      nsDisplayListBuilder::AutoBuildingDisplayList
+        buildingDisplayList(aBuilder, this, dirty, false);
+
       // Wrap the list to make it its own layer.
       const ActiveScrolledRoot* ownLayerASR = contASRTracker.GetContainerASR();
       aLists.Content()->AppendNewToTop(new (aBuilder)

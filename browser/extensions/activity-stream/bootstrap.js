@@ -7,13 +7,12 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["fetch"]);
 
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 const ACTIVITY_STREAM_ENABLED_PREF = "browser.newtabpage.activity-stream.enabled";
 const BROWSER_READY_NOTIFICATION = "sessionstore-windows-restored";
+const PREF_CHANGED_TOPIC = "nsPref:changed";
 const REASON_SHUTDOWN_ON_PREF_CHANGE = "PREF_OFF";
 const REASON_STARTUP_ON_PREF_CHANGE = "PREF_ON";
 const RESOURCE_BASE = "resource://activity-stream";
@@ -84,10 +83,9 @@ function uninit(reason) {
 /**
  * onPrefChanged - handler for changes to ACTIVITY_STREAM_ENABLED_PREF
  *
- * @param  {bool} isEnabled Determines whether Activity Stream is enabled
  */
-function onPrefChanged(isEnabled) {
-  if (isEnabled) {
+function onPrefChanged() {
+  if (Services.prefs.getBoolPref(ACTIVITY_STREAM_ENABLED_PREF, false)) {
     init(REASON_STARTUP_ON_PREF_CHANGE);
   } else {
     uninit(REASON_SHUTDOWN_ON_PREF_CHANGE);
@@ -101,10 +99,10 @@ function onBrowserReady() {
   waitingForBrowserReady = false;
 
   // Listen for changes to the pref that enables Activity Stream
-  Preferences.observe(ACTIVITY_STREAM_ENABLED_PREF, onPrefChanged);
+  Services.prefs.addObserver(ACTIVITY_STREAM_ENABLED_PREF, observe);
 
   // Only initialize if the pref is true
-  if (Preferences.get(ACTIVITY_STREAM_ENABLED_PREF)) {
+  if (Services.prefs.getBoolPref(ACTIVITY_STREAM_ENABLED_PREF, false)) {
     init(startupReason);
   }
 }
@@ -118,6 +116,11 @@ function observe(subject, topic, data) {
       Services.obs.removeObserver(observe, BROWSER_READY_NOTIFICATION);
       // Avoid running synchronously during this event that's used for timing
       Services.tm.dispatchToMainThread(() => onBrowserReady());
+      break;
+    case PREF_CHANGED_TOPIC:
+      if (data == ACTIVITY_STREAM_ENABLED_PREF) {
+        onPrefChanged();
+      }
       break;
   }
 }
@@ -152,7 +155,7 @@ this.shutdown = function shutdown(data, reason) {
     Services.obs.removeObserver(observe, BROWSER_READY_NOTIFICATION);
   } else {
     // Stop listening to the pref that enables Activity Stream
-    Preferences.ignore(ACTIVITY_STREAM_ENABLED_PREF, onPrefChanged);
+    Services.prefs.removeObserver(ACTIVITY_STREAM_ENABLED_PREF, observe);
   }
 
   // Unload any add-on modules that might might have been imported

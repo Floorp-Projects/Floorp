@@ -5,11 +5,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-// For ScreenOrientation.h and Hal.h
-#include "base/basictypes.h"
-#endif
-
 #include "mozilla/Logging.h"
 #include "nscore.h"
 #include "prenv.h"
@@ -44,71 +39,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "ANPBase.h"
-#include <android/log.h>
-#include "android_npapi.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/CondVar.h"
-#include "mozilla/dom/ScreenOrientation.h"
-#include "mozilla/Hal.h"
-#include "GLContextProvider.h"
-#include "GLContext.h"
-#include "TexturePoolOGL.h"
-#include "SurfaceTypes.h"
-#include "EGLUtils.h"
-#include "GeneratedJNIWrappers.h"
-#include "GeneratedJNINatives.h"
-
-using namespace mozilla;
-using namespace mozilla::gl;
-
-typedef nsNPAPIPluginInstance::VideoInfo VideoInfo;
-
-class PluginEventRunnable : public Runnable
-{
-public:
-  PluginEventRunnable(nsNPAPIPluginInstance* instance, ANPEvent* event)
-    : Runnable("PluginEventRunnable"),
-      mInstance(instance),
-      mEvent(*event),
-      mCanceled(false)
-  {
-  }
-
-  virtual nsresult Run() {
-    if (mCanceled)
-      return NS_OK;
-
-    mInstance->HandleEvent(&mEvent, nullptr);
-    mInstance->PopPostedEvent(this);
-    return NS_OK;
-  }
-
-  void Cancel() { mCanceled = true; }
-private:
-  nsNPAPIPluginInstance* mInstance;
-  ANPEvent mEvent;
-  bool mCanceled;
-};
-
-static RefPtr<GLContext> sPluginContext = nullptr;
-
-static bool EnsureGLContext()
-{
-  if (!sPluginContext) {
-    const auto flags = CreateContextFlags::REQUIRE_COMPAT_PROFILE;
-    nsCString discardedFailureId;
-    sPluginContext = GLContextProvider::CreateHeadless(flags, &discardedFailureId);
-  }
-
-  return sPluginContext != nullptr;
-}
-
-static std::map<NPP, nsNPAPIPluginInstance*> sPluginNPPMap;
-
-#endif // MOZ_WIDGET_ANDROID
-
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
 using namespace mozilla::layers;
@@ -119,13 +49,6 @@ NS_IMPL_ISUPPORTS(nsNPAPIPluginInstance, nsIAudioChannelAgentCallback)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance()
   : mDrawingModel(kDefaultDrawingModel)
-#ifdef MOZ_WIDGET_ANDROID
-  , mANPDrawingModel(0)
-  , mFullScreenOrientation(dom::eScreenOrientation_LandscapePrimary)
-  , mWakeLocked(false)
-  , mFullScreen(false)
-  , mOriginPos(gl::OriginPos::TopLeft)
-#endif
   , mRunning(NOT_STARTED)
   , mWindowless(false)
   , mTransparent(false)
@@ -138,9 +61,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
 #ifdef XP_MACOSX
   , mCurrentPluginEvent(nullptr)
 #endif
-#ifdef MOZ_WIDGET_ANDROID
-  , mOnScreen(true)
-#endif
+  , mHaveJavaC2PJSObjectQuirk(false)
   , mCachedParamLength(0)
   , mCachedParamNames(nullptr)
   , mCachedParamValues(nullptr)
@@ -150,19 +71,11 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
   mNPP.ndata = this;
 
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("nsNPAPIPluginInstance ctor: this=%p\n",this));
-
-#ifdef MOZ_WIDGET_ANDROID
-  sPluginNPPMap[&mNPP] = this;
-#endif
 }
 
 nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
 {
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("nsNPAPIPluginInstance dtor: this=%p\n",this));
-
-#ifdef MOZ_WIDGET_ANDROID
-  sPluginNPPMap.erase(&mNPP);
-#endif
 
   if (mMIMEType) {
     free(mMIMEType);
@@ -200,19 +113,6 @@ nsNPAPIPluginInstance::Destroy()
   Stop();
   mPlugin = nullptr;
   mAudioChannelAgent = nullptr;
-
-#if MOZ_WIDGET_ANDROID
-  if (mContentSurface) {
-    java::SurfaceAllocator::DisposeSurface(mContentSurface);
-  }
-
-  std::map<void*, VideoInfo*>::iterator it;
-  for (it = mVideos.begin(); it != mVideos.end(); it++) {
-    delete it->second;
-  }
-  mVideos.clear();
-  SetWakeLock(false);
-#endif
 }
 
 TimeStamp
@@ -299,14 +199,6 @@ nsresult nsNPAPIPluginInstance::Stop()
                    ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &mNPP, error));
   }
   mRunning = DESTROYED;
-
-#if MOZ_WIDGET_ANDROID
-  for (uint32_t i = 0; i < mPostedEvents.Length(); i++) {
-    mPostedEvents[i]->Cancel();
-  }
-
-  mPostedEvents.Clear();
-#endif
 
   nsJSNPRuntime::OnPluginDestroy(&mNPP);
 
@@ -398,13 +290,8 @@ nsNPAPIPluginInstance::Start()
     mCachedParamValues[i] = ToNewUTF8String(attributes[i].mValue);
   }
 
-  // Android expects and empty string instead of null.
   mCachedParamNames[attributes.Length()] = ToNewUTF8String(NS_LITERAL_STRING("PARAM"));
-  #ifdef MOZ_WIDGET_ANDROID
-    mCachedParamValues[attributes.Length()] = ToNewUTF8String(NS_LITERAL_STRING(""));
-  #else
-    mCachedParamValues[attributes.Length()] = nullptr;
-  #endif
+  mCachedParamValues[attributes.Length()] = nullptr;
 
   for (uint32_t i = 0, pos = attributes.Length() + 1; i < params.Length(); i ++) {
     mCachedParamNames[pos] = ToNewUTF8String(params[i].mName);
@@ -594,7 +481,6 @@ nsresult nsNPAPIPluginInstance::HandleEvent(void* event, int16_t* result,
     NS_TRY_SAFE_CALL_RETURN(tmpResult, (*pluginFunctions->event)(&mNPP, event), this,
                             aSafeToReenterGecko);
 #else
-    MAIN_THREAD_JNI_REF_GUARD;
     tmpResult = (*pluginFunctions->event)(&mNPP, event);
 #endif
     NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
@@ -700,270 +586,6 @@ void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 }
 #endif
 
-#if defined(MOZ_WIDGET_ANDROID)
-
-static void SendLifecycleEvent(nsNPAPIPluginInstance* aInstance, uint32_t aAction)
-{
-  ANPEvent event;
-  event.inSize = sizeof(ANPEvent);
-  event.eventType = kLifecycle_ANPEventType;
-  event.data.lifecycle.action = aAction;
-  aInstance->HandleEvent(&event, nullptr);
-}
-
-void nsNPAPIPluginInstance::NotifyForeground(bool aForeground)
-{
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::SetForeground this=%p\n foreground=%d",this, aForeground));
-  if (RUNNING != mRunning)
-    return;
-
-  SendLifecycleEvent(this, aForeground ? kResume_ANPLifecycleAction : kPause_ANPLifecycleAction);
-}
-
-void nsNPAPIPluginInstance::NotifyOnScreen(bool aOnScreen)
-{
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::SetOnScreen this=%p\n onScreen=%d",this, aOnScreen));
-  if (RUNNING != mRunning || mOnScreen == aOnScreen)
-    return;
-
-  mOnScreen = aOnScreen;
-  SendLifecycleEvent(this, aOnScreen ? kOnScreen_ANPLifecycleAction : kOffScreen_ANPLifecycleAction);
-}
-
-void nsNPAPIPluginInstance::MemoryPressure()
-{
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::MemoryPressure this=%p\n",this));
-  if (RUNNING != mRunning)
-    return;
-
-  SendLifecycleEvent(this, kFreeMemory_ANPLifecycleAction);
-}
-
-void nsNPAPIPluginInstance::NotifyFullScreen(bool aFullScreen)
-{
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::NotifyFullScreen this=%p\n",this));
-
-  if (RUNNING != mRunning || mFullScreen == aFullScreen)
-    return;
-
-  mFullScreen = aFullScreen;
-  SendLifecycleEvent(this, mFullScreen ? kEnterFullScreen_ANPLifecycleAction : kExitFullScreen_ANPLifecycleAction);
-
-  if (mFullScreen && mFullScreenOrientation != dom::eScreenOrientation_None) {
-    java::GeckoAppShell::LockScreenOrientation(mFullScreenOrientation);
-  }
-}
-
-void nsNPAPIPluginInstance::NotifySize(nsIntSize size)
-{
-  if (kOpenGL_ANPDrawingModel != GetANPDrawingModel() ||
-      size == mCurrentSize)
-    return;
-
-  mCurrentSize = size;
-
-  ANPEvent event;
-  event.inSize = sizeof(ANPEvent);
-  event.eventType = kDraw_ANPEventType;
-  event.data.draw.model = kOpenGL_ANPDrawingModel;
-  event.data.draw.data.surfaceSize.width = size.width;
-  event.data.draw.data.surfaceSize.height = size.height;
-
-  HandleEvent(&event, nullptr);
-}
-
-void nsNPAPIPluginInstance::SetANPDrawingModel(uint32_t aModel)
-{
-  mANPDrawingModel = aModel;
-}
-
-void* nsNPAPIPluginInstance::GetJavaSurface()
-{
-  void* surface = nullptr;
-  nsresult rv = GetValueFromPlugin(kJavaSurface_ANPGetValue, &surface);
-  if (NS_FAILED(rv))
-    return nullptr;
-
-  return surface;
-}
-
-void nsNPAPIPluginInstance::PostEvent(void* event)
-{
-  PluginEventRunnable *r = new PluginEventRunnable(this, (ANPEvent*)event);
-  mPostedEvents.AppendElement(RefPtr<PluginEventRunnable>(r));
-
-  NS_DispatchToMainThread(r);
-}
-
-void nsNPAPIPluginInstance::SetFullScreenOrientation(uint32_t orientation)
-{
-  if (mFullScreenOrientation == orientation)
-    return;
-
-  uint32_t oldOrientation = mFullScreenOrientation;
-  mFullScreenOrientation = orientation;
-
-  if (mFullScreen) {
-    // We're already fullscreen so immediately apply the orientation change
-
-    if (mFullScreenOrientation != dom::eScreenOrientation_None) {
-      java::GeckoAppShell::LockScreenOrientation(mFullScreenOrientation);
-    } else if (oldOrientation != dom::eScreenOrientation_None) {
-      // We applied an orientation when we entered fullscreen, but
-      // we don't want it anymore
-      java::GeckoAppShell::UnlockScreenOrientation();
-    }
-  }
-}
-
-void nsNPAPIPluginInstance::PopPostedEvent(PluginEventRunnable* r)
-{
-  mPostedEvents.RemoveElement(r);
-}
-
-void nsNPAPIPluginInstance::SetWakeLock(bool aLocked)
-{
-  if (aLocked == mWakeLocked)
-    return;
-
-  mWakeLocked = aLocked;
-  hal::ModifyWakeLock(NS_LITERAL_STRING("screen"),
-                      mWakeLocked ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_REMOVE_ONE,
-                      hal::WAKE_LOCK_NO_CHANGE);
-}
-
-GLContext* nsNPAPIPluginInstance::GLContext()
-{
-  if (!EnsureGLContext())
-    return nullptr;
-
-  return sPluginContext;
-}
-
-class PluginTextureListener
-  : public java::SurfaceTextureListener::Natives<PluginTextureListener>
-{
-  using Base = java::SurfaceTextureListener::Natives<PluginTextureListener>;
-
-  const nsCOMPtr<nsIRunnable> mCallback;
-public:
-  using Base::AttachNative;
-  using Base::DisposeNative;
-
-  PluginTextureListener(nsIRunnable* aCallback) : mCallback(aCallback) {}
-
-  void OnFrameAvailable()
-  {
-    if (NS_IsMainThread()) {
-      mCallback->Run();
-      return;
-    }
-    NS_DispatchToMainThread(mCallback);
-  }
-};
-
-java::GeckoSurface::LocalRef nsNPAPIPluginInstance::CreateSurface()
-{
-  java::GeckoSurface::LocalRef surf = java::SurfaceAllocator::AcquireSurface(0, 0, false);
-  if (!surf) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIRunnable> frameCallback = NewRunnableMethod("nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable",
-                                                          this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
-
-  java::SurfaceTextureListener::LocalRef listener = java::SurfaceTextureListener::New();
-
-  PluginTextureListener::AttachNative(listener, MakeUnique<PluginTextureListener>(frameCallback.get()));
-
-  java::GeckoSurfaceTexture::LocalRef gst = java::GeckoSurfaceTexture::Lookup(surf->GetHandle());
-  if (!gst) {
-    return nullptr;
-  }
-
-  const auto& st = java::sdk::SurfaceTexture::Ref::From(gst);
-  st->SetOnFrameAvailableListener(listener);
-
-  return surf;
-}
-
-void nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable()
-{
-  if (mRunning == RUNNING && mOwner)
-    mOwner->Recomposite();
-}
-
-void* nsNPAPIPluginInstance::AcquireContentWindow()
-{
-  if (!mContentWindow.NativeWindow()) {
-    mContentSurface = CreateSurface();
-    if (!mContentSurface)
-      return nullptr;
-
-    mContentWindow = AndroidNativeWindow(mContentSurface);
-  }
-
-  return mContentWindow.NativeWindow();
-}
-
-java::GeckoSurface::Param
-nsNPAPIPluginInstance::AsSurface()
-{
-  return mContentSurface;
-}
-
-void* nsNPAPIPluginInstance::AcquireVideoWindow()
-{
-  java::GeckoSurface::LocalRef surface = CreateSurface();
-  VideoInfo* info = new VideoInfo(surface);
-
-  void* window = info->mNativeWindow.NativeWindow();
-  mVideos.insert(std::pair<void*, VideoInfo*>(window, info));
-
-  return window;
-}
-
-void nsNPAPIPluginInstance::ReleaseVideoWindow(void* window)
-{
-  std::map<void*, VideoInfo*>::iterator it = mVideos.find(window);
-  if (it == mVideos.end())
-    return;
-
-  delete it->second;
-  mVideos.erase(window);
-}
-
-void nsNPAPIPluginInstance::SetVideoDimensions(void* window, gfxRect aDimensions)
-{
-  std::map<void*, VideoInfo*>::iterator it;
-
-  it = mVideos.find(window);
-  if (it == mVideos.end())
-    return;
-
-  it->second->mDimensions = aDimensions;
-}
-
-void nsNPAPIPluginInstance::GetVideos(nsTArray<VideoInfo*>& aVideos)
-{
-  std::map<void*, VideoInfo*>::iterator it;
-  for (it = mVideos.begin(); it != mVideos.end(); it++)
-    aVideos.AppendElement(it->second);
-}
-
-nsNPAPIPluginInstance* nsNPAPIPluginInstance::GetFromNPP(NPP npp)
-{
-  std::map<NPP, nsNPAPIPluginInstance*>::iterator it;
-
-  it = sPluginNPPMap.find(npp);
-  if (it == sPluginNPPMap.end())
-    return nullptr;
-
-  return it->second;
-}
-
-#endif
-
 nsresult nsNPAPIPluginInstance::GetDrawingModel(int32_t* aModel)
 {
   *aModel = (int32_t)mDrawingModel;
@@ -1062,9 +684,8 @@ nsNPAPIPluginInstance::ShouldCache()
 nsresult
 nsNPAPIPluginInstance::IsWindowless(bool* isWindowless)
 {
-#if defined(MOZ_WIDGET_ANDROID) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   // All OS X plugins are windowless.
-  // On android, pre-honeycomb, all plugins are treated as windowless.
   *isWindowless = true;
 #else
   *isWindowless = mWindowless;
@@ -1367,7 +988,6 @@ PluginTimerCallback(nsITimer *aTimer, void *aClosure)
 
   PLUGIN_LOG(PLUGIN_LOG_NOISY, ("nsNPAPIPluginInstance running plugin timer callback this=%p\n", npp->ndata));
 
-  MAIN_THREAD_JNI_REF_GUARD;
   // Some plugins (Flash on Android) calls unscheduletimer
   // from this callback.
   t->inCallback = true;

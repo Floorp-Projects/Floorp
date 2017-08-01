@@ -6,7 +6,6 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -111,13 +110,13 @@ function defineCohort() {
   let addonPolicy = "unknown";
   if (updateChannel in ADDON_ROLLOUT_POLICY) {
     addonPolicy = ADDON_ROLLOUT_POLICY[updateChannel];
-    Preferences.set(PREF_E10S_ADDON_POLICY, addonPolicy);
+    Services.prefs.setStringPref(PREF_E10S_ADDON_POLICY, addonPolicy);
 
     // This is also the proper place to set the blocklist pref
     // in case it is necessary.
-    Preferences.set(PREF_E10S_ADDON_BLOCKLIST, "");
+    Services.prefs.setStringPref(PREF_E10S_ADDON_BLOCKLIST, "");
   } else {
-    Preferences.reset(PREF_E10S_ADDON_POLICY);
+    Services.prefs.clearUserPref(PREF_E10S_ADDON_POLICY);
   }
 
   let userOptedOut = optedOut();
@@ -125,7 +124,7 @@ function defineCohort() {
   let disqualified = (Services.appinfo.multiprocessBlockPolicy != 0);
   let testThreshold = TEST_THRESHOLD[updateChannel];
   let testGroup = (getUserSample(false) < testThreshold);
-  let hasNonExemptAddon = Preferences.get(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
+  let hasNonExemptAddon = Services.prefs.getBoolPref(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
   let temporaryDisqualification = getTemporaryDisqualification();
   let temporaryQualification = getTemporaryQualification();
 
@@ -153,24 +152,24 @@ function defineCohort() {
     // For these volatile disqualification reasons, however, we must not try
     // to activate e10s because the backend doesn't know about it. E10S_STATUS
     // here will be accumulated as "2 - Disabled", which is fine too.
-    Preferences.reset(PREF_TOGGLE_E10S);
-    Preferences.reset(PREF_E10S_PROCESSCOUNT + ".web");
+    Services.prefs.clearUserPref(PREF_TOGGLE_E10S);
+    Services.prefs.clearUserPref(PREF_E10S_PROCESSCOUNT + ".web");
     setCohort(`temp-disqualified-${temporaryDisqualification}`);
   } else if (!disqualified && testThreshold < 1.0 &&
              temporaryQualification != "") {
     // Users who are qualified for e10s and on channels where some population
     // would not receive e10s can be pushed into e10s anyway via a temporary
     // qualification which overrides the user sample value when non-empty.
-    Preferences.set(PREF_TOGGLE_E10S, true);
+    Services.prefs.setBoolPref.set(PREF_TOGGLE_E10S, true);
     eligibleForMulti = true;
     setCohort(`temp-qualified-${temporaryQualification}`);
   } else if (testGroup) {
-    Preferences.set(PREF_TOGGLE_E10S, true);
+    Services.prefs.setBoolPref(PREF_TOGGLE_E10S, true);
     eligibleForMulti = true;
     setCohort(`${cohortPrefix}test`);
   } else {
-    Preferences.reset(PREF_TOGGLE_E10S);
-    Preferences.reset(PREF_E10S_PROCESSCOUNT + ".web");
+    Services.prefs.clearUserPref(PREF_TOGGLE_E10S);
+    Services.prefs.clearUserPref(PREF_E10S_PROCESSCOUNT + ".web");
     setCohort(`${cohortPrefix}control`);
   }
 
@@ -189,7 +188,7 @@ function defineCohort() {
       !eligibleForMulti ||
       userOptedIn.multi ||
       disqualified) {
-    Preferences.reset(PREF_E10S_PROCESSCOUNT + ".web");
+    Services.prefs.clearUserPref(PREF_E10S_PROCESSCOUNT + ".web");
     return;
   }
 
@@ -209,7 +208,7 @@ function defineCohort() {
   for (let sampleName of Object.getOwnPropertyNames(buckets)) {
     if (multiUserSample < buckets[sampleName]) {
       // NB: Coerce sampleName to an integer because this is an integer pref.
-      Preferences.set(PREF_E10S_PROCESSCOUNT + ".web", +sampleName);
+      Services.prefs.setIntPref(PREF_E10S_PROCESSCOUNT + ".web", +sampleName);
       setCohort(`${cohortPrefix}multiBucket${sampleName}`);
       break;
     }
@@ -224,27 +223,26 @@ function uninstall() {
 
 function getUserSample(multi) {
   let pref = multi ? (PREF_COHORT_SAMPLE + ".multi") : PREF_COHORT_SAMPLE;
-  let prefValue = Preferences.get(pref, undefined);
-  let value = 0.0;
+  let prefType = Services.prefs.getPrefType(pref);
 
-  if (typeof(prefValue) == "string") {
-    value = parseFloat(prefValue, 10);
-    return value;
+  if (prefType == Ci.nsIPrefBranch.PREF_STRING) {
+    return parseFloat(Services.prefs.getStringPref(pref), 10);
   }
 
-  if (typeof(prefValue) == "number") {
+  let value = 0.0;
+  if (prefType == Ci.nsIPrefBranch.PREF_INT) {
     // convert old integer value
-    value = prefValue / 100;
+    value = Services.prefs.getIntPref(pref) / 100;
   } else {
     value = Math.random();
   }
 
-  Preferences.set(pref, value.toString().substr(0, 8));
+  Services.prefs.setStringPref(pref, value.toString().substr(0, 8));
   return value;
 }
 
 function setCohort(cohortName) {
-  Preferences.set(PREF_COHORT_NAME, cohortName);
+  Services.prefs.setStringPref(PREF_COHORT_NAME, cohortName);
   if (cohortName != "unsupportedChannel") {
     TelemetryEnvironment.setExperimentActive("e10sCohort", cohortName);
   }
@@ -256,10 +254,10 @@ function setCohort(cohortName) {
 }
 
 function optedIn() {
-  let e10s = Preferences.get(PREF_E10S_OPTED_IN, false) ||
-             Preferences.get(PREF_E10S_FORCE_ENABLED, false);
-  let multi = Preferences.isSet(PREF_E10S_PROCESSCOUNT) ||
-             !Preferences.get(PREF_USE_DEFAULT_PERF_SETTINGS, true);
+  let e10s = Services.prefs.getBoolPref(PREF_E10S_OPTED_IN, false) ||
+             Services.prefs.getBoolPref(PREF_E10S_FORCE_ENABLED, false);
+  let multi = Services.prefs.prefHasUserValue(PREF_E10S_PROCESSCOUNT) ||
+             !Services.prefs.getBoolPref(PREF_USE_DEFAULT_PERF_SETTINGS, true);
   return { e10s, multi };
 }
 
@@ -267,10 +265,10 @@ function optedOut() {
   // Users can also opt-out by toggling back the pref to false.
   // If they reset the pref instead they might be re-enabled if
   // they are still part of the threshold.
-  let e10s = Preferences.get(PREF_E10S_FORCE_DISABLED, false) ||
-               (Preferences.isSet(PREF_TOGGLE_E10S) &&
-                Preferences.get(PREF_TOGGLE_E10S) == false);
-  let multi = Preferences.get(PREF_E10S_MULTI_OPTOUT, 0) >=
+  let e10s = Services.prefs.getBoolPref(PREF_E10S_FORCE_DISABLED, false) ||
+               (Services.prefs.prefHasUserValue(PREF_TOGGLE_E10S) &&
+                Services.prefs.getBoolPref(PREF_TOGGLE_E10S) == false);
+  let multi = Services.prefs.getIntPref(PREF_E10S_MULTI_OPTOUT, 0) >=
               Services.appinfo.E10S_MULTI_EXPERIMENT;
   return { e10s, multi };
 }
@@ -297,7 +295,7 @@ function getTemporaryQualification() {
   // system.  If this pref is set, then it means the user has opened DevTools at
   // some point in time.
   const PREF_OPENED_DEVTOOLS = "devtools.telemetry.tools.opened.version";
-  let hasOpenedDevTools = Preferences.isSet(PREF_OPENED_DEVTOOLS);
+  let hasOpenedDevTools = Services.prefs.prefHasUserValue(PREF_OPENED_DEVTOOLS);
   if (hasOpenedDevTools) {
     return "devtools";
   }
@@ -306,6 +304,6 @@ function getTemporaryQualification() {
 }
 
 function getAddonsDisqualifyForMulti() {
-  return Preferences.get("extensions.e10sMultiBlocksEnabling", false) &&
-         Preferences.get("extensions.e10sMultiBlockedByAddons", false);
+  return Services.prefs.getBoolPref("extensions.e10sMultiBlocksEnabling", false) &&
+         Services.prefs.getBoolPref("extensions.e10sMultiBlockedByAddons", false);
 }
