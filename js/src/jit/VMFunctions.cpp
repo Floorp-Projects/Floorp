@@ -1808,5 +1808,17 @@ TypeOfObject(JSObject* obj, JSRuntime* rt)
     return TypeName(type, *rt->commonNames);
 }
 
+bool
+GetPrototypeOf(JSContext* cx, HandleObject target, MutableHandleValue rval)
+{
+    MOZ_ASSERT(target->hasDynamicPrototype());
+
+    RootedObject proto(cx);
+    if (!GetPrototype(cx, target, &proto))
+        return false;
+    rval.setObjectOrNull(proto);
+    return true;
+}
+
 } // namespace jit
 } // namespace js

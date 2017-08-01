@@ -2199,7 +2199,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Object_getOwnPropertyDescriptor", obj_getOwnPropertyDescriptor, 2,0),
     JS_FN("std_Object_toString",                 obj_toString,                 0,0),
 
-    JS_FN("std_Reflect_getPrototypeOf",          Reflect_getPrototypeOf,       1,0),
+    JS_INLINABLE_FN("std_Reflect_getPrototypeOf", Reflect_getPrototypeOf,      1,0,
+                    ReflectGetPrototypeOf),
     JS_FN("std_Reflect_isExtensible",            Reflect_isExtensible,         1,0),
 
     JS_FN("std_Set_has",                         SetObject::has,               1,0),

@@ -415,6 +415,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineNaNToZero(OutOfLineNaNToZero* ool);
     void visitFinishBoundFunctionInit(LFinishBoundFunctionInit* lir);
     void visitIsPackedArray(LIsPackedArray* lir);
+    void visitGetPrototypeOf(LGetPrototypeOf* lir);
 
     void visitCheckOverRecursed(LCheckOverRecursed* lir);
     void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);

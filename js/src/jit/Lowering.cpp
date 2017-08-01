@@ -5001,6 +5001,17 @@ LIRGenerator::visitIsPackedArray(MIsPackedArray* ins)
     define(lir, ins);
 }
 
+void
+LIRGenerator::visitGetPrototypeOf(MGetPrototypeOf* ins)
+{
+    MOZ_ASSERT(ins->target()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->type() == MIRType::Value);
+
+    auto lir = new(alloc()) LGetPrototypeOf(useRegister(ins->target()));
+    defineBox(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
 static void
 SpewResumePoint(MBasicBlock* block, MInstruction* ins, MResumePoint* resumePoint)
 {
