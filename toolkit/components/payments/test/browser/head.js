@@ -34,6 +34,10 @@ let ContentTasks = {
     content.rq = rq; // assign it so we can retrieve it later
     rq.show();
   },
+
+  manuallyClickCancel: async () => {
+    content.document.getElementById("cancel").click();
+  },
 };
 
 
