@@ -86,6 +86,7 @@
         "type": "function",
         "allowedContexts": ["content"],
         "async": "callback",
+        "requireUserInput": true,
         "description": "Request the given permissions.",
         "parameters": [
           {

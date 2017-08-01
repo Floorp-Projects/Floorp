@@ -469,7 +469,7 @@ var gPrivacyPane = {
       permissionType: "trackingprotection",
       hideStatusColumn: true,
       windowTitle: bundlePreferences.getString("trackingprotectionpermissionstitle"),
-      introText: bundlePreferences.getString("trackingprotectionpermissionstext"),
+      introText: bundlePreferences.getString("trackingprotectionpermissionstext2"),
     };
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
                     null, params);

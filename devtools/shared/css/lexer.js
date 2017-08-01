@@ -1066,6 +1066,7 @@ Scanner.prototype = {
     // aToken.mIdent may be "url" at this point; clear that out
     aToken.mIdent.length = 0;
 
+    let hasString = false;
     let ch = this.Peek();
     // Do we have a string?
     if (ch == QUOTATION_MARK || ch == APOSTROPHE) {
@@ -1074,6 +1075,7 @@ Scanner.prototype = {
         aToken.mType = eCSSToken_Bad_URL;
         return;
       }
+      hasString = true;
     } else {
       // Otherwise, this is the start of a non-quoted url (which may be empty).
       aToken.mSymbol = 0;
@@ -1092,6 +1094,25 @@ Scanner.prototype = {
       }
     } else {
       aToken.mType = eCSSToken_Bad_URL;
+      if (!hasString) {
+        // Consume until before the next right parenthesis, which follows
+        // how <bad-url-token> is consumed in CSS Syntax 3 spec.
+        // Note that, we only do this when "url(" is not followed by a
+        // string, because in the spec, "url(" followed by a string is
+        // handled as a url function rather than a <url-token>, so the
+        // rest of content before ")" should be consumed in balance,
+        // which will be done by the parser.
+        // The closing ")" is not consumed here. It is left to the parser
+        // so that the parser can handle both cases.
+        do {
+          if (IsVertSpace(ch)) {
+            this.AdvanceLine();
+          } else {
+            this.Advance();
+          }
+          ch = this.Peek();
+        } while (ch >= 0 && ch != RIGHT_PARENTHESIS);
+      }
     }
   },
 

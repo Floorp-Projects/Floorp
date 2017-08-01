@@ -450,10 +450,12 @@ class SchemaAPIInterface {
    * @param {Array} args The parameters for the function.
    * @param {function(*)} [callback] The callback to be called when the function
    *     completes.
+   * @param {boolean} [requireUserInput=false] If true, the function should
+   *                  fail if the browser is not currently handling user input.
    * @returns {Promise|undefined} Must be void if `callback` is set, and a
    *     promise otherwise. The promise is resolved when the function completes.
    */
-  callAsyncFunction(args, callback) {
+  callAsyncFunction(args, callback, requireUserInput = false) {
     throw new Error("Not implemented");
   }
 
@@ -559,9 +561,16 @@ class LocalAPIImplementation extends SchemaAPIInterface {
     this.pathObj[this.name](...args);
   }
 
-  callAsyncFunction(args, callback) {
+  callAsyncFunction(args, callback, requireUserInput) {
     let promise;
     try {
+      if (requireUserInput) {
+        let winUtils = this.context.contentWindow
+                           .getInterface(Ci.nsIDOMWindowUtils);
+        if (!winUtils.isHandlingUserInput) {
+          throw new ExtensionError(`${this.name} may only be called from a user input handler`);
+        }
+      }
       promise = this.pathObj[this.name](...args) || Promise.resolve();
     } catch (e) {
       promise = Promise.reject(e);

@@ -162,14 +162,14 @@ nsRFPService::UpdatePref()
         PR_SetEnv(tz);
       }
     } else {
-#if defined(XP_LINUX) || defined (XP_MACOSX)
-      // For POSIX like system, we reset the TZ to the /etc/localtime, which is the
-      // system timezone.
-      PR_SetEnv("TZ=:/etc/localtime");
-#else
+#if defined(XP_WIN)
       // For Windows, we reset the TZ to an empty string. This will make Windows to use
       // its system timezone.
       PR_SetEnv("TZ=");
+#else
+      // For POSIX like system, we reset the TZ to the /etc/localtime, which is the
+      // system timezone.
+      PR_SetEnv("TZ=:/etc/localtime");
 #endif
     }
   }

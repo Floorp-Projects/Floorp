@@ -52,7 +52,7 @@
           onkeypress="gPermissionManager.onPermissionKeyPress(event)"
           onselect="gPermissionManager.onPermissionSelected();">
       <treecols>
-        <treecol id="siteCol" label="&treehead.sitename.label;" flex="3"
+        <treecol id="siteCol" label="&treehead.sitename2.label;" flex="3"
                  data-field-name="origin" persist="width"/>
         <splitter class="tree-splitter"/>
         <treecol id="statusCol" label="&treehead.status.label;" flex="1"
@@ -64,12 +64,12 @@
   <vbox>
     <hbox class="actionButtons" align="left" flex="1">
       <button id="removePermission" disabled="true"
-              accesskey="&removepermission.accesskey;"
-              icon="remove" label="&removepermission.label;"
+              accesskey="&removepermission2.accesskey;"
+              icon="remove" label="&removepermission2.label;"
               oncommand="gPermissionManager.onPermissionDeleted();"/>
       <button id="removeAllPermissions"
-              icon="clear" label="&removeallpermissions.label;"
-              accesskey="&removeallpermissions.accesskey;"
+              icon="clear" label="&removeallpermissions2.label;"
+              accesskey="&removeallpermissions2.accesskey;"
               oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
     </hbox>
     <spacer flex="1"/>

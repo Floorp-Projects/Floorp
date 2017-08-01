@@ -185,7 +185,7 @@
   <vbox id="passwordSettings">
     <hbox id="savePasswordsBox">
       <checkbox id="savePasswords"
-                label="&rememberLogins1.label;" accesskey="&rememberLogins1.accesskey;"
+                label="&rememberLogins2.label;" accesskey="&rememberLogins2.accesskey;"
                 preference="signon.rememberSignons"
                 onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
                 flex="1" />
@@ -250,7 +250,7 @@
           <menuitem label="&historyHeader.custom.label;" value="custom" searchkeywords="&privateBrowsingPermanent2.label;
                                                                                         &rememberHistory2.label;
                                                                                         &rememberSearchForm.label;
-                                                                                        &acceptCookies.label;
+                                                                                        &acceptCookies2.label;
                                                                                         &cookieExceptions.label;
                                                                                         &acceptThirdParty.pre.label;
                                                                                         &acceptThirdParty.always.label;
@@ -309,9 +309,9 @@
                     accesskey="&rememberSearchForm.accesskey;"
                     preference="browser.formfill.enable"/>
           <hbox id="cookiesBox">
-            <checkbox id="acceptCookies" label="&acceptCookies.label;"
+            <checkbox id="acceptCookies" label="&acceptCookies2.label;"
                       preference="network.cookie.cookieBehavior"
-                      accesskey="&acceptCookies.accesskey;"
+                      accesskey="&acceptCookies2.accesskey;"
                       onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
                       onsynctopreference="return gPrivacyPane.writeAcceptCookies();"
                       flex="1" />
@@ -497,8 +497,8 @@
                   label="&trackingProtectionExceptions.label;"
                   accesskey="&trackingProtectionExceptions.accesskey;"
                   preference="pref.privacy.disable_button.tracking_protection_exceptions"
-                  searchkeywords="&removepermission.label;
-                                  &removeallpermissions.label;
+                  searchkeywords="&removepermission2.label;
+                                  &removeallpermissions2.label;
                                   &button.cancel.label;
                                   &button.ok.label;"/>
         </hbox>
@@ -542,7 +542,7 @@
     <rows>
       <row id="notificationsPolicyRow" align="center">
         <description flex="1">
-          <label id="notificationsPolicy">&notificationsPolicyDesc3.label;</label>
+          <label id="notificationsPolicy">&notificationsPolicyDesc4.label;</label>
           <label id="notificationsPolicyLearnMore"
                  class="learnMore text-link">&notificationsPolicyLearnMore.label;</label>
         </description>
@@ -551,8 +551,8 @@
                   class="accessory-button"
                   label="&notificationsPolicyButton.label;"
                   accesskey="&notificationsPolicyButton.accesskey;"
-                  searchkeywords="&removepermission.label;
-                                  &removeallpermissions.label;
+                  searchkeywords="&removepermission2.label;
+                                  &removeallpermissions2.label;
                                   &button.cancel.label;
                                   &button.ok.label;"/>
         </hbox>
@@ -584,8 +584,8 @@
 
   <hbox id="addonInstallBox">
     <checkbox id="warnAddonInstall"
-              label="&warnOnAddonInstall.label;"
-              accesskey="&warnOnAddonInstall.accesskey;"
+              label="&warnOnAddonInstall2.label;"
+              accesskey="&warnOnAddonInstall2.accesskey;"
               preference="xpinstall.whitelist.required"
               onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"
               flex="1" />
@@ -597,8 +597,8 @@
               accesskey="&addonExceptions.accesskey;"
               searchkeywords="&address.label;
                               &allow.label;
-                              &removepermission.label;
-                              &removeallpermissions.label;
+                              &removepermission2.label;
+                              &removeallpermissions2.label;
                               &button.cancel.label;
                               &button.ok.label;"/>
     </hbox>

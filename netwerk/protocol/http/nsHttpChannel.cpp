@@ -416,6 +416,15 @@ nsHttpChannel::AddSecurityMessage(const nsAString& aMessageTag,
                                                aMessageCategory);
 }
 
+NS_IMETHODIMP
+nsHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage)
+{
+    if (mWarningReporter) {
+        return mWarningReporter->LogBlockedCORSRequest(aMessage);
+    }
+    return NS_ERROR_UNEXPECTED;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel <private>
 //-----------------------------------------------------------------------------
@@ -858,6 +867,7 @@ nsHttpChannel::ReleaseListeners()
 {
     HttpBaseChannel::ReleaseListeners();
     mChannelClassifier = nullptr;
+    mWarningReporter = nullptr;
 }
 
 void
@@ -5922,6 +5932,7 @@ nsHttpChannel::Cancel(nsresult status)
         LOG(("  ignoring; already canceled\n"));
         return NS_OK;
     }
+
     if (mWaitingForRedirectCallback) {
         LOG(("channel canceled during wait for redirect callback"));
     }
@@ -9248,6 +9259,20 @@ nsHttpChannel::Notify(nsITimer *aTimer)
     }
 
     return NS_OK;
+}
+
+void
+nsHttpChannel::SetWarningReporter(HttpChannelSecurityWarningReporter *aReporter)
+{
+    LOG(("nsHttpChannel [this=%p] SetWarningReporter [%p]", this, aReporter));
+    mWarningReporter = aReporter;
+}
+
+HttpChannelSecurityWarningReporter*
+nsHttpChannel::GetWarningReporter()
+{
+    LOG(("nsHttpChannel [this=%p] GetWarningReporter [%p]", this, mWarningReporter.get()));
+    return mWarningReporter.get();
 }
 
 } // namespace net

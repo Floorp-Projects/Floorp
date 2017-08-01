@@ -141,8 +141,8 @@ function defineCohort() {
     // the proper prefs must already be set.
     setCohort("optedOut");
   } else if (userOptedIn.e10s) {
-    setCohort("optedIn");
     eligibleForMulti = true;
+    setCohort("optedIn");
   } else if (temporaryDisqualification != "") {
     // Users who are disqualified by the backend (from multiprocessBlockPolicy)
     // can be put into either the test or control groups, because e10s will
@@ -152,25 +152,25 @@ function defineCohort() {
     // For these volatile disqualification reasons, however, we must not try
     // to activate e10s because the backend doesn't know about it. E10S_STATUS
     // here will be accumulated as "2 - Disabled", which is fine too.
-    setCohort(`temp-disqualified-${temporaryDisqualification}`);
     Services.prefs.clearUserPref(PREF_TOGGLE_E10S);
     Services.prefs.clearUserPref(PREF_E10S_PROCESSCOUNT + ".web");
+    setCohort(`temp-disqualified-${temporaryDisqualification}`);
   } else if (!disqualified && testThreshold < 1.0 &&
              temporaryQualification != "") {
     // Users who are qualified for e10s and on channels where some population
     // would not receive e10s can be pushed into e10s anyway via a temporary
     // qualification which overrides the user sample value when non-empty.
+    Services.prefs.setBoolPref.set(PREF_TOGGLE_E10S, true);
+    eligibleForMulti = true;
     setCohort(`temp-qualified-${temporaryQualification}`);
-    Services.prefs.setBoolPref(PREF_TOGGLE_E10S, true);
-    eligibleForMulti = true;
   } else if (testGroup) {
-    setCohort(`${cohortPrefix}test`);
     Services.prefs.setBoolPref(PREF_TOGGLE_E10S, true);
     eligibleForMulti = true;
+    setCohort(`${cohortPrefix}test`);
   } else {
-    setCohort(`${cohortPrefix}control`);
     Services.prefs.clearUserPref(PREF_TOGGLE_E10S);
     Services.prefs.clearUserPref(PREF_E10S_PROCESSCOUNT + ".web");
+    setCohort(`${cohortPrefix}control`);
   }
 
   // Now determine if this user should be in the e10s-multi experiment.
@@ -207,10 +207,9 @@ function defineCohort() {
   let multiUserSample = getUserSample(true);
   for (let sampleName of Object.getOwnPropertyNames(buckets)) {
     if (multiUserSample < buckets[sampleName]) {
-      setCohort(`${cohortPrefix}multiBucket${sampleName}`);
-
       // NB: Coerce sampleName to an integer because this is an integer pref.
       Services.prefs.setIntPref(PREF_E10S_PROCESSCOUNT + ".web", +sampleName);
+      setCohort(`${cohortPrefix}multiBucket${sampleName}`);
       break;
     }
   }

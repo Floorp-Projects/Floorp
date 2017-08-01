@@ -39,6 +39,7 @@ using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUnifo
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using base::ProcessId from "base/process.h";
 using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 
@@ -250,7 +251,7 @@ parent:
 
   // The pipelineId is the same as the layersId
   sync PWebRenderBridge(PipelineId pipelineId, LayoutDeviceIntSize aSize)
-    returns (TextureFactoryIdentifier textureFactoryIdentifier, uint32_t idNamespace); //XXX: use the WrIdNamespace type
+    returns (TextureFactoryIdentifier textureFactoryIdentifier, IdNamespace idNamespace);
 
   sync CheckContentOnlyTDR(uint32_t sequenceNum)
     returns (bool isContentOnlyTDR);
