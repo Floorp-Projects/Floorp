@@ -124,6 +124,15 @@ OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise,
                     HandleValue onFulfilled, HandleValue onRejected,
                     MutableHandleObject dependent, bool createDependent);
 
+/**
+ * PromiseResolve ( C, x )
+ *
+ * The abstract operation PromiseResolve, given a constructor and a value,
+ * returns a new promise resolved with that value.
+ */
+MOZ_MUST_USE JSObject*
+PromiseResolve(JSContext* cx, HandleObject constructor, HandleValue value);
+
 
 MOZ_MUST_USE PromiseObject*
 CreatePromiseObjectForAsync(JSContext* cx, HandleValue generatorVal);
