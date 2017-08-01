@@ -106,8 +106,8 @@
                   accesskey="&cmd.clearList2.accesskey;"/>
       </menupopup>
 
-      <panelmultiview id="downloadsPanel-multiView"
-                      mainViewId="downloadsPanel-mainView">
+      <photonpanelmultiview id="downloadsPanel-multiView"
+                            mainViewId="downloadsPanel-mainView">
 
         <panelview id="downloadsPanel-mainView">
           <vbox class="panel-view-body-unscrollable">
@@ -154,7 +154,9 @@
         </panelview>
 
         <panelview id="downloadsPanel-blockedSubview"
-                   descriptionheightworkaround="true">
+                   descriptionheightworkaround="true"
+                   class="PanelUI-subView"
+                   title="&downloadDetails.label;">
           <vbox class="panel-view-body-unscrollable">
             <description id="downloadsPanel-blockedSubview-title"/>
             <description id="downloadsPanel-blockedSubview-details1"/>
@@ -176,7 +178,7 @@
           </hbox>
         </panelview>
 
-      </panelmultiview>
+      </photonpanelmultiview>
 
     </panel>
   </popupset>
