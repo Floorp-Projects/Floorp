@@ -7,7 +7,6 @@
 this.EXPORTED_SYMBOLS = ["SessionStorage"];
 
 const Cu = Components.utils;
-const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -15,9 +14,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
-
-const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
-              .createInstance(Ci.nsISessionStoreUtils);
 
 // A bound to the size of data to store for DOM Storage.
 const DOM_STORAGE_LIMIT_PREF = "browser.sessionstore.dom_storage_limit";
@@ -58,36 +54,22 @@ this.SessionStorage = Object.freeze({
   },
 });
 
-/**
- * Calls the given callback |cb|, passing |frame| and each of its descendants.
- */
-function forEachNonDynamicChildFrame(frame, cb) {
-  // Call for current frame.
-  cb(frame);
-
-  // Call the callback recursively for each descendant.
-  ssu.forEachNonDynamicChildFrame(frame, subframe => {
-    return forEachNonDynamicChildFrame(subframe, cb);
-  });
-}
-
 var SessionStorageInternal = {
   /**
    * Reads all session storage data from the given docShell.
-   * @param content
-   *        A tab's global, i.e. the root frame we want to collect for.
+   * @param docShell
+   *        A tab's docshell (containing the sessionStorage)
+   * @param frameTree
+   *        The docShell's FrameTree instance.
    * @return Returns a nested object that will have hosts as keys and per-origin
    *         session storage data as strings. For example:
    *         {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
    */
-  collect(content) {
+  collect(docShell, frameTree) {
     let data = {};
     let visitedOrigins = new Set();
-    let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
 
-    forEachNonDynamicChildFrame(content, frame => {
+    frameTree.forEach(frame => {
       let principal = getPrincipalForFrame(docShell, frame);
       if (!principal) {
         return;

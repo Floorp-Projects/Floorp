@@ -101,10 +101,6 @@ this.FormData = Object.freeze({
     return FormDataInternal.collect(frame);
   },
 
-  restore(frame, data) {
-    return FormDataInternal.restore(frame, data);
-  },
-
   restoreTree(root, data) {
     FormDataInternal.restoreTree(root, data);
   }
@@ -290,14 +286,10 @@ var FormDataInternal = {
    *        An object holding form data.
    */
   restore({document: doc}, data) {
-    if (!data.url) {
-      return;
-    }
-
     // Don't restore any data for the given frame if the URL
     // stored in the form data doesn't match its current URL.
-    if (data.url != getDocumentURI(doc)) {
-      return false;
+    if (!data.url || data.url != getDocumentURI(doc)) {
+      return;
     }
 
     // For about:{sessionrestore,welcomeback} we saved the field as JSON to
@@ -449,11 +441,14 @@ var FormDataInternal = {
    *        }
    */
   restoreTree(root, data) {
-    // Restore data for the given |root| frame and its descendants. If restore()
-    // returns false this indicates the |data.url| doesn't match the loaded
-    // document URI. We then must ignore this branch for security reasons.
-    if (this.restore(root, data) === false) {
+    // Don't restore any data for the root frame and its subframes if there
+    // is a URL stored in the form data and it doesn't match its current URL.
+    if (data.url && data.url != getDocumentURI(root.document)) {
       return;
+    }
+
+    if (data.url) {
+      this.restore(root, data);
     }
 
     if (!data.hasOwnProperty("children")) {

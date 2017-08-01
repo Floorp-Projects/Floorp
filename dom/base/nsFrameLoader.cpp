@@ -2412,10 +2412,6 @@ nsFrameLoader::MaybeCreateDocShell()
   mIsTopLevelContent =
     AddTreeItemToTreeOwner(mDocShell, parentTreeOwner, parentType, docShell);
 
-  if (mIsTopLevelContent) {
-    mDocShell->SetCreatedDynamically(false);
-  }
-
   // Make sure all shells have links back to the content element
   // in the nearest enclosing chrome shell.
   nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
