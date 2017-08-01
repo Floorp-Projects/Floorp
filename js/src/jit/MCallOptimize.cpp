@@ -3019,16 +3019,26 @@ IonBuilder::inlineToObject(CallInfo& callInfo)
         return InliningStatus_NotInlined;
     }
 
-    // If we know the input type is an object, nop ToObject.
     if (getInlineReturnType() != MIRType::Object)
         return InliningStatus_NotInlined;
-    if (callInfo.getArg(0)->type() != MIRType::Object)
+
+    MDefinition* object = callInfo.getArg(0);
+    if (object->type() != MIRType::Object && object->type() != MIRType::Value)
         return InliningStatus_NotInlined;
 
     callInfo.setImplicitlyUsedUnchecked();
-    MDefinition* object = callInfo.getArg(0);
 
-    current->push(object);
+    // If we know the input type is an object, nop ToObject.
+    if (object->type() == MIRType::Object) {
+        current->push(object);
+    } else {
+        auto* ins = MToObject::New(alloc(), object);
+        current->add(ins);
+        current->push(ins);
+
+        MOZ_TRY(pushTypeBarrier(ins, getInlineReturnTypeSet(), BarrierKind::TypeSet));
+    }
+
     return InliningStatus_Inlined;
 }
 
