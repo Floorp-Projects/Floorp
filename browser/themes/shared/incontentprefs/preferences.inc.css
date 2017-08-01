@@ -658,7 +658,12 @@ groupbox {
 }
 
 #searchInput {
+  width: 230px;
   margin: 20px 0;
+}
+
+#searchInput .textbox-search-icons:not([selectedIndex="1"]) {
+  display: none;
 }
 
 .search-tooltip {
