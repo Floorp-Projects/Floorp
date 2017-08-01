@@ -294,7 +294,7 @@ var CastingApps = {
           return;
         }
       }
-    } catch(e) {}
+    } catch (e) {}
   },
 
   _getContentTypeForURI: function(aURI, aElement, aCallback) {
@@ -313,7 +313,7 @@ var CastingApps = {
         securityFlags: secFlags,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_VIDEO
       });
-    } catch(e) {
+    } catch (e) {
      aCallback(null);
      return;
     }
@@ -457,7 +457,7 @@ var CastingApps = {
           return element.mozAllowCasting;
         }
       }
-    } catch(e) {}
+    } catch (e) {}
 
     return false;
   },

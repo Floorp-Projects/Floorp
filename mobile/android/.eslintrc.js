@@ -8,13 +8,8 @@ module.exports = {
 
     // Rules enabled in mozilla/recommended, and disabled for now, we should
     // re-enable these over time.
-    "block-spacing": "off",
     "brace-style": "off",
-    "comma-spacing": "off",
     "consistent-return": "off",
-    "eol-last": "off",
-    "key-spacing": "off",
-    "keyword-spacing": "off",
     "no-else-return": "off",
     "no-empty": "off",
     "no-extra-bind": "off",
@@ -26,7 +21,6 @@ module.exports = {
     "no-new-object": "off",
     "no-octal": "off",
     "no-redeclare": "off",
-    "no-trailing-spaces": "off",
     "no-useless-call": "off",
     "no-useless-concat": "off",
     "no-useless-return": "off",

@@ -20,7 +20,7 @@ var OfflineApps = {
         // All pages can use offline capabilities, no need to ask the user
         return;
       }
-    } catch(e) {
+    } catch (e) {
       // This pref isn't set by default, ignore failures
     }
 

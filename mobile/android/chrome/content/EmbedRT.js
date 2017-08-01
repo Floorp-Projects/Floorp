@@ -56,7 +56,7 @@ var EmbedRT = {
 
       try {
         sandbox.load(params);
-      } catch(e) {
+      } catch (e) {
         dump("Exception calling 'load' method in script: " + scriptURL + "\n" + e);
       }
     }

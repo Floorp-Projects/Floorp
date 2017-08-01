@@ -36,7 +36,7 @@ FilePicker.prototype = {
     this._mode = aMode;
     this._title = aTitle;
 
-    let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator); 
+    let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
     this.guid = idService.generateUUID().toString();
 
     if (aMode != Ci.nsIFilePicker.modeOpen && aMode != Ci.nsIFilePicker.modeOpenMultiple)
@@ -114,7 +114,7 @@ FilePicker.prototype = {
   set filterIndex(val) {
     this._filterIndex = val;
   },
-  
+
   get displayDirectory() {
     return this._displayDirectory;
   },
@@ -279,7 +279,7 @@ FilePicker.prototype = {
       let winUtils = aDomWin.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
       winUtils.dispatchEventToChromeOnly(aDomWin, event);
-    } catch(ex) {
+    } catch (ex) {
     }
   },
 

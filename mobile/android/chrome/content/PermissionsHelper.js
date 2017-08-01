@@ -113,7 +113,7 @@ var PermissionsHelper = {
           permissions: permissions
         });
         break;
- 
+
       case "Permissions:Clear":
         // An array of the indices of the permissions we want to clear
         let permissionsToClear = data.permissions;

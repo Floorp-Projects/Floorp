@@ -82,7 +82,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
 
     // Check the system font scale factor and then enable it for testing
     is(getSystemFontScale(), 1.0, "system font scale is default");
-    tab = BrowserApp.addTab(URL_mobile , { selected: true, parentId: BrowserApp.selectedTab.id });
+    tab = BrowserApp.addTab(URL_mobile, { selected: true, parentId: BrowserApp.selectedTab.id });
     yield promiseBrowserEvent(tab.browser, "load");
     is(tab.browser.effectiveTextZoom, 1.0, "text zoom is default value");
 
@@ -132,7 +132,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
 
     // Check the system font scale factor and then take a screenshot of this base state
     is(getSystemFontScale(), 1.0, "system font scale is default");
-    tab = BrowserApp.addTab(URL_desktop , { selected: true, parentId: BrowserApp.selectedTab.id });
+    tab = BrowserApp.addTab(URL_desktop, { selected: true, parentId: BrowserApp.selectedTab.id });
     yield promiseBrowserEvent(tab.browser, "load");
     is(tab.browser.effectiveTextZoom, 1.0, "text zoom is default value");
 

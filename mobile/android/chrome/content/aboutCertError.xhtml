@@ -75,7 +75,7 @@
           if (node.textContent == "#1")
             node.textContent = location.host;
           else
-            for(var i = 0; i < node.childNodes.length; i++)
+            for (var i = 0; i < node.childNodes.length; i++)
               replaceWithHost(node.childNodes[i]);
         };
         replaceWithHost(intro);

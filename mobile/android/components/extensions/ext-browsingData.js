@@ -66,7 +66,7 @@ this.browsingData = class extends ExtensionAPI {
           for (let item of PREF_LIST) {
             // The property formData needs a different case than the
             // formdata preference.
-            switch(item){
+            switch (item){
               case "formdata":
                 name = "formData";
                 break;

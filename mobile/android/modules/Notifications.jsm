@@ -122,8 +122,8 @@ Notification.prototype = {
         let button = this._buttons[buttonName];
         let obj = {
           buttonId: button.buttonId,
-          title : button.title,
-          icon : button.icon
+          title: button.title,
+          icon: button.icon
         };
         msg.actions.push(obj);
       }
