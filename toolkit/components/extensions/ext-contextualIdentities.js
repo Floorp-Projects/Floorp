@@ -19,18 +19,6 @@ const convertIdentity = identity => {
   return result;
 };
 
-const convertIdentityFromObserver = wrappedIdentity => {
-  let identity = wrappedIdentity.wrappedJSObject;
-  let result = {
-    name: identity.name,
-    icon: identity.icon,
-    color: identity.color,
-    cookieStoreId: getCookieStoreIdForContainer(identity.userContextId),
-  };
-
-  return result;
-};
-
 this.contextualIdentities = class extends ExtensionAPI {
   getAPI(context) {
     let self = {
@@ -138,40 +126,6 @@ this.contextualIdentities = class extends ExtensionAPI {
 
           return Promise.resolve(convertedIdentity);
         },
-
-        onCreated: new EventManager(context, "contextualIdentities.onCreated", fire => {
-          let observer = (subject, topic) => {
-            fire.async({contextualIdentity: convertIdentityFromObserver(subject)});
-          };
-
-          Services.obs.addObserver(observer, "contextual-identity-created");
-          return () => {
-            Services.obs.removeObserver(observer, "contextual-identity-created");
-          };
-        }).api(),
-
-        onUpdated: new EventManager(context, "contextualIdentities.onUpdated", fire => {
-          let observer = (subject, topic) => {
-            fire.async({contextualIdentity: convertIdentityFromObserver(subject)});
-          };
-
-          Services.obs.addObserver(observer, "contextual-identity-updated");
-          return () => {
-            Services.obs.removeObserver(observer, "contextual-identity-updated");
-          };
-        }).api(),
-
-        onRemoved: new EventManager(context, "contextualIdentities.onRemoved", fire => {
-          let observer = (subject, topic) => {
-            fire.async({contextualIdentity: convertIdentityFromObserver(subject)});
-          };
-
-          Services.obs.addObserver(observer, "contextual-identity-deleted");
-          return () => {
-            Services.obs.removeObserver(observer, "contextual-identity-deleted");
-          };
-        }).api(),
-
       },
     };
 
