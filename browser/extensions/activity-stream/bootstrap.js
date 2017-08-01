@@ -75,8 +75,10 @@ function init(reason) {
  * @param  {type} reason Reason for uninitialization. Could be uninstall, upgrade, or PREF_OFF
  */
 function uninit(reason) {
+  // Make sure to only uninit once in case both pref change and shutdown happen
   if (activityStream) {
     activityStream.uninit(reason);
+    activityStream = null;
   }
 }
 

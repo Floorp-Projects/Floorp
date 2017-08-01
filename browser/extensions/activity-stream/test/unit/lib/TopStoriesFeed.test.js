@@ -9,15 +9,17 @@ describe("Top Stories Feed", () => {
   let STORIES_UPDATE_TIME;
   let TOPICS_UPDATE_TIME;
   let SECTION_ID;
+  let FEED_PREF;
+  let SECTION_OPTIONS_PREF;
   let instance;
   let clock;
   let globals;
 
   beforeEach(() => {
     FakePrefs.prototype.prefs["feeds.section.topstories.options"] = `{
-      "stories_endpoint": "https://somedomain.org/stories?key=$apiKey&locale=$locale",
+      "stories_endpoint": "https://somedomain.org/stories?key=$apiKey",
       "stories_referrer": "https://somedomain.org/referrer",
-      "topics_endpoint": "https://somedomain.org/topics?key=$apiKey&locale=$locale",
+      "topics_endpoint": "https://somedomain.org/topics?key=$apiKey",
       "survey_link": "https://www.surveymonkey.com/r/newtabffx",
       "api_key_pref": "apiKeyPref",
       "provider_name": "test-provider",
@@ -30,9 +32,11 @@ describe("Top Stories Feed", () => {
     globals.set("Services", {locale: {getRequestedLocale: () => "en-CA"}});
     clock = sinon.useFakeTimers();
 
-    ({TopStoriesFeed, STORIES_UPDATE_TIME, TOPICS_UPDATE_TIME, SECTION_ID} = injector({"lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs}}));
+    ({TopStoriesFeed, STORIES_UPDATE_TIME, TOPICS_UPDATE_TIME, SECTION_ID, FEED_PREF, SECTION_OPTIONS_PREF} = injector({"lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs}}));
     instance = new TopStoriesFeed();
     instance.store = {getState() { return {}; }, dispatch: sinon.spy()};
+    instance.storiesLastUpdated = 0;
+    instance.topicsLastUpdated = 0;
   });
   afterEach(() => {
     globals.restore();
@@ -44,9 +48,9 @@ describe("Top Stories Feed", () => {
     });
     it("should initialize endpoints based on prefs", () => {
       instance.onAction({type: at.INIT});
-      assert.equal("https://somedomain.org/stories?key=test-api-key&locale=en-CA", instance.stories_endpoint);
+      assert.equal("https://somedomain.org/stories?key=test-api-key", instance.stories_endpoint);
       assert.equal("https://somedomain.org/referrer", instance.stories_referrer);
-      assert.equal("https://somedomain.org/topics?key=test-api-key&locale=en-CA", instance.topics_endpoint);
+      assert.equal("https://somedomain.org/topics?key=test-api-key", instance.topics_endpoint);
     });
     it("should register section", () => {
       const expectedSectionOptions = {
@@ -117,18 +121,6 @@ describe("Top Stories Feed", () => {
 
       assert.called(Components.utils.reportError);
     });
-    it("should report error for missing locale", () => {
-      let fakeServices = {locale: {getRequestedLocale: sinon.spy()}};
-      globals.set("Services", fakeServices);
-      globals.sandbox.spy(global.Components.utils, "reportError");
-      FakePrefs.prototype.prefs["feeds.section.topstories.options"] = `{
-        "stories_endpoint": "https://somedomain.org/stories?locale=$locale",
-        "topics_endpoint": "https://somedomain.org/topics?locale=$locale"
-      }`;
-      instance.init();
-
-      assert.called(Components.utils.reportError);
-    });
     it("should deregister section", () => {
       instance.onAction({type: at.UNINIT});
       assert.calledOnce(instance.store.dispatch);
@@ -139,7 +131,12 @@ describe("Top Stories Feed", () => {
     });
     it("should initialize on FEED_INIT", () => {
       instance.init = sinon.spy();
-      instance.onAction({type: at.FEED_INIT, data: "feeds.section.topstories"});
+      instance.onAction({type: at.FEED_INIT, data: FEED_PREF});
+      assert.calledOnce(instance.init);
+    });
+    it("should initialize on PREF_CHANGED", () => {
+      instance.init = sinon.spy();
+      instance.onAction({type: at.PREF_CHANGED, data: {name: SECTION_OPTIONS_PREF}});
       assert.calledOnce(instance.init);
     });
   });
@@ -163,7 +160,8 @@ describe("Top Stories Feed", () => {
         "description": "description",
         "image": "image-url",
         "referrer": "referrer",
-        "url": "rec-url"
+        "url": "rec-url",
+        "eTLD": ""
       }];
 
       instance.stories_endpoint = "stories-endpoint";
@@ -277,7 +275,6 @@ describe("Top Stories Feed", () => {
   describe("#update", () => {
     it("should fetch stories after update interval", () => {
       instance.fetchStories = sinon.spy();
-      instance.fetchTopics = sinon.spy();
       instance.onAction({type: at.SYSTEM_TICK});
       assert.notCalled(instance.fetchStories);
 
@@ -286,7 +283,6 @@ describe("Top Stories Feed", () => {
       assert.calledOnce(instance.fetchStories);
     });
     it("should fetch topics after update interval", () => {
-      instance.fetchStories = sinon.spy();
       instance.fetchTopics = sinon.spy();
       instance.onAction({type: at.SYSTEM_TICK});
       assert.notCalled(instance.fetchTopics);
