@@ -4,25 +4,25 @@
 
 /* exported TraversalRules, TraversalHelper */
 
-'use strict';
+"use strict";
 
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = ['TraversalRules', 'TraversalHelper']; // jshint ignore:line
+this.EXPORTED_SYMBOLS = ["TraversalRules", "TraversalHelper"]; // jshint ignore:line
 
-Cu.import('resource://gre/modules/accessibility/Utils.jsm');
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Roles',  // jshint ignore:line
-  'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Filters',  // jshint ignore:line
-  'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'States',  // jshint ignore:line
-  'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Prefilters',  // jshint ignore:line
-  'resource://gre/modules/accessibility/Constants.jsm');
+Cu.import("resource://gre/modules/accessibility/Utils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Roles",  // jshint ignore:line
+  "resource://gre/modules/accessibility/Constants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Filters",  // jshint ignore:line
+  "resource://gre/modules/accessibility/Constants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "States",  // jshint ignore:line
+  "resource://gre/modules/accessibility/Constants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Prefilters",  // jshint ignore:line
+  "resource://gre/modules/accessibility/Constants.jsm");
 
-var gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
+var gSkipEmptyImages = new PrefCache("accessibility.accessfu.skip_empty_images");
 
 function BaseTraversalRule(aRoles, aMatchFunc, aPreFilter, aContainerRule) {
   this._explicitMatchRoles = new Set(aRoles);
@@ -232,13 +232,13 @@ this.TraversalRules = { // jshint ignore:line
       }
 
       let matchedRole = Utils.matchRoles(aAccessible, [
-        'banner',
-        'complementary',
-        'contentinfo',
-        'main',
-        'navigation',
-        'search',
-        'region'
+        "banner",
+        "complementary",
+        "contentinfo",
+        "main",
+        "navigation",
+        "search",
+        "region"
         ]);
 
       return matchedRole ? Filters.MATCH : Filters.IGNORE;
@@ -361,7 +361,7 @@ this.TraversalRules = { // jshint ignore:line
      Roles.SWITCH /* A type of checkbox that represents on/off values */]),
 
   _shouldSkipImage: function _shouldSkipImage(aAccessible) {
-    if (gSkipEmptyImages.value && aAccessible.name === '') {
+    if (gSkipEmptyImages.value && aAccessible.name === "") {
       return Filters.IGNORE;
     }
     return Filters.MATCH;

@@ -168,7 +168,7 @@
       this.invoke = function cloneAndAppendToDOM_invoke()
       {
         var newElm = this.DOMNode.cloneNode(true);
-        newElm.removeAttribute('id');
+        newElm.removeAttribute("id");
 
         var targets = aTargetsFunc ?
           aTargetsFunc.call(null, newElm) : [newElm];
@@ -237,7 +237,7 @@
       }
 
       this.newElm = this.DOMNode.cloneNode(true);
-      this.newElm.removeAttribute('id');
+      this.newElm.removeAttribute("id");
       this.setTarget(kShowEvent, this.newElm);
     }
 
@@ -368,7 +368,7 @@
 
       this.invoke = function showHiddenParentOfVisibleChild_invoke()
       {
-        getNode("c4_middle").style.visibility = 'visible';
+        getNode("c4_middle").style.visibility = "visible";
       }
 
       this.getID = function showHiddenParentOfVisibleChild_getID()
@@ -386,13 +386,13 @@
 
       this.invoke = function hideNDestroyDoc_invoke()
       {
-        this.txt = getAccessible('c5').firstChild.firstChild;
+        this.txt = getAccessible("c5").firstChild.firstChild;
         this.txt.DOMNode.remove();
       }
 
       this.check = function hideNDestroyDoc_check()
       {
-        getNode('c5').remove();
+        getNode("c5").remove();
       }
 
       this.getID = function hideNDestroyDoc_getID()
@@ -410,7 +410,7 @@
 
       this.invoke = function hideHideNDestroyDoc_invoke()
       {
-        var doc = getAccessible('c6').firstChild;
+        var doc = getAccessible("c6").firstChild;
         var l1 = doc.firstChild;
         this.target = l1.firstChild;
         var l2 = doc.lastChild;
@@ -420,7 +420,7 @@
 
       this.check = function hideHideNDestroyDoc_check()
       {
-        getNode('c6').remove();
+        getNode("c6").remove();
       }
 
       this.getID = function hideHideNDestroyDoc_getID()

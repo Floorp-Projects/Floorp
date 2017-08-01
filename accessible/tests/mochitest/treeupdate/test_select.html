@@ -97,13 +97,13 @@
     function setHrefOnOption()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, 's2_o'),
-        new invokerChecker(EVENT_SHOW, 's2_o'),
+        new invokerChecker(EVENT_HIDE, "s2_o"),
+        new invokerChecker(EVENT_SHOW, "s2_o"),
       ];
 
       this.invoke = function setHrefOnOption_setHref()
       {
-        getNode('s2_o').setAttribute('href', '1');
+        getNode("s2_o").setAttribute("href", "1");
       }
 
       this.finalCheck = function() {
@@ -113,7 +113,7 @@
               { COMBOBOX_OPTION: [ ] }
             ] }
           ] };
-        testAccessibleTree('s2', tree);
+        testAccessibleTree("s2", tree);
       }
 
       this.getID = function removeptions_getID()

@@ -85,14 +85,14 @@
     // not 'invalid' state
     // (per spec, min/maxlength are always valid until interactively edited)
     var validInput = document.createElement("input");
-    validInput.maxLength = '0';
-    validInput.value = 'a';
+    validInput.maxLength = "0";
+    validInput.value = "a";
     ok(validInput.validity.valid,
        "input should be valid despite maxlength (no interactive edits)");
 
     var validInput2 = document.createElement("input");
-    validInput2.minLength = '1';
-    validInput2.value = '';
+    validInput2.minLength = "1";
+    validInput2.value = "";
     ok(validInput2.validity.valid,
        "input should be valid despite minlength (no interactive edits)");
 

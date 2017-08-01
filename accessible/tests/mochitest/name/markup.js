@@ -374,7 +374,7 @@ function evaluateXPath(aNode, aExpr, aResolver)
 
 function htmlDocResolver(aPrefix) {
   var ns = {
-    'html': 'http://www.w3.org/1999/xhtml'
+    "html": "http://www.w3.org/1999/xhtml"
   };
   return ns[aPrefix] || null;
 }
