@@ -271,7 +271,7 @@ this.FxAccountsWebChannel.prototype = {
                   UITelemetry.addEvent("action.1", "content", null, "fxaccount-create");
                   return success;
                 });
-              } else {
+              }
                 return Accounts.updateFirefoxAccountFromJSON(data).then(success => {
                   if (!success) {
                     throw new Error("Could not update Firefox Account!");
@@ -279,7 +279,7 @@ this.FxAccountsWebChannel.prototype = {
                   UITelemetry.addEvent("action.1", "content", null, "fxaccount-login");
                   return success;
                 });
-              }
+
             })
             .then(success => {
               if (!success) {

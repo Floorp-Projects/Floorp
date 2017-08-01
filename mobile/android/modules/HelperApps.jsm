@@ -158,11 +158,11 @@ var HelperApps =  {
         throw new Error("Intent:GetHandler did not return data");
       }
       return parseData(data);
-    } else {
+    }
       EventDispatcher.instance.sendRequestForResult(msg).then(function(data) {
         callback(parseData(data));
       });
-    }
+
   },
 
   launchUri: function launchUri(uri) {

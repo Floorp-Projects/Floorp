@@ -388,8 +388,7 @@ LoginManagerPrompter.prototype = {
     if (formatArgs)
       return this._strBundle.pwmgr.formatStringFromName(
         key, formatArgs, formatArgs.length);
-    else
-      return this._strBundle.pwmgr.GetStringFromName(key);
+    return this._strBundle.pwmgr.GetStringFromName(key);
   },
 
   /*

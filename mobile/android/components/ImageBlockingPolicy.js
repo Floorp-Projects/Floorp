@@ -87,7 +87,7 @@ ImageBlockingPolicy.prototype = {
     let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
     return !(network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
         network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
-        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB  ||
+        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB ||
         network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI);
   },
 
