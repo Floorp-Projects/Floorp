@@ -5,7 +5,8 @@
       function testDone() {
         clearTimeout(timerID);
         var l = document.body.firstChild.contentWindow.location.href;
-        opener.is(l, "data:text/html,bar", "Should have loaded a new document");
+        opener.ok(l.endsWith("file_fragment_handling_during_load_frame2.html"),
+                 "Should have loaded a new document");
         opener.nextTest();
         window.close();
       }
@@ -13,12 +14,12 @@
         var ifr = document.getElementsByTagName("iframe")[0];
         ifr.onload = testDone;
         ifr.contentWindow.location.hash = "b";
-        ifr.contentWindow.location.href = "data:text/html,bar";
+        ifr.contentWindow.location.href = "file_fragment_handling_during_load_frame2.html";
         history.back();
         timerID = setTimeout(testDone, 2000);
       }
     </script>
   </head>
-  <body onload="setTimeout(test, 0)"><iframe src="data:text/html,foo#a"></iframe>
+  <body onload="setTimeout(test, 0)"><iframe src="file_fragment_handling_during_load_frame1.html#a"></iframe>
   </body>
 </html>
