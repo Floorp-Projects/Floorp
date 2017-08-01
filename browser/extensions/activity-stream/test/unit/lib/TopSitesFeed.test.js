@@ -49,24 +49,37 @@ describe("Top Sites Feed", () => {
     clock.restore();
   });
 
-  describe("#init", () => {
-    it("should add defaults on INIT", () => {
-      feed.onAction({type: at.INIT});
-      assert.ok(DEFAULT_TOP_SITES.length);
+  describe("#refreshDefaults", () => {
+    it("should add defaults on PREFS_INITIAL_VALUES", () => {
+      feed.onAction({type: at.PREFS_INITIAL_VALUES, data: {"default.sites": "https://foo.com"}});
+
+      assert.isAbove(DEFAULT_TOP_SITES.length, 0);
+    });
+    it("should add defaults on PREF_CHANGED", () => {
+      feed.onAction({type: at.PREF_CHANGED, data: {name: "default.sites", value: "https://foo.com"}});
+
+      assert.isAbove(DEFAULT_TOP_SITES.length, 0);
     });
     it("should have default sites with .isDefault = true", () => {
-      feed.init();
+      feed.refreshDefaults("https://foo.com");
+
       DEFAULT_TOP_SITES.forEach(link => assert.propertyVal(link, "isDefault", true));
     });
     it("should add no defaults on empty pref", () => {
-      FakePrefs.prototype.prefs["default.sites"] = "";
-      feed.init();
+      feed.refreshDefaults("");
+
+      assert.equal(DEFAULT_TOP_SITES.length, 0);
+    });
+    it("should clear defaults", () => {
+      feed.refreshDefaults("https://foo.com");
+      feed.refreshDefaults("");
+
       assert.equal(DEFAULT_TOP_SITES.length, 0);
     });
   });
   describe("#getLinksWithDefaults", () => {
     beforeEach(() => {
-      feed.init();
+      feed.refreshDefaults("https://foo.com");
     });
 
     it("should get the links from NewTabUtils", async () => {

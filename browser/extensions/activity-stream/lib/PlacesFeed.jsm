@@ -225,10 +225,12 @@ class PlacesFeed {
         Pocket.savePage(action._target.browser, action.data.site.url, action.data.site.title);
         break;
       case at.OPEN_LINK: {
+        const win = action._target.browser.ownerGlobal;
+        const where = win.whereToOpenLink(action.data.event);
         if (action.data.referrer) {
-          action._target.browser.loadURI(action.data.url, Services.io.newURI(action.data.referrer));
+          win.openLinkIn(action.data.url, where, {referrerURI: Services.io.newURI(action.data.referrer)});
         } else {
-          action._target.browser.loadURI(action.data.url);
+          win.openLinkIn(action.data.url, where);
         }
         break;
       }
