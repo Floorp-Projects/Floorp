@@ -258,7 +258,9 @@ VRDisplayHost::CheckClearDisplayInfoDirty()
 
 VRControllerHost::VRControllerHost(VRDeviceType aType, dom::GamepadHand aHand,
                                    uint32_t aDisplayID)
- : mVibrateIndex(0)
+ : mButtonPressed(0)
+ , mButtonTouched(0)
+ , mVibrateIndex(0)
 {
   MOZ_COUNT_CTOR(VRControllerHost);
   mControllerInfo.mType = aType;
