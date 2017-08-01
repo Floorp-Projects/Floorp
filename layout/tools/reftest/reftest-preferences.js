@@ -144,5 +144,6 @@ user_pref("media.openUnsupportedTypeWithExternalApp", false);
 // consumer automation; not vendor testing.
 user_pref("marionette.prefs.recommended", false);
 
-// Make sure we don't reach out to the network with pocket
+// Make sure we don't reach out to the network with pocket or snippets
 user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
+user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
