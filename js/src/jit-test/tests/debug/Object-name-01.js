@@ -1,5 +1,7 @@
 // Debugger.Object.prototype.name
 
+load(libdir + 'nightly-only.js');
+
 var g = newGlobal();
 var dbg = Debugger(g);
 var name;
@@ -13,5 +15,7 @@ g.eval("Function('debugger;')();");
 assertEq(name, "anonymous");
 g.eval("(async function grondo() { debugger; })();");
 assertEq(name, "grondo");
-g.eval("(async function* estux() { debugger; })().next();");
-assertEq(name, "estux");
+nightlyOnly(g.SyntaxError, () => {
+  g.eval("(async function* estux() { debugger; })().next();");
+  assertEq(name, "estux");
+});
