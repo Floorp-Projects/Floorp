@@ -381,7 +381,7 @@
       }
     }
 
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
     function doPreTest()
     {
       waitForImageMap("imgmap", doTest);
@@ -401,8 +401,8 @@
       gQueue.push(new insertMap("container", "imgmap"));
       gQueue.push(new hideImageMap("container", "imgmap"));
 
-      //enableLogging("tree"); // debug stuff
-      //gQueue.onFinish = function() { disableLogging("tree"); }
+      // enableLogging("tree"); // debug stuff
+      // gQueue.onFinish = function() { disableLogging("tree"); }
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

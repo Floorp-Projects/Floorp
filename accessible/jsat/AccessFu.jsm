@@ -298,7 +298,7 @@ this.AccessFu = { // jshint ignore:line
     this._loadFrameScript(aMessageManager);
   },
 
-  onEvent: function (event, data, callback) {
+  onEvent: function(event, data, callback) {
     switch (event) {
       case "Accessibility:Settings":
         this._systemPref = data.enabled;
@@ -566,8 +566,8 @@ var Output = {
         highlightBox.classList.remove("show");
         highlightBox.style.top = (r.top - padding) + "px";
         highlightBox.style.left = (r.left - padding) + "px";
-        highlightBox.style.width = (r.width + padding*2) + "px";
-        highlightBox.style.height = (r.height + padding*2) + "px";
+        highlightBox.style.width = (r.width + padding * 2) + "px";
+        highlightBox.style.height = (r.height + padding * 2) + "px";
         highlightBox.classList.add("show");
 
         break;

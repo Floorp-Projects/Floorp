@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Public
 
 const BOUNDARY_CHAR = nsIAccessibleText.BOUNDARY_CHAR;
@@ -325,7 +325,7 @@ function testWordAt(aElement, aWordIndex, aText, aToDoFlag)
   }
 
   text = acc.getText(startWordOffset, endWordOffset);
-  isFunc(text, aText,  "wrong text for word at index '" + aWordIndex + "': " +
+  isFunc(text, aText, "wrong text for word at index '" + aWordIndex + "': " +
          " of text '" + acc.getText(0, -1) + "' in " + prettyName(aElement));
 }
 
@@ -496,7 +496,7 @@ function testTextRange(aRange, aRangeDescr, aStartContainer, aStartOffset,
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Private
 
 function testTextSuperHelper(aFuncName, aArgs)

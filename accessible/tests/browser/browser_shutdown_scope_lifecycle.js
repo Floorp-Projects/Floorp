@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   // Create a11y service inside of the function scope. Its reference should be
   // released once the anonimous function is called.
   let a11yInitThenShutdown = initPromise().then(shutdownPromise);

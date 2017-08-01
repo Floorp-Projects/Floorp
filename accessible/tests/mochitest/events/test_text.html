@@ -17,7 +17,7 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
     /**
@@ -249,7 +249,7 @@
       this.textNode = getNode(aTextNode);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
     gA11yEventDumpToConsole = true; // debugging
 
@@ -279,10 +279,10 @@
 
       // bug 570691
       todo(false, "Fix text change events from editable area, see bug 570691");
-      //var textNode = getNode("editable").firstChild;
-      //gQueue.push(new removeTextFromEditable("editable", 1, 3, "al", textNode));
-      //textNode = getNode("editable2").firstChild.firstChild;
-      //gQueue.push(new removeTextFromEditable("editable2", 1, 3, "al", textNode));
+      // var textNode = getNode("editable").firstChild;
+      // gQueue.push(new removeTextFromEditable("editable", 1, 3, "al", textNode));
+      // textNode = getNode("editable2").firstChild.firstChild;
+      // gQueue.push(new removeTextFromEditable("editable2", 1, 3, "al", textNode));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

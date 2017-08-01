@@ -602,7 +602,7 @@ this.UtteranceGenerator = {  // jshint ignore:line
     cycle: "cycleAction"
   },
 
-  //TODO: May become more verbose in the future.
+  // TODO: May become more verbose in the future.
   genForAction: function genForAction(aObject, aActionName) {
     return [{string: this.gActionMap[aActionName]}];
   },

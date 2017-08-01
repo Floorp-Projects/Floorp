@@ -111,7 +111,7 @@ addAccessibleTask(`
   <input id="checkbox" type="checkbox">
   <input id="file" type="file">
   <input id="text">`,
-  async function (browser, accDoc) {
+  async function(browser, accDoc) {
     await runStateTests(browser, accDoc, "checkbox", attributeTests);
     await runStateTests(browser, accDoc, "file", ariaTests);
     await runStateTests(browser, accDoc, "text", extraStateTests);

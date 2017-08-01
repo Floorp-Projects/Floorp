@@ -23,7 +23,7 @@
           src="../text.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true; // debugging
+    // gA11yEventDumpToConsole = true; // debugging
 
     function traverseTextByLines(aQueue, aID, aLines)
     {
@@ -33,7 +33,7 @@
 
       var baseInvokerFunc = synthClick;
       var charIter = new charIterator(wholeText, aLines);
-      //charIter.debugOffset = 10; // enable to run tests at given offset only
+      // charIter.debugOffset = 10; // enable to run tests at given offset only
 
       while (charIter.next()) {
         aQueue.push(new tmpl_moveTo(aID, baseInvokerFunc, wholeText, charIter));

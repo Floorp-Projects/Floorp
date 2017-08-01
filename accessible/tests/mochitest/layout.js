@@ -97,7 +97,7 @@ function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild)
     if (aFindDeepestChild)
       return acc.getDeepestChildAtPoint(x, y);
     return acc.getChildAtPoint(x, y);
-  } catch (e) {  }
+  } catch (e) { }
 
   return null;
 }

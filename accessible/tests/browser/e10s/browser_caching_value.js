@@ -124,7 +124,7 @@ addAccessibleTask(`
   <input id="combobox" role="combobox" aria-autocomplete="inline">
   <progress id="progress" value="22" max="100"></progress>
   <input type="range" id="range" min="0" max="10" value="6">`,
-  async function (browser, accDoc) {
+  async function(browser, accDoc) {
     for (let { desc, id, action, attrs, expected, waitFor } of valueTests) {
       info(desc);
       let acc = findAccessibleChildByID(accDoc, id);

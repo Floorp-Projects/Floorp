@@ -2,7 +2,7 @@
 
 "use strict";
 
-/*global isDeeply, getMainChromeWindow, SimpleTest, SpecialPowers, Logger,
+/* global isDeeply, getMainChromeWindow, SimpleTest, SpecialPowers, Logger,
   AccessFu, Utils, addMessageListener, currentTabDocument, currentBrowser*/
 
 /**
@@ -108,7 +108,7 @@ var AccessFuTest = {
       this.maxGestureResolveTimeout =
       this.originalMaxGestureResolveTimeout;
     // Finish through idle callback to let AccessFu._disable complete.
-    SimpleTest.executeSoon(function () {
+    SimpleTest.executeSoon(function() {
       AccessFu.detach();
       SimpleTest.finish();
     });
@@ -166,7 +166,7 @@ var AccessFuTest = {
     this.maxGestureResolveTimeout = GestureSettings.maxGestureResolveTimeout =
       GestureSettings.maxGestureResolveTimeout * 10;
 
-    SpecialPowers.pushPrefEnv({ "set": prefs }, function () {
+    SpecialPowers.pushPrefEnv({ "set": prefs }, function() {
       if (AccessFuTest._waitForExplicitFinish) {
         // Run all test functions asynchronously.
         AccessFuTest.nextTest();
@@ -195,7 +195,7 @@ AccessFuContentTest.prototype = {
 
     // Get top content message manager, and set it up.
     this.mms = [Utils.getMessageManager(currentBrowser())];
-    this.setupMessageManager(this.mms[0], function () {
+    this.setupMessageManager(this.mms[0], function() {
       // Get child message managers and set them up
       var frames = currentTabDocument().querySelectorAll("iframe");
       if (frames.length === 0) {
@@ -209,7 +209,7 @@ AccessFuContentTest.prototype = {
         if (mm) {
           toSetup++;
           self.mms.push(mm);
-          self.setupMessageManager(mm, function () {
+          self.setupMessageManager(mm, function() {
             if (--toSetup === 0) {
               // All message managers are loaded and ready to go.
               self.pump();
@@ -237,9 +237,9 @@ AccessFuContentTest.prototype = {
     }
   },
 
-  setupMessageManager:  function (aMessageManager, aCallback) {
+  setupMessageManager:  function(aMessageManager, aCallback) {
     function contentScript() {
-      addMessageListener("AccessFuTest:Focus", function (aMessage) {
+      addMessageListener("AccessFuTest:Focus", function(aMessage) {
         var elem = content.document.querySelector(aMessage.json.selector);
         if (elem) {
           if (aMessage.json.blur) {
@@ -256,7 +256,7 @@ AccessFuContentTest.prototype = {
     aMessageManager.addMessageListener("AccessFu:CursorCleared", this);
     aMessageManager.addMessageListener("AccessFu:Focused", this);
     aMessageManager.addMessageListener("AccessFu:AriaHidden", this);
-    aMessageManager.addMessageListener("AccessFu:Ready", function () {
+    aMessageManager.addMessageListener("AccessFu:Ready", function() {
       aMessageManager.addMessageListener("AccessFu:ContentStarted", aCallback);
       aMessageManager.sendAsyncMessage("AccessFu:Start",
         { buildApp: "browser",
@@ -478,7 +478,7 @@ var ContentMessages = {
   }
 };
 
-function ExpectedMessage (aName, aOptions) {
+function ExpectedMessage(aName, aOptions) {
   this.name = aName;
   this.options = aOptions || {};
   this.json = {};

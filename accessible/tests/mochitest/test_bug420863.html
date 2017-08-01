@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
       // Actions should be exposed on any accessible having related DOM node
       // with registered 'click' event handler.
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // generic td
       var td1Acc = getAccessible("td1");
       if (!td1Acc) {
@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
       is(td1Acc.actionCount, 0,
            "Simple table cell shouldn't have any actions");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // one td with 'onclick' attribute and one with registered click handler
       var td3Node = getNode("td3");
 

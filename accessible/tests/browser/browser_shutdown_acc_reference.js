@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   // Create a11y service.
   let a11yInit = initPromise();
   let accService = Cc["@mozilla.org/accessibilityService;1"].getService(

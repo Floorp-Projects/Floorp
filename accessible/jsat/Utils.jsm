@@ -390,7 +390,7 @@ this.Utils = { // jshint ignore:line
   },
 
   inHiddenSubtree: function inHiddenSubtree(aAccessible) {
-    for (let acc=aAccessible; acc; acc=acc.parent) {
+    for (let acc = aAccessible; acc; acc = acc.parent) {
       if (this.isHidden(acc)) {
         return true;
       }
