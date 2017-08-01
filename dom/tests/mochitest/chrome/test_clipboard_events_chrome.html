@@ -13,8 +13,7 @@ SimpleTest.waitForExplicitFinish();
 function runTest()
 {
   SpecialPowers.pushPrefEnv({"set": [['dom.event.clipboardevents.enabled', false]]}, function() {
-    window.open("data:text/html,<body onload='window.opener.doChecks(this)'><input id='i' value='Sample Text'></body>",
-                "_blank", "chrome,width=200,height=200");
+    window.open("file_clipboard_events_chrome.html", "_blank", "chrome,width=200,height=200");
   });
 }
 

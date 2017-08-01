@@ -151,6 +151,11 @@ StackWalkInitCriticalAddress()
   // restore the previous malloc logger
   malloc_logger = old_malloc_logger;
 
+  // XXX: the critical address machinery appears to have been unnecessary since
+  // Mac OS 10.7 (the minimum version we currently support is 10.9). See bug
+  // 1384814 for details.
+  MOZ_DIAGNOSTIC_ASSERT(!gCriticalAddress.mAddr);
+
   MOZ_ASSERT(r == ETIMEDOUT);
   r = pthread_mutex_unlock(&mutex);
   MOZ_ASSERT(r == 0);
