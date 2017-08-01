@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
+#include "mozilla/PresShell.h"          // for PresShell
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"         // for StyleSheet
 #include "mozilla/WeakPtr.h"            // for WeakPtr
@@ -566,7 +567,21 @@ protected:
    */
   bool EnsureComposition(WidgetCompositionEvent* aCompositionEvent);
 
-  already_AddRefed<nsISelectionController> GetSelectionController();
+  nsISelectionController* GetSelectionController() const
+  {
+    if (mSelectionController) {
+      return mSelectionController;
+    }
+    if (!mDocument) {
+      return nullptr;
+    }
+    nsIPresShell* presShell = mDocument->GetShell();
+    if (!presShell) {
+      return nullptr;
+    }
+    nsISelectionController* sc = static_cast<PresShell*>(presShell);
+    return sc;
+  }
   nsresult GetSelection(SelectionType aSelectionType,
                         nsISelection** aSelection);
 
