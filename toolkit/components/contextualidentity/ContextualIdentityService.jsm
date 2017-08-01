@@ -216,8 +216,6 @@ _ContextualIdentityService.prototype = {
 
     this._identities.push(identity);
     this.saveSoon();
-    Services.obs.notifyObservers(this.getIdentityObserverOutput(identity),
-                                 "contextual-identity-created");
 
     return Cu.cloneInto(identity, {});
   },
@@ -234,9 +232,8 @@ _ContextualIdentityService.prototype = {
       delete identity.l10nID;
       delete identity.accessKey;
 
+      Services.obs.notifyObservers(null, "contextual-identity-updated", userContextId);
       this.saveSoon();
-      Services.obs.notifyObservers(this.getIdentityObserverOutput(identity),
-                                   "contextual-identity-updated");
     }
 
     return !!identity;
@@ -253,24 +250,11 @@ _ContextualIdentityService.prototype = {
     Services.obs.notifyObservers(null, "clear-origin-attributes-data",
                                  JSON.stringify({ userContextId }));
 
-    let deletedOutput = this.getIdentityObserverOutput(this.getPublicIdentityFromId(userContextId));
     this._identities.splice(index, 1);
     this._openedIdentities.delete(userContextId);
     this.saveSoon();
-    Services.obs.notifyObservers(deletedOutput, "contextual-identity-deleted");
 
     return true;
-  },
-
-  getIdentityObserverOutput(identity) {
-    let wrappedJSObject = {
-      name: this.getUserContextLabel(identity.userContextId),
-      icon: identity.icon,
-      color: identity.color,
-      userContextId: identity.userContextId,
-    };
-
-    return {wrappedJSObject};
   },
 
   ensureDataReady() {
