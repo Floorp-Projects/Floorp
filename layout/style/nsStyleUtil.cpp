@@ -213,7 +213,7 @@ nsStyleUtil::AppendEscapedCSSFontFamilyList(
   size_t i, len = fontlist.Length();
   for (i = 0; i < len; i++) {
     if (i != 0) {
-      aResult.Append(',');
+      aResult.AppendLiteral(", ");
     }
     const FontFamilyName& name = fontlist[i];
     switch (name.mType) {
