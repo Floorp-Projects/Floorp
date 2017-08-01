@@ -334,7 +334,7 @@ SourceBuffer::ExpectLength(size_t aExpectedLength)
     return NS_OK;
   }
 
-  if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(CreateChunk(aExpectedLength))))) {
+  if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(CreateChunk(aExpectedLength, /* aRoundUp */ false))))) {
     return HandleError(NS_ERROR_OUT_OF_MEMORY);
   }
 
