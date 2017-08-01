@@ -4083,7 +4083,7 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetChildOffset(int32_t aChildOffset)
+nsDocShell::SetChildOffset(uint32_t aChildOffset)
 {
   mChildOffset = aChildOffset;
   return NS_OK;
