@@ -1826,6 +1826,39 @@ nsDOMWindowUtils::GetBoundsWithoutFlushing(nsIDOMElement *aElement,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::NeedsFlush(int32_t aFlushType, bool* aResult)
+{
+  MOZ_ASSERT(aResult);
+
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  NS_ENSURE_STATE(doc);
+
+  nsIPresShell* presShell = doc->GetShell();
+  NS_ENSURE_STATE(presShell);
+
+  FlushType flushType;
+  switch (aFlushType) {
+  case FLUSH_STYLE:
+    flushType = FlushType::Style;
+    break;
+
+  case FLUSH_LAYOUT:
+    flushType = FlushType::Layout;
+    break;
+
+  case FLUSH_DISPLAY:
+    flushType = FlushType::Display;
+    break;
+
+  default:
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aResult = presShell->NeedFlush(flushType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
 {
   nsIDocument* doc = GetDocument();

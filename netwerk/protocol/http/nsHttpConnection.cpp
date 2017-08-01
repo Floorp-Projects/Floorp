@@ -144,7 +144,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
 
     mConnectedTransport = connectedTransport;
     mConnInfo = info;
-    MOZ_DIAGNOSTIC_ASSERT(mConnInfo);
+    MOZ_ASSERT(mConnInfo);
     mLastWriteTime = mLastReadTime = PR_IntervalNow();
     mRtt = rtt;
     mMaxHangTime = PR_SecondsToInterval(maxHangTime);
@@ -315,7 +315,7 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
         gHttpHandler->ConnMgr()->MoveToWildCardConnEntry(mConnInfo,
                                                          wildCardProxyCi, this);
         mConnInfo = wildCardProxyCi;
-        MOZ_DIAGNOSTIC_ASSERT(mConnInfo);
+        MOZ_ASSERT(mConnInfo);
     }
 
     if (!mDid0RTTSpdy) {
@@ -1941,7 +1941,7 @@ nsHttpConnection::SetupSecondaryTLS()
     if (!ci) {
         ci = mConnInfo;
     }
-    MOZ_DIAGNOSTIC_ASSERT(ci);
+    MOZ_ASSERT(ci);
 
     mTLSFilter = new TLSFilterTransaction(mTransaction,
                                           ci->Origin(), ci->OriginPort(), this, this);

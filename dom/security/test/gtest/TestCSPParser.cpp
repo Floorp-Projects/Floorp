@@ -19,8 +19,6 @@ class nsACString;
 class nsAString;
 class nsString;
 class nsCString;
-class nsAdoptingString;
-class nsAdoptingCString;
 class nsXPIDLString;
 template<class T> class nsReadingIterator;
 #endif

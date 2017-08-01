@@ -90,12 +90,6 @@ DIRS += [
     '/xpfe/appshell'
 ]
 
-# This needs to be built after the gfx/ directory
-# to ensure all dependencies for skia (e.g. mozalloc, xpcom)
-# have been built
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    DIRS += ['/other-licenses/skia-npapi']
-
 if CONFIG['MOZ_UNIVERSALCHARDET']:
     DIRS += ['/extensions/universalchardet']
 

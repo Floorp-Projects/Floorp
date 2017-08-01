@@ -332,7 +332,7 @@ nsFileStreamBase::DoOpen()
         // Result doesn't need to be checked. If the file's parent path does not
         // exist, make it. If it does exist, do nothing.
         if (parent) {
-            Unused << parent->Create(nsIFile::DIRECTORY_TYPE, 0644);
+            Unused << parent->Create(nsIFile::DIRECTORY_TYPE, 0755);
         }
     }
 

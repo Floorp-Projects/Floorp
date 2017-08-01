@@ -197,7 +197,7 @@ std::string gfxPrefs::PrefGet(const char* aPref, std::string aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
 
-  nsAdoptingCString result;
+  nsAutoCString result;
   Preferences::GetCString(aPref, result);
 
   if (result.IsEmpty()) {

@@ -430,6 +430,12 @@ public:
     SetPSTexture(aSlot, nullTexture);
   }
 
+  // Debugging helper function for dumping an MLGTexture to a file.
+  void WriteAsPNG(MLGTexture* aTexture, const char* aPath);
+
+  // Debugging helper function for copying a texture for later dumping to a file.
+  RefPtr<MLGTexture> CopyAndCreateReadbackTexture(MLGTexture* aTexture);
+
 protected:
   virtual ~MLGDevice();
 

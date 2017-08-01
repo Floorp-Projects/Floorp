@@ -189,6 +189,7 @@ private:
     bool     ValidIPv6orHostname(const char *host, uint32_t aLen);
     static bool     IsValidOfBase(unsigned char c, const uint32_t base);
     nsresult NormalizeIDN(const nsACString& host, nsCString& result);
+    nsresult CheckIfHostIsAscii();
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 
     uint32_t AppendSegmentToBuf(char *, uint32_t, const char *,
