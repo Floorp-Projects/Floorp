@@ -1,6 +1,5 @@
 "use strict";
 
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/CleanupManager.jsm", this);

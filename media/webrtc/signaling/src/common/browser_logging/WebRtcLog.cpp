@@ -59,7 +59,9 @@ static WebRtcTraceCallback gWebRtcCallback;
 // For LOG()
 static mozilla::StaticAutoPtr<LogSinkImpl> sSink;
 
-void GetWebRtcLogPrefs(uint32_t *aTraceMask, nsACString* aLogFile, nsACString *aAECLogDir, bool *aMultiLog)
+void
+GetWebRtcLogPrefs(uint32_t *aTraceMask, nsACString& aLogFile,
+                  nsACString& aAECLogDir, bool *aMultiLog)
 {
   *aMultiLog = mozilla::Preferences::GetBool("media.webrtc.debug.multi_log");
   *aTraceMask = mozilla::Preferences::GetUint("media.webrtc.debug.trace_mask");
@@ -217,7 +219,7 @@ void StartWebRtcLog(uint32_t log_level)
   nsAutoCString log_file;
   nsAutoCString aec_log_dir;
 
-  GetWebRtcLogPrefs(&trace_mask, &log_file, &aec_log_dir, &multi_log);
+  GetWebRtcLogPrefs(&trace_mask, log_file, aec_log_dir, &multi_log);
   mozilla::LogLevel level = CheckOverrides(&trace_mask, &log_file, &multi_log);
 
   if (trace_mask == 0) {
@@ -239,7 +241,7 @@ void EnableWebRtcLog()
   nsAutoCString log_file;
   nsAutoCString aec_log_dir;
 
-  GetWebRtcLogPrefs(&trace_mask, &log_file, &aec_log_dir, &multi_log);
+  GetWebRtcLogPrefs(&trace_mask, log_file, aec_log_dir, &multi_log);
   mozilla::LogLevel level = CheckOverrides(&trace_mask, &log_file, &multi_log);
   ConfigWebRtcLog(level, trace_mask, log_file, aec_log_dir, multi_log);
 }
@@ -295,7 +297,7 @@ void StartAecLog()
   nsAutoCString log_file;
   nsAutoCString aec_log_dir;
 
-  GetWebRtcLogPrefs(&trace_mask, &log_file, &aec_log_dir, &multi_log);
+  GetWebRtcLogPrefs(&trace_mask, log_file, aec_log_dir, &multi_log);
   CheckOverrides(&trace_mask, &log_file, &multi_log);
   ConfigAecLog(aec_log_dir);
 

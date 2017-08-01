@@ -180,7 +180,7 @@ this.GeckoDriver = function(appName, server) {
 
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this),
-                                   () => this.curBrowser);
+      () => this.curBrowser);
 
   // points to an alert instance if a modal dialog is present
   this.dialog = null;
@@ -1200,7 +1200,7 @@ GeckoDriver.prototype.refresh = function* (cmd, resp) {
   assert.noUserPrompt(this.dialog);
 
   let refresh = this.listener.refresh(
-      {pageTimeout: this.timeouts.pageLoad})
+      {pageTimeout: this.timeouts.pageLoad});
 
   // If a reload of the frame script interrupts our page load, this will
   // never return. We need to re-issue this request to correctly poll for
@@ -1282,7 +1282,7 @@ GeckoDriver.prototype.getWindowHandle = function(cmd, resp) {
  */
 GeckoDriver.prototype.getWindowHandles = function(cmd, resp) {
   return this.windowHandles.map(String);
-}
+};
 
 /**
  * Get the current window's handle.  This corresponds to a window that
@@ -1318,7 +1318,7 @@ GeckoDriver.prototype.getChromeWindowHandle = function(cmd, resp) {
  */
 GeckoDriver.prototype.getChromeWindowHandles = function(cmd, resp) {
   return this.chromeWindowHandles.map(String);
-}
+};
 
 /**
  * Get the current position and size of the browser window currently in focus.
@@ -1373,7 +1373,7 @@ GeckoDriver.prototype.getWindowRect = function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
-  assert.firefox()
+  assert.firefox();
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
@@ -3108,7 +3108,7 @@ GeckoDriver.prototype._checkIfAlertIsPresent = function() {
 GeckoDriver.prototype.acceptConnections = function(cmd, resp) {
   assert.boolean(cmd.parameters.value);
   this._server.acceptConnections = cmd.parameters.value;
-}
+};
 
 /**
  * Quits the application with the provided flags.
@@ -3147,7 +3147,7 @@ GeckoDriver.prototype.quit = function* (cmd, resp) {
   }
 
   // bug 1298921
-  assert.firefox()
+  assert.firefox();
 
   let quitSeen;
   let mode = 0;
@@ -3187,7 +3187,7 @@ GeckoDriver.prototype.quit = function* (cmd, resp) {
 };
 
 GeckoDriver.prototype.installAddon = function(cmd, resp) {
-  assert.firefox()
+  assert.firefox();
 
   let path = cmd.parameters.path;
   let temp = cmd.parameters.temporary || false;
@@ -3200,7 +3200,7 @@ GeckoDriver.prototype.installAddon = function(cmd, resp) {
 };
 
 GeckoDriver.prototype.uninstallAddon = function(cmd, resp) {
-  assert.firefox()
+  assert.firefox();
 
   let id = cmd.parameters.id;
   if (typeof id == "undefined" || typeof id != "string") {
@@ -3305,7 +3305,7 @@ GeckoDriver.prototype.localizeEntity = function(cmd, resp) {
   }
 
   resp.body.value = l10n.localizeEntity(urls, id);
-}
+};
 
 /**
  * Retrieve the localized string for the specified property id.
@@ -3334,7 +3334,7 @@ GeckoDriver.prototype.localizeProperty = function(cmd, resp) {
   }
 
   resp.body.value = l10n.localizeProperty(urls, id);
-}
+};
 
 /**
  * Initialize the reftest mode

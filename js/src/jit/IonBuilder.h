@@ -683,6 +683,7 @@ class IonBuilder
 
     // Object natives and intrinsics.
     InliningResult inlineObjectCreate(CallInfo& callInfo);
+    InliningResult inlineObjectToString(CallInfo& callInfo);
     InliningResult inlineDefineDataProperty(CallInfo& callInfo);
 
     // Atomics natives.

@@ -1532,46 +1532,46 @@ nsUrlClassifierDBService::ReadTablesFromPrefs()
   mCheckBlockedURIs = Preferences::GetBool(CHECK_BLOCKED_PREF,
     CHECK_BLOCKED_DEFAULT);
 
-  nsCString allTables;
-  nsCString tables;
+  nsAutoCString allTables;
+  nsAutoCString tables;
 
   mBaseTables.Truncate();
   mTrackingProtectionTables.Truncate();
 
-  Preferences::GetCString(PHISH_TABLE_PREF, &allTables);
+  Preferences::GetCString(PHISH_TABLE_PREF, allTables);
   if (mCheckPhishing) {
     AppendTables(allTables, mBaseTables);
   }
 
-  Preferences::GetCString(MALWARE_TABLE_PREF, &tables);
+  Preferences::GetCString(MALWARE_TABLE_PREF, tables);
   AppendTables(tables, allTables);
   if (mCheckMalware) {
     AppendTables(tables, mBaseTables);
   }
 
-  Preferences::GetCString(BLOCKED_TABLE_PREF, &tables);
+  Preferences::GetCString(BLOCKED_TABLE_PREF, tables);
   AppendTables(tables, allTables);
   if (mCheckBlockedURIs) {
     AppendTables(tables, mBaseTables);
   }
 
-  Preferences::GetCString(DOWNLOAD_BLOCK_TABLE_PREF, &tables);
+  Preferences::GetCString(DOWNLOAD_BLOCK_TABLE_PREF, tables);
   AppendTables(tables, allTables);
 
-  Preferences::GetCString(DOWNLOAD_ALLOW_TABLE_PREF, &tables);
+  Preferences::GetCString(DOWNLOAD_ALLOW_TABLE_PREF, tables);
   AppendTables(tables, allTables);
 
-  Preferences::GetCString(TRACKING_TABLE_PREF, &tables);
+  Preferences::GetCString(TRACKING_TABLE_PREF, tables);
   AppendTables(tables, allTables);
   AppendTables(tables, mTrackingProtectionTables);
 
-  Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, &tables);
+  Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, tables);
   AppendTables(tables, allTables);
   AppendTables(tables, mTrackingProtectionTables);
 
   Classifier::SplitTables(allTables, mGethashTables);
 
-  Preferences::GetCString(DISALLOW_COMPLETION_TABLE_PREF, &tables);
+  Preferences::GetCString(DISALLOW_COMPLETION_TABLE_PREF, tables);
   Classifier::SplitTables(tables, mDisallowCompletionsTables);
 
   return NS_OK;

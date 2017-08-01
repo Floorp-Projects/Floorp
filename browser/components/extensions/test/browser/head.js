@@ -34,6 +34,7 @@ PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
 
 const {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
 const {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm", {});
+const {Preferences} = Cu.import("resource://gre/modules/Preferences.jsm", {});
 
 // We run tests under two different configurations, from browser.ini and
 // browser-remote.ini. When running from browser-remote.ini, the tests are

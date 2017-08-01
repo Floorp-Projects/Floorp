@@ -58,11 +58,15 @@ def create_tasks(taskgraph, label_to_taskid, params):
         for task_id in taskgraph.graph.visit_postorder():
             task_def = taskgraph.tasks[task_id].task
             attributes = taskgraph.tasks[task_id].attributes
-            # if this task has no dependencies, make it depend on this decision
-            # task so that it does not start immediately; and so that if this loop
-            # fails halfway through, none of the already-created tasks run.
-            if decision_task_id and not task_def.get('dependencies'):
-                task_def['dependencies'] = [decision_task_id]
+
+            # if this task has no dependencies *within* this taskgraph, make it
+            # depend on this decision task. If it has another dependency within
+            # the taskgraph, then it already implicitly depends on the decision
+            # task.  The result is that tasks do not start immediately. if this
+            # loop fails halfway through, none of the already-created tasks run.
+            if decision_task_id:
+                if not any(t in taskgraph.tasks for t in task_def.get('dependencies', [])):
+                    task_def.setdefault('dependencies', []).append(decision_task_id)
 
             task_def['taskGroupId'] = task_group_id
             task_def['schedulerId'] = scheduler_id

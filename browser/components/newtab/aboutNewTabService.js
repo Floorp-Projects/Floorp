@@ -10,7 +10,8 @@ const {utils: Cu, interfaces: Ci} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 const LOCAL_NEWTAB_URL = "chrome://browser/content/newtab/newTab.xhtml";
 

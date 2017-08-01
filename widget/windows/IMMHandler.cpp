@@ -363,8 +363,8 @@ IMMHandler::InitKeyboardLayout(nsWindow* aWindow,
   // For hacking some bugs of some TIP, we should set an IME name from the
   // pref.
   if (sCodePage == 932 && sIMEName.IsEmpty()) {
-    sIMEName =
-      Preferences::GetString("intl.imm.japanese.assume_active_tip_name_as");
+    Preferences::GetString("intl.imm.japanese.assume_active_tip_name_as",
+                           sIMEName);
   }
 
   // Whether the IME supports vertical writing mode might be changed or
@@ -2538,8 +2538,12 @@ IMMHandler::AdjustCompositionFont(nsWindow* aWindow,
   // Therefore, we need to store the information which are set to the IM
   // context to static variables since IM context is never recreated.
   static bool sCompositionFontsInitialized = false;
-  static nsString sCompositionFont =
-    Preferences::GetString("intl.imm.composition_font");
+  static nsString sCompositionFont;
+  static bool sCompositionFontPrefDone = false;
+  if (!sCompositionFontPrefDone) {
+    sCompositionFontPrefDone = true;
+    Preferences::GetString("intl.imm.composition_font", sCompositionFont);
+  }
 
   // If composition font is customized by pref, we need to modify the
   // composition font of the IME context at first time even if the writing mode
@@ -2588,8 +2592,8 @@ IMMHandler::AdjustCompositionFont(nsWindow* aWindow,
   if (IsJapanist2003Active() && sCompositionFontForJapanist2003.IsEmpty()) {
     const char* kCompositionFontForJapanist2003 =
       "intl.imm.composition_font.japanist_2003";
-    sCompositionFontForJapanist2003 =
-      Preferences::GetString(kCompositionFontForJapanist2003);
+    Preferences::GetString(kCompositionFontForJapanist2003,
+                           sCompositionFontForJapanist2003);
     // If the font name is not specified properly, let's use
     // "MS PGothic" instead.
     if (sCompositionFontForJapanist2003.IsEmpty() ||

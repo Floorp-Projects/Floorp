@@ -88,6 +88,7 @@
     _(IntrinsicStringSplitString)   \
                                     \
     _(ObjectCreate)                 \
+    _(ObjectToString)               \
                                     \
     _(SimdInt32x4)                  \
     _(SimdUint32x4)                 \

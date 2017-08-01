@@ -6,12 +6,9 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const prefs = new Preferences("datareporting.healthreport.");
-
-const PREF_UNIFIED = "toolkit.telemetry.unified";
 const PREF_REPORTING_URL = "datareporting.healthreport.about.reportUrl";
 
 var healthReportWrapper = {
@@ -19,11 +16,9 @@ var healthReportWrapper = {
     let iframe = document.getElementById("remote-report");
     iframe.addEventListener("load", healthReportWrapper.initRemotePage);
     iframe.src = this._getReportURI().spec;
-    prefs.observe("uploadEnabled", this.updatePrefState, healthReportWrapper);
-  },
-
-  uninit() {
-    prefs.ignore("uploadEnabled", this.updatePrefState, healthReportWrapper);
+    XPCOMUtils.defineLazyPreferenceGetter(this, /* unused */ "_isUploadEnabled",
+                                          "datareporting.healthreport.uploadEnabled",
+                                          false, () => this.updatePrefState());
   },
 
   _getReportURI() {
@@ -175,4 +170,3 @@ var healthReportWrapper = {
 }
 
 window.addEventListener("load", function() { healthReportWrapper.init(); });
-window.addEventListener("unload", function() { healthReportWrapper.uninit(); });

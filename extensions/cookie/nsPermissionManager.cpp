@@ -2857,7 +2857,8 @@ nsPermissionManager::Import()
 nsresult
 nsPermissionManager::ImportDefaults()
 {
-  nsCString defaultsURL = mozilla::Preferences::GetCString(kDefaultsUrlPrefName);
+  nsAutoCString defaultsURL;
+  mozilla::Preferences::GetCString(kDefaultsUrlPrefName, defaultsURL);
   if (defaultsURL.IsEmpty()) { // == Don't use built-in permissions.
     return NS_OK;
   }

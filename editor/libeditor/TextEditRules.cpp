@@ -317,7 +317,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
   NS_ENSURE_STATE(mTextEditor);
   // don't let any txns in here move the selection around behind our back.
   // Note that this won't prevent explicit selection setting from working.
-  AutoTransactionsConserveSelection dontSpazMySelection(mTextEditor);
+  AutoTransactionsConserveSelection dontChangeMySelection(mTextEditor);
 
   NS_ENSURE_TRUE(aSelection && aInfo, NS_ERROR_NULL_POINTER);
 
@@ -788,9 +788,9 @@ TextEditRules::WillInsertText(EditAction aAction,
     nsCOMPtr<nsINode> curNode = selNode;
     int32_t curOffset = selOffset;
 
-    // don't spaz my selection in subtransactions
+    // don't change my selection in subtransactions
     NS_ENSURE_STATE(mTextEditor);
-    AutoTransactionsConserveSelection dontSpazMySelection(mTextEditor);
+    AutoTransactionsConserveSelection dontChangeMySelection(mTextEditor);
 
     rv = mTextEditor->InsertTextImpl(*outString, address_of(curNode),
                                      &curOffset, doc);
@@ -901,9 +901,13 @@ TextEditRules::WillSetText(Selection& aSelection,
     return NS_OK;
   }
 
+  // don't change my selection in subtransactions
+  AutoTransactionsConserveSelection dontChangeMySelection(textEditor);
+
   // Even if empty text, we don't remove text node and set empty text
   // for performance
-  nsresult rv = textEditor->SetTextImpl(tString, *curNode->GetAsText());
+  nsresult rv = textEditor->SetTextImpl(aSelection, tString,
+                                        *curNode->GetAsText());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1391,7 +1395,7 @@ TextEditRules::CreateTrailingBRIfNeeded()
   NS_ENSURE_TRUE(lastChild, NS_ERROR_NULL_POINTER);
 
   if (!lastChild->IsHTMLElement(nsGkAtoms::br)) {
-    AutoTransactionsConserveSelection dontSpazMySelection(mTextEditor);
+    AutoTransactionsConserveSelection dontChangeMySelection(mTextEditor);
     nsCOMPtr<nsIDOMNode> domBody = do_QueryInterface(body);
     return CreateMozBR(domBody, body->Length());
   }

@@ -205,7 +205,7 @@ var tests = [
   // dismissal callback if privacy.permissionPrompts.showCloseButton is set.
   { id: "Test#10",
     run() {
-      Preferences.set("privacy.permissionPrompts.showCloseButton", true);
+      Services.prefs.setBoolPref("privacy.permissionPrompts.showCloseButton", true);
       this.notifyObj = new BasicNotification(this.id);
       this.notification = showNotification(this.notifyObj);
     },
@@ -217,7 +217,7 @@ var tests = [
     onHidden(popup) {
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback not triggered");
       ok(this.notifyObj.secondaryActionClicked, "secondary action clicked");
-      Preferences.reset("privacy.permissionPrompts.showCloseButton");
+      Services.prefs.clearUserPref("privacy.permissionPrompts.showCloseButton");
       this.notification.remove();
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     }

@@ -3,7 +3,6 @@
 let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 const PREF_NEWTAB_ACTIVITY_STREAM = "browser.newtabpage.activity-stream.enabled";
 
 Services.prefs.setBoolPref(PREF_NEWTAB_ACTIVITY_STREAM, false);

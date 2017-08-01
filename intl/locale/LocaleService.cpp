@@ -95,7 +95,7 @@ ReadRequestedLocales(nsTArray<nsCString>& aRetVal)
   }
 
   // Otherwise, we'll try to get the requested locale from the prefs.
-  if (!NS_SUCCEEDED(Preferences::GetCString(SELECTED_LOCALE_PREF, &locale))) {
+  if (!NS_SUCCEEDED(Preferences::GetCString(SELECTED_LOCALE_PREF, locale))) {
     return false;
   }
 
@@ -512,12 +512,12 @@ LocaleService::IsAppLocaleRTL()
   // the locale. If that isn't set, default to left-to-right.
   nsAutoCString prefString = NS_LITERAL_CSTRING("intl.uidirection.") + locale;
   nsAutoCString dir;
-  Preferences::GetCString(prefString.get(), &dir);
+  Preferences::GetCString(prefString.get(), dir);
   if (dir.IsEmpty()) {
     int32_t hyphen = prefString.FindChar('-');
     if (hyphen >= 1) {
       prefString.Truncate(hyphen);
-      Preferences::GetCString(prefString.get(), &dir);
+      Preferences::GetCString(prefString.get(), dir);
     }
   }
   return dir.EqualsLiteral("rtl");
