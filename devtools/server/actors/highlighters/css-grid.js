@@ -1162,12 +1162,39 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
             startPos) {
     let lineStartPos = startPos;
 
+    // Keep track of the number of collapsed lines per line position
+    let stackedLines = [];
+
     const { lines } = gridDimension;
 
-    for (let i = 0, line = lines[i]; i < lines.length; line = lines[++i]) {
+    for (let i = 0, line; line = lines[i++];) {
       let linePos = line.start;
+      let negativeLineNumber = i - lines.length - 1;
 
-      const negativeLineNumber = i - lines.length;
+      // Check for overlapping lines. We render a second box beneath the last overlapping
+      // line number to indicate there are lines beneath it.
+      const gridLine = gridDimension.tracks[line.number - 1];
+
+      if (gridLine) {
+        const { breadth }  = gridLine;
+
+        if (breadth === 0) {
+          stackedLines.push(negativeLineNumber);
+
+          if (stackedLines.length > 0) {
+            this.renderGridLineNumber(negativeLineNumber, linePos, lineStartPos,
+              line.breadth, dimensionType, 1);
+          }
+          continue;
+        }
+      }
+
+      // For negative line numbers, we want to display the smallest
+      // value at the front of the stack.
+      if (stackedLines.length) {
+        negativeLineNumber = stackedLines[0];
+        stackedLines = [];
+      }
 
       this.renderGridLineNumber(negativeLineNumber, linePos, lineStartPos, line.breadth,
         dimensionType);
@@ -1360,8 +1387,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // Keep track of the number of collapsed lines per line position
     let stackedLines = [];
 
-    for (let i = 0; i < gridDimension.lines.length; i++) {
-      let line = gridDimension.lines[i];
+    const { lines } = gridDimension;
+
+    for (let i = 0, line; line = lines[i++];) {
       let linePos = line.start;
 
       // If you place something using negative numbers, you can trigger some implicit grid
@@ -1379,10 +1407,13 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       // Check for overlapping lines. We render a second box beneath the last overlapping
       // line number to indicate there are lines beneath it.
       const gridLine = gridDimension.tracks[line.number - 1];
+
       if (gridLine) {
         const { breadth }  = gridLine;
+
         if (breadth === 0) {
           stackedLines.push(gridDimension.lines[i].number);
+
           if (stackedLines.length > 0) {
             this.renderGridLineNumber(line.number, linePos, lineStartPos, line.breadth,
               dimensionType, 1);
