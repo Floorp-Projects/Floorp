@@ -890,7 +890,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 NS_IMETHODIMP
 FetchDriver::CheckListenerChain()
 {
-  return NS_OK;
+  return NS_ERROR_NO_INTERFACE;
 }
 
 NS_IMETHODIMP
