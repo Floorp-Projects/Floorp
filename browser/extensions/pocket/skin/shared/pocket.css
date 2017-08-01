@@ -184,7 +184,7 @@ toolbar[brighttext] #pocket-button {
   background-image: url("chrome://pocket-shared/skin/library-pocket-animation.svg");
   width: 1078px;
   animation-name: library-pocket-animation;
-  animation-duration: 768ms;
+  animation-duration: 800ms;
   animation-timing-function: steps(48);
 }
 
