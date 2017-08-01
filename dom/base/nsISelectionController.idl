@@ -313,10 +313,10 @@ enum : size_t
 };
 
 const char* ToChar(SelectionType aSelectionType);
-SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
-RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
-bool operator &(SelectionType aSelectionType,
-                RawSelectionType aRawSelectionTypes);
+inline SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
+inline RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
+inline bool operator &(SelectionType aSelectionType,
+                       RawSelectionType aRawSelectionTypes);
 
 } // namespace mozilla
 %}
