@@ -87,21 +87,22 @@ function promiseOnboardingOverlayLoaded(browser) {
 }
 
 function promiseOnboardingOverlayOpened(browser) {
-  let condition = () => {
-    return ContentTask.spawn(browser, {}, function() {
-      return new Promise(resolve => {
-        let overlay = content.document.querySelector("#onboarding-overlay");
-        if (overlay.classList.contains("onboarding-opened")) {
-          resolve(true);
-          return;
-        }
-        resolve(false);
-      });
-    })
-  };
-  return BrowserTestUtils.waitForCondition(
-    condition,
-    "Should open onboarding overlay",
+  return BrowserTestUtils.waitForCondition(() =>
+    ContentTask.spawn(browser, {}, () =>
+      content.document.querySelector("#onboarding-overlay").classList.contains(
+        "onboarding-opened")),
+    "Should close onboarding overlay",
+    100,
+    30
+  );
+}
+
+function promiseOnboardingOverlayClosed(browser) {
+  return BrowserTestUtils.waitForCondition(() =>
+    ContentTask.spawn(browser, {}, () =>
+      !content.document.querySelector("#onboarding-overlay").classList.contains(
+        "onboarding-opened")),
+    "Should close onboarding overlay",
     100,
     30
   );
@@ -209,9 +210,17 @@ function assertOverlaySemantics(browser) {
   return ContentTask.spawn(browser, {}, function() {
     let doc = content.document;
 
+    info("Checking dialog");
+    let dialog = doc.getElementById("onboarding-overlay-dialog");
+    is(dialog.getAttribute("role"), "dialog",
+      "Dialog should have a dialog role attribute set");
+    is(dialog.tabIndex, "-1", "Dialog should be focusable but not in tab order");
+    is(dialog.getAttribute("aria-labelledby"), "onboarding-header",
+      "Dialog should be labaled by its header");
+
     info("Checking the tablist container");
     is(doc.getElementById("onboarding-tour-list").getAttribute("role"), "tablist",
-      "Tour list should have a tablist role argument set");
+      "Tour list should have a tablist role attribute set");
 
     info("Checking each tour item that represents the tab");
     let items = [...doc.querySelectorAll(".onboarding-tour-item")];
@@ -222,15 +231,43 @@ function assertOverlaySemantics(browser) {
          item.classList.contains("onboarding-active") ? "true" : "false",
          "Active item should have aria-selected set to true and inactive to false");
       is(item.tabIndex, "0", "Item tab index must be set for keyboard accessibility");
-      is(item.getAttribute("role"), "tab", "Item should have a tab role argument set");
+      is(item.getAttribute("role"), "tab", "Item should have a tab role attribute set");
       let tourPanelId = `${item.id}-page`;
       is(item.getAttribute("aria-controls"), tourPanelId,
         "Item should have aria-controls attribute point to its tabpanel");
       let panel = doc.getElementById(tourPanelId);
       is(panel.getAttribute("role"), "tabpanel",
-        "Tour panel should have a tabpanel role argument set");
+        "Tour panel should have a tabpanel role attribute set");
       is(panel.getAttribute("aria-labelledby"), item.id,
         "Tour panel should have aria-labelledby attribute point to its tab");
     });
+  });
+}
+
+function assertModalDialog(browser, args) {
+  return ContentTask.spawn(browser, args, ({ keyboardFocus, visible, focusedId }) => {
+    let doc = content.document;
+    let overlayButton = doc.getElementById("onboarding-overlay-button");
+    if (visible) {
+      [...doc.body.children].forEach(child =>
+        child.id !== "onboarding-overlay" &&
+        is(child.getAttribute("aria-hidden"), "true",
+          "Content should not be visible to screen reader"));
+      is(focusedId ? doc.getElementById(focusedId) : doc.body,
+        doc.activeElement, `Focus should be on ${focusedId || "body"}`);
+      is(keyboardFocus ? "true" : undefined,
+        overlayButton.dataset.keyboardFocus,
+        "Overlay button focus state is saved correctly");
+    } else {
+      [...doc.body.children].forEach(
+        child => ok(!child.hasAttribute("aria-hidden"),
+          "Content should be visible to screen reader"));
+      if (keyboardFocus) {
+        is(overlayButton, doc.activeElement,
+          "Focus should be set on overlay button");
+      }
+      ok(!overlayButton.dataset.keyboardFocus,
+        "Overlay button focus state should be cleared");
+    }
   });
 }
