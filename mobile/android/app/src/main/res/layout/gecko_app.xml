@@ -31,11 +31,6 @@
                                          android:layout_height="match_parent"
                                          android:scrollbars="none"/>
 
-            <AbsoluteLayout android:id="@+id/plugin_container"
-                            android:background="@android:color/transparent"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"/>
-
             <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
                                                android:layout_width="match_parent"
                                                android:layout_height="match_parent"

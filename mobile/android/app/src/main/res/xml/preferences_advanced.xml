@@ -54,12 +54,6 @@
 
     <PreferenceCategory android:title="@string/pref_category_media">
 
-        <ListPreference android:key="plugin.enable"
-                        android:title="@string/pref_plugins"
-                        android:entries="@array/pref_plugins_entries"
-                        android:entryValues="@array/pref_plugins_values"
-                        android:persistent="false" />
-
         <SwitchPreference android:key="media.autoplay.enabled"
                           android:title="@string/pref_media_autoplay_enabled"
                           android:summary="@string/pref_media_autoplay_enabled_summary" />

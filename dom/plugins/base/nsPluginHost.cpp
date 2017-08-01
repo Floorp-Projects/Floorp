@@ -103,11 +103,6 @@
 #include "winbase.h"
 #endif
 
-#ifdef ANDROID
-#include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
-#endif
-
 #if MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
@@ -278,10 +273,6 @@ nsPluginHost::nsPluginHost()
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     obsService->AddObserver(this, "blocklist-updated", false);
-#ifdef MOZ_WIDGET_ANDROID
-    obsService->AddObserver(this, "application-foreground", false);
-    obsService->AddObserver(this, "application-background", false);
-#endif
   }
 
 #ifdef PLUGIN_LOGGING
@@ -876,12 +867,6 @@ nsPluginHost::TrySetUpPluginInstance(const nsACString &aMimeType,
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
 
   plugin->GetLibrary()->SetHasLocalInstance();
-
-#if defined(MOZ_WIDGET_ANDROID) && defined(MOZ_CRASHREPORTER)
-  if (pluginTag->mIsFlashPlugin) {
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FlashVersion"), pluginTag->Version());
-  }
-#endif
 
   RefPtr<nsNPAPIPluginInstance> instance = new nsNPAPIPluginInstance();
 
@@ -2466,10 +2451,6 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
       NS_ITERATIVE_UNREF_LIST(RefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
       return NS_OK;
     }
-  } else {
-#ifdef ANDROID
-    LOG("getting plugins dir failed");
-#endif
   }
 
   mPluginsLoaded = true; // at this point 'some' plugins have been loaded,
@@ -3060,14 +3041,6 @@ nsPluginHost::ReadPluginInfo()
     if (!reader.NextLine())
       return rv;
 
-#if MOZ_WIDGET_ANDROID
-    // Flash on Android does not populate the version field, but it is tacked on to the description.
-    // For example, "Shockwave Flash 11.1 r115"
-    if (PL_strncmp("Shockwave Flash ", description, 16) == 0 && description[16]) {
-      version = &description[16];
-    }
-#endif
-
     const char *name = reader.LinePtr();
     if (!reader.NextLine())
       return rv;
@@ -3133,8 +3106,6 @@ nsPluginHost::ReadPluginInfo()
     mCachedPlugins = tag;
   }
 
-// On Android we always want to try to load a plugin again (Flash). Bug 935676.
-#ifndef MOZ_WIDGET_ANDROID
   if (!ReadSectionHeader(reader, "INVALID")) {
     return rv;
   }
@@ -3156,7 +3127,6 @@ nsPluginHost::ReadPluginInfo()
     }
     mInvalidPlugins = invalidTag;
   }
-#endif
 
   return NS_OK;
 }
@@ -3488,24 +3458,6 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
       SendPluginsToContent();
     }
   }
-#ifdef MOZ_WIDGET_ANDROID
-  if (!strcmp("application-background", aTopic)) {
-    for(uint32_t i = 0; i < mInstances.Length(); i++) {
-      mInstances[i]->NotifyForeground(false);
-    }
-  }
-  if (!strcmp("application-foreground", aTopic)) {
-    for(uint32_t i = 0; i < mInstances.Length(); i++) {
-      if (mInstances[i]->IsOnScreen())
-        mInstances[i]->NotifyForeground(true);
-    }
-  }
-  if (!strcmp("memory-pressure", aTopic)) {
-    for(uint32_t i = 0; i < mInstances.Length(); i++) {
-      mInstances[i]->MemoryPressure();
-    }
-  }
-#endif
   return NS_OK;
 }
 

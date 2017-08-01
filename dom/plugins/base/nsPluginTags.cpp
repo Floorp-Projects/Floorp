@@ -695,11 +695,6 @@ nsPluginTag::GetNiceName(nsACString & aResult)
 NS_IMETHODIMP
 nsPluginTag::GetBlocklistState(uint32_t *aResult)
 {
-#if defined(MOZ_WIDGET_ANDROID)
-  *aResult = nsIBlocklistService::STATE_NOT_BLOCKED;
-  return NS_OK;
-#else
-
   // If we're in the content process, assume our cache state to always be valid,
   // as the only way it can be updated is via a plugin list push from the
   // parent process.
@@ -725,7 +720,6 @@ nsPluginTag::GetBlocklistState(uint32_t *aResult)
   mCachedBlocklistState = (uint16_t) *aResult;
   mCachedBlocklistStateValid = true;
   return NS_OK;
-#endif // defined(MOZ_WIDGET_ANDROID)
 }
 
 void

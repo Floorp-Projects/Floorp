@@ -133,10 +133,10 @@ SVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
 void
 SVGFilterElement::Invalidate()
 {
-  nsTObserverArray<nsIMutationObserver*> *observers = GetMutationObservers();
+  nsAutoTObserverArray<nsIMutationObserver*, 1> *observers = GetMutationObservers();
 
   if (observers && !observers->IsEmpty()) {
-    nsTObserverArray<nsIMutationObserver*>::ForwardIterator iter(*observers);
+    nsAutoTObserverArray<nsIMutationObserver*, 1>::ForwardIterator iter(*observers);
     while (iter.HasMore()) {
       nsCOMPtr<nsIMutationObserver> obs(iter.GetNext());
       nsCOMPtr<nsISVGFilterReference> filter = do_QueryInterface(obs);

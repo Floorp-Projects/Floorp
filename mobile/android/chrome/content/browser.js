@@ -129,7 +129,6 @@ var WindowEventDispatcher = EventDispatcher.for(window);
 
 var lazilyLoadedBrowserScripts = [
   ["MasterPassword", "chrome://browser/content/MasterPassword.js"],
-  ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
   ["Linkifier", "chrome://browser/content/Linkify.js"],
   ["CastingApps", "chrome://browser/content/CastingApps.js"],
@@ -1014,13 +1013,6 @@ var BrowserApp = {
     }
 
     if (currentUIVersion < 1) {
-      // Migrate user-set "plugins.click_to_play" pref. See bug 884694.
-      // Because the default value is true, a user-set pref means that the pref was set to false.
-      if (Services.prefs.prefHasUserValue("plugins.click_to_play")) {
-        Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_ENABLED);
-        Services.prefs.clearUserPref("plugins.click_to_play");
-      }
-
       // Migrate the "privacy.donottrackheader.value" pref. See bug 1042135.
       if (Services.prefs.prefHasUserValue("privacy.donottrackheader.value")) {
         // Make sure the doNotTrack value conforms to the conversion from
@@ -1955,12 +1947,6 @@ var BrowserApp = {
         aSubject.QueryInterface(Ci.nsIWritableVariant);
 
         switch (aData) {
-          // The plugin pref is actually two separate prefs, so
-          // we need to handle it differently
-          case "plugin.enable":
-            aSubject.setAsAString(PluginHelper.getPluginPreference());
-            break;
-
           // Handle master password
           case "privacy.masterpassword.enabled":
             aSubject.setAsBool(MasterPassword.enabled);
@@ -1991,13 +1977,6 @@ var BrowserApp = {
         let value = aSubject.QueryInterface(Ci.nsIVariant);
 
         switch (aData) {
-          // The plugin pref is actually two separate prefs, so we need to
-          // handle it differently.
-          case "plugin.enable":
-            PluginHelper.setPluginPreference(value);
-            aSubject.setAsEmpty();
-            break;
-
           // MasterPassword pref is not real, we just need take action and leave
           case "privacy.masterpassword.enabled":
             if (MasterPassword.enabled) {
@@ -3473,9 +3452,6 @@ function Tab(aURL, aParams) {
   this._parentId = -1;
   this.lastTouchedAt = Date.now();
   this.contentDocumentIsDisplayed = true;
-  this.pluginDoorhangerTimeout = null;
-  this.shouldShowPluginDoorhanger = true;
-  this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
   this.hasTouchListener = false;
@@ -3643,7 +3619,6 @@ Tab.prototype = {
     this.browser.addEventListener("DOMWindowFocus", this, true);
 
     // Note that the XBL binding is untrusted
-    this.browser.addEventListener("PluginBindingAttached", this, true, true);
     this.browser.addEventListener("VideoBindingAttached", this, true, true);
     this.browser.addEventListener("VideoBindingCast", this, true, true);
 
@@ -3758,7 +3733,6 @@ Tab.prototype = {
     this.browser.removeEventListener("TabPreZombify", this, true);
     this.browser.removeEventListener("DOMWindowFocus", this, true);
 
-    this.browser.removeEventListener("PluginBindingAttached", this, true, true);
     this.browser.removeEventListener("VideoBindingAttached", this, true, true);
     this.browser.removeEventListener("VideoBindingCast", this, true, true);
 
@@ -4271,11 +4245,6 @@ Tab.prototype = {
         break;
       }
 
-      case "PluginBindingAttached": {
-        PluginHelper.handlePluginBindingAttached(this, aEvent);
-        break;
-      }
-
       case "VideoBindingAttached": {
         CastingApps.handleVideoBindingAttached(this, aEvent);
         break;
@@ -4453,12 +4422,6 @@ Tab.prototype = {
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       this.browser.messageManager.sendAsyncMessage("Reader:PushState", {isArticle: this.browser.isArticle});
     }
-
-    // Reset state of click-to-play plugin notifications.
-    clearTimeout(this.pluginDoorhangerTimeout);
-    this.pluginDoorhangerTimeout = null;
-    this.shouldShowPluginDoorhanger = true;
-    this.clickToPlayPluginsActivated = false;
 
     let baseDomain = "";
     // For recognized scheme, get base domain from host.
@@ -5919,7 +5882,7 @@ var IdentityHandler = {
     }
 
     // We also allow "about:" by allowing the selector to be empty (i.e. '(|.....|...|...)'
-    let whitelist = /^about:($|about|accounts|addons|buildconfig|cache|config|crashes|devices|downloads|fennec|firefox|feedback|healthreport|home|license|logins|logo|memory|mozilla|networking|plugins|privatebrowsing|rights|serviceworkers|support|telemetry|webrtc)($|\?)/i;
+    let whitelist = /^about:($|about|accounts|addons|buildconfig|cache|config|crashes|devices|downloads|fennec|firefox|feedback|healthreport|home|license|logins|logo|memory|mozilla|networking|privatebrowsing|rights|serviceworkers|support|telemetry|webrtc)($|\?)/i;
     if (uri.schemeIs("about") && whitelist.test(uri.spec)) {
         return this.IDENTITY_MODE_CHROMEUI;
     }

@@ -1097,7 +1097,7 @@ public:
     /**
      * A list of mutation observers
      */
-    nsTObserverArray<nsIMutationObserver*> mMutationObservers;
+    nsAutoTObserverArray<nsIMutationObserver*, 1> mMutationObservers;
 
     /**
      * An object implementing nsIDOMNodeList for this content (childNodes)
@@ -1954,7 +1954,7 @@ protected:
     return GetExistingSlots();
   }
 
-  nsTObserverArray<nsIMutationObserver*> *GetMutationObservers()
+  nsAutoTObserverArray<nsIMutationObserver*, 1> *GetMutationObservers()
   {
     return HasSlots() ? &GetExistingSlots()->mMutationObservers : nullptr;
   }

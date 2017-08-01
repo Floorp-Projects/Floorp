@@ -1331,6 +1331,9 @@ let PDFViewerApplication = {
     this.fallback();
   },
   progress(level) {
+    if (this.downloadComplete) {
+      return;
+    }
     let percent = Math.round(level * 100);
     if (percent > this.loadingBar.percent || isNaN(percent)) {
       this.loadingBar.percent = percent;

@@ -7,7 +7,6 @@
 const { utils: Cu, interfaces: Ci, classes: Cc, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -66,7 +65,7 @@ function reportResult(val) {
     histogram.add(val);
   } catch (e) {}
 
-  Preferences.set(RUNNING_PREF, false);
+  Services.prefs.setBoolPref(RUNNING_PREF, false);
   Services.prefs.savePrefFile(null);
 }
 
@@ -131,21 +130,21 @@ function testCompositor(test, win, ctx) {
 
   if (!verifyVideoRendering(ctx)) {
     reportResult(TEST_FAILED_VIDEO);
-    Preferences.set(DISABLE_VIDEO_PREF, true);
+    Services.prefs.setBoolPref(DISABLE_VIDEO_PREF, true);
     testPassed = false;
   }
 
   if (!verifyLayersRendering(ctx)) {
     // Try disabling advanced layers if it was enabled. Also trgiger
     // a device reset so the screen redraws.
-    if (Preferences.get(AL_ENABLED_PREF, false)) {
-      Preferences.set(AL_TEST_FAILED_PREF, true);
+    if (Services.prefs.getBoolPref(AL_ENABLED_PREF, false)) {
+      Services.prefs.setBoolPref(AL_TEST_FAILED_PREF, true);
       test.utils.triggerDeviceReset();
     }
     reportResult(TEST_FAILED_RENDER);
     testPassed = false;
   } else {
-    Preferences.set(AL_TEST_FAILED_PREF, false);
+    Services.prefs.setBoolPref(AL_TEST_FAILED_PREF, false);
   }
 
   if (testPassed) {
@@ -259,25 +258,45 @@ SanityTest.prototype = {
     // gpu or drivers.
     var buildId = Services.appinfo.platformBuildID;
     var gfxinfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
-    var hasAL = Preferences.get(AL_ENABLED_PREF, false);
+    var hasAL = Services.prefs.getBoolPref(AL_ENABLED_PREF, false);
 
-    if (Preferences.get(RUNNING_PREF, false)) {
-      Preferences.set(DISABLE_VIDEO_PREF, true);
+    if (Services.prefs.getBoolPref(RUNNING_PREF, false)) {
+      Services.prefs.setBoolPref(DISABLE_VIDEO_PREF, true);
       reportResult(TEST_CRASHED);
       return false;
     }
 
     function checkPref(pref, value, reason) {
-      var prefValue = Preferences.get(pref, undefined);
-      if (prefValue == value) {
-        return true;
+      let prefValue;
+      let prefType = Services.prefs.getPrefType(pref);
+
+      switch (prefType) {
+          case Ci.nsIPrefBranch.PREF_INVALID:
+              reportTestReason(REASON_FIRST_RUN);
+              return false;
+
+          case Ci.nsIPrefBranch.PREF_STRING:
+              prefValue = Services.prefs.getStringPref(pref);
+              break;
+
+          case Ci.nsIPrefBranch.PREF_BOOL:
+              prefValue = Services.prefs.getBoolPref(pref);
+              break;
+
+          case Ci.nsIPrefBranch.PREF_INT:
+              prefValue = Services.prefs.getIntPref(pref);
+              break;
+
+          default:
+              throw new Error("Unexpected preference type.");
       }
-      if (prefValue === undefined) {
-        reportTestReason(REASON_FIRST_RUN);
-      } else {
+
+      if (prefValue != value) {
         reportTestReason(reason);
+        return false;
       }
-      return false;
+
+      return true;
     }
 
     // TODO: Handle dual GPU setups
@@ -290,14 +309,14 @@ SanityTest.prototype = {
 
     // Enable hardware decoding so we can test again
     // and record the driver version to detect if the driver changes.
-    Preferences.set(DISABLE_VIDEO_PREF, false);
-    Preferences.set(DRIVER_PREF, gfxinfo.adapterDriverVersion);
-    Preferences.set(DEVICE_PREF, gfxinfo.adapterDeviceID);
-    Preferences.set(VERSION_PREF, buildId);
-    Preferences.set(ADVANCED_LAYERS_PREF, hasAL);
+    Services.prefs.setBoolPref(DISABLE_VIDEO_PREF, false);
+    Services.prefs.setStringPref(DRIVER_PREF, gfxinfo.adapterDriverVersion);
+    Services.prefs.setStringPref(DEVICE_PREF, gfxinfo.adapterDeviceID);
+    Services.prefs.setStringPref(VERSION_PREF, buildId);
+    Services.prefs.setBoolPref(ADVANCED_LAYERS_PREF, hasAL);
 
     // Update the prefs so that this test doesn't run again until the next update.
-    Preferences.set(RUNNING_PREF, true);
+    Services.prefs.setBoolPref(RUNNING_PREF, true);
     Services.prefs.savePrefFile(null);
     return true;
   },

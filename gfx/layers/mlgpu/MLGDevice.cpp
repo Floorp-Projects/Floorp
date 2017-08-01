@@ -354,5 +354,42 @@ MLGDevice::DrawClearRegion(const ClearRegionHelper& aHelper)
   }
 }
 
+void
+MLGDevice::WriteAsPNG(MLGTexture* aTexture, const char* aPath)
+{
+  MLGMappedResource map;
+  if (!Map(aTexture, MLGMapType::READ, &map)) {
+    return;
+  }
+
+  RefPtr<DataSourceSurface> surface = Factory::CreateWrappingDataSourceSurface(
+    map.mData,
+    map.mStride,
+    aTexture->GetSize(),
+    SurfaceFormat::B8G8R8A8);
+  gfxUtils::WriteAsPNG(surface, aPath);
+
+  Unmap(aTexture);
+}
+
+RefPtr<MLGTexture>
+MLGDevice::CopyAndCreateReadbackTexture(MLGTexture* aTexture)
+{
+  RefPtr<MLGTexture> copy = CreateTexture(
+    aTexture->GetSize(),
+    SurfaceFormat::B8G8R8A8,
+    MLGUsage::Staging,
+    MLGTextureFlags::None);
+  if (!copy) {
+    return nullptr;
+  }
+  CopyTexture(
+    copy,
+    IntPoint(0, 0),
+    aTexture,
+    IntRect(IntPoint(0, 0), aTexture->GetSize()));
+  return copy;
+}
+
 } // namespace layers
 } // namespace mozilla
