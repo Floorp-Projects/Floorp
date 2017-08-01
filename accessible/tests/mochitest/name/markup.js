@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Name tests described by "markuprules.xml" file.
 
 var gNameRulesFileURL = "markuprules.xml";
@@ -14,7 +14,7 @@ var gDumpToConsole = false;
  */
 function testNames()
 {
-  //enableLogging("tree,stack"); // debugging
+  // enableLogging("tree,stack"); // debugging
 
   var request = new XMLHttpRequest();
   request.open("get", gNameRulesFileURL, false);
@@ -26,7 +26,7 @@ function testNames()
   gTestIterator.iterateMarkups(markupElms);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Private section.
 
 /**
@@ -73,7 +73,7 @@ var gTestIterator =
 
       this.markupIdx++;
       if (this.markupIdx == this.markupElms.length) {
-        //disableLogging("tree"); // debugging
+        // disableLogging("tree"); // debugging
         SimpleTest.finish();
         return;
       }
@@ -168,7 +168,7 @@ function testNameForRule(aElm, aRuleElm)
 {
   if (aRuleElm.hasAttribute("attr")) {
     if (gDumpToConsole) {
-      dump("\nProcessing rule { attr: " + aRuleElm.getAttribute("attr") +" }\n");
+      dump("\nProcessing rule { attr: " + aRuleElm.getAttribute("attr") + " }\n");
     }
 
     testNameForAttrRule(aElm, aRuleElm);
@@ -176,7 +176,7 @@ function testNameForRule(aElm, aRuleElm)
   } else if (aRuleElm.hasAttribute("elm")) {
     if (gDumpToConsole) {
       dump("\nProcessing rule { elm: " + aRuleElm.getAttribute("elm") +
-           ", elmattr: " + aRuleElm.getAttribute("elmattr") +" }\n");
+           ", elmattr: " + aRuleElm.getAttribute("elmattr") + " }\n");
     }
 
     testNameForElmRule(aElm, aRuleElm);
@@ -184,7 +184,7 @@ function testNameForRule(aElm, aRuleElm)
   } else if (aRuleElm.getAttribute("fromsubtree") == "true") {
     if (gDumpToConsole) {
       dump("\nProcessing rule { fromsubtree: " +
-           aRuleElm.getAttribute("fromsubtree") +" }\n");
+           aRuleElm.getAttribute("fromsubtree") + " }\n");
     }
 
     testNameForSubtreeRule(aElm, aRuleElm);

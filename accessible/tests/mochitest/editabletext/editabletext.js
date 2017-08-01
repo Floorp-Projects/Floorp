@@ -217,7 +217,7 @@ function editableTextTest(aID)
                       getValueChecker(aID, aResStr), testID);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
   // Implementation details.
 
   function getValue(aID)
@@ -280,7 +280,7 @@ function editableTextTest(aID)
       invoke: aInvokeFunc,
       finalCheck: function finalCheck()
       {
-        //dumpTree(aID, `'${aID}' tree:`);
+        // dumpTree(aID, `'${aID}' tree:`);
 
         aChecker.check();
         et.unwrapNextTest(); // replace dummy invoker on real invoker object.

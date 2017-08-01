@@ -75,7 +75,7 @@ addAccessibleTask(`
   <div id="dependant1">label</div>
   <div id="dependant2">label2</div>
   <div role="checkbox" id="host"></div>`,
-  async function (browser, accDoc) {
+  async function(browser, accDoc) {
     for (let spec of attrRelationsSpec) {
       await testRelated(browser, accDoc, ...spec);
     }

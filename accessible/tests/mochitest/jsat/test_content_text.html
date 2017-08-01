@@ -262,7 +262,7 @@
       }
 
       addA11yLoadEvent(function() {
-        textTest.start(function () {
+        textTest.start(function() {
           closeBrowserWindow();
           SimpleTest.finish();
         });
@@ -271,7 +271,7 @@
 
     SimpleTest.waitForExplicitFinish();
     addLoadEvent(
-      function () {
+      function() {
         openBrowserWindow(
           doTest,
           getRootDirectory(window.location.href) + "doc_content_text.html");

@@ -330,7 +330,7 @@
     function doTest() {
       AccessFuTest.addFunc(startAccessFu);
       tests.forEach(function addTest(test) {
-        AccessFuTest.addFunc(function () {
+        AccessFuTest.addFunc(function() {
           AccessFuTest.once(test.expected, AccessFuTest.nextTest);
           test.action();
         });

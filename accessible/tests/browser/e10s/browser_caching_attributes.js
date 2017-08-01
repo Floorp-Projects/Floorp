@@ -90,7 +90,7 @@ const attributesTests = [{
  */
 addAccessibleTask(`
   <input id="textbox" value="hello">`,
-  async function (browser, accDoc) {
+  async function(browser, accDoc) {
     let textbox = findAccessibleChildByID(accDoc, "textbox");
     for (let { desc, action, attrs, expected, waitFor, unexpected } of attributesTests) {
       info(desc);

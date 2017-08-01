@@ -4,7 +4,7 @@
 
 /* exported GestureSettings, GestureTracker */
 
-/******************************************************************************
+/** ****************************************************************************
   All gestures have the following pathways when being resolved(v)/rejected(x):
                Tap -> DoubleTap        (x)
                    -> Dwell            (x)
