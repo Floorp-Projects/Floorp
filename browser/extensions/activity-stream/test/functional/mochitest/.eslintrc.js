@@ -1,41 +1,5 @@
 module.exports = {
-  "globals": {
-    "add_task": false,
-    "Assert": false,
-    "BrowserOpenTab": false,
-    "BrowserTestUtils": false,
-    "content": false,
-    "ContentTask": false,
-    "ContentTaskUtils": false,
-    "Components": false,
-    "EventUtils": false,
-    "executeSoon": false,
-    "expectUncaughtException": false,
-    "export_assertions": false,
-    "extractJarToTmp": false,
-    "finish": false,
-    "getJar": false,
-    "getRootDirectory": false,
-    "getTestFilePath": false,
-    "gBrowser": false,
-    "gTestPath": false,
-    "info": false,
-    "is": false,
-    "isnot": false,
-    "ok": false,
-    "OpenBrowserWindow": false,
-    "Preferences": false,
-    "registerCleanupFunction": false,
-    "requestLongerTimeout": false,
-    "Services": false,
-    "SimpleTest": false,
-    "SpecialPowers": false,
-    "TestUtils": false,
-    "todo": false,
-    "todo_is": false,
-    "todo_isnot": false,
-    "waitForClipboard": false,
-    "waitForExplicitFinish": false,
-    "waitForFocus": false
-  }
+  "extends": [
+    "plugin:mozilla/browser-test"
+  ]
 };
