@@ -128,7 +128,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 
 #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-timing-function: steps(25);
-  animation-duration: 400ms;
+  animation-duration: 417ms;
 }
 
 #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
@@ -146,7 +146,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 
 #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-timing-function: steps(25);
-  animation-duration: 400ms;
+  animation-duration: 417ms;
 }
 
 #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
@@ -389,7 +389,7 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
 #nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-name: overflow-animation;
   animation-timing-function: steps(69);
-  animation-duration: 1104ms;
+  animation-duration: 1150ms;
   background-image: url("chrome://browser/skin/chevron-animation.svg");
   width: 1260px;
 }
@@ -510,7 +510,7 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   background-image: url("chrome://browser/skin/library-bookmark-animation.svg");
   width: 1078px;
   animation-name: library-bookmark-animation;
-  animation-duration: 768ms;
+  animation-duration: 800ms;
   animation-timing-function: steps(48);
 }
 
