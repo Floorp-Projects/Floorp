@@ -40,7 +40,7 @@ function runTest() {
 <script>
 
 var e = document.createElement('iframe');
-var url = 'data:text/html,<a href="%23anchor">Click to scroll to anchor</a><div style="height:5000px"></div><a name="anchor">FAIL</a>'
+var url = 'file_bug842853-frame.html';
 e.setAttribute('src',url);
 e.setAttribute('onload','runTest()');
 document.body.appendChild(e);

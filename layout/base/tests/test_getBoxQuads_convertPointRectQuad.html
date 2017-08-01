@@ -234,7 +234,7 @@ em {
 <div id="dUnrelated" style="width:50px; height:50px;"></div>
 
 <iframe id="f1" style="width:50px; height:50px; border:0; background:lime;"
-        src="data:text/html,<!DOCTYPE HTML><html style='padding:25px'><div id='f1d' style='position:absolute; left:14px; top:15px; width:16px; height:17px; background:pink'></div>">
+        src="file_getBoxQuads_convertPointRectQuad_frame1.html">
 </iframe>
 <!--
 It matters that the first part of this span is on the same line as the above <iframe>!
@@ -686,7 +686,7 @@ function runTest() {
   // Test that converting between nodes in different toplevel browsing contexts
   // throws an exception.
   try {
-    openedWindow = window.open("data:text/html,<div id='d'>","");
+    openedWindow = window.open("file_getBoxQuads_convertPointRectQuad_frame2.html","");
   } catch (ex) {
     // in some cases we can't open the window.
     openedWindow = null;
