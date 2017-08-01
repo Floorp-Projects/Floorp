@@ -81,7 +81,7 @@ function deferTransitionToRemoteAfterLoaded() {
 
 function handleLoadedMessage(message) {
   loadedDeferred.resolve();
-};
+}
 
 var wrapper = {
   iframe: null,

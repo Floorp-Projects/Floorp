@@ -65,7 +65,7 @@ function promiseLinkVisit(url) {
       info("Visited URL " + uri.spec + " is desired URL " + url);
       Services.obs.removeObserver(observe, topic);
       resolve();
-    };
+    }
     Services.obs.addObserver(observe, linkVisitedTopic);
     info("Now waiting for " + linkVisitedTopic + " notification from Gecko with URL " + url);
   });
@@ -88,5 +88,5 @@ function makeObserver(observerId) {
   };
 
   return ret;
-};
+}
 

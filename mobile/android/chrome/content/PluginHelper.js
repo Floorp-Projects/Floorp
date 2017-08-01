@@ -156,7 +156,7 @@ var PluginHelper = {
       return;
     }
 
-    switch  (eventType) {
+    switch (eventType) {
       case "PluginClickToPlay": {
         // Check if plugins have already been activated for this page, or if
         // the user has set a permission to always play plugins on the site

@@ -50,9 +50,9 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     }
 
     SimpleTest.finish();
-  };
+  }
 
-  SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function() {
     Services.obs.removeObserver(search_observer, "browser-search-engine-modified");
   });
   Services.obs.addObserver(search_observer, "browser-search-engine-modified");

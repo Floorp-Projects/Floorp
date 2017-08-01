@@ -293,14 +293,12 @@ function _do_check_neq(left, right, stack, todo) {
       _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
             " : " + stack.lineNumber + "] " + text + "\n");
     }
-  } else {
-    if (!todo) {
+  } else if (!todo) {
       _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
             stack.lineNumber + "] " + text + "\n");
     } else {
       do_throw_todo(text, stack);
     }
-  }
 }
 
 function do_check_neq(left, right, stack) {
@@ -325,14 +323,12 @@ function do_report_result(passed, text, stack, todo) {
       _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
             stack.lineNumber + "] " + text + "\n");
     }
-  } else {
-    if (todo) {
+  } else if (todo) {
       _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
             " : " + stack.lineNumber + "] " + text + "\n");
     } else {
       do_throw(text, stack);
     }
-  }
 }
 
 /**
@@ -537,14 +533,14 @@ function pattern_matcher(pattern) {
     };
   } else if (pattern === undefined) {
     return function(value) { return true; };
-  } else {
+  }
     return function(value, diagnosis) {
       if (value !== pattern) {
         return explain(diagnosis, "pattern " + uneval(pattern) + " not === to value " + uneval(value));
       }
       return true;
     };
-  }
+
 }
 
 // Format an explanation for a pattern match failure, as stored in the
@@ -775,7 +771,7 @@ function JavaBridge(obj) {
   this._EventDispatcher.registerListener(this, this._EVENT_TYPE);
 
   this._sendMessage("notify-loaded", []);
-};
+}
 
 JavaBridge.prototype = {
 

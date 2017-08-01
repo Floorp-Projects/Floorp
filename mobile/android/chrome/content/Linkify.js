@@ -82,8 +82,7 @@ Linkifier.prototype = {
          node.parentNode.tagName != 'APPLET' &&
          node.parentNode.tagName != 'TEXTAREA')
         return NodeFilter.FILTER_ACCEPT;
-      else
-        return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_REJECT;
     }
 
     let nodeWalker = aDoc.createTreeWalker(aDoc.body, NodeFilter.SHOW_TEXT, filterNode, false);
