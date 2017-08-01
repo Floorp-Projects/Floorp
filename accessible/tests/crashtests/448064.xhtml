@@ -27,7 +27,7 @@ function dumpAccessibleNode(aNode, level) {
     msg += " noName ";
   }
 
-  dump(msg + '\n');
+  dump(msg + "\n");
 }
 
 
@@ -42,12 +42,12 @@ function dumpAccessibleTree(aNode, level) {
       child = child.nextSibling;
     }
   } catch (e) {
-    dump("Error visiting child nodes: " + e + '\n');
+    dump("Error visiting child nodes: " + e + "\n");
   }
 }
 
 function A(o) {
-  var acc = SpecialPowers.Cc['@mozilla.org/accessibilityService;1']
+  var acc = SpecialPowers.Cc["@mozilla.org/accessibilityService;1"]
                          .getService(SpecialPowers.Ci.nsIAccessibilityService);
   return acc.getAccessibleFor(o);
 }
@@ -60,10 +60,10 @@ setTimeout(beginAccessible, 100);
 
 setTimeout(doe, 200);
 function doe() {
-   document.getElementById('mw_a').appendChild(document.getElementById('mw_b'));
-   document.getElementById('mw_c').appendChild(document.getElementById('mw_d'));
-   document.getElementById('mw_e').appendChild(document.getElementById('mw_f'));
-   document.getElementById('mw_g').appendChild(document.getElementById('mw_b'));
+   document.getElementById("mw_a").appendChild(document.getElementById("mw_b"));
+   document.getElementById("mw_c").appendChild(document.getElementById("mw_d"));
+   document.getElementById("mw_e").appendChild(document.getElementById("mw_f"));
+   document.getElementById("mw_g").appendChild(document.getElementById("mw_b"));
 }
 </script>
 </body>

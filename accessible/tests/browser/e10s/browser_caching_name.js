@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 /* import-globals-from ../../mochitest/name.js */
-loadScripts({ name: 'name.js', dir: MOCHITESTS_DIR });
+loadScripts({ name: "name.js", dir: MOCHITESTS_DIR });
 
 /**
  * Rules for name tests that are inspired by
@@ -26,37 +26,37 @@ loadScripts({ name: 'name.js', dir: MOCHITESTS_DIR });
  *   * textchanged - text is inserted into a subtree and the test should only
  *                   continue after a text inserted event
  */
-const ARIARule = [{ attr: 'aria-labelledby' }, { attr: 'aria-label' }];
-const HTMLControlHeadRule = [...ARIARule, { elm: 'label', isSibling: true }];
+const ARIARule = [{ attr: "aria-labelledby" }, { attr: "aria-label" }];
+const HTMLControlHeadRule = [...ARIARule, { elm: "label", isSibling: true }];
 const rules = {
-  CSSContent: [{ elm: 'style', isSibling: true }, { fromsubtree: true }],
-  HTMLARIAGridCell: [...ARIARule, { fromsubtree: true }, { attr: 'title' }],
+  CSSContent: [{ elm: "style", isSibling: true }, { fromsubtree: true }],
+  HTMLARIAGridCell: [...ARIARule, { fromsubtree: true }, { attr: "title" }],
   HTMLControl: [...HTMLControlHeadRule, { fromsubtree: true },
-    { attr: 'title' }],
-  HTMLElm: [...ARIARule, { attr: 'title' }],
-  HTMLImg: [...ARIARule, { attr: 'alt', recreated: true }, { attr: 'title' }],
-  HTMLImgEmptyAlt: [...ARIARule, { attr: 'title' }, { attr: 'alt' }],
-  HTMLInputButton: [...HTMLControlHeadRule, { attr: 'value' },
-    { attr: 'title' }],
-  HTMLInputImage: [...HTMLControlHeadRule, { attr: 'alt', recreated: true },
-    { attr: 'value', recreated: true }, { attr: 'title' }],
+    { attr: "title" }],
+  HTMLElm: [...ARIARule, { attr: "title" }],
+  HTMLImg: [...ARIARule, { attr: "alt", recreated: true }, { attr: "title" }],
+  HTMLImgEmptyAlt: [...ARIARule, { attr: "title" }, { attr: "alt" }],
+  HTMLInputButton: [...HTMLControlHeadRule, { attr: "value" },
+    { attr: "title" }],
+  HTMLInputImage: [...HTMLControlHeadRule, { attr: "alt", recreated: true },
+    { attr: "value", recreated: true }, { attr: "title" }],
   HTMLInputImageNoValidSrc: [...HTMLControlHeadRule,
-    { attr: 'alt', recreated: true }, { attr: 'value', recreated: true }],
+    { attr: "alt", recreated: true }, { attr: "value", recreated: true }],
   HTMLInputReset: [...HTMLControlHeadRule,
-    { attr: 'value', textchanged: true }],
+    { attr: "value", textchanged: true }],
   HTMLInputSubmit: [...HTMLControlHeadRule,
-    { attr: 'value', textchanged: true }],
-  HTMLLink: [...ARIARule, { fromsubtree: true }, { attr: 'title' }],
-  HTMLLinkImage: [...ARIARule, { elm: 'img' }, { attr: 'title' }],
-  HTMLOption: [...ARIARule, { attr: 'label' }, { fromsubtree: true },
-    { attr: 'title' }],
-  HTMLTable: [...ARIARule, { elm: 'caption' }, { attr: 'summary' },
-    { attr: 'title' }]
+    { attr: "value", textchanged: true }],
+  HTMLLink: [...ARIARule, { fromsubtree: true }, { attr: "title" }],
+  HTMLLinkImage: [...ARIARule, { elm: "img" }, { attr: "title" }],
+  HTMLOption: [...ARIARule, { attr: "label" }, { fromsubtree: true },
+    { attr: "title" }],
+  HTMLTable: [...ARIARule, { elm: "caption" }, { attr: "summary" },
+    { attr: "title" }]
 };
 
 const markupTests = [{
-  id: 'btn',
-  ruleset: 'HTMLControl',
+  id: "btn",
+  ruleset: "HTMLControl",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -65,10 +65,10 @@ const markupTests = [{
             aria-label="test1"
             aria-labelledby="l1 l2"
             title="test5">press me</button>`,
-  expected: ['test2 test3', 'test1', 'test4', 'press me', 'test5']
+  expected: ["test2 test3", "test1", "test4", "press me", "test5"]
 }, {
-  id: 'btn',
-  ruleset: 'HTMLInputButton',
+  id: "btn",
+  ruleset: "HTMLInputButton",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -82,11 +82,11 @@ const markupTests = [{
            src="no name from src"
            data="no name from data"
            title="name from title"/>`,
-  expected: ['test2 test3', 'test1', 'test4', 'name from value',
-    'name from title']
+  expected: ["test2 test3", "test1", "test4", "name from value",
+    "name from title"]
 }, {
-  id: 'btn-submit',
-  ruleset: 'HTMLInputSubmit',
+  id: "btn-submit",
+  ruleset: "HTMLInputSubmit",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -100,10 +100,10 @@ const markupTests = [{
            src="no name from src"
            data="no name from data"
            title="no name from title"/>`,
-  expected: ['test2 test3', 'test1', 'test4', 'name from value']
+  expected: ["test2 test3", "test1", "test4", "name from value"]
 }, {
-  id: 'btn-reset',
-  ruleset: 'HTMLInputReset',
+  id: "btn-reset",
+  ruleset: "HTMLInputReset",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -117,10 +117,10 @@ const markupTests = [{
            src="no name from src"
            data="no name from data"
            title="no name from title"/>`,
-  expected: ['test2 test3', 'test1', 'test4', 'name from value']
+  expected: ["test2 test3", "test1", "test4", "name from value"]
 }, {
-  id: 'btn-image',
-  ruleset: 'HTMLInputImage',
+  id: "btn-image",
+  ruleset: "HTMLInputImage",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -134,11 +134,11 @@ const markupTests = [{
            src="http://example.com/a11y/accessible/tests/mochitest/moz.png"
            data="no name from data"
            title="name from title"/>`,
-  expected: ['test2 test3', 'test1', 'test4', 'name from alt',
-    'name from value', 'name from title']
+  expected: ["test2 test3", "test1", "test4", "name from alt",
+    "name from value", "name from title"]
 }, {
-  id: 'btn-image',
-  ruleset: 'HTMLInputImageNoValidSrc',
+  id: "btn-image",
+  ruleset: "HTMLInputImageNoValidSrc",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -151,11 +151,11 @@ const markupTests = [{
            value="name from value"
            data="no name from data"
            title="no name from title"/>`,
-  expected: ['test2 test3', 'test1', 'test4', 'name from alt',
-    'name from value']
+  expected: ["test2 test3", "test1", "test4", "name from alt",
+    "name from value"]
 }, {
-  id: 'opt',
-  ruleset: 'HTMLOption',
+  id: "opt",
+  ruleset: "HTMLOption",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -167,10 +167,10 @@ const markupTests = [{
               title="test5">option1</option>
       <option>option2</option>
     </select>`,
-  expected: ['test2 test3', 'test1', 'test4', 'option1', 'test5']
+  expected: ["test2 test3", "test1", "test4", "option1", "test5"]
 }, {
-  id: 'img',
-  ruleset: 'HTMLImg',
+  id: "img",
+  ruleset: "HTMLImg",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -180,10 +180,10 @@ const markupTests = [{
          alt="Mozilla logo"
          title="This is a logo"
          src="http://example.com/a11y/accessible/tests/mochitest/moz.png"/>`,
-  expected: ['test2 test3', 'Logo of Mozilla', 'Mozilla logo', 'This is a logo']
+  expected: ["test2 test3", "Logo of Mozilla", "Mozilla logo", "This is a logo"]
 }, {
-  id: 'imgemptyalt',
-  ruleset: 'HTMLImgEmptyAlt',
+  id: "imgemptyalt",
+  ruleset: "HTMLImgEmptyAlt",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -193,10 +193,10 @@ const markupTests = [{
          title="This is a logo"
          alt=""
          src="http://example.com/a11y/accessible/tests/mochitest/moz.png"/>`,
-  expected: ['test2 test3', 'Logo of Mozilla', 'This is a logo', '']
+  expected: ["test2 test3", "Logo of Mozilla", "This is a logo", ""]
 }, {
-  id: 'tc',
-  ruleset: 'HTMLElm',
+  id: "tc",
+  ruleset: "HTMLElm",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -215,10 +215,10 @@ const markupTests = [{
         </td>
       </tr>
     </table>`,
-  expected: ['test2 test3', 'test1', 'test5']
+  expected: ["test2 test3", "test1", "test5"]
 }, {
-  id: 'gc',
-  ruleset: 'HTMLARIAGridCell',
+  id: "gc",
+  ruleset: "HTMLARIAGridCell",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -239,12 +239,12 @@ const markupTests = [{
         </td>
       </tr>
     </table>`,
-  expected: ['test2 test3', 'test1',
-    'This is a paragraph This is a link \u2022 Listitem1 \u2022 Listitem2',
-    'This is a paragraph This is a link This is a list']
+  expected: ["test2 test3", "test1",
+    "This is a paragraph This is a link \u2022 Listitem1 \u2022 Listitem2",
+    "This is a paragraph This is a link This is a list"]
 }, {
-  id: 't',
-  ruleset: 'HTMLTable',
+  id: "t",
+  ruleset: "HTMLTable",
   markup: `
     <span id="l1">lby_tst6_1</span>
     <span id="l2">lby_tst6_2</span>
@@ -260,11 +260,11 @@ const markupTests = [{
         <td>cell2</td>
       </tr>
     </table>`,
-  expected: ['lby_tst6_1 lby_tst6_2', 'arialabel_tst6', 'caption_tst6',
-    'summary_tst6', 'title_tst6']
+  expected: ["lby_tst6_1 lby_tst6_2", "arialabel_tst6", "caption_tst6",
+    "summary_tst6", "title_tst6"]
 }, {
-  id: 'btn',
-  ruleset: 'CSSContent',
+  id: "btn",
+  ruleset: "CSSContent",
   markup: `
     <style>
       button::before {
@@ -272,7 +272,7 @@ const markupTests = [{
       }
     </style>
     <button id="btn">press me</button>`,
-  expected: ['do not press me', 'press me']
+  expected: ["do not press me", "press me"]
 }, {
   // TODO: uncomment when Bug-1256382 is resoved.
   // id: 'li',
@@ -288,8 +288,8 @@ const markupTests = [{
   //   </ul>`,
   // expected: ['1. Listitem', `${String.fromCharCode(0x2022)} Listitem`]
 // }, {
-  id: 'a',
-  ruleset: 'HTMLLink',
+  id: "a",
+  ruleset: "HTMLLink",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -297,10 +297,10 @@ const markupTests = [{
        aria-label="test1"
        aria-labelledby="l1 l2"
        title="test4">test5</a>`,
-  expected: ['test2 test3', 'test1', 'test5', 'test4']
+  expected: ["test2 test3", "test1", "test5", "test4"]
 }, {
-  id: 'a-img',
-  ruleset: 'HTMLLinkImage',
+  id: "a-img",
+  ruleset: "HTMLLinkImage",
   markup: `
     <span id="l1">test2</span>
     <span id="l2">test3</span>
@@ -308,7 +308,7 @@ const markupTests = [{
        aria-label="test1"
        aria-labelledby="l1 l2"
        title="test4"><img alt="test5"/></a>`,
-  expected: ['test2 test3', 'test1', 'test5', 'test4']
+  expected: ["test2 test3", "test1", "test5", "test4"]
 }];
 
 /**

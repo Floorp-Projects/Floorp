@@ -16,7 +16,7 @@ async function runTests(browser, accDoc) {
                    COORDTYPE_SCREEN_RELATIVE);
   }
 
-  loadFrameScripts(browser, { name: 'layout.js', dir: MOCHITESTS_DIR });
+  loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
 
   testTextNode("p1");
   testTextNode("p2");

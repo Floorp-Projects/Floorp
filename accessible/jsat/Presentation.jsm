@@ -4,26 +4,26 @@
 
 /* exported Presentation */
 
-'use strict';
+"use strict";
 
 const {utils: Cu, interfaces: Ci} = Components;
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import('resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Logger', // jshint ignore:line
-  'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'PivotContext', // jshint ignore:line
-  'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'UtteranceGenerator', // jshint ignore:line
-  'resource://gre/modules/accessibility/OutputGenerator.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'BrailleGenerator', // jshint ignore:line
-  'resource://gre/modules/accessibility/OutputGenerator.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Roles', // jshint ignore:line
-  'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'States', // jshint ignore:line
-  'resource://gre/modules/accessibility/Constants.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/accessibility/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Logger", // jshint ignore:line
+  "resource://gre/modules/accessibility/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PivotContext", // jshint ignore:line
+  "resource://gre/modules/accessibility/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UtteranceGenerator", // jshint ignore:line
+  "resource://gre/modules/accessibility/OutputGenerator.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrailleGenerator", // jshint ignore:line
+  "resource://gre/modules/accessibility/OutputGenerator.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Roles", // jshint ignore:line
+  "resource://gre/modules/accessibility/Constants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "States", // jshint ignore:line
+  "resource://gre/modules/accessibility/Constants.jsm");
 
-this.EXPORTED_SYMBOLS = ['Presentation']; // jshint ignore:line
+this.EXPORTED_SYMBOLS = ["Presentation"]; // jshint ignore:line
 
 /**
  * The interface for all presenter classes. A presenter could be, for example,
@@ -35,7 +35,7 @@ Presenter.prototype = {
   /**
    * The type of presenter. Used for matching it with the appropriate output method.
    */
-  type: 'Base',
+  type: "Base",
 
   /**
    * The virtual cursor's position changed.
@@ -145,7 +145,7 @@ function VisualPresenter() {}
 
 VisualPresenter.prototype = Object.create(Presenter.prototype);
 
-VisualPresenter.prototype.type = 'Visual';
+VisualPresenter.prototype.type = "Visual";
 
 /**
  * The padding in pixels between the object and the highlight border.
@@ -168,7 +168,7 @@ VisualPresenter.prototype.viewportChanged =
       return {
         type: this.type,
         details: {
-          eventType: 'viewport-change',
+          eventType: "viewport-change",
           bounds: bounds,
           padding: this.BORDER_PADDING
         }
@@ -197,13 +197,13 @@ VisualPresenter.prototype.pivotChanged =
       return {
         type: this.type,
         details: {
-          eventType: 'vc-change',
+          eventType: "vc-change",
           bounds: bounds,
           padding: this.BORDER_PADDING
         }
       };
     } catch (e) {
-      Logger.logException(e, 'Failed to get bounds');
+      Logger.logException(e, "Failed to get bounds");
       return null;
     }
   };
@@ -215,8 +215,8 @@ VisualPresenter.prototype.tabSelected =
 
 VisualPresenter.prototype.tabStateChanged =
   function VisualPresenter_tabStateChanged(aDocObj, aPageState) {
-    if (aPageState == 'newdoc') {
-      return {type: this.type, details: {eventType: 'tabstate-change'}};
+    if (aPageState == "newdoc") {
+      return {type: this.type, details: {eventType: "tabstate-change"}};
     }
 
     return null;
@@ -229,7 +229,7 @@ function AndroidPresenter() {}
 
 AndroidPresenter.prototype = Object.create(Presenter.prototype);
 
-AndroidPresenter.prototype.type = 'Android';
+AndroidPresenter.prototype.type = "Android";
 
 // Android AccessibilityEvent type constants.
 AndroidPresenter.prototype.ANDROID_VIEW_CLICKED = 0x01;
@@ -441,7 +441,7 @@ AndroidPresenter.prototype.editingModeChanged =
 
 AndroidPresenter.prototype.announce =
   function AndroidPresenter_announce(aAnnouncement) {
-    let localizedAnnouncement = Utils.localize(aAnnouncement).join(' ');
+    let localizedAnnouncement = Utils.localize(aAnnouncement).join(" ");
     return {
       type: this.type,
       details: [{
@@ -469,7 +469,7 @@ AndroidPresenter.prototype.noMove =
       details: [
       { eventType: this.ANDROID_VIEW_ACCESSIBILITY_FOCUSED,
         exitView: aMoveMethod,
-        text: ['']
+        text: [""]
       }]
     };
   };
@@ -481,10 +481,10 @@ function B2GPresenter() {}
 
 B2GPresenter.prototype = Object.create(Presenter.prototype);
 
-B2GPresenter.prototype.type = 'B2G';
+B2GPresenter.prototype.type = "B2G";
 
 B2GPresenter.prototype.keyboardEchoSetting =
-  new PrefCache('accessibility.accessfu.keyboard_echo');
+  new PrefCache("accessibility.accessfu.keyboard_echo");
 B2GPresenter.prototype.NO_ECHO = 0;
 B2GPresenter.prototype.CHARACTER_ECHO = 1;
 B2GPresenter.prototype.WORD_ECHO = 2;
@@ -500,8 +500,8 @@ B2GPresenter.prototype.PIVOT_CHANGE_HAPTIC_PATTERN = [40];
  * Pivot move reasons.
  * @type {Array}
  */
-B2GPresenter.prototype.pivotChangedReasons = ['none', 'next', 'prev', 'first',
-                                              'last', 'text', 'point'];
+B2GPresenter.prototype.pivotChangedReasons = ["none", "next", "prev", "first",
+                                              "last", "text", "point"];
 
 B2GPresenter.prototype.pivotChanged =
   function B2GPresenter_pivotChanged(aContext, aReason, aIsUserInput) {
@@ -512,7 +512,7 @@ B2GPresenter.prototype.pivotChanged =
     return {
       type: this.type,
       details: {
-        eventType: 'vc-change',
+        eventType: "vc-change",
         data: UtteranceGenerator.genForContext(aContext),
         options: {
           pattern: this.PIVOT_CHANGE_HAPTIC_PATTERN,
@@ -530,7 +530,7 @@ B2GPresenter.prototype.nameChanged =
     return {
       type: this.type,
       details: {
-        eventType: 'name-change',
+        eventType: "name-change",
         data: aAccessible.name,
         options: {enqueue: aIsPolite}
       }
@@ -548,7 +548,7 @@ B2GPresenter.prototype.valueChanged =
     return {
       type: this.type,
       details: {
-        eventType: 'value-change',
+        eventType: "value-change",
         data: aAccessible.value,
         options: {enqueue: aIsPolite}
       }
@@ -558,7 +558,7 @@ B2GPresenter.prototype.valueChanged =
 B2GPresenter.prototype.textChanged = function B2GPresenter_textChanged(
   aAccessible, aIsInserted, aStart, aLength, aText, aModifiedText) {
     let echoSetting = this.keyboardEchoSetting.value;
-    let text = '';
+    let text = "";
 
     if (echoSetting == this.CHARACTER_ECHO ||
         echoSetting == this.CHARACTER_AND_WORD_ECHO) {
@@ -584,7 +584,7 @@ B2GPresenter.prototype.textChanged = function B2GPresenter_textChanged(
     return {
       type: this.type,
       details: {
-        eventType: 'text-change',
+        eventType: "text-change",
         data: text
       }
     };
@@ -596,7 +596,7 @@ B2GPresenter.prototype.actionInvoked =
     return {
       type: this.type,
       details: {
-        eventType: 'action',
+        eventType: "action",
         data: UtteranceGenerator.genForAction(aObject, aActionName)
       }
     };
@@ -607,7 +607,7 @@ B2GPresenter.prototype.liveRegion = function B2GPresenter_liveRegion(aContext,
     return {
       type: this.type,
       details: {
-        eventType: 'liveregion-change',
+        eventType: "liveregion-change",
         data: UtteranceGenerator.genForLiveRegion(aContext, aIsHide,
           aModifiedText),
         options: {enqueue: aIsPolite}
@@ -620,7 +620,7 @@ B2GPresenter.prototype.announce =
     return {
       type: this.type,
       details: {
-        eventType: 'announcement',
+        eventType: "announcement",
         data: aAnnouncement
       }
     };
@@ -631,7 +631,7 @@ B2GPresenter.prototype.noMove =
     return {
       type: this.type,
       details: {
-        eventType: 'no-move',
+        eventType: "no-move",
         data: aMoveMethod
       }
     };
@@ -644,7 +644,7 @@ function BraillePresenter() {}
 
 BraillePresenter.prototype = Object.create(Presenter.prototype);
 
-BraillePresenter.prototype.type = 'Braille';
+BraillePresenter.prototype.type = "Braille";
 
 BraillePresenter.prototype.pivotChanged =
   function BraillePresenter_pivotChanged(aContext) {
@@ -656,7 +656,7 @@ BraillePresenter.prototype.pivotChanged =
       type: this.type,
       details: {
         output: Utils.localize(BrailleGenerator.genForContext(aContext)).join(
-          ' '),
+          " "),
         selectionStart: 0,
         selectionEnd: 0
       }
@@ -678,9 +678,9 @@ this.Presentation = { // jshint ignore:line
   get presenters() {
     delete this.presenters;
     let presenterMap = {
-      'mobile/android': [VisualPresenter, AndroidPresenter],
-      'b2g': [VisualPresenter, B2GPresenter],
-      'browser': [VisualPresenter, B2GPresenter, AndroidPresenter]
+      "mobile/android": [VisualPresenter, AndroidPresenter],
+      "b2g": [VisualPresenter, B2GPresenter],
+      "browser": [VisualPresenter, B2GPresenter, AndroidPresenter]
     };
     this.presenters = presenterMap[Utils.MozBuildApp].map(P => new P());
     return this.presenters;

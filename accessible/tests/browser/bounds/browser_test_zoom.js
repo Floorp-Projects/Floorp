@@ -26,7 +26,7 @@ async function testContentBounds(browser, acc) {
 }
 
 async function runTests(browser, accDoc) {
-  loadFrameScripts(browser, { name: 'layout.js', dir: MOCHITESTS_DIR });
+  loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
 
   let p1 = findAccessibleChildByID(accDoc, "p1");
   let p2 = findAccessibleChildByID(accDoc, "p2");
