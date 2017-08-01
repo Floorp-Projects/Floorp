@@ -663,18 +663,6 @@ EditorBase::GetSelection(SelectionType aSelectionType,
   return selcon->GetSelection(ToRawSelectionType(aSelectionType), aSelection);
 }
 
-Selection*
-EditorBase::GetSelection(SelectionType aSelectionType)
-{
-  nsCOMPtr<nsISelection> sel;
-  nsresult rv = GetSelection(aSelectionType, getter_AddRefs(sel));
-  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!sel)) {
-    return nullptr;
-  }
-
-  return sel->AsSelection();
-}
-
 NS_IMETHODIMP
 EditorBase::DoTransaction(nsITransaction* aTxn)
 {
