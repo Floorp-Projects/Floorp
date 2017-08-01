@@ -361,10 +361,62 @@ def process_test262(test262Dir, test262OutDir, strictTests):
         # Add shell.js and browers.js files for the current directory.
         writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localIncludesMap, relPath)
 
+def fetch_pr_files(outDir, inDir, prNumber):
+    import requests
+
+    prTestsOutDir = os.path.join(outDir, prNumber)
+    if os.path.isdir(prTestsOutDir):
+        print("Removing folder %s" % prTestsOutDir)
+        shutil.rmtree(prTestsOutDir)
+
+    # Reuses current Test262 clone's harness and tools folders only, the clone's test/
+    # folder can be discarded from here
+    shutil.rmtree(os.path.join(inDir, "test"))
+
+    prRequest = requests.get("https://api.github.com/repos/tc39/test262/pulls/%s" % prNumber)
+    prRequest.raise_for_status()
+
+    pr = prRequest.json()
+
+    if (pr["state"] != "open"):
+        # Closed PR, remove respective files from folder
+        print("PR %s is closed" % prNumber)
+    else:
+        files = requests.get("https://api.github.com/repos/tc39/test262/pulls/%s/files" % prNumber)
+        files.raise_for_status()
+
+        for item in files.json():
+            if not item["filename"].startswith("test/"):
+                continue
+
+            filename = item["filename"]
+            fileStatus = item["status"]
+
+            print("%s %s" % (fileStatus, filename))
+
+            # Do not add deleted files
+            if fileStatus == "removed":
+                continue
+
+            contents = requests.get(item["raw_url"])
+            contents.raise_for_status()
+
+            fileText = contents.text
+
+            # Prefix the PRs tests dir with test/ so files are processed as Test262 files
+            prsTestsDir = "test/prs/%s" % prNumber
+            filePathDirs = os.path.join(inDir, prsTestsDir, *filename.split("/")[1:-1])
+
+            if not os.path.isdir(filePathDirs):
+                os.makedirs(filePathDirs)
+
+            filenameInDir = os.path.join(inDir, prsTestsDir, *filename.split("/")[1:])
+
+            with io.open(filenameInDir, "wb") as output_file:
+                output_file.write(fileText.encode('utf8'))
+
 def update_test262(args):
     import subprocess
-    import requests
-    import json
 
     url = args.url
     branch = args.branch
@@ -394,56 +446,7 @@ def update_test262(args):
         # It also creates a new folder for that PR or replaces if it already exists, without
         # updating the regular Test262 tests.
         if prNumber:
-            prTestsOutDir = os.path.join(prsTestsOutDir, prNumber)
-            if os.path.isdir(prTestsOutDir):
-                print("Removing folder %s" % prTestsOutDir)
-                shutil.rmtree(prTestsOutDir)
-
-            # Reuses current Test262 clone's harness and tools folders only, the clone's test/
-            # folder can be discarded from here
-            shutil.rmtree(os.path.join(inDir, "test"))
-
-            prRequest = requests.get("https://api.github.com/repos/tc39/test262/pulls/%s" % prNumber)
-            prRequest.raise_for_status()
-
-            pr = prRequest.json()
-
-            if (pr["state"] != "open"):
-                # Closed PR, remove respective files from folder
-                print("PR %s is closed" % prNumber)
-            else:
-                files = requests.get("https://api.github.com/repos/tc39/test262/pulls/%s/files" % prNumber)
-                files.raise_for_status()
-
-                for item in files.json():
-                    if not item["filename"].startswith("test/"):
-                        continue
-
-                    filename = item["filename"]
-                    fileStatus = item["status"]
-
-                    print("%s %s" % (fileStatus, filename))
-
-                    # Do not add deleted files
-                    if fileStatus == "removed":
-                        continue
-
-                    contents = requests.get(item["raw_url"])
-                    contents.raise_for_status()
-
-                    fileText = contents.text
-
-                    # Prefix the PRs tests dir with test/ so files are processed as Test262 files
-                    prsTestsDir = "test/prs/%s" % prNumber
-                    filePathDirs = os.path.join(inDir, prsTestsDir, *filename.split("/")[1:-1])
-
-                    if not os.path.isdir(filePathDirs):
-                        os.makedirs(filePathDirs)
-
-                    filenameInDir = os.path.join(inDir, prsTestsDir, *filename.split("/")[1:])
-
-                    with open(filenameInDir, "wb") as output_file:
-                        output_file.write(fileText)
+            fetch_pr_files(prsTestsOutDir, inDir, prNumber)
         # Without a specific PR, follows through a regular copy.
         else:
             # Stash test262/local and test262/prs. Currently the Test262 repo does not have any
@@ -497,6 +500,7 @@ if __name__ == "__main__":
     parser.add_argument("--out", default="test262",
                         help="Output directory. Any existing directory will be removed! (default: %(default)s)")
     parser.add_argument("--pull", help="Import contents from a Pull Request specified by its number")
+    parser.add_argument("--local", help="Import new and modified contents from a local folder, a new folder will be created on local/branch_name")
     parser.add_argument("--strict", default=False, action="store_true",
                         help="Generate additional strict mode tests. Not enabled by default.")
     parser.set_defaults(func=update_test262)
