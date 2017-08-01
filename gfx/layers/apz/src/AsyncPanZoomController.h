@@ -289,6 +289,16 @@ public:
   void HandleTouchVelocity(uint32_t aTimesampMs, float aSpeedY);
 
   /**
+   * Start autoscrolling this APZC, anchored at the provided location.
+   */
+  void StartAutoscroll(const ScreenPoint& aAnchorLocation);
+
+  /**
+   * Stop autoscrolling this APZC.
+   */
+  void StopAutoscroll();
+
+  /**
    * Populates the provided object (if non-null) with the scrollable guid of this apzc.
    */
   void GetGuid(ScrollableLayerGuid* aGuidOut) const;
@@ -532,9 +542,17 @@ protected:
   nsEventStatus OnCancelTap(const TapGestureInput& aEvent);
 
   /**
-   * Scrolls the viewport by an X,Y offset.
+   * Scroll the scroll frame by an X,Y offset.
+   * The resulting scroll offset is not clamped to the scrollable rect;
+   * the caller must ensure it stays within range.
    */
   void ScrollBy(const CSSPoint& aOffset);
+
+  /**
+   * Scroll the scroll frame by an X,Y offset, clamping the resulting
+   * scroll offset to the scrollable rect.
+   */
+  void ScrollByAndClamp(const CSSPoint& aOffset);
 
   /**
    * Scales the viewport by an amount (note that it multiplies this scale in to
@@ -891,7 +909,8 @@ protected:
     SMOOTH_SCROLL,            /* Smooth scrolling to destination. Used by
                                  CSSOM-View smooth scroll-behavior */
     WHEEL_SCROLL,             /* Smooth scrolling to a destination for a wheel event. */
-    KEYBOARD_SCROLL           /* Smooth scrolling to a destination for a keyboard event. */
+    KEYBOARD_SCROLL,          /* Smooth scrolling to a destination for a keyboard event. */
+    AUTOSCROLL                /* Autoscroll animation. */
   };
 
   // This is in theory protected by |mMonitor|; that is, it should be held whenever
@@ -985,6 +1004,7 @@ public:
 
 private:
   friend class AndroidFlingAnimation;
+  friend class AutoscrollAnimation;
   friend class GenericFlingAnimation;
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;

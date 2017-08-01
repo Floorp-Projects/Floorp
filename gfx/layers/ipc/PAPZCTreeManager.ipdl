@@ -10,6 +10,7 @@ include "mozilla/dom/TabMessageUtils.h"; // Needed for IPC::ParamTraits<nsEventS
 
 include protocol PCompositorBridge;
 
+using CSSPoint from "Units.h";
 using CSSRect from "Units.h";
 using LayoutDeviceCoord from "Units.h";
 using LayoutDeviceIntPoint from "Units.h";
@@ -78,6 +79,10 @@ parent:
   async SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aValues);
 
   async StartScrollbarDrag(ScrollableLayerGuid aGuid, AsyncDragMetrics aDragMetrics);
+
+  async StartAutoscroll(ScrollableLayerGuid aGuid, ScreenPoint aAnchorLocation);
+
+  async StopAutoscroll(ScrollableLayerGuid aGuid);
 
   async SetLongTapEnabled(bool aTapGestureEnabled);
 

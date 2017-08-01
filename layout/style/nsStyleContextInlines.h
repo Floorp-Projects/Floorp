@@ -191,24 +191,6 @@ nsStyleContext::GetStyleIfVisited() const
   MOZ_STYLO_FORWARD(GetStyleIfVisited, ())
 }
 
-mozilla::GeckoStyleContext*
-nsStyleContext::GetParent() const
-{
-  MOZ_ASSERT(IsGecko(),
-             "This should be used only in Gecko-backed style system!");
-  if (mParent) {
-    return mParent->AsGecko();
-  } else {
-    return nullptr;
-  }
-}
-
-bool
-nsStyleContext::IsLinkContext() const
-{
-  return GetStyleIfVisited() && GetStyleIfVisited()->GetParent() == GetParent();
-}
-
 void
 nsStyleContext::StartBackgroundImageLoads()
 {

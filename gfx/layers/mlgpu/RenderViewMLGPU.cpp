@@ -12,6 +12,8 @@
 #include "MLGDevice.h"
 #include "RenderPassMLGPU.h"
 #include "ShaderDefinitionsMLGPU.h"
+#include "Units.h"
+#include "UnitTransforms.h"
 #include "UtilityMLGPU.h"
 
 namespace mozilla {

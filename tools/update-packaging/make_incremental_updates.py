@@ -4,7 +4,7 @@
 
 import os
 import shutil
-import sha
+import hashlib
 from os.path import join, getsize
 from stat import *
 import re
@@ -12,9 +12,9 @@ import sys
 import getopt
 import time
 import datetime
-import bz2
 import string
 import tempfile
+import io
 
 class PatchInfo:
     """ Represents the meta-data associated with a patch
@@ -46,11 +46,11 @@ class PatchInfo:
         if m:
             # Directory immediately following extensions is used for the test
             testdir = m.group(1)
-            print '     add-if "'+testdir+'" "'+filename+'"'
+            print('     add-if "'+testdir+'" "'+filename+'"')
             self.manifestv2.append('add-if "'+testdir+'" "'+filename+'"')
             self.manifestv3.append('add-if "'+testdir+'" "'+filename+'"')
         else:
-            print '        add "'+filename+'"'
+            print('        add "'+filename+'"')
             self.manifestv2.append('add "'+filename+'"')
             self.manifestv3.append('add "'+filename+'"')
 
@@ -59,7 +59,7 @@ class PatchInfo:
             This was ported from mozilla/tools/update-packaging/common.sh's
             make_add_if_not_instruction.
         """
-        print ' add-if-not "'+filename+'" "'+filename+'"'
+        print(' add-if-not "'+filename+'" "'+filename+'"')
         self.manifestv3.append('add-if-not "'+filename+'" "'+filename+'"')
 
     def append_patch_instruction(self, filename, patchname):
@@ -76,11 +76,11 @@ class PatchInfo:
         m = re.match("((?:|.*/)distribution/extensions/.*)/", filename)
         if m:
             testdir = m.group(1)
-            print '   patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"'
+            print('   patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
             self.manifestv2.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
             self.manifestv3.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
         else:
-            print '      patch "'+patchname+'" "'+filename+'"'
+            print('      patch "'+patchname+'" "'+filename+'"')
             self.manifestv2.append('patch "'+patchname+'" "'+filename+'"')
             self.manifestv3.append('patch "'+patchname+'" "'+filename+'"')
 
@@ -90,16 +90,16 @@ class PatchInfo:
             mozilla/tools/update-packaging/common.sh/make_remove_instruction
         """
         if filename.endswith("/"):
-            print '      rmdir "'+filename+'"'
+            print('      rmdir "'+filename+'"')
             self.manifestv2.append('rmdir "'+filename+'"')
             self.manifestv3.append('rmdir "'+filename+'"')
         elif filename.endswith("/*"):
             filename = filename[:-1]
-            print '    rmrfdir "'+filename+'"'
+            print('    rmrfdir "'+filename+'"')
             self.manifestv2.append('rmrfdir "'+filename+'"')
             self.manifestv3.append('rmrfdir "'+filename+'"')
         else:
-            print '     remove "'+filename+'"'
+            print('     remove "'+filename+'"')
             self.manifestv2.append('remove "'+filename+'"')
             self.manifestv3.append('remove "'+filename+'"')
 
@@ -107,23 +107,23 @@ class PatchInfo:
         """ Create the v2 manifest file in the root of the work_dir """
         manifest_file_path = os.path.join(self.work_dir,"updatev2.manifest")
         manifest_file = open(manifest_file_path, "wb")
-        manifest_file.writelines("type \"partial\"\n")
-        manifest_file.writelines(string.join(self.manifestv2, '\n'))
-        manifest_file.writelines("\n")
+        manifest_file.writelines(io.BytesIO(b"type \"partial\"\n"))
+        manifest_file.writelines(io.BytesIO('\n'.join(self.manifestv2).encode('ascii')))
+        manifest_file.writelines(io.BytesIO(b"\n"))
         manifest_file.close()
 
-        bzip_file(manifest_file_path)
+        xz_file(manifest_file_path)
         self.archive_files.append('"updatev2.manifest"')
 
         """ Create the v3 manifest file in the root of the work_dir """
         manifest_file_path = os.path.join(self.work_dir,"updatev3.manifest")
         manifest_file = open(manifest_file_path, "wb")
-        manifest_file.writelines("type \"partial\"\n")
-        manifest_file.writelines(string.join(self.manifestv3, '\n'))
-        manifest_file.writelines("\n")
+        manifest_file.writelines(io.BytesIO(b"type \"partial\"\n"))
+        manifest_file.writelines(io.BytesIO('\n'.join(self.manifestv3).encode('ascii')))
+        manifest_file.writelines(io.BytesIO(b"\n"))
         manifest_file.close()
 
-        bzip_file(manifest_file_path)
+        xz_file(manifest_file_path)
         self.archive_files.append('"updatev3.manifest"')
 
     def build_marfile_entry_hash(self, root_path):
@@ -176,8 +176,8 @@ class MarFileEntry:
 
     def calc_file_sha_digest(self, filename):
         """ Returns sha digest of given filename"""
-        file_content = open(filename, 'r').read()
-        return sha.new(file_content).digest()
+        file_content = open(filename, 'rb').read()
+        return hashlib.sha1(file_content).digest()
 
     def sha(self):
         """ Returns sha digest of file repreesnted by this _marfile_entry"""
@@ -188,7 +188,7 @@ class MarFileEntry:
 def exec_shell_cmd(cmd):
     """Execs shell cmd and raises an exception if the cmd fails"""
     if (os.system(cmd)):
-        raise Exception, "cmd failed "+cmd
+        raise Exception("cmd failed "+cmd)
 
 
 def copy_file(src_file_abs_path, dst_file_abs_path):
@@ -199,25 +199,25 @@ def copy_file(src_file_abs_path, dst_file_abs_path):
     # Copy the file over
     shutil.copy2(src_file_abs_path, dst_file_abs_path)
 
-def bzip_file(filename):
-    """ Bzip's the file in place.  The original file is replaced with a bzip'd version of itself
+def xz_file(filename):
+    """ XZ compresses the file in place.  The original file is replaced with the xz compressed version of itself
         assumes the path is absolute"""
-    exec_shell_cmd('bzip2 -z9 "' + filename+'"')
-    os.rename(filename+".bz2",filename)
+    exec_shell_cmd('xz --compress --x86 --lzma2 --format=xz --check=crc64 "' + filename+'"')
+    os.rename(filename+".xz",filename)
 
-def bunzip_file(filename):
-    """ Bzip's the file in palce.   The original file is replaced with a bunzip'd version of itself.
-        doesn't matter if the filename ends in .bz2 or not"""
-    if not filename.endswith(".bz2"):
-        os.rename(filename, filename+".bz2")
-        filename=filename+".bz2"
-    exec_shell_cmd('bzip2 -d "' + filename+'"')
+def xzunzip_file(filename):
+    """ xz decompresses the file in palce.  The original file is replaced with a xz decompressed version of itself.
+        doesn't matter if the filename ends in .xz or not"""
+    if not filename.endswith(".xz"):
+        os.rename(filename, filename+".xz")
+        filename=filename+".xz"
+    exec_shell_cmd('xz -d "' + filename+'"')
 
 
 def extract_mar(filename, work_dir):
     """ Extracts the marfile intot he work_dir
         assumes work_dir already exists otherwise will throw osError"""
-    print "Extracting "+filename+" to "+work_dir
+    print("Extracting "+filename+" to "+work_dir)
     saved_path = os.getcwd()
     try:
         os.chdir(work_dir)
@@ -229,10 +229,10 @@ def create_partial_patch_for_file(from_marfile_entry, to_marfile_entry, shas, pa
     """ Creates the partial patch file and manifest entry for the pair of files passed in
     """
     if not (from_marfile_entry.sha(),to_marfile_entry.sha()) in shas:
-        print 'diffing "'+from_marfile_entry.name+'\"'
+        print('diffing "'+from_marfile_entry.name+'\"')
         #bunzip to/from
-        bunzip_file(from_marfile_entry.abs_path)
-        bunzip_file(to_marfile_entry.abs_path)
+        xzunzip_file(from_marfile_entry.abs_path)
+        xzunzip_file(to_marfile_entry.abs_path)
 
         # The patch file will be created in the working directory with the
         # name of the file in the mar + .patch
@@ -241,14 +241,14 @@ def create_partial_patch_for_file(from_marfile_entry, to_marfile_entry, shas, pa
         if not os.path.exists(patch_file_dir):
             os.makedirs(patch_file_dir)
 
-        # Create bzip'd patch file
+        # Create xz compressed patch file
         exec_shell_cmd("mbsdiff "+from_marfile_entry.abs_path+" "+to_marfile_entry.abs_path+" "+patch_file_abs_path)
-        bzip_file(patch_file_abs_path)
+        xz_file(patch_file_abs_path)
 
-        # Create bzip's full file
+        # Create xz compressed full file
         full_file_abs_path =  os.path.join(patch_info.work_dir, to_marfile_entry.name)
         shutil.copy2(to_marfile_entry.abs_path, full_file_abs_path)
-        bzip_file(full_file_abs_path)
+        xz_file(full_file_abs_path)
 
         if os.path.getsize(patch_file_abs_path) < os.path.getsize(full_file_abs_path):
             # Patch is smaller than file.  Remove the file and add patch to manifest
@@ -304,13 +304,17 @@ def process_explicit_remove_files(dir_path, patch_info):
         list_file_path = os.path.join(dir_path, "Contents/Resources/removed-files")
 
     if (os.path.exists(list_file_path)):
-        list_file = bz2.BZ2File(list_file_path,"r") # throws if doesn't exist
+        fd, tmppath = tempfile.mkstemp('', 'tmp', os.getcwd())
+        os.close(fd)
+        exec_shell_cmd('xz -k -d --stdout "' + list_file_path + '" > "'+tmppath+'"')
+        list_file = open(tmppath)
 
         lines = []
         for line in list_file:
             lines.append(line.strip())
-        list_file.close()
 
+        list_file.close()
+        os.remove(tmppath)
         lines.sort(reverse=True)
         for line in lines:
             # Exclude any blank and comment lines.
@@ -339,7 +343,7 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     elif "Contents\Resources\precomplete" in to_file_set:
         forced_list.append("Contents\Resources\precomplete")
     else:
-        raise Exception, "missing precomplete file in: "+to_dir_path
+        raise Exception("missing precomplete file in: "+to_dir_path)
 
     if "removed-files" in to_file_set:
         forced_list.append("removed-files")
@@ -349,7 +353,7 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     elif "Contents\Resources\\removed-files" in to_file_set:
         forced_list.append("Contents\Resources\\removed-files")
     else:
-        raise Exception, "missing removed-files file in: "+to_dir_path
+        raise Exception("missing removed-files file in: "+to_dir_path)
 
     if "chrome.manifest" in to_file_set:
         forced_list.append("chrome.manifest")
@@ -359,7 +363,7 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     elif "Contents\Resources\\chrome.manifest" in to_file_set:
         forced_list.append("Contents\Resources\\chrome.manifest")
     else:
-        raise Exception, "missing chrome.manifest file in: "+to_dir_path
+        raise Exception("missing chrome.manifest file in: "+to_dir_path)
 
     # Files which exist in both sets need to be patched
     patch_filenames = list(from_file_set.intersection(to_file_set))
@@ -371,7 +375,7 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
             # This filename is in the add if not list, explicitly add-if-not
             create_add_if_not_patch_for_file(to_dir_hash[filename], patch_info)
         elif filename in forced_list:
-            print 'Forcing "'+filename+'"'
+            print('Forcing "'+filename+'"')
             # This filename is in the forced list, explicitly add
             create_add_patch_for_file(to_dir_hash[filename], patch_info)
         else:
@@ -406,7 +410,7 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     patch_info.create_manifest_files()
 
     # And construct the mar
-    mar_cmd = 'mar -C '+patch_info.work_dir+' -c output.mar '+string.join(patch_info.archive_files, ' ')
+    mar_cmd = 'mar -C '+patch_info.work_dir+' -c output.mar '+' '.join(patch_info.archive_files)
     exec_shell_cmd(mar_cmd)
 
     # Copy mar to final destination
@@ -418,8 +422,8 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     return patch_filename
 
 def usage():
-    print "-h for help"
-    print "-f for patchlist_file"
+    print("-h for help")
+    print("-f for patchlist_file")
 
 def get_buildid(work_dir):
     """ extracts buildid from MAR
@@ -428,14 +432,21 @@ def get_buildid(work_dir):
     if not os.path.exists(ini):
         ini = '%s/Contents/Resources/application.ini' % work_dir
         if not os.path.exists(ini):
-            print 'WARNING: application.ini not found, cannot find build ID'
+            print('WARNING: application.ini not found, cannot find build ID')
             return ''
 
-    file = bz2.BZ2File(ini)
+    fd, tmppath = tempfile.mkstemp('', 'tmp', os.getcwd())
+    os.close(fd)
+    exec_shell_cmd('xz -k -d --stdout "' + ini + '" > "'+tmppath+'"')
+    file = open(tmppath)
     for line in file:
         if line.find('BuildID') == 0:
+            file.close()
+            os.remove(tmppath)
             return line.strip().split('=')[1]
-    print 'WARNING: cannot find build ID in application.ini'
+    print('WARNING: cannot find build ID in application.ini')
+    file.close()
+    os.remove(tmppath)
     return ''
 
 def decode_filename(filepath):
@@ -449,7 +460,7 @@ def decode_filename(filepath):
         '(?P<product>\w+)(-)(?P<version>\w+\.\w+(\.\w+){0,2})(\.)(?P<locale>.+?)(\.)(?P<platform>.+?)(\.)(?P<type>\w+)(.mar)',
       os.path.basename(filepath))
       return m.groupdict()
-    except Exception, exc:
+    except Exception(exc):
       try:
         m = re.search(
           '(?P<platform>.+?)\/(?P<locale>.+?)\/(?P<product>\w+)-(?P<version>\w+\.\w+)\.(?P<type>\w+).mar',
@@ -466,7 +477,7 @@ def create_partial_patches(patches):
     metadata = []
     try:
         work_dir_root = tempfile.mkdtemp('-fastmode', 'tmp', os.getcwd())
-        print "Building patches using work dir: %s" % (work_dir_root)
+        print("Building patches using work dir: %s" % (work_dir_root))
 
         # Iterate through every patch set in the patch file
         patch_num = 1
@@ -486,7 +497,7 @@ def create_partial_patches(patches):
             extract_mar(from_filename,work_dir_from)
             from_decoded = decode_filename(from_filename)
             from_buildid = get_buildid(work_dir_from)
-            from_shasum = sha.sha(open(from_filename).read()).hexdigest()
+            from_shasum = hashlib.sha1(open(from_filename, "rb").read()).hexdigest()
             from_size = str(os.path.getsize(to_filename))
 
             # Extract to mar into to dir
@@ -495,14 +506,14 @@ def create_partial_patches(patches):
             extract_mar(to_filename, work_dir_to)
             to_decoded = decode_filename(from_filename)
             to_buildid = get_buildid(work_dir_to)
-            to_shasum = sha.sha(open(to_filename).read()).hexdigest()
+            to_shasum = hashlib.sha1(open(to_filename, 'rb').read()).hexdigest()
             to_size = str(os.path.getsize(to_filename))
 
             mar_extract_time = time.time()
 
             partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['update.manifest','updatev2.manifest','updatev3.manifest'],[]),forced_updates,['channel-prefs.js','update-settings.ini'])
             partial_buildid = to_buildid
-            partial_shasum = sha.sha(open(partial_filename).read()).hexdigest()
+            partial_shasum = hashlib.sha1(open(partial_filename, "rb").read()).hexdigest()
             partial_size = str(os.path.getsize(partial_filename))
 
             metadata.append({
@@ -522,7 +533,7 @@ def create_partial_patches(patches):
              'locale':from_decoded['locale'],
              'platform':from_decoded['platform'],
             })
-            print "done with patch %s/%s time (%.2fs/%.2fs/%.2fs) (mar/patch/total)" % (str(patch_num),str(len(patches)),mar_extract_time-startTime,time.time()-mar_extract_time,time.time()-startTime)
+            print("done with patch %s/%s time (%.2fs/%.2fs/%.2fs) (mar/patch/total)" % (str(patch_num),str(len(patches)),mar_extract_time-startTime,time.time()-mar_extract_time,time.time()-startTime))
             patch_num += 1
         return metadata
     finally:

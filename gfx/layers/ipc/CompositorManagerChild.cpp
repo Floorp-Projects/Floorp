@@ -4,9 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/CompositorManagerChild.h"
+
+#include "gfxPrefs.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/dom/ContentChild.h"   // for ContentChild
 #include "mozilla/dom/TabChild.h"       // for TabChild
@@ -15,6 +18,8 @@
 
 namespace mozilla {
 namespace layers {
+
+using gfx::GPUProcessManager;
 
 StaticRefPtr<CompositorManagerChild> CompositorManagerChild::sInstance;
 
@@ -265,7 +270,7 @@ CompositorManagerChild::SetReplyTimeout()
   // Don't apply timeout when using web render as it tend to timeout frequently.
   if (XRE_IsParentProcess() &&
       GPUProcessManager::Get()->GetGPUChild() &&
-      !gfxVars::UseWebRender()) {
+      !gfx::gfxVars::UseWebRender()) {
     int32_t timeout = gfxPrefs::GPUProcessIPCReplyTimeoutMs();
     SetReplyTimeoutMs(timeout);
   }

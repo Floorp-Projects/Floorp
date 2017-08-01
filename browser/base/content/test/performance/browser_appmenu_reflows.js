@@ -10,68 +10,49 @@
  * for tips on how to do that.
  */
 const EXPECTED_APPMENU_OPEN_REFLOWS = [
-  [
-    "openPopup@chrome://global/content/bindings/popup.xml",
-    "show/</<@chrome://browser/content/customizableui/panelUI.js",
-  ],
+  {
+    stack: [
+      "openPopup@chrome://global/content/bindings/popup.xml",
+      "show/</<@chrome://browser/content/customizableui/panelUI.js",
+    ],
+  },
 
-  [
-    "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
-    "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
-    "onxblpopupshowing@chrome://global/content/bindings/popup.xml",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-    "show/</<@chrome://browser/content/customizableui/panelUI.js",
-  ],
+  {
+    stack: [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
+      "onxblpopupshowing@chrome://global/content/bindings/popup.xml",
+      "openPopup@chrome://global/content/bindings/popup.xml",
+      "show/</<@chrome://browser/content/customizableui/panelUI.js",
+    ],
 
-  [
-    "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
-    "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
-    "onxblpopupshowing@chrome://global/content/bindings/popup.xml",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-    "show/</<@chrome://browser/content/customizableui/panelUI.js",
-  ],
+    times: 2, // This number should only ever go down - never up.
+  },
 
-  [
-    "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
-    "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
-    "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
-  ],
+  {
+    stack: [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
+      "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
+    ],
+  },
 
-  [
-    "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
-    "handleEvent@resource:///modules/PanelMultiView.jsm",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-  ],
+  {
+    stack: [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "handleEvent@resource:///modules/PanelMultiView.jsm",
+      "openPopup@chrome://global/content/bindings/popup.xml",
+    ],
+  },
 
-  [
-    "handleEvent@resource:///modules/PanelMultiView.jsm",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-  ],
+  {
+    stack: [
+      "handleEvent@resource:///modules/PanelMultiView.jsm",
+      "openPopup@chrome://global/content/bindings/popup.xml",
+    ],
 
-  [
-    "handleEvent@resource:///modules/PanelMultiView.jsm",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-  ],
-
-  [
-    "handleEvent@resource:///modules/PanelMultiView.jsm",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-  ],
-
-  [
-    "handleEvent@resource:///modules/PanelMultiView.jsm",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-  ],
-
-  [
-    "handleEvent@resource:///modules/PanelMultiView.jsm",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-  ],
-
-  [
-    "handleEvent@resource:///modules/PanelMultiView.jsm",
-    "openPopup@chrome://global/content/bindings/popup.xml",
-  ],
+    times: 6, // This number should only ever go down - never up.
+  },
 ];
 
 const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
@@ -84,15 +65,14 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
    * If we add more views where this is necessary, we may need to duplicate
    * these expected reflows further.
    */
-  [
-    "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
-    "onTransitionEnd@resource:///modules/PanelMultiView.jsm",
-  ],
+  {
+    stack: [
+      "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
+      "onTransitionEnd@resource:///modules/PanelMultiView.jsm",
+    ],
 
-  [
-    "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
-    "onTransitionEnd@resource:///modules/PanelMultiView.jsm",
-  ],
+    times: 2, // This number should only ever go down - never up.
+  },
 
   /**
    * Please don't add anything new!
