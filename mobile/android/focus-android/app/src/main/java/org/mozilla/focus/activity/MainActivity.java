@@ -33,6 +33,7 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
 
     public static final String EXTRA_FINISH = "finish";
     public static final String EXTRA_TEXT_SELECTION = "text_selection";
+    public static final String EXTRA_NOTIFICATION = "notification";
 
     private static final String EXTRA_SHORTCUT = "shortcut";
 
@@ -177,6 +178,7 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
     private void processEraseAction(final SafeIntent intent) {
         final boolean finishActivity = intent.getBooleanExtra(EXTRA_FINISH, false);
         final boolean fromShortcut = intent.getBooleanExtra(EXTRA_SHORTCUT, false);
+        final boolean fromNotification = intent.getBooleanExtra(EXTRA_NOTIFICATION, false);
 
         final BrowserFragment browserFragment = (BrowserFragment) getSupportFragmentManager()
                 .findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
@@ -184,7 +186,7 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
         if (browserFragment != null) {
             // We are currently displaying a browser fragment. Let the fragment handle the erase and
             // play its animation.
-            browserFragment.eraseAndShowHomeScreen();
+            browserFragment.eraseAndShowHomeScreen(!fromNotification);
         } else {
             // There's no fragment available currently. Let's delete manually and notify the service
             // that the session should have ended (normally the fragment would do both).
@@ -201,6 +203,8 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
 
         if (fromShortcut) {
             TelemetryWrapper.eraseShortcutEvent();
+        } else if (fromNotification) {
+            TelemetryWrapper.eraseAndOpenNotificationActionEvent();
         }
     }
 

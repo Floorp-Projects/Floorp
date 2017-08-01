@@ -150,15 +150,12 @@ public class BrowsingNotificationService extends Service {
     }
 
     private Notification buildNotification() {
-        final PendingIntent notificationPendingIntent = createNotificationIntent();
-        final PendingIntent openPendingIntent = createOpenActionIntent();
-
         return new NotificationCompat.Builder(this)
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.notification_erase_text))
-                .setContentIntent(notificationPendingIntent)
+                .setContentIntent(createNotificationIntent())
                 .setVisibility(Notification.VISIBILITY_SECRET)
                 .setShowWhen(false)
                 .setLocalOnly(true)
@@ -166,7 +163,11 @@ public class BrowsingNotificationService extends Service {
                 .addAction(new NotificationCompat.Action(
                         R.drawable.ic_notification,
                         getString(R.string.notification_action_open),
-                        openPendingIntent))
+                        createOpenActionIntent()))
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_delete,
+                        getString(R.string.notification_action_erase_and_open),
+                        createOpenAndEraseActionIntent()))
                 .build();
     }
 
@@ -182,6 +183,16 @@ public class BrowsingNotificationService extends Service {
         intent.setAction(MainActivity.ACTION_OPEN);
 
         return PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private PendingIntent createOpenAndEraseActionIntent() {
+        final Intent intent = new Intent(this, MainActivity.class);
+        intent.setAction(MainActivity.ACTION_ERASE);
+        intent.putExtra(MainActivity.EXTRA_FINISH, false);
+        intent.putExtra(MainActivity.EXTRA_NOTIFICATION, true);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        return PendingIntent.getActivity(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     @Nullable

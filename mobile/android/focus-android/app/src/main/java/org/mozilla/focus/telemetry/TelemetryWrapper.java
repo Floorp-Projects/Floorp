@@ -91,6 +91,7 @@ public final class TelemetryWrapper {
         private static final String FIREFOX = "firefox";
         private static final String SELECTION = "selection";
         private static final String ERASE = "erase";
+        private static final String ERASE_AND_OPEN = "erase_open";
         private static final String ERASE_TO_HOME = "erase_home";
         private static final String ERASE_TO_APP = "erase_app";
         private static final String IMAGE = "image";
@@ -311,6 +312,10 @@ public final class TelemetryWrapper {
 
     public static void eraseNotificationActionEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.ERASE).queue();
+    }
+
+    public static void eraseAndOpenNotificationActionEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.ERASE_AND_OPEN).queue();
     }
 
     public static void openNotificationActionEvent() {

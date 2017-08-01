@@ -27,6 +27,7 @@ import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -633,7 +634,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 TelemetryWrapper.eraseBackToAppEvent();
             } else {
                 // Just go back to the home screen.
-                eraseAndShowHomeScreen();
+                eraseAndShowHomeScreen(true);
 
                 TelemetryWrapper.eraseBackToHomeEvent();
             }
@@ -651,12 +652,17 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         BrowsingNotificationService.stop(getContext());
     }
 
-    public void eraseAndShowHomeScreen() {
+    public void eraseAndShowHomeScreen(final boolean animateErase) {
         erase();
 
-        getActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .setCustomAnimations(0, R.anim.erase_animation)
+        final FragmentTransaction transaction = getActivity().getSupportFragmentManager()
+                .beginTransaction();
+
+        if (animateErase) {
+            transaction.setCustomAnimations(0, R.anim.erase_animation);
+        }
+
+        transaction
                 .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
                 .commit();
 
@@ -693,7 +699,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 break;
 
             case R.id.erase: {
-                eraseAndShowHomeScreen();
+                eraseAndShowHomeScreen(true);
 
                 TelemetryWrapper.eraseEvent();
                 break;
