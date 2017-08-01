@@ -190,7 +190,7 @@ public:
   // Return the duration of the video in seconds.
   virtual double GetDuration();
 
-  // Return true if the stream is infinite (see SetInfinite).
+  // Return true if the stream is infinite.
   bool IsInfinite() const;
 
   // Called as data arrives on the stream and is read into the cache.  Called
@@ -564,16 +564,6 @@ protected:
   // Call on the main thread only.
   void DownloadProgressed();
 
-  // A media stream is assumed to be infinite if the metadata doesn't
-  // contain the duration, and range requests are not supported, and
-  // no headers give a hint of a possible duration (Content-Length,
-  // Content-Duration, and variants), and we cannot seek in the media
-  // stream to determine the duration.
-  //
-  // When the media stream ends, we can know the duration, thus the stream is
-  // no longer considered to be infinite.
-  void SetInfinite(bool aInfinite);
-
   // Called by MediaResource when the "cache suspended" status changes.
   // If MediaResource::IsSuspendedByCache returns true, then the decoder
   // should stop buffering or otherwise waiting for download progress and
@@ -601,9 +591,6 @@ protected:
   // during seek and duration operations to prevent the progress indicator
   // from jumping around. Read/Write on the main thread only.
   bool mIgnoreProgressData;
-
-  // True if the stream is infinite (e.g. a webradio).
-  bool mInfiniteStream;
 
   // Ensures our media stream has been pinned.
   void PinForSeek();

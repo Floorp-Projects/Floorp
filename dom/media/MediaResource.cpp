@@ -254,25 +254,13 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     Unused << hc->GetResponseHeader(NS_LITERAL_CSTRING("Accept-Ranges"),
                                     ranges);
     bool acceptsRanges = ranges.EqualsLiteral("bytes");
-    // True if this channel will not return an unbounded amount of data
-    bool dataIsBounded = false;
 
     int64_t contentLength = -1;
     const bool isCompressed = IsPayloadCompressed(hc);
     if (!isCompressed) {
       hc->GetContentLength(&contentLength);
     }
-    if (contentLength >= 0 &&
-        (responseStatus == HTTP_OK_CODE ||
-         responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
-      // "OK" status means Content-Length is for the whole resource.
-      // Since that's bounded, we know we have a finite-length resource.
-      dataIsBounded = true;
-    }
 
-    // Assume Range requests have a bounded upper limit unless the
-    // Content-Range header tells us otherwise.
-    bool boundedSeekLimit = true;
     // Check response code for byte-range requests (seeking, chunk requests).
     // We don't expect to get a 206 response for a compressed stream, but
     // double check just to be sure.
@@ -291,9 +279,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
         // Notify media cache about the length and start offset of data received.
         // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
         //       For now, tell the decoder that the stream is infinite.
-        if (rangeTotal == -1) {
-          boundedSeekLimit = false;
-        } else {
+        if (rangeTotal != -1) {
           contentLength = std::max(contentLength, rangeTotal);
         }
         // Give some warnings if the ranges are unexpected.
@@ -327,13 +313,6 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     // and the server isn't sending Accept-Ranges:bytes then we don't
     // support seeking. We also can't seek in compressed streams.
     seekable = !isCompressed && acceptsRanges;
-    if (seekable && boundedSeekLimit) {
-      // If range requests are supported, and we did not see an unbounded
-      // upper range limit, we assume the resource is bounded.
-      dataIsBounded = true;
-    }
-
-    mCallback->SetInfinite(!dataIsBounded);
   }
   mCacheStream.SetTransportSeekable(seekable);
 

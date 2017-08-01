@@ -339,20 +339,11 @@ MediaDecoder::GetDuration()
   return mDuration;
 }
 
-void
-MediaDecoder::SetInfinite(bool aInfinite)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  mInfiniteStream = aInfinite;
-  DurationChanged();
-}
-
 bool
 MediaDecoder::IsInfinite() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mInfiniteStream;
+  return mozilla::IsInfinite<double>(mDuration);
 }
 
 #define INIT_MIRROR(name, val) \
@@ -366,7 +357,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , mDuration(std::numeric_limits<double>::quiet_NaN())
   , mCDMProxyPromise(mCDMProxyPromiseHolder.Ensure(__func__))
   , mIgnoreProgressData(false)
-  , mInfiniteStream(false)
   , mOwner(aInit.mOwner)
   , mAbstractMainThread(aInit.mOwner->AbstractMainThread())
   , mFrameStats(new FrameStatistics())
@@ -762,11 +752,6 @@ MediaDecoder::MetadataLoaded(UniquePtr<MediaInfo> aInfo,
   Invalidate();
 
   EnsureTelemetryReported();
-
-  // The duration is no longer infinite when we get one from the metadata.
-  if (mInfo->mMetadataDuration && IsInfinite()) {
-    SetInfinite(false);
-  }
 }
 
 void
@@ -918,12 +903,6 @@ MediaDecoder::PlaybackEnded()
   ChangeState(PLAY_STATE_ENDED);
   InvalidateWithFlags(VideoFrameContainer::INVALIDATE_FORCE);
   GetOwner()->PlaybackEnded();
-
-  // This must be called after |GetOwner()->PlaybackEnded()| call above, in
-  // order to fire the required durationchange.
-  if (IsInfinite()) {
-    SetInfinite(false);
-  }
 }
 
 MediaStatistics
@@ -1180,9 +1159,10 @@ MediaDecoder::DurationChanged()
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
   double oldDuration = mDuration;
-  if (IsInfinite()) {
-    mDuration = std::numeric_limits<double>::infinity();
-  } else if (mExplicitDuration.Ref().isSome()) {
+
+  // Use the explicit duration if we have one.
+  // Otherwise use the duration mirrored from MDSM.
+  if (mExplicitDuration.Ref().isSome()) {
     mDuration = mExplicitDuration.Ref().ref();
   } else if (mStateMachineDuration.Ref().isSome()) {
     mDuration = mStateMachineDuration.Ref().ref().ToSeconds();
