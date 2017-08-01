@@ -3226,7 +3226,10 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
     LOG3(("Http2Session::WriteSegments %p trying to discard %d bytes of data",
           this, discardCount));
 
-    if (!discardCount) {
+    if (!discardCount && mDownstreamState == DISCARDING_DATA_FRAME) {
+      // Only do this short-cirtuit if we're not discarding a pure padding
+      // frame, as we need to potentially handle the stream FIN in those cases.
+      // See bug 1381016 comment 36 for more details.
       ResetDownstreamState();
       Unused << ResumeRecv();
       return NS_BASE_STREAM_WOULD_BLOCK;
