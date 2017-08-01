@@ -760,6 +760,9 @@ public:
   already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) const
   {
     RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
+    if (aOffset < 0) {
+      return bytes.forget();
+    }
     bool ok = bytes->SetLength(aCount, fallible);
     NS_ENSURE_TRUE(ok, nullptr);
     char* curr = reinterpret_cast<char*>(bytes->Elements());
@@ -772,6 +775,10 @@ public:
         break;
       }
       aOffset += bytesRead;
+      if (aOffset < 0) {
+        // Very unlikely overflow.
+        break;
+      }
       aCount -= bytesRead;
       curr += bytesRead;
     }
