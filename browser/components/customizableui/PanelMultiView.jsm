@@ -11,8 +11,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
-  "resource:///modules/CustomizableWidgets.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm");
 
 /**
  * Simple implementation of the sliding window pattern; panels are added to a
@@ -676,14 +676,9 @@ this.PanelMultiView = class {
    */
   _dispatchViewEvent(viewNode, eventName, anchor, detail) {
     let cancel = false;
-    if (this.panelViews) {
-      let custWidget = CustomizableWidgets.find(widget => widget.viewId == viewNode.id);
-      let method = "on" + eventName;
-      if (custWidget && custWidget[method]) {
-        if (anchor && custWidget.onInit)
-          custWidget.onInit(anchor);
-        custWidget[method]({ target: viewNode, preventDefault: () => cancel = true, detail });
-      }
+    if (eventName != "PanelMultiViewHidden" && eventName != "destructed") {
+      // Don't need to do this for PanelMultiViewHidden or "destructed" events
+      CustomizableUI.ensureSubviewListeners(viewNode);
     }
 
     let evt = new this.window.CustomEvent(eventName, {
