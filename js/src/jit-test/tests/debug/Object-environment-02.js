@@ -1,13 +1,17 @@
 // The .environment of a function Debugger.Object is an Environment object.
 
+load(libdir + 'nightly-only.js');
+
 var g = newGlobal()
 var dbg = new Debugger;
 var gDO = dbg.addDebuggee(g);
 
 function check(expr) {
   print("checking " + uneval(expr));
-  let val = gDO.executeInGlobal(expr).return;
-  assertEq(val.environment instanceof Debugger.Environment, true);
+  let completion = gDO.executeInGlobal(expr);
+  if (completion.throw)
+    throw completion.throw.unsafeDereference();
+  assertEq(completion.return.environment instanceof Debugger.Environment, true);
 }
 
 g.eval('function j(a) { }');
@@ -17,4 +21,6 @@ check('(() => { })');
 check('(function f() { })');
 check('(function* g() { })');
 check('(async function m() { })');
-check('(async function* n() { })');
+nightlyOnly(g.SyntaxError, () => {
+  check('(async function* n() { })');
+});

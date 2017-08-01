@@ -1,4 +1,5 @@
 load(libdir + 'array-compare.js');
+load(libdir + 'nightly-only.js');
 
 var g = newGlobal();
 var dbg = new Debugger;
@@ -7,7 +8,12 @@ var hits = 0;
 
 function check(expr, expected) {
   print("checking " + uneval(expr));
-  let fn = gDO.executeInGlobal(expr).return;
+
+  let completion = gDO.executeInGlobal(expr);
+  if (completion.throw)
+    throw completion.throw.unsafeDereference();
+
+  let fn = completion.return;
   if (expected === undefined)
     assertEq(fn.parameterNames, undefined);
   else
@@ -24,4 +30,6 @@ check('(function (a, [b, c], {d, e:f}) { })',
 check('({a:1})', undefined);
 check('Math.atan2', [undefined, undefined]);
 check('(async function (a, b, c) {})', ["a", "b", "c"]);
-check('(async function* (d, e, f) {})', ["d", "e", "f"]);
+nightlyOnly(g.SyntaxError, () => {
+  check('(async function* (d, e, f) {})', ["d", "e", "f"]);
+});
