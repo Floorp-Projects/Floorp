@@ -13,7 +13,7 @@ class Task(object):
     - label; the label for this task
     - attributes: a dictionary of attributes for this task (used for filtering)
     - task: the task definition (JSON-able dictionary)
-    - optimizations: optimizations to apply to the task (see taskgraph.optimize)
+    - optimization: optimization to apply to the task (see taskgraph.optimize)
     - dependencies: tasks this one depends on, in the form {name: label}, for example
       {'build': 'build-linux64/opt', 'docker-image': 'build-docker-image-desktop-test'}
 
@@ -26,7 +26,7 @@ class Task(object):
     display, comparison, serialization, etc. It has no functionality of its own.
     """
     def __init__(self, kind, label, attributes, task,
-                 optimizations=None, dependencies=None):
+                 optimization=None, dependencies=None):
         self.kind = kind
         self.label = label
         self.attributes = attributes
@@ -37,7 +37,7 @@ class Task(object):
 
         self.attributes['kind'] = kind
 
-        self.optimizations = optimizations or []
+        self.optimization = optimization
         self.dependencies = dependencies or {}
 
     def __eq__(self, other):
@@ -46,12 +46,12 @@ class Task(object):
             self.attributes == other.attributes and \
             self.task == other.task and \
             self.task_id == other.task_id and \
-            self.optimizations == other.optimizations and \
+            self.optimization == other.optimization and \
             self.dependencies == other.dependencies
 
     def __repr__(self):
         return ('Task({kind!r}, {label!r}, {attributes!r}, {task!r}, '
-                'optimizations={optimizations!r}, '
+                'optimization={optimization!r}, '
                 'dependencies={dependencies!r})'.format(**self.__dict__))
 
     def to_json(self):
@@ -60,7 +60,7 @@ class Task(object):
             'label': self.label,
             'attributes': self.attributes,
             'dependencies': self.dependencies,
-            'optimizations': self.optimizations,
+            'optimization': self.optimization,
             'task': self.task,
         }
         if self.task_id:
@@ -79,7 +79,7 @@ class Task(object):
             label=task_dict['label'],
             attributes=task_dict['attributes'],
             task=task_dict['task'],
-            optimizations=task_dict['optimizations'],
+            optimization=task_dict['optimization'],
             dependencies=task_dict.get('dependencies'))
         if 'task_id' in task_dict:
             rv.task_id = task_dict['task_id']
