@@ -145,11 +145,6 @@ TextRangeType ToTextRangeType(RawTextRangeType aRawTextRangeType);
 const char* ToChar(TextRangeType aTextRangeType);
 SelectionType ToSelectionType(TextRangeType aTextRangeType);
 
-inline RawSelectionType ToRawSelectionType(TextRangeType aTextRangeType)
-{
-  return ToRawSelectionType(ToSelectionType(aTextRangeType));
-}
-
 struct TextRange
 {
   TextRange()
