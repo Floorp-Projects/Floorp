@@ -15,8 +15,7 @@ let syncWasCalled = false;
 
 // TODO: This test should probably be re-written, we don't really test much here.
 add_task(async function testSyncRemoteTabsButtonFunctionality() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  info("Test the Sync Remote Tabs button in the PanelUI");
+  info("Test the Sync Remote Tabs button in the panel");
   storeInitialValues();
   mockFunctions();
 
@@ -24,17 +23,19 @@ add_task(async function testSyncRemoteTabsButtonFunctionality() {
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
   // add the sync remote tabs button to the panel
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   // check the button's functionality
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   info("The panel menu was opened");
 
   let syncRemoteTabsBtn = document.getElementById("sync-button");
+  let remoteTabsPanel = document.getElementById("PanelUI-remotetabs");
+  let viewShown = BrowserTestUtils.waitForEvent(remoteTabsPanel, "ViewShown");
   ok(syncRemoteTabsBtn, "The sync remote tabs button was added to the Panel Menu");
   // click the button - the panel should open.
   syncRemoteTabsBtn.click();
-  let remoteTabsPanel = document.getElementById("PanelUI-remotetabs");
+  await viewShown;
   ok(remoteTabsPanel.getAttribute("current"), "Sync Panel is in view");
 
   // Find and click the "setup" button.
@@ -50,9 +51,9 @@ add_task(async function asyncCleanup() {
   await resetCustomization();
   ok(CustomizableUI.inDefaultState, "The panel UI is in default state again.");
 
-  if (isPanelUIOpen()) {
-    let panelHidePromise = promisePanelHidden(window);
-    PanelUI.hide();
+  if (isOverflowOpen()) {
+    let panelHidePromise = promiseOverflowHidden(window);
+    PanelUI.overflowPanel.hidePopup();
     await panelHidePromise;
   }
 

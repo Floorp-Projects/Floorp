@@ -7,7 +7,6 @@ const kWidgetId = "test-981418-widget-onbeforecreated";
 
 // Should be able to add broken view widget
 add_task(async function testAddOnBeforeCreatedWidget() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let viewShownDeferred = Promise.defer();
   let onBeforeCreatedCalled = false;
   let widgetSpec = {
@@ -59,8 +58,8 @@ add_task(async function testAddOnBeforeCreatedWidget() {
       tempPanel.hidePopup();
       await panelHiddenPromise;
 
-      CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_PANEL);
-      await PanelUI.show();
+      CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+      await document.getElementById("nav-bar").overflowable.show();
 
       viewShownDeferred = Promise.defer();
       widgetNode.click();
@@ -70,8 +69,8 @@ add_task(async function testAddOnBeforeCreatedWidget() {
       clearTimeout(shownTimeout);
       ok(true, "Found view shown");
 
-      let panelHidden = promisePanelHidden(window);
-      PanelUI.hide();
+      let panelHidden = promiseOverflowHidden(window);
+      PanelUI.overflowPanel.hidePopup();
       await panelHidden;
     } catch (ex) {
       ok(false, "Unexpected exception (like a timeout for one of the yields) " +
