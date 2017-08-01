@@ -86,7 +86,7 @@
   margin-inline-start: -8px;
 }
 
-.onboarding-close-btn:hover,
+.onboarding-close-btn:-moz-any(:hover, :active, :focus, :-moz-focusring),
 #onboarding-notification-close-btn:hover {
   background-color: rgba(204, 204, 204, 0.6);
 }
