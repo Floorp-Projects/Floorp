@@ -123,6 +123,6 @@ TEST_DIRS += [
     'imptests',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'cocoa', 'windows', 'android'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'cocoa', 'windows'):
     TEST_DIRS += ['plugins/test']
 

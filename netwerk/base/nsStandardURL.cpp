@@ -1411,7 +1411,9 @@ nsStandardURL::GetSpecIgnoringRef(nsACString &result)
     URLSegment noRef(0, mRef.mPos - 1);
     result = Segment(noRef);
 
-    if (!gPunycodeHost && mCheckedIfHostA && !mDisplayHost.IsEmpty()) {
+    CheckIfHostIsAscii();
+    MOZ_ASSERT(mCheckedIfHostA);
+    if (!gPunycodeHost && !mDisplayHost.IsEmpty()) {
         result.Replace(mHost.mPos, mHost.mLen, mDisplayHost);
     }
 
@@ -1419,11 +1421,43 @@ nsStandardURL::GetSpecIgnoringRef(nsACString &result)
     return NS_OK;
 }
 
+nsresult
+nsStandardURL::CheckIfHostIsAscii()
+{
+    nsresult rv;
+    if (mCheckedIfHostA) {
+        return NS_OK;
+    }
+
+    mCheckedIfHostA = true;
+
+    // If the hostname doesn't begin with `xn--` we are sure it is ASCII.
+    if (!StringBeginsWith(Host(), NS_LITERAL_CSTRING("xn--"))) {
+        return NS_OK;
+    }
+
+    if (!gIDN) {
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    bool isAscii;
+    rv = gIDN->ConvertToDisplayIDN(Host(), &isAscii, mDisplayHost);
+    if (NS_FAILED(rv)) {
+        mDisplayHost.Truncate();
+        mCheckedIfHostA = false;
+        return rv;
+    }
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsStandardURL::GetDisplaySpec(nsACString &aUnicodeSpec)
 {
+    CheckIfHostIsAscii();
     aUnicodeSpec.Assign(mSpec);
-    if (mCheckedIfHostA && !mDisplayHost.IsEmpty()) {
+    MOZ_ASSERT(mCheckedIfHostA);
+    if (!mDisplayHost.IsEmpty()) {
         aUnicodeSpec.Replace(mHost.mPos, mHost.mLen, mDisplayHost);
     }
 
@@ -1458,29 +1492,13 @@ nsStandardURL::GetDisplayHostPort(nsACString &aUnicodeHostPort)
 NS_IMETHODIMP
 nsStandardURL::GetDisplayHost(nsACString &aUnicodeHost)
 {
-    if (mCheckedIfHostA) {
-        if (mDisplayHost.IsEmpty()) {
-            return GetAsciiHost(aUnicodeHost);
-        } else {
-            aUnicodeHost = mDisplayHost;
-            return NS_OK;
-        }
+    CheckIfHostIsAscii();
+    MOZ_ASSERT(mCheckedIfHostA);
+    if (mDisplayHost.IsEmpty()) {
+        return GetAsciiHost(aUnicodeHost);
     }
 
-    if (!gIDN) {
-        return NS_ERROR_NOT_INITIALIZED;
-    }
-
-    nsresult rv = gIDN->ConvertACEtoUTF8(Host(), aUnicodeHost);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    mCheckedIfHostA = true;
-    if (aUnicodeHost != Host()) {
-        mDisplayHost = aUnicodeHost;
-    }
-
+    aUnicodeHost = mDisplayHost;
     return NS_OK;
 }
 
@@ -1490,7 +1508,9 @@ NS_IMETHODIMP
 nsStandardURL::GetPrePath(nsACString &result)
 {
     result = Prepath();
-    if (!gPunycodeHost && mCheckedIfHostA && !mDisplayHost.IsEmpty()) {
+    CheckIfHostIsAscii();
+    MOZ_ASSERT(mCheckedIfHostA);
+    if (!gPunycodeHost && !mDisplayHost.IsEmpty()) {
         result.Replace(mHost.mPos, mHost.mLen, mDisplayHost);
     }
     CALL_RUST_GETTER_STR(result, GetPrePath, result);

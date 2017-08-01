@@ -130,6 +130,11 @@ DeviceManagerDx::CreateCompositorDevices()
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   MOZ_ASSERT(d3d11.IsEnabled());
 
+  if (int32_t sleepSec = gfxPrefs::Direct3D11SleepOnCreateDevice()) {
+    printf_stderr("Attach to PID: %d\n", GetCurrentProcessId());
+    Sleep(sleepSec * 1000);
+  }
+
   if (!LoadD3D11()) {
     return false;
   }

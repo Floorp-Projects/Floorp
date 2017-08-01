@@ -128,7 +128,6 @@ using namespace widget;
 
 EditorBase::EditorBase()
   : mPlaceholderName(nullptr)
-  , mSelState(nullptr)
   , mModCount(0)
   , mFlags(0)
   , mUpdateCount(0)
@@ -974,7 +973,7 @@ EditorBase::BeginPlaceHolderTransaction(nsIAtom* aName)
     mPlaceholderName = aName;
     RefPtr<Selection> selection = GetSelection();
     if (selection) {
-      mSelState = MakeUnique<SelectionState>();
+      mSelState.emplace();
       mSelState->SaveSelection(selection);
       // Composition transaction can modify multiple nodes and it merges text
       // node for ime into single text node.
@@ -1039,7 +1038,7 @@ EditorBase::EndPlaceHolderTransaction()
       if (mPlaceholderName == nsGkAtoms::IMETxnName) {
         mRangeUpdater.DropSelectionState(*mSelState);
       }
-      mSelState = nullptr;
+      mSelState.reset();
     }
     // We might have never made a placeholder if no action took place.
     if (mPlaceholderTransaction) {
@@ -2723,11 +2722,7 @@ nsresult
 EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
                         Text& aCharData)
 {
-  RefPtr<SetTextTransaction> transaction =
-    CreateTxnForSetText(aString, aCharData);
-  if (NS_WARN_IF(!transaction)) {
-    return NS_ERROR_FAILURE;
-  }
+  SetTextTransaction transaction(aCharData, aString, *this, &mRangeUpdater);
 
   uint32_t length = aCharData.Length();
 
@@ -2751,7 +2746,10 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
     }
   }
 
-  nsresult rv = DoTransaction(&aSelection, transaction);
+  // We don't support undo here, so we don't really need all of the transaction
+  // machinery, therefore we can run our transaction directly, breaking all of
+  // the rules!
+  nsresult rv = transaction.DoTransaction();
 
   // Let listeners know what happened
   {
@@ -2781,15 +2779,6 @@ EditorBase::CreateTxnForInsertText(const nsAString& aStringToInsert,
   RefPtr<InsertTextTransaction> transaction =
     new InsertTextTransaction(aTextNode, aOffset, aStringToInsert, *this,
                               &mRangeUpdater);
-  return transaction.forget();
-}
-
-already_AddRefed<SetTextTransaction>
-EditorBase::CreateTxnForSetText(const nsAString& aString,
-                                Text& aTextNode)
-{
-  RefPtr<SetTextTransaction> transaction =
-    new SetTextTransaction(aTextNode, aString, *this, &mRangeUpdater);
   return transaction.forget();
 }
 

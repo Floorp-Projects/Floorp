@@ -96,16 +96,6 @@ using mozilla::plugins::PluginModuleContentParent;
 #endif
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-#include <android/log.h>
-#include "android_npapi.h"
-#include "ANPBase.h"
-#include "FennecJNIWrappers.h"
-#include "GeneratedJNIWrappers.h"
-#undef LOG
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
-#endif
-
 #include "nsIAudioChannelAgent.h"
 #include "AudioChannelService.h"
 
@@ -236,11 +226,7 @@ nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
 bool
 nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 {
-#ifdef MOZ_WIDGET_ANDROID
-  return false;
-#else
   return true;
-#endif
 }
 
 inline PluginLibrary*
@@ -282,7 +268,7 @@ nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
     return NS_ERROR_FAILURE;
   }
 
-#if defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_MACOSX)
   if (!pluginLib->HasRequiredFunctions()) {
     NS_WARNING("Not all necessary functions exposed by plugin, it will not load.");
     delete pluginLib;
@@ -1782,159 +1768,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-    case kLogInterfaceV0_ANPGetValue: {
-      LOG("get log interface");
-      ANPLogInterfaceV0 *i = (ANPLogInterfaceV0 *) result;
-      InitLogInterface(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kBitmapInterfaceV0_ANPGetValue: {
-      LOG("get bitmap interface");
-      return NPERR_GENERIC_ERROR;
-    }
-
-    case kMatrixInterfaceV0_ANPGetValue: {
-      LOG("get matrix interface");
-      return NPERR_GENERIC_ERROR;
-    }
-
-    case kPathInterfaceV0_ANPGetValue: {
-      LOG("get path interface");
-      return NPERR_GENERIC_ERROR;
-    }
-
-    case kTypefaceInterfaceV0_ANPGetValue: {
-      LOG("get typeface interface");
-      ANPTypefaceInterfaceV0 *i = (ANPTypefaceInterfaceV0 *) result;
-      InitTypeFaceInterface(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kPaintInterfaceV0_ANPGetValue: {
-      LOG("get paint interface");
-      ANPPaintInterfaceV0 *i = (ANPPaintInterfaceV0 *) result;
-      InitPaintInterface(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kCanvasInterfaceV0_ANPGetValue: {
-      LOG("get canvas interface");
-      ANPCanvasInterfaceV0 *i = (ANPCanvasInterfaceV0 *) result;
-      InitCanvasInterface(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kWindowInterfaceV0_ANPGetValue: {
-      LOG("get window interface");
-      ANPWindowInterfaceV0 *i = (ANPWindowInterfaceV0 *) result;
-      InitWindowInterface(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kAudioTrackInterfaceV0_ANPGetValue: {
-      LOG("get audio interface");
-      ANPAudioTrackInterfaceV0 *i = (ANPAudioTrackInterfaceV0 *) result;
-      InitAudioTrackInterfaceV0(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kEventInterfaceV0_ANPGetValue: {
-      LOG("get event interface");
-      ANPEventInterfaceV0 *i = (ANPEventInterfaceV0 *) result;
-      InitEventInterface(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kSystemInterfaceV0_ANPGetValue: {
-      LOG("get system interface");
-      return NPERR_GENERIC_ERROR;
-    }
-
-    case kSurfaceInterfaceV0_ANPGetValue: {
-      LOG("get surface interface");
-      ANPSurfaceInterfaceV0 *i = (ANPSurfaceInterfaceV0 *) result;
-      InitSurfaceInterface(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kSupportedDrawingModel_ANPGetValue: {
-      LOG("get supported drawing model");
-      return NPERR_GENERIC_ERROR;
-    }
-
-    case kJavaContext_ANPGetValue: {
-      LOG("get java context");
-
-      auto ret = npp && jni::IsFennec()
-          ? java::GeckoApp::GetPluginContext()
-          : java::GeckoAppShell::GetApplicationContext();
-      if (!ret) {
-        return NPERR_GENERIC_ERROR;
-      }
-      *static_cast<jobject*>(result) = ret.Forget();
-      return NPERR_NO_ERROR;
-    }
-
-    case kAudioTrackInterfaceV1_ANPGetValue: {
-      LOG("get audio interface v1");
-      ANPAudioTrackInterfaceV1 *i = (ANPAudioTrackInterfaceV1 *) result;
-      InitAudioTrackInterfaceV1(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kNativeWindowInterfaceV0_ANPGetValue: {
-      LOG("get native window interface v0");
-      ANPNativeWindowInterfaceV0* i = (ANPNativeWindowInterfaceV0 *) result;
-      InitNativeWindowInterface(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kOpenGLInterfaceV0_ANPGetValue: {
-      LOG("get openGL interface");
-      return NPERR_GENERIC_ERROR;
-    }
-
-    case kWindowInterfaceV1_ANPGetValue: {
-      LOG("get Window interface V1");
-      return NPERR_GENERIC_ERROR;
-    }
-
-    case kWindowInterfaceV2_ANPGetValue: {
-      LOG("get Window interface V2");
-      ANPWindowInterfaceV2 *i = (ANPWindowInterfaceV2 *) result;
-      InitWindowInterfaceV2(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kVideoInterfaceV0_ANPGetValue: {
-      LOG("get video interface V0");
-      return NPERR_GENERIC_ERROR;
-    }
-
-    case kVideoInterfaceV1_ANPGetValue: {
-      LOG("get video interface V1");
-      ANPVideoInterfaceV1 *i = (ANPVideoInterfaceV1*) result;
-      InitVideoInterfaceV1(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kSystemInterfaceV1_ANPGetValue: {
-      LOG("get system interface v1");
-      ANPSystemInterfaceV1* i = reinterpret_cast<ANPSystemInterfaceV1*>(result);
-      InitSystemInterfaceV1(i);
-      return NPERR_NO_ERROR;
-    }
-
-    case kSystemInterfaceV2_ANPGetValue: {
-      LOG("get system interface v2");
-      ANPSystemInterfaceV2* i = reinterpret_cast<ANPSystemInterfaceV2*>(result);
-      InitSystemInterfaceV2(i);
-      return NPERR_NO_ERROR;
-    }
-#endif
-
   // we no longer hand out any XPCOM objects
   case NPNVDOMElement:
   case NPNVDOMWindow:
@@ -2030,8 +1863,6 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       return NPERR_NO_ERROR;
     }
 
-#ifndef MOZ_WIDGET_ANDROID
-    // On android, their 'drawing model' uses the same constant!
     case NPPVpluginDrawingModel: {
       if (inst) {
         inst->SetDrawingModel((NPDrawingModel)NS_PTR_TO_INT32(result));
@@ -2039,7 +1870,6 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       }
       return NPERR_GENERIC_ERROR;
     }
-#endif
 
 #ifdef XP_MACOSX
     case NPPVpluginEventModel: {
@@ -2051,14 +1881,6 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         return NPERR_GENERIC_ERROR;
       }
     }
-#endif
-#ifdef MOZ_WIDGET_ANDROID
-  case kRequestDrawingModel_ANPSetValue:
-    if (inst)
-      inst->SetANPDrawingModel(NS_PTR_TO_INT32(result));
-    return NPERR_NO_ERROR;
-  case kAcceptEvents_ANPSetValue:
-    return NPERR_NO_ERROR;
 #endif
     default:
       return NPERR_GENERIC_ERROR;
@@ -2296,13 +2118,7 @@ _unscheduletimer(NPP instance, uint32_t timerID)
     return;
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-  // Sometimes Flash calls this with a dead NPP instance. Ensure the one we have
-  // here is valid and maps to a nsNPAPIPluginInstance.
-  nsNPAPIPluginInstance *inst = nsNPAPIPluginInstance::GetFromNPP(instance);
-#else
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
-#endif
   if (!inst)
     return;
 

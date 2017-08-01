@@ -72,7 +72,6 @@ using mozilla::Unused;
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
 #include "AndroidUiThread.h"
-#include "android_npapi.h"
 #include "FennecJNINatives.h"
 #include "GeneratedJNINatives.h"
 #include "GeckoEditableSupport.h"

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<script>
+  onload = function() {
+    function done(success) {
+      var bc = new BroadcastChannel("test_channel");
+      bc.postMessage({success:success});
+      bc.close();
+    }
+    try {
+      new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket_basic");
+      done(true); // no hang!
+    } catch (e) {
+      done(false);
+    }
+  }
+</script>
+</html>
+
