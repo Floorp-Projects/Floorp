@@ -22,8 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
     // gA11yEventDumpToConsole = true;
     // enableLogging("tree,verbose"); // debug
 
-    function addTestEditable(aID, aTestRun, aBeforeContent, aAfterContent)
-    {
+    function addTestEditable(aID, aTestRun, aBeforeContent, aAfterContent) {
       var et = new editableTextTest(aID);
       var startOffset = aBeforeContent ? aBeforeContent.length : 0;
       // XXX afterContent currently is not used
@@ -69,8 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
 
     // gA11yEventDumpToConsole = true; // debug stuff
 
-    function runTest()
-    {
+    function runTest() {
       var testRun = new editableTextTestRun();
 
       addTestEditable("input", testRun);
@@ -83,8 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
       testRun.run(); // Will call SimpleTest.finish();
     }
 
-    function doTest()
-    {
+    function doTest() {
       // Prepare tested elements.
 
       // Design mode on/off triggers an editable state change event on

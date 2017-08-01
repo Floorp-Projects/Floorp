@@ -26,10 +26,8 @@
 	  src="chrome://mochikit/content/chrome-harness.js"></script>
 
   <script type="application/javascript">
-    function doTest()
-    {
-      function testValue(aID, aValue)
-      {
+    function doTest() {
+      function testValue(aID, aValue) {
         var acc = getAccessible(aID);
         if (!acc)
           return;

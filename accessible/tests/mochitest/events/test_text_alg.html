@@ -24,8 +24,7 @@
     const kInsertion = true;
     const kUnexpected = true;
 
-    function changeText(aContainerID, aValue, aEventList)
-    {
+    function changeText(aContainerID, aValue, aEventList) {
       this.containerNode = getNode(aContainerID);
       this.textNode = this.containerNode.firstChild;
       this.textData = this.textNode.data;
@@ -49,21 +48,18 @@
           this.eventSeq.push(checker);
       }
 
-      this.invoke = function changeText_invoke()
-      {
+      this.invoke = function changeText_invoke() {
         this.textNode.data = aValue;
       }
 
-      this.getID = function changeText_getID()
-      {
+      this.getID = function changeText_getID() {
         return "change text '" + shortenString(this.textData) + "' -> '" +
           shortenString(this.textNode.data) + "' for " +
           prettyName(this.containerNode);
       }
     }
 
-    function expStr(x, doublings)
-    {
+    function expStr(x, doublings) {
       for (var i = 0; i < doublings; ++i)
         x = x + x;
       return x;
@@ -76,8 +72,7 @@
     // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       // ////////////////////////////////////////////////////////////////////////

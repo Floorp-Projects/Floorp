@@ -17,10 +17,8 @@
 
   <script type="application/javascript">
 
-    function appendCaption(aTableID)
-    {
-      this.invoke = function appendCaption_invoke()
-      {
+    function appendCaption(aTableID) {
+      this.invoke = function appendCaption_invoke() {
         // append a caption, it should appear as a first element in the
         // accessible tree.
         var caption = document.createElement("caption");
@@ -32,8 +30,7 @@
         new invokerChecker(EVENT_REORDER, aTableID)
       ];
 
-      this.finalCheck = function appendCaption_finalCheck()
-      {
+      this.finalCheck = function appendCaption_finalCheck() {
         var tree =
           { TABLE: [
             { CAPTION: [
@@ -47,14 +44,12 @@
         testAccessibleTree(aTableID, tree);
       }
 
-      this.getID = function appendCaption_getID()
-      {
+      this.getID = function appendCaption_getID() {
         return "append caption";
       }
     }
 
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
       gQueue.push(new appendCaption("table"));
       gQueue.invoke(); // Will call SimpleTest.finish();

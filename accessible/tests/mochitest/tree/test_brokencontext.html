@@ -19,22 +19,18 @@
   /**
    * Return true if TD element has a generic accessible.
    */
-  function isTDGeneric(aID)
-  {
+  function isTDGeneric(aID) {
     return isAccessible(aID) && !isAccessible(aID, nsIAccessibleTableCell);
   }
 
-  function checkIfNotAccessible(aID)
-  {
+  function checkIfNotAccessible(aID) {
     ok(!isAccessible(aID), "'" + aID + "' shouldn't be accessible");
   }
-  function checkIfTDGeneric(aID)
-  {
+  function checkIfTDGeneric(aID) {
     ok(isTDGeneric(aID), "'" + aID + "' shouldn't have cell accessible");
   }
 
-  function doTest()
-  {
+  function doTest() {
     // //////////////////////////////////////////////////////////////////////////
     // HTML table elements outside table context.
 

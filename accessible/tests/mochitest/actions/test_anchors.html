@@ -21,12 +21,10 @@
     // //////////////////////////////////////////////////////////////////////////
     // Event checkers
 
-    function scrollingChecker(aAcc)
-    {
+    function scrollingChecker(aAcc) {
       this.type = EVENT_SCROLLING_START;
       this.target = aAcc;
-      this.getID = function scrollingChecker_getID()
-      {
+      this.getID = function scrollingChecker_getID() {
         return "scrolling start handling for " + prettyName(aAcc);
       }
     }
@@ -37,8 +35,7 @@
     // gA11yEventDumpID = "debug"; // debug stuff
     // gA11yEventDumpToConsole = true; // debug stuff
 
-    function doTest()
-    {
+    function doTest() {
       var actionsArray = [
         {
           ID: "anchor1",

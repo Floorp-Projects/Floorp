@@ -17,8 +17,7 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function runTest()
-    {
+    function runTest() {
       // children change will recreate the table
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, getNode("c1"))
@@ -49,14 +48,12 @@
         testAccessibleTree("c1", tree);
       };
 
-      this.getID = function runTest_getID()
-      {
+      this.getID = function runTest_getID() {
         return "child DOM node is removed before the layout notifies the a11y about parent removal/show";
       };
     }
 
-    function runShadowTest()
-    {
+    function runShadowTest() {
       // children change will recreate the table
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, "c2")
@@ -96,8 +93,7 @@
     // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
       gQueue.push(new runTest());
       gQueue.push(new runShadowTest());

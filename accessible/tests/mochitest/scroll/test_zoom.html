@@ -18,8 +18,7 @@
           src="../layout.js"></script>
 
   <script type="application/javascript">
-    function testScrollToPoint()
-    {
+    function testScrollToPoint() {
       // scrollToPoint relative screen
       var anchor = getAccessible("bottom1");
       var [x, /*y*/] = getPos(anchor);
@@ -48,8 +47,7 @@
       testPos(anchor, [x, docY]);
     }
 
-    function doTest()
-    {
+    function doTest() {
       testScrollToPoint();
       zoomDocument(document, 2.0);
       testScrollToPoint(); // zoom and test again
