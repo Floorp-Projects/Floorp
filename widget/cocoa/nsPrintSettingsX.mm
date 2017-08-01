@@ -127,7 +127,7 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
 
   nsAutoCString encodedData;
   nsresult rv =
-    Preferences::GetCString(MAC_OS_X_PAGE_SETUP_PREFNAME, &encodedData);
+    Preferences::GetCString(MAC_OS_X_PAGE_SETUP_PREFNAME, encodedData);
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -991,9 +991,11 @@ gfxDWriteFontList::InitFontListForPlatform()
         }
     }
 
-    nsAdoptingCString classicFamilies =
-        Preferences::GetCString("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families");
-    if (classicFamilies) {
+    nsAutoCString classicFamilies;
+    nsresult rv = Preferences::GetCString(
+      "gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
+      classicFamilies);
+    if (NS_SUCCEEDED(rv)) {
         nsCCharSeparatedTokenizer tokenizer(classicFamilies, ',');
         while (tokenizer.hasMoreTokens()) {
             NS_ConvertUTF8toUTF16 name(tokenizer.nextToken());

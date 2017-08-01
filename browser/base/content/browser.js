@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
           Deprecated:false, E10SUtils:false, ExtensionsUI: false, FormValidationHandler:false,
           GMPInstallManager:false, LightweightThemeManager:false, Log:false,
           LoginManagerParent:false, NewTabUtils:false, PageThumbs:false,
-          PluralForm:false, Preferences:false, PrivateBrowsingUtils:false,
+          PluralForm:false, PrivateBrowsingUtils:false,
           ProcessHangMonitor:false, PromiseUtils:false, ReaderMode:false,
           ReaderParent:false, RecentWindow:false, SafeBrowsing: false,
           SessionStore:false,
@@ -72,7 +72,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
   ["PageActions", "resource:///modules/PageActions.jsm"],
   ["PageThumbs", "resource://gre/modules/PageThumbs.jsm"],
   ["PluralForm", "resource://gre/modules/PluralForm.jsm"],
-  ["Preferences", "resource://gre/modules/Preferences.jsm"],
   ["PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm"],
   ["ProcessHangMonitor", "resource:///modules/ProcessHangMonitor.jsm"],
   ["PromiseUtils", "resource://gre/modules/PromiseUtils.jsm"],
@@ -586,7 +585,7 @@ const gStoragePressureObserver = {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.
           let win = gBrowser.ownerGlobal;
-          if (Preferences.get("browser.preferences.useOldOrganization")) {
+          if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
             win.openAdvancedPreferences("networkTab", {origin: "storagePressure"});
           } else {
             win.openPreferences("panePrivacy", {origin: "storagePressure"});
@@ -6517,7 +6516,7 @@ var OfflineApps = {
   manage() {
     // The advanced subpanes are only supported in the old organization, which will
     // be removed by bug 1349689.
-    if (Preferences.get("browser.preferences.useOldOrganization")) {
+    if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
       openAdvancedPreferences("networkTab", {origin: "offlineApps"});
     } else {
       openPreferences("panePrivacy", {origin: "offlineApps"});

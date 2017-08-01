@@ -516,7 +516,7 @@ FOR_EACH_NURSERY_PROFILE_TIME(EXTRACT_NAME)
 /* static */ void
 js::Nursery::printProfileHeader()
 {
-    fprintf(stderr, "MinorGC:               Reason  PRate Size ");
+    fprintf(stderr, "MinorGC:               Reason  PRate Size        ");
 #define PRINT_HEADER(name, text)                                              \
     fprintf(stderr, " %6s", text);
 FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
@@ -536,7 +536,7 @@ void
 js::Nursery::printTotalProfileTimes()
 {
     if (enableProfiling_) {
-        fprintf(stderr, "MinorGC TOTALS: %7" PRIu64 " collections:      ", minorGcCount_);
+        fprintf(stderr, "MinorGC TOTALS: %7" PRIu64 " collections:             ", minorGcCount_);
         printProfileDurations(totalDurations_);
     }
 }
@@ -669,7 +669,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     if (enableProfiling_ && totalTime >= profileThreshold_) {
         rt->gc.stats().maybePrintProfileHeaders();
 
-        fprintf(stderr, "MinorGC: %20s %5.1f%% %4u ",
+        fprintf(stderr, "MinorGC: %20s %5.1f%% %4u        ",
                 JS::gcreason::ExplainReason(reason),
                 promotionRate * 100,
                 numChunks());
