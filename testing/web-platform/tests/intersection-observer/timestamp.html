@@ -18,20 +18,28 @@ pre, #log {
 <div id="trailing-space" class="spacer"></div>
 
 <script>
-// Pick this number to be comfortably greater than the length of two frames at 60Hz.
-var timeSkew = 40;
-
 var topWindowEntries = [];
 var iframeWindowEntries = [];
 var targetIframe;
+var topWindowTimeOnTestStart;
+var topWindowTimeBeforeCreatingIframe;
 var topWindowTimeBeforeNotification;
 var iframeWindowTimeBeforeNotification;
+var timeSkew;
+
+function waitFor(numFrames, callback) {
+  if (numFrames <= 0) {
+    callback();
+    return;
+  }
+  window.requestAnimationFrame(waitFor.bind(null, numFrames - 1, callback));
+}
 
 async_test(function(t) {
-  // assert_equals(window.innerWidth, 800, "Window must be 800 pixels wide.");
-  // assert_equals(window.innerHeight, 600, "Window must be 600 pixels high.");
-
-  t.step_timeout(function() {
+  topWindowTimeOnTestStart = performance.now();
+  waitFor(3, function () {
+    topWindowTimeBeforeCreatingIframe = performance.now();
+    timeSkew = topWindowTimeBeforeCreatingIframe - topWindowTimeOnTestStart;
     targetIframe = document.createElement("iframe");
     assert_true(!!targetIframe, "iframe exists");
     targetIframe.src = "resources/timestamp-subframe.html";
@@ -58,7 +66,7 @@ async_test(function(t) {
       runTestCycle(step1, "First rAF after iframe is loaded.");
       t.done();
     };
-  }, timeSkew);
+  });
 }, "Check that timestamps correspond to the to execution context that created the observer.");
 
 function step1() {
