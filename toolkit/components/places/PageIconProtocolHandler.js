@@ -102,6 +102,7 @@ PageIconProtocolHandler.prototype = {
         } else {
           try {
             channel.contentType = mimeType;
+            channel.contentLength = len;
             serveIcon(pipe, data, len);
           } catch (ex) {
             streamDefaultFavicon(uri, loadInfo, pipe.outputStream, channel);
