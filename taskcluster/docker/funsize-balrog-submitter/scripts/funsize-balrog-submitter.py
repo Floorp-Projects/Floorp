@@ -52,7 +52,7 @@ def verify_signature(mar, certs):
     log.info("Checking %s signature", mar)
     with open(mar, 'rb') as mar_fh:
         m = MarReader(mar_fh)
-        m.verify(verify_key=certs.get(m.signature_type()))
+        m.verify(verify_key=certs.get(m.signature_type))
 
 
 def verify_copy_to_s3(bucket_name, aws_access_key_id, aws_secret_access_key,
@@ -145,12 +145,12 @@ def main():
     auth = (balrog_username, balrog_password)
 
     signing_certs = {
-        'sha1': args.sha1_signing_cert,
-        'sha384': args.sha384_signing_cert,
+        'sha1': open(args.sha1_signing_cert, 'rb').read(),
+        'sha384': open(args.sha384_signing_cert, 'rb').read(),
     }
 
-    assert(get_keysize(open(signing_certs['sha1'], 'rb').read()) == 2048)
-    assert(get_keysize(open(signing_certs['sha384'], 'rb').read()) == 4096)
+    assert(get_keysize(signing_certs['sha1']) == 2048)
+    assert(get_keysize(signing_certs['sha384']) == 4096)
 
     for e in manifest:
         complete_info = [{
