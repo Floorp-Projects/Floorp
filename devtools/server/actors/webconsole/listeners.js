@@ -8,7 +8,7 @@ const {Cc, Ci, components} = require("chrome");
 const {isWindowIncluded} = require("devtools/shared/layout/utils");
 const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-const {CONSOLE_WORKER_IDS, WebConsoleUtils} = require("devtools/server/actors/utils/webconsole-utils");
+const {CONSOLE_WORKER_IDS, WebConsoleUtils} = require("devtools/server/actors/webconsole/utils");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "swm",
