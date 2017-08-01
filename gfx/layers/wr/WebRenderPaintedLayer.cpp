@@ -57,7 +57,7 @@ WebRenderPaintedLayer::UpdateImageClient()
   IntRect bounds = visibleRegion.GetBounds();
   IntSize imageSize = bounds.Size();
 
-  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize);
+  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize, gfx::SurfaceFormat::B8G8R8A8);
 
   {
     RefPtr<DrawTarget> target = helper.GetDrawTarget();

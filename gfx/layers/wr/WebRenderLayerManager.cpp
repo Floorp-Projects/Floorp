@@ -371,7 +371,13 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   aDT->ClearRect(aImageRect.ToUnknownRect());
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT, aOffset.ToUnknownPoint());
   MOZ_ASSERT(context);
-  aItem->Paint(aDisplayListBuilder, context);
+
+  if (aItem->GetType() == nsDisplayItem::TYPE_MASK) {
+    context->SetMatrix(gfxMatrix::Translation(-aOffset.x, -aOffset.y));
+    static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context);
+  } else {
+    aItem->Paint(aDisplayListBuilder, context);
+  }
 
   if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
     aDT->SetTransform(Matrix());
@@ -386,11 +392,12 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   }
 }
 
-bool
-WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
-                                       wr::DisplayListBuilder& aBuilder,
-                                       const StackingContextHelper& aSc,
-                                       nsDisplayListBuilder* aDisplayListBuilder)
+already_AddRefed<WebRenderFallbackData>
+WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
+                                            wr::DisplayListBuilder& aBuilder,
+                                            nsDisplayListBuilder* aDisplayListBuilder,
+                                            LayerRect& aImageRect,
+                                            LayerPoint& aOffset)
 {
   RefPtr<WebRenderFallbackData> fallbackData = CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
@@ -409,14 +416,13 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
       PixelCastJustification::WebRenderHasUnitResolution);
 
   LayerIntSize imageSize = RoundedToInt(bounds.Size());
-  LayerRect imageRect;
-  imageRect.SizeTo(LayerSize(imageSize));
+  aImageRect = LayerRect(LayerPoint(0, 0), LayerSize(imageSize));
   if (imageSize.width == 0 || imageSize.height == 0) {
-    return true;
+    return nullptr;
   }
 
   nsPoint shift = clippedBounds.TopLeft() - itemBounds.TopLeft();
-  LayerPoint offset = ViewAs<LayerPixel>(
+  aOffset = ViewAs<LayerPixel>(
       LayoutDevicePoint::FromAppUnits(aItem->ToReferenceFrame() + shift, appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
 
@@ -442,13 +448,16 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
     }
   }
 
+  gfx::SurfaceFormat format = aItem->GetType() == nsDisplayItem::TYPE_MASK ?
+                                                    gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
   if (!geometry || !invalidRegion.IsEmpty() || fallbackData->IsInvalid()) {
     if (gfxPrefs::WebRenderBlobImages()) {
       RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+      // TODO: should use 'format' to replace gfx::SurfaceFormat::B8G8R8X8. Currently blob image doesn't support A8 format.
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
-      PaintItemByDrawTarget(aItem, dt, imageRect, offset, aDisplayListBuilder);
+      PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
       recorder->Finish();
 
       wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
@@ -461,13 +470,13 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
       RefPtr<ImageContainer> imageContainer = LayerManager::CreateImageContainer();
 
       {
-        UpdateImageHelper helper(imageContainer, imageClient, imageSize.ToUnknownSize());
+        UpdateImageHelper helper(imageContainer, imageClient, imageSize.ToUnknownSize(), format);
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
-          PaintItemByDrawTarget(aItem, dt, imageRect, offset, aDisplayListBuilder);
+          PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
         }
         if (!helper.UpdateImage()) {
-          return false;
+          return nullptr;
         }
       }
 
@@ -475,7 +484,7 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
       // If not force update, fallbackData may reuse the original key because it
       // doesn't know UpdateImageHelper already updated the image container.
       if (!fallbackData->UpdateImageKey(imageContainer, true)) {
-        return false;
+        return nullptr;
       }
     }
 
@@ -488,6 +497,45 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
   fallbackData->SetBounds(clippedBounds);
 
   MOZ_ASSERT(fallbackData->GetKey());
+
+  return fallbackData.forget();
+}
+
+Maybe<wr::WrImageMask>
+WebRenderLayerManager::BuildWrMaskImage(nsDisplayItem* aItem,
+                                        wr::DisplayListBuilder& aBuilder,
+                                        const StackingContextHelper& aSc,
+                                        nsDisplayListBuilder* aDisplayListBuilder,
+                                        const LayerRect& aBounds)
+{
+  LayerRect imageRect;
+  LayerPoint offset;
+  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aDisplayListBuilder,
+                                                                    imageRect, offset);
+  if (!fallbackData) {
+    return Nothing();
+  }
+
+  wr::WrImageMask imageMask;
+  imageMask.image = fallbackData->GetKey().value();
+  imageMask.rect = aSc.ToRelativeLayoutRect(aBounds);
+  imageMask.repeat = false;
+  return Some(imageMask);
+}
+
+bool
+WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
+                                       wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsDisplayListBuilder* aDisplayListBuilder)
+{
+  LayerRect imageRect;
+  LayerPoint offset;
+  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aDisplayListBuilder,
+                                                                    imageRect, offset);
+  if (!fallbackData) {
+    return false;
+  }
 
   wr::LayoutRect dest = aSc.ToRelativeLayoutRect(imageRect + offset);
   aBuilder.PushImage(dest,

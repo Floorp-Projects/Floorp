@@ -70,6 +70,16 @@ public:
                  mozilla::wr::DisplayListBuilder& aBuilder,
                  const StackingContextHelper& aSc,
                  const LayerRect& aRect);
+  already_AddRefed<WebRenderFallbackData> GenerateFallbackData(nsDisplayItem* aItem,
+                                                               wr::DisplayListBuilder& aBuilder,
+                                                               nsDisplayListBuilder* aDisplayListBuilder,
+                                                               LayerRect& aImageRect,
+                                                               LayerPoint& aOffset);
+  Maybe<wr::WrImageMask> BuildWrMaskImage(nsDisplayItem* aItem,
+                                          wr::DisplayListBuilder& aBuilder,
+                                          const StackingContextHelper& aSc,
+                                          nsDisplayListBuilder* aDisplayListBuilder,
+                                          const LayerRect& aBounds);
   bool PushItemAsImage(nsDisplayItem* aItem,
                        wr::DisplayListBuilder& aBuilder,
                        const StackingContextHelper& aSc,

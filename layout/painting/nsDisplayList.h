@@ -4520,6 +4520,12 @@ public:
   {
     return mDestRects;
   }
+
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
 private:
   // According to mask property and the capability of aManager, determine
   // whether paint mask onto a dedicate mask layer.
