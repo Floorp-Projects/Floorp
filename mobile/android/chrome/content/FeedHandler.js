@@ -52,8 +52,7 @@ var FeedHandler = {
         if (!(type in this._contentTypes))
           this._contentTypes[type] = [];
         this._contentTypes[type].push({ contentType: type, uri: uri, name: title });
-      }
-      catch (ex) {}
+      } catch (ex) {}
     }
   },
 

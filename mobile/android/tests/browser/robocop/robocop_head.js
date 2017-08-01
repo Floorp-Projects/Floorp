@@ -13,8 +13,8 @@
 // placebo for compat. An easy way to differentiate this from the real thing
 // is whether the property is read-only or not.
 {
-  let c = Object.getOwnPropertyDescriptor(this, 'Components');
-  if ((!c.value || c.writable) && typeof SpecialPowers === 'object')
+  let c = Object.getOwnPropertyDescriptor(this, "Components");
+  if ((!c.value || c.writable) && typeof SpecialPowers === "object")
     Components = SpecialPowers.wrap(SpecialPowers.Components);
 }
 
@@ -49,8 +49,7 @@ try {
   runningInParent = Components.classes["@mozilla.org/xre/runtime;1"].
                     getService(Components.interfaces.nsIXULRuntime).processType
                     == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-}
-catch (e) { }
+} catch (e) { }
 
 try {
   if (runningInParent) {
@@ -66,8 +65,7 @@ try {
       prefs.setCharPref("network.dns.ipv4OnlyDomains", "localhost");
     }
   }
-}
-catch (e) { }
+} catch (e) { }
 
 // Enable crash reporting, if possible
 // We rely on the Python harness to set MOZ_CRASHREPORTER_NO_REPORT
@@ -85,8 +83,7 @@ try { // nsIXULRuntime is not available in some configurations.
     crashReporter.enabled = true;
     crashReporter.minidumpPath = do_get_cwd();
   }
-}
-catch (e) { }
+} catch (e) { }
 
 /**
  * Date.now() is not necessarily monotonically increasing (insert sob story
@@ -214,14 +211,12 @@ function do_execute_soon(callback) {
           if (e.stack) {
             dump(" - See following stack:\n");
             _dump_exception_stack(e.stack);
-          }
-          else {
+          } else {
             dump("\n");
           }
           _do_quit();
         }
-      }
-      finally {
+      } finally {
         do_test_finished();
       }
     }
@@ -514,9 +509,9 @@ function pattern_matcher(pattern) {
     }
     // Kludge: include 'length', if not enumerable. (If it is enumerable,
     // we picked it up in the array comprehension, above.
-    ld = Object.getOwnPropertyDescriptor(pattern, 'length');
+    ld = Object.getOwnPropertyDescriptor(pattern, "length");
     if (ld && !ld.enumerable) {
-      matchers.push(['length', pattern_matcher(pattern.length)])
+      matchers.push(["length", pattern_matcher(pattern.length)])
     }
     return function(value, diagnosis) {
       if (!(value && typeof value == "object")) {
@@ -600,8 +595,7 @@ function do_get_file(path, allowNonexistent) {
     }
 
     return lf;
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw(ex.toString(), Components.stack.caller);
   }
 
@@ -715,10 +709,8 @@ function add_task(func) {
  */
 var _gRunningTest = null;
 var _gTestIndex = 0; // The index of the currently running test.
-function run_next_test()
-{
-  function _run_next_test()
-  {
+function run_next_test() {
+  function _run_next_test() {
     if (_gTestIndex < _gTests.length) {
       do_test_pending();
       let _isTask;
@@ -800,7 +792,7 @@ JavaBridge.prototype = {
   },
 
   onEvent: function(event, message, callback) {
-    if (typeof SpecialPowers === 'object') {
+    if (typeof SpecialPowers === "object") {
       message = SpecialPowers.wrap(message);
     }
     if (message.innerType === "sync-reply") {

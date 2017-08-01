@@ -1,6 +1,6 @@
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import('resource://gre/modules/ClientID.jsm');
+Cu.import("resource://gre/modules/ClientID.jsm");
 
 var java = new JavaBridge(this);
 do_register_cleanup(() => {
@@ -26,12 +26,12 @@ function getAsyncClientId() {
     }, function(fail) {
         // Since Java doesn't listen to our messages (bug 1253467), I don't expect
         // this throw to work correctly but we should timeout in Java.
-        do_throw('Could not retrieve client ID: ' + fail);
+        do_throw("Could not retrieve client ID: " + fail);
     });
 }
 
 function pollGetAsyncClientId() {
-    java.asyncCall('blockingFromJsResponseString', isClientIDSet, clientID);
+    java.asyncCall("blockingFromJsResponseString", isClientIDSet, clientID);
 }
 
 function getAsyncReset() {
@@ -42,7 +42,7 @@ function getAsyncReset() {
 }
 
 function pollGetAsyncReset() {
-    java.asyncCall('blockingFromJsResponseString', isResetDone, '');
+    java.asyncCall("blockingFromJsResponseString", isResetDone, "");
 }
 
 function endTest() {

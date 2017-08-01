@@ -75,9 +75,9 @@ var Accounts = Object.freeze({
   _addDefaultEndpoints: function(json) {
     let newData = Cu.cloneInto(json, {}, { cloneFunctions: false });
     let associations = {
-      authServerEndpoint: 'identity.fxaccounts.auth.uri',
-      profileServerEndpoint: 'identity.fxaccounts.remote.profile.uri',
-      tokenServerEndpoint: 'identity.sync.tokenserver.uri'
+      authServerEndpoint: "identity.fxaccounts.auth.uri",
+      profileServerEndpoint: "identity.fxaccounts.remote.profile.uri",
+      tokenServerEndpoint: "identity.sync.tokenserver.uri"
     };
     for (let key in associations) {
       newData[key] = newData[key] || Services.urlFormatter.formatURLPref(associations[key]);

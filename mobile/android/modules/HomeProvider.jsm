@@ -286,13 +286,13 @@ function getDatabaseConnection() {
  */
 function validateItem(datasetId, item) {
   if (!item.url) {
-    throw new ValidationError('HomeStorage: All rows must have an URL: datasetId = ' +
+    throw new ValidationError("HomeStorage: All rows must have an URL: datasetId = " +
                               datasetId);
   }
 
   if (!item.image_url && !item.title && !item.description) {
-    throw new ValidationError('HomeStorage: All rows must have at least an image URL, ' +
-                              'or a title or a description: datasetId = ' + datasetId);
+    throw new ValidationError("HomeStorage: All rows must have at least an image URL, " +
+                              "or a title or a description: datasetId = " + datasetId);
   }
 }
 

@@ -112,7 +112,7 @@ HelperAppLauncherDialog.prototype = {
    * or a third-party app and instead be forwarded to Android's download manager.
    */
   _shouldForwardToAndroidDownloadManager: function(aLauncher) {
-    let forwardDownload = Services.prefs.getBoolPref('browser.download.forward_oma_android_download_manager');
+    let forwardDownload = Services.prefs.getBoolPref("browser.download.forward_oma_android_download_manager");
     if (!forwardDownload) {
       return false;
     }
@@ -279,10 +279,10 @@ HelperAppLauncherDialog.prototype = {
     }
 
     EventDispatcher.instance.sendRequest({
-      'type': 'Download:AndroidDownloadManager',
-      'uri': aLauncher.source.spec,
-      'mimeType': mimeType,
-      'filename': aLauncher.suggestedFileName
+      "type": "Download:AndroidDownloadManager",
+      "uri": aLauncher.source.spec,
+      "mimeType": mimeType,
+      "filename": aLauncher.suggestedFileName
     });
   },
 
@@ -374,15 +374,13 @@ HelperAppLauncherDialog.prototype = {
             aLocalFile.leafName = aLocalFile.leafName.replace(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i, "(2)$&");
           else
             aLocalFile.leafName = aLocalFile.leafName.replace(/(\.[^\.]*)?$/, "(2)$&");
-        }
-        else {
+        } else {
           // replace the last (n) in the filename with (n+1)
           aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount + 1) + ")");
         }
       }
       aLocalFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
-    }
-    catch (e) {
+    } catch (e) {
       dump("*** exception in validateLeafName: " + e + "\n");
 
       if (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED)

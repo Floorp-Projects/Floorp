@@ -42,7 +42,8 @@ var WebrtcUI = {
             WebrtcUI.handleGumRequest(aSubject, aTopic, aData);
           } else {
             Services.obs.notifyObservers(null, "getUserMedia:response:deny", aSubject.callID);
-          } });
+          }
+});
     } else if (aTopic === "PeerConnection:request") {
       this.handlePCRequest(aSubject, aTopic, aData);
     } else if (aTopic === "recording-device-events") {

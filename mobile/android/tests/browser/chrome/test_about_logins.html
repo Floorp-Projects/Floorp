@@ -60,7 +60,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       let observer = new MutationObserver((mutations) => {
         for (let mutation of mutations) {
           for (let node of mutation.addedNodes) {
-            if (node.id == 'logins-list') {
+            if (node.id == "logins-list") {
               info("Received mutation replacing 'logins-list'");
               resolve();
               return;

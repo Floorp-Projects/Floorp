@@ -501,7 +501,7 @@ var AboutConfig = {
   // Quick context menu helpers for about:config
   clipboardCopy: function AC_clipboardCopy(aField) {
     let pref = this._getPrefForNode(this.contextMenuLINode);
-    if (aField == 'name') {
+    if (aField == "name") {
       gClipboardHelper.copyString(pref.name);
     } else {
       gClipboardHelper.copyString(pref.value);
