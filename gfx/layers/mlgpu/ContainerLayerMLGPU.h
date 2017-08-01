@@ -67,8 +67,10 @@ private:
   gfx::IntSize mTargetSize;
 
   // The region of the container that needs to be recomposited if visible. We
-  // store this as a rectangle instead of an nsIntRegion for efficiency.
+  // store this as a rectangle instead of an nsIntRegion for efficiency. This
+  // is in layer coordinates.
   gfx::IntRect mInvalidRect;
+  bool mInvalidateEntireSurface;
 };
 
 } // namespace layers

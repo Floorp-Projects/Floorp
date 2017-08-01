@@ -105,7 +105,7 @@ exports.unreachable = exports.warn = exports.utf8StringToString = exports.string
 
 __w_pdfjs_require__(15);
 
-var _streamsLib = __w_pdfjs_require__(9);
+var _streams_polyfill = __w_pdfjs_require__(16);
 
 var globalScope = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : undefined;
 var FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
@@ -1131,7 +1131,7 @@ MessageHandler.prototype = {
     let streamId = this.streamId++;
     let sourceName = this.sourceName;
     let targetName = this.targetName;
-    return new _streamsLib.ReadableStream({
+    return new _streams_polyfill.ReadableStream({
       start: controller => {
         let startCapability = createPromiseCapability();
         this.streamControllers[streamId] = {
@@ -1435,7 +1435,7 @@ exports.readInt8 = readInt8;
 exports.readUint16 = readUint16;
 exports.readUint32 = readUint32;
 exports.removeNullCharacters = removeNullCharacters;
-exports.ReadableStream = _streamsLib.ReadableStream;
+exports.ReadableStream = _streams_polyfill.ReadableStream;
 exports.setVerbosityLevel = setVerbosityLevel;
 exports.shadow = shadow;
 exports.string32 = string32;
@@ -2505,7 +2505,14 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    source,
+    source: {
+      data: source.data,
+      url: source.url,
+      password: source.password,
+      disableAutoFetch: source.disableAutoFetch,
+      rangeChunkSize: source.rangeChunkSize,
+      length: source.length
+    },
     maxImageSize: (0, _dom_utils.getDefaultSetting)('maxImageSize'),
     disableFontFace: (0, _dom_utils.getDefaultSetting)('disableFontFace'),
     disableCreateObjectURL: (0, _dom_utils.getDefaultSetting)('disableCreateObjectURL'),
@@ -3806,8 +3813,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.8.581';
-  exports.build = build = '343b4dc2';
+  exports.version = version = '1.8.593';
+  exports.build = build = 'f62d0a10';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -4857,8 +4864,8 @@ if (!_util.globalScope.PDFJS) {
 }
 var PDFJS = _util.globalScope.PDFJS;
 {
-  PDFJS.version = '1.8.581';
-  PDFJS.build = '343b4dc2';
+  PDFJS.version = '1.8.593';
+  PDFJS.build = 'f62d0a10';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -10424,8 +10431,8 @@ exports.PDFDataTransportStream = PDFDataTransportStream;
 "use strict";
 
 
-var pdfjsVersion = '1.8.581';
-var pdfjsBuild = '343b4dc2';
+var pdfjsVersion = '1.8.593';
+var pdfjsBuild = 'f62d0a10';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -10472,6 +10479,19 @@ exports.StatTimer = pdfjsSharedUtil.StatTimer;
 
 
 ;
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+if (typeof ReadableStream !== 'undefined') {
+  exports.ReadableStream = ReadableStream;
+} else {
+  exports.ReadableStream = __w_pdfjs_require__(9).ReadableStream;
+}
 
 /***/ })
 /******/ ]);

@@ -10583,7 +10583,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 128,
-    "description": "Negotiated cipher suite in full handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp)"
+    "description": "Negotiated cipher suite in full handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp). Entries #8, 9, 47, 48, 68, and 69 correspond to ciphers that use RC4."
   },
   "SSL_CIPHER_SUITE_RESUMED": {
     "record_in_processes": ["main", "content"],

@@ -22,10 +22,6 @@ elif toolkit in ('gtk2', 'gtk3'):
     UNIFIED_SOURCES += [
         'nptest_gtk2.cpp',
     ]
-elif toolkit == 'android':
-    UNIFIED_SOURCES += [
-        'nptest_droid.cpp',
-    ]
 elif toolkit == 'windows':
     UNIFIED_SOURCES += [
         'nptest_windows.cpp',

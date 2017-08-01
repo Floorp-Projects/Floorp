@@ -465,14 +465,6 @@ auto GeckoAppShell::KillAnyZombies() -> void
     return mozilla::jni::Method<KillAnyZombies_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
-constexpr char GeckoAppShell::LoadPluginClass_t::name[];
-constexpr char GeckoAppShell::LoadPluginClass_t::signature[];
-
-auto GeckoAppShell::LoadPluginClass(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1) -> mozilla::jni::Class::LocalRef
-{
-    return mozilla::jni::Method<LoadPluginClass_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
-}
-
 constexpr char GeckoAppShell::LockScreenOrientation_t::name[];
 constexpr char GeckoAppShell::LockScreenOrientation_t::signature[];
 

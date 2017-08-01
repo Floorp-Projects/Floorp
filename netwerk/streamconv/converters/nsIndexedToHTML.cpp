@@ -556,7 +556,8 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         // dealing with a resource URI.
         if (!isResource) {
             buffer.AppendLiteral("<base href=\"");
-            nsAdoptingCString htmlEscapedUri(nsEscapeHTML(baseUri.get()));
+            nsCString htmlEscapedUri;
+            htmlEscapedUri.Adopt(nsEscapeHTML(baseUri.get()));
             buffer.Append(htmlEscapedUri);
             buffer.AppendLiteral("\" />\n");
         }
@@ -596,7 +597,8 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
 
         buffer.AppendLiteral("<p id=\"UI_goUp\"><a class=\"up\" href=\"");
 
-        nsAdoptingCString htmlParentStr(nsEscapeHTML(parentStr.get()));
+        nsCString htmlParentStr;
+        htmlParentStr.Adopt(nsEscapeHTML(parentStr.get()));
         buffer.Append(htmlParentStr);
         buffer.AppendLiteral("\">");
         AppendNonAsciiToNCR(parentText, buffer);
@@ -726,7 +728,8 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
             pushBuffer.Append('2');
             break;
     }
-    nsAdoptingCString escaped(nsEscapeHTML(loc));
+    nsCString escaped;
+    escaped.Adopt(nsEscapeHTML(loc));
     pushBuffer.Append(escaped);
 
     pushBuffer.AppendLiteral("\"><table class=\"ellipsis\"><tbody><tr><td><a class=\"");
@@ -777,7 +780,8 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     // contains semicolons we need to manually escape them.
     // This replacement should be removed in bug #473280
     locEscaped.ReplaceSubstring(";", "%3b");
-    nsAdoptingCString htmlEscapedURL(nsEscapeHTML(locEscaped.get()));
+    nsCString htmlEscapedURL;
+    htmlEscapedURL.Adopt(nsEscapeHTML(locEscaped.get()));
     pushBuffer.Append(htmlEscapedURL);
 
     pushBuffer.AppendLiteral("\">");
@@ -787,7 +791,8 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         int32_t lastDot = locEscaped.RFindChar('.');
         if (lastDot != kNotFound) {
             locEscaped.Cut(0, lastDot);
-            nsAdoptingCString htmlFileExt(nsEscapeHTML(locEscaped.get()));
+            nsCString htmlFileExt;
+            htmlFileExt.Adopt(nsEscapeHTML(locEscaped.get()));
             pushBuffer.Append(htmlFileExt);
         } else {
             pushBuffer.AppendLiteral("unknown");
@@ -858,9 +863,11 @@ nsIndexedToHTML::OnInformationAvailable(nsIRequest *aRequest,
                                         nsISupports *aCtxt,
                                         const nsAString& aInfo) {
     nsAutoCString pushBuffer;
-    nsAdoptingString escaped(nsEscapeHTML2(PromiseFlatString(aInfo).get()));
-    if (!escaped)
+    char16_t* str = nsEscapeHTML2(PromiseFlatString(aInfo).get());
+    if (!str)
         return NS_ERROR_OUT_OF_MEMORY;
+    nsString escaped;
+    escaped.Adopt(str);
     pushBuffer.AppendLiteral("<tr>\n <td>");
     // escaped is provided in Unicode, so write hex NCRs as necessary
     // to prevent the HTML parser from applying a character set.

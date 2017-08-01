@@ -59,8 +59,8 @@ using mozilla::AutoJSContext;
     if (slots && !slots->mMutationObservers.IsEmpty()) {          \
       /* No need to explicitly notify the first observer first    \
          since that'll happen anyway. */                          \
-      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(                         \
-        slots->mMutationObservers, nsIMutationObserver,           \
+      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(                    \
+        slots->mMutationObservers, nsIMutationObserver, 1,        \
         func_, params_);                                          \
     }                                                             \
     ShadowRoot* shadow = ShadowRoot::FromNode(node);              \
@@ -87,8 +87,8 @@ using mozilla::AutoJSContext;
     if (slots && !slots->mMutationObservers.IsEmpty()) {          \
       /* No need to explicitly notify the first observer first    \
          since that'll happen anyway. */                          \
-      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(                 \
-        slots->mMutationObservers, nsIMutationObserver,           \
+      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS_WITH_QI(            \
+        slots->mMutationObservers, nsIMutationObserver, 1,        \
         nsIAnimationObserver, func_, params_);                    \
     }                                                             \
     ShadowRoot* shadow = ShadowRoot::FromNode(node);              \
@@ -292,9 +292,9 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   nsINode::nsSlots* slots = aNode->GetExistingSlots();
   if (slots) {
     if (!slots->mMutationObservers.IsEmpty()) {
-      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
-                                         nsIMutationObserver,
-                                         NodeWillBeDestroyed, (aNode));
+      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
+                                              nsIMutationObserver, 1,
+                                              NodeWillBeDestroyed, (aNode));
     }
 
     if (aNode->IsElement()) {
