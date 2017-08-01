@@ -397,6 +397,7 @@ GeckoStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 
   UNIQUE_CASE(Font)
   UNIQUE_CASE(Display)
+  UNIQUE_CASE(Position)
   UNIQUE_CASE(Text)
   UNIQUE_CASE(TextReset)
   UNIQUE_CASE(Visibility)
@@ -630,6 +631,7 @@ ShouldSuppressLineBreak(const nsStyleContext* aContext,
   return false;
 }
 
+// FIXME(emilio): Why in GeckoStyleContext.cpp?
 void
 nsStyleContext::SetStyleBits()
 {
@@ -775,7 +777,7 @@ GeckoStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   if (mPseudoTag == nsCSSPseudoElements::firstLetter) {
     const nsStyleTextReset* textReset = StyleTextReset();
     if (textReset->mInitialLetterSize != 0.0f) {
-      nsStyleContext* containerSC = mParent;
+      GeckoStyleContext* containerSC = GetParent();
       const nsStyleDisplay* containerDisp = containerSC->StyleDisplay();
       while (containerDisp->mDisplay == mozilla::StyleDisplay::Contents) {
         if (!containerSC->GetParent()) {
@@ -865,6 +867,23 @@ GeckoStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     }
   }
 
+  // Fixup the "justify-items: auto" value based on our parent style here if
+  // needed.
+  //
+  // Note that this only pulls a unique struct in the case the parent has the
+  // "legacy" modifier (which is not the default), and the computed value would
+  // change as a result.
+  //
+  // We check the parent first just to avoid unconditionally pulling the
+  // nsStylePosition struct on every style context.
+  if (mParent &&
+      mParent->StylePosition()->mJustifyItems & NS_STYLE_JUSTIFY_LEGACY &&
+      StylePosition()->mSpecifiedJustifyItems == NS_STYLE_JUSTIFY_AUTO &&
+      StylePosition()->mJustifyItems != mParent->StylePosition()->mJustifyItems) {
+    nsStylePosition* uniquePosition = GET_UNIQUE_STYLE_DATA(Position);
+    uniquePosition->mJustifyItems = mParent->StylePosition()->mJustifyItems;
+  }
+
   // CSS2.1 section 9.2.4 specifies fixups for the 'display' property of
   // the root element.  We can't implement them in nsRuleNode because we
   // don't want to store all display structs that aren't 'block',
@@ -920,7 +939,7 @@ GeckoStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     // a flex/grid container ancestor, then this node is a flex/grid item, since
     // its parent *in the frame tree* will be the flex/grid container. So we treat
     // it like a flex/grid item here.)
-    nsStyleContext* containerContext = mParent;
+    GeckoStyleContext* containerContext = GetParent();
     const nsStyleDisplay* containerDisp = containerContext->StyleDisplay();
     while (containerDisp->mDisplay == mozilla::StyleDisplay::Contents) {
       if (!containerContext->GetParent()) {

@@ -12,8 +12,9 @@
 # By default just assume that these tools exist on our path
 
 use Getopt::Std;
+use Cwd 'abs_path';
 
-my ($MAR, $BZIP2, $archive, @marentries, @marfiles);
+my ($MAR, $XZ, $BZIP2, $MAR_OLD_FORMAT, $archive, @marentries, @marfiles);
 
 if (defined($ENV{"MAR"})) {
     $MAR = $ENV{"MAR"};
@@ -27,6 +28,31 @@ if (defined($ENV{"BZIP2"})) {
 }
 else {
     $BZIP2 = "bzip2";
+}
+
+if (defined($ENV{"XZ"})) {
+    $XZ = $ENV{"XZ"};
+}
+else {
+    if (system("xz --version > /dev/null 2>&1") != 0) {
+        # Some of the Windows build systems have xz.exe in topsrcdir/xz/.
+        my $xzwinpath = abs_path(__FILE__);
+        $xzwinpath = substr($xzwinpath, 0, rindex($xzwinpath, '/'));
+        $xzwinpath = substr($xzwinpath, 0, rindex($xzwinpath, '/'));
+        $xzwinpath = substr($xzwinpath, 0, rindex($xzwinpath, '/'));
+        $xzwinpath = $xzwinpath . "/xz/xz.exe";
+        if (-e $xzwinpath) {
+            $XZ = $xzwinpath;
+        }
+        else {
+            # If the xz executable was not found fallback to trying to execute
+            # xz and follow the normal failure path if it isn't found.
+            $XZ = "xz";
+        }
+    }
+    else {
+        $XZ = "xz";
+    }
 }
 
 sub print_usage
@@ -47,21 +73,45 @@ if (defined($opts{'h'}) || scalar(@ARGV) != 1) {
 
 $archive = $ARGV[0];
 @marentries = `"$MAR" -t "$archive"`;
-
 $? && die("Couldn't run \"$MAR\" -t");
 
-shift @marentries;
+system("$MAR -x \"$archive\"") == 0 ||
+  die "Couldn't run $MAR -x";
 
-system("$MAR -x \"$archive\"") == 0 || die "Couldn't run $MAR -x";
+# Try to determine if the mar file contains bzip2 compressed files and if not
+# assume that the mar file contains lzma compressed files. The updatev3.manifest
+# file is checked since a valid mar file must have this file in the root path.
+open(my $testfilename, "updatev3.manifest") or die $!;
+binmode($testfilename);
+read($testfilename, my $bytes, 3);
+if ($bytes eq "BZh") {
+    $MAR_OLD_FORMAT = 1;
+} else {
+    undef $MAR_OLD_FORMAT;
+}
+close $testfilename;
+
+shift @marentries;
 
 foreach (@marentries) {
     tr/\n\r//d;
     my @splits = split(/\t/,$_);
     my $file = $splits[2];
 
-    system("mv \"$file\" \"$file.bz2\"") == 0 ||
-      die "Couldn't mv \"$file\"";
-    system("\"$BZIP2\" -d \"$file.bz2\"") == 0 ||
-      die "Couldn't decompress \"$file\"";
+    print "Decompressing: " . $file . "\n";
+    if ($MAR_OLD_FORMAT) {
+      system("mv \"$file\" \"$file.bz2\"") == 0 ||
+        die "Couldn't mv \"$file\"";
+      system("\"$BZIP2\" -d \"$file.bz2\"") == 0 ||
+        die "Couldn't decompress \"$file\"";
+    }
+    else {
+      system("mv \"$file\" \"$file.xz\"") == 0 ||
+        die "Couldn't mv \"$file\"";
+      system("\"$XZ\" -d \"$file.xz\"") == 0 ||
+        die "Couldn't decompress \"$file\"";
+    }
 }
+
+print "Finished\n";
 

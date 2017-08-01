@@ -1984,8 +1984,7 @@ or run without that action (ie: --no-{action})"
 
         if os.path.exists(installer):
             installer_size = self.query_filesize(installer)
-            self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' % (
-                packageName, installer_size))
+            self.info('Size of %s: %s bytes' % (packageName, installer_size))
             try:
                 subtests = {}
                 if zipfile.is_zipfile(installer):
@@ -2014,8 +2013,8 @@ or run without that action (ie: --no-{action})"
                                     subtests[name] = size
                 for name in subtests:
                     if subtests[name] is not None:
-                        self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' %
-                                  (name, subtests[name]))
+                        self.info('Size of %s: %s bytes' % (name,
+                                                            subtests[name]))
                         size_measurements.append(
                             {'name': name, 'value': subtests[name]})
             except:

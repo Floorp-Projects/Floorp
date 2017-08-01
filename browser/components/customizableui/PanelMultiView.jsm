@@ -292,7 +292,8 @@ this.PanelMultiView = class {
 
     // Proxy these public properties and methods, as used elsewhere by various
     // parts of the browser, to this instance.
-    ["_mainView", "ignoreMutations", "showingSubView"].forEach(property => {
+    ["_mainView", "ignoreMutations", "showingSubView",
+     "_panelViews"].forEach(property => {
       Object.defineProperty(this.node, property, {
         enumerable: true,
         get: () => this[property],

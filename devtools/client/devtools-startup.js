@@ -250,7 +250,7 @@ DevToolsStartup.prototype = {
                      CustomizableUI.AREA_PANEL,
       onViewShowing: (event) => {
         // Ensure creating the menuitems in the system menu before trying to copy them.
-        this.initDevTools();
+        this.initDevTools("HamburgerMenu");
 
         // Populate the subview with whatever menuitems are in the developer
         // menu. We skip menu elements, because the menu panel has no way
@@ -300,7 +300,9 @@ DevToolsStartup.prototype = {
    */
   hookWebDeveloperMenu(window) {
     let menu = window.document.getElementById("webDeveloperMenu");
-    menu.addEventListener("popupshowing", () => this.initDevTools(), { once: true });
+    menu.addEventListener("popupshowing", () => {
+      this.initDevTools("SystemMenu");
+    }, { once: true });
   },
 
   hookKeyShortcuts(window) {
@@ -321,7 +323,7 @@ DevToolsStartup.prototype = {
   },
 
   onKey(window, key) {
-    let require = this.initDevTools();
+    let require = this.initDevTools("KeyShortcut");
     let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
     gDevToolsBrowser.onKeyShortcut(window, key);
   },
@@ -354,7 +356,18 @@ DevToolsStartup.prototype = {
    */
   initialized: false,
 
-  initDevTools: function () {
+  initDevTools: function (reason) {
+    if (!this.initialized) {
+      // Only save the first call for each firefox run as next call
+      // won't necessarely start the tool. For example key shortcuts may
+      // only change the currently selected tool.
+      try {
+        Services.telemetry.getHistogramById("DEVTOOLS_ENTRY_POINT")
+                          .add(reason);
+      } catch (e) {
+        dump("DevTools telemetry entry point failed: " + e + "\n");
+      }
+    }
     this.initialized = true;
     let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
@@ -366,7 +379,7 @@ DevToolsStartup.prototype = {
   handleConsoleFlag: function (cmdLine) {
     let window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
-      this.initDevTools();
+      this.initDevTools("CommandLine");
 
       let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
       let hudservice = require("devtools/client/webconsole/hudservice");
@@ -384,7 +397,7 @@ DevToolsStartup.prototype = {
 
   // Open the toolbox on the selected tab once the browser starts up.
   handleDevToolsFlag: function (window) {
-    const require = this.initDevTools();
+    const require = this.initDevTools("CommandLine");
     const {gDevTools} = require("devtools/client/framework/devtools");
     const {TargetFactory} = require("devtools/client/framework/target");
     let target = TargetFactory.forTab(window.gBrowser.selectedTab);

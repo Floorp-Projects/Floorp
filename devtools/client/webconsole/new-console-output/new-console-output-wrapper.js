@@ -46,15 +46,19 @@ NewConsoleOutputWrapper.prototype = {
         return;
       }
 
-      // Do not focus if something is selected
-      let selection = this.document.defaultView.getSelection();
-      if (selection && !selection.isCollapsed) {
+      // Do not focus if a link was clicked
+      if (event.originalTarget.closest("a")) {
         return;
       }
 
-      // Do not focus if a link was clicked
-      if (event.target.nodeName.toLowerCase() === "a" ||
-          event.target.parentNode.nodeName.toLowerCase() === "a") {
+      // Do not focus if something other than the output region was clicked
+      if (!event.originalTarget.closest(".webconsole-output")) {
+        return;
+      }
+
+      // Do not focus if something is selected
+      let selection = this.document.defaultView.getSelection();
+      if (selection && !selection.isCollapsed) {
         return;
       }
 

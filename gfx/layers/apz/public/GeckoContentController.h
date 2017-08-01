@@ -157,6 +157,8 @@ public:
 
   virtual void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) = 0;
 
+  virtual void NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId) = 0;
+
   virtual void UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent) {}
   virtual void UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent) {}
 

@@ -533,11 +533,11 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
 }
 
 static void
-VerifySameTree(nsStyleContext* aContext1, nsStyleContext* aContext2)
+VerifySameTree(GeckoStyleContext* aContext1, GeckoStyleContext* aContext2)
 {
-  nsStyleContext* top1 = aContext1;
-  nsStyleContext* top2 = aContext2;
-  nsStyleContext* parent;
+  GeckoStyleContext* top1 = aContext1;
+  GeckoStyleContext* top2 = aContext2;
+  GeckoStyleContext* parent;
   for (;;) {
     parent = top1->GetParent();
     if (!parent)
@@ -555,22 +555,23 @@ VerifySameTree(nsStyleContext* aContext1, nsStyleContext* aContext2)
 }
 
 static void
-VerifyContextParent(nsIFrame* aFrame, nsStyleContext* aContext,
-                    nsStyleContext* aParentContext)
+VerifyContextParent(nsIFrame* aFrame, GeckoStyleContext* aContext,
+                    GeckoStyleContext* aParentContext)
 {
   // get the contexts not provided
   if (!aContext) {
-    aContext = aFrame->StyleContext();
+    aContext = aFrame->StyleContext()->AsGecko();
   }
 
   if (!aParentContext) {
     nsIFrame* providerFrame;
-    aParentContext = aFrame->GetParentStyleContext(&providerFrame);
+    nsStyleContext* parent = aFrame->GetParentStyleContext(&providerFrame);
+    aParentContext = parent ? parent->AsGecko() : nullptr;
     // aParentContext could still be null
   }
 
   NS_ASSERTION(aContext, "Failure to get required contexts");
-  nsStyleContext* actualParentContext = aContext->GetParent();
+  GeckoStyleContext* actualParentContext = aContext->GetParent();
 
   if (aParentContext) {
     if (aParentContext != actualParentContext) {
@@ -598,7 +599,7 @@ VerifyContextParent(nsIFrame* aFrame, nsStyleContext* aContext,
     }
   }
 
-  nsStyleContext* childStyleIfVisited = aContext->GetStyleIfVisited();
+  GeckoStyleContext* childStyleIfVisited = aContext->GetStyleIfVisited();
   // Either childStyleIfVisited has aContext->GetParent()->GetStyleIfVisited()
   // as the parent or it has a different rulenode from aContext _and_ has
   // aContext->GetParent() as the parent.
@@ -616,7 +617,7 @@ VerifyContextParent(nsIFrame* aFrame, nsStyleContext* aContext,
 static void
 VerifyStyleTree(nsIFrame* aFrame)
 {
-  nsStyleContext* context = aFrame->StyleContext();
+  GeckoStyleContext* context = aFrame->StyleContext()->AsGecko();
   VerifyContextParent(aFrame, context, nullptr);
 
   nsIFrame::ChildListIterator lists(aFrame);
@@ -650,7 +651,7 @@ VerifyStyleTree(nsIFrame* aFrame)
   for (nsStyleContext* extraContext;
        (extraContext = aFrame->GetAdditionalStyleContext(contextIndex));
        ++contextIndex) {
-    VerifyContextParent(aFrame, extraContext, context);
+    VerifyContextParent(aFrame, extraContext->AsGecko(), context);
   }
 }
 

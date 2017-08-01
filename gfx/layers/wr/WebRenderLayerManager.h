@@ -24,6 +24,9 @@
 class nsIWidget;
 
 namespace mozilla {
+
+struct ActiveScrolledRoot;
+
 namespace layers {
 
 class CompositorBridgeChild;
@@ -245,6 +248,11 @@ private:
   // We use this as a temporary data structure while building the mScrollData
   // inside a layers-free transaction.
   std::vector<WebRenderLayerScrollData> mLayerScrollData;
+  // We use this as a temporary data structure to track the current display
+  // item's ASR as we recurse in CreateWebRenderCommandsFromDisplayList. We
+  // need this so that WebRenderLayerScrollData items that deeper in the
+  // tree don't duplicate scroll metadata that their ancestors already have.
+  std::vector<const ActiveScrolledRoot*> mAsrStack;
 
   // Layers that have been mutated. If we have an empty transaction
   // then a display item layer will no longer be valid

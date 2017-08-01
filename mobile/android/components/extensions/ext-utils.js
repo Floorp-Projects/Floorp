@@ -441,12 +441,12 @@ class TabContext {
     this.getDefaults = getDefaults;
     this.tabData = new Map();
 
+    EventEmitter.decorate(this);
+
     GlobalEventDispatcher.registerListener(this, [
       "Tab:Selected",
       "Tab:Closed",
     ]);
-
-    EventEmitter.decorate(this);
   }
 
   get(tabId) {
