@@ -88,13 +88,14 @@ public:
   /**
    * Register the style context for the display:none content, aContent.
    */
-  void SetUndisplayedContent(nsIContent* aContent,
-                             nsStyleContext* aStyleContext);
+  void RegisterDisplayNoneStyleFor(nsIContent* aContent,
+                                   nsStyleContext* aStyleContext);
 
   /**
    * Register the style context for the display:contents content, aContent.
    */
-  void SetDisplayContents(nsIContent* aContent, nsStyleContext* aStyleContext);
+  void RegisterDisplayContentsStyleFor(nsIContent* aContent,
+                                       nsStyleContext* aStyleContext);
 
   /**
    * Change the style context for the display:none content, aContent.
