@@ -5219,7 +5219,8 @@ JS::RejectPromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue re
 static bool
 CallOriginalPromiseThenImpl(JSContext* cx, JS::HandleObject promiseObj,
                             JS::HandleObject onResolvedObj_, JS::HandleObject onRejectedObj_,
-                            JS::MutableHandleObject resultObj, bool createDependent)
+                            JS::MutableHandleObject resultObj,
+                            CreateDependentPromise createDependent)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
@@ -5268,8 +5269,11 @@ JS::CallOriginalPromiseThen(JSContext* cx, JS::HandleObject promiseObj,
                             JS::HandleObject onResolvedObj, JS::HandleObject onRejectedObj)
 {
     RootedObject resultPromise(cx);
-    if (!CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj, onRejectedObj, &resultPromise, true))
+    if (!CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj, onRejectedObj, &resultPromise,
+                                     CreateDependentPromise::Always))
+    {
         return nullptr;
+    }
     return resultPromise;
 }
 
@@ -5278,7 +5282,8 @@ JS::AddPromiseReactions(JSContext* cx, JS::HandleObject promiseObj,
                         JS::HandleObject onResolvedObj, JS::HandleObject onRejectedObj)
 {
     RootedObject resultPromise(cx);
-    bool result = CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj, onRejectedObj, &resultPromise, false);
+    bool result = CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj, onRejectedObj,
+                                              &resultPromise, CreateDependentPromise::Never);
     MOZ_ASSERT(!resultPromise);
     return result;
 }
