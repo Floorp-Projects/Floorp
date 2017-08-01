@@ -10,8 +10,8 @@ const {utils: Cu, interfaces: Ci} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AboutNewTab",
+                                  "resource:///modules/AboutNewTab.jsm");
 
 const LOCAL_NEWTAB_URL = "chrome://browser/content/newtab/newTab.xhtml";
 
@@ -19,12 +19,18 @@ const ACTIVITY_STREAM_URL = "resource://activity-stream/data/content/activity-st
 
 const ABOUT_URL = "about:newtab";
 
+const IS_MAIN_PROCESS = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+
 // Pref that tells if activity stream is enabled
 const PREF_ACTIVITY_STREAM_ENABLED = "browser.newtabpage.activity-stream.enabled";
 
 function AboutNewTabService() {
-  Preferences.observe(PREF_ACTIVITY_STREAM_ENABLED, this._handleToggleEvent.bind(this));
-  this.toggleActivityStream(Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_ENABLED));
+  Services.obs.addObserver(this, "quit-application-granted");
+  Services.prefs.addObserver(PREF_ACTIVITY_STREAM_ENABLED, this);
+  this.toggleActivityStream();
+  if (IS_MAIN_PROCESS) {
+    AboutNewTab.init();
+  }
 }
 
 /*
@@ -68,14 +74,28 @@ AboutNewTabService.prototype = {
   _overridden: false,
 
   classID: Components.ID("{dfcd2adc-7867-4d3a-ba70-17501f208142}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutNewTabService]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIAboutNewTabService,
+    Ci.nsIObserver
+  ]),
   _xpcom_categories: [{
     service: true
   }],
 
-  _handleToggleEvent(stateEnabled) {
-    if (this.toggleActivityStream(stateEnabled)) {
-      Services.obs.notifyObservers(null, "newtab-url-changed", ABOUT_URL);
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "nsPref:changed":
+        if (this.toggleActivityStream()) {
+          Services.obs.notifyObservers(null, "newtab-url-changed", ABOUT_URL);
+        }
+        break;
+      case "quit-application-granted":
+        Services.obs.removeObserver(this, "quit-application-granted");
+        Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_ENABLED, this);
+        if (IS_MAIN_PROCESS) {
+          AboutNewTab.uninit();
+        }
+        break;
     }
   },
 
@@ -93,7 +113,8 @@ AboutNewTabService.prototype = {
    * @param {Boolean}   stateEnabled    activity stream enabled state to set to
    * @param {Boolean}   forceState      force state change
    */
-  toggleActivityStream(stateEnabled, forceState = false) {
+  toggleActivityStream(stateEnabled = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_ENABLED),
+                       forceState = false) {
 
     if (!forceState && (this.overridden || stateEnabled === this.activityStreamEnabled)) {
       // exit there is no change of state
@@ -158,7 +179,7 @@ AboutNewTabService.prototype = {
   resetNewTabURL() {
     this._overridden = false;
     this._newTabURL = ABOUT_URL;
-    this.toggleActivityStream(Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_ENABLED), true);
+    this.toggleActivityStream(undefined, true);
     Services.obs.notifyObservers(null, "newtab-url-changed", this._newTabURL);
   }
 };
