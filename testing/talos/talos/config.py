@@ -100,6 +100,7 @@ DEFAULTS = dict(
         'browser.newtabpage.activity-stream.default.sites': '',
         'browser.newtabpage.activity-stream.telemetry': False,
         'browser.newtabpage.activity-stream.feeds.section.topstories': False,
+        'browser.newtabpage.activity-stream.feeds.snippets': False,
         'browser.newtabpage.directory.source':
             '${webserver}/directoryLinks.json',
         'browser.newtabpage.introShown': True,
