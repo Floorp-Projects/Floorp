@@ -44,4 +44,5 @@ interface nsIClassOfService : nsISupports
   const unsigned long Unblocked = 1 << 4;
   const unsigned long Throttleable = 1 << 5;
   const unsigned long UrgentStart = 1 << 6;
+  const unsigned long DontThrottle = 1 << 7;
 };
