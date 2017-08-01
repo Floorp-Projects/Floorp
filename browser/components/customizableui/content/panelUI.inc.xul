@@ -442,27 +442,21 @@
              onpopupshowing="gCustomizeMode.onPanelContextMenuShowing(event)">
     <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
               id="customizationPanelItemContextMenuPin"
-              photonaccesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
-              photonlabel="&customizeMenu.pinToOverflowMenu.label;"
-              accesskey="&customizeMenu.moveToPanel.accesskey;"
-              label="&customizeMenu.moveToPanel.label;"
+              accesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
+              label="&customizeMenu.pinToOverflowMenu.label;"
               closemenu="single"
               class="customize-context-moveToPanel"/>
     <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
               id="customizationPanelItemContextMenuUnpin"
               closemenu="single"
               class="customize-context-moveToToolbar"
-              photonaccesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
-              photonlabel="&customizeMenu.unpinFromOverflowMenu.label;"
-              accesskey="&customizeMenu.moveToToolbar.accesskey;"
-              label="&customizeMenu.moveToToolbar.label;"/>
+              accesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
+              label="&customizeMenu.unpinFromOverflowMenu.label;"/>
     <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
               closemenu="single"
               class="customize-context-removeFromPanel"
-              photonaccesskey="&customizeMenu.removeFromToolbar.accesskey;"
-              photonlabel="&customizeMenu.removeFromToolbar.label;"
-              accesskey="&customizeMenu.removeFromMenu.accesskey;"
-              label="&customizeMenu.removeFromMenu.label;"/>
+              accesskey="&customizeMenu.removeFromToolbar.accesskey;"
+              label="&customizeMenu.removeFromToolbar.label;"/>
     <menuseparator/>
     <menuitem command="cmd_CustomizeToolbars"
               class="viewCustomizeToolbar"
@@ -579,10 +573,8 @@
             label="&customizeMenu.addToToolbar.label;"/>
   <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
             class="customize-context-addToPanel"
-            photonaccesskey="&customizeMenu.addToOverflowMenu.accesskey;"
-            photonlabel="&customizeMenu.addToOverflowMenu.label;"
-            accesskey="&customizeMenu.addToPanel.accesskey;"
-            label="&customizeMenu.addToPanel.label;"/>
+            accesskey="&customizeMenu.addToOverflowMenu.accesskey;"
+            label="&customizeMenu.addToOverflowMenu.label;"/>
 </menupopup>
 
 <menupopup id="customizationPanelContextMenu">

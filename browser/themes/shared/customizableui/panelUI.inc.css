@@ -26,10 +26,6 @@
   --appmenu-yellow-warning-color: #FFEFBF;
   --appmenu-yellow-warning-hover-color: #FFE8A2;
   --appmenu-yellow-warning-active-color: #FFE38F;
-  --panel-palette-icon-size: 32px;
-}
-
-:root[photon-structure] {
   --panel-palette-icon-size: 16px;
 }
 
@@ -401,20 +397,12 @@ photonpanelmultiview .panel-subview-body {
   margin: 0;
 }
 
-:root:not([photon-structure]) toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
 .panelUI-grid .toolbarbutton-1,
 .panel-customization-placeholder-child {
   -moz-appearance: none;
   -moz-box-orient: vertical;
   width: calc(@menuPanelButtonWidth@);
   height: calc(51px + 2.2em);
-}
-
-/* In order to have button labels constrained appropriately, items inside the toolbarpaletteitem
- * should have a min-width set so they abide by the width set above (which they do outside of
- * customize mode because they're in a flexed container) */
-:root:not([photon-structure]) toolbarpaletteitem[place="panel"]:not([haswideitem=true]) > .toolbarbutton-1 {
-  min-width: 0.01px;
 }
 
 /* Help SDK buttons fit in. */
@@ -428,9 +416,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   width: @panelPaletteIconSize@;
 }
 
-.customization-palette .toolbarbutton-1 {
+#customization-palette .toolbarbutton-1 {
   -moz-appearance: none;
   -moz-box-orient: vertical;
+  padding: 12px 0 9px;
+  margin: 0;
 }
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button {
@@ -552,11 +542,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-icon,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-stack,
-:root:not([photon-structure]) .customization-palette .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-:root:not([photon-structure]) .customization-palette .toolbarbutton-1 > .toolbarbutton-icon,
-:root:not([photon-structure]) .customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack,
 .panelUI-grid #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
-:root:not([photon-structure]) .customization-palette #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 .panel-customization-placeholder-child > .toolbarbutton-icon {
   /* Explanation for the below formula (A / B - C)
      A
@@ -584,15 +570,6 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   min-height: @panelPaletteIconSize@;
   margin: 0;
   padding: 0;
-}
-
-:root[photon-structure] .customization-palette .toolbarbutton-1 {
-  padding: 12px 0 9px;
-  margin: 0;
-}
-
-:root[photon-structure] toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
-  -moz-box-flex: 1;
 }
 
 #personal-bookmarks[overflowedItem=true] > #bookmarks-toolbar-placeholder {
@@ -1177,8 +1154,7 @@ panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-.share-provider-button,
-:root:not([photon-structure]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
+.share-provider-button {
   -moz-appearance: none;
   padding: 0 6px;
   background-color: transparent;
@@ -1190,8 +1166,7 @@ panelview .toolbarbutton-1,
 panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1,
-.share-provider-button,
-:root:not([photon-structure]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
+.share-provider-button {
   border-width: 1px;
 }
 

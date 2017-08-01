@@ -391,29 +391,6 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   margin-bottom: 5px;
 }
 
-:root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
-:root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > separator,
-:root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton,
-:root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > separator {
-  margin-top: 20px;
-}
-
-:root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
-:root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton {
-  margin-left: 0;
-  margin-right: 0;
-  max-width: 24px;
-  min-width: 24px;
-  max-height: 24px;
-  min-height: 24px;
-  padding: 4px;
-}
-
-:root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-icon,
-:root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton > .toolbarbutton-icon {
-  width: 16px;
-}
-
 #wrapper-edit-controls > #edit-controls > toolbarbutton > .toolbarbutton-icon {
   opacity: 1; /* To ensure these buttons always look enabled in customize mode */
 }
@@ -421,11 +398,6 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-reset-button,
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-reset-button + separator {
   display: none;
-}
-
-:root:not([photon-structure]) #wrapper-personal-bookmarks:not([place="toolbar"]) > #personal-bookmarks {
-  -moz-box-pack: center;
-  min-height: 48px;
 }
 
 #personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
