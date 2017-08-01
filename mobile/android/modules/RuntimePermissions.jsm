@@ -32,7 +32,7 @@ var RuntimePermissions = {
     let permissions = [].concat(permission);
 
     let msg = {
-      type: 'RuntimePermissions:Check',
+      type: "RuntimePermissions:Check",
       permissions: permissions,
       shouldPrompt: true
     };
@@ -51,7 +51,7 @@ var RuntimePermissions = {
     let permissions = [].concat(permission);
 
     let msg = {
-      type: 'RuntimePermissions:Check',
+      type: "RuntimePermissions:Check",
       permissions: permissions,
       shouldPrompt: false
     };

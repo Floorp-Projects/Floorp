@@ -29,7 +29,7 @@ var Snackbars = {
     }
 
     let msg = {
-      type: 'Snackbar:Show',
+      type: "Snackbar:Show",
       message: aMessage,
       duration: aDuration,
     };
@@ -64,8 +64,7 @@ function migrateToastIfNeeded(aDuration, aOptions) {
   let duration;
   if (aDuration === "long") {
     duration = LENGTH_LONG;
-  }
-  else {
+  } else {
     duration = LENGTH_SHORT;
   }
 

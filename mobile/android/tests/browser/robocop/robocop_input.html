@@ -33,13 +33,13 @@
 
       // An input that resets the editor on every input by resetting the value property.
       let resetting_input = document.getElementById("resetting-input");
-      resetting_input.addEventListener('input', function() {
+      resetting_input.addEventListener("input", function() {
         this.value = this.value;
       });
 
       // An input that hides on input.
       let hiding_input = document.getElementById("hiding-input");
-      hiding_input.addEventListener('keydown', function(e) {
+      hiding_input.addEventListener("keydown", function(e) {
         if (e.key === "!") { // '!' key event as sent by testInputConnection.java.
           this.value = "";
           this.style.display = "none";
@@ -188,10 +188,10 @@
         },
 
         test_bug1123514: function() {
-          document.activeElement.addEventListener('input', function() {
+          document.activeElement.addEventListener("input", function() {
             // Only works on input and textarea.
-            if (this.value === 'b') {
-              this.value = 'abc';
+            if (this.value === "b") {
+              this.value = "abc";
             }
           }, {once: true});
         },

@@ -8,7 +8,6 @@ module.exports = {
 
     // Rules enabled in mozilla/recommended, and disabled for now, we should
     // re-enable these over time.
-    "brace-style": "off",
     "consistent-return": "off",
     "no-empty": "off",
     "no-native-reassign": "off",
@@ -21,6 +20,5 @@ module.exports = {
     "no-undef": "off",
     "no-unused-vars": "off",
     "object-shorthand": "off",
-    "quotes": "off", // [2, "double"]
   }
 };

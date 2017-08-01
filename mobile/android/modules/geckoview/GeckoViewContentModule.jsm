@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["GeckoViewContentModule"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
   "resource://gre/modules/Messaging.jsm");

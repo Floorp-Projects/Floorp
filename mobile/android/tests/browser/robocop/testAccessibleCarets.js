@@ -7,7 +7,7 @@
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
-Cu.import('resource://gre/modules/Geometry.jsm');
+Cu.import("resource://gre/modules/Geometry.jsm");
 
 const ACCESSIBLECARET_PREF = "layout.accessiblecaret.enabled";
 const BASE_TEST_URL = "http://mochi.test:8888/tests/robocop/testAccessibleCarets.html";

@@ -26,8 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm
 function getPref(func, preference, defaultValue) {
   try {
     return Services.prefs[func](preference);
-  }
-  catch (e) {}
+  } catch (e) {}
   return defaultValue;
 }
 

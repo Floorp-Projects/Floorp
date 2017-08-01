@@ -69,8 +69,8 @@ FxAccountsPush.prototype = {
         type: "FxAccountsPush:Subscribe:Response",
         subscription: {
           pushCallback: subscription.endpoint,
-          pushPublicKey: urlsafeBase64Encode(subscription.getKey('p256dh')),
-          pushAuthKey: urlsafeBase64Encode(subscription.getKey('auth'))
+          pushPublicKey: urlsafeBase64Encode(subscription.getKey("p256dh")),
+          pushAuthKey: urlsafeBase64Encode(subscription.getKey("auth"))
         }
       });
     })

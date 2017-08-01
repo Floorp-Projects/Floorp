@@ -204,7 +204,7 @@ NSSDialogs.prototype = {
 
   viewCertDetails: function(details) {
     let p = this.getPrompt(this.getString("clientAuthAsk.message3"),
-                    '',
+                    "",
                     [ this.getString("nssdialogs.ok.label") ]);
     p.addLabel({ label: details });
     this.showPrompt(p);
