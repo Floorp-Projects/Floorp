@@ -42,7 +42,7 @@ add_task(function* () {
 });
 
 function* testCopySome(view) {
-  let expectedPattern = "font-family: helvetica,sans-serif;[\\r\\n]+" +
+  let expectedPattern = "font-family: helvetica, sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
@@ -54,7 +54,7 @@ function* testCopySome(view) {
 
 function* testCopyAll(view) {
   let expectedPattern = "color: rgb\\(255, 255, 0\\);[\\r\\n]+" +
-                        "font-family: helvetica,sans-serif;[\\r\\n]+" +
+                        "font-family: helvetica, sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
