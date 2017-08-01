@@ -9351,6 +9351,21 @@ class LIsPackedArray : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LGetPrototypeOf : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(GetPrototypeOf)
+
+    explicit LGetPrototypeOf(const LAllocation& target)
+    {
+        setOperand(0, target);
+    }
+
+    const LAllocation* target() {
+        return getOperand(0);
+    }
+};
+
 } // namespace jit
 } // namespace js
 

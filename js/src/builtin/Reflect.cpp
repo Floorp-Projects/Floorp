@@ -9,6 +9,7 @@
 #include "jsarray.h"
 #include "jscntxt.h"
 
+#include "jit/InlinableNatives.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Stack.h"
 
@@ -256,7 +257,7 @@ static const JSFunctionSpec methods[] = {
     JS_FN("deleteProperty", Reflect_deleteProperty, 2, 0),
     JS_FN("get", Reflect_get, 2, 0),
     JS_FN("getOwnPropertyDescriptor", Reflect_getOwnPropertyDescriptor, 2, 0),
-    JS_FN("getPrototypeOf", Reflect_getPrototypeOf, 1, 0),
+    JS_INLINABLE_FN("getPrototypeOf", Reflect_getPrototypeOf, 1, 0, ReflectGetPrototypeOf),
     JS_SELF_HOSTED_FN("has", "Reflect_has", 2, 0),
     JS_FN("isExtensible", Reflect_isExtensible, 1, 0),
     JS_FN("ownKeys", Reflect_ownKeys, 1, 0),

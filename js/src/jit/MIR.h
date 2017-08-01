@@ -13911,6 +13911,23 @@ class MIsPackedArray
     }
 };
 
+class MGetPrototypeOf
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MGetPrototypeOf(MDefinition* target)
+      : MUnaryInstruction(target)
+    {
+        setResultType(MIRType::Value);
+        setGuard(); // May throw if target is a proxy.
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetPrototypeOf)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, target))
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.
