@@ -13,6 +13,7 @@ interface nsIRequest;
 interface nsIDOMElement;
 interface nsIInputStream;
 interface nsIDocShell;
+interface nsIFrameLoaderOwner;
 interface nsITabParent;
 interface nsIPrincipal;
 interface mozIDOMWindowProxy;
@@ -76,7 +77,8 @@ interface nsIXULBrowserWindow : nsISupports
   /**
    * Show/hide a tooltip (when the user mouses over a link, say).
    */
-  void showTooltip(in long x, in long y, in AString tooltip, in AString direction);
+  void showTooltip(in long x, in long y, in AString tooltip, in AString direction,
+                   in nsIFrameLoaderOwner browser);
   void hideTooltip();
 
   /**
