@@ -5,10 +5,11 @@
 "use strict";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check find button existence and functionality");
+  CustomizableUI.addWidgetToArea("find-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  registerCleanupFunction(() => CustomizableUI.reset());
 
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   info("Menu panel was opened");
 
   let findButton = document.getElementById("find-button");

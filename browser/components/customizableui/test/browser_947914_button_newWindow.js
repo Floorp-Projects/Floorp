@@ -5,9 +5,11 @@
 "use strict";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check new window button existence and functionality");
-  await PanelUI.show();
+  CustomizableUI.addWidgetToArea("new-window-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  registerCleanupFunction(() => CustomizableUI.reset());
+
+  await document.getElementById("nav-bar").overflowable.show();
   info("Menu panel was opened");
 
   let windowWasHandled = false;

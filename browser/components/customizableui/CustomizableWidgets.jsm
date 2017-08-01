@@ -1027,10 +1027,7 @@ const CustomizableWidgets = [
 
       let getPanel = () => {
         let {PanelUI} = document.ownerGlobal;
-        if (PanelUI.overflowContents) {
-          return document.getElementById("widget-overflow");
-        }
-        return PanelUI.panel;
+        return PanelUI.overflowPanel;
       }
 
       if (CustomizableUI.getAreaType(this.currentArea) == CustomizableUI.TYPE_MENU_PANEL) {

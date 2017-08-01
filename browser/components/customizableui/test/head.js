@@ -327,6 +327,11 @@ function isPanelUIOpen() {
   return PanelUI.panel.state == "open" || PanelUI.panel.state == "showing";
 }
 
+function isOverflowOpen() {
+  let panel = document.getElementById("widget-overflow");
+  return panel.state == "open" || panel.state == "showing";
+}
+
 function subviewShown(aSubview) {
   return new Promise((resolve, reject) => {
     let win = aSubview.ownerGlobal;
