@@ -263,7 +263,6 @@ class Window(object):
         body = {"x": x, "y": y}
         self.session.send_session_command("POST", "window/rect", body)
 
-    @property
     @command
     def maximize(self):
         return self.session.send_session_command("POST", "window/maximize")
