@@ -13,7 +13,9 @@ import requests
 import sh
 
 import redo
-from mardor.marfile import MarFile
+from mardor.reader import MarReader
+from mardor.signing import get_keysize
+
 
 log = logging.getLogger(__name__)
 ALLOWED_URL_PREFIXES = [
@@ -30,10 +32,16 @@ DEFAULT_FILENAME_TEMPLATE = "{appName}-{branch}-{version}-{platform}-" \
                             "{locale}-{from_buildid}-{to_buildid}.partial.mar"
 
 
-def verify_signature(mar, signature):
+def verify_signature(mar, certs):
     log.info("Checking %s signature", mar)
-    m = MarFile(mar, signature_versions=[(1, signature)])
-    m.verify_signatures()
+    with open(mar, 'rb') as mar_fh:
+        m = MarReader(mar_fh)
+        m.verify(verify_key=certs.get(m.signature_type()))
+
+
+def is_lzma_compressed_mar(mar):
+    log.info("Checking %s for lzma compression", mar)
+    return MarReader(open(mar, 'rb')).compression_type() == 'xz'
 
 
 @redo.retriable()
@@ -64,7 +72,12 @@ def unpack(work_env, mar, dest_dir):
     unwrap_cmd = sh.Command(os.path.join(work_env.workdir,
                                          "unwrap_full_update.pl"))
     log.debug("Unwrapping %s", mar)
-    out = unwrap_cmd(mar, _cwd=dest_dir, _env=work_env.env, _timeout=240,
+    env = work_env.env
+    if not is_lzma_compressed_mar(mar):
+        env['MAR_OLD_FORMAT'] = 1
+    elif 'MAR_OLD_FORMAT' in env:
+        del env['MAR_OLD_FORMAT']
+    out = unwrap_cmd(mar, _cwd=dest_dir, _env=env, _timeout=240,
                      _err_to_out=True)
     if out:
         log.debug(out)
@@ -96,6 +109,10 @@ def generate_partial(work_env, from_dir, to_dir, dest_mar, channel_ids,
     env = work_env.env
     env["MOZ_PRODUCT_VERSION"] = version
     env["MOZ_CHANNEL_ID"] = channel_ids
+    if not is_lzma_compressed_mar(dest_mar):
+        env['MAR_OLD_FORMAT'] = 1
+    elif 'MAR_OLD_FORMAT' in env:
+        del env['MAR_OLD_FORMAT']
     make_incremental_update = os.path.join(work_env.workdir,
                                            "make_incremental_update.sh")
     out = sh.bash(make_incremental_update, dest_mar, from_dir, to_dir,
@@ -166,7 +183,8 @@ def verify_allowed_url(mar):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifacts-dir", required=True)
-    parser.add_argument("--signing-cert", required=True)
+    parser.add_argument("--sha1-signing-cert", required=True)
+    parser.add_argument("--sha384-signing-cert", required=True)
     parser.add_argument("--task-definition", required=True,
                         type=argparse.FileType('r'))
     parser.add_argument("--filename-template",
@@ -182,6 +200,14 @@ def main():
                         level=args.log_level)
     task = json.load(args.task_definition)
     # TODO: verify task["extra"]["funsize"]["partials"] with jsonschema
+
+    signing_certs = {
+        'sha1': args.sha1_signing_cert,
+        'sha384': args.sha384_signing_cert,
+    }
+
+    assert(get_keysize(open(signing_certs['sha1'], 'rb').read()) == 2048)
+    assert(get_keysize(open(signing_certs['sha384'], 'rb').read()) == 4096)
 
     if args.no_freshclam:
         log.info("Skipping freshclam")
@@ -207,7 +233,7 @@ def main():
             unpack_dir = os.path.join(work_env.workdir, mar_type)
             download(f, dest)
             if not os.getenv("MOZ_DISABLE_MAR_CERT_VERIFICATION"):
-                verify_signature(dest, args.signing_cert)
+                verify_signature(dest, signing_certs)
             complete_mars["%s_size" % mar_type] = os.path.getsize(dest)
             complete_mars["%s_hash" % mar_type] = get_hash(dest)
             unpack(work_env, dest, unpack_dir)
