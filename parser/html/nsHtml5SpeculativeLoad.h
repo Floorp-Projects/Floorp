@@ -128,7 +128,9 @@ class nsHtml5SpeculativeLoad {
                            nsHtml5String aType,
                            nsHtml5String aCrossOrigin,
                            nsHtml5String aIntegrity,
-                           bool aParserInHead)
+                           bool aParserInHead,
+                           bool aAsync,
+                           bool aDefer)
     {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
@@ -139,6 +141,8 @@ class nsHtml5SpeculativeLoad {
       aType.ToString(mTypeOrCharsetSourceOrDocumentMode);
       aCrossOrigin.ToString(mCrossOrigin);
       aIntegrity.ToString(mIntegrity);
+      mIsAsync = aAsync;
+      mIsDefer = aDefer;
     }
 
     inline void InitStyle(nsHtml5String aUrl,
@@ -221,6 +225,13 @@ class nsHtml5SpeculativeLoad {
 
   private:
     eHtml5SpeculativeLoad mOpCode;
+
+    /**
+     * Whether the refering element has async and/or defer attributes.
+     */
+    bool mIsAsync;
+    bool mIsDefer;
+
     nsString mUrl;
     nsString mReferrerPolicy;
     nsString mMetaCSP;
