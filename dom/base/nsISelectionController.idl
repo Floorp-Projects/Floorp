@@ -8,6 +8,11 @@
 
 %{C++
 typedef short SelectionRegion;
+namespace mozilla {
+namespace dom {
+class Selection;
+} // namespace dom
+} // namespace mozilla
 %}
 
 interface nsIContent;
@@ -273,6 +278,13 @@ interface nsISelectionController : nsISelectionDisplay
    */
     boolean checkVisibility(in nsIDOMNode node, in short startOffset, in short endOffset);
     [noscript,nostdcall] boolean checkVisibilityContent(in nsIContent node, in short startOffset, in short endOffset);
+
+%{C++
+    /**
+     * Return the selection object corresponding to a selection type.
+     */
+    NS_IMETHOD_(mozilla::dom::Selection*) GetSelection(int16_t aType) = 0;
+%}
 };
 %{ C++
    #define NS_ISELECTIONCONTROLLER_CID \

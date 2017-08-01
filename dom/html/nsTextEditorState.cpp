@@ -296,6 +296,7 @@ public:
   NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable) override;
   NS_IMETHOD GetSelection(RawSelectionType aRawSelectionType,
                           nsISelection** aSelection) override;
+  NS_IMETHODIMP_(Selection*) GetSelection(RawSelectionType aRawSelectionType) override;
   NS_IMETHOD ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
                                      int16_t aRegion, int16_t aFlags) override;
   NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
@@ -430,6 +431,12 @@ nsTextInputSelectionImpl::GetSelection(RawSelectionType aRawSelectionType,
 
   NS_ADDREF(*aSelection);
   return NS_OK;
+}
+
+NS_IMETHODIMP_(Selection*)
+nsTextInputSelectionImpl::GetSelection(RawSelectionType aRawSelectionType)
+{
+  return GetSelection(ToSelectionType(aRawSelectionType));
 }
 
 NS_IMETHODIMP
