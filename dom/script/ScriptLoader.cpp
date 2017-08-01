@@ -972,15 +972,16 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
   }
 
   nsIScriptElement* script = aRequest->mElement;
-  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
+  bool async = script ? script->GetScriptAsync() : aRequest->mPreloadAsAsync;
+  bool defer = script ? script->GetScriptDeferred() : aRequest->mPreloadAsDefer;
 
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
   if (cos) {
-    if (aRequest->mScriptFromHead &&
-        !(script && (script->GetScriptAsync() || script->GetScriptDeferred()))) {
+    if (aRequest->mScriptFromHead && !async && !defer) {
       // synchronous head scripts block loading of most other non js/css
       // content such as images
       cos->AddClassFlags(nsIClassOfService::Leader);
-    } else if (!(script && script->GetScriptDeferred())) {
+    } else if (!defer) {
       // other scripts are neither blocked nor prioritized unless marked deferred
       cos->AddClassFlags(nsIClassOfService::Unblocked);
     }
@@ -2925,7 +2926,7 @@ ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
                          const nsAString& aType,
                          const nsAString& aCrossOrigin,
                          const nsAString& aIntegrity,
-                         bool aScriptFromHead,
+                         bool aScriptFromHead, bool aAsync, bool aDefer,
                          const mozilla::net::ReferrerPolicy aReferrerPolicy)
 {
   NS_ENSURE_TRUE_VOID(mDocument);
@@ -2958,6 +2959,8 @@ ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
   request->mIsInline = false;
   request->mReferrerPolicy = aReferrerPolicy;
   request->mScriptFromHead = aScriptFromHead;
+  request->mPreloadAsAsync = aAsync;
+  request->mPreloadAsDefer = aDefer;
 
   nsresult rv = StartLoad(request);
   if (NS_FAILED(rv)) {
