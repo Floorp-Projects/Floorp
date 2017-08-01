@@ -1648,13 +1648,11 @@ TextEditRules::FillBufWithPWChars(nsAString* aOutString,
   }
 }
 
-/**
- * CreateMozBR() puts a BR node with moz attribute at {inParent, inOffset}.
- */
 nsresult
-TextEditRules::CreateMozBR(nsIDOMNode* inParent,
-                           int32_t inOffset,
-                           nsIDOMNode** outBRNode)
+TextEditRules::CreateBRInternal(nsIDOMNode* inParent,
+                                int32_t inOffset,
+                                bool aMozBR,
+                                nsIDOMNode** outBRNode)
 {
   NS_ENSURE_TRUE(inParent, NS_ERROR_NULL_POINTER);
 
@@ -1665,7 +1663,7 @@ TextEditRules::CreateMozBR(nsIDOMNode* inParent,
 
   // give it special moz attr
   nsCOMPtr<Element> brElem = do_QueryInterface(brNode);
-  if (brElem) {
+  if (aMozBR && brElem) {
     rv = mTextEditor->SetAttribute(brElem, nsGkAtoms::type,
                                    NS_LITERAL_STRING("_moz"));
     NS_ENSURE_SUCCESS(rv, rv);
