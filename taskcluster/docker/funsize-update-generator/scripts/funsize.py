@@ -36,12 +36,17 @@ def verify_signature(mar, certs):
     log.info("Checking %s signature", mar)
     with open(mar, 'rb') as mar_fh:
         m = MarReader(mar_fh)
-        m.verify(verify_key=certs.get(m.signature_type()))
+        m.verify(verify_key=certs.get(m.signature_type))
 
 
 def is_lzma_compressed_mar(mar):
     log.info("Checking %s for lzma compression", mar)
-    return MarReader(open(mar, 'rb')).compression_type() == 'xz'
+    result = MarReader(open(mar, 'rb')).compression_type == 'xz'
+    if result:
+        log.info("%s is lzma compressed", mar)
+    else:
+        log.info("%s is not lzma compressed", mar)
+    return result
 
 
 @redo.retriable()
@@ -74,7 +79,7 @@ def unpack(work_env, mar, dest_dir):
     log.debug("Unwrapping %s", mar)
     env = work_env.env
     if not is_lzma_compressed_mar(mar):
-        env['MAR_OLD_FORMAT'] = 1
+        env['MAR_OLD_FORMAT'] = '1'
     elif 'MAR_OLD_FORMAT' in env:
         del env['MAR_OLD_FORMAT']
     out = unwrap_cmd(mar, _cwd=dest_dir, _env=env, _timeout=240,
@@ -104,13 +109,13 @@ def get_option(directory, filename, section, option):
 
 
 def generate_partial(work_env, from_dir, to_dir, dest_mar, channel_ids,
-                     version):
+                     version, use_old_format):
     log.debug("Generating partial %s", dest_mar)
     env = work_env.env
     env["MOZ_PRODUCT_VERSION"] = version
     env["MOZ_CHANNEL_ID"] = channel_ids
-    if not is_lzma_compressed_mar(dest_mar):
-        env['MAR_OLD_FORMAT'] = 1
+    if use_old_format:
+        env['MAR_OLD_FORMAT'] = '1'
     elif 'MAR_OLD_FORMAT' in env:
         del env['MAR_OLD_FORMAT']
     make_incremental_update = os.path.join(work_env.workdir,
@@ -202,12 +207,12 @@ def main():
     # TODO: verify task["extra"]["funsize"]["partials"] with jsonschema
 
     signing_certs = {
-        'sha1': args.sha1_signing_cert,
-        'sha384': args.sha384_signing_cert,
+        'sha1': open(args.sha1_signing_cert, 'rb').read(),
+        'sha384': open(args.sha384_signing_cert, 'rb').read(),
     }
 
-    assert(get_keysize(open(signing_certs['sha1'], 'rb').read()) == 2048)
-    assert(get_keysize(open(signing_certs['sha384'], 'rb').read()) == 4096)
+    assert(get_keysize(signing_certs['sha1']) == 2048)
+    assert(get_keysize(signing_certs['sha384']) == 4096)
 
     if args.no_freshclam:
         log.info("Skipping freshclam")
@@ -228,6 +233,7 @@ def main():
         # TODO: run setup once
         work_env.setup()
         complete_mars = {}
+        use_old_format = False
         for mar_type, f in (("from", e["from_mar"]), ("to", e["to_mar"])):
             dest = os.path.join(work_env.workdir, "{}.mar".format(mar_type))
             unpack_dir = os.path.join(work_env.workdir, mar_type)
@@ -236,6 +242,8 @@ def main():
                 verify_signature(dest, signing_certs)
             complete_mars["%s_size" % mar_type] = os.path.getsize(dest)
             complete_mars["%s_hash" % mar_type] = get_hash(dest)
+            if mar_type == 'to' and not is_lzma_compressed_mar(dest):
+                use_old_format = True
             unpack(work_env, dest, unpack_dir)
             log.info("AV-scanning %s ...", unpack_dir)
             sh.clamscan("-r", unpack_dir, _timeout=600, _err_to_out=True)
@@ -285,7 +293,8 @@ def main():
                                            revision=mar_data["revision"])
         generate_partial(work_env, from_path, path, dest_mar,
                          mar_data["ACCEPTED_MAR_CHANNEL_IDS"],
-                         mar_data["version"])
+                         mar_data["version"],
+                         use_old_format)
         mar_data["size"] = os.path.getsize(dest_mar)
         mar_data["hash"] = get_hash(dest_mar)
 
