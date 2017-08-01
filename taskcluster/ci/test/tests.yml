@@ -1844,7 +1844,6 @@ xpcshell:
     docker-image: {"in-tree": "desktop1604-test"}
     tier:
         by-test-platform:
-            windows10-64.*: 2
             default: default
     chunks:
         by-test-platform:
