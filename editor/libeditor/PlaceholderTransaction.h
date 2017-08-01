@@ -9,12 +9,10 @@
 #include "EditAggregateTransaction.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/WeakPtr.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
-#include "nsWeakReference.h"
 
 namespace mozilla {
 
@@ -30,11 +28,8 @@ class CompositionTransaction;
 class PlaceholderTransaction final
  : public EditAggregateTransaction
  , public nsIAbsorbingTransaction
- , public SupportsWeakPtr<PlaceholderTransaction>
 {
 public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PlaceholderTransaction)
-
   NS_DECL_ISUPPORTS_INHERITED
 
   PlaceholderTransaction(EditorBase& aEditorBase, nsIAtom* aName,

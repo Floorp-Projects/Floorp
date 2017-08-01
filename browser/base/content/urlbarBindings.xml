@@ -2454,7 +2454,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           if (downloadingCount == 0) {
             this.destroy();
-            if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+            if (Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
               this.progressmeter.setAttribute("mode", "undetermined");
               let status = gNavigatorBundle.getString("addonDownloadVerifying");
               this.progresstext.setAttribute("value", status);

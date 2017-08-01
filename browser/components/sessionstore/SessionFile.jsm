@@ -34,7 +34,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
@@ -303,9 +302,9 @@ var SessionFileInternal = {
     // Initialize the worker (in the background) to let it handle backups and also
     // as a workaround for bug 964531.
     let promiseInitialized = SessionWorker.post("init", [result.origin, result.useOldExtension, this.Paths, {
-      maxUpgradeBackups: Preferences.get(PREF_MAX_UPGRADE_BACKUPS, 3),
-      maxSerializeBack: Preferences.get(PREF_MAX_SERIALIZE_BACK, 10),
-      maxSerializeForward: Preferences.get(PREF_MAX_SERIALIZE_FWD, -1)
+      maxUpgradeBackups: Services.prefs.getIntPref(PREF_MAX_UPGRADE_BACKUPS, 3),
+      maxSerializeBack: Services.prefs.getIntPref(PREF_MAX_SERIALIZE_BACK, 10),
+      maxSerializeForward: Services.prefs.getIntPref(PREF_MAX_SERIALIZE_FWD, -1)
     }]);
 
     promiseInitialized.catch(err => {

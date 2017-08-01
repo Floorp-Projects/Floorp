@@ -2764,8 +2764,9 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   // Note that when the content signing becomes a standard, we might have
   // to restrict this enforcement to "remote content" only.
   if (applySignedContentCSP) {
-    nsAdoptingString signedContentCSP =
-      Preferences::GetString("security.signed_content.CSP.default");
+    nsAutoString signedContentCSP;
+    Preferences::GetString("security.signed_content.CSP.default",
+                           signedContentCSP);
     csp->AppendPolicy(signedContentCSP, false, false);
   }
 
@@ -13291,24 +13292,24 @@ nsDocument::PrincipalFlashClassification()
                 denyTables, denyExceptionsTables,
                 subDocDenyTables, subDocDenyExceptionsTables,
                 tables;
-  Preferences::GetCString("urlclassifier.flashAllowTable", &allowTables);
+  Preferences::GetCString("urlclassifier.flashAllowTable", allowTables);
   MaybeAddTableToTableList(allowTables, tables);
   Preferences::GetCString("urlclassifier.flashAllowExceptTable",
-                          &allowExceptionsTables);
+                          allowExceptionsTables);
   MaybeAddTableToTableList(allowExceptionsTables, tables);
-  Preferences::GetCString("urlclassifier.flashTable", &denyTables);
+  Preferences::GetCString("urlclassifier.flashTable", denyTables);
   MaybeAddTableToTableList(denyTables, tables);
   Preferences::GetCString("urlclassifier.flashExceptTable",
-                          &denyExceptionsTables);
+                          denyExceptionsTables);
   MaybeAddTableToTableList(denyExceptionsTables, tables);
 
   bool isThirdPartyDoc = IsThirdParty();
   if (isThirdPartyDoc) {
     Preferences::GetCString("urlclassifier.flashSubDocTable",
-                            &subDocDenyTables);
+                            subDocDenyTables);
     MaybeAddTableToTableList(subDocDenyTables, tables);
     Preferences::GetCString("urlclassifier.flashSubDocExceptTable",
-                            &subDocDenyExceptionsTables);
+                            subDocDenyExceptionsTables);
     MaybeAddTableToTableList(subDocDenyExceptionsTables, tables);
   }
 

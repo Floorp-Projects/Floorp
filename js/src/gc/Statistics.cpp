@@ -462,6 +462,13 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice) c
     return DuplicateString(buffer);
 }
 
+static bool
+IncludePhase(TimeDuration duration)
+{
+    // Don't include durations that will print as "0.000ms".
+    return duration.ToMilliseconds() >= 0.001;
+}
+
 UniqueChars
 Statistics::formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const
 {
@@ -473,15 +480,15 @@ Statistics::formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const
         uint8_t level = phases[phase].depth;
         TimeDuration ownTime = phaseTimes[phase];
         TimeDuration childTime = SumChildTimes(phase, phaseTimes);
-        if (!ownTime.IsZero()) {
-            SprintfLiteral(buffer, "      %*s: %.3fms\n",
-                           level * 2, phases[phase].name, t(ownTime));
+        if (IncludePhase(ownTime)) {
+            SprintfLiteral(buffer, "      %*s%s: %.3fms\n",
+                           level * 2, "", phases[phase].name, t(ownTime));
             if (!fragments.append(DuplicateString(buffer)))
                 return UniqueChars(nullptr);
 
             if (childTime && (ownTime - childTime) > MaxUnaccountedChildTime) {
-                SprintfLiteral(buffer, "      %*s: %.3fms\n",
-                               (level + 1) * 2, "Other", t(ownTime - childTime));
+                SprintfLiteral(buffer, "      %*s%s: %.3fms\n",
+                               (level + 1) * 2, "", "Other", t(ownTime - childTime));
                 if (!fragments.append(DuplicateString(buffer)))
                     return UniqueChars(nullptr);
             }
@@ -1298,12 +1305,8 @@ Statistics::maybePrintProfileHeaders()
     static int printedHeader = 0;
     if ((printedHeader++ % 200) == 0) {
         printProfileHeader();
-        for (ZoneGroupsIter group(runtime); !group.done(); group.next()) {
-            if (group->nursery().enableProfiling()) {
-                Nursery::printProfileHeader();
-                break;
-            }
-        }
+        if (runtime->gc.nursery().enableProfiling())
+            Nursery::printProfileHeader();
     }
 }
 
@@ -1313,7 +1316,8 @@ Statistics::printProfileHeader()
     if (!enableProfiling_)
         return;
 
-    fprintf(stderr, "MajorGC:               Reason States      ");
+    fprintf(stderr, "MajorGC:               Reason States SRN  ");
+    fprintf(stderr, " %6s", "budget");
     fprintf(stderr, " %6s", "total");
 #define PRINT_PROFILE_HEADER(name, text, phase)                               \
     fprintf(stderr, " %6s", text);
@@ -1337,8 +1341,21 @@ Statistics::printSliceProfile()
 
     maybePrintProfileHeaders();
 
-    fprintf(stderr, "MajorGC: %20s %1d -> %1d      ",
-            ExplainReason(slice.reason), int(slice.initialState), int(slice.finalState));
+    bool shrinking = gckind == GC_SHRINK;
+    bool reset = slice.resetReason != AbortReason::None;
+    bool nonIncremental = nonincrementalReason_ != AbortReason::None;
+
+    fprintf(stderr, "MajorGC: %20s %1d -> %1d %1s%1s%1s  ",
+            ExplainReason(slice.reason),
+            int(slice.initialState), int(slice.finalState),
+            shrinking ? "S" : "",
+            reset ? "R" : "",
+            nonIncremental ? "N" : "");
+
+    if (!nonIncremental && !slice.budget.isUnlimited() && slice.budget.isTimeBudget())
+        fprintf(stderr, " %6" PRIi64, static_cast<int64_t>(slice.budget.timeBudget.budget));
+    else
+        fprintf(stderr, "       ");
 
     ProfileDurations times;
     times[ProfileKey::Total] = slice.duration();
@@ -1357,7 +1374,7 @@ void
 Statistics::printTotalProfileTimes()
 {
     if (enableProfiling_) {
-        fprintf(stderr, "MajorGC TOTALS: %7" PRIu64 " slices:           ", sliceCount_);
+        fprintf(stderr, "MajorGC TOTALS: %7" PRIu64 " slices:                  ", sliceCount_);
         printProfileTimes(totalTimes_);
     }
 }

@@ -49,8 +49,8 @@ FallbackEncoding::Get()
     return WrapNotNull(mFallback);
   }
 
-  const nsAdoptingCString& override =
-    Preferences::GetCString("intl.charset.fallback.override");
+  nsAutoCString override;
+  Preferences::GetCString("intl.charset.fallback.override", override);
   // Don't let the user break things by setting the override to unreasonable
   // values via about:config
   auto encoding = Encoding::ForLabel(override);

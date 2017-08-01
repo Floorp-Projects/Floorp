@@ -18,6 +18,22 @@
 #include "mozilla/jni/Types.h"
 #include "mozilla/jni/Utils.h"
 
+struct NativeException {
+    const char* str;
+};
+
+template<class T> static
+NativeException NullHandle()
+{
+    return { __func__ };
+}
+
+template<class T> static
+NativeException NullWeakPtr()
+{
+    return { __func__ };
+}
+
 namespace mozilla {
 namespace jni {
 
@@ -126,12 +142,14 @@ public:
     static const int value = sizeof(Test<Impl>('\0')) / sizeof(char);
 };
 
+template<class Impl>
 inline uintptr_t CheckNativeHandle(JNIEnv* env, uintptr_t handle)
 {
     if (!handle) {
         if (!env->ExceptionCheck()) {
-            ThrowException(env, "java/lang/NullPointerException",
-                           "Null native pointer");
+            ThrowException(env,
+                           "java/lang/NullPointerException",
+                           NullHandle<Impl>().str);
         }
         return 0;
     }
@@ -145,7 +163,7 @@ struct NativePtr<Impl, /* Type = */ NativePtrType::OWNING>
 {
     static Impl* Get(JNIEnv* env, jobject instance)
     {
-        return reinterpret_cast<Impl*>(CheckNativeHandle(
+        return reinterpret_cast<Impl*>(CheckNativeHandle<Impl>(
                 env, GetNativeHandle(env, instance)));
     }
 
@@ -184,15 +202,16 @@ struct NativePtr<Impl, /* Type = */ NativePtrType::WEAK>
     static Impl* Get(JNIEnv* env, jobject instance)
     {
         const auto ptr = reinterpret_cast<WeakPtr<Impl>*>(
-                CheckNativeHandle(env, GetNativeHandle(env, instance)));
+                CheckNativeHandle<Impl>(env, GetNativeHandle(env, instance)));
         if (!ptr) {
             return nullptr;
         }
 
         Impl* const impl = *ptr;
         if (!impl) {
-            ThrowException(env, "java/lang/NullPointerException",
-                           "Native weak object already released");
+            ThrowException(env,
+                           "java/lang/NullPointerException",
+                           NullWeakPtr<Impl>().str);
         }
         return impl;
     }
@@ -233,7 +252,7 @@ struct NativePtr<Impl, /* Type = */ NativePtrType::REFPTR>
     static Impl* Get(JNIEnv* env, jobject instance)
     {
         const auto ptr = reinterpret_cast<RefPtr<Impl>*>(
-                CheckNativeHandle(env, GetNativeHandle(env, instance)));
+                CheckNativeHandle<Impl>(env, GetNativeHandle(env, instance)));
         if (!ptr) {
             return nullptr;
         }
@@ -404,10 +423,9 @@ class ProxyNativeCall
     Call(const typename Owner::LocalRef& inst,
          mozilla::IndexSequence<Indices...>) const
     {
-        if (Impl* const impl = NativePtr<Impl>::Get(inst)) {
-            MOZ_CATCH_JNI_EXCEPTION(inst.Env());
-            (impl->*mNativeCall)(inst, mozilla::Get<Indices>(mArgs)...);
-        }
+        Impl* const impl = NativePtr<Impl>::Get(inst);
+        MOZ_CATCH_JNI_EXCEPTION(inst.Env());
+        (impl->*mNativeCall)(inst, mozilla::Get<Indices>(mArgs)...);
     }
 
     template<bool Static, bool ThisArg, size_t... Indices>
@@ -415,10 +433,9 @@ class ProxyNativeCall
     Call(const typename Owner::LocalRef& inst,
          mozilla::IndexSequence<Indices...>) const
     {
-        if (Impl* const impl = NativePtr<Impl>::Get(inst)) {
-            MOZ_CATCH_JNI_EXCEPTION(inst.Env());
-            (impl->*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
-        }
+        Impl* const impl = NativePtr<Impl>::Get(inst);
+        MOZ_CATCH_JNI_EXCEPTION(inst.Env());
+        (impl->*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
     }
 
     template<size_t... Indices>
