@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*globals ContentAreaUtils */
+/* globals ContentAreaUtils */
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -52,7 +52,7 @@ HelperAppLauncherDialog.prototype = {
    *
    * Returns true otherwise.
    */
-  _canDownload: function (url, alreadyResolved=false) {
+  _canDownload: function(url, alreadyResolved = false) {
     // The common case.
     if (url.schemeIs("http") ||
         url.schemeIs("https") ||
@@ -89,7 +89,7 @@ HelperAppLauncherDialog.prototype = {
    * Returns true if `launcher` represents a download for which we wish
    * to prompt.
    */
-  _shouldPrompt: function (launcher) {
+  _shouldPrompt: function(launcher) {
     let mimeType = this._getMimeTypeFromLauncher(launcher);
 
     // Straight equality: nsIMIMEInfo normalizes.
@@ -290,7 +290,7 @@ HelperAppLauncherDialog.prototype = {
     return "browser.download.preferred." + mimetype.replace("\\", ".");
   },
 
-  _getMimeTypeFromLauncher: function (launcher) {
+  _getMimeTypeFromLauncher: function(launcher) {
     let mime = launcher.MIMEInfo.MIMEType;
     if (!mime)
       mime = ContentAreaUtils.getMIMETypeForURI(launcher.source) || "";
@@ -321,7 +321,7 @@ HelperAppLauncherDialog.prototype = {
       Services.prefs.clearUserPref(this._getPrefName(mime));
   },
 
-  promptForSaveToFileAsync: function (aLauncher, aContext, aDefaultFile,
+  promptForSaveToFileAsync: function(aLauncher, aContext, aDefaultFile,
                                       aSuggestedFileExt, aForcePrompt) {
     Task.spawn(function* () {
       let file = null;
@@ -377,7 +377,7 @@ HelperAppLauncherDialog.prototype = {
         }
         else {
           // replace the last (n) in the filename with (n+1)
-          aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount+1) + ")");
+          aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount + 1) + ")");
         }
       }
       aLocalFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);

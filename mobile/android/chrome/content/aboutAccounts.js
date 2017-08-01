@@ -24,12 +24,12 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components; /*global Components */
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components; /* global Components */
 
-Cu.import("resource://gre/modules/Accounts.jsm"); /*global Accounts */
-Cu.import("resource://gre/modules/PromiseUtils.jsm"); /*global PromiseUtils */
-Cu.import("resource://gre/modules/Services.jsm"); /*global Services */
-Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /*global XPCOMUtils */
+Cu.import("resource://gre/modules/Accounts.jsm"); /* global Accounts */
+Cu.import("resource://gre/modules/PromiseUtils.jsm"); /* global PromiseUtils */
+Cu.import("resource://gre/modules/Services.jsm"); /* global Services */
+Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /* global XPCOMUtils */
 
 const ACTION_URL_PARAM = "action";
 
@@ -88,7 +88,7 @@ var wrapper = {
 
   url: null,
 
-  init: function (url) {
+  init: function(url) {
     this.url = url;
     deferTransitionToRemoteAfterLoaded();
 
@@ -107,7 +107,7 @@ var wrapper = {
     webNav.loadURI(url, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY, null, null, null);
   },
 
-  retry: function () {
+  retry: function() {
     deferTransitionToRemoteAfterLoaded();
 
     let webNav = this.iframe.frameLoader.docShell.QueryInterface(Ci.nsIWebNavigation);

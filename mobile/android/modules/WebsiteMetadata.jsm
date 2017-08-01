@@ -210,7 +210,7 @@ function best(iterable, by, isBetter) {
     let bestSoFar, bestKeySoFar;
     let isFirst = true;
     forEach(
-        function (item) {
+        function(item) {
             const key = by(item);
             if (isBetter(key, bestKeySoFar) || isFirst) {
                 bestSoFar = item;
@@ -261,7 +261,7 @@ function ruleset(...rules) {
         // elements. Return the knowledgebase.
         //
         // This is the "rank" portion of the rank-and-yank algorithm.
-        score: function (tree) {
+        score: function(tree) {
             const kb = knowledgebase();
 
             // Introduce the whole DOM into the KB as flavor 'dom' to get
@@ -354,7 +354,7 @@ function knowledgebase() {
     return {
         // Return the "node" (our own data structure that we control) that
         // corresponds to a given DOM element, creating one if necessary.
-        nodeForElement: function (element) {
+        nodeForElement: function(element) {
             return getDefault(nodesByElement,
                               element,
                               () => ({element,
@@ -364,17 +364,17 @@ function knowledgebase() {
 
         // Return the highest-scored node of the given flavor, undefined if
         // there is none.
-        max: function (flavor) {
+        max: function(flavor) {
             const nodes = nodesByFlavor.get(flavor);
             return nodes === undefined ? undefined : max(nodes, node => node.score);
         },
 
         // Let the KB know that a new flavor has been added to an element.
-        indexNodeByFlavor: function (node, flavor) {
+        indexNodeByFlavor: function(node, flavor) {
             getDefault(nodesByFlavor, flavor, () => []).push(node);
         },
 
-        nodesOfFlavor: function (flavor) {
+        nodesOfFlavor: function(flavor) {
             return getDefault(nodesByFlavor, flavor, () => []);
         }
     };

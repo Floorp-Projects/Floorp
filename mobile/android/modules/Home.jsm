@@ -61,7 +61,7 @@ function BannerMessage(options) {
 // private members without leaking it outside Home.jsm.
 var HomeBannerMessageHandlers;
 
-var HomeBanner = (function () {
+var HomeBanner = (function() {
   // Whether there is a "HomeBanner:Get" request we couldn't fulfill.
   let _pendingRequest = false;
 
@@ -190,7 +190,7 @@ var HomeBanner = (function () {
 // private members without leaking it outside Home.jsm.
 var HomePanelsMessageHandlers;
 
-var HomePanels = (function () {
+var HomePanels = (function() {
   // Functions used to handle messages sent from Java.
   HomePanelsMessageHandlers = {
 
@@ -472,7 +472,7 @@ this.Home = Object.freeze({
   panels: HomePanels,
 
   // Lazy notification observer registered in browser.js
-  onEvent: function (event, data, callback) {
+  onEvent: function(event, data, callback) {
     if (event in HomeBannerMessageHandlers) {
       HomeBannerMessageHandlers[event](data);
     } else if (event in HomePanelsMessageHandlers) {

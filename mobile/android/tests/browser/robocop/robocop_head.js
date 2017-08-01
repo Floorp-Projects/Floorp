@@ -170,7 +170,7 @@ function _dump_exception_stack(stack) {
   });
 }
 
-/************** Functions to be used from the tests **************/
+/** ************ Functions to be used from the tests **************/
 
 /**
  * Prints a message to the output log.
@@ -291,7 +291,7 @@ function _do_check_neq(left, right, stack, todo) {
       do_throw(text, stack);
     } else {
       _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text +"\n");
+            " : " + stack.lineNumber + "] " + text + "\n");
     }
   } else {
     if (!todo) {
@@ -328,7 +328,7 @@ function do_report_result(passed, text, stack, todo) {
   } else {
     if (todo) {
       _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text +"\n");
+            " : " + stack.lineNumber + "] " + text + "\n");
     } else {
       do_throw(text, stack);
     }
@@ -400,11 +400,11 @@ function todo_check_false(condition, stack) {
   todo_check_eq(condition, false, stack);
 }
 
-function do_check_null(condition, stack=Components.stack.caller) {
+function do_check_null(condition, stack = Components.stack.caller) {
   do_check_eq(condition, null, stack);
 }
 
-function todo_check_null(condition, stack=Components.stack.caller) {
+function todo_check_null(condition, stack = Components.stack.caller) {
   todo_check_eq(condition, null, stack);
 }
 
@@ -475,7 +475,7 @@ function todo_check_null(condition, stack=Components.stack.caller) {
  * is ideal. If you do want to be more careful, you can use function
  * patterns to implement more stringent checks.
  */
-function do_check_matches(pattern, value, stack=Components.stack.caller, todo=false) {
+function do_check_matches(pattern, value, stack = Components.stack.caller, todo = false) {
   var matcher = pattern_matcher(pattern);
   var text = "VALUE: " + uneval(value) + "\nPATTERN: " + uneval(pattern) + "\n";
   var diagnosis = []
@@ -490,7 +490,7 @@ function do_check_matches(pattern, value, stack=Components.stack.caller, todo=fa
   }
 }
 
-function todo_check_matches(pattern, value, stack=Components.stack.caller) {
+function todo_check_matches(pattern, value, stack = Components.stack.caller) {
   do_check_matches(pattern, value, stack, true);
 }
 
@@ -522,7 +522,7 @@ function pattern_matcher(pattern) {
     if (ld && !ld.enumerable) {
       matchers.push(['length', pattern_matcher(pattern.length)])
     }
-    return function (value, diagnosis) {
+    return function(value, diagnosis) {
       if (!(value && typeof value == "object")) {
         return explain(diagnosis, "value not object");
       }
@@ -538,7 +538,7 @@ function pattern_matcher(pattern) {
   } else if (pattern === undefined) {
     return function(value) { return true; };
   } else {
-    return function (value, diagnosis) {
+    return function(value, diagnosis) {
       if (value !== pattern) {
         return explain(diagnosis, "pattern " + uneval(pattern) + " not === to value " + uneval(value));
       }
@@ -549,7 +549,7 @@ function pattern_matcher(pattern) {
 
 // Format an explanation for a pattern match failure, as stored in the
 // second argument to a matching function.
-function format_pattern_match_failure(diagnosis, indent="") {
+function format_pattern_match_failure(diagnosis, indent = "") {
   var a;
   if (!diagnosis) {
     a = "Matcher did not explain reason for mismatch.";
@@ -785,7 +785,7 @@ JavaBridge.prototype = {
   _EventDispatcher: Components.utils.import(
     "resource://gre/modules/Messaging.jsm", {}).EventDispatcher.instance,
 
-  _getArgs: function (args) {
+  _getArgs: function(args) {
     let out = {
       length: Math.max(0, args.length - 1),
     };
@@ -795,7 +795,7 @@ JavaBridge.prototype = {
     return out;
   },
 
-  _sendMessage: function (innerType, args) {
+  _sendMessage: function(innerType, args) {
     this._EventDispatcher.dispatch(this._JAVA_EVENT_TYPE, {
       innerType: innerType,
       method: args[0],
@@ -828,7 +828,7 @@ JavaBridge.prototype = {
    * Synchronously call a method in Java,
    * given the method name followed by a list of arguments.
    */
-  syncCall: function (methodName /*, ... */) {
+  syncCall: function(methodName /* , ... */) {
     this._sendMessage("sync-call", arguments);
     let thread = this._Services.tm.currentThread;
     let initialReplies = this._repliesNeeded;
@@ -845,14 +845,14 @@ JavaBridge.prototype = {
    * Asynchronously call a method in Java,
    * given the method name followed by a list of arguments.
    */
-  asyncCall: function (methodName /*, ... */) {
+  asyncCall: function(methodName /* , ... */) {
     this._sendMessage("async-call", arguments);
   },
 
   /**
    * Disconnect with Java.
    */
-  disconnect: function () {
+  disconnect: function() {
     this._EventDispatcher.unregisterListener(this, this._EVENT_TYPE);
   },
 };

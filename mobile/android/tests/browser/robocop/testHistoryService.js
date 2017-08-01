@@ -17,7 +17,7 @@ function sleep(wait) {
   return new Promise((resolve, reject) => {
     do_print("sleep start");
     gTimer.initWithCallback({
-      notify: function () {
+      notify: function() {
         do_print("sleep end");
         resolve();
       },
@@ -25,7 +25,7 @@ function sleep(wait) {
   });
 }
 
-function promiseLoadEvent(browser, url, eventType="load") {
+function promiseLoadEvent(browser, url, eventType = "load") {
   return new Promise((resolve, reject) => {
     do_print("Wait browser event: " + eventType);
 

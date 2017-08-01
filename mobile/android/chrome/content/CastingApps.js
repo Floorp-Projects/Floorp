@@ -123,7 +123,7 @@ var CastingApps = {
     return Services.prefs.getBoolPref("browser.casting.enabled");
   },
 
-  onEvent: function (event, message, callback) {
+  onEvent: function(event, message, callback) {
     switch (event) {
       case "Casting:Play":
         if (this.session && this.session.remoteMedia.status == "paused") {
@@ -143,7 +143,7 @@ var CastingApps = {
     }
   },
 
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "ssdp-service-found":
         this.serviceAdded(SimpleServiceDiscovery.findServiceForID(aData));

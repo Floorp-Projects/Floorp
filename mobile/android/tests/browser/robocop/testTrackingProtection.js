@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 
-function promiseLoadEvent(browser, url, eventType="load", runBeforeLoad) {
+function promiseLoadEvent(browser, url, eventType = "load", runBeforeLoad) {
   return new Promise((resolve, reject) => {
     do_print("Wait browser event: " + eventType);
 

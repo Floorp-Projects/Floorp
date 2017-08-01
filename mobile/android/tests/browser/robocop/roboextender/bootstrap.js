@@ -39,7 +39,7 @@ function startup(aData, aReason) {
 
   // Load into any new windows
   wm.addListener(windowListener);
-  EventDispatcher.instance.registerListener(function (event, data, callback) {
+  EventDispatcher.instance.registerListener(function(event, data, callback) {
       dump("Robocop:Quit received -- requesting quit");
       let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
       appStartup.quit(Ci.nsIAppStartup.eForceQuit);

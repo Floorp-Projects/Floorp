@@ -13,14 +13,14 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  const { classes: Cc, interfaces: Ci, utils: Cu } = Components; /*global Components */
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components; /* global Components */
 
-  Cu.import("resource://gre/modules/Promise.jsm"); /*global Promise */
-  Cu.import("resource://gre/modules/Services.jsm"); /*global Services */
-  Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /*global XPCOMUtils */
-  Cu.import("resource://gre/modules/Task.jsm"); /*global Task */
+  Cu.import("resource://gre/modules/Promise.jsm"); /* global Promise */
+  Cu.import("resource://gre/modules/Services.jsm"); /* global Services */
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /* global XPCOMUtils */
+  Cu.import("resource://gre/modules/Task.jsm"); /* global Task */
   XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
-    "resource://gre/modules/WebChannel.jsm"); /*global WebChannel */
+    "resource://gre/modules/WebChannel.jsm"); /* global WebChannel */
 
   const HTTP_PATH = "http://mochi.test:8888";
   const HTTP_ENDPOINT = "/chrome/mobile/android/tests/browser/chrome/web_channel.html";
@@ -40,7 +40,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
         return new Promise(function(resolve, reject) {
           let tab;
           let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH));
-          channel.listen(function (id, message, target) {
+          channel.listen(function(id, message, target) {
             is(id, "generic");
             is(message.something.nested, "hello");
             channel.stopListening();
@@ -59,7 +59,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
           let tab;
           let channel = new WebChannel("twoway", Services.io.newURI(HTTP_PATH));
 
-          channel.listen(function (id, message, sender) {
+          channel.listen(function(id, message, sender) {
             is(id, "twoway");
             ok(message.command);
 
@@ -86,7 +86,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
           let tab;
           let channel = new WebChannel("multichannel", Services.io.newURI(HTTP_PATH));
 
-          channel.listen(function (id, message, sender) {
+          channel.listen(function(id, message, sender) {
             is(id, "multichannel");
             BrowserApp.closeTab(tab);
             resolve();

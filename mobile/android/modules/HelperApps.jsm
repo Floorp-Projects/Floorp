@@ -178,9 +178,9 @@ var HelperApps =  {
     let apps = [];
     for (let i = 0; i < appInfo.length; i += numAttr) {
       apps.push(new App({"name": appInfo[i],
-                 "isDefault": appInfo[i+1],
-                 "packageName": appInfo[i+2],
-                 "activityName": appInfo[i+3]}));
+                 "isDefault": appInfo[i + 1],
+                 "packageName": appInfo[i + 2],
+                 "activityName": appInfo[i + 3]}));
     }
 
     return apps;

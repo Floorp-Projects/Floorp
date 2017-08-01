@@ -15,7 +15,7 @@ var isResetDone;
 
 function getAsyncClientId() {
     isClientIDSet = false;
-    ClientID.getClientID().then(function (retClientID) {
+    ClientID.getClientID().then(function(retClientID) {
         // Ideally, we'd directly send the client ID back to Java but Java won't listen for
         // js messages after we return from the containing function (bug 1253467).
         //
@@ -23,7 +23,7 @@ function getAsyncClientId() {
         // working failed - I have other things to focus on.
         clientID = retClientID;
         isClientIDSet = true;
-    }, function (fail) {
+    }, function(fail) {
         // Since Java doesn't listen to our messages (bug 1253467), I don't expect
         // this throw to work correctly but we should timeout in Java.
         do_throw('Could not retrieve client ID: ' + fail);
@@ -36,7 +36,7 @@ function pollGetAsyncClientId() {
 
 function getAsyncReset() {
     isResetDone = false;
-    ClientID._reset().then(function () {
+    ClientID._reset().then(function() {
         isResetDone = true;
     });
 }
