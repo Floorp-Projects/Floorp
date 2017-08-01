@@ -418,6 +418,7 @@
     _(DebugCheckSelfHosted)         \
     _(FinishBoundFunctionInit)      \
     _(IsPackedArray)                \
+    _(GetPrototypeOf)               \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSCompareExchangeHeap)     \
