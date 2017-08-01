@@ -63,7 +63,7 @@ const supportsAsyncGenerator = (function() {
     } catch (e) {
         return false;
     }
-});
+})();
 
 if (supportsAsyncGenerator) {
 eval(`
