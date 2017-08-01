@@ -81,10 +81,10 @@ public:
   // Mapping undisplayed content
   nsStyleContext* GetUndisplayedContent(const nsIContent* aContent)
   {
-    if (!mUndisplayedMap) {
+    if (!mDisplayNoneMap) {
       return nullptr;
     }
-    return GetStyleContextInMap(mUndisplayedMap, aContent);
+    return GetStyleContextInMap(mDisplayNoneMap, aContent);
   }
   mozilla::UndisplayedNode*
     GetAllUndisplayedContentIn(nsIContent* aParentContent);
@@ -93,7 +93,7 @@ public:
   void ChangeUndisplayedContent(nsIContent* aContent,
                                 nsStyleContext* aStyleContext)
   {
-    ChangeStyleContextInMap(mUndisplayedMap, aContent, aStyleContext);
+    ChangeStyleContextInMap(mDisplayNoneMap, aContent, aStyleContext);
   }
 
   void ClearUndisplayedContentIn(nsIContent* aContent,

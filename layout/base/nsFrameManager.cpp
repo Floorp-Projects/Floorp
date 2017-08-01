@@ -49,7 +49,7 @@ using namespace mozilla::dom;
 nsFrameManagerBase::nsFrameManagerBase()
   : mPresShell(nullptr)
   , mRootFrame(nullptr)
-  , mUndisplayedMap(nullptr)
+  , mDisplayNoneMap(nullptr)
   , mDisplayContentsMap(nullptr)
   , mIsDestroyingFrames(false)
 {
@@ -122,8 +122,8 @@ nsFrameManager::Destroy()
     mRootFrame = nullptr;
   }
 
-  delete mUndisplayedMap;
-  mUndisplayedMap = nullptr;
+  delete mDisplayNoneMap;
+  mDisplayNoneMap = nullptr;
   delete mDisplayContentsMap;
   mDisplayContentsMap = nullptr;
 
@@ -179,7 +179,7 @@ nsFrameManager::GetAllUndisplayedNodesInMapFor(UndisplayedMap* aMap,
 UndisplayedNode*
 nsFrameManager::GetAllUndisplayedContentIn(nsIContent* aParentContent)
 {
-  return GetAllUndisplayedNodesInMapFor(mUndisplayedMap, aParentContent);
+  return GetAllUndisplayedNodesInMapFor(mDisplayNoneMap, aParentContent);
 }
 
 /* static */ void
@@ -213,10 +213,10 @@ void
 nsFrameManager::SetUndisplayedContent(nsIContent* aContent,
                                       nsStyleContext* aStyleContext)
 {
-  if (!mUndisplayedMap) {
-    mUndisplayedMap = new UndisplayedMap;
+  if (!mDisplayNoneMap) {
+    mDisplayNoneMap = new UndisplayedMap;
   }
-  SetStyleContextInMap(mUndisplayedMap, aContent, aStyleContext);
+  SetStyleContextInMap(mDisplayNoneMap, aContent, aStyleContext);
 }
 
 /* static */ void
@@ -251,14 +251,14 @@ nsFrameManager::ClearUndisplayedContentIn(nsIContent* aContent,
   printf("ClearUndisplayedContent(%d): content=%p parent=%p --> ", i++, (void *)aContent, (void*)aParentContent);
 #endif
 
-  if (!mUndisplayedMap) {
+  if (!mDisplayNoneMap) {
     return;
   }
 
-  for (UndisplayedNode* node = mUndisplayedMap->GetFirstNode(aParentContent);
+  for (UndisplayedNode* node = mDisplayNoneMap->GetFirstNode(aParentContent);
        node; node = node->getNext()) {
     if (node->mContent == aContent) {
-      mUndisplayedMap->RemoveNodeFor(aParentContent, node);
+      mDisplayNoneMap->RemoveNodeFor(aParentContent, node);
 
 #ifdef DEBUG_UNDISPLAYED_MAP
       printf( "REMOVED!\n");
@@ -283,8 +283,8 @@ nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
   printf("ClearAllMapsFor(%d): parent=%p \n", i++, aParentContent);
 #endif
 
-  if (mUndisplayedMap) {
-    mUndisplayedMap->RemoveNodesFor(aParentContent);
+  if (mDisplayNoneMap) {
+    mDisplayNoneMap->RemoveNodesFor(aParentContent);
   }
   if (mDisplayContentsMap) {
     nsAutoPtr<LinkedList<UndisplayedNode>> list =
