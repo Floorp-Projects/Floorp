@@ -7,26 +7,17 @@ package org.mozilla.gecko.toolbar;
 
 import java.util.Arrays;
 
-import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.menu.MenuItemActionBar;
-import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.widget.themed.ThemedFrameLayout;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
-import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 /**
@@ -35,21 +26,12 @@ import android.widget.LinearLayout;
  */
 abstract class BrowserToolbarTabletBase extends BrowserToolbar {
 
-    protected enum ForwardButtonAnimation {
-        SHOW,
-        HIDE
-    }
-
     protected final LinearLayout actionItemBar;
 
     protected final BackButton backButton;
     protected final ForwardButton forwardButton;
 
     protected final View menuButtonMarginView;
-
-    private final PorterDuffColorFilter privateBrowsingTabletMenuItemColorFilter;
-
-    protected abstract void animateForwardButton(ForwardButtonAnimation animation);
 
     public BrowserToolbarTabletBase(final Context context, final AttributeSet attrs) {
         super(context, attrs);
@@ -67,9 +49,6 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         focusOrder.addAll(Arrays.asList(actionItemBar, menuButton));
 
         urlDisplayLayout.updateSiteIdentityAnchor(backButton);
-
-        privateBrowsingTabletMenuItemColorFilter = new PorterDuffColorFilter(
-                ContextCompat.getColor(context, R.color.tabs_tray_icon_grey), PorterDuff.Mode.SRC_IN);
 
         menuButtonMarginView = findViewById(R.id.menu_margin);
         if (menuButtonMarginView != null) {
@@ -126,8 +105,7 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     @Override
     protected void updateNavigationButtons(final Tab tab) {
         backButton.setEnabled(canDoBack(tab));
-        animateForwardButton(
-                canDoForward(tab) ? ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
+        forwardButton.setEnabled(canDoForward(tab));
     }
 
     @Override
@@ -148,44 +126,14 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     public void setPrivateMode(final boolean isPrivate) {
         super.setPrivateMode(isPrivate);
 
-        if (SkinConfig.isAustralis()) {
-            // If we had backgroundTintList, we could remove the colorFilter
-            // code in favor of setPrivateMode (bug 1197432).
-            final PorterDuffColorFilter colorFilter =
-                    isPrivate ? privateBrowsingTabletMenuItemColorFilter : null;
-            setTabsCounterPrivateMode(isPrivate, colorFilter);
-        }
-
         backButton.setPrivateMode(isPrivate);
         forwardButton.setPrivateMode(isPrivate);
-
-        // bug 1375351: menuButton is a ThemedImageButton in Photon flavor
-        if (SkinConfig.isPhoton()) {
-            ((ThemedImageButton)menuButton).setPrivateMode(isPrivate);
-        } else {
-            ((ThemedFrameLayout)menuButton).setPrivateMode(isPrivate);
-            // menuIcon only exists in Australis flavor
-            menuIcon.setPrivateMode(isPrivate);
-        }
+        ((ThemedImageButton) menuButton).setPrivateMode(isPrivate);
 
         for (int i = 0; i < actionItemBar.getChildCount(); ++i) {
             final MenuItemActionBar child = (MenuItemActionBar) actionItemBar.getChildAt(i);
             child.setPrivateMode(isPrivate);
         }
-    }
-
-    private void setTabsCounterPrivateMode(final boolean isPrivate, final PorterDuffColorFilter colorFilter) {
-        // The TabsCounter is a TextSwitcher which cycles two views
-        // to provide animations, hence looping over these two children.
-        for (int i = 0; i < 2; ++i) {
-            final ThemedTextView view = (ThemedTextView) tabsCounter.getChildAt(i);
-            view.setPrivateMode(isPrivate);
-            view.getBackground().mutate().setColorFilter(colorFilter);
-        }
-
-        // To prevent animation of the background,
-        // it is set to a different Drawable.
-        tabsCounter.getBackground().mutate().setColorFilter(colorFilter);
     }
 
     @Override
