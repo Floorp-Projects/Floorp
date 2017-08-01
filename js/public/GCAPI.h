@@ -532,6 +532,28 @@ class JS_PUBLIC_API(AutoAssertNoGC) : public AutoRequireNoGC
 };
 
 /**
+ * Assert if an allocation of a GC thing occurs while this class is live. This
+ * class does not disable the static rooting hazard analysis.
+ */
+class JS_PUBLIC_API(AutoAssertNoAlloc)
+{
+#ifdef JS_DEBUG
+    js::gc::GCRuntime* gc;
+
+  public:
+    AutoAssertNoAlloc() : gc(nullptr) {}
+    explicit AutoAssertNoAlloc(JSContext* cx);
+    void disallowAlloc(JSRuntime* rt);
+    ~AutoAssertNoAlloc();
+#else
+  public:
+    AutoAssertNoAlloc() {}
+    explicit AutoAssertNoAlloc(JSContext* cx) {}
+    void disallowAlloc(JSRuntime* rt) {}
+#endif
+};
+
+/**
  * Disable the static rooting hazard analysis in the live region and assert if
  * any allocation that could potentially trigger a GC occurs while this guard
  * object is live. This is most useful to help the exact rooting hazard analysis
@@ -545,11 +567,11 @@ class JS_PUBLIC_API(AutoAssertNoGC) : public AutoRequireNoGC
  *       that the hazard analysis is correct for that code, rather than relying
  *       on this class.
  */
-class JS_PUBLIC_API(AutoSuppressGCAnalysis) : public AutoAssertNoGC
+class JS_PUBLIC_API(AutoSuppressGCAnalysis) : public AutoAssertNoAlloc
 {
   public:
-    AutoSuppressGCAnalysis() : AutoAssertNoGC() {}
-    explicit AutoSuppressGCAnalysis(JSContext* cx) : AutoAssertNoGC(cx) {}
+    AutoSuppressGCAnalysis() : AutoAssertNoAlloc() {}
+    explicit AutoSuppressGCAnalysis(JSContext* cx) : AutoAssertNoAlloc(cx) {}
 } JS_HAZ_GC_SUPPRESSED;
 
 /**
