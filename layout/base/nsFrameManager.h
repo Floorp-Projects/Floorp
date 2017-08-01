@@ -142,14 +142,16 @@ public:
    * that have been registered for the display:none children of
    * aParentContent.
    */
-  UndisplayedNode* GetAllUndisplayedContentIn(nsIContent* aParentContent);
+  UndisplayedNode*
+  GetAllRegisteredDisplayNoneStylesIn(nsIContent* aParentContent);
 
   /**
    * Return the linked list of UndisplayedNodes that contain the style contexts
    * that have been registered for the display:contents children of
    * aParentContent.
    */
-  UndisplayedNode* GetAllDisplayContentsIn(nsIContent* aParentContent);
+  UndisplayedNode*
+  GetAllRegisteredDisplayContentsStylesIn(nsIContent* aParentContent);
 
   /**
    * Return the relevant undisplayed node for a given content with display:
