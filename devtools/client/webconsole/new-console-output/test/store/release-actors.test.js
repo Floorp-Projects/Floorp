@@ -85,11 +85,17 @@ describe("Release actor enhancer:", () => {
       const firstMessageActor = firstMessage.parameters[1].actor;
       const arrayProperties = Symbol();
       const arraySubProperties = Symbol();
+      const mapEntries1 = Symbol();
+      const mapEntries2 = Symbol();
       const [id] = [...messages.keys()];
       dispatch(actions.messageObjectPropertiesReceive(
         id, "fakeActor1", arrayProperties));
       dispatch(actions.messageObjectPropertiesReceive(
         id, "fakeActor2", arraySubProperties));
+      dispatch(actions.messageObjectEntriesReceive(
+        id, "mapActor1", mapEntries1));
+      dispatch(actions.messageObjectEntriesReceive(
+        id, "mapActor2", mapEntries2));
 
       const packet = clonePacket(stubPackets.get(
         "console.assert(false, {message: 'foobar'})"));
@@ -98,10 +104,12 @@ describe("Release actor enhancer:", () => {
 
       dispatch(actions.messagesClear());
 
-      expect(releasedActors.length).toBe(4);
+      expect(releasedActors.length).toBe(6);
       expect(releasedActors).toInclude(firstMessageActor);
       expect(releasedActors).toInclude("fakeActor1");
       expect(releasedActors).toInclude("fakeActor2");
+      expect(releasedActors).toInclude("mapActor1");
+      expect(releasedActors).toInclude("mapActor2");
       expect(releasedActors).toInclude(secondMessageActor);
     });
   });

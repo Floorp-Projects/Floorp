@@ -12,6 +12,7 @@ const {
   getCurrentGroup,
   getVisibleMessages,
   getAllMessagesObjectPropertiesById,
+  getAllMessagesObjectEntriesById,
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const {
   clonePacket,
@@ -867,6 +868,102 @@ describe("Message reducer:", () => {
       dispatch(actions.messageAdd(stubPackets.get("console.log('foobar', 'test')")));
 
       expect(getAllMessagesObjectPropertiesById(getState()).size).toBe(0);
+    });
+  });
+
+  describe("messagesObjectEntriesById", () => {
+    it(`adds messagesObjectEntriesById data in response to
+        MESSAGE_OBJECT_ENTRIES_RECEIVE action`, () => {
+      const { dispatch, getState } = setupStore([]);
+
+      // Add 2 log messages with loaded entries.
+      dispatch(actions.messageAdd(stubPackets.get("console.log('myset')")));
+      dispatch(actions.messageAdd(stubPackets.get("console.log('mymap')")));
+
+      let messages = getAllMessagesById(getState());
+
+      const setEntries = Symbol();
+      const mapEntries = Symbol();
+      const mapEntries2 = Symbol();
+
+      const [id1, id2] = [...messages.keys()];
+      dispatch(actions.messageObjectEntriesReceive(id1, "fakeActor1", setEntries));
+      dispatch(actions.messageObjectEntriesReceive(id2, "fakeActor2", mapEntries));
+      dispatch(actions.messageObjectEntriesReceive(id2, "fakeActor3", mapEntries2));
+
+      let loadedEntries = getAllMessagesObjectEntriesById(getState());
+      expect(loadedEntries.size).toBe(2);
+
+      expect(loadedEntries.get(id1)).toEqual({
+        fakeActor1: setEntries,
+      });
+
+      expect(loadedEntries.get(id2)).toEqual({
+        fakeActor2: mapEntries,
+        fakeActor3: mapEntries2,
+      });
+    });
+
+    it("resets messagesObjectEntriesById in response to MESSAGES_CLEAR action", () => {
+      const { dispatch, getState } = setupStore([
+        "console.log('myset')"
+      ]);
+
+      let messages = getAllMessagesById(getState());
+      const entries = Symbol("entries");
+      const message = messages.first();
+      const {actor} = message.parameters[1];
+
+      dispatch(actions.messageObjectEntriesReceive(message.id, actor, entries));
+
+      let loadedEntries = getAllMessagesObjectEntriesById(getState());
+      expect(loadedEntries.size).toBe(1);
+      expect(loadedEntries.get(message.id)).toEqual({
+        [actor]: entries
+      });
+
+      dispatch(actions.messagesClear());
+
+      expect(getAllMessagesObjectEntriesById(getState()).size).toBe(0);
+    });
+
+    it("cleans messagesObjectPropertiesById when messages are pruned", () => {
+      const { dispatch, getState } = setupStore([], null, {
+        logLimit: 2
+      });
+
+      // Add 2 log messages with loaded entries.
+      dispatch(actions.messageAdd(stubPackets.get("console.log('myset')")));
+      dispatch(actions.messageAdd(stubPackets.get("console.log('mymap')")));
+
+      let messages = getAllMessagesById(getState());
+
+      const setEntries = Symbol();
+      const mapEntries = Symbol();
+      const mapEntries2 = Symbol();
+
+      const [id1, id2] = [...messages.keys()];
+      dispatch(actions.messageObjectEntriesReceive(id1, "fakeActor1", setEntries));
+      dispatch(actions.messageObjectEntriesReceive(id2, "fakeActor2", mapEntries));
+      dispatch(actions.messageObjectEntriesReceive(id2, "fakeActor3", mapEntries2));
+
+      let loadedEntries = getAllMessagesObjectEntriesById(getState());
+      expect(loadedEntries.size).toBe(2);
+
+      // This addition will remove the first message.
+      dispatch(actions.messageAdd(stubPackets.get("console.log(undefined)")));
+
+      loadedEntries = getAllMessagesObjectEntriesById(getState());
+      expect(loadedEntries.size).toBe(1);
+      expect(loadedEntries.get(id2)).toEqual({
+        fakeActor2: mapEntries,
+        fakeActor3: mapEntries2,
+      });
+
+      // This addition will remove the second table message.
+      dispatch(actions.messageAdd(stubPackets.get("console.log('foobar', 'test')")));
+
+      expect(getAllMessagesObjectEntriesById(getState()).size).toBe(0);
     });
   });
 });
