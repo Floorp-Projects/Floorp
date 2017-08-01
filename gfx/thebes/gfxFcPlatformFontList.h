@@ -95,6 +95,8 @@ public:
                                     int16_t aStretch,
                                     uint8_t aStyle);
 
+    gfxFontEntry* Clone() const override;
+
     FcPattern* GetPattern() { return mFontPattern; }
 
     bool SupportsLangGroup(nsIAtom *aLangGroup) const override;
@@ -260,7 +262,7 @@ public:
 
     bool FindAndAddFamilies(const nsAString& aFamily,
                             nsTArray<gfxFontFamily*>* aOutput,
-                            bool aDeferOtherFamilyNamesLoading,
+                            FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
                             gfxFloat aDevToCssSize = 1.0) override;
 
@@ -302,6 +304,8 @@ protected:
 
     virtual gfxFontFamily*
     GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
+
+    gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
 
 #ifdef MOZ_BUNDLED_FONTS
     void ActivateBundledFonts();
