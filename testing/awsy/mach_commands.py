@@ -120,6 +120,10 @@ class MachCommands(MachCommandBase):
                 page_load_test_dir]}
             self.run_process(**unzip_args)
 
+        # If '--preferences' was not specified supply our default set.
+        if not kwargs['prefs_files']:
+            kwargs['prefs_files'] = [os.path.join(awsy_source_dir, 'conf', 'prefs.json')]
+
         for k, v in kwargs.iteritems():
             setattr(args, k, v)
 
