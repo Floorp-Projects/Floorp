@@ -192,7 +192,6 @@ function checkNotOverflowing(aID) {
  * context menus for the Unsorted and Bookmarks Toolbar menu items.
  */
 add_task(async function testOverflowingBookmarksButtonContextMenu() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   ok(!gNavBar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
