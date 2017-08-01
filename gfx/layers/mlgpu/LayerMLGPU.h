@@ -77,7 +77,9 @@ public:
   // This is a wrapper around SetShadowVisibleRegion. Some layers have visible
   // regions that extend beyond what is actually drawn. When performing CPU-
   // based occlusion culling we must clamp the visible region to the actual
-  // area.
+  // area. Note that if a layer is opaque, it must not expand its visible
+  // region such that it might include non-opaque pixels, as may be the case
+  // for PaintedLayers with a restricted visible region.
   virtual void SetRegionToRender(LayerIntRegion&& aRegion);
 
   virtual void AssignToView(FrameBuilder* aBuilder,
