@@ -226,7 +226,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 PageMetadata.HAS_IMAGE + " TINYINT NOT NULL DEFAULT 0, " +
                 PageMetadata.JSON + " TEXT NOT NULL, " +
 
-                "FOREIGN KEY (" + Visits.HISTORY_GUID + ") REFERENCES " +
+                "FOREIGN KEY (" + PageMetadata.HISTORY_GUID + ") REFERENCES " +
                 TABLE_HISTORY + "(" + History.GUID + ") ON DELETE CASCADE ON UPDATE CASCADE" +
                 ");");
 
