@@ -88,7 +88,7 @@ function prepareBaseStore() {
     "console.count('bar')",
     "console.log('myarray', ['red', 'green', 'blue'])",
     "console.log('myregex', /a.b.c/)",
-    "console.map('mymap')",
+    "console.log('mymap')",
     "console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});",
     "GET request",
   ]);
