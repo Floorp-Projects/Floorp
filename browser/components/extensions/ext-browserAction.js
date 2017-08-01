@@ -23,8 +23,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
                                    "@mozilla.org/inspector/dom-utils;1",
                                    "inIDOMUtils");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure", "browser.photon.structure.enabled");
-
 var {
   DefaultWeakMap,
 } = ExtensionUtils;
@@ -56,7 +54,7 @@ const browserActionMap = new WeakMap();
 XPCOMUtils.defineLazyGetter(this, "browserAreas", () => {
   return {
     "navbar": CustomizableUI.AREA_NAVBAR,
-    "menupanel": gPhotonStructure ? CustomizableUI.AREA_FIXED_OVERFLOW_PANEL : CustomizableUI.AREA_PANEL,
+    "menupanel": CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
     "tabstrip": CustomizableUI.AREA_TABSTRIP,
     "personaltoolbar": CustomizableUI.AREA_BOOKMARKS,
   };
@@ -246,11 +244,7 @@ this.browserAction = class extends ExtensionAPI {
     // Google Chrome onClicked extension API.
     if (this.getProperty(tab, "popup")) {
       if (this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-        if (gPhotonStructure) {
-          await window.document.getElementById("nav-bar").overflowable.show();
-        } else {
-          await window.PanelUI.show();
-        }
+        await window.document.getElementById("nav-bar").overflowable.show();
       }
 
       let event = new window.CustomEvent("command", {bubbles: true, cancelable: true});
