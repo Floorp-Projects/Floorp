@@ -9,7 +9,6 @@ var defer = require("devtools/shared/defer");
 var {Class} = require("sdk/core/heritage");
 var {EventTarget} = require("sdk/event/target");
 var events = require("sdk/event/core");
-var object = require("sdk/util/object");
 var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
 var {settleAll} = require("devtools/shared/DevToolsUtils");
 
@@ -147,7 +146,7 @@ types.addType = function (name, typeObject = {}, options = {}) {
     throw Error("Type '" + name + "' already exists.");
   }
 
-  let type = object.merge({
+  let type = Object.assign({
     toString() {
       return "[protocol type:" + name + "]";
     },
@@ -1009,7 +1008,7 @@ var generateActorSpec = function (actorDesc) {
       let methodSpec = desc.value._methodSpec;
       let spec = {};
       spec.name = methodSpec.name || name;
-      spec.request = Request(object.merge({type: spec.name},
+      spec.request = Request(Object.assign({type: spec.name},
                                           methodSpec.request || undefined));
       spec.response = Response(methodSpec.response || undefined);
       spec.release = methodSpec.release;
@@ -1026,7 +1025,7 @@ var generateActorSpec = function (actorDesc) {
       let spec = {};
 
       spec.name = methodSpec.name || name;
-      spec.request = Request(object.merge({type: spec.name},
+      spec.request = Request(Object.assign({type: spec.name},
                                           methodSpec.request || undefined));
       spec.response = Response(methodSpec.response || undefined);
       spec.release = methodSpec.release;
@@ -1042,7 +1041,7 @@ var generateActorSpec = function (actorDesc) {
     for (let name in actorDesc.events) {
       let eventRequest = actorDesc.events[name];
       Object.freeze(eventRequest);
-      actorSpec.events.set(name, Request(object.merge({type: name}, eventRequest)));
+      actorSpec.events.set(name, Request(Object.assign({type: name}, eventRequest)));
     }
   }
 

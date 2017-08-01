@@ -26,6 +26,23 @@ var fakeServerUrl = "http://localhost:" + fakeServer.port;
 
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 
+function removeLogFiles() {
+  let entries = logsdir.directoryEntries;
+  while (entries.hasMoreElements()) {
+    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+    logfile.remove(false);
+  }
+}
+
+function getLogFiles() {
+  let result = [];
+  let entries = logsdir.directoryEntries;
+  while (entries.hasMoreElements()) {
+    result.push(entries.getNext().QueryInterface(Ci.nsILocalFile));
+  }
+  return result;
+}
+
 const PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 2) * 1000;
 
@@ -41,12 +58,30 @@ function setLastSync(lastSyncValue) {
 var errorHandler = Service.errorHandler;
 let engine;
 
+async function syncAndWait(topic) {
+  let promise1 = promiseOneObserver(topic);
+  // also wait for the log file to be written
+  let promise2 = promiseOneObserver("weave:service:reset-file-log");
+  await Service.sync();
+  await promise1;
+  await promise2;
+}
+
+async function syncAndReportErrorsAndWait(topic) {
+  let promise1 = promiseOneObserver(topic);
+  // also wait for the log file to be written
+  let promise2 = promiseOneObserver("weave:service:reset-file-log");
+  errorHandler.syncAndReportErrors();
+  await promise1;
+  await promise2;
+}
 add_task(async function setup() {
   initTestLogging("Trace");
 
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.LogManager").level = Log.Level.Trace;
 
   Service.engineManager.clear();
   await Service.engineManager.register(EHTestsCommon.CatapultEngine);
@@ -54,10 +89,13 @@ add_task(async function setup() {
 });
 
 async function clean() {
+  let promiseLogReset = promiseOneObserver("weave:service:reset-file-log");
   await Service.startOver();
+  await promiseLogReset;
   Status.resetSync();
   Status.resetBackoff();
   errorHandler.didReportProlongedError = false;
+  removeLogFiles();
 }
 
 add_task(async function test_crypto_keys_login_server_maintenance_error() {
@@ -87,11 +125,8 @@ add_task(async function test_crypto_keys_login_server_maintenance_error() {
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:ui:clear-error");
-
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  await Service.sync();
-  await promiseObserved;
+  await syncAndWait("weave:ui:clear-error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -150,14 +185,11 @@ add_task(async function test_info_collections_login_prolonged_server_maintenance
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await Service.sync();
-  await promiseObserved;
+  await syncAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -184,14 +216,11 @@ add_task(async function test_meta_global_login_prolonged_server_maintenance_erro
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await Service.sync();
-  await promiseObserved;
+  await syncAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -220,14 +249,11 @@ add_task(async function test_download_crypto_keys_login_prolonged_server_mainten
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await Service.sync();
-  await promiseObserved;
+  await syncAndWait("weave:ui:login:error");
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
   do_check_eq(Status.service, SYNC_FAILED);
@@ -253,14 +279,11 @@ add_task(async function test_upload_crypto_keys_login_prolonged_server_maintenan
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await Service.sync();
-  await promiseObserved;
+  await syncAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -288,14 +311,11 @@ add_task(async function test_wipeServer_login_prolonged_server_maintenance_error
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await Service.sync();
-  await promiseObserved;
+  await syncAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -361,13 +381,10 @@ add_task(async function test_sync_syncAndReportErrors_server_maintenance_error()
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:error");
-
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:sync:error")
 
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   do_check_eq(Status.sync, SERVER_MAINTENANCE);
@@ -393,14 +410,11 @@ add_task(async function test_info_collections_login_syncAndReportErrors_server_m
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -428,14 +442,11 @@ add_task(async function test_meta_global_login_syncAndReportErrors_server_mainte
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -465,14 +476,11 @@ add_task(async function test_download_crypto_keys_login_syncAndReportErrors_serv
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -500,14 +508,11 @@ add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_server
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -535,14 +540,11 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_server_mainten
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -573,15 +575,12 @@ add_task(async function test_wipeRemote_syncAndReportErrors_server_maintenance_e
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   Svc.Prefs.set("firstSync", "wipeRemote");
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:sync:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -607,13 +606,10 @@ add_task(async function test_sync_syncAndReportErrors_prolonged_server_maintenan
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:error");
-
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:sync:error")
 
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   do_check_eq(Status.sync, SERVER_MAINTENANCE);
@@ -641,14 +637,11 @@ add_task(async function test_info_collections_login_syncAndReportErrors_prolonge
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -678,14 +671,11 @@ add_task(async function test_meta_global_login_syncAndReportErrors_prolonged_ser
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -717,14 +707,11 @@ add_task(async function test_download_crypto_keys_login_syncAndReportErrors_prol
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -754,14 +741,11 @@ add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_prolon
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -791,14 +775,11 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_prolonged_serv
     backoffInterval = subject;
   });
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
-
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await syncAndReportErrorsAndWait("weave:ui:login:error")
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -814,6 +795,8 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_prolonged_serv
 
 add_task(async function test_sync_engine_generic_fail() {
   enableValidationPrefs();
+
+  equal(getLogFiles().length, 0);
 
   let server = await EHTestsCommon.sync_httpd_setup();
   engine.enabled = true;
@@ -850,10 +833,9 @@ add_task(async function test_sync_engine_generic_fail() {
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 
   // Test Error log was written on SYNC_FAILED_PARTIAL.
-  let entries = logsdir.directoryEntries;
-  do_check_true(entries.hasMoreElements());
-  let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-  do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+  let logFiles = getLogFiles();
+  equal(logFiles.length, 1);
+  do_check_true(logFiles[0].leafName.startsWith("error-sync-"), logFiles[0].leafName);
 
   await clean();
 
@@ -883,10 +865,9 @@ add_task(async function test_logs_on_sync_error_despite_shouldReportError() {
   await promiseObserved;
 
   // Test that error log was written.
-  let entries = logsdir.directoryEntries;
-  do_check_true(entries.hasMoreElements());
-  let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-  do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+  let logFiles = getLogFiles();
+  equal(logFiles.length, 1);
+  do_check_true(logFiles[0].leafName.startsWith("error-sync-"), logFiles[0].leafName);
 
   await clean();
 });
@@ -910,10 +891,9 @@ add_task(async function test_logs_on_login_error_despite_shouldReportError() {
   await promiseObserved;
 
   // Test that error log was written.
-  let entries = logsdir.directoryEntries;
-  do_check_true(entries.hasMoreElements());
-  let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-  do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+  let logFiles = getLogFiles();
+  equal(logFiles.length, 1);
+  do_check_true(logFiles[0].leafName.startsWith("error-sync-"), logFiles[0].leafName);
 
   await clean();
 });
@@ -944,10 +924,9 @@ add_task(async function test_engine_applyFailed() {
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 
   // Test Error log was written on SYNC_FAILED_PARTIAL.
-  let entries = logsdir.directoryEntries;
-  do_check_true(entries.hasMoreElements());
-  let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-  do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+  let logFiles = getLogFiles();
+  equal(logFiles.length, 1);
+  do_check_true(logFiles[0].leafName.startsWith("error-sync-"), logFiles[0].leafName);
 
   await clean();
   await promiseStopServer(server);

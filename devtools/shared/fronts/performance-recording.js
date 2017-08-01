@@ -12,13 +12,13 @@ loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
   "devtools/shared/performance/recording-common", true);
 loader.lazyRequireGetter(this, "RecordingUtils",
   "devtools/shared/performance/recording-utils");
-loader.lazyRequireGetter(this, "merge", "sdk/util/object", true);
 
 /**
  * This can be used on older Profiler implementations, but the methods cannot
  * be changed -- you must introduce a new method, and detect the server.
  */
-const PerformanceRecordingFront = FrontClassWithSpec(performanceRecordingSpec, merge({
+const PerformanceRecordingFront = FrontClassWithSpec(performanceRecordingSpec,
+Object.assign({
   form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
