@@ -158,7 +158,7 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   let browser = await openPanel(extension, browserWin);
 
-  let panel = gPhotonStructure ? browserWin.PanelUI.overflowPanel : browserWin.PanelUI.panel;
+  let panel = browserWin.PanelUI.overflowPanel;
   let origPanelRect = panel.getBoundingClientRect();
 
   // Check that the panel is still positioned as expected.
