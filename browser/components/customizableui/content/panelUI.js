@@ -22,18 +22,15 @@ const PanelUI = {
    */
   get kElements() {
     return {
-      contents: "PanelUI-contents",
-      mainView: gPhotonStructure ? "appMenu-mainView" : "PanelUI-mainView",
-      multiView: gPhotonStructure ? "appMenu-multiView" : "PanelUI-multiView",
+      mainView: "appMenu-mainView",
+      multiView: "appMenu-multiView",
       helpView: "PanelUI-helpView",
       menuButton: "PanelUI-menu-button",
-      panel: gPhotonStructure ? "appMenu-popup" : "PanelUI-popup",
+      panel: "appMenu-popup",
       notificationPanel: "appMenu-notification-popup",
-      scroller: "PanelUI-contents-scroller",
-      addonNotificationContainer: gPhotonStructure ? "appMenu-addon-banners" : "PanelUI-footer-addons",
-
-      overflowFixedList: gPhotonStructure ? "widget-overflow-fixed-list" : "",
-      overflowPanel: gPhotonStructure ? "widget-overflow" : "",
+      addonNotificationContainer: "appMenu-addon-banners",
+      overflowFixedList: "widget-overflow-fixed-list",
+      overflowPanel: "widget-overflow",
       navbar: "nav-bar",
     };
   },
@@ -86,45 +83,21 @@ const PanelUI = {
       this.notificationPanel.addEventListener(event, this);
     }
 
-    this._initPhotonPanel();
-    this._updateContextMenuLabels();
+    // We do this sync on init because in order to have the overflow button show up
+    // we need to know whether anything is in the permanent panel area.
+    this.overflowFixedList.hidden = false;
+    // Also unhide the separator. We use CSS to hide/show it based on the panel's content.
+    this.overflowFixedList.previousSibling.hidden = false;
+    CustomizableUI.registerMenuPanel(this.overflowFixedList, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+    this.updateOverflowStatus();
+
     Services.obs.notifyObservers(null, "appMenu-notifications-request", "refresh");
 
     this._initialized = true;
   },
 
-  reinit() {
-    this._removeEventListeners();
-    // If the Photon pref changes, we need to re-init our element references.
-    this._initElements();
-    this._initPhotonPanel();
-    this._updateContextMenuLabels();
-    delete this._readyPromise;
-    this._isReady = false;
-  },
-
-  // We do this sync on init because in order to have the overflow button show up
-  // we need to know whether anything is in the permanent panel area.
-  _initPhotonPanel() {
-    if (gPhotonStructure) {
-      this.overflowFixedList.hidden = false;
-      // Also unhide the separator. We use CSS to hide/show it based on the panel's content.
-      this.overflowFixedList.previousSibling.hidden = false;
-      CustomizableUI.registerMenuPanel(this.overflowFixedList, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
-      this.navbar.setAttribute("photon-structure", "true");
-      document.documentElement.setAttribute("photon-structure", "true");
-      this.updateOverflowStatus();
-    } else {
-      this.navbar.removeAttribute("photon-structure");
-      document.documentElement.removeAttribute("photon-structure");
-    }
-  },
-
   _initElements() {
     for (let [k, v] of Object.entries(this.kElements)) {
-      if (!v) {
-        continue;
-      }
       // Need to do fresh let-bindings per iteration
       let getKey = k;
       let id = v;
@@ -132,32 +105,6 @@ const PanelUI = {
         delete this[getKey];
         return this[getKey] = document.getElementById(id);
       });
-    }
-  },
-
-  _updateContextMenuLabels() {
-    const kContextMenus = [
-      "customizationPanelItemContextMenu",
-      "customizationPaletteItemContextMenu",
-      "toolbar-context-menu",
-    ];
-    for (let menuId of kContextMenus) {
-      let menu = document.getElementById(menuId);
-      if (gPhotonStructure) {
-        let items = menu.querySelectorAll("menuitem[photonlabel]");
-        for (let item of items) {
-          item.setAttribute("nonphotonlabel", item.getAttribute("label"));
-          item.setAttribute("nonphotonaccesskey", item.getAttribute("accesskey"));
-          item.setAttribute("label", item.getAttribute("photonlabel"));
-          item.setAttribute("accesskey", item.getAttribute("photonaccesskey"));
-        }
-      } else {
-        let items = menu.querySelectorAll("menuitem[nonphotonlabel]");
-        for (let item of items) {
-          item.setAttribute("label", item.getAttribute("nonphotonlabel"));
-          item.setAttribute("accesskey", item.getAttribute("nonphotonaccesskey"));
-        }
-      }
     }
   },
 
@@ -246,9 +193,7 @@ const PanelUI = {
    * @param aEvent the event (if any) that triggers showing the menu.
    */
   show(aEvent) {
-    if (gPhotonStructure) {
-      this._ensureShortcutsShown();
-    }
+    this._ensureShortcutsShown();
     return new Promise(resolve => {
       this.ensureReady().then(() => {
         if (this.panel.state == "open" ||
@@ -316,11 +261,10 @@ const PanelUI = {
     }
     switch (aEvent.type) {
       case "popupshowing":
-        this._adjustLabelsForAutoHyphens();
         updateEditUIVisibility();
         // Fall through
       case "popupshown":
-        if (gPhotonStructure && aEvent.type == "popupshown") {
+        if (aEvent.type == "popupshown") {
           CustomizableUI.addPanelCloseListeners(this.panel);
         }
         // Fall through
@@ -332,7 +276,7 @@ const PanelUI = {
       case "popuphidden":
         this._updateNotifications();
         this._updatePanelButton(aEvent.target);
-        if (gPhotonStructure && aEvent.type == "popuphidden") {
+        if (aEvent.type == "popuphidden") {
           CustomizableUI.removePanelCloseListeners(this.panel);
         }
         break;
@@ -374,67 +318,14 @@ const PanelUI = {
    *
    * @return a Promise that resolves once the panel is ready to roll.
    */
-  ensureReady(aCustomizing = false) {
+  ensureReady() {
     if (this._readyPromise) {
       return this._readyPromise;
     }
     this._ensureEventListenersAdded();
-    if (gPhotonStructure) {
-      this.panel.hidden = false;
-      this._readyPromise = Promise.resolve();
-      this._isReady = true;
-      return this._readyPromise;
-    }
-    this._readyPromise = (async () => {
-      if (!this._initialized) {
-        await new Promise(resolve => {
-          let delayedStartupObserver = (aSubject, aTopic, aData) => {
-            if (aSubject == window) {
-              Services.obs.removeObserver(delayedStartupObserver, "browser-delayed-startup-finished");
-              resolve();
-            }
-          };
-          Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished");
-        });
-      }
-
-      this.contents.setAttributeNS("http://www.w3.org/XML/1998/namespace", "lang",
-                                   getLocale());
-      if (!this._scrollWidth) {
-        // In order to properly center the contents of the panel, while ensuring
-        // that we have enough space on either side to show a scrollbar, we have to
-        // do a bit of hackery. In particular, we calculate a new width for the
-        // scroller, based on the system scrollbar width.
-        this._scrollWidth =
-          (await ScrollbarSampler.getSystemScrollbarWidth()) + "px";
-        let cstyle = window.getComputedStyle(this.scroller);
-        let widthStr = cstyle.width;
-        // Get the calculated padding on the left and right sides of
-        // the scroller too. We'll use that in our final calculation so
-        // that if a scrollbar appears, we don't have the contents right
-        // up against the edge of the scroller.
-        let paddingLeft = cstyle.paddingLeft;
-        let paddingRight = cstyle.paddingRight;
-        let calcStr = [widthStr, this._scrollWidth,
-                       paddingLeft, paddingRight].join(" + ");
-        this.scroller.style.width = "calc(" + calcStr + ")";
-      }
-
-      if (aCustomizing) {
-        CustomizableUI.registerMenuPanel(this.contents, CustomizableUI.AREA_PANEL);
-      } else {
-        this.beginBatchUpdate();
-        try {
-          CustomizableUI.registerMenuPanel(this.contents, CustomizableUI.AREA_PANEL);
-        } finally {
-          this.endBatchUpdate();
-        }
-      }
-      this._updateQuitTooltip();
-      this.panel.hidden = false;
-      this._isReady = true;
-    })().catch(Cu.reportError);
-
+    this.panel.hidden = false;
+    this._readyPromise = Promise.resolve();
+    this._isReady = true;
     return this._readyPromise;
   },
 
@@ -513,19 +404,14 @@ const PanelUI = {
       tempPanel.classList.toggle("cui-widget-panelWithFooter",
                                  viewNode.querySelector(".panel-subview-footer"));
 
-      let multiView = document.createElement(gPhotonStructure ? "photonpanelmultiview" : "panelmultiview");
+      let multiView = document.createElement("photonpanelmultiview");
       multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("nosubviews", "true");
       multiView.setAttribute("viewCacheId", "appMenu-viewCache");
-      if (gPhotonStructure) {
-        tempPanel.setAttribute("photon", true);
-        multiView.setAttribute("mainViewId", viewNode.id);
-        multiView.appendChild(viewNode);
-      }
+      tempPanel.setAttribute("photon", true);
+      multiView.setAttribute("mainViewId", viewNode.id);
+      multiView.appendChild(viewNode);
       tempPanel.appendChild(multiView);
-      if (!gPhotonStructure) {
-        multiView.setMainView(viewNode);
-      }
       viewNode.classList.add("cui-widget-panelview");
 
       let viewShown = false;
@@ -605,10 +491,6 @@ const PanelUI = {
     this._disableAnimations = false;
   },
 
-  onPhotonChanged() {
-    this.reinit();
-  },
-
   updateOverflowStatus() {
     let hasKids = this.overflowFixedList.hasChildNodes();
     if (hasKids && !this.navbar.hasAttribute("nonemptyoverflow")) {
@@ -624,48 +506,14 @@ const PanelUI = {
   },
 
   onWidgetAfterDOMChange(aNode, aNextNode, aContainer, aWasRemoval) {
-    if (gPhotonStructure && aContainer == this.overflowFixedList) {
+    if (aContainer == this.overflowFixedList) {
       this.updateOverflowStatus();
-      return;
-    }
-    if (aContainer != this.contents) {
-      return;
-    }
-    if (aWasRemoval) {
-      aNode.removeAttribute("auto-hyphens");
-    }
-  },
-
-  onWidgetBeforeDOMChange(aNode, aNextNode, aContainer, aIsRemoval) {
-    if (aContainer != this.contents) {
-      return;
-    }
-    if (!aIsRemoval &&
-        (this.panel.state == "open" ||
-         document.documentElement.hasAttribute("customizing"))) {
-      this._adjustLabelsForAutoHyphens(aNode);
     }
   },
 
   onAreaReset(aArea, aContainer) {
-    if (gPhotonStructure && aContainer == this.overflowFixedList) {
+    if (aContainer == this.overflowFixedList) {
       this.updateOverflowStatus();
-    }
-  },
-
-  _adjustLabelsForAutoHyphens(aNode) {
-    let toolbarButtons = aNode ? [aNode] :
-                                 this.contents.querySelectorAll(".toolbarbutton-1");
-    for (let node of toolbarButtons) {
-      let label = node.getAttribute("label");
-      if (!label) {
-        continue;
-      }
-      if (label.includes("\u00ad")) {
-        node.setAttribute("auto-hyphens", "off");
-      } else {
-        node.removeAttribute("auto-hyphens");
-      }
     }
   },
 
