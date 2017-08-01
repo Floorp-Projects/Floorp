@@ -2911,26 +2911,17 @@ GeckoDriver.prototype.minimizeWindow = function* (cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let state;
   yield new Promise(resolve => {
     win.addEventListener("sizemodechange", resolve, {once: true});
 
     if (win.windowState == win.STATE_MINIMIZED) {
       win.restore();
-      state = "normal";
     } else {
       win.minimize();
-      state = "minimized";
     }
   });
 
-  resp.body = {
-    x: win.screenX,
-    y: win.screenY,
-    width: win.outerWidth,
-    height: win.outerHeight,
-    state,
-  };
+  return this.curBrowser.rect;
 };
 
 /**
@@ -2964,12 +2955,7 @@ GeckoDriver.prototype.maximizeWindow = function* (cmd, resp) {
     }
   });
 
-  resp.body = {
-    x: win.screenX,
-    y: win.screenY,
-    width: win.outerWidth,
-    height: win.outerHeight,
-  };
+  return this.curBrowser.rect;
 };
 
 /**
@@ -2996,16 +2982,10 @@ GeckoDriver.prototype.fullscreen = function* (cmd, resp) {
 
   yield new Promise(resolve => {
     win.addEventListener("sizemodechange", resolve, {once: true});
-
     win.fullScreen = !win.fullScreen;
   });
 
-  resp.body = {
-    x: win.screenX,
-    y: win.screenY,
-    width: win.outerWidth,
-    height: win.outerHeight,
-  };
+  return this.curBrowser.rect;
 };
 
 /**
