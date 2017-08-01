@@ -245,6 +245,13 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     mStretch = MapFcWidth(width);
 }
 
+gfxFontEntry*
+gfxFontconfigFontEntry::Clone() const
+{
+    MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
+    return new gfxFontconfigFontEntry(Name(), mFontPattern, mIgnoreFcCharmap);
+}
+
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                uint16_t aWeight,
                                                int16_t aStretch,
@@ -1516,7 +1523,7 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 bool
 gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
                                           nsTArray<gfxFontFamily*>* aOutput,
-                                          bool aDeferOtherFamilyNamesLoading,
+                                          FindFamiliesFlags aFlags,
                                           gfxFontStyle* aStyle,
                                           gfxFloat aDevToCssSize)
 {
@@ -1601,7 +1608,7 @@ gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
         }
         gfxPlatformFontList::FindAndAddFamilies(subst,
                                                 &cachedFamilies,
-                                                aDeferOtherFamilyNamesLoading);
+                                                aFlags);
     }
 
     // Cache the resulting list, so we don't have to do this again.
@@ -1884,7 +1891,7 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
             AutoTArray<gfxFontFamily*,1> genericFamilies;
             if (gfxPlatformFontList::FindAndAddFamilies(mappedGenericName,
                                                         &genericFamilies,
-                                                        true)) {
+                                                        FindFamiliesFlags(0))) {
                 MOZ_ASSERT(genericFamilies.Length() == 1,
                            "expected a single family");
                 if (!prefFonts->Contains(genericFamilies[0])) {
@@ -1974,6 +1981,12 @@ gfxFcPlatformFontList::CheckFontUpdates(nsITimer *aTimer, void *aThis)
         pfl->UpdateFontList();
         pfl->ForceGlobalReflow();
     }
+}
+
+gfxFontFamily*
+gfxFcPlatformFontList::CreateFontFamily(const nsAString& aName) const
+{
+    return new gfxFontconfigFontFamily(aName);
 }
 
 #ifdef MOZ_BUNDLED_FONTS

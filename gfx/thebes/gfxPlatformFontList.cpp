@@ -248,6 +248,25 @@ gfxPlatformFontList::ApplyWhitelist()
     }
 }
 
+bool
+gfxPlatformFontList::AddWithLegacyFamilyName(const nsAString& aLegacyName,
+                                             gfxFontEntry* aFontEntry)
+{
+    bool added = false;
+    nsAutoString key;
+    ToLowerCase(aLegacyName, key);
+    gfxFontFamily* family = mOtherFamilyNames.GetWeak(key);
+    if (!family) {
+        family = CreateFontFamily(aLegacyName);
+        family->SetHasStyles(true); // we don't want the family to search for
+                                    // faces, we're adding them directly here
+        mOtherFamilyNames.Put(key, family);
+        added = true;
+    }
+    family->AddFontEntry(aFontEntry->Clone());
+    return added;
+}
+
 nsresult
 gfxPlatformFontList::InitFontList()
 {
@@ -685,7 +704,7 @@ gfxPlatformFontList::CheckFamily(gfxFontFamily *aFamily)
 bool
 gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
                                         nsTArray<gfxFontFamily*>* aOutput,
-                                        bool aDeferOtherFamilyNamesLoading,
+                                        FindFamiliesFlags aFlags,
                                         gfxFontStyle* aStyle,
                                         gfxFloat aDevToCssSize)
 {
@@ -708,7 +727,7 @@ gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     // although ASCII localized family names are possible they don't occur
     // in practice so avoid pulling in names at startup
     if (!familyEntry && !mOtherFamilyNamesInitialized && !IsASCII(aFamily)) {
-        InitOtherFamilyNames(aDeferOtherFamilyNamesLoading);
+        InitOtherFamilyNames(!(aFlags & FindFamiliesFlags::eForceOtherFamilyNamesLoading));
         familyEntry = mOtherFamilyNames.GetWeak(key);
         if (!familyEntry && !mOtherFamilyNamesInitialized) {
             // localized family names load timed out, add name to list of
@@ -721,6 +740,34 @@ gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     }
 
     familyEntry = CheckFamily(familyEntry);
+
+    // If we failed to find the requested family, check for a space in the
+    // name; if found, and if the "base" name (up to the last space) exists
+    // as a family, then this might be a legacy GDI-style family name for
+    // an additional weight/width. Try searching the faces of the base family
+    // and create any corresponding legacy families.
+    if (!familyEntry && !(aFlags & FindFamiliesFlags::eNoSearchForLegacyFamilyNames)) {
+        // We don't have nsAString::RFindChar, so look for a space manually
+        const char16_t* data = aFamily.BeginReading();
+        int32_t index = aFamily.Length();
+        while (--index > 0) {
+            if (data[index] == ' ') {
+                break;
+            }
+        }
+        if (index > 0) {
+            gfxFontFamily* base =
+                FindFamily(Substring(aFamily, 0, index),
+                           FindFamiliesFlags::eNoSearchForLegacyFamilyNames);
+            // If we found the "base" family name, and if it has members with
+            // legacy names, this will add corresponding font-family entries to
+            // the mOtherFamilyNames list; then retry the legacy-family search.
+            if (base && base->CheckForLegacyFamilyNames(this)) {
+                familyEntry = mOtherFamilyNames.GetWeak(key);
+            }
+        }
+    }
+
     if (familyEntry) {
         aOutput->AppendElement(familyEntry);
         return true;
@@ -882,7 +929,8 @@ gfxPlatformFontList::ResolveGenericFontNames(
         style.language = langGroup;
         style.systemFont = false;
         AutoTArray<gfxFontFamily*,10> families;
-        FindAndAddFamilies(genericFamily, &families, true, &style);
+        FindAndAddFamilies(genericFamily, &families, FindFamiliesFlags(0),
+                           &style);
         for (gfxFontFamily* f : families) {
             if (!aGenericFamilies->Contains(f)) {
                 aGenericFamilies->AppendElement(f);
@@ -1509,7 +1557,8 @@ gfxPlatformFontList::CleanupLoader()
 
     if (mOtherNamesMissed) {
         for (auto it = mOtherNamesMissed->Iter(); !it.Done(); it.Next()) {
-            if (FindFamily(it.Get()->GetKey(), false)) {
+            if (FindFamily(it.Get()->GetKey(),
+                           FindFamiliesFlags::eForceOtherFamilyNamesLoading)) {
                 forceReflow = true;
                 ForceGlobalReflow();
                 break;

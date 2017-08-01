@@ -43,6 +43,8 @@ public:
         ::CGFontRelease(mFontRef);
     }
 
+    gfxFontEntry* Clone() const override;
+
     CGFontRef GetFontRef();
 
     // override gfxFontEntry table access function to bypass table cache,
@@ -88,6 +90,8 @@ public:
         return static_cast<gfxMacPlatformFontList*>(sPlatformFontList);
     }
 
+    gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
+
     static int32_t AppleWeightToCSSWeight(int32_t aAppleWeight);
 
     bool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName) override;
@@ -106,7 +110,7 @@ public:
 
     bool FindAndAddFamilies(const nsAString& aFamily,
                             nsTArray<gfxFontFamily*>* aOutput,
-                            bool aDeferOtherFamilyNamesLoading,
+                            FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
                             gfxFloat aDevToCssSize = 1.0) override;
 
