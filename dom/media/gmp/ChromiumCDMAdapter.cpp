@@ -15,7 +15,7 @@
 #include "GMPLog.h"
 #include "mozilla/Move.h"
 
-#if defined(XP_MACOSX) || defined(XP_LINUX)
+#ifndef XP_WIN
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -198,7 +198,7 @@ HostFile::HostFile(const nsCString& aPath)
 }
 #endif
 
-#if defined(XP_MACOSX) || defined(XP_LINUX)
+#ifndef XP_WIN
 HostFile::HostFile(const nsCString& aPath)
   : mPath(aPath)
 {

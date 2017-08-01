@@ -10,7 +10,6 @@ const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
-loader.lazyRequireGetter(this, "extend", "sdk/util/object", true);
 
 loader.lazyRequireGetter(this, "PerformanceRecorder",
   "devtools/server/performance/recorder", true);

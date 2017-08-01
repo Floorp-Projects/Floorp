@@ -8,7 +8,8 @@ import hashlib
 import requests
 import tempfile
 from boto.s3.connection import S3Connection
-from mardor.marfile import MarFile
+from mardor.reader import MarReader
+from mardor.signing import get_keysize
 
 site.addsitedir("/home/worker/tools/lib/python")
 
@@ -47,14 +48,15 @@ def download(url, dest, mode=None):
         os.chmod(dest, mode)
 
 
-def verify_signature(mar, signature):
+def verify_signature(mar, certs):
     log.info("Checking %s signature", mar)
-    m = MarFile(mar, signature_versions=[(1, signature)])
-    m.verify_signatures()
+    with open(mar, 'rb') as mar_fh:
+        m = MarReader(mar_fh)
+        m.verify(verify_key=certs.get(m.signature_type()))
 
 
 def verify_copy_to_s3(bucket_name, aws_access_key_id, aws_secret_access_key,
-                      mar_url, mar_dest, signing_cert):
+                      mar_url, mar_dest, signing_certs):
     conn = S3Connection(aws_access_key_id, aws_secret_access_key)
     bucket = conn.get_bucket(bucket_name)
     _, dest = tempfile.mkstemp()
@@ -62,7 +64,7 @@ def verify_copy_to_s3(bucket_name, aws_access_key_id, aws_secret_access_key,
     download(mar_url, dest)
     log.info("Verifying the signature...")
     if not os.getenv("MOZ_DISABLE_MAR_CERT_VERIFICATION"):
-        verify_signature(dest, signing_cert)
+        verify_signature(dest, signing_certs)
     for name in possible_names(mar_dest, 10):
         log.info("Checking if %s already exists", name)
         key = bucket.get_key(name)
@@ -112,7 +114,8 @@ def main():
                         help="Balrog API root")
     parser.add_argument("-d", "--dummy", action="store_true",
                         help="Add '-dummy' suffix to branch name")
-    parser.add_argument("--signing-cert", required=True)
+    parser.add_argument("--sha1-signing-cert", required=True)
+    parser.add_argument("--sha384-signing-cert", required=True)
     parser.add_argument("-v", "--verbose", action="store_const",
                         dest="loglevel", const=logging.DEBUG,
                         default=logging.INFO)
@@ -140,6 +143,14 @@ def main():
 
     manifest = json.load(open(args.manifest))
     auth = (balrog_username, balrog_password)
+
+    signing_certs = {
+        'sha1': args.sha1_signing_cert,
+        'sha384': args.sha384_signing_cert,
+    }
+
+    assert(get_keysize(open(signing_certs['sha1'], 'rb').read()) == 2048)
+    assert(get_keysize(open(signing_certs['sha384'], 'rb').read()) == 4096)
 
     for e in manifest:
         complete_info = [{
@@ -186,10 +197,10 @@ def main():
                                                complete_mar_filename)
             partial_info[0]["url"] = verify_copy_to_s3(
                 s3_bucket, aws_access_key_id, aws_secret_access_key,
-                partial_mar_url, partial_mar_dest, args.signing_cert)
+                partial_mar_url, partial_mar_dest, signing_certs)
             complete_info[0]["url"] = verify_copy_to_s3(
                 s3_bucket, aws_access_key_id, aws_secret_access_key,
-                complete_mar_url, complete_mar_dest, args.signing_cert)
+                complete_mar_url, complete_mar_dest, signing_certs)
             partial_info[0]["from_buildid"] = e["from_buildid"]
             submitter = NightlySubmitterV4(api_root=args.api_root, auth=auth,
                                            dummy=args.dummy)

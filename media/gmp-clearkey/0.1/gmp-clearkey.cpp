@@ -27,7 +27,7 @@
 #include "content_decryption_module.h"
 #include "content_decryption_module_ext.h"
 
-#if defined(XP_MACOSX) || defined(XP_LINUX)
+#ifndef XP_WIN
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -88,10 +88,8 @@ CanReadSome(cdm::PlatformFile aFile)
   DWORD bytesRead = 0;
   return ReadFile(aFile, &data.front(), TEST_READ_SIZE, &bytesRead, nullptr) &&
          bytesRead > 0;
-#elif defined(XP_MACOSX) || defined(XP_LINUX)
-  return read(aFile, &data.front(), TEST_READ_SIZE) > 0;
 #else
-  return false;
+  return read(aFile, &data.front(), TEST_READ_SIZE) > 0;
 #endif
 }
 
@@ -100,7 +98,7 @@ ClosePlatformFile(cdm::PlatformFile aFile)
 {
 #ifdef XP_WIN
   CloseHandle(aFile);
-#elif defined(XP_MACOSX) || defined(XP_LINUX)
+#else
   close(aFile);
 #endif
 }
