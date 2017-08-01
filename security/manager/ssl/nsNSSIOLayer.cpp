@@ -1714,9 +1714,9 @@ void
 nsSSLIOLayerHelpers::initInsecureFallbackSites()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCString insecureFallbackHosts;
+  nsAutoCString insecureFallbackHosts;
   Preferences::GetCString("security.tls.insecure_fallback_hosts",
-                          &insecureFallbackHosts);
+                          insecureFallbackHosts);
   setInsecureFallbackSites(insecureFallbackHosts);
 }
 
@@ -1742,8 +1742,8 @@ NS_IMETHODIMP
 FallbackPrefRemover::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCString oldValue;
-  Preferences::GetCString("security.tls.insecure_fallback_hosts", &oldValue);
+  nsAutoCString oldValue;
+  Preferences::GetCString("security.tls.insecure_fallback_hosts", oldValue);
   nsCCharSeparatedTokenizer toker(oldValue, ',');
   nsCString newValue;
   while (toker.hasMoreTokens()) {
@@ -1944,7 +1944,8 @@ UserCertChoice
 nsGetUserCertChoice()
 {
   nsAutoCString value;
-  nsresult rv = Preferences::GetCString("security.default_personal_cert", &value);
+  nsresult rv =
+    Preferences::GetCString("security.default_personal_cert", value);
   if (NS_FAILED(rv)) {
     return UserCertChoice::Ask;
   }

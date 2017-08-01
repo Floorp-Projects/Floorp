@@ -2509,7 +2509,8 @@ void nsExternalAppHandler::ProcessAnyRefreshTags()
 bool nsExternalAppHandler::GetNeverAskFlagFromPref(const char * prefName, const char * aContentType)
 {
   // Search the obsolete pref strings.
-  nsAdoptingCString prefCString = Preferences::GetCString(prefName);
+  nsAutoCString prefCString;
+  Preferences::GetCString(prefName, prefCString);
   if (prefCString.IsEmpty()) {
     // Default is true, if not found in the pref string.
     return true;

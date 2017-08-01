@@ -137,7 +137,7 @@ function waitForNotificationClose() {
 }
 
 async function waitForInstallDialog() {
-  if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+  if (Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
     let panel = await waitForNotification("addon-install-confirmation");
     return panel.childNodes[0];
   }
@@ -183,7 +183,7 @@ function removeTab() {
 }
 
 function acceptInstallDialog(installDialog) {
-  if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+  if (Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
     installDialog.button.click();
   } else {
     let win = Services.wm.getMostRecentWindow("Addons:Install");
@@ -192,7 +192,7 @@ function acceptInstallDialog(installDialog) {
 }
 
 function cancelInstallDialog(installDialog) {
-  if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+  if (Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
     installDialog.secondaryButton.click();
   } else {
     let win = Services.wm.getMostRecentWindow("Addons:Install");
@@ -446,7 +446,7 @@ async function test_sequential() {
   // This test is only relevant if using the new doorhanger UI
   // TODO: this subtest is disabled until multiple notification prompts are
   // reworked in bug 1188152
-  if (true || !Preferences.get("xpinstall.customConfirmationUI", false)) {
+  if (true || !Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
     return;
   }
   let pm = Services.perms;
@@ -519,8 +519,8 @@ async function test_sequential() {
 async function test_allUnverified() {
   // This test is only relevant if using the new doorhanger UI and allowing
   // unsigned add-ons
-  if (!Preferences.get("xpinstall.customConfirmationUI", false) ||
-      Preferences.get("xpinstall.signatures.required", true) ||
+  if (!Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false) ||
+      Services.prefs.getBoolPref("xpinstall.signatures.required", true) ||
       AppConstants.MOZ_REQUIRE_SIGNING) {
         return;
   }
@@ -620,7 +620,7 @@ async function test_localFile() {
 },
 
 async function test_tabClose() {
-  if (!Preferences.get("xpinstall.customConfirmationUI", false)) {
+  if (!Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
     info("Test skipped due to xpinstall.customConfirmationUI being false.");
     return;
   }
@@ -647,7 +647,7 @@ async function test_tabClose() {
 // Add-ons should be cancelled and the install notification destroyed when
 // navigating to a new origin
 async function test_tabNavigate() {
-  if (!Preferences.get("xpinstall.customConfirmationUI", false)) {
+  if (!Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
     return;
   }
   let pm = Services.perms;

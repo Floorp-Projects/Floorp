@@ -162,13 +162,13 @@ namespace CubebUtils {
 void PrefChanged(const char* aPref, void* aClosure)
 {
   if (strcmp(aPref, PREF_VOLUME_SCALE) == 0) {
-    nsAdoptingString value = Preferences::GetString(aPref);
+    nsAutoCString value;
+    Preferences::GetCString(aPref, value);
     StaticMutexAutoLock lock(sMutex);
     if (value.IsEmpty()) {
       sVolumeScale = 1.0;
     } else {
-      NS_ConvertUTF16toUTF8 utf8(value);
-      sVolumeScale = std::max<double>(0, PR_strtod(utf8.get(), nullptr));
+      sVolumeScale = std::max<double>(0, PR_strtod(value.get(), nullptr));
     }
   } else if (strcmp(aPref, PREF_CUBEB_LATENCY_PLAYBACK) == 0) {
     // Arbitrary default stream latency of 100ms.  The higher this
@@ -188,28 +188,28 @@ void PrefChanged(const char* aPref, void* aClosure)
     // experiment.
     sCubebMSGLatencyInFrames = std::min<uint32_t>(std::max<uint32_t>(value, 128), 1e6);
   } else if (strcmp(aPref, PREF_CUBEB_LOGGING_LEVEL) == 0) {
-    nsAdoptingString value = Preferences::GetString(aPref);
-    NS_ConvertUTF16toUTF8 utf8(value);
+    nsAutoCString value;
+    Preferences::GetCString(aPref, value);
     LogModule* cubebLog = LogModule::Get("cubeb");
-    if (strcmp(utf8.get(), "verbose") == 0) {
+    if (value.EqualsLiteral("verbose")) {
       cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
       cubebLog->SetLevel(LogLevel::Verbose);
-    } else if (strcmp(utf8.get(), "normal") == 0) {
+    } else if (value.EqualsLiteral("normal")) {
       cubeb_set_log_callback(CUBEB_LOG_NORMAL, CubebLogCallback);
       cubebLog->SetLevel(LogLevel::Error);
-    } else if (utf8.IsEmpty()) {
+    } else if (value.IsEmpty()) {
       cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr);
       cubebLog->SetLevel(LogLevel::Disabled);
     }
   } else if (strcmp(aPref, PREF_CUBEB_BACKEND) == 0) {
-    nsAdoptingString value = Preferences::GetString(aPref);
+    nsAutoCString value;
+    Preferences::GetCString(aPref, value);
     if (value.IsEmpty()) {
       sCubebBackendName = nullptr;
     } else {
-      NS_LossyConvertUTF16toASCII ascii(value);
-      sCubebBackendName = new char[ascii.Length() + 1];
-      PodCopy(sCubebBackendName.get(), ascii.get(), ascii.Length());
-      sCubebBackendName[ascii.Length()] = 0;
+      sCubebBackendName = new char[value.Length() + 1];
+      PodCopy(sCubebBackendName.get(), value.get(), value.Length());
+      sCubebBackendName[value.Length()] = 0;
     }
   }
 }

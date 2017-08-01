@@ -434,16 +434,17 @@ ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj, HandleId id,
 /* static */ bool
 ArgumentsObject::obj_mayResolve(const JSAtomState& names, jsid id, JSObject*)
 {
-    // Arguments might resolve indexes or Symbol.iterator.
-    if (!JSID_IS_ATOM(id))
-        return true;
-
-    JSAtom* atom = JSID_TO_ATOM(id);
-    uint32_t index;
-    if (atom->isIndex(&index))
-        return true;
-
-    return atom == names.length || atom == names.callee;
+    // Arguments might resolve indexes, Symbol.iterator, or length/callee.
+    if (JSID_IS_ATOM(id)) {
+        JSAtom* atom = JSID_TO_ATOM(id);
+        uint32_t index;
+        if (atom->isIndex(&index))
+            return true;
+        return atom == names.length || atom == names.callee;
+    }
+    if (JSID_IS_SYMBOL(id))
+        return JSID_TO_SYMBOL(id)->code() == JS::SymbolCode::iterator;
+    return true;
 }
 
 static bool

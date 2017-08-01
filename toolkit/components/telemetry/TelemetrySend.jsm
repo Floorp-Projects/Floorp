@@ -21,7 +21,6 @@ Cu.import("resource://gre/modules/AppConstants.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Log.jsm", this);
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/ServiceRequest.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
@@ -53,10 +52,11 @@ const TOPIC_IDLE_DAILY = "idle-daily";
 // because the OS is shutting down.
 const TOPIC_QUIT_APPLICATION_GRANTED = "quit-application-granted";
 const TOPIC_QUIT_APPLICATION_FORCED = "quit-application-forced";
+const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
-const IS_UNIFIED_TELEMETRY = Preferences.get(TelemetryUtils.Preferences.Unified, false);
+const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false);
 
 const PING_FORMAT_VERSION = 4;
 
@@ -609,7 +609,7 @@ var TelemetrySendImpl = {
 
   // Whether sending pings has been overridden.
   get _overrideOfficialCheck() {
-    return Preferences.get(TelemetryUtils.Preferences.OverrideOfficialCheck, false);
+    return Services.prefs.getBoolPref(TelemetryUtils.Preferences.OverrideOfficialCheck, false);
   },
 
   get _log() {
@@ -645,6 +645,8 @@ var TelemetrySendImpl = {
     Services.obs.addObserver(this, TOPIC_QUIT_APPLICATION_GRANTED);
   },
 
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
+
   async setup(testing) {
     this._log.trace("setup");
 
@@ -653,12 +655,12 @@ var TelemetrySendImpl = {
 
     Services.obs.addObserver(this, TOPIC_IDLE_DAILY);
 
-    this._server = Preferences.get(TelemetryUtils.Preferences.Server, undefined);
+    this._server = Services.prefs.getStringPref(TelemetryUtils.Preferences.Server, undefined);
 
     // Annotate crash reports so that crash pings are sent correctly and listen
     // to pref changes to adjust the annotations accordingly.
     for (let pref of this.OBSERVED_PREFERENCES) {
-      Preferences.observe(pref, this._annotateCrashReport, this);
+      Services.prefs.addObserver(pref, this, true);
     }
     this._annotateCrashReport();
 
@@ -690,7 +692,7 @@ var TelemetrySendImpl = {
         const crs = cr.getService(Ci.nsICrashReporter);
 
         let clientId = ClientID.getCachedClientID();
-        let server = this._server || Preferences.get(TelemetryUtils.Preferences.Server, undefined);
+        let server = this._server || Services.prefs.getStringPref(TelemetryUtils.Preferences.Server, undefined);
 
         if (!this.sendingEnabled() || !TelemetryReportingPolicy.canUpload()) {
           // If we cannot send pings then clear the crash annotations
@@ -741,7 +743,7 @@ var TelemetrySendImpl = {
       // FIXME: When running tests this causes errors to be printed out if
       // TelemetrySend.shutdown() is called twice in a row without calling
       // TelemetrySend.setup() in-between.
-      Preferences.ignore(pref, this._annotateCrashReport, this);
+      Services.prefs.removeObserver(pref, this);
     }
 
     for (let topic of this.OBSERVER_TOPICS) {
@@ -816,6 +818,11 @@ var TelemetrySendImpl = {
     case TOPIC_QUIT_APPLICATION_GRANTED:
       if (data == "syncShutdown") {
         setOSShutdown();
+      }
+      break;
+    case PREF_CHANGED_TOPIC:
+      if (this.OBSERVED_PREFERENCES.includes(data)) {
+        this._annotateCrashReport();
       }
       break;
     }
@@ -1238,7 +1245,7 @@ var TelemetrySendImpl = {
       if (ping && isDeletionPing(ping)) {
         return true;
       }
-      return Preferences.get(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+      return Services.prefs.getBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false);
     }
 
     // Without unified Telemetry, the Telemetry enabled pref controls ping sending.

@@ -860,8 +860,9 @@ void gfxFontUtils::AppendPrefsFontList(const char *aPrefName,
                                        nsTArray<nsString>& aFontList)
 {
     // get the list of single-face font families
-    nsAdoptingString fontlistValue = Preferences::GetString(aPrefName);
-    if (!fontlistValue) {
+    nsAutoString fontlistValue;
+    nsresult rv = Preferences::GetString(aPrefName, fontlistValue);
+    if (NS_FAILED(rv)) {
         return;
     }
 

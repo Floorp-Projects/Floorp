@@ -121,7 +121,7 @@ public class LayerView extends FrameLayout {
         /* package */ native void attachToJava(GeckoLayerClient layerClient,
                                                NativePanZoomController npzc);
 
-        @WrapForJNI(calledFrom = "any", dispatchTo = "gecko_priority")
+        @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
         /* package */ native void onSizeChanged(int windowWidth, int windowHeight,
                                                 int screenWidth, int screenHeight);
 

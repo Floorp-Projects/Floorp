@@ -85,8 +85,9 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
         if (!file) {
           return NS_ERROR_FAILURE;
         }
-        nsresult rv = file->InitWithNativePath(
-          Preferences::GetCString(kDevImportedDER));
+        nsAutoCString path;
+        Preferences::GetCString(kDevImportedDER, path);
+        nsresult rv = file->InitWithNativePath(path);
         if (NS_FAILED(rv)) {
           return rv;
         }

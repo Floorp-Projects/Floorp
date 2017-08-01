@@ -11,7 +11,6 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm", this);
-Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -186,7 +185,7 @@ var TelemetryReportingPolicyImpl = {
    * @return {Object} A date object or null on errors.
    */
   get dataSubmissionPolicyNotifiedDate() {
-    let prefString = Preferences.get(TelemetryUtils.Preferences.AcceptedPolicyDate, "0");
+    let prefString = Services.prefs.getStringPref(TelemetryUtils.Preferences.AcceptedPolicyDate, "0");
     let valueInteger = parseInt(prefString, 10);
 
     // Bail out if we didn't store any value yet.
@@ -223,7 +222,7 @@ var TelemetryReportingPolicyImpl = {
       return;
     }
 
-    Preferences.set(TelemetryUtils.Preferences.AcceptedPolicyDate, aDate.getTime().toString());
+    Services.prefs.setStringPref(TelemetryUtils.Preferences.AcceptedPolicyDate, aDate.getTime().toString());
   },
 
   /**
@@ -234,12 +233,12 @@ var TelemetryReportingPolicyImpl = {
    */
   get dataSubmissionEnabled() {
     // Default is true because we are opt-out.
-    return Preferences.get(TelemetryUtils.Preferences.DataSubmissionEnabled, true);
+    return Services.prefs.getBoolPref(TelemetryUtils.Preferences.DataSubmissionEnabled, true);
   },
 
   get currentPolicyVersion() {
-    return Preferences.get(TelemetryUtils.Preferences.CurrentPolicyVersion,
-                           TelemetryReportingPolicy.DEFAULT_DATAREPORTING_POLICY_VERSION);
+    return Services.prefs.getIntPref(TelemetryUtils.Preferences.CurrentPolicyVersion,
+                                     TelemetryReportingPolicy.DEFAULT_DATAREPORTING_POLICY_VERSION);
   },
 
   /**
@@ -247,7 +246,7 @@ var TelemetryReportingPolicyImpl = {
    * to be valid.
    */
   get minimumPolicyVersion() {
-    const minPolicyVersion = Preferences.get(TelemetryUtils.Preferences.MinimumPolicyVersion, 1);
+    const minPolicyVersion = Services.prefs.getIntPref(TelemetryUtils.Preferences.MinimumPolicyVersion, 1);
 
     // First check if the current channel has a specific minimum policy version. If not,
     // use the general minimum policy version.
@@ -259,15 +258,15 @@ var TelemetryReportingPolicyImpl = {
       return minPolicyVersion;
     }
     const channelPref = TelemetryUtils.Preferences.MinimumPolicyVersion + ".channel-" + channel;
-    return Preferences.get(channelPref, minPolicyVersion);
+    return Services.prefs.getIntPref(channelPref, minPolicyVersion);
   },
 
   get dataSubmissionPolicyAcceptedVersion() {
-    return Preferences.get(TelemetryUtils.Preferences.AcceptedPolicyVersion, 0);
+    return Services.prefs.getIntPref(TelemetryUtils.Preferences.AcceptedPolicyVersion, 0);
   },
 
   set dataSubmissionPolicyAcceptedVersion(value) {
-    Preferences.set(TelemetryUtils.Preferences.AcceptedPolicyVersion, value);
+    Services.prefs.setIntPref(TelemetryUtils.Preferences.AcceptedPolicyVersion, value);
   },
 
   /**
@@ -347,7 +346,7 @@ var TelemetryReportingPolicyImpl = {
 
     // Submission is enabled. We enable upload if user is notified or we need to bypass
     // the policy.
-    const bypassNotification = Preferences.get(TelemetryUtils.Preferences.BypassNotification, false);
+    const bypassNotification = Services.prefs.getBoolPref(TelemetryUtils.Preferences.BypassNotification, false);
     return this.isUserNotifiedOfCurrentPolicy || bypassNotification;
   },
 
@@ -361,7 +360,7 @@ var TelemetryReportingPolicyImpl = {
   _migratePreferences() {
     // Current prefs are mostly the same than the old ones, except for some deprecated ones.
     for (let pref of DEPRECATED_FHR_PREFS) {
-      Preferences.reset(pref);
+      Services.prefs.clearUserPref(pref);
     }
   },
 
@@ -374,7 +373,7 @@ var TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    const bypassNotification = Preferences.get(TelemetryUtils.Preferences.BypassNotification, false);
+    const bypassNotification = Services.prefs.getBoolPref(TelemetryUtils.Preferences.BypassNotification, false);
     if (this.isUserNotifiedOfCurrentPolicy || bypassNotification) {
       this._log.trace("_shouldNotify - User already notified or bypassing the policy.");
       return false;
@@ -431,7 +430,7 @@ var TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    let firstRunPolicyURL = Preferences.get(TelemetryUtils.Preferences.FirsRunURL, "");
+    let firstRunPolicyURL = Services.prefs.getStringPref(TelemetryUtils.Preferences.FirsRunURL, "");
     if (!firstRunPolicyURL) {
       return false;
     }
@@ -490,10 +489,10 @@ var TelemetryReportingPolicyImpl = {
       return;
     }
 
-    this._isFirstRun = Preferences.get(TelemetryUtils.Preferences.FirstRun, true);
+    this._isFirstRun = Services.prefs.getBoolPref(TelemetryUtils.Preferences.FirstRun, true);
     if (this._isFirstRun) {
       // We're performing the first run, flip firstRun preference for subsequent runs.
-      Preferences.set(TelemetryUtils.Preferences.FirstRun, false);
+      Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, false);
 
       try {
         if (this._openFirstRunPage()) {

@@ -977,14 +977,11 @@ public:
                 MOZ_ASSERT(NS_IsMainThread());
 
                 JNIEnv* const env = jni::GetGeckoThreadEnv();
-                // Make sure LayerViewSupport hasn't been detached from the
-                // Java object since this event was dispatched.
-                if (LayerViewSupport* const lvs = GetNative(
-                        LayerView::Compositor::LocalRef(env, mCompositor))) {
-                    MOZ_CATCH_JNI_EXCEPTION(env);
+                LayerViewSupport* const lvs = GetNative(
+                        LayerView::Compositor::LocalRef(env, mCompositor));
+                MOZ_CATCH_JNI_EXCEPTION(env);
 
-                    lvs->OnResumedCompositor();
-                }
+                lvs->OnResumedCompositor();
             }
         };
 
@@ -1258,12 +1255,12 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     MOZ_RELEASE_ASSERT(ww);
 
-    nsAdoptingCString url;
+    nsAutoCString url;
     if (aChromeURI) {
         url = aChromeURI->ToCString();
     } else {
-        url = Preferences::GetCString("toolkit.defaultChromeURI");
-        if (!url) {
+        nsresult rv = Preferences::GetCString("toolkit.defaultChromeURI", url);
+        if (NS_FAILED(rv)) {
             url = NS_LITERAL_CSTRING("chrome://geckoview/content/geckoview.xul");
         }
     }
@@ -1280,7 +1277,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
         chromeFlags += ",private";
     }
     nsCOMPtr<mozIDOMWindowProxy> domWindow;
-    ww->OpenWindow(nullptr, url, nullptr, chromeFlags.get(),
+    ww->OpenWindow(nullptr, url.get(), nullptr, chromeFlags.get(),
                    androidView, getter_AddRefs(domWindow));
     MOZ_RELEASE_ASSERT(domWindow);
 
