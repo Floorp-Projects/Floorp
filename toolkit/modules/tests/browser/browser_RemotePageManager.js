@@ -305,6 +305,59 @@ add_task(async function remote_pages_basic() {
   }
 });
 
+// Test that properties exist on the target port provided to listeners
+add_task(async function check_port_properties() {
+  let pages = new RemotePages(TEST_URL);
+
+  const expectedProperties = [
+    "addMessageListener",
+    "browser",
+    "destroy",
+    "loaded",
+    "portID",
+    "removeMessageListener",
+    "sendAsyncMessage"
+  ];
+  function checkProperties(port, description) {
+    const expected = [];
+    const unexpected = [];
+    for (const key in port) {
+      (expectedProperties.includes(key) ? expected : unexpected).push(key);
+    }
+    is(`${expected.sort()}`, expectedProperties, `${description} has expected keys`);
+    is(`${unexpected.sort()}`, "", `${description} should not have unexpected keys`);
+  }
+
+  function portFrom(message, extraFn = () => {}) {
+    return new Promise(resolve => {
+      function onMessage({target}) {
+        pages.removeMessageListener(message, onMessage);
+        resolve(target);
+      }
+      pages.addMessageListener(message, onMessage);
+      extraFn();
+    });
+  }
+
+  let portFromInit = await portFrom("RemotePage:Init", () =>
+    (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL)));
+  checkProperties(portFromInit, "inited port");
+  is(portFromInit.loaded, false, "inited port has not been loaded yet");
+
+  let portFromLoad = await portFrom("RemotePage:Load");
+  is(portFromLoad, portFromInit, "got the same port from init and load");
+  checkProperties(portFromLoad, "loaded port");
+  is(portFromInit.loaded, true, "loaded port is now loaded");
+
+  let portFromUnload = await portFrom("RemotePage:Unload", () =>
+    BrowserTestUtils.removeTab(gBrowser.selectedTab));
+  is(portFromUnload, portFromInit, "got the same port from init and unload");
+  checkProperties(portFromUnload, "unloaded port");
+  is(portFromInit.loaded, false, "unloaded port is now not loaded");
+
+  pages.destroy();
+});
+
 // Test sending messages to all remote pages works
 add_task(async function remote_pages_multiple() {
   let pages = new RemotePages(TEST_URL);
@@ -389,5 +442,7 @@ add_task(async function get_ports_for_browser() {
   let foundPorts = pages.portsForBrowser(browser);
   is(foundPorts.length, 1, "There should only be one port for this simple page");
   is(foundPorts[0], port, "Should find the port");
+
+  pages.destroy();
   gBrowser.removeCurrentTab();
 });
