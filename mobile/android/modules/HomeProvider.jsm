@@ -267,7 +267,7 @@ function getDatabaseConnection() {
       }
 
       yield db.setSchemaVersion(SCHEMA_VERSION);
-    } catch(e) {
+    } catch (e) {
       // Close the DB connection before passing the exception to the consumer.
       yield db.close();
       throw e;

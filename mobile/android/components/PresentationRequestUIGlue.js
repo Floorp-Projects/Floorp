@@ -54,7 +54,7 @@ PresentationRequestUIGlue.prototype = {
 
         Services.obs.removeObserver(handleObserve,
                                     TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE);
-        switch(data.result) {
+        switch (data.result) {
           case "success":
             aResolve(aSubject);
             break;

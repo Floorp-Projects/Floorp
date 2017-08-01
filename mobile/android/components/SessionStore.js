@@ -707,7 +707,7 @@ SessionStore.prototype = {
       }
 
       log("onTabClose() ran for tab " + tab.id);
-      let evt = new Event("SSTabCloseProcessed", {"bubbles":true, "cancelable":false});
+      let evt = new Event("SSTabCloseProcessed", {"bubbles": true, "cancelable": false});
       aBrowser.dispatchEvent(evt);
     }
   },
@@ -787,7 +787,7 @@ SessionStore.prototype = {
     }
 
     log("onTabLoad() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
-    let evt = new Event("SSTabDataUpdated", {"bubbles":true, "cancelable":false});
+    let evt = new Event("SSTabDataUpdated", {"bubbles": true, "cancelable": false});
     aBrowser.dispatchEvent(evt);
     this.saveStateDelayed();
 
@@ -966,7 +966,7 @@ SessionStore.prototype = {
     // Save zoom and scroll data.
     data.scrolldata = scrolldata;
     log("onTabScroll() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
-    let evt = new Event("SSTabScrollCaptured", {"bubbles":true, "cancelable":false});
+    let evt = new Event("SSTabScrollCaptured", {"bubbles": true, "cancelable": false});
     aBrowser.dispatchEvent(evt);
     this.saveStateDelayed();
   },

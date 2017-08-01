@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1178722
       for (var i = 0; i < listElements.length; i++) {
         dummyList.push(i);
       }
-      return {list:dummyList};
+      return {list: dummyList};
     }
 
     // Wait until the page has loaded so that we can access the DOM.
@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1178722
       // We will simulate "selecting" (ie choosing via the prompt) all the visible options...
       is(select.selectedOptions.length, 0, "No options selected yet.");
       let dummyData = createCallBackDummyData(select);
-      SelectHelper._promptCallBack(dummyData,select);
+      SelectHelper._promptCallBack(dummyData, select);
 
       // Check that only the visible options had the "selected" attribute set...
       let selectedOptions = select.selectedOptions;

@@ -304,7 +304,7 @@ HelperAppLauncherDialog.prototype = {
 
     try {
       return Services.prefs.getCharPref(this._getPrefName(mime));
-    } catch(ex) {
+    } catch (ex) {
       Services.console.logStringMessage("Error getting pref for " + mime + ".");
     }
     return null;

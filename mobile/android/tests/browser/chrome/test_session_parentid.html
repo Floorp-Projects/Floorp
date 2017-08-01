@@ -59,12 +59,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301160
     });
 
     // First, check that passing a parent tab ID works as expected
-    tabParent = BrowserApp.addTab(url , { selected: true });
+    tabParent = BrowserApp.addTab(url, { selected: true });
     yield promiseBrowserEvent(tabParent.browser, "DOMContentLoaded");
 
     // Open tabs without passing a parent tab ID
-    tabChild1 = BrowserApp.addTab(url , { selected: false });
-    tabChild2 = BrowserApp.addTab(url , { selected: true });
+    tabChild1 = BrowserApp.addTab(url, { selected: false });
+    tabChild2 = BrowserApp.addTab(url, { selected: true });
     yield promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabChild2, "2nd child tab is selected");
 
@@ -75,7 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301160
     is(BrowserApp.selectedTab, tabChild1, "1st child tab is selected");
 
     // Add a new tab and pass a parent tab ID this time
-    tabChild2 = BrowserApp.addTab(url , { selected: true, parentId: tabParent.id });
+    tabChild2 = BrowserApp.addTab(url, { selected: true, parentId: tabParent.id });
     yield promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabChild2, "2nd child tab is selected");
 
@@ -91,7 +91,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301160
     is(BrowserApp.selectedTab, tabChild1, "1st child tab is selected");
 
     // Now check that this works even if the child tab is closed and subsequently restored
-    tabChild2 = BrowserApp.addTab(url , { selected: false, parentId: tabParent.id });
+    tabChild2 = BrowserApp.addTab(url, { selected: false, parentId: tabParent.id });
     yield promiseTabEvent(tabChild2.browser, "SSTabDataUpdated");
     BrowserApp.closeTab(tabChild2);
     yield promiseTabEvent(tabChild2.browser, "SSTabCloseProcessed");

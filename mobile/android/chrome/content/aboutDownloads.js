@@ -244,7 +244,7 @@ const kDownloadStatePropertyNames = [
 ];
 
 DownloadItem.prototype = {
-  _htmlEscape : function (s) {
+  _htmlEscape: function (s) {
     s = s.replace(/&/g, "&amp;");
     s = s.replace(/>/g, "&gt;");
     s = s.replace(/</g, "&lt;");

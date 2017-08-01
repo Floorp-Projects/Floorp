@@ -229,7 +229,7 @@ DownloadNotification.prototype = {
     return options;
   },
 
-  _updateOptionsForStatic : function (options, titleName) {
+  _updateOptionsForStatic: function (options, titleName) {
     options.title = strings.GetStringFromName(titleName);
     options.message = this._fileName;
   },

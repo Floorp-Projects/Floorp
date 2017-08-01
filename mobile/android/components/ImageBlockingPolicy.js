@@ -95,7 +95,7 @@ ImageBlockingPolicy.prototype = {
     return Services.prefs.getIntPref(PREF_IMAGEBLOCKING);
   },
 
-  observe : function (subject, topic, data) {
+  observe: function (subject, topic, data) {
     if (topic == TOPIC_GATHER_TELEMETRY) {
       Services.telemetry.getHistogramById(TELEMETRY_TAP_TO_LOAD_ENABLED).add(this._enabled());
     }

@@ -100,7 +100,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     ok(sessionFileTemp.exists(), "temp file exists");
 
     // Clear browsing history
-    let sanitize = { history:true };
+    let sanitize = { history: true };
     let notification = promiseNotification("sessionstore-state-purge-complete");
 
     BrowserApp.sanitize(sanitize);
@@ -117,7 +117,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
 
   add_task(function* test_sessionStoreClearTabHistory() {
     // Add a new tab with some content
-    tabTest = BrowserApp.addTab(url1 , { selected: true, parentId: BrowserApp.selectedTab.id });
+    tabTest = BrowserApp.addTab(url1, { selected: true, parentId: BrowserApp.selectedTab.id });
     yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
 
     // Navigate to create some history
@@ -136,7 +136,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     is(data.entries[0].url, url1, "URL of first history entry is correct");
 
     // Clear browsing history
-    let sanitize = { history:true };
+    let sanitize = { history: true };
     let notification = promiseNotification("sessionstore-state-purge-complete");
 
     BrowserApp.sanitize(sanitize);
@@ -153,7 +153,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
 
   add_task(function* test_sessionStoreClearZombieTabHistory() {
     // Add a new tab with some content
-    tabTest = BrowserApp.addTab(url1 , { selected: true, parentId: BrowserApp.selectedTab.id });
+    tabTest = BrowserApp.addTab(url1, { selected: true, parentId: BrowserApp.selectedTab.id });
     yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
 
     // Navigate to create some history
@@ -184,7 +184,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     is(tabTest.browser.currentURI.spec, "about:blank", "Test tab is zombified.");
 
     // Clear browsing history
-    let sanitize = { history:true };
+    let sanitize = { history: true };
     let notification = promiseNotification("sessionstore-state-purge-complete");
 
     BrowserApp.sanitize(sanitize);

@@ -125,7 +125,7 @@ var HomeBanner = (function () {
 
   return Object.freeze({
     onEvent: function(event, data, callback) {
-      switch(event) {
+      switch (event) {
         case "HomeBanner:Click":
           _handleClick(data.id);
           break;
@@ -204,7 +204,7 @@ var HomePanels = (function () {
         if (ids == null || ids.indexOf(id) >= 0) {
           try {
             panels.push(_generatePanel(id));
-          } catch(e) {
+          } catch (e) {
             Cu.reportError("Home.panels: Invalid options, panel.id = " + id + ": " + e);
           }
         }
