@@ -31,7 +31,7 @@ MediaSourceDecoder::MediaSourceDecoder(MediaDecoderInit& aInit)
   , mMediaSource(nullptr)
   , mEnded(false)
 {
-  mExplicitDuration.Set(Some(UnspecifiedNaN<double>()));
+  mExplicitDuration.emplace(UnspecifiedNaN<double>());
 }
 
 MediaDecoderStateMachine*
