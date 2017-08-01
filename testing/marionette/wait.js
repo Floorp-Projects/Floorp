@@ -18,7 +18,7 @@ this.EXPORTED_SYMBOLS = ["wait"];
 this.wait = {};
 
 /**
- * @callback WaitCondition
+ * @callback Condition
  *
  * @param {function(*)} resolve
  *     To be called when the condition has been met.  Will return the
@@ -62,7 +62,7 @@ this.wait = {};
  *     });
  * </pre></code>
  *
- * @param {WaitCondition} func
+ * @param {Condition} func
  *     Function to run off the main thread.
  * @param {number=} timeout
  *     Desired timeout.  If 0 or less than the runtime evaluation time
