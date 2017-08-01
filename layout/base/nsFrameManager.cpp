@@ -177,7 +177,7 @@ nsFrameManager::GetAllUndisplayedNodesInMapFor(UndisplayedMap* aMap,
 }
 
 UndisplayedNode*
-nsFrameManager::GetAllUndisplayedContentIn(nsIContent* aParentContent)
+nsFrameManager::GetAllRegisteredDisplayNoneStylesIn(nsIContent* aParentContent)
 {
   return GetAllUndisplayedNodesInMapFor(mDisplayNoneMap, aParentContent);
 }
@@ -324,7 +324,7 @@ nsFrameManager::RegisterDisplayContentsStyleFor(nsIContent* aContent,
 }
 
 UndisplayedNode*
-nsFrameManager::GetAllDisplayContentsIn(nsIContent* aParentContent)
+nsFrameManager::GetAllRegisteredDisplayContentsStylesIn(nsIContent* aParentContent)
 {
   return GetAllUndisplayedNodesInMapFor(mDisplayContentsMap, aParentContent);
 }
