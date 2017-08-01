@@ -977,6 +977,8 @@ nsUrlClassifierStreamUpdater::Notify(nsITimer *timer)
     }
     mDownloadError = true; // Trigger backoff
     updateFailed = true;
+    MOZ_LOG(gUrlClassifierStreamUpdaterLog, mozilla::LogLevel::Error,
+            ("Safe Browsing timed out while waiting for the update server to respond."));
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_UPDATE_TIMEOUT,
                                    mTelemetryProvider,
                                    static_cast<uint8_t>(eResponseTimeout));
@@ -986,6 +988,8 @@ nsUrlClassifierStreamUpdater::Notify(nsITimer *timer)
     mTimeoutTimer = nullptr;
     // No backoff since the connection may just be temporarily slow.
     updateFailed = true;
+    MOZ_LOG(gUrlClassifierStreamUpdaterLog, mozilla::LogLevel::Error,
+            ("Safe Browsing timed out while waiting for the update server to finish."));
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_UPDATE_TIMEOUT,
                                    mTelemetryProvider,
                                    static_cast<uint8_t>(eDownloadTimeout));
