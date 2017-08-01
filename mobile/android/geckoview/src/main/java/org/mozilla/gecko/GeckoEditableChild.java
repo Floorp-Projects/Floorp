@@ -169,7 +169,7 @@ final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild 
         }
 
         try {
-            mEditableParent.notifyIMEContext(state, typeHint, modeHint, actionHint);
+            mEditableParent.notifyIMEContext(state, typeHint, modeHint, actionHint, inPrivateBrowsing);
         } catch (final RemoteException e) {
             Log.e(LOGTAG, "Remote call failed", e);
         }
