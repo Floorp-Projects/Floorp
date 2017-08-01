@@ -1332,8 +1332,9 @@ DoPeriodicSample(PSLockRef aLock, ThreadInfo& aThreadInfo,
 
   ThreadResponsiveness* resp = aThreadInfo.GetThreadResponsiveness();
   if (resp && resp->HasData()) {
-    TimeDuration delta = resp->GetUnresponsiveDuration(aNow);
-    buffer.AddEntry(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
+    double delta = resp->GetUnresponsiveDuration(
+      (aNow - CorePS::ProcessStartTime()).ToMilliseconds());
+    buffer.AddEntry(ProfileBufferEntry::Responsiveness(delta));
   }
 
   if (aRSSMemory != 0) {
