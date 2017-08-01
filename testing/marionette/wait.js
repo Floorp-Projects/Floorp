@@ -6,9 +6,12 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  TimeoutError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 
-this.EXPORTED_SYMBOLS = ["wait"];
+this.EXPORTED_SYMBOLS = ["wait", "TimedPromise"];
 
 /**
  * Poll-waiting utilities.
@@ -16,6 +19,8 @@ this.EXPORTED_SYMBOLS = ["wait"];
  * @namespace
  */
 this.wait = {};
+
+const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 
 /**
  * @callback Condition
@@ -104,9 +109,8 @@ wait.until = function(func, timeout = 2000, interval = 10) {
     // before invoking |evalFn|
     evalFn();
 
-    timer.init(evalFn, interval, Ci.nsITimer.TYPE_REPEATING_SLACK);
+    timer.init(evalFn, interval, TYPE_REPEATING_SLACK);
 
-  // cancel timer and propagate result
   }).then(res => {
     timer.cancel();
     return res;
@@ -115,3 +119,59 @@ wait.until = function(func, timeout = 2000, interval = 10) {
     throw err;
   });
 };
+
+/**
+ * The <code>TimedPromise</code> object represents the timed, eventual
+ * completion (or failure) of an asynchronous operation, and its
+ * resulting value.
+ *
+ * In contrast to a regular {@link Promise}, it times out after
+ * <var>timeout</var>.
+ *
+ * @param {Condition} func
+ *     Function to run, which will have its <code>reject</code>
+ *     callback invoked after the <var>timeout</var> duration is reached.
+ *     It is given two callbacks: <code>resolve(value)</code> and
+ *     <code>reject(error)</code>.
+ * @param {timeout=} [timeout=1500] timeout
+ *     <var>condition</var>'s <code>reject</code> callback will be called
+ *     after this timeout.
+ * @param {Error=} [throws=TimeoutError] throws
+ *     When the <var>timeout</var> is hit, this error class will be
+ *     thrown.  If it is null, no error is thrown and the promise is
+ *     instead resolved on timeout.
+ *
+ * @return {Promise.<*>}
+ *     Timed promise.
+ */
+function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
+  const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+  return new Promise((resolve, reject) => {
+    // Reject only if |throws| is given.  Otherwise it is assumed that
+    // the user is OK with the promise timing out.
+    let bail = res => {
+      if (throws !== null) {
+        let err = new throws();
+        reject(err);
+      } else {
+        resolve();
+      }
+    };
+
+    timer.initWithCallback({notify: bail}, timeout, TYPE_ONE_SHOT);
+
+    try {
+      fn(resolve, reject);
+    } catch (e) {
+      reject(e);
+    }
+
+  }).then(res => {
+    timer.cancel();
+    return res;
+  }, err => {
+    timer.cancel();
+    throw err;
+  });
+}
