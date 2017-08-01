@@ -1334,6 +1334,8 @@ gfxWindowsPlatform::InitializeD3D11Config()
     return;
   }
 
+  d3d11.EnableByDefault();
+
   if (!IsWin8OrLater() &&
       !DeviceManagerDx::Get()->CheckRemotePresentSupport()) {
     nsCOMPtr<nsIGfxInfo> gfxInfo;
@@ -1352,8 +1354,6 @@ gfxWindowsPlatform::InitializeD3D11Config()
 #endif
     }
   }
-
-  d3d11.EnableByDefault();
 
   nsCString message;
   nsCString failureId;
