@@ -551,7 +551,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Set the offset of this child in its container.
    */
-  [noscript] void setChildOffset(in long offset);
+  [noscript] void setChildOffset(in unsigned long offset);
 
   /**
    * Find out whether the docshell is currently in the middle of a page
