@@ -942,10 +942,10 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
         // Look for the first character that changes when lowercased.
         size_t i = 0;
         for (; i < length; i++) {
-            char16_t c = chars[i];
+            CharT c = chars[i];
             if (!IsSame<CharT, Latin1Char>::value) {
                 if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
-                    char16_t trail = chars[i + 1];
+                    CharT trail = chars[i + 1];
                     if (unicode::IsTrailSurrogate(trail)) {
                         if (unicode::CanLowerCaseNonBMP(c, trail))
                             break;
@@ -1252,10 +1252,10 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
         // Look for the first character that changes when uppercased.
         size_t i = 0;
         for (; i < length; i++) {
-            char16_t c = chars[i];
+            CharT c = chars[i];
             if (!IsSame<CharT, Latin1Char>::value) {
                 if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
-                    char16_t trail = chars[i + 1];
+                    CharT trail = chars[i + 1];
                     if (unicode::IsTrailSurrogate(trail)) {
                         if (unicode::CanUpperCaseNonBMP(c, trail))
                             break;
@@ -1267,7 +1267,7 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
             }
             if (unicode::CanUpperCase(c))
                 break;
-            if (MOZ_UNLIKELY(c > 0x7f && CanUpperCaseSpecialCasing(static_cast<CharT>(c))))
+            if (MOZ_UNLIKELY(c > 0x7f && CanUpperCaseSpecialCasing(c)))
                 break;
         }
 
