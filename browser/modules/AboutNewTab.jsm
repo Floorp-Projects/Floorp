@@ -26,14 +26,14 @@ var AboutNewTab = {
 
   isOverridden: false,
 
-  init() {
+  init(pageListener) {
     if (this.isOverridden) {
       return;
     }
-    this.pageListener = new RemotePages("about:newtab");
-    this.pageListener.addMessageListener("NewTab:Customize", this.customize.bind(this));
+    this.pageListener = pageListener || new RemotePages("about:newtab");
+    this.pageListener.addMessageListener("NewTab:Customize", this.customize);
     this.pageListener.addMessageListener("NewTab:MaybeShowMigrateMessage",
-      this.maybeShowMigrateMessage.bind(this));
+      this.maybeShowMigrateMessage);
   },
 
   maybeShowMigrateMessage({ target }) {
@@ -56,13 +56,24 @@ var AboutNewTab = {
     }
   },
 
-  override() {
-    this.uninit();
+  override(shouldPassPageListener) {
     this.isOverridden = true;
+    const pageListener = this.pageListener;
+    if (!pageListener) {
+      return;
+    }
+    if (shouldPassPageListener) {
+      this.pageListener = null;
+      pageListener.removeMessageListener("NewTab:Customize", this.customize);
+      pageListener.removeMessageListener("NewTab:MaybeShowMigrateMessage",
+        this.maybeShowMigrateMessage);
+      return pageListener;
+    }
+    this.uninit();
   },
 
-  reset() {
+  reset(pageListener) {
     this.isOverridden = false;
-    this.init();
+    this.init(pageListener);
   }
 };
