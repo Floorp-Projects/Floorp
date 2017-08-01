@@ -51,7 +51,7 @@ bool SkipTags(nsCOMPtr<nsINavBookmarkObserver> obs) {
 }
 bool SkipDescendants(nsCOMPtr<nsINavBookmarkObserver> obs) {
   bool skipDescendantsOnItemRemoval = false;
-  (void) obs->GetSkipTags(&skipDescendantsOnItemRemoval);
+  (void) obs->GetSkipDescendantsOnItemRemoval(&skipDescendantsOnItemRemoval);
   return skipDescendantsOnItemRemoval;
 }
 
