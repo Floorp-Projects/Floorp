@@ -357,7 +357,7 @@ photonpanelmultiview panelview {
 }
 
 photonpanelmultiview .panel-subview-body {
-  margin: 4px 0;
+  padding: 6px 0;
 }
 
 /* END photonpanelview adjustments */
@@ -1222,10 +1222,11 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
   content: url(chrome://browser/skin/back-12.svg);
   fill: GrayText;
   float: right;
+  transform: translateY(1px);
 }
 
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(ltr)::after {
-  transform: scaleX(-1);
+  transform: scaleX(-1) translateY(1px);
 }
 
 .subviewbutton[shortcut]::after,
@@ -1408,7 +1409,7 @@ menuitem.subviewbutton@menuStateActive@,
 }
 
 .subviewbutton.panel-subview-footer {
-  margin: 4px -4px -4px;
+  margin: 0;
   background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
   border-radius: 0;
@@ -1501,8 +1502,8 @@ menuitem.panel-subview-footer@menuStateActive@,
   border-inline-start: 1px solid var(--panel-separator-color);
   border-top: none;
   margin: 0;
-  margin-inline-start: 4px;
-  margin-inline-end: 5px;
+  margin-inline-start: 6px;
+  margin-inline-end: 7px;
 }
 
 .subviewbutton > .menu-accel-container {
