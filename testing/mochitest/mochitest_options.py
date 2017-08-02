@@ -606,6 +606,18 @@ class MochitestArguments(ArgumentContainer):
           "help": "Path to the base dir of all test files.",
           "suppress": True,
           }],
+        [["--verify"],
+         {"action": "store_true",
+          "default": False,
+          "help": "Test verification mode.",
+          "suppress": True,
+          }],
+        [["--verify-max-time"],
+         {"type": int,
+          "default": 3600,
+          "help": "Maximum time, in seconds, to run in --verify mode.",
+          "suppress": True,
+          }],
     ]
 
     defaults = {
