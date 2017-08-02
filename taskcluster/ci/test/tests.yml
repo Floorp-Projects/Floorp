@@ -790,7 +790,7 @@ mochitest-clipboard:
                             - unittests/linux_unittest.py
                             - remove_executables.py
                 extra-options:
-                    - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard,jetpack-package-clipboard
+                    - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
     tier:
         by-test-platform:
             windows7-32.*: 2
@@ -935,7 +935,6 @@ mochitest-jetpack:
                     - remove_executables.py
         extra-options:
             - --mochitest-suite=jetpack-package
-            - --mochitest-suite=jetpack-addon
 
 mochitest-media:
     description: "Mochitest media run"
