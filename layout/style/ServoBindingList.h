@@ -47,10 +47,10 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_SizeOfIncludingThis, size_t,
 SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSetOwned, RawGeckoPresContextOwned pres_context)
 SERVO_BINDING_FUNC(Servo_StyleSet_Clear, void,
                    RawServoStyleSetBorrowed set)
-SERVO_BINDING_FUNC(Servo_StyleSet_RebuildData, void,
+SERVO_BINDING_FUNC(Servo_StyleSet_RebuildCachedData, void,
                    RawServoStyleSetBorrowed set)
-SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, nsRestyleHint,
-                   RawServoStyleSetBorrowed set, bool viewport_changed)
+SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, bool,
+                   RawServoStyleSetBorrowed set, bool* viewport_units_used)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_CompatModeChanged, void,
                    RawServoStyleSetBorrowed raw_data)
