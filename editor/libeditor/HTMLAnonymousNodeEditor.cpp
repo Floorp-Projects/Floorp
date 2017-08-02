@@ -161,7 +161,7 @@ ElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode)
   NS_RELEASE_THIS();
 }
 
-already_AddRefed<Element>
+ManualNACPtr
 HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
                                    nsIDOMNode* aParentNode,
                                    const nsAString& aAnonClass,
@@ -196,16 +196,16 @@ HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
   }
 
   // Create a new node through the element factory
-  RefPtr<Element> newContent = CreateHTMLContent(aTag);
-  if (NS_WARN_IF(!newContent)) {
+  RefPtr<Element> newContentRaw = CreateHTMLContent(aTag);
+  if (NS_WARN_IF(!newContentRaw)) {
     return nullptr;
   }
 
   // add the "hidden" class if needed
   if (aIsCreatedHidden) {
     nsresult rv =
-      newContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                          NS_LITERAL_STRING("hidden"), true);
+      newContentRaw->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                             NS_LITERAL_STRING("hidden"), true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -214,8 +214,8 @@ HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
   // add an _moz_anonclass attribute if needed
   if (!aAnonClass.IsEmpty()) {
     nsresult rv =
-      newContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_anonclass,
-                          aAnonClass, true);
+      newContentRaw->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_anonclass,
+                             aAnonClass, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -225,24 +225,16 @@ HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
     nsAutoScriptBlocker scriptBlocker;
 
     // establish parenthood of the element
-    newContent->SetIsNativeAnonymousRoot();
+    newContentRaw->SetIsNativeAnonymousRoot();
     nsresult rv =
-      newContent->BindToTree(doc, parentContent, parentContent, true);
+      newContentRaw->BindToTree(doc, parentContent, parentContent, true);
     if (NS_FAILED(rv)) {
-      newContent->UnbindFromTree();
+      newContentRaw->UnbindFromTree();
       return nullptr;
     }
   }
 
-  // Record the NAC on the element, so that AllChildrenIterator can find it.
-  auto nac = static_cast<ManualNAC*>(
-      parentContent->GetProperty(nsGkAtoms::manualNACProperty));
-  if (!nac) {
-    nac = new ManualNAC();
-    parentContent->SetProperty(nsGkAtoms::manualNACProperty, nac,
-                               nsINode::DeleteProperty<ManualNAC>);
-  }
-  nac->AppendElement(newContent);
+  ManualNACPtr newContent(newContentRaw.forget());
 
   // Must style the new element, otherwise the PostRecreateFramesFor call
   // below will do nothing.
@@ -268,7 +260,7 @@ HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
   // display the element
   ps->PostRecreateFramesFor(newContent);
 
-  return newContent.forget();
+  return Move(newContent);
 }
 
 // Removes event listener and calls DeleteRefToAnonymousNode.
@@ -276,19 +268,19 @@ void
 HTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                        nsIDOMEventListener* aListener,
                                        bool aUseCapture,
-                                       Element* aElement,
+                                       ManualNACPtr aElement,
                                        nsIPresShell* aShell)
 {
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
   if (evtTarget) {
     evtTarget->RemoveEventListener(aEvent, aListener, aUseCapture);
   }
-  DeleteRefToAnonymousNode(aElement, aShell);
+  DeleteRefToAnonymousNode(Move(aElement), aShell);
 }
 
 // Deletes all references to an anonymous element
 void
-HTMLEditor::DeleteRefToAnonymousNode(nsIContent* aContent,
+HTMLEditor::DeleteRefToAnonymousNode(ManualNACPtr aContent,
                                      nsIPresShell* aShell)
 {
   // call ContentRemoved() for the anonymous content
@@ -332,19 +324,7 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIContent* aContent,
     }
   }
 
-  // Remove reference from the parent element.
-  auto nac = static_cast<mozilla::ManualNAC*>(
-      parentContent->GetProperty(nsGkAtoms::manualNACProperty));
-  // nsIDocument::AdoptNode might remove all properties before destroying
-  // editor.  So we have to consider that NAC could be already removed.
-  if (nac) {
-    nac->RemoveElement(aContent);
-    if (nac->IsEmpty()) {
-      parentContent->DeleteProperty(nsGkAtoms::manualNACProperty);
-    }
-  }
-
-  aContent->UnbindFromTree();
+  // The ManualNACPtr destructor will invoke UnbindFromTree.
 }
 
 // The following method is mostly called by a selection listener. When a
