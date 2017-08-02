@@ -23,7 +23,7 @@ linux64-clang-3.9:
         toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
-        - linux64-gcc
+        - linux64-gcc-4.8
 
 linux64-clang-tidy:
     description: "Clang-tidy build"
@@ -50,6 +50,24 @@ linux64-clang-tidy:
         toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
         - linux64-gcc
+
+linux64-gcc-4.8:
+    description: "GCC 4.8 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(gcc4.8)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-gcc-4.8-linux.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+        toolchain-artifact: public/build/gcc.tar.xz
 
 linux64-gcc-4.9:
     description: "GCC 4.9 toolchain build"
