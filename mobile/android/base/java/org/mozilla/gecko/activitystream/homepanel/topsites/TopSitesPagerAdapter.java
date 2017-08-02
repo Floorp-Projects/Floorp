@@ -24,7 +24,7 @@ import java.util.List;
  * all lower-level Adapters that populate the individual topsite items.
  */
 public class TopSitesPagerAdapter extends PagerAdapter {
-    public static final int PAGES = 4;
+    public static final int PAGES = 2;
     public static final int SUGGESTED_SITES_MAX_PAGES = 2;
 
     private int tiles;
@@ -110,7 +110,6 @@ public class TopSitesPagerAdapter extends PagerAdapter {
             for (int i = 0; i < pageDelta; i++) {
                 final TopSitesPage page = (TopSitesPage) inflater.inflate(R.layout.activity_stream_topsites_page, null, false);
 
-                page.setTiles(tiles);
                 final TopSitesPageAdapter adapter = new TopSitesPageAdapter(
                         context, i, tiles, tilesSize, onUrlOpenListener, onUrlOpenInBackgroundListener);
                 page.setAdapter(adapter);
