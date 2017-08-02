@@ -100,19 +100,23 @@
 
 #main-window[customizing] .customization-target:not(#PanelUI-contents):not(#widget-overflow-fixed-list) {
   min-width: 100px;
-  padding-left: 10px;
-  padding-right: 10px;
 }
 
 #customization-container {
 %ifdef MOZ_PHOTON_THEME
-  background-color: var(--toolbar-background-color);
-  color: var(--toolbar-foreground-color);
+  background-color: var(--toolbar-non-lwt-bgcolor);
+  background-image: var(--toolbar-non-lwt-bgimage);
+  color: var(--toolbar-non-lwt-textcolor);
 %else
   background-color: -moz-field;
   color: -moz-fieldText;
 %endif
   text-shadow: none;
+}
+
+#customization-container:-moz-lwtheme {
+  background-color: transparent;
+  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-non-lwt-bgcolor) 45px);
 }
 
 #customization-palette,
@@ -121,18 +125,15 @@
 }
 
 #customization-header {
-%ifdef MOZ_PHOTON_THEME;
-  border-bottom: 1px solid ThreeDLightShadow;
-  font-size: 1.75em;
-  line-height: 1.75em;
-  color: GrayText;
-  font-weight: 200;
-  padding-bottom: 12px;
-%else
   font-weight: 600;
   font-size: 1.2em;
-%endif
   margin: 20px 20px 15px;
+}
+
+#customization-header:-moz-lwtheme {
+  text-shadow: 0 0 1em var(--toolbar-non-lwt-bgcolor),
+               0 0 1em var(--toolbar-non-lwt-bgcolor),
+               0 0 .5em var(--toolbar-non-lwt-bgcolor);
 }
 
 #customization-panel-container {
@@ -152,7 +153,7 @@
 %endif
 
 #customization-footer {
-  border-top: 2px solid ThreeDLightShadow;
+  border-top: 1px solid rgba(0,0,0,.15);
   padding: 10px;
 }
 
@@ -350,6 +351,10 @@ toolbarpaletteitem[place="toolbar"] {
 
 #customization-palette:not([hidden]) {
   margin-bottom: 20px;
+}
+
+#customization-palette .toolbarbutton-1 {
+  fill: currentColor;
 }
 
 toolbarpaletteitem[place="palette"]:-moz-focusring,

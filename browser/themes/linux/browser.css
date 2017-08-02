@@ -11,11 +11,18 @@
 @namespace svg url("http://www.w3.org/2000/svg");
 
 %include ../shared/browser.inc
-%include linuxShared.inc
 
 %include ../shared/browser.inc.css
 
 :root {
+  --tabs-border: rgba(0,0,0,.3);
+
+  --toolbar-non-lwt-bgcolor: -moz-dialog;
+  --toolbar-non-lwt-textcolor: -moz-dialogtext;
+  --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
+  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
+  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
+
 %ifdef MOZ_PHOTON_THEME
   --toolbarbutton-border-radius: 4px;
 %else
@@ -45,6 +52,11 @@
   --urlbar-separator-color: ThreeDShadow;
 }
 
+:root:-moz-lwtheme {
+  --toolbar-bgcolor: rgba(255,255,255,.4);
+  --toolbar-bgimage: none;
+}
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
@@ -70,18 +82,15 @@
   border-bottom-color: rgba(0,0,0,.3);
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#addon-bar) {
-  background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
+:root[customizing] #navigator-toolbox::after {
+  display: none;
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#addon-bar):-moz-lwtheme {
-  background-image: linear-gradient(@toolbarHighlightLWT@, @toolbarHighlightLWT@);
-}
-
-#navigator-toolbox > toolbar:not(:-moz-lwtheme):not(#toolbar-menubar):not(#TabsToolbar) {
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+  background-color: var(--toolbar-bgcolor);
+  background-image: var(--toolbar-bgimage);
   -moz-appearance: none;
   border-style: none;
-  background-color: -moz-Dialog;
 }
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
@@ -98,17 +107,14 @@
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  border-top: 1px solid hsla(0,0%,0%,.3) !important;
+  border-top: 1px solid var(--tabs-border) !important;
   background-clip: padding-box;
-  /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
-  margin-top: calc(-1 * var(--navbar-tab-toolbar-highlight-overlap));
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
 }
 
 #nav-bar {
-  box-shadow: 0 1px 0 @navbarInsetHighlight@ inset;
   padding-top: 2px;
   padding-bottom: 2px;
 }

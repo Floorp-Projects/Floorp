@@ -6,16 +6,18 @@
    preffed on.  The bulk of the styling is here in the shared file, but
    there are overrides for each platform in their compacttheme.css files. */
 
-:root {
-  --tab-toolbar-navbar-overlap: 0px;
-  --navbar-tab-toolbar-highlight-overlap: 0px;
+:root:-moz-lwtheme {
 %ifndef MOZ_PHOTON_THEME
   --space-above-tabbar: 0px;
-%endif
-  --toolbarbutton-text-shadow: none;
   --backbutton-urlbar-overlap: 0px;
   /* 18px icon + 2 * 5px padding + 1 * 1px border */
   --forwardbutton-width: 29px;
+%endif
+  --toolbar-bgcolor: var(--chrome-secondary-background-color);
+  --toolbar-gbimage: none;
+  --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
+  --toolbar-non-lwt-textcolor: var(--chrome-color);
+  --toolbar-non-lwt-bgimage: none;
 }
 
 :root:-moz-lwtheme-brighttext {
@@ -34,13 +36,6 @@
   --chrome-selection-color: #fff;
   --chrome-selection-background-color: #5675B9;
 
-  /* Tabs */
-  --tab-background-color: #272b35;
-  --tab-hover-background-color: #07090a;
-  --tab-selection-color: #f5f7fa;
-  --tab-selection-background-color: #5675B9;
-  --tab-selection-box-shadow: none;
-
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, transparent 70%);
 
 
@@ -48,7 +43,7 @@
 
   /* Chrome */
   --chrome-background-color: hsl(240, 5%, 5%);
-  --chrome-color: #F5F7FA;
+  --chrome-color: rgb(249, 249, 250);
   --chrome-secondary-background-color: hsl(240, 1%, 20%);
   --chrome-navigator-toolbox-separator-color: hsla(240, 5%, 5%, .1);
   --chrome-nav-bar-separator-color: rgba(0,0,0,.2);
@@ -57,12 +52,6 @@
   --chrome-nav-bar-controls-border-color: hsla(240, 5%, 5%, .3);
   --chrome-selection-color: #fff;
   --chrome-selection-background-color: #5675B9;
-
-  /* Tabs */
-  --tab-hover-background-color: hsla(240, 9%, 98%, .1);
-  --tab-selection-color: #f5f7fa;
-  --tab-selection-background-color: hsl(240, 1%, 20%);
-  --tab-selection-box-shadow: none;
 
   --toolbarbutton-icon-fill-inverted: rgba(249, 249, 250, .7);
 
@@ -112,11 +101,6 @@ toolbar:-moz-lwtheme-brighttext  {
   --chrome-selection-color: #f5f7fa;
   --chrome-selection-background-color: #4c9ed9;
 
-  --tab-background-color: #E3E4E6;
-  --tab-hover-background-color: #D7D8DA;
-  --tab-selection-color: #f5f7fa;
-  --tab-selection-background-color: #4c9ed9;
-  --tab-selection-box-shadow: none;
 %ifndef MOZ_PHOTON_THEME
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, transparent 16%);
 %endif
@@ -141,38 +125,6 @@ toolbar:-moz-lwtheme-darktext {
   --space-above-tabbar: 9px;
 }
 %endif
-/* Override @tabCurveHalfWidth@ and @tabCurveWidth@.  XXX: Switch to a CSS variable once the perf is sorted out - bug 1088771 */
-.tab-background-middle {
-  border-left-width: 0;
-  border-right-width: 0;
-  margin: 0;
-}
-
-.tab-background,
-.tabs-newtab-button {
-  margin-inline-end: 0;
-  margin-inline-start: 0;
-}
-
-.tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  padding-inline-end: 0;
-  padding-inline-start: 0;
-}
-
-.tab-background-start[selected=true]::after,
-.tab-background-start[selected=true]::before,
-.tab-background-start,
-.tab-background-end,
-.tab-background-end[selected=true]::after,
-.tab-background-end[selected=true]::before {
-  width: 0;
-}
-
-.tab-background-start[selected=true]::after,
-.tab-background-end[selected=true]::after {
-  margin-inline-start: 0;
-}
-/* End override @tabCurveHalfWidth@ and @tabCurveWidth@ */
 
 #urlbar ::-moz-selection,
 #navigator-toolbox .searchbar-textbox ::-moz-selection,
@@ -183,7 +135,6 @@ toolbar:-moz-lwtheme-darktext {
 
 /* Change the base colors for the browser chrome */
 
-#tabbrowser-tabs,
 #TabsToolbar,
 #browser-panel {
   background: var(--chrome-background-color);
@@ -212,7 +163,7 @@ toolbar:-moz-lwtheme-darktext {
 .browserContainer > findbar .findbar-button,
 #PlacesToolbar toolbarbutton.bookmark-item {
   color: var(--chrome-color);
-  text-shadow: var(--toolbarbutton-text-shadow);
+  text-shadow: none;
 }
 
 #TabsToolbar {
@@ -314,47 +265,9 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(
   background-color: rgba(255,255,255,.3);
 }
 
-/* Nav bar specific stuff */
-#nav-bar {
-  margin-top: 0 !important;
-  border-top: none !important;
-  border-bottom: none !important;
-  border-radius: 0 !important;
-  box-shadow: 0 -1px var(--chrome-nav-bar-separator-color) !important;
-}
-
-/* No extra vertical padding for nav bar */
-#nav-bar {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
 /* Use smaller back button icon */
 #back-button {
   list-style-image: url("chrome://browser/skin/back.svg");
-}
-
-.tab-background {
-  visibility: hidden;
-}
-
-/* Tab separators */
-.tabbrowser-tab::after,
-.tabbrowser-tab::before {
-  background: currentColor;
-  opacity: 0.2 !important;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down,
-.tabbrowser-arrowscrollbox > .scrollbutton-up {
-  background-color: var(--tab-background-color);
-  border-color: transparent;
-}
-
-.tabbrowser-tab {
-  /* We normally rely on other tab elements for pointer events, but this
-     theme hides those so we need it set here instead */
-  pointer-events: auto;
 }
 
 .tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
@@ -373,17 +286,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(
   background-size: 34px 100%;
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover,
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,
-.tabbrowser-tab:hover {
-  background-color: var(--tab-hover-background-color);
-}
-
-.tabbrowser-tab[visuallyselected] {
-  color: var(--tab-selection-color) !important; /* Override color: inherit */
-  background-color: var(--tab-selection-background-color);
-}
-
 .tab-throbber[selected][progress] {
   list-style-image: url("chrome://browser/skin/compacttheme/loading-inverted.png");
 }
@@ -399,13 +301,3 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(
   filter: none !important; /* removes drop-shadow filter */
 }
 
-/* Don't need space for the tab curves (66px - 30px) */
-.tabs-newtab-button {
-  width: 36px;
-}
-
-.tabs-newtab-button:hover {
-  /* Important needed because !important is used in browser.css */
-  background-color: var(--tab-hover-background-color) !important;
-  background-image: none;
-}
