@@ -87,23 +87,27 @@ add_task(async function test_notification_events() {
 });
 
 add_task(async function test_notification_clear() {
-  async function background() {
+  function background() {
     let opts = {
       type: "basic",
       title: "Testing Notification",
       message: "Carry on",
     };
 
-    browser.notifications.onClosed.addListener(id => {
-      browser.test.sendMessage("closed", id);
+    let createdId = "99";
+
+    browser.notifications.onShown.addListener(async id => {
+      browser.test.assertEq(createdId, id, "onShown received the expected id.");
+      let wasCleared = await browser.notifications.clear(id);
+      browser.test.assertTrue(wasCleared, "notifications.clear returned true.");
     });
 
-    let id = await browser.notifications.create("99", opts);
+    browser.notifications.onClosed.addListener(id => {
+      browser.test.assertEq(createdId, id, "onClosed received the expected id.");
+      browser.test.notifyPass("background test passed");
+    });
 
-    let wasCleared = await browser.notifications.clear(id);
-    browser.test.sendMessage("cleared", wasCleared);
-
-    browser.test.notifyPass("background test passed");
+    browser.notifications.create(createdId, opts);
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -113,10 +117,6 @@ add_task(async function test_notification_clear() {
     background,
   });
   await extension.startup();
-  let x = await extension.awaitMessage("closed");
-  is(x, "99", "got correct id from onClosed listener");
-  x = await extension.awaitMessage("cleared");
-  is(x, true, "got correct boolean from notifications.clear");
   await extension.awaitFinish();
   await extension.unload();
 });

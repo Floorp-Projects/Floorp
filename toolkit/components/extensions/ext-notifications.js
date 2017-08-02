@@ -62,11 +62,16 @@ Notification.prototype = {
       return;
     }
 
-    if (topic === "alertclickcallback") {
-      emitAndDelete("clicked");
-    }
-    if (topic === "alertfinished") {
-      emitAndDelete("closed");
+    switch (topic) {
+      case "alertclickcallback":
+        emitAndDelete("clicked");
+        break;
+      case "alertfinished":
+        emitAndDelete("closed");
+        break;
+      case "alertshow":
+        notifications.emit("shown", data);
+        break;
     }
   },
 };
@@ -153,6 +158,17 @@ this.notifications = class extends ExtensionAPI {
           notificationsMap.get(extension).on("clicked", listener);
           return () => {
             notificationsMap.get(extension).off("clicked", listener);
+          };
+        }).api(),
+
+        onShown: new EventManager(context, "notifications.onShown", fire => {
+          let listener = (event, notificationId) => {
+            fire.async(notificationId, true);
+          };
+
+          notificationsMap.get(extension).on("shown", listener);
+          return () => {
+            notificationsMap.get(extension).off("shown", listener);
           };
         }).api(),
 
