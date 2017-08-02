@@ -630,16 +630,6 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 }
 %endif
 
-/* Non-photon adjustments. Remove when we stop supporting non-photon. */
-#customization-container:not([photon]) #customization-panelWrapper > .panel-arrowbox {
-  margin-bottom: -1px;
-}
-
-#customization-container:not([photon]) #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
-  margin-inline-end: 0;
-  margin-inline-start: 22.35em;
-}
-
 %ifdef MOZ_PHOTON_THEME
 #customization-panelHolder > #widget-overflow-fixed-list:not(:empty) {
   padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
