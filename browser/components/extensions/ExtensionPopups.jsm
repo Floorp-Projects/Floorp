@@ -117,6 +117,9 @@ class BasePopup {
         this.destroyBrowser(this.browser, true);
         this.browser.remove();
       }
+      if (this.stack) {
+        this.stack.remove();
+      }
 
       if (this.viewNode) {
         this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
@@ -132,6 +135,7 @@ class BasePopup {
       }
 
       this.browser = null;
+      this.stack = null;
       this.viewNode = null;
     });
   }
@@ -220,6 +224,10 @@ class BasePopup {
 
   createBrowser(viewNode, popupURL = null) {
     let document = viewNode.ownerDocument;
+
+    let stack = document.createElementNS(XUL_NS, "stack");
+    stack.setAttribute("class", "webextension-popup-stack");
+
     let browser = document.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
@@ -242,6 +250,7 @@ class BasePopup {
     // main menu panel, so that the browser occupies the full width of the view,
     // and also takes up any extra height that's available to it.
     browser.setAttribute("flex", "1");
+    stack.setAttribute("flex", "1");
 
     // Note: When using noautohide panels, the popup manager will add width and
     // height attributes to the panel, breaking our resize code, if the browser
@@ -249,6 +258,7 @@ class BasePopup {
     // will be if and when we popup debugging.
 
     this.browser = browser;
+    this.stack = stack;
 
     let readyPromise;
     if (this.extension.remote) {
@@ -257,7 +267,8 @@ class BasePopup {
       readyPromise = promiseEvent(browser, "load");
     }
 
-    viewNode.appendChild(browser);
+    stack.appendChild(browser);
+    viewNode.appendChild(stack);
 
     ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
 
