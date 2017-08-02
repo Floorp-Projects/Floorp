@@ -16,20 +16,19 @@ function setTimeout(callback, delay) {
 
 function doUpdate(update) {
   let listener = {
-    QueryInterface: function(iid)
-    {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIUrlClassifierUpdateObserver))
         return this;
 
       throw Cr.NS_ERROR_NO_INTERFACE;
     },
-    updateUrlRequested: function(url) { },
-    streamFinished: function(status) { },
-    updateError: function(errorCode) {
+    updateUrlRequested(url) { },
+    streamFinished(status) { },
+    updateError(errorCode) {
       sendAsyncMessage("updateError", errorCode);
     },
-    updateSuccess: function(requestedTimeout) {
+    updateSuccess(requestedTimeout) {
       sendAsyncMessage("updateSuccess");
     }
   };
@@ -43,7 +42,7 @@ function doUpdate(update) {
     dbService.updateStream(update);
     dbService.finishStream();
     dbService.finishUpdate();
-  } catch(e) {
+  } catch (e) {
     // beginUpdate may fail if there's an existing update in progress
     // retry until success or testcase timeout.
     setTimeout(() => { doUpdate(update); }, 1000);
@@ -54,7 +53,7 @@ function doReload() {
   try {
     dbService.reloadDatabase();
     sendAsyncMessage("reloadSuccess");
-  } catch(e) {
+  } catch (e) {
     setTimeout(() => { doReload(); }, 1000);
   }
 }
@@ -84,16 +83,14 @@ function waitForInit() {
     iosvc.newURI(url), {});
 
   let listener = {
-    QueryInterface: function(iid)
-    {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIUrlClassifierUpdateObserver))
         return this;
       throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    handleEvent: function(value)
-    {
+    handleEvent(value) {
       if (value === table) {
         sendAsyncMessage("safeBrowsingInited");
       }

@@ -8,9 +8,9 @@ var gScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
 const HASHLEN = 32;
 
 const PREFS = {
-  PROVIDER_LISTS : "browser.safebrowsing.provider.mozilla.lists",
-  DISALLOW_COMPLETIONS : "urlclassifier.disallow_completions",
-  PROVIDER_GETHASHURL : "browser.safebrowsing.provider.mozilla.gethashURL"
+  PROVIDER_LISTS: "browser.safebrowsing.provider.mozilla.lists",
+  DISALLOW_COMPLETIONS: "urlclassifier.disallow_completions",
+  PROVIDER_GETHASHURL: "browser.safebrowsing.provider.mozilla.gethashURL"
 };
 
 classifierHelper._curAddChunkNum = 1;
@@ -109,7 +109,7 @@ classifierHelper.resetDatabase = function() {
 classifierHelper.reloadDatabase = function() {
   return new Promise(function(resolve, reject) {
     gScript.addMessageListener("reloadSuccess", function handler() {
-      gScript.removeMessageListener('reloadSuccess', handler);
+      gScript.removeMessageListener("reloadSuccess", handler);
       resolve();
     });
 
@@ -150,7 +150,7 @@ classifierHelper._updateError = function(errorCode) {
 };
 
 classifierHelper._inited = function() {
-  classifierHelper._initsCB.forEach(function (cb) {
+  classifierHelper._initsCB.forEach(function(cb) {
     cb();
   });
   classifierHelper._initsCB = [];

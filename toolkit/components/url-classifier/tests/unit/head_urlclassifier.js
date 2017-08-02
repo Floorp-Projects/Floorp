@@ -41,11 +41,11 @@ prefBranch.setIntPref("urlclassifier.gethash.timeout_ms", 5000);
 function delFile(name) {
   try {
     // Delete a previously created sqlite file
-    var file = dirSvc.get('ProfLD', Ci.nsIFile);
+    var file = dirSvc.get("ProfLD", Ci.nsIFile);
     file.append(name);
     if (file.exists())
       file.remove(false);
-  } catch(e) {
+  } catch (e) {
   }
 }
 
@@ -103,9 +103,9 @@ function buildUpdate(update, hashSize) {
     var chunks = update[tableName];
     for (var j = 0; j < chunks.length; j++) {
       var chunk = chunks[j];
-      var chunkType = chunk.chunkType ? chunk.chunkType : 'a';
+      var chunkType = chunk.chunkType ? chunk.chunkType : "a";
       var chunkNum = chunk.chunkNum ? chunk.chunkNum : j;
-      updateStr += chunkType + ':' + chunkNum + ':' + hashSize;
+      updateStr += chunkType + ":" + chunkNum + ":" + hashSize;
 
       if (chunk.urls) {
         var chunkData = chunk.urls.join("\n");
@@ -120,27 +120,27 @@ function buildUpdate(update, hashSize) {
 }
 
 function buildPhishingUpdate(chunks, hashSize) {
-  return buildUpdate({"test-phish-simple" : chunks}, hashSize);
+  return buildUpdate({"test-phish-simple": chunks}, hashSize);
 }
 
 function buildMalwareUpdate(chunks, hashSize) {
-  return buildUpdate({"test-malware-simple" : chunks}, hashSize);
+  return buildUpdate({"test-malware-simple": chunks}, hashSize);
 }
 
 function buildUnwantedUpdate(chunks, hashSize) {
-  return buildUpdate({"test-unwanted-simple" : chunks}, hashSize);
+  return buildUpdate({"test-unwanted-simple": chunks}, hashSize);
 }
 
 function buildBlockedUpdate(chunks, hashSize) {
-  return buildUpdate({"test-block-simple" : chunks}, hashSize);
+  return buildUpdate({"test-block-simple": chunks}, hashSize);
 }
 
 function buildMozPhishingUpdate(chunks, hashSize) {
-  return buildUpdate({"moz-phish-simple" : chunks}, hashSize);
+  return buildUpdate({"moz-phish-simple": chunks}, hashSize);
 }
 
 function buildBareUpdate(chunks, hashSize) {
-  return buildUpdate({"" : chunks}, hashSize);
+  return buildUpdate({"": chunks}, hashSize);
 }
 
 /**
@@ -148,18 +148,17 @@ function buildBareUpdate(chunks, hashSize) {
  */
 function doSimpleUpdate(updateText, success, failure) {
   var listener = {
-    QueryInterface: function(iid)
-    {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIUrlClassifierUpdateObserver))
         return this;
       throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    updateUrlRequested: function(url) { },
-    streamFinished: function(status) { },
-    updateError: function(errorCode) { failure(errorCode); },
-    updateSuccess: function(requestedTimeout) { success(requestedTimeout); }
+    updateUrlRequested(url) { },
+    streamFinished(status) { },
+    updateError(errorCode) { failure(errorCode); },
+    updateSuccess(requestedTimeout) { success(requestedTimeout); }
   };
 
   dbservice.beginUpdate(listener, allTables);
@@ -174,18 +173,17 @@ function doSimpleUpdate(updateText, success, failure) {
  */
 function doErrorUpdate(tables, success, failure) {
   var listener = {
-    QueryInterface: function(iid)
-    {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIUrlClassifierUpdateObserver))
         return this;
       throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    updateUrlRequested: function(url) { },
-    streamFinished: function(status) { },
-    updateError: function(errorCode) { success(errorCode); },
-    updateSuccess: function(requestedTimeout) { failure(requestedTimeout); }
+    updateUrlRequested(url) { },
+    streamFinished(status) { },
+    updateError(errorCode) { success(errorCode); },
+    updateSuccess(requestedTimeout) { failure(requestedTimeout); }
   };
 
   dbservice.beginUpdate(listener, tables, null);
@@ -210,12 +208,11 @@ function doStreamUpdate(updateText, success, failure, downloadFailure) {
 
 var gAssertions = {
 
-tableData : function(expectedTables, cb)
-{
+tableData(expectedTables, cb) {
   dbservice.getTables(function(tables) {
       // rebuild the tables in a predictable order.
       var parts = tables.split("\n");
-      while (parts[parts.length - 1] == '') {
+      while (parts[parts.length - 1] == "") {
         parts.pop();
       }
       parts.sort();
@@ -226,8 +223,7 @@ tableData : function(expectedTables, cb)
     });
 },
 
-checkUrls: function(urls, expected, cb, useMoz = false)
-{
+checkUrls(urls, expected, cb, useMoz = false) {
   // work with a copy of the list.
   urls = urls.slice(0);
   var doLookup = function() {
@@ -247,13 +243,12 @@ checkUrls: function(urls, expected, cb, useMoz = false)
   doLookup();
 },
 
-checkTables: function(url, expected, cb)
-{
+checkTables(url, expected, cb) {
   var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + url), {});
   dbservice.lookup(principal, allTables, function(tables) {
     // Rebuild tables in a predictable order.
     var parts = tables.split(",");
-    while (parts[parts.length - 1] == '') {
+    while (parts[parts.length - 1] == "") {
       parts.pop();
     }
     parts.sort();
@@ -263,51 +258,42 @@ checkTables: function(url, expected, cb)
   }, true);
 },
 
-urlsDontExist: function(urls, cb)
-{
-  this.checkUrls(urls, '', cb);
+urlsDontExist(urls, cb) {
+  this.checkUrls(urls, "", cb);
 },
 
-urlsExist: function(urls, cb)
-{
-  this.checkUrls(urls, 'test-phish-simple', cb);
+urlsExist(urls, cb) {
+  this.checkUrls(urls, "test-phish-simple", cb);
 },
 
-malwareUrlsExist: function(urls, cb)
-{
-  this.checkUrls(urls, 'test-malware-simple', cb);
+malwareUrlsExist(urls, cb) {
+  this.checkUrls(urls, "test-malware-simple", cb);
 },
 
-unwantedUrlsExist: function(urls, cb)
-{
-  this.checkUrls(urls, 'test-unwanted-simple', cb);
+unwantedUrlsExist(urls, cb) {
+  this.checkUrls(urls, "test-unwanted-simple", cb);
 },
 
-blockedUrlsExist: function(urls, cb)
-{
-  this.checkUrls(urls, 'test-block-simple', cb);
+blockedUrlsExist(urls, cb) {
+  this.checkUrls(urls, "test-block-simple", cb);
 },
 
-mozPhishingUrlsExist: function(urls, cb)
-{
-  this.checkUrls(urls, 'moz-phish-simple', cb, true);
+mozPhishingUrlsExist(urls, cb) {
+  this.checkUrls(urls, "moz-phish-simple", cb, true);
 },
 
-subsDontExist: function(urls, cb)
-{
+subsDontExist(urls, cb) {
   // XXX: there's no interface for checking items in the subs table
   cb();
 },
 
-subsExist: function(urls, cb)
-{
+subsExist(urls, cb) {
   // XXX: there's no interface for checking items in the subs table
   cb();
 },
 
-urlExistInMultipleTables: function(data, cb)
-{
-  this.checkTables(data["url"], data["tables"], cb);
+urlExistInMultipleTables(data, cb) {
+  this.checkTables(data.url, data.tables, cb);
 }
 
 };
@@ -315,8 +301,7 @@ urlExistInMultipleTables: function(data, cb)
 /**
  * Check a set of assertions against the gAssertions table.
  */
-function checkAssertions(assertions, doneCallback)
-{
+function checkAssertions(assertions, doneCallback) {
   var checkAssertion = function() {
     for (var i in assertions) {
       var data = assertions[i];
@@ -331,8 +316,7 @@ function checkAssertions(assertions, doneCallback)
   checkAssertion();
 }
 
-function updateError(arg)
-{
+function updateError(arg) {
   do_throw(arg);
 }
 
@@ -357,23 +341,21 @@ function doUpdateTest(updates, assertions, successCallback, errorCallback) {
 var gTests;
 var gNextTest = 0;
 
-function runNextTest()
-{
+function runNextTest() {
   if (gNextTest >= gTests.length) {
     do_test_finished();
     return;
   }
 
   dbservice.resetDatabase();
-  dbservice.setHashCompleter('test-phish-simple', null);
+  dbservice.setHashCompleter("test-phish-simple", null);
 
   let test = gTests[gNextTest++];
   dump("running " + test.name + "\n");
   test();
 }
 
-function runTests(tests)
-{
+function runTests(tests) {
   gTests = tests;
   runNextTest();
 }
@@ -388,13 +370,13 @@ function Timer(delay, cb) {
 }
 
 Timer.prototype = {
-QueryInterface: function(iid) {
+QueryInterface(iid) {
     if (!iid.equals(Ci.nsISupports) && !iid.equals(Ci.nsITimerCallback)) {
       throw Cr.NS_ERROR_NO_INTERFACE;
     }
     return this;
   },
-notify: function(timer) {
+notify(timer) {
     this.cb();
   }
 }
@@ -414,7 +396,7 @@ function LFSRgenerator(seed) {
 }
 LFSRgenerator.prototype = {
   // nextNum returns a random unsigned integer of in the range [0,2^|bits|].
-  nextNum: function(bits) {
+  nextNum(bits) {
     if (!bits)
       bits = 32;
 
@@ -446,13 +428,13 @@ function waitUntilMetaDataSaved(expectedState, expectedChecksum, callback) {
       let stateBase64 = metadata[0];
       let checksumBase64 = metadata[1];
 
-      if (tableName !== 'test-phish-proto') {
+      if (tableName !== "test-phish-proto") {
         return false; // continue.
       }
 
       if (stateBase64 === btoa(expectedState) &&
           checksumBase64 === btoa(expectedChecksum)) {
-        do_print('State has been saved to disk!');
+        do_print("State has been saved to disk!");
 
         // We slightly defer the callback to see if the in-memory
         // |getTables| caching works correctly.

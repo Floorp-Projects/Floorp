@@ -340,9 +340,6 @@ toolkit/components/workerloader/tests/moduleF-syntax-error.js
 # Tests old non-star function generators
 toolkit/modules/tests/xpcshell/test_task.js
 
-# Not yet updated
-toolkit/components/url-classifier/**
-
 # External code:
 toolkit/components/microformats/test/**
 toolkit/components/microformats/microformat-shiv.js

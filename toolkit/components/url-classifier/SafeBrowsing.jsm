@@ -55,7 +55,7 @@ const tablePreferences = [
 
 this.SafeBrowsing = {
 
-  init: function() {
+  init() {
     if (this.initialized) {
       log("Already initialized");
       return;
@@ -75,7 +75,7 @@ this.SafeBrowsing = {
     log("init() finished");
   },
 
-  registerTableWithURLs: function(listname) {
+  registerTableWithURLs(listname) {
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
       getService(Ci.nsIUrlListManager);
 
@@ -96,7 +96,7 @@ this.SafeBrowsing = {
     listManager.registerTable(listname, providerName, provider.updateURL, provider.gethashURL);
   },
 
-  registerTables: function() {
+  registerTables() {
     for (let i = 0; i < this.phishingLists.length; ++i) {
       this.registerTableWithURLs(this.phishingLists[i]);
     }
@@ -151,7 +151,7 @@ this.SafeBrowsing = {
 
   reportURL:             null,
 
-  getReportURL: function(kind, info) {
+  getReportURL(kind, info) {
     let pref;
     switch (kind) {
       case "Phish":
@@ -187,7 +187,7 @@ this.SafeBrowsing = {
     return reportUrl;
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     // skip nextupdatetime and lastupdatetime
     if (aData.indexOf("lastupdatetime") >= 0 || aData.indexOf("nextupdatetime") >= 0) {
       return;
@@ -201,7 +201,7 @@ this.SafeBrowsing = {
     this.readPrefs();
   },
 
-  readPrefs: function() {
+  readPrefs() {
     loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
     log("reading prefs");
 
@@ -249,10 +249,10 @@ this.SafeBrowsing = {
   },
 
 
-  updateProviderURLs: function() {
+  updateProviderURLs() {
     try {
       var clientID = Services.prefs.getCharPref("browser.safebrowsing.id");
-    } catch(e) {
+    } catch (e) {
       clientID = Services.appinfo.name;
     }
 
@@ -295,8 +295,8 @@ this.SafeBrowsing = {
       let googleKey = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
       if ((provider == "google" || provider == "google4") &&
           (!googleKey || googleKey == "no-google-api-key")) {
-        updateURL= "";
-        gethashURL= "";
+        updateURL = "";
+        gethashURL = "";
       }
 
       log("Provider: " + provider + " updateURL=" + updateURL);
@@ -318,7 +318,7 @@ this.SafeBrowsing = {
     }, this);
   },
 
-  controlUpdateChecking: function() {
+  controlUpdateChecking() {
     log("phishingEnabled:", this.phishingEnabled, "malwareEnabled:",
         this.malwareEnabled, "trackingEnabled:", this.trackingEnabled,
         "blockedEnabled:", this.blockedEnabled, "trackingAnnotations",
@@ -395,7 +395,7 @@ this.SafeBrowsing = {
   },
 
 
-  addMozEntries: function() {
+  addMozEntries() {
     // Add test entries to the DB.
     // XXX bug 779008 - this could be done by DB itself?
     const phishURL    = "itisatrap.org/firefox/its-a-trap.html";
@@ -414,7 +414,7 @@ this.SafeBrowsing = {
                  malwareURL + "\n";
     update += "n:1000\ni:test-phish-simple\nad:1\n" +
               "a:1:32:" + phishURL.length + "\n" +
-              phishURL  + "\n";
+              phishURL + "\n";
     update += "n:1000\ni:test-unwanted-simple\nad:1\n" +
               "a:1:32:" + unwantedURL.length + "\n" +
               unwantedURL + "\n";
@@ -440,14 +440,14 @@ this.SafeBrowsing = {
 
     // nsIUrlClassifierUpdateObserver
     let dummyListener = {
-      updateUrlRequested: function() { },
-      streamFinished:     function() { },
+      updateUrlRequested() { },
+      streamFinished() { },
       // We notify observers when we're done in order to be able to make perf
       // test results more consistent
-      updateError:        function() {
+      updateError() {
         Services.obs.notifyObservers(db, "mozentries-update-finished", "error");
       },
-      updateSuccess:      function() {
+      updateSuccess() {
         Services.obs.notifyObservers(db, "mozentries-update-finished", "success");
       }
     };
@@ -459,7 +459,7 @@ this.SafeBrowsing = {
       db.updateStream(update);
       db.finishStream();
       db.finishUpdate();
-    } catch(ex) {
+    } catch (ex) {
       // beginUpdate will throw harmlessly if there's an existing update in progress, ignore failures.
       log("addMozEntries failed!", ex);
       Services.obs.notifyObservers(db, "mozentries-update-finished", "exception");

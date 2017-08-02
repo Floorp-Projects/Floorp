@@ -21,13 +21,13 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, 'gDbService',
-                                   '@mozilla.org/url-classifier/dbservice;1',
-                                   'nsIUrlClassifierDBService');
+XPCOMUtils.defineLazyServiceGetter(this, "gDbService",
+                                   "@mozilla.org/url-classifier/dbservice;1",
+                                   "nsIUrlClassifierDBService");
 
-XPCOMUtils.defineLazyServiceGetter(this, 'gUrlUtil',
-                                   '@mozilla.org/url-classifier/utils;1',
-                                   'nsIUrlClassifierUtils');
+XPCOMUtils.defineLazyServiceGetter(this, "gUrlUtil",
+                                   "@mozilla.org/url-classifier/utils;1",
+                                   "nsIUrlClassifierUtils");
 
 let loggingEnabled = false;
 
@@ -147,7 +147,7 @@ function httpStatusToBucket(httpStatus) {
     break;
   default:
     statusBucket = 15;
-  };
+  }
   return statusBucket;
 }
 
@@ -160,9 +160,9 @@ function FullHashMatch(table, hash, duration) {
 FullHashMatch.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFullHashMatch]),
 
-  tableName : null,
-  fullHash : null,
-  cacheDuration : null,
+  tableName: null,
+  fullHash: null,
+  cacheDuration: null,
 };
 
 function HashCompleter() {
@@ -240,7 +240,7 @@ HashCompleter.prototype = {
   // This is called after several calls to |complete|, or after the
   // currentRequest has finished.  It starts off the HTTP request by making a
   // |begin| call to the HashCompleterRequest.
-  run: function() {
+  run() {
     // Clear everything on shutdown
     if (this._shuttingDown) {
       this._currentRequest = null;
@@ -273,13 +273,13 @@ HashCompleter.prototype = {
 
   // Pass the server response status to the RequestBackoff for the given
   // gethashUrl and fetch the next pending request, if there is one.
-  finishRequest: function(url, aStatus) {
+  finishRequest(url, aStatus) {
     this._backoffs[url].noteServerResponse(aStatus);
     Services.tm.dispatchToMainThread(this);
   },
 
   // Returns true if we can make a request from the given url, false otherwise.
-  canMakeRequest: function(aGethashUrl) {
+  canMakeRequest(aGethashUrl) {
     return this._backoffs[aGethashUrl].canMakeRequest() &&
            Date.now() >= this._nextGethashTimeMs[aGethashUrl];
   },
@@ -287,7 +287,7 @@ HashCompleter.prototype = {
   // Notifies the RequestBackoff of a new request so we can throttle based on
   // max requests/time period. This must be called before a channel is opened,
   // and finishRequest must be called once the response is received.
-  noteRequest: function(aGethashUrl) {
+  noteRequest(aGethashUrl) {
     return this._backoffs[aGethashUrl].noteRequest();
   },
 
@@ -339,17 +339,17 @@ HashCompleterRequest.prototype = {
       partialHash: aPartialHash,
       callback: aCallback,
       tableName: aTableName,
-      response: { matches:[] },
+      response: { matches: [] },
     });
 
     if (aTableName) {
-      let isTableNameV4 = aTableName.endsWith('-proto');
+      let isTableNameV4 = aTableName.endsWith("-proto");
       if (0 === this.tableNames.size) {
         // Decide if this request is v4 by the first added partial hash.
         this.isV4 = isTableNameV4;
       } else if (this.isV4 !== isTableNameV4) {
         log('ERROR: Cannot mix "proto" tables with other types within ' +
-            'the same gethash URL.');
+            "the same gethash URL.");
       }
       this.tableNames.set(aTableName);
 
@@ -403,8 +403,7 @@ HashCompleterRequest.prototype = {
         // Notify the RequestBackoff if opening the channel succeeded. At this
         // point, finishRequest must be called.
         this._completer.noteRequest(this.gethashUrl);
-      }
-      catch (err) {
+      } catch (err) {
         this.notifyFailure(err);
         throw err;
       }
@@ -490,8 +489,8 @@ HashCompleterRequest.prototype = {
     this._requests.forEach(r => prefixSet.add(btoa(r.partialHash)));
     let prefixArray = Array.from(prefixSet).sort();
 
-    log("Build v4 gethash request with " + JSON.stringify(tableNameArray) + ', '
-                                         + JSON.stringify(stateArray) + ', '
+    log("Build v4 gethash request with " + JSON.stringify(tableNameArray) + ", "
+                                         + JSON.stringify(stateArray) + ", "
                                          + JSON.stringify(prefixArray));
 
     return gUrlUtil.makeFindFullHashRequestV4(tableNameArray,
@@ -522,7 +521,7 @@ HashCompleterRequest.prototype = {
     body = PARTIAL_LENGTH + ":" + (PARTIAL_LENGTH * prefixes.length) +
            "\n" + prefixes.join("");
 
-    log('Requesting completions for ' + prefixes.length + ' ' + PARTIAL_LENGTH + '-byte prefixes: ' + body);
+    log("Requesting completions for " + prefixes.length + " " + PARTIAL_LENGTH + "-byte prefixes: " + body);
     return body;
   },
 
@@ -563,9 +562,9 @@ HashCompleterRequest.prototype = {
     let callback = {
       // onCompleteHashFound will be called for each fullhash found in
       // FullHashResponse.
-      onCompleteHashFound : (aCompleteHash,
-                             aTableNames,
-                             aPerHashCacheDuration) => {
+      onCompleteHashFound: (aCompleteHash,
+                            aTableNames,
+                            aPerHashCacheDuration) => {
         log("V4 fullhash response complete hash found callback: " +
             JSON.stringify(aCompleteHash) + ", " +
             aTableNames + ", CacheDuration(" + aPerHashCacheDuration + ")");
@@ -592,8 +591,8 @@ HashCompleterRequest.prototype = {
       // onResponseParsed will be called no matter if there is match in
       // FullHashResponse, the callback is mainly used to pass negative cache
       // duration and minimum wait duration.
-      onResponseParsed : (aMinWaitDuration,
-                          aNegCacheDuration) => {
+      onResponseParsed: (aMinWaitDuration,
+                        aNegCacheDuration) => {
         log("V4 fullhash response parsed callback: " +
             "MinWaitDuration(" + aMinWaitDuration + "), " +
             "NegativeCacheDuration(" + aNegCacheDuration + ")");
@@ -644,7 +643,7 @@ HashCompleterRequest.prototype = {
     let addChunk = parseInt(entries[1]);
     let dataLength = parseInt(entries[2]);
 
-    log('Response includes add chunks for ' + list + ': ' + addChunk);
+    log("Response includes add chunks for " + list + ": " + addChunk);
     if (dataLength % COMPLETE_LENGTH != 0 ||
         dataLength == 0 ||
         dataLength > body.length - (newlineIndex + 1)) {
@@ -761,7 +760,7 @@ HashCompleterRequest.prototype = {
       }
     }
     let success = Components.isSuccessCode(aStatusCode);
-    log('Received a ' + httpStatus + ' status code from the gethash server (success=' + success + ').');
+    log("Received a " + httpStatus + " status code from the gethash server (success=" + success + ").");
 
     Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_REMOTE_STATUS2").
       add(this.telemetryProvider, httpStatusToBucket(httpStatus));
@@ -779,8 +778,7 @@ HashCompleterRequest.prototype = {
     if (success) {
       try {
         this.handleResponse();
-      }
-      catch (err) {
+      } catch (err) {
         log(err.stack);
         aStatusCode = err.value;
         success = false;
