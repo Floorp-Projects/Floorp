@@ -765,7 +765,27 @@ public:
    * returns true if aNode is an editable node.
    */
   bool IsEditable(nsIDOMNode* aNode);
-  virtual bool IsEditable(nsINode* aNode);
+  bool IsEditable(nsINode* aNode)
+  {
+    NS_ENSURE_TRUE(aNode, false);
+
+    if (!aNode->IsNodeOfType(nsINode::eCONTENT) || IsMozEditorBogusNode(aNode) ||
+        !IsModifiableNode(aNode)) {
+      return false;
+    }
+
+    switch (aNode->NodeType()) {
+      case nsIDOMNode::ELEMENT_NODE:
+        // In HTML editors, if we're dealing with an element, then ask it
+        // whether it's editable.
+        return mIsHTMLEditorClass ? aNode->IsEditable() : true;
+      case nsIDOMNode::TEXT_NODE:
+        // Text nodes are considered to be editable by both typed of editors.
+        return true;
+      default:
+        return false;
+    }
+  }
 
   /**
    * Returns true if aNode is a MozEditorBogus node.
