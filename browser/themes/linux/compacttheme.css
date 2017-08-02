@@ -40,15 +40,6 @@
   -moz-image-region: var(--urlbar-dropmarker-region);
 }
 
-#new-tab-button:hover > .toolbarbutton-icon {
-  border-color: transparent !important;
-}
-
-/* Prevent double border below tabs toolbar */
-#TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  border-top-width: 0 !important;
-}
-
 /* Fix the bad-looking text-shadow in the sidebar header: */
 .sidebar-header,
 #sidebar-header {
