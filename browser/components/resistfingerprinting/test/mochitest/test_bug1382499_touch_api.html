@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+/* global SimpleTest SpecialPowers synthesizeTouch */
+
+SimpleTest.waitForExplicitFinish();
+
+function promiseEvent(target, eventName) {
+  return new Promise(resolve => {
+    target.addEventListener(eventName, resolve, {once: true});
+  });
+}
+
+function promiseTouchEvent(target, type, offsetX, offsetY, params) {
+  let touchEventPromise = promiseEvent(target, type);
+  params.type = type;
+  synthesizeTouch(target, offsetX, offsetY, params);
+  return touchEventPromise;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const target0 = document.getElementById("target0");
+  const touchParams = {force: 1.0, angle: 1.0, rx: 2, ry: 3};
+  await SpecialPowers.pushPrefEnv({set: [["dom.w3c_touch_events.enabled", 1]]});
+  for (let resist of [false, true]) {
+    await SpecialPowers.pushPrefEnv({set: [["privacy.resistFingerprinting", resist]]});
+    info("starting test with fingerprinting resistance " + (resist ? "on" : "off"));
+    let touchEvent = await promiseTouchEvent(target0, "touchstart", 5, 5, touchParams);
+    info("touch event received");
+    let touch = touchEvent.touches[0];
+    if (resist) {
+      is(touch.screenX, touch.clientX, "touch.screenX should be the same as touch.clientX");
+      is(touch.screenY, touch.clientY, "touch.screenY should be the same as touch.clientY");
+      // radiusX/radiusY may differ from the original rx/ry because of AppUnitsPerCSSPixel and AppUnitsPerDevPixel.
+      // So only check if the values are spoofed.
+      is(touch.radiusX, 0, "touch.radiusX");
+      is(touch.radiusY, 0, "touch.radiusY");
+    }
+    is(touch.force, resist ? 0.0 : touchParams.force, "touch.force");
+    is(touch.rotationAngle, resist ? 0 : touchParams.angle, "touch.rotationAngle");
+  }
+  SimpleTest.finish();
+});
+</script>
+<div id="target0">target 0</div>
