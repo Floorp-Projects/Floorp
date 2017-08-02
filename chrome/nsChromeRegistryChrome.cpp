@@ -329,7 +329,6 @@ SerializeURI(nsIURI* aURI,
     return;
 
   aURI->GetSpec(aSerializedURI.spec);
-  aURI->GetOriginCharset(aSerializedURI.charset);
 }
 
 void
