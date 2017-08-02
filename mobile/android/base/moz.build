@@ -602,7 +602,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'distribution/ReferrerReceiver.java',
     'dlc/BaseAction.java',
     'dlc/catalog/DownloadContent.java',
-    'dlc/catalog/DownloadContentBootstrap.java',
     'dlc/catalog/DownloadContentBuilder.java',
     'dlc/catalog/DownloadContentCatalog.java',
     'dlc/DownloadAction.java',
