@@ -3744,7 +3744,7 @@ MediaDecoderStateMachine::AudioEndTime() const
   if (mMediaSink->IsStarted()) {
     return mMediaSink->GetEndTime(TrackInfo::kAudioTrack);
   }
-  return TimeUnit::Zero();
+  return GetMediaTime();
 }
 
 TimeUnit
@@ -3754,7 +3754,7 @@ MediaDecoderStateMachine::VideoEndTime() const
   if (mMediaSink->IsStarted()) {
     return mMediaSink->GetEndTime(TrackInfo::kVideoTrack);
   }
-  return TimeUnit::Zero();
+  return GetMediaTime();
 }
 
 void
