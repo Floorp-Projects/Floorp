@@ -245,24 +245,6 @@ DisableSystemTimezoneChangeNotifications()
 }
 
 void
-Reboot()
-{
-  MOZ_CRASH("Reboot() can't be called from sandboxed contexts.");
-}
-
-void
-PowerOff()
-{
-  MOZ_CRASH("PowerOff() can't be called from sandboxed contexts.");
-}
-
-void
-StartForceQuitWatchdog(ShutdownMode aMode, int32_t aTimeoutSecs)
-{
-  MOZ_CRASH("StartForceQuitWatchdog() can't be called from sandboxed contexts.");
-}
-
-void
 EnableSensorNotifications(SensorType aSensor) {
   Hal()->SendEnableSensorNotifications(aSensor);
 }
