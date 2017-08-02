@@ -24,24 +24,6 @@
 #include <unistd.h>
 #endif
 
-#ifdef ANDROID
-#include <android/log.h>
-extern "C" char* PrintJSStack();
-static void LogFunctionAndJSStack(const char* funcname) {
-  char *jsstack = PrintJSStack();
-  __android_log_print(ANDROID_LOG_INFO, "PowerManagerService", \
-                      "Call to %s. The JS stack is:\n%s\n",
-                      funcname,
-                      jsstack ? jsstack : "<no JS stack>");
-  js_free(jsstack);
-}
-// bug 839452
-#define LOG_FUNCTION_AND_JS_STACK() \
-  LogFunctionAndJSStack(__PRETTY_FUNCTION__);
-#else
-#define LOG_FUNCTION_AND_JS_STACK()
-#endif
-
 namespace mozilla {
 namespace dom {
 namespace power {
@@ -69,12 +51,6 @@ void
 PowerManagerService::Init()
 {
   RegisterWakeLockObserver(this);
-
-  // NB: default to *enabling* the watchdog even when the pref is
-  // absent, in case the profile might be damaged and we need to
-  // restart to repair it.
-  mWatchdogTimeoutSecs =
-    Preferences::GetInt("shutdown.watchdog.timeoutSecs", 10);
 }
 
 PowerManagerService::~PowerManagerService()
@@ -117,68 +93,6 @@ PowerManagerService::Notify(const WakeLockInformation& aWakeLockInfo)
   for (uint32_t i = 0; i < listeners.Length(); ++i) {
     listeners[i]->Callback(aWakeLockInfo.topic(), state);
   }
-}
-
-void
-PowerManagerService::SyncProfile()
-{
-  nsCOMPtr<nsIObserverService> obsServ = services::GetObserverService();
-  if (obsServ) {
-    const char16_t* context = u"shutdown-persist";
-    obsServ->NotifyObservers(nullptr, "profile-change-net-teardown", context);
-    obsServ->NotifyObservers(nullptr, "profile-change-teardown", context);
-    obsServ->NotifyObservers(nullptr, "profile-before-change", context);
-    obsServ->NotifyObservers(nullptr, "profile-before-change-qm", context);
-    obsServ->NotifyObservers(nullptr, "profile-before-change-telemetry", context);
-  }
-}
-
-NS_IMETHODIMP
-PowerManagerService::Reboot()
-{
-  LOG_FUNCTION_AND_JS_STACK() // bug 839452
-
-  StartForceQuitWatchdog(eHalShutdownMode_Reboot, mWatchdogTimeoutSecs);
-  // To synchronize any unsaved user data before rebooting.
-  SyncProfile();
-  hal::Reboot();
-  MOZ_CRASH("hal::Reboot() shouldn't return");
-}
-
-NS_IMETHODIMP
-PowerManagerService::PowerOff()
-{
-  LOG_FUNCTION_AND_JS_STACK() // bug 839452
-
-  StartForceQuitWatchdog(eHalShutdownMode_PowerOff, mWatchdogTimeoutSecs);
-  // To synchronize any unsaved user data before powering off.
-  SyncProfile();
-  hal::PowerOff();
-  MOZ_CRASH("hal::PowerOff() shouldn't return");
-}
-
-NS_IMETHODIMP
-PowerManagerService::Restart()
-{
-  LOG_FUNCTION_AND_JS_STACK() // bug 839452
-
-  // FIXME/bug 796826 this implementation is currently gonk-specific,
-  // because it relies on the Gonk to initialize the Gecko processes to
-  // restart B2G. It's better to do it here to have a real "restart".
-  StartForceQuitWatchdog(eHalShutdownMode_Restart, mWatchdogTimeoutSecs);
-  // Ensure all content processes are dead before we continue
-  // restarting.  This code is used to restart to apply updates, and
-  // if we don't join all the subprocesses, race conditions can cause
-  // them to see an inconsistent view of the application directory.
-  ContentParent::JoinAllSubprocesses();
-
-  // To synchronize any unsaved user data before restarting.
-  SyncProfile();
-#ifdef XP_UNIX
-  sync();
-#endif
-  _exit(0);
-  MOZ_CRASH("_exit() shouldn't return");
 }
 
 NS_IMETHODIMP

@@ -646,27 +646,6 @@ NotifyNetworkChange(const NetworkInformation& aInfo)
   NetworkObservers().BroadcastCachedInformation();
 }
 
-void Reboot()
-{
-  AssertMainProcess();
-  AssertMainThread();
-  PROXY_IF_SANDBOXED(Reboot());
-}
-
-void PowerOff()
-{
-  AssertMainProcess();
-  AssertMainThread();
-  PROXY_IF_SANDBOXED(PowerOff());
-}
-
-void StartForceQuitWatchdog(ShutdownMode aMode, int32_t aTimeoutSecs)
-{
-  AssertMainProcess();
-  AssertMainThread();
-  PROXY_IF_SANDBOXED(StartForceQuitWatchdog(aMode, aTimeoutSecs));
-}
-
 void
 RegisterWakeLockObserver(WakeLockObserver* aObserver)
 {
