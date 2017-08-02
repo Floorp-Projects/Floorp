@@ -9,6 +9,7 @@
   <string name="menu_share">Подели…</string>
   <string name="menu_open_with_default_browser">Отвори у %1$s-у</string>
   <string name="menu_open_with_a_browser">Отвори у…</string>
+  <string name="menu_add_to_home_screen">Додај на почетни екран</string>
   <string name="menu_settings">Поставке</string>
   <string name="menu_about">О Focus за Android</string>
   <string name="menu_help">Помоћ</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Подели преко</string>
   <string name="notification_erase_text">Обришите историју прегледања</string>
   <string name="notification_action_open">Отвори</string>
+  <string name="notification_action_erase_and_open">Обриши и отвори</string>
   <string name="shortcut_erase_short_label">Обриши</string>
   <string name="shortcut_erase_long_label">Обриши историју прегледања</string>
   <string name="text_selection_search_action">Претражујте приватно</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Блокирај трагаче осталог садржаја</string>
   <string name="preference_privacy_block_content_summary">Може пореметити неке видео клипове и веб странице</string>
   <string name="preference_privacy_secure_mode">Потајни</string>
+  <string name="preference_privacy_stealth_summary">Сакриј веб странице приликом мењања између апликација</string>
   <string name="preference_category_performance">Перформансе</string>
   <string name="preference_performance_block_webfonts">Блокирај веб фонтове</string>
   <string name="preference_performance_block_webfonts_summary">Иконице и слике се можда неће приказивати</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Прескочи</string>
   <string name="firstrun_next_button">Следеће</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Додај на почетни екран</string>
+  <string name="dialog_addtohomescreen_action_add">Додај</string>
+  <string name="dialog_addtohomescreen_action_cancel">Откажи</string>
 </resources>

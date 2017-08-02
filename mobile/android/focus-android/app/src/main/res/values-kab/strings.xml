@@ -9,7 +9,7 @@
   <string name="menu_share">Bḍu…</string>
   <string name="menu_open_with_default_browser">Ldi s %1$s</string>
   <string name="menu_open_with_a_browser">Ldi s…</string>
-  <string name="menu_add_to_home_screen">Rnu ɣer ugdil agejdan</string>
+  <string name="menu_add_to_home_screen">Rnu γer ugdil agejdan</string>
   <string name="menu_settings">Iγewwaṛen</string>
   <string name="menu_about">Γef</string>
   <string name="menu_help">Tallalt</string>
@@ -104,7 +104,7 @@
   <string name="firstrun_skip_button">Suref</string>
   <string name="firstrun_next_button">Γer zdat</string>
   <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_title">Rnu ɣer ugdil agejdan</string>
+  <string name="dialog_addtohomescreen_title">Rnu γer ugdil agejdan</string>
   <string name="dialog_addtohomescreen_action_add">Rnu</string>
   <string name="dialog_addtohomescreen_action_cancel">Sefsex</string>
 </resources>
