@@ -117,9 +117,6 @@ class BasePopup {
         this.destroyBrowser(this.browser, true);
         this.browser.remove();
       }
-      if (this.stack) {
-        this.stack.remove();
-      }
 
       if (this.viewNode) {
         this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
@@ -135,7 +132,6 @@ class BasePopup {
       }
 
       this.browser = null;
-      this.stack = null;
       this.viewNode = null;
     });
   }
@@ -224,9 +220,6 @@ class BasePopup {
 
   createBrowser(viewNode, popupURL = null) {
     let document = viewNode.ownerDocument;
-
-    let stack = document.createElementNS(XUL_NS, "stack");
-
     let browser = document.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
@@ -256,7 +249,6 @@ class BasePopup {
     // will be if and when we popup debugging.
 
     this.browser = browser;
-    this.stack = stack;
 
     let readyPromise;
     if (this.extension.remote) {
@@ -265,8 +257,7 @@ class BasePopup {
       readyPromise = promiseEvent(browser, "load");
     }
 
-    stack.appendChild(browser);
-    viewNode.appendChild(stack);
+    viewNode.appendChild(browser);
 
     ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
 
