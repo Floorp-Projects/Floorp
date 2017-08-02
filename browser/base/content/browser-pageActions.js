@@ -47,6 +47,9 @@ var BrowserPageActions = {
    * Inits.  Call to init.
    */
   init() {
+    if (!AppConstants.MOZ_PHOTON_THEME) {
+      return;
+    }
     for (let action of PageActions.actions) {
       this.placeAction(action, PageActions.insertBeforeActionIDInUrlbar(action));
     }
