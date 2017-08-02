@@ -10,3 +10,4 @@ JAR_MANIFESTS += ['jar.mn']
 
 DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
 
+include('../tab-svgs.mozbuild')

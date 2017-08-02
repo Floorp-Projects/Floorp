@@ -111,6 +111,24 @@ browser.jar:
   skin/classic/browser/social/services-16@2x.png            (social/services-16@2x.png)
   skin/classic/browser/social/services-64.png               (social/services-64.png)
   skin/classic/browser/social/services-64@2x.png            (social/services-64@2x.png)
+  skin/classic/browser/tabbrowser/tab-active-middle.png                  (tabbrowser/tab-active-middle.png)
+  skin/classic/browser/tabbrowser/tab-active-middle@2x.png               (tabbrowser/tab-active-middle@2x.png)
+  skin/classic/browser/tabbrowser/tab-background-end.png                 (tabbrowser/tab-background-end.png)
+  skin/classic/browser/tabbrowser/tab-background-end@2x.png              (tabbrowser/tab-background-end@2x.png)
+  skin/classic/browser/tabbrowser/tab-background-middle.png              (tabbrowser/tab-background-middle.png)
+  skin/classic/browser/tabbrowser/tab-background-middle@2x.png           (tabbrowser/tab-background-middle@2x.png)
+  skin/classic/browser/tabbrowser/tab-background-start.png               (tabbrowser/tab-background-start.png)
+  skin/classic/browser/tabbrowser/tab-background-start@2x.png            (tabbrowser/tab-background-start@2x.png)
+
+# NOTE: The following two files (tab-selected-end.svg, tab-selected-start.svg) get pre-processed in
+#       Makefile.in with a non-default marker of "%" and the result of that gets packaged.
+  skin/classic/browser/tabbrowser/tab-selected-end.svg                   (tab-selected-end.svg)
+  skin/classic/browser/tabbrowser/tab-selected-start.svg                 (tab-selected-start.svg)
+
+  skin/classic/browser/tabbrowser/tab-stroke-end.png                     (tabbrowser/tab-stroke-end.png)
+  skin/classic/browser/tabbrowser/tab-stroke-end@2x.png                  (tabbrowser/tab-stroke-end@2x.png)
+  skin/classic/browser/tabbrowser/tab-stroke-start.png                   (tabbrowser/tab-stroke-start.png)
+  skin/classic/browser/tabbrowser/tab-stroke-start@2x.png                (tabbrowser/tab-stroke-start@2x.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
   skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
@@ -132,6 +150,14 @@ browser.jar:
   skin/classic/browser/yosemite/reload-stop-go@2x.png                  (reload-stop-go-yosemite@2x.png)
   skin/classic/browser/yosemite/sync-horizontalbar.png                 (sync-horizontalbar-yosemite.png)
   skin/classic/browser/yosemite/sync-horizontalbar@2x.png              (sync-horizontalbar-yosemite@2x.png)
+  skin/classic/browser/yosemite/tab-selected-end-inactive.svg          (tabbrowser/tab-selected-end-yosemite-inactive.svg)
+  skin/classic/browser/yosemite/tab-selected-start-inactive.svg        (tabbrowser/tab-selected-start-yosemite-inactive.svg)
+  skin/classic/browser/yosemite/tab-active-middle-inactive.png         (tabbrowser/tab-active-middle-yosemite-inactive.png)
+  skin/classic/browser/yosemite/tab-active-middle-inactive@2x.png      (tabbrowser/tab-active-middle-yosemite-inactive@2x.png)
+  skin/classic/browser/yosemite/tab-stroke-end-inactive.png            (tabbrowser/tab-stroke-end-yosemite-inactive.png)
+  skin/classic/browser/yosemite/tab-stroke-end-inactive@2x.png         (tabbrowser/tab-stroke-end-yosemite-inactive@2x.png)
+  skin/classic/browser/yosemite/tab-stroke-start-inactive.png          (tabbrowser/tab-stroke-start-yosemite-inactive.png)
+  skin/classic/browser/yosemite/tab-stroke-start-inactive@2x.png       (tabbrowser/tab-stroke-start-yosemite-inactive@2x.png)
 #ifdef E10S_TESTING_ONLY
   skin/classic/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)
 #endif

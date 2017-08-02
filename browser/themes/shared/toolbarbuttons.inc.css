@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%ifndef MOZ_PHOTON_THEME
 %filter substitution
 %define toolbarShadowColor hsla(209,67%,12%,0.35)
 %define forwardTransitionLength 150ms
+%ifndef MOZ_PHOTON_THEME
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
 %endif
 
@@ -101,7 +101,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #TabsToolbar .toolbarbutton-1,
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  margin: 0 0 var(--tab-toolbar-navbar-overlap);
+  margin: 0 0 calc(var(--navbar-tab-toolbar-highlight-overlap) + var(--tab-toolbar-navbar-overlap));
 }
 
 #TabsToolbar .toolbarbutton-1,
