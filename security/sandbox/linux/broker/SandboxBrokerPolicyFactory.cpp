@@ -109,6 +109,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddDir(rdonly, "/var/tmp");
   policy->AddDir(rdonly, "/sys/devices/cpu");
   policy->AddDir(rdonly, "/sys/devices/system/cpu");
+  policy->AddDir(rdonly, "/nix/store");
 
   // Bug 1384178: mesa driver loader
   policy->AddPrefix(rdonly, "/sys/dev/char/226:");
