@@ -14,6 +14,10 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 // Add addresses enabled flag in telemetry environment for recording the number of
 // users who disable/enable the address autofill feature.
 const PREF_AUTOFILL_ENABLED = "extensions.formautofill.addresses.enabled";
+// Add credit card enabled flag in telemetry environment for recording the number of
+// users who disable/enable the credit card autofill feature.
+// TODO: Add const PREF_CREDITCARD_ENABLED = "extensions.formautofill.creditCards.enabled";
+//       when the credit card preferences UI is ready
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const MANAGE_ADDRESSES_URL = "chrome://formautofill/content/manageAddresses.xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
