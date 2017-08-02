@@ -226,7 +226,13 @@ class PseudoStack
 
         // This must happen at the end! The compiler will not reorder this
         // update because stackPointer is Atomic.
-        stackPointer++;
+        // Do the read and the write as two separate statements, in order to
+        // make it clear that we don't need an atomic increment, which would be
+        // more expensive on x86 than the separate operations done here.
+        // This thread is the only one that ever changes the value of
+        // stackPointer.
+        uint32_t oldStackPointer = stackPointer;
+        stackPointer = oldStackPointer + 1;
     }
 
     void pushJsFrame(const char* label, const char* dynamicString, JSScript* script,
@@ -237,12 +243,24 @@ class PseudoStack
 
         // This must happen at the end! The compiler will not reorder this
         // update because stackPointer is Atomic.
-        stackPointer++;
+        // Do the read and the write as two separate statements, in order to
+        // make it clear that we don't need an atomic increment, which would be
+        // more expensive on x86 than the separate operations done here.
+        // This thread is the only one that ever changes the value of
+        // stackPointer.
+        uint32_t oldStackPointer = stackPointer;
+        stackPointer = oldStackPointer + 1;
     }
 
     void pop() {
         MOZ_ASSERT(stackPointer > 0);
-        stackPointer--;
+        // Do the read and the write as two separate statements, in order to
+        // make it clear that we don't need an atomic decrement, which would be
+        // more expensive on x86 than the separate operations done here.
+        // This thread is the only one that ever changes the value of
+        // stackPointer.
+        uint32_t oldStackPointer = stackPointer;
+        stackPointer = oldStackPointer - 1;
     }
 
     uint32_t stackSize() const { return std::min(uint32_t(stackPointer), uint32_t(MaxEntries)); }
