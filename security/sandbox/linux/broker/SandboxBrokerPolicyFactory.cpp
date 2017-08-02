@@ -111,8 +111,11 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddDir(rdonly, "/sys/devices/system/cpu");
   policy->AddDir(rdonly, "/nix/store");
 
-  // Bug 1384178: mesa driver loader
+  // Bug 1384178: Mesa driver loader
   policy->AddPrefix(rdonly, "/sys/dev/char/226:");
+
+  // Bug 1385715: NVIDIA PRIME support
+  policy->AddPath(rdonly, "/proc/modules");
 
   // Configuration dirs in the homedir that we want to allow read
   // access to.
