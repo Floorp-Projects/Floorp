@@ -19,15 +19,12 @@ add_task(async function() {
   // Attempt to open a file that does not exist, ensure that it yields the
   // appropriate error.
   try {
-    await OS.File.open(OS.Path.join(".", "This file does not exist"));
+    let fd = await OS.File.open(OS.Path.join(".", "This file does not exist"));
     do_check_true(false, "File opening 1 succeeded (it should fail)");
-  } catch (err) {
-    if (err instanceof OS.File.Error && err.becauseNoSuchFile) {
-      do_print("File opening 1 failed " + err);
-    } else {
-      throw err;
-    }
+  } catch (err if err instanceof OS.File.Error && err.becauseNoSuchFile) {
+    do_print("File opening 1 failed " + err);
   }
+
   // Attempt to open a file with the wrong args, so that it fails before
   // serialization, ensure that it yields the appropriate error.
   do_print("Attempting to open a file with wrong arguments");

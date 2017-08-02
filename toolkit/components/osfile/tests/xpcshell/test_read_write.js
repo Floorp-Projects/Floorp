@@ -62,12 +62,8 @@ add_test_pair(async function read_write_all() {
         opt.noOverwrite = true;
         await OS.File.writeAtomic(DEST_PATH, view, opt);
         do_throw("With noOverwrite, writeAtomic should have refused to overwrite file (" + suffix + ")");
-      } catch (err) {
-        if (err instanceof OS.File.Error && err.becauseExists) {
-          do_print("With noOverwrite, writeAtomic correctly failed (" + suffix + ")");
-        } else {
-          throw err;
-        }
+      } catch (err if err instanceof OS.File.Error && err.becauseExists) {
+        do_print("With noOverwrite, writeAtomic correctly failed (" + suffix + ")");
       }
       await reference_compare_files(pathSource, DEST_PATH, TEST);
 
@@ -93,7 +89,7 @@ add_test_pair(async function read_write_all() {
       await OS.File.remove(DEST_PATH);
       await OS.File.remove(TMP_PATH);
     })();
-  }
+  };
 
   await test_with_options({tmpPath: TMP_PATH}, "Renaming, not flushing");
   await test_with_options({tmpPath: TMP_PATH, flush: true}, "Renaming, flushing");
