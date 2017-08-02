@@ -136,6 +136,16 @@ function getConfigurationPromise(configName) {
   });
 }
 
+function getShowHighlightTargetName() {
+  let highlight = document.getElementById("UITourHighlight");
+  return highlight.parentElement.getAttribute("targetName");
+}
+
+function getShowInfoTargetName() {
+  let tooltip = document.getElementById("UITourTooltip");
+  return tooltip.getAttribute("targetName");
+}
+
 function hideInfoPromise(...args) {
   let popup = document.getElementById("UITourTooltip");
   gContentAPI.hideInfo.apply(gContentAPI, args);
