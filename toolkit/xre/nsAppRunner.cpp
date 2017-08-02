@@ -3711,6 +3711,27 @@ AnnotateLSBRelease(void*)
 
 #endif
 
+#ifdef XP_WIN
+static void ReadAheadDll(const wchar_t* dllName) {
+  wchar_t dllPath[MAX_PATH];
+  if (ConstructSystem32Path(dllName, dllPath, MAX_PATH)) {
+    ReadAheadLib(dllPath);
+  }
+}
+
+static void PR_CALLBACK ReadAheadDlls_ThreadStart(void *) {
+  // Load DataExchange.dll and twinapi.appcore.dll for nsWindow::EnableDragDrop
+  ReadAheadDll(L"DataExchange.dll");
+  ReadAheadDll(L"twinapi.appcore.dll");
+
+  // Load twinapi.dll for WindowsUIUtils::UpdateTabletModeState
+  ReadAheadDll(L"twinapi.dll");
+
+  // Load explorerframe.dll for WinTaskbar::Initialize
+  ReadAheadDll(L"ExplorerFrame.dll");
+}
+#endif
+
 namespace mozilla {
   ShutdownChecksMode gShutdownChecks = SCM_NOTHING;
 } // namespace mozilla
@@ -4338,6 +4359,15 @@ XREMain::XRE_mainRun()
   nsCOMPtr<nsIAppStartup> appStartup
     (do_GetService(NS_APPSTARTUP_CONTRACTID));
   NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
+
+
+#ifdef XP_WIN
+  if (!PR_GetEnv("XRE_NO_DLL_READAHEAD"))
+  {
+    PR_CreateThread(PR_USER_THREAD, ReadAheadDlls_ThreadStart, 0, PR_PRIORITY_LOW,
+                    PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+  }
+#endif
 
   if (gDoMigration) {
     nsCOMPtr<nsIFile> file;
