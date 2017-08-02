@@ -768,7 +768,13 @@ public:
   /**
    * Returns true if aNode is a MozEditorBogus node.
    */
-  bool IsMozEditorBogusNode(nsINode* aNode);
+  bool IsMozEditorBogusNode(nsINode* aNode)
+  {
+    return aNode && aNode->IsElement() &&
+           aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
+               kMOZEditorBogusNodeAttrAtom, kMOZEditorBogusNodeValue,
+               eCaseMatters);
+  }
 
   /**
    * Counts number of editable child nodes.
