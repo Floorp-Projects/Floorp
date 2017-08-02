@@ -1877,9 +1877,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // opens because otherwise the items will visibly shift.
           let nodes = [...document.getElementById("nav-bar-customization-target").childNodes];
           let urlbarPosition = nodes.findIndex(n => n.id == "urlbar-container");
-          let alignSiteIcons = urlbarPosition <= 2 &&
+          let alignSiteIcons = urlbarPosition <= 5 &&
                                nodes.slice(0, urlbarPosition)
-                                    .every(n => n.localName == "toolbarbutton");
+                                    .every(n => n.localName == "toolbarbutton" || n.id == "stop-reload-button");
           if (alignSiteIcons) {
             let identityRect =
               document.getElementById("identity-icon").getBoundingClientRect();
