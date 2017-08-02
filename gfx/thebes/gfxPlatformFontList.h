@@ -90,8 +90,6 @@ class gfxUserFontSet;
 
 class gfxPlatformFontList : public gfxFontInfoLoader
 {
-    friend class InitOtherFamilyNamesRunnable;
-
 public:
     typedef mozilla::unicode::Script Script;
 
@@ -139,7 +137,6 @@ public:
     virtual bool
     FindAndAddFamilies(const nsAString& aFamily,
                        nsTArray<gfxFontFamily*>* aOutput,
-                       bool aDeferOtherFamilyNamesLoading,
                        gfxFontStyle* aStyle = nullptr,
                        gfxFloat aDevToCssSize = 1.0);
 
@@ -265,42 +262,6 @@ public:
     }
 
 protected:
-    class InitOtherFamilyNamesRunnable : public mozilla::CancelableRunnable
-    {
-    public:
-        InitOtherFamilyNamesRunnable()
-            : CancelableRunnable("gfxPlatformFontList::InitOtherFamilyNamesRunnable")
-            , mIsCanceled(false)
-        {
-        }
-
-        NS_IMETHOD Run() override
-        {
-            if (mIsCanceled) {
-                return NS_OK;
-            }
-
-            gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
-            if (!fontList) {
-                return NS_OK;
-            }
-
-            fontList->InitOtherFamilyNamesInternal(true);
-
-            return NS_OK;
-        }
-
-        NS_IMETHOD Cancel() override
-        {
-            mIsCanceled = true;
-
-            return NS_OK;
-        }
-
-    private:
-        bool mIsCanceled;
-    };
-
     class MemoryReporter final : public nsIMemoryReporter
     {
         ~MemoryReporter() {}
@@ -357,17 +318,12 @@ protected:
     // Convenience method to return the first matching family (if any) as found
     // by FindAndAddFamilies().
     gfxFontFamily*
-    FindFamily(const nsAString& aFamily,
-               bool aDeferOtherFamilyNamesLoading = true,
-               gfxFontStyle* aStyle = nullptr,
+    FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle = nullptr,
                gfxFloat aDevToCssSize = 1.0)
     {
         AutoTArray<gfxFontFamily*,1> families;
-        return FindAndAddFamilies(aFamily,
-                                  &families,
-                                  aDeferOtherFamilyNamesLoading,
-                                  aStyle,
-                                  aDevToCssSize) ? families[0] : nullptr;
+        return FindAndAddFamilies(aFamily, &families, aStyle, aDevToCssSize)
+               ? families[0] : nullptr;
     }
 
     // Lookup family name in global family list without substitutions or
@@ -418,9 +374,7 @@ protected:
     gfxFontFamily* CheckFamily(gfxFontFamily *aFamily);
 
     // initialize localized family names
-    void InitOtherFamilyNames(bool aDeferOtherFamilyNamesLoading);
-    void InitOtherFamilyNamesInternal(bool aDeferOtherFamilyNamesLoading);
-    void CancelInitOtherFamilyNamesTask();
+    void InitOtherFamilyNames();
 
     // search through font families, looking for a given name, initializing
     // facename lists along the way. first checks all families with names
@@ -499,9 +453,6 @@ protected:
 
     // flag set after InitOtherFamilyNames is called upon first name lookup miss
     bool mOtherFamilyNamesInitialized;
-
-    // The pending InitOtherFamilyNames() task.
-    RefPtr<mozilla::CancelableRunnable> mPendingOtherFamilyNameTask;
 
     // flag set after fullname and Postcript name lists are populated
     bool mFaceNameListsInitialized;

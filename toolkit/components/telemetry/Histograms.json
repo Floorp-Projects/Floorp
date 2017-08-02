@@ -1574,14 +1574,6 @@
     "n_buckets": 50,
     "description": "Time(ms) spent on reading other family names from all fonts"
   },
-  "FONTLIST_INITOTHERFAMILYNAMES_NO_DEFERRING": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "Time(ms) spent on reading other family names from all fonts for no timeout case"
-  },
   "FONTLIST_INITFACENAMELISTS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
