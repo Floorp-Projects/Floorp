@@ -653,25 +653,6 @@ const PanelUI = {
     }
   },
 
-  /**
-   * Signal that we're about to make a lot of changes to the contents of the
-   * panels all at once. For performance, we ignore the mutations.
-   */
-  beginBatchUpdate() {
-    this._ensureEventListenersAdded();
-    this.multiView.ignoreMutations = true;
-  },
-
-  /**
-   * Signal that we're done making bulk changes to the panel. We now pay
-   * attention to mutations. This automatically synchronizes the multiview
-   * container with whichever view is displayed if the panel is open.
-   */
-  endBatchUpdate(aReason) {
-    this._ensureEventListenersAdded();
-    this.multiView.ignoreMutations = false;
-  },
-
   _adjustLabelsForAutoHyphens(aNode) {
     let toolbarButtons = aNode ? [aNode] :
                                  this.contents.querySelectorAll(".toolbarbutton-1");

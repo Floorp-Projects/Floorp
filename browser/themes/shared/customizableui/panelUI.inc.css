@@ -282,8 +282,8 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   -moz-hyphens: auto;
 }
 
-.panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
-.panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-multiline-text {
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
   position: absolute;
   clip: rect(-0.1em, auto, 2.6em, auto);
 }
