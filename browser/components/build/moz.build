@@ -23,5 +23,6 @@ LOCAL_INCLUDES += [
     '../dirprovider',
     '../feeds',
     '../migration',
+    '../sessionstore',
     '../shell',
 ]

@@ -7,6 +7,7 @@
 this.EXPORTED_SYMBOLS = ["ContentRestore"];
 
 const Cu = Components.utils;
+const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -24,6 +25,33 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
+
+const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
+              .getService(Ci.nsISessionStoreUtils);
+
+/**
+ * Restores frame tree |data|, starting at the given root |frame|. As the
+ * function recurses into descendant frames it will call cb(frame, data) for
+ * each frame it encounters, starting with the given root.
+ */
+function restoreFrameTreeData(frame, data, cb) {
+  // Restore data for the root frame.
+  // The callback can abort by returning false.
+  if (cb(frame, data) === false) {
+    return;
+  }
+
+  if (!data.hasOwnProperty("children")) {
+    return;
+  }
+
+  // Recurse into child frames.
+  ssu.forEachNonDynamicChildFrame(frame, (subframe, index) => {
+    if (data.children[index]) {
+      restoreFrameTreeData(subframe, data.children[index], cb);
+    }
+  });
+}
 
 /**
  * This module implements the content side of session restoration. The chrome
@@ -294,8 +322,20 @@ ContentRestoreInternal.prototype = {
     let window = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIDOMWindow);
 
-    FormData.restoreTree(window, formdata);
-    ScrollPosition.restoreTree(window, scrollPositions);
+    // Restore form data.
+    restoreFrameTreeData(window, formdata, (frame, data) => {
+      // restore() will return false, and thus abort restoration for the
+      // current |frame| and its descendants, if |data.url| is given but
+      // doesn't match the loaded document's URL.
+      return FormData.restore(frame, data);
+    });
+
+    // Restore scroll data.
+    restoreFrameTreeData(window, scrollPositions, (frame, data) => {
+      if (data.scroll) {
+        ScrollPosition.restore(frame, data.scroll);
+      }
+    });
   },
 
   /**
