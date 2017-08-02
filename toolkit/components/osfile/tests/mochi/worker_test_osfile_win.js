@@ -203,12 +203,8 @@ function test_passing_undefined()
       OS.Constants.Win.OPEN_EXISTING,
       0,
       null);
-  } catch(e) {
-    if (e instanceof TypeError && e.message.indexOf("CreateFile") > -1) {
-      exceptionRaised = true;
-    } else {
-      throw e;
-    }
+  } catch(e if e instanceof TypeError && e.message.indexOf("CreateFile") > -1) {
+    exceptionRaised = true;
   }
 
   ok(exceptionRaised, "test_passing_undefined: exception gets thrown")

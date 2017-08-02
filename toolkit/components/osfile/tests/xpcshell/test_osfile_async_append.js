@@ -27,7 +27,11 @@ async function test_append(mode) {
                           "test_osfile_async_append.tmp");
 
   // Clear any left-over files from previous runs.
-  await removeTestFile(path)
+  try {
+    await OS.File.remove(path);
+  } catch (ex if ex.becauseNoSuchFile) {
+    // ignore
+  }
 
   try {
     mode = setup_mode(mode);
@@ -49,8 +53,12 @@ async function test_append(mode) {
     } finally {
       await file.close();
     }
-  } catch (ex) {
-    await removeTestFile(path)
+  } catch(ex) {
+    try {
+      await OS.File.remove(path);
+    } catch (ex if ex.becauseNoSuchFile) {
+      // ignore.
+    }
   }
 }
 
@@ -60,7 +68,11 @@ async function test_no_append(mode) {
                           "test_osfile_async_noappend.tmp");
 
   // Clear any left-over files from previous runs.
-  await removeTestFile(path)
+  try {
+    await OS.File.remove(path);
+  } catch (ex if ex.becauseNoSuchFile) {
+    // ignore
+  }
 
   try {
     mode = setup_mode(mode);
@@ -83,14 +95,18 @@ async function test_no_append(mode) {
       await file.close();
     }
   } finally {
-    await removeTestFile(path)
+    try {
+      await OS.File.remove(path);
+    } catch (ex if ex.becauseNoSuchFile) {
+      // ignore.
+    }
   }
 }
 
 var test_flags = [
   {},
-  {create: true},
-  {trunc: true}
+  {create:true},
+  {trunc:true}
 ];
 function run_test() {
   do_test_pending();
