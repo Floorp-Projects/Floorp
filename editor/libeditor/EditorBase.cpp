@@ -23,7 +23,6 @@
 #include "InsertTextTransaction.h"      // for InsertTextTransaction
 #include "JoinNodeTransaction.h"        // for JoinNodeTransaction
 #include "PlaceholderTransaction.h"     // for PlaceholderTransaction
-#include "SetTextTransaction.h"         // for SetTextTransaction
 #include "SplitNodeTransaction.h"       // for SplitNodeTransaction
 #include "StyleSheetTransactions.h"     // for AddStyleSheetTransaction, etc.
 #include "TextEditUtils.h"              // for TextEditUtils
@@ -2722,9 +2721,7 @@ nsresult
 EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
                         Text& aCharData)
 {
-  SetTextTransaction transaction(aCharData, aString, *this, &mRangeUpdater);
-
-  uint32_t length = aCharData.Length();
+  const uint32_t length = aCharData.Length();
 
   AutoRules beginRulesSniffing(this, EditAction::setText,
                                nsIEditor::eNext);
@@ -2749,7 +2746,20 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
   // We don't support undo here, so we don't really need all of the transaction
   // machinery, therefore we can run our transaction directly, breaking all of
   // the rules!
-  nsresult rv = transaction.DoTransaction();
+  nsresult rv = aCharData.SetData(aString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Only set selection to insertion point if editor gives permission
+  if (GetShouldTxnSetSelection()) {
+    RefPtr<Selection> selection = GetSelection();
+    DebugOnly<nsresult> rv = selection->Collapse(&aCharData, length);
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "Selection could not be collapsed after insert");
+  }
+  mRangeUpdater.SelAdjDeleteText(&aCharData, 0, length);
+  mRangeUpdater.SelAdjInsertText(aCharData, 0, aString);
 
   // Let listeners know what happened
   {

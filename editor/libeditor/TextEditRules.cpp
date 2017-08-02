@@ -840,7 +840,7 @@ TextEditRules::WillSetText(Selection& aSelection,
 
   if (!IsPlaintextEditor() || textEditor->IsIMEComposing() ||
       aMaxLength != -1) {
-    // SetTextTransaction only supports plain text editor without IME.
+    // SetTextImpl only supports plain text editor without IME.
     return NS_OK;
   }
 

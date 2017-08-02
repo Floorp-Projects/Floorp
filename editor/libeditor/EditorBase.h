@@ -119,7 +119,6 @@ class InsertTextTransaction;
 class JoinNodeTransaction;
 class PlaceholderTransaction;
 class RemoveStyleSheetTransaction;
-class SetTextTransaction;
 class SplitNodeTransaction;
 class TextComposition;
 class TextEditor;
