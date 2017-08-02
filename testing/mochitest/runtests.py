@@ -15,6 +15,7 @@ sys.path.insert(0, SCRIPT_DIR)
 from argparse import Namespace
 from collections import defaultdict
 from contextlib import closing
+import copy
 import ctypes
 import glob
 import json
@@ -969,7 +970,7 @@ class MochitestDesktop(object):
                 self.urlOpts.append("runUntilFailure=1")
             if options.repeat:
                 self.urlOpts.append("repeat=%d" % options.repeat)
-            if len(options.test_paths) == 1 and options.repeat > 0 and os.path.isfile(
+            if len(options.test_paths) == 1 and os.path.isfile(
                 os.path.join(
                     self.oldcwd,
                     os.path.dirname(__file__),
@@ -1059,7 +1060,7 @@ class MochitestDesktop(object):
         testURL = "/".join([testHost, self.TEST_PATH])
 
         if len(options.test_paths) == 1:
-            if options.repeat > 0 and os.path.isfile(
+            if os.path.isfile(
                 os.path.join(
                     self.oldcwd,
                     os.path.dirname(__file__),
@@ -2332,7 +2333,7 @@ toolbar#nav-bar {
         VERIFY_REPEAT_SINGLE_BROWSER = 10
 
         def step1():
-            stepOptions = options
+            stepOptions = copy.deepcopy(options)
             stepOptions.repeat = VERIFY_REPEAT
             stepOptions.keep_open = False
             result = self.runTests(stepOptions)
@@ -2340,7 +2341,7 @@ toolbar#nav-bar {
             return result
 
         def step2():
-            stepOptions = options
+            stepOptions = copy.deepcopy(options)
             stepOptions.repeat = 0
             stepOptions.keep_open = False
             for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
@@ -2351,7 +2352,7 @@ toolbar#nav-bar {
             return result
 
         def step3():
-            stepOptions = options
+            stepOptions = copy.deepcopy(options)
             stepOptions.repeat = VERIFY_REPEAT
             stepOptions.keep_open = False
             stepOptions.environment.append("MOZ_CHAOSMODE=")
@@ -2360,7 +2361,7 @@ toolbar#nav-bar {
             return result
 
         def step4():
-            stepOptions = options
+            stepOptions = copy.deepcopy(options)
             stepOptions.repeat = 0
             stepOptions.keep_open = False
             stepOptions.environment.append("MOZ_CHAOSMODE=")
