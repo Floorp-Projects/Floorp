@@ -291,20 +291,6 @@ void NotifySystemTimezoneChange(
   const hal::SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo);
 
 /**
- * Reboot the device.
- *
- * This API is currently only allowed to be used from the main process.
- */
-void Reboot();
-
-/**
- * Power off the device.
- *
- * This API is currently only allowed to be used from the main process.
- */
-void PowerOff();
-
-/**
  * Enable wake lock notifications from the backend.
  *
  * This method is only used by WakeLockObserversManager.
@@ -459,15 +445,6 @@ void SetCurrentThreadPriority(hal::ThreadPriority aThreadPriority);
  */
 void SetThreadPriority(PlatformThreadId aThreadId,
                        hal::ThreadPriority aThreadPriority);
-
-/**
- * Start a watchdog to compulsively shutdown the system if it hangs.
- * @param aMode Specify how to shutdown the system.
- * @param aTimeoutSecs Specify the delayed seconds to shutdown the system.
- *
- * This API is currently only allowed to be used from the main process.
- */
-void StartForceQuitWatchdog(hal::ShutdownMode aMode, int32_t aTimeoutSecs);
 
 /**
  * Start monitoring disk space for low space situations.
