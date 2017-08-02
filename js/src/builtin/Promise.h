@@ -259,13 +259,6 @@ class OffThreadPromiseRuntimeState
     void shutdown(JSContext* cx);
 };
 
-bool
-Promise_static_resolve(JSContext* cx, unsigned argc, Value* vp);
-bool
-Promise_reject(JSContext* cx, unsigned argc, Value* vp);
-bool
-Promise_then(JSContext* cx, unsigned argc, Value* vp);
-
 } // namespace js
 
 #endif /* builtin_Promise_h */
