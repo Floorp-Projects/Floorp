@@ -4,7 +4,8 @@
     xmlns:gecko="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:layout_marginBottom="@dimen/activity_stream_base_margin">
 
     <org.mozilla.gecko.widget.FaviconView
         android:id="@+id/favicon"

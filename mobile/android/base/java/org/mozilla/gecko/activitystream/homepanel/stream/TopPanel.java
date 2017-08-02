@@ -61,8 +61,10 @@ public class TopPanel extends StreamItem {
         final Resources resources = itemView.getResources();
         final int tilesMargin = resources.getDimensionPixelSize(R.dimen.activity_stream_base_margin);
 
+        final int rows = cursor == null || cursor.getCount() > 4 ? 2 : 1;
+
         ViewGroup.LayoutParams layoutParams = topSitesPager.getLayoutParams();
-        layoutParams.height = tilesSize + tilesMargin * 2;
+        layoutParams.height = (tilesSize * rows) + (tilesMargin * 2);
         topSitesPager.setLayoutParams(layoutParams);
 
         // Reset the page position: binding a new Cursor means that topsites reverts to the first page,
