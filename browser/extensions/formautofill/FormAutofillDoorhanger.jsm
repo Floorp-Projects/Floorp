@@ -26,10 +26,12 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const GetStringFromName = Services.strings.createBundle(BUNDLE_URI).GetStringFromName;
 let changeAutofillOptsKey = "changeAutofillOptions";
-let viewAutofillOptsKey = "viewAutofillOptionsLink";
-if (AppConstants.platform != "macosx") {
+let autofillOptsKey = "autofillOptionsLink";
+let autofillSecurityOptionsKey = "autofillSecurityOptionsLink";
+if (AppConstants.platform == "macosx") {
   changeAutofillOptsKey += "OSX";
-  viewAutofillOptsKey += "OSX";
+  autofillOptsKey += "OSX";
+  autofillSecurityOptionsKey += "OSX";
 }
 
 const CONTENT = {
@@ -69,6 +71,7 @@ const CONTENT = {
   update: {
     notificationId: "autofill-address",
     message: GetStringFromName("updateAddressMessage"),
+    linkMessage: GetStringFromName(autofillOptsKey),
     anchor: {
       id: "autofill-address-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
@@ -87,6 +90,34 @@ const CONTENT = {
     options: {
       persistWhileVisible: true,
       popupIconURL: "chrome://formautofill/content/icon-address-update.svg",
+    },
+  },
+  creditCard: {
+    notificationId: "autofill-credit-card",
+    message: GetStringFromName("saveCreditCardMessage"),
+    linkMessage: GetStringFromName(autofillSecurityOptionsKey),
+    anchor: {
+      id: "autofill-credit-card-notification-icon",
+      URL: "chrome://formautofill/content/formfill-anchor.svg",
+      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+    },
+    mainAction: {
+      label: GetStringFromName("saveCreditCardLabel"),
+      accessKey: "S",
+      callbackState: "save",
+    },
+    secondaryActions: [{
+      label: GetStringFromName("cancelCreditCardLabel"),
+      accessKey: "D",
+      callbackState: "cancel",
+    }, {
+      label: GetStringFromName("disableCreditCardLabel"),
+      accessKey: "N",
+      callbackState: "disable",
+    }],
+    options: {
+      persistWhileVisible: true,
+      popupIconURL: "chrome://formautofill/content/icon-credit-card.svg",
     },
   },
 };
@@ -136,8 +167,10 @@ let FormAutofillDoorhanger = {
    *         Target browser element for showing doorhanger.
    * @param  {string} id
    *         The ID of the doorhanger.
+   * @param  {string} message
+   *         The localized string for link title.
    */
-  _appendPrivacyPanelLink(browser, id) {
+  _appendPrivacyPanelLink(browser, id, message) {
     let notificationId = id + "-notification";
     let chromeDoc = browser.ownerDocument;
     let notification = chromeDoc.getElementById(notificationId);
@@ -148,7 +181,7 @@ let FormAutofillDoorhanger = {
       privacyLinkElement.className = "text-link";
       privacyLinkElement.setAttribute("useoriginprincipal", true);
       privacyLinkElement.setAttribute("href", "about:preferences#privacy");
-      privacyLinkElement.setAttribute("value", GetStringFromName(viewAutofillOptsKey));
+      privacyLinkElement.setAttribute("value", message);
       notificationcontent.appendChild(privacyLinkElement);
       notification.append(notificationcontent);
     }
@@ -221,13 +254,22 @@ let FormAutofillDoorhanger = {
   async show(browser, type) {
     log.debug("show doorhanger with type:", type);
     return new Promise((resolve) => {
-      let content = CONTENT[type];
+      let {
+        notificationId,
+        message,
+        linkMessage,
+        anchor,
+        mainAction,
+        secondaryActions,
+        options,
+      } = CONTENT[type];
+
       let chromeWin = browser.ownerGlobal;
-      content.options.eventCallback = (topic) => {
+      options.eventCallback = (topic) => {
         log.debug("eventCallback:", topic);
 
         if (topic == "removed" || topic == "dismissed") {
-          this._removeCheckboxListener(browser, content);
+          this._removeCheckboxListener(browser, {notificationId, options});
           return;
         }
 
@@ -235,23 +277,23 @@ let FormAutofillDoorhanger = {
         if (topic != "shown") {
           return;
         }
-        this._addCheckboxListener(browser, content);
+        this._addCheckboxListener(browser, {notificationId, options});
 
         // There's no preferences link or other customization in first time use doorhanger.
         if (type == "firstTimeUse") {
           return;
         }
 
-        this._appendPrivacyPanelLink(browser, content.notificationId);
+        this._appendPrivacyPanelLink(browser, notificationId, linkMessage);
       };
-      this._setAnchor(browser, content.anchor);
+      this._setAnchor(browser, anchor);
       chromeWin.PopupNotifications.show(
         browser,
-        content.notificationId,
-        content.message,
-        content.anchor.id,
-        ...this._createActions(content.mainAction, content.secondaryActions, resolve),
-        content.options,
+        notificationId,
+        message,
+        anchor.id,
+        ...this._createActions(mainAction, secondaryActions, resolve),
+        options,
       );
     });
   },
