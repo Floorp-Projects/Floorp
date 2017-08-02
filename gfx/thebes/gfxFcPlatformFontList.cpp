@@ -1483,7 +1483,6 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 bool
 gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
                                           nsTArray<gfxFontFamily*>* aOutput,
-                                          bool aDeferOtherFamilyNamesLoading,
                                           gfxFontStyle* aStyle,
                                           gfxFloat aDevToCssSize)
 {
@@ -1566,9 +1565,7 @@ gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
             FcStrCmp(substName, sentinelFirstFamily) == 0) {
             break;
         }
-        gfxPlatformFontList::FindAndAddFamilies(subst,
-                                                &cachedFamilies,
-                                                aDeferOtherFamilyNamesLoading);
+        gfxPlatformFontList::FindAndAddFamilies(subst, &cachedFamilies);
     }
 
     // Cache the resulting list, so we don't have to do this again.
@@ -1850,8 +1847,7 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
             NS_ConvertUTF8toUTF16 mappedGenericName(ToCharPtr(mappedGeneric));
             AutoTArray<gfxFontFamily*,1> genericFamilies;
             if (gfxPlatformFontList::FindAndAddFamilies(mappedGenericName,
-                                                        &genericFamilies,
-                                                        true)) {
+                                                        &genericFamilies)) {
                 MOZ_ASSERT(genericFamilies.Length() == 1,
                            "expected a single family");
                 if (!prefFonts->Contains(genericFamilies[0])) {
