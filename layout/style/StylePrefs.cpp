@@ -17,6 +17,7 @@ bool StylePrefs::sWebkitDevicePixelRatioEnabled;
 bool StylePrefs::sMozGradientsEnabled;
 bool StylePrefs::sControlCharVisibility;
 bool StylePrefs::sFramesTimingFunctionEnabled;
+bool StylePrefs::sUnprefixedFullscreenApiEnabled;
 
 /* static */ void
 StylePrefs::Init()
@@ -35,6 +36,8 @@ StylePrefs::Init()
                                "layout.css.control-characters.visible");
   Preferences::AddBoolVarCache(&sFramesTimingFunctionEnabled,
                                "layout.css.frames-timing.enabled");
+  Preferences::AddBoolVarCache(&sUnprefixedFullscreenApiEnabled,
+                               "full-screen-api.unprefix.enabled");
 }
 
 } // namespace mozilla
