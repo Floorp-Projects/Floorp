@@ -263,7 +263,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             os.makedirs(font_path)
         ahem_src = os.path.join(dirs["abs_wpttest_dir"], "tests", "fonts", "Ahem.ttf")
         ahem_dest = os.path.join(font_path, "Ahem.ttf")
-        with open(ahem_src) as src, open(ahem_dest, "w") as dest:
+        with open(ahem_src, "rb") as src, open(ahem_dest, "wb") as dest:
             dest.write(src.read())
 
     def run_tests(self):
