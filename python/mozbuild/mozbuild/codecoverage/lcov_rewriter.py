@@ -83,10 +83,10 @@ class RecordRewriter(object):
         self._ranges = None
         self._line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
 
-    def populate_pp_info(self, fh, src_path):
-        if src_path in self.pp_info:
-            return
+    def has_pp_info(self, src_path):
+        return src_path in self.pp_info
 
+    def populate_pp_info(self, fh, src_path):
         # (start, end) -> (included_source, start)
         section_info = dict()
 
@@ -246,36 +246,45 @@ class LcovFile(object):
     }
 
     def __init__(self, lcov_fh):
-        # These are keyed by source file because output will split sources (at
-        # least for xbl).
-        self._records = defaultdict(lambda: LcovRecord())
-        self.new_record()
-        self.parse_file(lcov_fh)
+        self.lcov_fh = lcov_fh
 
-    @property
-    def records(self):
-        return self._records.values()
-
-    @records.setter
-    def records(self, value):
-        self._records = {r.source_file: r for r in value}
-
-    def new_record(self):
-        rec = LcovRecord()
-        self.current_record = rec
-
-    def finish_record(self):
-        self._records[self.current_record.source_file] += self.current_record
-        self.new_record()
-
-    def parse_file(self, lcov_fh):
-        for count, line in enumerate(lcov_fh):
+    def iterate_records(self, rewrite_source=None):
+        current_source_file = None
+        current_preprocessed = False
+        current_lines = []
+        for line in self.lcov_fh:
             line = line.rstrip()
             if not line:
                 continue
+
             if line == 'end_of_record':
-                self.finish_record()
+                # We skip records that we couldn't rewrite, that is records for which
+                # rewrite_url returns None.
+                if current_source_file != None:
+                    yield (current_source_file, current_preprocessed, current_lines)
+                current_source_file = None
+                current_preprocessed = False
+                current_lines = []
                 continue
+
+            colon = line.find(':')
+            prefix = line[:colon]
+
+            if prefix == 'SF':
+                sf = line[(colon + 1):]
+                res = rewrite_source(sf) if rewrite_source is not None else (sf, False)
+                if res is None:
+                    current_lines.append(line)
+                else:
+                    current_source_file, current_preprocessed = res
+                    current_lines.append('SF:' + current_source_file)
+            else:
+                current_lines.append(line)
+
+    def parse_record(self, record_content):
+        self.current_record = LcovRecord()
+
+        for line in record_content:
             colon = line.find(':')
 
             prefix = line[:colon]
@@ -297,29 +306,38 @@ class LcovFile(object):
             try:
                 LcovFile.__dict__['parse_' + prefix](self, *args)
             except ValueError:
-                print("Encountered an error at line %d:\n%s" %
-                      (count + 1, line))
+                print("Encountered an error in %s:\n%s" %
+                      (self.lcov_fh.name, line))
                 raise
             except KeyError:
-                print("Invalid lcov line start at %s:%d:\n%s" %
-                      (lcov_fh.name, count + 1, line))
+                print("Invalid lcov line start in %s:\n%s" %
+                      (self.lcov_fh.name, line))
                 raise
             except TypeError:
-                print("Invalid lcov line start at %s:%d:\n%s" %
-                      (lcov_fh.name, count + 1, line))
+                print("Invalid lcov line start in %s:\n%s" %
+                      (self.lcov_fh.name, line))
                 raise
 
-    def print_file(self, fh):
-        for record in self.records:
-            fh.write(self.format_record(record))
-            fh.write('\n')
+        ret = self.current_record
+        self.current_record = LcovRecord()
+        return ret
+
+    def print_file(self, fh, rewrite_source, rewrite_record):
+        for source_file, preprocessed, record_content in self.iterate_records(rewrite_source):
+            if preprocessed:
+                record = self.parse_record(record_content)
+                for r in rewrite_record(record):
+                    fh.write(self.format_record(r))
+                fh.write(self.format_record(record))
+            else:
+                fh.write('\n'.join(record_content) + '\nend_of_record\n')
 
     def format_record(self, record):
         out_lines = []
         for name in LcovRecord.__slots__:
             if hasattr(record, name):
                 out_lines.append(LcovFile.__dict__['format_' + name](self, record))
-        return '\n'.join(out_lines) + '\nend_of_record'
+        return '\n'.join(out_lines) + '\nend_of_record\n'
 
     def format_test_name(self, record):
         return "TN:%s" % record.test_name
@@ -650,49 +668,39 @@ class LcovFileRewriter(object):
         in_path = os.path.abspath(in_path)
         out_path = in_path + output_suffix
 
-        with open(in_path) as fh:
-            lcov_file = LcovFile(fh)
-
-        removals = set()
-        additions = []
         unknowns = set()
-        pp = set()
-        for record in lcov_file.records:
-            url = record.source_file
+        found_valid = False
+
+        def rewrite_source(url):
             try:
                 res = self.url_finder.rewrite_url(url)
                 if res is None:
-                    removals.add(record)
-                    continue
-
+                    return None
             except Exception as e:
                 if url not in unknowns:
                     print("Error: %s.\nCouldn't find source info for %s, removing record" %
                           (e, url))
-                removals.add(record)
                 unknowns.add(url)
-                continue
+                return None
+
             source_file, objdir_file, preprocessed = res
             assert os.path.isfile(source_file), "Couldn't find mapped source file at %s!" % source_file
-            record.source_file = source_file
-            if preprocessed:
-                pp.add(record)
+            if preprocessed and not self.pp_rewriter.has_pp_info(source_file):
                 obj_path = os.path.join(self.topobjdir, objdir_file)
                 with open(obj_path) as fh:
                     self.pp_rewriter.populate_pp_info(fh, source_file)
 
-        additions = []
-        for r in pp:
-            additions += self.pp_rewriter.rewrite_record(r)
+            found_valid = True
 
-        lcov_file.records = [r for r in lcov_file.records + additions
-                             if r not in removals]
-        if not lcov_file.records:
+            return source_file, preprocessed
+
+        with open(in_path) as fh, open(out_path, 'w+') as out_fh:
+            lcov_file = LcovFile(fh)
+            lcov_file.print_file(out_fh, rewrite_source, self.pp_rewriter.rewrite_record)
+
+        if not found_valid:
             print("WARNING: No valid records found in %s" % in_path)
             return
-
-        with open(out_path, 'w+') as out_fh:
-            lcov_file.print_file(out_fh)
 
 
 def main():
