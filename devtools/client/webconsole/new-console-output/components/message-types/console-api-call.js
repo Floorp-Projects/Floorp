@@ -27,7 +27,6 @@ ConsoleApiCall.propTypes = {
   serviceContainer: PropTypes.object.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   loadedObjectProperties: PropTypes.object,
-  loadedObjectEntries: PropTypes.object,
 };
 
 ConsoleApiCall.defaultProps = {
@@ -44,7 +43,6 @@ function ConsoleApiCall(props) {
     timestampsVisible,
     repeat,
     loadedObjectProperties,
-    loadedObjectEntries,
   } = props;
   const {
     id: messageId,
@@ -64,7 +62,6 @@ function ConsoleApiCall(props) {
   const messageBodyConfig = {
     dispatch,
     loadedObjectProperties,
-    loadedObjectEntries,
     messageId,
     parameters,
     userProvidedStyles,
@@ -132,7 +129,6 @@ function formatReps(options = {}) {
   const {
     dispatch,
     loadedObjectProperties,
-    loadedObjectEntries,
     messageId,
     parameters,
     serviceContainer,
@@ -152,7 +148,6 @@ function formatReps(options = {}) {
         serviceContainer,
         useQuotes: false,
         loadedObjectProperties,
-        loadedObjectEntries,
         type,
       }))
       // Interleave spaces.
