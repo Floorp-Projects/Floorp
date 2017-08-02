@@ -59,9 +59,6 @@ public final class TestHelper {
             .enabled(true));
 
     /********* Main View Locators ***********/
-    static UiObject urlBar = mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/fake_urlbar")
-            .clickable(true));
     static ViewInteraction menuButton = onView(
             allOf(withId(R.id.menu),
                     isDisplayed()));

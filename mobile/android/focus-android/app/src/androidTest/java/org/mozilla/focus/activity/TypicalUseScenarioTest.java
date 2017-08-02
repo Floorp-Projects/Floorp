@@ -65,9 +65,6 @@ public class TypicalUseScenarioTest {
                 .className("android.widget.Switch"));
 
         // Let's search for something
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
-
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("mozilla focus");
@@ -82,10 +79,8 @@ public class TypicalUseScenarioTest {
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         assertTrue(TestHelper.erasedMsg.exists());
-        assertTrue(TestHelper.urlBar.exists());
 
         // Let's go to an actual URL which is https://
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("https://www.google.com");
@@ -104,10 +99,8 @@ public class TypicalUseScenarioTest {
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         assertTrue(TestHelper.erasedMsg.exists());
-        assertTrue(TestHelper.urlBar.exists());
 
         // Let's go to an actual URL which is http://
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("http://www.example.com");

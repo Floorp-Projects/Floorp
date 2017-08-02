@@ -55,8 +55,8 @@ public class TrashcanTest {
     public void TrashTest() throws InterruptedException, UiObjectNotFoundException {
 
         // Open a webpage
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
+        //TestHelper.urlBar.waitForExists(waitingTime);
+        //TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
@@ -68,15 +68,12 @@ public class TrashcanTest {
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         assertTrue(TestHelper.erasedMsg.exists());
-        assertTrue(TestHelper.urlBar.exists());
+        assertTrue(TestHelper.inlineAutocompleteEditText.exists());
     }
 
     @Test
     public void systemBarTest() throws InterruptedException, UiObjectNotFoundException {
-
         // Open a webpage
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
@@ -92,7 +89,7 @@ public class TrashcanTest {
         TestHelper.notificationBarDeleteItem.click();
         TestHelper.erasedMsg.waitForExists(waitingTime);
         assertTrue(TestHelper.erasedMsg.exists());
-        assertTrue(TestHelper.urlBar.exists());
+        assertTrue(TestHelper.inlineAutocompleteEditText.exists());
         assertFalse(TestHelper.menulist.exists());
     }
 
@@ -104,8 +101,6 @@ public class TrashcanTest {
         final String FOCUS_DEBUG_APP = "org.mozilla.focus.debug";
 
         // Open a webpage
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
@@ -134,7 +129,7 @@ public class TrashcanTest {
         context.startActivity(intent);
 
         // Verify that it's on the main view, not showing the previous browsing session
-        TestHelper.urlBar.waitForExists(waitingTime);
-        assertTrue(TestHelper.urlBar.exists());
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        assertTrue(TestHelper.inlineAutocompleteEditText.exists());
     }
 }

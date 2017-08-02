@@ -121,8 +121,6 @@ public class ImageSelectTest {
         final String imagePath = webServer.url(TEST_PATH).toString() + "rabbit.jpg";
 
         // Load website with service worker
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
@@ -154,12 +152,9 @@ public class ImageSelectTest {
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.erasedMsg.exists());
-        Assert.assertTrue(TestHelper.urlBar.exists());
-
 
         // KeyEvent.KEYCODE_PASTE) requires API 24 or above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            TestHelper.urlBar.click();
             TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
             TestHelper.mDevice.pressKeyCode(KeyEvent.KEYCODE_PASTE);
             Assert.assertEquals(TestHelper.inlineAutocompleteEditText.getText(), imagePath);
@@ -170,8 +165,6 @@ public class ImageSelectTest {
     public void ShareImageTest() throws UiObjectNotFoundException {
 
         // Load website with service worker
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
@@ -204,8 +197,6 @@ public class ImageSelectTest {
     public void DownloadImageMenuTest() throws UiObjectNotFoundException {
 
         // Load website with service worker
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());

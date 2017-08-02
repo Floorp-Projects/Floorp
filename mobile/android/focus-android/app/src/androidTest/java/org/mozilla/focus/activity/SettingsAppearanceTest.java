@@ -66,7 +66,7 @@ public class SettingsAppearanceTest {
                 .resourceId("android:id/title"));
 
         /* Go to Settings */
-        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.menuButton.perform(click());
         TestHelper.settingsMenuItem.click();
         SearchEngineSelection.waitForExists(waitingTime);

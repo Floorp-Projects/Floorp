@@ -61,8 +61,6 @@ public class AdBlockingTest {
                 .resourceId("ad_iframe"));
 
         // Let's go to ads-blocker.com/testing/
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
 
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();

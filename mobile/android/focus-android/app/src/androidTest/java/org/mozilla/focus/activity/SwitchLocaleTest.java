@@ -103,7 +103,7 @@ public class SwitchLocaleTest {
                 .text("Français"));
 
         /* Go to Settings */
-        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.menuButton.perform(click());
         TestHelper.settingsMenuItem.click();
         LanguageSelection.waitForExists(waitingTime);
@@ -149,7 +149,7 @@ public class SwitchLocaleTest {
 
         /* Go to Settings */
         changeLocale("fr");
-        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.menuButton.perform(click());
         TestHelper.settingsMenuItem.click();
         LanguageSelection.waitForExists(waitingTime);

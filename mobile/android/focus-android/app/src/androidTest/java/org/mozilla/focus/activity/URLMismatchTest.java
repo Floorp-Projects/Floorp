@@ -58,9 +58,6 @@ public class URLMismatchTest {
                 .description("Internet for people, not profit — Mozilla"));
 
         // Search for mozilla
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
-
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.mDevice.pressKeyCode(KEYCODE_M);

@@ -85,7 +85,6 @@ public class SearchEngineSelectionTest {
         TestHelper.pressBackKey();
 
         /* load blank spaces and press enter key for search, it should not do anything */
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("   ");

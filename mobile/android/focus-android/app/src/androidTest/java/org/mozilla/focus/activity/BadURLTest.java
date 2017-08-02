@@ -55,8 +55,6 @@ public class BadURLTest {
         .text("Open link in another app"));
 
         /* provide an invalid URL */
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("htps://www.mozilla.org");
@@ -71,8 +69,6 @@ public class BadURLTest {
 
         /* provide market URL that is handled by Google Play app */
         TestHelper.floatingEraseButton.perform(click());
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("market://details?id=org.mozilla.firefox&referrer=" +

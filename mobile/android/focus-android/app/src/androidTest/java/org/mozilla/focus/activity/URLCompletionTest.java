@@ -44,11 +44,6 @@ public class URLCompletionTest {
 
     @Test
     public void CompletionTest() throws InterruptedException, UiObjectNotFoundException {
-
-        /* Open website */
-        TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
-
         /* type a partial url, and check it autocompletes*/
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();

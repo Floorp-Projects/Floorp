@@ -57,7 +57,7 @@ public class OnBoardingTest {
         Assert.assertTrue(TestHelper.lastSlide.exists());
         TestHelper.finishBtn.click();
 
-        TestHelper.urlBar.waitForExists(waitingTime);
-        Assert.assertTrue(TestHelper.urlBar.exists());
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.inlineAutocompleteEditText.exists());
     }
 }
