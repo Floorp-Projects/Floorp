@@ -611,20 +611,6 @@ gfxContext::GetClipExtents()
 }
 
 bool
-gfxContext::HasComplexClip() const
-{
-  for (int i = mStateStack.Length() - 1; i >= 0; i--) {
-    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      const AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
-      if (clip.path || !clip.transform.IsRectilinear()) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-bool
 gfxContext::ExportClip(ClipExporter& aExporter)
 {
   for (unsigned int i = 0; i < mStateStack.Length(); i++) {
