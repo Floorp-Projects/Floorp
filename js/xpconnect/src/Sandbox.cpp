@@ -114,6 +114,10 @@ xpc::NewSandboxConstructor()
 static bool
 SandboxDump(JSContext* cx, unsigned argc, Value* vp)
 {
+    if (!nsContentUtils::DOMWindowDumpEnabled()) {
+        return true;
+    }
+
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() == 0)
