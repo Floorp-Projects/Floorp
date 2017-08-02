@@ -109,8 +109,11 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         raise NotImplementedError("Cannot disabled mh magic arg passing via"
                                   "'use-magic-mh-args' on docker-workers")
 
-    # running via mozharness assumes desktop-build (which contains build.sh)
-    taskdesc['worker']['docker-image'] = {"in-tree": "desktop-build"}
+    # Running via mozharness assumes an image that contains build.sh:
+    # by default, desktop-build, but it could be another image (like
+    # android-gradle-build) that "inherits" from desktop-build.
+    if not taskdesc['worker']['docker-image']:
+        taskdesc['worker']['docker-image'] = {"in-tree": "desktop-build"}
 
     worker['relengapi-proxy'] = False  # but maybe enabled for tooltool below
     worker['taskcluster-proxy'] = run.get('taskcluster-proxy')
