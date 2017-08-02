@@ -24,7 +24,7 @@ class GeckoViewContentModule {
   constructor(aModuleName, aMessageManager) {
     this.moduleName = aModuleName;
     this.messageManager = aMessageManager;
-    this.eventDispatcher = EventDispatcher.for(this);
+    this.eventDispatcher = EventDispatcher.forMessageManager(aMessageManager);
 
     this.messageManager.addMessageListener(
       "GeckoView:Register",
