@@ -184,8 +184,6 @@ modules = [
     'sdk/stylesheet/style.js',
     'sdk/stylesheet/utils.js',
     'sdk/system.js',
-    'sdk/system/child_process.js',
-    'sdk/system/child_process/subprocess.js',
     'sdk/system/environment.js',
     'sdk/system/events-shimmed.js',
     'sdk/system/events.js',
