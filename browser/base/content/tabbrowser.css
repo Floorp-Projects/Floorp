@@ -19,7 +19,7 @@
 }
 
 .tab-close-button[pinned],
-.tabbrowser-tabs[closebuttons="activetab"] > .tabbrowser-tab > .tab-stack > .tab-content > .tab-close-button:not([selected="true"]),
+.tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([selected="true"]),
 .tab-icon-image:not([src]):not([pinned]):not([crashed])[selected],
 .tab-icon-image:not([src]):not([pinned]):not([crashed]):not([sharing]),
 .tab-icon-image[busy],
@@ -61,6 +61,10 @@
 .tab-label-container[textoverflow]:not([labeldirection]):not([pinned]):-moz-locale-dir(rtl) {
   direction: rtl;
   mask-image: linear-gradient(to right, transparent, black 2em);
+}
+
+.tab-stack {
+  vertical-align: top; /* for pinned tabs */
 }
 
 tabpanels {
