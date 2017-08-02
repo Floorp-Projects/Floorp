@@ -2201,7 +2201,7 @@ nsTArray_Impl<E, Alloc>::AppendElement(Item&& aItem) -> elem_type*
   }
   elem_type* elem = Elements() + Length();
   elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
-  this->IncrementLength(1);
+  this->mHdr->mLength += 1;
   return elem;
 }
 
