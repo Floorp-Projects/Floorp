@@ -80,13 +80,18 @@ NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
   NS_WARNING_ASSERTION(indx != -1, "bad indx");
 
   if (!aIsPreMode) {
-    ++indx;
+    // Post mode: start < node <= end.
+    return nsContentUtils::ComparePoints(aStartContainer, aStartOffset,
+                                         parent, indx + 1) < 0 &&
+           nsContentUtils::ComparePoints(aEndContainer, aEndOffset,
+                                         parent, indx + 1) >= 0;
   }
 
+  // Pre mode: start <= node < end.
   return nsContentUtils::ComparePoints(aStartContainer, aStartOffset,
                                        parent, indx) <= 0 &&
          nsContentUtils::ComparePoints(aEndContainer, aEndOffset,
-                                       parent, indx) >= 0;
+                                       parent, indx) > 0;
 }
 
 
