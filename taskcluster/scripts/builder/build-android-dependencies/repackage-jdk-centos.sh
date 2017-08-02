@@ -1,8 +1,8 @@
-#! /bin/bash
+#!/bin/bash -vex
 
 set -e -x
 
-: WORKSPACE ${WORKSPACE:=/workspace}
+: WORKSPACE ${WORKSPACE:=/home/worker/workspace}
 
 set -v
 

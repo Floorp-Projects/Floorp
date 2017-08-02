@@ -8,11 +8,6 @@ MAINTAINER    Nick Alexander <nalexander@mozilla.com>
 VOLUME /home/worker/workspace
 VOLUME /home/worker/tooltool-cache
 
-# Add build scripts; these are the entry points from the taskcluster worker, and
-# operate on environment variables
-COPY bin /home/worker/bin
-RUN chmod +x /home/worker/bin/*
-
 # %include python/mozbuild/mozbuild/action/tooltool.py
 COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /build/tooltool.py
 COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/tooltool.py
@@ -115,7 +110,10 @@ RUN tar zxf nexus-${NEXUS_VERSION}-bundle.tar.gz \
   && rm -rf /tmp/nexus-${NEXUS_VERSION} \
   && rm -rf /tmp/nexus-${NEXUS_VERSION}-bundle.tar.gz
 
-COPY nexus.xml /workspace/nexus/conf/nexus.xml
+# So that we don't have to RUN_AS_USER=root.
+RUN chown -R worker:worker /opt/sonatype/nexus/
+
+COPY nexus.xml /home/worker/workspace/nexus/conf/nexus.xml
 
 # Back to the centos6-build workdir, matching desktop-build.
 WORKDIR /home/worker
