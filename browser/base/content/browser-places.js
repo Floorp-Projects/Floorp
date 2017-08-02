@@ -1962,8 +1962,8 @@ var BookmarkingUI = {
   },
 
   onStarCommand(aEvent) {
-    // Ignore clicks on the star if we are updating its state.
-    if (!this._pendingUpdate) {
+    // Ignore non-left clicks on the star, or if we are updating its state.
+    if (!this._pendingUpdate && aEvent.button == 0) {
       let isBookmarked = this._itemGuids.size > 0;
       // Disable the old animation in photon
       if (!isBookmarked && !AppConstants.MOZ_PHOTON_THEME)
