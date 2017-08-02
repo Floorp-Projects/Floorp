@@ -513,7 +513,8 @@ Link::SetSearch(const nsAString& aSearch)
     return;
   }
 
-  (void)url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+  auto encoding = mElement->OwnerDoc()->GetDocumentCharacterSet();
+  (void)url->SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch), encoding);
   SetHrefAttribute(uri);
 }
 

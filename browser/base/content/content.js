@@ -1210,7 +1210,6 @@ var PageInfoListener = {
 
     let documentURIObject = {};
     documentURIObject.spec = document.documentURIObject.spec;
-    documentURIObject.originCharset = document.documentURIObject.originCharset;
     docInfo.documentURIObject = documentURIObject;
 
     docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(content);
