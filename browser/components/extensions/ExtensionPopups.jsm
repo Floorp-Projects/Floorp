@@ -249,6 +249,7 @@ class BasePopup {
     // main menu panel, so that the browser occupies the full width of the view,
     // and also takes up any extra height that's available to it.
     browser.setAttribute("flex", "1");
+    stack.setAttribute("flex", "1");
 
     // Note: When using noautohide panels, the popup manager will add width and
     // height attributes to the panel, breaking our resize code, if the browser
