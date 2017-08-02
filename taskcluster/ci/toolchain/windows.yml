@@ -18,7 +18,8 @@ win32-clang-cl:
         using: toolchain-script
         script: build-clang32-windows.sh
         resources:
-            - 'build/build-clang/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
         toolchain-artifact: public/build/clang.tar.bz2
 
@@ -38,7 +39,8 @@ win64-clang-cl:
         using: toolchain-script
         script: build-clang64-windows.sh
         resources:
-            - 'build/build-clang/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-win64.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang.tar.bz2
 
@@ -61,7 +63,9 @@ win32-clang-tidy:
         using: toolchain-script
         script: build-clang-tidy32-windows.sh
         resources:
-            - 'build/build-clang/**'
+            - 'build/clang-plugin/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-tidy-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
 
@@ -84,7 +88,9 @@ win64-clang-tidy:
         using: toolchain-script
         script: build-clang-tidy64-windows.sh
         resources:
-            - 'build/build-clang/**'
+            - 'build/clang-plugin/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-tidy-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
 

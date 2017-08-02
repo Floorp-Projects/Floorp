@@ -17,7 +17,8 @@ linux64-clang:
         using: toolchain-script
         script: build-clang-linux.sh
         resources:
-            - 'build/build-clang/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
@@ -42,7 +43,8 @@ linux64-clang-tidy:
         script: build-clang-tidy-linux.sh
         resources:
             - 'build/clang-plugin/**'
-            - 'build/build-clang/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-tidy-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
@@ -63,7 +65,8 @@ linux64-gcc:
         using: toolchain-script
         script: build-gcc-linux.sh
         resources:
-            - 'build/unix/build-gcc/**'
+            - 'build/unix/build-gcc/build-gcc.sh'
+            - 'build/unix/build-gcc/checksums'
         toolchain-artifact: public/build/gcc.tar.xz
 
 linux64-binutils:
@@ -81,7 +84,7 @@ linux64-binutils:
         using: toolchain-script
         script: build-binutils-linux.sh
         resources:
-            - 'build/unix/build-binutils/**'
+            - 'build/unix/build-binutils/build-binutils.sh'
         toolchain-artifact: public/build/binutils.tar.xz
 
 linux64-cctools-port:
@@ -119,7 +122,7 @@ linux64-hfsplus:
         using: toolchain-script
         script: build-hfsplus-linux.sh
         resources:
-            - 'build/unix/build-hfsplus/**'
+            - 'build/unix/build-hfsplus/build-hfsplus.sh'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
     toolchains:
