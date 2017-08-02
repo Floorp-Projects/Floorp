@@ -47,7 +47,7 @@ function log(message) {
  */
 function handleSaveTelemetryMsg(message) {
   if (message.name != kSaveTelemetryMsg) {
-    throw new Error(`Unexpected message received: ${kSaveTelemetryMsg}`);
+    throw new Error(`Unexpected message received: ${message.name}`);
   }
 
   let info = message.data;
@@ -63,7 +63,7 @@ function handleSaveTelemetryMsg(message) {
 }
 
 /**
- * Activites recording of telemetry if it isn't already activated.
+ * Activates recording of telemetry if it isn't already activated.
  */
 function activateTelemetry() {
   if (gTelemetryActivated) {
