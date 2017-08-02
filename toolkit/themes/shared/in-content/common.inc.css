@@ -755,7 +755,6 @@ xul|filefield + xul|button:-moz-locale-dir(rtl) {
   border-bottom-right-radius: 0;
 }
 
-xul|textbox + xul|button,
 xul|filefield + xul|button {
   border-inline-start: none;
 }
