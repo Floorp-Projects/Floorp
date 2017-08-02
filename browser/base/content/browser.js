@@ -19,9 +19,6 @@ XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
   return Cu.import("resource://gre/modules/ExtensionParent.jsm", {}).extensionNameFromURI;
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
-  "browser.photon.structure.enabled", false);
-
 // lazy module getters
 
 /* global AboutHome:false,
@@ -4290,7 +4287,7 @@ function updateEditUIVisibility() {
     let placement = CustomizableUI.getPlacementOfWidget("edit-controls");
     let areaType = placement ? CustomizableUI.getAreaType(placement.area) : "";
     if (areaType == CustomizableUI.TYPE_MENU_PANEL) {
-      let customizablePanel = gPhotonStructure ? PanelUI.overflowPanel : PanelUI.panel;
+      let customizablePanel = PanelUI.overflowPanel;
       gEditUIVisible = kOpenPopupStates.includes(customizablePanel.state);
     } else if (areaType == CustomizableUI.TYPE_TOOLBAR && window.toolbar.visible) {
       // The edit controls are on a toolbar, so they are visible,
@@ -4305,8 +4302,8 @@ function updateEditUIVisibility() {
     }
   }
 
-  // Now check the main menu panel if we're using photon
-  if (!gEditUIVisible && gPhotonStructure) {
+  // Now check the main menu panel
+  if (!gEditUIVisible) {
     gEditUIVisible = kOpenPopupStates.includes(PanelUI.panel.state);
   }
 
@@ -8300,11 +8297,6 @@ var MenuTouchModeObserver = {
 
   handleEvent(event) {
     let target = event.originalTarget;
-    // Only resize non-context menus in Photon.
-    if (target.localName != "menupopup" && !gPhotonStructure) {
-      return;
-    }
-
     if (event.mozInputSource == MouseEvent.MOZ_SOURCE_TOUCH) {
       target.setAttribute("touchmode", "true");
     } else {
