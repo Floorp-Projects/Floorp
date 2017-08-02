@@ -2118,6 +2118,14 @@ TSFTextStore::FlushPendingActions()
     return;
   }
 
+  // Some TIP may request lock but does nothing during the lock.  In such case,
+  // this should do nothing.  For example, when MS-IME for Japanese is active
+  // and we're inactivating, this case occurs and causes different behavior
+  // from the other TIPs.
+  if (mPendingActions.IsEmpty()) {
+    return;
+  }
+
   RefPtr<nsWindowBase> widget(mWidget);
   nsresult rv = mDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5333,18 +5341,33 @@ TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
 IMENotificationRequests
 TSFTextStore::GetIMENotificationRequests()
 {
-  if (sThreadMgr && sEnabledTextStore && sEnabledTextStore->mDocumentMgr) {
-    RefPtr<ITfDocumentMgr> docMgr;
-    sThreadMgr->GetFocus(getter_AddRefs(docMgr));
-    if (docMgr == sEnabledTextStore->mDocumentMgr) {
-      return IMENotificationRequests(
-               IMENotificationRequests::NOTIFY_TEXT_CHANGE |
-               IMENotificationRequests::NOTIFY_POSITION_CHANGE |
-               IMENotificationRequests::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
-               IMENotificationRequests::NOTIFY_DURING_DEACTIVE);
-    }
+  if (!sEnabledTextStore ||
+      NS_WARN_IF(!sEnabledTextStore->mDocumentMgr)) {
+    // If there is no active text store, we don't need any notifications
+    // since there is no sink which needs notifications.
+    return IMENotificationRequests();
   }
-  return IMENotificationRequests();
+
+  // Otherwise, requests all notifications since even if some of them may not
+  // be required by the sink of active TIP, active TIP may be changed and
+  // other TIPs may need all notifications.
+  // Note that Windows temporarily steal focus from active window if the main
+  // process which created the window becomes busy.  In this case, we shouldn't
+  // commit composition since user may want to continue to compose the
+  // composition after becoming not busy.  Therefore, we need notifications
+  // even during deactive.
+  // Be aware, we don't need to check actual focused text store.  For example,
+  // MS-IME for Japanese handles focus messages by themselves and sets focused
+  // text store to nullptr when the process is being inactivated.  However,
+  // we still need to reuse sEnabledTextStore if the process is activated and
+  // focused element isn't changed.  Therefore, if sEnabledTextStore isn't
+  // nullptr, we need to keep notifying the sink even when it is not focused
+  // text store for the thread manager.
+  return IMENotificationRequests(
+           IMENotificationRequests::NOTIFY_TEXT_CHANGE |
+           IMENotificationRequests::NOTIFY_POSITION_CHANGE |
+           IMENotificationRequests::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
+           IMENotificationRequests::NOTIFY_DURING_DEACTIVE);
 }
 
 nsresult
