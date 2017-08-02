@@ -185,6 +185,15 @@
           return innerRect;
         ]]></getter>
       </property>
+      <field name="scrollboxPaddingStart"><![CDATA[
+        this._isRTLScrollbox ? this.scrollboxPaddingRight : this.scrollboxPaddingLeft;
+      ]]></field>
+      <field name="scrollboxPaddingLeft"><![CDATA[
+        parseFloat(window.getComputedStyle(this._scrollbox).paddingLeft);
+      ]]></field>
+      <field name="scrollboxPaddingRight"><![CDATA[
+        parseFloat(window.getComputedStyle(this._scrollbox).paddingRight);
+      ]]></field>
       <property name="scrollPosition">
         <getter><![CDATA[
           return this.orient == "vertical" ?
@@ -270,6 +279,12 @@
             right: scrollPaddingRect.right - parseFloat(style.paddingRight),
             bottom: scrollPaddingRect.bottom - parseFloat(style.paddingBottom)
           };
+
+          // Provide an entry point for derived bindings to adjust these values.
+          if (this._adjustElementStartAndEnd) {
+            [elementStart, elementEnd] =
+              this._adjustElementStartAndEnd(element, elementStart, elementEnd);
+          }
 
           if (elementStart <= (vertical ? scrollContentRect.top : scrollContentRect.left)) {
             elementStart = vertical ? scrollPaddingRect.top : scrollPaddingRect.left;
@@ -650,6 +665,9 @@
                 scrolledToStart = true;
                 scrolledToEnd = true;
               } else {
+                let scrollboxPaddingLeft = Math.round(this.scrollboxPaddingLeft);
+                let scrollboxPaddingRight = Math.round(this.scrollboxPaddingRight);
+
                 let [leftOrTop, rightOrBottom] = this._startEndProps;
                 let leftOrTopEdge = ele => Math.round(this._boundsWithoutFlushing(ele)[leftOrTop]);
                 let rightOrBottomEdge = ele => Math.round(this._boundsWithoutFlushing(ele)[rightOrBottom]);
@@ -661,11 +679,11 @@
                 }
 
                 if (leftOrTopElement &&
-                    leftOrTopEdge(leftOrTopElement) >= leftOrTopEdge(this._scrollbox)) {
+                    leftOrTopEdge(leftOrTopElement) >= leftOrTopEdge(this._scrollbox) + scrollboxPaddingLeft) {
                   scrolledToStart = !this._isRTLScrollbox;
                   scrolledToEnd = this._isRTLScrollbox;
                 } else if (rightOrBottomElement &&
-                           rightOrBottomEdge(rightOrBottomElement) <= rightOrBottomEdge(this._scrollbox)) {
+                           rightOrBottomEdge(rightOrBottomElement) <= rightOrBottomEdge(this._scrollbox) - scrollboxPaddingRight) {
                   scrolledToStart = this._isRTLScrollbox;
                   scrolledToEnd = !this._isRTLScrollbox;
                 }

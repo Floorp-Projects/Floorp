@@ -1,0 +1,24 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="30px" height="31px" preserveAspectRatio="none">
+  <defs>
+    <style>
+      #tab-background-fill {
+        background-color: transparent;
+        background-image: linear-gradient(transparent, transparent 2px, hsl(0,0%,99%) 2px, hsl(0,0%,97%));
+        background-repeat: no-repeat;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <clipPath id="tab-curve-clip-path-start" clipPathUnits="objectBoundingBox">
+      <path d="m 1,0.0625 0.05,0 0,0.938 -1,0 0,-0.028 C 0.32082458,0.95840561 0.4353096,0.81970962 0.48499998,0.5625 0.51819998,0.3905 0.535,0.0659 1,0.0625 z"/>
+    </clipPath>
+  </defs>
+
+  <foreignObject width="30" height="31" clip-path="url(#tab-curve-clip-path-start)">
+    <div id="tab-background-fill" xmlns="http://www.w3.org/1999/xhtml"></div>
+  </foreignObject>
+</svg>

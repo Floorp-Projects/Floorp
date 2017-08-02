@@ -5904,6 +5904,34 @@
           return !tab.pinned && !tab.hidden;
         ]]></body>
       </method>
+      <field name="_tabMarginLeft">null</field>
+      <field name="_tabMarginRight">null</field>
+      <method name="_calcTabMargins">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          if (this._tabMarginLeft === null || this._tabMarginRight === null) {
+            let tabMiddle = document.getAnonymousElementByAttribute(aTab, "class", "tab-background-middle");
+            let tabMiddleStyle = window.getComputedStyle(tabMiddle);
+            this._tabMarginLeft = parseFloat(tabMiddleStyle.marginLeft);
+            this._tabMarginRight = parseFloat(tabMiddleStyle.marginRight);
+          }
+        ]]></body>
+      </method>
+      <method name="_adjustElementStartAndEnd">
+        <parameter name="aTab"/>
+        <parameter name="tabStart"/>
+        <parameter name="tabEnd"/>
+        <body><![CDATA[
+          this._calcTabMargins(aTab);
+          if (this._tabMarginLeft < 0) {
+            tabStart = tabStart + this._tabMarginLeft;
+          }
+          if (this._tabMarginRight < 0) {
+            tabEnd = tabEnd - this._tabMarginRight;
+          }
+          return [tabStart, tabEnd];
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -5965,10 +5993,12 @@
   button, necessary due to the previous hack.
 -->
         <children/>
-        <xul:toolbarbutton class="tabs-newtab-button toolbarbutton-1"
+        <xul:toolbarbutton class="tabs-newtab-button"
                            anonid="tabs-newtab-button"
                            command="cmd_newNavigatorTab"
                            onclick="checkForMiddleClick(this, event);"
+                           onmouseover="document.getBindingParent(this)._enterNewTab();"
+                           onmouseout="document.getBindingParent(this)._leaveNewTab();"
                            tooltip="dynamic-shortcut-tooltip"/>
         <xul:hbox class="restore-tabs-button-wrapper"
                   anonid="restore-tabs-button-wrapper">
@@ -6226,6 +6256,26 @@
         ]]></setter>
       </property>
 
+      <method name="_enterNewTab">
+        <body><![CDATA[
+          let visibleTabs = this.tabbrowser.visibleTabs;
+          let candidate = visibleTabs[visibleTabs.length - 1];
+          if (!candidate.selected) {
+            this._beforeHoveredTab = candidate;
+            candidate.setAttribute("beforehovered", "true");
+          }
+        ]]></body>
+      </method>
+
+      <method name="_leaveNewTab">
+        <body><![CDATA[
+          if (this._beforeHoveredTab) {
+            this._beforeHoveredTab.removeAttribute("beforehovered");
+            this._beforeHoveredTab = null;
+          }
+        ]]></body>
+      </method>
+
       <method name="_propagateVisibility">
         <body><![CDATA[
           let visible = this.visible;
@@ -6427,6 +6477,7 @@
               let tabstrip = this.mTabstrip;
               layoutData = this._pinnedTabsLayoutCache = {
                 pinnedTabWidth: this.childNodes[0].getBoundingClientRect().width,
+                paddingStart: tabstrip.scrollboxPaddingStart,
                 scrollButtonWidth: tabstrip._scrollButtonDown.getBoundingClientRect().width
               };
             }
@@ -6435,9 +6486,10 @@
             for (let i = numPinned - 1; i >= 0; i--) {
               let tab = this.childNodes[i];
               width += layoutData.pinnedTabWidth;
-              tab.style.marginInlineStart = -(width + layoutData.scrollButtonWidth) + "px";
+              tab.style.marginInlineStart =
+                -(width + layoutData.scrollButtonWidth + layoutData.paddingStart) + "px";
             }
-            this.style.paddingInlineStart = width + "px";
+            this.style.paddingInlineStart = width + layoutData.paddingStart + "px";
           } else {
             this.removeAttribute("positionpinnedtabs");
 
@@ -6619,6 +6671,7 @@
 
           var scrollRect = this.mTabstrip.scrollClientRect;
           var tab = aTab.getBoundingClientRect();
+          this.mTabstrip._calcTabMargins(aTab);
 
           // DOMRect left/right properties are immutable.
           tab = {left: tab.left, right: tab.right};
@@ -6630,6 +6683,15 @@
           if (this.mTabstrip.smoothScroll) {
             let selected = !this.selectedItem.pinned &&
                            this.selectedItem.getBoundingClientRect();
+            if (selected) {
+              selected = {left: selected.left, right: selected.right};
+              // Need to take in to account the width of the left/right margins on tabs.
+              selected.left = selected.left + this.mTabstrip._tabMarginLeft;
+              selected.right = selected.right - this.mTabstrip._tabMarginRight;
+            }
+
+            tab.left += this.mTabstrip._tabMarginLeft;
+            tab.right -= this.mTabstrip._tabMarginRight;
 
             // Can we make both the new tab and the selected tab completely visible?
             if (!selected ||
@@ -7380,11 +7442,15 @@
 
     <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
-        <xul:vbox xbl:inherits="selected=visuallyselected,fadein"
+        <xul:hbox xbl:inherits="pinned,selected=visuallyselected,fadein"
                   class="tab-background">
-          <xul:hbox xbl:inherits="selected=visuallyselected"
-                    class="tab-line"/>
-        </xul:vbox>
+          <xul:hbox xbl:inherits="pinned,selected=visuallyselected"
+                    class="tab-background-start"/>
+          <xul:hbox xbl:inherits="pinned,selected=visuallyselected"
+                    class="tab-background-middle"/>
+          <xul:hbox xbl:inherits="pinned,selected=visuallyselected"
+                    class="tab-background-end"/>
+        </xul:hbox>
         <xul:hbox xbl:inherits="pinned,selected=visuallyselected,titlechanged,attention"
                   class="tab-content" align="center">
           <xul:image xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected"

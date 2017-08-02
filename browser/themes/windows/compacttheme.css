@@ -34,6 +34,10 @@
   display: none;
 }
 
+.tabbrowser-tab {
+  background-color: var(--tab-background-color);
+}
+
 #toolbar-menubar {
   text-shadow: none !important;
 }
@@ -83,6 +87,7 @@
     background-clip: padding-box;
     border-top: 1px solid var(--chrome-nav-bar-separator-color);
     border-inline-end: 1px solid var(--chrome-nav-bar-separator-color);
+    background-color: var(--tab-background-color); /* Make sure there is no transparent gap during tab close animation */
   }
 
   /* Add a border to the left of the first tab (or scroll arrow).  Using .tabbrowser-tabs
@@ -93,9 +98,26 @@
     border-inline-end: 1px solid transparent;
   }
 
+  #main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabbrowser-tab,
+  #main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabbrowser-arrowscrollbox > .scrollbutton-down,
+  #main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabbrowser-arrowscrollbox > .scrollbutton-up,
+  #main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabs-newtab-button {
+    background-clip: padding-box;
+    border-top: 1px solid var(--chrome-nav-bar-separator-color);
+  }
+
+  /* Allow the border-top rule to take effect */
+  #main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabbrowser-tab {
+    -moz-border-top-colors: none;
+  }
+
   #main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .closing-tabs-spacer {
     background-clip: padding-box;
     border-inline-start: 1px solid var(--chrome-nav-bar-separator-color);
+  }
+
+  .tabs-newtab-button {
+    background: var(--tab-background-color);
   }
 
   /* Use default window colors when in non-maximized mode */
@@ -136,6 +158,31 @@
       color: inherit;
     }
   }
+
+  /* Use less opacity than normal since this is very dark, and on top of the default toolbar color */
+  .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
+  .tabbrowser-arrowscrollbox > .scrollbutton-down[disabled] {
+    opacity: .6;
+  }
+
+  /* Override scrollbutton gradients in normal and hover state */
+  .tabbrowser-arrowscrollbox > .scrollbutton-down,
+  .tabbrowser-arrowscrollbox > .scrollbutton-up {
+    background-image: none !important;
+    transition: none; /* scrollbutton-down has an unwanted transition on background color */
+  }
+
+  /* Restore draggable space on the sides of tabs when maximized */
+  #main-window[sizemode="maximized"] .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  /* Override the padding that's intended to compensate for tabs that can overlap border-radius on nav-bar in default theme. */
+  #main-window[sizemode=normal]:not([customizing]) #TabsToolbar {
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 /* Restored windows get an artificial border on windows, because the lwtheme background
@@ -170,6 +217,12 @@
 }
 
 @media (-moz-os-version: windows-win10) {
+  /* Always keep draggable space on the sides of tabs since there is no top margin on Win10 */
+  #main-window .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
   .titlebar-button:-moz-lwtheme {
     -moz-context-properties: stroke;
     stroke: currentColor;
