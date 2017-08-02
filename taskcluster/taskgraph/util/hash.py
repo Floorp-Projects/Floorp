@@ -28,7 +28,11 @@ def hash_paths(base_path, patterns):
     h = hashlib.sha256()
     files = {}
     for pattern in patterns:
-        files.update(finder.find(pattern))
+        found = list(finder.find(pattern))
+        if found:
+            files.update(found)
+        else:
+            raise Exception('%s did not match anything' % pattern)
     for path in sorted(files.keys()):
         h.update('{} {}\n'.format(
             _hash_path(mozpath.abspath(mozpath.join(base_path, path))),
