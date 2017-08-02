@@ -51,7 +51,7 @@ this.UrlClassifierTestUtils = {
     let tableIndex = 0
     let doOneUpdate = () => {
       if (tableIndex == tables.length) {
-        return;
+        return Promise.resolve();
       }
       return this.useTestDatabase(tables[tableIndex])
         .then(() => {

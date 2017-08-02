@@ -197,7 +197,6 @@ function testDuplicateAdds() {
 
 // Tests a sub which matches some existing adds but leaves others.
 function testSubPartiallyMatches() {
-  var subUrls = ["foo.com/a"];
   var addUrls = ["1:foo.com/a", "2:foo.com/b"];
 
   var addUpdate = buildPhishingUpdate(

@@ -5,8 +5,6 @@ if (typeof(classifierHelper) == "undefined") {
 const CLASSIFIER_COMMON_URL = SimpleTest.getTestFileURL("classifierCommon.js");
 var gScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
 
-const HASHLEN = 32;
-
 const PREFS = {
   PROVIDER_LISTS: "browser.safebrowsing.provider.mozilla.lists",
   DISALLOW_COMPLETIONS: "urlclassifier.disallow_completions",

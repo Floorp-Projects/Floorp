@@ -74,15 +74,7 @@ const contentPage =
   "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/dnt.html";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-
-function whenDelayedStartupFinished(aWindow, aCallback) {
-  Services.obs.addObserver(function observer(aSubject, aTopic) {
-    if (aWindow == aSubject) {
-      Services.obs.removeObserver(observer, aTopic);
-      setTimeout(aCallback, 0);
-    }
-  }, "browser-delayed-startup-finished");
-}
+Components.utils.import("resource://testing-common/TestUtils.jsm");
 
 function executeTest(test) {
   SpecialPowers.pushPrefEnv({"set": [
@@ -95,7 +87,8 @@ function executeTest(test) {
 
   return new Promise(function(resolve, reject) {
     win.addEventListener("load", function() {
-      whenDelayedStartupFinished(win, function() {
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win).then(() => {
         win.addEventListener("DOMContentLoaded", function onInnerLoad() {
           if (win.content.location.href != contentPage) {
             win.gBrowser.loadURI(contentPage);
