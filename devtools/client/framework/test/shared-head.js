@@ -58,6 +58,9 @@ const URL_ROOT = CHROME_URL_ROOT.replace("chrome://mochitests/content/",
 const URL_ROOT_SSL = CHROME_URL_ROOT.replace("chrome://mochitests/content/",
                                              "https://example.com/");
 
+// Force devtools to be initialized so menu items and keyboard shortcuts get installed
+require("devtools/client/framework/devtools-browser");
+
 // All test are asynchronous
 waitForExplicitFinish();
 
