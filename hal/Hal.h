@@ -11,7 +11,6 @@
 #include "base/platform_thread.h"
 #include "nsTArray.h"
 #include "mozilla/dom/battery/Types.h"
-#include "mozilla/dom/MozPowerManagerBinding.h"
 #include "mozilla/dom/network/Types.h"
 #include "mozilla/dom/power/Types.h"
 #include "mozilla/dom/ScreenOrientation.h"
@@ -469,11 +468,6 @@ void SetThreadPriority(PlatformThreadId aThreadId,
  * This API is currently only allowed to be used from the main process.
  */
 void StartForceQuitWatchdog(hal::ShutdownMode aMode, int32_t aTimeoutSecs);
-
-/**
- * Perform Factory Reset to wipe out all user data.
- */
-void FactoryReset(mozilla::dom::FactoryResetReason& aReason);
 
 /**
  * Start monitoring disk space for low space situations.

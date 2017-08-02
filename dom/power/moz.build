@@ -15,7 +15,6 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'dom_power'
 
 EXPORTS.mozilla.dom += [
-    'PowerManager.h',
     'WakeLock.h',
 ]
 
@@ -25,7 +24,6 @@ EXPORTS.mozilla.dom.power += [
 ]
 
 UNIFIED_SOURCES += [
-    'PowerManager.cpp',
     'PowerManagerService.cpp',
     'WakeLock.cpp',
 ]
@@ -35,5 +33,3 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
