@@ -4090,6 +4090,13 @@ nsDocShell::SetChildOffset(int32_t aChildOffset)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetChildOffset(int32_t* aChildOffset)
+{
+  *aChildOffset = mChildOffset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetHistoryID(nsID** aID)
 {
   *aID = static_cast<nsID*>(nsMemory::Clone(&mHistoryID, sizeof(nsID)));

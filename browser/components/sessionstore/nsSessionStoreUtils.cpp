@@ -89,7 +89,7 @@ nsSessionStoreUtils::ForEachNonDynamicChildFrame(mozIDOMWindowProxy* aWindow,
   nsresult rv = docShell->GetChildCount(&length);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (int32_t i = 0, idx = 0; i < length; ++i) {
+  for (int32_t i = 0; i < length; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> item;
     docShell->GetChildAt(i, getter_AddRefs(item));
     NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
@@ -103,7 +103,11 @@ nsSessionStoreUtils::ForEachNonDynamicChildFrame(mozIDOMWindowProxy* aWindow,
       continue;
     }
 
-    aCallback->HandleFrame(item->GetWindow(), idx++);
+    int32_t childOffset = 0;
+    rv = childDocShell->GetChildOffset(&childOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aCallback->HandleFrame(item->GetWindow(), childOffset);
   }
 
   return NS_OK;
