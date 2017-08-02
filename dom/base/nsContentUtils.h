@@ -200,7 +200,10 @@ typedef bool (*CallOnRemoteChildFunction) (mozilla::dom::TabParent* aTabParent,
 namespace mozilla {
 // 16 seems to be the maximum number of manual NAC nodes that editor
 // creates for a given element.
-typedef AutoTArray<mozilla::dom::Element*,16> ManualNAC;
+//
+// These need to be manually removed by the machinery that sets the NAC,
+// otherwise we'll leak.
+typedef AutoTArray<RefPtr<mozilla::dom::Element>,16> ManualNAC;
 }
 
 class nsContentUtils
