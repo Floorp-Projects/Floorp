@@ -121,7 +121,7 @@
 }
 
 #customization-header {
-%ifdef MOZ_PHOTON_THEME;
+%ifndef MOZ_PHOTON_THEME
   border-bottom: 1px solid ThreeDLightShadow;
   font-size: 1.75em;
   line-height: 1.75em;
