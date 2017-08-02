@@ -55,7 +55,10 @@ this.TopSitesFeed = class TopSitesFeed {
     let frecent = await NewTabUtils.activityStreamLinks.getTopSites();
     const defaultUrls = DEFAULT_TOP_SITES.map(site => site.url);
     let pinned = NewTabUtils.pinnedLinks.links;
-    pinned = pinned.map(site => site && Object.assign({}, site, {isDefault: defaultUrls.indexOf(site.url) !== -1}));
+    pinned = pinned.map(site => site && Object.assign({}, site, {
+      isDefault: defaultUrls.indexOf(site.url) !== -1,
+      hostname: shortURL(site)
+    }));
 
     if (!frecent) {
       frecent = [];
