@@ -1,25 +1,29 @@
-var g = newGlobal();
-var dbg = new Debugger(g);
-var hits = 0;
-dbg.onDebuggerStatement = function (frame) {
-    var arr = frame.arguments;
-    assertEq(arr[0].script instanceof Debugger.Script, true);
-    assertEq(arr[1].script instanceof Debugger.Script, true);
-    assertEq(arr[2].script instanceof Debugger.Script, true);
-    assertEq(arr[3].script instanceof Debugger.Script, true);
-    assertEq(arr[4].script, undefined);
-    assertEq(arr[5].script, undefined);
-    assertEq(arr.length, 6);
-    hits++;
-};
+load(libdir + 'nightly-only.js');
 
-g.eval(`
-    function f() { debugger; }
-    f(function g(){},
-      function* h() {},
-      async function j() {},
-      async function* k() {},
-      {},
-      Math.atan2);
-`);
-assertEq(hits, 1);
+var g = newGlobal();
+var dbg = new Debugger;
+var gDO = dbg.addDebuggee(g);
+
+function check(expr, expected) {
+  print("checking " + uneval(expr) + ", expecting " +
+        (expected ? "script" : "no script"));
+
+  let completion = gDO.executeInGlobal(expr);
+  if (completion.throw)
+    throw completion.throw.unsafeDereference();
+
+  let val = completion.return;
+  if (expected)
+    assertEq(val.script instanceof Debugger.Script, true);
+  else
+    assertEq(val.script, undefined);
+}
+
+check('(function g(){})', true);
+check('(function* h() {})', true);
+check('(async function j() {})', true);
+nightlyOnly(g.SyntaxError, () => {
+  check('(async function* k() {})', true);
+});
+check('({})', false);
+check('Math.atan2', false);

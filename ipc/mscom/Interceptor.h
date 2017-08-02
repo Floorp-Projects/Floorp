@@ -130,6 +130,8 @@ private:
                                    IUnknown** aOutInterface) override;
   HRESULT CreateInterceptor(REFIID aIid, IUnknown* aOuter, IUnknown** aOutput);
 
+  static DWORD GetMarshalFlags(DWORD aDestContext, DWORD aMarshalFlags);
+
 private:
   InterceptorTargetPtr<IUnknown>  mTarget;
   RefPtr<IInterceptorSink>  mEventSink;

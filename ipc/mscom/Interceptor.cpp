@@ -192,13 +192,49 @@ Interceptor::GetClassForHandler(DWORD aDestContext, void* aDestContextPtr,
   return mEventSink->GetHandler(WrapNotNull(aHandlerClsid));
 }
 
+/**
+ * When we are marshaling to the parent process main thread, we want to turn
+ * off COM's ping functionality. That functionality is designed to free
+ * strong references held by defunct client processes. Since our content
+ * processes cannot outlive our parent process, we turn off pings when we know
+ * that the COM client is going to be our parent process. This provides a
+ * significant performance boost in a11y code due to large numbers of remote
+ * objects being created and destroyed within a short period of time.
+ */
+DWORD
+Interceptor::GetMarshalFlags(DWORD aDestContext, DWORD aMarshalFlags)
+{
+  // Only worry about local contexts.
+  if (aDestContext != MSHCTX_LOCAL) {
+    return aMarshalFlags;
+  }
+
+  // Get the caller TID. We check for S_FALSE to ensure that the caller is a
+  // different process from ours, which is the only scenario we care about.
+  DWORD callerTid;
+  if (::CoGetCallerTID(&callerTid) != S_FALSE) {
+    return aMarshalFlags;
+  }
+
+  // Now we compare the caller TID to our parent main thread TID.
+  const DWORD chromeMainTid =
+    dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
+  if (callerTid != chromeMainTid) {
+    return aMarshalFlags;
+  }
+
+  // The caller is our parent main thread. Disable ping functionality.
+  return aMarshalFlags | MSHLFLAGS_NOPING;
+}
+
 HRESULT
 Interceptor::GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
                                void* pvDestContext, DWORD mshlflags,
                                CLSID* pCid)
 {
   return mStdMarshal->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext,
-                                        mshlflags, pCid);
+                                        GetMarshalFlags(dwDestContext,
+                                                        mshlflags), pCid);
 }
 
 HRESULT
@@ -207,14 +243,23 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
                                DWORD* pSize)
 {
   HRESULT hr = mStdMarshal->GetMarshalSizeMax(riid, pv, dwDestContext,
-                                              pvDestContext, mshlflags, pSize);
+                                              pvDestContext,
+                                              GetMarshalFlags(dwDestContext,
+                                                              mshlflags),
+                                              pSize);
   if (FAILED(hr)) {
     return hr;
   }
 
   DWORD payloadSize = 0;
   hr = mEventSink->GetHandlerPayloadSize(WrapNotNull(&payloadSize));
-  *pSize += payloadSize;
+  if (hr == E_NOTIMPL) {
+    return S_OK;
+  }
+
+  if (SUCCEEDED(hr)) {
+    *pSize += payloadSize;
+  }
   return hr;
 }
 
@@ -240,7 +285,8 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
 #endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 
   hr = mStdMarshal->MarshalInterface(pStm, riid, pv, dwDestContext,
-                                     pvDestContext, mshlflags);
+                                     pvDestContext,
+                                     GetMarshalFlags(dwDestContext, mshlflags));
   if (FAILED(hr)) {
     return hr;
   }
@@ -277,7 +323,12 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
   }
 #endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 
-  return mEventSink->WriteHandlerPayload(WrapNotNull(pStm));
+  hr = mEventSink->WriteHandlerPayload(WrapNotNull(pStm));
+  if (hr == E_NOTIMPL) {
+    return S_OK;
+  }
+
+  return hr;
 }
 
 HRESULT
@@ -594,14 +645,6 @@ Interceptor::ThreadSafeQueryInterface(REFIID aIid, IUnknown** aOutInterface)
   }
 
   if (aIid == IID_IMarshal) {
-    // Do not indicate that this interface is available unless we actually
-    // support it. We'll check that by looking for a successful call to
-    // IInterceptorSink::GetHandler()
-    CLSID dummy;
-    if (FAILED(mEventSink->GetHandler(WrapNotNull(&dummy)))) {
-      return E_NOINTERFACE;
-    }
-
     if (!mStdMarshalUnk) {
       HRESULT hr = ::CoGetStdMarshalEx(static_cast<IWeakReferenceSource*>(this),
                                        SMEXF_SERVER,

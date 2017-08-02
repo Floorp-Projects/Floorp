@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1386222
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 1386222" onload="runTest();">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <textbox id="t"/>
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+function runTest() {
+  var t = document.getElementById("t");
+  var numUndo = () => t.editor.transactionManager.numberOfUndoItems;
+  is(numUndo(), 0, "no undo items to begin with");
+  t.value = "foo";
+  is(t.value, "foo", "value setter worked");
+  is(numUndo(), 1, "one undo item now");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+]]>
+</script>
+</window>

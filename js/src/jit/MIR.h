@@ -5744,6 +5744,29 @@ class MToString :
     ALLOW_CLONE(MToString)
 };
 
+// Converts any type to an object, throwing on null or undefined.
+class MToObject :
+  public MUnaryInstruction,
+  public BoxInputsPolicy::Data
+{
+    explicit MToObject(MDefinition* def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType::Object);
+        setGuard(); // Throws on null or undefined.
+    }
+
+  public:
+    INSTRUCTION_HEADER(ToObject)
+    TRIVIAL_NEW_WRAPPERS
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    ALLOW_CLONE(MToObject)
+};
+
 // Converts any type to an object or null value, throwing on undefined.
 class MToObjectOrNull :
   public MUnaryInstruction,
@@ -7452,9 +7475,8 @@ class MFromCodePoint
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
-    bool possiblyCalls() const override {
-        return true;
-    }
+
+    ALLOW_CLONE(MFromCodePoint)
 };
 
 class MSinCos
@@ -13910,6 +13932,23 @@ class MIsPackedArray
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
+};
+
+class MGetPrototypeOf
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MGetPrototypeOf(MDefinition* target)
+      : MUnaryInstruction(target)
+    {
+        setResultType(MIRType::Value);
+        setGuard(); // May throw if target is a proxy.
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetPrototypeOf)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, target))
 };
 
 // Flips the input's sign bit, independently of the rest of the number's
