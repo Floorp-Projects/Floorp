@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+
 'use strict';
 
 (function() {
@@ -18,21 +19,19 @@
   var associatedBindings = mojo;
   var codec = mojo.internal;
   var validator = mojo.internal;
+
+  var exports = mojo.internal.exposeNamespace('device.mojom');
   var device$ =
       mojo.internal.exposeNamespace('device.mojom');
   if (mojo.config.autoLoadMojomDeps) {
     mojo.internal.loadMojomIfNecessary(
-        'device/usb/public/interfaces/device.mojom',
-        new URL('device.mojom.js',
-                document.currentScript.src).href);
+        'device/usb/public/interfaces/device.mojom', 'device.mojom.js');
   }
   var device_manager$ =
       mojo.internal.exposeNamespace('device.mojom');
   if (mojo.config.autoLoadMojomDeps) {
     mojo.internal.loadMojomIfNecessary(
-        'device/usb/public/interfaces/device_manager.mojom',
-        new URL('device_manager.mojom.js',
-                document.currentScript.src).href);
+        'device/usb/public/interfaces/device_manager.mojom', 'device_manager.mojom.js');
   }
 
 
@@ -274,7 +273,6 @@
   };
   UsbChooserServiceStub.prototype.validator = validateUsbChooserServiceRequest;
   UsbChooserServiceProxy.prototype.validator = validateUsbChooserServiceResponse;
-  var exports = mojo.internal.exposeNamespace("device.mojom");
   exports.UsbChooserService = UsbChooserService;
   exports.UsbChooserServicePtr = UsbChooserServicePtr;
   exports.UsbChooserServiceAssociatedPtr = UsbChooserServiceAssociatedPtr;

@@ -24,6 +24,13 @@
       };
    */
 
+  // Before calling removeTrack can be tested, one needs to add MediaStreamTracks to
+  // a peer connection. There are two ways for adding MediaStreamTrack: addTrack and
+  // addTransceiver. addTransceiver is a newer API while addTrack has been implemented
+  // in current browsers for some time. As a result some of the removeTrack tests have
+  // two versions so that removeTrack can be partially tested without addTransceiver
+  // and the transceiver APIs being implemented.
+
   /*
     5.1.  removeTrack
       3.  If connection's [[isClosed]] slot is true, throw an InvalidStateError.
@@ -37,7 +44,24 @@
     pc.close();
     assert_throws('InvalidStateError', () => pc.removeTrack(sender));
 
-  }, 'Calling removeTrack when connection is closed should throw InvalidStateError');
+  }, 'addTransceiver - Calling removeTrack when connection is closed should throw InvalidStateError');
+
+  promise_test(t => {
+    const pc = new RTCPeerConnection();
+
+    return navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(mediaStream => {
+      const tracks = mediaStream.getTracks();
+      assert_greater_than(tracks.length, 0,
+        'Expect getUserMedia to return at least one audio track');
+
+      const track = tracks[0];
+      const sender = pc.addTrack(track, mediaStream);
+
+      pc.close();
+      assert_throws('InvalidStateError', () => pc.removeTrack(sender));
+    });
+  }, 'addTrack - Calling removeTrack when connection is closed should throw InvalidStateError');
 
   test(t => {
     const pc = new RTCPeerConnection();
@@ -49,7 +73,25 @@
     pc2.close();
     assert_throws('InvalidStateError', () => pc2.removeTrack(sender));
 
-  }, 'Calling removeTrack on different connection that is closed should throw InvalidStateError');
+  }, 'addTransceiver - Calling removeTrack on different connection that is closed should throw InvalidStateError');
+
+  promise_test(t => {
+    const pc = new RTCPeerConnection();
+
+    return navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(mediaStream => {
+      const tracks = mediaStream.getTracks();
+      assert_greater_than(tracks.length, 0,
+        'Expect getUserMedia to return at least one audio track');
+
+      const track = tracks[0];
+      const sender = pc.addTrack(track, mediaStream);
+
+      const pc2 = new RTCPeerConnection();
+      pc2.close();
+      assert_throws('InvalidStateError', () => pc2.removeTrack(sender));
+    });
+  }, 'addTrack - Calling removeTrack on different connection that is closed should throw InvalidStateError');
 
   /*
     5.1.  removeTrack
@@ -64,7 +106,24 @@
     const pc2 = new RTCPeerConnection();
     assert_throws('InvalidAccessError', () => pc2.removeTrack(sender));
 
-  }, 'Calling removeTrack on different connection should throw InvalidAccessError');
+  }, 'addTransceiver - Calling removeTrack on different connection should throw InvalidAccessError');
+
+  promise_test(t => {
+    const pc = new RTCPeerConnection();
+
+    return navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(mediaStream => {
+      const tracks = mediaStream.getTracks();
+      assert_greater_than(tracks.length, 0,
+        'Expect getUserMedia to return at least one audio track');
+
+      const track = tracks[0];
+      const sender = pc.addTrack(track, mediaStream);
+
+      const pc2 = new RTCPeerConnection();
+      assert_throws('InvalidAccessError', () => pc2.removeTrack(sender));
+    });
+  }, 'addTrack - Calling removeTrack on different connection should throw InvalidAccessError')
 
   /*
     5.1.  removeTrack
@@ -85,7 +144,26 @@
     assert_equals(transceiver.direction, 'sendrecv',
       'direction should not be altered');
 
-  }, 'Calling removeTrack with valid sender should set sender.track to null');
+  }, 'addTransceiver - Calling removeTrack with valid sender should set sender.track to null');
+
+  promise_test(t => {
+    const pc = new RTCPeerConnection();
+
+    return navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(mediaStream => {
+      const tracks = mediaStream.getTracks();
+      assert_greater_than(tracks.length, 0,
+        'Expect getUserMedia to return at least one audio track');
+
+      const track = tracks[0];
+      const sender = pc.addTrack(track, mediaStream);
+
+      assert_equals(sender.track, track);
+
+      pc.removeTrack(sender);
+      assert_equals(sender.track, null);
+    });
+  }, 'addTrack - Calling removeTrack with valid sender should set sender.track to null');
 
   /*
     5.1.  removeTrack
