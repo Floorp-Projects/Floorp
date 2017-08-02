@@ -118,6 +118,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitIntToString(LIntToString* lir);
     void visitDoubleToString(LDoubleToString* lir);
     void visitValueToString(LValueToString* lir);
+    void visitValueToObject(LValueToObject* lir);
     void visitValueToObjectOrNull(LValueToObjectOrNull* lir);
     void visitInteger(LInteger* lir);
     void visitInteger64(LInteger64* lir);
@@ -415,6 +416,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineNaNToZero(OutOfLineNaNToZero* ool);
     void visitFinishBoundFunctionInit(LFinishBoundFunctionInit* lir);
     void visitIsPackedArray(LIsPackedArray* lir);
+    void visitGetPrototypeOf(LGetPrototypeOf* lir);
 
     void visitCheckOverRecursed(LCheckOverRecursed* lir);
     void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);

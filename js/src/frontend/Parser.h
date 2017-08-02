@@ -527,6 +527,11 @@ class ParseContext : public Nestable<ParseContext>
         return sc_->isFunctionBox() && sc_->asFunctionBox()->function()->isMethod();
     }
 
+    bool isGetterOrSetter() const {
+        return sc_->isFunctionBox() && (sc_->asFunctionBox()->function()->isGetter() ||
+                                        sc_->asFunctionBox()->function()->isSetter());
+    }
+
     uint32_t scriptId() const {
         return scriptId_;
     }

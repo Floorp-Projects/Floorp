@@ -8,7 +8,6 @@
 #include "prlink.h"
 #include "prenv.h"
 #include "gfxPrefs.h"
-#include "nsString.h"
 #include "mozilla/Preferences.h"
 
 #include "mozilla/gfx/Quaternion.h"
@@ -378,10 +377,10 @@ VRDisplayOpenVR::NotifyVSync()
 }
 
 VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aDisplayID,
-                                       uint32_t aNumButtons, uint32_t aNumAxes,
-                                       ::vr::ETrackedDeviceClass aDeviceType)
+                                       uint32_t aNumButtons, uint32_t aNumTriggers,
+                                       uint32_t aNumAxes, ::vr::ETrackedDeviceClass aDeviceType)
   : VRControllerHost(VRDeviceType::OpenVR, aHand, aDisplayID)
-  , mTrigger(0)
+  , mTrigger(aNumTriggers)
   , mAxisMove(aNumAxes)
   , mVibrateThread(nullptr)
   , mIsVibrateStopped(false)
@@ -401,6 +400,7 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aDisplay
   }
 
   mAxisMove.SetLengthAndRetainStorage(aNumAxes);
+  mTrigger.SetLengthAndRetainStorage(aNumTriggers);
   mControllerInfo.mNumButtons = aNumButtons;
   mControllerInfo.mNumAxes = aNumAxes;
   mControllerInfo.mNumHaptics = kNumOpenVRHaptcs;
@@ -441,15 +441,15 @@ VRControllerOpenVR::SetAxisMove(uint32_t aAxis, float aValue)
 }
 
 void
-VRControllerOpenVR::SetTrigger(float aValue)
+VRControllerOpenVR::SetTrigger(uint32_t aButton, float aValue)
 {
-  mTrigger = aValue;
+  mTrigger[aButton] = aValue;
 }
 
 float
-VRControllerOpenVR::GetTrigger()
+VRControllerOpenVR::GetTrigger(uint32_t aButton)
 {
-  return mTrigger;
+  return mTrigger[aButton];
 }
 
 void
@@ -660,6 +660,7 @@ VRSystemManagerOpenVR::HandleInput()
   for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
     uint32_t axisIdx = 0;
     uint32_t buttonIdx = 0;
+    uint32_t triggerIdx = 0;
     controller = mOpenVRController[i];
     const uint32_t trackedIndex = controller->GetTrackedIndex();
 
@@ -703,8 +704,18 @@ VRSystemManagerOpenVR::HandleInput()
             ++buttonIdx;
             break;
           case vr::EVRControllerAxisType::k_eControllerAxis_Trigger:
-            HandleTriggerPress(i, buttonIdx, state.rAxis[j].x);
-            ++buttonIdx;
+            if (j <= 2) {
+              HandleTriggerPress(i, buttonIdx, triggerIdx, state.rAxis[j].x);
+              ++buttonIdx;
+              ++triggerIdx;
+            } else {
+              HandleTriggerPress(i, buttonIdx, triggerIdx, state.rAxis[j].x);
+              ++buttonIdx;
+              ++triggerIdx;
+              HandleTriggerPress(i, buttonIdx, triggerIdx, state.rAxis[j].y);
+              ++buttonIdx;
+              ++triggerIdx;
+            }
             break;
         }
       }
@@ -843,11 +854,12 @@ VRSystemManagerOpenVR::HandleButtonPress(uint32_t aControllerIdx,
 void
 VRSystemManagerOpenVR::HandleTriggerPress(uint32_t aControllerIdx,
                                           uint32_t aButton,
+                                          uint32_t aTrigger,
                                           float aValue)
 {
   RefPtr<impl::VRControllerOpenVR> controller(mOpenVRController[aControllerIdx]);
   MOZ_ASSERT(controller);
-  const float oldValue = controller->GetTrigger();
+  const float oldValue = controller->GetTrigger(aTrigger);
   // For OpenVR, the threshold value of ButtonPressed and ButtonTouched is 0.55.
   // We prefer to let developers to set their own threshold for the adjustment.
   // Therefore, we don't check ButtonPressed and ButtonTouched with ButtonMask here.
@@ -858,7 +870,7 @@ VRSystemManagerOpenVR::HandleTriggerPress(uint32_t aControllerIdx,
   if (oldValue != aValue) {
     NewButtonEvent(aControllerIdx, aButton, aValue > threshold,
                    aValue > threshold, aValue);
-    controller->SetTrigger(aValue);
+    controller->SetTrigger(aTrigger, aValue);
   }
 }
 
@@ -998,6 +1010,7 @@ VRSystemManagerOpenVR::ScanForControllers()
                                                 trackedDevice);
       const GamepadHand hand = GetGamepadHandFromControllerRole(role);
       uint32_t numButtons = 0;
+      uint32_t numTriggers = 0;
       uint32_t numAxes = 0;
 
       // Scan the axes that the controllers support
@@ -1012,7 +1025,24 @@ VRSystemManagerOpenVR::ScanForControllers()
             ++numButtons;
             break;
           case ::vr::k_eControllerAxis_Trigger:
-            ++numButtons;
+            if (j <= 2) {
+              ++numButtons;
+              ++numTriggers;
+            } else {
+          #ifdef DEBUG
+              // SteamVR Knuckles is the only special case for using 2D axis values on triggers.
+              ::vr::ETrackedPropertyError err;
+              uint32_t requiredBufferLen;
+              char charBuf[128];
+              requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(trackedDevice,
+                                  ::vr::Prop_RenderModelName_String, charBuf, 128, &err);
+              MOZ_ASSERT(requiredBufferLen && err == ::vr::TrackedProp_Success);
+              nsCString deviceId(charBuf);
+              MOZ_ASSERT(deviceId.Find("knuckles") != kNotFound);
+          #endif // #ifdef DEBUG
+              numButtons += 2;
+              numTriggers += 2;
+            }
             break;
         }
       }
@@ -1051,7 +1081,7 @@ VRSystemManagerOpenVR::ScanForControllers()
 
       RefPtr<VRControllerOpenVR> openVRController =
         new VRControllerOpenVR(hand, mOpenVRHMD->GetDisplayInfo().GetDisplayID(),
-                               numButtons, numAxes, deviceType);
+                               numButtons, numTriggers, numAxes, deviceType);
       openVRController->SetTrackedIndex(trackedDevice);
       mOpenVRController.AppendElement(openVRController);
 

@@ -155,6 +155,8 @@ public:
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
   bool mIsDefer;          // True if we live in mDeferRequests.
   bool mIsAsync;          // True if we live in mLoadingAsyncRequests or mLoadedAsyncRequests.
+  bool mPreloadAsAsync;   // True if this is a preload request and the script is async
+  bool mPreloadAsDefer;   // True if this is a preload request and the script is defer
   bool mIsNonAsyncScriptInserted; // True if we live in mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;           // True if we live in mXSLTRequests.
   bool mIsCanceled;       // True if we have been explicitly canceled.

@@ -2357,6 +2357,16 @@ LIRGenerator::visitToString(MToString* ins)
 }
 
 void
+LIRGenerator::visitToObject(MToObject* ins)
+{
+    MOZ_ASSERT(ins->input()->type() == MIRType::Value);
+
+    LValueToObject* lir = new(alloc()) LValueToObject(useBox(ins->input()));
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitToObjectOrNull(MToObjectOrNull* ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType::Value);
@@ -4999,6 +5009,17 @@ LIRGenerator::visitIsPackedArray(MIsPackedArray* ins)
 
     auto lir = new(alloc()) LIsPackedArray(useRegister(ins->array()), temp());
     define(lir, ins);
+}
+
+void
+LIRGenerator::visitGetPrototypeOf(MGetPrototypeOf* ins)
+{
+    MOZ_ASSERT(ins->target()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->type() == MIRType::Value);
+
+    auto lir = new(alloc()) LGetPrototypeOf(useRegister(ins->target()));
+    defineBox(lir, ins);
+    assignSafepoint(lir, ins);
 }
 
 static void
