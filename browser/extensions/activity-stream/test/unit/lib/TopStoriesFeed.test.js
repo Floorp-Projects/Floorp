@@ -14,6 +14,7 @@ describe("Top Stories Feed", () => {
   let instance;
   let clock;
   let globals;
+  let shortURLStub;
 
   beforeEach(() => {
     FakePrefs.prototype.prefs["feeds.section.topstories.options"] = `{
@@ -32,7 +33,12 @@ describe("Top Stories Feed", () => {
     globals.set("Services", {locale: {getRequestedLocale: () => "en-CA"}});
     clock = sinon.useFakeTimers();
 
-    ({TopStoriesFeed, STORIES_UPDATE_TIME, TOPICS_UPDATE_TIME, SECTION_ID, FEED_PREF, SECTION_OPTIONS_PREF} = injector({"lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs}}));
+    shortURLStub = sinon.stub().callsFake(site => site.url);
+
+    ({TopStoriesFeed, STORIES_UPDATE_TIME, TOPICS_UPDATE_TIME, SECTION_ID, FEED_PREF, SECTION_OPTIONS_PREF} = injector({
+      "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
+      "common/ShortURL.jsm": {shortURL: shortURLStub}
+    }));
     instance = new TopStoriesFeed();
     instance.store = {getState() { return {}; }, dispatch: sinon.spy()};
     instance.storiesLastUpdated = 0;
@@ -161,7 +167,8 @@ describe("Top Stories Feed", () => {
         "image": "image-url",
         "referrer": "referrer",
         "url": "rec-url",
-        "eTLD": ""
+        "eTLD": "",
+        "hostname": "rec-url"
       }];
 
       instance.stories_endpoint = "stories-endpoint";
@@ -170,6 +177,7 @@ describe("Top Stories Feed", () => {
       await instance.fetchStories();
 
       assert.calledOnce(fetchStub);
+      assert.calledOnce(shortURLStub);
       assert.calledWithExactly(fetchStub, instance.stories_endpoint);
       assert.calledOnce(instance.store.dispatch);
       assert.propertyVal(instance.store.dispatch.firstCall.args[0], "type", at.SECTION_ROWS_UPDATE);
