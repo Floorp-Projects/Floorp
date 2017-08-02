@@ -848,8 +848,12 @@ HttpObserverManager = {
     let {loadInfo} = channel;
     if (loadInfo && loadInfo.loadingPrincipal) {
       let {loadingPrincipal} = loadInfo;
-
-      return loadingPrincipal.URI && !isHostPermitted(loadingPrincipal.URI.host);
+      try {
+        return loadingPrincipal.URI && !isHostPermitted(loadingPrincipal.URI.host);
+      } catch (e) {
+        // about:newtab and other non-host URIs will throw.  Those wont be in
+        // the host permitted list, so we pass on the error.
+      }
     }
 
     return true;
