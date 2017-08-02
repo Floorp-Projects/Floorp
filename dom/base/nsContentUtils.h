@@ -197,15 +197,6 @@ struct EventNameMapping
 typedef bool (*CallOnRemoteChildFunction) (mozilla::dom::TabParent* aTabParent,
                                            void* aArg);
 
-namespace mozilla {
-// 16 seems to be the maximum number of manual NAC nodes that editor
-// creates for a given element.
-//
-// These need to be manually removed by the machinery that sets the NAC,
-// otherwise we'll leak.
-typedef AutoTArray<RefPtr<mozilla::dom::Element>,16> ManualNAC;
-}
-
 class nsContentUtils
 {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
