@@ -8,9 +8,11 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 const scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
+/* import-globals-from classifierHelper.js */
 scriptLoader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/url-classifier/tests/browser/classifierHelper.js",
   this);
+  /* import-globals-from classifierTester.js */
 scriptLoader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/url-classifier/tests/browser/classifierTester.js",
   this);
