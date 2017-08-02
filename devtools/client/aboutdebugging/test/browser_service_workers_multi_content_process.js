@@ -21,10 +21,13 @@ add_task(function* () {
   let img = warningSection.querySelector(".warning");
   ok(img, "warning message is rendered");
 
-  let swTab = yield addTab(TAB_URL, { background: true });
   let serviceWorkersElement = getServiceWorkerList(document);
+  let onMutation = waitForMutation(serviceWorkersElement, { childList: true });
 
-  yield waitForMutation(serviceWorkersElement, { childList: true });
+  let swTab = yield addTab(TAB_URL, { background: true });
+
+  info("Wait for service worker to appear in the list");
+  yield onMutation;
 
   info("Check that service worker buttons are disabled.");
   // Check that the service worker appears in the UI
@@ -34,7 +37,8 @@ add_task(function* () {
 
   info("Update the preference to 1");
   let onWarningCleared = waitUntil(() => {
-    return document.querySelector(".service-worker-multi-process");
+    let hasWarning = document.querySelector(".service-worker-multi-process");
+    return !hasWarning && !debugButton.disabled;
   });
   yield pushPref("dom.ipc.processCount", 1);
   yield onWarningCleared;
@@ -42,7 +46,8 @@ add_task(function* () {
 
   info("Update the preference back to 2");
   let onWarningRestored = waitUntil(() => {
-    return document.querySelector(".service-worker-multi-process");
+    let hasWarning = document.querySelector(".service-worker-multi-process");
+    return hasWarning && debugButton.disabled;
   });
   yield pushPref("dom.ipc.processCount", 2);
   yield onWarningRestored;
