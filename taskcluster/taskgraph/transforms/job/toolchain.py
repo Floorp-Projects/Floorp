@@ -157,16 +157,6 @@ def windows_toolchain(config, job, taskdesc):
 
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
 
-    # We fetch LLVM SVN into this.
-    svn_cache = 'level-{}-toolchain-clang-cl-build-svn'.format(config.params['level'])
-    worker['mounts'] = [{
-        'cache-name': svn_cache,
-        'directory': r'llvm-sources',
-    }]
-    taskdesc['scopes'].extend([
-        'generic-worker:cache:' + svn_cache,
-    ])
-
     env = worker['env']
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
