@@ -8,62 +8,9 @@
 HAS_MISC_RULE = True
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-JETPACK_PACKAGE_MANIFESTS += ['source/test/jetpack-package.ini',
-                              'source/test/leak/jetpack-package.ini']
-JETPACK_ADDON_MANIFESTS += ['source/test/addons/jetpack-addon.ini']
+JETPACK_PACKAGE_MANIFESTS += ['source/test/jetpack-package.ini']
 
 DIRS += ['source/test/fixtures']
-
-addons = [
-    'addon-manager',
-    'author-email',
-    'child_process',
-    'chrome',
-    'content-permissions',
-    'content-script-messages-latency',
-    'contributors',
-    'curly-id',
-    'developers',
-    'e10s-content',
-    'e10s-l10n',
-    'e10s-remote',
-    'e10s-tabs',
-    'e10s',
-    'embedded-webextension',
-    'l10n-properties',
-    'l10n',
-    'layout-change',
-    'main',
-    'name-in-numbers-plus',
-    'name-in-numbers',
-    'packaging',
-    'packed',
-    'page-mod-debugger-post',
-    'page-mod-debugger-pre',
-    'page-worker',
-    'places',
-    'predefined-id-with-at',
-    'preferences-branch',
-    'private-browsing-supported',
-    'remote',
-    'require',
-    'self',
-    'simple-prefs-l10n',
-    'simple-prefs-regression',
-    'simple-prefs',
-    'standard-id',
-    'tab-close-on-startup',
-    'toolkit-require-reload',
-    'translators',
-    'unsafe-content-script',
-]
-
-addons = ['%s.xpi' % f for f in addons]
-GENERATED_FILES += addons
-
-TEST_HARNESS_FILES.testing.mochitest['jetpack-addon']['addon-sdk'].source.test.addons += [
-    '!%s' % f for f in addons
-]
 
 EXTRA_JS_MODULES.sdk += [
     'source/app-extension/bootstrap.js',
