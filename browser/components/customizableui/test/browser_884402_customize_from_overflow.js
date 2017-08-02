@@ -32,10 +32,10 @@ add_task(async function() {
 
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownContextPromise = popupShown(contextMenu);
-  let sidebarButton = document.getElementById("sidebar-button");
-  ok(sidebarButton, "sidebar-button was found");
-  is(sidebarButton.getAttribute("overflowedItem"), "true", "Sidebar button is overflowing");
-  EventUtils.synthesizeMouse(sidebarButton, 2, 2, {type: "contextmenu", button: 2});
+  let homeButton = document.getElementById("home-button");
+  ok(homeButton, "home-button was found");
+  is(homeButton.getAttribute("overflowedItem"), "true", "Home button is overflowing");
+  EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2});
   await shownContextPromise;
 
   is(overflowPanel.state, "open", "The widget overflow panel should still be open.");
@@ -65,18 +65,18 @@ add_task(async function() {
   await hiddenContextPromise;
   await hiddenPromise;
 
-  let sidebarButtonPlacement = CustomizableUI.getPlacementOfWidget("sidebar-button");
-  ok(sidebarButtonPlacement, "Sidebar button should still have a placement");
-  is(sidebarButtonPlacement && sidebarButtonPlacement.area, "PanelUI-contents", "Sidebar button should be in the panel now");
+  let homeButtonPlacement = CustomizableUI.getPlacementOfWidget("home-button");
+  ok(homeButtonPlacement, "Home button should still have a placement");
+  is(homeButtonPlacement && homeButtonPlacement.area, "PanelUI-contents", "Home button should be in the panel now");
   CustomizableUI.reset();
 
   // In some cases, it can take a tick for the navbar to overflow again. Wait for it:
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
-  sidebarButtonPlacement = CustomizableUI.getPlacementOfWidget("sidebar-button");
-  ok(sidebarButtonPlacement, "Sidebar button should still have a placement");
-  is(sidebarButtonPlacement && sidebarButtonPlacement.area, "nav-bar", "Sidebar button should be back in the navbar now");
+  homeButtonPlacement = CustomizableUI.getPlacementOfWidget("home-button");
+  ok(homeButtonPlacement, "Home button should still have a placement");
+  is(homeButtonPlacement && homeButtonPlacement.area, "nav-bar", "Home button should be back in the navbar now");
 
-  is(sidebarButton.getAttribute("overflowedItem"), "true", "Sidebar button should still be overflowed");
+  is(homeButton.getAttribute("overflowedItem"), "true", "Home button should still be overflowed");
 });
