@@ -42,21 +42,8 @@ public:
     //
     // If you need to use tail dispatch on other XPCOM threads, you'll need to
     // implement an nsIThreadObserver to fire the tail dispatcher at the
-    // appropriate times.
-    nsCOMPtr<nsIThread> thread(do_QueryInterface(aTarget));
-    bool isOnCurrentThread = false;
-    aTarget->IsOnCurrentThread(&isOnCurrentThread);
-
-    MOZ_ASSERT_IF(aRequireTailDispatch,
-      (thread && NS_IsMainThread() && NS_GetCurrentThread() == thread) ||
-      (!thread && NS_IsMainThread() && isOnCurrentThread));
-
-    // XXX Bug 1323742:
-    // We hold mRunningThread for IsCurrentThreadIn() for now.
-    // This shall be replaced by this == GetCurrent() in the future in
-    // AbstractThread perspective instead of PR_Thread perspective.
-    mRunningThread = thread ? thread.get() : NS_GetCurrentThread();
-    MOZ_ASSERT(mRunningThread);
+    // appropriate times. You will also need to modify this assertion.
+    MOZ_ASSERT_IF(aRequireTailDispatch, NS_IsMainThread() && aTarget->IsOnCurrentThread());
   }
 
   virtual void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
@@ -80,12 +67,7 @@ public:
 
   virtual bool IsCurrentThreadIn() override
   {
-    // Compare NSPR threads so that this works after shutdown when
-    // NS_GetCurrentThread starts returning null.
-    PRThread* thread = nullptr;
-    mRunningThread->GetPRThread(&thread);
-    bool in = PR_GetCurrentThread() == thread;
-    return in;
+    return mTarget->IsOnCurrentThread();
   }
 
   void FireTailDispatcher()
@@ -99,9 +81,6 @@ public:
 
   virtual TaskDispatcher& TailDispatcher() override
   {
-    // See the comment in the constructor.
-    MOZ_ASSERT(mRunningThread ==
-      static_cast<EventTargetWrapper*>(sMainThread.get())->mRunningThread);
     MOZ_ASSERT(IsCurrentThreadIn());
     if (!mTailDispatcher.isSome()) {
       mTailDispatcher.emplace(/* aIsTailDispatcher = */ true);
