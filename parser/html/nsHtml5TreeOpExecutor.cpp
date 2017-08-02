@@ -947,16 +947,14 @@ nsHtml5TreeOpExecutor::PreloadScript(const nsAString& aURL,
                                      const nsAString& aType,
                                      const nsAString& aCrossOrigin,
                                      const nsAString& aIntegrity,
-                                     bool aScriptFromHead,
-                                     bool aAsync,
-                                     bool aDefer)
+                                     bool aScriptFromHead)
 {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {
     return;
   }
   mDocument->ScriptLoader()->PreloadURI(uri, aCharset, aType, aCrossOrigin,
-                                           aIntegrity, aScriptFromHead, aAsync, aDefer,
+                                           aIntegrity, aScriptFromHead,
                                            mSpeculationReferrerPolicy);
 }
 
