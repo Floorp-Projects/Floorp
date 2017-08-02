@@ -5290,21 +5290,6 @@ HTMLEditor::GetInputEventTargetContent()
   return target.forget();
 }
 
-bool
-HTMLEditor::IsEditable(nsINode* aNode)
-{
-  if (!TextEditor::IsEditable(aNode)) {
-    return false;
-  }
-  if (aNode->IsElement()) {
-    // If we're dealing with an element, then ask it whether it's editable.
-    return aNode->IsEditable();
-  }
-  // We might be dealing with a text node for example, which we always consider
-  // to be editable.
-  return true;
-}
-
 Element*
 HTMLEditor::GetEditorRoot()
 {

@@ -3578,25 +3578,6 @@ EditorBase::IsEditable(nsIDOMNode* aNode)
   return IsEditable(content);
 }
 
-bool
-EditorBase::IsEditable(nsINode* aNode)
-{
-  NS_ENSURE_TRUE(aNode, false);
-
-  if (!aNode->IsNodeOfType(nsINode::eCONTENT) || IsMozEditorBogusNode(aNode) ||
-      !IsModifiableNode(aNode)) {
-    return false;
-  }
-
-  switch (aNode->NodeType()) {
-    case nsIDOMNode::ELEMENT_NODE:
-    case nsIDOMNode::TEXT_NODE:
-      return true;
-    default:
-      return false;
-  }
-}
-
 uint32_t
 EditorBase::CountEditableChildren(nsINode* aNode)
 {
