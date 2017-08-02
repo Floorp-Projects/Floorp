@@ -35,7 +35,7 @@
         src="chrome://browser/content/preferences/in-content-new/sync.js"/>
 
 <hbox id="firefoxAccountCategory"
-      class="searchCategory"
+      class="subcategory"
       hidden="true"
       data-category="paneSync">
   <label class="header-name" flex="1">&paneSync1.title;</label>
