@@ -6,7 +6,7 @@
 
 function makeXHR(url, callback) {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
+  xhr.open("GET", url, true);
   xhr.onload = function() {
     callback(xhr.response);
   };

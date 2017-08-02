@@ -51,8 +51,8 @@ function testOnWindow(contentPage, aCallback) {
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-        win.content.addEventListener('load', function innerLoad2() {
-          win.content.removeEventListener('load', innerLoad2);
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);
@@ -110,8 +110,8 @@ function checkLoads(aWindow, aWhitelisted) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["privacy.trackingprotection.enabled", true],
-            ["channelclassifier.allowlist_example", true]]},
+  {"set": [["privacy.trackingprotection.enabled", true],
+           ["channelclassifier.allowlist_example", true]]},
   test);
 
 function test() {
@@ -128,7 +128,7 @@ function test() {
         aWindow.close();
 
         // Load the test from a URL on the whitelist but without the whitelist
-        SpecialPowers.pushPrefEnv({"set" : [["urlclassifier.trackingWhitelistTable", ""]]},
+        SpecialPowers.pushPrefEnv({"set": [["urlclassifier.trackingWhitelistTable", ""]]},
           function() {
             testOnWindow(contentPage1, function(aWindow) {
               checkLoads(aWindow, false);

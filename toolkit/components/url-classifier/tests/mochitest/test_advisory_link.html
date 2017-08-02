@@ -82,7 +82,7 @@ function setupTestData(data) {
 }
 
 function testOnWindow(aTestData) {
-  return new Promise(resolve  => {
+  return new Promise(resolve => {
     let win = mainWindow.OpenBrowserWindow();
 
     (async function() {
@@ -117,7 +117,7 @@ function testOnWindow(aTestData) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["browser.safebrowsing.phishing.enabled", true]]},
+  {"set": [["browser.safebrowsing.phishing.enabled", true]]},
   test);
 
 function test() {

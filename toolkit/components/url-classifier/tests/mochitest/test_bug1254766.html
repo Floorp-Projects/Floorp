@@ -139,10 +139,12 @@ function testGethash() {
     .then(addPrefixToDB)
     .then(loadTestFrame)
     .then(() => {
-       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
+       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered.");
+})
     .then(loadTestFrame)
     .then(() => {
-      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered.");
+})
     .then(reset);
 }
 
@@ -155,7 +157,8 @@ function testUpdate() {
     .then(addCompletionToDB)
     .then(loadTestFrame)
     .then(() => {
-      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered.");
+})
     .then(reset);
 }
 
@@ -170,11 +173,13 @@ function testUpdateNotClearCompletions() {
     .then(addCompletionToDB)
     .then(loadTestFrame)
     .then(() => {
-      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered.");
+})
     .then(updateUnusedUrl)
     .then(loadTestFrame)
     .then(() => {
-      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered.");
+})
     .then(reset);
 }
 
@@ -189,7 +194,8 @@ function testUpdateCompletionsAfterReload() {
     .then(classifierHelper.reloadDatabase)
     .then(loadTestFrame)
     .then(() => {
-      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered.");
+})
     .then(reset);
 }
 
@@ -205,14 +211,17 @@ function testGethashCompletionsAfterReload() {
     .then(addPrefixToDB)
     .then(loadTestFrame)
     .then(() => {
-       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
+       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered.");
+})
     .then(loadTestFrame)
     .then(() => {
-      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered.");
+})
     .then(classifierHelper.reloadDatabase)
     .then(loadTestFrame)
     .then(() => {
-       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
+       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered.");
+})
     .then(reset);
 }
 

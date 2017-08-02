@@ -33,7 +33,7 @@ function checkLoads() {
   }
 
   let dwu = window.parent.SpecialPowers.getDOMWindowUtils(window);
-  let timer1 = window.setTimeout(function(){}, 0);
+  let timer1 = window.setTimeout(function() {}, 0);
   window.parent.ok(!dwu.isTimeoutTracking(timer1),
                    "Timeout set from main script should not be considered as tracking");
   let timer2 = getTrackerTimeout();

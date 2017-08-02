@@ -50,8 +50,8 @@ function testOnWindow(aPrivate, aCallback) {
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-        win.content.addEventListener('load', function innerLoad2() {
-          win.content.removeEventListener('load', innerLoad2);
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);
@@ -112,7 +112,7 @@ function checkLoads(aWindow, aBlocked) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
+  {"set": [["urlclassifier.trackingTable", "test-track-simple"],
             ["privacy.trackingprotection.enabled", false],
             ["privacy.trackingprotection.pbmode.enabled", true],
             ["channelclassifier.allowlist_example", true]]},
