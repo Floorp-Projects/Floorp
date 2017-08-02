@@ -377,14 +377,14 @@ nsMozIconURI::SetPort(int32_t aPort)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetPath(nsACString& aPath)
+nsMozIconURI::GetPathQueryRef(nsACString& aPath)
 {
   aPath.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMozIconURI::SetPath(const nsACString& aPath)
+nsMozIconURI::SetPathQueryRef(const nsACString& aPath)
 {
   return NS_ERROR_FAILURE;
 }

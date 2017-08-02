@@ -802,7 +802,7 @@ function getExpectedInstall(aAddon) {
   if (gExpectedInstalls instanceof Array)
     return gExpectedInstalls.shift();
   if (!aAddon || !aAddon.id)
-    return gExpectedInstalls["NO_ID"].shift();
+    return gExpectedInstalls.NO_ID.shift();
   let id = aAddon.id;
   if (!(id in gExpectedInstalls) || !(gExpectedInstalls[id] instanceof Array))
     do_throw("Wasn't expecting events for " + id);

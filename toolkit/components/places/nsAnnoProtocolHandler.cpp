@@ -290,7 +290,7 @@ nsAnnoProtocolHandler::ParseAnnoURI(nsIURI* aURI,
 {
   nsresult rv;
   nsAutoCString path;
-  rv = aURI->GetPath(path);
+  rv = aURI->GetPathQueryRef(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t firstColon = path.FindChar(':');

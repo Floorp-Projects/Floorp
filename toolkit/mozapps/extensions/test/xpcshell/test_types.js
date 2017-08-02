@@ -44,13 +44,13 @@ function run_test() {
   do_check_eq(expectedAdd, null);
 
   do_check_true("test" in types);
-  do_check_eq(types["test"].name, "Test");
+  do_check_eq(types.test.name, "Test");
   do_check_false("t$e%st" in types);
 
-  delete types["test"];
+  delete types.test;
   do_check_true("test" in types);
 
-  types["foo"] = "bar";
+  types.foo = "bar";
   do_check_false("foo" in types);
 
   expectedRemove = "test";

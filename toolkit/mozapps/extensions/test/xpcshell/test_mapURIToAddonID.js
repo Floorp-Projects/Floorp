@@ -315,7 +315,7 @@ function run_test_provider() {
   check_mapping(provider.uri, provider.id);
 
   let u2 = provider.uri.clone();
-  u2.path = "notmapped";
+  u2.pathQueryRef = "notmapped";
   do_check_eq(AddonManager.mapURIToAddonID(u2), null);
 
   AddonManagerPrivate.unregisterProvider(provider);

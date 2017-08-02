@@ -201,7 +201,7 @@ nsUrlClassifierUtils::GetKeyForURI(nsIURI * uri, nsACString & _retval)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString path;
-  rv = innerURI->GetPath(path);
+  rv = innerURI->GetPathQueryRef(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // strip out anchors

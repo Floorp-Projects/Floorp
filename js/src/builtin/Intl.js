@@ -818,7 +818,7 @@ function addSpecialMissingLanguageTags(availableLocales) {
 
     // Also forcibly provide the last-ditch locale.
     var lastDitch = lastDitchLocale();
-    assert(lastDitch === "en-GB" && availableLocales["en"],
+    assert(lastDitch === "en-GB" && availableLocales.en,
            "shouldn't be a need to add every locale implied by the last-" +
            "ditch locale, merely just the last-ditch locale");
     availableLocales[lastDitch] = true;

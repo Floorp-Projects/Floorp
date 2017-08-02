@@ -279,7 +279,7 @@ add_task(async function checkAllTheCSS() {
   // so that all chrome paths can be recorded.
   let manifestPromises = [];
   uris = uris.filter(uri => {
-    if (uri.path.endsWith(".manifest")) {
+    if (uri.pathQueryRef.endsWith(".manifest")) {
       manifestPromises.push(parseManifest(uri));
       return false;
     }

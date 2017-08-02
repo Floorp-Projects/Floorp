@@ -82,7 +82,7 @@ add_task(async function bookmark() {
 
     // Done.
     hiddenPromise = promisePageActionPanelHidden();
-    gPageActionPanel.hidePopup();
+    BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
   });
 });
@@ -125,7 +125,7 @@ add_task(async function sendToDevice_nonSendable() {
       document.getElementById("pageAction-panel-sendToDevice");
     Assert.ok(sendToDeviceButton.disabled);
     let hiddenPromise = promisePageActionPanelHidden();
-    gPageActionPanel.hidePopup();
+    BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
   });
 });
@@ -180,7 +180,7 @@ add_task(async function sendToDevice_syncNotReady_other_states() {
 
     // Done, hide the panel.
     let hiddenPromise = promisePageActionPanelHidden();
-    gPageActionPanel.hidePopup();
+    BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
 
     cleanUp();
@@ -270,7 +270,7 @@ add_task(async function sendToDevice_syncNotReady_configured() {
 
     // Done, hide the panel.
     let hiddenPromise = promisePageActionPanelHidden();
-    gPageActionPanel.hidePopup();
+    BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
     cleanUp();
   });
@@ -316,7 +316,7 @@ add_task(async function sendToDevice_notSignedIn() {
 
     // Done, hide the panel.
     let hiddenPromise = promisePageActionPanelHidden();
-    gPageActionPanel.hidePopup();
+    BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
   });
 });
@@ -372,7 +372,7 @@ add_task(async function sendToDevice_noDevices() {
 
     // Done, hide the panel.
     let hiddenPromise = promisePageActionPanelHidden();
-    gPageActionPanel.hidePopup();
+    BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
 
     cleanUp();
@@ -438,12 +438,117 @@ add_task(async function sendToDevice_devices() {
 
     // Done, hide the panel.
     let hiddenPromise = promisePageActionPanelHidden();
-    gPageActionPanel.hidePopup();
+    BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
 
     cleanUp();
   });
 });
+
+add_task(async function contextMenu() {
+  // Open an actionable page so that the main page action button appears.
+  let url = "http://example.com/";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    // Open the panel and then open the context menu on the bookmark button.
+    await promisePageActionPanelOpen();
+    let bookmarkButton = document.getElementById("pageAction-panel-bookmark");
+    let contextMenuPromise = promisePanelShown("pageActionPanelContextMenu");
+    EventUtils.synthesizeMouseAtCenter(bookmarkButton, {
+      type: "contextmenu",
+      button: 2,
+    });
+    await contextMenuPromise;
+
+    // The context menu should show "Remove from Address Bar".  Click it.
+    let contextMenuNode = document.getElementById("pageActionPanelContextMenu");
+    Assert.equal(contextMenuNode.childNodes.length, 1,
+                 "Context menu has one child");
+    Assert.equal(contextMenuNode.childNodes[0].label, "Remove from Address Bar",
+                 "Context menu is in the 'remove' state");
+    contextMenuPromise = promisePanelHidden("pageActionPanelContextMenu");
+    EventUtils.synthesizeMouseAtCenter(contextMenuNode.childNodes[0], {});
+    await contextMenuPromise;
+
+    // The action should be removed from the urlbar.  In this case, the bookmark
+    // star, the node in the urlbar should be hidden.
+    let starButtonBox = document.getElementById("star-button-box");
+    await BrowserTestUtils.waitForCondition(() => {
+      return starButtonBox.hidden;
+    }, "Waiting for star button to become hidden");
+
+    // Open the context menu again on the bookmark button.  (The page action
+    // panel remains open.)
+    contextMenuPromise = promisePanelShown("pageActionPanelContextMenu");
+    EventUtils.synthesizeMouseAtCenter(bookmarkButton, {
+      type: "contextmenu",
+      button: 2,
+    });
+    await contextMenuPromise;
+
+    // The context menu should show "Add to Address Bar".  Click it.
+    Assert.equal(contextMenuNode.childNodes.length, 1,
+                 "Context menu has one child");
+    Assert.equal(contextMenuNode.childNodes[0].label, "Add to Address Bar",
+                 "Context menu is in the 'add' state");
+    contextMenuPromise = promisePanelHidden("pageActionPanelContextMenu");
+    EventUtils.synthesizeMouseAtCenter(contextMenuNode.childNodes[0], {});
+    await contextMenuPromise;
+
+    // The action should be added to the urlbar.
+    await BrowserTestUtils.waitForCondition(() => {
+      return !starButtonBox.hidden;
+    }, "Waiting for star button to become unhidden");
+
+    // Open the context menu on the bookmark star in the urlbar.
+    contextMenuPromise = promisePanelShown("pageActionPanelContextMenu");
+    EventUtils.synthesizeMouseAtCenter(starButtonBox, {
+      type: "contextmenu",
+      button: 2,
+    });
+    await contextMenuPromise;
+
+    // The context menu should show "Remove from Address Bar".  Click it.
+    Assert.equal(contextMenuNode.childNodes.length, 1,
+                 "Context menu has one child");
+    Assert.equal(contextMenuNode.childNodes[0].label, "Remove from Address Bar",
+                 "Context menu is in the 'remove' state");
+    contextMenuPromise = promisePanelHidden("pageActionPanelContextMenu");
+    EventUtils.synthesizeMouseAtCenter(contextMenuNode.childNodes[0], {});
+    await contextMenuPromise;
+
+    // The action should be removed from the urlbar.
+    await BrowserTestUtils.waitForCondition(() => {
+      return starButtonBox.hidden;
+    }, "Waiting for star button to become hidden");
+
+    // Finally, add the bookmark star back to the urlbar so that other tests
+    // that rely on it are OK.
+    await promisePageActionPanelOpen();
+    contextMenuPromise = promisePanelShown("pageActionPanelContextMenu");
+    EventUtils.synthesizeMouseAtCenter(bookmarkButton, {
+      type: "contextmenu",
+      button: 2,
+    });
+    await contextMenuPromise;
+    Assert.equal(contextMenuNode.childNodes.length, 1,
+                 "Context menu has one child");
+    Assert.equal(contextMenuNode.childNodes[0].label, "Add to Address Bar",
+                 "Context menu is in the 'add' state");
+    contextMenuPromise = promisePanelHidden("pageActionPanelContextMenu");
+    EventUtils.synthesizeMouseAtCenter(contextMenuNode.childNodes[0], {});
+    await contextMenuPromise;
+    await BrowserTestUtils.waitForCondition(() => {
+      return !starButtonBox.hidden;
+    }, "Waiting for star button to become unhidden");
+  });
+
+  // urlbar tests that run after this one can break if the mouse is left over
+  // the area where the urlbar popup appears, which seems to happen due to the
+  // above synthesized mouse events.  Move it over the urlbar.
+  EventUtils.synthesizeMouseAtCenter(gURLBar, { type: "mousemove" });
+  gURLBar.focus();
+});
+
 
 function promiseSyncReady() {
   let service = Cc["@mozilla.org/weave/service;1"]

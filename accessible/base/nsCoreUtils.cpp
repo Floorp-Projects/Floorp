@@ -444,7 +444,7 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
     return false;
 
   nsAutoCString path;
-  uri->GetPath(path);
+  uri->GetPathQueryRef(path);
 
   NS_NAMED_LITERAL_CSTRING(neterror, "neterror");
   NS_NAMED_LITERAL_CSTRING(certerror, "certerror");

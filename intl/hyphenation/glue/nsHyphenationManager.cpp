@@ -210,7 +210,7 @@ nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType)
       continue;
     }
     nsCString locale;
-    rv = uri->GetPath(locale);
+    rv = uri->GetPathQueryRef(locale);
     if (NS_FAILED(rv)) {
       continue;
     }

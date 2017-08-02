@@ -3,7 +3,7 @@ rust:
   - nightly
   - beta
   - stable
-  - 1.15.0
+  - 1.17.0
 script: make test
 notifications:
   webhooks: http://build.servo.org:54856/travis

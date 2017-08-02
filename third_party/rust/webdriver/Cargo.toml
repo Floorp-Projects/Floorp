@@ -12,7 +12,7 @@
 
 [package]
 name = "webdriver"
-version = "0.27.0"
+version = "0.28.0"
 authors = ["Mozilla Tools and Automation <tools@lists.mozilla.com>"]
 description = "Library implementing the wire protocol for the W3C WebDriver specification"
 documentation = "https://docs.rs/webdriver"
@@ -23,24 +23,24 @@ repository = "https://github.com/mozilla/webdriver-rust"
 [dependencies.log]
 version = "0.3"
 
+[dependencies.backtrace]
+version = "0.3"
+
+[dependencies.regex]
+version = "0.2"
+
+[dependencies.rustc-serialize]
+version = "0.3"
+
+[dependencies.cookie]
+version = "0.9"
+default-features = false
+
+[dependencies.time]
+version = "0.1"
+
 [dependencies.hyper]
 version = "0.10"
 
 [dependencies.url]
 version = "1"
-
-[dependencies.backtrace]
-version = "0.3"
-
-[dependencies.rustc-serialize]
-version = "0.3"
-
-[dependencies.time]
-version = "0.1"
-
-[dependencies.regex]
-version = "0.2"
-
-[dependencies.cookie]
-version = "0.9"
-default-features = false

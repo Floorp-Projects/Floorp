@@ -136,7 +136,7 @@ var HelperApps =  {
       // file extension.
       if (flags.filterHtml) {
         // Matches from the first '.' to the end of the string, '?', or '#'
-        let ext = /\.([^\?#]*)/.exec(uri.path);
+        let ext = /\.([^\?#]*)/.exec(uri.pathQueryRef);
         if (ext && (ext[1] === "html" || ext[1] === "htm")) {
           apps = apps.filter(function(app) {
             return app.name && !this.defaultHtmlHandlers[app.name];

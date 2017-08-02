@@ -174,6 +174,11 @@ HTMLEditor::DoInlineTableEditingAction(nsIDOMElement* aElement)
     else
       return NS_OK;
 
+    // InsertTableRow might causes reframe
+    if (Destroyed()) {
+      return NS_OK;
+    }
+
     if (hideUI) {
       HideInlineTableEditingUI();
       if (hideResizersWithInlineTableUI)

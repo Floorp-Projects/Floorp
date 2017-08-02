@@ -115,8 +115,8 @@ AuthPrompt2.prototype = {
   promptAuth:
     function ap2_promptAuth(channel, level, authInfo)
   {
-    var isNTLM = channel.URI.path.indexOf("ntlm") != -1;
-    var isDigest = channel.URI.path.indexOf("digest") != -1;
+    var isNTLM = channel.URI.pathQueryRef.indexOf("ntlm") != -1;
+    var isDigest = channel.URI.pathQueryRef.indexOf("digest") != -1;
 
     if (isNTLM || (this.flags & FLAG_NO_REALM)) {
       this.expectedRealm = ""; // NTLM knows no realms

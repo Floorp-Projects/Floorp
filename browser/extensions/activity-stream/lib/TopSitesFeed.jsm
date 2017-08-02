@@ -7,8 +7,10 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
-const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
+const {TippyTopProvider} = Cu.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
 const {insertPinned} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
+const {Dedupe} = Cu.import("resource://activity-stream/common/Dedupe.jsm", {});
+const {shortURL} = Cu.import("resource://activity-stream/common/ShortURL.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
@@ -17,15 +19,24 @@ XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
 
 const TOP_SITES_SHOWMORE_LENGTH = 12;
 const UPDATE_TIME = 15 * 60 * 1000; // 15 minutes
+const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
 
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this.lastUpdated = 0;
+    this._tippyTopProvider = new TippyTopProvider();
+    this._tippyTopProvider.init();
+    this.dedupe = new Dedupe(this._dedupeKey);
   }
-  init() {
+  _dedupeKey(site) {
+    return site && site.hostname;
+  }
+  refreshDefaults(sites) {
+    // Clear out the array of any previous defaults
+    DEFAULT_TOP_SITES.length = 0;
+
     // Add default sites if any based on the pref
-    let sites = new Prefs().get("default.sites");
     if (sites) {
       for (const url of sites.split(",")) {
         DEFAULT_TOP_SITES.push({
@@ -44,7 +55,10 @@ this.TopSitesFeed = class TopSitesFeed {
     let frecent = await NewTabUtils.activityStreamLinks.getTopSites();
     const defaultUrls = DEFAULT_TOP_SITES.map(site => site.url);
     let pinned = NewTabUtils.pinnedLinks.links;
-    pinned = pinned.map(site => site && Object.assign({}, site, {isDefault: defaultUrls.indexOf(site.url) !== -1}));
+    pinned = pinned.map(site => site && Object.assign({}, site, {
+      isDefault: defaultUrls.indexOf(site.url) !== -1,
+      hostname: shortURL(site)
+    }));
 
     if (!frecent) {
       frecent = [];
@@ -52,7 +66,17 @@ this.TopSitesFeed = class TopSitesFeed {
       frecent = frecent.filter(link => link && link.type !== "affiliate");
     }
 
-    return insertPinned([...frecent, ...DEFAULT_TOP_SITES], pinned).slice(0, TOP_SITES_SHOWMORE_LENGTH);
+    // Group together websites that require deduping.
+    let topsitesGroup = [];
+    for (const group of [pinned, frecent, DEFAULT_TOP_SITES]) {
+      topsitesGroup.push(group.filter(site => site).map(site => Object.assign({}, site, {hostname: shortURL(site)})));
+    }
+
+    const dedupedGroups = this.dedupe.group(topsitesGroup);
+    // Insert original pinned websites in the result of the dedupe operation.
+    pinned = insertPinned([...dedupedGroups[1], ...dedupedGroups[2]], pinned);
+
+    return pinned.slice(0, TOP_SITES_SHOWMORE_LENGTH);
   }
   async refresh(target = null) {
     const links = await this.getLinksWithDefaults();
@@ -65,9 +89,15 @@ this.TopSitesFeed = class TopSitesFeed {
       }
     }
 
-    // Now, get a screenshot for every item
+    // Now, get a tippy top icon or screenshot for every item
     for (let link of links) {
       if (!link) { continue; }
+
+      // Check for tippy top icon.
+      link = this._tippyTopProvider.processSite(link);
+      if (link.tippyTopIcon) { continue; }
+
+      // If no tippy top, then we get a screenshot.
       if (currentScreenshots[link.url]) {
         link.screenshot = currentScreenshots[link.url];
       } else {
@@ -108,18 +138,9 @@ this.TopSitesFeed = class TopSitesFeed {
     }));
   }
   onAction(action) {
-    let realRows;
     switch (action.type) {
-      case at.INIT:
-        this.init();
-        break;
       case at.NEW_TAB_LOAD:
-        // Only check against real rows returned from history, not default ones.
-        realRows = this.store.getState().TopSites.rows.filter(row => !row.isDefault);
         if (
-          // When a new tab is opened, if we don't have enough top sites yet, refresh the data.
-          (realRows.length < TOP_SITES_SHOWMORE_LENGTH) ||
-
           // When a new tab is opened, if the last time we refreshed the data
           // is greater than 15 minutes, refresh the data.
           (Date.now() - this.lastUpdated >= UPDATE_TIME)
@@ -129,6 +150,14 @@ this.TopSitesFeed = class TopSitesFeed {
         break;
       case at.PLACES_HISTORY_CLEARED:
         this.refresh();
+        break;
+      case at.PREF_CHANGED:
+        if (action.data.name === DEFAULT_SITES_PREF) {
+          this.refreshDefaults(action.data.value);
+        }
+        break;
+      case at.PREFS_INITIAL_VALUES:
+        this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);
         break;
       case at.TOP_SITES_PIN:
         this.pin(action);

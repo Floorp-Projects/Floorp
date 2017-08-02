@@ -283,9 +283,9 @@ var PlacesOrganizer = {
     let itemId = aNode.itemId;
 
     if (PlacesUtils.nodeIsHistoryContainer(aNode) ||
-        itemId == PlacesUIUtils.leftPaneQueries["History"]) {
+        itemId == PlacesUIUtils.leftPaneQueries.History) {
       PlacesQueryBuilder.setScope("history");
-    } else if (itemId == PlacesUIUtils.leftPaneQueries["Downloads"]) {
+    } else if (itemId == PlacesUIUtils.leftPaneQueries.Downloads) {
       PlacesQueryBuilder.setScope("downloads");
     } else {
       // Default to All Bookmarks for all other nodes, per bug 469437.
