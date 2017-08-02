@@ -6591,9 +6591,9 @@
               return;
             }
 
-            this.mTabstrip._smoothScrollByPixels(this.mTabstrip._isRTLScrollbox ?
-                                                 selected.right - scrollRect.right :
-                                                 selected.left - scrollRect.left);
+            this.mTabstrip.scrollByPixels(this.mTabstrip._isRTLScrollbox ?
+                                          selected.right - scrollRect.right :
+                                          selected.left - scrollRect.left);
           }
 
           if (!this._animateElement.hasAttribute("highlight")) {
