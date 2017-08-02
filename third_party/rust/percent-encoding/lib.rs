@@ -6,7 +6,32 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use encoding;
+//! URLs use special chacters to indicate the parts of the request.  For example, a forward slash
+//! indicates a path.  In order for that charcter to exist outside of a path separator, that
+//! charcter would need to be encoded.
+//!
+//! Percent encoding replaces reserved charcters with the `%` escape charcter followed by hexidecimal
+//! ASCII representaton.  For non-ASCII charcters that are percent encoded, a UTF-8 byte sequence
+//! becomes percent encoded.  A simple example can be seen when the space literal is replaced with
+//! `%20`.
+//!
+//! Percent encoding is further complicated by the fact that different parts of an URL have
+//! different encoding requirements.  In order to support the variety of encoding requirements,
+//! `url::percent_encoding` includes different *encode sets*.
+//! See [URL Standard](https://url.spec.whatwg.org/#percent-encoded-bytes) for details.
+//!
+//! This module provides some `*_ENCODE_SET` constants.
+//! If a different set is required, it can be created with
+//! the [`define_encode_set!`](../macro.define_encode_set!.html) macro.
+//!
+//! # Examples
+//!
+//! ```
+//! use url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+//!
+//! assert_eq!(utf8_percent_encode("foo bar?", DEFAULT_ENCODE_SET).to_string(), "foo%20bar%3F");
+//! ```
+
 use std::ascii::AsciiExt;
 use std::borrow::Cow;
 use std::fmt;
@@ -44,8 +69,8 @@ pub trait EncodeSet: Clone {
 /// =======
 ///
 /// ```rust
-/// #[macro_use] extern crate url;
-/// use url::percent_encoding::{utf8_percent_encode, SIMPLE_ENCODE_SET};
+/// #[macro_use] extern crate percent_encoding;
+/// use percent_encoding::{utf8_percent_encode, SIMPLE_ENCODE_SET};
 /// define_encode_set! {
 ///     /// This encode set is used in the URL parser for query strings.
 ///     pub QUERY_ENCODE_SET = [SIMPLE_ENCODE_SET] | {' ', '"', '#', '<', '>'}
@@ -58,11 +83,11 @@ pub trait EncodeSet: Clone {
 macro_rules! define_encode_set {
     ($(#[$attr: meta])* pub $name: ident = [$base_set: expr] | {$($ch: pat),*}) => {
         $(#[$attr])*
-        #[derive(Copy, Clone)]
+        #[derive(Copy, Clone, Debug)]
         #[allow(non_camel_case_types)]
         pub struct $name;
 
-        impl $crate::percent_encoding::EncodeSet for $name {
+        impl $crate::EncodeSet for $name {
             #[inline]
             fn contains(&self, byte: u8) -> bool {
                 match byte as char {
@@ -77,7 +102,10 @@ macro_rules! define_encode_set {
 }
 
 /// This encode set is used for the path of cannot-be-a-base URLs.
-#[derive(Copy, Clone)]
+///
+/// All ASCII charcters less than hexidecimal 20 and greater than 7E are encoded.  This includes
+/// special charcters such as line feed, carriage return, NULL, etc.
+#[derive(Copy, Clone, Debug)]
 #[allow(non_camel_case_types)]
 pub struct SIMPLE_ENCODE_SET;
 
@@ -90,21 +118,39 @@ impl EncodeSet for SIMPLE_ENCODE_SET {
 
 define_encode_set! {
     /// This encode set is used in the URL parser for query strings.
+    ///
+    /// Aside from special chacters defined in the [`SIMPLE_ENCODE_SET`](struct.SIMPLE_ENCODE_SET.html),
+    /// space, double quote ("), hash (#), and inequality qualifiers (<), (>) are encoded.
     pub QUERY_ENCODE_SET = [SIMPLE_ENCODE_SET] | {' ', '"', '#', '<', '>'}
 }
 
 define_encode_set! {
     /// This encode set is used for path components.
+    ///
+    /// Aside from special chacters defined in the [`SIMPLE_ENCODE_SET`](struct.SIMPLE_ENCODE_SET.html),
+    /// space, double quote ("), hash (#), inequality qualifiers (<), (>), backtick (`),
+    /// question mark (?), and curly brackets ({), (}) are encoded.
     pub DEFAULT_ENCODE_SET = [QUERY_ENCODE_SET] | {'`', '?', '{', '}'}
 }
 
 define_encode_set! {
     /// This encode set is used for on '/'-separated path segment
+    ///
+    /// Aside from special chacters defined in the [`SIMPLE_ENCODE_SET`](struct.SIMPLE_ENCODE_SET.html),
+    /// space, double quote ("), hash (#), inequality qualifiers (<), (>), backtick (`),
+    /// question mark (?), and curly brackets ({), (}), percent sign (%), forward slash (/) are
+    /// encoded.
     pub PATH_SEGMENT_ENCODE_SET = [DEFAULT_ENCODE_SET] | {'%', '/'}
 }
 
 define_encode_set! {
     /// This encode set is used for username and password.
+    ///
+    /// Aside from special chacters defined in the [`SIMPLE_ENCODE_SET`](struct.SIMPLE_ENCODE_SET.html),
+    /// space, double quote ("), hash (#), inequality qualifiers (<), (>), backtick (`),
+    /// question mark (?), and curly brackets ({), (}), forward slash (/), colon (:), semi-colon (;),
+    /// equality (=), at (@), backslash (\\), square brackets ([), (]), caret (\^), and pipe (|) are
+    /// encoded.
     pub USERINFO_ENCODE_SET = [DEFAULT_ENCODE_SET] | {
         '/', ':', ';', '=', '@', '[', '\\', ']', '^', '|'
     }
@@ -113,6 +159,15 @@ define_encode_set! {
 /// Return the percent-encoding of the given bytes.
 ///
 /// This is unconditional, unlike `percent_encode()` which uses an encode set.
+///
+/// # Examples
+///
+/// ```
+/// use url::percent_encoding::percent_encode_byte;
+///
+/// assert_eq!("foo bar".bytes().map(percent_encode_byte).collect::<String>(),
+///            "%66%6F%6F%20%62%61%72");
+/// ```
 pub fn percent_encode_byte(byte: u8) -> &'static str {
     let index = usize::from(byte) * 3;
     &"\
@@ -146,6 +201,14 @@ pub fn percent_encode_byte(byte: u8) -> &'static str {
 /// that also implements `Display` and `Into<Cow<str>>`.
 /// The latter returns `Cow::Borrowed` when none of the bytes in `input`
 /// are in the given encode set.
+///
+/// # Examples
+///
+/// ```
+/// use url::percent_encoding::{percent_encode, DEFAULT_ENCODE_SET};
+///
+/// assert_eq!(percent_encode(b"foo bar?", DEFAULT_ENCODE_SET).to_string(), "foo%20bar%3F");
+/// ```
 #[inline]
 pub fn percent_encode<E: EncodeSet>(input: &[u8], encode_set: E) -> PercentEncode<E> {
     PercentEncode {
@@ -157,13 +220,21 @@ pub fn percent_encode<E: EncodeSet>(input: &[u8], encode_set: E) -> PercentEncod
 /// Percent-encode the UTF-8 encoding of the given string.
 ///
 /// See `percent_encode()` for how to use the return value.
+///
+/// # Examples
+///
+/// ```
+/// use url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+///
+/// assert_eq!(utf8_percent_encode("foo bar?", DEFAULT_ENCODE_SET).to_string(), "foo%20bar%3F");
+/// ```
 #[inline]
 pub fn utf8_percent_encode<E: EncodeSet>(input: &str, encode_set: E) -> PercentEncode<E> {
     percent_encode(input.as_bytes(), encode_set)
 }
 
 /// The return type of `percent_encode()` and `utf8_percent_encode()`.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PercentEncode<'a, E: EncodeSet> {
     bytes: &'a [u8],
     encode_set: E,
@@ -241,6 +312,14 @@ impl<'a, E: EncodeSet> From<PercentEncode<'a, E>> for Cow<'a, str> {
 /// that also implements `Into<Cow<u8>>`
 /// (which returns `Cow::Borrowed` when `input` contains no percent-encoded sequence)
 /// and has `decode_utf8()` and `decode_utf8_lossy()` methods.
+///
+/// # Examples
+///
+/// ```
+/// use url::percent_encoding::percent_decode;
+///
+/// assert_eq!(percent_decode(b"foo%20bar%3F").decode_utf8().unwrap(), "foo bar?");
+/// ```
 #[inline]
 pub fn percent_decode(input: &[u8]) -> PercentDecode {
     PercentDecode {
@@ -249,7 +328,7 @@ pub fn percent_decode(input: &[u8]) -> PercentDecode {
 }
 
 /// The return type of `percent_decode()`.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PercentDecode<'a> {
     bytes: slice::Iter<'a, u8>,
 }
@@ -339,6 +418,25 @@ impl<'a> PercentDecode<'a> {
     /// Invalid UTF-8 percent-encoded byte sequences will be replaced � U+FFFD,
     /// the replacement character.
     pub fn decode_utf8_lossy(self) -> Cow<'a, str> {
-        encoding::decode_utf8_lossy(self.clone().into())
+        decode_utf8_lossy(self.clone().into())
     }
 }
+
+fn decode_utf8_lossy(input: Cow<[u8]>) -> Cow<str> {
+    match input {
+        Cow::Borrowed(bytes) => String::from_utf8_lossy(bytes),
+        Cow::Owned(bytes) => {
+            let raw_utf8: *const [u8];
+            match String::from_utf8_lossy(&bytes) {
+                Cow::Borrowed(utf8) => raw_utf8 = utf8.as_bytes(),
+                Cow::Owned(s) => return s.into(),
+            }
+            // from_utf8_lossy returned a borrow of `bytes` unchanged.
+            debug_assert!(raw_utf8 == &*bytes as *const [u8]);
+            // Reuse the existing `Vec` allocation.
+            unsafe { String::from_utf8_unchecked(bytes) }.into()
+        }
+    }
+}
+
+
