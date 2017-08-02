@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/PresShell.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -335,6 +336,8 @@ nsFrameSelection::nsFrameSelection()
   mNotifyFrames = true;
 
   mMouseDoubleDownState = false;
+  mDesiredPosSet = false;
+  mAccessibleCaretEnabled = false;
 
   mHint = CARET_ASSOCIATE_BEFORE;
   mCaretBidiLevel = BIDI_LEVEL_UNDEFINED;
@@ -700,7 +703,8 @@ GetCellParent(nsINode *aDomNode)
 }
 
 void
-nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
+nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter,
+                       bool aAccessibleCaretEnabled)
 {
   mShell = aShell;
   mDragState = false;
@@ -720,11 +724,14 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
                                  "dom.select_events.textcontrols.enabled", false);
   }
 
-  RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
-  if (eventHub) {
-    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    if (mDomSelections[index]) {
-      mDomSelections[index]->AddSelectionListener(eventHub);
+  mAccessibleCaretEnabled = aAccessibleCaretEnabled;
+  if (mAccessibleCaretEnabled) {
+    RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
+    if (eventHub) {
+      int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+      if (mDomSelections[index]) {
+        mDomSelections[index]->AddSelectionListener(eventHub);
+      }
     }
   }
 
@@ -2954,10 +2961,12 @@ nsFrameSelection::SetDelayedCaretData(WidgetMouseEvent* aMouseEvent)
 void
 nsFrameSelection::DisconnectFromPresShell()
 {
-  RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
-  if (eventHub) {
-    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    mDomSelections[index]->RemoveSelectionListener(eventHub);
+  if (mAccessibleCaretEnabled) {
+    RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
+    if (eventHub) {
+      int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+      mDomSelections[index]->RemoveSelectionListener(eventHub);
+    }
   }
 
   StopAutoScrollTimer();
