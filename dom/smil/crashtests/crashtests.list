@@ -20,7 +20,7 @@ load 556841-1.svg
 load 572938-1.svg
 load 572938-2.svg
 load 572938-3.svg
-skip-if(stylo) load 572938-4.svg # Bug 1385089
+load 572938-4.svg
 load 588287-1.svg
 load 588287-2.svg
 load 590425-1.html
