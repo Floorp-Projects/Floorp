@@ -80,21 +80,6 @@ const whitelist = [
   },
 
   {
-    file: "chrome://browser/skin/tabbrowser/tab-background-end.png",
-    hidpi: "chrome://browser/skin/tabbrowser/tab-background-end@2x.png",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/tabbrowser/tab-background-middle.png",
-    hidpi: "chrome://browser/skin/tabbrowser/tab-background-middle@2x.png",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/tabbrowser/tab-background-start.png",
-    hidpi: "chrome://browser/skin/tabbrowser/tab-background-start@2x.png",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
     file: "chrome://browser/skin/tabbrowser/tabDragIndicator.png",
     hidpi: "chrome://browser/skin/tabbrowser/tabDragIndicator@2x.png",
     platforms: ["linux", "win", "macosx"],
@@ -122,32 +107,6 @@ const whitelist = [
     hidpi: "<not loaded>",
     platforms: ["win", "macosx"],
     intermittentShown: ["win", "macosx"],
-  },
-
-  {
-    file: "chrome://browser/skin/yosemite/tab-selected-start-inactive.svg",
-    platforms: ["macosx"],
-    intermittentShown: ["macosx"],
-  },
-  {
-    file: "chrome://browser/skin/yosemite/tab-active-middle-inactive.png",
-    hidpi: "<not loaded>",
-    platforms: ["macosx"],
-  },
-  {
-    file: "chrome://browser/skin/yosemite/tab-selected-end-inactive.svg",
-    platforms: ["macosx"],
-    intermittentShown: ["macosx"],
-  },
-  {
-    file: "chrome://browser/skin/yosemite/tab-stroke-start-inactive.png",
-    hidpi: "<not loaded>",
-    platforms: ["macosx"],
-  },
-  {
-    file: "chrome://browser/skin/yosemite/tab-stroke-end-inactive.png",
-    hidpi: "<not loaded>",
-    platforms: ["macosx"],
   },
 
   {

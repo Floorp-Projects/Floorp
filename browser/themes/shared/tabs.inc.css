@@ -6,34 +6,27 @@
 
 :root {
   --tab-toolbar-navbar-overlap: 1px;
-  --navbar-tab-toolbar-highlight-overlap: 1px;
-  --tab-min-height: 31px;
-}
-#TabsToolbar {
-  --tab-stroke-background-size: auto 100%;
-  --tab-curve-width: 30px;
-  --tab-curve-half-width: 15px;
+  --tab-min-height: 33px;
 }
 
-
-/* image preloading hack */
-#tabbrowser-tabs::before {
-  /* Because of bug 853415, we need to ordinal this to the first position: */
-  -moz-box-ordinal-group: 0;
-  content: '';
-  display: block;
-  background-image:
-    url(chrome://browser/skin/tabbrowser/tab-background-end.png),
-    url(chrome://browser/skin/tabbrowser/tab-background-middle.png),
-    url(chrome://browser/skin/tabbrowser/tab-background-start.png);
+:root[uidensity=compact] {
+  --tab-min-height: 29px;
 }
 
-#tabbrowser-tabs {
+:root[uidensity=touch] {
+  --tab-min-height: 41px;
+}
+
+#tabbrowser-tabs,
+.tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
   min-height: var(--tab-min-height);
 }
 
-.tabbrowser-tab,
-.tabs-newtab-button {
+.tab-stack {
+  min-height: inherit;
+}
+
+.tabbrowser-tab {
   -moz-appearance: none;
   background-color: transparent;
   border-radius: 0;
@@ -46,18 +39,11 @@
   -moz-box-align: stretch;
 }
 
-/* The selected tab should appear above adjacent tabs, .tabs-newtab-button and the highlight of #nav-bar */
+/* The selected tab should appear above the border between the tabs toolbar and
+   the navigation toolbar. */
 .tabbrowser-tab[visuallyselected=true] {
   position: relative;
   z-index: 2;
-}
-
-.tab-background-middle {
-  -moz-box-flex: 1;
-  background-clip: padding-box;
-  border-left: var(--tab-curve-half-width) solid transparent;
-  border-right: var(--tab-curve-half-width) solid transparent;
-  margin: 0 calc(-1 * var(--tab-curve-half-width));
 }
 
 .tab-content {
@@ -246,25 +232,13 @@
   opacity: 0;
 }
 
-.tab-background,
-.tabs-newtab-button {
-  /* overlap the tab curves */
-  margin-inline-end: calc(-1 * var(--tab-curve-half-width));
-  margin-inline-start: calc(-1 * var(--tab-curve-half-width));
-}
-
-.tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  padding-inline-end: var(--tab-curve-half-width);
-  padding-inline-start: var(--tab-curve-half-width);
-}
-
 /* Tab Overflow */
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:not([collapsed]),
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:not([collapsed]) {
   background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-indicator.png);
   background-size: 100% 100%;
   width: 19px;
-  margin-bottom: calc(var(--navbar-tab-toolbar-highlight-overlap) + var(--tab-toolbar-navbar-overlap));
+  margin-bottom: var(--tab-toolbar-navbar-overlap);
   pointer-events: none;
   position: relative;
   z-index: 3; /* the selected tab's z-index + 1 */
@@ -295,117 +269,37 @@
   transition: opacity 150ms ease;
 }
 
-.tab-background-start[selected=true]::after,
-.tab-background-start[selected=true]::before,
-.tab-background-start,
-.tab-background-end,
-.tab-background-end[selected=true]::after,
-.tab-background-end[selected=true]::before {
-  min-height: var(--tab-min-height);
-  width: var(--tab-curve-width);
-}
-
 .tabbrowser-tab:not([visuallyselected=true]),
 .tabbrowser-tab:-moz-lwtheme {
   color: inherit;
 }
 
+.tab-line {
+  height: 2px;
+}
+
 /* Selected tab */
 
-/*
- Tab background pseudo-elements which are positioned above .tab-background-start/end:
-   - ::before - provides the fill of the tab curve and is clipped to the tab shape. This is where
-                pointer events go for the curve.
-   - ::after  - provides the border/stroke of the tab curve and is overlayed above ::before.  Pointer
-                events go through to ::before to get the proper shape.
- */
-
-
-.tab-background-start[selected=true]::after,
-.tab-background-end[selected=true]::after {
-  /* position ::after on top of its parent */
-  margin-inline-start: calc(-1 * var(--tab-curve-width));
-  background-size: 100% 100%;
-  content: "";
-  display: -moz-box;
-  position: relative;
+.tab-background {
+  border: 1px none transparent;
+  background-clip: padding-box;
 }
 
-.tab-background-start[selected=true]::before,
-.tab-background-end[selected=true]::before {
-  /* all ::before pseudo elements */
-  content: "";
-  display: -moz-box;
+#toolbar-menubar:not([autohide=true]) ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab > .tab-stack > .tab-background {
+  border-top-style: solid;
 }
 
-.tab-background-start[selected=true]:-moz-locale-dir(ltr):not(:-moz-lwtheme)::before,
-.tab-background-end[selected=true]:-moz-locale-dir(rtl):not(:-moz-lwtheme)::before {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-selected-start.svg);
-  background-size: 100% 100%;
-}
-
-.tab-background-end[selected=true]:-moz-locale-dir(ltr):not(:-moz-lwtheme)::before,
-.tab-background-start[selected=true]:-moz-locale-dir(rtl):not(:-moz-lwtheme)::before {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-selected-end.svg);
-  background-size: 100% 100%;
-}
-
-/* For lightweight themes, clip the header image on start, middle, and end. */
-.tab-background-start[selected=true]:-moz-locale-dir(ltr):-moz-lwtheme::before,
-.tab-background-end[selected=true]:-moz-locale-dir(rtl):-moz-lwtheme::before {
-  clip-path: url(chrome://browser/content/browser.xul#tab-curve-clip-path-start);
-}
-
-.tab-background-end[selected=true]:-moz-locale-dir(ltr):-moz-lwtheme::before,
-.tab-background-start[selected=true]:-moz-locale-dir(rtl):-moz-lwtheme::before {
-  clip-path: url(chrome://browser/content/browser.xul#tab-curve-clip-path-end);
-}
-
-.tab-background-start[selected=true]:-moz-locale-dir(ltr)::after,
-.tab-background-end[selected=true]:-moz-locale-dir(rtl)::after {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start.png);
-}
-
-.tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
-.tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end.png);
-}
-
-.tab-background-middle[selected=true] {
-  background-clip: padding-box, padding-box, content-box;
-  background-color: @fgTabBackgroundColor@;
-  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                    @fgTabTexture@,
-                    none;
+.tab-background[selected=true] {
+  border-left-style: solid;
+  border-right-style: solid;
+  border-color: var(--tabs-border);
+  background-color: var(--toolbar-bgcolor);
+  background-image: var(--toolbar-bgimage);
   background-repeat: repeat-x;
-  background-size: var(--tab-stroke-background-size), auto 100%;
-  /* The padding-top combined with background-clip: content-box (the bottom-most) ensure the
-     background-color doesn't extend above the top border. */
-  padding-top: 2px;
 }
 
-/* Selected tab lightweight theme styles.
-   See the "Lightweight theme on tabs" section of this file
-   for information about run-time changes to LWT styles. */
-.tab-background-middle[selected=true]:-moz-lwtheme {
-  background-color: transparent;
-  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                    @fgTabTextureLWT@;
-  /* Don't stretch the LWT header images */
-  background-size: var(--tab-stroke-background-size), auto 100%, auto auto;
-}
-
-/* These LWT styles are normally overridden by the "Lightweight theme on tabs"
-   section of this file. */
-.tab-background-start[selected=true]:-moz-lwtheme::before,
-.tab-background-end[selected=true]:-moz-lwtheme::before {
-  background-image: @fgTabTextureLWT@;
-}
-
-.tab-background-start[selected=true]:-moz-lwtheme::before,
-.tab-background-end[selected=true]:-moz-lwtheme::before,
-.tab-background-middle[selected=true]:-moz-lwtheme {
-  background-color: transparent;
+.tab-line[selected=true] {
+  background-color: Highlight;
 }
 
 /*
@@ -414,51 +308,40 @@
  */
 
 /* Lightweight theme on tabs */
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start[selected=true]:-moz-lwtheme::before,
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end[selected=true]:-moz-lwtheme::before {
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background[selected=true]:-moz-lwtheme {
   background-attachment: scroll, fixed;
   background-color: transparent;
-  background-image: @fgTabTextureLWT@, var(--lwt-header-image);
+  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)),
+                    var(--lwt-header-image);
   background-position: 0 0, right top;
   background-repeat: repeat-x, no-repeat;
+  background-size: auto 100%, auto auto;
 }
 
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
-  background-attachment: scroll, scroll, fixed;
-  background-color: transparent;
-  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                    @fgTabTextureLWT@,
-                    var(--lwt-header-image);
-  background-position: 0 0, 0 0, right top;
-  background-repeat: repeat-x, repeat-x, no-repeat;
+/* Tab hover */
+
+.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]) {
+  background-color: rgba(0,0,0,.1);
 }
 
-/* End selected tab */
-
-/* new tab button border and gradient on hover */
-.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
-.tabs-newtab-button:hover {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-background-start.png),
-                    url(chrome://browser/skin/tabbrowser/tab-background-middle.png),
-                    url(chrome://browser/skin/tabbrowser/tab-background-end.png);
-  background-position: left bottom, var(--tab-curve-width) bottom, right bottom;
-  background-repeat: no-repeat;
-  background-size: var(--tab-curve-width) 100%, calc(100% - (2 * var(--tab-curve-width))) 100%, var(--tab-curve-width) 100%;
+#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]) {
+  background-color: rgba(255,255,255,.1);
 }
 
-/* Tab pointer-events */
-.tabbrowser-tab {
-  pointer-events: none;
+.tab-line:not([selected=true]) {
+  opacity: 0;
+  transform: scaleX(0);
+  transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
 }
 
-.tab-background-middle,
-.tabs-newtab-button,
-.tab-icon-overlay[soundplaying],
-.tab-icon-overlay[muted]:not([crashed]),
-.tab-icon-overlay[activemedia-blocked]:not([crashed]),
-.tab-icon-sound,
-.tab-close-button {
-  pointer-events: auto;
+.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]) {
+  background-color: rgba(0,0,0,.2);
+  opacity: 1;
+  transform: none;
+}
+
+#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]) {
+  background-color: rgba(255,255,255,.2);
 }
 
 /* Pinned tabs */
@@ -551,56 +434,10 @@
 }
 
 .tabs-newtab-button {
-  width: calc(36px + var(--tab-curve-width));
-}
-
-.tabs-newtab-button > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
-.tabs-newtab-button > .toolbarbutton-icon {
-  /* override drop marker image padding */
-  margin-inline-end: 0;
+  width: 36px;
 }
 
 @media (min-resolution: 1.1dppx) {
-  /* image preloading hack from like lowdpi styles */
-  #tabbrowser-tabs::before {
-    background-image:
-      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png);
-  }
-
-  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
-  .tabs-newtab-button:hover {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png),
-                      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
-                      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png);
-  }
-
-  .tab-background-middle[selected=true] {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
-                      @fgTabTexture@,
-                      none;
-  }
-
-  .tab-background-start[selected=true]:-moz-locale-dir(ltr)::after,
-  .tab-background-end[selected=true]:-moz-locale-dir(rtl)::after {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start@2x.png);
-  }
-
-  .tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
-  .tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end@2x.png);
-  }
-
-  #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
-                      @fgTabTextureLWT@,
-                      var(--lwt-header-image);
-  }
-
   .tab-throbber[busy] {
     list-style-image: url("chrome://browser/skin/tabbrowser/connecting@2x.png");
   }
