@@ -60,7 +60,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	const { MODE } = __webpack_require__(1);
 	const { REPS, getRep } = __webpack_require__(2);
-	const ObjectInspector = __webpack_require__(45);
+	const ObjectInspector = __webpack_require__(44);
 
 	const {
 	  parseURLEncodedText,
@@ -138,13 +138,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	const ObjectWithURL = __webpack_require__(41);
 	const GripArray = __webpack_require__(42);
 	const GripMap = __webpack_require__(43);
-	const GripMapEntry = __webpack_require__(44);
 	const Grip = __webpack_require__(17);
 
 	// List of all registered template.
 	// XXX there should be a way for extensions to register a new
 	// or modify an existing rep.
-	let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, LongStringRep, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
+	let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, LongStringRep, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
 
 	/**
 	 * Generic rep that is using for rendering native JS types or an object.
@@ -221,7 +220,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    Grip,
 	    GripArray,
 	    GripMap,
-	    GripMapEntry,
 	    InfinityRep,
 	    LongStringRep,
 	    NaNRep,
@@ -1279,7 +1277,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key = span({ "className": "nodeName" }, name);
 	  } else {
 	    key = Rep(Object.assign({}, props, {
-	      className: "nodeName",
 	      object: name,
 	      mode: mode || MODE.TINY,
 	      defaultRep: Grip
@@ -1345,7 +1342,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  if (mode === MODE.TINY) {
-	    let propertiesLength = getPropertiesLength(object);
+	    let propertiesLength = object.preview && object.preview.ownPropertiesLength ? object.preview.ownPropertiesLength : object.ownPropertyLength;
+
+	    if (object.preview && object.preview.safeGetterValues) {
+	      propertiesLength += Object.keys(object.preview.safeGetterValues).length;
+	    }
 
 	    const tinyModeItems = [];
 	    if (getTitle(props, object) !== DEFAULT_TITLE) {
@@ -1384,20 +1385,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return props.title || object.class || DEFAULT_TITLE;
 	}
 
-	function getPropertiesLength(object) {
-	  let propertiesLength = object.preview && object.preview.ownPropertiesLength ? object.preview.ownPropertiesLength : object.ownPropertyLength;
-
-	  if (object.preview && object.preview.safeGetterValues) {
-	    propertiesLength += Object.keys(object.preview.safeGetterValues).length;
-	  }
-
-	  if (object.preview && object.preview.ownSymbols) {
-	    propertiesLength += object.preview.ownSymbolsLength;
-	  }
-
-	  return propertiesLength;
-	}
-
 	function safePropIterator(props, object, max) {
 	  max = typeof max === "undefined" ? maxLengthMap.get(MODE.SHORT) : max;
 	  try {
@@ -1425,10 +1412,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 
 	  let properties = object.preview ? object.preview.ownProperties : {};
-	  let propertiesLength = getPropertiesLength(object);
+	  let propertiesLength = object.preview && object.preview.ownPropertiesLength ? object.preview.ownPropertiesLength : object.ownPropertyLength;
 
 	  if (object.preview && object.preview.safeGetterValues) {
 	    properties = Object.assign({}, properties, object.preview.safeGetterValues);
+	    propertiesLength += Object.keys(object.preview.safeGetterValues).length;
 	  }
 
 	  let indexes = getPropIndexes(properties, max, isInterestingProp);
@@ -1445,27 +1433,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // unquoted.
 	  const suppressQuotes = object.class === "Proxy";
 	  let propsArray = getProps(props, properties, indexes, suppressQuotes);
-
-	  // Show symbols.
-	  if (object.preview && object.preview.ownSymbols) {
-	    const { ownSymbols } = object.preview;
-	    const length = max - indexes.length;
-
-	    const symbolsProps = ownSymbols.slice(0, length).map(symbolItem => {
-	      return PropRep(Object.assign({}, props, {
-	        mode: MODE.TINY,
-	        name: symbolItem,
-	        object: symbolItem.descriptor.value,
-	        equal: ": ",
-	        defaultRep: Grip,
-	        title: null,
-	        suppressQuotes
-	      }));
-	    });
-
-	    propsArray.push(...symbolsProps);
-	  }
-
 	  if (Object.keys(properties).length > max || propertiesLength > max
 	  // When the object has non-enumerable properties, we don't have them in the packet,
 	  // but we might want to show there's something in the object.
@@ -1589,8 +1556,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (noGrip === true || !isGrip(object)) {
 	    return false;
 	  }
-
-	  return object.preview ? typeof object.preview.ownProperties !== "undefined" : typeof object.ownPropertyLength !== "undefined";
+	  return object.preview && object.preview.ownProperties;
 	}
 
 	const maxLengthMap = new Map();
@@ -1631,13 +1597,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	function SymbolRep(props) {
-	  let {
-	    className = "objectBox objectBox-symbol",
-	    object
-	  } = props;
+	  let { object } = props;
 	  let { name } = object;
 
-	  return span({ className }, `Symbol(${name || ""})`);
+	  return span({ className: "objectBox objectBox-symbol" }, `Symbol(${name || ""})`);
 	}
 
 	function supportsObject(object, type) {
@@ -3530,7 +3493,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return PropRep({
 	      name: key,
-	      equal: " \u2192 ",
+	      equal: ": ",
 	      object: value,
 	      mode: MODE.TINY,
 	      onDOMNodeMouseOver,
@@ -3591,80 +3554,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-	// Dependencies
-	const React = __webpack_require__(8);
-	// Shortcuts
-	const { span } = React.DOM;
-	const {
-	  wrapRender
-	} = __webpack_require__(7);
-	const PropRep = __webpack_require__(16);
-	const { MODE } = __webpack_require__(1);
-	/**
-	 * Renders an map entry. A map entry is represented by its key, a column and its value.
-	 */
-	GripMapEntry.propTypes = {
-	  object: React.PropTypes.object,
-	  // @TODO Change this to Object.values once it's supported in Node's version of V8
-	  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-	  onDOMNodeMouseOver: React.PropTypes.func,
-	  onDOMNodeMouseOut: React.PropTypes.func,
-	  onInspectIconClick: React.PropTypes.func
-	};
-
-	function GripMapEntry(props) {
-	  const {
-	    object
-	  } = props;
-
-	  const {
-	    key,
-	    value
-	  } = object.preview;
-
-	  return span({
-	    className: "objectBox objectBox-map-entry"
-	  }, ...PropRep(Object.assign({}, props, {
-	    name: key,
-	    object: value,
-	    equal: " \u2192 ",
-	    title: null,
-	    suppressQuotes: false
-	  })));
-	}
-
-	function supportsObject(grip, type, noGrip = false) {
-	  if (noGrip === true) {
-	    return false;
-	  }
-	  return grip && grip.type === "mapEntry" && grip.preview;
-	}
-
-	function createGripMapEntry(key, value) {
-	  return {
-	    type: "mapEntry",
-	    preview: {
-	      key,
-	      value
-	    }
-	  };
-	}
-
-	// Exports from this module
-	module.exports = {
-	  rep: wrapRender(GripMapEntry),
-	  createGripMapEntry,
-	  supportsObject
-	};
-
-/***/ },
-/* 45 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 	const {
 	  Component,
 	  createFactory,
@@ -3672,16 +3561,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  PropTypes
 	} = __webpack_require__(8);
 
-	const Tree = createFactory(__webpack_require__(46).Tree);
-	__webpack_require__(48);
+	const Tree = createFactory(__webpack_require__(45).Tree);
+	__webpack_require__(47);
 
-	const classnames = __webpack_require__(50);
+	const classnames = __webpack_require__(49);
 	const Svg = __webpack_require__(33);
 	const {
-	  REPS: {
-	    Rep,
-	    Grip
-	  }
+	  REPS: { Rep }
 	} = __webpack_require__(2);
 	const {
 	  MODE
@@ -3689,19 +3575,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	const {
 	  getChildren,
-	  getParent,
 	  getValue,
+	  isDefault,
 	  nodeHasAccessors,
-	  nodeHasAllEntriesInPreview,
 	  nodeHasProperties,
-	  nodeIsDefaultProperties,
-	  nodeIsEntries,
-	  nodeIsMapEntry,
 	  nodeIsMissingArguments,
 	  nodeIsOptimizedOut,
-	  nodeIsPrimitive,
-	  nodeIsPrototype
-	} = __webpack_require__(51);
+	  nodeIsPrimitive
+	} = __webpack_require__(50);
 
 	// This implements a component that renders an interactive inspector
 	// for looking at JavaScript objects. It expects descriptions of
@@ -3749,15 +3630,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    self.getRoots = this.getRoots.bind(this);
 	  }
 
+	  isDefaultProperty(item) {
+	    const roots = this.props.roots;
+	    return isDefault(item, roots);
+	  }
+
+	  getParent(item) {
+	    return null;
+	  }
+
 	  getChildren(item) {
-	    const {
-	      getObjectEntries,
-	      getObjectProperties
-	    } = this.props;
+	    const { getObjectProperties } = this.props;
 	    const { actors } = this;
 
 	    return getChildren({
-	      getObjectEntries,
 	      getObjectProperties,
 	      actors,
 	      item
@@ -3787,22 +3673,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (expand === true) {
 	      const {
 	        getObjectProperties,
-	        getObjectEntries,
-	        loadObjectProperties,
-	        loadObjectEntries
+	        loadObjectProperties
 	      } = this.props;
 
 	      const value = getValue(item);
-	      const parent = getParent(item);
-	      const parentValue = getValue(parent);
-	      const parentActor = parentValue ? parentValue.actor : null;
-
 	      if (nodeHasProperties(item) && value && !getObjectProperties(value.actor)) {
 	        loadObjectProperties(value);
-	      }
-
-	      if (nodeIsEntries(item) && !nodeHasAllEntriesInPreview(parent) && parentActor && !getObjectEntries(parentActor)) {
-	        loadObjectEntries(parentValue);
 	      }
 	    }
 	  }
@@ -3832,7 +3708,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      objectValue = dom.span({ className: "unavailable" }, "(optimized away)");
 	    } else if (nodeIsMissingArguments(item) || unavailable) {
 	      objectValue = dom.span({ className: "unavailable" }, "(unavailable)");
-	    } else if (nodeHasProperties(item) || nodeHasAccessors(item) || nodeIsMapEntry(item) || isPrimitive) {
+	    } else if (nodeHasProperties(item) || nodeHasAccessors(item) || isPrimitive) {
 	      let repsProp = Object.assign({}, this.props);
 	      if (depth > 0) {
 	        repsProp.mode = this.props.mode === MODE.LONG ? MODE.SHORT : MODE.TINY;
@@ -3840,9 +3716,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      objectValue = this.renderGrip(item, repsProp);
 	    }
-
-	    const hasLabel = label !== null && typeof label !== "undefined";
-	    const hasValue = typeof objectValue !== "undefined";
 
 	    const SINGLE_INDENT_WIDTH = 15;
 	    const indentWidth = (depth + (isPrimitive ? 1 : 0)) * SINGLE_INDENT_WIDTH;
@@ -3855,7 +3728,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dom.div({
 	      className: classnames("node object-node", {
 	        focused,
-	        lessen: !expanded && (nodeIsDefaultProperties(item) || nodeIsPrototype(item))
+	        "default-property": this.isDefaultProperty(item)
 	      }),
 	      style: {
 	        marginLeft: indentWidth
@@ -3876,7 +3749,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      className: classnames({
 	        expanded: expanded
 	      })
-	    }) : null, hasLabel ? dom.span({
+	    }) : null, label ? dom.span({
 	      className: "object-label",
 	      onClick: onLabelClick ? event => {
 	        event.stopPropagation();
@@ -3887,15 +3760,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	          setExpanded: this.setExpanded
 	        });
 	      } : null
-	    }, label) : null, hasLabel && hasValue ? dom.span({ className: "object-delimiter" }, " : ") : null, hasValue ? objectValue : null);
+	    }, label) : null, label && objectValue ? dom.span({ className: "object-delimiter" }, " : ") : null, objectValue);
 	  }
 
 	  renderGrip(item, props) {
 	    const object = getValue(item);
 	    return Rep(Object.assign({}, props, {
 	      object,
-	      mode: props.mode || MODE.TINY,
-	      defaultRep: Grip
+	      mode: props.mode || MODE.TINY
 	    }));
 	  }
 
@@ -3929,7 +3801,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      focused: focusedItem,
 
 	      getRoots: this.getRoots,
-	      getParent,
+	      getParent: this.getParent,
 	      getChildren: this.getChildren,
 	      getKey: this.getKey,
 
@@ -3962,17 +3834,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = ObjectInspector;
 
 /***/ },
-/* 46 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const Tree = __webpack_require__(47);
+	const Tree = __webpack_require__(46);
 
 	module.exports = {
 	  Tree
 	};
 
 /***/ },
-/* 47 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	const { DOM: dom, createClass, createFactory, PropTypes } = __webpack_require__(8);
@@ -4516,14 +4388,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 /***/ },
-/* 48 */
+/* 47 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 49 */,
-/* 50 */
+/* 48 */,
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -4577,43 +4449,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 51 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-	const get = __webpack_require__(52);
-	const has = __webpack_require__(104);
+	const get = __webpack_require__(51);
+	const has = __webpack_require__(103);
 	const { maybeEscapePropertyName } = __webpack_require__(7);
-	const GripMapEntry = __webpack_require__(44);
-
-	const NODE_TYPES = {
-	  BUCKET: Symbol("[n…n]"),
-	  DEFAULT_PROPERTIES: Symbol("[default properties]"),
-	  ENTRIES: Symbol("<entries>"),
-	  GET: Symbol("<get>"),
-	  GRIP: Symbol("GRIP"),
-	  MAP_ENTRY_KEY: Symbol("<key>"),
-	  MAP_ENTRY_VALUE: Symbol("<value>"),
-	  PROMISE_REASON: Symbol("<reason>"),
-	  PROMISE_STATE: Symbol("<state>"),
-	  PROMISE_VALUE: Symbol("<value>"),
-	  SET: Symbol("<set>"),
-	  PROTOTYPE: Symbol("__proto__")
-	};
 
 	let WINDOW_PROPERTIES = {};
 
 	if (typeof window === "object") {
 	  WINDOW_PROPERTIES = Object.getOwnPropertyNames(window);
-	}
-
-	const SAFE_PATH_PREFIX = "##-";
-
-	function getType(item) {
-	  return item.type;
 	}
 
 	function getValue(item) {
@@ -4632,20 +4482,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return undefined;
 	}
 
-	function nodeIsBucket(item) {
-	  return getType(item) === NODE_TYPES.BUCKET;
-	}
-
-	function nodeIsEntries(item) {
-	  return getType(item) === NODE_TYPES.ENTRIES;
-	}
-
-	function nodeIsMapEntry(item) {
-	  return GripMapEntry.supportsObject(getValue(item));
+	function isBucket(item) {
+	  return item.path && item.path.match(/bucket(\d+)$/);
 	}
 
 	function nodeHasChildren(item) {
-	  return Array.isArray(item.contents) || nodeIsBucket(item);
+	  return Array.isArray(item.contents) || isBucket(item);
 	}
 
 	function nodeIsObject(item) {
@@ -4653,8 +4495,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value && value.type === "object";
 	}
 
-	function nodeIsArray(item) {
-	  const value = getValue(item);
+	function nodeIsArray(value) {
 	  return value && value.class === "Array";
 	}
 
@@ -4678,117 +4519,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function nodeIsPrimitive(item) {
-	  return !nodeHasChildren(item) && !nodeHasProperties(item) && !nodeIsEntries(item) && !nodeIsMapEntry(item) && !nodeHasAccessors(item);
+	  return !nodeHasChildren(item) && !nodeHasProperties(item) && !nodeHasAccessors(item);
 	}
 
-	function nodeIsDefaultProperties(item) {
-	  return getType(item) === NODE_TYPES.DEFAULT_PROPERTIES;
-	}
-
-	function isDefaultWindowProperty(name) {
-	  return WINDOW_PROPERTIES.includes(name);
-	}
-
-	function nodeIsPromise(item) {
+	function isPromise(item) {
 	  const value = getValue(item);
-	  if (!value) {
-	    return false;
-	  }
-
 	  return value.class == "Promise";
 	}
 
-	function nodeIsPrototype(item) {
-	  return getType(item) === NODE_TYPES.PROTOTYPE;
-	}
-
-	function nodeHasAccessors(item) {
-	  return !!getNodeGetter(item) || !!getNodeSetter(item);
-	}
-
-	function nodeSupportsBucketing(item) {
-	  return nodeIsArray(item) || nodeIsEntries(item);
-	}
-
-	function nodeHasEntries(item) {
-	  const value = getValue(item);
-	  if (!value) {
-	    return false;
-	  }
-
-	  return value.class === "Map" || value.class === "Set" || value.class === "WeakMap" || value.class === "WeakSet";
-	}
-
-	function nodeHasAllEntriesInPreview(item) {
-	  const { preview } = getValue(item) || {};
-	  if (!preview) {
-	    return false;
-	  }
-
-	  const {
-	    entries,
-	    items,
-	    length,
-	    size
-	  } = preview;
-
-	  return entries ? entries.length === size : items.length === length;
-	}
-
-	function makeNodesForPromiseProperties(item) {
+	function getPromiseProperties(item) {
 	  const { promiseState: { reason, value, state } } = getValue(item);
 
 	  const properties = [];
 
 	  if (state) {
-	    properties.push(createNode(item, "<state>", `${item.path}/${SAFE_PATH_PREFIX}state`, { value: state }, NODE_TYPES.PROMISE_STATE));
+	    properties.push(createNode("<state>", `${item.path}/state`, { value: state }));
 	  }
 
 	  if (reason) {
-	    properties.push(createNode(item, "<reason>", `${item.path}/${SAFE_PATH_PREFIX}reason`, { value: reason }, NODE_TYPES.PROMISE_REASON));
+	    properties.push(createNode("<reason>", `${item.path}/reason`, { value: reason }));
 	  }
 
 	  if (value) {
-	    properties.push(createNode(item, "<value>", `${item.path}/${SAFE_PATH_PREFIX}value`, { value: value }, NODE_TYPES.PROMISE_VALUE));
+	    properties.push(createNode("<value>", `${item.path}/value`, { value: value }));
 	  }
 
 	  return properties;
-	}
-
-	function makeNodesForEntries(item) {
-	  const { path } = item;
-	  const { preview } = getValue(item);
-	  const nodeName = "<entries>";
-	  const entriesPath = `${path}/${SAFE_PATH_PREFIX}entries`;
-
-	  if (nodeHasAllEntriesInPreview(item)) {
-	    let entriesNodes = [];
-	    if (preview.entries) {
-	      entriesNodes = preview.entries.map(([key, value], index) => {
-	        return createNode(item, index, `${entriesPath}/${index}`, {
-	          value: GripMapEntry.createGripMapEntry(key, value)
-	        });
-	      });
-	    } else if (preview.items) {
-	      entriesNodes = preview.items.map((value, index) => {
-	        return createNode(item, index, `${entriesPath}/${index}`, { value });
-	      });
-	    }
-	    return createNode(item, nodeName, entriesPath, entriesNodes, NODE_TYPES.ENTRIES);
-	  }
-	  return createNode(item, nodeName, entriesPath, null, NODE_TYPES.ENTRIES);
-	}
-
-	function makeNodesForMapEntry(item) {
-	  const nodeValue = getValue(item);
-	  if (!nodeValue || !nodeValue.preview) {
-	    return [];
-	  }
-
-	  const { key, value } = nodeValue.preview;
-	  const path = item.path;
-
-	  return [createNode(item, "<key>", `${path}/##key`, { value: key }, NODE_TYPES.MAP_ENTRY_KEY), createNode(item, "<value>", `${path}/##value`, { value }, NODE_TYPES.MAP_ENTRY_VALUE)];
 	}
 
 	function getNodeGetter(item) {
@@ -4799,20 +4555,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return get(item, "contents.set", undefined);
 	}
 
-	function makeNodesForAccessors(item) {
+	function nodeHasAccessors(item) {
+	  return !!getNodeGetter(item) || !!getNodeSetter(item);
+	}
+
+	function getAccessors(item) {
 	  const accessors = [];
 
 	  const getter = getNodeGetter(item);
 	  if (getter && getter.type !== "undefined") {
-	    accessors.push(createNode(item, "<get>", `${item.path}/${SAFE_PATH_PREFIX}get`, { value: getter }, NODE_TYPES.GET));
+	    accessors.push(createNode("<get>", `${item.path}/get`, { value: getter }));
 	  }
 
 	  const setter = getNodeSetter(item);
 	  if (setter && setter.type !== "undefined") {
-	    accessors.push(createNode(item, "<set>", `${item.path}/${SAFE_PATH_PREFIX}set`, { value: setter }, NODE_TYPES.SET));
+	    accessors.push(createNode("<set>", `${item.path}/set`, { value: setter }));
 	  }
 
 	  return accessors;
+	}
+
+	function isDefault(item, roots) {
+	  if (roots && roots.length === 1) {
+	    const value = getValue(roots[0]);
+	    return value.class === "Window";
+	  }
+	  return WINDOW_PROPERTIES.includes(item.name);
 	}
 
 	function sortProperties(properties) {
@@ -4829,60 +4597,47 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 
-	function makeNumericalBuckets(propertiesNames, bucketSize, parent, ownProperties) {
-	  const parentPath = parent.path;
-	  const numProperties = propertiesNames.length;
+	function makeNumericalBuckets(props, bucketSize, parentPath, ownProperties) {
+	  const numProperties = props.length;
 	  const numBuckets = Math.ceil(numProperties / bucketSize);
 	  let buckets = [];
 	  for (let i = 1; i <= numBuckets; i++) {
-	    const bucketKey = `${SAFE_PATH_PREFIX}bucket${i}`;
+	    const bucketKey = `bucket${i}`;
 	    const minKey = (i - 1) * bucketSize;
 	    const maxKey = Math.min(i * bucketSize - 1, numProperties);
 	    const bucketName = `[${minKey}..${maxKey}]`;
-	    const bucketProperties = propertiesNames.slice(minKey, maxKey);
+	    const bucketProperties = props.slice(minKey, maxKey);
 
-	    const bucketNodes = bucketProperties.map(name => createNode(parent, name, `${parentPath}/${bucketKey}/${name}`, ownProperties[name]));
+	    const bucketNodes = bucketProperties.map(name => createNode(name, `${parentPath}/${bucketKey}/${name}`, ownProperties[name]));
 
-	    buckets.push(createNode(parent, bucketName, `${parentPath}/${bucketKey}`, bucketNodes, NODE_TYPES.BUCKET));
+	    buckets.push(createNode(bucketName, `${parentPath}/${bucketKey}`, bucketNodes));
 	  }
 	  return buckets;
 	}
 
-	function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
-	  const parentPath = parent.path;
+	function makeDefaultPropsBucket(props, parentPath, ownProperties) {
+	  const userProps = props.filter(name => !isDefault({ name }));
+	  const defaultProps = props.filter(name => isDefault({ name }));
 
-	  const userPropertiesNames = [];
-	  const defaultProperties = [];
+	  let nodes = makeNodesForOwnProps(userProps, parentPath, ownProperties);
 
-	  propertiesNames.forEach(name => {
-	    if (isDefaultWindowProperty(name)) {
-	      defaultProperties.push(name);
-	    } else {
-	      userPropertiesNames.push(name);
-	    }
-	  });
-
-	  let nodes = makeNodesForOwnProps(userPropertiesNames, parent, ownProperties);
-
-	  if (defaultProperties.length > 0) {
-	    const defaultPropertiesNode = createNode(parent, "[default properties]", `${parentPath}/${SAFE_PATH_PREFIX}default`, null, NODE_TYPES.DEFAULT_PROPERTIES);
-
-	    const defaultNodes = defaultProperties.map((name, index) => createNode(defaultPropertiesNode, maybeEscapePropertyName(name), `${parentPath}/${SAFE_PATH_PREFIX}bucket${index}/${name}`, ownProperties[name]));
-	    nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
+	  if (defaultProps.length > 0) {
+	    const defaultNodes = defaultProps.map((name, index) => createNode(maybeEscapePropertyName(name), `${parentPath}/bucket${index}/${name}`, ownProperties[name]));
+	    nodes.push(createNode("[default properties]", `${parentPath}/##-default`, defaultNodes));
 	  }
 	  return nodes;
 	}
 
-	function makeNodesForOwnProps(propertiesNames, parent, ownProperties) {
-	  const parentPath = parent.path;
-	  return propertiesNames.map(name => createNode(parent, maybeEscapePropertyName(name), `${parentPath}/${name}`, ownProperties[name]));
+	function makeNodesForOwnProps(properties, parentPath, ownProperties) {
+	  return properties.map(name => createNode(maybeEscapePropertyName(name), `${parentPath}/${name}`, ownProperties[name]));
 	}
 
-	function makeNodesForProperties(objProps, parent, {
-	  bucketSize = 100
-	} = {}) {
+	/*
+	 * Ignore properties that are neither non-concrete nor getters/setters.
+	*/
+	function makeNodesForProperties(objProps, parent, { bucketSize = 100 } = {}) {
 	  const {
-	    ownProperties = {},
+	    ownProperties,
 	    ownSymbols,
 	    prototype,
 	    safeGetterValues
@@ -4892,89 +4647,59 @@ return /******/ (function(modules) { // webpackBootstrap
 	  const parentValue = getValue(parent);
 
 	  let allProperties = Object.assign({}, ownProperties, safeGetterValues);
+	  const properties = sortProperties(Object.keys(allProperties)).filter(name => allProperties[name].hasOwnProperty("value") || allProperties[name].hasOwnProperty("getterValue") || allProperties[name].hasOwnProperty("get") || allProperties[name].hasOwnProperty("set"));
 
-	  // Ignore properties that are neither non-concrete nor getters/setters.
-	  const propertiesNames = sortProperties(Object.keys(allProperties)).filter(name => allProperties[name].hasOwnProperty("value") || allProperties[name].hasOwnProperty("getterValue") || allProperties[name].hasOwnProperty("get") || allProperties[name].hasOwnProperty("set"));
-
-	  const numProperties = propertiesNames.length;
+	  const numProperties = properties.length;
 
 	  let nodes = [];
-	  if (nodeSupportsBucketing(parent) && numProperties > bucketSize) {
-	    nodes = makeNumericalBuckets(propertiesNames, bucketSize, parent, allProperties);
-	  } else if (parentValue && parentValue.class == "Window") {
-	    nodes = makeDefaultPropsBucket(propertiesNames, parent, allProperties);
+	  if (nodeIsArray(prototype) && numProperties > bucketSize) {
+	    nodes = makeNumericalBuckets(properties, bucketSize, parentPath, allProperties);
+	  } else if (parentValue.class == "Window") {
+	    nodes = makeDefaultPropsBucket(properties, parentPath, allProperties);
 	  } else {
-	    nodes = makeNodesForOwnProps(propertiesNames, parent, allProperties);
+	    nodes = makeNodesForOwnProps(properties, parentPath, allProperties);
 	  }
 
-	  if (Array.isArray(ownSymbols)) {
-	    ownSymbols.forEach((ownSymbol, index) => {
-	      nodes.push(createNode(parent, ownSymbol.name, `${parentPath}/${SAFE_PATH_PREFIX}symbol-${index}`, ownSymbol.descriptor));
-	    }, this);
+	  for (let index in ownSymbols) {
+	    nodes.push(createNode(ownSymbols[index].name, `${parentPath}/##symbol-${index}`, ownSymbols[index].descriptor));
 	  }
 
-	  if (nodeIsPromise(parent)) {
-	    nodes.push(...makeNodesForPromiseProperties(parent));
-	  }
-
-	  if (nodeHasEntries(parent)) {
-	    nodes.push(makeNodesForEntries(parent));
+	  if (isPromise(parent)) {
+	    nodes.push(...getPromiseProperties(parent));
 	  }
 
 	  // Add the prototype if it exists and is not null
 	  if (prototype && prototype.type !== "null") {
-	    nodes.push(createNode(parent, "__proto__", `${parentPath}/__proto__`, { value: prototype }, NODE_TYPES.PROTOTYPE));
+	    nodes.push(createNode("__proto__", `${parentPath}/__proto__`, { value: prototype }));
 	  }
 
 	  return nodes;
 	}
 
-	function createNode(parent, name, path, contents, type = NODE_TYPES.GRIP) {
+	function createNode(name, path, contents) {
 	  if (contents === undefined) {
 	    return null;
 	  }
-
 	  // The path is important to uniquely identify the item in the entire
 	  // tree. This helps debugging & optimizes React's rendering of large
 	  // lists. The path will be separated by property name,
 	  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of `foo/bar/baz`
 	  // for the inner object.
-	  return {
-	    parent,
-	    name,
-	    path,
-	    contents,
-	    type
-	  };
+	  return { name, path, contents };
 	}
 
-	function setNodeChildren(node, children) {
-	  node.contents = children;
-	  return node;
-	}
-
-	function getChildren(options) {
-	  const {
-	    actors = {},
-	    getObjectEntries,
-	    getObjectProperties,
-	    item
-	  } = options;
+	function getChildren({ getObjectProperties, actors, item }) {
 	  // Nodes can either have children already, or be an object with
 	  // properties that we need to go and fetch.
 	  if (nodeHasAccessors(item)) {
-	    return makeNodesForAccessors(item);
-	  }
-
-	  if (nodeIsMapEntry(item)) {
-	    return makeNodesForMapEntry(item);
+	    return getAccessors(item);
 	  }
 
 	  if (nodeHasChildren(item)) {
 	    return item.contents;
 	  }
 
-	  if (!nodeHasProperties(item) && !nodeIsEntries(item)) {
+	  if (!nodeHasProperties(item)) {
 	    return [];
 	  }
 
@@ -4989,20 +4714,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return actors[key];
 	  }
 
-	  if (nodeIsBucket(item)) {
+	  if (isBucket(item)) {
 	    return item.contents.children;
 	  }
 
-	  let loadedProps;
-	  if (nodeIsEntries(item)) {
-	    // If `item` is an <entries> node, we need to get the entries
-	    // matching the parent node actor.
-	    const parent = getParent(item);
-	    loadedProps = getObjectEntries(get(getValue(parent), "actor", undefined));
-	  } else {
-	    loadedProps = getObjectProperties(get(getValue(item), "actor", undefined));
-	  }
-
+	  const actor = get(getValue(item), "actor", undefined);
+	  const loadedProps = getObjectProperties(actor);
 	  const {
 	    ownProperties,
 	    ownSymbols,
@@ -5019,45 +4736,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return children;
 	}
 
-	function getParent(item) {
-	  return item.parent;
-	}
-
 	module.exports = {
 	  createNode,
 	  getChildren,
-	  getParent,
+	  getPromiseProperties,
 	  getValue,
-	  makeNodesForEntries,
-	  makeNodesForPromiseProperties,
+	  isDefault,
+	  isPromise,
 	  makeNodesForProperties,
 	  nodeHasAccessors,
-	  nodeHasAllEntriesInPreview,
 	  nodeHasChildren,
-	  nodeHasEntries,
 	  nodeHasProperties,
-	  nodeIsDefaultProperties,
-	  nodeIsEntries,
 	  nodeIsFunction,
-	  nodeIsMapEntry,
 	  nodeIsMissingArguments,
 	  nodeIsObject,
 	  nodeIsOptimizedOut,
 	  nodeIsPrimitive,
-	  nodeIsPromise,
-	  nodeIsPrototype,
-	  nodeSupportsBucketing,
-	  sortProperties,
-	  NODE_TYPES,
-	  // Export for testing purpose.
-	  SAFE_PATH_PREFIX
+	  sortProperties
 	};
 
 /***/ },
-/* 52 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGet = __webpack_require__(53);
+	var baseGet = __webpack_require__(52);
 
 	/**
 	 * Gets the value at `path` of `object`. If the resolved value is
@@ -5093,11 +4795,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 53 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var castPath = __webpack_require__(54),
-	    toKey = __webpack_require__(103);
+	var castPath = __webpack_require__(53),
+	    toKey = __webpack_require__(102);
 
 	/**
 	 * The base implementation of `_.get` without support for default values.
@@ -5123,13 +4825,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 54 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArray = __webpack_require__(55),
-	    isKey = __webpack_require__(56),
-	    stringToPath = __webpack_require__(65),
-	    toString = __webpack_require__(100);
+	var isArray = __webpack_require__(54),
+	    isKey = __webpack_require__(55),
+	    stringToPath = __webpack_require__(64),
+	    toString = __webpack_require__(99);
 
 	/**
 	 * Casts `value` to a path array if it's not one.
@@ -5150,7 +4852,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 55 */
+/* 54 */
 /***/ function(module, exports) {
 
 	/**
@@ -5182,11 +4884,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 56 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArray = __webpack_require__(55),
-	    isSymbol = __webpack_require__(57);
+	var isArray = __webpack_require__(54),
+	    isSymbol = __webpack_require__(56);
 
 	/** Used to match property names within property paths. */
 	var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
@@ -5217,11 +4919,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 57 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGetTag = __webpack_require__(58),
-	    isObjectLike = __webpack_require__(64);
+	var baseGetTag = __webpack_require__(57),
+	    isObjectLike = __webpack_require__(63);
 
 	/** `Object#toString` result references. */
 	var symbolTag = '[object Symbol]';
@@ -5252,12 +4954,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 58 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Symbol = __webpack_require__(59),
-	    getRawTag = __webpack_require__(62),
-	    objectToString = __webpack_require__(63);
+	var Symbol = __webpack_require__(58),
+	    getRawTag = __webpack_require__(61),
+	    objectToString = __webpack_require__(62);
 
 	/** `Object#toString` result references. */
 	var nullTag = '[object Null]',
@@ -5286,10 +4988,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 59 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var root = __webpack_require__(60);
+	var root = __webpack_require__(59);
 
 	/** Built-in value references. */
 	var Symbol = root.Symbol;
@@ -5298,10 +5000,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 60 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var freeGlobal = __webpack_require__(61);
+	var freeGlobal = __webpack_require__(60);
 
 	/** Detect free variable `self`. */
 	var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
@@ -5313,7 +5015,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 61 */
+/* 60 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/** Detect free variable `global` from Node.js. */
@@ -5324,10 +5026,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 62 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Symbol = __webpack_require__(59);
+	var Symbol = __webpack_require__(58);
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -5376,7 +5078,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 63 */
+/* 62 */
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -5404,7 +5106,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 64 */
+/* 63 */
 /***/ function(module, exports) {
 
 	/**
@@ -5439,10 +5141,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 65 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var memoizeCapped = __webpack_require__(66);
+	var memoizeCapped = __webpack_require__(65);
 
 	/** Used to match property names within property paths. */
 	var reLeadingDot = /^\./,
@@ -5473,10 +5175,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 66 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var memoize = __webpack_require__(67);
+	var memoize = __webpack_require__(66);
 
 	/** Used as the maximum memoize cache size. */
 	var MAX_MEMOIZE_SIZE = 500;
@@ -5505,10 +5207,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 67 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var MapCache = __webpack_require__(68);
+	var MapCache = __webpack_require__(67);
 
 	/** Error message constants. */
 	var FUNC_ERROR_TEXT = 'Expected a function';
@@ -5584,14 +5286,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 68 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mapCacheClear = __webpack_require__(69),
-	    mapCacheDelete = __webpack_require__(94),
-	    mapCacheGet = __webpack_require__(97),
-	    mapCacheHas = __webpack_require__(98),
-	    mapCacheSet = __webpack_require__(99);
+	var mapCacheClear = __webpack_require__(68),
+	    mapCacheDelete = __webpack_require__(93),
+	    mapCacheGet = __webpack_require__(96),
+	    mapCacheHas = __webpack_require__(97),
+	    mapCacheSet = __webpack_require__(98);
 
 	/**
 	 * Creates a map cache object to store key-value pairs.
@@ -5622,12 +5324,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 69 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Hash = __webpack_require__(70),
-	    ListCache = __webpack_require__(85),
-	    Map = __webpack_require__(93);
+	var Hash = __webpack_require__(69),
+	    ListCache = __webpack_require__(84),
+	    Map = __webpack_require__(92);
 
 	/**
 	 * Removes all key-value entries from the map.
@@ -5649,14 +5351,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 70 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var hashClear = __webpack_require__(71),
-	    hashDelete = __webpack_require__(81),
-	    hashGet = __webpack_require__(82),
-	    hashHas = __webpack_require__(83),
-	    hashSet = __webpack_require__(84);
+	var hashClear = __webpack_require__(70),
+	    hashDelete = __webpack_require__(80),
+	    hashGet = __webpack_require__(81),
+	    hashHas = __webpack_require__(82),
+	    hashSet = __webpack_require__(83);
 
 	/**
 	 * Creates a hash object.
@@ -5687,10 +5389,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 71 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(72);
+	var nativeCreate = __webpack_require__(71);
 
 	/**
 	 * Removes all key-value entries from the hash.
@@ -5708,10 +5410,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 72 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getNative = __webpack_require__(73);
+	var getNative = __webpack_require__(72);
 
 	/* Built-in method references that are verified to be native. */
 	var nativeCreate = getNative(Object, 'create');
@@ -5720,11 +5422,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 73 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsNative = __webpack_require__(74),
-	    getValue = __webpack_require__(80);
+	var baseIsNative = __webpack_require__(73),
+	    getValue = __webpack_require__(79);
 
 	/**
 	 * Gets the native function at `key` of `object`.
@@ -5743,13 +5445,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 74 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isFunction = __webpack_require__(75),
-	    isMasked = __webpack_require__(77),
-	    isObject = __webpack_require__(76),
-	    toSource = __webpack_require__(79);
+	var isFunction = __webpack_require__(74),
+	    isMasked = __webpack_require__(76),
+	    isObject = __webpack_require__(75),
+	    toSource = __webpack_require__(78);
 
 	/**
 	 * Used to match `RegExp`
@@ -5796,11 +5498,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 75 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGetTag = __webpack_require__(58),
-	    isObject = __webpack_require__(76);
+	var baseGetTag = __webpack_require__(57),
+	    isObject = __webpack_require__(75);
 
 	/** `Object#toString` result references. */
 	var asyncTag = '[object AsyncFunction]',
@@ -5839,7 +5541,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 76 */
+/* 75 */
 /***/ function(module, exports) {
 
 	/**
@@ -5876,10 +5578,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 77 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var coreJsData = __webpack_require__(78);
+	var coreJsData = __webpack_require__(77);
 
 	/** Used to detect methods masquerading as native. */
 	var maskSrcKey = (function() {
@@ -5902,10 +5604,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 78 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var root = __webpack_require__(60);
+	var root = __webpack_require__(59);
 
 	/** Used to detect overreaching core-js shims. */
 	var coreJsData = root['__core-js_shared__'];
@@ -5914,7 +5616,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 79 */
+/* 78 */
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -5946,7 +5648,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 80 */
+/* 79 */
 /***/ function(module, exports) {
 
 	/**
@@ -5965,7 +5667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 81 */
+/* 80 */
 /***/ function(module, exports) {
 
 	/**
@@ -5988,10 +5690,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 82 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(72);
+	var nativeCreate = __webpack_require__(71);
 
 	/** Used to stand-in for `undefined` hash values. */
 	var HASH_UNDEFINED = '__lodash_hash_undefined__';
@@ -6024,10 +5726,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 83 */
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(72);
+	var nativeCreate = __webpack_require__(71);
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -6053,10 +5755,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 84 */
+/* 83 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(72);
+	var nativeCreate = __webpack_require__(71);
 
 	/** Used to stand-in for `undefined` hash values. */
 	var HASH_UNDEFINED = '__lodash_hash_undefined__';
@@ -6082,14 +5784,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 85 */
+/* 84 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var listCacheClear = __webpack_require__(86),
-	    listCacheDelete = __webpack_require__(87),
-	    listCacheGet = __webpack_require__(90),
-	    listCacheHas = __webpack_require__(91),
-	    listCacheSet = __webpack_require__(92);
+	var listCacheClear = __webpack_require__(85),
+	    listCacheDelete = __webpack_require__(86),
+	    listCacheGet = __webpack_require__(89),
+	    listCacheHas = __webpack_require__(90),
+	    listCacheSet = __webpack_require__(91);
 
 	/**
 	 * Creates an list cache object.
@@ -6120,7 +5822,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 86 */
+/* 85 */
 /***/ function(module, exports) {
 
 	/**
@@ -6139,10 +5841,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 87 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(88);
+	var assocIndexOf = __webpack_require__(87);
 
 	/** Used for built-in method references. */
 	var arrayProto = Array.prototype;
@@ -6180,10 +5882,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 88 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var eq = __webpack_require__(89);
+	var eq = __webpack_require__(88);
 
 	/**
 	 * Gets the index at which the `key` is found in `array` of key-value pairs.
@@ -6207,7 +5909,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 89 */
+/* 88 */
 /***/ function(module, exports) {
 
 	/**
@@ -6250,10 +5952,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 90 */
+/* 89 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(88);
+	var assocIndexOf = __webpack_require__(87);
 
 	/**
 	 * Gets the list cache value for `key`.
@@ -6275,10 +5977,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 91 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(88);
+	var assocIndexOf = __webpack_require__(87);
 
 	/**
 	 * Checks if a list cache value for `key` exists.
@@ -6297,10 +5999,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 92 */
+/* 91 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(88);
+	var assocIndexOf = __webpack_require__(87);
 
 	/**
 	 * Sets the list cache `key` to `value`.
@@ -6329,11 +6031,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 93 */
+/* 92 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getNative = __webpack_require__(73),
-	    root = __webpack_require__(60);
+	var getNative = __webpack_require__(72),
+	    root = __webpack_require__(59);
 
 	/* Built-in method references that are verified to be native. */
 	var Map = getNative(root, 'Map');
@@ -6342,10 +6044,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 94 */
+/* 93 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getMapData = __webpack_require__(95);
+	var getMapData = __webpack_require__(94);
 
 	/**
 	 * Removes `key` and its value from the map.
@@ -6366,10 +6068,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 95 */
+/* 94 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isKeyable = __webpack_require__(96);
+	var isKeyable = __webpack_require__(95);
 
 	/**
 	 * Gets the data for `map`.
@@ -6390,7 +6092,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 96 */
+/* 95 */
 /***/ function(module, exports) {
 
 	/**
@@ -6411,10 +6113,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 97 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getMapData = __webpack_require__(95);
+	var getMapData = __webpack_require__(94);
 
 	/**
 	 * Gets the map value for `key`.
@@ -6433,10 +6135,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 98 */
+/* 97 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getMapData = __webpack_require__(95);
+	var getMapData = __webpack_require__(94);
 
 	/**
 	 * Checks if a map value for `key` exists.
@@ -6455,10 +6157,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 99 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getMapData = __webpack_require__(95);
+	var getMapData = __webpack_require__(94);
 
 	/**
 	 * Sets the map `key` to `value`.
@@ -6483,10 +6185,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 100 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToString = __webpack_require__(101);
+	var baseToString = __webpack_require__(100);
 
 	/**
 	 * Converts `value` to a string. An empty string is returned for `null`
@@ -6517,13 +6219,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 101 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Symbol = __webpack_require__(59),
-	    arrayMap = __webpack_require__(102),
-	    isArray = __webpack_require__(55),
-	    isSymbol = __webpack_require__(57);
+	var Symbol = __webpack_require__(58),
+	    arrayMap = __webpack_require__(101),
+	    isArray = __webpack_require__(54),
+	    isSymbol = __webpack_require__(56);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0;
@@ -6560,7 +6262,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 102 */
+/* 101 */
 /***/ function(module, exports) {
 
 	/**
@@ -6587,10 +6289,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 103 */
+/* 102 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isSymbol = __webpack_require__(57);
+	var isSymbol = __webpack_require__(56);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0;
@@ -6614,11 +6316,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 104 */
+/* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseHas = __webpack_require__(105),
-	    hasPath = __webpack_require__(106);
+	var baseHas = __webpack_require__(104),
+	    hasPath = __webpack_require__(105);
 
 	/**
 	 * Checks if `path` is a direct property of `object`.
@@ -6655,7 +6357,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 105 */
+/* 104 */
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -6680,15 +6382,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 106 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var castPath = __webpack_require__(54),
-	    isArguments = __webpack_require__(107),
-	    isArray = __webpack_require__(55),
-	    isIndex = __webpack_require__(109),
-	    isLength = __webpack_require__(110),
-	    toKey = __webpack_require__(103);
+	var castPath = __webpack_require__(53),
+	    isArguments = __webpack_require__(106),
+	    isArray = __webpack_require__(54),
+	    isIndex = __webpack_require__(108),
+	    isLength = __webpack_require__(109),
+	    toKey = __webpack_require__(102);
 
 	/**
 	 * Checks if `path` exists on `object`.
@@ -6725,11 +6427,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 107 */
+/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsArguments = __webpack_require__(108),
-	    isObjectLike = __webpack_require__(64);
+	var baseIsArguments = __webpack_require__(107),
+	    isObjectLike = __webpack_require__(63);
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -6767,11 +6469,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 108 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGetTag = __webpack_require__(58),
-	    isObjectLike = __webpack_require__(64);
+	var baseGetTag = __webpack_require__(57),
+	    isObjectLike = __webpack_require__(63);
 
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]';
@@ -6791,7 +6493,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 109 */
+/* 108 */
 /***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
@@ -6819,7 +6521,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 110 */
+/* 109 */
 /***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
