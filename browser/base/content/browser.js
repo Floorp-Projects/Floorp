@@ -5048,8 +5048,9 @@ var CombinedStopReload = {
   },
 
   switchToStop(aRequest, aWebProgress) {
-    if (!this._initialized || !this._shouldSwitch(aRequest))
+    if (!this._initialized || !this._shouldSwitch(aRequest, aWebProgress)) {
       return;
+    }
 
     let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
                         aRequest instanceof Ci.nsIRequest &&
@@ -5068,9 +5069,10 @@ var CombinedStopReload = {
   },
 
   switchToReload(aRequest, aWebProgress) {
-    if (!this._initialized || !this._shouldSwitch(aRequest) ||
-        !this.reload.hasAttribute("displaystop"))
+    if (!this._initialized || !this._shouldSwitch(aRequest, aWebProgress) ||
+        !this.reload.hasAttribute("displaystop")) {
       return;
+    }
 
     let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
                         aRequest instanceof Ci.nsIRequest &&
@@ -5108,15 +5110,15 @@ var CombinedStopReload = {
     }, 650, this);
   },
 
-  _shouldSwitch(aRequest) {
-    if (!aRequest ||
-        !aRequest.originalURI ||
-        aRequest.originalURI.spec.startsWith("about:reader"))
-      return true;
-
-    if (aRequest.originalURI.schemeIs("chrome") ||
-        aRequest.originalURI.schemeIs("about"))
+  _shouldSwitch(aRequest, aWebProgress) {
+    if (aRequest &&
+        aRequest.originalURI &&
+        (aRequest.originalURI.schemeIs("chrome") ||
+         (aRequest.originalURI.schemeIs("about") &&
+          aWebProgress.isTopLevel &&
+          !aRequest.originalURI.spec.startsWith("about:reader")))) {
       return false;
+    }
 
     return true;
   },
