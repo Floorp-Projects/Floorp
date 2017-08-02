@@ -88,6 +88,24 @@ linux64-gcc-4.9:
         toolchain-alias: linux64-gcc
         toolchain-artifact: public/build/gcc.tar.xz
 
+linux64-gcc-6:
+    description: "GCC 6 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(gcc6)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-gcc-6-linux.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+        toolchain-artifact: public/build/gcc.tar.xz
+
 linux64-binutils:
     description: "Binutils toolchain build"
     treeherder:
