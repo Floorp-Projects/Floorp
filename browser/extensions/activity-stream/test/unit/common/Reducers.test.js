@@ -9,14 +9,18 @@ describe("Reducers", () => {
       const nextState = App(undefined, {type: "FOO"});
       assert.equal(nextState, INITIAL_STATE.App);
     });
-    it("should not set initialized to true on INIT", () => {
+    it("should set initialized to true on INIT", () => {
       const nextState = App(undefined, {type: "INIT"});
+
       assert.propertyVal(nextState, "initialized", true);
     });
     it("should set initialized, version, and locale on INIT", () => {
       const action = {type: "INIT", data: {version: "1.2.3"}};
+
       const nextState = App(undefined, action);
+
       assert.propertyVal(nextState, "version", "1.2.3");
+      assert.propertyVal(nextState, "locale", INITIAL_STATE.App.locale);
     });
     it("should not update state for empty action.data on LOCALE_UPDATED", () => {
       const nextState = App(undefined, {type: at.LOCALE_UPDATED});

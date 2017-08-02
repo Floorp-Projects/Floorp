@@ -1,4 +1,5 @@
 const injector = require("inject!lib/ActivityStream.jsm");
+const {CONTENT_MESSAGE_TYPE} = require("common/Actions.jsm");
 
 const REASON_ADDON_UNINSTALL = 6;
 
@@ -62,6 +63,14 @@ describe("ActivityStream", () => {
       assert.calledOnce(as.store.dispatch);
       const action = as.store.dispatch.firstCall.args[0];
       assert.propertyVal(action.data, "version", "1.2.3");
+    });
+    it("should emit an INIT event to content", () => {
+      sandbox.stub(as.store, "dispatch");
+
+      as.init();
+
+      const action = as.store.dispatch.firstCall.args[0];
+      assert.equal(action.meta.to, CONTENT_MESSAGE_TYPE);
     });
   });
   describe("#uninit", () => {

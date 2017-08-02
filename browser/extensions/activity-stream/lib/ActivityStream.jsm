@@ -8,7 +8,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
 // common case to avoid the overhead of wrapping and detecting lazy loading.
-const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {DefaultPrefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {LocalizationFeed} = Cu.import("resource://activity-stream/lib/LocalizationFeed.jsm", {});
 const {ManualMigration} = Cu.import("resource://activity-stream/lib/ManualMigration.jsm", {});
@@ -147,7 +147,7 @@ const FEEDS_DATA = [
     name: "snippets",
     factory: () => new SnippetsFeed(),
     title: "Gets snippets data",
-    value: false
+    value: true
   },
   {
     name: "systemtick",
@@ -197,11 +197,12 @@ this.ActivityStream = class ActivityStream {
     this._updateDynamicPrefs();
     this._defaultPrefs.init();
 
+    // Hook up the store and let all feeds and pages initialize
     this.store.init(this.feeds);
-    this.store.dispatch({
+    this.store.dispatch(ac.BroadcastToContent({
       type: at.INIT,
       data: {version: this.options.version}
-    });
+    }));
 
     this.initialized = true;
   }
