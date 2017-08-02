@@ -603,7 +603,7 @@ class TryOptionSyntax(object):
                 if self.platforms is None or attr('build_platform') in self.platforms:
                     return True
                 return False
-            return True
+            return check_run_on_projects()
         elif attr('kind') == 'test':
             return match_test(self.unittests, 'unittest_try_name') \
                  or match_test(self.talos, 'talos_try_name')
