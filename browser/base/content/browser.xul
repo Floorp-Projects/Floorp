@@ -1283,9 +1283,8 @@
     <notificationbox id="global-notificationbox" notificationside="bottom"/>
   </vbox>
 
-  <svg:svg height="0">
-#include tab-shape.inc.svg
 #ifndef MOZ_PHOTON_THEME
+  <svg:svg height="0">
     <svg:clipPath id="urlbar-back-button-clip-path">
 #ifndef XP_MACOSX
       <svg:path d="M -9,-4 l 0,1 a 15 15 0 0,1 0,30 l 0,1 l 10000,0 l 0,-32 l -10000,0 z" />
@@ -1298,8 +1297,8 @@
       <svg:path d="M -6,-2 l 0,1 a 15 15 0 0,1 0,30 l 0,1 l 10000,0 l 0,-32 l -10000,0 z" />
     </svg:clipPath>
 #endif
-#endif
   </svg:svg>
+#endif
 
 </vbox>
 # <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
