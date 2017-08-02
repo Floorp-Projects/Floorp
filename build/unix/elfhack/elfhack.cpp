@@ -89,8 +89,10 @@ private:
 
 class ElfRelHackCode_Section: public ElfSection {
 public:
-    ElfRelHackCode_Section(Elf_Shdr &s, Elf &e, unsigned int init, unsigned int mprotect_cb)
-    : ElfSection(s, nullptr, nullptr), parent(e), init(init), mprotect_cb(mprotect_cb) {
+    ElfRelHackCode_Section(Elf_Shdr &s, Elf &e, ElfRelHack_Section &relhack_section,
+                           unsigned int init, unsigned int mprotect_cb)
+    : ElfSection(s, nullptr, nullptr), parent(e), relhack_section(relhack_section),
+      init(init), mprotect_cb(mprotect_cb) {
         std::string file(rundir);
         file += "/inject/";
         switch (parent.getMachine()) {
@@ -354,7 +356,7 @@ private:
             unsigned int addr;
             if (symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection() == nullptr) {
                 if (strcmp(name, "relhack") == 0) {
-                    addr = getNext()->getAddr();
+                    addr = relhack_section.getAddr();
                 } else if (strcmp(name, "elf_header") == 0) {
                     // TODO: change this ungly hack to something better
                     ElfSection *ehdr = parent.getSection(1)->getPrevious()->getPrevious();
@@ -417,6 +419,7 @@ private:
     }
 
     Elf *elf, &parent;
+    ElfRelHack_Section &relhack_section;
     std::vector<ElfSection *> code;
     unsigned int init;
     unsigned int mprotect_cb;
@@ -750,7 +753,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
 
-    ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf, original_init, mprotect_cb);
+    ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf, *relhack, original_init, mprotect_cb);
     relhackcode->insertBefore(section);
     relhack->insertAfter(relhackcode);
     if (section->getOffset() + section->getSize() >= old_end) {
