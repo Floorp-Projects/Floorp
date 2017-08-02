@@ -886,12 +886,6 @@ public class GeckoPreferences
                         preferences.removePreference(pref);
                         i--;
                         continue;
-                    } else {
-                        final boolean value = GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_COMPACT_TABS,
-                                SwitchBoard.isInExperiment(this, Experiments.COMPACT_TABS));
-
-                        pref.setDefaultValue(value);
-                        ((SwitchPreference) pref).setChecked(value);
                     }
                 }
 
