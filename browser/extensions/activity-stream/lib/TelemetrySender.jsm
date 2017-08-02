@@ -6,6 +6,7 @@ const {interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["fetch"]);
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
@@ -18,8 +19,6 @@ const PREF_BRANCH = "browser.newtabpage.activity-stream.";
 const ENDPOINT_PREF = `${PREF_BRANCH}telemetry.ping.endpoint`;
 const TELEMETRY_PREF = `${PREF_BRANCH}telemetry`;
 const LOGGING_PREF = `${PREF_BRANCH}telemetry.log`;
-
-const FHR_UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 
 /**
  * Observe various notifications and send them to a telemetry endpoint.
@@ -44,10 +43,6 @@ function TelemetrySender(args) {
   this._onTelemetryPrefChange = this._onTelemetryPrefChange.bind(this);
   this._prefs.observe(TELEMETRY_PREF, this._onTelemetryPrefChange);
 
-  this._fhrEnabled = this._prefs.get(FHR_UPLOAD_ENABLED_PREF);
-  this._onFhrPrefChange = this._onFhrPrefChange.bind(this);
-  this._prefs.observe(FHR_UPLOAD_ENABLED_PREF, this._onFhrPrefChange);
-
   this.logging = this._prefs.get(LOGGING_PREF);
   this._onLoggingPrefChange = this._onLoggingPrefChange.bind(this);
   this._prefs.observe(LOGGING_PREF, this._onLoggingPrefChange);
@@ -57,7 +52,9 @@ function TelemetrySender(args) {
 
 TelemetrySender.prototype = {
   get enabled() {
-    return this._enabled && this._fhrEnabled;
+    // Note: Services.telemetry.canRecordBase is the general indicator for
+    // opt-out Firefox Telemetry
+    return this._enabled && Services.telemetry.canRecordBase;
   },
 
   _onLoggingPrefChange(prefVal) {
@@ -66,10 +63,6 @@ TelemetrySender.prototype = {
 
   _onTelemetryPrefChange(prefVal) {
     this._enabled = prefVal;
-  },
-
-  _onFhrPrefChange(prefVal) {
-    this._fhrEnabled = prefVal;
   },
 
   sendPing(data) {
@@ -95,7 +88,6 @@ TelemetrySender.prototype = {
     try {
       this._prefs.ignore(TELEMETRY_PREF, this._onTelemetryPrefChange);
       this._prefs.ignore(LOGGING_PREF, this._onLoggingPrefChange);
-      this._prefs.ignore(FHR_UPLOAD_ENABLED_PREF, this._onFhrPrefChange);
     } catch (e) {
       Cu.reportError(e);
     }
@@ -105,7 +97,6 @@ TelemetrySender.prototype = {
 this.TelemetrySender = TelemetrySender;
 this.TelemetrySenderConstants = {
   ENDPOINT_PREF,
-  FHR_UPLOAD_ENABLED_PREF,
   TELEMETRY_PREF,
   LOGGING_PREF
 };

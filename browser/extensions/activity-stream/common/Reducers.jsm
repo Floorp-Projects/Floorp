@@ -37,7 +37,7 @@ const INITIAL_STATE = {
 function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
     case at.INIT:
-      return Object.assign({}, action.data || {}, {initialized: true});
+      return Object.assign({}, prevState, action.data || {}, {initialized: true});
     case at.LOCALE_UPDATED: {
       if (!action.data) {
         return prevState;
