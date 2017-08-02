@@ -32,14 +32,18 @@ const PROMOTE_COUNT_PREF = "devtools.promote.layoutview";
 
 // Default grid colors.
 const GRID_COLORS = [
-  "#4B0082",
-  "#BB9DFF",
-  "#FFB53B",
-  "#71F362",
-  "#FF90FF",
-  "#FF90FF",
-  "#1B80FF",
-  "#FF2647"
+  "#9400FF",
+  "#DF00A9",
+  "#0A84FF",
+  "#12BC00",
+  "#EA8000",
+  "#00B0BD",
+  "#D70022",
+  "#4B42FF",
+  "#B5007F",
+  "#058B00",
+  "#A47F00",
+  "#005A71"
 ];
 
 function GridInspector(inspector, window) {
