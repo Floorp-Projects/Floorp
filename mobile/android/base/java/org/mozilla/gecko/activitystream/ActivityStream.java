@@ -25,31 +25,6 @@ import java.util.List;
 
 public class ActivityStream {
     /**
-     * List of undesired prefixes for labels based on a URL.
-     *
-     * This list is by no means complete and is based on those sources:
-     * - https://gist.github.com/nchapman/36502ad115e8825d522a66549971a3f0
-     * - https://github.com/mozilla/activity-stream/issues/1311
-     */
-    private static final List<String> UNDESIRED_LABEL_PREFIXES = Arrays.asList(
-            "index.",
-            "home."
-    );
-
-    /**
-     * Undesired labels for labels based on a URL.
-     *
-     * This list is by no means complete and is based on those sources:
-     * - https://gist.github.com/nchapman/36502ad115e8825d522a66549971a3f0
-     * - https://github.com/mozilla/activity-stream/issues/1311
-     */
-    private static final List<String> UNDESIRED_LABELS = Arrays.asList(
-            "render",
-            "login",
-            "edit"
-    );
-
-    /**
      * Is Activity Stream enabled?
      */
     public static boolean isEnabled(Context context) {
