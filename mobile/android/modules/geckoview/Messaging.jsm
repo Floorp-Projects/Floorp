@@ -221,14 +221,19 @@ var EventDispatcher = {
                aWindow.arguments[0].QueryInterface(Ci.nsIAndroidView);
 
     if (!view) {
-      if (!aWindow.messageManager) {
+      let mm = aWindow && aWindow.messageManager;
+      if (!mm) {
         throw new Error("window is not a GeckoView-connected window and does" +
                         " not have a message manager");
       }
-      return new DispatcherDelegate(null, aWindow.messageManager);
+      return this.forMessageManager(mm);
     }
 
     return new DispatcherDelegate(view);
+  },
+
+  forMessageManager: function (aMessageManager) {
+    return new DispatcherDelegate(null, aMessageManager);
   },
 
   receiveMessage: function (aMsg) {
