@@ -10,22 +10,10 @@ var Cu = Components.utils;
 var Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
-var gFrameTree = new FrameTree(this);
 
 function executeSoon(callback) {
   Services.tm.dispatchToMainThread(callback);
 }
-
-gFrameTree.addObserver({
-  onFrameTreeReset() {
-    sendAsyncMessage("ss-test:onFrameTreeReset");
-  },
-
-  onFrameTreeCollected() {
-    sendAsyncMessage("ss-test:onFrameTreeCollected");
-  }
-});
 
 var historyListener = {
   OnHistoryNewEntry() {
@@ -169,48 +157,6 @@ addMessageListener("ss-test:setScrollPosition", function(msg) {
       sendAsyncMessage("ss-test:setScrollPosition");
     }
   });
-});
-
-addMessageListener("ss-test:createDynamicFrames", function({data}) {
-  function createIFrame(rows) {
-    let frames = content.document.getElementById(data.id);
-    frames.setAttribute("rows", rows);
-
-    let frame = content.document.createElement("frame");
-    frame.setAttribute("src", data.url);
-    frames.appendChild(frame);
-  }
-
-  addEventListener("DOMContentLoaded", function onContentLoaded(event) {
-    if (content.document == event.target) {
-      removeEventListener("DOMContentLoaded", onContentLoaded, true);
-      // DOMContentLoaded is fired right after we finished parsing the document.
-      createIFrame("33%, 33%, 33%");
-    }
-  }, true);
-
-  addEventListener("load", function onLoad(event) {
-    if (content.document == event.target) {
-      removeEventListener("load", onLoad, true);
-
-      // Creating this frame on the same tick as the load event
-      // means that it must not be included in the frame tree.
-      createIFrame("25%, 25%, 25%, 25%");
-    }
-  }, true);
-
-  sendAsyncMessage("ss-test:createDynamicFrames");
-});
-
-addMessageListener("ss-test:removeLastFrame", function({data}) {
-  let frames = content.document.getElementById(data.id);
-  frames.lastElementChild.remove();
-  sendAsyncMessage("ss-test:removeLastFrame");
-});
-
-addMessageListener("ss-test:mapFrameTree", function(msg) {
-  let result = gFrameTree.map(frame => ({href: frame.location.href}));
-  sendAsyncMessage("ss-test:mapFrameTree", result);
 });
 
 addMessageListener("ss-test:click", function({data}) {
