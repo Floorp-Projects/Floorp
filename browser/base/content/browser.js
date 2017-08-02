@@ -1332,10 +1332,6 @@ var gBrowserInit = {
     mm.loadFrameScript("chrome://browser/content/content-UITour.js", true);
     mm.loadFrameScript("chrome://global/content/manifestMessages.js", true);
 
-    // initialize observers and listeners
-    // and give C++ access to gBrowser
-    XULBrowserWindow.init();
-
     window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
 
     if (!gMultiProcessBrowser) {
@@ -4455,12 +4451,6 @@ var XULBrowserWindow = {
     return this.canViewSource = document.getElementById("canViewSource");
   },
 
-  init() {
-    // Initialize the security button's state and tooltip text.
-    var securityUI = gBrowser.securityUI;
-    this.onSecurityChange(null, null, securityUI.state, true);
-  },
-
   setJSStatus() {
     // unsupported
   },
@@ -7358,7 +7348,6 @@ var gIdentityHandler = {
     // Check this._uri because we don't want to refresh the user interface if
     // this is called before the first page load in the window for any reason.
     if (!this._uri) {
-      Cu.reportError("Unexpected early call to refreshForInsecureLoginForms.");
       return;
     }
     this.refreshIdentityBlock();
