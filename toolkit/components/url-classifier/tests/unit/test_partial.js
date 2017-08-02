@@ -28,7 +28,6 @@ complete(partialHash, gethashUrl, tableName, cb) {
         cb.completionFinished(Cr.NS_ERROR_FAILURE);
         return;
       }
-      var results;
       if (fragments[partialHash]) {
         for (var i = 0; i < fragments[partialHash].length; i++) {
           var chunkId = fragments[partialHash][i][0];
@@ -38,7 +37,7 @@ complete(partialHash, gethashUrl, tableName, cb) {
       }
     cb.completionFinished(0);
   }
-  var timer = new Timer(0, doCallback);
+  do_execute_soon(doCallback);
 },
 
 getHash(fragment) {
@@ -76,13 +75,13 @@ addHash(chunkId, hash) {
 
 compareQueries(fragments) {
   var expectedQueries = [];
-  for (var i = 0; i < fragments.length; i++) {
+  for (let i = 0; i < fragments.length; i++) {
     expectedQueries.push(this.getHash(fragments[i]).slice(0, 4));
   }
   do_check_eq(this.queries.length, expectedQueries.length);
   expectedQueries.sort();
   this.queries.sort();
-  for (var i = 0; i < this.queries.length; i++) {
+  for (let i = 0; i < this.queries.length; i++) {
     do_check_eq(this.queries[i], expectedQueries[i]);
   }
 }
@@ -91,17 +90,17 @@ compareQueries(fragments) {
 function setupCompleter(table, hits, conflicts) {
   var completer = new DummyCompleter();
   completer.tableName = table;
-  for (var i = 0; i < hits.length; i++) {
-    var chunkId = hits[i][0];
-    var fragments = hits[i][1];
-    for (var j = 0; j < fragments.length; j++) {
+  for (let i = 0; i < hits.length; i++) {
+    let chunkId = hits[i][0];
+    let fragments = hits[i][1];
+    for (let j = 0; j < fragments.length; j++) {
       completer.addFragment(chunkId, fragments[j]);
     }
   }
-  for (var i = 0; i < conflicts.length; i++) {
-    var chunkId = conflicts[i][0];
-    var fragments = conflicts[i][1];
-    for (var j = 0; j < fragments.length; j++) {
+  for (let i = 0; i < conflicts.length; i++) {
+    let chunkId = conflicts[i][0];
+    let fragments = conflicts[i][1];
+    for (let j = 0; j < fragments.length; j++) {
       completer.addConflict(chunkId, fragments[j]);
     }
   }
@@ -409,7 +408,7 @@ function testInvalidHashSize() {
           }],
         4);
 
-  var completer = installCompleter("test-phish-simple", [[1, addUrls]], []);
+  installCompleter("test-phish-simple", [[1, addUrls]], []);
 
   var assertions = {
     "tableData": "test-phish-simple;a:2",
@@ -449,17 +448,17 @@ function testWrongTable() {
   doUpdateTest([update], assertions,
                function() {
                  // Give the dbservice a chance to (not) cache the result.
-                 var timer = new Timer(3000, function() {
+                 do_timeout(3000, function() {
                      // The miss earlier will have caused a miss to be cached.
                      // Resetting the completer does not count as an update,
                      // so we will not be probed again.
                      var newCompleter = installCompleter("test-malware-simple", [[1, addUrls]], []); dbservice.setHashCompleter("test-phish-simple",
                                                 newCompleter);
 
-                     var assertions = {
+                     var assertions1 = {
                        "urlsDontExist": addUrls
                      };
-                     checkAssertions(assertions, runNextTest);
+                     checkAssertions(assertions1, runNextTest);
                    });
                }, updateError);
 }
@@ -485,7 +484,7 @@ function setupCachedResults(addUrls, part2) {
   doUpdateTest([update], assertions,
                function() {
                  // Give the dbservice a chance to cache the result.
-                 var timer = new Timer(3000, part2);
+                 do_timeout(3000, part2);
                }, updateError);
 }
 
@@ -556,15 +555,6 @@ function testCachedResultsFailure() {
       "urlsExist": existUrls,
       "completerQueried": [newCompleter, []]
     };
-
-    var addUrls = ["foobar.org/a"];
-
-    var update2 = buildPhishingUpdate(
-        [
-          { "chunkNum": 2,
-            "urls": addUrls
-          }],
-        4);
 
     checkAssertions(assertions, function() {
       // Apply the update. The cached completes should be gone.

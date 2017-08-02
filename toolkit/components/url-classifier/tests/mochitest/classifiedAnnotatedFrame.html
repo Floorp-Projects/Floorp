@@ -63,9 +63,9 @@ function checkLoads() {
   // (that may not always be the case but do not expect any nodes to disappear
   // from the tree here)
   var allNodeMatch = true;
-  for (var i = 0; i < blockedTrackingNodes.length; i++) {
-    var nodeMatch = false;
-    for (var j = 0; j < badids.length && !nodeMatch; j++) {
+  for (let i = 0; i < blockedTrackingNodes.length; i++) {
+    let nodeMatch = false;
+    for (let j = 0; j < badids.length && !nodeMatch; j++) {
       nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == document.getElementById(badids[j]));
     }
@@ -79,9 +79,9 @@ function checkLoads() {
   // blockedTrackingNodes. This tells us if we are neglecting to annotate
   // some nodes
   allNodeMatch = true;
-  for (var j = 0; j < badids.length; j++) {
-    var nodeMatch = false;
-    for (var i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
+  for (let j = 0; j < badids.length; j++) {
+    let nodeMatch = false;
+    for (let i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
       nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == document.getElementById(badids[j]));
     }

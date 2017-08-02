@@ -101,7 +101,7 @@ PROT_ListManager.prototype.registerTable = function(tableName,
     // Using the V4 backoff algorithm for both V2 and V4. See bug 1273398.
     this.requestBackoffs_[updateUrl] = new RequestBackoffV4(
                                             4 /* num requests */,
-                                   60*60*1000 /* request time, 60 min */);
+                               60 * 60 * 1000 /* request time, 60 min */);
   }
   this.needsUpdate_[updateUrl][tableName] = false;
 
@@ -260,11 +260,7 @@ PROT_ListManager.prototype.kickoffUpdate_ = function(onDiskTableData) {
       let updateDelay = initialUpdateDelay;
       let nextUpdatePref = "browser.safebrowsing.provider." + provider +
                            ".nextupdatetime";
-      let nextUpdate;
-      try {
-        nextUpdate = Services.prefs.getCharPref(nextUpdatePref);
-      } catch (ex) {
-      }
+      let nextUpdate = Services.prefs.getCharPref(nextUpdatePref, "");
 
       if (nextUpdate) {
         updateDelay = Math.min(maxDelayMs, Math.max(0, nextUpdate - Date.now()));
@@ -639,6 +635,7 @@ function Init() {
   // Pull the library in.
   var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
               .getService().wrappedJSObject;
+  /* global BindToObject, RequestBackoffV4 */
   modScope.BindToObject = jslib.BindToObject;
   modScope.RequestBackoffV4 = jslib.RequestBackoffV4;
 
