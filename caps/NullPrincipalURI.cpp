@@ -155,14 +155,14 @@ NullPrincipalURI::SetPassword(const nsACString& aPassword)
 }
 
 NS_IMETHODIMP
-NullPrincipalURI::GetPath(nsACString& _path)
+NullPrincipalURI::GetPathQueryRef(nsACString& _path)
 {
   _path = mPath;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullPrincipalURI::SetPath(const nsACString& aPath)
+NullPrincipalURI::SetPathQueryRef(const nsACString& aPath)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

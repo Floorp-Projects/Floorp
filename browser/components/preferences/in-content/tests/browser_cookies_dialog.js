@@ -25,7 +25,7 @@ add_task(async function testDeleteCookie() {
   let doc = cookiesDialog.document;
 
   // Add a cookie.
-  Services.cookies.add(URI.host, URI.path, "", "", false, false, true, Date.now());
+  Services.cookies.add(URI.host, URI.pathQueryRef, "", "", false, false, true, Date.now());
 
   let tree = doc.getElementById("cookiesList");
   Assert.equal(tree.view.rowCount, 1, "Row count should initially be 1");

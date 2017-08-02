@@ -20,7 +20,6 @@ public interface TabsAccessor {
     public Cursor getRemoteClientsNoStaleSorted(Context context);
     public Cursor getRemoteTabsCursor(Context context);
     public Cursor getRemoteTabsCursor(Context context, int limit);
-    public List<RemoteClient> getClientsWithoutTabsNoStaleSortedFromCursor(final Cursor cursor);
     public List<RemoteClient> getClientsFromCursor(final Cursor cursor);
     public void getTabs(final Context context, final OnQueryTabsCompleteListener listener);
     public void getTabs(final Context context, final int limit, final OnQueryTabsCompleteListener listener);

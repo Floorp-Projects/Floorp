@@ -7,7 +7,8 @@ ENV DEBIAN_FRONTEND noninteractive
 # to make sure that files are removed within a single docker layer
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
-    python mercurial curl python-boto python-setuptools python-cryptography && \
+    python mercurial curl python-boto python-setuptools python-cryptography \
+    python-dev gcc liblzma-dev && \
     apt-get clean
 
 COPY requirements.txt /tmp/

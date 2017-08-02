@@ -174,12 +174,12 @@ var pktApi = (function() {
         var pocketCookies = getCookiesFromPocket();
 
         // If no cookie was found just return undefined
-        if (typeof pocketCookies["ftv1"] === "undefined") {
+        if (typeof pocketCookies.ftv1 === "undefined") {
             return undefined;
         }
 
         // Check if a new user logged in in the meantime and clearUserData if so
-        var sessionId = pocketCookies["fsv1"];
+        var sessionId = pocketCookies.fsv1;
         var lastSessionId = getSetting("fsv1");
         if (sessionId !== lastSessionId) {
             clearUserData();
@@ -187,7 +187,7 @@ var pktApi = (function() {
         }
 
         // Return access token
-        return pocketCookies["ftv1"];
+        return pocketCookies.ftv1;
     }
 
     /**
@@ -199,7 +199,7 @@ var pktApi = (function() {
         if (typeof premiumStatus === "undefined") {
             // Premium status is not in settings try get it from cookie
             var pocketCookies = getCookiesFromPocket();
-            premiumStatus = pocketCookies["ps"];
+            premiumStatus = pocketCookies.ps;
         }
         return premiumStatus;
     }

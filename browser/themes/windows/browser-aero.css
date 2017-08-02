@@ -190,12 +190,18 @@
 
       @media (-moz-windows-default-theme) {
 %ifdef MOZ_PHOTON_THEME
-        .titlebar-button:hover {
-          background-color: hsla(0,0%,100%,.12);
+        #main-menubar > menu {
+          -moz-appearance: none;
         }
-        .titlebar-button:hover:active {
+
+        #main-menubar > menu[_moz-menuactive="true"],
+        .titlebar-button:hover {
           background-color: hsla(0,0%,100%,.22);
         }
+        .titlebar-button:hover:active {
+          background-color: hsla(0,0%,100%,.32);
+        }
+        #main-menubar > menu[_moz-menuactive="true"]:-moz-lwtheme-darktext,
         .titlebar-button:-moz-lwtheme-darktext:hover {
           background-color: hsla(0,0%,0%,.12);
         }

@@ -323,3 +323,18 @@ ChromeProcessController::NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID
 
   APZCCallbackHelper::NotifyAutoscrollHandledByAPZ(aScrollId);
 }
+
+void
+ChromeProcessController::CancelAutoscroll(const ScrollableLayerGuid& aGuid)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(NewRunnableMethod<ScrollableLayerGuid>(
+      "layers::ChromeProcessController::CancelAutoscroll",
+      this,
+      &ChromeProcessController::CancelAutoscroll,
+      aGuid));
+    return;
+  }
+
+  APZCCallbackHelper::CancelAutoscroll(aGuid.mScrollId);
+}

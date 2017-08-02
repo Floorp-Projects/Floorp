@@ -294,5 +294,17 @@ APZCTreeManagerChild::RecvNotifyPinchGesture(const PinchGestureType& aType,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+APZCTreeManagerChild::RecvCancelAutoscroll(const FrameMetrics::ViewID& aScrollId)
+{
+  // This will only get sent from the GPU process to the parent process, so
+  // this function should never get called in the content process.
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  APZCCallbackHelper::CancelAutoscroll(aScrollId);
+  return IPC_OK();
+}
+
 } // namespace layers
 } // namespace mozilla

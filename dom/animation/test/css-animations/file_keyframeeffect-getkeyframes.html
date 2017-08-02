@@ -578,9 +578,9 @@ test(function(t) {
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
-      filter: "drop-shadow(10px 10px 10px rgb(0, 255, 0))" },
+      filter: "drop-shadow(rgb(0, 255, 0) 10px 10px 10px)" },
     { offset: 1, computedOffset: 1, easing: "ease",
-      filter: "drop-shadow(50px 30px 10px rgb(255, 0, 0))" },
+      filter: "drop-shadow(rgb(255, 0, 0) 50px 30px 10px)" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -606,9 +606,9 @@ test(function(t) {
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
-      textShadow: "1px 1px 2px rgb(0, 0, 0),"
-                  + " 0px 0px 16px rgb(0, 0, 255),"
-                  + " 0px 0px 3.2px rgb(0, 0, 255)" },
+      textShadow: "rgb(0, 0, 0) 1px 1px 2px,"
+                  + " rgb(0, 0, 255) 0px 0px 16px,"
+                  + " rgb(0, 0, 255) 0px 0px 3.2px" },
     { offset: 1, computedOffset: 1, easing: "ease", textShadow: "none" },
   ];
 

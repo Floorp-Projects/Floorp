@@ -901,16 +901,17 @@
                        class="urlbar-icon"
                        tooltiptext="&pageActionButton.tooltip;"
                        onclick="BrowserPageActions.mainButtonClicked(event);"/>
-                <hbox id="star-button-box" hidden="true">
-                  <image id="star-button"
-                         class="urlbar-icon"
-                         onclick="BookmarkingUI.onStarCommand(event);">
+                <hbox id="star-button-box"
+                      hidden="true"
+                      context="pageActionPanelContextMenu"
+                      oncontextmenu="BrowserPageActions.onContextMenu(event);"
+                      onclick="BrowserPageActions.bookmark.onUrlbarNodeClicked(event);">
+                  <image id="star-button" class="urlbar-icon">
                     <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
                     <observes element="bookmarkThisPageBroadcaster" attribute="tooltiptext"/>
                   </image>
                   <hbox id="star-button-animatable-box">
-                    <image id="star-button-animatable-image"
-                           onclick="BookmarkingUI.onStarCommand(event);"/>
+                    <image id="star-button-animatable-image"/>
                   </hbox>
                 </hbox>
 #endif

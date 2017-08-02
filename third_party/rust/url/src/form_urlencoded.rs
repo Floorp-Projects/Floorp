@@ -81,7 +81,7 @@ pub fn parse_with_encoding<'a>(input: &'a [u8],
 }
 
 /// The return type of `parse()`.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Parse<'a> {
     input: &'a [u8],
     encoding: EncodingOverride,
@@ -145,6 +145,7 @@ impl<'a> Parse<'a> {
 }
 
 /// Like `Parse`, but yields pairs of `String` instead of pairs of `Cow<str>`.
+#[derive(Debug)]
 pub struct ParseIntoOwned<'a> {
     inner: Parse<'a>
 }
@@ -168,6 +169,7 @@ pub fn byte_serialize(input: &[u8]) -> ByteSerialize {
 }
 
 /// Return value of `byte_serialize()`.
+#[derive(Debug)]
 pub struct ByteSerialize<'a> {
     bytes: &'a [u8],
 }
@@ -209,6 +211,7 @@ impl<'a> Iterator for ByteSerialize<'a> {
 
 /// The [`application/x-www-form-urlencoded` serializer](
 /// https://url.spec.whatwg.org/#concept-urlencoded-serializer).
+#[derive(Debug)]
 pub struct Serializer<T: Target> {
     target: Option<T>,
     start_position: usize,

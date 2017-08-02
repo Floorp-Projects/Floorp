@@ -196,7 +196,7 @@ RemoteMedia.prototype = {
       return;
 
     // Add the protocol version
-    data["_v"] = PROTOCOL_VERSION;
+    data._v = PROTOCOL_VERSION;
 
     let raw = JSON.stringify(data);
     this._outputStream.write(raw, raw.length);

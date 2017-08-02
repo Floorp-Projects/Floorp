@@ -37,8 +37,8 @@ TEST(TestStandardURL, Simple) {
     ASSERT_EQ(url->GetHost(out), NS_OK);
     ASSERT_TRUE(out == NS_LITERAL_CSTRING("www.yahoo.com"));
 
-    ASSERT_EQ(url->SetPath(NS_LITERAL_CSTRING("/some-path/one-the-net/about.html?with-a-query#for-you")), NS_OK);
-    ASSERT_EQ(url->GetPath(out), NS_OK);
+    ASSERT_EQ(url->SetPathQueryRef(NS_LITERAL_CSTRING("/some-path/one-the-net/about.html?with-a-query#for-you")), NS_OK);
+    ASSERT_EQ(url->GetPathQueryRef(out), NS_OK);
     ASSERT_TRUE(out == NS_LITERAL_CSTRING("/some-path/one-the-net/about.html?with-a-query#for-you"));
 
     ASSERT_EQ(url->SetQuery(NS_LITERAL_CSTRING("a=b&d=c&what-ever-you-want-to-be-called=45")), NS_OK);
@@ -190,8 +190,8 @@ MOZ_GTEST_BENCH(TestStandardURL, Perf, [] {
         url->GetScheme(out);
         url->SetHost(NS_LITERAL_CSTRING("www.yahoo.com"));
         url->GetHost(out);
-        url->SetPath(NS_LITERAL_CSTRING("/some-path/one-the-net/about.html?with-a-query#for-you"));
-        url->GetPath(out);
+        url->SetPathQueryRef(NS_LITERAL_CSTRING("/some-path/one-the-net/about.html?with-a-query#for-you"));
+        url->GetPathQueryRef(out);
         url->SetQuery(NS_LITERAL_CSTRING("a=b&d=c&what-ever-you-want-to-be-called=45"));
         url->GetQuery(out);
         url->SetRef(NS_LITERAL_CSTRING("#some-book-mark"));

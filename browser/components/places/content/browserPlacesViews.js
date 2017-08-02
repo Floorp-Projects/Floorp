@@ -219,7 +219,8 @@ PlacesViewBase.prototype = {
       return null;
 
     return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
-                              index, orientation, tagName);
+                              index, orientation, tagName, null,
+                              PlacesUtils.getConcreteItemGuid(container));
   },
 
   buildContextMenu: function PVB_buildContextMenu(aPopup) {
@@ -1423,7 +1424,8 @@ PlacesToolbar.prototype = {
           // Drop before this folder.
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
-                               eltIndex, Ci.nsITreeView.DROP_BEFORE);
+                               eltIndex, Ci.nsITreeView.DROP_BEFORE, null, null,
+                               PlacesUtils.getConcreteItemGuid(this._resultNode));
           dropPoint.beforeIndex = eltIndex;
         } else if (this.isRTL ? (aEvent.clientX > eltRect.left + threshold)
                             : (aEvent.clientX < eltRect.right - threshold)) {
@@ -1432,8 +1434,8 @@ PlacesToolbar.prototype = {
                         elt._placesNode.title : null;
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(elt._placesNode),
-                               -1, Ci.nsITreeView.DROP_ON,
-                               tagName);
+                               -1, Ci.nsITreeView.DROP_ON, tagName, null,
+                               PlacesUtils.getConcreteItemGuid(elt._placesNode));
           dropPoint.beforeIndex = eltIndex;
           dropPoint.folderElt = elt;
         } else {
@@ -1444,7 +1446,8 @@ PlacesToolbar.prototype = {
 
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
-                               beforeIndex, Ci.nsITreeView.DROP_BEFORE);
+                               beforeIndex, Ci.nsITreeView.DROP_BEFORE, null, null,
+                               PlacesUtils.getConcreteItemGuid(this._resultNode));
           dropPoint.beforeIndex = beforeIndex;
         }
       } else {
@@ -1456,7 +1459,8 @@ PlacesToolbar.prototype = {
           // Drop before this bookmark.
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
-                               eltIndex, Ci.nsITreeView.DROP_BEFORE);
+                               eltIndex, Ci.nsITreeView.DROP_BEFORE, null, null,
+                               PlacesUtils.getConcreteItemGuid(this._resultNode));
           dropPoint.beforeIndex = eltIndex;
         } else {
           // Drop after this bookmark.
@@ -1465,7 +1469,8 @@ PlacesToolbar.prototype = {
             -1 : eltIndex + 1;
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
-                               beforeIndex, Ci.nsITreeView.DROP_BEFORE);
+                               beforeIndex, Ci.nsITreeView.DROP_BEFORE, null, null,
+                               PlacesUtils.getConcreteItemGuid(this._resultNode));
           dropPoint.beforeIndex = beforeIndex;
         }
       }
@@ -1474,7 +1479,8 @@ PlacesToolbar.prototype = {
       // toolbar, we should drop after the last node.
       dropPoint.ip =
         new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
-                           -1, Ci.nsITreeView.DROP_BEFORE);
+                           -1, Ci.nsITreeView.DROP_BEFORE, null, null,
+                           PlacesUtils.getConcreteItemGuid(this._resultNode));
       dropPoint.beforeIndex = -1;
     }
 

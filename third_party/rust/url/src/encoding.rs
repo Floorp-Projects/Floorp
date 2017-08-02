@@ -13,6 +13,7 @@
 #[cfg(feature = "query_encoding")] extern crate encoding;
 
 use std::borrow::Cow;
+#[cfg(feature = "query_encoding")] use std::fmt::{self, Debug, Formatter};
 
 #[cfg(feature = "query_encoding")] use self::encoding::types::{DecoderTrap, EncoderTrap};
 #[cfg(feature = "query_encoding")] use self::encoding::label::encoding_from_whatwg_label;
@@ -89,9 +90,19 @@ impl EncodingOverride {
     }
 }
 
+#[cfg(feature = "query_encoding")]
+impl Debug for EncodingOverride {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "EncodingOverride {{ encoding: ")?;
+        match self.encoding {
+            Some(e) => write!(f, "{} }}", e.name()),
+            None => write!(f, "None }}")
+        }
+    }
+}
 
 #[cfg(not(feature = "query_encoding"))]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct EncodingOverride;
 
 #[cfg(not(feature = "query_encoding"))]

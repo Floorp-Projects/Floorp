@@ -169,3 +169,8 @@ This is the type of repackage. Can be ``repackage`` or
 toolchain-artifact
 ==================
 For toolchain jobs, this is the path to the artifact for that toolchain.
+
+toolchain-alias
+===============
+For toolchain jobs, this optionally gives an alias that can be used instead of the
+real toolchain job name in the toolchains list for build jobs.

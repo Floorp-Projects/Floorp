@@ -75,41 +75,6 @@ public class LocalTabsAccessor implements TabsAccessor {
     }
 
     /**
-     * Extracts a List of just RemoteClients from a cursor.
-     * The supplied cursor should be grouped by guid and sorted by name alphabetically.
-     */
-    @Override
-    public List<RemoteClient> getClientsWithoutTabsNoStaleSortedFromCursor(Cursor cursor) {
-        final ArrayList<RemoteClient> clients = new ArrayList<>(cursor.getCount());
-
-        final int originalPosition = cursor.getPosition();
-        try {
-            if (!cursor.moveToFirst()) {
-                return clients;
-            }
-
-            final int clientGuidIndex = cursor.getColumnIndex(BrowserContract.Clients.GUID);
-            final int clientNameIndex = cursor.getColumnIndex(BrowserContract.Clients.NAME);
-            final int clientLastModifiedIndex = cursor.getColumnIndex(BrowserContract.Clients.LAST_MODIFIED);
-            final int clientDeviceTypeIndex = cursor.getColumnIndex(BrowserContract.Clients.DEVICE_TYPE);
-
-            while (!cursor.isAfterLast()) {
-                final String clientGuid = cursor.getString(clientGuidIndex);
-                final String clientName = cursor.getString(clientNameIndex);
-                final String deviceType = cursor.getString(clientDeviceTypeIndex);
-                final long lastModified = cursor.getLong(clientLastModifiedIndex);
-
-                clients.add(new RemoteClient(clientGuid, clientName, lastModified, deviceType));
-
-                cursor.moveToNext();
-            }
-        } finally {
-            cursor.moveToPosition(originalPosition);
-        }
-        return clients;
-    }
-
-    /**
      * Extract client and tab records from a cursor.
      * <p>
      * The position of the cursor is moved to before the first record before

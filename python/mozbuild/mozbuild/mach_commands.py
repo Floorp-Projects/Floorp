@@ -1877,13 +1877,20 @@ class PackageFrontend(MachCommandBase):
 
             toolchains = tasks('toolchain')
 
+            aliases = {}
+            for t in toolchains.values():
+                alias = t.attributes.get('toolchain-alias')
+                if alias:
+                    aliases['toolchain-{}'.format(alias)] = \
+                        t.task['metadata']['name']
+
             for b in from_build:
                 user_value = b
 
                 if not b.startswith('toolchain-'):
                     b = 'toolchain-{}'.format(b)
 
-                task = toolchains.get(b)
+                task = toolchains.get(aliases.get(b, b))
                 if not task:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              'Could not find a toolchain build named `{build}`')

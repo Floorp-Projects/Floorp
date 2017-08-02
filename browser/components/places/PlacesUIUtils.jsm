@@ -1089,11 +1089,11 @@ this.PlacesUIUtils = {
         var fileName = uri.QueryInterface(Ci.nsIURL).fileName;
         // if fileName is empty, use path to distinguish labels
         if (aDoNotCutTitle) {
-          title = host + uri.path;
+          title = host + uri.pathQueryRef;
         } else {
           title = host + (fileName ?
                            (host ? "/" + this.ellipsis + "/" : "") + fileName :
-                           uri.path);
+                           uri.pathQueryRef);
         }
       } catch (e) {
         // Use (no title) for non-standard URIs (data:, javascript:, ...)
@@ -1360,7 +1360,7 @@ this.PlacesUIUtils = {
     // ensure the left-pane root is initialized;
     this.leftPaneFolderId;
     delete this.allBookmarksFolderId;
-    return this.allBookmarksFolderId = this.leftPaneQueries["AllBookmarks"];
+    return this.allBookmarksFolderId = this.leftPaneQueries.AllBookmarks;
   },
 
   /**

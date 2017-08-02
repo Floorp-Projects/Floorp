@@ -293,7 +293,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
   }
 
   let fileExtension = null, mimeInfo = null;
-  let match = sourceURI.path.match(/\.([^.\/]+)$/);
+  let match = sourceURI.pathQueryRef.match(/\.([^.\/]+)$/);
   if (match) {
     fileExtension = match[1];
   }

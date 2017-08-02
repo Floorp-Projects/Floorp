@@ -18,7 +18,7 @@ BrowserCLH.prototype = {
    * Consumers can access Android assets using resource://android/assets/FILENAME.
    */
   setResourceSubstitutions: function () {
-    let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci["nsIChromeRegistry"]);
+    let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
     // Like jar:jar:file:///data/app/org.mozilla.fennec-2.apk!/assets/omni.ja!/chrome/chrome/content/aboutHome.xhtml
     let url = registry.convertChromeURL(Services.io.newURI("chrome://browser/content/aboutHome.xhtml")).spec;
     // Like jar:file:///data/app/org.mozilla.fennec-2.apk!/

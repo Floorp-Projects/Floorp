@@ -625,7 +625,7 @@
           }
 
           if (this.shouldShowSecondField()) {
-            options["second"] = "numeric";
+            options.second = "numeric";
             this.mSecondField = this.createEditField(this.mSecondPlaceHolder,
               true, this.mMaxLength, this.mMaxLength, this.mMinSecond,
               this.mMaxSecond, this.mMinSecPageUpDownInterval);

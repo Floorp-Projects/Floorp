@@ -471,7 +471,7 @@
           var result = this.result;
           var resultview = this.view;
           var container = result.root;
-          var dropNearItemId = -1;
+          var dropNearNode = null;
           NS_ASSERT(container, "null container");
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's itemId).
@@ -515,7 +515,7 @@
                 // We don't replace index here to avoid requests to the db,
                 // instead it will be calculated later by the controller.
                 index = -1;
-                dropNearItemId = lastSelected.itemId;
+                dropNearNode = lastSelected;
               } else {
                 var lsi = container.getChildIndex(lastSelected);
                 index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
@@ -537,7 +537,8 @@
           return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
                                     index, orientation,
                                     tagName,
-                                    dropNearItemId);
+                                    dropNearNode,
+                                    PlacesUtils.getConcreteItemGuid(container));
         ]]></body>
       </method>
 

@@ -48,13 +48,13 @@ function getEngineModules() {
     ExtensionStorage: {module: "extension-storage.js", symbol: "ExtensionStorageEngine"},
   }
   if (Svc.Prefs.get("engine.addresses.available", false)) {
-    result["Addresses"] = {
+    result.Addresses = {
       module: "resource://formautofill/FormAutofillSync.jsm",
       symbol: "AddressesEngine",
     };
   }
   if (Svc.Prefs.get("engine.creditcards.available", false)) {
-    result["CreditCards"] = {
+    result.CreditCards = {
       module: "resource://formautofill/FormAutofillSync.jsm",
       symbol: "CreditCardsEngine",
     };

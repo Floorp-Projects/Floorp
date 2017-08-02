@@ -27,7 +27,7 @@ add_task(async function() {
       let tabState = state.windows[0].tabs[i];
       let tabCurState = curState.windows[0].tabs[i];
       if (tabState.extData) {
-        is(tabCurState.extData["uniq"], tabState.extData["uniq"],
+        is(tabCurState.extData.uniq, tabState.extData.uniq,
            "sanity check that tab has correct extData");
       } else {
         // We aren't expecting there to be any data on extData, but panorama

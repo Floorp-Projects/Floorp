@@ -184,7 +184,7 @@ toolbar[brighttext] #pocket-button {
   background-image: url("chrome://pocket-shared/skin/library-pocket-animation.svg");
   width: 1078px;
   animation-name: library-pocket-animation;
-  animation-duration: 768ms;
+  animation-duration: 800ms;
   animation-timing-function: steps(48);
 }
 
@@ -247,4 +247,9 @@ toolbar[brighttext] #pocket-button {
   #panelMenu_pocket > .toolbarbutton-icon {
     width: 16px;
   }
+}
+
+#pageAction-panel-pocket,
+#pageAction-urlbar-pocket {
+  list-style-image: url("chrome://pocket-shared/skin/pocket.svg");
 }

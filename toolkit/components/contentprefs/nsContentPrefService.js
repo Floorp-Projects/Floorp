@@ -391,8 +391,8 @@ ContentPrefService.prototype = {
       selectGroupsStmt.params.setting = settingID;
 
       while (selectGroupsStmt.executeStep()) {
-        groupIDs.push(selectGroupsStmt.row["groupID"]);
-        groupNames.push(selectGroupsStmt.row["groupName"]);
+        groupIDs.push(selectGroupsStmt.row.groupID);
+        groupNames.push(selectGroupsStmt.row.groupName);
       }
     } finally {
       selectGroupsStmt.reset();
@@ -602,7 +602,7 @@ ContentPrefService.prototype = {
         }});
       } else {
         if (this._stmtSelectPref.executeStep()) {
-          value = this._stmtSelectPref.row["value"];
+          value = this._stmtSelectPref.row.value;
         }
         this._cache.set(aGroup, aSetting, value);
       }
@@ -649,7 +649,7 @@ ContentPrefService.prototype = {
         }});
       } else {
         if (this._stmtSelectGlobalPref.executeStep()) {
-          value = this._stmtSelectGlobalPref.row["value"];
+          value = this._stmtSelectGlobalPref.row.value;
         }
         this._cache.set(null, aName, value);
       }
@@ -679,7 +679,7 @@ ContentPrefService.prototype = {
       this._stmtSelectGroupID.params.name = aName;
 
       if (this._stmtSelectGroupID.executeStep())
-        id = this._stmtSelectGroupID.row["id"];
+        id = this._stmtSelectGroupID.row.id;
     } finally {
       this._stmtSelectGroupID.reset();
     }
@@ -720,7 +720,7 @@ ContentPrefService.prototype = {
       this._stmtSelectSettingID.params.name = aName;
 
       if (this._stmtSelectSettingID.executeStep())
-        id = this._stmtSelectSettingID.row["id"];
+        id = this._stmtSelectSettingID.row.id;
     } finally {
       this._stmtSelectSettingID.reset();
     }
@@ -762,7 +762,7 @@ ContentPrefService.prototype = {
       this._stmtSelectPrefID.params.settingID = aSettingID;
 
       if (this._stmtSelectPrefID.executeStep())
-        id = this._stmtSelectPrefID.row["id"];
+        id = this._stmtSelectPrefID.row.id;
     } finally {
       this._stmtSelectPrefID.reset();
     }
@@ -787,7 +787,7 @@ ContentPrefService.prototype = {
       this._stmtSelectGlobalPrefID.params.settingID = aSettingID;
 
       if (this._stmtSelectGlobalPrefID.executeStep())
-        id = this._stmtSelectGlobalPrefID.row["id"];
+        id = this._stmtSelectGlobalPrefID.row.id;
     } finally {
       this._stmtSelectGlobalPrefID.reset();
     }
@@ -899,8 +899,8 @@ ContentPrefService.prototype = {
       this._stmtSelectPrefs.params.group = aGroup;
 
       while (this._stmtSelectPrefs.executeStep())
-        prefs.setProperty(this._stmtSelectPrefs.row["name"],
-                          this._stmtSelectPrefs.row["value"]);
+        prefs.setProperty(this._stmtSelectPrefs.row.name,
+                          this._stmtSelectPrefs.row.value);
     } finally {
       this._stmtSelectPrefs.reset();
     }
@@ -927,8 +927,8 @@ ContentPrefService.prototype = {
 
     try {
       while (this._stmtSelectGlobalPrefs.executeStep())
-        prefs.setProperty(this._stmtSelectGlobalPrefs.row["name"],
-                          this._stmtSelectGlobalPrefs.row["value"]);
+        prefs.setProperty(this._stmtSelectGlobalPrefs.row.name,
+                          this._stmtSelectGlobalPrefs.row.value);
     } finally {
       this._stmtSelectGlobalPrefs.reset();
     }
@@ -958,8 +958,8 @@ ContentPrefService.prototype = {
       this._stmtSelectPrefsByName.params.setting = aName;
 
       while (this._stmtSelectPrefsByName.executeStep())
-        prefs.setProperty(this._stmtSelectPrefsByName.row["groupName"],
-                          this._stmtSelectPrefsByName.row["value"]);
+        prefs.setProperty(this._stmtSelectPrefsByName.row.groupName,
+                          this._stmtSelectPrefsByName.row.value);
     } finally {
       this._stmtSelectPrefsByName.reset();
     }

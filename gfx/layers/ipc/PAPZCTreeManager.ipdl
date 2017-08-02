@@ -18,6 +18,7 @@ using mozilla::LayoutDevicePoint from "Units.h";
 using ScreenPoint from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
+using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
 using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
@@ -149,6 +150,8 @@ child:
 
   async NotifyPinchGesture(PinchGestureType aType, ScrollableLayerGuid aGuid,
                            LayoutDeviceCoord aSpanChange, Modifiers aModifiers);
+
+  async CancelAutoscroll(ViewID aScrollId);
 };
 
 } // namespace gfx

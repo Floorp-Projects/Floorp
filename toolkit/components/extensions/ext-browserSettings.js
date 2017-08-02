@@ -29,6 +29,19 @@ const getSettingsAPI = (extension, name, callback) => {
 };
 
 // Add settings objects for supported APIs to the preferences manager.
+ExtensionPreferencesManager.addSetting("allowPopupsForUserEvents", {
+  prefNames: [
+    "dom.popup_allowed_events",
+  ],
+
+  setCallback(value) {
+    let returnObj = {};
+    // If the value is true, then reset the pref, otherwise set it to "".
+    returnObj[this.prefNames[0]] = value ? undefined : "";
+    return returnObj;
+  },
+});
+
 ExtensionPreferencesManager.addSetting("cacheEnabled", {
   prefNames: [
     "browser.cache.disk.enable",
@@ -49,6 +62,11 @@ this.browserSettings = class extends ExtensionAPI {
     let {extension} = context;
     return {
       browserSettings: {
+        allowPopupsForUserEvents: getSettingsAPI(extension,
+          "allowPopupsForUserEvents",
+          () => {
+            return Preferences.get("dom.popup_allowed_events") != "";
+          }),
         cacheEnabled: getSettingsAPI(extension,
           "cacheEnabled",
           () => {
