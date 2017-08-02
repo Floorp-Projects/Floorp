@@ -136,7 +136,7 @@ jobs:
             symbol: SM-tc(asan)
         worker:
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/asan.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             spidermonkey-variant: asan
 
@@ -158,7 +158,7 @@ jobs:
             symbol: SM-tc(msan)
         worker:
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/msan.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             spidermonkey-variant: msan
 

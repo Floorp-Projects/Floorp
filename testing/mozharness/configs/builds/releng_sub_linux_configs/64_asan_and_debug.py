@@ -19,7 +19,7 @@ config = {
     'build_type': 'asan-debug',
     'debug_build': True,
     'tooltool_manifest_src': "browser/config/tooltool-manifests/linux64/\
-asan.manifest",
+releng.manifest",
     'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     'enable_talos_sendchange': False,
