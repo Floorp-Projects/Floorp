@@ -13682,5 +13682,14 @@
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
     "description": "The amount of time spend(ms) for users who view VR content in OpenVR."
+  },
+  "URLCLASSIFIER_UI_EVENTS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "francois@mozilla.com"],
+    "bug_numbers": [1375277],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "URL CLassifier-related (aka Safe Browsing) UI events. See nsIUrlClassifierUITelemetry.idl for the specific values."
   }
 }
