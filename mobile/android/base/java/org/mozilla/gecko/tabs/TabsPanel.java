@@ -90,8 +90,7 @@ public class TabsPanel extends LinearLayout
             return new AutoFitTabsGridLayout(context, attrs);
         } else {
             // Phone in portrait mode.
-            if (GeckoSharedPrefs.forApp(context).getBoolean(GeckoPreferences.PREFS_COMPACT_TABS,
-                    SwitchBoard.isInExperiment(context, Experiments.COMPACT_TABS))) {
+            if (GeckoSharedPrefs.forApp(context).getBoolean(GeckoPreferences.PREFS_COMPACT_TABS, true)) {
                 return new CompactTabsGridLayout(context, attrs);
             } else {
                 return new TabsListLayout(context, attrs);
