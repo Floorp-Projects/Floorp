@@ -200,26 +200,42 @@ function promiseNewSearchEngine(basename) {
   });
 }
 
-let gPageActionPanel = document.getElementById("pageActionPanel");
-
 function promisePageActionPanelOpen() {
-  let button = document.getElementById("pageActionButton");
+  if (BrowserPageActions.panelNode.state == "open") {
+    return Promise.resolve();
+  }
   let shownPromise = promisePageActionPanelShown();
-  EventUtils.synthesizeMouseAtCenter(button, {});
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   return shownPromise;
 }
 
 function promisePageActionPanelShown() {
-  return promisePageActionPanelEvent("popupshown");
+  return promisePanelShown(BrowserPageActions.panelNode);
 }
 
 function promisePageActionPanelHidden() {
-  return promisePageActionPanelEvent("popuphidden");
+  return promisePanelHidden(BrowserPageActions.panelNode);
 }
 
-function promisePageActionPanelEvent(name) {
+function promisePanelShown(panelIDOrNode) {
+  return promisePanelEvent(panelIDOrNode, "popupshown");
+}
+
+function promisePanelHidden(panelIDOrNode) {
+  return promisePanelEvent(panelIDOrNode, "popuphidden");
+}
+
+function promisePanelEvent(panelIDOrNode, eventType) {
   return new Promise(resolve => {
-    gPageActionPanel.addEventListener(name, () => {
+    let panel = typeof(panelIDOrNode) != "string" ? panelIDOrNode :
+                document.getElementById(panelIDOrNode);
+    if (!panel ||
+        (eventType == "popupshown" && panel.state == "open") ||
+        (eventType == "popuphidden" && panel.state == "closed")) {
+      executeSoon(resolve);
+      return;
+    }
+    panel.addEventListener(eventType, () => {
       executeSoon(resolve);
     }, { once: true });
   });
@@ -227,7 +243,7 @@ function promisePageActionPanelEvent(name) {
 
 function promisePageActionViewShown() {
   return new Promise(resolve => {
-    gPageActionPanel.addEventListener("ViewShown", (event) => {
+    BrowserPageActions.panelNode.addEventListener("ViewShown", (event) => {
       let target = event.originalTarget;
       window.setTimeout(() => {
         resolve(target);
