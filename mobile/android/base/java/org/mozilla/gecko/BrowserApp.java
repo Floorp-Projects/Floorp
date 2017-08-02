@@ -260,6 +260,7 @@ public class BrowserApp extends GeckoApp
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
+    private static final int BROWSER_ACTION_MENU_OFFSET = 10000;
     public static final String TAB_HISTORY_FRAGMENT_TAG = "tabHistoryFragment";
 
     // When the static action bar is shown, only the real toolbar chrome should be
@@ -1864,7 +1865,7 @@ public class BrowserApp extends GeckoApp
                     Log.e(LOGTAG, "Invalid browser action name");
                     return;
                 }
-                browserAction.id = message.getInt("id") + ADDON_MENU_OFFSET;
+                browserAction.id = message.getInt("id") + BROWSER_ACTION_MENU_OFFSET;
                 browserAction.uuid = message.getString("uuid");
                 addBrowserActionMenuItem(browserAction);
                 break;
