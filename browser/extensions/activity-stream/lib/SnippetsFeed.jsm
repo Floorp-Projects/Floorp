@@ -14,8 +14,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
 
 // Url to fetch snippets, in the urlFormatter service format.
 const SNIPPETS_URL_PREF = "browser.aboutHomeSnippets.updateUrl";
-const TELEMETRY_PREF = "datareporting.healthreport.uploadEnabled";
 const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
+const FXA_USERNAME_PREF = "services.sync.username";
 
 // Should be bumped up if the snippets content format changes.
 const STARTPAGE_VERSION = 5;
@@ -48,22 +48,29 @@ this.SnippetsFeed = class SnippetsFeed {
       version: STARTPAGE_VERSION,
       profileCreatedWeeksAgo: profileInfo.createdWeeksAgo,
       profileResetWeeksAgo: profileInfo.resetWeeksAgo,
-      telemetryEnabled: Services.prefs.getBoolPref(TELEMETRY_PREF),
-      onboardingFinished: Services.prefs.getBoolPref(ONBOARDING_FINISHED_PREF)
+      telemetryEnabled: Services.telemetry.canRecordBase,
+      onboardingFinished: Services.prefs.getBoolPref(ONBOARDING_FINISHED_PREF),
+      fxaccount: Services.prefs.prefHasUserValue(FXA_USERNAME_PREF)
     };
 
     this.store.dispatch(ac.BroadcastToContent({type: at.SNIPPETS_DATA, data}));
+  }
+  _refreshCanRecordBase() {
+    // TODO: There is currently no way to listen for changes to this value, so
+    // we are just refreshing it on every new tab instead. A bug is filed
+    // here to fix this: https://bugzilla.mozilla.org/show_bug.cgi?id=1386318
+    this.store.dispatch({type: at.SNIPPETS_DATA, data: {telemetryEnabled: Services.telemetry.canRecordBase}});
   }
   async init() {
     await this._refresh();
     Services.prefs.addObserver(ONBOARDING_FINISHED_PREF, this._refresh);
     Services.prefs.addObserver(SNIPPETS_URL_PREF, this._refresh);
-    Services.prefs.addObserver(TELEMETRY_PREF, this._refresh);
+    Services.prefs.addObserver(FXA_USERNAME_PREF, this._refresh);
   }
   uninit() {
     Services.prefs.removeObserver(ONBOARDING_FINISHED_PREF, this._refresh);
     Services.prefs.removeObserver(SNIPPETS_URL_PREF, this._refresh);
-    Services.prefs.removeObserver(TELEMETRY_PREF, this._refresh);
+    Services.prefs.removeObserver(FXA_USERNAME_PREF, this._refresh);
     this.store.dispatch({type: at.SNIPPETS_RESET});
   }
   onAction(action) {
@@ -73,6 +80,9 @@ this.SnippetsFeed = class SnippetsFeed {
         break;
       case at.FEED_INIT:
         if (action.data === "feeds.snippets") { this.init(); }
+        break;
+      case at.NEW_TAB_INIT:
+        this._refreshCanRecordBase();
         break;
     }
   }
