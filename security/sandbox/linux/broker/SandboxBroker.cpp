@@ -281,26 +281,6 @@ SandboxBroker::Policy::AddDynamic(int aPerms, const char* aPath)
   }
 }
 
-void
-SandboxBroker::Policy::AddAncestors(const char* aPath)
-{
-  AddAncestors(nsAutoCString(aPath));
-}
-
-void
-SandboxBroker::Policy::AddAncestors(nsCString&& aPath)
-{
-  while (true) {
-    const auto lastSlash = aPath.RFindCharInSet("/");
-    if (lastSlash <= 0) {
-      MOZ_ASSERT(lastSlash == 0);
-      break;
-    }
-    aPath.Truncate(lastSlash);
-    AddPath(MAY_ACCESS, aPath.get());
-  }
-}
-
 int
 SandboxBroker::Policy::Lookup(const nsACString& aPath) const
 {

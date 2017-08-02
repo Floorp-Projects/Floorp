@@ -79,21 +79,13 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
 #endif
 
 #ifdef MOZ_WIDGET_GTK
+  // Bug 1321134: DConf's single bit of shared memory
   if (const auto userDir = g_get_user_runtime_dir()) {
-    // Bug 1321134: DConf's single bit of shared memory
     // The leaf filename is "user" by default, but is configurable.
     nsPrintfCString shmPath("%s/dconf/", userDir);
     policy->AddPrefix(rdwrcr, shmPath.get());
-    policy->AddAncestors(Move(shmPath));
-#ifdef MOZ_PULSEAUDIO
-    // PulseAudio, if it can't get server info from X11, will break
-    // unless it can open this directory (or create it, but in our use
-    // case we know it already exists).  See bug 1335329.
-    nsPrintfCString pulsePath("%s/pulse", userDir);
-    policy->AddPath(rdonly, pulsePath.get());
-#endif // MOZ_PULSEAUDIO
   }
-#endif // MOZ_WIDGET_GTK
+#endif
 
   // Read permissions
   // No read blocking at level 2 and below
@@ -120,13 +112,6 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
 
   // Bug 1384178: mesa driver loader
   policy->AddPrefix(rdonly, "/sys/dev/char/226:");
-
-#ifdef MOZ_PULSEAUDIO
-  // See bug 1384986 comment #1.
-  if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
-    policy->AddPath(rdonly, xauth);
-  }
-#endif
 
   // Configuration dirs in the homedir that we want to allow read
   // access to.

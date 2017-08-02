@@ -92,13 +92,6 @@ class SandboxBroker final
       AddPath(aPerms, aPath,
               (aPerms & MAY_CREATE) ? AddAlways : AddIfExistsNow);
     }
-    // Adds MAY_ACCESS for all ancestors of a given path.  Useful for
-    // libraries that try to do the equivalent of `mkdir -p`.  This
-    // does not include the root directory, and it includes the path
-    // itself only if it has a trailing slash.
-    void AddAncestors(const char* aPath);
-    void AddAncestors(nsCString&& aPath);
-
     int Lookup(const nsACString& aPath) const;
     int Lookup(const char* aPath) const {
       return Lookup(nsDependentCString(aPath));
