@@ -21,7 +21,7 @@ function symmetricEquality(expect, a, b)
     /* We don't check port in the loop, because it can be defaulted in
        some cases. */
     ["spec", "prePath", "scheme", "userPass", "username", "password",
-     "hostPort", "host", "path", "filePath", "param", "query",
+     "hostPort", "host", "pathQueryRef", "filePath", "param", "query",
      "ref",
      // TODO: implement these
      //"directory", "fileName", "fileBaseName", "fileExtension"
@@ -70,8 +70,8 @@ add_test({ skip_if: () => rustIsMissing }, function test_setEmptyPath()
     dump(provided.userPass);
     dump(provided.hostPort);
 
-    provided.path = "";
-    target.path = "";
+    provided.pathQueryRef = "";
+    target.pathQueryRef = "";
 
     do_check_eq(provided.spec, target.spec);
     symmetricEquality(true, target, provided);
@@ -322,7 +322,7 @@ add_test({ skip_if: () => true }, function test_hugeStringThrows()
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
   let properties = ["spec", "scheme", "userPass", "username",
-                    "password", "hostPort", "host", "path", "ref",
+                    "password", "hostPort", "host", "pathQueryRef", "ref",
                     "query", "fileName", "filePath", "fileBaseName", "fileExtension"];
   for (let prop of properties) {
     Assert.throws(() => url[prop] = hugeString,
@@ -360,7 +360,7 @@ add_test({ skip_if: () => rustIsMissing }, function test_backslashReplacement()
   url = stringToURL("http:\\\\test.com\\example.org/path\\to/file");
   do_check_eq(url.spec, "http://test.com/example.org/path/to/file");
   do_check_eq(url.host, "test.com");
-  do_check_eq(url.path, "/example.org/path/to/file");
+  do_check_eq(url.pathQueryRef, "/example.org/path/to/file");
 
   run_next_test();
 });

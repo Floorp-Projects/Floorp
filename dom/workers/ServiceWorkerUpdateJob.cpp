@@ -65,7 +65,7 @@ GetRequiredScopeStringPrefix(nsIURI* aScriptURI, nsACString& aPrefix,
     aPrefix.Append(dir);
   } else if (aPrefixMode == eUsePath) {
     nsAutoCString path;
-    rv = aScriptURI->GetPath(path);
+    rv = aScriptURI->GetPathQueryRef(path);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

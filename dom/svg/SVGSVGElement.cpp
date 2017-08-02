@@ -750,8 +750,9 @@ bool
 SVGSVGElement::ClearPreserveAspectRatioProperty()
 {
   void* valPtr = UnsetProperty(nsGkAtoms::overridePreserveAspectRatio);
+  bool didHaveProperty = !!valPtr;
   delete static_cast<SVGPreserveAspectRatio*>(valPtr);
-  return valPtr;
+  return didHaveProperty;
 }
 
 

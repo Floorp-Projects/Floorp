@@ -9,6 +9,7 @@
 // except according to those terms.
 
 use std::collections::VecDeque;
+use std::fmt::{self, Write};
 use decompose::Decompositions;
 
 #[derive(Clone)]
@@ -133,5 +134,14 @@ impl<I: Iterator<Item=char>> Iterator for Recompositions<I> {
                 }
             }
         }
+    }
+}
+
+impl<I: Iterator<Item=char> + Clone> fmt::Display for Recompositions<I> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for c in self.clone() {
+            f.write_char(c)?;
+        }
+        Ok(())
     }
 }

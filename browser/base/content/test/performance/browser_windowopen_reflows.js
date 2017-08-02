@@ -27,7 +27,6 @@ if (Services.appinfo.OS == "Linux") {
     EXPECTED_REFLOWS.push({
       stack: [
         "handleEvent@chrome://browser/content/tabbrowser.xml",
-        "EventListener.handleEvent*tabbrowser-tabs_XBL_Constructor@chrome://browser/content/tabbrowser.xml",
       ],
     });
   } else {
@@ -74,7 +73,6 @@ if (Services.appinfo.OS == "WINNT") {
     {
       stack: [
         "handleEvent@chrome://browser/content/tabbrowser.xml",
-        "EventListener.handleEvent*tabbrowser-tabs_XBL_Constructor@chrome://browser/content/tabbrowser.xml",
       ],
     }
   );

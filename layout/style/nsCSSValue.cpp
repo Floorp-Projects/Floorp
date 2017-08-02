@@ -1312,6 +1312,26 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
   }
 }
 
+/**
+ * Returns a re-ordered version of an csCSSValue::Array representing a shadow
+ * item (including a drop-shadow() filter function) suitable for serialization.
+ */
+static already_AddRefed<nsCSSValue::Array>
+GetReorderedShadowArrayForSerialization(const nsCSSValue::Array* aOriginalArray)
+{
+  MOZ_ASSERT(aOriginalArray);
+
+  RefPtr<nsCSSValue::Array> reorderArray = nsCSSValue::Array::Create(6);
+
+  reorderArray->Item(0) = aOriginalArray->Item(4); // Color
+  for (uint8_t i = 0; i < 4; i++) {
+    reorderArray->Item(i + 1) = aOriginalArray->Item(i); // Length
+  }
+  reorderArray->Item(5) = aOriginalArray->Item(5); // Inset
+
+  return reorderArray.forget();
+}
+
 void
 nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
                            Serialization aSerialization) const
@@ -1351,6 +1371,19 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
     }
 
     nsCSSValue::Array *array = GetArrayValue();
+
+    // CSSParserImpl::ParseShadowItem stores shadow items in a specific order
+    // that does not match the order we use when serializing computed shadow
+    // items. In order to match the computed value order, we shuffle the items
+    // in the shadow array before serializing it.
+    RefPtr<nsCSSValue::Array> reordered;
+    if (aProperty == eCSSProperty_text_shadow ||
+        aProperty == eCSSProperty_box_shadow ||
+        aProperty == eCSSProperty_filter) {
+      reordered = GetReorderedShadowArrayForSerialization(array);
+      array = reordered.get();
+    }
+
     bool mark = false;
     for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
       if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {

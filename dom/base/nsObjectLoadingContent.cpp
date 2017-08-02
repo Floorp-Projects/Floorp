@@ -1388,7 +1388,7 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
   // We should only rewrite URLs with paths starting with "/v/", as we shouldn't
   // touch object nodes with "/embed/" urls that already do that right thing.
   nsAutoCString path;
-  aURI->GetPath(path);
+  aURI->GetPathQueryRef(path);
   if (!StringBeginsWith(path, NS_LITERAL_CSTRING("/v/"))) {
     return;
   }

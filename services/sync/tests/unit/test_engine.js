@@ -210,7 +210,7 @@ add_task(async function test_disabled_no_track() {
   do_check_empty(tracker.changedIDs);
 
   tracker.addChangedID("abcdefghijkl");
-  do_check_true(0 < tracker.changedIDs["abcdefghijkl"]);
+  do_check_true(0 < tracker.changedIDs.abcdefghijkl);
   Svc.Prefs.set("engine." + engine.prefName, false);
   do_check_false(tracker._isTracking);
   do_check_empty(tracker.changedIDs);

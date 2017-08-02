@@ -12,6 +12,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layout/RenderFrameParent.h"
@@ -286,6 +287,55 @@ RemoteContentController::NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID
 
   if (mCanSend) {
     Unused << SendNotifyAutoscrollHandledByAPZ(aScrollId);
+  }
+}
+
+void
+RemoteContentController::CancelAutoscroll(const ScrollableLayerGuid& aGuid)
+{
+  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
+    CancelAutoscrollCrossProcess(aGuid);
+  } else {
+    CancelAutoscrollInProcess(aGuid);
+  }
+}
+
+void
+RemoteContentController::CancelAutoscrollInProcess(const ScrollableLayerGuid& aGuid)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NewRunnableMethod<ScrollableLayerGuid>(
+        "layers::RemoteContentController::CancelAutoscrollInProcess",
+        this,
+        &RemoteContentController::CancelAutoscrollInProcess,
+        aGuid));
+    return;
+  }
+
+  APZCCallbackHelper::CancelAutoscroll(aGuid.mScrollId);
+}
+
+void
+RemoteContentController::CancelAutoscrollCrossProcess(const ScrollableLayerGuid& aGuid)
+{
+  MOZ_ASSERT(XRE_IsGPUProcess());
+
+  if (MessageLoop::current() != mCompositorThread) {
+    mCompositorThread->PostTask(NewRunnableMethod<ScrollableLayerGuid>(
+        "layers::RemoteContentController::CancelAutoscrollCrossProcess",
+        this,
+        &RemoteContentController::CancelAutoscrollCrossProcess,
+        aGuid));
+    return;
+  }
+
+  // The raw pointer to APZCTreeManagerParent is ok here because we are on the
+  // compositor thread.
+  if (APZCTreeManagerParent* parent =
+      CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId)) {
+    Unused << parent->SendCancelAutoscroll(aGuid.mScrollId);
   }
 }
 

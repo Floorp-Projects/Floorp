@@ -57,6 +57,7 @@ DevToolsModules(
     'flags.js',
     'generate-uuid.js',
     'indentation.js',
+    'indexed-db.js',
     'l10n.js',
     'loader-plugin-raw.jsm',
     'Loader.jsm',

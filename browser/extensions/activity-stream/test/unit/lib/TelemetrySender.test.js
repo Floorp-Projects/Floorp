@@ -3,7 +3,7 @@
 
 const {GlobalOverrider, FakePrefs} = require("test/unit/utils");
 const {TelemetrySender, TelemetrySenderConstants} = require("lib/TelemetrySender.jsm");
-const {ENDPOINT_PREF, FHR_UPLOAD_ENABLED_PREF, TELEMETRY_PREF, LOGGING_PREF} =
+const {ENDPOINT_PREF, TELEMETRY_PREF, LOGGING_PREF} =
   TelemetrySenderConstants;
 
 /**
@@ -52,15 +52,15 @@ describe("TelemetrySender", () => {
 
   describe("#enabled", () => {
     let testParams = [
-      {enabledPref: true, fhrPref: true, result: true},
-      {enabledPref: false, fhrPref: true, result: false},
-      {enabledPref: true, fhrPref: false, result: false},
-      {enabledPref: false, fhrPref: false, result: false}
+      {enabledPref: true, canRecordBase: true, result: true},
+      {enabledPref: false, canRecordBase: true, result: false},
+      {enabledPref: true, canRecordBase: false, result: false},
+      {enabledPref: false, canRecordBase: false, result: false}
     ];
 
     function testEnabled(p) {
       FakePrefs.prototype.prefs[TELEMETRY_PREF] = p.enabledPref;
-      FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = p.fhrPref;
+      sandbox.stub(global.Services.telemetry, "canRecordBase").value(p.canRecordBase);
 
       tSender = new TelemetrySender(tsArgs);
 
@@ -68,7 +68,7 @@ describe("TelemetrySender", () => {
     }
 
     for (let p of testParams) {
-      it(`should return ${p.result} if the fhrPref is ${p.fhrPref} and telemetry.enabled is ${p.enabledPref}`, () => {
+      it(`should return ${p.result} if the Services.telemetry.canRecordBase is ${p.canRecordBase} and telemetry.enabled is ${p.enabledPref}`, () => {
         testEnabled(p);
       });
     }
@@ -77,7 +77,7 @@ describe("TelemetrySender", () => {
       beforeEach(() => {
         FakePrefs.prototype.prefs = {};
         FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-        FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = true;
+        sandbox.stub(global.Services.telemetry, "canRecordBase").value(true);
         tSender = new TelemetrySender(tsArgs);
         assert.propertyVal(tSender, "enabled", true);
       });
@@ -92,7 +92,7 @@ describe("TelemetrySender", () => {
     describe("telemetry.enabled pref changes from false to true", () => {
       beforeEach(() => {
         FakePrefs.prototype.prefs = {};
-        FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = true;
+        sandbox.stub(global.Services.telemetry, "canRecordBase").value(true);
         FakePrefs.prototype.prefs[TELEMETRY_PREF] = false;
         tSender = new TelemetrySender(tsArgs);
 
@@ -106,26 +106,26 @@ describe("TelemetrySender", () => {
       });
     });
 
-    describe("FHR enabled pref changes from true to false", () => {
+    describe("canRecordBase changes from true to false", () => {
       beforeEach(() => {
         FakePrefs.prototype.prefs = {};
         FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-        FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = true;
+        sandbox.stub(global.Services.telemetry, "canRecordBase").value(true);
         tSender = new TelemetrySender(tsArgs);
         assert.propertyVal(tSender, "enabled", true);
       });
 
       it("should set the enabled property to false", () => {
-        fakePrefs.set(FHR_UPLOAD_ENABLED_PREF, false);
+        sandbox.stub(global.Services.telemetry, "canRecordBase").value(false);
 
         assert.propertyVal(tSender, "enabled", false);
       });
     });
 
-    describe("FHR enabled pref changes from false to true", () => {
+    describe("canRecordBase changes from false to true", () => {
       beforeEach(() => {
         FakePrefs.prototype.prefs = {};
-        FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = false;
+        sandbox.stub(global.Services.telemetry, "canRecordBase").value(false);
         FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
         tSender = new TelemetrySender(tsArgs);
 
@@ -133,7 +133,7 @@ describe("TelemetrySender", () => {
       });
 
       it("should set the enabled property to true", () => {
-        fakePrefs.set(FHR_UPLOAD_ENABLED_PREF, true);
+        sandbox.stub(global.Services.telemetry, "canRecordBase").value(true);
 
         assert.propertyVal(tSender, "enabled", true);
       });
@@ -143,7 +143,7 @@ describe("TelemetrySender", () => {
   describe("#sendPing()", () => {
     beforeEach(() => {
       FakePrefs.prototype.prefs = {};
-      FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = true;
+      sandbox.stub(global.Services.telemetry, "canRecordBase").value(true);
       FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
       FakePrefs.prototype.prefs[ENDPOINT_PREF] = fakeEndpointUrl;
       tSender = new TelemetrySender(tsArgs);
@@ -206,15 +206,6 @@ describe("TelemetrySender", () => {
       tSender.uninit();
 
       assert.notProperty(fakePrefs.observers, TELEMETRY_PREF);
-    });
-
-    it("should remove the fhrpref listener", () => {
-      tSender = new TelemetrySender(tsArgs);
-      assert.property(fakePrefs.observers, FHR_UPLOAD_ENABLED_PREF);
-
-      tSender.uninit();
-
-      assert.notProperty(fakePrefs.observers, FHR_UPLOAD_ENABLED_PREF);
     });
 
     it("should remove the telemetry log listener", () => {

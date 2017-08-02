@@ -28,19 +28,13 @@ PWDMGR_KEYBUNDLE_REALM:                "Mozilla Services Key Bundles",
 // Put in [] because those aren't allowed in a collection name.
 DEFAULT_KEYBUNDLE_NAME:                "[default]",
 
-// Our extra input to SHA256-HMAC in generateEntry.
-// This includes the full crypto spec; change this when our algo changes.
-HMAC_INPUT:                            "Sync-AES_256_CBC-HMAC256",
-
 // Key dimensions.
 SYNC_KEY_ENCODED_LENGTH:               26,
 SYNC_KEY_DECODED_LENGTH:               16,
-SYNC_KEY_HYPHENATED_LENGTH:            31,    // 26 chars, 5 hyphens.
 
 NO_SYNC_NODE_INTERVAL:                 10 * 60 * 1000, // 10 minutes
 
 MAX_ERROR_COUNT_BEFORE_BACKOFF:        3,
-MAX_IGNORE_ERROR_COUNT:                5,
 
 // Backoff intervals
 MINIMUM_BACKOFF_INTERVAL:              15 * 60 * 1000,      // 15 minutes
@@ -54,9 +48,6 @@ HMAC_EVENT_INTERVAL:                   600000,
 // How long to wait between sync attempts if the Master Password is locked.
 MASTER_PASSWORD_LOCKED_RETRY_INTERVAL: 15 * 60 * 1000,   // 15 minutes
 
-// The default for how long we "block" sync from running when doing a migration.
-DEFAULT_BLOCK_PERIOD:                  2 * 24 * 60 * 60 * 1000, // 2 days
-
 // 50 is hardcoded here because of URL length restrictions.
 // (GUIDs can be up to 64 chars long.)
 // Individual engines can set different values for their limit if their
@@ -68,8 +59,6 @@ DEFAULT_STORE_BATCH_SIZE:              1,
 HISTORY_STORE_BATCH_SIZE:              50,
 FORMS_STORE_BATCH_SIZE:                50,
 PASSWORDS_STORE_BATCH_SIZE:            50,
-ADDONS_STORE_BATCH_SIZE:               1000000, // process all addons at once
-APPS_STORE_BATCH_SIZE:                 50,
 
 // Default batch size for download batching
 // (how many records are fetched at a time from the server when batching is used).
@@ -132,8 +121,6 @@ LOGIN_FAILED_LOGIN_REJECTED:           "error.login.reason.account",
 // sync failure status codes
 METARECORD_DOWNLOAD_FAIL:              "error.sync.reason.metarecord_download_fail",
 VERSION_OUT_OF_DATE:                   "error.sync.reason.version_out_of_date",
-DESKTOP_VERSION_OUT_OF_DATE:           "error.sync.reason.desktop_version_out_of_date",
-SETUP_FAILED_NO_PASSPHRASE:            "error.sync.reason.setup_failed_no_passphrase",
 CREDENTIALS_CHANGED:                   "error.sync.reason.credentials_changed",
 ABORT_SYNC_COMMAND:                    "aborting sync, process commands said so",
 NO_SYNC_NODE_FOUND:                    "error.sync.reason.no_node_found",
@@ -148,8 +135,6 @@ ENGINE_UPLOAD_FAIL:                    "error.engine.reason.record_upload_fail",
 ENGINE_DOWNLOAD_FAIL:                  "error.engine.reason.record_download_fail",
 ENGINE_UNKNOWN_FAIL:                   "error.engine.reason.unknown_fail",
 ENGINE_APPLY_FAIL:                     "error.engine.reason.apply_fail",
-ENGINE_METARECORD_DOWNLOAD_FAIL:       "error.engine.reason.metarecord_download_fail",
-ENGINE_METARECORD_UPLOAD_FAIL:         "error.engine.reason.metarecord_upload_fail",
 // an upload failure where the batch was interrupted with a 412
 ENGINE_BATCH_INTERRUPTED:              "error.engine.reason.batch_interrupted",
 
@@ -165,15 +150,6 @@ kSyncWeaveDisabled:                    "Weave is disabled",
 kSyncNetworkOffline:                   "Network is offline",
 kSyncBackoffNotMet:                    "Trying to sync before the server said it's okay",
 kFirstSyncChoiceNotMade:               "User has not selected an action for first sync",
-
-// Application IDs
-FIREFOX_ID:                            "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
-FENNEC_ID:                             "{a23983c0-fd0e-11dc-95ff-0800200c9a66}",
-SEAMONKEY_ID:                          "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}",
-TEST_HARNESS_ID:                       "xuth@mozilla.org",
-
-MIN_PP_LENGTH:                         12,
-MIN_PASS_LENGTH:                       8,
 
 DEVICE_TYPE_DESKTOP:                   "desktop",
 DEVICE_TYPE_MOBILE:                    "mobile",
