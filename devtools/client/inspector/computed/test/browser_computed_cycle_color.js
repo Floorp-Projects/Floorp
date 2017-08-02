@@ -30,7 +30,7 @@ add_task(function* () {
 });
 
 function* checkColorCycling(container, view) {
-  let valueNode = container.querySelector(".computedview-color");
+  let valueNode = container.querySelector(".computed-color");
   let win = view.styleWindow;
 
   // "Authored" (default; currently the computed value)
@@ -57,8 +57,8 @@ function* checkColorCycling(container, view) {
 }
 
 function* checkSwatchShiftClick(container, win, expectedValue, comment) {
-  let swatch = container.querySelector(".computedview-colorswatch");
-  let valueNode = container.querySelector(".computedview-color");
+  let swatch = container.querySelector(".computed-colorswatch");
+  let valueNode = container.querySelector(".computed-color");
   swatch.scrollIntoView();
 
   let onUnitChange = swatch.once("unit-change");
