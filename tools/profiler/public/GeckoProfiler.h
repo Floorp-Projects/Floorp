@@ -142,6 +142,64 @@ struct ProfilerFeature
   #undef DECLARE
 };
 
+#ifdef MOZ_GECKO_PROFILER
+namespace mozilla {
+namespace profiler {
+namespace detail {
+
+// RacyFeatures is only defined in this header file so that its methods can
+// be inlined into profiler_is_active(). Please do not use anything from the
+// detail namespace outside the profiler.
+
+// Within the profiler's code, the preferred way to check profiler activeness
+// and features is via ActivePS(). However, that requires locking gPSMutex.
+// There are some hot operations where absolute precision isn't required, so we
+// duplicate the activeness/feature state in a lock-free manner in this class.
+class RacyFeatures
+{
+public:
+  static void SetActive(uint32_t aFeatures)
+  {
+    sActiveAndFeatures = Active | aFeatures;
+  }
+
+  static void SetInactive() { sActiveAndFeatures = 0; }
+
+  static bool IsActive() { return uint32_t(sActiveAndFeatures) & Active; }
+
+  static bool IsActiveWithFeature(uint32_t aFeature)
+  {
+    uint32_t af = sActiveAndFeatures;  // copy it first
+    return (af & Active) && (af & aFeature);
+  }
+
+  static bool IsActiveWithoutPrivacy()
+  {
+    uint32_t af = sActiveAndFeatures;  // copy it first
+    return (af & Active) && !(af & ProfilerFeature::Privacy);
+  }
+
+private:
+  static const uint32_t Active = 1u << 31;
+
+  // Ensure Active doesn't overlap with any of the feature bits.
+  #define NO_OVERLAP(n_, str_, Name_) \
+    static_assert(ProfilerFeature::Name_ != Active, "bad Active value");
+
+  PROFILER_FOR_EACH_FEATURE(NO_OVERLAP);
+
+  #undef NO_OVERLAP
+
+  // We combine the active bit with the feature bits so they can be read or
+  // written in a single atomic operation.
+  static mozilla::Atomic<uint32_t> sActiveAndFeatures;
+};
+
+} // namespace detail
+} // namespace profiler
+} // namespace mozilla
+#endif
+
 //---------------------------------------------------------------------------
 // Start and stop the profiler
 //---------------------------------------------------------------------------
@@ -263,7 +321,14 @@ void profiler_clear_js_context();
 // expensive data will end up being created but not used if another thread
 // stops the profiler between the CreateExpensiveData() and PROFILER_OPERATION
 // calls.
-bool profiler_is_active();
+inline bool profiler_is_active()
+{
+#ifdef MOZ_GECKO_PROFILER
+  return mozilla::profiler::detail::RacyFeatures::IsActive();
+#else
+  return false;
+#endif
+}
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
 bool profiler_is_paused();
