@@ -90,7 +90,7 @@
                     android:selectAllOnFocus="true"
                     android:textColor="#ffffff"
                     android:textColorHighlight="@color/colorAutocompleteHighlight"
-                    android:textColorHint="#40ffffff"
+                    android:textColorHint="@color/inactive_text"
                     android:textSize="15sp" />
 
                 <ImageButton

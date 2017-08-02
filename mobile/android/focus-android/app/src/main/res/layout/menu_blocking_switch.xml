@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="80dp"
-    android:background="#262626"
+    android:background="#272727"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingEnd="0dp"
@@ -26,7 +26,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="@string/menu_trackers_blocked_title"
-            android:textColor="#808080"
+            android:textColor="@color/inactive_text"
             android:textSize="16sp" />
 
         <LinearLayout
