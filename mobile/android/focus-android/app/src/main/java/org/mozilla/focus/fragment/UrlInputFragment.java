@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.PopupMenu;
 import android.text.SpannableString;
@@ -30,6 +29,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.autocomplete.UrlAutoCompleteFilter;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
+import org.mozilla.focus.locale.LocaleAwareFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
@@ -40,7 +40,7 @@ import org.mozilla.focus.widget.InlineAutocompleteEditText;
 /**
  * Fragment for displaying he URL input controls.
  */
-public class UrlInputFragment extends Fragment implements View.OnClickListener, InlineAutocompleteEditText.OnCommitListener, InlineAutocompleteEditText.OnFilterListener, PopupMenu.OnMenuItemClickListener {
+public class UrlInputFragment extends LocaleAwareFragment implements View.OnClickListener, InlineAutocompleteEditText.OnCommitListener, InlineAutocompleteEditText.OnFilterListener, PopupMenu.OnMenuItemClickListener {
     public static final String FRAGMENT_TAG = "url_input";
 
     private static final String ARGUMENT_URL = "url";
@@ -67,6 +67,21 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         fragment.setArguments(arguments);
 
         return fragment;
+    }
+
+    @Override
+    public void applyLocale() {
+        if (isOverlay()) {
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, UrlInputFragment.createAsOverlay(ARGUMENT_URL, urlView), UrlInputFragment.FRAGMENT_TAG)
+                    .commit();
+        } else {
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, UrlInputFragment.createWithBackground(), UrlInputFragment.FRAGMENT_TAG)
+                    .commit();
+        }
     }
 
     /**
