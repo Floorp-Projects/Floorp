@@ -13,6 +13,7 @@ this.EXPORTED_SYMBOLS = ["BrowserActions"];
 
 var BrowserActions = {
   _browserActions: {},
+  _browserActionTitles: {},
 
   _initialized: false,
 
@@ -73,6 +74,7 @@ var BrowserActions = {
     });
 
     this._browserActions[browserAction.uuid] = browserAction;
+    this._browserActionTitles[browserAction.uuid] = browserAction.defaults.name;
 
     this._maybeRegisterListeners();
   },
@@ -89,6 +91,8 @@ var BrowserActions = {
         uuid,
         options,
       });
+
+      this._browserActionTitles[uuid] = options.name;
     }
   },
 
@@ -99,7 +103,7 @@ var BrowserActions = {
    * @returns {string} the name currently used for the browser action.
    */
   getNameForActiveTab(uuid) {
-    return this._browserActions[uuid].activeName;
+    return this._browserActionTitles[uuid];
   },
 
   /**
@@ -137,6 +141,7 @@ var BrowserActions = {
       uuid,
     });
     delete this._browserActions[uuid];
+    delete this._browserActionTitles[uuid];
     this._maybeUnregisterListeners();
   }
 }
