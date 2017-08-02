@@ -5566,6 +5566,7 @@ var TabletModeUpdater = {
     }
     if (wasInTabletMode != isInTabletMode) {
       gUIDensity.update();
+      TabsInTitlebar.updateAppearance(true);
     }
   },
 };
@@ -5662,8 +5663,6 @@ var gUIDensity = {
       doc.removeAttribute("uidensity");
       break;
     }
-
-    TabsInTitlebar.updateAppearance(true);
   },
 };
 
