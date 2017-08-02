@@ -154,18 +154,6 @@ public:
   GetAllRegisteredDisplayContentsStylesIn(nsIContent* aParentContent);
 
   /**
-   * Return the relevant undisplayed node for a given content with display:
-   * contents style.
-   */
-  UndisplayedNode* GetDisplayContentsNodeFor(const nsIContent* aContent)
-  {
-    if (!mDisplayContentsMap) {
-      return nullptr;
-    }
-    return GetUndisplayedNodeInMapFor(mDisplayContentsMap, aContent);
-  }
-
-  /**
    * Unregister the style context for the display:none content, aContent,
    * if any.  If found, then this method also unregisters the style contexts
    * for any display:contents and display:none descendants of aContent.
