@@ -35,7 +35,7 @@ let searchDomains = [{
   // The Yahoo domains to watch for.
   "domains": [
     "search.yahoo.com", "ca.search.yahoo.com", "hk.search.yahoo.com",
-    "tw.search.yahoo.com"
+    "tw.search.yahoo.com", "mozilla.search.yahoo.com", "us.search.yahoo.com"
   ],
   "search": "p",
   "followOnSearch": "fr2",
