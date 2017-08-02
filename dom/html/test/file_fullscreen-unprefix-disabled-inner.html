@@ -5,6 +5,14 @@
   <title>Test for Bug 1268749</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style>
+    #fullscreen {
+      color: green;
+    }
+    #fullscreen:fullscreen {
+      color: red;
+    }
+  </style>
 </head>
 <body>
   <div id="fullscreen"></div>
@@ -74,6 +82,8 @@ function begin() {
 
 function enteredFullscreen() {
   document.removeEventListener("mozfullscreenchange", enteredFullscreen);
+  is(getComputedStyle(div).color, "rgb(0, 128, 0)",
+     ":fullscreen should not apply");
   document.addEventListener("mozfullscreenchange", exitedFullscreen);
   SimpleTest.executeSoon(() => document.mozCancelFullScreen());
 }
