@@ -30,6 +30,10 @@ awsy-stylo:
     suite: awsy
     treeherder-symbol: tc-SY-stylo(sy)
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            default: built-projects
     max-run-time: 7200
     e10s: true
     instance-size: xlarge
@@ -54,6 +58,10 @@ awsy-stylo-sequential:
     suite: awsy
     treeherder-symbol: tc-SY-stylo-seq(sy)
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            default: built-projects
     max-run-time: 7200
     e10s: true
     instance-size: xlarge
