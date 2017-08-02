@@ -375,18 +375,6 @@ SetThreadPriority(PlatformThreadId aThreadId,
 }
 
 void
-FactoryReset(FactoryResetReason& aReason)
-{
-  if (aReason == FactoryResetReason::Normal) {
-    Hal()->SendFactoryReset(NS_LITERAL_STRING("normal"));
-  } else if (aReason == FactoryResetReason::Wipe) {
-    Hal()->SendFactoryReset(NS_LITERAL_STRING("wipe"));
-  } else if (aReason == FactoryResetReason::Root) {
-    Hal()->SendFactoryReset(NS_LITERAL_STRING("root"));
-  }
-}
-
-void
 StartDiskSpaceWatcher()
 {
   MOZ_CRASH("StartDiskSpaceWatcher() can't be called from sandboxed contexts.");
@@ -772,25 +760,6 @@ public:
   void Notify(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo) override
   {
     Unused << SendNotifySystemTimezoneChange(aSystemTimezoneChangeInfo);
-  }
-
-  virtual mozilla::ipc::IPCResult
-  RecvFactoryReset(const nsString& aReason) override
-  {
-    FactoryResetReason reason = FactoryResetReason::Normal;
-    if (aReason.EqualsLiteral("normal")) {
-      reason = FactoryResetReason::Normal;
-    } else if (aReason.EqualsLiteral("wipe")) {
-      reason = FactoryResetReason::Wipe;
-    } else if (aReason.EqualsLiteral("root")) {
-      reason = FactoryResetReason::Root;
-    } else {
-      // Invalid factory reset reason. That should never happen.
-      return IPC_FAIL_NO_REASON(this);
-    }
-
-    hal::FactoryReset(reason);
-    return IPC_OK();
   }
 };
 

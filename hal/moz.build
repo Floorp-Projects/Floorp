@@ -110,7 +110,6 @@ else:
 # Fallbacks for backends implemented on Gonk only.
 UNIFIED_SOURCES += [
     'fallback/FallbackDiskSpaceWatcher.cpp',
-    'fallback/FallbackFactoryReset.cpp',
     'fallback/FallbackProcessPriority.cpp',
     'fallback/FallbackScreenPower.cpp',
     'fallback/FallbackSwitch.cpp',
