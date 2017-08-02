@@ -266,7 +266,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_work_dir'],
-                                       output_timeout=300,
+                                       output_timeout=1000,
                                        output_parser=parser,
                                        env=env)
 
