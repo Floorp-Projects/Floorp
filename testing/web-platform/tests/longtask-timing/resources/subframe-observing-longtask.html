@@ -7,12 +7,15 @@
 <script>
     var observer = new PerformanceObserver(function(entryList) {
       for (i = 0; i < entryList.getEntries().length; i++) {
-      	var longtask = entryList.getEntries()[i];
-      	 // Ignore long task generated within here, as part of making this iframe.
-      	if (longtask.name == "same-origin-self")
-      	  return;
-      	// TODO(panicker): include frameId etc.
-        var entryContents = longtask.entryType + '+' + longtask.name + '+' + longtask.attribution[0].name;
+        var longtask = entryList.getEntries()[i];
+         // Ignore long task generated within here, as part of making this iframe.
+         // Ignore multiple-contexts and unknown because they cause longtask-in-parentiframe test to be flaky.
+        if (longtask.name == "same-origin-self" ||
+            longtask.name == "multiple-contexts" || longtask.name == "unknown")
+          return;
+        // TODO(panicker): include frameId etc.
+        var entryContents = longtask.entryType + '+' + longtask.name + '+' +
+            longtask.attribution[0].name;
         top.postMessage(entryContents, '*');
       }
     });
