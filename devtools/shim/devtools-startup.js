@@ -42,7 +42,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
                                   "resource:///modules/CustomizableWidgets.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Bundle", function () {
-  const kUrl = "chrome://devtools/locale/key-shortcuts.properties";
+  const kUrl = "chrome://devtools-shim/locale/key-shortcuts.properties";
   return Services.strings.createBundle(kUrl);
 });
 

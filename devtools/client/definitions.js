@@ -33,7 +33,7 @@ loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scrat
 const {MultiLocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new MultiLocalizationHelper(
   "devtools/client/locales/startup.properties",
-  "devtools/client/locales/key-shortcuts.properties"
+  "devtools/shim/locales/key-shortcuts.properties"
 );
 
 var Tools = {};
