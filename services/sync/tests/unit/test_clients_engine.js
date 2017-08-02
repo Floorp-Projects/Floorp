@@ -436,6 +436,21 @@ add_task(async function test_send_command() {
   await cleanup();
 });
 
+// The browser UI might call _addClientCommand indirectly without awaiting on the returned promise.
+// We need to make sure this doesn't result on commands not being saved.
+add_task(async function test_add_client_command_race() {
+  let promises = [];
+  for (let i = 0; i < 100; i++) {
+    promises.push(engine._addClientCommand(`client-${i}`, { command: "cmd", args: []}));
+  }
+  await Promise.all(promises);
+
+  let localCommands = await engine._readCommands();
+  for (let i = 0; i < 100; i++) {
+    equal(localCommands[`client-${i}`].length, 1);
+  }
+});
+
 add_task(async function test_command_validation() {
   _("Verifies that command validation works properly.");
 
