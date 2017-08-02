@@ -1139,6 +1139,21 @@ static const VMFunction ToObjectInfo =
     FunctionInfo<ToObjectFn>(ToObjectSlow, "ToObjectSlow");
 
 void
+CodeGenerator::visitValueToObject(LValueToObject* lir)
+{
+    ValueOperand input = ToValue(lir, LValueToObject::Input);
+    Register output = ToRegister(lir->output());
+
+    OutOfLineCode* ool = oolCallVM(ToObjectInfo, lir, ArgList(input, Imm32(0)),
+                                   StoreRegisterTo(output));
+
+    masm.branchTestObject(Assembler::NotEqual, input, ool->entry());
+    masm.unboxObject(input, output);
+
+    masm.bind(ool->rejoin());
+}
+
+void
 CodeGenerator::visitValueToObjectOrNull(LValueToObjectOrNull* lir)
 {
     ValueOperand input = ToValue(lir, LValueToObjectOrNull::Input);
@@ -12933,6 +12948,38 @@ CodeGenerator::visitIsPackedArray(LIsPackedArray* lir)
     masm.move32(Imm32(0), output);
 
     masm.bind(&done);
+}
+
+typedef bool (*GetPrototypeOfFn)(JSContext*, HandleObject, MutableHandleValue);
+static const VMFunction GetPrototypeOfInfo =
+    FunctionInfo<GetPrototypeOfFn>(jit::GetPrototypeOf, "GetPrototypeOf");
+
+void
+CodeGenerator::visitGetPrototypeOf(LGetPrototypeOf* lir)
+{
+    Register target = ToRegister(lir->target());
+    ValueOperand out = ToOutValue(lir);
+    Register scratch = out.scratchReg();
+
+    OutOfLineCode* ool = oolCallVM(GetPrototypeOfInfo, lir, ArgList(target), StoreValueTo(out));
+
+    MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
+
+    masm.loadObjProto(target, scratch);
+
+    Label hasProto;
+    masm.branchPtr(Assembler::Above, scratch, ImmWord(1), &hasProto);
+
+    // Call into the VM for lazy prototypes.
+    masm.branchPtr(Assembler::Equal, scratch, ImmWord(1), ool->entry());
+
+    masm.moveValue(NullValue(), out);
+    masm.jump(ool->rejoin());
+
+    masm.bind(&hasProto);
+    masm.tagValue(JSVAL_TYPE_OBJECT, scratch, out);
+
+    masm.bind(ool->rejoin());
 }
 
 } // namespace jit

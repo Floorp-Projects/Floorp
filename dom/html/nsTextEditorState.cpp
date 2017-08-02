@@ -2640,7 +2640,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
           bool notifyValueChanged = !!(aFlags & eSetValue_Notify);
           mTextListener->SetValueChanged(notifyValueChanged);
 
-          if (aFlags & eSetValue_BySetUserInput) {
+          // We preserve the undo history if we are explicitly setting the
+          // value for the user's input, or if we are setting the value for a
+          // XUL text control.
+          if (aFlags & (eSetValue_BySetUserInput | eSetValue_ForXUL)) {
             nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
             uint32_t currentLength = currentValue.Length();
             uint32_t newlength = newValue.Length();

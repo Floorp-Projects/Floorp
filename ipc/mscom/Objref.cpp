@@ -166,7 +166,8 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream)
   hr = aStream->Read(&type, sizeof(type), &bytesRead);
   if (FAILED(hr) || bytesRead != sizeof(type) ||
       type != OBJREF_TYPE_HANDLER) {
-    return false;
+    // If we're not a handler then just return success
+    return true;
   }
 
   IID iid;

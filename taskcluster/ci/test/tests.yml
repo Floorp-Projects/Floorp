@@ -35,6 +35,7 @@ cppunit:
         by-test-platform:
             windows10-64-asan/opt: []  # as an exception to windows.*
             linux64-qr/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     mozharness:
         by-test-platform:
@@ -75,6 +76,7 @@ crashtest:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -667,6 +669,10 @@ mochitest-chrome-style:
     treeherder-symbol: tc-M(cs)
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
+            default: built-projects
     e10s: false
     mozharness:
         mochitest-flavor: chrome
@@ -953,6 +959,10 @@ mochitest-style:
     treeherder-symbol: tc-M(s)
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
+            default: built-projects
     e10s:
         by-test-platform:
             # Bug 1384701: e10s-off parallel reftest runs crash on shutdown
@@ -1083,6 +1093,7 @@ reftest:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -1240,6 +1251,7 @@ reftest-stylo:
     run-on-projects:
         by-test-platform:
             .*-stylo/opt: [ 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
+            macosx64-stylo/debug: [ 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
             linux64-stylo-sequential/opt: [ 'mozilla-central']
             default: built-projects
     e10s:
@@ -1310,6 +1322,7 @@ talos-chrome:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1339,6 +1352,7 @@ talos-dromaeojs:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1368,6 +1382,7 @@ talos-g1:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 7200
     e10s: true
@@ -1398,6 +1413,7 @@ talos-g2:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     e10s: true
     mozharness:
@@ -1426,6 +1442,7 @@ talos-g3:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1455,6 +1472,7 @@ talos-g4:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1484,6 +1502,7 @@ talos-g5:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1514,6 +1533,7 @@ talos-other:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1543,6 +1563,7 @@ talos-perf-reftest:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central', 'try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1617,6 +1638,7 @@ talos-quantum-pageload-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: []
     max-run-time: 3600
     e10s: true
@@ -1644,6 +1666,7 @@ talos-svgr:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1673,6 +1696,7 @@ talos-tp5o:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1753,6 +1777,10 @@ web-platform-tests:
     max-run-time: 7200
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
+            default: built-projects
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
@@ -1785,6 +1813,10 @@ web-platform-tests-reftests:
             macosx.*: true
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
+            default: built-projects
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true

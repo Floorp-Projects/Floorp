@@ -2174,7 +2174,6 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
 {
   MOZ_ASSERT(aStartIdx <= aChildren->Length(), "Wrong removal index");
 
-  nsTArray<RefPtr<Accessible> > containers;
   for (auto idx = aStartIdx; idx < aChildren->Length(); idx++) {
     Accessible* child = aChildren->ElementAt(idx);
     if (!child->IsInDocument()) {
@@ -2196,11 +2195,12 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
     // Unset relocated flag to find an insertion point for the child.
     child->SetRelocated(false);
 
+    nsIContent* content = child->GetContent();
     int32_t idxInParent = -1;
-    Accessible* origContainer = GetContainerAccessible(child->GetContent());
+    Accessible* origContainer = AccessibleOrTrueContainer(content->GetParentNode());
     if (origContainer) {
       TreeWalker walker(origContainer);
-      if (walker.Seek(child->GetContent())) {
+      if (walker.Seek(content)) {
         Accessible* prevChild = walker.Prev();
         if (prevChild) {
           idxInParent = prevChild->IndexInParent() + 1;

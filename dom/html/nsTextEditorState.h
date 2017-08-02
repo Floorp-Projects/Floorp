@@ -178,6 +178,10 @@ public:
     // be within the length of the new value.  In either case, if the value has
     // not changed the cursor won't move.
     eSetValue_MoveCursorToEndIfValueChanged = 1 << 3,
+    // The value is changed for a XUL text control as opposed to for an HTML
+    // text control.  Such value changes are different in that they preserve the
+    // undo history.
+    eSetValue_ForXUL                = 1 << 4,
   };
   MOZ_MUST_USE bool SetValue(const nsAString& aValue,
                              const nsAString* aOldValue,

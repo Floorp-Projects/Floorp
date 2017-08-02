@@ -216,6 +216,7 @@
     _(IntToString)                  \
     _(DoubleToString)               \
     _(ValueToString)                \
+    _(ValueToObject)                \
     _(ValueToObjectOrNull)          \
     _(Int32x4ToFloat32x4)           \
     _(Float32x4ToInt32x4)           \
@@ -418,6 +419,7 @@
     _(DebugCheckSelfHosted)         \
     _(FinishBoundFunctionInit)      \
     _(IsPackedArray)                \
+    _(GetPrototypeOf)               \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSCompareExchangeHeap)     \
