@@ -67,7 +67,6 @@ linux64-gcc-4.9:
         script: build-gcc-4.9-linux.sh
         resources:
             - 'build/unix/build-gcc/build-gcc.sh'
-            - 'build/unix/build-gcc/checksums'
         toolchain-alias: linux64-gcc
         toolchain-artifact: public/build/gcc.tar.xz
 
