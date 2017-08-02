@@ -21,7 +21,6 @@ const {
   MESSAGE_TYPE,
   MESSAGE_TABLE_RECEIVE,
   MESSAGE_OBJECT_PROPERTIES_RECEIVE,
-  MESSAGE_OBJECT_ENTRIES_RECEIVE,
 } = require("../constants");
 
 const defaultIdGenerator = new IdGenerator();
@@ -127,17 +126,6 @@ function messageObjectPropertiesLoad(id, client, grip) {
   };
 }
 
-function messageObjectEntriesLoad(id, client, grip) {
-  return (dispatch) => {
-    client.enumEntries(enumResponse => {
-      const {iterator} = enumResponse;
-      iterator.slice(0, iterator.count, sliceResponse => {
-        dispatch(messageObjectEntriesReceive(id, grip.actor, sliceResponse));
-      });
-    });
-  };
-}
-
 /**
  * This action is dispatched when properties of a grip are loaded.
  *
@@ -155,23 +143,6 @@ function messageObjectPropertiesReceive(id, actor, properties) {
   };
 }
 
-/**
- * This action is dispatched when entries of a grip are loaded.
- *
- * @param {string} id - The message id the grip is in.
- * @param {string} actor - The actor id of the grip the properties were loaded from.
- * @param {object} entries - A RDP packet that contains the entries of the grip.
- * @returns {object}
- */
-function messageObjectEntriesReceive(id, actor, entries) {
-  return {
-    type: MESSAGE_OBJECT_ENTRIES_RECEIVE,
-    id,
-    actor,
-    entries
-  };
-}
-
 module.exports = {
   messageAdd,
   messagesClear,
@@ -180,10 +151,8 @@ module.exports = {
   messageTableDataGet,
   networkMessageUpdate,
   messageObjectPropertiesLoad,
-  messageObjectEntriesLoad,
   // for test purpose only.
   messageTableDataReceive,
   messageObjectPropertiesReceive,
-  messageObjectEntriesReceive,
 };
 
