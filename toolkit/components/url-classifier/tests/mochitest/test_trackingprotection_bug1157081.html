@@ -50,8 +50,8 @@ function testOnWindow(aCallback) {
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-        win.content.addEventListener('load', function innerLoad2() {
-          win.content.removeEventListener('load', innerLoad2);
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);
@@ -70,11 +70,11 @@ function checkLoads(aWindow, aBlocked) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
-            ["privacy.trackingprotection.enabled", true],
-            ["browser.safebrowsing.malware.enabled", false],
-            ["browser.safebrowsing.phishing.enabled", false],
-            ["channelclassifier.allowlist_example", true]]},
+  {"set": [["urlclassifier.trackingTable", "test-track-simple"],
+           ["privacy.trackingprotection.enabled", true],
+           ["browser.safebrowsing.malware.enabled", false],
+           ["browser.safebrowsing.phishing.enabled", false],
+           ["channelclassifier.allowlist_example", true]]},
   test);
 
 function test() {

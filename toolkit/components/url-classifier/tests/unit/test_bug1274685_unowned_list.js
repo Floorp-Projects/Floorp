@@ -13,7 +13,7 @@ function run_test() {
   let origList = Services.prefs.getCharPref("browser.safebrowsing.provider.google.lists");
 
   // Remove 'goog-malware-shavar' from the original.
-  let trimmedList = origList.replace('goog-malware-shavar,', '');
+  let trimmedList = origList.replace("goog-malware-shavar,", "");
   Services.prefs.setCharPref("browser.safebrowsing.provider.google.lists", trimmedList);
 
   try {
@@ -25,7 +25,7 @@ function run_test() {
     //
     SafeBrowsing.registerTables();
   } catch (e) {
-    ok(false, 'Exception thrown due to ' + e.toString());
+    ok(false, "Exception thrown due to " + e.toString());
   }
 
   Services.prefs.setCharPref("browser.safebrowsing.provider.google.lists", origList);

@@ -1,5 +1,4 @@
-function doTest(updates, assertions, expectError)
-{
+function doTest(updates, assertions, expectError) {
   if (expectError) {
     doUpdateTest(updates, assertions, updateError, runNextTest);
   } else {
@@ -16,13 +15,13 @@ function testFillDb() {
   update += "i:test-phish-simple\n";
 
   var update1 = buildBareUpdate(
-    [{ "chunkNum" : 1,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 1,
+       "urls": add1Urls }]);
   update += "u:data:," + encodeURIComponent(update1) + "\n";
 
   var assertions = {
-    "tableData" : "test-phish-simple;a:1",
-    "urlsExist" : add1Urls
+    "tableData": "test-phish-simple;a:1",
+    "urlsExist": add1Urls
   };
 
   doTest([update], assertions, false);
@@ -37,23 +36,23 @@ function testSimpleForward() {
   update += "i:test-phish-simple\n";
 
   var update1 = buildBareUpdate(
-    [{ "chunkNum" : 1,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 1,
+       "urls": add1Urls }]);
   update += "u:data:," + encodeURIComponent(update1) + "\n";
 
   var update2 = buildBareUpdate(
-    [{ "chunkNum" : 2,
-       "urls" : add2Urls }]);
+    [{ "chunkNum": 2,
+       "urls": add2Urls }]);
   update += "u:data:," + encodeURIComponent(update2) + "\n";
 
   var update3 = buildBareUpdate(
-    [{ "chunkNum" : 3,
-       "urls" : add3Urls }]);
+    [{ "chunkNum": 3,
+       "urls": add3Urls }]);
   update += "u:data:," + encodeURIComponent(update3) + "\n";
 
   var assertions = {
-    "tableData" : "test-phish-simple;a:1-3",
-    "urlsExist" : add1Urls.concat(add2Urls).concat(add3Urls)
+    "tableData": "test-phish-simple;a:1-3",
+    "urlsExist": add1Urls.concat(add2Urls).concat(add3Urls)
   };
 
   doTest([update], assertions, false);
@@ -69,23 +68,23 @@ function testNestedForward() {
   update += "i:test-phish-simple\n";
 
   var update1 = buildBareUpdate(
-    [{ "chunkNum" : 1,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 1,
+       "urls": add1Urls }]);
   update += "u:data:," + encodeURIComponent(update1) + "\n";
 
   var update2 = buildBareUpdate(
-    [{ "chunkNum" : 2 }]);
+    [{ "chunkNum": 2 }]);
   var update3 = buildBareUpdate(
-    [{ "chunkNum" : 3,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 3,
+       "urls": add1Urls }]);
 
   update2 += "u:data:," + encodeURIComponent(update3) + "\n";
 
   update += "u:data:," + encodeURIComponent(update2) + "\n";
 
   var assertions = {
-    "tableData" : "",
-    "urlsDontExist" : add1Urls.concat(add2Urls)
+    "tableData": "",
+    "urlsDontExist": add1Urls.concat(add2Urls)
   };
 
   doTest([update], assertions, true);
@@ -96,14 +95,14 @@ function testInvalidUrlForward() {
   var add1Urls = [ "foo-invalid.com/a", "bar-invalid.com/c" ];
 
   var update = buildPhishingUpdate(
-    [{ "chunkNum" : 1,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 1,
+       "urls": add1Urls }]);
   update += "u:asdf://blah/blah\n";  // invalid URL scheme
 
   // add1Urls is present, but that is an artifact of the way we do the test.
   var assertions = {
-    "tableData" : "test-phish-simple;a:1",
-    "urlsExist" : add1Urls
+    "tableData": "test-phish-simple;a:1",
+    "urlsExist": add1Urls
   };
 
   doTest([update], assertions, true);
@@ -114,14 +113,14 @@ function testErrorUrlForward() {
   var add1Urls = [ "foo-forward.com/a", "bar-forward.com/c" ];
 
   var update = buildPhishingUpdate(
-    [{ "chunkNum" : 1,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 1,
+       "urls": add1Urls }]);
   update += "u:http://test.invalid/asdf/asdf\n";  // invalid URL scheme
 
   // add1Urls is present, but that is an artifact of the way we do the test.
   var assertions = {
-    "tableData" : "test-phish-simple;a:1",
-    "urlsExist" : add1Urls
+    "tableData": "test-phish-simple;a:1",
+    "urlsExist": add1Urls
   };
 
   doTest([update], assertions, true);
@@ -138,40 +137,40 @@ function testMultipleTables() {
   update += "i:test-phish-simple\n";
 
   var update1 = buildBareUpdate(
-    [{ "chunkNum" : 1,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 1,
+       "urls": add1Urls }]);
   update += "u:data:," + encodeURIComponent(update1) + "\n";
 
   var update2 = buildBareUpdate(
-    [{ "chunkNum" : 2,
-       "urls" : add2Urls }]);
+    [{ "chunkNum": 2,
+       "urls": add2Urls }]);
   update += "u:data:," + encodeURIComponent(update2) + "\n";
 
   update += "i:test-malware-simple\n";
 
   var update3 = buildBareUpdate(
-    [{ "chunkNum" : 3,
-       "urls" : add3Urls }]);
+    [{ "chunkNum": 3,
+       "urls": add3Urls }]);
   update += "u:data:," + encodeURIComponent(update3) + "\n";
 
   update += "i:test-unwanted-simple\n";
   var update4 = buildBareUpdate(
-    [{ "chunkNum" : 4,
-       "urls" : add4Urls }]);
+    [{ "chunkNum": 4,
+       "urls": add4Urls }]);
   update += "u:data:," + encodeURIComponent(update4) + "\n";
 
   update += "i:test-block-simple\n";
   var update6 = buildBareUpdate(
-    [{ "chunkNum" : 6,
-       "urls" : add6Urls }]);
+    [{ "chunkNum": 6,
+       "urls": add6Urls }]);
   update += "u:data:," + encodeURIComponent(update6) + "\n";
 
   var assertions = {
-    "tableData" : "test-block-simple;a:6\ntest-malware-simple;a:3\ntest-phish-simple;a:1-2\ntest-unwanted-simple;a:4",
-    "urlsExist" : add1Urls.concat(add2Urls),
-    "malwareUrlsExist" : add3Urls,
-    "unwantedUrlsExist" : add4Urls,
-    "blockedUrlsExist" : add6Urls
+    "tableData": "test-block-simple;a:6\ntest-malware-simple;a:3\ntest-phish-simple;a:1-2\ntest-unwanted-simple;a:4",
+    "urlsExist": add1Urls.concat(add2Urls),
+    "malwareUrlsExist": add3Urls,
+    "unwantedUrlsExist": add4Urls,
+    "blockedUrlsExist": add6Urls
   };
 
   doTest([update], assertions, false);
@@ -184,25 +183,25 @@ function testUrlInMultipleTables() {
   update += "i:test-phish-simple\n";
 
   var update1 = buildBareUpdate(
-    [{ "chunkNum" : 1,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 1,
+       "urls": add1Urls }]);
   update += "u:data:," + encodeURIComponent(update1) + "\n";
 
   update += "i:test-malware-simple\n";
   var update2 = buildBareUpdate(
-    [{ "chunkNum" : 2,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 2,
+       "urls": add1Urls }]);
   update += "u:data:," + encodeURIComponent(update2) + "\n";
 
   update += "i:test-unwanted-simple\n";
   var update3 = buildBareUpdate(
-    [{ "chunkNum" : 3,
-       "urls" : add1Urls }]);
+    [{ "chunkNum": 3,
+       "urls": add1Urls }]);
   update += "u:data:," + encodeURIComponent(update3) + "\n";
 
   var assertions = {
-    "tableData" : "test-malware-simple;a:2\ntest-phish-simple;a:1\ntest-unwanted-simple;a:3",
-    "urlExistInMultipleTables" : { url: add1Urls,
+    "tableData": "test-malware-simple;a:2\ntest-phish-simple;a:1\ntest-unwanted-simple;a:3",
+    "urlExistInMultipleTables": { url: add1Urls,
                                    tables: "test-malware-simple,test-phish-simple,test-unwanted-simple" }
   };
 
@@ -215,8 +214,7 @@ function Observer(callback) {
 
 Observer.prototype =
 {
-QueryInterface: function(iid)
-{
+QueryInterface(iid) {
   if (!iid.equals(Ci.nsISupports) &&
       !iid.equals(Ci.nsIObserver)) {
     throw Cr.NS_ERROR_NO_INTERFACE;
@@ -233,8 +231,8 @@ function testReset() {
   var mozAddUrls = [ "moz-reset.com/a" ];
   var mozUpdate = buildMozPhishingUpdate(
     [
-      { "chunkNum" : 1,
-        "urls" : mozAddUrls
+      { "chunkNum": 1,
+        "urls": mozAddUrls
       }]);
 
   var dataUpdate = "data:," + encodeURIComponent(mozUpdate);
@@ -245,8 +243,8 @@ function testReset() {
   var addUrls1 = [ "foo-reset.com/a", "foo-reset.com/b" ];
   var update1 = buildPhishingUpdate(
     [
-      { "chunkNum" : 1,
-        "urls" : addUrls1
+      { "chunkNum": 1,
+        "urls": addUrls1
       }]);
 
   var update2 = "n:1000\nr:pleasereset\n";
@@ -254,16 +252,16 @@ function testReset() {
   var addUrls3 = [ "bar-reset.com/a", "bar-reset.com/b" ];
   var update3 = buildPhishingUpdate(
     [
-      { "chunkNum" : 3,
-        "urls" : addUrls3
+      { "chunkNum": 3,
+        "urls": addUrls3
       }]);
 
   var assertions = {
-    "tableData" : "moz-phish-simple;a:1\ntest-phish-simple;a:3", // tables that should still be there.
-    "mozPhishingUrlsExist" : mozAddUrls,                         // mozAddUrls added prior to the reset
+    "tableData": "moz-phish-simple;a:1\ntest-phish-simple;a:3", // tables that should still be there.
+    "mozPhishingUrlsExist": mozAddUrls,                         // mozAddUrls added prior to the reset
                                                                  // but it should still exist after reset.
-    "urlsExist" : addUrls3,                                      // addUrls3 added after the reset.
-    "urlsDontExist" : addUrls1                                   // addUrls1 added prior to the reset
+    "urlsExist": addUrls3,                                      // addUrls3 added after the reset.
+    "urlsDontExist": addUrls1                                   // addUrls1 added prior to the reset
   };
 
   // Use these update responses in order. The update request only
@@ -272,8 +270,7 @@ function testReset() {
 }
 
 
-function run_test()
-{
+function run_test() {
   runTests([
     testSimpleForward,
     testNestedForward,

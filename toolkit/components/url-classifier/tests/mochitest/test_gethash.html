@@ -47,7 +47,7 @@ function loadTestFrame(id) {
 // add 4-bytes prefixes to local database, so when we access the url,
 // it will trigger gethash request.
 function addPrefixToDB(list, url) {
-  var testData = [{ db: list, url: url, len: 4 }];
+  var testData = [{ db: list, url, len: 4 }];
 
   return classifierHelper.addUrlToDB(testData)
     .catch(function(err) {

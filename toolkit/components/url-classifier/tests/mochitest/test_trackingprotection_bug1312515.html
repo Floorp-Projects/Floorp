@@ -50,8 +50,8 @@ function testOnWindow(aPrivate, aCallback) {
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-        win.content.addEventListener('load', function innerLoad2() {
-          win.content.removeEventListener('load', innerLoad2);
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);
@@ -103,10 +103,10 @@ function endTest() {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
-            ["privacy.trackingprotection.annotate_channels", true],
-            ["privacy.trackingprotection.lower_network_priority", true],
-            ["channelclassifier.allowlist_example", true]]},
+  {"set": [["urlclassifier.trackingTable", "test-track-simple"],
+           ["privacy.trackingprotection.annotate_channels", true],
+           ["privacy.trackingprotection.lower_network_priority", true],
+           ["channelclassifier.allowlist_example", true]]},
   test);
 
 function test() {

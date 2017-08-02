@@ -194,7 +194,7 @@ function getRandomCompletionSet(forceServerError) {
       let length = 1 + rand.nextNum(5);
       for (let i = 0; i < length; i++)
         hash += String.fromCharCode(rand.nextNum(8));
-      prefix = hash.substring(0,4);
+      prefix = hash.substring(0, 4);
     } while (hashPrefixes.indexOf(prefix) != -1);
 
     hashPrefixes.push(prefix);
@@ -261,8 +261,7 @@ function run_test() {
           let numChars = COMPLETE_LENGTH - responseCompletion.hash.length;
           responseCompletion.hash += (new Array(numChars + 1)).join("\u0000");
         }
-      }
-      else {
+      } else {
         let numChars = COMPLETE_LENGTH - completion.hash.length;
         completion.hash += (new Array(numChars + 1)).join("\u0000");
       }
@@ -295,7 +294,7 @@ function runNextCompletion() {
   // Number of finished completions for this set.
   finishedCompletions = 0;
   for (let completion of completionSets[currentCompletionSet]) {
-    completer.complete(completion.hash.substring(0,4), gethashUrl,
+    completer.complete(completion.hash.substring(0, 4), gethashUrl,
                        "test-phish-shavar", // Could be arbitrary v2 table name.
                        (new callback(completion)));
   }
@@ -372,8 +371,7 @@ callback.prototype = {
           break;
         }
       }
-    }
-    else {
+    } else {
       // Hashes are not actually strings and can contain arbitrary data.
       do_check_eq(JSON.stringify(hash), JSON.stringify(this._completion.hash));
       do_check_eq(table, this._completion.table);

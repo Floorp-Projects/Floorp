@@ -105,8 +105,7 @@ function testFailure(arg) {
   do_throw(arg);
 }
 
-function checkNoHost()
-{
+function checkNoHost() {
   // Looking up a no-host uri such as a data: uri should throw an exception.
   var exception;
   try {
@@ -114,7 +113,7 @@ function checkNoHost()
     dbservice.lookup(principal, allTables);
 
     exception = false;
-  } catch(e) {
+  } catch (e) {
     exception = true;
   }
   do_check_true(exception);
@@ -122,8 +121,7 @@ function checkNoHost()
   do_test_finished();
 }
 
-function tablesCallbackWithoutSub(tables)
-{
+function tablesCallbackWithoutSub(tables) {
   var parts = tables.split("\n");
   parts.sort();
 
@@ -140,8 +138,7 @@ function expireSubSuccess(result) {
   dbservice.getTables(tablesCallbackWithoutSub);
 }
 
-function tablesCallbackWithSub(tables)
-{
+function tablesCallbackWithSub(tables) {
   var parts = tables.split("\n");
   parts.sort();
 
@@ -159,8 +156,7 @@ function tablesCallbackWithSub(tables)
   doSimpleUpdate(data, expireSubSuccess, testFailure);
 }
 
-function checkChunksWithSub()
-{
+function checkChunksWithSub() {
   dbservice.getTables(tablesCallbackWithSub);
 }
 
@@ -217,8 +213,7 @@ function blockedExists(result) {
   }
 }
 
-function checkState()
-{
+function checkState() {
   numExpecting = 0;
 
 
@@ -253,8 +248,7 @@ function checkState()
   }
 }
 
-function testSubSuccess(result)
-{
+function testSubSuccess(result) {
   do_check_eq(result, "1000");
   checkState();
 }

@@ -72,7 +72,7 @@ var testDatas = [
     expect: { error: Cr.NS_ERROR_BLOCKED_URI,
               table: "mochi-block-simple",
               provider: "",
-              prefix: (function(){
+              prefix: (function() {
                 return hashPrefix("malware.example.com/");
               })(),
             }
@@ -82,7 +82,7 @@ var testDatas = [
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochi1-malware-simple",
               provider: "mozilla",
-              prefix: (function(){
+              prefix: (function() {
                 return hashPrefix("malware1.example.com/");
               })(),
             }
@@ -92,7 +92,7 @@ var testDatas = [
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochi2-malware-simple",
               provider: "mozilla",
-              prefix: (function(){
+              prefix: (function() {
                 return hashPrefix("malware2.example.com/");
               })(),
             }
@@ -102,7 +102,7 @@ var testDatas = [
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochig3-malware-simple",
               provider: "google",
-              prefix: (function(){
+              prefix: (function() {
                 return hashPrefix("malware3.example.com/");
               })(),
             }
@@ -171,7 +171,7 @@ function runTest() {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["browser.safebrowsing.malware.enabled", true]]},
+  {"set": [["browser.safebrowsing.malware.enabled", true]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => setupTestData(inputDatas))

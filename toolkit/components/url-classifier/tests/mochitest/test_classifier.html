@@ -125,7 +125,7 @@ SimpleTest.waitForExplicitFinish();
 
 function updateSuccess() {
   return SpecialPowers.pushPrefEnv(
-    {"set" : [["browser.safebrowsing.malware.enabled", true]]});
+    {"set": [["browser.safebrowsing.malware.enabled", true]]});
 }
 
 function updateError(errorCode) {
@@ -171,12 +171,12 @@ function testService() {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
-            ["urlclassifier.phishTable", "test-phish-simple"],
-            ["urlclassifier.downloadBlockTable", "test-block-simple"],
-            ["urlclassifier.trackingTable", "test-track-simple"],
-            ["browser.safebrowsing.debug", true],
-            ["privacy.trackingprotection.annotate_channels", true]]},
+  {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
+           ["urlclassifier.phishTable", "test-phish-simple"],
+           ["urlclassifier.downloadBlockTable", "test-block-simple"],
+           ["urlclassifier.trackingTable", "test-track-simple"],
+           ["browser.safebrowsing.debug", true],
+           ["privacy.trackingprotection.annotate_channels", true]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => classifierHelper.addUrlToDB(testData))
