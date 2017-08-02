@@ -12,6 +12,7 @@ the promise of working across browsers and devices without needing extra
 layers of abstraction to paper over the gaps left by specification
 editors and implementors.
 
+
 Running the Tests
 =================
 
@@ -40,9 +41,13 @@ following entries are required:
 If you are behind a proxy, you also need to make sure the domains above are
 excluded from your proxy lookups.
 
-The test environment can then be started using
 
-    ./serve
+Running Tests Manually
+======================
+
+The test server can be started using
+
+    ./wpt serve
 
 This will start HTTP servers on two ports and a websockets server on
 one port. By default one web server starts on port 8000 and the other
@@ -73,25 +78,25 @@ like:
 Running Tests Automatically
 ---------------------------
 
-Tests can be run automatically in a browser using the `wptrun` script
-in the root of the checkout. This requires the hosts file and OpenSSL
-setup documented above, but you must *not* have the test server
-already running when calling `wptrun`. The basic command line syntax
-is:
+Tests can be run automatically in a browser using the `run` command of
+the `wpt` script in the root of the checkout. This requires the hosts
+file and OpenSSL setup documented above, but you must *not* have the
+test server already running when calling `wpt run`. The basic command
+line syntax is:
 
 ```
-./wptrun product [tests]
+./wpt run product [tests]
 ```
 
 **On Windows**: for technical reasons the above will not work and you
-must instead run `python tools/wptrun.py products [tests]`.
+must instead run `python tools/wpt/wpt.py run products [tests]`.
 
 where `product` is currently `firefox` or `chrome` and `[tests]` is a
 list of paths to tests. This will attempt to automatically locate a
 browser instance and install required dependencies. The command is
 very configurable; for examaple to specify a particular binary use
-`wptrun --binary=path product`. The full range of options can be see
-with `wptrun --help` and `wptrun --wptrunner-help`.
+`wpt run --binary=path product`. The full range of options can be see
+with `wpt run --help` and `wpt run --wptrunner-help`.
 
 Not all dependencies can be automatically installed; in particular the
 `certutil` tool required to run https tests with Firefox must be
@@ -108,6 +113,20 @@ And on macOS with homebrew using:
 ```
 brew install nss
 ```
+
+Command Line Tools
+==================
+
+The `wpt` command provides a frontend to a variety of tools for
+working with and running web-platform-tests. Some of the most useful
+commands are:
+
+* `wpt serve` - For starting the wpt http server
+* `wpt run` - For running tests in a browser
+* `wpt lint` - For running the lint against all tests
+* `wpt manifest` - For updating or generating a `MANIFEST.json` test manifest
+* `wpt install` - For installing the latest release of a browser or
+  webdriver server on the local machine.
 
 <span id="submodules">Submodules</span>
 =======================================
@@ -262,7 +281,7 @@ can run it manually by starting the `lint` executable from the root of
 your local web-platform-tests working directory like this:
 
 ```
-./lint
+./wpt lint
 ```
 
 The lint tool is also run automatically for every submitted pull

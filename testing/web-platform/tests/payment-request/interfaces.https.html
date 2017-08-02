@@ -29,8 +29,8 @@ interface PaymentRequest : EventTarget {
              attribute EventHandler         onshippingoptionchange;
 };
 dictionary PaymentMethodData {
-    required sequence<DOMString> supportedMethods;
-             object              data;
+    required DOMString supportedMethods;
+             object    data;
 };
 dictionary PaymentCurrencyAmount {
     required DOMString currency;
@@ -51,7 +51,7 @@ dictionary PaymentDetailsUpdate : PaymentDetailsBase {
     PaymentItem total;
 };
 dictionary PaymentDetailsModifier {
-    required sequence<DOMString>   supportedMethods;
+    required DOMString             supportedMethods;
              PaymentItem           total;
              sequence<PaymentItem> additionalDisplayItems;
              object                data;
@@ -134,7 +134,7 @@ var idlArray = new IdlArray();
   }
 });
 idlArray.add_objects({
-  PaymentRequest: ["new PaymentRequest([{supportedMethods: ['foo']}], {total: {label: 'bar', amount: {currency: 'BAZ', value: '0'}}})"]
+  PaymentRequest: ["new PaymentRequest([{supportedMethods: 'foo'}], {total: {label: 'bar', amount: {currency: 'BAZ', value: '0'}}})"]
 });
 idlArray.test();
 </script>

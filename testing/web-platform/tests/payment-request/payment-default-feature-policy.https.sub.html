@@ -11,7 +11,7 @@
   var header = 'Default "payment" feature policy ["self"]';
 
   test(() => {
-    var supportedInstruments = [ { supportedMethods: [ 'visa' ] } ];
+    var supportedInstruments = [ { supportedMethods: 'visa' } ];
     var details = {
       total: { label: 'Test', amount: { currency: 'USD', value: '5.00' } }
     };

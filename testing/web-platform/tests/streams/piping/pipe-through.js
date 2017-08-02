@@ -30,6 +30,10 @@ function duckTypedPassThroughTransform() {
   };
 }
 
+function uninterestingReadableWritablePair() {
+  return { writable: new WritableStream(), readable: new ReadableStream() };
+}
+
 promise_test(() => {
   const readableEnd = sequentialReadableStream(5).pipeThrough(duckTypedPassThroughTransform());
 
@@ -82,7 +86,7 @@ test(() => {
     }
   };
 
-  ReadableStream.prototype.pipeThrough.call(dummy, { });
+  ReadableStream.prototype.pipeThrough.call(dummy, uninterestingReadableWritablePair());
 
   // Test passes if this doesn't throw or crash.
 
@@ -98,7 +102,7 @@ test(() => {
     }
   };
 
-  ReadableStream.prototype.pipeThrough.call(dummy, { });
+  ReadableStream.prototype.pipeThrough.call(dummy, uninterestingReadableWritablePair());
 
   // Test passes if this doesn't throw or crash.
 
@@ -111,7 +115,7 @@ promise_test(() => {
     }
   };
 
-  ReadableStream.prototype.pipeThrough.call(dummy, { });
+  ReadableStream.prototype.pipeThrough.call(dummy, uninterestingReadableWritablePair());
 
   // The test harness should complain about unhandled rejections by then.
   return flushAsyncEvents();
@@ -119,7 +123,7 @@ promise_test(() => {
 }, 'pipeThrough should mark a real promise from a fake readable as handled');
 
 test(() => {
-  let thenCalled = false
+  let thenCalled = false;
   let catchCalled = false;
   const dummy = {
     pipeTo() {
@@ -136,12 +140,41 @@ test(() => {
   };
 
   // An incorrect implementation which uses an internal method to mark the promise as handled will throw or crash here.
-  ReadableStream.prototype.pipeThrough.call(dummy, { });
+  ReadableStream.prototype.pipeThrough.call(dummy, uninterestingReadableWritablePair());
 
   // An incorrect implementation that tries to mark the promise as handled by calling .then() or .catch() on the object
   // will fail these tests.
   assert_false(thenCalled, 'then should not be called');
   assert_false(catchCalled, 'catch should not be called');
 }, 'pipeThrough should not be fooled by an object whose instanceof Promise returns true');
+
+test(() => {
+  const pairs = [
+    {},
+    { readable: undefined, writable: undefined },
+    { readable: 'readable' },
+    { readable: 'readable', writable: undefined },
+    { writable: 'writable' },
+    { readable: undefined, writable: 'writable' }
+  ];
+  for (let i = 0; i < pairs.length; ++i) {
+    const pair = pairs[i];
+    const rs = new ReadableStream();
+    assert_throws(new TypeError(), () => rs.pipeThrough(pair),
+                  `pipeThrough should throw for argument ${JSON.stringify(pair)} (index ${i});`);
+  }
+}, 'undefined readable or writable arguments should cause pipeThrough() to throw');
+
+test(() => {
+  const invalidArguments = [null, 0, NaN, '', [], {}, false, () => {}];
+  for (const arg of invalidArguments) {
+    const rs = new ReadableStream();
+    assert_equals(arg, rs.pipeThrough({ writable: new WritableStream(), readable: arg }),
+                  'pipeThrough() should not throw for readable: ' + JSON.stringify(arg));
+    const rs2 = new ReadableStream();
+    assert_equals(rs2, rs.pipeThrough({ writable: arg, readable: rs2 }),
+                  'pipeThrough() should not throw for writable: ' + JSON.stringify(arg));
+  }
+}, 'invalid but not undefined arguments should not cause pipeThrough() to throw');
 
 done();

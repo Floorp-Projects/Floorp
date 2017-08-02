@@ -762,10 +762,9 @@ def get_parser():
     return parser
 
 
-def main():
-    kwargs = vars(get_parser().parse_args())
-    config = load_config("config.default.json",
-                         "config.json",
+def run(**kwargs):
+    config = load_config(os.path.join(repo_root, "config.default.json"),
+                         os.path.join(repo_root, "config.json"),
                          **kwargs)
 
     setup_logger(config["log_level"])
@@ -784,3 +783,8 @@ def main():
                         item.join(1)
             except KeyboardInterrupt:
                 logger.info("Shutting down")
+
+
+def main():
+    kwargs = vars(get_parser().parse_args())
+    return run(**kwargs)

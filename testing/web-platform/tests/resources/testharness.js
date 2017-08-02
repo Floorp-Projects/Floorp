@@ -528,7 +528,7 @@ policies and contribution forms [3].
         }
         tests.promise_tests = tests.promise_tests.then(function() {
             var donePromise = new Promise(function(resolve) {
-                test.add_cleanup(resolve);
+                test._add_cleanup(resolve);
             });
             var promise = test.step(func, test, test);
             test.step(function() {
@@ -618,7 +618,7 @@ policies and contribution forms [3].
             }
         };
 
-        test.add_cleanup(stop_watching);
+        test._add_cleanup(stop_watching);
 
         return this;
     }
@@ -1347,6 +1347,7 @@ policies and contribution forms [3].
         this.steps = [];
 
         this.cleanup_callbacks = [];
+        this._user_defined_cleanup_count = 0;
 
         tests.push(this);
     }
@@ -1471,8 +1472,25 @@ policies and contribution forms [3].
         }), timeout * tests.timeout_multiplier);
     }
 
-    Test.prototype.add_cleanup = function(callback) {
+    /*
+     * Private method for registering cleanup functions. `testharness.js`
+     * internals should use this method instead of the public `add_cleanup`
+     * method in order to hide implementation details from the harness status
+     * message in the case errors.
+     */
+    Test.prototype._add_cleanup = function(callback) {
         this.cleanup_callbacks.push(callback);
+    };
+
+    /*
+     * Schedule a function to be run after the test result is known, regardless
+     * of passing or failing state. The behavior of this function will not
+     * influence the result of the test, but if an exception is thrown, the
+     * test harness will report an error.
+     */
+    Test.prototype.add_cleanup = function(callback) {
+        this._user_defined_cleanup_count += 1;
+        this._add_cleanup(callback);
     };
 
     Test.prototype.force_timeout = function() {
@@ -1545,7 +1563,7 @@ policies and contribution forms [3].
                 });
 
         if (error_count > 0) {
-            total = this.cleanup_callbacks.length;
+            total = this._user_defined_cleanup_count;
             tests.status.status = tests.status.ERROR;
             tests.status.message = "Test named '" + this.name +
                 "' specified " + total + " 'cleanup' function" +
