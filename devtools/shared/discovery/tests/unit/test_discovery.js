@@ -12,7 +12,7 @@ const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const discovery = require("devtools/shared/discovery/discovery");
-const { setTimeout, clearTimeout } = require("sdk/timers");
+const { setTimeout, clearTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 Services.prefs.setBoolPref("devtools.discovery.log", true);
 
