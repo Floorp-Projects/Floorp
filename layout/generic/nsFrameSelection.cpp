@@ -728,13 +728,8 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
     }
   }
 
-  bool plaintextControl = (aLimiter != nullptr);
-  bool initSelectEvents = plaintextControl ?
-                            sSelectionEventsOnTextControlsEnabled :
-                            sSelectionEventsEnabled;
-
   nsIDocument* doc = aShell->GetDocument();
-  if (initSelectEvents ||
+  if (sSelectionEventsEnabled ||
       (doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()))) {
     int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     if (mDomSelections[index]) {
