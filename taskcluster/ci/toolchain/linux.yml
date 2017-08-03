@@ -23,7 +23,7 @@ linux64-clang-3.9:
         toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
-        - linux64-gcc
+        - linux64-gcc-4.9
 
 linux64-clang-4:
     description: "Clang 4 toolchain build"
@@ -45,7 +45,7 @@ linux64-clang-4:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
-        - linux64-gcc
+        - linux64-gcc-4.9
 
 linux64-clang-tidy:
     description: "Clang-tidy build"
@@ -71,7 +71,7 @@ linux64-clang-tidy:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
-        - linux64-gcc
+        - linux64-gcc-4.9
 
 linux64-gcc-4.9:
     description: "GCC 4.9 toolchain build"
