@@ -2317,6 +2317,52 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         // browser-search-autocomplete-result-popup, which apparently had a
         // similar problem.
         event.preventDefault();
+
+        if (!this.input.speculativeConnectEnabled) {
+          return;
+        }
+        if (event.button == 2) {
+          // Ignore right-clicks.
+          return;
+        }
+        // Ensure the user is clicking on an url instead of other buttons
+        // on the popup.
+        let elt = event.originalTarget;
+        while (elt && elt.localName != "richlistitem" &&  elt != this) {
+          elt = elt.parentNode;
+        }
+        if (!elt || elt.localName != "richlistitem") {
+          return;
+        }
+        // The user might click on a ghost entry which was removed because of
+        // the coming new results.
+        if (this.input.controller.matchCount <= this.selectedIndex) {
+          return;
+        }
+
+        let url = this.input.controller.getFinalCompleteValueAt(this.selectedIndex);
+
+        // Whitelist the cases that we want to speculative connect, and ignore
+        // other moz-action uris or fancy protocols.
+        // Note that it's likely we've speculatively connected to the first
+        // url because it is a heuristic "autofill" result (see bug 1348275).
+        // "moz-action:searchengine" is also the same case. (see bug 1355443)
+        // So we won't duplicate the effort here.
+        if (url.startsWith("http") && this.selectedIndex > 0) {
+          this.maybeSetupSpeculativeConnect(url);
+        } else if (url.startsWith("moz-action:remotetab")) {
+          // URL is in the format moz-action:ACTION,PARAMS
+          // Where PARAMS is a JSON encoded object.
+          const MOZ_ACTION_REGEX = /^moz-action:([^,]+),(.*)$/;
+          if (!MOZ_ACTION_REGEX.test(url))
+            return;
+
+          let params = JSON.parse(url.match(MOZ_ACTION_REGEX)[2]);
+          if (params.url) {
+            this.maybeSetupSpeculativeConnect(decodeURIComponent(params.url));
+          }
+        }
+
       ]]></handler>
 
     </handlers>
