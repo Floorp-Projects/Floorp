@@ -84,6 +84,8 @@ public:
   virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
   virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {}
 
+  virtual void NativeInit() = 0;
+
 protected:
   nsXPLookAndFeel();
 
