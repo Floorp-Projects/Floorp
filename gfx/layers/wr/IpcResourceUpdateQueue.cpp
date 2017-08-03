@@ -279,13 +279,14 @@ IpcResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
 bool
 IpcResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
                                         const ImageDescriptor& aDescriptor,
-                                        Range<uint8_t> aBytes)
+                                        Range<uint8_t> aBytes,
+                                        ImageIntRect aDirtyRect)
 {
   auto bytes = mWriter.Write(aBytes);
   if (!bytes.length()) {
     return false;
   }
-  mUpdates.AppendElement(layers::OpUpdateBlobImage(aDescriptor, bytes, aKey));
+  mUpdates.AppendElement(layers::OpUpdateBlobImage(aDescriptor, bytes, aKey, aDirtyRect));
   return true;
 }
 

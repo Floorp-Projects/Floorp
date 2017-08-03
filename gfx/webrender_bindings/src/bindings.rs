@@ -794,12 +794,13 @@ pub extern "C" fn wr_resource_updates_update_blob_image(
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
+    dirty_rect: DeviceUintRect,
 ) {
     resources.update_image(
         image_key,
         descriptor.into(),
         ImageData::new_blob_image(bytes.flush_into_vec()),
-        None
+        Some(dirty_rect)
     );
 }
 
