@@ -2961,26 +2961,27 @@ void nsHttpConnectionMgr::LogActiveTransactions(char operation)
 }
 
 void
-nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction * aTrans, bool aThrottled)
+nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction * aTrans)
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
+    bool throttled = aTrans->EligibleForThrottling();
 
     nsTArray<RefPtr<nsHttpTransaction>> *transactions =
-        mActiveTransactions[aThrottled].LookupOrAdd(tabId);
+        mActiveTransactions[throttled].LookupOrAdd(tabId);
 
     MOZ_ASSERT(!transactions->Contains(aTrans));
 
     transactions->AppendElement(aTrans);
 
     LOG(("nsHttpConnectionMgr::AddActiveTransaction    t=%p tabid=%" PRIx64 "(%d) thr=%d",
-          aTrans, tabId, tabId == mCurrentTopLevelOuterContentWindowId, aThrottled));
+          aTrans, tabId, tabId == mCurrentTopLevelOuterContentWindowId, throttled));
     LogActiveTransactions('+');
 
     if (tabId == mCurrentTopLevelOuterContentWindowId) {
         mActiveTabTransactionsExist = true;
-        if (!aThrottled) {
+        if (!throttled) {
             mActiveTabUnthrottledTransactionsExist = true;
         }
     }
@@ -2993,15 +2994,17 @@ nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction * aTrans, bool aThro
 }
 
 void
-nsHttpConnectionMgr::RemoveActiveTransaction(nsHttpTransaction * aTrans, bool aThrottled)
+nsHttpConnectionMgr::RemoveActiveTransaction(nsHttpTransaction * aTrans,
+                                             Maybe<bool> const& aOverride)
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
     bool forActiveTab = tabId == mCurrentTopLevelOuterContentWindowId;
+    bool throttled = aOverride.valueOr(aTrans->EligibleForThrottling());
 
     nsTArray<RefPtr<nsHttpTransaction>> *transactions =
-        mActiveTransactions[aThrottled].Get(tabId);
+        mActiveTransactions[throttled].Get(tabId);
 
     if (!transactions || !transactions->RemoveElement(aTrans)) {
         // Was not tracked as active, probably just ignore.
@@ -3009,7 +3012,7 @@ nsHttpConnectionMgr::RemoveActiveTransaction(nsHttpTransaction * aTrans, bool aT
     }
 
     LOG(("nsHttpConnectionMgr::RemoveActiveTransaction t=%p tabid=%" PRIx64 "(%d) thr=%d",
-          aTrans, tabId, forActiveTab, aThrottled));
+          aTrans, tabId, forActiveTab, throttled));
 
     if (!transactions->IsEmpty()) {
         // There are still transactions of the type, hence nothing in the throttling conditions
@@ -3020,16 +3023,16 @@ nsHttpConnectionMgr::RemoveActiveTransaction(nsHttpTransaction * aTrans, bool aT
     }
 
     // To optimize the following logic, always remove the entry when the array is empty.
-    mActiveTransactions[aThrottled].Remove(tabId);
+    mActiveTransactions[throttled].Remove(tabId);
     LogActiveTransactions('-');
 
     if (forActiveTab) {
         // Update caches of the active tab transaction existence, since it's now affected
-        if (!aThrottled) {
+        if (!throttled) {
             mActiveTabUnthrottledTransactionsExist = false;
         }
         if (mActiveTabTransactionsExist) {
-            mActiveTabTransactionsExist = mActiveTransactions[!aThrottled].Contains(tabId);
+            mActiveTabTransactionsExist = mActiveTransactions[!throttled].Contains(tabId);
         }
     }
 
@@ -3067,7 +3070,7 @@ nsHttpConnectionMgr::RemoveActiveTransaction(nsHttpTransaction * aTrans, bool aT
         // There are only trottled transactions for the active tab.
         // If the last transaction we just removed was a non-throttled for the active tab
         // we can wake the throttled transactions for the active tab.
-        if (forActiveTab && !aThrottled) {
+        if (forActiveTab && !throttled) {
             LOG(("  resuming throttled for active tab"));
             ResumeReadOf(mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId));
         }
@@ -3094,16 +3097,21 @@ nsHttpConnectionMgr::RemoveActiveTransaction(nsHttpTransaction * aTrans, bool aT
 }
 
 void
-nsHttpConnectionMgr::MoveActiveTransaction(nsHttpTransaction * aTrans, bool aThrottled)
+nsHttpConnectionMgr::UpdateActiveTransaction(nsHttpTransaction * aTrans)
 {
-    LOG(("nsHttpConnectionMgr::MoveActiveTransaction ENTER t=%p", aTrans));
-    AddActiveTransaction(aTrans, aThrottled);
-    RemoveActiveTransaction(aTrans, !aThrottled);
-    LOG(("nsHttpConnectionMgr::MoveActiveTransaction EXIT t=%p", aTrans));
+    LOG(("nsHttpConnectionMgr::UpdateActiveTransaction ENTER t=%p", aTrans));
+
+    AddActiveTransaction(aTrans);
+
+    Maybe<bool> reversed;
+    reversed.emplace(!aTrans->EligibleForThrottling());
+    RemoveActiveTransaction(aTrans, reversed);
+
+    LOG(("nsHttpConnectionMgr::UpdateActiveTransaction EXIT t=%p", aTrans));
 }
 
 bool
-nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottled)
+nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans)
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -3113,12 +3121,13 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottl
 
     uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
     bool forActiveTab = tabId == mCurrentTopLevelOuterContentWindowId;
+    bool throttled = aTrans->EligibleForThrottling();
 
     if (mActiveTabTransactionsExist) {
         if (!tabId) {
             // Chrome initiated and unidentified transactions just respect
             // their throttle flag, when something for the active tab is happening.
-            return aThrottled;
+            return throttled;
         }
         if (!forActiveTab) {
             // This is a background tab request, we want them to always throttle.
@@ -3126,7 +3135,7 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottl
         }
         if (mActiveTabUnthrottledTransactionsExist) {
             // Unthrottled transactions for the active tab take precedence
-            return aThrottled;
+            return throttled;
         }
         // This is a throttled transaction for the active tab and there are no
         // unthrottled for the active tab, just let go on full fuel.
@@ -3145,7 +3154,7 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottl
         // This means there are unthrottled active transactions for background tabs.
         // If we are here, there can't be any transactions for the active tab.
         // (If there is no transaction for a tab id, there is no entry for it in the hashtable.)
-        return aThrottled;
+        return throttled;
     }
 
     // There are only unthrottled transactions for background tabs: don't throttle.
