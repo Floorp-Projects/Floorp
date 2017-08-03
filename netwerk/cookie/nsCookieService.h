@@ -31,8 +31,10 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Maybe.h"
+#include "nsCookieKey.h"
 
 using mozilla::OriginAttributes;
+using mozilla::nsCookieKey;
 
 class nsICookiePermission;
 class nsIEffectiveTLDService;
@@ -54,64 +56,6 @@ namespace net {
 class CookieServiceParent;
 } // namespace net
 } // namespace mozilla
-
-// hash key class
-class nsCookieKey : public PLDHashEntryHdr
-{
-public:
-  typedef const nsCookieKey& KeyType;
-  typedef const nsCookieKey* KeyTypePointer;
-
-  nsCookieKey()
-  {}
-
-  nsCookieKey(const nsCString &baseDomain, const OriginAttributes &attrs)
-    : mBaseDomain(baseDomain)
-    , mOriginAttributes(attrs)
-  {}
-
-  explicit nsCookieKey(KeyTypePointer other)
-    : mBaseDomain(other->mBaseDomain)
-    , mOriginAttributes(other->mOriginAttributes)
-  {}
-
-  nsCookieKey(KeyType other)
-    : mBaseDomain(other.mBaseDomain)
-    , mOriginAttributes(other.mOriginAttributes)
-  {}
-
-  ~nsCookieKey()
-  {}
-
-  bool KeyEquals(KeyTypePointer other) const
-  {
-    return mBaseDomain == other->mBaseDomain &&
-           mOriginAttributes == other->mOriginAttributes;
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey)
-  {
-    return &aKey;
-  }
-
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  {
-    // TODO: more efficient way to generate hash?
-    nsAutoCString temp(aKey->mBaseDomain);
-    temp.Append('#');
-    nsAutoCString suffix;
-    aKey->mOriginAttributes.CreateSuffix(suffix);
-    temp.Append(suffix);
-    return mozilla::HashString(temp);
-  }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  enum { ALLOW_MEMMOVE = true };
-
-  nsCString        mBaseDomain;
-  OriginAttributes mOriginAttributes;
-};
 
 // Inherit from nsCookieKey so this can be stored in nsTHashTable
 // TODO: why aren't we using nsClassHashTable<nsCookieKey, ArrayType>?
