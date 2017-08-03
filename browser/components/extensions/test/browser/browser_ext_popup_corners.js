@@ -41,7 +41,8 @@ add_task(async function testPopupBorderRadius() {
 
     let panelStyle = getComputedStyle(arrowContent);
 
-    let viewNode = browser.parentNode === panel ? browser : browser.parentNode;
+    let stack = browser.parentNode;
+    let viewNode = stack.parentNode === panel ? browser : stack.parentNode;
     let viewStyle = getComputedStyle(viewNode);
 
     let props = ["borderTopLeftRadius", "borderTopRightRadius",

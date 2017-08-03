@@ -1234,7 +1234,8 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   overflow: hidden;
 }
 
-.webextension-popup-browser {
+.webextension-popup-browser,
+.webextension-popup-stack {
   border-radius: inherit;
 }
 

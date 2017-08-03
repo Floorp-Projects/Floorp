@@ -9,6 +9,7 @@
 #include "LayersLogging.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/Unused.h"
+#include "nsDisplayList.h"
 #include "nsTArray.h"
 #include "UnitTransforms.h"
 

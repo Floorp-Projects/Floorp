@@ -145,7 +145,7 @@ private:
     class CachedScript : public LinkedListElement<CachedScript>
     {
     public:
-        CachedScript(CachedScript&&) = default;
+        CachedScript(CachedScript&&) = delete;
 
         CachedScript(ScriptPreloader& cache, const nsCString& url, const nsCString& cachePath, JSScript* script)
             : mCache(cache)

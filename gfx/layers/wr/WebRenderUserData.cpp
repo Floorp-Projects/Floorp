@@ -4,10 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebRenderUserData.h"
+
+#include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderMessages.h"
 #include "nsDisplayListInvalidation.h"
+#include "WebRenderCanvasRenderer.h"
 
 namespace mozilla {
 namespace layers {
+
+WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager)
+  : mWRManager(aWRManager)
+{
+}
+
+WebRenderUserData::~WebRenderUserData()
+{
+}
 
 WebRenderBridgeChild*
 WebRenderUserData::WrBridge() const
@@ -31,7 +46,7 @@ WebRenderImageData::~WebRenderImageData()
   }
 
   if (mPipelineId) {
-    WrBridge()->RemovePipelineIdForAsyncCompositable(mPipelineId.ref());
+    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
   }
 }
 
@@ -91,8 +106,8 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
                                                       const StackingContextHelper& aSc,
                                                       const LayerRect& aBounds,
                                                       const LayerRect& aSCBounds,
-                                                      const Matrix4x4& aSCTransform,
-                                                      const MaybeIntSize& aScaleToSize,
+                                                      const gfx::Matrix4x4& aSCTransform,
+                                                      const gfx::MaybeIntSize& aScaleToSize,
                                                       const wr::ImageRendering& aFilter,
                                                       const wr::MixBlendMode& aMixBlendMode)
 {
@@ -174,6 +189,25 @@ WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager
   : WebRenderUserData(aWRManager),
     mAnimationInfo(aWRManager)
 {
+}
+
+WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager)
+  : WebRenderUserData(aWRManager)
+{
+}
+
+WebRenderCanvasData::~WebRenderCanvasData()
+{
+}
+
+WebRenderCanvasRendererAsync*
+WebRenderCanvasData::GetCanvasRenderer()
+{
+  if (!mCanvasRenderer) {
+    mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mWRManager);
+  }
+
+  return mCanvasRenderer.get();
 }
 
 } // namespace layers
