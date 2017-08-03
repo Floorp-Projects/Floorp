@@ -1074,6 +1074,9 @@ nsLookAndFeel::EnsureInit()
         return;
     mInitialized = true;
 
+    // gtk does non threadsafe refcounting
+    MOZ_ASSERT(NS_IsMainThread());
+
 #if (MOZ_WIDGET_GTK == 2)
     NS_ASSERTION(!mStyle, "already initialized");
     // GtkInvisibles come with a refcount that is not floating
