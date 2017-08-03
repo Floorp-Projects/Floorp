@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "tls_connect.h"
-#include "sslexp.h"
 extern "C" {
 #include "libssl_internals.h"
 }

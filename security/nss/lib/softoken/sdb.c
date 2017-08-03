@@ -1600,7 +1600,7 @@ loser:
     return error;
 }
 
-static const char RESET_CMD[] = "DELETE FROM %s;";
+static const char RESET_CMD[] = "DROP TABLE IF EXISTS %s;";
 CK_RV
 sdb_Reset(SDB *sdb)
 {
@@ -1621,19 +1621,17 @@ sdb_Reset(SDB *sdb)
         goto loser;
     }
 
-    if (tableExists(sqlDB, sdb_p->table)) {
-        /* delete the contents of the key table */
-        newStr = sqlite3_mprintf(RESET_CMD, sdb_p->table);
-        if (newStr == NULL) {
-            error = CKR_HOST_MEMORY;
-            goto loser;
-        }
-        sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
-        sqlite3_free(newStr);
-
-        if (sqlerr != SQLITE_OK)
-            goto loser;
+    /* delete the key table */
+    newStr = sqlite3_mprintf(RESET_CMD, sdb_p->table);
+    if (newStr == NULL) {
+        error = CKR_HOST_MEMORY;
+        goto loser;
     }
+    sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
+    sqlite3_free(newStr);
+
+    if (sqlerr != SQLITE_OK)
+        goto loser;
 
     /* delete the password entry table */
     sqlerr = sqlite3_exec(sqlDB, "DROP TABLE IF EXISTS metaData;",
@@ -1868,29 +1866,30 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
      * so we use it for the cache (see sdb_buildCache for how it's done).*/
 
     /*
-     * we decide whether or not to use the cache based on the following input.
-     *
-     * NSS_SDB_USE_CACHE environment variable is set to anything other than
-     *   "yes" or "no" (for instance, "auto"): NSS will measure the performance
-     *   of access to the temp database versus the access to the user's
-     *   passed-in database location. If the temp database location is
-     *   "significantly" faster we will use the cache.
-     *
-     * NSS_SDB_USE_CACHE environment variable is nonexistent or set to "no":
-     *   cache will not be used.
-     *
-     * NSS_SDB_USE_CACHE environment variable is set to "yes": cache will
-     *   always be used.
-     *
-     * It is expected that most applications will not need this feature, and
-     * thus it is disabled by default.
-     */
+      * we decide whether or not to use the cache based on the following input.
+      *
+      * NSS_SDB_USE_CACHE environment variable is non-existant or set to
+      *   anything other than "no" or "yes" ("auto", for instance).
+      *   This is the normal case. NSS will measure the performance of access
+      *   to the temp database versus the access to the users passed in
+      *   database location. If the temp database location is "significantly"
+      *   faster we will use the cache.
+      *
+      * NSS_SDB_USE_CACHE environment variable is set to "no": cache will not
+      *   be used.
+      *
+      * NSS_SDB_USE_CACHE environment variable is set to "yes": cache will
+      *   always be used.
+      *
+      * It is expected that most applications would use the "auto" selection,
+      * the environment variable is primarily to simplify testing, and to
+      * correct potential corner cases where  */
 
     env = PR_GetEnvSecure("NSS_SDB_USE_CACHE");
 
-    if (!env || PORT_Strcasecmp(env, "no") == 0) {
+    if (env && PORT_Strcasecmp(env, "no") == 0) {
         enableCache = PR_FALSE;
-    } else if (PORT_Strcasecmp(env, "yes") == 0) {
+    } else if (env && PORT_Strcasecmp(env, "yes") == 0) {
         enableCache = PR_TRUE;
     } else {
         char *tempDir = NULL;
@@ -2036,11 +2035,10 @@ s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
     {
         char *env;
         env = PR_GetEnvSecure("NSS_SDB_USE_CACHE");
-        /* If the environment variable is undefined or set to yes or no,
-         * sdb_init() will ignore the value of accessOps, and we can skip the
-         * measuring.*/
-        if (env && PORT_Strcasecmp(env, "no") != 0 &&
-            PORT_Strcasecmp(env, "yes") != 0) {
+        /* If the environment variable is set to yes or no, sdb_init() will
+         * ignore the value of accessOps, and we can skip the measuring.*/
+        if (!env || ((PORT_Strcasecmp(env, "no") != 0) &&
+                     (PORT_Strcasecmp(env, "yes") != 0))) {
             accessOps = sdb_measureAccess(directory);
         }
     }

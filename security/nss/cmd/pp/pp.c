@@ -84,8 +84,6 @@ main(int argc, char **argv)
                 if (!inFile) {
                     fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
                             progName, optstate->value);
-                    PORT_Free(typeTag);
-                    PL_DestroyOptState(optstate);
                     return -1;
                 }
                 break;
@@ -95,8 +93,6 @@ main(int argc, char **argv)
                 if (!outFile) {
                     fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
                             progName, optstate->value);
-                    PORT_Free(typeTag);
-                    PL_DestroyOptState(optstate);
                     return -1;
                 }
                 break;

@@ -2977,7 +2977,6 @@ ssl3_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags)
                                         ssl_SEND_FLAG_CAP_RECORD_VERSION;
     PRInt32 count = -1;
     SECStatus rv;
-    SSL3ContentType ct = content_handshake;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
@@ -2991,12 +2990,7 @@ ssl3_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags)
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
-    /* Maybe send the first message with alt handshake type. */
-    if (ss->ssl3.hs.altHandshakeType) {
-        ct = content_alt_handshake;
-        ss->ssl3.hs.altHandshakeType = PR_FALSE;
-    }
-    count = ssl3_SendRecord(ss, NULL, ct,
+    count = ssl3_SendRecord(ss, NULL, content_handshake,
                             ss->sec.ci.sendBuf.buf,
                             ss->sec.ci.sendBuf.len, flags);
     if (count < 0) {
@@ -12735,14 +12729,6 @@ process_it:
      */
     ssl_GetSSL3HandshakeLock(ss);
 
-    /* Special case: allow alt content type for TLS 1.3 ServerHello. */
-    if ((rType == content_alt_handshake) &&
-        (ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3) &&
-        (ss->ssl3.hs.ws == wait_server_hello) &&
-        (ss->opt.enableAltHandshaketype) &&
-        (!IS_DTLS(ss))) {
-        rType = content_handshake;
-    }
     /* All the functions called in this switch MUST set error code if
     ** they return SECFailure or SECWouldBlock.
     */

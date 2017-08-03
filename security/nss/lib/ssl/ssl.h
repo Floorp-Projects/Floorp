@@ -1374,13 +1374,6 @@ extern const char *NSSSSL_GetVersion(void);
  */
 SSL_IMPORT SECStatus SSL_AuthCertificateComplete(PRFileDesc *fd,
                                                  PRErrorCode error);
-
-/*
- * This is used to access experimental APIs.  Don't call this directly.  This is
- * used to enable the experimental APIs that are defined in "sslexp.h".
- */
-SSL_IMPORT void *SSL_GetExperimentalAPI(const char *name);
-
 SEC_END_PROTOS
 
 #endif /* __ssl_h_ */

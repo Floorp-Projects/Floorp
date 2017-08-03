@@ -10,7 +10,6 @@
 
 #include "nss.h"
 #include "scoped_ptrs.h"
-#include "prprf.h"
 
 namespace nss_test {
 
@@ -90,23 +89,4 @@ INSTANTIATE_TEST_CASE_P(ParseAVAStrings, Alg1485ParseTest,
                         ::testing::ValuesIn(kAVATestStrings));
 INSTANTIATE_TEST_CASE_P(CompareAVAStrings, Alg1485CompareTest,
                         ::testing::ValuesIn(kAVACompareStrings));
-
-TEST_F(Alg1485Test, ShortOIDTest) {
-  // This is not a valid OID (too short). CERT_GetOidString should return 0.
-  unsigned char data[] = {0x05};
-  const SECItem oid = {siBuffer, data, sizeof(data)};
-  char* result = CERT_GetOidString(&oid);
-  EXPECT_EQ(result, nullptr);
-}
-
-TEST_F(Alg1485Test, BrokenOIDTest) {
-  // This is not a valid OID (first bit of last byte is not set).
-  // CERT_GetOidString should return 0.
-  unsigned char data[] = {0x81, 0x82, 0x83, 0x84};
-  const SECItem oid = {siBuffer, data, sizeof(data)};
-  char* result = CERT_GetOidString(&oid);
-  EXPECT_EQ(15U, strlen(result));
-  EXPECT_EQ(0, strncmp("OID.UNSUPPORTED", result, 15));
-  PR_smprintf_free(result);
-}
 }
