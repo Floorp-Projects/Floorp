@@ -9,7 +9,6 @@
 #include "nsCollation.h"
 #include "nsCollationCID.h"
 #include "mozilla/ModuleUtils.h"
-#include "nsIScriptableDateFormat.h"
 #include "nsIServiceManager.h"
 #include "nsPlatformCharset.h"
 #include "LocaleService.h"

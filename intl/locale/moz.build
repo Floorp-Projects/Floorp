@@ -23,7 +23,6 @@ XPIDL_SOURCES += [
     'mozILocaleService.idl',
     'mozIOSPreferences.idl',
     'nsICollation.idl',
-    'nsIScriptableDateFormat.idl',
 ]
 
 XPIDL_MODULE = 'locale'
@@ -45,7 +44,6 @@ UNIFIED_SOURCES += [
     'LocaleService.cpp',
     'nsCollationFactory.cpp',
     'nsLanguageAtomService.cpp',
-    'nsScriptableDateFormat.cpp',
     'nsUConvPropertySearch.cpp',
     'OSPreferences.cpp',
 ]
