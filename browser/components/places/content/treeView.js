@@ -1440,11 +1440,11 @@ PlacesTreeView.prototype = {
         return null;
     }
 
-    return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
-                              index, orientation,
-                              tagName,
-                              dropNearNode,
-                              PlacesUtils.getConcreteItemGuid(container));
+    return new InsertionPoint({
+      parentId: PlacesUtils.getConcreteItemId(container),
+      parentGuid: PlacesUtils.getConcreteItemGuid(container),
+      index, orientation, tagName, dropNearNode
+    });
   },
 
   drop: function PTV_drop(aRow, aOrientation, aDataTransfer) {
