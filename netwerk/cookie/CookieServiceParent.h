@@ -9,6 +9,7 @@
 #include "mozilla/net/PCookieServiceParent.h"
 
 class nsCookie;
+class nsICookie;
 class nsCookieService;
 namespace mozilla { class OriginAttributes; }
 
@@ -22,6 +23,14 @@ public:
   virtual ~CookieServiceParent();
 
   void TrackCookieLoad(nsIChannel *aChannel);
+
+  void RemoveBatchDeletedCookies(nsIArray *aCookieList);
+
+  void RemoveAll();
+
+  void RemoveCookie(nsICookie *aCookie);
+
+  void AddCookie(nsICookie *aCookie);
 
 protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
