@@ -31,13 +31,11 @@ browser/chrome/browser/content/browser/preferences/in-content-new/security.js
 browser/chrome/browser/content/browser/preferences/in-content-new/sync.js
 browser/chrome/browser/skin/classic/browser/preferences/in-content/search.css
 browser/chrome/browser/skin/classic/browser/preferences/in-content/containers.css
-browser/chrome/browser/skin/classic/browser/preferences/in-content/favicon.ico
 browser/chrome/browser/skin/classic/browser/preferences/in-content/icons.svg
 browser/chrome/browser/skin/classic/browser/preferences/in-content/preferences.css
 browser/chrome/browser/skin/classic/browser/preferences/in-content/dialog.css
 browser/chrome/browser/skin/classic/browser/preferences/in-content-new/search.css
 browser/chrome/browser/skin/classic/browser/preferences/in-content-new/containers.css
-browser/chrome/browser/skin/classic/browser/preferences/in-content-new/favicon.ico
 browser/chrome/browser/skin/classic/browser/preferences/in-content-new/icons.svg
 browser/chrome/browser/skin/classic/browser/preferences/in-content-new/preferences.css
 browser/chrome/browser/skin/classic/browser/preferences/in-content-new/dialog.css

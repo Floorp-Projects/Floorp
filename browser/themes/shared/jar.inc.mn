@@ -95,13 +95,11 @@
   skin/classic/browser/panel-icon-magnifier.svg                (../shared/panel-icon-magnifier.svg)
 #endif
   skin/classic/browser/panel-icon-retry.svg                    (../shared/panel-icon-retry.svg)
-  skin/classic/browser/preferences/in-content-new/favicon.ico      (../shared/incontentprefs/favicon.ico)
   skin/classic/browser/preferences/in-content-new/icons.svg        (../shared/incontentprefs/icons.svg)
   skin/classic/browser/preferences/in-content-new/search-arrow-indicator.svg  (../shared/incontentprefs/search-arrow-indicator.svg)
   skin/classic/browser/preferences/in-content-new/search.css       (../shared/incontentprefs/search.css)
   skin/classic/browser/preferences/in-content-new/siteDataSettings.css (../shared/incontentprefs/siteDataSettings.css)
 * skin/classic/browser/preferences/in-content-new/containers.css   (../shared/incontentprefs/containers.css)
-  skin/classic/browser/preferences/in-content/favicon.ico      (../shared/incontentprefs-old/favicon.ico)
   skin/classic/browser/preferences/in-content/icons.svg        (../shared/incontentprefs-old/icons.svg)
   skin/classic/browser/preferences/in-content/search.css       (../shared/incontentprefs-old/search.css)
 * skin/classic/browser/preferences/in-content/containers.css   (../shared/incontentprefs-old/containers.css)
