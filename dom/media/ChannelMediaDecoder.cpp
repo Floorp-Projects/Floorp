@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChannelMediaDecoder.h"
+#include "DecoderTraits.h"
+#include "MediaDecoderStateMachine.h"
+#include "MediaFormatReader.h"
 #include "MediaResource.h"
 #include "MediaShutdownManager.h"
 
@@ -159,6 +162,19 @@ ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   , mResourceCallback(new ResourceCallback(aInit.mOwner->AbstractMainThread()))
 {
   mResourceCallback->Connect(this);
+}
+
+MediaDecoderStateMachine* ChannelMediaDecoder::CreateStateMachine()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaFormatReaderInit init;
+  init.mVideoFrameContainer = GetVideoFrameContainer();
+  init.mKnowsCompositor = GetCompositor();
+  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
+  init.mFrameStats = mFrameStats;
+  init.mResource = mResource;
+  mReader = DecoderTraits::CreateReader(ContainerType(), init);
+  return new MediaDecoderStateMachine(this, mReader);
 }
 
 void
