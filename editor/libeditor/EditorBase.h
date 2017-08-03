@@ -236,10 +236,12 @@ public:
    */
   EditorBase();
 
-  virtual TextEditor* AsTextEditor() = 0;
-  virtual const TextEditor* AsTextEditor() const = 0;
-  virtual HTMLEditor* AsHTMLEditor() = 0;
-  virtual const HTMLEditor* AsHTMLEditor() const = 0;
+  // Please include TextEditor.h.
+  inline TextEditor* AsTextEditor();
+  inline const TextEditor* AsTextEditor() const;
+  // Please include HTMLEditor.h.
+  inline HTMLEditor* AsHTMLEditor();
+  inline const HTMLEditor* AsHTMLEditor() const;
 
 protected:
   /**
@@ -1223,6 +1225,8 @@ protected:
   bool mHidingCaret;
   // Whether spellchecker dictionary is initialized after focused.
   bool mSpellCheckerDictionaryUpdated;
+  // Whether we are an HTML editor class.
+  bool mIsHTMLEditorClass;
 
   friend bool NSCanUnload(nsISupports* serviceMgr);
   friend class AutoRules;
