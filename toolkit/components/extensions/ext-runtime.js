@@ -7,12 +7,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Extension",
-                                  "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 this.runtime = class extends ExtensionAPI {
   getAPI(context) {
@@ -126,7 +124,7 @@ this.runtime = class extends ExtensionAPI {
 
           let uri;
           try {
-            uri = NetUtil.newURI(url);
+            uri = Services.io.newURI(url);
           } catch (e) {
             return Promise.reject({message: `Invalid URL: ${JSON.stringify(url)}`});
           }

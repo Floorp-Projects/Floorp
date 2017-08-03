@@ -13,8 +13,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://gre/modules/EventEmitter.jsm");
 
@@ -465,7 +463,7 @@ this.downloads = class extends ExtensionAPI {
             if (filename) {
               target = OS.Path.join(downloadsDir, filename);
             } else {
-              let uri = NetUtil.newURI(options.url);
+              let uri = Services.io.newURI(options.url);
 
               let remote;
               if (uri instanceof Ci.nsIURL) {

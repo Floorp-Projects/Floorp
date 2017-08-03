@@ -2,16 +2,14 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gThemesEnabled", () => {
-  return Preferences.get("extensions.webextensions.themes.enabled");
+  return Services.prefs.getBoolPref("extensions.webextensions.themes.enabled");
 });
 
-const ICONS = Preferences.get("extensions.webextensions.themes.icons.buttons", "").split(",");
+const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icons.buttons", "").split(",");
 
 /** Class representing a theme. */
 class Theme {
@@ -133,7 +131,7 @@ class Theme {
    * @param {Object} icons Dictionary mapping icon properties to extension URLs.
    */
   loadIcons(icons) {
-    if (!Preferences.get("extensions.webextensions.themes.icons.enabled")) {
+    if (!Services.prefs.getBoolPref("extensions.webextensions.themes.icons.enabled")) {
       // Return early if icons are disabled.
       return;
     }
