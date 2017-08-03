@@ -94,9 +94,6 @@ IntentionalCrash()
 static NPNetscapeFuncs* sBrowserFuncs = nullptr;
 static NPClass sNPClass;
 
-void
-asyncCallback(void* cookie);
-
 //
 // identifiers
 //
@@ -141,8 +138,6 @@ static bool getObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argC
 static bool getJavaCodebase(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool checkObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool enableFPExceptions(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool checkGCRace(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool stallPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -215,8 +210,6 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getJavaCodebase",
   "checkObjectValue",
   "enableFPExceptions",
-  "asyncCallbackTest",
-  "checkGCRace",
   "hang",
   "stall",
   "getClipboardText",
@@ -290,8 +283,6 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getJavaCodebase,
   checkObjectValue,
   enableFPExceptions,
-  asyncCallbackTest,
-  checkGCRace,
   hangPlugin,
   stallPlugin,
   getClipboardText,
@@ -1906,12 +1897,6 @@ NPN_GetValueForURL(NPP instance, NPNURLVariable variable, const char *url, char 
 }
 
 void
-NPN_PluginThreadAsyncCall(NPP plugin, void (*func)(void*), void* userdata)
-{
-  return sBrowserFuncs->pluginthreadasynccall(plugin, func, userdata);
-}
-
-void
 NPN_URLRedirectResponse(NPP instance, void* notifyData, NPBool allow)
 {
   return sBrowserFuncs->urlredirectresponse(instance, notifyData, allow);
@@ -3012,171 +2997,6 @@ timerTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* 
   id->timerID[event.timerIdSchedule] = NPN_ScheduleTimer(npp, event.timerInterval, event.timerRepeat, timerCallback);
 
   return id->timerID[event.timerIdSchedule] != 0;
-}
-
-#ifdef XP_WIN
-void
-ThreadProc(void* cookie)
-#else
-void*
-ThreadProc(void* cookie)
-#endif
-{
-  NPObject* npobj = (NPObject*)cookie;
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  id->asyncTestPhase = 1;
-  NPN_PluginThreadAsyncCall(npp, asyncCallback, (void*)npobj);
-#ifndef XP_WIN
-  return nullptr;
-#endif
-}
-
-void
-asyncCallback(void* cookie)
-{
-  NPObject* npobj = (NPObject*)cookie;
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-
-  switch (id->asyncTestPhase) {
-    // async callback triggered from same thread
-    case 0:
-#ifdef XP_WIN
-      if (_beginthread(ThreadProc, 0, (void*)npobj) == -1)
-        id->asyncCallbackResult = false;
-#else
-      pthread_t tid;
-      if (pthread_create(&tid, 0, ThreadProc, (void*)npobj))
-        id->asyncCallbackResult = false;
-#endif
-      break;
-
-    // async callback triggered from different thread
-    default:
-      NPObject* windowObject;
-      NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
-      if (!windowObject)
-        return;
-      NPVariant arg, rval;
-      BOOLEAN_TO_NPVARIANT(id->asyncCallbackResult, arg);
-      NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier(id->asyncTestScriptCallback.c_str()), &arg, 1, &rval);
-      NPN_ReleaseVariantValue(&arg);
-      NPN_ReleaseObject(windowObject);
-      break;
-  }
-}
-
-static bool
-asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
-{
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-
-  if (argCount < 1 || !NPVARIANT_IS_STRING(args[0]))
-    return false;
-  const NPString* argstr = &NPVARIANT_TO_STRING(args[0]);
-  id->asyncTestScriptCallback = argstr->UTF8Characters;
-
-  id->asyncTestPhase = 0;
-  id->asyncCallbackResult = true;
-  NPN_PluginThreadAsyncCall(npp, asyncCallback, (void*)npobj);
-
-  return true;
-}
-
-static bool
-GCRaceInvoke(NPObject*, NPIdentifier, const NPVariant*, uint32_t, NPVariant*)
-{
-  return false;
-}
-
-static bool
-GCRaceInvokeDefault(NPObject* o, const NPVariant* args, uint32_t argCount,
-		    NPVariant* result)
-{
-  if (1 != argCount || !NPVARIANT_IS_INT32(args[0]) ||
-      35 != NPVARIANT_TO_INT32(args[0]))
-    return false;
-
-  return true;
-}
-
-static const NPClass kGCRaceClass = {
-  NP_CLASS_STRUCT_VERSION,
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr,
-  GCRaceInvoke,
-  GCRaceInvokeDefault,
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr
-};
-
-struct GCRaceData
-{
-  GCRaceData(NPP npp, NPObject* callback, NPObject* localFunc)
-    : npp_(npp)
-    , callback_(callback)
-    , localFunc_(localFunc)
-  {
-    NPN_RetainObject(callback_);
-    NPN_RetainObject(localFunc_);
-  }
-
-  ~GCRaceData()
-  {
-    NPN_ReleaseObject(callback_);
-    NPN_ReleaseObject(localFunc_);
-  }
-
-  NPP npp_;
-  NPObject* callback_;
-  NPObject* localFunc_;
-};
-
-static void
-FinishGCRace(void* closure)
-{
-  GCRaceData* rd = static_cast<GCRaceData*>(closure);
-
-  XPSleep(5);
-
-  NPVariant arg;
-  OBJECT_TO_NPVARIANT(rd->localFunc_, arg);
-
-  NPVariant result;
-  bool ok = NPN_InvokeDefault(rd->npp_, rd->callback_, &arg, 1, &result);
-  if (!ok)
-    return;
-
-  NPN_ReleaseVariantValue(&result);
-  delete rd;
-}
-
-bool
-checkGCRace(NPObject* npobj, const NPVariant* args, uint32_t argCount,
-	    NPVariant* result)
-{
-  if (1 != argCount || !NPVARIANT_IS_OBJECT(args[0]))
-    return false;
-
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-
-  NPObject* localFunc =
-    NPN_CreateObject(npp, const_cast<NPClass*>(&kGCRaceClass));
-
-  GCRaceData* rd =
-    new GCRaceData(npp, NPVARIANT_TO_OBJECT(args[0]), localFunc);
-  NPN_PluginThreadAsyncCall(npp, FinishGCRace, rd);
-
-  OBJECT_TO_NPVARIANT(localFunc, *result);
-  return true;
 }
 
 bool
