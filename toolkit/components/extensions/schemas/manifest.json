@@ -177,13 +177,8 @@
           "optional_permissions": {
             "type": "array",
             "items": {
-              "choices": [
-                { "$ref": "OptionalPermission" },
-                {
-                  "type": "string",
-                  "deprecated": "Unknown optional permission ${value}"
-                }
-              ]
+              "$ref": "OptionalPermission",
+              "onError": "warn"
             },
             "optional": true,
             "default": []
