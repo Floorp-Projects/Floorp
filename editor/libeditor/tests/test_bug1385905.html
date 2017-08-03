@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi=id=1385905
+-->
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1385905">Mozilla Bug 1385905</a>
+<div id="display"></div>
+<div id="editor" contenteditable style="padding: 5px;"><div>contents</div></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({"set": [["editor.use_div_for_default_newlines", true]]}, () => {
+    function ensureNoMozBR() {
+      for (let br of document.querySelectorAll("#editor > div > br")) {
+        isnot(br.getAttribute("type"), "_moz",
+              "mozBR shouldn't be used with this test");
+      }
+    }
+    var editor = document.getElementById("editor");
+    // Click the left blank area of the first line to set cursor to the start of "contents".
+    synthesizeMouse(editor, 3, 10, {});
+    synthesizeKey("KEY_Enter", { code: "Enter" });
+    is(editor.innerHTML, "<div><br></div><div>contents</div>",
+       "Typing Enter at start of the <div> element should split the <div> element");
+    synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
+    synthesizeKey("x", { code: "KeyX" });
+    is(editor.innerHTML, "<div>x<br></div><div>contents</div>",
+       "Typing 'x' at the empty <div> element should just insert 'x' into the <div> element");
+    ensureNoMozBR();
+    synthesizeKey("KEY_Enter", { code: "Enter" });
+    is(editor.innerHTML, "<div>x</div><div><br></div><div>contents</div>",
+       "Typing Enter next to 'x' in the first <div> element should split the <div> element and inserts <br> element to a new <div> element");
+    ensureNoMozBR();
+    synthesizeKey("KEY_Enter", { code: "Enter" });
+    is(editor.innerHTML, "<div>x</div><div><br></div><div><br></div><div>contents</div>",
+       "Typing Enter in the empty <div> should split the <div> element and inserts <br> element to a new <div> element");
+    ensureNoMozBR();
+    SimpleTest.finish();
+  });
+});
+</script>
+</body>
+</html>

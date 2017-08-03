@@ -207,7 +207,6 @@
         "description": "Clears the browser's cache.",
         "type": "function",
         "async": "callback",
-        "unsupported": true,
         "parameters": [
           {
             "$ref": "RemovalOptions",

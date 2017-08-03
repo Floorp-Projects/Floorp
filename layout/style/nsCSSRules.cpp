@@ -952,15 +952,6 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(const nsAString & propertyName,
   return GetPropertyValue(nsCSSProps::LookupFontDesc(propertyName), aResult);
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::GetAuthoredPropertyValue(const nsAString& propertyName,
-                                                 nsAString& aResult)
-{
-  // We don't return any authored property values different from
-  // GetPropertyValue, currently.
-  return GetPropertyValue(nsCSSProps::LookupFontDesc(propertyName), aResult);
-}
-
 already_AddRefed<dom::CSSValue>
 nsCSSFontFaceStyleDecl::GetPropertyCSSValue(const nsAString & propertyName,
                                             ErrorResult& aRv)

@@ -411,6 +411,18 @@
         "description": "Fired when the user clicked on a link for the app's notification settings.",
         "parameters": [
         ]
+      },
+      {
+        "name": "onShown",
+        "type": "function",
+        "description": "Fired when the notification is shown.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "notificationId",
+            "description": "The notificationId of the shown notification."
+          }
+        ]
       }
     ]
   }

@@ -18,6 +18,7 @@ using namespace mozilla::java;
 
 namespace mozilla {
 
+class HLSDecoder;
 class HLSResource;
 
 class HLSResourceCallbacksSupport
@@ -42,9 +43,7 @@ private:
 class HLSResource final : public MediaResource
 {
 public:
-  HLSResource(MediaResourceCallback* aCallback,
-              nsIChannel* aChannel,
-              nsIURI* aURI);
+  HLSResource(HLSDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
   ~HLSResource();
   nsresult Close() override { return NS_OK; }
   void Suspend(bool aCloseImmediately) override;
@@ -100,6 +99,8 @@ public:
     return mHLSResourceWrapper;
   }
 
+  void Detach() { mDecoder = nullptr; }
+
 private:
   friend class HLSResourceCallbacksSupport;
 
@@ -117,7 +118,7 @@ private:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  RefPtr<MediaResourceCallback> mCallback;
+  HLSDecoder* mDecoder;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
   java::GeckoHLSResourceWrapper::GlobalRef mHLSResourceWrapper;

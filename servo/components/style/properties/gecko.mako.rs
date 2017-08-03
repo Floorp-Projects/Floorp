@@ -60,6 +60,7 @@ use selector_parser::PseudoElement;
 use servo_arc::{Arc, RawOffsetArc};
 use std::mem::{forget, uninitialized, transmute, zeroed};
 use std::{cmp, ops, ptr};
+use stylesheets::{MallocSizeOfWithRepeats, SizeOfState};
 use values::{self, Auto, CustomIdent, Either, KeyframesName};
 use values::computed::ToComputedValue;
 use values::computed::effects::{BoxShadow, Filter, SimpleShadow};
@@ -308,6 +309,11 @@ impl ComputedValuesInner {
         self.visited_style.as_ref().map(|x| &**x)
     }
 
+    /// Gets the raw visited style. Useful for memory reporting.
+    pub fn get_raw_visited_style(&self) -> &Option<RawOffsetArc<ComputedValues>> {
+        &self.visited_style
+    }
+
     /// Gets a reference to the visited style. Panic if no visited style exists.
     pub fn visited_style(&self) -> &ComputedValues {
         self.get_visited_style().unwrap()
@@ -361,6 +367,18 @@ impl ComputedValuesInner {
             PropertyDeclarationId::Custom(_name) => unimplemented!(),
             _ => unimplemented!()
         }
+    }
+}
+
+impl MallocSizeOfWithRepeats for ComputedValues {
+    fn malloc_size_of_children(&self, state: &mut SizeOfState) -> usize {
+        let mut n = 0;
+        if let Some(ref raw_offset_arc) = *self.get_raw_visited_style() {
+            n += raw_offset_arc.with_arc(|a: &Arc<ComputedValues>| {
+                a.malloc_size_of_children(state)
+            })
+        }
+        n
     }
 }
 
@@ -2057,7 +2075,7 @@ fn static_assert() {
                              font-variant-east-asian font-variant-ligatures
                              font-variant-numeric font-language-override
                              font-feature-settings font-variation-settings
-                             -moz-min-font-size-ratio"""
+                             -moz-min-font-size-ratio -x-text-zoom"""
 %>
 <%self:impl_trait style_struct_name="Font"
     skip_longhands="${skip_font_longhands}"
@@ -2231,9 +2249,12 @@ fn static_assert() {
         )
     }
 
-    // FIXME(bholley): Gecko has two different sizes, one of which (mSize) is the
-    // actual computed size, and the other of which (mFont.size) is the 'display
-    // size' which takes font zooming into account. We don't handle font zooming yet.
+    pub fn unzoom_fonts(&mut self, device: &Device) {
+        self.gecko.mSize = device.unzoom_text(Au(self.gecko.mSize)).0;
+        self.gecko.mScriptUnconstrainedSize = device.unzoom_text(Au(self.gecko.mScriptUnconstrainedSize)).0;
+        self.gecko.mFont.size = device.unzoom_text(Au(self.gecko.mFont.size)).0;
+    }
+
     pub fn set_font_size(&mut self, v: longhands::font_size::computed_value::T) {
         self.gecko.mSize = v.0;
         self.gecko.mScriptUnconstrainedSize = v.0;
@@ -2244,8 +2265,8 @@ fn static_assert() {
     pub fn apply_font_size(&mut self, v: longhands::font_size::computed_value::T,
                            parent: &Self,
                            device: &Device) -> Option<Au> {
-        let (adjusted_size, adjusted_unconstrained_size)
-            = self.calculate_script_level_size(parent);
+        let (adjusted_size, adjusted_unconstrained_size) =
+            self.calculate_script_level_size(parent, device);
         // In this case, we have been unaffected by scriptminsize, ignore it
         if parent.gecko.mSize == parent.gecko.mScriptUnconstrainedSize &&
            adjusted_size == adjusted_unconstrained_size {
@@ -2324,7 +2345,7 @@ fn static_assert() {
     /// will be set to the value of that unit computed against the parent
     /// unconstrained size, whereas the font size will be set computing against
     /// the parent font size.
-    pub fn calculate_script_level_size(&self, parent: &Self) -> (Au, Au) {
+    pub fn calculate_script_level_size(&self, parent: &Self, device: &Device) -> (Au, Au) {
         use std::cmp;
 
         let delta = self.gecko.mScriptLevel - parent.gecko.mScriptLevel;
@@ -2336,8 +2357,11 @@ fn static_assert() {
             return (parent_size, parent_unconstrained_size)
         }
 
-        /// XXXManishearth this should also handle text zoom
-        let min = Au(parent.gecko.mScriptMinSize);
+
+        let mut min = Au(parent.gecko.mScriptMinSize);
+        if self.gecko.mAllowZoom {
+            min = device.zoom_text(min);
+        }
 
         let scale = (parent.gecko.mScriptSizeMultiplier as f32).powi(delta as i32);
 
@@ -2374,7 +2398,7 @@ fn static_assert() {
                                   kw_inherited_size: Option<Au>,
                                   device: &Device) -> bool {
         let (adjusted_size, adjusted_unconstrained_size)
-            = self.calculate_script_level_size(parent);
+            = self.calculate_script_level_size(parent, device);
         if adjusted_size.0 != parent.gecko.mSize ||
            adjusted_unconstrained_size.0 != parent.gecko.mScriptUnconstrainedSize {
             // This is incorrect. When there is both a keyword size being inherited
@@ -2463,6 +2487,21 @@ fn static_assert() {
         unsafe {
             Gecko_nsStyleFont_CopyLangFrom(&mut self.gecko, &other.gecko);
         }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn set__x_text_zoom(&mut self, v: longhands::_x_text_zoom::computed_value::T) {
+        self.gecko.mAllowZoom = v.0;
+    }
+
+    #[allow(non_snake_case)]
+    pub fn copy__x_text_zoom_from(&mut self, other: &Self) {
+        self.gecko.mAllowZoom = other.gecko.mAllowZoom;
+    }
+
+    #[allow(non_snake_case)]
+    pub fn reset__x_text_zoom(&mut self, other: &Self) {
+        self.copy__x_text_zoom_from(other)
     }
 
     #[allow(non_snake_case)]

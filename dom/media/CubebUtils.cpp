@@ -610,9 +610,9 @@ void GetDeviceCollection(nsTArray<RefPtr<AudioDeviceInfo>>& aDeviceInfos,
       for (unsigned int i = 0; i < collection.count; ++i) {
         auto device = collection.device[i];
         RefPtr<AudioDeviceInfo> info =
-          new AudioDeviceInfo(NS_ConvertASCIItoUTF16(device.friendly_name),
-                              NS_ConvertASCIItoUTF16(device.group_id),
-                              NS_ConvertASCIItoUTF16(device.vendor_name),
+          new AudioDeviceInfo(NS_ConvertUTF8toUTF16(device.friendly_name),
+                              NS_ConvertUTF8toUTF16(device.group_id),
+                              NS_ConvertUTF8toUTF16(device.vendor_name),
                               ConvertCubebType(device.type),
                               ConvertCubebState(device.state),
                               ConvertCubebPreferred(device.preferred),

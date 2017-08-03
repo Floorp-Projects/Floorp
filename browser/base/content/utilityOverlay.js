@@ -76,6 +76,14 @@ function getBoolPref(prefname, def) {
   }
 }
 
+function doGetProtocolFlags(aURI) {
+  let handler = Services.io.getProtocolHandler(aURI.scheme);
+  // see DoGetProtocolFlags in nsIProtocolHandler.idl
+  return handler instanceof Ci.nsIProtocolHandlerWithDynamicFlags ?
+         handler.QueryInterface(Ci.nsIProtocolHandlerWithDynamicFlags).getFlagsForURI(aURI) :
+         handler.protocolFlags;
+}
+
 /* openUILink handles clicks on UI elements that cause URLs to load.
  *
  * As the third argument, you may pass an object with the same properties as
@@ -429,7 +437,7 @@ function openLinkIn(url, where, params) {
     let {URI_INHERITS_SECURITY_CONTEXT} = Ci.nsIProtocolHandler;
     if (aForceAboutBlankViewerInCurrent &&
         (!uriObj ||
-         (Services.io.getProtocolFlags(uriObj.scheme) & URI_INHERITS_SECURITY_CONTEXT))) {
+         (doGetProtocolFlags(uriObj) & URI_INHERITS_SECURITY_CONTEXT))) {
       // Unless we know for sure we're not inheriting principals,
       // force the about:blank viewer to have the right principal:
       targetBrowser.createAboutBlankContentViewer(aPrincipal);

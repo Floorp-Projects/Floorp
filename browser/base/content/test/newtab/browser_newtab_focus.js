@@ -9,7 +9,7 @@ add_task(async function() {
 
   // When the onboarding component is enabled, it would inject extra tour notification into
   // the newtab page so there would be 3 more overlay button, notification close button and action button
-  let onbardingEnabled = AppConstants.NIGHTLY_BUILD && Services.prefs.getBoolPref("browser.onboarding.enabled");
+  let onbardingEnabled = Services.prefs.getBoolPref("browser.onboarding.enabled");
 
   // Focus count in new tab page.
   // 30 = 9 * 3 + 3 = 9 sites, each with link, pin and remove buttons; search
@@ -67,22 +67,27 @@ function promiseNoMuteNotificationOnFirstSession() {
  * Wait for the onboarding tour notification opens
  */
 function promiseTourNotificationOpened(browser) {
-  let condition = () => {
-    return ContentTask.spawn(browser, {}, function() {
-      return new Promise(resolve => {
-        let bar = content.document.querySelector("#onboarding-notification-bar");
-        if (bar && bar.classList.contains("onboarding-opened")) {
-          resolve(true);
-          return;
-        }
-        resolve(false);
+  function isOpened() {
+    let doc = content && content.document;
+    let notification = doc.querySelector("#onboarding-notification-bar");
+    if (notification && notification.classList.contains("onboarding-opened")) {
+      ok(true, "Should open tour notification");
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      let observer = new content.MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          let bar = Array.from(mutation.addedNodes)
+                         .find(node => node.id == "onboarding-notification-bar");
+          if (bar && bar.classList.contains("onboarding-opened")) {
+            observer.disconnect();
+            ok(true, "Should open tour notification");
+            resolve();
+          }
+        });
       });
-    })
-  };
-  return BrowserTestUtils.waitForCondition(
-    condition,
-    "Should open tour notification",
-    100,
-    30
-  );
+      observer.observe(doc.body, { childList: true });
+    });
+  }
+  return ContentTask.spawn(browser, {}, isOpened);
 }

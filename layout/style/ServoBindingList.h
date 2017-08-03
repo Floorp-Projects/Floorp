@@ -20,6 +20,8 @@
 
 // Element data
 SERVO_BINDING_FUNC(Servo_Element_ClearData, void, RawGeckoElementBorrowed node)
+SERVO_BINDING_FUNC(Servo_Element_SizeOfExcludingThis, size_t, mozilla::MallocSizeOf,
+                   mozilla::SeenPtrs* seen_ptrs, RawGeckoElementBorrowed node)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetContentsStrong,
