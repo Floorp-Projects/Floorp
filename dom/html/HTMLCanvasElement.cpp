@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLCanvasElement.h"
 
+#include "gfxPrefs.h"
 #include "ImageEncoder.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -24,6 +25,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/layers/AsyncCanvasRenderer.h"
+#include "mozilla/layers/WebRenderCanvasRenderer.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -1059,18 +1061,38 @@ HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect)
 
   ActiveLayerTracker::NotifyContentChange(frame);
 
-  Layer* layer = nullptr;
-  if (damageRect) {
-    nsIntSize size = GetWidthHeight();
-    if (size.width != 0 && size.height != 0) {
-      gfx::IntRect invalRect = gfx::IntRect::Truncate(*damageRect);
-      layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS, &invalRect);
+  // When using layers-free WebRender, we cannot invalidate the layer (because there isn't one).
+  // Instead, we mark the CanvasRenderer dirty and scheduling an empty transaction
+  // which is effectively equivalent.
+  CanvasRenderer* renderer = nullptr;
+  if (gfxPrefs::WebRenderLayersFree() && frame->HasProperty(nsIFrame::WebRenderUserDataProperty())) {
+    nsIFrame::WebRenderUserDataTable* userDataTable =
+      frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
+    RefPtr<WebRenderUserData> data;
+    userDataTable->Get(nsDisplayItem::TYPE_CANVAS, getter_AddRefs(data));
+    if (data && data->AsCanvasData()) {
+      renderer = data->AsCanvasData()->GetCanvasRenderer();
     }
-  } else {
-    layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS);
   }
-  if (layer) {
-    static_cast<CanvasLayer*>(layer)->Updated();
+
+  if (renderer) {
+    renderer->SetDirty();
+    frame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
+  } else {
+    Layer* layer = nullptr;
+    if (damageRect) {
+      nsIntSize size = GetWidthHeight();
+      if (size.width != 0 && size.height != 0) {
+        gfx::IntRect invalRect = gfx::IntRect::Truncate(*damageRect);
+        layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS, &invalRect);
+      }
+    } else {
+      layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS);
+    }
+
+    if (layer) {
+      static_cast<CanvasLayer*>(layer)->Updated();
+    }
   }
 
   /*
