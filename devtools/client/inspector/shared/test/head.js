@@ -199,9 +199,9 @@ var simulateColorPickerChange = Task.async(function* (ruleView, colorPicker,
  */
 function getComputedViewProperty(view, name) {
   let prop;
-  for (let property of view.styleDocument.querySelectorAll(".property-view")) {
-    let nameSpan = property.querySelector(".property-name");
-    let valueSpan = property.querySelector(".property-value");
+  for (let property of view.styleDocument.querySelectorAll(".computed-property-view")) {
+    let nameSpan = property.querySelector(".computed-property-name");
+    let valueSpan = property.querySelector(".computed-property-value");
 
     if (nameSpan.firstChild.textContent === name) {
       prop = {nameSpan, valueSpan};

@@ -96,7 +96,7 @@ module.exports = createClass({
 
     return dom.div(
       {
-        className: "property-view",
+        className: "computed-property-view",
         "data-property-name": name,
         tabIndex: "0",
         ref: container => {
@@ -105,11 +105,11 @@ module.exports = createClass({
       },
       dom.div(
         {
-          className: "property-name-container",
+          className: "computed-property-name-container",
         },
         dom.div(
           {
-            className: "property-name theme-fg-color5",
+            className: "computed-property-name theme-fg-color5",
             tabIndex: "",
             title: name,
             onClick: this.onFocus,
@@ -119,11 +119,11 @@ module.exports = createClass({
       ),
       dom.div(
         {
-          className: "property-value-container",
+          className: "computed-property-value-container",
         },
         dom.div(
           {
-            className: "property-value theme-fg-color1",
+            className: "computed-property-value theme-fg-color1",
             dir: "ltr",
             tabIndex: "",
             onClick: this.onFocus,

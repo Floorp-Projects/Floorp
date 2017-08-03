@@ -560,7 +560,7 @@ uint64_t ContentParent::sNextTabParentId = 0;
 nsDataHashtable<nsUint64HashKey, TabParent*> ContentParent::sNextTabParents;
 
 // This is true when subprocess launching is enabled.  This is the
-// case between StartUp() and ShutDown() or JoinAllSubprocesses().
+// case between StartUp() and ShutDown().
 static bool sCanLaunchSubprocesses;
 
 // Set to true if the DISABLE_UNSAFE_CPOW_WARNINGS environment variable is
@@ -645,53 +645,6 @@ ContentParent::ShutDown()
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
   sSandboxBrokerPolicyFactory = nullptr;
 #endif
-}
-
-/*static*/ void
-ContentParent::JoinProcessesIOThread(const nsTArray<ContentParent*>* aProcesses,
-                                     Monitor* aMonitor, bool* aDone)
-{
-  const nsTArray<ContentParent*>& processes = *aProcesses;
-  for (uint32_t i = 0; i < processes.Length(); ++i) {
-    if (GeckoChildProcessHost* process = processes[i]->mSubprocess) {
-      process->Join();
-    }
-  }
-  {
-    MonitorAutoLock lock(*aMonitor);
-    *aDone = true;
-    lock.Notify();
-  }
-  // Don't touch any arguments to this function from now on.
-}
-
-/*static*/ void
-ContentParent::JoinAllSubprocesses()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  AutoTArray<ContentParent*, 8> processes;
-  GetAll(processes);
-  if (processes.IsEmpty()) {
-    printf_stderr("There are no live subprocesses.");
-    return;
-  }
-
-  printf_stderr("Subprocesses are still alive.  Doing emergency join.\n");
-
-  bool done = false;
-  Monitor monitor("mozilla.dom.ContentParent.JoinAllSubprocesses");
-  XRE_GetIOMessageLoop()->PostTask(NewRunnableFunction(
-                                     &ContentParent::JoinProcessesIOThread,
-                                     &processes, &monitor, &done));
-  {
-    MonitorAutoLock lock(monitor);
-    while (!done) {
-      lock.Wait();
-    }
-  }
-
-  sCanLaunchSubprocesses = false;
 }
 
 /*static*/ uint32_t

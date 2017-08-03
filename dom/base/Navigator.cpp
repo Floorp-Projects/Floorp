@@ -35,7 +35,6 @@
 #include "BatteryManager.h"
 #include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/GamepadServiceTest.h"
-#include "mozilla/dom/PowerManager.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/FlyWebPublishedServer.h"
@@ -203,7 +202,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotification)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryPromise)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCredentials)
@@ -255,11 +253,6 @@ Navigator::Invalidate()
   }
 
   mBatteryPromise = nullptr;
-
-  if (mPowerManager) {
-    mPowerManager->Shutdown();
-    mPowerManager = nullptr;
-  }
 
   if (mConnection) {
     mConnection->Shutdown();
@@ -1415,24 +1408,6 @@ Navigator::PublishServer(const nsAString& aName,
                    });
 
   return domPromise.forget();
-}
-
-PowerManager*
-Navigator::GetMozPower(ErrorResult& aRv)
-{
-  if (!mPowerManager) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    mPowerManager = PowerManager::CreateInstance(mWindow);
-    if (!mPowerManager) {
-      // We failed to get the power manager service?
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-    }
-  }
-
-  return mPowerManager;
 }
 
 already_AddRefed<WakeLock>

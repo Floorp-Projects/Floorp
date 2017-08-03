@@ -145,7 +145,7 @@ const TEST_DATA = [
     desc: "Testing a matched rule value",
     getHoveredNode: function* (view) {
       let el = yield getComputedViewMatchedRules(view, "color");
-      return el.querySelector(".other-property-value");
+      return el.querySelector(".computed-other-property-value");
     },
     assertNodeInfo: function (nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_VALUE_TYPE);

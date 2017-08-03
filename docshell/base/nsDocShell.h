@@ -906,7 +906,7 @@ protected:
 
   // Offset in the parent's child list.
   // -1 if the docshell is added dynamically to the parent shell.
-  uint32_t mChildOffset;
+  int32_t mChildOffset;
   uint32_t mBusyFlags;
   uint32_t mAppType;
   uint32_t mLoadType;

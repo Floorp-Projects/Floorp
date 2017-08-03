@@ -65,6 +65,7 @@ enum class CallerType : uint32_t;
 enum PopupControlState {
   openAllowed = 0,  // open that window without worries
   openControlled,   // it's a popup, but allow it
+  openBlocked,      // it's a popup, but not from an allowed event
   openAbused,       // it's a popup. disallow it, but allow domain override.
   openOverridden    // disallow window open
 };

@@ -28,9 +28,9 @@ add_task(function* () {
   let swatch = doc.querySelector(".grid-color-swatch");
 
   info("Checking the initial state of the Grid Inspector.");
-  is(swatch.style.backgroundColor, "rgb(75, 0, 130)",
+  is(swatch.style.backgroundColor, "rgb(148, 0, 255)",
     "The color swatch's background is correct.");
-  is(store.getState().grids[0].color, "#4B0082", "The grid color state is correct.");
+  is(store.getState().grids[0].color, "#9400FF", "The grid color state is correct.");
 
   info("Scrolling into view of the #grid color swatch.");
   swatch.scrollIntoView();
@@ -47,12 +47,12 @@ add_task(function* () {
 
   info("Pressing ESCAPE to close the tooltip.");
   let onGridColorUpdate = waitUntilState(store, state =>
-    state.grids[0].color === "#4B0082");
+    state.grids[0].color === "#9400FF");
   let onColorPickerHidden = cPicker.tooltip.once("hidden");
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "ESCAPE");
   yield onColorPickerHidden;
   yield onGridColorUpdate;
 
-  is(swatch.style.backgroundColor, "rgb(75, 0, 130)",
+  is(swatch.style.backgroundColor, "rgb(148, 0, 255)",
     "The color swatch's background was reverted after ESCAPE.");
 });

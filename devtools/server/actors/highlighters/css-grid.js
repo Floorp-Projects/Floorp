@@ -97,18 +97,18 @@ const CANVAS_SIZE = 4096;
  * as input; optionally applying a matrix, and a function to each of the coordinates'
  * value.
  *
- * @param {Number} x1
- *        The x-axis coordinate of the rectangle's diagonal start point.
- * @param {Number} y1
- *        The y-axis coordinate of the rectangle's diagonal start point.
- * @param {Number} x2
- *        The x-axis coordinate of the rectangle's diagonal end point.
- * @param {Number} y2
- *        The y-axis coordinate of the rectangle's diagonal end point.
- * @param {Array} [matrix=identity()]
- *        A transformation matrix to apply.
+ * @param  {Number} x1
+ *         The x-axis coordinate of the rectangle's diagonal start point.
+ * @param  {Number} y1
+ *         The y-axis coordinate of the rectangle's diagonal start point.
+ * @param  {Number} x2
+ *         The x-axis coordinate of the rectangle's diagonal end point.
+ * @param  {Number} y2
+ *         The y-axis coordinate of the rectangle's diagonal end point.
+ * @param  {Array} [matrix=identity()]
+ *         A transformation matrix to apply.
  * @return {Array}
- *        The rect four corners' points transformed by the matrix given.
+ *         The rect four corners' points transformed by the matrix given.
  */
 function getPointsFromDiagonal(x1, y1, x2, y2, matrix = identity()) {
   return [
@@ -127,8 +127,8 @@ function getPointsFromDiagonal(x1, y1, x2, y2, matrix = identity()) {
  * Takes an array of four points and returns a DOMRect-like object, represent the
  * boundaries defined by the points given.
  *
- * @param {Array} points
- *        The four points.
+ * @param  {Array} points
+ *         The four points.
  * @return {Object}
  *         A DOMRect-like object.
  */
@@ -151,8 +151,8 @@ function getBoundsFromPoints(points) {
 /**
  * Takes an array of four points and returns a string represent a path description.
  *
- * @param {Array} points
- *        The four points.
+ * @param  {Array} points
+ *         The four points.
  * @return {String}
  *         A Path Description that can be used in svg's <path> element.
  */
@@ -166,22 +166,22 @@ function getPathDescriptionFromPoints(points) {
 /**
  * Draws a line to the context given, applying a transformation matrix if passed.
  *
- * @param {CanvasRenderingContext2D} ctx
- *        The 2d canvas context.
- * @param {Number} x1
- *        The x-axis of the coordinate for the begin of the line.
- * @param {Number} y1
- *        The y-axis of the coordinate for the begin of the line.
- * @param {Number} x2
- *        The x-axis of the coordinate for the end of the line.
- * @param {Number} y2
- *        The y-axis of the coordinate for the end of the line.
- * @param {Object} [options]
- *        The options object.
- * @param {Array} [options.matrix=identity()]
- *        The transformation matrix to apply.
- * @param {Array} [options.extendToBoundaries]
- *        If set, the line will be extended to reach the boundaries specified.
+ * @param  {CanvasRenderingContext2D} ctx
+ *         The 2d canvas context.
+ * @param  {Number} x1
+ *         The x-axis of the coordinate for the begin of the line.
+ * @param  {Number} y1
+ *         The y-axis of the coordinate for the begin of the line.
+ * @param  {Number} x2
+ *         The x-axis of the coordinate for the end of the line.
+ * @param  {Number} y2
+ *         The y-axis of the coordinate for the end of the line.
+ * @param  {Object} [options]
+ *         The options object.
+ * @param  {Array} [options.matrix=identity()]
+ *         The transformation matrix to apply.
+ * @param  {Array} [options.extendToBoundaries]
+ *         If set, the line will be extended to reach the boundaries specified.
  */
 function drawLine(ctx, x1, y1, x2, y2, options) {
   let matrix = options.matrix || identity();
@@ -214,18 +214,18 @@ function drawLine(ctx, x1, y1, x2, y2, options) {
  * Draws a rect to the context given, applying a transformation matrix if passed.
  * The coordinates are the start and end points of the rectangle's diagonal.
  *
- * @param {CanvasRenderingContext2D} ctx
- *        The 2d canvas context.
- * @param {Number} x1
- *        The x-axis coordinate of the rectangle's diagonal start point.
- * @param {Number} y1
- *        The y-axis coordinate of the rectangle's diagonal start point.
- * @param {Number} x2
- *        The x-axis coordinate of the rectangle's diagonal end point.
- * @param {Number} y2
- *        The y-axis coordinate of the rectangle's diagonal end point.
- * @param {Array} [matrix=identity()]
- *        The transformation matrix to apply.
+ * @param  {CanvasRenderingContext2D} ctx
+ *         The 2d canvas context.
+ * @param  {Number} x1
+ *         The x-axis coordinate of the rectangle's diagonal start point.
+ * @param  {Number} y1
+ *         The y-axis coordinate of the rectangle's diagonal start point.
+ * @param  {Number} x2
+ *         The x-axis coordinate of the rectangle's diagonal end point.
+ * @param  {Number} y2
+ *         The y-axis coordinate of the rectangle's diagonal end point.
+ * @param  {Array} [matrix=identity()]
+ *         The transformation matrix to apply.
  */
 function drawRect(ctx, x1, y1, x2, y2, matrix = identity()) {
   let p = getPointsFromDiagonal(x1, y1, x2, y2, matrix);
@@ -623,7 +623,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * Gets the grid gap pattern used to render the gap regions based on the device
    * pixel ratio given.
    *
-   * @param {Number} devicePixelRatio
+   * @param  {Number} devicePixelRatio
    *         The device pixel ratio we want the pattern for.
    * @param  {Object} dimension
    *         Refers to the Map key for the grid dimension type which is either the
@@ -779,7 +779,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   /**
    * Checks if the current node has a CSS Grid layout.
    *
-   * @return  {Boolean} true if the current node has a CSS grid layout, false otherwise.
+   * @return {Boolean} true if the current node has a CSS grid layout, false otherwise.
    */
   isGrid() {
     return this.currentNode.getGridFragments().length > 0;
@@ -885,7 +885,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * @param  {GridArea} area
    *         The grid area object.
    * @param  {Object} bounds
-   *          A DOMRect-like object represent the grid area rectangle.
+   *         A DOMRect-like object represent the grid area rectangle.
    */
   _updateGridAreaInfobar(area, bounds) {
     let { width, height } = bounds;
@@ -911,7 +911,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * @param  {Number} columnNumber
    *         The grid cell's column number.
    * @param  {Object} bounds
-   *          A DOMRect-like object represent the grid cell rectangle.
+   *         A DOMRect-like object represent the grid cell rectangle.
    */
   _updateGridCellInfobar(rowNumber, columnNumber, bounds) {
     let { width, height } = bounds;
@@ -1162,12 +1162,40 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
             startPos) {
     let lineStartPos = startPos;
 
+    // Keep track of the number of collapsed lines per line position
+    let stackedLines = [];
+
     const { lines } = gridDimension;
 
-    for (let i = 0, line = lines[i]; i < lines.length; line = lines[++i]) {
+    for (let i = 0, line; (line = lines[i++]);) {
       let linePos = line.start;
+      let negativeLineNumber = i - lines.length - 1;
 
-      const negativeLineNumber = i - lines.length;
+      // Check for overlapping lines. We render a second box beneath the last overlapping
+      // line number to indicate there are lines beneath it.
+      const gridLine = gridDimension.tracks[line.number - 1];
+
+      if (gridLine) {
+        const { breadth }  = gridLine;
+
+        if (breadth === 0) {
+          stackedLines.push(negativeLineNumber);
+
+          if (stackedLines.length > 0) {
+            this.renderGridLineNumber(negativeLineNumber, linePos, lineStartPos,
+              line.breadth, dimensionType, 1);
+          }
+
+          continue;
+        }
+      }
+
+      // For negative line numbers, we want to display the smallest
+      // value at the front of the stack.
+      if (stackedLines.length) {
+        negativeLineNumber = stackedLines[0];
+        stackedLines = [];
+      }
 
       this.renderGridLineNumber(negativeLineNumber, linePos, lineStartPos, line.breadth,
         dimensionType);
@@ -1360,8 +1388,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // Keep track of the number of collapsed lines per line position
     let stackedLines = [];
 
-    for (let i = 0; i < gridDimension.lines.length; i++) {
-      let line = gridDimension.lines[i];
+    const { lines } = gridDimension;
+
+    for (let i = 0, line; (line = lines[i++]);) {
       let linePos = line.start;
 
       // If you place something using negative numbers, you can trigger some implicit grid
@@ -1379,14 +1408,18 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       // Check for overlapping lines. We render a second box beneath the last overlapping
       // line number to indicate there are lines beneath it.
       const gridLine = gridDimension.tracks[line.number - 1];
+
       if (gridLine) {
         const { breadth }  = gridLine;
+
         if (breadth === 0) {
           stackedLines.push(gridDimension.lines[i].number);
+
           if (stackedLines.length > 0) {
             this.renderGridLineNumber(line.number, linePos, lineStartPos, line.breadth,
               dimensionType, 1);
           }
+
           continue;
         }
       }

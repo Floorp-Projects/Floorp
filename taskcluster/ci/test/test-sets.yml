@@ -65,6 +65,12 @@ talos:
 awsy:
     - awsy
 
+awsy-stylo:
+    - awsy-stylo
+
+awsy-stylo-sequential:
+    - awsy-stylo-sequential
+
 ##
 # Limited test sets for specific platforms
 

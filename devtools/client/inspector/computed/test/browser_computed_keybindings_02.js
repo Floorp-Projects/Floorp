@@ -38,7 +38,7 @@ add_task(function* () {
   yield selectNode("span", inspector);
 
   info("Selecting the first computed style in the list");
-  let firstStyle = view.styleDocument.querySelector(".property-view");
+  let firstStyle = view.styleDocument.querySelector(".computed-property-view");
   ok(firstStyle, "First computed style found in panel");
   firstStyle.focus();
 
@@ -50,7 +50,7 @@ add_task(function* () {
 
   info("Verify the 2nd style has been expanded");
   let secondStyleSelectors = view.styleDocument.querySelectorAll(
-    ".property-content .matchedselectors")[1];
+    ".computed-property-content .matchedselectors")[1];
   ok(secondStyleSelectors.childNodes.length > 0, "Matched selectors expanded");
 
   info("Tab back up and test the same thing, with space");
@@ -61,6 +61,6 @@ add_task(function* () {
 
   info("Verify the 1st style has been expanded too");
   let firstStyleSelectors = view.styleDocument.querySelectorAll(
-    ".property-content .matchedselectors")[0];
+    ".computed-property-content .matchedselectors")[0];
   ok(firstStyleSelectors.childNodes.length > 0, "Matched selectors expanded");
 });

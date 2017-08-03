@@ -86,8 +86,7 @@ MaybeRecordCurrentStack(DWORD aTlsIndex)
     auto stack = static_cast<stack_t*>(aClosure);
     stack->AppendElement(reinterpret_cast<uintptr_t>(aPC));
   };
-  MozStackWalk(callback, /* skip 2 frames */ 2,
-              /* maxFrames */ 0, &rawStack, 0, nullptr);
+  MozStackWalk(callback, /* skip 2 frames */ 2, /* maxFrames */ 0, &rawStack);
 
   StaticMutexAutoLock lock(sMutex);
   if (!sRecentTlsAllocationStacks) {

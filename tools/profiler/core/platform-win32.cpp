@@ -91,10 +91,10 @@ private:
   HANDLE mProfiledThread;
 };
 
-uintptr_t
+HANDLE
 GetThreadHandle(PlatformData* aData)
 {
-  return (uintptr_t) aData->ProfiledThread();
+  return aData->ProfiledThread();
 }
 
 static const HANDLE kNoThread = INVALID_HANDLE_VALUE;

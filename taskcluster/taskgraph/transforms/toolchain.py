@@ -48,6 +48,10 @@ def use_toolchains(config, jobs):
             raise Exception(
                 "Cannot use the alias %s for %s, it's already used for %s"
                 % (alias, job, aliases[alias]))
+        if alias in artifacts:
+            raise Exception(
+                "Cannot use the alias %s for %s, it's already a toolchain job"
+                % (alias, job))
         aliases[alias] = job
 
     for job in jobs:

@@ -174,8 +174,8 @@ linux64-base-toolchains/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang
-        - linux64-gcc
+        - linux64-clang-3.9
+        - linux64-gcc-4.9
         - linux64-sccache
 
 linux64-base-toolchains/debug:
@@ -204,8 +204,8 @@ linux64-base-toolchains/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang
-        - linux64-gcc
+        - linux64-clang-3.9
+        - linux64-gcc-4.9
         - linux64-sccache
 
 linux/opt:

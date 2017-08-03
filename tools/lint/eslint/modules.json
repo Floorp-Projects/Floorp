@@ -212,7 +212,7 @@
   "test.jsm": ["Foo"],
   "test2.jsm": ["Bar"],
   "test_bug883784.jsm": ["Test"],
-  "Timer.jsm": ["setTimeout", "clearTimeout", "setInterval", "clearInterval"],
+  "Timer.jsm": ["setTimeout", "setTimeoutWithTarget", "clearTimeout", "setInterval", "setIntervalWithTarget", "clearInterval"],
   "tokenserverclient.js": ["TokenServerClient", "TokenServerClientError", "TokenServerClientNetworkError", "TokenServerClientServerError"],
   "ToolboxProcess.jsm": ["BrowserToolboxProcess"],
   "tps.jsm": ["ACTIONS", "TPS"],

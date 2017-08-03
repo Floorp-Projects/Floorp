@@ -18,8 +18,6 @@ from contextlib import contextmanager
 import sys
 import which
 
-DEBUG = os.getenv("DEBUG")
-
 
 def symlink(source, link_name):
     os_symlink = getattr(os, "symlink", None)
@@ -32,22 +30,17 @@ def symlink(source, link_name):
 
 
 def check_run(args):
-    global DEBUG
-    if DEBUG:
-        print >> sys.stderr, ' '.join(args)
+    print >> sys.stderr, ' '.join(args)
     r = subprocess.call(args)
     assert r == 0
 
 
 def run_in(path, args):
     d = os.getcwd()
-    global DEBUG
-    if DEBUG:
-        print >> sys.stderr, 'cd "%s"' % path
+    print >> sys.stderr, 'cd "%s"' % path
     os.chdir(path)
     check_run(args)
-    if DEBUG:
-        print >> sys.stderr, 'cd "%s"' % d
+    print >> sys.stderr, 'cd "%s"' % d
     os.chdir(d)
 
 

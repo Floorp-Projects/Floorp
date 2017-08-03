@@ -1699,6 +1699,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
     new AsyncImagePipelineManager(WebRenderBridgeParent::AllocIdNameSpace());
   if (!api) {
     mWrBridge = WebRenderBridgeParent::CreateDestroyed();
+    mWrBridge.get()->AddRef(); // IPDL reference
     *aIdNamespace = mWrBridge->GetIdNamespace();
     *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     return mWrBridge;
@@ -1706,11 +1707,11 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   api->SetRootPipeline(aPipelineId);
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(asyncMgr), Move(animStorage));
-  *aIdNamespace = mWrBridge->GetIdNamespace();
+  mWrBridge.get()->AddRef(); // IPDL reference
 
+  *aIdNamespace = mWrBridge->GetIdNamespace();
   mCompositorScheduler = mWrBridge->CompositorScheduler();
   MOZ_ASSERT(mCompositorScheduler);
-  mWrBridge.get()->AddRef(); // IPDL reference
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   MOZ_ASSERT(sIndirectLayerTrees[mRootLayerTreeID].mWrBridge == nullptr);
   sIndirectLayerTrees[mRootLayerTreeID].mWrBridge = mWrBridge;
