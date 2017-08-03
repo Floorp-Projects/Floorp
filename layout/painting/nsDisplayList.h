@@ -4586,12 +4586,6 @@ public:
   void PaintAsLayer(nsDisplayListBuilder* aBuilder,
                     gfxContext* aCtx,
                     LayerManager* aManager);
-
-  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                       const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
-                                       mozilla::layers::WebRenderLayerManager* aManager,
-                                       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 
 /* A display item that applies a transformation to all of its descendant
