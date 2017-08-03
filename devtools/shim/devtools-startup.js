@@ -26,6 +26,11 @@ const kDebuggerPrefs = [
   "devtools.debugger.remote-enabled",
   "devtools.chrome.enabled"
 ];
+
+// If devtools.toolbar.visible is set to true, the developer toolbar should appear on
+// startup.
+const TOOLBAR_VISIBLE_PREF = "devtools.toolbar.visible";
+
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
@@ -192,6 +197,12 @@ DevToolsStartup.prototype = {
     // Only top level Firefox Windows fire a browser-delayed-startup-finished event
     let onWindowReady = window => {
       this.hookWindow(window);
+
+      if (Services.prefs.getBoolPref(TOOLBAR_VISIBLE_PREF, false)) {
+        // Loading devtools-browser will open the developer toolbar by also checking this
+        // pref.
+        this.initDevTools();
+      }
 
       if (devtoolsFlag) {
         this.handleDevToolsFlag(window);
@@ -366,7 +377,7 @@ DevToolsStartup.prototype = {
   initialized: false,
 
   initDevTools: function (reason) {
-    if (!this.initialized) {
+    if (reason && !this.initialized) {
       // Only save the first call for each firefox run as next call
       // won't necessarely start the tool. For example key shortcuts may
       // only change the currently selected tool.
