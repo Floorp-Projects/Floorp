@@ -317,19 +317,20 @@ add_task(function* () {
 
     // If a test expects more than one mutation it may come through in a single
     // event or possibly in multiples.
-    let def = defer();
     let seenMutations = 0;
-    inspector.on("markupmutation", function onmutation(e, mutations) {
-      seenMutations += mutations.length;
-      info("Receieved " + seenMutations +
-           " mutations, expecting at least " + numMutations);
-      if (seenMutations >= numMutations) {
-        inspector.off("markupmutation", onmutation);
-        def.resolve();
-      }
+    let promise = new Promise(resolve => {
+      inspector.on("markupmutation", function onmutation(e, mutations) {
+        seenMutations += mutations.length;
+        info("Receieved " + seenMutations +
+             " mutations, expecting at least " + numMutations);
+        if (seenMutations >= numMutations) {
+          inspector.off("markupmutation", onmutation);
+          resolve();
+        }
+      });
     });
     yield test(testActor, inspector);
-    yield def.promise;
+    yield promise;
 
     info("Expanding all markup-view nodes to make sure new nodes are imported");
     yield inspector.markup.expandAll();
