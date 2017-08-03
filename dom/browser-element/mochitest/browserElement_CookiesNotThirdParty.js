@@ -47,5 +47,6 @@ function runTest() {
 
 // Disable third-party cookies for this test.
 addEventListener('testready', function() {
-  SpecialPowers.pushPrefEnv({'set': [['network.cookie.cookieBehavior', 1]]}, runTest);
+  SpecialPowers.pushPrefEnv({'set': [['network.cookie.cookieBehavior', 1],
+                                     ['network.cookie.ipc.sync', true]]}, runTest);
 });
