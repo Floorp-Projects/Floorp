@@ -170,6 +170,7 @@
 #include <process.h>
 #define getpid _getpid
 #include "mozilla/widget/AudioSession.h"
+#include "mozilla/audio/AudioNotificationReceiver.h"
 #endif
 
 #ifdef MOZ_X11
@@ -1330,6 +1331,15 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorManagerChild>&& aComposito
   }
 
   VideoDecoderManagerChild::InitForContent(Move(aVideoManager));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvAudioDefaultDeviceChange()
+{
+#ifdef XP_WIN
+  audio::AudioNotificationReceiver::NotifyDefaultDeviceChanged();
+#endif
   return IPC_OK();
 }
 

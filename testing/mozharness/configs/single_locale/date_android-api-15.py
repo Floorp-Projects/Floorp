@@ -8,7 +8,7 @@ EN_US_BINARY_URL = "http://archive.mozilla.org/pub/" \
 config = {
     "branch": BRANCH,
     "log_name": "single_locale",
-    "objdir": "obj-l10n",
+    "objdir": "obj-firefox",
     "is_automation": True,
     "buildbot_json_path": "buildprops.json",
     "force_clobber": True,
@@ -45,7 +45,7 @@ config = {
     "repack_env": {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
-        "MOZ_OBJDIR": "obj-l10n",
+        "MOZ_OBJDIR": "obj-firefox",
         "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": "nightly-date",

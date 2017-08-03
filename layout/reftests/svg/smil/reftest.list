@@ -276,7 +276,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 
 # Test animation that changes 'display' attribute
 == anim-display.svg lime.svg
-skip-if(styloVsGecko||stylo) == anim-display-in-g-element.svg lime.svg # Bug 1385089
+== anim-display-in-g-element.svg lime.svg
 
 # Test animation that change 'display' style value to 'none'
 == anim-change-display-none-for-ancestor-elem.html lime.html

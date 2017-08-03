@@ -19,6 +19,8 @@
 #   language pack and zip package.
 #   Other targets like windows installers might be listed, too, and should
 #   be defined in the including makefile.
+#   The installer-% targets should not set AB_CD, so that the unpackaging
+#   step finds the original package.
 # The including makefile should provide values for the variables
 #   MOZ_APP_VERSION and MOZ_LANGPACK_EID.
 
@@ -54,7 +56,15 @@ ACDEFINES += \
 	-DPKG_INST_BASENAME='$(PKG_INST_BASENAME)' \
 	$(NULL)
 
+# export some global defines for l10n repacks
+BASE_MERGE:=$(CURDIR)/merge-dir
+export REAL_LOCALE_MERGEDIR=$(BASE_MERGE)/$(AB_CD)
+# is an l10n repack step:
+export IS_LANGUAGE_REPACK
+# is a language pack:
+export IS_LANGPACK
 
+clobber-%: AB_CD=$*
 clobber-%:
 	$(RM) -rf $(DIST)/xpi-stage/locale-$*
 
@@ -167,9 +177,38 @@ TK_DEFINES = $(firstword \
 # chrome directory.
 PKG_ZIP_DIRS = chrome $(or $(DIST_SUBDIRS),$(DIST_SUBDIR))
 
+# Clone a l10n repository, either via hg or git
+# Make this a variable as it's embedded in a sh conditional
+ifeq ($(VCS_CHECKOUT_TYPE),hg)
+L10N_CO = $(HG) --cwd $(L10NBASEDIR) clone https://hg.mozilla.org/l10n-central/$(AB_CD)/
+else
+ifeq ($(VCS_CHECKOUT_TYPE),git)
+L10N_CO = $(GIT) -C $(L10NBASEDIR) clone hg://hg.mozilla.org/l10n-central/$(AB_CD)/
+else
+L10N_CO = $(error You need to use either hg or git)
+endif
+endif
+
+
+merge-%: IS_LANGUAGE_REPACK=1
+merge-%: AB_CD=$*
+merge-%:
+# For nightly builds, we automatically check out missing localizations
+# from l10n-central.
+ifdef NIGHTLY_BUILD
+	@if  ! test -d $(L10NBASEDIR)/$(AB_CD) ; then \
+		$(NSINSTALL) -D $(L10NBASEDIR) ; \
+		$(L10N_CO) ; \
+	fi
+endif
+	$(RM) -rf $(REAL_LOCALE_MERGEDIR)
+	$(MOZILLA_DIR)/mach compare-locales --l10n-base $(L10NBASEDIR) --merge-dir $(REAL_LOCALE_MERGEDIR) $*
+
 langpack-%: LANGPACK_FILE=$(ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
 langpack-%: AB_CD=$*
 langpack-%: XPI_NAME=locale-$*
+langpack-%: IS_LANGUAGE_REPACK=1
+langpack-%: IS_LANGPACK=1
 langpack-%: libs-%
 	@echo 'Making langpack $(LANGPACK_FILE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)

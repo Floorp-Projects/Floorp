@@ -19,6 +19,17 @@
 
 namespace mozilla {
 
+void
+HLSDecoder::Shutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  auto resource = static_cast<HLSResource*>(mResource.get());
+  if (resource) {
+    resource->Detach();
+  }
+  MediaDecoder::Shutdown();
+}
+
 MediaDecoderStateMachine*
 HLSDecoder::CreateStateMachine()
 {
@@ -39,13 +50,6 @@ HLSDecoder::CreateStateMachine()
   return new MediaDecoderStateMachine(this, mReader);
 }
 
-ChannelMediaDecoder*
-HLSDecoder::Clone(MediaDecoderInit& aInit)
-{
-  MOZ_CRASH("Clone is not supported");
-  return nullptr;
-}
-
 bool
 HLSDecoder::IsEnabled()
 {
@@ -60,9 +64,7 @@ HLSDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 }
 
 nsresult
-HLSDecoder::Load(nsIChannel* aChannel,
-                 bool aIsPrivateBrowsing,
-                 nsIStreamListener**)
+HLSDecoder::Load(nsIChannel* aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResource);
@@ -73,7 +75,7 @@ HLSDecoder::Load(nsIChannel* aChannel,
     return rv;
   }
 
-  mResource = new HLSResource(mResourceCallback, aChannel, uri);
+  mResource = new HLSResource(this, aChannel, uri);
 
   rv = MediaShutdownManager::Instance().Register(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -84,13 +86,6 @@ HLSDecoder::Load(nsIChannel* aChannel,
   NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
 
   return InitializeStateMachine();
-}
-
-nsresult
-HLSDecoder::Load(MediaResource*)
-{
-  MOZ_CRASH("Clone is not supported");
-  return NS_ERROR_FAILURE;
 }
 
 nsresult

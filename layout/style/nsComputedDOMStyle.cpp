@@ -395,15 +395,6 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetAuthoredPropertyValue(const nsAString& aPropertyName,
-                                             nsAString& aReturn)
-{
-  // Authored style doesn't make sense to return from computed DOM style,
-  // so just return whatever GetPropertyValue() returns.
-  return GetPropertyValue(aPropertyName, aReturn);
-}
-
 /* static */
 already_AddRefed<nsStyleContext>
 nsComputedDOMStyle::GetStyleContext(Element* aElement,
