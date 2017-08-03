@@ -2123,6 +2123,10 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     }
 
     aBuilder->SetIsCompositingCheap(temp);
+    if (document && widgetTransaction) {
+      TriggerPendingAnimations(document, layerManager->GetAnimationReadyTime());
+    }
+
     return layerManager.forget();
   }
 
