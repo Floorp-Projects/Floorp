@@ -69,11 +69,6 @@ public:
   nsIContent* GetFocusedContent() { return mFocusedContent; }
 
   /**
-   * Returns true if aContent currently has focus.
-   */
-  bool IsFocused(nsIContent* aContent);
-
-  /**
    * Return a focused window. Version of nsIFocusManager::GetFocusedWindow.
    */
   nsPIDOMWindowOuter* GetFocusedWindow() const { return mFocusedWindow; }
