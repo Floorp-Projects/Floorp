@@ -38,34 +38,6 @@
   text-shadow: none !important;
 }
 
-.findbar-closebutton:-moz-lwtheme-brighttext,
-/* Tab styling - make sure to use an inverted icon for the selected tab
-   (brighttext only covers the unselected tabs) */
-.tab-close-button[selected=true] {
-  list-style-image: url("chrome://global/skin/icons/close-inverted.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .findbar-closebutton:-moz-lwtheme-brighttext,
-  .tab-close-button[selected=true] {
-    list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
-  }
-}
-
-/* Override tab close icon (to disable inversion) for better contrast with
-   light theme on Windows 7 Classic theme. */
-@media not all and (min-resolution: 1.1dppx) {
-  #TabsToolbar[brighttext] .tab-close-button:-moz-lwtheme-darktext:not([selected="true"]) {
-    list-style-image: url("chrome://global/skin/icons/close.png");
-  }
-}
-
-@media (min-resolution: 1.1dppx) {
-  #TabsToolbar[brighttext] .tab-close-button:-moz-lwtheme-darktext:not([selected="true"]) {
-    list-style-image: url("chrome://global/skin/icons/close@2x.png");
-  }
-}
-
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
 %ifndef MOZ_PHOTON_THEME
