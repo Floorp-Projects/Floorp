@@ -3465,6 +3465,8 @@ this.XPIProvider = {
         logger.warn("Addon with ID " + oldAddon.id + " already installed,"
                     + " older version will be disabled");
 
+        addon.installDate = oldAddon.installDate;
+
         let existingAddonID = oldAddon.id;
         let existingAddon = oldAddon._sourceBundle;
 
