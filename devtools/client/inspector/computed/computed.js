@@ -179,12 +179,11 @@ function CssComputedView(inspector, document, pageStyle) {
   this._onIncludeBrowserStyles = this._onIncludeBrowserStyles.bind(this);
 
   let doc = this.styleDocument;
-  this.element = doc.getElementById("propertyContainer");
+  this.element = doc.getElementById("computed-property-container");
   this.boxModelWrapper = doc.getElementById("boxmodel-wrapper");
-  this.searchField = doc.getElementById("computedview-searchbox");
-  this.searchClearButton = doc.getElementById("computedview-searchinput-clear");
-  this.includeBrowserStylesCheckbox =
-    doc.getElementById("browser-style-checkbox");
+  this.searchField = doc.getElementById("computed-searchbox");
+  this.searchClearButton = doc.getElementById("computed-searchinput-clear");
+  this.includeBrowserStylesCheckbox = doc.getElementById("browser-style-checkbox");
 
   this.shortcuts = new KeyShortcuts({ window: this.styleWindow });
   this._onShortcut = this._onShortcut.bind(this);
@@ -203,7 +202,7 @@ function CssComputedView(inspector, document, pageStyle) {
   this.searchClearButton.hidden = true;
 
   // No results text.
-  this.noResults = this.styleDocument.getElementById("computedview-no-results");
+  this.noResults = this.styleDocument.getElementById("computed-no-results");
 
   // Refresh panel when color unit changed or pref for showing
   // original sources changes.
@@ -347,11 +346,11 @@ CssComputedView.prototype = {
     let propertyContent;
     let parent = node;
     while (parent.parentNode) {
-      if (parent.classList.contains("property-view")) {
+      if (parent.classList.contains("computed-property-view")) {
         propertyView = parent;
         break;
       }
-      if (parent.classList.contains("property-content")) {
+      if (parent.classList.contains("computed-property-content")) {
         propertyContent = parent;
         break;
       }
@@ -364,29 +363,29 @@ CssComputedView.prototype = {
     let value, type;
 
     // Get the property and value for a node that's a property name or value
-    let isHref = classes.contains("theme-link") && !classes.contains("link");
-    if (propertyView && (classes.contains("property-name") ||
-                         classes.contains("property-value") ||
+    let isHref = classes.contains("theme-link") && !classes.contains("computed-link");
+    if (propertyView && (classes.contains("computed-property-name") ||
+                         classes.contains("computed-property-value") ||
                          isHref)) {
       value = {
-        property: parent.querySelector(".property-name").firstChild.textContent,
-        value: parent.querySelector(".property-value").textContent
+        property: parent.querySelector(".computed-property-name").firstChild.textContent,
+        value: parent.querySelector(".computed-property-value").textContent
       };
     }
-    if (propertyContent && (classes.contains("other-property-value") ||
+    if (propertyContent && (classes.contains("computed-other-property-value") ||
                             isHref)) {
       let view = propertyContent.previousSibling;
       value = {
-        property: view.querySelector(".property-name").firstChild.textContent,
+        property: view.querySelector(".computed-property-name").firstChild.textContent,
         value: node.textContent
       };
     }
 
     // Get the type
-    if (classes.contains("property-name")) {
+    if (classes.contains("computed-property-name")) {
       type = VIEW_NODE_PROPERTY_TYPE;
-    } else if (classes.contains("property-value") ||
-               classes.contains("other-property-value")) {
+    } else if (classes.contains("computed-property-value") ||
+               classes.contains("computed-other-property-value")) {
       type = VIEW_NODE_VALUE_TYPE;
     } else if (isHref) {
       type = VIEW_NODE_IMAGE_URL_TYPE;
@@ -928,9 +927,9 @@ PropertyView.prototype = {
   get propertyHeaderClassName() {
     if (this.visible) {
       let isDark = this.tree._darkStripe = !this.tree._darkStripe;
-      return isDark ? "property-view row-striped" : "property-view";
+      return isDark ? "computed-property-view row-striped" : "computed-property-view";
     }
-    return "property-view-hidden";
+    return "computed-property-hidden";
   },
 
   /**
@@ -942,9 +941,11 @@ PropertyView.prototype = {
   get propertyContentClassName() {
     if (this.visible) {
       let isDark = this.tree._darkStripe;
-      return isDark ? "property-content row-striped" : "property-content";
+      return isDark
+        ? "computed-property-content row-striped"
+        : "computed-property-content";
     }
-    return "property-content-hidden";
+    return "computed-property-hidden";
   },
 
   /**
@@ -977,18 +978,18 @@ PropertyView.prototype = {
     this.shortcuts.on("Space", (name, event) => this.onMatchedToggle(event));
 
     let nameContainer = doc.createElementNS(HTML_NS, "span");
-    nameContainer.className = "property-name-container";
+    nameContainer.className = "computed-property-name-container";
     this.element.appendChild(nameContainer);
 
     // Build the twisty expand/collapse
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
-    this.matchedExpander.className = "expander theme-twisty";
+    this.matchedExpander.className = "computed-expander theme-twisty";
     this.matchedExpander.addEventListener("click", this.onMatchedToggle);
     nameContainer.appendChild(this.matchedExpander);
 
     // Build the style name element
     this.nameNode = doc.createElementNS(HTML_NS, "span");
-    this.nameNode.classList.add("property-name", "theme-fg-color5");
+    this.nameNode.classList.add("computed-property-name", "theme-fg-color5");
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
     this.nameNode.setAttribute("tabindex", "");
@@ -1009,12 +1010,12 @@ PropertyView.prototype = {
     nameContainer.appendChild(this.nameNode);
 
     let valueContainer = doc.createElementNS(HTML_NS, "span");
-    valueContainer.className = "property-value-container";
+    valueContainer.className = "computed-property-value-container";
     this.element.appendChild(valueContainer);
 
     // Build the style value element
     this.valueNode = doc.createElementNS(HTML_NS, "span");
-    this.valueNode.classList.add("property-value", "theme-fg-color1");
+    this.valueNode.classList.add("computed-property-value", "theme-fg-color1");
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
     this.valueNode.setAttribute("tabindex", "");
@@ -1070,8 +1071,8 @@ PropertyView.prototype = {
     let frag = outputParser.parseCssProperty(this.propertyInfo.name,
       this.propertyInfo.value,
       {
-        colorSwatchClass: "computedview-colorswatch",
-        colorClass: "computedview-color",
+        colorSwatchClass: "computed-colorswatch",
+        colorClass: "computed-color",
         urlClass: "theme-link"
         // No need to use baseURI here as computed URIs are never relative.
       });
@@ -1089,9 +1090,9 @@ PropertyView.prototype = {
     this.matchedSelectorsContainer.parentNode.hidden = !hasMatchedSelectors;
 
     if (hasMatchedSelectors) {
-      this.matchedExpander.classList.add("expandable");
+      this.matchedExpander.classList.add("computed-expandable");
     } else {
-      this.matchedExpander.classList.remove("expandable");
+      this.matchedExpander.classList.remove("computed-expandable");
     }
 
     if (this.matchedExpanded && hasMatchedSelectors) {
@@ -1132,7 +1133,7 @@ PropertyView.prototype = {
       });
       let link = createChild(span, "a", {
         target: "_blank",
-        class: "link theme-link",
+        class: "computed-link theme-link",
         title: selector.href,
         sourcelocation: selector.source,
         tabindex: "0",
@@ -1157,7 +1158,7 @@ PropertyView.prototype = {
       });
 
       let valueDiv = createChild(status, "div", {
-        class: "fix-get-selection other-property-value theme-fg-color1"
+        class: "fix-get-selection computed-other-property-value theme-fg-color1"
       });
       valueDiv.appendChild(selector.outputFragment);
       promises.push(selector.ready);
@@ -1336,8 +1337,8 @@ SelectorView.prototype = {
     let frag = outputParser.parseCssProperty(
       this.selectorInfo.name,
       this.selectorInfo.value, {
-        colorSwatchClass: "computedview-colorswatch",
-        colorClass: "computedview-color",
+        colorSwatchClass: "computed-colorswatch",
+        colorClass: "computed-color",
         urlClass: "theme-link",
         baseURI: this.selectorInfo.rule.href
       }

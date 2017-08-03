@@ -46,16 +46,14 @@ public:
     MOZ_ASSERT(HasComponentAlpha());
     return mTextureOnWhite;
   }
-
   ContentHostTexture* GetContentHost() const {
     return mHost;
   }
 
-  nsIntRegion GetRenderRegion() const {
-    nsIntRegion region = GetShadowVisibleRegion().ToUnknownRegion();
-    region.AndWith(gfx::IntRect(region.GetBounds().TopLeft(), mTexture->GetSize()));
-    return region;
-  }
+  // This can return a different region than GetShadowVisibleRegion or
+  // GetLocalVisibleRegion, since we make sure to clamp it to the
+  // texture size and account for resampling.
+  nsIntRegion GetRenderRegion();
 
   MOZ_LAYER_DECL_NAME("PaintedLayerMLGPU", TYPE_PAINTED)
 
