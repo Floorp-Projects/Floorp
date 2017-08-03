@@ -11,19 +11,19 @@ add_task(async function() {
 });
 
 /**
- * Test for searching for the "Saved Logins" subdialog.
+ * Test for searching for the "Block Lists" subdialog.
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("sites are stored", "passwordsGroup");
+  await evaluateSearchResults("block Web elements", "trackingGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
- * Test for searching for the "Exceptions - Tracking Protection" subdialog.
+ * Test for searching for the "Allowed Sites - Pop-ups" subdialog.
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("disabled Tracking Protection", "trackingGroup");
+  await evaluateSearchResults("open pop-up windows", "permissionsGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

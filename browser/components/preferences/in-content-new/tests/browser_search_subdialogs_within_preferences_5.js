@@ -8,19 +8,28 @@ add_task(async function() {
 });
 
 /**
- * Test for searching for the "Set Home Page" subdialog.
+ * Test for searching for the "Fonts" subdialog.
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("Set Home Page", "startupGroup");
+  await evaluateSearchResults("Text Encoding", "fontsGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
- * Test for searching for the "Languages" subdialog.
+ * Test for searching for the "Colors" subdialog.
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("Choose languages", "languagesGroup");
+  await evaluateSearchResults("Link Colors", "fontsGroup");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+/**
+ * Test for searching for the "Exceptions - Saved Logins" subdialog.
+ */
+add_task(async function() {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await evaluateSearchResults("sites will not be saved", "passwordsGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
