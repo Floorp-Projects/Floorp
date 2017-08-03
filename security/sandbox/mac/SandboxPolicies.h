@@ -213,8 +213,7 @@ static const char contentSandboxRules[] = R"(
       (iokit-user-client-class "IGAccelSharedUserClient")
       (iokit-user-client-class "IGAccelVideoContextMain")
       (iokit-user-client-class "IGAccelVideoContextMedia")
-      (iokit-user-client-class "IGAccelVideoContextVEBox")
-      (iokit-user-client-class "RootDomainUserClient"))
+      (iokit-user-client-class "IGAccelVideoContextVEBox"))
 
 ; depending on systems, the 1st, 2nd or both rules are necessary
   (allow-shared-preferences-read "com.apple.HIToolbox")
