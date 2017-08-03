@@ -9,7 +9,7 @@
 #include <jni.h>
 #include <android/log.h>
 #include <cstdlib>
-#include <pthread.h>
+#include <unistd.h>
 
 #include "APKOpen.h"
 
@@ -104,7 +104,7 @@ public:
     };
 
     static bool IsJavaUiThread() {
-        return pthread_equal(pthread_self(), ::getJavaUiThread());
+        return mozilla::jni::GetUIThreadId() == gettid();
     }
 
     static void ConstructBridge();
