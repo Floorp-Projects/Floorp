@@ -8304,7 +8304,11 @@ nsDocument::AddToRadioGroup(const nsAString& aName,
 
   nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
   NS_ASSERTION(element, "radio controls have to be content elements");
-  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+
+  HTMLInputElement* input = HTMLInputElement::FromContent(element);
+  NS_ASSERTION(input, "radio controls have to be input elements!");
+
+  if (input->IsRequired()) {
     radioGroup->mRequiredRadioCount++;
   }
 }
@@ -8318,7 +8322,11 @@ nsDocument::RemoveFromRadioGroup(const nsAString& aName,
 
   nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
   NS_ASSERTION(element, "radio controls have to be content elements");
-  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+
+  HTMLInputElement* input = HTMLInputElement::FromContent(element);
+  NS_ASSERTION(input, "radio controls have to be input elements!");
+
+  if (input->IsRequired()) {
     NS_ASSERTION(radioGroup->mRequiredRadioCount != 0,
                  "mRequiredRadioCount about to wrap below 0!");
     radioGroup->mRequiredRadioCount--;

@@ -252,7 +252,7 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::readonly, aReadOnly, aError);
   }
-  bool Required()
+  bool Required() const
   {
     return GetBoolAttr(nsGkAtoms::required);
   }

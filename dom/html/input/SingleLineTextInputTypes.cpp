@@ -58,7 +58,7 @@ SingleLineTextInputTypeBase::IsTooShort() const
 bool
 SingleLineTextInputTypeBase::IsValueMissing() const
 {
-  if (!mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+  if (!mInputElement->IsRequired()) {
     return false;
   }
 
