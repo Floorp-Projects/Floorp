@@ -83,6 +83,14 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
 }
 %endif
 
+%ifdef MOZ_PHOTON_ANIMATIONS
+#downloads-indicator-progress-inner:-moz-locale-dir(rtl) {
+  animation-name: indicatorArrowProgressRTL;
+  margin-left: 16px;
+  margin-right: 0;
+}
+%endif
+
 @keyframes indicatorArrowProgress {
   0% {
 %ifdef MOZ_PHOTON_ANIMATIONS
@@ -102,7 +110,16 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
   }
 }
 
-%ifndef MOZ_PHOTON_ANIMATIONS
+%ifdef MOZ_PHOTON_ANIMATIONS
+@keyframes indicatorArrowProgressRTL {
+  0% {
+    margin-left: 14px;
+  }
+  100% {
+    margin-left: 2px;
+  }
+}
+%else
 @keyframes indicatorArrowProgressDark {
   0% {
     margin-top: 12px;
@@ -246,6 +263,8 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
   min-height: 98px;
   max-height: 98px;
   overflow: hidden;
+  /* animation is not directional and shouldn't be reversed in RTL */
+  direction: ltr;
 }
 %endif
 
