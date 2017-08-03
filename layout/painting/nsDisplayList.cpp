@@ -6356,6 +6356,7 @@ nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
     , mScrollTarget(aScrollTarget)
     , mThumbData(aThumbData)
     , mForceActive(aForceActive)
+    , mWrAnimationId(0)
 {
   MOZ_COUNT_CTOR(nsDisplayOwnLayer);
 
@@ -6442,10 +6443,10 @@ nsDisplayOwnLayer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
   RefPtr<WebRenderAnimationData> animationData = aManager->CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(this);
   AnimationInfo& animationInfo = animationData->GetAnimationInfo();
   animationInfo.EnsureAnimationsId();
-  uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
+  mWrAnimationId = animationInfo.GetCompositorAnimationsId();
 
   StackingContextHelper sc(aSc, aBuilder, aDisplayListBuilder, this,
-                           &mList, nullptr, animationsId, nullptr, nullptr);
+                           &mList, nullptr, mWrAnimationId, nullptr, nullptr);
 
   nsDisplayWrapList::CreateWebRenderCommands(aBuilder, sc,
       aParentCommands, aManager, aDisplayListBuilder);
@@ -6461,6 +6462,7 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
     ret = true;
     if (aLayerData) {
       aLayerData->SetScrollThumbData(mThumbData);
+      aLayerData->SetScrollbarAnimationId(mWrAnimationId);
       aLayerData->SetScrollbarTargetContainerId(mScrollTarget);
     }
   }
