@@ -6,15 +6,15 @@
 #ifndef GFX_CLIENTCANVASLAYER_H
 #define GFX_CLIENTCANVASLAYER_H
 
-#include "CanvasClient.h"               // for CanvasClient, etc
+#include "ClientCanvasRenderer.h"
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "Layers.h"                     // for CanvasLayer, etc
 #include "mozilla/Attributes.h"         // for override
+#include "mozilla/layers/CanvasClient.h"// for CanvasClient, etc
 #include "mozilla/layers/LayersMessages.h"  // for CanvasLayerAttributes, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
-#include "ShareableCanvasLayer.h"
 
 namespace mozilla {
 namespace layers {
@@ -22,15 +22,17 @@ namespace layers {
 class CompositableClient;
 class ShadowableLayer;
 
-class ClientCanvasLayer : public ShareableCanvasLayer,
+class ClientCanvasLayer : public CanvasLayer,
                           public ClientLayer
 {
 public:
   explicit ClientCanvasLayer(ClientLayerManager* aLayerManager) :
-    ShareableCanvasLayer(aLayerManager, static_cast<ClientLayer*>(this))
+    CanvasLayer(aLayerManager, static_cast<ClientLayer*>(this))
   {
     MOZ_COUNT_CTOR(ClientCanvasLayer);
   }
+
+  CanvasRenderer* CreateCanvasRendererInternal() override;
 
 protected:
   virtual ~ClientCanvasLayer();
@@ -47,22 +49,12 @@ public:
 
   virtual void ClearCachedResources() override
   {
-    if (mBufferProvider) {
-      mBufferProvider->ClearCachedResources();
-    }
-    if (mCanvasClient) {
-      mCanvasClient->Clear();
-    }
+    mCanvasRenderer->ClearCachedResources();
   }
 
   virtual void HandleMemoryPressure() override
   {
-    if (mBufferProvider) {
-      mBufferProvider->ClearCachedResources();
-    }
-    if (mCanvasClient) {
-      mCanvasClient->HandleMemoryPressure();
-    }
+    mCanvasRenderer->ClearCachedResources();
   }
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override
@@ -75,32 +67,14 @@ public:
 
   virtual void Disconnect() override
   {
-    if (mBufferProvider) {
-      mBufferProvider->ClearCachedResources();
-    }
-    mCanvasClient = nullptr;
-  }
-
-  virtual CompositableForwarder* GetForwarder() override
-  {
-    return mManager->AsShadowForwarder();
+    mCanvasRenderer->Destroy();
   }
 
   virtual CompositableClient* GetCompositableClient() override
   {
-    return mCanvasClient;
-  }
-
-  virtual void AttachCompositable() override
-  {
-    if (HasShadow()) {
-      if (mAsyncRenderer) {
-        static_cast<CanvasClientBridge*>(mCanvasClient.get())->SetLayer(this);
-      } else {
-        mCanvasClient->Connect();
-        ClientManager()->AsShadowForwarder()->Attach(mCanvasClient, this);
-      }
-    }
+    ClientCanvasRenderer* canvasRenderer = mCanvasRenderer->AsClientCanvasRenderer();
+    MOZ_ASSERT(canvasRenderer);
+    return canvasRenderer->GetCanvasClient();
   }
 
 protected:
