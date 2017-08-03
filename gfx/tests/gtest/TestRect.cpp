@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 
+#include "gfxTypes.h"
 #include "nsRect.h"
 #include "gfxRect.h"
 #ifdef XP_WIN
