@@ -30,6 +30,7 @@ class WebGLContext;
 
 namespace layers {
 class AsyncCanvasRenderer;
+class CanvasRenderer;
 class CanvasLayer;
 class Image;
 class Layer;
@@ -124,6 +125,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   };
 
   typedef layers::AsyncCanvasRenderer AsyncCanvasRenderer;
+  typedef layers::CanvasRenderer CanvasRenderer;
   typedef layers::CanvasLayer CanvasLayer;
   typedef layers::Layer Layer;
   typedef layers::LayerManager LayerManager;
@@ -308,6 +310,8 @@ public:
   already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          Layer *aOldLayer,
                                          LayerManager *aManager);
+  void InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                                CanvasRenderer* aRenderer);
   // Should return true if the canvas layer should always be marked inactive.
   // We should return true here if we can't do accelerated compositing with
   // a non-BasicCanvasLayer.

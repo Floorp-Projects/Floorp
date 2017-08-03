@@ -2062,6 +2062,7 @@ html|*.addon-webext-perm-list {
   border-radius: 3.5px;
 }
 
-.webextension-popup-browser {
+.webextension-popup-browser,
+.webextension-popup-stack {
   border-radius: inherit;
 }
