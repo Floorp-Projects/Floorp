@@ -53,11 +53,14 @@ class ChannelMediaDecoder : public MediaDecoder
 
 protected:
   RefPtr<ResourceCallback> mResourceCallback;
+  RefPtr<MediaResource> mResource;
 
 public:
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
 
   MediaDecoderStateMachine* CreateStateMachine() override;
+
+  MediaResource* GetResource() const override final;
 
   void Shutdown() override;
 
