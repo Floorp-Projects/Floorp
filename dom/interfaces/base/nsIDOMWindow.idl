@@ -20,10 +20,3 @@ interface nsIVariant;
 
 [scriptable, uuid(b8343993-0383-4add-9930-ad176b189240)]
 interface nsIDOMWindow : nsISupports {};
-
-/**
- * Empty interface for compatibility with older versions.
- * @deprecated Use nsIDOMWindow instead
- */
-[scriptable, uuid(8c589e65-3237-4cd1-8bad-c5c47135e79b)]
-interface nsIDOMWindowInternal : nsIDOMWindow {};
