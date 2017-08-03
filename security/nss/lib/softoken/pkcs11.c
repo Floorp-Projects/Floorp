@@ -3566,6 +3566,7 @@ NSC_InitToken(CK_SLOT_ID slotID, CK_CHAR_PTR pPin,
 {
     SFTKSlot *slot = sftk_SlotFromID(slotID, PR_FALSE);
     SFTKDBHandle *handle;
+    SFTKDBHandle *certHandle;
     SECStatus rv;
     unsigned int i;
     SFTKObject *object;
@@ -3613,16 +3614,19 @@ NSC_InitToken(CK_SLOT_ID slotID, CK_CHAR_PTR pPin,
     }
 
     rv = sftkdb_ResetKeyDB(handle);
-    /* clear the password */
-    sftkdb_ClearPassword(handle);
-    /* update slot->needLogin (should be true now since no password is set) */
-    sftk_checkNeedLogin(slot, handle);
     sftk_freeDB(handle);
     if (rv != SECSuccess) {
         return CKR_DEVICE_ERROR;
     }
 
-    return CKR_OK;
+    /* finally  mark all the user certs as non-user certs */
+    certHandle = sftk_getCertDB(slot);
+    if (certHandle == NULL)
+        return CKR_OK;
+
+    sftk_freeDB(certHandle);
+
+    return CKR_OK; /*is this the right function for not implemented*/
 }
 
 /* NSC_InitPIN initializes the normal user's PIN. */

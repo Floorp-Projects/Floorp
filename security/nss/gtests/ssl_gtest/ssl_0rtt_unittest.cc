@@ -7,7 +7,6 @@
 #include "secerr.h"
 #include "ssl.h"
 #include "sslerr.h"
-#include "sslexp.h"
 #include "sslproto.h"
 
 extern "C" {

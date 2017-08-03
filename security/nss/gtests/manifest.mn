@@ -23,9 +23,8 @@ NSS_SRCDIRS = \
 	certdb_gtest \
 	certhigh_gtest \
 	pk11_gtest \
-	softoken_gtest \
 	ssl_gtest \
-	nss_bogo_shim \
+        nss_bogo_shim \
 	$(NULL)
 endif
 endif

@@ -1841,11 +1841,13 @@ secoid_FindDynamic(const SECItem *key)
 {
     SECOidData *ret = NULL;
 
-    NSSRWLock_LockRead(dynOidLock);
     if (dynOidHash) {
-        ret = (SECOidData *)PL_HashTableLookup(dynOidHash, key);
+        NSSRWLock_LockRead(dynOidLock);
+        if (dynOidHash) { /* must check it again with lock held. */
+            ret = (SECOidData *)PL_HashTableLookup(dynOidHash, key);
+        }
+        NSSRWLock_UnlockRead(dynOidLock);
     }
-    NSSRWLock_UnlockRead(dynOidLock);
     if (ret == NULL) {
         PORT_SetError(SEC_ERROR_UNRECOGNIZED_OID);
     }
@@ -1864,12 +1866,14 @@ secoid_FindDynamicByTag(SECOidTag tagnum)
     }
     tagNumDiff = tagnum - SEC_OID_TOTAL;
 
-    NSSRWLock_LockRead(dynOidLock);
-    if (dynOidTable != NULL &&
-        tagNumDiff < dynOidEntriesUsed) {
-        dxo = dynOidTable[tagNumDiff];
+    if (dynOidTable) {
+        NSSRWLock_LockRead(dynOidLock);
+        if (dynOidTable != NULL && /* must check it again with lock held. */
+            tagNumDiff < dynOidEntriesUsed) {
+            dxo = dynOidTable[tagNumDiff];
+        }
+        NSSRWLock_UnlockRead(dynOidLock);
     }
-    NSSRWLock_UnlockRead(dynOidLock);
     if (dxo == NULL) {
         PORT_SetError(SEC_ERROR_UNRECOGNIZED_OID);
     }

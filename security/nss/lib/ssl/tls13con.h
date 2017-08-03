@@ -81,10 +81,9 @@ SECStatus tls13_HandleEndOfEarlyData(sslSocket *ss);
 SECStatus tls13_HandleEarlyApplicationData(sslSocket *ss, sslBuffer *origBuf);
 PRBool tls13_ClientAllow0Rtt(const sslSocket *ss, const sslSessionID *sid);
 PRUint16 tls13_EncodeDraftVersion(SSL3ProtocolVersion version);
-PRUint16 tls13_EncodeAltDraftVersion(SSL3ProtocolVersion version);
+PRUint16 tls13_DecodeDraftVersion(PRUint16 version);
 SECStatus tls13_NegotiateVersion(sslSocket *ss,
                                  const TLSExtension *supported_versions);
 SECStatus tls13_SendNewSessionTicket(sslSocket *ss);
-SECStatus SSLExp_UseAltServerHelloType(PRFileDesc *fd, PRBool enable);
 
 #endif /* __tls13con_h_ */
