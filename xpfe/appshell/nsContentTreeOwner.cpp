@@ -923,16 +923,15 @@ nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
       flags |= nsIBrowserDOMWindow::OPEN_NO_OPENER;
     }
 
-    // Get a new rendering area from the browserDOMWin.  We don't want
-    // to be starting any loads here, so get it with a null URI. Since/
-    // we are not loading any URI, we follow the principle of least privlege
-    // and use a nullPrincipal as the triggeringPrincipal.
+    // Get a new rendering area from the browserDOMWin.
+    // Since we are not loading any URI, we follow the principle of least
+    // privilege and use a nullPrincipal as the triggeringPrincipal.
     //
     // This method handles setting the opener for us, so we don't need to set it
     // ourselves.
     RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::Create();
-    return browserDOMWin->OpenURI(nullptr, aParent, openLocation,
-                                  flags, nullPrincipal, aReturn);
+    return browserDOMWin->CreateContentWindow(aURI, aParent, openLocation,
+                                              flags, nullPrincipal, aReturn);
   }
 }
 
