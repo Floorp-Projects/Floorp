@@ -14,7 +14,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "libevent/include/event.h"
+#include "event2/event.h"
+#include "event2/event_compat.h"
+#include "event2/event_struct.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/task_queue_posix.h"
