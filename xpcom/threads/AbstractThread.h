@@ -126,7 +126,7 @@ public:
 
   struct AutoEnter
   {
-    AutoEnter(AbstractThread* aThread)
+    explicit AutoEnter(AbstractThread* aThread)
     {
       mLastCurrentThread = sCurrentThreadTLS.get();
       sCurrentThreadTLS.set(aThread);
