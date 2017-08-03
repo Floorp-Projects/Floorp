@@ -534,7 +534,7 @@ DocumentManager = {
   initialized: false,
 
   lazyInit() {
-    if (this.initalized) {
+    if (this.initialized) {
       return;
     }
     this.initialized = true;
