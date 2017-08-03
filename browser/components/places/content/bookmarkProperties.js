@@ -164,10 +164,10 @@ var BookmarkPropertiesPanel = {
         this._defaultInsertionPoint = dialogInfo.defaultInsertionPoint;
       } else {
         this._defaultInsertionPoint =
-          new InsertionPoint(PlacesUtils.bookmarksMenuFolderId,
-                             PlacesUtils.bookmarks.DEFAULT_INDEX,
-                             Ci.nsITreeView.DROP_ON, null, null,
-                             PlacesUtils.bookmarks.menuGuid);
+          new InsertionPoint({
+            parentId: PlacesUtils.bookmarksMenuFolderId,
+            parentGuid: PlacesUtils.bookmarks.menuGuid
+          });
       }
 
       switch (dialogInfo.type) {
@@ -498,7 +498,7 @@ var BookmarkPropertiesPanel = {
     return [
       this._defaultInsertionPoint.itemId,
       await this._defaultInsertionPoint.getIndex(),
-      await this._defaultInsertionPoint.promiseGuid(),
+      this._defaultInsertionPoint.guid,
     ]
   },
 
