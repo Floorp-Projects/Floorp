@@ -1088,7 +1088,7 @@ HTMLSelectElement::IsOptionDisabled(int32_t aIndex, bool* aIsDisabled)
 }
 
 bool
-HTMLSelectElement::IsOptionDisabled(HTMLOptionElement* aOption)
+HTMLSelectElement::IsOptionDisabled(HTMLOptionElement* aOption) const
 {
   MOZ_ASSERT(aOption);
   if (aOption->Disabled()) {
@@ -1530,7 +1530,7 @@ HTMLSelectElement::IntrinsicState() const
     }
   }
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+  if (Required()) {
     state |= NS_EVENT_STATE_REQUIRED;
   } else {
     state |= NS_EVENT_STATE_OPTIONAL;
@@ -1781,7 +1781,7 @@ HTMLSelectElement::RebuildOptionsArray(bool aNotify)
 }
 
 bool
-HTMLSelectElement::IsValueMissing()
+HTMLSelectElement::IsValueMissing() const
 {
   if (!Required()) {
     return false;

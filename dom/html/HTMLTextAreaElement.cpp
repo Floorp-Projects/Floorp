@@ -958,7 +958,7 @@ HTMLTextAreaElement::IntrinsicState() const
 {
   EventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+  if (Required()) {
     state |= NS_EVENT_STATE_REQUIRED;
   } else {
     state |= NS_EVENT_STATE_OPTIONAL;
@@ -1218,7 +1218,7 @@ HTMLTextAreaElement::IsTooShort()
 bool
 HTMLTextAreaElement::IsValueMissing() const
 {
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) || !IsMutable()) {
+  if (!Required() || !IsMutable()) {
     return false;
   }
 
