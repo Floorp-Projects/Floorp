@@ -2212,6 +2212,7 @@ pref("network.cookie.cookieBehavior",       0); // Keep the old default of accep
 #endif
 pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.leave-secure-alone",   true);
+pref("network.cookie.ipc.sync",             false);
 pref("network.cookie.lifetimePolicy",       0); // 0-accept, 1-dontUse 2-acceptForSession, 3-acceptForNDays
 pref("network.cookie.prefsMigrated",        false);
 pref("network.cookie.lifetime.days",        90); // Ignored unless network.cookie.lifetimePolicy is 3.

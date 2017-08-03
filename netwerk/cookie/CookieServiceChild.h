@@ -16,7 +16,10 @@
 #include "nsWeakReference.h"
 
 class nsCookie;
+class nsICookiePermission;
 class nsIEffectiveTLDService;
+
+struct nsCookieAttributes;
 
 namespace mozilla {
 namespace net {
@@ -56,6 +59,17 @@ protected:
                                    nsIChannel *aChannel,
                                    char **aCookieString);
 
+  void GetCookieStringFromCookieHashTable(nsIURI *aHostURI,
+                                          bool aIsForeign,
+                                          const OriginAttributes &aAttrs,
+                                          nsCString &aCookieString);
+
+  void
+  GetCookieStringSyncIPC(nsIURI                 *aHostURI,
+                         bool                    aIsForeign,
+                         const OriginAttributes &aAttrs,
+                         nsAutoCString          &aCookieString);
+
   nsresult SetCookieStringInternal(nsIURI *aHostURI,
                                    nsIChannel *aChannel,
                                    const char *aCookieString,
@@ -65,6 +79,17 @@ protected:
   void
   RecordDocumentCookie(nsCookie *aCookie,
                        const OriginAttributes &aAttrs);
+
+  void
+  SetCookieInternal(nsCookieAttributes &aCookieAttributes,
+                    const mozilla::OriginAttributes &aAttrs,
+                    nsIChannel *aChannel,
+                    bool aFromHttp,
+                    nsICookiePermission *aPermissionService);
+
+  uint32_t
+  CountCookiesFromHashTable(const nsCString &aBaseDomain,
+                            const OriginAttributes &aOriginAttrs);
 
   void PrefChanged(nsIPrefBranch *aPrefBranch);
 
@@ -79,6 +104,8 @@ protected:
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
   uint8_t mCookieBehavior;
   bool mThirdPartySession;
+  bool mIPCSync;
+  bool mLeaveSecureAlone;
 };
 
 } // namespace net

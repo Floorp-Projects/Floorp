@@ -47,7 +47,6 @@ class mozIStorageService;
 class mozIThirdPartyUtil;
 class ReadCookieDBListener;
 
-struct nsCookieAttributes;
 struct nsListIter;
 
 namespace mozilla {
@@ -183,6 +182,21 @@ enum OpenDBResult
  * class declaration
  ******************************************************************************/
 
+// struct for temporarily storing cookie attributes during header parsing
+struct nsCookieAttributes
+{
+  nsAutoCString name;
+  nsAutoCString value;
+  nsAutoCString host;
+  nsAutoCString path;
+  nsAutoCString expires;
+  nsAutoCString maxage;
+  int64_t expiryTime;
+  bool isSession;
+  bool isSecure;
+  bool isHttpOnly;
+};
+
 class nsCookieService final : public nsICookieService
                             , public nsICookieManager2
                             , public nsIObserver
@@ -216,6 +230,9 @@ class nsCookieService final : public nsICookieService
   static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService *aTLDService, const nsACString &aHost, nsCString &aBaseDomain);
   static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
   static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
+  static bool CanSetCookie(nsIURI *aHostURI, const nsCookieKey& aKey, nsCookieAttributes &aCookieAttributes, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel, bool aLeaveSercureAlone, bool &aSetCookie);
+  static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartyUtil, nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader, const int aNumOfCookies);
+  static int64_t ParseServerTime(const nsCString &aServerTime);
   void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList);
 
   protected:
@@ -254,8 +271,7 @@ class nsCookieService final : public nsICookieService
     static bool                   GetTokenValue(nsACString::const_char_iterator &aIter, nsACString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, bool &aEqualsFound);
     static bool                   ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     bool                          RequireThirdPartyCheck();
-    CookieStatus                  CheckPrefs(nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader);
-    bool                          CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, bool aRequireHostMatch);
+    static bool                   CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, bool aRequireHostMatch);
     static bool                   CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static bool                   CheckPrefixes(nsCookieAttributes &aCookie, bool aSecureRequest);
     static bool                   GetExpiry(nsCookieAttributes &aCookie, int64_t aServerTime, int64_t aCurrentTime);
