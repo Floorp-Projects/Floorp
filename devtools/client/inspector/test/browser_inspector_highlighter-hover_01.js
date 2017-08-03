@@ -33,9 +33,9 @@ add_task(function* () {
 });
 
 function waitForTheBrieflyShowBoxModelTimeout() {
-  let deferred = defer();
   // Note that the current timeout is 1 sec and is neither configurable nor
   // exported anywhere we can access, so hard-coding the timeout
-  setTimeout(deferred.resolve, 1500);
-  return deferred.promise;
+  return new Promise(resolve => {
+    setTimeout(resolve, 1500);
+  });
 }
