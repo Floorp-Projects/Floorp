@@ -74,7 +74,7 @@ var MozFileLogger = {};
 MozFileLogger.init = function(path) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  MozFileLogger._file = Cc[LF_CID].createInstance(Ci.nsILocalFile);
+  MozFileLogger._file = Cc[LF_CID].createInstance(Ci.nsIFile);
   MozFileLogger._file.initWithPath(path);
   MozFileLogger._foStream = Cc[FOSTREAM_CID].createInstance(Ci.nsIFileOutputStream);
   MozFileLogger._foStream.init(this._file, PR_WRITE_ONLY | PR_CREATE_FILE | PR_APPEND,
@@ -122,7 +122,7 @@ MozFileLogger.close = function() {
 
 try {
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-    .getService(Components.interfaces.nsIPrefBranch2);
+    .getService(Components.interfaces.nsIPrefBranch);
   var filename = prefs.getCharPref("talos.logfile");
   MozFileLogger.init(filename);
 } catch (ex) {} // pref does not exist, return empty string
