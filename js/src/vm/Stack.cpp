@@ -45,14 +45,15 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script,
     RootedValue newTarget(cx, newTargetValue);
     if (script->isDirectEvalInFunction()) {
         FrameIter iter(cx);
-        MOZ_ASSERT(!iter.isWasm());
         if (newTarget.isNull() &&
+            iter.hasScript() &&
             iter.script()->bodyScope()->hasOnChain(ScopeKind::Function))
         {
             newTarget = iter.newTarget();
         }
     } else if (evalInFramePrev) {
         if (newTarget.isNull() &&
+            evalInFramePrev.hasScript() &&
             evalInFramePrev.script()->bodyScope()->hasOnChain(ScopeKind::Function))
         {
             newTarget = evalInFramePrev.newTarget();
@@ -1192,7 +1193,6 @@ FrameIter::environmentChain(JSContext* cx) const
 {
     switch (data_.state_) {
       case DONE:
-      case WASM:
         break;
       case JIT:
         if (data_.jitFrames_.isIonScripted()) {
@@ -1202,6 +1202,8 @@ FrameIter::environmentChain(JSContext* cx) const
         return data_.jitFrames_.baselineFrame()->environmentChain();
       case INTERP:
         return interpFrame()->environmentChain();
+      case WASM:
+        return data_.wasmFrames_.debugFrame()->environmentChain();
     }
     MOZ_CRASH("Unexpected state");
 }
