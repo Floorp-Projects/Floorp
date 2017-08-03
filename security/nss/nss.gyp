@@ -168,7 +168,6 @@
             'gtests/certdb_gtest/certdb_gtest.gyp:certdb_gtest',
             'gtests/freebl_gtest/freebl_gtest.gyp:prng_gtest',
             'gtests/pk11_gtest/pk11_gtest.gyp:pk11_gtest',
-            'gtests/softoken_gtest/softoken_gtest.gyp:softoken_gtest',
             'gtests/ssl_gtest/ssl_gtest.gyp:ssl_gtest',
             'gtests/util_gtest/util_gtest.gyp:util_gtest',
             'gtests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim',

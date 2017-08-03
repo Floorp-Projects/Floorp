@@ -133,7 +133,6 @@ inline std::ostream& operator<<(std::ostream& stream, TlsRecordHeader& hdr) {
       stream << "Alert";
       break;
     case kTlsHandshakeType:
-    case kTlsAltHandshakeType:
       stream << "Handshake";
       break;
     case kTlsApplicationDataType:
@@ -231,19 +230,7 @@ class TlsConversationRecorder : public TlsRecordFilter {
                                             DataBuffer* output);
 
  private:
-  DataBuffer buffer_;
-};
-
-// Make a copy of the records
-class TlsHeaderRecorder : public TlsRecordFilter {
- public:
-  virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
-                                            const DataBuffer& input,
-                                            DataBuffer* output);
-  const TlsRecordHeader* header(size_t index);
-
- private:
-  std::vector<TlsRecordHeader> headers_;
+  DataBuffer& buffer_;
 };
 
 // Runs multiple packet filters in series.
