@@ -619,6 +619,16 @@ public:
   static void Refresh();
 
   /**
+   * GTK's initialization code can't be run off main thread, call this
+   * if you plan on using LookAndFeel off main thread later.
+   *
+   * This initialized state may get reset due to theme changes, so it
+   * must be called prior to each potential off-main-thread LookAndFeel
+   * call, not just once.
+   */
+  static void NativeInit();
+
+  /**
    * If the implementation is caching values, these accessors allow the
    * cache to be exported and imported.
    */
