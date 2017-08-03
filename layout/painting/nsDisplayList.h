@@ -4190,6 +4190,7 @@ protected:
   // and can be ignored.
   ScrollThumbData mThumbData;
   bool mForceActive;
+  uint64_t mWrAnimationId;
 };
 
 /**
