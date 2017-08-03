@@ -991,6 +991,13 @@ LookAndFeel::Refresh()
 }
 
 // static
+void
+LookAndFeel::NativeInit()
+{
+  nsLookAndFeel::GetInstance()->NativeInit();
+}
+
+// static
 nsTArray<LookAndFeelInt>
 LookAndFeel::GetIntCache()
 {
