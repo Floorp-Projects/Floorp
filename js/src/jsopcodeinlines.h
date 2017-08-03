@@ -36,7 +36,7 @@ GetDefCount(JSScript* script, unsigned offset)
          */
         return pc[1] + 1;
       default:
-        return StackDefs(script, pc);
+        return StackDefs(pc);
     }
 }
 
@@ -47,9 +47,8 @@ GetUseCount(JSScript* script, unsigned offset)
 
     if (JSOp(*pc) == JSOP_PICK || JSOp(*pc) == JSOP_UNPICK)
         return pc[1] + 1;
-    if (CodeSpec[*pc].nuses == -1)
-        return StackUses(script, pc);
-    return CodeSpec[*pc].nuses;
+
+    return StackUses(pc);
 }
 
 static inline JSOp
