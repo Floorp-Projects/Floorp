@@ -6196,6 +6196,29 @@ nsDisplayBlendMode::GetLayerState(nsDisplayListBuilder* aBuilder,
   return LAYER_ACTIVE;
 }
 
+bool
+nsDisplayBlendMode::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                            const StackingContextHelper& aSc,
+                                            nsTArray<WebRenderParentCommand>& aParentCommands,
+                                            mozilla::layers::WebRenderLayerManager* aManager,
+                                            nsDisplayListBuilder* aDisplayListBuilder)
+{
+  nsRect itemBounds = mList.GetClippedBoundsWithRespectToASR(aDisplayListBuilder, mActiveScrolledRoot);
+  nsRect childrenVisible = GetVisibleRectForChildren();
+  nsRect visibleRect = itemBounds.Intersect(childrenVisible);
+  float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  LayerRect bounds = ViewAs<LayerPixel>(LayoutDeviceRect::FromAppUnits(visibleRect, appUnitsPerDevPixel),
+                                        PixelCastJustification::WebRenderHasUnitResolution);
+  LayerPoint origin = bounds.TopLeft();
+
+  nsTArray<mozilla::wr::WrFilterOp> filters;
+  StackingContextHelper sc(aSc, aBuilder, bounds, origin, 0, nullptr, nullptr,
+                           filters, nsCSSRendering::GetGFXBlendMode(mBlendMode));
+
+  return nsDisplayWrapList::CreateWebRenderCommands(aBuilder, sc, aParentCommands,
+                                                    aManager, aDisplayListBuilder);
+}
+
 // nsDisplayBlendMode uses layers for rendering
 already_AddRefed<Layer>
 nsDisplayBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -6304,6 +6327,27 @@ nsDisplayBlendContainer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                        const ContainerLayerParameters& aParameters)
 {
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList, GetAnimatedGeometryRoot());
+}
+
+bool
+nsDisplayBlendContainer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                 const StackingContextHelper& aSc,
+                                                 nsTArray<WebRenderParentCommand>& aParentCommands,
+                                                 mozilla::layers::WebRenderLayerManager* aManager,
+                                                 nsDisplayListBuilder* aDisplayListBuilder)
+{
+  nsRect itemBounds = mList.GetClippedBoundsWithRespectToASR(aDisplayListBuilder, mActiveScrolledRoot);
+  nsRect childrenVisible = GetVisibleRectForChildren();
+  nsRect visibleRect = itemBounds.Intersect(childrenVisible);
+  float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  LayerRect bounds = ViewAs<LayerPixel>(LayoutDeviceRect::FromAppUnits(visibleRect, appUnitsPerDevPixel),
+                                        PixelCastJustification::WebRenderHasUnitResolution);
+  LayerPoint origin = bounds.TopLeft();
+
+  StackingContextHelper sc(aSc, aBuilder, bounds, origin, 0, nullptr, nullptr);
+
+  return nsDisplayWrapList::CreateWebRenderCommands(aBuilder, sc, aParentCommands,
+                                                    aManager, aDisplayListBuilder);
 }
 
 bool nsDisplayBlendContainer::TryMerge(nsDisplayItem* aItem) {

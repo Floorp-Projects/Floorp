@@ -24,7 +24,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              uint64_t aAnimationsId,
                                              float* aOpacityPtr,
                                              gfx::Matrix4x4* aTransformPtr,
-                                             const nsTArray<wr::WrFilterOp>& aFilters)
+                                             const nsTArray<wr::WrFilterOp>& aFilters,
+                                             const gfx::CompositionOp& aMixBlendMode)
   : mBuilder(&aBuilder)
 {
   wr::LayoutRect scBounds = aParentSC.ToRelativeLayoutRect(aBoundForSC);
@@ -37,8 +38,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 aOpacityPtr,
                                 aTransformPtr,
                                 wr::TransformStyle::Flat,
-                                // TODO: set correct blend mode.
-                                wr::ToMixBlendMode(gfx::CompositionOp::OP_OVER),
+                                wr::ToMixBlendMode(aMixBlendMode),
                                 aFilters);
 
   mOrigin = aOrigin;
