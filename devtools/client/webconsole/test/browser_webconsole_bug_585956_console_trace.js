@@ -37,28 +37,24 @@ add_task(function* () {
       columnNumber: 3,
       filename: TEST_URI,
       functionName: "window.foobar585956c",
-      language: 2,
       lineNumber: 9
     },
     {
       columnNumber: 10,
       filename: TEST_URI,
       functionName: "foobar585956b",
-      language: 2,
       lineNumber: 14
     },
     {
       columnNumber: 10,
       filename: TEST_URI,
       functionName: "foobar585956a",
-      language: 2,
       lineNumber: 18
     },
     {
       columnNumber: 1,
       filename: TEST_URI,
       functionName: "",
-      language: 2,
       lineNumber: 21
     }
   ];

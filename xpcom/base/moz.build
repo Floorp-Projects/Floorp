@@ -19,7 +19,6 @@ XPIDL_SOURCES += [
     'nsIMemoryReporter.idl',
     'nsIMessageLoop.idl',
     'nsIMutable.idl',
-    'nsIProgrammingLanguage.idl',
     'nsISecurityConsoleMessage.idl',
     'nsIStatusReporter.idl',
     'nsISupports.idl',

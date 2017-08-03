@@ -13,9 +13,6 @@
 [scriptable, builtinclass, uuid(28bfb2a2-5ea6-4738-918b-049dc4d51f0b)]
 interface nsIStackFrame : nsISupports
 {
-    // see nsIProgrammingLanguage for list of language consts
-    readonly attribute uint32_t                language;
-    readonly attribute AUTF8String             languageName;
     [implicit_jscontext]
     readonly attribute AString                 filename;
     [implicit_jscontext]

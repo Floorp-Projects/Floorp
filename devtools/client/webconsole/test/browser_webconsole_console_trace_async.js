@@ -46,7 +46,6 @@ add_task(function* runTest() {
       columnNumber: 3,
       filename: TEST_URI,
       functionName: "inner",
-      language: 2,
       lineNumber: 9
     },
     {
@@ -54,7 +53,6 @@ add_task(function* runTest() {
       columnNumber: 3,
       filename: TEST_URI,
       functionName: "time1",
-      language: 2,
       lineNumber: 13,
     },
     {
@@ -62,7 +60,6 @@ add_task(function* runTest() {
       columnNumber: 1,
       filename: TEST_URI,
       functionName: "",
-      language: 2,
       lineNumber: 18,
     }
   ];
