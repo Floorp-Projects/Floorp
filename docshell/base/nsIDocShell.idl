@@ -549,9 +549,10 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute nsIChannel currentDocumentChannel;
 
   /**
-   * Set the offset of this child in its container.
+   * The original offset of this child in its container. This property is -1 for
+   * dynamically added docShells.
    */
-  [noscript] void setChildOffset(in unsigned long offset);
+  [noscript] attribute long childOffset;
 
   /**
    * Find out whether the docshell is currently in the middle of a page

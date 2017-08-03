@@ -173,6 +173,8 @@ HTMLEditor::~HTMLEditor()
   }
 
   RemoveEventListeners();
+
+  HideAnonymousEditingUIs();
 }
 
 void

@@ -19,21 +19,6 @@ interface mozIDOMWindow;
 [scriptable, builtinclass, uuid(ba7ca4c1-9d92-4425-a83b-85dd7fa953f7)]
 interface nsIPowerManagerService : nsISupports
 {
-  /**
-   * This API will power off the machine.
-   */
-  void              powerOff();
-
-  /**
-   * This API will completely shut down and boot the machine.
-   */
-  void              reboot();
-
-  /**
-   * This API will restart the Gecko processes without powering off the machine.
-   */
-  void              restart();
-
   void              addWakeLockListener(in nsIDOMMozWakeLockListener aListener);
   void              removeWakeLockListener(in nsIDOMMozWakeLockListener aListener);
   DOMString         getWakeLockState(in DOMString aTopic);

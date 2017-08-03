@@ -7865,7 +7865,7 @@ nsGlobalWindow::FocusOuter(ErrorResult& aError)
   // (bugs 355482 and 369306).
   bool canFocus = CanSetProperty("dom.disable_window_flip") ||
                     (opener == callerOuter &&
-                     RevisePopupAbuseLevel(gPopupControlState) < openAbused);
+                     RevisePopupAbuseLevel(gPopupControlState) < openBlocked);
 
   nsCOMPtr<mozIDOMWindowProxy> activeDOMWindow;
   fm->GetActiveWindow(getter_AddRefs(activeDOMWindow));
@@ -8860,10 +8860,15 @@ nsGlobalWindow::RevisePopupAbuseLevel(PopupControlState aControl)
   PopupControlState abuse = aControl;
   switch (abuse) {
   case openControlled:
-  case openAbused:
+  case openBlocked:
   case openOverridden:
     if (PopupWhitelisted())
       abuse = PopupControlState(abuse - 1);
+    break;
+  case openAbused:
+    if (PopupWhitelisted())
+      //Skip openBlocked
+      abuse = openControlled;
     break;
   case openAllowed: break;
   default:
@@ -8871,7 +8876,9 @@ nsGlobalWindow::RevisePopupAbuseLevel(PopupControlState aControl)
   }
 
   // limit the number of simultaneously open popups
-  if (abuse == openAbused || abuse == openControlled) {
+  if (abuse == openAbused ||
+      abuse == openBlocked ||
+      abuse == openControlled) {
     int32_t popupMax = Preferences::GetInt("dom.popup_maximum", -1);
     if (popupMax >= 0 && gOpenPopupSpamCount >= popupMax)
       abuse = openOverridden;
@@ -12993,7 +13000,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   PopupControlState abuseLevel = gPopupControlState;
   if (checkForPopup) {
     abuseLevel = RevisePopupAbuseLevel(abuseLevel);
-    if (abuseLevel >= openAbused) {
+    if (abuseLevel >= openBlocked) {
       if (!aCalledNoScript) {
         // If script in some other window is doing a window.open on us and
         // it's being blocked, then it's OK to close us afterwards, probably.
@@ -13031,9 +13038,9 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
   NS_ENSURE_STATE(pwwatch);
 
-  MOZ_ASSERT_IF(checkForPopup, abuseLevel < openAbused);
+  MOZ_ASSERT_IF(checkForPopup, abuseLevel < openBlocked);
   // At this point we should know for a fact that if checkForPopup then
-  // abuseLevel < openAbused, so we could just check for abuseLevel ==
+  // abuseLevel < openBlocked, so we could just check for abuseLevel ==
   // openControlled.  But let's be defensive just in case and treat anything
   // that fails the above assert as a spam popup too, if it ever happens.
   bool isPopupSpamWindow = checkForPopup && (abuseLevel >= openControlled);

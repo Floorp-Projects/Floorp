@@ -46,53 +46,47 @@
     <!-- Main Panel Content -->
     <div id="inspector-main-content" class="devtools-main-content">
       <div id="inspector-toolbar" class="devtools-toolbar" nowindowdrag="true"
-                data-localization-bundle="devtools/client/locales/inspector.properties">
+           data-localization-bundle="devtools/client/locales/inspector.properties">
         <button id="inspector-element-add-button" class="devtools-button"
-                     data-localization="title=inspectorAddNode.label"></button>
+                data-localization="title=inspectorAddNode.label"></button>
         <div class="devtools-toolbar-spacer"></div>
         <span id="inspector-searchlabel"></span>
         <div id="inspector-search" class="devtools-searchbox has-clear-btn">
           <input id="inspector-searchbox" class="devtools-searchinput"
-                      type="search"
-                      data-localization="placeholder=inspectorSearchHTML.label3"/>
+                 type="search"
+                 data-localization="placeholder=inspectorSearchHTML.label3"/>
           <button id="inspector-searchinput-clear" class="devtools-searchinput-clear" tabindex="-1"></button>
         </div>
-        <button id="inspector-eyedropper-toggle"
-                     class="devtools-button command-button-invertable"></button>
+        <button id="inspector-eyedropper-toggle" class="devtools-button command-button-invertable"></button>
         <div id="inspector-sidebar-toggle-box"></div>
       </div>
       <div id="markup-box"></div>
       <div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
         <div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"
-                  role="group" data-localization="aria-label=inspector.breadcrumbs.label" tabindex="0"></div>
+             role="group" data-localization="aria-label=inspector.breadcrumbs.label" tabindex="0"></div>
       </div>
     </div>
 
     <!-- Splitter -->
-    <div
-      xmlns="http://www.w3.org/1999/xhtml"
-      id="inspector-splitter-box">
+    <div xmlns="http://www.w3.org/1999/xhtml" id="inspector-splitter-box">
     </div>
 
     <!-- Sidebar Container -->
     <div id="inspector-sidebar-container">
-      <div
-        xmlns="http://www.w3.org/1999/xhtml"
-        id="inspector-sidebar"
-        hidden="true"></div>
+      <div xmlns="http://www.w3.org/1999/xhtml" id="inspector-sidebar" hidden="true"></div>
     </div>
 
     <!-- Sidebar panel definitions -->
     <div id="tabpanels" style="visibility:collapse">
       <div id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel"
-                data-localization-bundle="devtools/client/locales/inspector.properties">
+           data-localization-bundle="devtools/client/locales/inspector.properties">
         <div id="ruleview-toolbar-container" class="devtools-toolbar">
           <div id="ruleview-toolbar">
             <div class="devtools-searchbox has-clear-btn">
               <input id="ruleview-searchbox"
-                          class="devtools-filterinput devtools-rule-searchbox"
-                          type="search"
-                          data-localization="placeholder=inspector.filterStyles.placeholder"/>
+                     class="devtools-filterinput devtools-rule-searchbox"
+                     type="search"
+                     data-localization="placeholder=inspector.filterStyles.placeholder"/>
               <button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></button>
             </div>
             <div id="ruleview-command-toolbar">
@@ -116,31 +110,27 @@
       </div>
 
       <div id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel"
-                data-localization-bundle="devtools/client/locales/inspector.properties">
-        <div id="computedview-toolbar" class="devtools-toolbar">
+           data-localization-bundle="devtools/client/locales/inspector.properties">
+        <div id="computed-toolbar" class="devtools-toolbar">
           <div class="devtools-searchbox has-clear-btn">
-            <input id="computedview-searchbox"
-                        class="devtools-filterinput devtools-rule-searchbox"
-                        type="search"
-                        data-localization="placeholder=inspector.filterStyles.placeholder"/>
-            <button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></button>
+            <input id="computed-searchbox"
+                   class="devtools-filterinput devtools-rule-searchbox"
+                   type="search"
+                   data-localization="placeholder=inspector.filterStyles.placeholder"/>
+            <button id="computed-searchinput-clear" class="devtools-searchinput-clear"></button>
           </div>
           <input id="browser-style-checkbox"
-                      type="checkbox"
-                      class="includebrowserstyles"/>
+                 type="checkbox"
+                 class="includebrowserstyles"/>
           <label id="browser-style-checkbox-label" for="browser-style-checkbox"
-                        data-localization="content=inspector.browserStyles.label"></label>
+                 data-localization="content=inspector.browserStyles.label"></label>
         </div>
 
-        <div id="computedview-container">
-          <div id="computedview-container-focusable" tabindex="-1">
-            <div id="boxmodel-wrapper">
-            </div>
-
-            <div id="propertyContainer" class="theme-separator" tabindex="0" dir="ltr">
-            </div>
-
-            <div id="computedview-no-results" hidden="" data-localization="content=inspector.noProperties"></div>
+        <div id="computed-container">
+          <div id="computed-container-focusable" tabindex="-1">
+            <div id="boxmodel-wrapper"></div>
+            <div id="computed-property-container" class="theme-separator" tabindex="0" dir="ltr"></div>
+            <div id="computed-no-results" hidden="" data-localization="content=inspector.noProperties"></div>
           </div>
         </div>
       </div>

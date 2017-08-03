@@ -57,7 +57,7 @@ add_task(function* () {
         showInfiniteLines,
       } = options;
 
-      is(color, "#4B0082", "CSS grid highlighter color is correct.");
+      is(color, "#9400FF", "CSS grid highlighter color is correct.");
       ok(!showGridAreasOverlay, "Show grid areas overlay option is off.");
       ok(!showGridLineNumbers, "Show grid line numbers option is off.");
       ok(showInfiniteLines, "Show infinite lines option is on.");

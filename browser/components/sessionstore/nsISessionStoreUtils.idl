@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindowProxy;
+interface nsIDOMEventListener;
+
+/**
+ * A callback passed to nsISessionStoreUtils.forEachNonDynamicChildFrame().
+ */
+[function, scriptable, uuid(8199ebf7-76c0-43d6-bcbe-913dd3de3ebf)]
+interface nsISessionStoreUtilsFrameCallback : nsISupports
+{
+  /**
+   * handleFrame() will be called once for each non-dynamic child frame of the
+   * given parent |frame|. The second argument is the |index| of the frame in
+   * the list of all child frames.
+   */
+  void handleFrame(in mozIDOMWindowProxy frame, in unsigned long index);
+};
+
+/**
+ * SessionStore utility functions implemented in C++ for performance reasons.
+ */
+[scriptable, uuid(2be448ef-c783-45de-a0df-442bccbb4532)]
+interface nsISessionStoreUtils : nsISupports
+{
+  /**
+   * Calls the given |callback| once for each non-dynamic child frame of the
+   * given |window|.
+   */
+  void forEachNonDynamicChildFrame(in mozIDOMWindowProxy window,
+                                   in nsISessionStoreUtilsFrameCallback callback);
+
+  /**
+   * Creates and returns an event listener that filters events from dynamic
+   * docShells. It forwards those from non-dynamic docShells to the given
+   * |listener|.
+   *
+   * This is implemented as a native filter, rather than a JS-based one, for
+   * performance reasons.
+   */
+  nsIDOMEventListener createDynamicFrameEventFilter(in nsIDOMEventListener listener);
+};

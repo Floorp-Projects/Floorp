@@ -96,7 +96,7 @@ function* testExpandedComputedViewProperty(computedView, nodeFront) {
   yield propertyView.refreshMatchedSelectors();
 
   let valueSpan = propertyView.matchedSelectorsContainer
-    .querySelector(".bestmatch .other-property-value");
+    .querySelector(".bestmatch .computed-other-property-value");
 
   let tooltip = computedView.tooltips.getTooltip("previewTooltip");
   let panel = tooltip.panel;

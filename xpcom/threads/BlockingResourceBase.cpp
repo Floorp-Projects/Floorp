@@ -70,7 +70,7 @@ BlockingResourceBase::GetStackTrace(AcquisitionState& aState)
 
   // NB: Ignore the return value, there's nothing useful we can do if this
   //     this fails.
-  MozStackWalk(StackWalkCallback, kSkipFrames, 24, &aState, 0, nullptr);
+  MozStackWalk(StackWalkCallback, kSkipFrames, 24, &aState);
 #endif
 }
 

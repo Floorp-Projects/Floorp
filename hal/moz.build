@@ -38,8 +38,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     ]
     UNIFIED_SOURCES += [
         'android/AndroidSensor.cpp',
-        'fallback/FallbackPower.cpp',
-        'linux/LinuxMemory.cpp',
     ]
     # AndroidHal.cpp cannot be built in unified mode because it relies on HalImpl.h.
     SOURCES += [
@@ -50,8 +48,6 @@ elif CONFIG['OS_TARGET'] == 'Linux':
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
-        'linux/LinuxMemory.cpp',
-        'linux/LinuxPower.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         UNIFIED_SOURCES += [
@@ -63,8 +59,6 @@ elif CONFIG['OS_TARGET'] == 'Linux':
         ]
 elif CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
-        'fallback/FallbackMemory.cpp',
-        'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
         'windows/WindowsSensor.cpp',
@@ -76,15 +70,11 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'cocoa/CocoaBattery.cpp',
-        'fallback/FallbackMemory.cpp',
-        'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
     ]
 elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
     UNIFIED_SOURCES += [
-        'fallback/FallbackMemory.cpp',
-        'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
@@ -100,8 +90,6 @@ elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
 else:
     UNIFIED_SOURCES += [
         'fallback/FallbackBattery.cpp',
-        'fallback/FallbackMemory.cpp',
-        'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
@@ -110,14 +98,10 @@ else:
 # Fallbacks for backends implemented on Gonk only.
 UNIFIED_SOURCES += [
     'fallback/FallbackDiskSpaceWatcher.cpp',
-    'fallback/FallbackFactoryReset.cpp',
     'fallback/FallbackProcessPriority.cpp',
-    'fallback/FallbackScreenPower.cpp',
     'fallback/FallbackSwitch.cpp',
-    'fallback/FallbackSystemService.cpp',
     'fallback/FallbackThreadPriority.cpp',
     'fallback/FallbackTime.cpp',
-    'fallback/FallbackWakeLocks.cpp',
 ]
 
 # Fallbacks for backends implemented on Android only.
