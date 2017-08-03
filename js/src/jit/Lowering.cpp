@@ -2302,14 +2302,14 @@ LIRGenerator::visitToString(MToString* ins)
 
     switch (opd->type()) {
       case MIRType::Null: {
-        const JSAtomState& names = GetJitContext()->runtime->names();
+        const JSAtomState& names = gen->runtime->names();
         LPointer* lir = new(alloc()) LPointer(names.null);
         define(lir, ins);
         break;
       }
 
       case MIRType::Undefined: {
-        const JSAtomState& names = GetJitContext()->runtime->names();
+        const JSAtomState& names = gen->runtime->names();
         LPointer* lir = new(alloc()) LPointer(names.undefined);
         define(lir, ins);
         break;
