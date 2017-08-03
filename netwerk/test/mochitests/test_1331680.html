@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1331680
+-->
+<head>
+  <title>Cookies set in content processes update immediately.</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1331680">Mozilla Bug 1331680</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let {utils: Cu, classes: Cc, interfaces: Ci } = Components;
+
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('file_1331680.js'));
+
+gScript.addMessageListener("cookieName", confirmCookieName);
+gScript.addMessageListener("createObserver:return", testSetCookie);
+gScript.addMessageListener("removeObserver:return", finishTest);
+gScript.sendAsyncMessage('createObserver');
+var testsNum = 0;
+
+function confirmRemoveAllCookies() {
+      is(document.cookie, "", "Removed all cookies.");
+      SimpleTest.finish();
+}
+
+// Confirm the notify which represents the cookie is updating.
+function confirmCookieName(name) {
+  testsNum++;
+  switch(testsNum) {
+    case 1:
+    case 3:
+      is(name, "cookie0=test1", "An update for the cookie named " + name + " was observed.");
+      break;
+    case 2:
+      is(name, "cookie2=test3", "An update for the cookie named " + name + " was observed.");
+      break;
+    case 4:
+      is(name, "cookie2=test3", "An update for the cookie named " + name + " was observed.");
+      gScript.sendAsyncMessage('removeObserver');
+      break;
+  }
+}
+
+function finishTest() {
+  is(document.cookie, "", "Removed all cookies from cookie-changed");
+  SimpleTest.finish();
+}
+
+/* Test document.cookie
+ * 1. Set a cookie and confirm the cookies which are processed from observer.
+ * 2. Set a cookie and get cookie.
+ */
+const COOKIE_NAMES = ["cookie0", "cookie1", "cookie2"];
+function testSetCookie() {
+  document.cookie = COOKIE_NAMES[0] + "=test1";
+  document.cookie = COOKIE_NAMES[1] + "=test2; HttpOnly";
+  document.cookie = COOKIE_NAMES[2] + "=test3";
+  var confirmCookieString = COOKIE_NAMES[0] + "=test1; " + COOKIE_NAMES[2] + "=test3";
+  is(document.cookie, confirmCookieString, "Confirm the cookies string which be get is current.");
+  for (var i = 0; i < COOKIE_NAMES.length; i++) {
+    document.cookie = COOKIE_NAMES[i] + "=; expires=Thu, 01-Jan-1970 00:00:01 GMT;";
+  }
+  is(document.cookie, "", "Removed all cookies.");
+}
+
+</script>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
