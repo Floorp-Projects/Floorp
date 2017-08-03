@@ -1169,6 +1169,10 @@ ServoRestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
   // cause the style to change.
   IncrementUndisplayedRestyleGeneration();
 
+  // Some other random attribute changes may also affect the transitions,
+  // so we also set this true here.
+  mHaveNonAnimationRestyles = true;
+
   ServoElementSnapshot& snapshot = SnapshotFor(aElement);
   snapshot.AddAttrs(aElement, aNameSpaceID, aAttribute);
 
@@ -1228,6 +1232,10 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
     // Assuming we need to invalidate cached style in getComputedStyle for
     // undisplayed elements, since we don't know if it is needed.
     IncrementUndisplayedRestyleGeneration();
+
+    // If we change attributes, we have to mark this to be true, so we will
+    // increase the animation generation for the new created transition if any.
+    mHaveNonAnimationRestyles = true;
   }
 }
 

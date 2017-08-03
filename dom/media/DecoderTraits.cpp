@@ -234,12 +234,6 @@ InstantiateDecoder(MediaDecoderInit& aInit,
 
   const MediaContainerType& type = aInit.mContainerType;
 
-#ifdef MOZ_ANDROID_HLS_SUPPORT
-  if (HLSDecoder::IsSupportedType(type)) {
-    decoder = new HLSDecoder(aInit);
-    return decoder.forget();
-  }
-#endif
 #ifdef MOZ_FMP4
   if (MP4Decoder::IsSupportedType(type, aDiagnostics)) {
     decoder = new MP4Decoder(aInit);

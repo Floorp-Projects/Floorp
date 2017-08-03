@@ -57,7 +57,7 @@ AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& a
 
   // Avoid long jumps when the browser hangs for more than |maxTimeDelta| ms.
   static const TimeDuration maxTimeDelta = TimeDuration::FromMilliseconds(100);
-  TimeDuration timeDelta = TimeDuration::Max(aDelta, maxTimeDelta);
+  TimeDuration timeDelta = TimeDuration::Min(aDelta, maxTimeDelta);
 
   float timeCompensation = timeDelta.ToMilliseconds() / 20;
 

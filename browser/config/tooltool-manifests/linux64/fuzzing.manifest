@@ -1,14 +1,5 @@
 [
   {
-    "version": "clang 4.0.1 gecko build for linux",
-    "size": 215309284,
-    "visibility": "public",
-    "digest": "8f6d386ca1d4606526dd24f366b1dbc1914c6c6d7f54c69c2a2ca0e7cfabe641c1168952d606295feffa9f38ad687084de5efb1e80be3ed2f431ac91de80039b",
-    "algorithm": "sha512",
-    "filename": "clang.tar.xz",
-    "unpack": true
-  },
-  {
     "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
     "size": 161014632,
     "digest": "65bebcf94fc66ea618c58c9ac33f0f206095ecfe3931cc6edb301f4b40480e3b44b0f39aea7a25fed8eef47e63523e7e670082947a3662cdc04c68ebbe5dfc89",

@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../windowsShared.inc
-%filter substitution
-
 /* Toolbar */
 #placesToolbar {
   padding: 3px;
@@ -170,10 +167,6 @@
   #placesToolbox {
     border-top: none;
   }
-
-  #placesToolbar {
-    background-image: linear-gradient(@toolbarHighlight@, transparent);
-  }
 }
 
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
@@ -184,12 +177,6 @@
     background-color: #EEF3FA;
   }
 
-%ifndef MOZ_PHOTON_THEME
-  #placesToolbar {
-    background-color: @customToolbarColor@;
-    color: black;
-  }
-%endif
   #detailsDeck {
     border-top-color: #A9B7C9;
   }

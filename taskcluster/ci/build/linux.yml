@@ -421,6 +421,7 @@ linux64-asan-fuzzing/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-clang-4
         - linux64-gcc
         - linux64-sccache
 

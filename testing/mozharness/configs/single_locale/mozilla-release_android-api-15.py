@@ -2,7 +2,7 @@ import os
 BRANCH = "mozilla-release"
 MOZ_UPDATE_CHANNEL = "release"
 MOZILLA_DIR = BRANCH
-OBJDIR = "obj-l10n"
+OBJDIR = "obj-firefox"
 EN_US_BINARY_URL = None
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
