@@ -9132,43 +9132,6 @@ nsDisplayFilter::PaintAsLayer(nsDisplayListBuilder* aBuilder,
   nsDisplayFilterGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
-bool
-nsDisplayFilter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                         const StackingContextHelper& aSc,
-                                         nsTArray<WebRenderParentCommand>& aParentCommands,
-                                         mozilla::layers::WebRenderLayerManager* aManager,
-                                         nsDisplayListBuilder* aDisplayListBuilder)
-{
-  if (aManager->IsLayersFreeTransaction()) {
-    ContainerLayerParameters parameter;
-    if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
-      // TODO: should have a fallback path to paint the child list
-      return false;
-    }
-  }
-
-  nsTArray<mozilla::wr::WrFilterOp> wrFilters;
-  const nsTArray<nsStyleFilter>& filters = mFrame->StyleEffects()->mFilters;
-  nsTArray<layers::CSSFilter> cssFilters = nsTArray<layers::CSSFilter>(filters.Length());
-  for (const nsStyleFilter& filter : filters) {
-    wrFilters.AppendElement(wr::ToWrFilterOp(ToCSSFilter(filter)));
-  }
-
-  StackingContextHelper sc(aSc,
-                           aBuilder,
-                           aDisplayListBuilder,
-                           this,
-                           &mList,
-                           nullptr,
-                           0,
-                           nullptr,
-                           nullptr,
-                           wrFilters);
-
-  nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, sc, aParentCommands, aManager, aDisplayListBuilder);
-  return true;
-}
-
 #ifdef MOZ_DUMP_PAINTING
 void
 nsDisplayFilter::PrintEffects(nsACString& aTo)
