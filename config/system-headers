@@ -1277,6 +1277,9 @@ bzlib.h
 gio/gio.h
 #if MOZ_SYSTEM_LIBEVENT==1
 event.h
+event2/event.h
+event2/event_compat.h
+event2/event_struct.h
 #else
 sys/event.h
 #endif
