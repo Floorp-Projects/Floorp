@@ -29,7 +29,7 @@
     _(CheckHashTables,          "ckTbls")                                     \
     _(MarkRuntime,              "mkRntm")                                     \
     _(MarkDebugger,             "mkDbgr")                                     \
-    _(ClearNewObjectCache,      "clrNOC")                                     \
+    _(SweepCaches,              "swpCch")                                     \
     _(CollectToFP,              "collct")                                     \
     _(ObjectsTenuredCallback,   "tenCB")                                      \
     _(Sweep,                    "sweep")                                      \
