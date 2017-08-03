@@ -9,6 +9,7 @@
 #include "gfxPlatformFontList.h"
 #include "mozilla/AutoRestyleTimelineMarker.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/ServoStyleRuleMap.h"
@@ -259,6 +260,8 @@ ServoStyleSet::PreTraverseSync()
   ResolveMappedAttrDeclarationBlocks();
 
   nsCSSRuleProcessor::InitSystemMetrics();
+
+  LookAndFeel::NativeInit();
 
   // This is lazily computed and pseudo matching needs to access
   // it so force computation early.
