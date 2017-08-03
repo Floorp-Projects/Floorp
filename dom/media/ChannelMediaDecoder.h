@@ -70,11 +70,11 @@ public:
   virtual nsresult Load(nsIChannel* aChannel,
                         bool aIsPrivateBrowsing,
                         nsIStreamListener** aStreamListener);
-  virtual nsresult Load(MediaResource* aOriginal);
 
 private:
   virtual ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) = 0;
   nsresult OpenResource(nsIStreamListener** aStreamListener);
+  virtual nsresult Load(MediaResource* aOriginal);
 };
 
 } // namespace mozilla
