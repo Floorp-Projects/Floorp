@@ -65,6 +65,8 @@ using namespace mozilla::ipc;
 
 namespace {
 
+class ChildImpl;
+
 // -----------------------------------------------------------------------------
 // Utility Functions
 // -----------------------------------------------------------------------------
@@ -88,6 +90,12 @@ AssertIsOnMainThread()
   THREADSAFETY_ASSERT(NS_IsMainThread());
 }
 
+void
+AssertIsNotOnMainThread()
+{
+  THREADSAFETY_ASSERT(!NS_IsMainThread());
+}
+
 // -----------------------------------------------------------------------------
 // ParentImpl Declaration
 // -----------------------------------------------------------------------------
@@ -106,6 +114,7 @@ private:
   class ForceCloseBackgroundActorsRunnable;
   class CreateCallbackRunnable;
   class ConnectActorRunnable;
+  class CreateActorHelper;
 
   struct MOZ_STACK_CLASS TimerCallbackClosure
   {
@@ -181,6 +190,9 @@ private:
 public:
   static bool
   CreateActorForSameProcess(CreateCallback* aCallback);
+
+  static already_AddRefed<ChildImpl>
+  CreateActorForSameProcess();
 
   static bool
   IsOnBackgroundThread()
@@ -294,6 +306,7 @@ class ChildImpl final : public BackgroundChildImpl
   class CreateActorRunnable;
   class ParentCreateCallback;
   class AlreadyCreatedCallbackRunnable;
+  class ActorCreatedRunnable;
   class FailedCreateCallbackRunnable;
   class OpenChildProcessActorRunnable;
   class OpenMainProcessActorRunnable;
@@ -308,6 +321,13 @@ class ChildImpl final : public BackgroundChildImpl
 
   struct ThreadLocalInfo
   {
+    ThreadLocalInfo()
+#ifdef DEBUG
+      : mClosed(false)
+#endif
+    {
+    }
+
     explicit ThreadLocalInfo(nsIIPCBackgroundChildCreateCallback* aCallback)
 #ifdef DEBUG
       : mClosed(false)
@@ -337,6 +357,7 @@ class ChildImpl final : public BackgroundChildImpl
 #endif
 
 #ifdef DEBUG
+  bool mActorWasAlive;
   bool mActorDestroyed;
 #endif
 
@@ -368,15 +389,42 @@ public:
     MOZ_ASSERT(mActorDestroyed, "ChildImpl::ActorDestroy not called in time");
   }
 
+  // For same-process actors.
+  explicit ChildImpl(nsISerialEventTarget* aBoundThread)
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+  : mBoundEventTarget(aBoundThread)
+#endif
+#ifdef DEBUG
+  , mActorWasAlive(false)
+  , mActorDestroyed(false)
+#endif
+  {
+    AssertIsOnBoundThread();
+  }
+
+  // For other-process actors.
   ChildImpl()
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
   : mBoundEventTarget(nullptr)
 #endif
 #ifdef DEBUG
+  , mActorWasAlive(false)
   , mActorDestroyed(false)
 #endif
   {
     AssertIsOnMainThread();
+  }
+
+  void
+  SetActorAlive()
+  {
+    AssertIsOnBoundThread();
+    MOZ_ASSERT(!mActorWasAlive);
+    MOZ_ASSERT(!mActorDestroyed);
+
+#ifdef DEBUG
+    mActorWasAlive = true;
+#endif
   }
 
   NS_INLINE_DECL_REFCOUNTING(ChildImpl)
@@ -420,17 +468,6 @@ private:
       if (threadLocalInfo->mActor) {
         threadLocalInfo->mActor->Close();
         threadLocalInfo->mActor->AssertActorDestroyed();
-
-        // Since the actor is created on the main thread it must only
-        // be released on the main thread as well.
-        if (!NS_IsMainThread()) {
-          ChildImpl* actor;
-          threadLocalInfo->mActor.forget(&actor);
-
-          MOZ_ALWAYS_SUCCEEDS(
-            NS_DispatchToMainThread(NewNonOwningRunnableMethod("ChildImpl::Release",
-                                                               actor, &ChildImpl::Release)));
-        }
       }
       delete threadLocalInfo;
     }
@@ -442,7 +479,7 @@ private:
   // This class is reference counted.
   ~ChildImpl()
   {
-    AssertActorDestroyed();
+    MOZ_ASSERT_IF(mActorWasAlive, mActorDestroyed);
   }
 
   void
@@ -599,6 +636,41 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
+class ParentImpl::CreateActorHelper final : public Runnable
+{
+  mozilla::Monitor mMonitor;
+  RefPtr<ParentImpl> mParentActor;
+  nsCOMPtr<nsIThread> mThread;
+  nsresult mMainThreadResultCode;
+  bool mWaiting;
+
+public:
+  explicit CreateActorHelper()
+    : Runnable("Background::ParentImpl::CreateActorHelper")
+    , mMonitor("CreateActorHelper::mMonitor")
+    , mMainThreadResultCode(NS_OK)
+    , mWaiting(true)
+  {
+    AssertIsInMainProcess();
+    AssertIsNotOnMainThread();
+  }
+
+  nsresult
+  BlockAndGetResults(RefPtr<ParentImpl>& aParentActor,
+                     nsCOMPtr<nsIThread>& aThread);
+
+private:
+  ~CreateActorHelper()
+  {
+    AssertIsInMainProcess();
+  }
+
+  nsresult
+  RunOnMainThread();
+
+  NS_DECL_NSIRUNNABLE
+};
+
 class NS_NO_VTABLE ParentImpl::CreateCallback
 {
 public:
@@ -699,6 +771,35 @@ protected:
 
   NS_DECL_NSIRUNNABLE
   nsresult Cancel() override;
+};
+
+// Must be cancelable in order to dispatch on active worker threads
+class ChildImpl::ActorCreatedRunnable final :
+  public CancelableRunnable
+{
+  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> mCallback;
+  RefPtr<ChildImpl> mActor;
+
+public:
+  ActorCreatedRunnable(nsIIPCBackgroundChildCreateCallback* aCallback,
+                       ChildImpl* aActor)
+    : CancelableRunnable("Background::ChildImpl::ActorCreatedRunnable")
+    , mCallback(aCallback)
+    , mActor(aActor)
+  {
+    // May be created on any thread!
+    MOZ_ASSERT(aCallback);
+    MOZ_ASSERT(aActor);
+  }
+
+protected:
+  virtual ~ActorCreatedRunnable()
+  { }
+
+  NS_DECL_NSIRUNNABLE
+
+  nsresult
+  Cancel() override;
 };
 
 class ChildImpl::FailedCreateCallbackRunnable final : public Runnable
@@ -1068,6 +1169,65 @@ ParentImpl::CreateActorForSameProcess(CreateCallback* aCallback)
 
   sPendingCallbacks->AppendElement(aCallback);
   return true;
+}
+
+// static
+already_AddRefed<ChildImpl>
+ParentImpl::CreateActorForSameProcess()
+{
+  AssertIsInMainProcess();
+
+  RefPtr<ParentImpl> parentActor;
+  nsCOMPtr<nsIThread> backgroundThread;
+
+  if (NS_IsMainThread()) {
+    if (!sBackgroundThread && !CreateBackgroundThread()) {
+      NS_WARNING("Failed to create background thread!");
+      return nullptr;
+    }
+
+    MOZ_ASSERT(!sShutdownHasStarted);
+
+    sLiveActorCount++;
+
+    parentActor = new ParentImpl();
+    backgroundThread = sBackgroundThread.get();
+  } else {
+    RefPtr<CreateActorHelper> helper = new CreateActorHelper();
+
+    nsresult rv = helper->BlockAndGetResults(parentActor, backgroundThread);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+  }
+
+  RefPtr<ChildImpl> childActor =
+    new ChildImpl(GetCurrentThreadSerialEventTarget());
+
+  MessageChannel* parentChannel = parentActor->GetIPCChannel();
+  MOZ_ASSERT(parentChannel);
+
+  if (!childActor->Open(parentChannel, backgroundThread, ChildSide)) {
+    NS_WARNING("Failed to open ChildImpl!");
+
+    // Can't release it here, we will release this reference in Destroy.
+    ParentImpl* actor;
+    parentActor.forget(&actor);
+
+    actor->Destroy();
+
+    return nullptr;
+  }
+
+  childActor->SetActorAlive();
+
+  // Make sure the parent knows it is same process.
+  parentActor->SetOtherProcessId(base::GetCurrentProcId());
+
+  // Now that Open() has succeeded transfer the ownership of the actors to IPDL.
+  Unused << parentActor.forget();
+
+  return childActor.forget();
 }
 
 // static
@@ -1454,6 +1614,68 @@ ParentImpl::ConnectActorRunnable::Run()
   return NS_OK;
 }
 
+nsresult
+ParentImpl::
+CreateActorHelper::BlockAndGetResults(RefPtr<ParentImpl>& aParentActor,
+                                      nsCOMPtr<nsIThread>& aThread)
+{
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+
+  mozilla::MonitorAutoLock lock(mMonitor);
+  while (mWaiting) {
+    lock.Wait();
+  }
+
+  if (NS_WARN_IF(NS_FAILED(mMainThreadResultCode))) {
+    return mMainThreadResultCode;
+  }
+
+  aParentActor = Move(mParentActor);
+  aThread = Move(mThread);
+  return NS_OK;
+}
+
+nsresult
+ParentImpl::
+CreateActorHelper::RunOnMainThread()
+{
+  AssertIsOnMainThread();
+
+  if (!sBackgroundThread && !CreateBackgroundThread()) {
+    NS_WARNING("Failed to create background thread!");
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(!sShutdownHasStarted);
+
+  sLiveActorCount++;
+
+  mParentActor = new ParentImpl();
+  mThread = sBackgroundThread;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ParentImpl::
+CreateActorHelper::Run()
+{
+  AssertIsOnMainThread();
+
+  nsresult rv = RunOnMainThread();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mMainThreadResultCode = rv;
+  }
+
+  mozilla::MonitorAutoLock lock(mMonitor);
+  MOZ_ASSERT(mWaiting);
+
+  mWaiting = false;
+  lock.Notify();
+
+  return NS_OK;
+}
+
 // -----------------------------------------------------------------------------
 // ChildImpl Implementation
 // -----------------------------------------------------------------------------
@@ -1562,6 +1784,8 @@ ChildImpl::GetOrCreateForCurrentThread(
                                  nsIIPCBackgroundChildCreateCallback* aCallback)
 {
   MOZ_ASSERT(aCallback);
+  // XXX Remove me!
+#if 0
   MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
              "BackgroundChild::Startup() was never called!");
 
@@ -1615,60 +1839,107 @@ ChildImpl::GetOrCreateForCurrentThread(
   }
 
   return true;
+#endif
+
+  RefPtr<ChildImpl> actor =
+    static_cast<ChildImpl*>(GetOrCreateForCurrentThread());
+  if (NS_WARN_IF(!actor)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIRunnable> runnable = new ActorCreatedRunnable(aCallback, actor);
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
+
+  return true;
 }
-
-namespace {
-
-class Callback final : public nsIIPCBackgroundChildCreateCallback
-{
-  bool* mDone;
-
-public:
-  explicit Callback(bool* aDone)
-    : mDone(aDone)
-  {
-    MOZ_ASSERT(mDone);
-  }
-
-  NS_DECL_ISUPPORTS
-
-private:
-  ~Callback()
-  { }
-
-  virtual void
-  ActorCreated(PBackgroundChild* aActor) override
-  {
-    *mDone = true;
-  }
-
-  virtual void
-  ActorFailed() override
-  {
-    *mDone = true;
-  }
-};
-
-NS_IMPL_ISUPPORTS(Callback, nsIIPCBackgroundChildCreateCallback)
-
-} // anonymous namespace
 
 /* static */
 PBackgroundChild*
 ChildImpl::GetOrCreateForCurrentThread()
 {
-  bool done = false;
-  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback = new Callback(&done);
+  MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
+             "BackgroundChild::Startup() was never called!");
 
-  if (NS_WARN_IF(!GetOrCreateForCurrentThread(callback))) {
+  auto threadLocalInfo =
+    static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
+
+  if (!threadLocalInfo) {
+    nsAutoPtr<ThreadLocalInfo> newInfo(new ThreadLocalInfo());
+
+    if (PR_SetThreadPrivate(sThreadLocalIndex, newInfo) != PR_SUCCESS) {
+      CRASH_IN_CHILD_PROCESS("PR_SetThreadPrivate failed!");
+      return nullptr;
+    }
+
+    threadLocalInfo = newInfo.forget();
+  }
+
+  if (threadLocalInfo->mActor) {
+    return threadLocalInfo->mActor;
+  }
+
+  if (XRE_IsParentProcess()) {
+    RefPtr<ChildImpl> strongActor = ParentImpl::CreateActorForSameProcess();
+    if (NS_WARN_IF(!strongActor)) {
+      return nullptr;
+    }
+
+    RefPtr<ChildImpl>& actor = threadLocalInfo->mActor;
+    strongActor.swap(actor);
+
+    return actor;
+  }
+
+  RefPtr<ContentChild> content = ContentChild::GetSingleton();
+  MOZ_ASSERT(content);
+
+  if (content->IsShuttingDown()) {
+    // The transport for ContentChild is shut down and can't be used to open
+    // PBackground.
     return nullptr;
   }
 
-  if (NS_WARN_IF(!SpinEventLoopUntil([&]() { return done; }))) {
+  Endpoint<PBackgroundParent> parent;
+  Endpoint<PBackgroundChild> child;
+  nsresult rv;
+  rv = PBackground::CreateEndpoints(content->OtherPid(),
+                                    base::GetCurrentProcId(),
+                                    &parent, &child);
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH("Failed to create top level actor!");
     return nullptr;
   }
 
-  return GetForCurrentThread();
+  RefPtr<ChildImpl> strongActor =
+    new ChildImpl(GetCurrentThreadSerialEventTarget());
+
+  if (!child.Bind(strongActor)) {
+    CRASH_IN_CHILD_PROCESS("Failed to bind ChildImpl!");
+
+    return nullptr;
+  }
+
+  strongActor->SetActorAlive();
+
+  if (NS_IsMainThread()) {
+    if (!content->SendInitBackground(Move(parent))) {
+      MOZ_CRASH("Failed to create top level actor!");
+      return nullptr;
+    }
+  } else {
+    nsCOMPtr<nsIRunnable> runnable =
+      NewRunnableMethod<Endpoint<PBackgroundParent>&&>(
+        "dom::ContentChild::SendInitBackground",
+        content,
+        &ContentChild::SendInitBackground,
+        Move(parent));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+  }
+
+  RefPtr<ChildImpl>& actor = threadLocalInfo->mActor;
+  strongActor.swap(actor);
+
+  return actor;
 }
 
 // static
@@ -1769,6 +2040,27 @@ ChildImpl::AlreadyCreatedCallbackRunnable::Run()
 
 nsresult
 ChildImpl::AlreadyCreatedCallbackRunnable::Cancel()
+{
+  // These are IPC infrastructure objects and need to run unconditionally.
+  Run();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ChildImpl::ActorCreatedRunnable::Run()
+{
+  // May run on any thread!
+
+  MOZ_ASSERT(mCallback);
+  MOZ_ASSERT(mActor);
+
+  mCallback->ActorCreated(mActor);
+
+  return NS_OK;
+}
+
+nsresult
+ChildImpl::ActorCreatedRunnable::Cancel()
 {
   // These are IPC infrastructure objects and need to run unconditionally.
   Run();
