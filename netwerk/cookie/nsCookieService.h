@@ -13,6 +13,7 @@
 #include "nsWeakReference.h"
 
 #include "nsCookie.h"
+#include "nsCookieKey.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsHashKeys.h"
@@ -31,10 +32,8 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Maybe.h"
-#include "nsCookieKey.h"
 
 using mozilla::OriginAttributes;
-using mozilla::nsCookieKey;
 
 class nsICookiePermission;
 class nsIEffectiveTLDService;
@@ -53,10 +52,12 @@ struct nsListIter;
 
 namespace mozilla {
 namespace net {
+class nsCookieKey;
 class CookieServiceParent;
 } // namespace net
 } // namespace mozilla
 
+using mozilla::net::nsCookieKey;
 // Inherit from nsCookieKey so this can be stored in nsTHashTable
 // TODO: why aren't we using nsClassHashTable<nsCookieKey, ArrayType>?
 class nsCookieEntry : public nsCookieKey
@@ -210,6 +211,12 @@ class nsCookieService final : public nsICookieService
    * app.
    */
   static void AppClearDataObserverInit();
+  static nsCString GetPathFromURI(nsIURI *aHostURI);
+  static nsresult GetBaseDomain(nsIEffectiveTLDService *aTLDService, nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
+  static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService *aTLDService, const nsACString &aHost, nsCString &aBaseDomain);
+  static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
+  static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
+  void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList);
 
   protected:
     virtual ~nsCookieService();
@@ -235,8 +242,6 @@ class nsCookieService final : public nsICookieService
     void                          EnsureReadDomain(const nsCookieKey &aKey);
     void                          EnsureReadComplete();
     nsresult                      NormalizeHost(nsCString &aHost);
-    nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
-    nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     nsresult                      GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel, bool aHttpBound, char** aCookie);
     void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsCString &aCookie);
     nsresult                      SetCookieStringCommon(nsIURI *aHostURI, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, bool aFromHttp);

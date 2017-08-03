@@ -257,6 +257,8 @@ public:
 
   friend class OnLinkClickEvent;
 
+  static bool SandboxFlagsImplyCookies(const uint32_t &aSandboxFlags);
+
   // We need dummy OnLocationChange in some cases to update the UI without
   // updating security info.
   void FireDummyOnLocationChange()

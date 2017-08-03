@@ -27,6 +27,7 @@
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 #include "mozilla/a11y/AccessibleWrap.h"
 #endif
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/DataStorage.h"
@@ -80,6 +81,8 @@
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Move.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/net/CookieServiceParent.h"
+#include "mozilla/net/PCookieServiceParent.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitor.h"
@@ -5045,6 +5048,17 @@ ContentParent::ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch
   ProcessHangMonitor::ForcePaint(mHangMonitorActor, aTabParent, aLayerObserverEpoch);
 }
 
+void
+ContentParent::UpdateCookieStatus(nsIChannel   *aChannel)
+{
+  PNeckoParent *neckoParent = LoneManagedOrNullAsserts(ManagedPNeckoParent());
+  PCookieServiceParent *csParent = LoneManagedOrNullAsserts(neckoParent->ManagedPCookieServiceParent());
+  if (csParent) {
+    auto *cs = static_cast<CookieServiceParent*>(csParent);
+    cs->TrackCookieLoad(aChannel);
+  }
+}
+
 nsresult
 ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild(nsIChannel* aChannel)
 {
@@ -5068,6 +5082,14 @@ ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild(nsIChannel* aChannel)
 
   rv = TransmitPermissionsForPrincipal(principal);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsLoadFlags newLoadFlags;
+  aChannel->GetLoadFlags(&newLoadFlags);
+  bool isDocument = false;
+  aChannel->GetIsDocument(&isDocument);
+  if (newLoadFlags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE && isDocument) {
+    UpdateCookieStatus(aChannel);
+  }
 
   return NS_OK;
 }

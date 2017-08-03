@@ -8639,6 +8639,12 @@ private:
 
 } // namespace
 
+bool
+nsDocShell::SandboxFlagsImplyCookies(const uint32_t &aSandboxFlags)
+{
+  return (aSandboxFlags & (SANDBOXED_ORIGIN | SANDBOXED_SCRIPTS)) == 0;
+}
+
 nsresult
 nsDocShell::RestoreFromHistory()
 {
@@ -9299,6 +9305,9 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
     // Mark the channel as being a document URI...
     aOpenedChannel->GetLoadFlags(&loadFlags);
     loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
+    if (SandboxFlagsImplyCookies(mSandboxFlags)) {
+      loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
+    }
 
     aOpenedChannel->SetLoadFlags(loadFlags);
 
@@ -11515,6 +11524,9 @@ nsDocShell::DoChannelLoad(nsIChannel* aChannel,
   loadFlags |= nsIChannel::LOAD_DOCUMENT_URI |
                nsIChannel::LOAD_CALL_CONTENT_SNIFFERS;
 
+  if (SandboxFlagsImplyCookies(mSandboxFlags)) {
+    loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
+  }
   // Load attributes depend on load type...
   switch (mLoadType) {
     case LOAD_HISTORY: {

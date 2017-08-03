@@ -2476,6 +2476,17 @@ WarnIfSandboxIneffective(nsIDocShell* aDocShell,
   }
 }
 
+bool
+nsDocument::IsSynthesized() {
+  nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(mChannel);
+  bool synthesized = false;
+  if (internalChan) {
+    DebugOnly<nsresult> rv = internalChan->GetResponseSynthesized(&synthesized);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "GetResponseSynthesized shouldn't fail.");
+  }
+  return synthesized;
+}
+
 nsresult
 nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                               nsILoadGroup* aLoadGroup,
@@ -2543,6 +2554,19 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     inStrmChan->GetIsSrcdocChannel(&isSrcdocChannel);
     if (isSrcdocChannel) {
       mIsSrcdocDocument = true;
+    }
+  }
+
+  if (mChannel) {
+    nsLoadFlags loadFlags;
+    mChannel->GetLoadFlags(&loadFlags);
+    bool isDocument = false;
+    mChannel->GetIsDocument(&isDocument);
+    if (loadFlags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE &&
+        isDocument &&
+        IsSynthesized() &&
+        XRE_IsContentProcess()) {
+      ContentChild::UpdateCookieStatus(mChannel);
     }
   }
 
