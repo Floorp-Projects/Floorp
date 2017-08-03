@@ -29,7 +29,6 @@
 #  define CATCH(e)  if (0)
 #endif
 
-#include "gtest/gtest.h"
 
 #if defined(XP_UNIX)
 extern unsigned int _gdb_sleep_duration;

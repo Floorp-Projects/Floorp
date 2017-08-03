@@ -60,8 +60,6 @@ public:
   }
 
   void DoRandomOperation() {
-    using mozilla::UniquePtr;
-
     Object* obj;
     switch (rand() & 0x7) {
     case 0: {
