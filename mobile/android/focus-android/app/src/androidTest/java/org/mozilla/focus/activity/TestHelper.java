@@ -57,6 +57,9 @@ public final class TestHelper {
     static UiObject finishBtn = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/finish")
             .enabled(true));
+    static UiObject initialView = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/brand_background")
+            .enabled(true));
 
     /********* Main View Locators ***********/
     static ViewInteraction menuButton = onView(
@@ -107,7 +110,11 @@ public final class TestHelper {
             .enabled(true));
     static UiObject notificationOpenItem = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("android:id/action0")
-            .descriptionContains("Open")
+            .description("Open")
+            .enabled(true));
+    static UiObject notificationEraseOpenItem = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("android:id/action0")
+            .description("Erase and Open")
             .enabled(true));
     static UiObject FocusInRecentApps = TestHelper.mDevice.findObject(new UiSelector()
             .text("Focus (Dev)")

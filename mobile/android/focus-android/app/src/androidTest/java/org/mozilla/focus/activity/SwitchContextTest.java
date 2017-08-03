@@ -123,6 +123,36 @@ public class SwitchContextTest {
     }
 
     @Test
+    public void EraseandOpenTest() throws InterruptedException, UiObjectNotFoundException {
+
+        // Open a webpage
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.inlineAutocompleteEditText.exists());
+        TestHelper.inlineAutocompleteEditText.clearTextField();
+        TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
+        TestHelper.hint.waitForExists(waitingTime);
+        TestHelper.pressEnterKey();
+
+        // Assert website is loaded
+        TestHelper.webView.waitForExists(waitingTime);
+        Assert.assertTrue("Website title loaded", titleMsg.exists());
+        assertTrue(rabbitImage.exists());
+
+        // Switch out of Focus, pull down system bar and select open action
+        TestHelper.pressHomeKey();
+        TestHelper.openNotification();
+        TestHelper.notificationEraseOpenItem.waitForExists(waitingTime);
+        TestHelper.notificationEraseOpenItem.click();
+
+        // Verify that it's on the main view, showing the previous browsing session
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        assertTrue(TestHelper.erasedMsg.exists());
+        assertTrue(TestHelper.inlineAutocompleteEditText.exists());
+        assertTrue(TestHelper.initialView.exists());
+        assertTrue(!rabbitImage.exists());
+    }
+
+    @Test
     public void settingsToFocus() throws InterruptedException, UiObjectNotFoundException, RemoteException {
 
         // Initialize UiDevice instance
