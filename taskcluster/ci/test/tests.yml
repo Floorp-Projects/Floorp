@@ -1807,18 +1807,8 @@ xpcshell:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
-            # Deactivate try on Buildbot, by default. We don't have enough machines
-            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
-            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             default: built-projects
-    worker-type:
-        by-test-platform:
-            windows8-64.*: buildbot-bridge/buildbot-bridge
-            default: null
-    tier:
-        by-test-platform:
-            default: default
     chunks:
         by-test-platform:
             linux64/debug: 10
