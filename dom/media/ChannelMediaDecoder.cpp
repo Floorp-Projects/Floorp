@@ -155,6 +155,12 @@ ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   mResourceCallback->Connect(this);
 }
 
+MediaResource*
+ChannelMediaDecoder::GetResource() const
+{
+  return mResource;
+}
+
 MediaDecoderStateMachine* ChannelMediaDecoder::CreateStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());

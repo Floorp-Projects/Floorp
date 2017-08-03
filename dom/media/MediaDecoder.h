@@ -135,7 +135,7 @@ public:
   // MediaDecoder has been destroyed. You might need to do this if you're
   // wrapping the MediaResource in some kind of byte stream interface to be
   // passed to a platform decoder.
-  MediaResource* GetResource() const { return mResource; }
+  virtual MediaResource* GetResource() const = 0;
 
   // Return the principal of the current URI being played or downloaded.
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
@@ -504,9 +504,6 @@ protected:
   /******
    * The following member variables can be accessed from any thread.
    ******/
-
-  // Media data resource.
-  RefPtr<MediaResource> mResource;
 
   RefPtr<MediaFormatReader> mReader;
 
