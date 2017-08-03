@@ -402,7 +402,7 @@ enum SideBits {
   int32_t MOZ_CONCAT(var_,__LINE__) = mozilla::eSideTop;                 \
   for (mozilla::Side var_;                                               \
        MOZ_CONCAT(var_,__LINE__) <= mozilla::eSideLeft &&                \
-         ((var_ = mozilla::Side(MOZ_CONCAT(var_,__LINE__))), true);      \
+         (static_cast<void>(var_ = mozilla::Side(MOZ_CONCAT(var_,__LINE__))), true); \
        ++MOZ_CONCAT(var_,__LINE__))
 
 static inline Side& operator++(Side& side) {
@@ -431,7 +431,7 @@ constexpr int eCornerCount = 4;
   int32_t MOZ_CONCAT(var_,__LINE__) = mozilla::eCornerTopLeft;          \
   for (mozilla::Corner var_;                                            \
        MOZ_CONCAT(var_,__LINE__) <= mozilla::eCornerBottomLeft &&       \
-         (var_ = mozilla::Corner(MOZ_CONCAT(var_,__LINE__)), true);     \
+         (static_cast<void>(var_ = mozilla::Corner(MOZ_CONCAT(var_,__LINE__))), true); \
        ++MOZ_CONCAT(var_,__LINE__))
 
 static inline Corner operator++(Corner& aCorner) {
@@ -460,7 +460,7 @@ enum HalfCorner {
   int32_t MOZ_CONCAT(var_,__LINE__) = mozilla::eCornerTopLeftX;         \
   for (mozilla::HalfCorner var_;                                        \
        MOZ_CONCAT(var_,__LINE__) <= mozilla::eCornerBottomLeftY &&      \
-         (var_ = mozilla::HalfCorner(MOZ_CONCAT(var_,__LINE__)), true); \
+         (static_cast<void>(var_ = mozilla::HalfCorner(MOZ_CONCAT(var_,__LINE__))), true); \
        ++MOZ_CONCAT(var_,__LINE__))
 
 static inline HalfCorner operator++(HalfCorner& aHalfCorner) {
