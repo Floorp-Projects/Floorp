@@ -144,13 +144,20 @@ void
 WebRenderBridgeChild::AddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
                                                         const CompositableHandle& aHandle)
 {
-  SendAddPipelineIdForAsyncCompositable(aPipelineId, aHandle);
+  SendAddPipelineIdForCompositable(aPipelineId, aHandle, true);
 }
 
 void
-WebRenderBridgeChild::RemovePipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId)
+WebRenderBridgeChild::AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
+                                                   const CompositableHandle& aHandle)
 {
-  SendRemovePipelineIdForAsyncCompositable(aPipelineId);
+  SendAddPipelineIdForCompositable(aPipelineId, aHandle, false);
+}
+
+void
+WebRenderBridgeChild::RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId)
+{
+  SendRemovePipelineIdForCompositable(aPipelineId);
 }
 
 wr::ExternalImageId
