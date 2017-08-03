@@ -5761,19 +5761,6 @@ function UpdateDynamicShortcutTooltipText(aTooltip) {
   aTooltip.setAttribute("label", gDynamicTooltipCache.get(nodeId));
 }
 
-function getBrowserSelection(aCharLen) {
-  Deprecated.warning("getBrowserSelection",
-                     "https://bugzilla.mozilla.org/show_bug.cgi?id=1134769");
-
-  let focusedElement = document.activeElement;
-  if (focusedElement && focusedElement.localName == "browser" &&
-      focusedElement.isRemoteBrowser) {
-    throw "getBrowserSelection doesn't support child process windows";
-  }
-
-  return BrowserUtils.getSelectionDetails(window, aCharLen).text;
-}
-
 var gWebPanelURI;
 function openWebPanel(title, uri) {
   // Ensure that the web panels sidebar is open.
@@ -8014,9 +8001,6 @@ function getTabModalPromptBox(aWindow) {
 /* DEPRECATED */
 function getBrowser() {
   return gBrowser;
-}
-function getNavToolbox() {
-  return gNavToolbox;
 }
 
 var gPrivateBrowsingUI = {
