@@ -3885,6 +3885,19 @@ class MOZ_RAII js::gc::AutoRunParallelTask : public GCParallelTask
 };
 
 void
+GCRuntime::purgeRuntimeForMinorGC()
+{ 
+    // If external strings become nursery allocable, remember to call
+    // zone->externalStringCache().purge() (and delete this assert.)
+    MOZ_ASSERT(!IsNurseryAllocable(AllocKind::EXTERNAL_STRING));
+
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next())
+        zone->functionToStringCache().purge();
+
+    rt->caches().purgeForMinorGC(rt);
+}
+
+void
 GCRuntime::purgeRuntime(AutoLockForExclusiveAccess& lock)
 {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE);
@@ -3904,12 +3917,7 @@ GCRuntime::purgeRuntime(AutoLockForExclusiveAccess& lock)
         target.context()->frontendCollectionPool().purge();
     }
 
-    rt->caches().gsnCache.purge();
-    rt->caches().envCoordinateNameCache.purge();
-    rt->caches().newObjectCache.purge();
-    rt->caches().uncompressedSourceCache.purge();
-    if (rt->caches().evalCache.initialized())
-        rt->caches().evalCache.clear();
+    rt->caches().purge();
 
     if (auto cache = rt->maybeThisRuntimeSharedImmutableStrings())
         cache->purge();
@@ -6574,9 +6582,7 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
         releaseRelocatedArenas(relocatedArenas);
 
     // Clear caches that can contain cell pointers.
-    rt->caches().newObjectCache.purge();
-    if (rt->caches().evalCache.initialized())
-        rt->caches().evalCache.clear();
+    rt->caches().purgeForCompaction();
 
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
