@@ -526,11 +526,37 @@ class SrcNoteLineScanner
     uint32_t getLine() const { return lineno; }
 };
 
-extern unsigned
-StackUses(JSScript* script, jsbytecode* pc);
+MOZ_ALWAYS_INLINE unsigned
+StackUses(jsbytecode* pc)
+{
+    JSOp op = JSOp(*pc);
+    int nuses = CodeSpec[op].nuses;
+    if (nuses >= 0)
+        return nuses;
 
-extern unsigned
-StackDefs(JSScript* script, jsbytecode* pc);
+    MOZ_ASSERT(nuses == -1);
+    switch (op) {
+      case JSOP_POPN:
+        return GET_UINT16(pc);
+      case JSOP_NEW:
+      case JSOP_SUPERCALL:
+        return 2 + GET_ARGC(pc) + 1;
+      default:
+        /* stack: fun, this, [argc arguments] */
+        MOZ_ASSERT(op == JSOP_CALL || op == JSOP_CALL_IGNORES_RV || op == JSOP_EVAL ||
+                   op == JSOP_CALLITER ||
+                   op == JSOP_STRICTEVAL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
+        return 2 + GET_ARGC(pc);
+    }
+}
+
+MOZ_ALWAYS_INLINE unsigned
+StackDefs(jsbytecode* pc)
+{
+    int ndefs = CodeSpec[*pc].ndefs;
+    MOZ_ASSERT(ndefs >= 0);
+    return ndefs;
+}
 
 #ifdef DEBUG
 /*
