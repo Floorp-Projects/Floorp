@@ -29,7 +29,6 @@ DIRS += [
     'diskspacewatcher',
     'downloads',
     'extensions',
-    'exthelper',
     'filewatcher',
     'finalizationwitness',
     'find',

@@ -153,7 +153,6 @@
 @BINPATH@/components/editor.xpt
 @BINPATH@/components/extensions.xpt
 @BINPATH@/components/exthandler.xpt
-@BINPATH@/components/exthelper.xpt
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
 @BINPATH@/components/gfx.xpt
