@@ -7,6 +7,7 @@
 #define mozilla_gfx_layers_mlgpu_SharedBufferMLGPU_h
 
 #include "ShaderDefinitionsMLGPU.h"
+#include "MLGDevice.h"
 #include "MLGDeviceTypes.h"
 #include "StagingBuffer.h"
 #include "mozilla/gfx/Logging.h"
