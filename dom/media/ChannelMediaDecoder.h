@@ -65,8 +65,7 @@ public:
   void Shutdown() override;
 
   // Create a new decoder of the same type as this one.
-  // Subclasses must implement this.
-  virtual ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) = 0;
+  already_AddRefed<ChannelMediaDecoder> Clone(MediaDecoderInit& aInit);
 
   virtual nsresult Load(nsIChannel* aChannel,
                         bool aIsPrivateBrowsing,
@@ -74,6 +73,7 @@ public:
   virtual nsresult Load(MediaResource* aOriginal);
 
 private:
+  virtual ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) = 0;
   nsresult OpenResource(nsIStreamListener** aStreamListener);
 };
 

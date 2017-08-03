@@ -155,6 +155,13 @@ ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   mResourceCallback->Connect(this);
 }
 
+already_AddRefed<ChannelMediaDecoder>
+ChannelMediaDecoder::Clone(MediaDecoderInit& aInit)
+{
+  RefPtr<ChannelMediaDecoder> decoder = CloneImpl(aInit);
+  return decoder.forget();
+}
+
 MediaResource*
 ChannelMediaDecoder::GetResource() const
 {
