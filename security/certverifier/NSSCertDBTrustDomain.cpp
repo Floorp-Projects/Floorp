@@ -31,7 +31,6 @@
 #include "prerror.h"
 #include "secerr.h"
 
-#include "CNNICHashWhitelist.inc"
 #include "StartComAndWoSignData.inc"
 
 using namespace mozilla;
@@ -791,40 +790,6 @@ NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   return rv;
 }
 
-static const uint8_t CNNIC_ROOT_CA_SUBJECT_DATA[] =
-  "\x30\x32\x31\x0B\x30\x09\x06\x03\x55\x04\x06\x13\x02\x43\x4E\x31\x0E\x30"
-  "\x0C\x06\x03\x55\x04\x0A\x13\x05\x43\x4E\x4E\x49\x43\x31\x13\x30\x11\x06"
-  "\x03\x55\x04\x03\x13\x0A\x43\x4E\x4E\x49\x43\x20\x52\x4F\x4F\x54";
-
-static const uint8_t CNNIC_EV_ROOT_CA_SUBJECT_DATA[] =
-  "\x30\x81\x8A\x31\x0B\x30\x09\x06\x03\x55\x04\x06\x13\x02\x43\x4E\x31\x32"
-  "\x30\x30\x06\x03\x55\x04\x0A\x0C\x29\x43\x68\x69\x6E\x61\x20\x49\x6E\x74"
-  "\x65\x72\x6E\x65\x74\x20\x4E\x65\x74\x77\x6F\x72\x6B\x20\x49\x6E\x66\x6F"
-  "\x72\x6D\x61\x74\x69\x6F\x6E\x20\x43\x65\x6E\x74\x65\x72\x31\x47\x30\x45"
-  "\x06\x03\x55\x04\x03\x0C\x3E\x43\x68\x69\x6E\x61\x20\x49\x6E\x74\x65\x72"
-  "\x6E\x65\x74\x20\x4E\x65\x74\x77\x6F\x72\x6B\x20\x49\x6E\x66\x6F\x72\x6D"
-  "\x61\x74\x69\x6F\x6E\x20\x43\x65\x6E\x74\x65\x72\x20\x45\x56\x20\x43\x65"
-  "\x72\x74\x69\x66\x69\x63\x61\x74\x65\x73\x20\x52\x6F\x6F\x74";
-
-class WhitelistedCNNICHashBinarySearchComparator
-{
-public:
-  explicit WhitelistedCNNICHashBinarySearchComparator(const uint8_t* aTarget,
-                                                      size_t aTargetLength)
-    : mTarget(aTarget)
-  {
-    MOZ_ASSERT(aTargetLength == CNNIC_WHITELIST_HASH_LEN,
-               "Hashes should be of the same length.");
-  }
-
-  int operator()(const WhitelistedCNNICHash val) const {
-    return memcmp(mTarget, val.hash, CNNIC_WHITELIST_HASH_LEN);
-  }
-
-private:
-  const uint8_t* mTarget;
-};
-
 static bool
 CertIsStartComOrWoSign(const CERTCertificate* cert)
 {
@@ -1001,8 +966,6 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     return rv;
   }
 
-  // If the certificate appears to have been issued by a CNNIC root, only allow
-  // it if it is on the whitelist.
   CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
   if (!rootNode) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -1011,39 +974,6 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   if (!root) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  if ((root->derSubject.len == sizeof(CNNIC_ROOT_CA_SUBJECT_DATA) - 1 &&
-       memcmp(root->derSubject.data, CNNIC_ROOT_CA_SUBJECT_DATA,
-              root->derSubject.len) == 0) ||
-      (root->derSubject.len == sizeof(CNNIC_EV_ROOT_CA_SUBJECT_DATA) - 1 &&
-       memcmp(root->derSubject.data, CNNIC_EV_ROOT_CA_SUBJECT_DATA,
-              root->derSubject.len) == 0)) {
-    CERTCertListNode* certNode = CERT_LIST_HEAD(certList);
-    if (!certNode) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-    }
-    CERTCertificate* cert = certNode->cert;
-    if (!cert) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-    }
-    Digest digest;
-    nsresult nsrv = digest.DigestBuf(SEC_OID_SHA256, cert->derCert.data,
-                                     cert->derCert.len);
-    if (NS_FAILED(nsrv)) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-    }
-    const uint8_t* certHash(
-      BitwiseCast<uint8_t*, unsigned char*>(digest.get().data));
-    size_t certHashLen = digest.get().len;
-    size_t unused;
-    if (!mozilla::BinarySearchIf(WhitelistedCNNICHashes, 0,
-                                 ArrayLength(WhitelistedCNNICHashes),
-                                 WhitelistedCNNICHashBinarySearchComparator(
-                                   certHash, certHashLen),
-                                 &unused)) {
-      return Result::ERROR_REVOKED_CERTIFICATE;
-    }
-  }
-
   bool isBuiltInRoot = false;
   rv = IsCertBuiltInRoot(root, isBuiltInRoot);
   if (rv != Success) {
