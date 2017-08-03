@@ -807,7 +807,7 @@ PopupNotifications.prototype = {
         let uri;
         try {
            if (n.options.displayURI instanceof Ci.nsIFileURL) {
-            uri = n.options.displayURI.path;
+            uri = n.options.displayURI.pathQueryRef;
           } else {
             uri = n.options.displayURI.hostPort;
           }

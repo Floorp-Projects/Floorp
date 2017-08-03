@@ -98,8 +98,8 @@ function createLocationFromURI(uri) {
                       (":" + uri.port) : ""),
     port: uri.port,
     hostname: uri.host,
-    pathname: uri.path.replace(/[#\?].*/, ""),
-    search: uri.path.replace(/^[^\?]*/, "").replace(/#.*/, ""),
+    pathname: uri.pathQueryRef.replace(/[#\?].*/, ""),
+    search: uri.pathQueryRef.replace(/^[^\?]*/, "").replace(/#.*/, ""),
     hash: uri.hasRef ? ("#" + uri.ref) : "",
     origin: uri.prePath,
     toString() {
@@ -163,7 +163,7 @@ IdpSandbox.createIdpUri = function(domain, protocol) {
     if (uri.hostPort !== domain) {
       throw new Error(message + "domain is invalid");
     }
-    if (uri.path.indexOf("/.well-known/idp-proxy/") !== 0) {
+    if (uri.pathQueryRef.indexOf("/.well-known/idp-proxy/") !== 0) {
       throw new Error(message + "must produce a /.well-known/idp-proxy/ URI");
     }
 

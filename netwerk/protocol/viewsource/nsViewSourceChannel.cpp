@@ -44,7 +44,7 @@ nsViewSourceChannel::Init(nsIURI* uri)
     mOriginalURI = uri;
 
     nsAutoCString path;
-    nsresult rv = uri->GetPath(path);
+    nsresult rv = uri->GetPathQueryRef(path);
     if (NS_FAILED(rv))
       return rv;
 

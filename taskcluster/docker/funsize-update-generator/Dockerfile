@@ -8,10 +8,15 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
     python python-setuptools python-cryptography  libgetopt-simple-perl \
-    bzip2 clamav clamav-freshclam python-requests python-sh curl && \
+    bzip2 clamav clamav-freshclam python-requests python-sh curl \
+    python-dev gcc liblzma-dev xz-utils && \
     apt-get clean
 RUN useradd -d /home/worker -s /bin/bash -m worker
 COPY requirements.txt /tmp/
+
+# Freshclam may be flaky, retry if it fails
+RUN for i in 1 2 3 4 5; do freshclam --verbose && break || sleep 15; done
+
 # python-pip installs a lot of dependencies increasing the size of an image
 # drastically. Using easy_install saves us almost 200M.
 RUN easy_install pip
@@ -24,8 +29,6 @@ COPY runme.sh /runme.sh
 RUN chmod 755 /home/worker/bin/* /runme.sh
 RUN mkdir /home/worker/keys
 COPY *.pubkey /home/worker/keys/
-# Freshclam may be flaky, retry if it fails
-RUN for i in 1 2 3 4 5; do freshclam --verbose && break || sleep 15; done
 
 ENV           HOME          /home/worker
 ENV           SHELL         /bin/bash

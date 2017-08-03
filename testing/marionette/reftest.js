@@ -73,7 +73,7 @@ reftest.Runner = class {
     this.parentWindow =  assert.window(this.driver.getCurrentWindow());
 
     this.screenshotMode = SCREENSHOT_MODE[screenshotMode] ||
-        SCREENSHOT_MODE["unexpected"];
+        SCREENSHOT_MODE.unexpected;
 
     this.urlCount = Object.keys(urlCount || {})
         .reduce((map, key) => map.set(key, urlCount[key]), new Map());

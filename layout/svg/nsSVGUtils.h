@@ -532,10 +532,9 @@ public:
                               SVGContextPaint* aContextPaint = nullptr);
 
   /*
-   * Set up a cairo context for a stroked path (including any dashing that
-   * applies).
+   * Set up a context for a stroked path (including any dashing that applies).
    */
-  static void SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext,
+  static void SetupStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext,
                                        SVGContextPaint* aContextPaint = nullptr);
 
   /**

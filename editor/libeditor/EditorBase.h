@@ -1003,6 +1003,11 @@ public:
     return !mDispatchInputEvent;
   }
 
+  bool Destroyed() const
+  {
+    return mDidPreDestroy;
+  }
+
   /**
    * GetTransactionManager() returns transaction manager associated with the
    * editor.  This may return nullptr if undo/redo hasn't been enabled.

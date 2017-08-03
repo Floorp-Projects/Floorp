@@ -785,14 +785,15 @@ function BuildConditionSandbox(aURL) {
         sandbox.asyncPan = false;
     }
 
+    // Graphics features
+    sandbox.usesRepeatResampling = sandbox.d2d;
+
     if (!gDumpedConditionSandbox) {
         logger.info("Dumping JSON representation of sandbox");
         logger.info(JSON.stringify(CU.waiveXrays(sandbox)));
         gDumpedConditionSandbox = true;
     }
 
-    // Graphics features
-    sandbox.usesRepeatResampling = sandbox.d2d;
     return sandbox;
 }
 

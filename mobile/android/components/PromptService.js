@@ -625,8 +625,8 @@ var PromptUtils = {
     let uri = Services.io.newURI(aRealmString);
     let pathname = "";
 
-    if (uri.path != "/")
-      pathname = uri.path;
+    if (uri.pathQueryRef != "/")
+      pathname = uri.pathQueryRef;
 
     let formattedHostname = this._getFormattedHostname(uri);
     return [formattedHostname, formattedHostname + pathname, uri.username];

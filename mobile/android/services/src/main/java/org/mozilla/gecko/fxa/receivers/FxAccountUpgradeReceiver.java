@@ -45,6 +45,7 @@ public class FxAccountUpgradeReceiver extends BroadcastReceiver {
     // Recovering accounts that are in the Doghouse should happen *after* we
     // unpickle any accounts saved to disk.
     runnables.add(new AdvanceFromDoghouseRunnable(context));
+    runnables.add(new ForcedClientCollectionSync(context));
     return runnables;
   }
 
@@ -68,6 +69,34 @@ public class FxAccountUpgradeReceiver extends BroadcastReceiver {
           }
         }
       });
+    }
+  }
+
+  /**
+   * Remove this when we reach version 60ish.
+   * A Runnable that forces a sync in order to populate the fxadeviceid column in the clients table.
+   * See https://bugzilla.mozilla.org/show_bug.cgi?id=1351104#c15
+   */
+  protected static class ForcedClientCollectionSync implements Runnable {
+    protected final Context context;
+
+    public ForcedClientCollectionSync(Context context) {
+      this.context = context;
+    }
+
+    @Override
+    public void run() {
+      final Account[] accounts = FirefoxAccounts.getFirefoxAccounts(context);
+      Logger.info(LOG_TAG, "Trying to sync " + accounts.length + " existing Firefox Accounts.");
+      for (Account account : accounts) {
+        try {
+          final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+          fxAccount.requestImmediateSync(new String[] { "clients" }, null);
+        } catch (Exception e) {
+          Logger.warn(LOG_TAG, "Got exception trying to force sync account named like " + Utils.obfuscateEmail(account.name) +
+                               "; ignoring.", e);
+        }
+      }
     }
   }
 

@@ -3132,13 +3132,11 @@ nsDisplaySVGText::Paint(nsDisplayListBuilder* aBuilder,
                    gfxMatrix::Translation(devPixelOffset);
 
   gfxContext* ctx = aCtx;
-  ctx->Save();
   imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
                              ? imgIContainer::FLAG_SYNC_DECODE
                              : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
   static_cast<SVGTextFrame*>(mFrame)->PaintSVG(*ctx, tm, imgParams);
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);
-  ctx->Restore();
 }
 
 // ---------------------------------------------------------------------
@@ -3640,7 +3638,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   canvasTMForChildren.PreScale(cssPxPerDevPx, cssPxPerDevPx);
   initialMatrix.PreScale(1 / cssPxPerDevPx, 1 / cssPxPerDevPx);
 
-  gfxContextAutoSaveRestore save(&aContext);
+  gfxContextMatrixAutoSaveRestore matSR(&aContext);
   aContext.NewPath();
   aContext.Multiply(canvasTMForChildren);
   gfxMatrix currentMatrix = aContext.CurrentMatrix();
@@ -3649,6 +3647,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   nsRect caretRect;
   nsIFrame* caretFrame = caret->GetPaintGeometry(&caretRect);
 
+  gfxContextAutoSaveRestore ctxSR;
   TextRenderedRunIterator it(this, TextRenderedRunIterator::eVisibleFrames);
   TextRenderedRun run = it.Current();
 
@@ -3662,19 +3661,16 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     // need to ignore.
     SVGCharClipDisplayItem item(run);
 
-    // Set up the fill and stroke so that SVG glyphs can get painted correctly
-    // when they use context-fill etc.
-    aContext.SetMatrix(initialMatrix);
-
     RefPtr<SVGContextPaintImpl> contextPaint = new SVGContextPaintImpl();
     DrawMode drawMode = contextPaint->Init(&aDrawTarget,
-                                           aContext.CurrentMatrix(),
+                                           initialMatrix,
                                            frame, outerContextPaint,
                                            aImgParams);
     if (drawMode & DrawMode::GLYPH_STROKE) {
+      ctxSR.EnsureSaved(&aContext);
       // This may change the gfxContext's transform (for non-scaling stroke),
       // in which case this needs to happen before we call SetMatrix() below.
-      nsSVGUtils::SetupCairoStrokeGeometry(frame, &aContext, outerContextPaint);
+      nsSVGUtils::SetupStrokeGeometry(frame, &aContext, outerContextPaint);
     }
 
     // Set up the transform for painting the text frame for the substring

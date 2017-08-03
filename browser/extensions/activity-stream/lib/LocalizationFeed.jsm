@@ -30,7 +30,14 @@ this.LocalizationFeed = class LocalizationFeed {
   }
 
   updateLocale() {
-    let locale = Services.locale.getRequestedLocale() || DEFAULT_LOCALE;
+    // Just take the first element in the result array, as it should be
+    // the best locale
+    let locale = Services.locale.negotiateLanguages(
+      Services.locale.getAppLocalesAsLangTags(), // desired locales
+      Object.keys(this.allStrings), // available locales
+      DEFAULT_LOCALE // fallback
+    )[0];
+
     let strings = this.allStrings[locale];
 
     // Use the default strings for any that are missing

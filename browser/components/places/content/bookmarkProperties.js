@@ -166,7 +166,8 @@ var BookmarkPropertiesPanel = {
         this._defaultInsertionPoint =
           new InsertionPoint(PlacesUtils.bookmarksMenuFolderId,
                              PlacesUtils.bookmarks.DEFAULT_INDEX,
-                             Ci.nsITreeView.DROP_ON);
+                             Ci.nsITreeView.DROP_ON, null, null,
+                             PlacesUtils.bookmarks.menuGuid);
       }
 
       switch (dialogInfo.type) {
@@ -493,11 +494,12 @@ var BookmarkPropertiesPanel = {
    * The container-identifier and insertion-index are returned separately in
    * the form of [containerIdentifier, insertionIndex]
    */
-  _getInsertionPointDetails: function BPP__getInsertionPointDetails() {
-    var containerId = this._defaultInsertionPoint.itemId;
-    var indexInContainer = this._defaultInsertionPoint.index;
-
-    return [containerId, indexInContainer];
+  async _getInsertionPointDetails() {
+    return [
+      this._defaultInsertionPoint.itemId,
+      await this._defaultInsertionPoint.getIndex(),
+      await this._defaultInsertionPoint.promiseGuid(),
+    ]
   },
 
   /**
@@ -585,7 +587,7 @@ var BookmarkPropertiesPanel = {
   },
 
   async _createNewItem() {
-    let [container, index] = this._getInsertionPointDetails();
+    let [container, index] = await this._getInsertionPointDetails();
     let txn;
     switch (this._itemType) {
       case BOOKMARK_FOLDER:
@@ -632,8 +634,7 @@ var BookmarkPropertiesPanel = {
     if (!PlacesUIUtils.useAsyncTransactions)
       return this._createNewItem();
 
-    let [containerId, index] = this._getInsertionPointDetails();
-    let parentGuid = await PlacesUtils.promiseItemGuid(containerId);
+    let [containerId, index, parentGuid] = await this._getInsertionPointDetails();
     let annotations = [];
     if (this._description) {
       annotations.push({ name: PlacesUIUtils.DESCRIPTION_ANNO,

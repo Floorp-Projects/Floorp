@@ -142,6 +142,9 @@ ifeq (,$(findstring -j,$(MOZ_MAKE_FLAGS)))
   MOZ_MAKE_FLAGS += -j$(cores)
 endif
 
+ifeq (4.0,$(firstword $(sort 4.0 $(MAKE_VERSION))))
+MOZ_MAKE_FLAGS += --output-sync=line
+endif
 
 ifdef MOZ_BUILD_PROJECTS
 

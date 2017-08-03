@@ -18,14 +18,22 @@ use Url;
 /// Examples:
 ///
 /// ```rust
-/// # use url::Url;
-/// let mut url = Url::parse("mailto:me@example.com").unwrap();
+/// use url::Url;
+/// # use std::error::Error;
+///
+/// # fn run() -> Result<(), Box<Error>> {
+/// let mut url = Url::parse("mailto:me@example.com")?;
 /// assert!(url.path_segments_mut().is_err());
 ///
-/// let mut url = Url::parse("http://example.net/foo/index.html").unwrap();
-/// url.path_segments_mut().unwrap().pop().push("img").push("2/100%.png");
+/// let mut url = Url::parse("http://example.net/foo/index.html")?;
+/// url.path_segments_mut().map_err(|_| "cannot be base")?
+///     .pop().push("img").push("2/100%.png");
 /// assert_eq!(url.as_str(), "http://example.net/foo/img/2%2F100%25.png");
+/// # Ok(())
+/// # }
+/// # run().unwrap();
 /// ```
+#[derive(Debug)]
 pub struct PathSegmentsMut<'a> {
     url: &'a mut Url,
     after_first_slash: usize,
@@ -60,10 +68,17 @@ impl<'a> PathSegmentsMut<'a> {
     /// Example:
     ///
     /// ```rust
-    /// # use url::Url;
-    /// let mut url = Url::parse("https://github.com/servo/rust-url/").unwrap();
-    /// url.path_segments_mut().unwrap().clear().push("logout");
+    /// use url::Url;
+    /// # use std::error::Error;
+    ///
+    /// # fn run() -> Result<(), Box<Error>> {
+    /// let mut url = Url::parse("https://github.com/servo/rust-url/")?;
+    /// url.path_segments_mut().map_err(|_| "cannot be base")?
+    ///     .clear().push("logout");
     /// assert_eq!(url.as_str(), "https://github.com/logout");
+    /// # Ok(())
+    /// # }
+    /// # run().unwrap();
     /// ```
     pub fn clear(&mut self) -> &mut Self {
         self.url.serialization.truncate(self.after_first_slash);
@@ -81,14 +96,22 @@ impl<'a> PathSegmentsMut<'a> {
     /// Example:
     ///
     /// ```rust
-    /// # use url::Url;
-    /// let mut url = Url::parse("https://github.com/servo/rust-url/").unwrap();
-    /// url.path_segments_mut().unwrap().push("pulls");
+    /// use url::Url;
+    /// # use std::error::Error;
+    ///
+    /// # fn run() -> Result<(), Box<Error>> {
+    /// let mut url = Url::parse("https://github.com/servo/rust-url/")?;
+    /// url.path_segments_mut().map_err(|_| "cannot be base")?
+    ///     .push("pulls");
     /// assert_eq!(url.as_str(), "https://github.com/servo/rust-url//pulls");
     ///
-    /// let mut url = Url::parse("https://github.com/servo/rust-url/").unwrap();
-    /// url.path_segments_mut().unwrap().pop_if_empty().push("pulls");
+    /// let mut url = Url::parse("https://github.com/servo/rust-url/")?;
+    /// url.path_segments_mut().map_err(|_| "cannot be base")?
+    ///     .pop_if_empty().push("pulls");
     /// assert_eq!(url.as_str(), "https://github.com/servo/rust-url/pulls");
+    /// # Ok(())
+    /// # }
+    /// # run().unwrap();
     /// ```
     pub fn pop_if_empty(&mut self) -> &mut Self {
         if self.url.serialization[self.after_first_slash..].ends_with('/') {
@@ -138,23 +161,37 @@ impl<'a> PathSegmentsMut<'a> {
     /// Example:
     ///
     /// ```rust
-    /// # use url::Url;
-    /// let mut url = Url::parse("https://github.com/").unwrap();
+    /// use url::Url;
+    /// # use std::error::Error;
+    ///
+    /// # fn run() -> Result<(), Box<Error>> {
+    /// let mut url = Url::parse("https://github.com/")?;
     /// let org = "servo";
     /// let repo = "rust-url";
     /// let issue_number = "188";
-    /// url.path_segments_mut().unwrap().extend(&[org, repo, "issues", issue_number]);
+    /// url.path_segments_mut().map_err(|_| "cannot be base")?
+    ///     .extend(&[org, repo, "issues", issue_number]);
     /// assert_eq!(url.as_str(), "https://github.com/servo/rust-url/issues/188");
+    /// # Ok(())
+    /// # }
+    /// # run().unwrap();
     /// ```
     ///
     /// In order to make sure that parsing the serialization of an URL gives the same URL,
     /// a segment is ignored if it is `"."` or `".."`:
     ///
     /// ```rust
-    /// # use url::Url;
-    /// let mut url = Url::parse("https://github.com/servo").unwrap();
-    /// url.path_segments_mut().unwrap().extend(&["..", "rust-url", ".", "pulls"]);
+    /// use url::Url;
+    /// # use std::error::Error;
+    ///
+    /// # fn run() -> Result<(), Box<Error>> {
+    /// let mut url = Url::parse("https://github.com/servo")?;
+    /// url.path_segments_mut().map_err(|_| "cannot be base")?
+    ///     .extend(&["..", "rust-url", ".", "pulls"]);
     /// assert_eq!(url.as_str(), "https://github.com/servo/rust-url/pulls");
+    /// # Ok(())
+    /// # }
+    /// # run().unwrap();
     /// ```
     pub fn extend<I>(&mut self, segments: I) -> &mut Self
     where I: IntoIterator, I::Item: AsRef<str> {

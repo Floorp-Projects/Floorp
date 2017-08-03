@@ -76,6 +76,8 @@ public:
 
   virtual void NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId) override;
 
+  virtual void CancelAutoscroll(const ScrollableLayerGuid& aScrollId) override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void Destroy() override;
@@ -89,6 +91,9 @@ private:
                              Modifiers aModifiers,
                              ScrollableLayerGuid aGuid,
                              uint64_t aInputBlockId);
+
+  void CancelAutoscrollInProcess(const ScrollableLayerGuid& aScrollId);
+  void CancelAutoscrollCrossProcess(const ScrollableLayerGuid& aScrollId);
 };
 
 } // namespace layers

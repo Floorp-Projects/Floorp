@@ -194,14 +194,17 @@ impl Au {
 
     #[inline]
     pub fn scale_by(self, factor: f32) -> Au {
-        let new_float = ((self.0 as f32) * factor).round();
-        if new_float > MAX_AU.0 as f32 {
-            MAX_AU
-        } else if new_float < MIN_AU.0 as f32 {
-            MIN_AU
-        } else {
-            Au(new_float as i32)
-        }
+        let new_float = ((self.0 as f64) * factor as f64).round();
+        Au::clamp_from_f64_au(new_float)
+    }
+
+    #[inline]
+    fn clamp_from_f64_au(float: f64) -> Self {
+        // We *must* operate in f64. f32 isn't precise enough
+        // to handle MAX_AU
+        Au(float.min(MAX_AU.0 as f64)
+                .max(MIN_AU.0 as f64)
+            as i32)
     }
 
     #[inline]
@@ -244,25 +247,13 @@ impl Au {
     #[inline]
     pub fn from_f32_px(px: f32) -> Au {
         let float = (px * AU_PER_PX as f32).round();
-        if float > MAX_AU.0 as f32 {
-            MAX_AU
-        } else if float < MIN_AU.0 as f32 {
-            MIN_AU
-        } else {
-            Au(float as i32)
-        }
+        Au::clamp_from_f64_au(float as f64)
     }
 
     #[inline]
     pub fn from_f64_px(px: f64) -> Au {
         let float = (px * AU_PER_PX as f64).round();
-        if float > MAX_AU.0 as f64 {
-            MAX_AU
-        } else if float < MIN_AU.0 as f64 {
-            MIN_AU
-        } else {
-            Au(float as i32)
-        }
+        Au::clamp_from_f64_au(float)
     }
 }
 

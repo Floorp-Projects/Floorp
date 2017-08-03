@@ -47,6 +47,9 @@ var BrowserPageActions = {
    * Inits.  Call to init.
    */
   init() {
+    if (!AppConstants.MOZ_PHOTON_THEME) {
+      return;
+    }
     for (let action of PageActions.actions) {
       this.placeAction(action, PageActions.insertBeforeActionIDInUrlbar(action));
     }
@@ -299,6 +302,10 @@ var BrowserPageActions = {
     if (action.iconURL) {
       buttonNode.style.listStyleImage = `url('${action.iconURL}')`;
     }
+    buttonNode.setAttribute("context", "pageActionPanelContextMenu");
+    buttonNode.addEventListener("contextmenu", event => {
+      BrowserPageActions.onContextMenu(event);
+    });
     if (action.nodeAttributes) {
       for (let name in action.nodeAttributes) {
         buttonNode.setAttribute(name, action.nodeAttributes[name]);
@@ -420,7 +427,22 @@ var BrowserPageActions = {
       return null;
     }
     let actionID = this._actionIDForNodeID(node.id);
-    return PageActions.actionForID(actionID);
+    let action = PageActions.actionForID(actionID);
+    if (!action) {
+      // The given node may be an ancestor of a node corresponding to an action,
+      // like how #star-button is contained in #star-button-box, the latter
+      // being the bookmark action's node.  Look up the ancestor chain.
+      for (let n = node.parentNode; n && !action; n = n.parentNode) {
+        if (n.id == "urlbar-icons" || n.localName == "panelview") {
+          // We reached the urlbar icons container or the panelview container.
+          // Stop looking; no acton was found.
+          break;
+        }
+        actionID = this._actionIDForNodeID(n.id);
+        action = PageActions.actionForID(actionID);
+      }
+    }
+    return action;
   },
 
   // The ID of the given action's top-level button in the panel.
@@ -456,7 +478,16 @@ var BrowserPageActions = {
       return null;
     }
     let match = nodeID.match(/^pageAction-(?:panel|urlbar)-(.+)$/);
-    return match ? match[1] : null;
+    if (match) {
+      return match[1];
+    }
+    // Check all the urlbar ID overrides.
+    for (let action of PageActions.actions) {
+      if (action.urlbarIDOverride && action.urlbarIDOverride == nodeID) {
+        return action.id;
+      }
+    }
+    return null;
   },
 
   /**
@@ -590,6 +621,13 @@ BrowserPageActions.bookmark = {
 
   onCommand(event, buttonNode) {
     BrowserPageActions.panelNode.hidePopup();
+    BookmarkingUI.onStarCommand(event);
+  },
+
+  onUrlbarNodeClicked(event) {
+    if (event.type == "click" && event.button != 0) {
+      return;
+    }
     BookmarkingUI.onStarCommand(event);
   },
 };

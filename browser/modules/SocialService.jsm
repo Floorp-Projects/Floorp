@@ -485,7 +485,7 @@ this.SocialService = {
 
     if (type == "directory" || type == "internal") {
       // directory provided manifests must have origin in manifest, use that
-      if (!data["origin"]) {
+      if (!data.origin) {
         Cu.reportError("SocialService.manifestFromData directory service provided manifest without origin.");
         return null;
       }
@@ -502,7 +502,7 @@ this.SocialService = {
       Cu.reportError("SocialService.manifestFromData manifest missing required urls.");
       return null;
     }
-    if (!data["name"] || !data["iconURL"]) {
+    if (!data.name || !data.iconURL) {
       Cu.reportError("SocialService.manifestFromData manifest missing name or iconURL.");
       return null;
     }

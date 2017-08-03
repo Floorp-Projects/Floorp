@@ -417,6 +417,10 @@ this.downloads = class extends ExtensionAPI {
             if (path.components.some(component => component == "..")) {
               return Promise.reject({message: "filename must not contain back-references (..)"});
             }
+
+            if (AppConstants.platform === "win" && /[|"*?:<>]/.test(filename)) {
+              return Promise.reject({message: "filename must not contain illegal characters"});
+            }
           }
 
           if (options.conflictAction == "prompt") {
@@ -463,11 +467,11 @@ this.downloads = class extends ExtensionAPI {
             } else {
               let uri = NetUtil.newURI(options.url);
 
-              let remote = "download";
+              let remote;
               if (uri instanceof Ci.nsIURL) {
                 remote = uri.fileName;
               }
-              target = OS.Path.join(downloadsDir, remote);
+              target = OS.Path.join(downloadsDir, remote || "download");
             }
 
             // Create any needed subdirectories if required by filename.

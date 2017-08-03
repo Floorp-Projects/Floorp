@@ -1636,7 +1636,7 @@ nsFtpState::Init(nsFtpChannel *channel)
     if (url) {
         rv = url->GetFilePath(path);
     } else {
-        rv = mChannel->URI()->GetPath(path);
+        rv = mChannel->URI()->GetPathQueryRef(path);
     }
     if (NS_FAILED(rv))
         return rv;
@@ -1647,7 +1647,7 @@ nsFtpState::Init(nsFtpChannel *channel)
     if (url) {
         url->SetFilePath(path);
     } else {
-        mChannel->URI()->SetPath(path);
+        mChannel->URI()->SetPathQueryRef(path);
     }
 
     // Skip leading slash

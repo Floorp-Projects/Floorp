@@ -34,10 +34,6 @@ to mochitest command.
 * Animation support:
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
-* Unsupported values
-  * SVG-in-OpenType values not supported servo/servo#15211 bug 1338764
-    * test_value_storage.html `context-` [7]
-    * test_bug798843_pref.html [3]
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
@@ -58,7 +54,3 @@ to mochitest command.
 ## Unknown / Unsure
 
 ## Ignore
-
-* Ignore for now since should be mostly identical to test_value_storage.html
-  * test_value_cloning.html [*]
-  * test_value_computation.html [*]

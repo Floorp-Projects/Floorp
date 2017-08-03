@@ -264,13 +264,13 @@ RustURL::SetPort(int32_t aPort)
 }
 
 NS_IMETHODIMP
-RustURL::GetPath(nsACString & aPath)
+RustURL::GetPathQueryRef(nsACString & aPath)
 {
   return rusturl_get_path(mURL.get(), &aPath);
 }
 
 NS_IMETHODIMP
-RustURL::SetPath(const nsACString & aPath)
+RustURL::SetPathQueryRef(const nsACString & aPath)
 {
   ENSURE_MUTABLE();
 
