@@ -114,6 +114,71 @@ CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
 }
 
 mozilla::ipc::IPCResult
+CookieServiceChild::RecvRemoveAll(){
+  mCookiesMap.Clear();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvRemoveCookie(const CookieStruct     &aCookie,
+                                     const OriginAttributes &aAttrs)
+{
+  nsCString baseDomain;
+  nsCookieService::
+    GetBaseDomainFromHost(mTLDService, aCookie.host(), baseDomain);
+  nsCookieKey key(baseDomain, aAttrs);
+  CookiesList *cookiesList = nullptr;
+  mCookiesMap.Get(key, &cookiesList);
+
+  if (!cookiesList) {
+    return IPC_OK();
+  }
+
+  for (uint32_t i = 0; i < cookiesList->Length(); i++) {
+    nsCookie *cookie = cookiesList->ElementAt(i);
+    if (cookie->Name().Equals(aCookie.name()) &&
+        cookie->Host().Equals(aCookie.host()) &&
+        cookie->Path().Equals(aCookie.path())) {
+      cookiesList->RemoveElementAt(i);
+      break;
+    }
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvAddCookie(const CookieStruct     &aCookie,
+                                  const OriginAttributes &aAttrs)
+{
+  RefPtr<nsCookie> cookie = nsCookie::Create(aCookie.name(),
+                                             aCookie.value(),
+                                             aCookie.host(),
+                                             aCookie.path(),
+                                             aCookie.expiry(),
+                                             aCookie.lastAccessed(),
+                                             aCookie.creationTime(),
+                                             aCookie.isSession(),
+                                             aCookie.isSecure(),
+                                             false,
+                                             aAttrs);
+  RecordDocumentCookie(cookie, aAttrs);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvRemoveBatchDeletedCookies(nsTArray<CookieStruct>&& aCookiesList,
+                                                  nsTArray<OriginAttributes>&& aAttrsList)
+{
+  MOZ_ASSERT(aCookiesList.Length() == aAttrsList.Length());
+  for (uint32_t i = 0; i < aCookiesList.Length(); i++) {
+    CookieStruct cookieStruct = aCookiesList.ElementAt(i);
+    RecvRemoveCookie(cookieStruct, aAttrsList.ElementAt(i));
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 CookieServiceChild::RecvTrackCookiesLoad(nsTArray<CookieStruct>&& aCookiesList,
                                          const OriginAttributes &aAttrs)
 {
@@ -316,6 +381,14 @@ CookieServiceChild::RecordDocumentCookie(nsCookie               *aCookie,
     if (cookie->Name().Equals(aCookie->Name()) &&
         cookie->Host().Equals(aCookie->Host()) &&
         cookie->Path().Equals(aCookie->Path())) {
+      if (cookie->Value().Equals(aCookie->Value()) &&
+          cookie->Expiry() == aCookie->Expiry() &&
+          cookie->IsSecure() == aCookie->IsSecure() &&
+          cookie->IsSession() == aCookie->IsSession() &&
+          cookie->IsHttpOnly() == aCookie->IsHttpOnly()) {
+        cookie->SetLastAccessed(aCookie->LastAccessed());
+        return;
+      }
       cookiesList->RemoveElementAt(i);
       break;
     }

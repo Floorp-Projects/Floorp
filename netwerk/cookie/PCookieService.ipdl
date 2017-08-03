@@ -110,6 +110,18 @@ parent:
 child:
   async TrackCookiesLoad(CookieStruct[] cookiesList,
                          OriginAttributes attrs);
+
+  async RemoveCookie(CookieStruct cookie,
+                     OriginAttributes attrs);
+
+  async RemoveBatchDeletedCookies(CookieStruct[] cookiesList,
+                                  OriginAttributes[] attrsList);
+
+  async RemoveAll();
+
+  async AddCookie(CookieStruct cookie,
+                  OriginAttributes attrs);
+
 };
 
 }
