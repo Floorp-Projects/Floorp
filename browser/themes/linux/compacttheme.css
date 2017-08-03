@@ -15,12 +15,6 @@
   --urlbar-dropmarker-active-2x-region: rect(0px, 33px, 14px, 22px);
 }
 
-.findbar-closebutton:-moz-lwtheme-brighttext:not(:hover),
-#sidebar-header > .close-icon:-moz-lwtheme-brighttext:not(:hover),
-.tab-close-button[selected]:not(:hover) {
-  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
-}
-
 /* The menubar and tabs toolbar should match the devedition theme */
 #TabsToolbar,
 #toolbar-menubar {
