@@ -9,7 +9,7 @@ config = {
     'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
     "bootstrap_env": {
         "NO_MERCURIAL_SETUP_CHECK": "1",
-        "MOZ_OBJDIR": "obj-l10n",
+        "MOZ_OBJDIR": "obj-firefox",
         "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
         # EN_US_INSTALLER_BINARY_URL falls back on EN_US_BINARY_URL
         "EN_US_INSTALLER_BINARY_URL": os.environ.get(
