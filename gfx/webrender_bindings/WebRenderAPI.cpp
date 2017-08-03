@@ -528,12 +528,14 @@ ResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
 void
 ResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
                                      const ImageDescriptor& aDescriptor,
-                                     wr::Vec_u8& aBytes)
+                                     wr::Vec_u8& aBytes,
+                                     const wr::DeviceUintRect& aDirtyRect)
 {
   wr_resource_updates_update_blob_image(mUpdates,
                                         aKey,
                                         &aDescriptor,
-                                        &aBytes.inner);
+                                        &aBytes.inner,
+                                        aDirtyRect);
 }
 
 void
