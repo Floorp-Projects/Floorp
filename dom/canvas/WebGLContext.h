@@ -462,6 +462,10 @@ public:
     GetCanvasLayer(nsDisplayListBuilder* builder, Layer* oldLayer,
                    LayerManager* manager,
                    bool aMirror = false) override;
+    void
+    InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                             CanvasRenderer* aRenderer,
+                             bool aMirror = false) override;
 
     // Note that 'clean' here refers to its invalidation state, not the
     // contents of the buffer.

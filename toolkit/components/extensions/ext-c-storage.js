@@ -6,7 +6,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
                                   "resource://gre/modules/TelemetryStopwatch.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 var {
   ExtensionError,

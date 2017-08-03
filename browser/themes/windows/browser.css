@@ -1904,7 +1904,8 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   }
 }
 
-.webextension-popup-browser {
+.webextension-popup-browser,
+.webextension-popup-stack {
   border-radius: inherit;
 }
 

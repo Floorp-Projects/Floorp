@@ -35,6 +35,7 @@
 #include "mozilla/gfx/UserData.h"       // for UserData, etc
 #include "mozilla/layers/AnimationInfo.h" // for AnimationInfo
 #include "mozilla/layers/BSPTree.h"     // for LayerPolygon
+#include "mozilla/layers/CanvasRenderer.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
@@ -2686,56 +2687,7 @@ protected:
  */
 class CanvasLayer : public Layer {
 public:
-  struct Data {
-    Data()
-      : mBufferProvider(nullptr)
-      , mGLContext(nullptr)
-      , mRenderer(nullptr)
-      , mFrontbufferGLTex(0)
-      , mSize(0,0)
-      , mHasAlpha(false)
-      , mIsGLAlphaPremult(true)
-      , mIsMirror(false)
-    { }
-
-    // One of these three must be specified for Canvas2D, but never more than one
-    PersistentBufferProvider* mBufferProvider; // A BufferProvider for the Canvas contents
-    mozilla::gl::GLContext* mGLContext; // or this, for GL.
-    AsyncCanvasRenderer* mRenderer; // or this, for OffscreenCanvas
-
-    // Frontbuffer override
-    uint32_t mFrontbufferGLTex;
-
-    // The size of the canvas content
-    gfx::IntSize mSize;
-
-    // Whether the canvas drawingbuffer has an alpha channel.
-    bool mHasAlpha;
-
-    // Whether mGLContext contains data that is alpha-premultiplied.
-    bool mIsGLAlphaPremult;
-
-    // Whether the canvas front buffer is already being rendered somewhere else.
-    // When true, do not swap buffers or Morph() to another factory on mGLContext
-    bool mIsMirror;
-  };
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Initialize this CanvasLayer with the given data.  The data must
-   * have either mSurface or mGLContext initialized (but not both), as
-   * well as mSize.
-   *
-   * This must only be called once.
-   */
-  virtual void Initialize(const Data& aData) = 0;
-
   void SetBounds(gfx::IntRect aBounds) { mBounds = aBounds; }
-
-  /**
-   * Check the data is owned by this layer is still valid for rendering
-   */
-  virtual bool IsDataValid(const Data& aData) { return true; }
 
   virtual CanvasLayer* AsCanvasLayer() override { return this; }
 
@@ -2743,13 +2695,13 @@ public:
    * Notify this CanvasLayer that the canvas surface contents have
    * changed (or will change) before the next transaction.
    */
-  void Updated() { mDirty = true; SetInvalidRectToVisibleRegion(); }
+  void Updated() { mCanvasRenderer->SetDirty(); SetInvalidRectToVisibleRegion(); }
 
   /**
    * Notify this CanvasLayer that the canvas surface contents have
    * been painted since the last change.
    */
-  void Painted() { mDirty = false; }
+  void Painted() { mCanvasRenderer->ResetDirty(); }
 
   /**
    * Returns true if the canvas surface contents have changed since the
@@ -2762,39 +2714,14 @@ public:
     if (!mManager || !mManager->IsWidgetLayerManager()) {
       return true;
     }
-    return mDirty;
-  }
-
-  /**
-   * Register a callback to be called at the start of each transaction.
-   */
-  typedef void PreTransactionCallback(void* closureData);
-  void SetPreTransactionCallback(PreTransactionCallback* callback, void* closureData)
-  {
-    mPreTransCallback = callback;
-    mPreTransCallbackData = closureData;
+    return mCanvasRenderer->IsDirty();
   }
 
   const nsIntRect& GetBounds() const { return mBounds; }
 
-protected:
-  void FirePreTransactionCallback()
-  {
-    if (mPreTransCallback) {
-      mPreTransCallback(mPreTransCallbackData);
-    }
-  }
+  CanvasRenderer* CreateOrGetCanvasRenderer();
 
 public:
-  /**
-   * Register a callback to be called at the end of each transaction.
-   */
-  typedef void (* DidTransactionCallback)(void* aClosureData);
-  void SetDidTransactionCallback(DidTransactionCallback aCallback, void* aClosureData)
-  {
-    mPostTransCallback = aCallback;
-    mPostTransCallbackData = aClosureData;
-  }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -2825,11 +2752,6 @@ public:
     ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
   }
 
-  bool GetIsAsyncRenderer() const
-  {
-    return !!mAsyncRenderer;
-  }
-
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData);
   virtual ~CanvasLayer();
@@ -2838,29 +2760,15 @@ protected:
 
   virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
 
-  void FireDidTransactionCallback()
-  {
-    if (mPostTransCallback) {
-      mPostTransCallback(mPostTransCallbackData);
-    }
-  }
+  virtual CanvasRenderer* CreateCanvasRendererInternal() = 0;
+
+  UniquePtr<CanvasRenderer> mCanvasRenderer;
+  gfx::SamplingFilter mSamplingFilter;
 
   /**
    * 0, 0, canvaswidth, canvasheight
    */
   gfx::IntRect mBounds;
-  PreTransactionCallback* mPreTransCallback;
-  void* mPreTransCallbackData;
-  DidTransactionCallback mPostTransCallback;
-  void* mPostTransCallbackData;
-  gfx::SamplingFilter mSamplingFilter;
-  RefPtr<AsyncCanvasRenderer> mAsyncRenderer;
-
-private:
-  /**
-   * Set to true in Updated(), cleared during a transaction.
-   */
-  bool mDirty;
 };
 
 /**

@@ -11,10 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
                                   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionCommon",
                                   "resource://gre/modules/ExtensionCommon.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "require",
-                                  "resource://devtools/shared/Loader.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
 

@@ -2,8 +2,6 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPermissions",
                                   "resource://gre/modules/ExtensionPermissions.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 

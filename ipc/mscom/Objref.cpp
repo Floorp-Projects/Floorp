@@ -140,15 +140,14 @@ namespace mozilla {
 namespace mscom {
 
 bool
-StripHandlerFromOBJREF(NotNull<IStream*> aStream)
+StripHandlerFromOBJREF(NotNull<IStream*> aStream, const uint64_t aStartPos,
+                       const uint64_t aEndPos)
 {
-  // Get current stream position
+  // Ensure that the current stream position is set to the beginning
   LARGE_INTEGER seekTo;
-  seekTo.QuadPart = 0;
+  seekTo.QuadPart = aStartPos;
 
-  ULARGE_INTEGER objrefPos;
-
-  HRESULT hr = aStream->Seek(seekTo, STREAM_SEEK_CUR, &objrefPos);
+  HRESULT hr = aStream->Seek(seekTo, STREAM_SEEK_SET, nullptr);
   if (FAILED(hr)) {
     return false;
   }
@@ -164,10 +163,14 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream)
 
   uint32_t type;
   hr = aStream->Read(&type, sizeof(type), &bytesRead);
-  if (FAILED(hr) || bytesRead != sizeof(type) ||
-      type != OBJREF_TYPE_HANDLER) {
-    // If we're not a handler then just return success
-    return true;
+  if (FAILED(hr) || bytesRead != sizeof(type)) {
+    return false;
+  }
+  if (type != OBJREF_TYPE_HANDLER) {
+    // If we're not a handler then just seek to the end of the OBJREF and return
+    // success; there is nothing left to do.
+    seekTo.QuadPart = aEndPos;
+    return SUCCEEDED(aStream->Seek(seekTo, STREAM_SEEK_SET, nullptr));
   }
 
   IID iid;
@@ -217,7 +220,7 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream)
   }
 
   // Signature doesn't change so we'll seek past that
-  seekTo.QuadPart = objrefPos.QuadPart + sizeof(signature);
+  seekTo.QuadPart = aStartPos + sizeof(signature);
   hr = aStream->Seek(seekTo, STREAM_SEEK_SET, nullptr);
   if (FAILED(hr)) {
     return false;
@@ -251,7 +254,9 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream)
     return false;
   }
 
-  return true;
+  // Back up to just before the zeros we just wrote
+  seekTo.QuadPart = -static_cast<int64_t>(sizeof(CLSID));
+  return SUCCEEDED(aStream->Seek(seekTo, STREAM_SEEK_CUR, nullptr));
 }
 
 } // namespace mscom

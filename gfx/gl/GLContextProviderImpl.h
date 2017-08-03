@@ -10,9 +10,9 @@
 #ifndef GL_CONTEXT_PROVIDER_NAME
 #error GL_CONTEXT_PROVIDER_NAME not defined
 #endif
-#if defined(ANDROID)
-typedef void* EGLSurface;
-#endif // defined(ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
+#include "GLTypes.h" // for EGLSurface and EGLConfig
+#endif // defined(MOZ_WIDGET_ANDROID)
 
 class GL_CONTEXT_PROVIDER_NAME
 {
@@ -112,10 +112,10 @@ public:
     static already_AddRefed<GLContext>
     CreateWrappingExisting(void* aContext, void* aSurface);
 
-#if defined(ANDROID)
-    static EGLSurface CreateEGLSurface(void* aWindow);
+#if defined(MOZ_WIDGET_ANDROID)
+    static EGLSurface CreateEGLSurface(void* aWindow, EGLConfig aConfig = nullptr);
     static void DestroyEGLSurface(EGLSurface surface);
-#endif // defined(ANDROID)
+#endif // defined(MOZ_WIDGET_ANDROID)
 
     /**
      * Get a pointer to the global context, creating it if it doesn't exist.

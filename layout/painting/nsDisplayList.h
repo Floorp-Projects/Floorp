@@ -4050,6 +4050,11 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
+  bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               const StackingContextHelper& aSc,
+                               nsTArray<WebRenderParentCommand>& aParentCommands,
+                               mozilla::layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
   virtual bool TryMerge(nsDisplayItem* aItem) override;
@@ -4085,6 +4090,11 @@ public:
     virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters) override;
+    bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                 const StackingContextHelper& aSc,
+                                 nsTArray<WebRenderParentCommand>& aParentCommands,
+                                 mozilla::layers::WebRenderLayerManager* aManager,
+                                 nsDisplayListBuilder* aDisplayListBuilder) override;
     virtual bool TryMerge(nsDisplayItem* aItem) override;
     virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
       return false;

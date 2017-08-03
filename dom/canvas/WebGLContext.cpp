@@ -1287,9 +1287,7 @@ public:
      * WebGL canvas is going to be composited.
      */
     static void PreTransactionCallback(void* data) {
-        WebGLContextUserData* userdata = static_cast<WebGLContextUserData*>(data);
-        HTMLCanvasElement* canvas = userdata->mCanvas;
-        WebGLContext* webgl = static_cast<WebGLContext*>(canvas->GetContextAtIndex(0));
+        WebGLContext* webgl = static_cast<WebGLContext*>(data);
 
         // Prepare the context for composition
         webgl->BeginComposition();
@@ -1299,9 +1297,7 @@ public:
       * so it really is the right place to put actions that have to be performed upon compositing
       */
     static void DidTransactionCallback(void* data) {
-        WebGLContextUserData* userdata = static_cast<WebGLContextUserData*>(data);
-        HTMLCanvasElement* canvas = userdata->mCanvas;
-        WebGLContext* webgl = static_cast<WebGLContext*>(canvas->GetContextAtIndex(0));
+        WebGLContext* webgl = static_cast<WebGLContext*>(data);
 
         // Clean up the context after composition
         webgl->EndComposition();
@@ -1334,6 +1330,32 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
 
     WebGLContextUserData* userData = nullptr;
     if (builder->IsPaintingToWindow() && mCanvasElement && !aMirror) {
+        userData = new WebGLContextUserData(mCanvasElement);
+    }
+
+    canvasLayer->SetUserData(aMirror ? &gWebGLMirrorLayerUserData : &gWebGLLayerUserData, userData);
+
+    CanvasRenderer* canvasRenderer = canvasLayer->CreateOrGetCanvasRenderer();
+    InitializeCanvasRenderer(builder, canvasRenderer, aMirror);
+    uint32_t flags = gl->Caps().alpha ? 0 : Layer::CONTENT_OPAQUE;
+    canvasLayer->SetContentFlags(flags);
+
+    mResetLayer = false;
+    // We only wish to update mLayerIsMirror when a new layer is returned.
+    // If a cached layer is returned above, aMirror is not changing since
+    // the last cached layer was created and mLayerIsMirror is still valid.
+    mLayerIsMirror = aMirror;
+
+    return canvasLayer.forget();
+}
+
+void
+WebGLContext::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                                       CanvasRenderer* aRenderer,
+                                       bool aMirror)
+{
+    CanvasInitializeData data;
+    if (aBuilder->IsPaintingToWindow() && mCanvasElement && !aMirror) {
         // Make the layer tell us whenever a transaction finishes (including
         // the current transaction), so we can clear our invalidation state and
         // start invalidating again. We need to do this for the layer that is
@@ -1346,34 +1368,20 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
         // releasing the reference to the element.
         // The userData will receive DidTransactionCallbacks, which flush the
         // the invalidation state to indicate that the canvas is up to date.
-        userData = new WebGLContextUserData(mCanvasElement);
-        canvasLayer->SetDidTransactionCallback(
-            WebGLContextUserData::DidTransactionCallback, userData);
-        canvasLayer->SetPreTransactionCallback(
-            WebGLContextUserData::PreTransactionCallback, userData);
+        data.mPreTransCallback = WebGLContextUserData::PreTransactionCallback;
+        data.mPreTransCallbackData = this;
+        data.mDidTransCallback = WebGLContextUserData::DidTransactionCallback;
+        data.mDidTransCallbackData = this;
     }
 
-    canvasLayer->SetUserData(aMirror ? &gWebGLMirrorLayerUserData : &gWebGLLayerUserData, userData);
-
-    CanvasLayer::Data data;
     data.mGLContext = gl;
     data.mSize = nsIntSize(mWidth, mHeight);
     data.mHasAlpha = gl->Caps().alpha;
     data.mIsGLAlphaPremult = IsPremultAlpha() || !data.mHasAlpha;
     data.mIsMirror = aMirror;
 
-    canvasLayer->Initialize(data);
-    uint32_t flags = gl->Caps().alpha ? 0 : Layer::CONTENT_OPAQUE;
-    canvasLayer->SetContentFlags(flags);
-    canvasLayer->Updated();
-
-    mResetLayer = false;
-    // We only wish to update mLayerIsMirror when a new layer is returned.
-    // If a cached layer is returned above, aMirror is not changing since
-    // the last cached layer was created and mLayerIsMirror is still valid.
-    mLayerIsMirror = aMirror;
-
-    return canvasLayer.forget();
+    aRenderer->Initialize(data);
+    aRenderer->SetDirty();
 }
 
 layers::LayersBackend

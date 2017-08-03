@@ -468,6 +468,9 @@ public:
                                          Layer* aOldLayer,
                                          LayerManager* aManager,
                                          bool aMirror = false) override;
+  void InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                                CanvasRenderer* aRenderer,
+                                bool aMirror = false) override;
   virtual bool ShouldForceInactiveLayer(LayerManager* aManager) override;
   void MarkContextClean() override;
   void MarkContextCleanForFrameCapture() override;

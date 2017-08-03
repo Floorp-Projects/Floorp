@@ -118,9 +118,10 @@ public:
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
-  mozilla::ipc::IPCResult RecvAddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineIds,
-                                                                const CompositableHandle& aHandle) override;
-  mozilla::ipc::IPCResult RecvRemovePipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId) override;
+  mozilla::ipc::IPCResult RecvAddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
+                                                           const CompositableHandle& aHandle,
+                                                           const bool& aAsync) override;
+  mozilla::ipc::IPCResult RecvRemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId) override;
 
   mozilla::ipc::IPCResult RecvAddExternalImageIdForCompositable(const ExternalImageId& aImageId,
                                                                 const CompositableHandle& aHandle) override;

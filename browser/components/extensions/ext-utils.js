@@ -12,10 +12,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 
 Cu.import("resource://gre/modules/ExtensionTabs.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
-                                   "@mozilla.org/content/style-sheet-service;1",
-                                   "nsIStyleSheetService");
-
 var {
   ExtensionError,
   defineLazyGetter,

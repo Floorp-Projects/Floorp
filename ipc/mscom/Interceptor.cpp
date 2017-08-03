@@ -306,15 +306,18 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
     DWORD callerTid;
     if (::CoGetCallerTID(&callerTid) == S_FALSE && callerTid != chromeMainTid) {
       // The caller isn't our chrome process, so do not provide a handler.
-      // First, seek back to the stream position that we prevously saved.
-      seekTo.QuadPart = objrefPos.QuadPart;
-      hr = pStm->Seek(seekTo, STREAM_SEEK_SET, nullptr);
+
+      // First, save the current position that marks the current end of the
+      // OBJREF in the stream.
+      ULARGE_INTEGER endPos;
+      hr = pStm->Seek(seekTo, STREAM_SEEK_CUR, &endPos);
       if (FAILED(hr)) {
         return hr;
       }
 
       // Now strip out the handler.
-      if (!StripHandlerFromOBJREF(WrapNotNull(pStm))) {
+      if (!StripHandlerFromOBJREF(WrapNotNull(pStm), objrefPos.QuadPart,
+                                  endPos.QuadPart)) {
         return E_FAIL;
       }
 

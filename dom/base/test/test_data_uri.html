@@ -6,12 +6,12 @@
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 
 <script>
+SimpleTest.waitForExplicitFinish();
+
 SpecialPowers.setBoolPref("security.data_uri.unique_opaque_origin", true);
 SimpleTest.registerCleanupFunction(() => {
   SpecialPowers.clearUserPref("security.data_uri.unique_opaque_origin");
 });
-
-SimpleTest.waitForExplicitFinish();
 
 function imgListener(img) {
   return new Promise((resolve, reject) => {
@@ -88,7 +88,29 @@ function runTests()
     is(document.fonts.size, 1, "should load data:font");
   });
 
-  Promise.all([p1, p2, p3]).then(() => {
+  var obj_doc = document.getElementById("obj_doc");
+  obj_doc.data="data:text/html,%3Cbody%3E%3Cbutton%3EChild%3C/button%3E%3C/body%3E"
+  let p4 = new Promise((resolve, reject) => {
+    obj_doc.onload = function() {
+      ok(SpecialPowers.wrap(obj_doc).contentDocument.nodePrincipal.isNullPrincipal,
+         "obj_doc.document should have NullPrincipal.");
+      resolve();
+    }
+  });
+
+  var obj_svg = document.getElementById("obj_svg");
+  obj_svg.data='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 200 200"><circle cx="100" cy="100" r="100" fill="green" fill-opacity="0.8"/></svg>'
+  let p5 = new Promise((resolve, reject) => {
+    obj_svg.onload = function() {
+      ok(SpecialPowers.wrap(obj_svg).contentDocument.nodePrincipal.isNullPrincipal,
+         "obj_svg.contentDocument should have NullPrincipal.");
+      ok(SpecialPowers.wrap(obj_svg).getSVGDocument().nodePrincipal.isNullPrincipal,
+         "obj_svg.getSVGDocument() should have NullPrincipal.");
+      resolve();
+    }
+  });
+
+  Promise.all([p1, p2, p3, p4, p5]).then(() => {
     SimpleTest.finish();
   }).catch((e) => {
     ok(false, "throwing " + e);
@@ -107,6 +129,10 @@ function runTests()
      id="img">
 <iframe id="iframe"></iframe>
 <iframe id="iframe1" ></iframe>
-<canvas id="canvas" class="output" width="100" height="50">
+<canvas id="canvas" class="output" width="100" height="50"></canvas>
+
+<object id="obj_doc"></object>
+<object id="obj_svg"></object>
+
 </body>
 </html>

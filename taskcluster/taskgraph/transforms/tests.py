@@ -230,7 +230,7 @@ test_description_schema = Schema({
     # name of the docker image or in-tree docker image to run the task in.  If
     # in-tree, then a dependency will be created automatically.  This is
     # generally `desktop-test`, or an image that acts an awful lot like it.
-    Required('docker-image', default={'in-tree': 'desktop-test'}): optionally_keyed_by(
+    Required('docker-image', default={'in-tree': 'desktop1604-test'}): optionally_keyed_by(
         'test-platform',
         Any(
             # a raw Docker image path (repo/image:tag)
