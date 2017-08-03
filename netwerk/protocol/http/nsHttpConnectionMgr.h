@@ -217,15 +217,16 @@ public:
     nsresult UpdateCurrentTopLevelOuterContentWindowId(uint64_t aWindowId);
 
     // tracks and untracks active transactions according their throttle status
-    void AddActiveTransaction(nsHttpTransaction* aTrans, bool aThrottled);
-    void RemoveActiveTransaction(nsHttpTransaction* aTrans, bool aThrottled);
-    void MoveActiveTransaction(nsHttpTransaction* aTrans, bool aThrottled);
+    void AddActiveTransaction(nsHttpTransaction* aTrans);
+    void RemoveActiveTransaction(nsHttpTransaction* aTrans,
+                                 Maybe<bool> const& aOverride = Nothing());
+    void UpdateActiveTransaction(nsHttpTransaction* aTrans);
 
     // called by nsHttpTransaction::WriteSegments.  decides whether the transaction
     // should stop reading data based on: the throttling ticker status, overall
     // status of all active transactions regarding active tab and respective
     // throttling state.
-    bool ShouldStopReading(nsHttpTransaction* aTrans, bool aThrottled);
+    bool ShouldStopReading(nsHttpTransaction* aTrans);
 
     // return true iff the connection has pending transactions for the active tab.
     // it's mainly used to disallow throttling (stop reading) of a response
