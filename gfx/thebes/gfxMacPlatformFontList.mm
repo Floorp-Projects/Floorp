@@ -1253,6 +1253,7 @@ static const char kSystemFont_system[] = "-apple-system";
 bool
 gfxMacPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
                                            nsTArray<gfxFontFamily*>* aOutput,
+                                           bool aDeferOtherFamilyNamesLoading,
                                            gfxFontStyle* aStyle,
                                            gfxFloat aDevToCssSize)
 {
@@ -1267,7 +1268,10 @@ gfxMacPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
         return true;
     }
 
-    return gfxPlatformFontList::FindAndAddFamilies(aFamily, aOutput, aStyle,
+    return gfxPlatformFontList::FindAndAddFamilies(aFamily,
+                                                   aOutput,
+                                                   aDeferOtherFamilyNamesLoading,
+                                                   aStyle,
                                                    aDevToCssSize);
 }
 
