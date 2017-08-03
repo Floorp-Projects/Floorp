@@ -152,7 +152,7 @@ function hiddenDataCheck(bytes, uri, path)
     do_check_eq(link.textContent, f.name + sep);
 
     uri = ios.newURI(link.getAttribute("href"), null, top);
-    do_check_eq(decodeURIComponent(uri.path), path + f.name + sep);
+    do_check_eq(decodeURIComponent(uri.pathQueryRef), path + f.name + sep);
   }
 }
 
@@ -232,7 +232,7 @@ function dataCheck(bytes, uri, path, dirEntries)
     do_check_eq(link.textContent, f.name + sep);
 
     uri = ios.newURI(link.getAttribute("href"), null, top);
-    do_check_eq(decodeURIComponent(uri.path), path + f.name + sep);
+    do_check_eq(decodeURIComponent(uri.pathQueryRef), path + f.name + sep);
   }
 }
 

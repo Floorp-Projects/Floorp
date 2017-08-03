@@ -179,7 +179,7 @@ nsAboutCache::Channel::ParseURI(nsIURI * uri, nsACString & storage)
     nsresult rv;
 
     nsAutoCString path;
-    rv = uri->GetPath(path);
+    rv = uri->GetPathQueryRef(path);
     if (NS_FAILED(rv)) return rv;
 
     mContextString.Truncate();

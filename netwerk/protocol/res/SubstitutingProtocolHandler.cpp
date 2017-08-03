@@ -367,7 +367,7 @@ SubstitutingProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
   rv = uri->GetAsciiHost(host);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->GetPath(path);
+  rv = uri->GetPathQueryRef(path);
   if (NS_FAILED(rv)) return rv;
 
   rv = url->GetFilePath(pathname);

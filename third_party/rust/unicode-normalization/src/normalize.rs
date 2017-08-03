@@ -12,17 +12,22 @@
 
 use std::cmp::Ordering::{Equal, Less, Greater};
 use std::ops::FnMut;
-use tables::normalization::{canonical_table, compatibility_table, composition_table};
+use tables::normalization::{canonical_table, canonical_table_STRTAB};
+use tables::normalization::{compatibility_table, compatibility_table_STRTAB};
+use tables::normalization::{composition_table, composition_table_STRTAB};
+use tables::normalization::Slice;
 
-fn bsearch_table<T>(c: char, r: &'static [(char, &'static [T])]) -> Option<&'static [T]> {
+fn bsearch_table<T>(c: char, r: &'static [(char, Slice)], strtab: &'static [T]) -> Option<&'static [T]> {
     match r.binary_search_by(|&(val, _)| {
         if c == val { Equal }
         else if val < c { Less }
         else { Greater }
     }) {
         Ok(idx) => {
-            let (_, result) = r[idx];
-            Some(result)
+            let ref slice = r[idx].1;
+            let offset = slice.offset as usize;
+            let length = slice.length as usize;
+            Some(&strtab[offset..(offset + length)])
         }
         Err(_) => None
     }
@@ -50,7 +55,7 @@ fn d<F>(c: char, i: &mut F, k: bool) where F: FnMut(char) {
     }
 
     // First check the canonical decompositions
-    match bsearch_table(c, canonical_table) {
+    match bsearch_table(c, canonical_table, canonical_table_STRTAB) {
         Some(canon) => {
             for x in canon {
                 d(*x, i, k);
@@ -64,7 +69,7 @@ fn d<F>(c: char, i: &mut F, k: bool) where F: FnMut(char) {
     if !k { (*i)(c); return; }
 
     // Then check the compatibility decompositions
-    match bsearch_table(c, compatibility_table) {
+    match bsearch_table(c, compatibility_table, compatibility_table_STRTAB) {
         Some(compat) => {
             for x in compat {
                 d(*x, i, k);
@@ -83,7 +88,7 @@ fn d<F>(c: char, i: &mut F, k: bool) where F: FnMut(char) {
 /// for more information.
 pub fn compose(a: char, b: char) -> Option<char> {
     compose_hangul(a, b).or_else(|| {
-        match bsearch_table(a, composition_table) {
+        match bsearch_table(a, composition_table, composition_table_STRTAB) {
             None => None,
             Some(candidates) => {
                 match candidates.binary_search_by(|&(val, _)| {

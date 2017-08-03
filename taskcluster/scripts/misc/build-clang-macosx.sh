@@ -24,7 +24,7 @@ set +x
 
 cd build/build-clang
 # |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-static-analysis-macosx64.json
+../../mach python ./build-clang.py -c clang-macosx64.json
 
 set -x
 

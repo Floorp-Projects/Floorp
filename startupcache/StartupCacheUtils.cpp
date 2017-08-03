@@ -232,7 +232,7 @@ PathifyURI(nsIURI *in, nsACString &out)
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsAutoCString path;
-            rv = baseFileURL->GetPath(path);
+            rv = baseFileURL->GetPathQueryRef(path);
             NS_ENSURE_SUCCESS(rv, rv);
 
             out.Append(path);

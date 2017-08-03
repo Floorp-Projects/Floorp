@@ -1120,30 +1120,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Fetch all annotations for a URI, including all properties of each
-   * annotation which would be required to recreate it.
-   * @param aURI
-   *        The URI for which annotations are to be retrieved.
-   * @return Array of objects, each containing the following properties:
-   *         name, flags, expires, value
-   */
-  getAnnotationsForURI: function PU_getAnnotationsForURI(aURI) {
-    var annosvc = this.annotations;
-    var annos = [], val = null;
-    var annoNames = annosvc.getPageAnnotationNames(aURI);
-    for (var i = 0; i < annoNames.length; i++) {
-      var flags = {}, exp = {}, storageType = {};
-      annosvc.getPageAnnotationInfo(aURI, annoNames[i], flags, exp, storageType);
-      val = annosvc.getPageAnnotation(aURI, annoNames[i]);
-      annos.push({name: annoNames[i],
-                  flags: flags.value,
-                  expires: exp.value,
-                  value: val});
-    }
-    return annos;
-  },
-
-  /**
    * Fetch all annotations for an item, including all properties of each
    * annotation which would be required to recreate it.
    * @param aItemId
@@ -1328,33 +1304,6 @@ this.PlacesUtils = {
       if (!stmt.executeStep())
         return null;
       return stmt.row.post_data;
-    } finally {
-      stmt.finalize();
-    }
-  },
-
-  /**
-   * Get the URI (and any associated POST data) for a given keyword.
-   * @param aKeyword string keyword
-   * @returns an array containing a string URL and a string of POST data
-   *
-   * @deprecated
-   */
-  getURLAndPostDataForKeyword(aKeyword) {
-    Deprecated.warning("getURLAndPostDataForKeyword() is deprecated, please " +
-                       "use PlacesUtils.keywords.fetch() instead",
-                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1100294");
-
-    let stmt = PlacesUtils.history.DBConnection.createStatement(
-      `SELECT h.url, k.post_data
-       FROM moz_keywords k
-       JOIN moz_places h ON h.id = k.place_id
-       WHERE k.keyword = :keyword`);
-    stmt.params.keyword = aKeyword.toLowerCase();
-    try {
-      if (!stmt.executeStep())
-        return [ null, null ];
-      return [ stmt.row.url, stmt.row.post_data ];
     } finally {
       stmt.finalize();
     }
@@ -1554,40 +1503,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Lazily adds a bookmarks observer, waiting for the bookmarks service to be
-   * alive before registering the observer.  This is especially useful in the
-   * startup path, to avoid initializing the service just to add an observer.
-   *
-   * @param aObserver
-   *        Object implementing nsINavBookmarkObserver
-   * @param [optional]aWeakOwner
-   *        Whether to use weak ownership.
-   *
-   * @note Correct functionality of lazy observers relies on the fact Places
-   *       notifies categories before real observers, and uses
-   *       PlacesCategoriesStarter component to kick-off the registration.
-   */
-  addLazyBookmarkObserver(aObserver, aWeakOwner) {
-    Deprecated.warning(`PlacesUtils.addLazyBookmarkObserver() is deprecated.
-                        Please use PlacesUtils.bookmarks.addObserver()`,
-                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1371677");
-    this.bookmarks.addObserver(aObserver, aWeakOwner === true);
-  },
-
-  /**
-   * Removes a bookmarks observer added through addLazyBookmarkObserver.
-   *
-   * @param aObserver
-   *        Object implementing nsINavBookmarkObserver
-   */
-  removeLazyBookmarkObserver(aObserver) {
-    Deprecated.warning(`PlacesUtils.removeLazyBookmarkObserver() is deprecated.
-                        Please use PlacesUtils.bookmarks.removeObserver()`,
-                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1371677");
-    this.bookmarks.removeObserver(aObserver);
-  },
-
-  /**
    * Sets the character-set for a URI.
    *
    * @param {nsIURI} aURI
@@ -1636,22 +1551,6 @@ this.PlacesUtils = {
       });
 
     });
-  },
-
-  /**
-   * Deprecated wrapper for History.jsm::fetch.
-   *
-   * @param aPlaceIdentifier
-   *        either an URL or a GUID (@see History.jsm::fetch)
-   * @return {Promise}.
-   * @resolve a PageInfo
-   * @reject if there is an error in the place identifier
-   */
-  promisePlaceInfo(aPlaceIdentifier) {
-    Deprecated.warning(`PlacesUtils.promisePlaceInfo() is deprecated.
-                        Please use PlacesUtils.history.fetch()`,
-                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1350377");
-    return PlacesUtils.history.fetch(aPlaceIdentifier);
   },
 
   /**

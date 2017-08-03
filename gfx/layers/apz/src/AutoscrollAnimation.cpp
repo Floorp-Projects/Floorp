@@ -85,5 +85,19 @@ AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& a
   return true;
 }
 
+void
+AutoscrollAnimation::Cancel(CancelAnimationFlags aFlags)
+{
+  // The cancellation was initiated by browser.xml, so there's no need to
+  // notify it.
+  if (aFlags & TriggeredExternally) {
+    return;
+  }
+
+  if (RefPtr<GeckoContentController> controller = mApzc.GetGeckoContentController()) {
+    controller->CancelAutoscroll(mApzc.GetGuid());
+  }
+}
+
 } // namespace layers
 } // namespace mozilla

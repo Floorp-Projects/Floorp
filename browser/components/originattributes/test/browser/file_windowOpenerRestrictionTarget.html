@@ -16,7 +16,7 @@
     }
 
     try {
-      let openerFrame = window.opener.frames["child"];
+      let openerFrame = window.opener.frames.child;
       let result = openerFrame.document.cookie === cookieValue;
       if (result && !openerRestriction) {
         document.title = "pass";

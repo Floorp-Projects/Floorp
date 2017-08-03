@@ -567,7 +567,17 @@ var pktUI = (function() {
         return panel;
     }
 
+    var photonPageActionPanelFrame;
+
+    function setPhotonPageActionPanelFrame(frame) {
+        photonPageActionPanelFrame = frame;
+    }
+
     function getPanelFrame() {
+        if (photonPageActionPanelFrame) {
+            return photonPageActionPanelFrame;
+        }
+
         var frame = document.getElementById("pocket-panel-iframe");
         if (!frame) {
             var frameParent = document.getElementById("PanelUI-pocketView").firstChild;
@@ -580,6 +590,10 @@ var pktUI = (function() {
     }
 
     function getSubview() {
+        if (photonPageActionPanelFrame) {
+            return null;
+        }
+
         var view = document.getElementById("PanelUI-pocketView");
         if (view && view.getAttribute("current") == "true" && !view.getAttribute("mainview"))
             return view;
@@ -587,6 +601,10 @@ var pktUI = (function() {
     }
 
     function isInOverflowMenu() {
+        if (photonPageActionPanelFrame) {
+            return false;
+        }
+
         var subview = getSubview();
         return !!subview;
     }
@@ -607,6 +625,7 @@ var pktUI = (function() {
      * Public functions
      */
     return {
+        setPhotonPageActionPanelFrame,
         getPanelFrame,
 
         openTabWithUrl,

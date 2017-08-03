@@ -526,7 +526,7 @@
           }
 
           // Specially handle about:blank as local
-          if (aURI.path === "blank") {
+          if (aURI.pathQueryRef === "blank") {
             return true;
           }
 

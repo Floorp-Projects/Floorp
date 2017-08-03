@@ -527,8 +527,8 @@ LoginManagerPrompter.prototype = {
     var uri = Services.io.newURI(aRealmString);
     var pathname = "";
 
-    if (uri.path != "/")
-      pathname = uri.path;
+    if (uri.pathQueryRef != "/")
+      pathname = uri.pathQueryRef;
 
     var formattedHostname = this._getFormattedHostname(uri);
 

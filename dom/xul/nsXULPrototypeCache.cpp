@@ -272,7 +272,7 @@ nsXULPrototypeCache::FlushSkinFiles()
     XBLDocTable& xblDocTable = XBLDocTableFor(tableType);
     for (auto iter = xblDocTable.Iter(); !iter.Done(); iter.Next()) {
       nsAutoCString str;
-      iter.Key()->GetPath(str);
+      iter.Key()->GetPathQueryRef(str);
       if (strncmp(str.get(), "/skin", 5) == 0) {
         iter.Remove();
       }
@@ -282,7 +282,7 @@ nsXULPrototypeCache::FlushSkinFiles()
     StyleSheetTable& table = StyleSheetTableFor(tableType);
     for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
       nsAutoCString str;
-      iter.Data()->GetSheetURI()->GetPath(str);
+      iter.Data()->GetSheetURI()->GetPathQueryRef(str);
       if (strncmp(str.get(), "/skin", 5) == 0) {
         iter.Remove();
       }
@@ -485,7 +485,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     nsresult rv, tmp;
 
     nsAutoCString path;
-    aURI->GetPath(path);
+    aURI->GetPathQueryRef(path);
     if (!StringEndsWith(path, NS_LITERAL_CSTRING(".xul")))
         return NS_ERROR_NOT_AVAILABLE;
 

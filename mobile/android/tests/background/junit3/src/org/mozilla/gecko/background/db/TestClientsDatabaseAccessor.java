@@ -4,6 +4,7 @@
 package org.mozilla.gecko.background.db;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -124,5 +125,41 @@ public class TestClientsDatabaseAccessor extends AndroidTestCase {
       thrown = true;
     }
     assertTrue(thrown);
+  }
+
+  public void testFetchNonStaleClients() throws NullCursorException {
+    String goodRecord1 = Utils.generateGuid();
+    ClientRecord record1 = new ClientRecord(goodRecord1);
+    record1.fxaDeviceId = "fxa1";
+    ClientRecord record2 = new ClientRecord(Utils.generateGuid());
+    record2.fxaDeviceId = "fxa2";
+    String goodRecord2 = Utils.generateGuid();
+    ClientRecord record3 = new ClientRecord(goodRecord2);
+    record3.fxaDeviceId = "fxa4";
+
+    ArrayList<ClientRecord> list = new ArrayList<>();
+    list.add(record1);
+    list.add(record2);
+    list.add(record3);
+    db.store(list);
+
+    assertTrue(db.hasNonStaleClients(new String[]{"fxa1", "fxa-unknown"}));
+    assertFalse(db.hasNonStaleClients(new String[]{}));
+
+    String noFxADeviceId = Utils.generateGuid();
+    ClientRecord record4 = new ClientRecord(noFxADeviceId);
+    record4.fxaDeviceId = null;
+    list.clear();
+    list.add(record4);
+    db.store(list);
+
+    assertTrue(db.hasNonStaleClients(new String[]{}));
+
+    Collection<ClientRecord> filtered = db.fetchNonStaleClients(new String[]{"fxa1", "fxa4", "fxa-unknown"});
+    ClientRecord[] filteredArr = filtered.toArray(new ClientRecord[0]);
+    assertEquals(3, filteredArr.length);
+    assertEquals(filteredArr[0].guid, goodRecord1);
+    assertEquals(filteredArr[1].guid, goodRecord2);
+    assertEquals(filteredArr[2].guid, noFxADeviceId);
   }
 }

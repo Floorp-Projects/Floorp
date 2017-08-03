@@ -95,7 +95,7 @@
                                     null,
                                     baseURI);
        if (filenameURI.scheme == 'chrome' &&
-           filenameURI.path.indexOf('/content/') == 0)
+           filenameURI.pathQueryRef.indexOf('/content/') == 0)
          // Content packages will always have wrappers made for them;
          // if automatic wrappers have been disabled for the
          // chrome package via a chrome manifest flag, then

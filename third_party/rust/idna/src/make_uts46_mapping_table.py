@@ -51,7 +51,15 @@ def strtab_slice(s):
         return c
 
 def rust_slice(s):
-    return "(StringTableSlice { byte_start: %d, byte_len: %d })" % s
+    start = s[0]
+    length = s[1]
+    start_lo = start & 0xff
+    start_hi = start >> 8
+    assert length <= 255
+    assert start_hi <= 255
+    return "(StringTableSlice { byte_start_lo: %d, byte_start_hi: %d, byte_len: %d })" % (start_lo, start_hi, length)
+
+ranges = []
 
 for line in txt:
     # remove comments
@@ -66,12 +74,58 @@ for line in txt:
     if not last:
         last = first
     mapping = fields[1].strip().replace('_', ' ').title().replace(' ', '')
+    unicode_str = None
     if len(fields) > 2:
         if fields[2].strip():
             unicode_str = u''.join(char(c) for c in fields[2].strip().split(' '))
-            mapping += rust_slice(strtab_slice(unicode_str))
         elif mapping == "Deviation":
-            mapping += rust_slice(strtab_slice(''))
+            unicode_str = u''
+    ranges.append((first, last, mapping, unicode_str))
+
+def mergeable_key(r):
+    mapping = r[2]
+    # These types have associated data, so we should not merge them.
+    if mapping in ('Mapped', 'Deviation', 'DisallowedStd3Mapped'):
+        return r
+    assert mapping in ('Valid', 'Ignored', 'Disallowed', 'DisallowedStd3Valid')
+    return mapping
+
+grouped_ranges = itertools.groupby(ranges, key=mergeable_key)
+
+optimized_ranges = []
+
+for (k, g) in grouped_ranges:
+    group = list(g)
+    if len(group) == 1:
+        optimized_ranges.append(group[0])
+        continue
+    # Assert that nothing in the group has an associated unicode string.
+    for g in group:
+        if g[3] is not None and len(g[3]) > 2:
+            assert not g[3][2].strip()
+    # Assert that consecutive members of the group don't leave gaps in
+    # the codepoint space.
+    a, b = itertools.tee(group)
+    next(b, None)
+    for (g1, g2) in itertools.izip(a, b):
+        last_char = int(g1[1], 16)
+        next_char = int(g2[0], 16)
+        if last_char + 1 == next_char:
+            continue
+        # There's a gap where surrogates would appear, but we don't have to
+        # worry about that gap, as surrogates never appear in Rust strings.
+        # Assert we're seeing the surrogate case here.
+        assert last_char == 0xd7ff
+        assert next_char == 0xe000
+    first = group[0][0]
+    last = group[-1][1]
+    mapping = group[0][2]
+    unicode_str = group[0][3]
+    optimized_ranges.append((first, last, mapping, unicode_str))
+
+for (first, last, mapping, unicode_str) in optimized_ranges:
+    if unicode_str is not None:
+        mapping += rust_slice(strtab_slice(unicode_str))
     print("    Range { from: '%s', to: '%s', mapping: %s }," % (escape_char(char(first)),
                                                                 escape_char(char(last)),
                                                                 mapping))

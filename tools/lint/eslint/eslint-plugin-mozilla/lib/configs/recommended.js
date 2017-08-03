@@ -103,6 +103,9 @@ module.exports = {
     // very frequently.
     // "curly": ["error", "multi-line"],
 
+    // Encourage the use of dot notation whenever possible.
+    "dot-notation": "error",
+
     // Always require a trailing EOL
     "eol-last": "error",
 

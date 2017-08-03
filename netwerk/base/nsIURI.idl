@@ -170,7 +170,7 @@ interface nsIURI : nsISupports
      * This attribute contains query and ref parts for historical reasons.
      * Use the 'filePath' attribute if you do not want those parts included.
      */
-    attribute AUTF8String path;
+    attribute AUTF8String pathQueryRef;
 
 
     /************************************************************************

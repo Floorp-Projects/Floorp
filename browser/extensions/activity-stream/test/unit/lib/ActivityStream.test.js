@@ -1,4 +1,5 @@
 const injector = require("inject!lib/ActivityStream.jsm");
+const {CONTENT_MESSAGE_TYPE} = require("common/Actions.jsm");
 
 const REASON_ADDON_UNINSTALL = 6;
 
@@ -6,12 +7,12 @@ describe("ActivityStream", () => {
   let sandbox;
   let as;
   let ActivityStream;
-  let SECTIONS;
+  let PREFS_CONFIG;
   function Fake() {}
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    ({ActivityStream, SECTIONS} = injector({
+    ({ActivityStream, PREFS_CONFIG} = injector({
       "lib/LocalizationFeed.jsm": {LocalizationFeed: Fake},
       "lib/ManualMigration.jsm": {ManualMigration: Fake},
       "lib/NewTabInit.jsm": {NewTabInit: Fake},
@@ -63,6 +64,14 @@ describe("ActivityStream", () => {
       const action = as.store.dispatch.firstCall.args[0];
       assert.propertyVal(action.data, "version", "1.2.3");
     });
+    it("should emit an INIT event to content", () => {
+      sandbox.stub(as.store, "dispatch");
+
+      as.init();
+
+      const action = as.store.dispatch.firstCall.args[0];
+      assert.equal(action.meta.to, CONTENT_MESSAGE_TYPE);
+    });
   });
   describe("#uninit", () => {
     beforeEach(() => {
@@ -111,13 +120,18 @@ describe("ActivityStream", () => {
       const feed = as.feeds.get("feeds.prefs")();
       assert.instanceOf(feed, Fake);
     });
-    it("should create a section feed for each section in SECTIONS", () => {
+    it("should create a section feed for each section in PREFS_CONFIG", () => {
       // If new sections are added, their feeds will have to be added to the
       // list of injected feeds above for this test to pass
-      SECTIONS.forEach((value, key) => {
-        const feed = as.feeds.get(`feeds.section.${key}`)();
-        assert.instanceOf(feed, Fake);
-      });
+      let feedCount = 0;
+      for (const pref of PREFS_CONFIG.keys()) {
+        if (pref.search(/^feeds\.section\.[^.]+$/) === 0) {
+          const feed = as.feeds.get(pref)();
+          assert.instanceOf(feed, Fake);
+          feedCount++;
+        }
+      }
+      assert.isAbove(feedCount, 0);
     });
     it("should create a ManualMigration feed", () => {
       const feed = as.feeds.get("feeds.migration")();
@@ -130,6 +144,84 @@ describe("ActivityStream", () => {
     it("should create a SystemTick feed", () => {
       const feed = as.feeds.get("feeds.systemtick")();
       assert.instanceOf(feed, Fake);
+    });
+  });
+  describe("_updateDynamicPrefs topstories default value", () => {
+    it("should be false with no geo/locale", () => {
+      as._updateDynamicPrefs();
+
+      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+    });
+    it("should be false with unexpected geo", () => {
+      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+      sandbox.stub(global.Services.prefs, "getStringPref").returns("NOGEO");
+
+      as._updateDynamicPrefs();
+
+      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+    });
+    it("should be false with expected geo and unexpected locale", () => {
+      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
+      sandbox.stub(global.Services.locale, "getRequestedLocale").returns("no-LOCALE");
+
+      as._updateDynamicPrefs();
+
+      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+    });
+    it("should be true with expected geo and locale", () => {
+      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
+      sandbox.stub(global.Services.locale, "getRequestedLocale").returns("en-US");
+
+      as._updateDynamicPrefs();
+
+      assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
+    });
+    it("should be false after expected geo and locale then unexpected", () => {
+      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+      sandbox.stub(global.Services.prefs, "getStringPref")
+        .onFirstCall()
+        .returns("US")
+        .onSecondCall()
+        .returns("NOGEO");
+      sandbox.stub(global.Services.locale, "getRequestedLocale").returns("en-US");
+
+      as._updateDynamicPrefs();
+      as._updateDynamicPrefs();
+
+      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+    });
+  });
+  describe("_updateDynamicPrefs topstories delayed default value", () => {
+    let clock;
+    beforeEach(() => {
+      clock = sinon.useFakeTimers();
+
+      // Have addObserver cause prefHasUserValue to now return true then observe
+      sandbox.stub(global.Services.prefs, "addObserver").callsFake((pref, obs) => {
+        sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+        setTimeout(() => obs.observe(null, "nsPref:changed", pref)); // eslint-disable-line max-nested-callbacks
+      });
+    });
+    afterEach(() => clock.restore());
+
+    it("should set false with unexpected geo", () => {
+      sandbox.stub(global.Services.prefs, "getStringPref").returns("NOGEO");
+
+      as._updateDynamicPrefs();
+      clock.tick(1);
+
+      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+    });
+    it("should set true with expected geo and locale", () => {
+      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
+      sandbox.stub(global.Services.locale, "getRequestedLocale").returns("en-US");
+
+      as._updateDynamicPrefs();
+      clock.tick(1);
+
+      assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
     });
   });
 });

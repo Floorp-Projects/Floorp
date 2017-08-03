@@ -1591,10 +1591,10 @@ nsStandardURL::GetPort(int32_t *result)
 
 // result may contain unescaped UTF-8 characters
 NS_IMETHODIMP
-nsStandardURL::GetPath(nsACString &result)
+nsStandardURL::GetPathQueryRef(nsACString &result)
 {
     result = Path();
-    CALL_RUST_GETTER_STR(result, GetPath, result);
+    CALL_RUST_GETTER_STR(result, GetPathQueryRef, result);
     return NS_OK;
 }
 
@@ -2330,12 +2330,12 @@ nsStandardURL::ReplacePortInSpec(int32_t aNewPort)
 }
 
 NS_IMETHODIMP
-nsStandardURL::SetPath(const nsACString &input)
+nsStandardURL::SetPathQueryRef(const nsACString &input)
 {
     ENSURE_MUTABLE();
 
     const nsPromiseFlatCString &path = PromiseFlatCString(input);
-    LOG(("nsStandardURL::SetPath [path=%s]\n", path.get()));
+    LOG(("nsStandardURL::SetPathQueryRef [path=%s]\n", path.get()));
 
     InvalidateCache();
 
@@ -2361,7 +2361,7 @@ nsStandardURL::SetPath(const nsACString &input)
         mQuery.mLen = -1;
         mRef.mLen = -1;
     }
-    CALL_RUST_SETTER(SetPath, input);
+    CALL_RUST_SETTER(SetPathQueryRef, input);
     return NS_OK;
 }
 
@@ -2973,7 +2973,7 @@ nsStandardURL::SetFilePath(const nsACString &input)
     // if there isn't a filepath, then there can't be anything
     // after the path either.  this url is likely uninitialized.
     if (mFilepath.mLen < 0)
-        return SetPath(flat);
+        return SetPathQueryRef(flat);
 
     if (filepath && *filepath) {
         nsAutoCString spec;
@@ -3049,7 +3049,7 @@ nsStandardURL::SetQuery(const nsACString &input)
     LOG(("nsStandardURL::SetQuery [query=%s]\n", query));
 
     if (mPath.mLen < 0)
-        return SetPath(flat);
+        return SetPathQueryRef(flat);
 
     if (mSpec.Length() + input.Length() - Query().Length() > (uint32_t) net_GetURLMaxLength()) {
         return NS_ERROR_MALFORMED_URI;
@@ -3123,7 +3123,7 @@ nsStandardURL::SetRef(const nsACString &input)
     LOG(("nsStandardURL::SetRef [ref=%s]\n", ref));
 
     if (mPath.mLen < 0)
-        return SetPath(flat);
+        return SetPathQueryRef(flat);
 
     if (mSpec.Length() + input.Length() - Ref().Length() > (uint32_t) net_GetURLMaxLength()) {
         return NS_ERROR_MALFORMED_URI;
@@ -3195,7 +3195,7 @@ nsStandardURL::SetFileName(const nsACString &input)
     LOG(("nsStandardURL::SetFileName [filename=%s]\n", filename));
 
     if (mPath.mLen < 0)
-        return SetPath(flat);
+        return SetPathQueryRef(flat);
 
     if (mSpec.Length() + input.Length() - Filename().Length() > (uint32_t) net_GetURLMaxLength()) {
         return NS_ERROR_MALFORMED_URI;

@@ -273,6 +273,12 @@ toolbar:-moz-lwtheme {
   }
 }
 
+#TabsToolbar:not([collapsed="true"]) + #nav-bar {
+  /* The toolbar buttons that animate are only visible when the #TabsToolbar is not collapsed.
+     The animations use position:absolute and require a positioned #nav-bar. */
+  position: relative;
+}
+
 #PersonalToolbar {
   padding: 0 4px 4px;
 }
@@ -636,6 +642,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 %include ../shared/identity-block/identity-block.inc.css
 
+%ifndef MOZ_PHOTON_THEME
 #identity-box {
   padding-top: 2px;
   padding-bottom: 2px;
@@ -656,6 +663,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
     padding-bottom: 4px;
   }
 }
+%endif
 
 #identity-box:-moz-locale-dir(ltr) {
   border-top-left-radius: 2px;

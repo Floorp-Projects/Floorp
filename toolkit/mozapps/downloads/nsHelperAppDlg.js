@@ -453,8 +453,8 @@ nsUnknownContentTypeDialog.prototype = {
       this.mSourcePath += url.directory;
     } else {
       // A generic uri, use path.
-      fname = url.path;
-      this.mSourcePath += url.path;
+      fname = url.pathQueryRef;
+      this.mSourcePath += url.pathQueryRef;
     }
 
     if (suggestedFileName)

@@ -13,7 +13,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 function LOG(str) {
-  dump("*** " + str + "\n");
+  // dump("*** " + str + "\n");
 }
 
 const WCCR_CONTRACTID = "@mozilla.org/embeddor.implemented/web-content-handler-registrar;1";

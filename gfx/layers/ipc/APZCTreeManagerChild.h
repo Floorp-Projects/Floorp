@@ -107,6 +107,8 @@ protected:
                                                  const LayoutDeviceCoord& aSpanChange,
                                                  const Modifiers& aModifiers) override;
 
+  mozilla::ipc::IPCResult RecvCancelAutoscroll(const FrameMetrics::ViewID& aScrollId) override;
+
   virtual
   ~APZCTreeManagerChild() { }
 

@@ -10,16 +10,21 @@ describe("ActivityStreamMessageChannel", () => {
   let dispatch;
   let mm;
   beforeEach(() => {
-    function RP(url) {
+    function RP(url, isFromAboutNewTab = false) {
       this.url = url;
       this.messagePorts = [];
       this.addMessageListener = globals.sandbox.spy();
+      this.removeMessageListener = globals.sandbox.spy();
       this.sendAsyncMessage = globals.sandbox.spy();
       this.destroy = globals.sandbox.spy();
+      this.isFromAboutNewTab = isFromAboutNewTab;
     }
     globals = new GlobalOverrider();
+    const override = globals.sandbox.stub();
+    override.withArgs(true).returns(new RP("about:newtab", true));
+    override.withArgs(false).returns(null);
     globals.set("AboutNewTab", {
-      override: globals.sandbox.spy(),
+      override,
       reset: globals.sandbox.spy()
     });
     globals.set("RemotePages", RP);
@@ -64,6 +69,10 @@ describe("ActivityStreamMessageChannel", () => {
         mm.createChannel();
         assert.calledOnce(global.AboutNewTab.override);
       });
+      it("should use the channel passed by AboutNewTab on override", () => {
+        mm.createChannel();
+        assert.ok(mm.channel.isFromAboutNewTab);
+      });
       it("should not override AboutNewTab if the pageURL is not about:newtab", () => {
         mm = new ActivityStreamMessageChannel({pageURL: "foo.html"});
         mm.createChannel();
@@ -76,23 +85,27 @@ describe("ActivityStreamMessageChannel", () => {
         mm.createChannel();
         channel = mm.channel;
       });
-      it("should call channel.destroy()", () => {
-        mm.destroyChannel();
-        assert.calledOnce(channel.destroy);
-      });
       it("should set .channel to null", () => {
         mm.destroyChannel();
         assert.isNull(mm.channel);
       });
-      it("should reset AboutNewTab", () => {
+      it("should reset AboutNewTab, and pass back its channel", () => {
         mm.destroyChannel();
         assert.calledOnce(global.AboutNewTab.reset);
+        assert.calledWith(global.AboutNewTab.reset, channel);
       });
       it("should not reset AboutNewTab if the pageURL is not about:newtab", () => {
         mm = new ActivityStreamMessageChannel({pageURL: "foo.html"});
         mm.createChannel();
         mm.destroyChannel();
         assert.notCalled(global.AboutNewTab.reset);
+      });
+      it("should call channel.destroy() if pageURL is not about:newtab", () => {
+        mm = new ActivityStreamMessageChannel({pageURL: "foo.html"});
+        mm.createChannel();
+        channel = mm.channel;
+        mm.destroyChannel();
+        assert.calledOnce(channel.destroy);
       });
     });
   });

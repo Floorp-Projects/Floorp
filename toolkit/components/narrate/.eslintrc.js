@@ -11,7 +11,6 @@ module.exports = {
     "complexity": ["error", {"max": 20}],
     "curly": "error",
     "dot-location": ["warn", "property"],
-    "dot-notation": "error",
     "generator-star-spacing": ["warn", "after"],
     "indent": ["warn", 2, {"SwitchCase": 1}],
     "max-len": ["warn", 80, 2, {"ignoreUrls": true}],

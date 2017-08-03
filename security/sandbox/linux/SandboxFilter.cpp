@@ -537,7 +537,7 @@ public:
       }
       Arg<int> domain(0), type(1);
       return Some(If(domain == AF_UNIX,
-                     Switch(type)
+                     Switch(type & ~SOCK_CLOEXEC)
                      .Case(SOCK_STREAM, Allow())
                      .Case(SOCK_SEQPACKET, Allow())
                      .Case(SOCK_DGRAM, Trap(SocketpairDatagramTrap, nullptr))

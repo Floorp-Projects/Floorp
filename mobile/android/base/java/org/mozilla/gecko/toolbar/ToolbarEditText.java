@@ -313,7 +313,8 @@ public class ToolbarEditText extends CustomEditText
 
             // If the result and the current text don't have the same prefixes,
             // the result is stale and we should wait for the another result to come in.
-            if (!TextUtils.regionMatches(result, 0, text, 0, autoCompleteStart)) {
+            final String userText = text.toString().substring(0, autoCompleteStart);
+            if (!StringUtils.caseInsensitiveStartsWith(result, userText)) {
                 return;
             }
 
@@ -336,7 +337,7 @@ public class ToolbarEditText extends CustomEditText
             // If the result prefix doesn't match the current text,
             // the result is stale and we should wait for the another result to come in.
             if (resultLength <= textLength ||
-                    !TextUtils.regionMatches(result, 0, text, 0, textLength)) {
+                    !StringUtils.caseInsensitiveStartsWith(result, text.toString())) {
                 return;
             }
 
@@ -534,7 +535,7 @@ public class ToolbarEditText extends CustomEditText
             // to discard any autocomplete results that are in-flight, and vice versa.
             mDiscardAutoCompleteResult = !doAutocomplete;
 
-            if (doAutocomplete && mAutoCompleteResult.startsWith(text)) {
+            if (doAutocomplete && StringUtils.caseInsensitiveStartsWith(mAutoCompleteResult, text)) {
                 // If this text already matches our autocomplete text, autocomplete likely
                 // won't change. Just reuse the old autocomplete value.
                 onAutocomplete(mAutoCompleteResult);

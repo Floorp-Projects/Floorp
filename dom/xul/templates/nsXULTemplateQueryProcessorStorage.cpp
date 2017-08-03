@@ -193,7 +193,7 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
     if (scheme.EqualsLiteral("profile")) {
 
         nsAutoCString path;
-        rv = uri->GetPath(path);
+        rv = uri->GetPathQueryRef(path);
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (path.IsEmpty()) {

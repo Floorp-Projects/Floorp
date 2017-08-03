@@ -3291,7 +3291,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
   if (NS_SUCCEEDED(rv))
     rv = aHostURI->GetAsciiHost(hostFromURI);
   if (NS_SUCCEEDED(rv))
-    rv = aHostURI->GetPath(pathFromURI);
+    rv = aHostURI->GetPathQueryRef(pathFromURI);
   if (NS_FAILED(rv)) {
     COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nullptr, "invalid host/path from URI");
     return;
@@ -4302,7 +4302,7 @@ GetPathFromURI(nsIURI* aHostURI)
   if (hostURL) {
     hostURL->GetDirectory(path);
   } else {
-    aHostURI->GetPath(path);
+    aHostURI->GetPathQueryRef(path);
     int32_t slash = path.RFindChar('/');
     if (slash != kNotFound) {
       path.Truncate(slash + 1);
@@ -4329,7 +4329,7 @@ nsCookieService::CheckPath(nsCookieAttributes &aCookieAttributes,
      */
     // get path from aHostURI
     nsAutoCString pathFromURI;
-    if (NS_FAILED(aHostURI->GetPath(pathFromURI)) ||
+    if (NS_FAILED(aHostURI->GetPathQueryRef(pathFromURI)) ||
         !StringBeginsWith(pathFromURI, aCookieAttributes.path)) {
       return false;
     }

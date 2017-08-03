@@ -1092,7 +1092,7 @@ void AsyncPanZoomController::StartAutoscroll(const ScreenPoint& aPoint)
 void AsyncPanZoomController::StopAutoscroll()
 {
   if (mState == AUTOSCROLL) {
-    CancelAnimation();
+    CancelAnimation(TriggeredExternally);
   }
 }
 
@@ -2876,6 +2876,10 @@ void AsyncPanZoomController::CancelAnimation(CancelAnimationFlags aFlags) {
 
   if ((aFlags & ExcludeWheel) && mState == WHEEL_SCROLL) {
     return;
+  }
+
+  if (mAnimation) {
+    mAnimation->Cancel(aFlags);
   }
 
   SetState(NOTHING);

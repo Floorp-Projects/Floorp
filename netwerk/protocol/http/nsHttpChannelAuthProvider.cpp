@@ -1748,7 +1748,7 @@ nsHttpChannelAuthProvider::GetCurrentPath(nsACString &path)
     if (url)
         rv = url->GetDirectory(path);
     else
-        rv = mURI->GetPath(path);
+        rv = mURI->GetPathQueryRef(path);
     return rv;
 }
 

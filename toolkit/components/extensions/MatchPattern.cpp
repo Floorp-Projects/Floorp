@@ -151,7 +151,7 @@ URLInfo::Path() const
 {
   if (mPath.IsEmpty()) {
     nsCString path;
-    if (NS_SUCCEEDED(URINoRef()->GetPath(path))) {
+    if (NS_SUCCEEDED(URINoRef()->GetPathQueryRef(path))) {
       AppendUTF8toUTF16(path, mPath);
     }
   }

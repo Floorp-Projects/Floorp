@@ -680,7 +680,7 @@ function promisePanelEvent(panelIDOrNode, eventType) {
     let panel = typeof(panelIDOrNode) != "string" ? panelIDOrNode :
                 document.getElementById(panelIDOrNode);
     if (!panel ||
-        (eventType == "popupshowing" && panel.state == "open") ||
+        (eventType == "popupshown" && panel.state == "open") ||
         (eventType == "popuphidden" && panel.state == "closed")) {
       executeSoon(resolve);
       return;

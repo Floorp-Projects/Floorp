@@ -25,6 +25,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     CloseWindow,
     GetWindowRect,
     SetWindowRect(WindowRectParameters),
+    MinimizeWindow,
     MaximizeWindow,
     FullscreenWindow,
     SwitchToWindow(SwitchToWindowParameters),
@@ -135,6 +136,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 let parameters: WindowRectParameters = Parameters::from_json(&body_data)?;
                 WebDriverCommand::SetWindowRect(parameters)
             },
+            Route::MinimizeWindow => WebDriverCommand::MinimizeWindow,
             Route::MaximizeWindow => WebDriverCommand::MaximizeWindow,
             Route::FullscreenWindow => WebDriverCommand::FullscreenWindow,
             Route::SwitchToWindow => {
@@ -401,6 +403,7 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::IsDisplayed(_) |
             WebDriverCommand::IsEnabled(_) |
             WebDriverCommand::IsSelected(_) |
+            WebDriverCommand::MinimizeWindow |
             WebDriverCommand::MaximizeWindow |
             WebDriverCommand::FullscreenWindow |
             WebDriverCommand::NewSession(_) |

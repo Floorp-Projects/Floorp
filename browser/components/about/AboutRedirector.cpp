@@ -112,7 +112,7 @@ static nsAutoCString
 GetAboutModuleName(nsIURI *aURI)
 {
   nsAutoCString path;
-  aURI->GetPath(path);
+  aURI->GetPathQueryRef(path);
 
   int32_t f = path.FindChar('#');
   if (f >= 0)

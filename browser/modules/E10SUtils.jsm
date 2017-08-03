@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName
-  let moduleName = aURL.path.replace(/[#?].*/, "").toLowerCase();
+  let moduleName = aURL.pathQueryRef.replace(/[#?].*/, "").toLowerCase();
   let contract = "@mozilla.org/network/protocol/about;1?what=" + moduleName;
   try {
     return Cc[contract].getService(Ci.nsIAboutModule);

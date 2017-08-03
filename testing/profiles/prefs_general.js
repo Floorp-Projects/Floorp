@@ -305,6 +305,7 @@ user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 user_pref("browser.newtabpage.activity-stream.default.sites", "");
 user_pref("browser.newtabpage.activity-stream.telemetry", false);
 user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
+user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
 
 // Don't fetch directory tiles data from real servers
 user_pref("browser.newtabpage.directory.source", 'data:application/json,{"testing":1}');
@@ -393,3 +394,7 @@ user_pref("extensions.screenshots.system-disabled", true);
 // The maintenance can take a relatively long time which may cause unnecessary
 // intermittents and slow down tests.
 user_pref("places.database.lastMaintenance", 7258114800);
+
+// Disable the Pocket page action and enable the CUI widget until bug 1385418 is
+// fixed.
+user_pref("extensions.pocket.disablePageAction", true);

@@ -6,7 +6,7 @@ function test() {
   function checkLastSuccess() {
     let lastSuccess = Services.prefs.getIntPref("toolkit.startup.last_success");
     let si = Services.startup.getStartupInfo();
-    is(lastSuccess, parseInt(si["main"].getTime() / 1000, 10),
+    is(lastSuccess, parseInt(si.main.getTime() / 1000, 10),
        "Startup tracking pref should be set after a delay at the end of startup");
     finish();
   }

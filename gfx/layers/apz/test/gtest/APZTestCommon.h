@@ -94,6 +94,7 @@ public:
   MOCK_METHOD0(NotifyFlushComplete, void());
   MOCK_METHOD1(NotifyAsyncScrollbarDragRejected, void(const FrameMetrics::ViewID&));
   MOCK_METHOD1(NotifyAutoscrollHandledByAPZ, void(const FrameMetrics::ViewID&));
+  MOCK_METHOD1(CancelAutoscroll, void(const ScrollableLayerGuid&));
 };
 
 class MockContentControllerDelayed : public MockContentController {

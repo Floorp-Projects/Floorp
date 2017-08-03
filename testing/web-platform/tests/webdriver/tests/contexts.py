@@ -59,21 +59,3 @@ def test_window_resize_by_script(session):
         assert size2 == (800, 900)
     assert size2 == {"width": 200, "height": 100}
 """
-
-def test_window_position_types(http, session):
-    if not window_position_supported(session):
-        pytest.skip()
-
-    with http.get("/session/%s/window/position" % session.session_id) as resp:
-        assert resp.status == 200
-        body = json.load(resp)
-    assert "value" in body
-    assert "x" in body["value"]
-    assert "y" in body["value"]
-    assert isinstance(body["value"]["x"], int)
-    assert isinstance(body["value"]["y"], int)
-
-    pos = session.window.position
-    assert isinstance(pos, tuple)
-    assert isinstance(pos[0], int)
-    assert isinstance(pos[1], int)
