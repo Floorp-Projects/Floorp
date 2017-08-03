@@ -9,6 +9,15 @@
 namespace mozilla {
 namespace layers {
 
+WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager)
+  : mWRManager(aWRManager)
+{
+}
+
+WebRenderUserData::~WebRenderUserData()
+{
+}
+
 WebRenderBridgeChild*
 WebRenderUserData::WrBridge() const
 {
