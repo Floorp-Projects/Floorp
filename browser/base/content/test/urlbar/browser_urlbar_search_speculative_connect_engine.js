@@ -7,7 +7,6 @@
 // This test ensures that we setup a speculative network connection to
 // current search engine if the first result is 'searchengine'.
 
-let {HttpServer} = Cu.import("resource://testing-common/httpd.js", {});
 let gHttpServer = null;
 let gScheme = "http";
 let gHost = "localhost"; // 'localhost' by default.
@@ -15,21 +14,11 @@ let gPort = 20709; // the port number must be identical to what we said in searc
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine2.xml";
 
 add_task(async function setup() {
-  if (!gHttpServer) {
-    gHttpServer = new HttpServer();
-    try {
-      gHttpServer.start(gPort);
-      gPort = gHttpServer.identity.primaryPort;
-      gHttpServer.identity.setPrimary(gScheme, gHost, gPort);
-    } catch (ex) {
-      info("We can't launch our http server successfully.")
-    }
-  }
-  is(gHttpServer.identity.has(gScheme, gHost, gPort), true, "make sure we have this domain listed");
+  gHttpServer = runHttpServer(gScheme, gHost, gPort);
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.autoFill", true],
-          // Turn off speculative connect to the search engine.
+          // Make sure search suggestion for location bar is enabled
           ["browser.search.suggest.enabled", true],
           ["browser.urlbar.suggest.searches", true],
           ["browser.urlbar.speculativeConnect.enabled", true],
