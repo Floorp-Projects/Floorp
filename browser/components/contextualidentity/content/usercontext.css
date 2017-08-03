@@ -100,10 +100,13 @@
   -moz-box-align: center;
 }
 
-.tabbrowser-tab[usercontextid] {
-  background-image: linear-gradient(to right, transparent 20%, var(--identity-tab-color) 30%, var(--identity-tab-color) 70%, transparent 80%);
-  background-size: auto 2px;
-  background-repeat: no-repeat;
+.tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-bottom-line {
+  background: linear-gradient(to right, transparent 10%, var(--identity-tab-color) 10%, var(--identity-tab-color) 90%, transparent 90%);
+  height: 2px;
+}
+
+.tabbrowser-tab[pinned][usercontextid] > .tab-stack > .tab-background > .tab-bottom-line {
+  background: linear-gradient(to right, transparent 30%, var(--identity-tab-color) 30%, var(--identity-tab-color) 70%, transparent 70%);
 }
 
 .userContext-icon,
