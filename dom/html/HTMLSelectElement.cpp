@@ -1333,6 +1333,11 @@ HTMLSelectElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       UpdateValueMissingValidityState();
       UpdateBarredFromConstraintValidation();
     } else if (aName == nsGkAtoms::required) {
+      // This *has* to be called *before* UpdateValueMissingValidityState
+      // because UpdateValueMissingValidityState depends on our required
+      // state.
+      UpdateRequiredState(!!aValue, aNotify);
+
       UpdateValueMissingValidityState();
     } else if (aName == nsGkAtoms::autocomplete) {
       // Clear the cached @autocomplete attribute and autocompleteInfo state.
@@ -1528,12 +1533,6 @@ HTMLSelectElement::IntrinsicState() const
                         !mCanShowInvalidUI)))) {
       state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
-  }
-
-  if (Required()) {
-    state |= NS_EVENT_STATE_REQUIRED;
-  } else {
-    state |= NS_EVENT_STATE_OPTIONAL;
   }
 
   return state;
