@@ -280,14 +280,6 @@ GetContentWindow(nsIContent* aContent)
   return nullptr;
 }
 
-bool nsFocusManager::IsFocused(nsIContent* aContent)
-{
-  if (!aContent || !mFocusedContent) {
-    return false;
-  }
-  return aContent == mFocusedContent.get();
-}
-
 // get the current window for the given content node
 static nsPIDOMWindowOuter*
 GetCurrentWindow(nsIContent* aContent)
