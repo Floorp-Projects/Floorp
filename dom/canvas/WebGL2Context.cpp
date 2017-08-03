@@ -138,7 +138,7 @@ WebGLContext::InitWebGL2(FailureReason* const out_failReason)
 
     ////
 
-    if (missingList.size()) {
+    if (!missingList.empty()) {
         nsAutoCString exts;
         for (auto itr = missingList.begin(); itr != missingList.end(); ++itr) {
             exts.AppendLiteral("\n  ");
