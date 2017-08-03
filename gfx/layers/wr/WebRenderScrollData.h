@@ -19,6 +19,8 @@
 #include "mozilla/Maybe.h"
 #include "nsTArrayForwardDeclare.h"
 
+class nsDisplayItem;
+
 namespace mozilla {
 
 struct ActiveScrolledRoot;

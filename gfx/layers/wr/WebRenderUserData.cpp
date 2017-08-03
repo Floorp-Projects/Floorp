@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebRenderUserData.h"
+
+#include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderMessages.h"
 #include "nsDisplayListInvalidation.h"
 
 namespace mozilla {
@@ -100,8 +105,8 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
                                                       const StackingContextHelper& aSc,
                                                       const LayerRect& aBounds,
                                                       const LayerRect& aSCBounds,
-                                                      const Matrix4x4& aSCTransform,
-                                                      const MaybeIntSize& aScaleToSize,
+                                                      const gfx::Matrix4x4& aSCTransform,
+                                                      const gfx::MaybeIntSize& aScaleToSize,
                                                       const wr::ImageRendering& aFilter,
                                                       const wr::MixBlendMode& aMixBlendMode)
 {
