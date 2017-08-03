@@ -12,10 +12,6 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "Units.h"
 
-class nsDisplayBuilder;
-class nsDisplayItem;
-class nsDisplayList;
-
 namespace mozilla {
 namespace layers {
 
@@ -49,10 +45,8 @@ public:
   // The constructor for layers-free mode.
   StackingContextHelper(const StackingContextHelper& aParentSC,
                         wr::DisplayListBuilder& aBuilder,
-                        nsDisplayListBuilder* aDisplayListBuilder,
-                        nsDisplayItem* aItem,
-                        nsDisplayList* aDisplayList,
-                        gfx::Matrix4x4Typed<LayerPixel, LayerPixel>* aBoundTransform,
+                        LayerRect aBoundForSC,
+                        LayerPoint aOrigin,
                         uint64_t aAnimationsId,
                         float* aOpacityPtr,
                         gfx::Matrix4x4* aTransformPtr,
