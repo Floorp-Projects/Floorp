@@ -175,7 +175,7 @@ Internal API
 
 .. code-block:: js
 
-  Services.telemetry.snapshotBuiltinEvents(dataset, clear);
+  Services.telemetry.snapshotEvents(dataset, clear);
   Services.telemetry.clearEvents();
 
 These functions are only supposed to be used by Telemetry internally or in tests.
@@ -186,3 +186,4 @@ Version History
 - Firefox 52: Initial event support (`bug 1302663 <https://bugzilla.mozilla.org/show_bug.cgi?id=1302663>`_).
 - Firefox 53: Event recording disabled by default (`bug 1329139 <https://bugzilla.mozilla.org/show_bug.cgi?id=1329139>`_).
 - Firefox 54: Added child process events (`bug 1313326 <https://bugzilla.mozilla.org/show_bug.cgi?id=1313326>`_).
+- Firefox 56: Added support for recording new probes from add-ons (`bug 1302681 <bug https://bugzilla.mozilla.org/show_bug.cgi?id=1302681>`_).
