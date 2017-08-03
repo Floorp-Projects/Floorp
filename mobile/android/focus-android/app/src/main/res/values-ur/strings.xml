@@ -9,6 +9,7 @@
   <string name="menu_share">شیئر کریں…</string>
   <string name="menu_open_with_default_browser">۔%1$s کے ساتھ کھولِں</string>
   <string name="menu_open_with_a_browser">کے ساتھ کھولیں…</string>
+  <string name="menu_add_to_home_screen">ابتدائی اسکرین پر اظافہ کریں</string>
   <string name="menu_settings">سیٹنگیں</string>
   <string name="menu_about">کے بارے میں</string>
   <string name="menu_help">مدد</string>
@@ -99,4 +100,7 @@
   <string name="firstrun_skip_button">چھوڈیں</string>
   <string name="firstrun_next_button">آگے</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">ابتدائی اسکرین پر اظافہ کریں</string>
+  <string name="dialog_addtohomescreen_action_add">اظافہ کریں</string>
+  <string name="dialog_addtohomescreen_action_cancel">منسوخ کریں</string>
 </resources>

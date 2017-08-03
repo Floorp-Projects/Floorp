@@ -9,6 +9,7 @@
   <string name="menu_share">Paylaş…</string>
   <string name="menu_open_with_default_browser">%1$s ilə aç</string>
   <string name="menu_open_with_a_browser">Bununla aç…</string>
+  <string name="menu_add_to_home_screen">Ana ekrana əlavə et</string>
   <string name="menu_settings">Tənzimləmələr</string>
   <string name="menu_about">Haqqında</string>
   <string name="menu_help">Kömək</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Bununla paylaş:</string>
   <string name="notification_erase_text">Səyahət keçmişini poz</string>
   <string name="notification_action_open">Aç</string>
+  <string name="notification_action_erase_and_open">Poz və Aç</string>
   <string name="shortcut_erase_short_label">Poz</string>
   <string name="shortcut_erase_long_label">Səyahət keçmişini poz</string>
   <string name="text_selection_search_action">Məxfi Axtar</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Digər məzmun izləyicilərini əngəllə</string>
   <string name="preference_privacy_block_content_summary">Bəzi video və saytları işlənməz hala gətirə bilər</string>
   <string name="preference_privacy_secure_mode">Görünməzlik</string>
+  <string name="preference_privacy_stealth_summary">Tətbiqlər arası keçərkən saytları gizlət</string>
   <string name="preference_category_performance">Məhsuldarlıq</string>
   <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
   <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Keç</string>
   <string name="firstrun_next_button">Sonrakı</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Ana ekrana əlavə et</string>
+  <string name="dialog_addtohomescreen_action_add">Əlavə et</string>
+  <string name="dialog_addtohomescreen_action_cancel">Ləğv et</string>
 </resources>
