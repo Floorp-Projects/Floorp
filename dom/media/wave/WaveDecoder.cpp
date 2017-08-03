@@ -12,7 +12,7 @@
 namespace mozilla {
 
 ChannelMediaDecoder*
-WaveDecoder::Clone(MediaDecoderInit& aInit)
+WaveDecoder::CloneImpl(MediaDecoderInit& aInit)
 {
   return new WaveDecoder(aInit);
 }
