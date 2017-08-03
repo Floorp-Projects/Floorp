@@ -652,7 +652,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
         ("  OnChangeFocusInternal(), an "
          "IMEContentObserver instance is created for plugin and trying to "
          "flush its pending notifications..."));
-      sActiveIMEContentObserver->TryToFlushPendingNotifications();
+      sActiveIMEContentObserver->TryToFlushPendingNotifications(false);
     }
   }
 
@@ -827,7 +827,7 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("  OnFocusInEditor(), new IMEContentObserver is "
        "created, trying to flush pending notifications..."));
-    sActiveIMEContentObserver->TryToFlushPendingNotifications();
+    sActiveIMEContentObserver->TryToFlushPendingNotifications(false);
   }
 }
 
