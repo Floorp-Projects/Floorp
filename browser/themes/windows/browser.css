@@ -9,13 +9,20 @@
 @namespace svg url("http://www.w3.org/2000/svg");
 
 %include ../shared/browser.inc
-%include windowsShared.inc
 %define toolbarShadowColor hsla(209,67%,12%,0.35)
 
 %include ../shared/browser.inc.css
 
 :root {
   --titlebar-text-color: currentColor;
+
+  --tabs-border: threedshadow;
+
+  --toolbar-non-lwt-bgcolor: -moz-dialog;
+  --toolbar-non-lwt-textcolor: -moz-dialogtext;
+  --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
+  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
+  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
 
@@ -60,8 +67,21 @@
 
 @media (-moz-windows-default-theme) {
   :root {
+    --tabs-border: rgba(0,0,0,.3);
+
+    --toolbar-non-lwt-bgcolor: #f9f9fa;
+    --toolbar-non-lwt-textcolor: #0c0c0d;
+    --toolbar-non-lwt-bgimage: none;
+
     --panel-separator-color: hsla(210,4%,10%,.14);
   }
+}
+
+:root:-moz-lwtheme {
+  --tabs-border: rgba(0,0,0,.3);
+
+  --toolbar-bgcolor: rgba(255,255,255,.4);
+  --toolbar-bgimage: none;
 }
 
 %ifndef MOZ_PHOTON_THEME
@@ -136,9 +156,14 @@ toolbar[brighttext] {
   border-bottom-color: rgba(0,0,0,.3);
 }
 
+:root[customizing] #navigator-toolbox::after {
+  display: none;
+}
+
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+  background-color: var(--toolbar-bgcolor);
+  background-image: var(--toolbar-bgimage);
   background-clip: padding-box;
-  background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
 }
 
 %ifndef MOZ_PHOTON_THEME
@@ -152,9 +177,6 @@ toolbar[brighttext] {
   }
 }
 %endif
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme) {
-  background-color: -moz-Dialog;
-}
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
   overflow: -moz-hidden-unscrollable;
@@ -258,31 +280,6 @@ toolbar[brighttext] {
     overflow: -moz-hidden-unscrollable;
   }
 
-  /**
-   * When the tabstrip is overflowed, pinned tab separators get position: absolute,
-   * which makes the pinned tab separators leak over the nav-bar highlight. Forcing
-   * the element to snap to the bottom of the client rect works around the issue.
-   */
-  #main-window[tabsintitlebar] #tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned]::before {
-    bottom: 0px;
-  }
-
-  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) #TabsToolbar .toolbarbutton-1 {
-    position: relative;
-    z-index: 1;
-  }
-
-  /**
-   * With the tabbrowser-tabs element z-index'd above the nav-bar, we now get the
-   * scrollbox button borders leaking over the nav-bar highlight. This transparent bottom
-   * border forces the scrollbox button borders to terminate a pixel early, working
-   * around the issue.
-   */
-  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-up,
-  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-down {
-    border-bottom: 1px solid transparent;
-  }
-
   #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
     /* Render a window top border: */
     background-image: linear-gradient(to bottom,
@@ -299,16 +296,13 @@ toolbar[brighttext] {
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
-  margin-top: calc(-1 * var(--navbar-tab-toolbar-highlight-overlap));
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
 }
 
 #nav-bar {
-  border-top: 1px solid @toolbarShadowColor@ !important;
-  box-shadow: 0 1px 0 @toolbarHighlight@ inset;
+  border-top: 1px solid var(--tabs-border) !important;
 }
 @media (-moz-windows-compositor: 0) {
   #TabsToolbar[collapsed="true"] + #nav-bar {
@@ -1394,31 +1388,6 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
 }
 
 %include ../shared/tabs.inc.css
-
-/* Remove border between tab strip and navigation toolbar on Windows 10+ */
-@media not all and (-moz-os-version: windows-win7) {
-  @media not all and (-moz-os-version: windows-win8) {
-    @media (-moz-windows-default-theme) {
-      .tab-background-end[selected=true]::after,
-      .tab-background-start[selected=true]::after {
-        content: none;
-      }
-
-      #TabsToolbar {
-        --tab-stroke-background-size: 0 0;
-      }
-
-      :root {
-        --tab-toolbar-navbar-overlap: 0px;
-      }
-
-      #nav-bar {
-        border-top-style: none !important;
-        box-shadow: none;
-      }
-    }
-  }
-}
 
 /* Invert the unhovered close tab icons on bright-text tabs */
 @media not all and (min-resolution: 1.1dppx) {
