@@ -31,8 +31,11 @@ add_task(async function() {
   is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
     "Search input should be focused when visiting preferences");
 
-  searchInput.value = "Create Account";
-  searchInput.doCommand();
+  let query = "Create Account";
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
 
   let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
   for (let i = 0; i < mainPrefTag.childElementCount; i++) {
@@ -51,8 +54,11 @@ add_task(async function() {
 
   // Performs search.
   searchInput.focus();
-  searchInput.value = "Forget this Email";
-  searchInput.doCommand();
+  query = "Forget this Email";
+  searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
 
   let noResultsEl = gBrowser.contentDocument.querySelector(".no-results-message");
   is_element_visible(noResultsEl, "Should be reporting no results");
