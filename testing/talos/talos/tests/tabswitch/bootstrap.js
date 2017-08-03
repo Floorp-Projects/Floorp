@@ -24,7 +24,7 @@ var windowListener = {
     aboutNewTabService.newTabURL = "about:blank";
 
     // Wait for the window to finish loading
-    let window = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal || Ci.nsIDOMWindow);
+    let window = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
     let cb = function() {
       window.removeEventListener("load", cb);
       loadIntoWindow(window);
@@ -504,7 +504,7 @@ function shutdown(aData, aReason) {
 function handleFile(win, file) {
 
   let localFile = Cc["@mozilla.org/file/local;1"]
-    .createInstance(Ci.nsILocalFile);
+    .createInstance(Ci.nsIFile);
   localFile.initWithPath(file);
   let localURI = Services.io.newFileURI(localFile);
   let req = new win.XMLHttpRequest();
