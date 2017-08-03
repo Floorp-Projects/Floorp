@@ -9,7 +9,6 @@
 
 #include <time.h>
 #include "gtest/MozGtestFriend.h"
-#include "nsIScriptableDateFormat.h"
 #include "nsStringGlue.h"
 #include "prtime.h"
 #ifdef ENABLE_INTL_API
@@ -17,6 +16,25 @@
 #endif
 
 namespace mozilla {
+
+enum nsDateFormatSelector : long
+{
+  // Do not change the order of the values below (see bug 1225696).
+  kDateFormatNone = 0,            // do not include the date  in the format string
+  kDateFormatLong,                // provides the long date format for the given locale
+  kDateFormatShort,               // provides the short date format for the given locale
+  kDateFormatYearMonth,           // formats using only the year and month
+  kDateFormatWeekday,             // week day (e.g. Mon, Tue)
+  kDateFormatYearMonthLong,       // long version of kDateFormatYearMonth
+  kDateFormatMonthLong            // long format of month name only
+};
+
+enum nsTimeFormatSelector : long
+{
+  kTimeFormatNone = 0,            // don't include the time in the format string
+  kTimeFormatSeconds,             // provides the time format with seconds in the  given locale 
+  kTimeFormatNoSeconds            // provides the time format without seconds in the given locale 
+};
 
 class DateTimeFormat {
 public:

@@ -725,7 +725,8 @@ nsFileView::GetCellText(int32_t aRow, nsITreeColumn* aCol,
     curFile->GetLastModifiedTime(&lastModTime);
     // XXX FormatPRTime could take an nsAString&
     nsAutoString temp;
-    mozilla::DateTimeFormat::FormatPRTime(kDateFormatShort, kTimeFormatSeconds,
+    mozilla::DateTimeFormat::FormatPRTime(mozilla::kDateFormatShort,
+                                          mozilla::kTimeFormatSeconds,
                                           lastModTime * 1000, temp);
     aCellText = temp;
   } else {
