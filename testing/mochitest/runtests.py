@@ -15,6 +15,7 @@ sys.path.insert(0, SCRIPT_DIR)
 from argparse import Namespace
 from collections import defaultdict
 from contextlib import closing
+import copy
 import ctypes
 import glob
 import json
@@ -40,7 +41,7 @@ import zipfile
 import bisection
 
 from ctypes.util import find_library
-from datetime import datetime
+from datetime import datetime, timedelta
 from manifestparser import TestManifest
 from manifestparser.filters import (
     chunk_by_dir,
@@ -969,7 +970,7 @@ class MochitestDesktop(object):
                 self.urlOpts.append("runUntilFailure=1")
             if options.repeat:
                 self.urlOpts.append("repeat=%d" % options.repeat)
-            if len(options.test_paths) == 1 and options.repeat > 0 and os.path.isfile(
+            if len(options.test_paths) == 1 and os.path.isfile(
                 os.path.join(
                     self.oldcwd,
                     os.path.dirname(__file__),
@@ -1059,7 +1060,7 @@ class MochitestDesktop(object):
         testURL = "/".join([testHost, self.TEST_PATH])
 
         if len(options.test_paths) == 1:
-            if options.repeat > 0 and os.path.isfile(
+            if os.path.isfile(
                 os.path.join(
                     self.oldcwd,
                     os.path.dirname(__file__),
@@ -2319,6 +2320,111 @@ toolbar#nav-bar {
                 httpsTests.append(test)
         return {'http': httpTests, 'https': httpsTests}
 
+    def verifyTests(self, options):
+        """
+        Support --verify mode: Run test(s) many times in a variety of
+        configurations/environments in an effort to find intermittent
+        failures.
+        """
+
+        # Number of times to repeat test(s) when running with --repeat
+        VERIFY_REPEAT = 20
+        # Number of times to repeat test(s) when running test in
+        VERIFY_REPEAT_SINGLE_BROWSER = 10
+
+        def step1():
+            stepOptions = copy.deepcopy(options)
+            stepOptions.repeat = VERIFY_REPEAT
+            stepOptions.keep_open = False
+            result = self.runTests(stepOptions)
+            self.message_logger.finish()
+            return result
+
+        def step2():
+            stepOptions = copy.deepcopy(options)
+            stepOptions.repeat = 0
+            stepOptions.keep_open = False
+            for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
+                result = self.runTests(stepOptions)
+                self.message_logger.finish()
+                if result != 0:
+                    break
+            return result
+
+        def step3():
+            stepOptions = copy.deepcopy(options)
+            stepOptions.repeat = VERIFY_REPEAT
+            stepOptions.keep_open = False
+            stepOptions.environment.append("MOZ_CHAOSMODE=")
+            result = self.runTests(stepOptions)
+            self.message_logger.finish()
+            return result
+
+        def step4():
+            stepOptions = copy.deepcopy(options)
+            stepOptions.repeat = 0
+            stepOptions.keep_open = False
+            stepOptions.environment.append("MOZ_CHAOSMODE=")
+            for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
+                result = self.runTests(stepOptions)
+                self.message_logger.finish()
+                if result != 0:
+                    break
+            return result
+
+        steps = [
+            ("1. Run each test %d times in one browser." % VERIFY_REPEAT,
+             step1),
+            ("2. Run each test %d times in a new browser each time." %
+             VERIFY_REPEAT_SINGLE_BROWSER,
+             step2),
+            ("3. Run each test %d times in one browser, in chaos mode." %
+             VERIFY_REPEAT,
+             step3),
+            ("4. Run each test %d times in a new browser each time, "
+             "in chaos mode." % VERIFY_REPEAT_SINGLE_BROWSER,
+             step4),
+        ]
+
+        stepResults = {}
+        for (descr, step) in steps:
+            stepResults[descr] = "not run / incomplete"
+
+        startTime = datetime.now()
+        maxTime = timedelta(seconds=options.verify_max_time)
+        finalResult = "PASSED"
+        for (descr, step) in steps:
+            if (datetime.now() - startTime) > maxTime:
+                self.log.info("::: Test verification is taking too long: Giving up!")
+                self.log.info("::: So far, all checks passed, but not all checks were run.")
+                break
+            self.log.info(':::')
+            self.log.info('::: Running test verification step "%s"...' % descr)
+            self.log.info(':::')
+            result = step()
+            if result != 0:
+                stepResults[descr] = "FAIL"
+                finalResult = "FAILED!"
+                break
+            stepResults[descr] = "Pass"
+
+        self.logPreamble([])
+
+        self.log.info(':::')
+        self.log.info('::: Test verification summary for:')
+        self.log.info(':::')
+        tests = self.getActiveTests(options)
+        for test in tests:
+            self.log.info('::: '+test['path'])
+        self.log.info(':::')
+        for descr in sorted(stepResults.keys()):
+            self.log.info('::: %s : %s' % (descr, stepResults[descr]))
+        self.log.info(':::')
+        self.log.info('::: Test verification %s' % finalResult)
+        self.log.info(':::')
+
+        return result
+
     def runTests(self, options):
         """ Prepare, configure, run tests and cleanup """
 
@@ -2812,7 +2918,10 @@ def run_test_harness(parser, options):
     if options.flavor in ('plain', 'browser', 'chrome'):
         options.runByDir = True
 
-    result = runner.runTests(options)
+    if options.verify:
+        result = runner.verifyTests(options)
+    else:
+        result = runner.runTests(options)
 
     if runner.mozLogs:
         with zipfile.ZipFile("{}/mozLogs.zip".format(runner.browserEnv["MOZ_UPLOAD_DIR"]),

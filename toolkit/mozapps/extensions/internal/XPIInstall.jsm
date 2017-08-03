@@ -49,8 +49,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils",
                                   "resource://gre/modules/ZipUtils.jsm");
 
@@ -1084,8 +1082,8 @@ function getSignedStatus(aRv, aCert, aAddonID) {
       if (expectedCommonName && expectedCommonName != aCert.commonName)
         return AddonManager.SIGNEDSTATE_BROKEN;
 
-      let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
-      if (hotfixID && hotfixID == aAddonID && Preferences.get(PREF_EM_CERT_CHECKATTRIBUTES, false)) {
+      let hotfixID = Services.prefs.getStringPref(PREF_EM_HOTFIX_ID, undefined);
+      if (hotfixID && hotfixID == aAddonID && Services.prefs.getBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, false)) {
         // The hotfix add-on has some more rigorous certificate checks
         try {
           CertUtils.validateCert(aCert,
@@ -1134,7 +1132,7 @@ function shouldVerifySignedState(aAddon) {
     return false;
 
   // Hotfixes should always have their signature checked
-  let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
+  let hotfixID = Services.prefs.getStringPref(PREF_EM_HOTFIX_ID, undefined);
   if (hotfixID && aAddon.id == hotfixID)
     return true;
 
@@ -1163,7 +1161,7 @@ function verifyZipSignedState(aFile, aAddon) {
     });
 
   let root = Ci.nsIX509CertDB.AddonsPublicRoot;
-  if (!AppConstants.MOZ_REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
+  if (!AppConstants.MOZ_REQUIRE_SIGNING && Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false))
     root = Ci.nsIX509CertDB.AddonsStageRoot;
 
   return new Promise(resolve => {
@@ -1205,7 +1203,7 @@ function verifyDirSignedState(aDir, aAddon) {
     });
 
   let root = Ci.nsIX509CertDB.AddonsPublicRoot;
-  if (!AppConstants.MOZ_REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
+  if (!AppConstants.MOZ_REQUIRE_SIGNING && Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false))
     root = Ci.nsIX509CertDB.AddonsStageRoot;
 
   return new Promise(resolve => {
@@ -1976,7 +1974,7 @@ class AddonInstall {
     let installedUnpacked = 0;
 
     // First stage the file regardless of whether restarting is necessary
-    if (this.addon.unpack || Preferences.get(PREF_XPI_UNPACK, false)) {
+    if (this.addon.unpack || Services.prefs.getBoolPref(PREF_XPI_UNPACK, false)) {
       logger.debug("Addon " + this.addon.id + " will be installed as " +
                    "an unpacked directory");
       stagedAddon.leafName = this.addon.id;
@@ -2314,7 +2312,7 @@ this.DownloadAddonInstall = class extends AddonInstall {
                    createInstance(Ci.nsIStreamListenerTee);
     listener.init(this, this.stream);
     try {
-      let requireBuiltIn = Preferences.get(PREF_INSTALL_REQUIREBUILTINCERTS, true);
+      let requireBuiltIn = Services.prefs.getBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
       this.badCertHandler = new CertUtils.BadCertHandler(!requireBuiltIn);
 
       this.channel = NetUtil.newChannel({
@@ -2460,7 +2458,7 @@ this.DownloadAddonInstall = class extends AddonInstall {
         if (!this.hash && (aRequest instanceof Ci.nsIChannel)) {
           try {
             CertUtils.checkCert(aRequest,
-                                !Preferences.get(PREF_INSTALL_REQUIREBUILTINCERTS, true));
+                                !Services.prefs.getBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true));
           } catch (e) {
             this.downloadFailed(AddonManager.ERROR_NETWORK_FAILURE, e);
             return;

@@ -765,7 +765,7 @@ StackTrace::Get(Thread* aT)
     // frame pointer, and GetStackTop() for the stack end.
     CONTEXT context;
     RtlCaptureContext(&context);
-    void* fp = reinterpret_cast<void*>(context.Ebp);
+    void** fp = reinterpret_cast<void**>(context.Ebp);
 
     // Offset 0x18 from the FS segment register gives a pointer to the thread
     // information block for the current thread.
@@ -784,9 +784,8 @@ StackTrace::Get(Thread* aT)
 #   error "unknown compiler"
 #endif
     void* stackEnd = static_cast<void*>(pTib->StackBase);
-    bool ok = FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0,
-                                    MaxFrames, &tmp,
-                                    reinterpret_cast<void**>(fp), stackEnd);
+    FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, MaxFrames,
+                          &tmp, fp, stackEnd);
 #elif defined(XP_MACOSX)
     // This avoids MozStackWalk(), which has become unusably slow on Mac due to
     // changes in libunwind.
@@ -794,7 +793,7 @@ StackTrace::Get(Thread* aT)
     // This code is cribbed from the Gecko Profiler, which also uses
     // FramePointerStackWalk() on Mac: Registers::SyncPopulate() for the frame
     // pointer, and GetStackTop() for the stack end.
-    void* fp;
+    void** fp;
     asm (
         // Dereference %rbp to get previous %rbp
         "movq (%%rbp), %0\n\t"
@@ -802,21 +801,16 @@ StackTrace::Get(Thread* aT)
         "=r"(fp)
     );
     void* stackEnd = pthread_get_stackaddr_np(pthread_self());
-    bool ok = FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0,
-                                    MaxFrames, &tmp,
-                                    reinterpret_cast<void**>(fp), stackEnd);
+    FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, MaxFrames,
+                          &tmp, fp, stackEnd);
 #else
 #if defined(XP_WIN) && defined(_M_X64)
     int skipFrames = 1;
 #else
     int skipFrames = 2;
 #endif
-    bool ok = MozStackWalk(StackWalkCallback, skipFrames, MaxFrames, &tmp, 0,
-                           nullptr);
+    MozStackWalk(StackWalkCallback, skipFrames, MaxFrames, &tmp);
 #endif
-    if (!ok) {
-      tmp.mLength = 0; // re-zero in case the stack walk function changed it
-    }
   }
 
   StackTraceTable::AddPtr p = gStackTraceTable->lookupForAdd(&tmp);
@@ -1631,7 +1625,7 @@ Init(const malloc_table_t* aMallocTable)
   // just call MozStackWalk, because that calls StackWalkInitCriticalAddress().
   // See the comment above StackWalkInitCriticalAddress() for more details.
   (void)MozStackWalk(NopStackWalkCallback, /* skipFrames */ 0,
-                     /* maxFrames */ 1, nullptr, 0, nullptr);
+                     /* maxFrames */ 1, nullptr);
 #endif
 
   gStateLock = InfallibleAllocPolicy::new_<Mutex>();

@@ -78,9 +78,14 @@ add_task(async function test_pageshow() {
   browser.loadURI(URL2);
   await promiseBrowserLoaded(browser);
 
+  // Wait until shistory changes.
+  let pageShowPromise = ContentTask.spawn(browser, null, async () => {
+    return ContentTaskUtils.waitForEvent(this, "pageshow", true);
+  });
+
   // Go back to the previous url which is loaded from the bfcache.
   browser.goBack();
-  await promiseContentMessage(browser, "ss-test:onFrameTreeCollected");
+  await pageShowPromise;
   is(browser.currentURI.spec, URL, "correct url after going back");
 
   // Check that loading from bfcache did invalidate shistory.

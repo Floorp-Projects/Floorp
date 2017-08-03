@@ -19,6 +19,10 @@ this.ScrollPosition = Object.freeze({
     return ScrollPositionInternal.collect(frame);
   },
 
+  restore(frame, value) {
+    ScrollPositionInternal.restore(frame, value);
+  },
+
   restoreTree(root, data) {
     ScrollPositionInternal.restoreTree(root, data);
   }

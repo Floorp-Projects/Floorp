@@ -74,6 +74,7 @@ const startupPhases = {
       "resource://gre/modules/NewTabUtils.jsm",
       "resource://gre/modules/PageThumbs.jsm",
       "resource://gre/modules/Promise.jsm", // imported by devtools during _delayedStartup
+      "resource://gre/modules/Preferences.jsm",
     ]),
     services: new Set([
       "@mozilla.org/browser/search-service;1",

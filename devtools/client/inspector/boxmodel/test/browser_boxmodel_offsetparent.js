@@ -16,7 +16,7 @@ const TEST_URI = `
   <div id="fixed" style="position: fixed"></div>
 `;
 
-const OFFSET_PARENT_SELECTOR = ".property-value-container .objectBox-node";
+const OFFSET_PARENT_SELECTOR = ".computed-property-value-container .objectBox-node";
 
 const res1 = [
   {

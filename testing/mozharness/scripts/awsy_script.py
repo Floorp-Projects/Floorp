@@ -36,6 +36,18 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
          "dest": "e10s",
          "default": False,
          "help": "Run tests with multiple processes. (Desktop builds only)",
+         }],
+        [["--enable-stylo"],
+        {"action": "store_true",
+         "dest": "enable_stylo",
+         "default": False,
+         "help": "Run tests with Stylo enabled.",
+         }],
+        [["--single-stylo-traversal"],
+        {"action": "store_true",
+         "dest": "single_stylo_traversal",
+         "default": False,
+         "help": "Set STYLO_THREADS=1.",
          }]
     ] + testing_config_options + copy.deepcopy(blobupload_config_options) \
                                + copy.deepcopy(code_coverage_config_options)
@@ -158,6 +170,11 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
         test_file = os.path.join(self.awsy_libdir, 'test_memory_usage.py')
         cmd.append(test_file)
 
+        if self.config['enable_stylo']:
+            env['STYLO_FORCE_ENABLED'] = '1'
+            env['STYLO_THREADS'] = '4'
+            if self.config['single_stylo_traversal']:
+                env['STYLO_THREADS'] = '1'
         env['MOZ_UPLOAD_DIR'] = dirs['abs_blob_upload_dir']
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])

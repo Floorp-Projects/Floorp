@@ -316,7 +316,7 @@ def process_test262(test262Dir, test262OutDir, strictTests):
     explicitIncludes = {}
     explicitIncludes["intl402"] = ["testBuiltInObject.js"]
     explicitIncludes[os.path.join("built-ins", "DataView")] = ["byteConversionValues.js"]
-    explicitIncludes[os.path.join("built-ins", "Promise")] = ["PromiseHelper.js"]
+    explicitIncludes[os.path.join("built-ins", "Promise")] = ["promiseHelper.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArray")] = ["byteConversionValues.js",
         "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
@@ -329,7 +329,10 @@ def process_test262(test262Dir, test262OutDir, strictTests):
         relPath = os.path.relpath(dirPath, testDir)
         if relPath == ".":
             continue
-        os.makedirs(os.path.join(test262OutDir, relPath))
+
+        # Skip creating a "prs" directory if it already exists
+        if relPath != "prs" or not os.path.exists(os.path.join(test262OutDir, relPath)):
+            os.makedirs(os.path.join(test262OutDir, relPath))
 
         includeSet = set()
         includesMap[relPath] = includeSet
@@ -358,6 +361,60 @@ def process_test262(test262Dir, test262OutDir, strictTests):
         # Add shell.js and browers.js files for the current directory.
         writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localIncludesMap, relPath)
 
+def fetch_pr_files(outDir, inDir, prNumber):
+    import requests
+
+    prTestsOutDir = os.path.join(outDir, prNumber)
+    if os.path.isdir(prTestsOutDir):
+        print("Removing folder %s" % prTestsOutDir)
+        shutil.rmtree(prTestsOutDir)
+
+    # Reuses current Test262 clone's harness and tools folders only, the clone's test/
+    # folder can be discarded from here
+    shutil.rmtree(os.path.join(inDir, "test"))
+
+    prRequest = requests.get("https://api.github.com/repos/tc39/test262/pulls/%s" % prNumber)
+    prRequest.raise_for_status()
+
+    pr = prRequest.json()
+
+    if (pr["state"] != "open"):
+        # Closed PR, remove respective files from folder
+        print("PR %s is closed" % prNumber)
+    else:
+        files = requests.get("https://api.github.com/repos/tc39/test262/pulls/%s/files" % prNumber)
+        files.raise_for_status()
+
+        for item in files.json():
+            if not item["filename"].startswith("test/"):
+                continue
+
+            filename = item["filename"]
+            fileStatus = item["status"]
+
+            print("%s %s" % (fileStatus, filename))
+
+            # Do not add deleted files
+            if fileStatus == "removed":
+                continue
+
+            contents = requests.get(item["raw_url"])
+            contents.raise_for_status()
+
+            fileText = contents.text
+
+            # Prefix the PRs tests dir with test/ so files are processed as Test262 files
+            prsTestsDir = "test/prs/%s" % prNumber
+            filePathDirs = os.path.join(inDir, prsTestsDir, *filename.split("/")[1:-1])
+
+            if not os.path.isdir(filePathDirs):
+                os.makedirs(filePathDirs)
+
+            filenameInDir = os.path.join(inDir, prsTestsDir, *filename.split("/")[1:])
+
+            with io.open(filenameInDir, "wb") as output_file:
+                output_file.write(fileText.encode('utf8'))
+
 def update_test262(args):
     import subprocess
 
@@ -365,37 +422,55 @@ def update_test262(args):
     branch = args.branch
     revision = args.revision
     outDir = args.out
+    prNumber = args.pull
+
     if not os.path.isabs(outDir):
         outDir = os.path.join(os.getcwd(), outDir)
+
     strictTests = args.strict
-    localTestsOutDir = os.path.join(outDir, "local");
+    localTestsOutDir = os.path.join(outDir, "local")
+    prsTestsOutDir = os.path.join(outDir, "prs")
 
     # Download the requested branch in a temporary directory.
     with TemporaryDirectory() as inDir:
+        restoreLocalTestsDir = False
+        restorePrsTestsDir = False
+
         if revision == "HEAD":
             subprocess.check_call(["git", "clone", "--depth=1", "--branch=%s" % branch, url, inDir])
         else:
             subprocess.check_call(["git", "clone", "--single-branch", "--branch=%s" % branch, url, inDir])
             subprocess.check_call(["git", "-C", inDir, "reset", "--hard", revision])
 
-        # Stash test262/local. Currently the test262 repo does not have any
-        # top-level subdirectory named "local".
-        restoreLocalTestsDir = False
-        if os.path.isdir(localTestsOutDir):
-            shutil.move(localTestsOutDir, inDir)
-            restoreLocalTestsDir = True
+        # If a PR number is provided, fetches only the new and modified files from that PR.
+        # It also creates a new folder for that PR or replaces if it already exists, without
+        # updating the regular Test262 tests.
+        if prNumber:
+            fetch_pr_files(prsTestsOutDir, inDir, prNumber)
+        # Without a specific PR, follows through a regular copy.
+        else:
+            # Stash test262/local and test262/prs. Currently the Test262 repo does not have any
+            # top-level subdirectories named "local" or "prs".
+            # This prevents these folders from being removed during the update process.
+            if os.path.isdir(localTestsOutDir):
+                shutil.move(localTestsOutDir, inDir)
+                restoreLocalTestsDir = True
 
-        # Create the output directory from scratch.
-        if os.path.isdir(outDir):
-            shutil.rmtree(outDir)
-        os.makedirs(outDir)
+            if os.path.isdir(prsTestsOutDir):
+                shutil.move(prsTestsOutDir, inDir)
+                restorePrsTestsDir = True
 
-        # Copy license file.
-        shutil.copyfile(os.path.join(inDir, "LICENSE"), os.path.join(outDir, "LICENSE"))
+            # Create the output directory from scratch.
+            if os.path.isdir(outDir):
+                shutil.rmtree(outDir)
+            os.makedirs(outDir)
 
-        # Create the git info file.
-        with io.open(os.path.join(outDir, "GIT-INFO"), "wb") as info:
-            subprocess.check_call(["git", "-C", inDir, "log", "-1"], stdout=info)
+            # Copy license file.
+            shutil.copyfile(os.path.join(inDir, "LICENSE"), os.path.join(outDir, "LICENSE"))
+
+            # Create the git info file.
+            with io.open(os.path.join(outDir, "GIT-INFO"), "wb") as info:
+                subprocess.check_call(["git", "-C", inDir, "log", "-1"], stdout=info)
 
         # Copy the test files.
         process_test262(inDir, outDir, strictTests)
@@ -403,6 +478,10 @@ def update_test262(args):
         # Move test262/local back.
         if restoreLocalTestsDir:
             shutil.move(os.path.join(inDir, "local"), outDir)
+
+        # Restore test262/prs if necessary after a general Test262 update.
+        if restorePrsTestsDir:
+            shutil.move(os.path.join(inDir, "prs"), outDir)
 
 if __name__ == "__main__":
     import argparse
@@ -420,6 +499,8 @@ if __name__ == "__main__":
                         help="Git revision (default: %(default)s)")
     parser.add_argument("--out", default="test262",
                         help="Output directory. Any existing directory will be removed! (default: %(default)s)")
+    parser.add_argument("--pull", help="Import contents from a Pull Request specified by its number")
+    parser.add_argument("--local", help="Import new and modified contents from a local folder, a new folder will be created on local/branch_name")
     parser.add_argument("--strict", default=False, action="store_true",
                         help="Generate additional strict mode tests. Not enabled by default.")
     parser.set_defaults(func=update_test262)

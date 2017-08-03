@@ -1380,8 +1380,9 @@ pref("content.sink.pending_event_mode", 0);
 // Disable popups from plugins by default
 //   0 = openAllowed
 //   1 = openControlled
-//   2 = openAbused
-pref("privacy.popups.disable_from_plugins", 2);
+//   2 = openBlocked
+//   3 = openAbused
+pref("privacy.popups.disable_from_plugins", 3);
 
 // send "do not track" HTTP header, disabled by default
 pref("privacy.donottrackheader.enabled",    false);

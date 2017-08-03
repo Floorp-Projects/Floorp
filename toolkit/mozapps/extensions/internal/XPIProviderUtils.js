@@ -19,7 +19,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 /* globals AddonManagerPrivate*/
-Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
@@ -1094,7 +1093,7 @@ this.XPIDatabase = {
 
     let blockE10s = false;
 
-    Preferences.set(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
+    Services.prefs.setBoolPref(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
     for (let [, addon] of this.addonDB) {
       let active = (addon.visible && !addon.disabled && !addon.pendingUninstall);
 
@@ -1103,7 +1102,7 @@ this.XPIDatabase = {
         break;
       }
     }
-    Preferences.set(PREF_E10S_BLOCKED_BY_ADDONS, blockE10s);
+    Services.prefs.setBoolPref(PREF_E10S_BLOCKED_BY_ADDONS, blockE10s);
   },
 
   updateAddonsBlockingE10sMulti() {
@@ -1117,7 +1116,7 @@ this.XPIDatabase = {
         break;
       }
     }
-    Preferences.set(PREF_E10S_MULTI_BLOCKED_BY_ADDONS, blockMulti);
+    Services.prefs.setBoolPref(PREF_E10S_MULTI_BLOCKED_BY_ADDONS, blockMulti);
   },
 
   /**
@@ -1274,7 +1273,7 @@ this.XPIDatabaseReconcile = {
     if (isDetectedInstall && aNewAddon.foreignInstall) {
       // If the add-on is a foreign install and is in a scope where add-ons
       // that were dropped in should default to disabled then disable it
-      let disablingScopes = Preferences.get(PREF_EM_AUTO_DISABLED_SCOPES, 0);
+      let disablingScopes = Services.prefs.getIntPref(PREF_EM_AUTO_DISABLED_SCOPES, 0);
       if (aInstallLocation.scope & disablingScopes) {
         logger.warn("Disabling foreign installed add-on " + aNewAddon.id + " in "
             + aInstallLocation.name);

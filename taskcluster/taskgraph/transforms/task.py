@@ -446,6 +446,8 @@ GROUP_NAMES = {
     'tc-tt-c': 'Telemetry client marionette tests',
     'tc-tt-c-e10s': 'Telemetry client marionette tests with e10s',
     'tc-SY-e10s': 'Are we slim yet tests by TaskCluster with e10s',
+    'tc-SY-stylo-e10s': 'Are we slim yet tests by TaskCluster with e10s, stylo',
+    'tc-SY-stylo-seq-e10s': 'Are we slim yet tests by TaskCluster with e10s, stylo sequential',
     'tc-VP': 'VideoPuppeteer tests executed by TaskCluster',
     'tc-W': 'Web platform tests executed by TaskCluster',
     'tc-W-e10s': 'Web platform tests executed by TaskCluster with e10s',

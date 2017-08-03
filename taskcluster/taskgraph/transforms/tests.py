@@ -198,7 +198,7 @@ test_description_schema = Schema({
     # without e10s; if true, run with e10s; if 'both', run one task with and
     # one task without e10s.  E10s tasks have "-e10s" appended to the test name
     # and treeherder group.
-    Required('e10s', default='both'): optionally_keyed_by(
+    Required('e10s', default='true'): optionally_keyed_by(
         'test-platform', 'project',
         Any(bool, 'both')),
 
@@ -405,7 +405,7 @@ def set_defaults(config, tests):
         else:
             # all non-android tests want to run the bits that require node
             test['mozharness']['set-moz-node-path'] = True
-            test.setdefault('e10s', 'both')
+            test.setdefault('e10s', 'true')
 
         # software-gl-layers is only meaningful on linux unittests, where it defaults to True
         if test['test-platform'].startswith('linux') and test['suite'] != 'talos':
