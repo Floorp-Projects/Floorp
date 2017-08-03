@@ -35,12 +35,14 @@ class PBackgroundChild;
 // designated thread lives.
 //
 // Creation of PBackground is asynchronous. GetForCurrentThread() will return
-// null until the sequence is complete. GetOrCreateForCurrentThread() will start
-// the creation sequence and will call back via the
-// nsIIPCBackgroundChildCreateCallback interface when completed. Thereafter
-// (assuming success) GetForCurrentThread() will return the same actor every
-// time. SynchronouslyCreateForCurrentThread() will spin the event loop until
-// the BackgroundChild until the creation sequence is complete.
+// null until the sequence is complete.
+// GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback)
+// will start the creation sequence and will call back via the passed interface
+// when completed. Thereafter (assuming success) GetForCurrentThread() will
+// return the same actor every time. GetOrCreateForCurrentThread() is like
+// GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback)
+// but it will return the actor synchronously (it will spin the event loop
+// until the creation sequence is complete).
 //
 // CloseForCurrentThread() will close the current PBackground actor.  Subsequent
 // calls to GetForCurrentThread will return null.  CloseForCurrentThread() may
@@ -68,7 +70,7 @@ public:
 
   // See above.
   static PBackgroundChild*
-  SynchronouslyCreateForCurrentThread();
+  GetOrCreateForCurrentThread();
 
   // See above.
   static void
