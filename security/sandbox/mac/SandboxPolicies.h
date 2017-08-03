@@ -175,10 +175,10 @@ static const char contentSandboxRules[] = R"(
     (allow file-read*
            (home-regex (string-append "/Library/Preferences/" (regex-quote domain)))))
 
-  (allow ipc-posix-shm
-      (ipc-posix-name-regex "^/tmp/com.apple.csseed:")
-      (ipc-posix-name-regex "^CFPBS:")
-      (ipc-posix-name-regex "^AudioIO"))
+  (allow ipc-posix-shm-read-data ipc-posix-shm-write-data
+    (ipc-posix-name-regex "^CFPBS:"))
+  (allow ipc-posix-shm-read* ipc-posix-shm-write-data
+    (ipc-posix-name-regex "^AudioIO"))
 
   (allow signal (target self))
 
