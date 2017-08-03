@@ -132,6 +132,7 @@ HTMLEditor::HTMLEditor()
       Preferences::GetBool("editor.use_div_for_default_newlines", true)
       ? ParagraphSeparator::div : ParagraphSeparator::br)
 {
+  mIsHTMLEditorClass = true;
 }
 
 HTMLEditor::~HTMLEditor()

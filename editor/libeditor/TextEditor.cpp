@@ -78,18 +78,6 @@ TextEditor::TextEditor()
   GetDefaultEditorPrefs(mNewlineHandling, mCaretStyle);
 }
 
-HTMLEditor*
-TextEditor::AsHTMLEditor()
-{
-  return nullptr;
-}
-
-const HTMLEditor*
-TextEditor::AsHTMLEditor() const
-{
-  return nullptr;
-}
-
 TextEditor::~TextEditor()
 {
   // Remove event listeners. Note that if we had an HTML editor,
