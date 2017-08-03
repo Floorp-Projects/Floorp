@@ -8,9 +8,6 @@
 #include "nsIScriptableDateFormat.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
-#include "nsILocaleService.h"
-
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 class nsScriptableDateFormat final : public nsIScriptableDateFormat {
  public:
