@@ -192,8 +192,7 @@ static const char contentSandboxRules[] = R"(
       (global-name "com.apple.SystemConfiguration.configd")
       (global-name "com.apple.iconservices")
       (global-name "com.apple.cache_delete")
-      (global-name "com.apple.pluginkit.pkd")
-      (global-name "com.apple.bird"))
+      (global-name "com.apple.pluginkit.pkd"))
 
 ; bug 1376163
   (if (>= macosMinorVersion 13)
