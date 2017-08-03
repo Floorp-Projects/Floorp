@@ -22,7 +22,7 @@ interface nsIOpenURIInFrameParams : nsISupports
   readonly attribute jsval openerOriginAttributes;
 };
 
-[scriptable, uuid(9d17f3dd-672b-451e-afd2-b1115df780d5)]
+[scriptable, uuid(2a9bb880-5d73-40f3-8152-c60c8d137a14)]
 
 /**
  * The C++ source has access to the browser script source through
@@ -34,7 +34,7 @@ interface nsIOpenURIInFrameParams : nsISupports
 interface nsIBrowserDOMWindow : nsISupports
 {
   /**
-   * Values for openURI's aWhere parameter.
+   * Values for createContentWindow's and openURI's aWhere parameter.
    */
   /**
    * Do whatever the default is based on application state, user preferences,
@@ -64,7 +64,8 @@ interface nsIBrowserDOMWindow : nsISupports
   const short OPEN_SWITCHTAB     = 4;
 
   /**
-   * Values for openURI's aFlags parameter. This is a bitflags field.
+   * Values for createContentWindow's and openURI's aFlags parameter.
+   * This is a bitflags field.
    *
    * The 0x1 bit decides the behavior of OPEN_DEFAULTWINDOW, and the 0x4 bit
    * controls whether or not to set the window.opener property on the newly
@@ -75,31 +76,48 @@ interface nsIBrowserDOMWindow : nsISupports
    * the same way internally.
    */
   /**
-   * internal open new window
+   * Internal open new window.
    */
   const long OPEN_NEW           = 0x0;
   /**
-   * external link (load request from another application, xremote, etc).
+   * External link (load request from another application, xremote, etc).
    */
   const long OPEN_EXTERNAL      = 0x1;
 
   /**
-   * Don't set the window.opener property on the window which is being opened
+   * Don't set the window.opener property on the window which is being opened.
    */
   const long OPEN_NO_OPENER     = 0x4;
 
   /**
-   * Load a URI
+   * Create the content window for the given URI.
 
-   * @param aURI the URI to open. null is allowed.  If null is passed in, no
-   *             load will be done, though the window the load would have
-   *             happened in will be returned.
+   * @param aURI the URI to be opened in the window (can be null).
+   * @param aWhere see possible values described above.
+   * @param aOpener window requesting the creation (can be null).
+   * @param aFlags flags which control the behavior of the load. The
+   *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
+   *               aWhere == OPEN_DEFAULTWINDOW.
+   * @param aTriggeringPrincipal the principal that would trigger the potential
+   *        load of aURI.
+   * @return the window into which the URI would have been opened.
+  */
+  mozIDOMWindowProxy
+  createContentWindow(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
+                      in short aWhere, in long aFlags,
+                      in nsIPrincipal aTriggeringPrincipal);
+
+  /**
+   * Load a URI.
+
+   * @param aURI the URI to open. null is not allowed. To create the window
+   *        without loading the URI, use createContentWindow instead.
    * @param aWhere see possible values described above.
    * @param aOpener window requesting the open (can be null).
    * @param aFlags flags which control the behavior of the load. The
    *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
    *               aWhere == OPEN_DEFAULTWINDOW.
-   * @param aTriggeringPrincipal the principal that triggered the load of aURI
+   * @param aTriggeringPrincipal the principal that triggered the load of aURI.
    * @return the window into which the URI was opened.
   */
   mozIDOMWindowProxy
