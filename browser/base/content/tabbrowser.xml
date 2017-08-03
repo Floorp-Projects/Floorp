@@ -397,19 +397,6 @@
       ]]>
       </field>
 
-      <method name="_getTabForBrowser">
-        <parameter name="aBrowser" />
-        <body>
-        <![CDATA[
-          let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
-          let text = "_getTabForBrowser` is now deprecated, please use `getTabForBrowser";
-          let url = "https://developer.mozilla.org/docs/Mozilla/Tech/XUL/Method/getTabForBrowser";
-          Deprecated.warning(text, url);
-          return this.getTabForBrowser(aBrowser);
-        ]]>
-        </body>
-      </method>
-
       <method name="getTabForBrowser">
         <parameter name="aBrowser"/>
         <body>
@@ -5607,59 +5594,6 @@
         ]]>
       </destructor>
 
-      <!-- Deprecated stuff, implemented for backwards compatibility. -->
-      <method name="enterTabbedMode">
-        <body>
-          Services.console.logStringMessage("enterTabbedMode is an obsolete method and " +
-                                            "will be removed in a future release.");
-        </body>
-      </method>
-      <field name="mTabbedMode" readonly="true">true</field>
-      <method name="setStripVisibilityTo">
-        <parameter name="aShow"/>
-        <body>
-          this.tabContainer.visible = aShow;
-        </body>
-      </method>
-      <method name="getStripVisibility">
-        <body>
-          return this.tabContainer.visible;
-        </body>
-      </method>
-
-      <property name="mContextTab" readonly="true"
-                onget="return TabContextMenu.contextTab;"/>
-      <property name="mPrefs" readonly="true"
-                onget="return Services.prefs;"/>
-      <property name="mTabContainer" readonly="true"
-                onget="return this.tabContainer;"/>
-      <property name="mTabs" readonly="true"
-                onget="return this.tabs;"/>
-      <!--
-        - Compatibility hack: several extensions depend on this property to
-        - access the tab context menu or tab container, so keep that working for
-        - now. Ideally we can remove this once extensions are using
-        - tabbrowser.tabContextMenu and tabbrowser.tabContainer directly.
-        -->
-      <property name="mStrip" readonly="true">
-        <getter>
-        <![CDATA[
-          return ({
-            self: this,
-            childNodes: [null, this.tabContextMenu, this.tabContainer],
-            firstChild: { nextSibling: this.tabContextMenu },
-            getElementsByAttribute(attr, attrValue) {
-              if (attr == "anonid" && attrValue == "tabContextMenu")
-                return [this.self.tabContextMenu];
-              return [];
-            },
-            // Also support adding event listeners (forward to the tab container)
-            addEventListener(a, b, c) { this.self.tabContainer.addEventListener(a, b, c); },
-            removeEventListener(a, b, c) { this.self.tabContainer.removeEventListener(a, b, c); }
-          });
-        ]]>
-        </getter>
-      </property>
       <field name="_soundPlayingAttrRemovalTimer">0</field>
       <field name="_hoverTabTimer">null</field>
     </implementation>
@@ -6773,10 +6707,6 @@
         ]]>
         </body>
       </method>
-
-      <!-- Deprecated stuff, implemented for backwards compatibility. -->
-      <property name="mAllTabsPopup" readonly="true"
-                onget="return document.getElementById('alltabs-popup');"/>
     </implementation>
 
     <handlers>
