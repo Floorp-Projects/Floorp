@@ -44,7 +44,7 @@ doc-upload:
         using: run-task
         command: >
             cd /home/worker/checkouts/gecko &&
-            ./mach upload-doc --bucket gecko-docs.mozilla.org --region us-west-2
+            ./mach doc-upload --bucket gecko-docs.mozilla.org --region us-west-2
     scopes:
         - secrets:get:project/releng/gecko/build/level-3/gecko-docs-upload
     when:
