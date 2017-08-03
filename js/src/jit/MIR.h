@@ -1217,6 +1217,16 @@ class MInstruction
         return new(alloc) MThisOpcode(mozilla::Forward<Args>(args)...);     \
     }
 
+#define TRIVIAL_NEW_WRAPPERS_WITH_ALLOC                                     \
+    template <typename... Args>                                             \
+    static MThisOpcode* New(TempAllocator& alloc, Args&&... args) {         \
+        return new(alloc) MThisOpcode(alloc, mozilla::Forward<Args>(args)...); \
+    }                                                                       \
+    template <typename... Args>                                             \
+    static MThisOpcode* New(TempAllocator::Fallible alloc, Args&&... args)  \
+    {                                                                       \
+        return new(alloc) MThisOpcode(alloc, mozilla::Forward<Args>(args)...); \
+    }
 
 // These macros are used as a syntactic sugar for writting getOperand
 // accessors. They are meant to be used in the body of MIR Instructions as
@@ -1566,7 +1576,7 @@ class MConstant : public MNullaryInstruction
 #endif
 
   protected:
-    MConstant(const Value& v, CompilerConstraintList* constraints);
+    MConstant(TempAllocator& alloc, const Value& v, CompilerConstraintList* constraints);
     explicit MConstant(JSObject* obj);
     explicit MConstant(float f);
     explicit MConstant(int64_t i);
@@ -3210,10 +3220,10 @@ class MThrow
 
 // Fabricate a type set containing only the type of the specified object.
 TemporaryTypeSet*
-MakeSingletonTypeSet(CompilerConstraintList* constraints, JSObject* obj);
+MakeSingletonTypeSet(TempAllocator& alloc, CompilerConstraintList* constraints, JSObject* obj);
 
 TemporaryTypeSet*
-MakeSingletonTypeSet(CompilerConstraintList* constraints, ObjectGroup* obj);
+MakeSingletonTypeSet(TempAllocator& alloc, CompilerConstraintList* constraints, ObjectGroup* obj);
 
 MOZ_MUST_USE bool
 MergeTypes(TempAllocator& alloc, MIRType* ptype, TemporaryTypeSet** ptypeSet,
@@ -3248,18 +3258,20 @@ class MNewArray
 
     bool vmCall_;
 
-    MNewArray(CompilerConstraintList* constraints, uint32_t length, MConstant* templateConst,
-              gc::InitialHeap initialHeap, jsbytecode* pc, bool vmCall = false);
+    MNewArray(TempAllocator& alloc, CompilerConstraintList* constraints, uint32_t length,
+              MConstant* templateConst, gc::InitialHeap initialHeap, jsbytecode* pc,
+              bool vmCall = false);
 
   public:
     INSTRUCTION_HEADER(NewArray)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     static MNewArray* NewVM(TempAllocator& alloc, CompilerConstraintList* constraints,
                             uint32_t length, MConstant* templateConst,
                             gc::InitialHeap initialHeap, jsbytecode* pc)
     {
-        return new(alloc) MNewArray(constraints, length, templateConst, initialHeap, pc, true);
+        return new(alloc) MNewArray(alloc, constraints, length, templateConst, initialHeap, pc,
+                                    true);
     }
 
     uint32_t length() const {
@@ -3309,19 +3321,19 @@ class MNewArrayCopyOnWrite : public MNullaryInstruction
     CompilerGCPointer<ArrayObject*> templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MNewArrayCopyOnWrite(CompilerConstraintList* constraints, ArrayObject* templateObject,
-                         gc::InitialHeap initialHeap)
+    MNewArrayCopyOnWrite(TempAllocator& alloc, CompilerConstraintList* constraints,
+                         ArrayObject* templateObject, gc::InitialHeap initialHeap)
       : templateObject_(templateObject),
         initialHeap_(initialHeap)
     {
         MOZ_ASSERT(!templateObject->isSingleton());
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
     }
 
   public:
     INSTRUCTION_HEADER(NewArrayCopyOnWrite)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     ArrayObject* templateObject() const {
         return templateObject_;
@@ -3347,8 +3359,9 @@ class MNewArrayDynamicLength
     CompilerObject templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MNewArrayDynamicLength(CompilerConstraintList* constraints, JSObject* templateObject,
-                           gc::InitialHeap initialHeap, MDefinition* length)
+    MNewArrayDynamicLength(TempAllocator& alloc, CompilerConstraintList* constraints,
+                           JSObject* templateObject, gc::InitialHeap initialHeap,
+                           MDefinition* length)
       : MUnaryInstruction(length),
         templateObject_(templateObject),
         initialHeap_(initialHeap)
@@ -3356,12 +3369,12 @@ class MNewArrayDynamicLength
         setGuard(); // Need to throw if length is negative.
         setResultType(MIRType::Object);
         if (!templateObject->isSingleton())
-            setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
     }
 
   public:
     INSTRUCTION_HEADER(NewArrayDynamicLength)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
     NAMED_OPERANDS((0, length))
 
     JSObject* templateObject() const {
@@ -3386,19 +3399,19 @@ class MNewTypedArray
 {
     gc::InitialHeap initialHeap_;
 
-    MNewTypedArray(CompilerConstraintList* constraints, MConstant* templateConst,
-                   gc::InitialHeap initialHeap)
+    MNewTypedArray(TempAllocator& alloc, CompilerConstraintList* constraints,
+                   MConstant* templateConst, gc::InitialHeap initialHeap)
       : MUnaryInstruction(templateConst),
         initialHeap_(initialHeap)
     {
         MOZ_ASSERT(!templateObject()->isSingleton());
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject()));
     }
 
   public:
     INSTRUCTION_HEADER(NewTypedArray)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     TypedArrayObject* templateObject() const {
         return &getOperand(0)->toConstant()->toObject().as<TypedArrayObject>();
@@ -3425,8 +3438,9 @@ class MNewTypedArrayDynamicLength
     CompilerObject templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MNewTypedArrayDynamicLength(CompilerConstraintList* constraints, JSObject* templateObject,
-                           gc::InitialHeap initialHeap, MDefinition* length)
+    MNewTypedArrayDynamicLength(TempAllocator& alloc, CompilerConstraintList* constraints,
+                                JSObject* templateObject, gc::InitialHeap initialHeap,
+                                MDefinition* length)
       : MUnaryInstruction(length),
         templateObject_(templateObject),
         initialHeap_(initialHeap)
@@ -3434,18 +3448,12 @@ class MNewTypedArrayDynamicLength
         setGuard(); // Need to throw if length is negative.
         setResultType(MIRType::Object);
         if (!templateObject->isSingleton())
-            setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
     }
 
   public:
     INSTRUCTION_HEADER(NewTypedArrayDynamicLength)
-
-    static MNewTypedArrayDynamicLength* New(TempAllocator& alloc, CompilerConstraintList* constraints,
-                                            JSObject* templateObject, gc::InitialHeap initialHeap,
-                                            MDefinition* length)
-    {
-        return new(alloc) MNewTypedArrayDynamicLength(constraints, templateObject, initialHeap, length);
-    }
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     MDefinition* length() const {
         return getOperand(0);
@@ -3478,7 +3486,7 @@ class MNewObject
     Mode mode_;
     bool vmCall_;
 
-    MNewObject(CompilerConstraintList* constraints, MConstant* templateConst,
+    MNewObject(TempAllocator& alloc, CompilerConstraintList* constraints, MConstant* templateConst,
                gc::InitialHeap initialHeap, Mode mode, bool vmCall = false)
       : MUnaryInstruction(templateConst),
         initialHeap_(initialHeap),
@@ -3489,7 +3497,7 @@ class MNewObject
         setResultType(MIRType::Object);
 
         if (JSObject* obj = templateObject())
-            setResultTypeSet(MakeSingletonTypeSet(constraints, obj));
+            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, obj));
 
         // The constant is kept separated in a MConstant, this way we can safely
         // mark it during GC if we recover the object allocation.  Otherwise, by
@@ -3502,13 +3510,13 @@ class MNewObject
 
   public:
     INSTRUCTION_HEADER(NewObject)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     static MNewObject* NewVM(TempAllocator& alloc, CompilerConstraintList* constraints,
                              MConstant* templateConst, gc::InitialHeap initialHeap,
                              Mode mode)
     {
-        return new(alloc) MNewObject(constraints, templateConst, initialHeap, mode, true);
+        return new(alloc) MNewObject(alloc, constraints, templateConst, initialHeap, mode, true);
     }
 
     Mode mode() const {
@@ -3549,18 +3557,19 @@ class MNewIterator
 private:
     Type type_;
 
-    MNewIterator(CompilerConstraintList* constraints, MConstant* templateConst, Type type)
+    MNewIterator(TempAllocator& alloc, CompilerConstraintList* constraints,
+                 MConstant* templateConst, Type type)
       : MUnaryInstruction(templateConst),
         type_(type)
     {
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject()));
         templateConst->setEmittedAtUses();
     }
 
   public:
     INSTRUCTION_HEADER(NewIterator)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     Type type() const {
         return type_;
@@ -3586,19 +3595,19 @@ class MNewTypedObject : public MNullaryInstruction
     CompilerGCPointer<InlineTypedObject*> templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MNewTypedObject(CompilerConstraintList* constraints,
+    MNewTypedObject(TempAllocator& alloc, CompilerConstraintList* constraints,
                     InlineTypedObject* templateObject,
                     gc::InitialHeap initialHeap)
       : templateObject_(templateObject),
         initialHeap_(initialHeap)
     {
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
     }
 
   public:
     INSTRUCTION_HEADER(NewTypedObject)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     InlineTypedObject* templateObject() const {
         return templateObject_;
@@ -3654,7 +3663,8 @@ class MSimdBox
     SimdType simdType_;
     gc::InitialHeap initialHeap_;
 
-    MSimdBox(CompilerConstraintList* constraints,
+    MSimdBox(TempAllocator& alloc,
+             CompilerConstraintList* constraints,
              MDefinition* op,
              InlineTypedObject* templateObject,
              SimdType simdType,
@@ -3668,12 +3678,12 @@ class MSimdBox
         setMovable();
         setResultType(MIRType::Object);
         if (constraints)
-            setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
     }
 
   public:
     INSTRUCTION_HEADER(SimdBox)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     InlineTypedObject* templateObject() const {
         return templateObject_;
@@ -4999,18 +5009,18 @@ class MCreateThisWithTemplate
 {
     gc::InitialHeap initialHeap_;
 
-    MCreateThisWithTemplate(CompilerConstraintList* constraints, MConstant* templateConst,
-                            gc::InitialHeap initialHeap)
+    MCreateThisWithTemplate(TempAllocator& alloc, CompilerConstraintList* constraints,
+                            MConstant* templateConst, gc::InitialHeap initialHeap)
       : MUnaryInstruction(templateConst),
         initialHeap_(initialHeap)
     {
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject()));
     }
 
   public:
     INSTRUCTION_HEADER(CreateThisWithTemplate)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     // Template for |this|, provided by TI.
     JSObject* templateObject() const {
@@ -7519,19 +7529,19 @@ class MStringSplit
 {
     CompilerObjectGroup group_;
 
-    MStringSplit(CompilerConstraintList* constraints, MDefinition* string, MDefinition* sep,
-                 ObjectGroup* group)
+    MStringSplit(TempAllocator& alloc, CompilerConstraintList* constraints, MDefinition* string,
+                 MDefinition* sep, ObjectGroup* group)
       : MBinaryInstruction(string, sep),
         group_(group)
     {
         setResultType(MIRType::Object);
-        TemporaryTypeSet* types = MakeSingletonTypeSet(constraints, group);
+        TemporaryTypeSet* types = MakeSingletonTypeSet(alloc, constraints, group);
         setResultTypeSet(types);
     }
 
   public:
     INSTRUCTION_HEADER(StringSplit)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
     NAMED_OPERANDS((0, string), (1, separator))
 
     ObjectGroup* group() const {
@@ -8224,18 +8234,19 @@ class MRegExp : public MNullaryInstruction
     bool mustClone_;
     bool hasShared_;
 
-    MRegExp(CompilerConstraintList* constraints, RegExpObject* source, bool hasShared)
+    MRegExp(TempAllocator& alloc, CompilerConstraintList* constraints, RegExpObject* source,
+            bool hasShared)
       : source_(source),
         mustClone_(true),
         hasShared_(hasShared)
     {
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, source));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, source));
     }
 
   public:
     INSTRUCTION_HEADER(RegExp)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
     void setDoNotClone() {
         mustClone_ = false;
@@ -8571,17 +8582,18 @@ class MLambda
 {
     const LambdaFunctionInfo info_;
 
-    MLambda(CompilerConstraintList* constraints, MDefinition* envChain, MConstant* cst)
+    MLambda(TempAllocator& alloc, CompilerConstraintList* constraints, MDefinition* envChain,
+            MConstant* cst)
       : MBinaryInstruction(envChain, cst), info_(&cst->toObject().as<JSFunction>())
     {
         setResultType(MIRType::Object);
         if (!info().fun->isSingleton() && !ObjectGroup::useSingletonForClone(info().fun))
-            setResultTypeSet(MakeSingletonTypeSet(constraints, info().fun));
+            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, info().fun));
     }
 
   public:
     INSTRUCTION_HEADER(Lambda)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
     NAMED_OPERANDS((0, environmentChain))
 
     MConstant* functionOperand() const {
@@ -8605,7 +8617,7 @@ class MLambdaArrow
 {
     const LambdaFunctionInfo info_;
 
-    MLambdaArrow(CompilerConstraintList* constraints, MDefinition* envChain,
+    MLambdaArrow(TempAllocator& alloc, CompilerConstraintList* constraints, MDefinition* envChain,
                  MDefinition* newTarget, MConstant* cst)
       : MTernaryInstruction(envChain, newTarget, cst),
         info_(&cst->toObject().as<JSFunction>())
@@ -8613,12 +8625,12 @@ class MLambdaArrow
         setResultType(MIRType::Object);
         MOZ_ASSERT(!ObjectGroup::useSingletonForClone(info().fun));
         if (!info().fun->isSingleton())
-            setResultTypeSet(MakeSingletonTypeSet(constraints, info().fun));
+            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, info().fun));
     }
 
   public:
     INSTRUCTION_HEADER(LambdaArrow)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
     NAMED_OPERANDS((0, environmentChain), (1, newTargetDef))
 
     MConstant* functionOperand() const {
@@ -10889,7 +10901,7 @@ class InlinePropertyTable : public TempObject
     bool hasFunction(JSFunction* func) const;
     bool hasObjectGroup(ObjectGroup* group) const;
 
-    TemporaryTypeSet* buildTypeSetForFunction(JSFunction* func) const;
+    TemporaryTypeSet* buildTypeSetForFunction(TempAllocator& tempAlloc, JSFunction* func) const;
 
     // Remove targets that vetoed inlining from the InlinePropertyTable.
     void trimTo(const InliningTargets& targets, const BoolVector& choiceSet);
@@ -12879,18 +12891,18 @@ class MRest
     public MRestCommon,
     public IntPolicy<0>::Data
 {
-    MRest(CompilerConstraintList* constraints, MDefinition* numActuals, unsigned numFormals,
-          ArrayObject* templateObject)
+    MRest(TempAllocator& alloc, CompilerConstraintList* constraints, MDefinition* numActuals,
+          unsigned numFormals, ArrayObject* templateObject)
       : MUnaryInstruction(numActuals),
         MRestCommon(numFormals, templateObject)
     {
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
     }
 
   public:
     INSTRUCTION_HEADER(Rest)
-    TRIVIAL_NEW_WRAPPERS
+    TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
     NAMED_OPERANDS((0, numActuals))
 
     AliasSet getAliasSet() const override {
@@ -14884,10 +14896,12 @@ AbortReasonOr<bool>
 ElementAccessHasExtraIndexedProperty(IonBuilder* builder, MDefinition* obj);
 MIRType DenseNativeElementType(CompilerConstraintList* constraints, MDefinition* obj);
 BarrierKind PropertyReadNeedsTypeBarrier(JSContext* propertycx,
+                                         TempAllocator& alloc,
                                          CompilerConstraintList* constraints,
                                          TypeSet::ObjectKey* key, PropertyName* name,
                                          TemporaryTypeSet* observed, bool updateObserved);
 BarrierKind PropertyReadNeedsTypeBarrier(JSContext* propertycx,
+                                         TempAllocator& alloc,
                                          CompilerConstraintList* constraints,
                                          MDefinition* obj, PropertyName* name,
                                          TemporaryTypeSet* observed);
@@ -14897,7 +14911,7 @@ PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
                                         TemporaryTypeSet* observed);
 bool PropertyReadIsIdempotent(CompilerConstraintList* constraints,
                               MDefinition* obj, PropertyName* name);
-void AddObjectsForPropertyRead(MDefinition* obj, PropertyName* name,
+void AddObjectsForPropertyRead(TempAllocator& tempAlloc, MDefinition* obj, PropertyName* name,
                                TemporaryTypeSet* observed);
 bool CanWriteProperty(TempAllocator& alloc, CompilerConstraintList* constraints,
                       HeapTypeSetKey property, MDefinition* value,

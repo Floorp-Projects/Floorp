@@ -2132,7 +2132,8 @@ IonCompile(JSContext* cx, JSScript* script,
     if (!inlineScriptTree)
         return AbortReason::Alloc;
 
-    CompileInfo* info = alloc->new_<CompileInfo>(script, script->functionNonDelazifying(), osrPc,
+    CompileInfo* info = alloc->new_<CompileInfo>(CompileRuntime::get(cx->runtime()),
+                                                 script, script->functionNonDelazifying(), osrPc,
                                                  Analysis_None,
                                                  script->needsArgsObj(), inlineScriptTree);
     if (!info)
