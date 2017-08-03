@@ -45,7 +45,7 @@ linux64-clang-4:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
-        - linux64-gcc-4.8
+        - linux64-gcc
 
 linux64-clang-tidy:
     description: "Clang-tidy build"
