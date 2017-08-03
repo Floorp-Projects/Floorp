@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use atomic_refcell::AtomicRefMut;
 use cssparser::{Parser, ParserInput};
 use cssparser::ToCss as ParserToCss;
 use env_logger::LogBuilder;
@@ -14,8 +13,7 @@ use std::fmt::Write;
 use std::ptr;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
 use style::context::ThreadLocalStyleContext;
-use style::data::{ElementData, ElementStyles, RestyleData};
-use style::dom::{AnimationOnlyDirtyDescendants, DirtyDescendants};
+use style::data::ElementStyles;
 use style::dom::{ShowSubtreeData, TElement, TNode};
 use style::element_state::ElementState;
 use style::error_reporting::{NullReporter, ParseErrorReporter};
@@ -26,7 +24,6 @@ use style::gecko::restyle_damage::GeckoRestyleDamage;
 use style::gecko::selector_parser::PseudoElement;
 use style::gecko::traversal::RecalcStyleOnly;
 use style::gecko::wrapper::GeckoElement;
-use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::{RawGeckoElementBorrowed, RawGeckoElementBorrowedOrNull};
 use style::gecko_bindings::bindings::{RawGeckoKeyframeListBorrowed, RawGeckoKeyframeListBorrowedMut};
 use style::gecko_bindings::bindings::{RawServoDeclarationBlockBorrowed, RawServoDeclarationBlockStrong};
@@ -77,6 +74,7 @@ use style::gecko_bindings::structs::IterationCompositeOperation;
 use style::gecko_bindings::structs::MallocSizeOf;
 use style::gecko_bindings::structs::RawGeckoGfxMatrix4x4;
 use style::gecko_bindings::structs::RawGeckoPresContextOwned;
+use style::gecko_bindings::structs::SeenPtrs;
 use style::gecko_bindings::structs::ServoElementSnapshotTable;
 use style::gecko_bindings::structs::ServoTraversalFlags;
 use style::gecko_bindings::structs::StyleRuleInclusion;
@@ -91,7 +89,7 @@ use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasFFI, HasArcFFI, 
 use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, Strong};
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::gecko_properties::style_structs;
-use style::invalidation::element::restyle_hints::{self, RestyleHint};
+use style::invalidation::element::restyle_hints;
 use style::media_queries::{MediaList, parse_media_query_list};
 use style::parallel;
 use style::parser::{ParserContext, self};
@@ -110,8 +108,9 @@ use style::shared_lock::{SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard
 use style::string_cache::Atom;
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::{CssRule, CssRules, CssRuleType, CssRulesHelpers, DocumentRule};
-use style::stylesheets::{FontFeatureValuesRule, ImportRule, KeyframesRule, MallocSizeOfWithGuard, MediaRule};
-use style::stylesheets::{NamespaceRule, Origin, PageRule, StyleRule, SupportsRule};
+use style::stylesheets::{FontFeatureValuesRule, ImportRule, KeyframesRule, MallocSizeOfWithGuard};
+use style::stylesheets::{MallocSizeOfWithRepeats, MediaRule};
+use style::stylesheets::{NamespaceRule, Origin, PageRule, SizeOfState, StyleRule, SupportsRule};
 use style::stylesheets::StylesheetContents;
 use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
@@ -745,6 +744,24 @@ pub extern "C" fn Servo_StyleWorkerThreadCount() -> u32 {
 #[no_mangle]
 pub extern "C" fn Servo_Element_ClearData(element: RawGeckoElementBorrowed) {
     unsafe { GeckoElement(element).clear_data() };
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_Element_SizeOfExcludingThis(malloc_size_of: MallocSizeOf,
+                                                    seen_ptrs: *mut SeenPtrs,
+                                                    element: RawGeckoElementBorrowed) -> usize {
+    let malloc_size_of = malloc_size_of.unwrap();
+    let element = GeckoElement(element);
+    let borrow = element.borrow_data();
+    if let Some(data) = borrow {
+        let mut state = SizeOfState {
+            malloc_size_of: malloc_size_of,
+            seen_ptrs: seen_ptrs,
+        };
+        (*data).malloc_size_of_children(&mut state)
+    } else {
+        0
+    }
 }
 
 #[no_mangle]
@@ -2723,57 +2740,11 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
     }
 }
 
-/// Only safe to call on the main thread, with exclusive access to the element and
-/// its ancestors.
-unsafe fn maybe_restyle<'a>(data: &'a mut AtomicRefMut<ElementData>,
-                            element: GeckoElement,
-                            animation_only: bool)
-    -> Option<&'a mut RestyleData>
-{
-    // Don't generate a useless RestyleData if the element hasn't been styled.
-    if !data.has_styles() {
-        return None;
-    }
-
-    // Propagate the bit up the chain.
-    if let Some(p) = element.traversal_parent() {
-        if animation_only {
-            p.note_descendants::<AnimationOnlyDirtyDescendants>();
-        } else {
-            p.note_descendants::<DirtyDescendants>();
-        }
-    };
-
-    bindings::Gecko_SetOwnerDocumentNeedsStyleFlush(element.0);
-
-    // Ensure and return the RestyleData.
-    Some(&mut data.restyle)
-}
-
 #[no_mangle]
 pub extern "C" fn Servo_NoteExplicitHints(element: RawGeckoElementBorrowed,
                                           restyle_hint: nsRestyleHint,
                                           change_hint: nsChangeHint) {
-    let element = GeckoElement(element);
-    let damage = GeckoRestyleDamage::new(change_hint);
-    debug!("Servo_NoteExplicitHints: {:?}, restyle_hint={:?}, change_hint={:?}",
-           element, restyle_hint, change_hint);
-
-    let restyle_hint: RestyleHint = restyle_hint.into();
-    debug_assert!(!(restyle_hint.has_animation_hint() &&
-                    restyle_hint.has_non_animation_hint()),
-                  "Animation restyle hints should not appear with non-animation restyle hints");
-
-    let mut maybe_data = element.mutate_data();
-    let maybe_restyle_data = maybe_data.as_mut().and_then(|d| unsafe {
-        maybe_restyle(d, element, restyle_hint.has_animation_hint())
-    });
-    if let Some(restyle_data) = maybe_restyle_data {
-        restyle_data.hint.insert(restyle_hint.into());
-        restyle_data.damage |= damage;
-    } else {
-        debug!("(Element not styled, discarding hints)");
-    }
+    GeckoElement(element).note_explicit_hints(restyle_hint, change_hint);
 }
 
 #[no_mangle]

@@ -8,7 +8,7 @@ config = {
     "mozconfig": "%(branch)s/browser/config/mozconfigs/macosx64/l10n-mozconfig-devedition",
     "bootstrap_env": {
         "SHELL": '/bin/bash',
-        "MOZ_OBJDIR": "obj-l10n",
+        "MOZ_OBJDIR": "obj-firefox",
         "EN_US_BINARY_URL": "%(en_us_binary_url)s",
         "MOZ_UPDATE_CHANNEL": "%(update_channel)s",
         "MOZ_PKG_PLATFORM": "mac",
@@ -22,7 +22,7 @@ config = {
     },
     "ssh_key_dir": "~/.ssh",
     "log_name": "single_locale",
-    "objdir": "obj-l10n",
+    "objdir": "obj-firefox",
     "js_src_dir": "js/src",
     "vcs_share_base": "/builds/hg-shared",
 

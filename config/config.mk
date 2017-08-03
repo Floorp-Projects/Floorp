@@ -481,8 +481,6 @@ ACDEFINES += -DAB_CD=$(AB_CD)
 
 ifndef L10NBASEDIR
   L10NBASEDIR = $(error L10NBASEDIR not defined by configure)
-else
-  IS_LANGUAGE_REPACK = 1
 endif
 
 EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/$(subst /locales,,$(1)))
@@ -494,8 +492,8 @@ endif
 ifdef relativesrcdir
 MAKE_JARS_FLAGS += --relativesrcdir=$(relativesrcdir)
 ifneq (en-US,$(AB_CD))
-ifdef LOCALE_MERGEDIR
-MAKE_JARS_FLAGS += --locale-mergedir=$(LOCALE_MERGEDIR)
+ifdef IS_LANGUAGE_REPACK
+MAKE_JARS_FLAGS += --locale-mergedir=$(REAL_LOCALE_MERGEDIR)
 endif
 ifdef IS_LANGUAGE_REPACK
 MAKE_JARS_FLAGS += --l10n-base=$(L10NBASEDIR)/$(AB_CD)
@@ -507,9 +505,9 @@ else
 MAKE_JARS_FLAGS += -c $(LOCALE_SRCDIR)
 endif # ! relativesrcdir
 
-ifdef LOCALE_MERGEDIR
+ifdef IS_LANGUAGE_REPACK
 MERGE_FILE = $(firstword \
-  $(wildcard $(LOCALE_MERGEDIR)/$(subst /locales,,$(relativesrcdir))/$(1)) \
+  $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(relativesrcdir))/$(1)) \
   $(wildcard $(LOCALE_SRCDIR)/$(1)) \
   $(srcdir)/en-US/$(1) )
 else
