@@ -149,7 +149,7 @@ impl SpecNewSessionParameters {
             match &**key {
                 "proxyType" => match value.as_string() {
                     Some("pac") |
-                    Some("noproxy") |
+                    Some("direct") |
                     Some("autodetect") |
                     Some("system") |
                     Some("manual") => {},
