@@ -1165,16 +1165,30 @@ HTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     LayerUserData* userData = nullptr;
     layer->SetUserData(&sOffscreenCanvasLayerUserDataDummy, userData);
 
-    CanvasLayer::Data data;
-    data.mRenderer = GetAsyncCanvasRenderer();
-    data.mSize = GetWidthHeight();
-    layer->Initialize(data);
+    CanvasRenderer* canvasRenderer = layer->CreateOrGetCanvasRenderer();
+    InitializeCanvasRenderer(aBuilder, canvasRenderer);
 
     layer->Updated();
     return layer.forget();
   }
 
   return nullptr;
+}
+
+void
+HTMLCanvasElement::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                                            CanvasRenderer* aRenderer)
+{
+  if (mCurrentContext) {
+    mCurrentContext->InitializeCanvasRenderer(aBuilder, aRenderer);
+  }
+
+  if (mOffscreenCanvas) {
+    CanvasInitializeData data;
+    data.mRenderer = GetAsyncCanvasRenderer();
+    data.mSize = GetWidthHeight();
+    aRenderer->Initialize(data);
+  }
 }
 
 bool

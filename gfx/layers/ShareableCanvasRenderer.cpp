@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ShareableCanvasLayer.h"
+#include "ShareableCanvasRenderer.h"
 
 #include "GLContext.h"                  // for GLContext
 #include "GLScreenBuffer.h"             // for GLScreenBuffer
@@ -14,29 +14,25 @@
 namespace mozilla {
 namespace layers {
 
-ShareableCanvasLayer::ShareableCanvasLayer(LayerManager* aLayerManager, void *aImplData)
-  : CopyableCanvasLayer(aLayerManager, aImplData)
+ShareableCanvasRenderer::ShareableCanvasRenderer()
+  : mCanvasClient(nullptr)
+  , mFactory(nullptr)
   , mFlags(TextureFlags::NO_FLAGS)
 {
-  MOZ_COUNT_CTOR(ShareableCanvasLayer);
+  MOZ_COUNT_CTOR(ShareableCanvasRenderer);
 }
 
-ShareableCanvasLayer::~ShareableCanvasLayer()
+ShareableCanvasRenderer::~ShareableCanvasRenderer()
 {
-  MOZ_COUNT_DTOR(ShareableCanvasLayer);
-  if (mBufferProvider) {
-    mBufferProvider->ClearCachedResources();
-  }
-  if (mCanvasClient) {
-    mCanvasClient->OnDetach();
-    mCanvasClient = nullptr;
-  }
+  MOZ_COUNT_DTOR(ShareableCanvasRenderer);
+
+  Destroy();
 }
 
 void
-ShareableCanvasLayer::Initialize(const Data& aData)
+ShareableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
 {
-  CopyableCanvasLayer::Initialize(aData);
+  CopyableCanvasRenderer::Initialize(aData);
 
   mCanvasClient = nullptr;
 
@@ -80,8 +76,29 @@ ShareableCanvasLayer::Initialize(const Data& aData)
   }
 }
 
+void
+ShareableCanvasRenderer::ClearCachedResources()
+{
+  CopyableCanvasRenderer::ClearCachedResources();
+
+  if (mCanvasClient) {
+    mCanvasClient->Clear();
+  }
+}
+
+void
+ShareableCanvasRenderer::Destroy()
+{
+  CopyableCanvasRenderer::Destroy();
+
+  if (mCanvasClient) {
+    mCanvasClient->OnDetach();
+    mCanvasClient = nullptr;
+  }
+}
+
 bool
-ShareableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
+ShareableCanvasRenderer::UpdateTarget(DrawTarget* aDestTarget)
 {
   MOZ_ASSERT(aDestTarget);
   if (!aDestTarget) {
@@ -107,7 +124,7 @@ ShareableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     }
 
     aDestTarget->CopySurface(surface,
-                             IntRect(0, 0, mBounds.width, mBounds.height),
+                             IntRect(0, 0, mSize.width, mSize.height),
                              IntPoint(0, 0));
     return true;
   }
@@ -129,9 +146,8 @@ ShareableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   }
 
   IntSize readSize(frontbuffer->mSize);
-  SurfaceFormat format = (GetContentFlags() & CONTENT_OPAQUE)
-                          ? SurfaceFormat::B8G8R8X8
-                          : SurfaceFormat::B8G8R8A8;
+  SurfaceFormat format =
+    mOpaque ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
   bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
 
   // Try to read back directly into aDestTarget's output buffer
@@ -179,7 +195,7 @@ ShareableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
 }
 
 CanvasClient::CanvasClientType
-ShareableCanvasLayer::GetCanvasClientType()
+ShareableCanvasRenderer::GetCanvasClientType()
 {
   if (mAsyncRenderer) {
     return CanvasClient::CanvasClientAsync;
@@ -192,26 +208,10 @@ ShareableCanvasLayer::GetCanvasClientType()
 }
 
 void
-ShareableCanvasLayer::UpdateCompositableClient()
+ShareableCanvasRenderer::UpdateCompositableClient()
 {
-  if (!mCanvasClient) {
-    TextureFlags flags = TextureFlags::DEFAULT;
-    if (mOriginPos == gl::OriginPos::BottomLeft) {
-      flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
-    }
-
-    if (!mIsAlphaPremultiplied) {
-      flags |= TextureFlags::NON_PREMULTIPLIED;
-    }
-
-    mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
-                                                     GetForwarder(),
-                                                     flags);
-    if (!mCanvasClient) {
-      return;
-    }
-
-    AttachCompositable();
+  if (!CreateCompositable()) {
+    return;
   }
 
   if (mCanvasClient && mAsyncRenderer) {
@@ -221,17 +221,17 @@ ShareableCanvasLayer::UpdateCompositableClient()
   if (!IsDirty()) {
     return;
   }
-  Painted();
+  ResetDirty();
 
   FirePreTransactionCallback();
   if (mBufferProvider && mBufferProvider->GetTextureClient()) {
-    if (!mBufferProvider->SetForwarder(mManager->AsShadowForwarder())) {
+    if (!mBufferProvider->SetForwarder(GetForwarder()->AsLayerForwarder())) {
       gfxCriticalNote << "BufferProvider::SetForwarder failed";
       return;
     }
     mCanvasClient->UpdateFromTexture(mBufferProvider->GetTextureClient());
   } else {
-    mCanvasClient->Update(gfx::IntSize(mBounds.width, mBounds.height), this);
+    mCanvasClient->Update(gfx::IntSize(mSize.width, mSize.height), this);
   }
 
   FireDidTransactionCallback();

@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GFX_SHAREABLECANVASLAYER_H
-#define GFX_SHAREABLECANVASLAYER_H
+#ifndef GFX_SHAREABLECANVASRENDERER_H
+#define GFX_SHAREABLECANVASRENDERER_H
 
 #include "CompositorTypes.h"
-#include "CopyableCanvasLayer.h"
+#include "CopyableCanvasRenderer.h"
 #include "mozilla/layers/CanvasClient.h"
 
 namespace mozilla {
@@ -17,29 +17,31 @@ class SurfaceFactory;
 
 namespace layers {
 
-class ShareableCanvasLayer : public CopyableCanvasLayer
+class ShareableCanvasRenderer : public CopyableCanvasRenderer
 {
   typedef CanvasClient::CanvasClientType CanvasClientType;
 public:
-  ShareableCanvasLayer(LayerManager* aLayerManager, void *aImplData);
-
-protected:
-  virtual ~ShareableCanvasLayer();
+  ShareableCanvasRenderer();
+  virtual ~ShareableCanvasRenderer();
 
 public:
-  virtual void Initialize(const Data& aData) override;
+  void Initialize(const CanvasInitializeData& aData) override;
 
   virtual CompositableForwarder* GetForwarder() = 0;
 
-  virtual void AttachCompositable() = 0;
+  virtual bool CreateCompositable() = 0;
+
+  void ClearCachedResources() override;
+  void Destroy() override;
 
   void UpdateCompositableClient();
 
   const TextureFlags& Flags() const { return mFlags; }
 
-protected:
+  CanvasClient* GetCanvasClient() { return mCanvasClient; }
 
-  bool UpdateTarget(gfx::DrawTarget* aDestTarget = nullptr);
+protected:
+  bool UpdateTarget(gfx::DrawTarget* aDestTarget);
 
   CanvasClientType GetCanvasClientType();
 

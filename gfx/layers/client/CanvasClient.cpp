@@ -22,7 +22,6 @@
 #include "mozilla/layers/TextureClientOGL.h"
 #include "nsDebug.h"                    // for printf_stderr, NS_ASSERTION
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
-#include "ShareableCanvasLayer.h"
 #include "TextureClientSharedSurface.h"
 
 using namespace mozilla::gfx;
@@ -91,7 +90,7 @@ CanvasClient2D::UpdateFromTexture(TextureClient* aTexture)
 }
 
 void
-CanvasClient2D::Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer)
+CanvasClient2D::Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRenderer)
 {
   mBufferProviderTexture = nullptr;
 
@@ -103,10 +102,8 @@ CanvasClient2D::Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer)
 
   bool bufferCreated = false;
   if (!mBackBuffer) {
-    bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
-    gfxContentType contentType = isOpaque
-                                                ? gfxContentType::COLOR
-                                                : gfxContentType::COLOR_ALPHA;
+    gfxContentType contentType =
+      aCanvasRenderer->IsOpaque() ? gfxContentType::COLOR : gfxContentType::COLOR_ALPHA;
     gfx::SurfaceFormat surfaceFormat
       = gfxPlatform::GetPlatform()->Optimal2DFormatForContent(contentType);
     TextureFlags flags = TextureFlags::DEFAULT;
@@ -114,7 +111,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer)
       flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
 
-    mBackBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, aLayer);
+    mBackBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, aCanvasRenderer);
     if (!mBackBuffer) {
       NS_WARNING("Failed to allocate the TextureClient");
       return;
@@ -135,7 +132,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer)
 
     RefPtr<DrawTarget> target = mBackBuffer->BorrowDrawTarget();
     if (target) {
-      if (!aLayer->UpdateTarget(target)) {
+      if (!aCanvasRenderer->UpdateTarget(target)) {
         NS_WARNING("Failed to copy the canvas into a TextureClient.");
         return;
       }
@@ -165,9 +162,9 @@ already_AddRefed<TextureClient>
 CanvasClient2D::CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
                                              gfx::IntSize aSize,
                                              TextureFlags aFlags,
-                                             ShareableCanvasLayer* aLayer)
+                                             ShareableCanvasRenderer* aCanvasRenderer)
 {
-  if (aLayer->IsGLLayer()) {
+  if (aCanvasRenderer->HasGLContext()) {
     // We want a cairo backend here as we don't want to be copying into
     // an accelerated backend and we like LockBits to work. This is currently
     // the most effective way to make this work.
@@ -375,10 +372,10 @@ CloneSurface(gl::SharedSurface* src, gl::SurfaceFactory* factory)
 }
 
 void
-CanvasClientSharedSurface::Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer)
+CanvasClientSharedSurface::Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRenderer)
 {
   Renderer renderer;
-  renderer.construct<ShareableCanvasLayer*>(aLayer);
+  renderer.construct<ShareableCanvasRenderer*>(aCanvasRenderer);
   UpdateRenderer(aSize, renderer);
 }
 
@@ -394,11 +391,11 @@ void
 CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer)
 {
   GLContext* gl = nullptr;
-  ShareableCanvasLayer* layer = nullptr;
+  ShareableCanvasRenderer* canvasRenderer = nullptr;
   AsyncCanvasRenderer* asyncRenderer = nullptr;
-  if (aRenderer.constructed<ShareableCanvasLayer*>()) {
-    layer = aRenderer.ref<ShareableCanvasLayer*>();
-    gl = layer->mGLContext;
+  if (aRenderer.constructed<ShareableCanvasRenderer*>()) {
+    canvasRenderer = aRenderer.ref<ShareableCanvasRenderer*>();
+    gl = canvasRenderer->mGLContext;
   } else {
     asyncRenderer = aRenderer.ref<AsyncCanvasRenderer*>();
     gl = asyncRenderer->mGLContext;
@@ -407,14 +404,14 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
 
   RefPtr<TextureClient> newFront;
 
-  if (layer && layer->mGLFrontbuffer) {
-    mShSurfClient = CloneSurface(layer->mGLFrontbuffer.get(), layer->mFactory.get());
+  if (canvasRenderer && canvasRenderer->mGLFrontbuffer) {
+    mShSurfClient = CloneSurface(canvasRenderer->mGLFrontbuffer.get(), canvasRenderer->mFactory.get());
     if (!mShSurfClient) {
       gfxCriticalError() << "Invalid canvas front buffer";
       return;
     }
-  } else if (layer && layer->mIsMirror) {
-    mShSurfClient = CloneSurface(gl->Screen()->Front()->Surf(), layer->mFactory.get());
+  } else if (canvasRenderer && canvasRenderer->mIsMirror) {
+    mShSurfClient = CloneSurface(gl->Screen()->Front()->Surf(), canvasRenderer->mFactory.get());
     if (!mShSurfClient) {
       return;
     }
@@ -444,9 +441,9 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
     TextureFlags flags = TextureFlags::IMMUTABLE;
 
     CompositableForwarder* shadowForwarder = nullptr;
-    if (layer) {
-      flags |= layer->Flags();
-      shadowForwarder = layer->GetForwarder();
+    if (canvasRenderer) {
+      flags |= canvasRenderer->Flags();
+      shadowForwarder = canvasRenderer->GetForwarder();
     } else {
       MOZ_ASSERT(asyncRenderer);
       flags |= mTextureFlags;
