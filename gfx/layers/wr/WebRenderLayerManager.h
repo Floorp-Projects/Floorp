@@ -190,10 +190,13 @@ public:
   // means we need some other place to cached the data between transaction.
   // We store the data in frame's property.
   template<class T> already_AddRefed<T>
-  CreateOrRecycleWebRenderUserData(nsDisplayItem* aItem)
+  CreateOrRecycleWebRenderUserData(nsDisplayItem* aItem, bool* aOutIsRecycled = nullptr)
   {
     MOZ_ASSERT(aItem);
     nsIFrame* frame = aItem->Frame();
+    if (aOutIsRecycled) {
+      *aOutIsRecycled = true;
+    }
 
     if (!frame->HasProperty(nsIFrame::WebRenderUserDataProperty())) {
       frame->AddProperty(nsIFrame::WebRenderUserDataProperty(),
@@ -205,6 +208,9 @@ public:
     RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(aItem->GetPerFrameKey());
     if (!data || (data->GetType() != T::Type())) {
       data = new T(this);
+      if (aOutIsRecycled) {
+        *aOutIsRecycled = false;
+      }
     }
 
     MOZ_ASSERT(data);
