@@ -490,7 +490,7 @@ void
 EventStateManager::TryToFlushPendingNotificationsToIME()
 {
   if (mIMEContentObserver) {
-    mIMEContentObserver->TryToFlushPendingNotifications();
+    mIMEContentObserver->TryToFlushPendingNotifications(true);
   }
 }
 
