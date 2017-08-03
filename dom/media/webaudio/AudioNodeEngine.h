@@ -48,6 +48,12 @@ public:
   static already_AddRefed<ThreadSharedFloatArrayBufferList>
   Create(uint32_t aChannelCount, size_t aLength, const mozilla::fallible_t&);
 
+  ThreadSharedFloatArrayBufferList*
+  AsThreadSharedFloatArrayBufferList() override
+  {
+    return this;
+  };
+
   struct Storage final
   {
     Storage() :
