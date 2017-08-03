@@ -654,15 +654,8 @@ void nsCaret::ResetBlinking()
   } else {
     nsresult  err;
     mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
-    if (NS_FAILED(err)) {
+    if (NS_FAILED(err))
       return;
-    }
-
-    if (nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell)) {
-      if (nsCOMPtr<nsIDocument> doc = presShell->GetDocument()) {
-        mBlinkTimer->SetTarget(doc->EventTargetFor(TaskCategory::Other));
-      }
-    }
   }
 
   if (blinkRate > 0) {
