@@ -133,7 +133,7 @@ NumericInputTypeBase::ConvertNumberToString(mozilla::Decimal aValue,
 bool
 NumberInputType::IsValueMissing() const
 {
-  if (!mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+  if (!mInputElement->IsRequired()) {
     return false;
   }
 

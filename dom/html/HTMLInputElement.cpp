@@ -6554,7 +6554,7 @@ HTMLInputElement::IntrinsicState() const
     state |= nsImageLoadingContent::ImageState();
   }
 
-  if (DoesRequiredApply() && HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+  if (DoesRequiredApply() && IsRequired()) {
     state |= NS_EVENT_STATE_REQUIRED;
   } else {
     state |= NS_EVENT_STATE_OPTIONAL;
@@ -7232,6 +7232,9 @@ HTMLInputElement::UpdateTooShortValidityState()
 void
 HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
 {
+  MOZ_ASSERT(mType == NS_FORM_INPUT_RADIO,
+             "This should be called only for radio input types");
+
   bool notify = mDoneCreating;
   nsCOMPtr<nsIDOMHTMLInputElement> selection = GetSelectedRadioButton();
 
@@ -7240,7 +7243,7 @@ HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
   // If there is no selection, that might mean the radio is not in a group.
   // In that case, we can look for the checked state of the radio.
   bool selected = selection || (!aIgnoreSelf && mChecked);
-  bool required = !aIgnoreSelf && HasAttr(kNameSpaceID_None, nsGkAtoms::required);
+  bool required = !aIgnoreSelf && IsRequired();
   bool valueMissing = false;
 
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
@@ -7257,7 +7260,7 @@ HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
   // If the current radio is required and not ignored, we can assume the entire
   // group is required.
   if (!required) {
-    required = (aIgnoreSelf && HasAttr(kNameSpaceID_None, nsGkAtoms::required))
+    required = (aIgnoreSelf && IsRequired())
                  ? container->GetRequiredRadioCount(name) - 1
                  : container->GetRequiredRadioCount(name);
   }
