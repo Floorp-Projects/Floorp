@@ -14,8 +14,6 @@
 #include "nsAlgorithm.h" // Needed by nsVersionComparator.cpp
 #include "updatehelper.h"
 #endif
-#define XZ_USE_CRC64
-#include "xz.h"
 
 // These are generated at compile time based on the DER file for the channel
 // being used
@@ -38,10 +36,10 @@
 # include <io.h>
 #endif
 
-static size_t inbuf_size  = 262144;
-static size_t outbuf_size = 262144;
-static uint8_t *inbuf  = nullptr;
-static uint8_t *outbuf = nullptr;
+static int inbuf_size  = 262144;
+static int outbuf_size = 262144;
+static char *inbuf  = nullptr;
+static char *outbuf = nullptr;
 
 /**
  * Performs a verification on the opened MAR file with the passed in
@@ -184,22 +182,22 @@ ArchiveReader::Open(const NS_tchar *path)
     Close();
 
   if (!inbuf) {
-    inbuf = (uint8_t *)malloc(inbuf_size);
+    inbuf = (char *)malloc(inbuf_size);
     if (!inbuf) {
       // Try again with a smaller buffer.
       inbuf_size = 1024;
-      inbuf = (uint8_t *)malloc(inbuf_size);
+      inbuf = (char *)malloc(inbuf_size);
       if (!inbuf)
         return ARCHIVE_READER_MEM_ERROR;
     }
   }
 
   if (!outbuf) {
-    outbuf = (uint8_t *)malloc(outbuf_size);
+    outbuf = (char *)malloc(outbuf_size);
     if (!outbuf) {
       // Try again with a smaller buffer.
       outbuf_size = 1024;
-      outbuf = (uint8_t *)malloc(outbuf_size);
+      outbuf = (char *)malloc(outbuf_size);
       if (!outbuf)
         return ARCHIVE_READER_MEM_ERROR;
     }
@@ -212,9 +210,6 @@ ArchiveReader::Open(const NS_tchar *path)
 #endif
   if (!mArchive)
     return READ_ERROR;
-
-  xz_crc32_init();
-  xz_crc64_init();
 
   return OK;
 }
@@ -278,21 +273,12 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
 {
   /* decompress the data chunk by chunk */
 
-  int offset, inlen, ret = OK;
-  struct xz_buf strm = { 0 };
-  enum xz_ret xz_rv = XZ_OK;
+  bz_stream strm;
+  int offset, inlen, outlen, ret = OK;
 
-  struct xz_dec * dec = xz_dec_init(XZ_DYNALLOC, 64 * 1024 * 1024);
-  if (!dec) {
-    return UNEXPECTED_XZ_ERROR;
-  }
-
-  strm.in = inbuf;
-  strm.in_pos = 0;
-  strm.in_size = 0;
-  strm.out = outbuf;
-  strm.out_pos = 0;
-  strm.out_size = outbuf_size;
+  memset(&strm, 0, sizeof(strm));
+  if (BZ2_bzDecompressInit(&strm, 0, 0) != BZ_OK)
+    return UNEXPECTED_BZIP_ERROR;
 
   offset = 0;
   for (;;) {
@@ -301,49 +287,38 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
       break;
     }
 
-    if (offset < (int) item->length && strm.in_pos == strm.in_size) {
+    if (offset < (int) item->length && strm.avail_in == 0) {
       inlen = mar_read(mArchive, item, offset, inbuf, inbuf_size);
-      if (inlen <= 0) {
-        ret = READ_ERROR;
-        break;
-      }
+      if (inlen <= 0)
+        return READ_ERROR;
       offset += inlen;
-      strm.in_size = inlen;
-      strm.in_pos = 0;
+      strm.next_in = inbuf;
+      strm.avail_in = inlen;
     }
 
-    xz_rv = xz_dec_run(dec, &strm);
+    strm.next_out = outbuf;
+    strm.avail_out = outbuf_size;
 
-    if (strm.out_pos == outbuf_size) {
-      if (fwrite(outbuf, 1, strm.out_pos, fp) != strm.out_pos) {
-        ret = WRITE_ERROR_EXTRACT;
-        break;
-      }
-
-      strm.out_pos = 0;
-    }
-
-    if (xz_rv == XZ_OK) {
-      // There is still more data to decompress.
-      continue;
-    }
-
-    // The return value of xz_dec_run is not XZ_OK and if it isn't XZ_STREAM_END
-    // an error has occured.
-    if (xz_rv != XZ_STREAM_END) {
-      ret = UNEXPECTED_XZ_ERROR;
+    ret = BZ2_bzDecompress(&strm);
+    if (ret != BZ_OK && ret != BZ_STREAM_END) {
+      ret = UNEXPECTED_BZIP_ERROR;
       break;
     }
 
-    // Write out the remainder of the decompressed data. In the case of
-    // strm.out_pos == 0 this is needed to create empty files included in the
-    // mar file.
-    if (fwrite(outbuf, 1, strm.out_pos, fp) != strm.out_pos) {
-      ret = WRITE_ERROR_EXTRACT;
+    outlen = outbuf_size - strm.avail_out;
+    if (outlen) {
+      if (fwrite(outbuf, outlen, 1, fp) != 1) {
+        ret = WRITE_ERROR_EXTRACT;
+        break;
+      }
     }
-    break;
+
+    if (ret == BZ_STREAM_END) {
+      ret = OK;
+      break;
+    }
   }
 
-  xz_dec_end(dec);
+  BZ2_bzDecompressEnd(&strm);
   return ret;
 }

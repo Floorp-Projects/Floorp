@@ -37,7 +37,7 @@ static int mar_ensure_parent_dir(const char *path)
 
 static int mar_test_callback(MarFile *mar, const MarItem *item, void *unused) {
   FILE *fp;
-  uint8_t buf[BLOCKSIZE];
+  char buf[BLOCKSIZE];
   int fd, len, offset = 0;
 
   if (mar_ensure_parent_dir(item->name))

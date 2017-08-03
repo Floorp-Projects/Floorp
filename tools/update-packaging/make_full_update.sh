@@ -93,11 +93,7 @@ for ((i=0; $i<$num_files; i=$i+1)); do
 
   dir=$(dirname "$f")
   mkdir -p "$workdir/$dir"
-  if [[ -n $MAR_OLD_FORMAT ]]; then
-    $BZIP2 -cz9 "$targetdir/$f" > "$workdir/$f"
-  else
-    $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force --stdout "$targetdir/$f" > "$workdir/$f"
-  fi
+  $BZIP2 -cz9 "$targetdir/$f" > "$workdir/$f"
   copy_perm "$targetdir/$f" "$workdir/$f"
 
   targetfiles="$targetfiles \"$f\""
@@ -108,13 +104,8 @@ notice ""
 notice "Adding file and directory remove instructions from file 'removed-files'"
 append_remove_instructions "$targetdir" "$updatemanifestv2" "$updatemanifestv3"
 
-if [[ -n $MAR_OLD_FORMAT ]]; then
-  $BZIP2 -z9 "$updatemanifestv2" && mv -f "$updatemanifestv2.bz2" "$updatemanifestv2"
-  $BZIP2 -z9 "$updatemanifestv3" && mv -f "$updatemanifestv3.bz2" "$updatemanifestv3"
-else
-  $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force "$updatemanifestv2" && mv -f "$updatemanifestv2.xz" "$updatemanifestv2"
-  $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force "$updatemanifestv3" && mv -f "$updatemanifestv3.xz" "$updatemanifestv3"
-fi
+$BZIP2 -z9 "$updatemanifestv2" && mv -f "$updatemanifestv2.bz2" "$updatemanifestv2"
+$BZIP2 -z9 "$updatemanifestv3" && mv -f "$updatemanifestv3.bz2" "$updatemanifestv3"
 
 mar_command="$MAR"
 if [[ -n $MOZ_PRODUCT_VERSION ]]

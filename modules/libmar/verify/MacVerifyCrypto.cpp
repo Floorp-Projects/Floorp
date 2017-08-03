@@ -156,35 +156,7 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
                                 signatureData,
                                 &error);
   if (!verifier || error) {
-    if (error) {
-      CFRelease(error);
-    }
     CFRelease(signatureData);
-    return CryptoX_Error;
-  }
-
-  SecTransformSetAttributePtr(verifier,
-                              kSecDigestTypeAttribute,
-                              kSecDigestSHA2,
-                              &error);
-  if (error) {
-    CFRelease(error);
-    CFRelease(signatureData);
-    CFRelease(verifier);
-    return CryptoX_Error;
-  }
-
-  int digestLength = 384;
-  CFNumberRef dLen = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &digestLength);
-  SecTransformSetAttributePtr(verifier,
-                              kSecDigestLengthAttribute,
-                              dLen,
-                              &error);
-  CFRelease(dLen);
-  if (error) {
-    CFRelease(error);
-    CFRelease(signatureData);
-    CFRelease(verifier);
     return CryptoX_Error;
   }
 
@@ -193,7 +165,6 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
                               (CFDataRef)*aInputData,
                               &error);
   if (error) {
-    CFRelease(error);
     CFRelease(signatureData);
     CFRelease(verifier);
     return CryptoX_Error;
@@ -202,7 +173,6 @@ CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
   CryptoX_Result result = CryptoX_Error;
   CFTypeRef rv = SecTransformExecutePtr(verifier, &error);
   if (error) {
-    CFRelease(error);
     CFRelease(signatureData);
     CFRelease(verifier);
     return CryptoX_Error;
