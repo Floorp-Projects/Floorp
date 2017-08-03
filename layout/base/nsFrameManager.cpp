@@ -231,7 +231,9 @@ nsFrameManager::ChangeStyleContextInMap(UndisplayedMap* aMap,
    printf("ChangeStyleContextInMap(%d): p=%p \n", i++, (void *)aContent);
 #endif
 
-  for (UndisplayedNode* node = aMap->GetFirstNode(aContent->GetParent());
+  nsIContent* parent = ParentForUndisplayedMap(aContent);
+
+  for (UndisplayedNode* node = aMap->GetFirstNode(parent);
        node; node = node->getNext()) {
     if (node->mContent == aContent) {
       node->mStyle = aStyleContext;
