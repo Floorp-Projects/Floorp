@@ -4,66 +4,8 @@
 
 %include ../shared/compacttheme.inc.css
 
-/* Use only 1px separator between nav toolbox and page content */
-#navigator-toolbox::after {
-  border-top-style: none;
-  margin-top: -1px;
-}
-
-/* Include extra space on left/right for dragging since there is no space above
-   the tabs */
-#main-window[tabsintitlebar] #TabsToolbar {
-  padding-left: 50px;
-  padding-right: 50px;
-  margin-bottom: 0; /* Don't overlap the inner highlight at the top of the nav-bar */
-}
-
-/* Don't use the default background for tabs toolbar */
-#TabsToolbar {
-  -moz-appearance: none !important;
-}
-
 /* Get rid of 1px bright strip at the top of window */
 #main-window[tabsintitlebar] #titlebar-content {
   background: var(--chrome-background-color);
 }
 
-%ifndef MOZ_PHOTON_THEME
-/* Resize things so that the native titlebar is in line with the tabs */
-#main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
-#main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
-  margin-top: 6px;
-}
-%endif
-/* Prevent the hover styling from on the identity icon from overlapping the
-   urlbar border. */
-#identity-box {
-  margin-top: -1px !important;
-  margin-bottom: -1px !important;
-  padding-top: 3px !important;
-  padding-bottom: 3px !important;
-}
-
-#PanelUI-button {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-.findbar-closebutton:-moz-lwtheme-brighttext:not(:hover),
-/* Tab styling - make sure to use an inverted icon for the selected tab
-   (brighttext only covers the unselected tabs) */
-.tab-close-button[selected=true]:not(:hover) {
-  -moz-image-region: rect(0, 64px, 16px, 48px);
-}
-@media (min-resolution: 2dppx) {
-  .findbar-closebutton:-moz-lwtheme-brighttext :not(:hover),
-  .tab-close-button[selected=true]:not(:hover) {
-    -moz-image-region: rect(0, 128px, 32px, 96px);
-  }
-}
-
-.ac-type-icon {
-  /* Left-align the type icon in awesomebar popup results with the icon in the
-     urlbar. */
-  margin-inline-start: 14px;
-}
