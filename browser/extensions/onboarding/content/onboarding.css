@@ -329,7 +329,8 @@
 
 /* Keyboard focus specific outline */
 .onboarding-tour-action-button:-moz-focusring,
-#onboarding-tour-list .onboarding-tour-item:focus {
+#onboarding-tour-list .onboarding-tour-item:focus,
+#onboarding-notification-action-btn:-moz-focusring {
   outline: 2px solid rgba(0,149,221,0.5);
   outline-offset: 1px;
   -moz-outline-radius: 2px;
@@ -499,7 +500,7 @@
   --height: 22px;
   --vpadding: 3px;
   position: absolute;
-  content: attr(data-tooltip);
+  content: attr(aria-label);
   top: 0;
   offset-inline-start: 73px;
   line-height: calc(var(--height) - var(--vpadding) * 2);
@@ -541,6 +542,7 @@
 
 #onboarding-notification-tour-title {
   margin: 0;
+  font-weight: bold;
 }
 
 #onboarding-notification-tour-icon {
