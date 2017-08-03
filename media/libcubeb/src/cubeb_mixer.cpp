@@ -561,11 +561,11 @@ void cubeb_mixer_destroy(cubeb_mixer * mixer)
 
 void cubeb_mixer_mix(cubeb_mixer * mixer, long frames,
                      void * input_buffer, unsigned long input_buffer_length,
-                     void * output_buffer, unsigned long outputput_buffer_length,
+                     void * output_buffer, unsigned long output_buffer_length,
                      cubeb_stream_params const * stream_params,
                      cubeb_stream_params const * mixer_params)
 {
   assert(mixer);
-  mixer->mix(frames, input_buffer, input_buffer_length, output_buffer, outputput_buffer_length,
+  mixer->mix(frames, input_buffer, input_buffer_length, output_buffer, output_buffer_length,
              stream_params, mixer_params);
 }
