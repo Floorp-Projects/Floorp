@@ -1071,24 +1071,24 @@ LayerManagerComposite::RenderToPresentationSurface()
     return;
   }
 
-  EGLSurface surface = widget->AsAndroid()->GetPresentationEGLSurface();
-
-  if (!surface) {
-    //create surface;
-    surface = GLContextProviderEGL::CreateEGLSurface(window);
-    if (!surface) {
-      return;
-    }
-
-    widget->AsAndroid()->SetPresentationEGLSurface(surface);
-  }
-
   CompositorOGL* compositor = mCompositor->AsCompositorOGL();
   GLContext* gl = compositor->gl();
   GLContextEGL* egl = GLContextEGL::Cast(gl);
 
   if (!egl) {
     return;
+  }
+
+  EGLSurface surface = widget->AsAndroid()->GetPresentationEGLSurface();
+
+  if (!surface) {
+    //create surface;
+    surface = egl->CreateCompatibleSurface(window);
+    if (!surface) {
+      return;
+    }
+
+    widget->AsAndroid()->SetPresentationEGLSurface(surface);
   }
 
   const IntSize windowSize(ANativeWindow_getWidth(window),

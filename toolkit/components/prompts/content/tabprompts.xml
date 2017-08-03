@@ -160,7 +160,9 @@
                 this.isLive = true;
                 window.addEventListener("resize", this);
                 window.addEventListener("unload", this);
-                linkedTab.addEventListener("TabClose", this);
+                if (linkedTab) {
+                  linkedTab.addEventListener("TabClose", this);
+                }
                 // Note:
                 // nsPrompter.js or in e10s mode browser-parent.js call abortPrompt,
                 // when the domWindow, for which the prompt was created, generates
@@ -191,7 +193,9 @@
                 try {
                     window.removeEventListener("resize", this);
                     window.removeEventListener("unload", this);
-                    this.linkedTab.removeEventListener("TabClose", this);
+                    if (this.linkedTab) {
+                      this.linkedTab.removeEventListener("TabClose", this);
+                    }
                 } catch (e) { }
                 this.isLive = false;
                 // invoke callback

@@ -55,14 +55,10 @@ function go() {
         }).then(() => {
             ok(checkDead(), "Expected a dead object wrapper");
 
-            // Wrapping the Window should throw now.
-            var exc;
-            try {
-                Components.utils.getGlobalForObject(getObject());
-            } catch(e) {
-                exc = e;
-            }
-            is(exc.message, "Can't wrap dead object");
+            // Wrapping the Window should return a dead wrapper now.
+            var global = Components.utils.getGlobalForObject(getObject());
+            ok(Components.utils.isDeadWrapper(global),
+               "Expected a dead wrapper when requesting the window's global");
 
             SimpleTest.finish();
         });

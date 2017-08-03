@@ -155,17 +155,6 @@ FrameBuilder::ProcessContainerLayer(ContainerLayer* aContainer,
     return false;
   }
 
-  // If the container is not part of the invalid region, we don't draw it
-  // or traverse it. Note that we do not pass the geometry here. Otherwise
-  // we could decide the particular split is not visible, and because of the
-  // check above, never bother traversing the container again.
-  gfx::IntRect boundingBox = layer->GetClippedBoundingBox(aView, Nothing());
-  const gfx::IntRect& invalidRect = aView->GetInvalidRect();
-  if (boundingBox.IsEmpty() || !invalidRect.Intersects(boundingBox)) {
-    AL_LOG("Culling ContainerLayer %p that does not need painting\n", aContainer);
-    return false;
-  }
-
   if (!aContainer->UseIntermediateSurface()) {
     // In case the layer previously required an intermediate surface, we
     // clear any intermediate render targets here.
