@@ -158,7 +158,18 @@ ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
 already_AddRefed<ChannelMediaDecoder>
 ChannelMediaDecoder::Clone(MediaDecoderInit& aInit)
 {
+  if (!mResource) {
+    return nullptr;
+  }
   RefPtr<ChannelMediaDecoder> decoder = CloneImpl(aInit);
+  if (!decoder) {
+    return nullptr;
+  }
+  nsresult rv = decoder->Load(mResource);
+  if (NS_FAILED(rv)) {
+    decoder->Shutdown();
+    return nullptr;
+  }
   return decoder.forget();
 }
 

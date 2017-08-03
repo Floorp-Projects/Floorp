@@ -4721,10 +4721,6 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
   NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
 
-  MediaResource* originalResource = aOriginal->GetResource();
-  if (!originalResource)
-    return NS_ERROR_FAILURE;
-
   MediaDecoderInit decoderInit(this,
                                mAudioChannel,
                                mMuted ? 0.0 : mVolume,
@@ -4741,14 +4737,6 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
     return NS_ERROR_FAILURE;
 
   LOG(LogLevel::Debug, ("%p Cloned decoder %p from %p", this, decoder.get(), aOriginal));
-
-  nsresult rv = decoder->Load(originalResource);
-  if (NS_FAILED(rv)) {
-    decoder->Shutdown();
-    LOG(LogLevel::Debug,
-        ("%p Failed to load for decoder %p", this, decoder.get()));
-    return rv;
-  }
 
   return FinishDecoderSetup(decoder);
 }
