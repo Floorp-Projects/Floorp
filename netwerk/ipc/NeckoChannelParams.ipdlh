@@ -199,6 +199,19 @@ union ChannelDiverterArgs
   PFTPChannel;
 };
 
+struct CookieStruct
+{
+  nsCString name;
+  nsCString value;
+  nsCString host;
+  nsCString path;
+  int64_t   expiry;
+  int64_t   lastAccessed;
+  int64_t   creationTime;
+  bool      isSession;
+  bool      isSecure;
+};
+
 //-----------------------------------------------------------------------------
 // RTSP IPDL structs
 //-----------------------------------------------------------------------------

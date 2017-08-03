@@ -145,6 +145,8 @@ public:
 
   static void AppendProcessId(nsACString& aName);
 
+  static void UpdateCookieStatus(nsIChannel *aChannel);
+
   mozilla::ipc::IPCResult
   RecvInitContentBridgeChild(Endpoint<PContentBridgeChild>&& aEndpoint) override;
 

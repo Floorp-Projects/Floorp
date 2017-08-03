@@ -11,6 +11,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "nsCookieService.h"
 #include "nsIChannel.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsNetCID.h"
@@ -75,6 +76,68 @@ CookieServiceParent::CookieServiceParent()
 
 CookieServiceParent::~CookieServiceParent()
 {
+}
+
+void
+CookieServiceParent::TrackCookieLoad(nsIChannel *aChannel)
+{
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  mozilla::OriginAttributes attrs;
+  if (loadInfo) {
+    attrs = loadInfo->GetOriginAttributes();
+  }
+
+  // Send matching cookies to Child.
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil;
+  thirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  bool isForeign = true;
+  thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
+  nsTArray<nsCookie*> foundCookieList;
+  mCookieService->GetCookiesForURI(uri, isForeign, false,
+                                   attrs, foundCookieList);
+  nsTArray<CookieStruct> matchingCookiesList;
+  SerialializeCookieList(foundCookieList, matchingCookiesList, uri);
+  Unused << SendTrackCookiesLoad(matchingCookiesList, attrs);
+}
+
+void
+CookieServiceParent::SerialializeCookieList(const nsTArray<nsCookie*> &aFoundCookieList,
+                                            nsTArray<CookieStruct>    &aCookiesList,
+                                            nsIURI                    *aHostURI)
+{
+  for (uint32_t i = 0; i < aFoundCookieList.Length(); i++) {
+    nsCookie *cookie = aFoundCookieList.ElementAt(i);
+    CookieStruct* cookieStruct = aCookiesList.AppendElement();
+    cookieStruct->name() = cookie->Name();
+    cookieStruct->value() = cookie->Value();
+    cookieStruct->host() = cookie->Host();
+    cookieStruct->path() = cookie->Path();
+    cookieStruct->expiry() = cookie->Expiry();
+    cookieStruct->lastAccessed() = cookie->LastAccessed();
+    cookieStruct->creationTime() = cookie->CreationTime();
+    cookieStruct->isSession() = cookie->IsSession();
+    cookieStruct->isSecure() = cookie->IsSecure();
+  }
+}
+
+mozilla::ipc::IPCResult
+CookieServiceParent::RecvPrepareCookieList(const URIParams        &aHost,
+                                           const bool             &aIsForeign,
+                                           const OriginAttributes &aAttrs)
+{
+  nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
+
+  // Send matching cookies to Child.
+  nsTArray<nsCookie*> foundCookieList;
+  mCookieService->GetCookiesForURI(hostURI, aIsForeign, false,
+                                   aAttrs, foundCookieList);
+  nsTArray<CookieStruct> matchingCookiesList;
+  SerialializeCookieList(foundCookieList, matchingCookiesList, hostURI);
+  Unused << SendTrackCookiesLoad(matchingCookiesList, aAttrs);
+  return IPC_OK();
 }
 
 void

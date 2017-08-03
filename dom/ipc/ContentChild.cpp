@@ -61,6 +61,7 @@
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/CaptivePortalService.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
@@ -1945,6 +1946,16 @@ mozilla::ipc::IPCResult
 ContentChild::RecvPTestShellConstructor(PTestShellChild* actor)
 {
   return IPC_OK();
+}
+
+void
+ContentChild::UpdateCookieStatus(nsIChannel   *aChannel)
+{
+  RefPtr<CookieServiceChild> csChild =
+    CookieServiceChild::GetSingleton();
+  NS_ASSERTION(csChild, "Couldn't get CookieServiceChild");
+
+  csChild->TrackCookieLoad(aChannel);
 }
 
 PScriptCacheChild*

@@ -4,18 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
+#include "nsCookie.h"
+#include "nsCookieService.h"
+#include "nsContentUtils.h"
+#include "nsNetCID.h"
 #include "nsIChannel.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 
 using namespace mozilla::ipc;
+using mozilla::OriginAttributes;
 
 namespace mozilla {
 namespace net {
@@ -61,6 +68,9 @@ CookieServiceChild::CookieServiceChild()
   NeckoChild::InitNeckoChild();
   gNeckoChild->SendPCookieServiceConstructor(this);
 
+  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  NS_ASSERTION(mTLDService, "couldn't get TLDService");
+
   // Init our prefs and observer.
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -75,6 +85,47 @@ CookieServiceChild::CookieServiceChild()
 CookieServiceChild::~CookieServiceChild()
 {
   gCookieService = nullptr;
+}
+
+void
+CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
+{
+  bool isForeign = false;
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+  if (RequireThirdPartyCheck()) {
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  mozilla::OriginAttributes attrs;
+  if (loadInfo) {
+    attrs = loadInfo->GetOriginAttributes();
+  }
+  URIParams uriParams;
+  SerializeURI(uri, uriParams);
+  SendPrepareCookieList(uriParams, isForeign, attrs);
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvTrackCookiesLoad(nsTArray<CookieStruct>&& aCookiesList,
+                                         const OriginAttributes &aAttrs)
+{
+  for (uint32_t i = 0; i < aCookiesList.Length(); i++) {
+    RefPtr<nsCookie> cookie = nsCookie::Create(aCookiesList[i].name(),
+                                               aCookiesList[i].value(),
+                                               aCookiesList[i].host(),
+                                               aCookiesList[i].path(),
+                                               aCookiesList[i].expiry(),
+                                               aCookiesList[i].lastAccessed(),
+                                               aCookiesList[i].creationTime(),
+                                               aCookiesList[i].isSession(),
+                                               aCookiesList[i].isSecure(),
+                                               false,
+                                               aAttrs);
+    RecordDocumentCookie(cookie, aAttrs);
+  }
+
+  return IPC_OK();
 }
 
 void
@@ -103,6 +154,39 @@ CookieServiceChild::RequireThirdPartyCheck()
   return mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
     mCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
     mThirdPartySession;
+}
+
+void
+CookieServiceChild::RecordDocumentCookie(nsCookie               *aCookie,
+                                         const OriginAttributes &aAttrs)
+{
+  nsAutoCString baseDomain;
+  nsCookieService::
+    GetBaseDomainFromHost(mTLDService, aCookie->Host(), baseDomain);
+
+  nsCookieKey key(baseDomain, aAttrs);
+  CookiesList *cookiesList = nullptr;
+  mCookiesMap.Get(key, &cookiesList);
+
+  if (!cookiesList) {
+    cookiesList = mCookiesMap.LookupOrAdd(key);
+  }
+  for (uint32_t i = 0; i < cookiesList->Length(); i++) {
+    nsCookie *cookie = cookiesList->ElementAt(i);
+    if (cookie->Name().Equals(aCookie->Name()) &&
+        cookie->Host().Equals(aCookie->Host()) &&
+        cookie->Path().Equals(aCookie->Path())) {
+      cookiesList->RemoveElementAt(i);
+      break;
+    }
+  }
+
+  int64_t currentTime = PR_Now() / PR_USEC_PER_SEC;
+  if (aCookie->Expiry() <= currentTime) {
+    return;
+  }
+
+  cookiesList->AppendElement(aCookie);
 }
 
 nsresult
@@ -141,6 +225,7 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   // Synchronously call the parent.
   nsAutoCString result;
   SendGetCookieString(uriParams, !!isForeign, attrs, &result);
+
   if (!result.IsEmpty())
     *aCookieString = ToNewCString(result);
 
