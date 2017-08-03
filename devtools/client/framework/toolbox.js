@@ -551,7 +551,12 @@ Toolbox.prototype = {
       get: (target, name) => {
         if (name === "getOriginalURLs") {
           return (urlInfo) => {
-            return target.getOriginalURLs(urlInfo).catch(console.error);
+            return target.getOriginalURLs(urlInfo)
+              .catch(text => {
+                let message = L10N.getFormatStr("toolbox.sourceMapFailure",
+                                                text, urlInfo.url, urlInfo.sourceMapURL);
+                this.target.logErrorInPage(message, "source map");
+              });
           };
         }
         return target[name];
