@@ -15,7 +15,14 @@ let gContainersManager = {
     "briefcase",
     "dollar",
     "cart",
-    "circle"
+    "circle",
+    "gift",
+    "vacation",
+    "food",
+    "fruit",
+    "pet",
+    "tree",
+    "chill"
   ],
 
   colors: [
