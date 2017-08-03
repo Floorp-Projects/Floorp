@@ -1948,6 +1948,9 @@ nsCookieService::Observe(nsISupports     *aSubject,
 
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
     // Flush all the cookies stored by private browsing contexts
+    mozilla::OriginAttributesPattern pattern;
+    pattern.mPrivateBrowsingId.Construct(1);
+    RemoveCookiesWithOriginAttributes(pattern, EmptyCString());
     mPrivateDBState = new DBState();
   }
 

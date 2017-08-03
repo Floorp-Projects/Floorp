@@ -9,6 +9,7 @@
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "nsArrayUtils.h"
 #include "nsCookieService.h"
 #include "nsIChannel.h"
 #include "nsIEffectiveTLDService.h"
@@ -76,6 +77,72 @@ CookieServiceParent::CookieServiceParent()
 
 CookieServiceParent::~CookieServiceParent()
 {
+}
+
+void
+GetInfoFromCookie(nsCookie         *aCookie,
+                  CookieStruct     &aCookieStruct)
+{
+  aCookieStruct.name() = aCookie->Name();
+  aCookieStruct.value() = aCookie->Value();
+  aCookieStruct.host() = aCookie->Host();
+  aCookieStruct.path() = aCookie->Path();
+  aCookieStruct.expiry() = aCookie->Expiry();
+  aCookieStruct.lastAccessed() = aCookie->LastAccessed();
+  aCookieStruct.creationTime() = aCookie->CreationTime();
+  aCookieStruct.isSession() = aCookie->IsSession();
+  aCookieStruct.isSecure() = aCookie->IsSecure();
+}
+
+void
+CookieServiceParent::RemoveBatchDeletedCookies(nsIArray *aCookieList) {
+  uint32_t len = 0;
+  aCookieList->GetLength(&len);
+  OriginAttributes attrs;
+  CookieStruct cookieStruct;
+  nsTArray<CookieStruct> cookieStructList;
+  nsTArray<OriginAttributes> attrsList;
+  for (uint32_t i = 0; i < len; i++) {
+    nsCOMPtr<nsICookie> xpcCookie = do_QueryElementAt(aCookieList, i);
+    auto cookie = static_cast<nsCookie*>(xpcCookie.get());
+    attrs = cookie->OriginAttributesRef();
+    GetInfoFromCookie(cookie, cookieStruct);
+    if (!cookie->IsHttpOnly()) {
+      cookieStructList.AppendElement(cookieStruct);
+      attrsList.AppendElement(attrs);
+    }
+  }
+  Unused << SendRemoveBatchDeletedCookies(cookieStructList, attrsList);
+}
+
+void
+CookieServiceParent::RemoveAll()
+{
+  Unused << SendRemoveAll();
+}
+
+void
+CookieServiceParent::RemoveCookie(nsICookie *aCookie)
+{
+  auto cookie = static_cast<nsCookie*>(aCookie);
+  OriginAttributes attrs = cookie->OriginAttributesRef();
+  CookieStruct cookieStruct;
+  GetInfoFromCookie(cookie, cookieStruct);
+  if (!cookie->IsHttpOnly()) {
+    Unused << SendRemoveCookie(cookieStruct, attrs);
+  }
+}
+
+void
+CookieServiceParent::AddCookie(nsICookie *aCookie)
+{
+  auto cookie = static_cast<nsCookie*>(aCookie);
+  OriginAttributes attrs = cookie->OriginAttributesRef();
+  CookieStruct cookieStruct;
+  GetInfoFromCookie(cookie, cookieStruct);
+  if (!cookie->IsHttpOnly()) {
+    Unused << SendAddCookie(cookieStruct, attrs);
+  }
 }
 
 void

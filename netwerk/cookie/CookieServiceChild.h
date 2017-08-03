@@ -99,6 +99,21 @@ protected:
   mozilla::ipc::IPCResult RecvTrackCookiesLoad(nsTArray<CookieStruct>&& aCookiesList,
                                                const OriginAttributes &aAttrs) override;
 
+  virtual
+  mozilla::ipc::IPCResult RecvRemoveAll() override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvRemoveBatchDeletedCookies(nsTArray<CookieStruct>&& aCookiesList,
+                                nsTArray<OriginAttributes>&& aAttrsList) override;
+
+  virtual
+  mozilla::ipc::IPCResult RecvRemoveCookie(const CookieStruct &aCookie,
+                                           const OriginAttributes &aAttrs) override;
+
+  virtual
+  mozilla::ipc::IPCResult RecvAddCookie(const CookieStruct &aCookie,
+                                        const OriginAttributes &aAttrs) override;
+
   CookiesMap mCookiesMap;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
