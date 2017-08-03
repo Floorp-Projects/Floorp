@@ -7,14 +7,20 @@
 #define mozilla_net_CookieServiceChild_h__
 
 #include "mozilla/net/PCookieServiceChild.h"
+#include "nsClassHashtable.h"
+#include "nsCookieKey.h"
 #include "nsICookieService.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsWeakReference.h"
 
+class nsCookie;
+class nsIEffectiveTLDService;
+
 namespace mozilla {
 namespace net {
+class CookieStruct;
 
 class CookieServiceChild : public PCookieServiceChild
                          , public nsICookieService
@@ -26,9 +32,15 @@ public:
   NS_DECL_NSICOOKIESERVICE
   NS_DECL_NSIOBSERVER
 
+  typedef nsTArray<RefPtr<nsCookie>> CookiesList;
+  typedef nsClassHashtable<nsCookieKey, CookiesList> CookiesMap;
+
   CookieServiceChild();
 
   static CookieServiceChild* GetSingleton();
+
+  void
+  TrackCookieLoad(nsIChannel *aChannel);
 
 protected:
   virtual ~CookieServiceChild();
@@ -50,11 +62,21 @@ protected:
                                    const char *aServerTime,
                                    bool aFromHttp);
 
+  void
+  RecordDocumentCookie(nsCookie *aCookie,
+                       const OriginAttributes &aAttrs);
+
   void PrefChanged(nsIPrefBranch *aPrefBranch);
 
   bool RequireThirdPartyCheck();
 
+  virtual
+  mozilla::ipc::IPCResult RecvTrackCookiesLoad(nsTArray<CookieStruct>&& aCookiesList,
+                                               const OriginAttributes &aAttrs) override;
+
+  CookiesMap mCookiesMap;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
+  nsCOMPtr<nsIEffectiveTLDService> mTLDService;
   uint8_t mCookieBehavior;
   bool mThirdPartySession;
 };
