@@ -33,9 +33,9 @@ BRANDING_FILES = \
 
 include $(topsrcdir)/config/config.mk
 
-ifdef LOCALE_MERGEDIR
+ifdef IS_LANGUAGE_REPACK
 PPL_LOCALE_ARGS = \
-  --l10n-dir=$(LOCALE_MERGEDIR)/browser/installer \
+  --l10n-dir=$(REAL_LOCALE_MERGEDIR)/browser/installer \
   --l10n-dir=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer \
   --l10n-dir=$(topsrcdir)/browser/locales/en-US/installer \
   $(NULL)

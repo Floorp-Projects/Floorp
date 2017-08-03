@@ -17,27 +17,6 @@
 }
 %endif
 
-%ifdef MOZ_PHOTON_THEME
-:root {
-  --toolbar-background-color: -moz-dialog;
-  --toolbar-foreground-color: -moz-dialogtext;
-}
-/* Colour to use for toolbars and customize mode */
-%if defined(XP_WIN) || defined(XP_MACOSX)
-%ifdef XP_WIN
-@media (-moz-windows-default-theme) {
-%endif
-:root {
-  --toolbar-background-color: #f9f9fa;
-  --toolbar-foreground-color: #0c0c0d;
-}
-%ifdef XP_WIN
-}
-%endif
-%endif
-%endif
-
-
 /* Go button */
 .urlbar-go-button {
   padding: 0 3px;

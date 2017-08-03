@@ -186,17 +186,6 @@ Declaration::GetPropertyValueByID(nsCSSPropertyID aPropID,
   GetPropertyValueInternal(aPropID, aValue, nsCSSValue::eNormalized);
 }
 
-void
-Declaration::GetAuthoredPropertyValue(const nsAString& aProperty,
-                                      nsAString& aValue) const
-{
-  DispatchPropertyOperation(aProperty,
-    [&](nsCSSPropertyID propID) {
-      GetPropertyValueInternal(propID, aValue, nsCSSValue::eAuthorSpecified);
-    },
-    [&](const nsAString& name) { GetVariableValue(name, aValue); });
-}
-
 bool
 Declaration::GetPropertyIsImportant(const nsAString& aProperty) const
 {

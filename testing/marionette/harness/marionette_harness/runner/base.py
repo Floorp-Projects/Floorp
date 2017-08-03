@@ -361,11 +361,11 @@ class BaseMarionetteArguments(ArgumentParser):
                           dest='e10s',
                           default=True,
                           help='Disable e10s when running marionette tests.')
-        self.add_argument('--headless',
-                          action='store_true',
-                          dest='headless',
-                          default=False,
-                          help='Enable headless mode when running marionette tests.')
+        self.add_argument("--headless",
+                          action="store_true",
+                          dest="headless",
+                          default=os.environ.get("MOZ_HEADLESS", False),
+                          help="Run tests in headless mode.")
         self.add_argument('--tag',
                           action='append', dest='test_tags',
                           default=None,

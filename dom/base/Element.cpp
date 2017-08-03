@@ -4138,13 +4138,20 @@ Element::SetCustomElementData(CustomElementData* aData)
   slots->mCustomElementData = aData;
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(ServoElementMallocSizeOf)
+
 size_t
 Element::SizeOfExcludingThis(SizeOfState& aState) const
 {
   size_t n = FragmentOrElement::SizeOfExcludingThis(aState);
 
-  // XXX: measure mServoData.
-
+  // Measure mServoData. We use ServoElementMallocSizeOf rather than
+  // |aState.mMallocSizeOf| to distinguish in DMD's output the memory
+  // measured within Servo code.
+  if (mServoData.Get()) {
+    n += Servo_Element_SizeOfExcludingThis(ServoElementMallocSizeOf,
+                                           &aState.mSeenPtrs, this);
+  }
   return n;
 }
 

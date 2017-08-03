@@ -64,7 +64,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 6;
+var kVersion = 7;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -243,16 +243,17 @@ var CustomizableUIInternal = {
     this._updateAreasForPhoton();
 
     let navbarPlacements = [
+      "back-button",
+      "forward-button",
+      "stop-reload-button",
+      "home-button",
       "urlbar-container",
       "search-container",
       "bookmarks-menu-button",
       "downloads-button",
-      "home-button",
+      "sidebar-button",
     ];
 
-    if (AppConstants.MOZ_PHOTON_THEME) {
-      navbarPlacements.push("sidebar-button");
-    }
     if (AppConstants.MOZ_DEV_EDITION) {
       navbarPlacements.splice(2, 0, "developer-button");
     }
@@ -424,6 +425,24 @@ var CustomizableUIInternal = {
     if (currentVersion < 4) {
       CustomizableUI.removeWidgetFromArea("loop-button-throttled");
     }
+
+    if (currentVersion < 7 && gSavedState && gSavedState.placements &&
+        gSavedState.placements[CustomizableUI.AREA_NAVBAR]) {
+      let placements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
+      let newPlacements = ["back-button", "forward-button", "stop-reload-button", "home-button"];
+      for (let button of placements) {
+        if (!newPlacements.includes(button)) {
+          newPlacements.push(button);
+        }
+      }
+
+      if (!newPlacements.includes("sidebar-button")) {
+        newPlacements.push("sidebar-button");
+      }
+
+      gSavedState.placements[CustomizableUI.AREA_NAVBAR] = newPlacements;
+    }
+
   },
 
   /**

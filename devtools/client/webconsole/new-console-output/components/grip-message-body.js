@@ -45,6 +45,7 @@ GripMessageBody.propTypes = {
   useQuotes: PropTypes.bool,
   escapeWhitespace: PropTypes.bool,
   loadedObjectProperties: PropTypes.object,
+  loadedObjectEntries: PropTypes.object,
   type: PropTypes.string,
   helperType: PropTypes.string,
 };
@@ -64,6 +65,7 @@ function GripMessageBody(props) {
     escapeWhitespace,
     mode = MODE.LONG,
     loadedObjectProperties,
+    loadedObjectEntries,
   } = props;
 
   let styleObject;
@@ -105,6 +107,11 @@ function GripMessageBody(props) {
     loadObjectProperties: object => {
       const client = new ObjectClient(serviceContainer.hudProxyClient, object);
       dispatch(actions.messageObjectPropertiesLoad(messageId, client, object));
+    },
+    getObjectEntries: actor => loadedObjectEntries && loadedObjectEntries[actor],
+    loadObjectEntries: object => {
+      const client = new ObjectClient(serviceContainer.hudProxyClient, object);
+      dispatch(actions.messageObjectEntriesLoad(messageId, client, object));
     },
   };
 

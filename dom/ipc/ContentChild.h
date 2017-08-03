@@ -175,6 +175,8 @@ public:
     Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
     nsTArray<uint32_t>&& namespaces) override;
 
+  virtual mozilla::ipc::IPCResult RecvAudioDefaultDeviceChange() override;
+
   mozilla::ipc::IPCResult RecvReinitRenderingForDeviceReset() override;
 
   virtual mozilla::ipc::IPCResult RecvSetProcessSandbox(const MaybeFileDesc& aBroker) override;

@@ -254,3 +254,8 @@ html[dir="rtl"] .arrow svg,
 .object-label {
   color: var(--theme-highlight-blue);
 }
+
+.lessen {
+  opacity: 0.6;
+}
+
