@@ -7340,6 +7340,8 @@
                   class="tab-background">
           <xul:hbox xbl:inherits="selected=visuallyselected"
                     class="tab-line"/>
+          <xul:spacer flex="1"/>
+          <xul:hbox class="tab-bottom-line"/>
         </xul:vbox>
         <xul:hbox xbl:inherits="pinned,selected=visuallyselected,titlechanged,attention"
                   class="tab-content" align="center">
