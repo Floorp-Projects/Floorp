@@ -751,17 +751,19 @@ class Onboarding {
   }
 
   _renderNotificationBar() {
-    let div = this._window.document.createElement("div");
-    div.id = "onboarding-notification-bar";
+    let footer = this._window.document.createElement("footer");
+    footer.id = "onboarding-notification-bar";
+    footer.setAttribute("aria-live", "polite");
+    footer.setAttribute("aria-labelledby", "onboarding-notification-icon")
     // We use `innerHTML` for more friendly reading.
     // The security should be fine because this is not from an external input.
-    div.innerHTML = `
-      <div id="onboarding-notification-icon"></div>
-      <section id="onboarding-notification-message-section">
-        <div id="onboarding-notification-tour-icon"></div>
-        <div id="onboarding-notification-body">
-          <h6 id="onboarding-notification-tour-title"></h6>
-          <span id="onboarding-notification-tour-message"></span>
+    footer.innerHTML = `
+      <div id="onboarding-notification-icon" role="presentation"></div>
+      <section id="onboarding-notification-message-section" role="presentation">
+        <div id="onboarding-notification-tour-icon" role="presentation"></div>
+        <div id="onboarding-notification-body" role="presentation">
+          <h1 id="onboarding-notification-tour-title"></h1>
+          <p id="onboarding-notification-tour-message"></p>
         </div>
         <button id="onboarding-notification-action-btn"></button>
       </section>
@@ -771,12 +773,15 @@ class Onboarding {
       this._tourType === "new" ? "onboarding.notification-icon-tool-tip" :
                                  "onboarding.notification-icon-tooltip-updated",
       [BRAND_SHORT_NAME], 1);
-    div.querySelector("#onboarding-notification-icon").setAttribute("data-tooltip", toolTip);
 
-    let closeBtn = div.querySelector("#onboarding-notification-close-btn");
+    let icon = footer.querySelector("#onboarding-notification-icon");
+    icon.setAttribute("aria-label", toolTip);
+    icon.setAttribute("role", "presentation");
+
+    let closeBtn = footer.querySelector("#onboarding-notification-close-btn");
     closeBtn.setAttribute("title",
       this._bundle.GetStringFromName("onboarding.notification-close-button-tooltip"));
-    return div;
+    return footer;
   }
 
   hide() {
