@@ -912,6 +912,7 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
 bool
 gfxGDIFontList::FindAndAddFamilies(const nsAString& aFamily,
                                    nsTArray<gfxFontFamily*>* aOutput,
+                                   bool aDeferOtherFamilyNamesLoading,
                                    gfxFontStyle* aStyle,
                                    gfxFloat aDevToCssSize)
 {
@@ -928,7 +929,10 @@ gfxGDIFontList::FindAndAddFamilies(const nsAString& aFamily,
         return false;
     }
 
-    return gfxPlatformFontList::FindAndAddFamilies(aFamily, aOutput, aStyle,
+    return gfxPlatformFontList::FindAndAddFamilies(aFamily,
+                                                   aOutput,
+                                                   aDeferOtherFamilyNamesLoading,
+                                                   aStyle,
                                                    aDevToCssSize);
 }
 
