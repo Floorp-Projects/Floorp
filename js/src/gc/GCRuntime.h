@@ -796,6 +796,8 @@ class GCRuntime
     void traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock);
     void traceRuntimeForMinorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
 
+    void purgeRuntimeForMinorGC();
+
     void shrinkBuffers();
     void onOutOfMallocMemory();
     void onOutOfMallocMemory(const AutoLockGC& lock);
