@@ -33,9 +33,6 @@ findbar[noanim] {
 }
 
 .findbar-closebutton {
-  -moz-appearance: none;
-  width: 16px;
-  height: 16px;
   margin: 0 8px;
 }
 

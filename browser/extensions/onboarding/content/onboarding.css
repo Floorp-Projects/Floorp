@@ -68,34 +68,31 @@
 }
 
 .onboarding-close-btn {
-   position: absolute;
-   top: 15px;
-   offset-inline-end: 15px;
-   cursor: pointer;
-   width: 16px;
-   height: 16px;
-   padding: 12px;
-   border: none;
-   background: var(--onboarding-overlay-dialog-background-color);
+  position: absolute;
+  top: 15px;
+  offset-inline-end: 15px;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  padding: 0;
  }
 
 .onboarding-close-btn::before {
-  content: url(chrome://browser/skin/sidebar/close.svg);
-  display: block;
-  margin-top: -8px;
-  margin-inline-start: -8px;
+  content: url(chrome://global/skin/icons/close.svg);
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0;
 }
 
-.onboarding-close-btn:hover,
-#onboarding-notification-close-btn:hover {
-  background-color: rgba(204, 204, 204, 0.6);
+.onboarding-close-btn:hover::before {
+  fill-opacity: 0.1;
 }
 
 #onboarding-overlay.onboarding-opened > #onboarding-overlay-dialog {
-  --onboarding-overlay-dialog-background-color: #f5f5f7;
   width: 960px;
   height: 510px;
-  background: var(--onboarding-overlay-dialog-background-color);
+  background: #f5f5f7;
   border: 1px solid rgba(9, 6, 13, 0.1); /* #09060D, 0.1 opacity */
   border-radius: 3px;
   position: relative;
@@ -495,7 +492,6 @@
 }
 
 #onboarding-notification-close-btn {
-  background: var(--onboarding-notification-bar-background-color);
   position: absolute;
   offset-block-start: 50%;
   offset-inline-end: 34px;

@@ -370,13 +370,10 @@ groupbox {
 }
 
 .close-icon {
-  background-color: transparent !important;
   border: none;
-  box-shadow: none;
-  padding: 0;
-  height: auto;
-  min-height: 16px;
+  background: none !important;
   min-width: 0;
+  min-height: auto;
 }
 
 .dialogBox > .groupbox-body {
