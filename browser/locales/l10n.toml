@@ -137,6 +137,10 @@ locales = [
 [[includes]]
     path = "devtools/client/locales/l10n.toml"
 
+[[paths]]
+    reference = "devtools/shim/locales/en-US/**"
+    l10n = "{l}devtools/shim/**"
+
 # Filters
 # The filters below are evaluated one after the other, in the given order.
 # Enter a combination of path as in the localization, key, and an action,
