@@ -552,16 +552,10 @@ var BookmarkPropertiesPanel = {
   _getTransactionsForURIList: function BPP__getTransactionsForURIList() {
     var transactions = [];
     for (let uri of this._URIs) {
-      // uri should be an object in the form { uri, title }. Though add-ons
-      // could still use the legacy form, where it's an nsIURI.
-      // TODO: Remove This from v57 on.
-      let [_uri, _title] = uri instanceof Ci.nsIURI ?
-        [uri, this._getURITitleFromHistory(uri)] : [uri.uri, uri.title];
-
       let createTxn =
-        new PlacesCreateBookmarkTransaction(_uri, -1,
+        new PlacesCreateBookmarkTransaction(uri.uri, -1,
                                             PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                            _title);
+                                            uri.title);
       transactions.push(createTxn);
     }
     return transactions;
@@ -665,14 +659,11 @@ var BookmarkPropertiesPanel = {
 
       itemGuid = await PlacesTransactions.NewLivemark(info).transact();
     } else if (this._itemType == BOOKMARK_FOLDER) {
+      // NewFolder requires a url rather than uri.
+      info.children = this._URIs.map(item => {
+        return { url: item.uri, title: item.title };
+      });
       itemGuid = await PlacesTransactions.NewFolder(info).transact();
-      // URIs is an array of objects in the form { uri, title }.  It is still
-      // named URIs because for backwards compatibility it could also be an
-      // array of nsIURIs. TODO: Fix the property names from v57.
-      for (let { uri: url, title } of this._URIs) {
-        await PlacesTransactions.NewBookmark({ parentGuid: itemGuid, url, title })
-                                .transact();
-      }
     } else {
       throw new Error(`unexpected value for _itemType:  ${this._itemType}`);
     }
