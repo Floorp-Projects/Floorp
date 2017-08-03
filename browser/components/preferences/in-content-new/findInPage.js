@@ -18,6 +18,7 @@ var gSearchResultsPane = {
     this.searchInput = document.getElementById("searchInput");
     this.searchInput.hidden = !Services.prefs.getBoolPref("browser.preferences.search");
     if (!this.searchInput.hidden) {
+      this.searchInput.addEventListener("input", this);
       this.searchInput.addEventListener("command", this);
       window.addEventListener("DOMContentLoaded", () => {
         this.searchInput.focus();
@@ -145,7 +146,8 @@ var gSearchResultsPane = {
       let nodeStartIndex = null;
 
       // Determining the start and end node to highlight from
-      nodeSizes.forEach(function(lengthNodes, index) {
+      for (let index = 0; index < nodeSizes.length; index++) {
+        let lengthNodes = nodeSizes[index];
         // Determining the start node
         if (!startNode && lengthNodes >= startValue) {
           startNode = textNodes[index];
@@ -164,7 +166,7 @@ var gSearchResultsPane = {
             endValue -= nodeSizes[index - 1];
           }
         }
-      });
+      }
       let range = document.createRange();
       range.setStart(startNode, startValue);
       range.setEnd(endNode, endValue);
@@ -207,8 +209,15 @@ var gSearchResultsPane = {
    * @param String event
    *    to search for filted query in
    */
-  searchFunction(event) {
-    this.query = event.target.value.trim().toLowerCase();
+  async searchFunction(event) {
+    let query = event.target.value.trim().toLowerCase();
+    if (this.query == query) {
+      return;
+    }
+
+    let subQuery = this.query && query.indexOf(this.query) !== -1;
+    this.query = query;
+
     this.getFindSelection(window).removeAllRanges();
     this.removeAllSearchTooltips();
     this.removeAllSearchMenuitemIndicators();
@@ -230,13 +239,40 @@ var gSearchResultsPane = {
       let rootPreferencesChildren = document
         .querySelectorAll("#mainPrefPane > *:not([data-hidden-from-search])");
 
-      // Showing all the children to bind JS, Access Keys, etc
+      if (subQuery) {
+        // Since the previous query is a subset of the current query,
+        // there is no need to check elements that is hidden already.
+        rootPreferencesChildren =
+          Array.prototype.filter.call(rootPreferencesChildren, el => !el.hidden);
+      }
+
+      // Mark all the children to check be visible to bind JS, Access Keys, etc,
+      // but don't really show them by setting their visibility to hidden in CSS.
       for (let i = 0; i < rootPreferencesChildren.length; i++) {
         rootPreferencesChildren[i].hidden = false;
+        rootPreferencesChildren[i].classList.add("visually-hidden");
       }
+
+      let ts = performance.now();
+      let FRAME_THRESHOLD = 1000 / 60;
 
       // Showing or Hiding specific section depending on if words in query are found
       for (let i = 0; i < rootPreferencesChildren.length; i++) {
+        if (performance.now() - ts > FRAME_THRESHOLD) {
+          // Creating tooltips for all the instances found
+          for (let anchorNode of this.listSearchTooltips) {
+            this.createSearchTooltip(anchorNode, this.query);
+          }
+          // It hides Search Results header so turning it on
+          srHeader.hidden = false;
+          srHeader.classList.remove("visually-hidden");
+          ts = await new Promise(resolve => window.requestAnimationFrame(resolve));
+          if (query !== this.query) {
+            return;
+          }
+        }
+
+        rootPreferencesChildren[i].classList.remove("visually-hidden");
         if (!rootPreferencesChildren[i].classList.contains("header") &&
             !rootPreferencesChildren[i].classList.contains("subcategory") &&
             !rootPreferencesChildren[i].classList.contains("no-results-message") &&
@@ -249,6 +285,7 @@ var gSearchResultsPane = {
       }
       // It hides Search Results header so turning it on
       srHeader.hidden = false;
+      srHeader.classList.remove("visually-hidden");
 
       if (!resultsFound) {
         let noResultsEl = document.querySelector(".no-results-message");
@@ -266,7 +303,9 @@ var gSearchResultsPane = {
           strings.getFormattedString("searchResults.needHelp2", [helpUrl, brandName]);
       } else {
         // Creating tooltips for all the instances found
-        this.listSearchTooltips.forEach((anchorNode) => this.createSearchTooltip(anchorNode, this.query));
+        for (let anchorNode of this.listSearchTooltips) {
+          this.createSearchTooltip(anchorNode, this.query);
+        }
 
         // Implant search telemetry probe after user stops typing for a while
         if (this.query.length >= 2) {
@@ -280,6 +319,8 @@ var gSearchResultsPane = {
       // Going back to General when cleared
       gotoPref("paneGeneral");
     }
+
+    window.dispatchEvent(new CustomEvent("PreferencesSearchCompleted", { detail: query }));
   },
 
   /**
@@ -409,6 +450,9 @@ var gSearchResultsPane = {
    *    Word or words that are being searched for
    */
   createSearchTooltip(anchorNode, query) {
+    if (anchorNode.tooltipNode) {
+      return;
+    }
     let searchTooltip = anchorNode.ownerDocument.createElement("span");
     searchTooltip.setAttribute("class", "search-tooltip");
     searchTooltip.textContent = query;
@@ -439,7 +483,10 @@ var gSearchResultsPane = {
       searchTooltip.parentElement.classList.remove("search-tooltip-parent");
       searchTooltip.remove();
     }
-    this.listSearchTooltips.forEach((anchorNode) => anchorNode.tooltipNode.remove());
+    for (let anchorNode of this.listSearchTooltips) {
+      anchorNode.tooltipNode.remove();
+      anchorNode.tooltipNode = null;
+    }
     this.listSearchTooltips.clear();
   },
 
@@ -447,7 +494,9 @@ var gSearchResultsPane = {
    * Remove all indicators on menuitem.
    */
   removeAllSearchMenuitemIndicators() {
-    this.listSearchMenuitemIndicators.forEach((node) => node.removeAttribute("indicator"));
+    for (let node of this.listSearchMenuitemIndicators) {
+      node.removeAttribute("indicator");
+    }
     this.listSearchMenuitemIndicators.clear();
   }
 }

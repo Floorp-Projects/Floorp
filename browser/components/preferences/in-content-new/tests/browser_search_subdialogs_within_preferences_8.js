@@ -8,19 +8,28 @@ add_task(async function() {
 });
 
 /**
- * Test for searching for the "Set Home Page" subdialog.
+ * Test for searching for the "Camera Permissions" subdialog.
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("Set Home Page", "startupGroup");
+  await evaluateSearchResults("set camera permissions", "permissionsGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
- * Test for searching for the "Languages" subdialog.
+ * Test for searching for the "Microphone Permissions" subdialog.
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("Choose languages", "languagesGroup");
+  await evaluateSearchResults("set microphone permissions", "permissionsGroup");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+/**
+ * Test for searching for the "Notification Permissions" subdialog.
+ */
+add_task(async function() {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await evaluateSearchResults("set notifications permissions", "permissionsGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
