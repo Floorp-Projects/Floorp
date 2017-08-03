@@ -57,7 +57,7 @@
 }
 
 #sidebar-switcher-arrow {
-  list-style-image: url(chrome://browser/skin/arrow-dropdown-12.svg);
+  list-style-image: url(chrome://browser/skin/arrow-dropdown.svg);
   width: 12px;
   height: 12px;
 }
