@@ -88,7 +88,7 @@ def _generate_upstream_artifacts(build_platform, is_nightly=False):
             'format': 'gpg',
         }, {
             'artifacts': ['public/build/update/target.complete.mar'],
-            'format': 'mar_sha384',
+            'format': 'mar',
         }]
     else:
         raise Exception("Platform not implemented for signing")
