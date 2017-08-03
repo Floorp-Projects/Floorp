@@ -1739,10 +1739,10 @@ IMEContentObserver::FlushMergeableNotifications()
 }
 
 void
-IMEContentObserver::TryToFlushPendingNotifications()
+IMEContentObserver::TryToFlushPendingNotifications(bool aAllowAsync)
 {
   if (!mQueuedSender || mSendingNotification != NOTIFY_IME_OF_NOTHING ||
-      XRE_IsContentProcess()) {
+      (XRE_IsContentProcess() && aAllowAsync)) {
     return;
   }
 
