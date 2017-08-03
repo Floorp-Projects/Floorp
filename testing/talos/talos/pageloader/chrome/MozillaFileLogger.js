@@ -48,7 +48,7 @@ var MozillaFileLogger = {};
 
 
 MozillaFileLogger.init = function(path) {
-  MozillaFileLogger._file = Cc[LF_CID].createInstance(Ci.nsILocalFile);
+  MozillaFileLogger._file = Cc[LF_CID].createInstance(Ci.nsIFile);
   MozillaFileLogger._file.initWithPath(path);
   MozillaFileLogger._foStream = Cc[FOSTREAM_CID].createInstance(Ci.nsIFileOutputStream);
   MozillaFileLogger._foStream.init(this._file, PR_WRITE_ONLY | PR_CREATE_FILE | PR_APPEND,
@@ -85,7 +85,7 @@ MozillaFileLogger.close = function() {
 
 try {
   var prefs = Cc["@mozilla.org/preferences-service;1"]
-    .getService(Ci.nsIPrefBranch2);
+    .getService(Ci.nsIPrefBranch);
   var filename = prefs.getCharPref("talos.logfile");
   MozillaFileLogger.init(filename);
 } catch (ex) {} // pref does not exist, return empty string
