@@ -250,9 +250,9 @@ GetPropertyIfPresent(JSContext* cx, HandleObject obj, HandleId id, MutableHandle
 }
 
 bool
-js::Throw(JSContext* cx, jsid id, unsigned errorNumber)
+js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
 {
-    MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == 1);
+    MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == (details ? 2 : 1));
 
     RootedValue idVal(cx, IdToValue(id));
     JSString* idstr = ValueToSource(cx, idVal);
@@ -261,7 +261,15 @@ js::Throw(JSContext* cx, jsid id, unsigned errorNumber)
     JSAutoByteString bytes(cx, idstr);
     if (!bytes)
         return false;
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr());
+
+    if (details) {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr(),
+                                   details);
+    }
+    else {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr());
+    }
+
     return false;
 }
 

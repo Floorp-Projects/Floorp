@@ -1391,7 +1391,7 @@ GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* method
 
 /* Helpers for throwing. These always return false. */
 extern bool
-Throw(JSContext* cx, jsid id, unsigned errorNumber);
+Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details = nullptr);
 
 extern bool
 Throw(JSContext* cx, JSObject* obj, unsigned errorNumber);
