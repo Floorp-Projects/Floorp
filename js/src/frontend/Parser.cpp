@@ -368,7 +368,7 @@ bool
 ParseContext::init()
 {
     if (scriptId_ == UINT32_MAX) {
-        tokenStream_.reportErrorNoOffset(JSMSG_NEED_DIET, js_script_str);
+        errorReporter_.reportErrorNoOffset(JSMSG_NEED_DIET, js_script_str);
         return false;
     }
 
@@ -1010,7 +1010,7 @@ Parser<ParseHandler, CharT>::parse()
     Directives directives(options().strictOption);
     GlobalSharedContext globalsc(context, ScopeKind::Global,
                                  directives, options().extraWarningsOption);
-    ParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
+    SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
     if (!globalpc.init())
         return null();
 
@@ -2151,7 +2151,7 @@ template <>
 ParseNode*
 Parser<FullParseHandler, char16_t>::evalBody(EvalSharedContext* evalsc)
 {
-    ParseContext evalpc(this, evalsc, /* newDirectives = */ nullptr);
+    SourceParseContext evalpc(this, evalsc, /* newDirectives = */ nullptr);
     if (!evalpc.init())
         return nullptr;
 
@@ -2234,7 +2234,7 @@ template <>
 ParseNode*
 Parser<FullParseHandler, char16_t>::globalBody(GlobalSharedContext* globalsc)
 {
-    ParseContext globalpc(this, globalsc, /* newDirectives = */ nullptr);
+    SourceParseContext globalpc(this, globalsc, /* newDirectives = */ nullptr);
     if (!globalpc.init())
         return nullptr;
 
@@ -2272,7 +2272,7 @@ Parser<FullParseHandler, char16_t>::moduleBody(ModuleSharedContext* modulesc)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
-    ParseContext modulepc(this, modulesc, nullptr);
+    SourceParseContext modulepc(this, modulesc, nullptr);
     if (!modulepc.init())
         return null();
 
@@ -2614,7 +2614,7 @@ Parser<FullParseHandler, char16_t>::standaloneFunction(HandleFunction fun,
         return null();
     funbox->initStandaloneFunction(enclosingScope);
 
-    ParseContext funpc(this, funbox, newDirectives);
+    SourceParseContext funpc(this, funbox, newDirectives);
     if (!funpc.init())
         return null();
     funpc.setIsStandaloneFunctionBody();
@@ -3591,11 +3591,11 @@ Parser<ParseHandler, CharT>::innerFunction(Node pn, ParseContext* outerpc, Funct
 {
     // Note that it is possible for outerpc != this->pc, as we may be
     // attempting to syntax parse an inner function from an outer full
-    // parser. In that case, outerpc is a ParseContext from the full parser
+    // parser. In that case, outerpc is a SourceParseContext from the full parser
     // instead of the current top of the stack of the syntax parser.
 
     // Push a new ParseContext.
-    ParseContext funpc(this, funbox, newDirectives);
+    SourceParseContext funpc(this, funbox, newDirectives);
     if (!funpc.init())
         return false;
 
@@ -3619,7 +3619,7 @@ Parser<ParseHandler, CharT>::innerFunction(Node pn, ParseContext* outerpc, Handl
 {
     // Note that it is possible for outerpc != this->pc, as we may be
     // attempting to syntax parse an inner function from an outer full
-    // parser. In that case, outerpc is a ParseContext from the full parser
+    // parser. In that case, outerpc is a SourceParseContext from the full parser
     // instead of the current top of the stack of the syntax parser.
 
     FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, inheritedDirectives,
@@ -3682,7 +3682,7 @@ Parser<FullParseHandler, char16_t>::standaloneLazyFunction(HandleFunction fun,
     funbox->initFromLazyFunction();
 
     Directives newDirectives = directives;
-    ParseContext funpc(this, funbox, &newDirectives);
+    SourceParseContext funpc(this, funbox, &newDirectives);
     if (!funpc.init())
         return null();
 
@@ -8695,7 +8695,7 @@ Parser<ParseHandler, CharT>::generatorComprehensionLambda(unsigned begin)
     genFunbox->isGenexpLambda = true;
     genFunbox->initWithEnclosingParseContext(outerpc, Expression);
 
-    ParseContext genpc(this, genFunbox, /* newDirectives = */ nullptr);
+    SourceParseContext genpc(this, genFunbox, /* newDirectives = */ nullptr);
     if (!genpc.init())
         return null();
     genpc.functionScope().useAsVarScope(&genpc);
