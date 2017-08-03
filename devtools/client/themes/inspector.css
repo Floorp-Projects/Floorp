@@ -191,7 +191,7 @@ window {
 /* "no results" warning message displayed in the ruleview and in the computed view */
 
 #ruleview-no-results,
-#computedview-no-results {
+#computed-no-results {
   color: var(--theme-body-color-inactive);
   text-align: center;
   margin: 5px;

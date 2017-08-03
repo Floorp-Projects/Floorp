@@ -60,6 +60,8 @@
   <button id='button-up' onclick="document.getElementById('by-button').click();">foo</button>
   <div id='div-click' onclick="document.getElementById('by-button').click();" tabindex='1'>foo</div>
   <div id='div-click-on-demand' onclick="var i=document.createElement('input'); i.type='file'; i.click();" tabindex='1'>foo</div>
+  <div id='div-keydown' onkeydown="document.getElementById('by-button').click();" tabindex='1'>foo</div>
+  <a id='link-click' href="javascript:document.getElementById('by-button').click();" tabindex='1'>foo</a>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -129,6 +131,8 @@ var testData = [["a", 1, MockFilePicker.filterImages, 1],
                 ["button-up", 0, undefined, 0],
                 ["div-click", 0, undefined, 0],
                 ["div-click-on-demand", 0, undefined, 0],
+                ["div-keydown", 0, undefined, 0],
+                ["link-click", 0, undefined, 0],
                ];
 
 var currentTest = 0;
@@ -137,9 +141,8 @@ var filters;
 var filterIndex;
 var mixRefExtensionList;
 
-// disable popups to make sure that the popup blocker does not interfere
-// with manually opened file pickers.
-SpecialPowers.pushPrefEnv({'set': [["dom.disable_open_during_load", false]]}, runTests);
+// Make sure picker works with popup blocker enabled and no allowed events
+SpecialPowers.pushPrefEnv({'set': [["dom.popup_allowed_events", ""]]}, runTests);
 
 function launchNextTest() {
   MockFilePicker.shown = false;
@@ -192,8 +195,11 @@ function launchNextTest() {
              testData[currentTest][0] == 'button-down' ||
              testData[currentTest][0] == 'button-up' ||
              testData[currentTest][0] == 'div-click' ||
-             testData[currentTest][0] == 'div-click-on-demand') {
+             testData[currentTest][0] == 'div-click-on-demand' ||
+             testData[currentTest][0] == 'link-click') {
     synthesizeMouseAtCenter(document.getElementById(testData[currentTest][0]), {});
+  } else if (testData[currentTest][0] == 'div-keydown') {
+    synthesizeKey("a", {});
   } else {
     document.getElementById(testData[currentTest][0]).click();
   }

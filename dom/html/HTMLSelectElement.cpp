@@ -1544,6 +1544,11 @@ HTMLSelectElement::IntrinsicState() const
 NS_IMETHODIMP
 HTMLSelectElement::SaveState()
 {
+  nsPresState* presState = GetPrimaryPresState();
+  if (!presState) {
+    return NS_OK;
+  }
+
   RefPtr<SelectState> state = new SelectState();
 
   uint32_t len = Length();
@@ -1557,15 +1562,12 @@ HTMLSelectElement::SaveState()
     }
   }
 
-  nsPresState* presState = GetPrimaryPresState();
-  if (presState) {
-    presState->SetStateProperty(state);
+  presState->SetStateProperty(state);
 
-    if (mDisabledChanged) {
-      // We do not want to save the real disabled state but the disabled
-      // attribute.
-      presState->SetDisabled(HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
-    }
+  if (mDisabledChanged) {
+    // We do not want to save the real disabled state but the disabled
+    // attribute.
+    presState->SetDisabled(HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
   }
 
   return NS_OK;

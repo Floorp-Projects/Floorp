@@ -633,7 +633,7 @@ hr {
   margin-inline-end: auto;
   color: gray;
   -moz-float-edge: margin-box;
-  box-sizing: border-box;
+  box-sizing: content-box;
 }
 
 hr[size="1"] {

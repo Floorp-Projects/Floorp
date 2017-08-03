@@ -64,6 +64,12 @@ class MachCommands(MachCommandBase):
             kwargs['perTabPause'] = 1
             kwargs['settleWaitTime'] = 1
 
+        if 'enable_stylo' in kwargs and kwargs['enable_stylo']:
+            os.environ['STYLO_FORCE_ENABLED'] = '1'
+            os.environ['STYLO_THREADS'] = '4'
+            if 'single_stylo_traversal' in kwargs and kwargs['single_stylo_traversal']:
+                os.environ['STYLO_THREADS'] = '1'
+
         runtime_testvars = {}
         for arg in ('webRootDir', 'pageManifest', 'resultsDir', 'entities', 'iterations',
                     'perTabPause', 'settleWaitTime', 'maxTabs'):
@@ -119,6 +125,10 @@ class MachCommands(MachCommandBase):
                 '-d',
                 page_load_test_dir]}
             self.run_process(**unzip_args)
+
+        # If '--preferences' was not specified supply our default set.
+        if not kwargs['prefs_files']:
+            kwargs['prefs_files'] = [os.path.join(awsy_source_dir, 'conf', 'prefs.json')]
 
         for k, v in kwargs.iteritems():
             setattr(args, k, v)
@@ -178,6 +188,12 @@ class MachCommands(MachCommandBase):
                      dest='settleWaitTime',
                      help='Seconds to wait for things to settled down. '
                      'Defaults to %s.' % SETTLE_WAIT_TIME)
+    @CommandArgument('--enable-stylo', group='AWSY', action='store_true',
+                     dest='enable_stylo', default=False,
+                     help='Enable stylo.')
+    @CommandArgument('--single-stylo-traversal', group='AWSY', action='store_true',
+                     dest='single_stylo_traversal', default=False,
+                     help='Set STYLO_THREADS=1.')
     def run_awsy_test(self, tests, **kwargs):
         """mach awsy-test runs the in-tree version of the Are We Slim Yet
         (AWSY) tests.

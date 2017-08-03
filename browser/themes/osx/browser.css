@@ -1071,10 +1071,6 @@ html|span.ac-emphasize-text-url {
   opacity: 0;
 }
 
-#manage-share-providers {
-  -moz-image-region: rect(18px, 468px, 36px, 450px);
-}
-
 .social-share-toolbar {
   border-bottom: 1px solid #dedede;
   padding: 2px;

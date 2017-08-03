@@ -332,15 +332,15 @@
   column-rule: 1px solid var(--theme-splitter-color);
 }
 
-.boxmodel-properties-wrapper .property-view {
+.boxmodel-properties-wrapper .computed-property-view {
   padding-inline-start: 17px;
 }
 
-.boxmodel-properties-wrapper .property-name-container {
+.boxmodel-properties-wrapper .computed-property-name-container {
   flex: 1;
 }
 
-.boxmodel-properties-wrapper .property-value-container {
+.boxmodel-properties-wrapper .computed-property-value-container {
   flex: 1;
   display: block;
 }

@@ -845,7 +845,9 @@ nsLookAndFeel::GetAccentColorText(nscolor& aColor)
   // the accent color.  Windows itself uses either white or black text
   // depending on how light or dark the accent color is.  We do the same
   // here based on the luminance of the accent color with a threshhold
-  // value that seem consistent with what Windows does.
+  // value.  This algorithm should match what Windows does.  It comes from:
+  //
+  // https://docs.microsoft.com/en-us/windows/uwp/style/color
 
   float luminance = (NS_GET_R(accentColor) * 2 +
                      NS_GET_G(accentColor) * 5 +

@@ -95,6 +95,7 @@ linux64-stylo/debug:
 linux64-stylo/opt:
     build-platform: linux64/opt
     test-sets:
+        - awsy-stylo
         - stylo-tests
         - talos
 linux64-stylo-sequential/debug:
@@ -104,6 +105,7 @@ linux64-stylo-sequential/debug:
 linux64-stylo-sequential/opt:
     build-platform: linux64/opt
     test-sets:
+        - awsy-stylo-sequential
         - stylo-sequential-tests
         - talos
 macosx64-stylo/debug:
@@ -113,6 +115,7 @@ macosx64-stylo/debug:
 macosx64-stylo/opt:
     build-platform: macosx64/opt
     test-sets:
+        - awsy-stylo
         - stylo-tests
 # Windows needs more work to green up (bug 1385027)
 # windows7-32-stylo/debug:
@@ -122,6 +125,7 @@ macosx64-stylo/opt:
 # windows7-32-stylo/opt:
 #     build-platform: win32/opt
 #     test-sets:
+#         - awsy-stylo
 #         - stylo-tests
 # windows10-64-stylo/debug:
 #     build-platform: win64/debug
@@ -130,6 +134,7 @@ macosx64-stylo/opt:
 # windows10-64-stylo/opt:
 #     build-platform: win64/opt
 #     test-sets:
+#         - awsy-stylo
 #         - stylo-tests
 
 # QR builds just run a subset right now. Note that the tests in this
