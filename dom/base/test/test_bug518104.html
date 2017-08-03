@@ -26,9 +26,7 @@ function done() {
 
 </script>
 <div id="content" style="display: none">
-  <iframe id='iframe' src="data:text/html,
-    <div></div><div></div>
-    <script defer src='data:application/javascript,document.write(%2522<p></p>%2522);parent.done();document.close();'></script>">
+  <iframe id='iframe' srcdoc="<div></div><div></div><script defer src='file_bug518104.js'></script>">
   </iframe>
 </div>
 <pre id="test">
