@@ -123,6 +123,18 @@ public final class TestHelper {
     static UiObject blockOffIcon = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/block")
             .enabled(true));
+    static UiObject AddtoHSmenuItem = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/add_to_homescreen")
+            .enabled(true));
+    static UiObject AddtoHSCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("android:id/button2")
+            .enabled(true));
+    static UiObject AddtoHSOKBtn = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("android:id/button1")
+            .enabled(true));
+    static UiObject shortcutTitle = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/edit_title")
+            .enabled(true));
 
     /********* Main View Menu Item Locators ***********/
     static UiObject RightsItem = mDevice.findObject(new UiSelector()
