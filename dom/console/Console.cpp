@@ -37,7 +37,6 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
-#include "nsIProgrammingLanguage.h"
 #include "nsISensitiveInfoHiddenURI.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
@@ -1151,7 +1150,6 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
     aStackEntry.mAsyncCause.Construct(cause);
   }
 
-  aStackEntry.mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
   return NS_OK;
 }
 
