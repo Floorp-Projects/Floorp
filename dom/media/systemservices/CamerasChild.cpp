@@ -90,7 +90,7 @@ public:
     if (!existingBackgroundChild) {
       LOG(("No existingBackgroundChild"));
       existingBackgroundChild =
-        ipc::BackgroundChild::SynchronouslyCreateForCurrentThread();
+        ipc::BackgroundChild::GetOrCreateForCurrentThread();
       LOG(("BackgroundChild: %p", existingBackgroundChild));
       if (!existingBackgroundChild) {
         return NS_ERROR_FAILURE;
@@ -130,7 +130,7 @@ GetCamerasChild() {
     // At this point we are in the MediaManager thread, and the thread we are
     // dispatching to is the specific Cameras IPC thread that was just made
     // above, so now we will fire off a runnable to run
-    // BackgroundChild::SynchronouslyCreateForCurrentThread there, while we
+    // BackgroundChild::GetOrCreateForCurrentThread there, while we
     // block in this thread.
     // We block until the following happens in the Cameras IPC thread:
     // 1) Creation of PBackground finishes

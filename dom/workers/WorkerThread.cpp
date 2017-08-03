@@ -327,7 +327,7 @@ WorkerThread::Observer::OnProcessNextEvent(nsIThreadInternal* /* aThread */,
 
   // If the PBackground child is not created yet, then we must permit
   // blocking event processing to support
-  // BackgroundChild::SynchronouslyCreateForCurrentThread(). If this occurs
+  // BackgroundChild::GetOrCreateCreateForCurrentThread(). If this occurs
   // then we are spinning on the event queue at the start of
   // PrimaryWorkerRunnable::Run() and don't want to process the event in
   // mWorkerPrivate yet.

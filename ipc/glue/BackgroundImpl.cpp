@@ -399,7 +399,7 @@ private:
 
   // Forwarded from BackgroundChild.
   static PBackgroundChild*
-  SynchronouslyCreateForCurrentThread();
+  GetOrCreateForCurrentThread();
 
   // Forwarded from BackgroundChild.
   static void
@@ -864,9 +864,9 @@ BackgroundChild::GetOrCreateForCurrentThread(
 
 // static
 PBackgroundChild*
-BackgroundChild::SynchronouslyCreateForCurrentThread()
+BackgroundChild::GetOrCreateForCurrentThread()
 {
-  return ChildImpl::SynchronouslyCreateForCurrentThread();
+  return ChildImpl::GetOrCreateForCurrentThread();
 }
 
 // static
@@ -1655,10 +1655,8 @@ NS_IMPL_ISUPPORTS(Callback, nsIIPCBackgroundChildCreateCallback)
 
 /* static */
 PBackgroundChild*
-ChildImpl::SynchronouslyCreateForCurrentThread()
+ChildImpl::GetOrCreateForCurrentThread()
 {
-  MOZ_ASSERT(!GetForCurrentThread());
-
   bool done = false;
   nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback = new Callback(&done);
 
