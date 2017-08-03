@@ -20,7 +20,7 @@ function resetMasterPassword()
   let token = Cc["@mozilla.org/security/pk11tokendb;1"]
                 .getService(Ci.nsIPK11TokenDB).getInternalKeyToken();
   token.reset();
-  token.changePassword("", "");
+  token.initPassword("");
 }
 
 // Tests
