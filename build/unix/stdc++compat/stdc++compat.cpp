@@ -28,6 +28,7 @@ This file adds the necessary compatibility tricks to avoid symbols with
 version GLIBCXX_3.4.16 and bigger, keeping binary compatibility with
 libstdc++ 4.6.1.
 
+WARNING: all symbols from this file must be defined weak.
 */
 
 #define GLIBCXX_VERSION(a, b, c) (((a) << 16) | ((b) << 8) | (c))
@@ -39,7 +40,7 @@ libstdc++ 4.6.1.
 #include <tr1/unordered_map>
 namespace std
 {
-  size_t
+  size_t __attribute__((weak))
   __detail::_Prime_rehash_policy::_M_next_bkt(size_t __n) const
   {
     tr1::__detail::_Prime_rehash_policy policy(_M_max_load_factor);
@@ -48,7 +49,7 @@ namespace std
     return ret;
   }
 
-  pair<bool, size_t>
+  pair<bool, size_t> __attribute__((weak))
   __detail::_Prime_rehash_policy::_M_need_rehash(size_t __n_bkt,
                                                  size_t __n_elt,
                                                  size_t __n_ins) const
@@ -67,7 +68,7 @@ namespace std {
 
     /* We shouldn't be throwing exceptions at all, but it sadly turns out
        we call STL (inline) functions that do. */
-    void __throw_out_of_range_fmt(char const* fmt, ...)
+    void __attribute__((weak)) __throw_out_of_range_fmt(char const* fmt, ...)
     {
         va_list ap;
         char buf[1024]; // That should be big enough.
@@ -87,7 +88,7 @@ namespace std {
 /* Technically, this symbol is not in GLIBCXX_3.4.20, but in CXXABI_1.3.8,
    but that's equivalent, version-wise. Those calls are added by the compiler
    itself on `new Class[n]` calls. */
-extern "C" void
+extern "C" void __attribute__((weak))
 __cxa_throw_bad_array_new_length()
 {
     MOZ_CRASH();
@@ -100,7 +101,7 @@ __cxa_throw_bad_array_new_length()
  * char const* argument. Older versions only have a constructor with
  * std::string. */
 namespace std {
-    runtime_error::runtime_error(char const* s)
+    __attribute__((weak)) runtime_error::runtime_error(char const* s)
     : runtime_error(std::string(s))
     {
     }
