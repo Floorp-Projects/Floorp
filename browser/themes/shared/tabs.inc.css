@@ -77,6 +77,11 @@
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
+.tab-icon-image[src^="chrome://"] {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 .tab-icon-image[sharing]:not([selected]),
 .tab-sharing-icon-overlay {
   animation: 3s linear tab-sharing-icon-pulse infinite;
