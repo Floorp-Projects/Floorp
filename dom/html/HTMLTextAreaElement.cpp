@@ -958,12 +958,6 @@ HTMLTextAreaElement::IntrinsicState() const
 {
   EventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
 
-  if (Required()) {
-    state |= NS_EVENT_STATE_REQUIRED;
-  } else {
-    state |= NS_EVENT_STATE_OPTIONAL;
-  }
-
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
       state |= NS_EVENT_STATE_VALID;
@@ -1112,6 +1106,13 @@ HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         // UpdateBarredFromConstraintValidation and
         // UpdateValueMissingValidityState depend on our disabled state.
         UpdateDisabledState(aNotify);
+      }
+
+      if (aName == nsGkAtoms::required) {
+        // This *has* to be called *before* UpdateValueMissingValidityState
+        // because UpdateValueMissingValidityState depends on our required
+        // state.
+        UpdateRequiredState(!!aValue, aNotify);
       }
 
       UpdateValueMissingValidityState();

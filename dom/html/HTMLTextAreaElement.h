@@ -254,7 +254,7 @@ public:
   }
   bool Required() const
   {
-    return GetBoolAttr(nsGkAtoms::required);
+    return State().HasState(NS_EVENT_STATE_REQUIRED);
   }
 
   void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
@@ -410,6 +410,7 @@ protected:
   void GetSelectionRange(uint32_t* aSelectionStart,
                          uint32_t* aSelectionEnd,
                          ErrorResult& aRv);
+
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     GenericSpecifiedValues* aGenericData);

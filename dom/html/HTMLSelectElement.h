@@ -211,7 +211,7 @@ public:
   }
   bool Required() const
   {
-    return GetBoolAttr(nsGkAtoms::required);
+    return State().HasState(NS_EVENT_STATE_REQUIRED);
   }
   void SetRequired(bool aVal, ErrorResult& aRv)
   {

@@ -942,11 +942,19 @@ public:
   static void Shutdown();
 
   /**
-   * Returns the current required state of the element.
+   * Returns if the required attribute applies for the current type.
+   */
+  bool DoesRequiredApply() const;
+
+  /**
+   * Returns the current required state of the element. This function differs
+   * from Required() in that this function only returns true for input types
+   * that @required attribute applies and the attribute is set; in contrast,
+   * Required() returns true whenever @required attribute is set.
    */
   bool IsRequired() const
   {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::required);
+    return State().HasState(NS_EVENT_STATE_REQUIRED);
   }
 
 protected:
@@ -1144,11 +1152,6 @@ protected:
    * Returns if the readonly attribute applies for the current type.
    */
   bool DoesReadOnlyApply() const;
-
-  /**
-   * Returns if the required attribute applies for the current type.
-   */
-  bool DoesRequiredApply() const;
 
   /**
    * Returns if the min and max attributes apply for the current type.
