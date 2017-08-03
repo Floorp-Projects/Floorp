@@ -7,12 +7,13 @@
 
 const { interfaces: Ci, utils: Cu } = Components;
 
-const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+  "resource://devtools/shared/event-emitter.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
