@@ -8,7 +8,7 @@
 #define mozilla_dom_workers_scriptloader_h__
 
 #include "Workers.h"
-#include "nsIContentPolicyBase.h"
+#include "nsIContentPolicy.h"
 
 class nsIPrincipal;
 class nsIURI;
