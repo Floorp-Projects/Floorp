@@ -120,9 +120,9 @@ interface nsIScriptableDateFormat : nsISupports
      * Pass an empty string as the locale parameter to use the OS settings with
      * the preferred date and time formatting given by the user.
      *
-     * Pass a locale code as described in nsILocale as the locale parameter
-     * (e.g. en-US) to use a specific locale. If the given locale is not
-     * available, a fallback will be used.
+     * Pass a locale code as described in nsILocaleService as the locale
+     * parameter (e.g. en-US) to use a specific locale. If the given locale
+     * is not available, a fallback will be used.
      *
      * NOTE: The output of this method depends on the operating system and user
      * settings. Even if you pass a locale code as the first parameter, there
