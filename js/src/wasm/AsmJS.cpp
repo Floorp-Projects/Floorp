@@ -7126,7 +7126,7 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
     funbox->initWithEnclosingParseContext(outerpc, frontend::Statement);
 
     Directives newDirectives = directives;
-    ParseContext funpc(&m.parser(), funbox, &newDirectives);
+    SourceParseContext funpc(&m.parser(), funbox, &newDirectives);
     if (!funpc.init())
         return false;
 
