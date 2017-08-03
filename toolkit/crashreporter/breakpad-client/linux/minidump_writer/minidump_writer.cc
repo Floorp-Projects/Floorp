@@ -599,7 +599,7 @@ class MinidumpWriter {
 
   bool WriteMemoryListStream(MDRawDirectory* dirent) {
     TypedMDRVA<uint32_t> list(&minidump_writer_);
-    if (memory_blocks_.size()) {
+    if (!memory_blocks_.empty()) {
       if (!list.AllocateObjectAndArray(memory_blocks_.size(),
                                        sizeof(MDMemoryDescriptor)))
         return false;
