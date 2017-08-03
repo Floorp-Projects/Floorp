@@ -47,7 +47,7 @@ WebRenderImageLayer::ClearWrResources()
     mExternalImageId = Nothing();
   }
   if (mPipelineId.isSome()) {
-    WrBridge()->RemovePipelineIdForAsyncCompositable(mPipelineId.ref());
+    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
     mPipelineId = Nothing();
   }
 }

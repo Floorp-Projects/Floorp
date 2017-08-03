@@ -118,6 +118,9 @@ var whitelist = [
   // browser/extensions/pdfjs/content/web/viewer.js#7450
   {file: "resource://pdf.js/web/debugger.js"},
 
+  // Needed by Normandy
+  {file: "resource://gre/modules/IndexedDB.jsm"},
+
   // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339420
   {file: "chrome://branding/content/icon128.png"},

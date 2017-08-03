@@ -15,6 +15,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/UpdateImageHelper.h"
 #include "WebRenderCanvasLayer.h"
+#include "WebRenderCanvasRenderer.h"
 #include "WebRenderColorLayer.h"
 #include "WebRenderContainerLayer.h"
 #include "WebRenderImageLayer.h"
@@ -593,6 +594,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
       mParentCommands.Clear();
       mScrollData = WebRenderScrollData();
       MOZ_ASSERT(mLayerScrollData.empty());
+      mLastCanvasDatas.Clear();
 
       CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder);
 
@@ -608,6 +610,12 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
         mScrollData.AddLayerData(*i);
       }
       mLayerScrollData.clear();
+    } else {
+      for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
+        RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
+        WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
+        canvas->UpdateCompositableClient();
+      }
     }
 
     builder.PushBuiltDisplayList(mBuiltDisplayList);

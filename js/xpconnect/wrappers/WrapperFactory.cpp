@@ -164,14 +164,13 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
     // Outerize any raw inner objects at the entry point here, so that we don't
     // have to worry about them for the rest of the wrapping code.
     if (js::IsWindow(obj)) {
-        JSAutoCompartment ac(cx, obj);
         obj = js::ToWindowProxyIfWindow(obj);
         MOZ_ASSERT(obj);
         // ToWindowProxyIfWindow can return a CCW if |obj| was a
         // navigated-away-from Window. Strip any CCWs.
         obj = js::UncheckedUnwrap(obj);
         if (JS_IsDeadWrapper(obj)) {
-            JS_ReportErrorASCII(cx, "Can't wrap dead object");
+            retObj.set(JS_NewDeadWrapper(cx, obj));
             return;
         }
         MOZ_ASSERT(js::IsWindowProxy(obj));
