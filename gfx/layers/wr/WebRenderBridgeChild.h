@@ -76,7 +76,9 @@ public:
 
   void AddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
                                          const CompositableHandle& aHandlee);
-  void RemovePipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId);
+  void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
+                                    const CompositableHandle& aHandlee);
+  void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId);
 
   wr::ExternalImageId AllocExternalImageIdForCompositable(CompositableClient* aCompositable);
   void DeallocExternalImageId(wr::ExternalImageId& aImageId);
