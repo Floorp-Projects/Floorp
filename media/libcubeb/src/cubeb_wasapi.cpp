@@ -451,8 +451,22 @@ channel_layout_to_mask(cubeb_channel_layout layout)
 }
 
 cubeb_channel_layout
-mask_to_channel_layout(DWORD mask)
+mask_to_channel_layout(WAVEFORMATEX const * fmt)
 {
+  DWORD mask = 0;
+
+  if (fmt->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+    WAVEFORMATEXTENSIBLE const * ext = reinterpret_cast<WAVEFORMATEXTENSIBLE const *>(fmt);
+    mask = ext->dwChannelMask;
+  } else if (fmt->wFormatTag == WAVE_FORMAT_PCM ||
+             fmt->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
+    if (fmt->nChannels == 1) {
+      mask = MASK_MONO;
+    } else if (fmt->nChannels == 2) {
+      mask = MASK_STEREO;
+    }
+  }
+
   switch (mask) {
     // MASK_DUAL_MONO(_LFE) is same as STEREO(_LFE), so we skip it.
     case MASK_MONO: return CUBEB_LAYOUT_MONO;
@@ -1368,8 +1382,7 @@ wasapi_get_preferred_channel_layout(cubeb * context, cubeb_channel_layout * layo
   }
   com_heap_ptr<WAVEFORMATEX> mix_format(tmp);
 
-  WAVEFORMATEXTENSIBLE * format_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(mix_format.get());
-  *layout = mask_to_channel_layout(format_pcm->dwChannelMask);
+  *layout = mask_to_channel_layout(mix_format.get());
 
   LOG("Preferred channel layout: %s", CUBEB_CHANNEL_LAYOUT_MAPS[*layout].name);
 
@@ -1428,6 +1441,7 @@ handle_channel_layout(cubeb_stream * stm,  EDataFlow direction, com_heap_ptr<WAV
        and handle the eventual upmix/downmix ourselves. Ignore the subformat of
        the suggestion, since it seems to always be IEEE_FLOAT. */
     LOG("Using WASAPI suggested format: channels: %d", closest->nChannels);
+    XASSERT(closest->wFormatTag == WAVE_FORMAT_EXTENSIBLE);
     WAVEFORMATEXTENSIBLE * closest_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(closest);
     format_pcm->dwChannelMask = closest_pcm->dwChannelMask;
     mix_format->nChannels = closest->nChannels;
@@ -1436,6 +1450,7 @@ handle_channel_layout(cubeb_stream * stm,  EDataFlow direction, com_heap_ptr<WAV
     /* Not supported, no suggestion. This should not happen, but it does in the
        field with some sound cards. We restore the mix format, and let the rest
        of the code figure out the right conversion path. */
+    XASSERT(mix_format->wFormatTag == WAVE_FORMAT_EXTENSIBLE);
     *reinterpret_cast<WAVEFORMATEXTENSIBLE *>(mix_format.get()) = hw_mix_format;
   } else if (hr == S_OK) {
     LOG("Requested format accepted by WASAPI.");
@@ -1514,21 +1529,23 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   }
   com_heap_ptr<WAVEFORMATEX> mix_format(tmp);
 
-  WAVEFORMATEXTENSIBLE * format_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(mix_format.get());
   mix_format->wBitsPerSample = stm->bytes_per_sample * 8;
-  format_pcm->SubFormat = stm->waveformatextensible_sub_format;
+  if (mix_format->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+    WAVEFORMATEXTENSIBLE * format_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(mix_format.get());
+    format_pcm->SubFormat = stm->waveformatextensible_sub_format;
+  }
   waveformatex_update_derived_properties(mix_format.get());
   /* Set channel layout only when there're more than two channels. Otherwise,
    * use the default setting retrieved from the stream format of the audio
    * engine's internal processing by GetMixFormat. */
   if (mix_format->nChannels > 2) {
-    handle_channel_layout(stm, direction ,mix_format, stream_params);
+    handle_channel_layout(stm, direction, mix_format, stream_params);
   }
 
   mix_params->format = stream_params->format;
   mix_params->rate = mix_format->nSamplesPerSec;
   mix_params->channels = mix_format->nChannels;
-  mix_params->layout = mask_to_channel_layout(format_pcm->dwChannelMask);
+  mix_params->layout = mask_to_channel_layout(mix_format.get());
   if (mix_params->layout == CUBEB_LAYOUT_UNDEFINED) {
     LOG("Output using undefined layout!\n");
   } else if (mix_format->nChannels != CUBEB_CHANNEL_LAYOUT_MAPS[mix_params->layout].channels) {
