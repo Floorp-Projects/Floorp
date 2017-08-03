@@ -13,6 +13,7 @@ import android.text.format.DateUtils;
 import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.activitystream.ranking.HighlightCandidateCursorIndices;
 import org.mozilla.gecko.activitystream.ranking.HighlightsRanking;
+import org.mozilla.gecko.db.BrowserContract;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

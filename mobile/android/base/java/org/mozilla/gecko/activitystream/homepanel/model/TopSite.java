@@ -17,6 +17,7 @@ public class TopSite implements Item {
     private @Nullable Boolean isBookmarked;
     private final @Nullable boolean isPinned;
     private @BrowserContract.TopSites.TopSiteType final int type;
+    private final Metadata metadata;
 
     public static TopSite fromCursor(Cursor cursor) {
         // The Combined View only contains pages that have been visited at least once, i.e. any
@@ -25,6 +26,7 @@ public class TopSite implements Item {
         final String url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
         final String title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
         final int type = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.TopSites.TYPE));
+        final Metadata metadata = Metadata.fromCursor(cursor, BrowserContract.TopSites.PAGE_METADATA_JSON);
 
         // We can't figure out bookmark state of a pin or suggested site, so we leave it as unknown to be queried later.
         Boolean isBookmarked = null;
@@ -33,16 +35,17 @@ public class TopSite implements Item {
             isBookmarked = !cursor.isNull(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
         }
 
-        return new TopSite(id, url, title, isBookmarked, type);
+        return new TopSite(id, url, title, isBookmarked, type, metadata);
     }
 
-    private TopSite(long id, String url, String title, @Nullable Boolean isBookmarked, int type) {
+    private TopSite(long id, String url, String title, @Nullable Boolean isBookmarked, int type, final Metadata metadata) {
         this.id = id;
         this.url = url;
         this.title = title;
         this.isBookmarked = isBookmarked;
         this.isPinned = type == BrowserContract.TopSites.TYPE_PINNED;
         this.type = type;
+        this.metadata = metadata;
     }
 
     public long getId() {
@@ -69,6 +72,10 @@ public class TopSite implements Item {
 
     public Boolean isPinned() {
         return isPinned;
+    }
+
+    public Metadata getMetadata() {
+        return metadata;
     }
 
     @Override
