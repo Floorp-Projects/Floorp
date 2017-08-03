@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Reference
+  </title>
+  <style>
+    .box {
+      display: flex;
+      border: 1px solid black;
+      margin: 5px 20px;
+      width: 100px;
+      float: left; /* For testing in "rows" */
+      font: 10px serif;
+    }
+
+    .box > *:nth-child(1) { background: turquoise; }
+    .box > *:nth-child(2) { background: salmon;    }
+
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- FIRST ROW -->
+  <div class="box">
+    <div>a</div>
+    <div>b</div>
+  </div>
+
+  <div class="box">
+    <div>a</div>
+    <div>b</div>
+  </div>
+
+  <br>
+
+  <!-- SECOND ROW -->
+  <div class="box">
+    <div>a</div>
+    <div>b</div>
+  </div>
+
+  <div class="box">
+    <div>a</div>
+    <div>b</div>
+  </div>
+
+</body>
+</html>
