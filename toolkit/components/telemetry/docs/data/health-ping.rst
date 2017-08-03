@@ -72,6 +72,16 @@ sendFailure
 The ``sendFailure`` field contains the information about pings, which had failures on sending.
 This field lists the number of failed pings per ping send failure type.
 
+The recorded failure types are:
+
+* "eOK"
+* "eRequest"
+* "eUnreachable"
+* "eChannelOpen"
+* "eRedirect"
+* "abort"
+* "timeout"
+
 This field is optional.
 
 .. note::

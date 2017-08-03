@@ -188,8 +188,6 @@ partial interface Navigator {
   readonly attribute boolean cookieEnabled;
   [Throws, Constant, Cached, NeedsCallerType]
   readonly attribute DOMString buildID;
-  [Throws, ChromeOnly, UnsafeInPrerendering]
-  readonly attribute MozPowerManager mozPower;
 
   // WebKit/Blink/Trident/Presto support this.
   [Throws, NeedsCallerType]

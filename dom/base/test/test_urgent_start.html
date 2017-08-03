@@ -259,7 +259,7 @@ function endCheck() {
 }
 
 function runTest() {
-  return Promise.resolve()
+  return SpecialPowers.pushPrefEnv({"set": [["network.http.rcwn.enabled", false]]})
     .then(executeTest)
     .then(endCheck)
     .catch(aError => ok(false, "Some test failed with error " + aError))

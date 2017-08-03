@@ -7,6 +7,8 @@ Support for running toolchain-building jobs via dedicated scripts
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import hashlib
+
 from taskgraph.util.schema import Schema
 from voluptuous import Optional, Required, Any
 
@@ -57,10 +59,21 @@ def add_optimizations(config, run, taskdesc):
     # The script
     files.append('taskcluster/scripts/misc/{}'.format(run['script']))
 
+    digest = hash_paths(GECKO, files)
+
+    # If the task has dependencies, we need those dependencies to influence
+    # the index path. So take the digest from the files above, add the list
+    # of its dependencies, and hash the aggregate.
+    # If the task has no dependencies, just use the digest from above.
+    deps = taskdesc['dependencies']
+    if deps:
+        data = [digest] + sorted(deps.values())
+        digest = hashlib.sha256('\n'.join(data)).hexdigest()
+
     label = taskdesc['label']
     subs = {
         'name': label.replace('%s-' % config.kind, ''),
-        'digest': hash_paths(GECKO, files),
+        'digest': digest,
     }
 
     optimizations = taskdesc.setdefault('optimizations', [])
@@ -156,16 +169,6 @@ def windows_toolchain(config, job, taskdesc):
     worker['chain-of-trust'] = True
 
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
-
-    # We fetch LLVM SVN into this.
-    svn_cache = 'level-{}-toolchain-clang-cl-build-svn'.format(config.params['level'])
-    worker['mounts'] = [{
-        'cache-name': svn_cache,
-        'directory': r'llvm-sources',
-    }]
-    taskdesc['scopes'].extend([
-        'generic-worker:cache:' + svn_cache,
-    ])
 
     env = worker['env']
     env.update({
