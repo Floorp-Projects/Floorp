@@ -128,7 +128,7 @@ add_task(async function test_plainQuery() {
   checkKeyedHistogram(search_hist, "other-MozSearch.searchbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "searchbar", "enter", {engine: "other-MozSearch"}]]);
 
@@ -172,7 +172,7 @@ add_task(async function test_oneOff_enter() {
   checkKeyedHistogram(search_hist, "other-MozSearch2.searchbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "searchbar", "oneoff", {engine: "other-MozSearch2"}]]);
 
@@ -297,7 +297,7 @@ add_task(async function test_suggestion_click() {
   checkKeyedHistogram(search_hist, searchEngineId + ".searchbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "searchbar", "suggestion", {engine: searchEngineId}]]);
 

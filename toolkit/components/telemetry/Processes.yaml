@@ -19,3 +19,8 @@ extension:
 gpu:
   gecko_enum: GeckoProcessType_GPU
   description: This is the compositor or GPU process.
+dynamic:
+  gecko_enum: GeckoProcessType_Default
+  description: >
+    This is not a real process, it is used to logically group add-on probes.
+    It contains data of any probes registered at runtime by add-ons.
