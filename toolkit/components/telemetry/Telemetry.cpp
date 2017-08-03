@@ -1807,10 +1807,18 @@ TelemetryImpl::RecordEvent(const nsACString & aCategory, const nsACString & aMet
 }
 
 NS_IMETHODIMP
-TelemetryImpl::SnapshotBuiltinEvents(uint32_t aDataset, bool aClear, JSContext* aCx,
+TelemetryImpl::SnapshotEvents(uint32_t aDataset, bool aClear, JSContext* aCx,
                                      uint8_t optional_argc, JS::MutableHandleValue aResult)
 {
   return TelemetryEvent::CreateSnapshots(aDataset, aClear, aCx, optional_argc, aResult);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::RegisterEvents(const nsACString& aCategory,
+                              JS::Handle<JS::Value> aEventData,
+                              JSContext* cx)
+{
+  return TelemetryEvent::RegisterEvents(aCategory, aEventData, cx);
 }
 
 NS_IMETHODIMP

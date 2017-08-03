@@ -80,7 +80,7 @@ add_task(async function test_context_menu() {
   checkKeyedHistogram(search_hist, "other-MozSearch.contextmenu", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "contextmenu", null, {engine: "other-MozSearch"}]]);
 
@@ -116,7 +116,7 @@ add_task(async function test_about_newtab() {
   checkKeyedHistogram(search_hist, "other-MozSearch.newtab", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "about_newtab", "enter", {engine: "other-MozSearch"}]]);
 

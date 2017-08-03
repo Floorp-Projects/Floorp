@@ -137,7 +137,7 @@ add_task(async function test_simpleQuery() {
   checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "urlbar", "enter", {engine: "other-MozSearch"}]]);
 
@@ -196,7 +196,7 @@ add_task(async function test_searchAlias() {
   checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "urlbar", "alias", {engine: "other-MozSearch"}]]);
 
@@ -260,7 +260,7 @@ add_task(async function test_oneOff_enter() {
   checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "urlbar", "oneoff", {engine: "other-MozSearch"}]]);
 
@@ -407,7 +407,7 @@ add_task(async function test_suggestion_click() {
   checkKeyedHistogram(search_hist, searchEngineId + ".urlbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "urlbar", "suggestion", {engine: searchEngineId}]]);
 
