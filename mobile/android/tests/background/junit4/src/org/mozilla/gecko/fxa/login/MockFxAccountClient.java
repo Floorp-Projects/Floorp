@@ -6,6 +6,7 @@ package org.mozilla.gecko.fxa.login;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.background.fxa.FxAccountClient;
+import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.AccountStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RecoveryEmailStatusResponse;
@@ -239,7 +240,7 @@ public class MockFxAccountClient implements FxAccountClient {
   }
 
   @Override
-  public void notifyDevices(byte[] sessionToken, List<String> deviceIds, ExtendedJSONObject payload, Long TTL, RequestDelegate<ExtendedJSONObject> requestDelegate) {
+  public void notifyDevices(byte[] sessionToken, ExtendedJSONObject body, RequestDelegate<ExtendedJSONObject> requestDelegate) {
     requestDelegate.handleSuccess(new ExtendedJSONObject());
   }
 }
