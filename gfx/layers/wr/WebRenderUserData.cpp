@@ -10,6 +10,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "nsDisplayListInvalidation.h"
+#include "WebRenderCanvasRenderer.h"
 
 namespace mozilla {
 namespace layers {
@@ -188,6 +189,25 @@ WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager
   : WebRenderUserData(aWRManager),
     mAnimationInfo(aWRManager)
 {
+}
+
+WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager)
+  : WebRenderUserData(aWRManager)
+{
+}
+
+WebRenderCanvasData::~WebRenderCanvasData()
+{
+}
+
+WebRenderCanvasRendererAsync*
+WebRenderCanvasData::GetCanvasRenderer()
+{
+  if (!mCanvasRenderer) {
+    mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mWRManager);
+  }
+
+  return mCanvasRenderer.get();
 }
 
 } // namespace layers

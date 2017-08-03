@@ -14,9 +14,12 @@ class nsDisplayItemGeometry;
 
 namespace mozilla {
 namespace layers {
+class CanvasLayer;
 class ImageClient;
 class ImageContainer;
 class WebRenderBridgeChild;
+class WebRenderCanvasData;
+class WebRenderCanvasRendererAsync;
 class WebRenderImageData;
 class WebRenderFallbackData;
 class WebRenderLayerManager;
@@ -30,11 +33,13 @@ public:
 
   virtual WebRenderImageData* AsImageData() { return nullptr; }
   virtual WebRenderFallbackData* AsFallbackData() { return nullptr; }
+  virtual WebRenderCanvasData* AsCanvasData() { return nullptr; }
 
   enum class UserDataType {
     eImage,
     eFallback,
     eAnimation,
+    eCanvas,
   };
 
   virtual UserDataType GetType() = 0;
@@ -118,6 +123,22 @@ public:
 
 protected:
   AnimationInfo mAnimationInfo;
+};
+
+class WebRenderCanvasData : public WebRenderUserData
+{
+public:
+  explicit WebRenderCanvasData(WebRenderLayerManager* aWRManager);
+  virtual ~WebRenderCanvasData();
+
+  virtual WebRenderCanvasData* AsCanvasData() override { return this; }
+  virtual UserDataType GetType() override { return UserDataType::eCanvas; }
+  static UserDataType Type() { return UserDataType::eCanvas; }
+
+  WebRenderCanvasRendererAsync* GetCanvasRenderer();
+
+protected:
+  UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
 };
 
 } // namespace layers
