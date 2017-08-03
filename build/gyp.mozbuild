@@ -43,7 +43,6 @@ gyp_vars.update({
     'build_icu': 0,
     'build_opus': 0,
     'libyuv_dir': '/media/libyuv/libyuv',
-    'libevent_dir': '/ipc/chromium/src/third_party/libevent',
     'yuv_disable_avx2': 0 if CONFIG['HAVE_X86_AVX2'] else 1,
     # don't use openssl
     'use_openssl': 0,
@@ -124,3 +123,6 @@ if CONFIG['MACOS_SDK_DIR']:
 
 if not CONFIG['MOZ_SYSTEM_LIBVPX']:
     gyp_vars['libvpx_dir'] =  '/media/libvpx/libvpx'
+
+if not CONFIG['MOZ_SYSTEM_LIBEVENT']:
+    gyp_vars['libevent_dir'] = '/ipc/chromium/src/third_party/libevent' 
