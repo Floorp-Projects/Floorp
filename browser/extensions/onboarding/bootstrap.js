@@ -196,7 +196,7 @@ function uninstall(aData, aReason) {}
 
 function startup(aData, aReason) {
   // Only start Onboarding when the browser UI is ready
-  if (aReason === APP_STARTUP || aReason === ADDON_INSTALL) {
+  if (Services.startup.startingUp) {
     Services.obs.addObserver(observe, BROWSER_READY_NOTIFICATION);
     Services.obs.addObserver(observe, BROWSER_SESSION_STORE_NOTIFICATION);
   } else {
