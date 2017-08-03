@@ -26,9 +26,7 @@ class WebRenderUserData
 public:
   NS_INLINE_DECL_REFCOUNTING(WebRenderUserData)
 
-  explicit WebRenderUserData(WebRenderLayerManager* aWRManager)
-    : mWRManager(aWRManager)
-  { }
+  explicit WebRenderUserData(WebRenderLayerManager* aWRManager);
 
   virtual WebRenderImageData* AsImageData() { return nullptr; }
   virtual WebRenderFallbackData* AsFallbackData() { return nullptr; }
@@ -42,11 +40,11 @@ public:
   virtual UserDataType GetType() = 0;
 
 protected:
-  virtual ~WebRenderUserData() {}
+  virtual ~WebRenderUserData();
 
   WebRenderBridgeChild* WrBridge() const;
 
-  WebRenderLayerManager* mWRManager;
+  RefPtr<WebRenderLayerManager> mWRManager;
 };
 
 class WebRenderImageData : public WebRenderUserData
