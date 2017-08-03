@@ -624,8 +624,8 @@ BrowserGlue.prototype = {
 
       LightweightThemeManager.addBuiltInTheme({
         id: "firefox-compact-light@mozilla.org",
-        name: gBrowserBundle.GetStringFromName("compactLightTheme.name"),
-        description: gBrowserBundle.GetStringFromName("compactLightTheme.description"),
+        name: gBrowserBundle.GetStringFromName("lightTheme.name"),
+        description: gBrowserBundle.GetStringFromName("lightTheme.description"),
         headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
         iconURL: "resource:///chrome/browser/content/browser/defaultthemes/compactlight.icon.svg",
         textcolor: "black",
@@ -634,8 +634,8 @@ BrowserGlue.prototype = {
       });
       LightweightThemeManager.addBuiltInTheme({
         id: "firefox-compact-dark@mozilla.org",
-        name: gBrowserBundle.GetStringFromName("compactDarkTheme.name"),
-        description: gBrowserBundle.GetStringFromName("compactDarkTheme.description"),
+        name: gBrowserBundle.GetStringFromName("darkTheme.name"),
+        description: gBrowserBundle.GetStringFromName("darkTheme.description"),
         headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
         iconURL: "resource:///chrome/browser/content/browser/defaultthemes/compactdark.icon.svg",
         textcolor: "white",
