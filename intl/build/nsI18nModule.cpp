@@ -12,7 +12,6 @@
 
 // unicharutil
 #include "nsEntityConverter.h"
-#include "nsSaveAsCharset.h"
 #include "nsUnicodeNormalizer.h"
 
 // string bundles (intl)
@@ -31,7 +30,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleTextOverride, Init)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntityConverter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSaveAsCharset)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeNormalizer)
 
 NS_DEFINE_NAMED_CID(MOZ_LOCALESERVICE_CID);
@@ -39,7 +37,6 @@ NS_DEFINE_NAMED_CID(MOZ_OSPREFERENCES_CID);
 NS_DEFINE_NAMED_CID(NS_LBRK_CID);
 NS_DEFINE_NAMED_CID(NS_WBRK_CID);
 NS_DEFINE_NAMED_CID(NS_ENTITYCONVERTER_CID);
-NS_DEFINE_NAMED_CID(NS_SAVEASCHARSET_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODE_NORMALIZER_CID);
 NS_DEFINE_NAMED_CID(NS_STRINGBUNDLESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_STRINGBUNDLETEXTOVERRIDE_CID);
@@ -54,7 +51,6 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kNS_LBRK_CID, false, nullptr, nsJISx4051LineBreakerConstructor },
     { &kNS_WBRK_CID, false, nullptr, nsSampleWordBreakerConstructor },
     { &kNS_ENTITYCONVERTER_CID, false, nullptr, nsEntityConverterConstructor },
-    { &kNS_SAVEASCHARSET_CID, false, nullptr, nsSaveAsCharsetConstructor },
     { &kNS_UNICODE_NORMALIZER_CID, false, nullptr, nsUnicodeNormalizerConstructor },
     { &kNS_STRINGBUNDLESERVICE_CID, false, nullptr, nsStringBundleServiceConstructor },
     { &kNS_STRINGBUNDLETEXTOVERRIDE_CID, false, nullptr, nsStringBundleTextOverrideConstructor },
@@ -71,7 +67,6 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { NS_LBRK_CONTRACTID, &kNS_LBRK_CID },
     { NS_WBRK_CONTRACTID, &kNS_WBRK_CID },
     { NS_ENTITYCONVERTER_CONTRACTID, &kNS_ENTITYCONVERTER_CID },
-    { NS_SAVEASCHARSET_CONTRACTID, &kNS_SAVEASCHARSET_CID },
     { NS_UNICODE_NORMALIZER_CONTRACTID, &kNS_UNICODE_NORMALIZER_CID },
     { NS_STRINGBUNDLE_CONTRACTID, &kNS_STRINGBUNDLESERVICE_CID },
     { NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID, &kNS_STRINGBUNDLETEXTOVERRIDE_CID },
