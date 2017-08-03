@@ -323,6 +323,33 @@ TEST_F(TlsConnectStreamTls13, NegotiateShortHeaders) {
   Connect();
 }
 
+TEST_F(TlsConnectStreamTls13, ClientAltHandshakeType) {
+  client_->SetAltHandshakeTypeEnabled();
+  auto filter = std::make_shared<TlsHeaderRecorder>();
+  server_->SetPacketFilter(filter);
+  Connect();
+  ASSERT_EQ(kTlsHandshakeType, filter->header(0)->content_type());
+}
+
+TEST_F(TlsConnectStreamTls13, ServerAltHandshakeType) {
+  server_->SetAltHandshakeTypeEnabled();
+  auto filter = std::make_shared<TlsHeaderRecorder>();
+  server_->SetPacketFilter(filter);
+  Connect();
+  ASSERT_EQ(kTlsHandshakeType, filter->header(0)->content_type());
+}
+
+TEST_F(TlsConnectStreamTls13, BothAltHandshakeType) {
+  client_->SetAltHandshakeTypeEnabled();
+  server_->SetAltHandshakeTypeEnabled();
+  auto filter = std::make_shared<TlsHeaderRecorder>();
+  server_->SetTlsRecordFilter(filter);
+  filter->EnableDecryption();
+  Connect();
+  ASSERT_EQ(kTlsAltHandshakeType, filter->header(0)->content_type());
+  ASSERT_EQ(kTlsHandshakeType, filter->header(1)->content_type());
+}
+
 INSTANTIATE_TEST_CASE_P(
     GenericStream, TlsConnectGeneric,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,

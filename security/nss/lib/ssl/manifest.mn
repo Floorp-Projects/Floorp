@@ -10,6 +10,7 @@ EXPORTS = \
         ssl.h \
         sslt.h \
         sslerr.h \
+        sslexp.h \
         sslproto.h \
         preenc.h \
         $(NULL)

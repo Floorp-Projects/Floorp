@@ -227,7 +227,8 @@ PacketFilter::Action TlsHandshakeFilter::FilterRecord(
     const TlsRecordHeader& record_header, const DataBuffer& input,
     DataBuffer* output) {
   // Check that the first byte is as requested.
-  if (record_header.content_type() != kTlsHandshakeType) {
+  if ((record_header.content_type() != kTlsHandshakeType) &&
+      (record_header.content_type() != kTlsAltHandshakeType)) {
     return KEEP;
   }
 
@@ -369,6 +370,20 @@ PacketFilter::Action TlsConversationRecorder::FilterRecord(
   return KEEP;
 }
 
+PacketFilter::Action TlsHeaderRecorder::FilterRecord(
+    const TlsRecordHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
+  headers_.push_back(header);
+  return KEEP;
+}
+
+const TlsRecordHeader* TlsHeaderRecorder::header(size_t index) {
+  if (index > headers_.size() + 1) {
+    return nullptr;
+  }
+  return &headers_[index];
+}
+
 PacketFilter::Action ChainedPacketFilter::Filter(const DataBuffer& input,
                                                  DataBuffer* output) {
   DataBuffer in(input);
@@ -378,6 +393,7 @@ PacketFilter::Action ChainedPacketFilter::Filter(const DataBuffer& input,
     if (action == DROP) {
       return DROP;
     }
+
     if (action == CHANGE) {
       in = *output;
       changed = true;
