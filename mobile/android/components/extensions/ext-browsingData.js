@@ -4,6 +4,8 @@
 
 Cu.import("resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Sanitizer",
+                                  "resource://gre/modules/Sanitizer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
@@ -88,6 +90,9 @@ this.browsingData = class extends ExtensionAPI {
         },
         removeCookies(options) {
           return clearCookies(options);
+        },
+        removeCache(options) {
+          return Sanitizer.clearItem("cache");
         },
       },
     };

@@ -171,6 +171,18 @@ protected:
                               nsIEditor::EDirection aDir,
                               nsresult aResult);
   nsresult InsertBRIfNeeded(Selection* aSelection);
+
+  /**
+   * Insert a normal <br> element or a moz-<br> element to aNode when
+   * aNode is a block and it has no children.
+   *
+   * @param aNode           Reference to a block parent.
+   * @param aInsertMozBR    true if this should insert a moz-<br> element.
+   *                        Otherwise, i.e., this should insert a normal <br>
+   *                        element, false.
+   */
+  nsresult InsertBRIfNeededInternal(nsINode& aNode, bool aInsertMozBR);
+
   mozilla::EditorDOMPoint GetGoodSelPointForNode(nsINode& aNode,
                                                  nsIEditor::EDirection aAction);
 
@@ -402,7 +414,25 @@ protected:
   nsresult SelectionEndpointInNode(nsINode* aNode, bool* aResult);
   nsresult UpdateDocChangeRange(nsRange* aRange);
   nsresult ConfirmSelectionInBody();
-  nsresult InsertMozBRIfNeeded(nsINode& aNode);
+
+  /**
+   * Insert normal <br> element into aNode when aNode is a block and it has
+   * no children.
+   */
+  nsresult InsertBRIfNeeded(nsINode& aNode)
+  {
+    return InsertBRIfNeededInternal(aNode, false);
+  }
+
+  /**
+   * Insert moz-<br> element (<br type="_moz">) into aNode when aNode is a
+   * block and it has no children.
+   */
+  nsresult InsertMozBRIfNeeded(nsINode& aNode)
+  {
+    return InsertBRIfNeededInternal(aNode, true);
+  }
+
   bool IsEmptyInline(nsINode& aNode);
   bool ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& arrayOfNodes);
   nsresult RemoveAlignment(nsINode& aNode, const nsAString& aAlignType,

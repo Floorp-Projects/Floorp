@@ -6,7 +6,7 @@ config = {
     "update_platform": "Linux_x86-gcc3",
     "mozconfig": "%(branch)s/browser/config/mozconfigs/linux32/l10n-mozconfig",
     "bootstrap_env": {
-        "MOZ_OBJDIR": "obj-l10n",
+        "MOZ_OBJDIR": "obj-firefox",
         "EN_US_BINARY_URL": "%(en_us_binary_url)s",
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": "%(update_channel)s",
@@ -18,7 +18,7 @@ config = {
     },
     "ssh_key_dir": "/home/mock_mozilla/.ssh",
     "log_name": "single_locale",
-    "objdir": "obj-l10n",
+    "objdir": "obj-firefox",
     "js_src_dir": "js/src",
     "vcs_share_base": "/builds/hg-shared",
 
