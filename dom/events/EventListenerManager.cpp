@@ -1311,6 +1311,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               profiler_add_marker(
                 "DOMEvent",
                 MakeUnique<DOMEventMarkerPayload>(typeStr, phase,
+                                                  aEvent->mTimeStamp,
                                                   startTime, endTime));
             } else {
               rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
