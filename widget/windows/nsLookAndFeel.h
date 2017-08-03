@@ -43,6 +43,7 @@ public:
   virtual ~nsLookAndFeel();
 
   nsresult NativeGetColor(ColorID aID, nscolor &aResult) override;
+  void NativeInit() final {};
   nsresult GetIntImpl(IntID aID, int32_t &aResult) override;
   nsresult GetFloatImpl(FloatID aID, float &aResult) override;
   bool GetFontImpl(FontID aID, nsString& aFontName,

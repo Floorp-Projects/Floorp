@@ -54,6 +54,12 @@ nsLookAndFeel::nsLookAndFeel()
 {
 }
 
+void
+nsLookAndFeel::NativeInit()
+{
+    EnsureInit();
+}
+
 nsLookAndFeel::~nsLookAndFeel()
 {
 #if (MOZ_WIDGET_GTK == 2)
