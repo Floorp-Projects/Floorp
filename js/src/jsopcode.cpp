@@ -573,8 +573,9 @@ uint32_t
 BytecodeParser::simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetStack,
                            uint32_t stackDepth)
 {
-    uint32_t nuses = GetUseCount(script_, offset);
-    uint32_t ndefs = GetDefCount(script_, offset);
+    jsbytecode* pc = script_->offsetToPC(offset);
+    uint32_t nuses = GetUseCount(pc);
+    uint32_t ndefs = GetDefCount(pc);
 
     MOZ_ASSERT(stackDepth >= nuses);
     stackDepth -= nuses;
@@ -650,7 +651,6 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetSt
 
       case JSOP_DUPAT: {
         MOZ_ASSERT(ndefs == 1);
-        jsbytecode* pc = script_->offsetToPC(offset);
         unsigned n = GET_UINT24(pc);
         MOZ_ASSERT(n < stackDepth);
         offsetStack[stackDepth] = offsetStack[stackDepth - 1 - n];
@@ -666,7 +666,6 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetSt
       }
 
       case JSOP_PICK: {
-        jsbytecode* pc = script_->offsetToPC(offset);
         unsigned n = GET_UINT8(pc);
         MOZ_ASSERT(ndefs == n + 1);
         uint32_t top = stackDepth + n;
@@ -678,7 +677,6 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetSt
       }
 
       case JSOP_UNPICK: {
-        jsbytecode* pc = script_->offsetToPC(offset);
         unsigned n = GET_UINT8(pc);
         MOZ_ASSERT(ndefs == n + 1);
         uint32_t top = stackDepth + n;
