@@ -109,6 +109,7 @@ ifneq '$(or $(MOZ_DEV_EDITION),$(NIGHTLY_BUILD))' ''
 endif
 	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../devtools/client/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
+	@$(MAKE) -C ../../devtools/shim/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
@@ -129,6 +130,7 @@ ifndef RELEASE_OR_BETA
 endif
 	@$(MAKE) -C ../../intl/locales chrome AB_CD=$*
 	@$(MAKE) -C ../../devtools/client/locales chrome AB_CD=$*
+	@$(MAKE) -C ../../devtools/shim/locales chrome AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
 ifdef NIGHTLY_BUILD
