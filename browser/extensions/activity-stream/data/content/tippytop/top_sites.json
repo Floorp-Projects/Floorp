@@ -1,0 +1,114 @@
+[
+  {
+    "title": "aliexpress",
+    "url": "https://www.aliexpress.com/",
+    "image_url": "aliexpress-com.png",
+    "background_color": "#f6050a",
+    "domain": "aliexpress.com"
+  },
+  {
+    "title": "allegro",
+    "url": "https://www.allegro.pl/",
+    "image_url": "allegro-pl.png",
+    "background_color": "#ff4900",
+    "domain": "allegro.pl"
+  },
+  {
+    "title": "amazon",
+    "urls": ["https://www.amazon.com/", "https://www.amazon.ca/", "https://www.amazon.de/", "https://www.amazon.co.uk/", "https://www.amazon.fr/"],
+    "image_url": "amazon-com.png",
+    "background_color": "#FFF",
+    "domain": "amazon.com"
+  },
+  {
+    "title": "avito",
+    "url": "https://www.avito.ru/",
+    "image_url": "avito-ru.png",
+    "background_color": "#FFFFFF",
+    "domain": "avito.ru"
+  },
+  {
+    "title": "bbc",
+    "urls": ["http://www.bbc.com/", "https://www.bbc.co.uk/"],
+    "image_url": "bbc-com.png",
+    "background_color": "#000000",
+    "domain": "bbc.com"
+  },
+  {
+    "title": "ebay",
+    "urls": ["https://www.ebay.com", "https://ebay.de", "https://www.ebay.co.uk/"],
+    "image_url": "ebay-com.png",
+    "background_color": "#ededed",
+    "domain": "ebay.com"
+  },
+  {
+    "title": "facebook",
+    "url": "https://www.facebook.com/",
+    "image_url": "facebook-com.png",
+    "background_color": "#3b5998",
+    "domain": "facebook.com"
+  },
+  {
+    "title": "leboncoin",
+    "url": "http://www.leboncoin.fr/",
+    "image_url": "leboncoin-fr.png",
+    "background_color": "#ff6000",
+    "domain": "leboncoin.fr"
+  },
+  {
+    "title": "ok",
+    "url": "https://www.ok.ru/",
+    "image_url": "ok-ru.png",
+    "background_color": "#fb7b00",
+    "domain": "ok.ru"
+  },
+  {
+    "title": "olx",
+    "url": "https://www.olx.pl/",
+    "image_url": "olx-pl.png",
+    "background_color": "#b7c200",
+    "domain": "olx.pl"
+  },
+  {
+    "title": "reddit",
+    "url": "https://www.reddit.com/",
+    "image_url": "reddit-com.png",
+    "background_color": "#cee3f8",
+    "domain": "reddit.com"
+  },
+  {
+    "title": "twitter",
+    "url": "https://twitter.com/",
+    "image_url": "twitter-com.png",
+    "background_color": "#049ff5",
+    "domain": "twitter.com"
+  },
+  {
+    "title": "vk",
+    "url": "https://vk.com/",
+    "image_url": "vk-com.png",
+    "background_color": "#4483be",
+    "domain": "vk.com"
+  },
+  {
+    "title": "youtube",
+    "url": "https://www.youtube.com/",
+    "image_url": "youtube-com.png",
+    "background_color": "#db4338",
+    "domain": "youtube.com"
+  },
+  {
+    "title": "wikipedia",
+    "url": "https://www.wikipedia.org/",
+    "image_url": "wikipedia-org.png",
+    "background_color": "#fff",
+    "domain": "wikipedia.org"
+  },
+  {
+    "title": "wykop",
+    "url": "https://www.wykop.pl/",
+    "image_url": "wykop-pl.png",
+    "background_color": "#157ead",
+    "domain": "wykop.pl"
+  }
+]

@@ -32,8 +32,8 @@ var putRecord = async function({scope, perm, quota, lastPush, lastVisit}) {
   await visitURI(uri, lastVisit);
 
   await db.put({
-    channelID: uri.path,
-    pushEndpoint: 'https://example.org/push' + uri.path,
+    channelID: uri.pathQueryRef,
+    pushEndpoint: 'https://example.org/push' + uri.pathQueryRef,
     scope: uri.spec,
     pushCount: 0,
     lastPush: lastPush,

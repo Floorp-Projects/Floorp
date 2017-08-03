@@ -27,10 +27,12 @@ enum HitTestResult {
 };
 
 enum CancelAnimationFlags : uint32_t {
-  Default = 0x0,            /* Cancel all animations */
-  ExcludeOverscroll = 0x1,  /* Don't clear overscroll */
-  ScrollSnap = 0x2,         /* Snap to snap points */
-  ExcludeWheel = 0x4,       /* Don't stop wheel smooth-scroll animations */
+  Default = 0x0,             /* Cancel all animations */
+  ExcludeOverscroll = 0x1,   /* Don't clear overscroll */
+  ScrollSnap = 0x2,          /* Snap to snap points */
+  ExcludeWheel = 0x4,        /* Don't stop wheel smooth-scroll animations */
+  TriggeredExternally = 0x8, /* Cancellation was not triggered by APZ in
+                                response to an input event */
 };
 
 inline CancelAnimationFlags

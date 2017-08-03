@@ -57,15 +57,15 @@ async function checkState(prefix, tab) {
   await TabStateFlusher.flush(tab.linkedBrowser);
   let {formdata} = JSON.parse(ss.getTabState(tab));
 
-  ok(formdata.id["sessionData"], prefix + ": we have form data for about:sessionrestore");
+  ok(formdata.id.sessionData, prefix + ": we have form data for about:sessionrestore");
 
-  let sessionData_raw = JSON.stringify(formdata.id["sessionData"]);
+  let sessionData_raw = JSON.stringify(formdata.id.sessionData);
   ok(!/\\/.test(sessionData_raw), prefix + ": #sessionData contains no backslashes");
   info(sessionData_raw);
 
   let gotError = false;
   try {
-    JSON.parse(formdata.id["sessionData"]);
+    JSON.parse(formdata.id.sessionData);
   } catch (e) {
     info(prefix + ": got error: " + e);
     gotError = true;

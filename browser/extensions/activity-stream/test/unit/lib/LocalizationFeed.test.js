@@ -25,8 +25,6 @@ describe("Localization Feed", () => {
     sandbox = globals.sandbox;
     feed = new LocalizationFeed();
     feed.store = {dispatch: sinon.spy()};
-
-    sandbox.stub(global.Services.locale, "getRequestedLocale");
   });
   afterEach(() => {
     globals.restore();
@@ -50,6 +48,8 @@ describe("Localization Feed", () => {
 
     it("should dispatch with locale and strings for default", () => {
       const locale = DEFAULT_LOCALE;
+      sandbox.stub(global.Services.locale, "negotiateLanguages")
+        .returns([locale]);
       feed.updateLocale();
 
       assert.calledOnce(feed.store.dispatch);
@@ -60,7 +60,8 @@ describe("Localization Feed", () => {
     });
     it("should use strings for other locale", () => {
       const locale = "it";
-      global.Services.locale.getRequestedLocale.returns(locale);
+      sandbox.stub(global.Services.locale, "negotiateLanguages")
+        .returns([locale]);
 
       feed.updateLocale();
 
@@ -72,7 +73,8 @@ describe("Localization Feed", () => {
     });
     it("should use some fallback strings for partial locale", () => {
       const locale = "ru";
-      global.Services.locale.getRequestedLocale.returns(locale);
+      sandbox.stub(global.Services.locale, "negotiateLanguages")
+        .returns([locale]);
 
       feed.updateLocale();
 
@@ -87,8 +89,8 @@ describe("Localization Feed", () => {
     });
     it("should use all default strings for unknown locale", () => {
       const locale = "xyz";
-      global.Services.locale.getRequestedLocale.returns(locale);
-
+      sandbox.stub(global.Services.locale, "negotiateLanguages")
+        .returns([locale]);
       feed.updateLocale();
 
       assert.calledOnce(feed.store.dispatch);

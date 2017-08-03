@@ -1725,21 +1725,14 @@ GetStrokeDashData(nsIFrame* aFrame,
 }
 
 void
-nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
-                                     gfxContext *aContext,
-                                     SVGContextPaint* aContextPaint)
+nsSVGUtils::SetupStrokeGeometry(nsIFrame* aFrame,
+                                gfxContext *aContext,
+                                SVGContextPaint* aContextPaint)
 {
   float width = GetStrokeWidth(aFrame, aContextPaint);
   if (width <= 0)
     return;
   aContext->SetLineWidth(width);
-
-  // Apply any stroke-specific transform
-  gfxMatrix outerSVGToUser;
-  if (GetNonScalingStrokeTransform(aFrame, &outerSVGToUser) &&
-      outerSVGToUser.Invert()) {
-    aContext->Multiply(outerSVGToUser);
-  }
 
   const nsStyleSVG* style = aFrame->StyleSVG();
 

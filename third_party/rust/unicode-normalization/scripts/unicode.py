@@ -18,7 +18,7 @@
 # Since this should not require frequent updates, we just store this
 # out-of-line and check the unicode.rs file into git.
 
-import fileinput, re, os, sys
+import fileinput, re, os, sys, collections
 
 preamble = '''// Copyright 2012-2015 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
@@ -160,19 +160,9 @@ def to_combines(combs):
     return combs_out
 
 def format_table_content(f, content, indent):
-    line = " "*indent
-    first = True
-    for chunk in content.split(","):
-        if len(line) + len(chunk) < 98:
-            if first:
-                line += chunk
-            else:
-                line += ", " + chunk
-            first = False
-        else:
-            f.write(line + ",\n")
-            line = " "*indent + chunk
-    f.write(line)
+    indent = " "*indent
+    for c in content:
+        f.write("%s%s,\n" % (indent, c))
 
 def load_properties(f, interestingprops):
     fetch(f)
@@ -220,14 +210,44 @@ def emit_table(f, name, t_data, t_type = "&'static [(char, char)]", is_pub=True,
     if is_pub:
         pub_string = "pub "
     f.write("    %sconst %s: %s = &[\n" % (pub_string, name, t_type))
-    data = ""
-    first = True
-    for dat in t_data:
-        if not first:
-            data += ","
-        first = False
-        data += pfun(dat)
-    format_table_content(f, data, 8)
+    format_table_content(f, [pfun(d) for d in t_data], 8)
+    f.write("\n    ];\n\n")
+
+def emit_strtab_table(f, name, keys, vfun, is_pub=True,
+                      tab_entry_type='char', slice_element_sfun=escape_char):
+    pub_string = ""
+    if is_pub:
+        pub_string = "pub "
+    f.write("    %s const %s: &'static [(char, Slice)] = &[\n"
+            % (pub_string, name))
+
+    strtab = collections.OrderedDict()
+    strtab_offset = 0
+
+    # TODO: a more sophisticated algorithm here would not only check for the
+    # existence of v in the strtab, but also v in contiguous substrings of
+    # strtab, if that's possible.
+    for k in keys:
+        v = tuple(vfun(k))
+        if v in strtab:
+            item_slice = strtab[v]
+        else:
+            value_len = len(v)
+            item_slice = (strtab_offset, value_len)
+            strtab[v] = item_slice
+            strtab_offset += value_len
+
+        f.write("%s(%s, Slice { offset: %d, length: %d }),\n"
+                % (" "*8, escape_char(k), item_slice[0], item_slice[1]))
+
+    f.write("\n    ];\n\n")
+
+    f.write("    %s const %s_STRTAB: &'static [%s] = &[\n"
+            % (pub_string, name, tab_entry_type))
+
+    for (v, _) in strtab.iteritems():
+        f.write("%s%s,\n" % (" "*8, ', '.join(slice_element_sfun(c) for c in v)))
+
     f.write("\n    ];\n\n")
 
 def emit_norm_module(f, canon, compat, combine, norm_props, general_category_mark):
@@ -251,43 +271,38 @@ def emit_norm_module(f, canon, compat, combine, norm_props, general_category_mar
     canon_comp_keys.sort()
 
     f.write("pub mod normalization {\n")
+    f.write("""
+pub struct Slice {
+  pub offset: u16,
+  pub length: u16,
+}
+""")
 
     def mkdata_fun(table):
         def f(char):
-            data = "(%s,&[" % escape_char(char)
-            first = True
-            for d in table[char]:
-                if not first:
-                    data += ","
-                first = False
-                data += escape_char(d)
-            data += "])"
-            return data
+            return table[char]
         return f
 
+    # TODO: should the strtab of these two tables be of type &'static str, for
+    # smaller data?
     f.write("    // Canonical decompositions\n")
-    emit_table(f, "canonical_table", canon_keys, "&'static [(char, &'static [char])]",
-        pfun=mkdata_fun(canon))
+    emit_strtab_table(f, "canonical_table", canon_keys,
+                      vfun=mkdata_fun(canon))
 
     f.write("    // Compatibility decompositions\n")
-    emit_table(f, "compatibility_table", compat_keys, "&'static [(char, &'static [char])]",
-        pfun=mkdata_fun(compat))
+    emit_strtab_table(f, "compatibility_table", compat_keys,
+                      vfun=mkdata_fun(compat))
 
-    def comp_pfun(char):
-        data = "(%s,&[" % escape_char(char)
-        canon_comp[char].sort(lambda x, y: x[0] - y[0])
-        first = True
-        for pair in canon_comp[char]:
-            if not first:
-                data += ","
-            first = False
-            data += "(%s,%s)" % (escape_char(pair[0]), escape_char(pair[1]))
-        data += "])"
-        return data
+    def comp_vfun(char):
+        return sorted(canon_comp[char], lambda x, y: x[0] - y[0])
 
     f.write("    // Canonical compositions\n")
-    emit_table(f, "composition_table", canon_comp_keys,
-        "&'static [(char, &'static [(char, char)])]", pfun=comp_pfun)
+    # "&'static [(char, &'static [(char, char)])]", pfun=comp_pfun)
+    emit_strtab_table(f, "composition_table", canon_comp_keys,
+                      vfun=comp_vfun,
+                      tab_entry_type="(char, char)",
+                      slice_element_sfun=lambda pair: "(%s,%s)" % (escape_char(pair[0]),
+                                                                   escape_char(pair[1])))
 
     f.write("""
     fn bsearch_range_value_table(c: char, r: &'static [(char, char, u8)]) -> u8 {
@@ -335,7 +350,7 @@ def emit_norm_module(f, canon, compat, combine, norm_props, general_category_mar
 
 """)
 
-    emit_table(f, "general_category_mark", combine, "&'static [(char, char)]", is_pub=False,
+    emit_table(f, "general_category_mark", general_category_mark, "&'static [(char, char)]", is_pub=False,
             pfun=lambda x: "(%s,%s)" % (escape_char(x[0]), escape_char(x[1])))
 
     f.write("""

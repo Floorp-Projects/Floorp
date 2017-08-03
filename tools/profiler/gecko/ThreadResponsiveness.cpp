@@ -4,30 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ThreadResponsiveness.h"
-#include "platform.h"
-#include "nsComponentManagerUtils.h"
-#include "nsThreadUtils.h"
-#include "nsITimer.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
+
+#include "mozilla/Atomics.h"
 #include "mozilla/SystemGroup.h"
 
-using mozilla::Mutex;
-using mozilla::MutexAutoLock;
-using mozilla::SystemGroup;
-using mozilla::TaskCategory;
-using mozilla::TimeStamp;
+#include "nsITimer.h"
+#include "platform.h"
 
-class CheckResponsivenessTask : public mozilla::Runnable,
+using namespace mozilla;
+
+class CheckResponsivenessTask : public Runnable,
                                 public nsITimerCallback {
 public:
   CheckResponsivenessTask()
-    : mozilla::Runnable("CheckResponsivenessTask")
-    , mLastTracerTime(TimeStamp::Now())
-    , mMutex("CheckResponsivenessTask")
-    , mTimer(nullptr)
-    , mHasEverBeenSuccessfullyDispatched(false)
+    : Runnable("CheckResponsivenessTask")
+    , mStartToPrevTracer_us(uint64_t(profiler_time() * 1000.0))
     , mStop(false)
+    , mHasEverBeenSuccessfullyDispatched(false)
   {
   }
 
@@ -38,7 +31,7 @@ protected:
 
 public:
 
-  // Must be called from the same thread every time. Call that the "update"
+  // Must be called from the same thread every time. Call that the update
   // thread, because it's the thread that ThreadResponsiveness::Update() is
   // called on. In reality it's the profiler's sampler thread.
   void DoFirstDispatchIfNeeded()
@@ -59,25 +52,20 @@ public:
   // Can only run on the main thread.
   NS_IMETHOD Run() override
   {
-    MutexAutoLock mon(mMutex);
-    if (mStop)
-      return NS_OK;
+    mStartToPrevTracer_us = uint64_t(profiler_time() * 1000.0);
 
-    // This is raced on because we might pause the thread here
-    // for profiling so if we tried to use a monitor to protect
-    // mLastTracerTime we could deadlock. We're risking seeing
-    // a partial write which will show up as an outlier in our
-    // performance data.
-    mLastTracerTime = TimeStamp::Now();
-    if (!mTimer) {
-      mTimer = do_CreateInstance("@mozilla.org/timer;1");
-      mTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
+    if (!mStop) {
+      if (!mTimer) {
+        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+        mTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
+      }
+      mTimer->InitWithCallback(this, 16, nsITimer::TYPE_ONE_SHOT);
     }
-    mTimer->InitWithCallback(this, 16, nsITimer::TYPE_ONE_SHOT);
 
     return NS_OK;
   }
 
+  // Main thread only
   NS_IMETHOD Notify(nsITimer* aTimer) final
   {
     SystemGroup::Dispatch(TaskCategory::Other,
@@ -85,23 +73,37 @@ public:
     return NS_OK;
   }
 
+  // Can be called on any thread.
   void Terminate() {
-    MutexAutoLock mon(mMutex);
     mStop = true;
   }
 
-  const TimeStamp& GetLastTracerTime() const {
-    return mLastTracerTime;
+  // Can be called on any thread.
+  double GetStartToPrevTracer_ms() const {
+    return mStartToPrevTracer_us / 1000.0;
   }
 
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  TimeStamp mLastTracerTime;
-  Mutex mMutex;
+  // The timer that's responsible for redispatching this event to the main
+  // thread. This field is only accessed on the main thread.
   nsCOMPtr<nsITimer> mTimer;
-  bool mHasEverBeenSuccessfullyDispatched; // only accessed on the "update" thread
-  bool mStop;
+
+  // The time (in integer microseconds since process startup) at which this
+  // event was last processed (Run() was last called).
+  // This field is written on the main thread and read on the update thread.
+  // This is stored as integer microseconds instead of double milliseconds
+  // because Atomic<double> is not available.
+  Atomic<uint64_t> mStartToPrevTracer_us;
+
+  // Whether we should stop redispatching this event once the timer fires the
+  // next time. Set to true by any thread when the profiler is stopped; read on
+  // the main thread.
+  Atomic<bool> mStop;
+
+  // Only accessed on the update thread.
+  bool mHasEverBeenSuccessfullyDispatched;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(CheckResponsivenessTask, mozilla::Runnable,
@@ -123,6 +125,6 @@ void
 ThreadResponsiveness::Update()
 {
   mActiveTracerEvent->DoFirstDispatchIfNeeded();
-  mLastTracerTime = mActiveTracerEvent->GetLastTracerTime();
+  mStartToPrevTracer_ms = Some(mActiveTracerEvent->GetStartToPrevTracer_ms());
 }
 

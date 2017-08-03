@@ -548,7 +548,7 @@ nsBindingManager::FlushSkinBindings()
     }
 
     nsAutoCString path;
-    binding->PrototypeBinding()->DocURI()->GetPath(path);
+    binding->PrototypeBinding()->DocURI()->GetPathQueryRef(path);
 
     if (!strncmp(path.get(), "/skin", 5)) {
       binding->MarkForDeath();

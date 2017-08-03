@@ -27,7 +27,7 @@ add_task(async function test_enabled() {
   await cleanup();
 });
 
-add_task(async function test_sync_enabled() {
+add_task(async function test_linked_enabled_prefs() {
   // Initialize unified complete.
   Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
     .getService(Ci.mozIPlacesAutoComplete);

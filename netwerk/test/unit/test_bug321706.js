@@ -6,6 +6,6 @@ function run_test() {
 
   var newURI = ios.newURI(url);
   do_check_eq(newURI.spec, url);
-  do_check_eq(newURI.path, "/folder/file?/.");
+  do_check_eq(newURI.pathQueryRef, "/folder/file?/.");
   do_check_eq(newURI.resolve("./file?/."), url);
 }

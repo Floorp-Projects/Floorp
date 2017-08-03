@@ -1213,6 +1213,8 @@ reftest-stylo:
     description: "Reftest run for Stylo"
     suite: reftest/reftest-stylo
     treeherder-symbol: tc-R(Rs)
+    virtualization: virtual-with-gpu
+    docker-image: {"in-tree": "desktop1604-test"}
     chunks: 16
     run-on-projects:
         by-test-platform:
@@ -1790,7 +1792,6 @@ xpcshell:
             default: null
     tier:
         by-test-platform:
-            windows10-64.*: 2
             default: default
     chunks:
         by-test-platform:

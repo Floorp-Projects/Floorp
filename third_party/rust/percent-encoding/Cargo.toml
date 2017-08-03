@@ -1,0 +1,16 @@
+[package]
+name = "percent-encoding"
+version = "1.0.0"
+authors = ["The rust-url developers"]
+description = "Percent encoding and decoding"
+repository = "https://github.com/servo/rust-url/"
+license = "MIT/Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+path = "lib.rs"
+
+[dev-dependencies]
+rustc-test = "0.1"
+rustc-serialize = "0.3"

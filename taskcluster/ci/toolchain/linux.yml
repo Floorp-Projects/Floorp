@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-linux64-clang:
-    description: "Clang toolchain build"
+linux64-clang-3.9:
+    description: "Clang 3.9 toolchain build"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TL(clang)
+        symbol: TL(clang3.9)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -15,13 +15,37 @@ linux64-clang:
         max-run-time: 36000
     run:
         using: toolchain-script
-        script: build-clang-linux.sh
+        script: build-clang-3.9-linux.sh
         resources:
-            - 'build/build-clang/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-3.9-linux64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-gcc-4.8
+
+linux64-clang-4:
+    description: "Clang 4 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(clang4)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-clang-4-linux.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-4-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
-        - linux64-gcc
+        - linux64-gcc-4.8
 
 linux64-clang-tidy:
     description: "Clang-tidy build"
@@ -42,18 +66,19 @@ linux64-clang-tidy:
         script: build-clang-tidy-linux.sh
         resources:
             - 'build/clang-plugin/**'
-            - 'build/build-clang/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-tidy-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
         - linux64-gcc
 
-linux64-gcc:
-    description: "GCC toolchain build"
+linux64-gcc-4.8:
+    description: "GCC 4.8 toolchain build"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TL(gcc)
+        symbol: TL(gcc4.8)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -61,9 +86,46 @@ linux64-gcc:
         max-run-time: 36000
     run:
         using: toolchain-script
-        script: build-gcc-linux.sh
+        script: build-gcc-4.8-linux.sh
         resources:
-            - 'build/unix/build-gcc/**'
+            - 'build/unix/build-gcc/build-gcc.sh'
+        toolchain-artifact: public/build/gcc.tar.xz
+
+linux64-gcc-4.9:
+    description: "GCC 4.9 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(gcc4.9)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-gcc-4.9-linux.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+        toolchain-alias: linux64-gcc
+        toolchain-artifact: public/build/gcc.tar.xz
+
+linux64-gcc-6:
+    description: "GCC 6 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(gcc6)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-gcc-6-linux.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
         toolchain-artifact: public/build/gcc.tar.xz
 
 linux64-binutils:
@@ -81,7 +143,7 @@ linux64-binutils:
         using: toolchain-script
         script: build-binutils-linux.sh
         resources:
-            - 'build/unix/build-binutils/**'
+            - 'build/unix/build-binutils/build-binutils.sh'
         toolchain-artifact: public/build/binutils.tar.xz
 
 linux64-cctools-port:
@@ -119,7 +181,7 @@ linux64-hfsplus:
         using: toolchain-script
         script: build-hfsplus-linux.sh
         resources:
-            - 'build/unix/build-hfsplus/**'
+            - 'build/unix/build-hfsplus/build-hfsplus.sh'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
     toolchains:

@@ -54,12 +54,12 @@ this.DefaultPrefs = class DefaultPrefs {
   }
 
   /**
-   * _setDefaultPref - Sets the default value (not user-defined) for a given pref
+   * setDefaultPref - Sets the default value (not user-defined) for a given pref
    *
    * @param  {string} key The name of the pref
    * @param  {type} val The default value of the pref
    */
-  _setDefaultPref(key, val) {
+  setDefaultPref(key, val) {
     switch (typeof val) {
       case "boolean":
         this.branch.setBoolPref(key, val);
@@ -89,7 +89,7 @@ this.DefaultPrefs = class DefaultPrefs {
       } else {
         value = prefConfig.value;
       }
-      this._setDefaultPref(pref, value);
+      this.setDefaultPref(pref, value);
     }
   }
 

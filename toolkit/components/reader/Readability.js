@@ -1301,7 +1301,7 @@ Readability.prototype = {
   **/
   _findBaseUrl: function() {
     var uri = this._uri;
-    var noUrlParams = uri.path.split("?")[0];
+    var noUrlParams = uri.pathQueryRef.split("?")[0];
     var urlSlashes = noUrlParams.split("/").reverse();
     var cleanedSegments = [];
     var possibleType = "";

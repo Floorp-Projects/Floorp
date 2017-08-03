@@ -20,7 +20,8 @@ macosx64-clang:
         script: build-clang-macosx.sh
         tooltool-downloads: internal
         resources:
-            - 'build/build-clang/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
@@ -50,7 +51,8 @@ macosx64-clang-tidy:
         tooltool-downloads: internal
         resources:
             - 'build/clang-plugin/**'
-            - 'build/build-clang/**'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-tidy-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
