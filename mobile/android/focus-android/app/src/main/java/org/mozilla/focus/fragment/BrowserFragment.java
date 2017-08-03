@@ -93,6 +93,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private AnimatedProgressBar progressView;
     private FrameLayout blockView;
     private ImageView lockView;
+    private ImageView blockIcon;
     private ImageButton menuView;
     private WeakReference<BrowserMenu> menuWeakReference = new WeakReference<>(null);
 
@@ -186,6 +187,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         if ((backButton = view.findViewById(R.id.back)) != null) {
             backButton.setOnClickListener(this);
         }
+
+        blockIcon = (ImageView) view.findViewById(R.id.block_image);
+        blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled);
 
         blockView = (FrameLayout) view.findViewById(R.id.block);
 

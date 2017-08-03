@@ -93,10 +93,10 @@
             android:visibility="gone">
 
             <ImageView
+                android:id="@+id/block_image"
                 android:layout_width="12dp"
                 android:layout_height="13.33dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_tracking_protection_disabled"
                 android:tint="#FFFFFF" />
         </FrameLayout>
 
