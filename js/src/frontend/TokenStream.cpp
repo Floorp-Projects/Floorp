@@ -737,6 +737,25 @@ TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err, uint32_t offset)
 }
 
 bool
+TokenStreamAnyChars::hasTokenizationStarted() const
+{
+    return isCurrentTokenType(TOK_EOF) && !isEOF();
+}
+
+void
+TokenStreamAnyChars::lineNumAndColumnIndex(size_t offset, uint32_t* line, uint32_t* column) const
+{
+    srcCoords.lineNumAndColumnIndex(offset, line, column);
+}
+
+size_t
+TokenStreamAnyChars::offset() const
+{
+    // Default implementation. Overridden by `TokenStream`.
+    return 0;
+}
+
+bool
 TokenStream::computeErrorMetadata(ErrorMetadata* err, uint32_t offset)
 {
     if (offset == NoOffset) {
@@ -805,6 +824,13 @@ TokenStream::computeLineOfContext(ErrorMetadata* err, uint32_t offset)
     err->lineLength = windowLength;
     err->tokenOffset = offset - windowStart;
     return true;
+}
+
+
+size_t
+TokenStream::offset() const
+{
+    return userbuf.offset();
 }
 
 bool

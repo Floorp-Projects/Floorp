@@ -14,6 +14,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "frontend/BytecodeEmitter.h"
+#include "frontend/ErrorReporter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/NameFunctions.h"
 #include "frontend/Parser.h"
@@ -107,21 +108,21 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextI
 #endif
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                                           const TokenStreamAnyChars& tokenStream)
+                                           const ErrorReporter& errorReporter)
 #ifdef JS_TRACE_LOGGING
   : logger_(TraceLoggerForCurrentThread(cx))
 {
     // If the tokenizer hasn't yet gotten any tokens, use the line and column
     // numbers from CompileOptions.
     uint32_t line, column;
-    if (tokenStream.isCurrentTokenType(TOK_EOF) && !tokenStream.isEOF()) {
-        line = tokenStream.options().lineno;
-        column = tokenStream.options().column;
+    if (errorReporter.hasTokenizationStarted()) {
+        line = errorReporter.options().lineno;
+        column = errorReporter.options().column;
     } else {
-        uint32_t offset = tokenStream.currentToken().pos.begin;
-        tokenStream.srcCoords.lineNumAndColumnIndex(offset, &line, &column);
+        uint32_t offset = errorReporter.offset();
+        errorReporter.lineNumAndColumnIndex(offset, &line, &column);
     }
-    frontendEvent_.emplace(TraceLogger_Frontend, tokenStream.getFilename(), line, column);
+    frontendEvent_.emplace(TraceLogger_Frontend, errorReporter.getFilename(), line, column);
     frontendLog_.emplace(logger_, *frontendEvent_);
     typeLog_.emplace(logger_, id);
 }
@@ -130,12 +131,12 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextI
 #endif
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                                           const TokenStreamAnyChars& tokenStream,
+                                           const ErrorReporter& errorReporter,
                                            FunctionBox* funbox)
 #ifdef JS_TRACE_LOGGING
   : logger_(TraceLoggerForCurrentThread(cx))
 {
-    frontendEvent_.emplace(TraceLogger_Frontend, tokenStream.getFilename(),
+    frontendEvent_.emplace(TraceLogger_Frontend, errorReporter.getFilename(),
                            funbox->startLine, funbox->startColumn);
     frontendLog_.emplace(logger_, *frontendEvent_);
     typeLog_.emplace(logger_, id);
@@ -145,13 +146,13 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextI
 #endif
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                                           const TokenStreamAnyChars& tokenStream, ParseNode* pn)
+                                           const ErrorReporter& errorReporter, ParseNode* pn)
 #ifdef JS_TRACE_LOGGING
   : logger_(TraceLoggerForCurrentThread(cx))
 {
     uint32_t line, column;
-    tokenStream.srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
-    frontendEvent_.emplace(TraceLogger_Frontend, tokenStream.getFilename(), line, column);
+    errorReporter.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
+    frontendEvent_.emplace(TraceLogger_Frontend, errorReporter.getFilename(), line, column);
     frontendLog_.emplace(logger_, *frontendEvent_);
     typeLog_.emplace(logger_, id);
 }
