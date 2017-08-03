@@ -40,7 +40,8 @@ public:
 
   bool Init(ChromiumCDMProxy* aProxy,
             bool aAllowDistinctiveIdentifier,
-            bool aAllowPersistentState);
+            bool aAllowPersistentState,
+            nsIEventTarget* aMainThread);
 
   void CreateSession(uint32_t aCreateSessionToken,
                      uint32_t aSessionType,
@@ -185,6 +186,9 @@ protected:
   // life time of this object, but never more than one active at once.
   uint32_t mMaxRefFrames = 0;
   ReorderQueue mReorderQueue;
+
+  // The main thread associated with the root document. Must be set in Init().
+    nsCOMPtr<nsIEventTarget> mMainThread;
 };
 
 } // namespace gmp

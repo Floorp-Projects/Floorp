@@ -98,7 +98,8 @@ ChromiumCDMProxy::Init(PromiseId aPromiseId,
         [self, aPromiseId](RefPtr<gmp::ChromiumCDMParent> cdm) {
           if (!cdm->Init(self,
                          self->mDistinctiveIdentifierRequired,
-                         self->mPersistentStateRequired)) {
+                         self->mPersistentStateRequired,
+                         self->mMainThread)) {
             self->RejectPromise(aPromiseId,
                                 NS_ERROR_FAILURE,
                                 NS_LITERAL_CSTRING("GetCDM failed."));
