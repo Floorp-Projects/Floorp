@@ -613,7 +613,7 @@
 /* All tabs button and menupopup */
 
 #alltabs-button {
-  list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
+  list-style-image: url(chrome://browser/skin/arrow-dropdown.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }
