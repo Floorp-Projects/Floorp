@@ -35,6 +35,8 @@
 #include <stack>
 #include <vector>
 
+class nsIEventTarget;
+
 namespace mozilla {
 namespace ipc {
 
@@ -146,7 +148,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     // For more details on the process of opening a channel between
     // threads, see the extended comment on this function
     // in MessageChannel.cpp.
-    bool Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side aSide);
+    bool Open(MessageChannel *aTargetChan, nsIEventTarget *aEventTarget, Side aSide);
 
     // Close the underlying transport channel.
     void Close();
