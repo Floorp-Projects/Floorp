@@ -130,7 +130,7 @@ public:
 
   void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData);
 
-  const mozilla::ServoStyleSet* GetServoStyleSet() const;
+  mozilla::ServoStyleSet* GetServoStyleSet() const;
 
   static nsresult DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> obj,
                                 const nsString& aClassName,
