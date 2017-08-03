@@ -21,6 +21,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
                            TempAllocator* alloc, MIRGraph* graph, const CompileInfo* info,
                            const OptimizationInfo* optimizationInfo)
   : compartment(compartment),
+    runtime(compartment ? compartment->runtime() : nullptr),
     info_(info),
     optimizationInfo_(optimizationInfo),
     alloc_(alloc),
