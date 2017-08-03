@@ -716,80 +716,6 @@ public:
 #endif
 };
 
-static bool
-IsChromeJSScript(JSScript* aScript)
-{
-  // WARNING: this function runs within the profiler's "critical section".
-
-  nsIScriptSecurityManager* const secman =
-    nsScriptSecurityManager::GetScriptSecurityManager();
-  NS_ENSURE_TRUE(secman, false);
-
-  JSPrincipals* const principals = JS_GetScriptPrincipals(aScript);
-  return secman->IsSystemPrincipal(nsJSPrincipals::get(principals));
-}
-
-static void
-AddPseudoEntry(uint32_t aFeatures, NotNull<RacyThreadInfo*> aRacyInfo,
-               const js::ProfileEntry& entry,
-               ProfilerStackCollector& aCollector)
-{
-  // WARNING: this function runs within the profiler's "critical section".
-  // WARNING: this function might be called while the profiler is inactive, and
-  //          cannot rely on ActivePS.
-
-  MOZ_ASSERT(entry.kind() == js::ProfileEntry::Kind::CPP_NORMAL ||
-             entry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
-
-  const char* label = entry.label();
-  const char* dynamicString = entry.dynamicString();
-  bool isChromeJSEntry = false;
-  int lineno = -1;
-
-  if (entry.isJs()) {
-    // There are two kinds of JS frames that get pushed onto the PseudoStack.
-    //
-    // - label = "", dynamic string = <something>
-    // - label = "js::RunScript", dynamic string = nullptr
-    //
-    // The line number is only interesting for the first case.
-    if (label[0] == '\0') {
-      MOZ_ASSERT(dynamicString);
-
-      // We call entry.script() repeatedly -- rather than storing the result in
-      // a local variable in order -- to avoid rooting hazards.
-      if (entry.script()) {
-        isChromeJSEntry = IsChromeJSScript(entry.script());
-        if (entry.pc()) {
-          lineno = JS_PCToLineNumber(entry.script(), entry.pc());
-        } else {
-          // The JIT only allows the top-most entry to have a nullptr pc.
-          MOZ_ASSERT(&entry == &aRacyInfo->entries[aRacyInfo->stackSize() - 1]);
-        }
-      }
-
-    } else {
-      MOZ_ASSERT(strcmp(label, "js::RunScript") == 0 && !dynamicString);
-    }
-
-  } else {
-    MOZ_ASSERT(entry.isCpp());
-    lineno = entry.line();
-  }
-
-  if (dynamicString) {
-    // Adjust the dynamic string as necessary.
-    if (ProfilerFeature::HasPrivacy(aFeatures) && !isChromeJSEntry) {
-      dynamicString = "(private)";
-    } else if (strlen(dynamicString) >= ProfileBuffer::kMaxFrameKeyLength) {
-      dynamicString = "(too long)";
-    }
-  }
-
-  aCollector.CollectCodeLocation(label, dynamicString, lineno,
-                                 Some(entry.category()));
-}
-
 // Setting MAX_NATIVE_FRAMES too high risks the unwinder wasting a lot of time
 // looping on corrupted stacks.
 //
@@ -965,7 +891,10 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       // Pseudo-frames with the CPP_MARKER_FOR_JS kind are just annotations and
       // should not be recorded in the profile.
       if (pseudoEntry.kind() != js::ProfileEntry::Kind::CPP_MARKER_FOR_JS) {
-        AddPseudoEntry(aFeatures, racyInfo, pseudoEntry, aCollector);
+        // The JIT only allows the top-most entry to have a nullptr pc.
+        MOZ_ASSERT_IF(pseudoEntry.isJs() && pseudoEntry.script() && !pseudoEntry.pc(),
+                      &pseudoEntry == &racyInfo->entries[racyInfo->stackSize() - 1]);
+        aCollector.CollectPseudoEntry(pseudoEntry);
       }
       pseudoIndex++;
       continue;
@@ -991,7 +920,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       // with stale JIT code return addresses.
       if (aIsSynchronous ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
-        aCollector.CollectCodeLocation("", jsFrame.label, -1, Nothing());
+        aCollector.CollectWasmFrame(jsFrame.label);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
@@ -1346,18 +1275,19 @@ DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
   aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
+  ProfileBufferCollector collector(aBuffer, ActivePS::Features(aLock));
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
     DoNativeBacktrace(aLock, aThreadInfo, aRegs, nativeStack);
 
     MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aThreadInfo, aRegs,
-                nativeStack, aBuffer);
+                nativeStack, collector);
   } else
 #endif
   {
     MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aThreadInfo, aRegs,
-                nativeStack, aBuffer);
+                nativeStack, collector);
 
     // We can't walk the whole native stack, but we can record the top frame.
     if (ActivePS::FeatureLeaf(aLock)) {

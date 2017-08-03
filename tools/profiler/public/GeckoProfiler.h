@@ -309,10 +309,9 @@ public:
 
   virtual void CollectJitReturnAddr(void* aAddr) = 0;
 
-  // aLabel is static and never null. aStr may be null. aLineNumber may be -1.
-  virtual void CollectCodeLocation(
-    const char* aLabel, const char* aStr, int aLineNumber,
-    const mozilla::Maybe<js::ProfileEntry::Category>& aCategory) = 0;
+  virtual void CollectWasmFrame(const char* aLabel) = 0;
+
+  virtual void CollectPseudoEntry(const js::ProfileEntry& aEntry) = 0;
 };
 
 // This method suspends the thread identified by aThreadId, samples its
