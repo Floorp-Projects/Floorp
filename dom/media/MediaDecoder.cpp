@@ -474,8 +474,8 @@ MediaDecoder::Shutdown()
 
   // Force any outstanding seek and byterange requests to complete
   // to prevent shutdown from deadlocking.
-  if (mResource) {
-    mResource->Close();
+  if (MediaResource* r = GetResource()) {
+    r->Close();
   }
 
   // Ask the owner to remove its audio/video tracks.
@@ -704,7 +704,8 @@ already_AddRefed<nsIPrincipal>
 MediaDecoder::GetCurrentPrincipal()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mResource ? mResource->GetCurrentPrincipal() : nullptr;
+  MediaResource* r = GetResource();
+  return r ? r->GetCurrentPrincipal() : nullptr;
 }
 
 void
@@ -810,7 +811,7 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   Invalidate();
 
   // This can run cache callbacks.
-  mResource->EnsureCacheUpToDate();
+  GetResource()->EnsureCacheUpToDate();
 
   // The element can run javascript via events
   // before reaching here, so only change the
@@ -908,13 +909,14 @@ MediaStatistics
 MediaDecoder::GetStatistics()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mResource);
+  MediaResource* r = GetResource();
+  MOZ_ASSERT(r);
 
   MediaStatistics result;
   result.mDownloadRate =
-    mResource->GetDownloadRate(&result.mDownloadRateReliable);
-  result.mDownloadPosition = mResource->GetCachedDataEnd(mDecoderPosition);
-  result.mTotalBytes = mResource->GetLength();
+    r->GetDownloadRate(&result.mDownloadRateReliable);
+  result.mDownloadPosition = r->GetCachedDataEnd(mDecoderPosition);
+  result.mTotalBytes = r->GetLength();
   result.mPlaybackRate = mPlaybackBytesPerSecond;
   result.mPlaybackRateReliable = mPlaybackRateReliable;
   result.mDecoderPosition = mDecoderPosition;
@@ -926,9 +928,9 @@ void
 MediaDecoder::ComputePlaybackRate()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mResource);
+  MOZ_ASSERT(GetResource());
 
-  int64_t length = mResource->GetLength();
+  int64_t length = GetResource()->GetLength();
   if (mozilla::IsFinite<double>(mDuration)
       && mDuration > 0
       && length >= 0) {
@@ -946,7 +948,7 @@ void
 MediaDecoder::UpdatePlaybackRate()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mResource);
+  MOZ_ASSERT(GetResource());
 
   ComputePlaybackRate();
   uint32_t rate = mPlaybackBytesPerSecond;
@@ -960,7 +962,7 @@ MediaDecoder::UpdatePlaybackRate()
     rate = std::max(rate, 10000u);
   }
 
-  mResource->SetPlaybackRate(rate);
+  GetResource()->SetPlaybackRate(rate);
 }
 
 void
@@ -968,8 +970,8 @@ MediaDecoder::NotifySuspendedStatusChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  if (mResource) {
-    bool suspended = mResource->IsSuspendedByCache();
+  if (MediaResource* r = GetResource()) {
+    bool suspended = r->IsSuspendedByCache();
     GetOwner()->NotifySuspendedByCache(suspended);
   }
 }
@@ -983,7 +985,7 @@ MediaDecoder::ShouldThrottleDownload()
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(mDecoderStateMachine, false);
 
-  int64_t length = mResource->GetLength();
+  int64_t length = GetResource()->GetLength();
   if (length > 0 &&
       length <= int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
     // Don't throttle the download of small resources. This is to speed
@@ -1013,7 +1015,7 @@ MediaDecoder::DownloadProgressed()
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   UpdatePlaybackRate();
   GetOwner()->DownloadProgressed();
-  mResource->ThrottleReadahead(ShouldThrottleDownload());
+  GetResource()->ThrottleReadahead(ShouldThrottleDownload());
 }
 
 void
@@ -1365,8 +1367,8 @@ void
 MediaDecoder::Suspend()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mResource) {
-    mResource->Suspend(true);
+  if (MediaResource* r = GetResource()) {
+    r->Suspend(true);
   }
 }
 
@@ -1374,8 +1376,8 @@ void
 MediaDecoder::Resume()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mResource) {
-    mResource->Resume();
+  if (MediaResource* r = GetResource()) {
+    r->Resume();
   }
 }
 
@@ -1383,8 +1385,8 @@ void
 MediaDecoder::SetLoadInBackground(bool aLoadInBackground)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mResource) {
-    mResource->SetLoadInBackground(aLoadInBackground);
+  if (MediaResource* r = GetResource()) {
+    r->SetLoadInBackground(aLoadInBackground);
   }
 }
 
