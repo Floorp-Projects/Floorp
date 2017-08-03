@@ -66,6 +66,7 @@ public class ToggleBlockTest {
         assertTrue(TestHelper.blockToggleSwitch.isChecked());
         TestHelper.blockToggleSwitch.click();
         TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.blockOffIcon.exists());
 
         // check that it blocked 0 tracker
         TestHelper.menuButton.perform(click());
@@ -74,6 +75,7 @@ public class ToggleBlockTest {
         assertTrue(!TestHelper.blockToggleSwitch.isChecked());
         TestHelper.blockToggleSwitch.click();
         TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(!TestHelper.blockOffIcon.exists());
     }
 
     @Test

@@ -120,6 +120,9 @@ public final class TestHelper {
             .text("Focus (Dev)")
             .resourceId("com.android.systemui:id/title")
             .enabled(true));
+    static UiObject blockOffIcon = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/block")
+            .enabled(true));
 
     /********* Main View Menu Item Locators ***********/
     static UiObject RightsItem = mDevice.findObject(new UiSelector()
