@@ -37,8 +37,6 @@ to mochitest command.
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
-  * radial gradients are not serialized using modern unprefixed style bug 1380259
-    * test_computed_style.html `gradient` [1]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
