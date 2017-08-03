@@ -113,6 +113,7 @@ function GripMessageBody(props) {
       const client = new ObjectClient(serviceContainer.hudProxyClient, object);
       dispatch(actions.messageObjectEntriesLoad(messageId, client, object));
     },
+    openLink: serviceContainer.openLink,
   };
 
   if (typeof grip === "string" || (grip && grip.type === "longString")) {
