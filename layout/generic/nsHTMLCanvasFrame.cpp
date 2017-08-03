@@ -357,12 +357,23 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (layer->GetType() == layers::Layer::TYPE_CANVAS) {
     RefPtr<CanvasLayer> canvasLayer = static_cast<CanvasLayer*>(layer.get());
     canvasLayer->SetSamplingFilter(nsLayoutUtils::GetSamplingFilterForFrame(this));
+    nsIntRect bounds;
+    bounds.SetRect(0, 0, canvasSizeInPx.width, canvasSizeInPx.height);
+    canvasLayer->SetBounds(bounds);
   } else if (layer->GetType() == layers::Layer::TYPE_IMAGE) {
     RefPtr<ImageLayer> imageLayer = static_cast<ImageLayer*>(layer.get());
     imageLayer->SetSamplingFilter(nsLayoutUtils::GetSamplingFilterForFrame(this));
   }
 
   return layer.forget();
+}
+
+void
+nsHTMLCanvasFrame::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                                            CanvasRenderer* aRenderer)
+{
+  HTMLCanvasElement* element = static_cast<HTMLCanvasElement*>(GetContent());
+  element->InitializeCanvasRenderer(aBuilder, aRenderer);
 }
 
 void

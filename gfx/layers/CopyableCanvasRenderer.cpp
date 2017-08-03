@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CopyableCanvasLayer.h"
+#include "CopyableCanvasRenderer.h"
 
 #include "BasicLayersImpl.h"            // for FillWithMask, etc
 #include "GLContext.h"                  // for GLContext
@@ -32,24 +32,31 @@ namespace layers {
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
-CopyableCanvasLayer::CopyableCanvasLayer(LayerManager* aLayerManager, void *aImplData) :
-  CanvasLayer(aLayerManager, aImplData)
+CopyableCanvasRenderer::CopyableCanvasRenderer()
+  : mGLContext(nullptr)
+  , mBufferProvider(nullptr)
   , mGLFrontbuffer(nullptr)
+  , mAsyncRenderer(nullptr)
   , mIsAlphaPremultiplied(true)
   , mOriginPos(gl::OriginPos::TopLeft)
   , mIsMirror(false)
+  , mOpaque(true)
+  , mCachedTempSurface(nullptr)
 {
-  MOZ_COUNT_CTOR(CopyableCanvasLayer);
+  MOZ_COUNT_CTOR(CopyableCanvasRenderer);
 }
 
-CopyableCanvasLayer::~CopyableCanvasLayer()
+CopyableCanvasRenderer::~CopyableCanvasRenderer()
 {
-  MOZ_COUNT_DTOR(CopyableCanvasLayer);
+  Destroy();
+  MOZ_COUNT_DTOR(CopyableCanvasRenderer);
 }
 
 void
-CopyableCanvasLayer::Initialize(const Data& aData)
+CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
 {
+  CanvasRenderer::Initialize(aData);
+
   if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     mIsAlphaPremultiplied = aData.mIsGLAlphaPremult;
@@ -70,20 +77,97 @@ CopyableCanvasLayer::Initialize(const Data& aData)
     mAsyncRenderer = aData.mRenderer;
     mOriginPos = gl::OriginPos::BottomLeft;
   } else {
-    MOZ_CRASH("GFX: CanvasLayer created without BufferProvider, DrawTarget or GLContext?");
+    MOZ_CRASH("GFX: CanvasRenderer created without BufferProvider, DrawTarget or GLContext?");
   }
 
-  mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+  mOpaque = !aData.mHasAlpha;
 }
 
 bool
-CopyableCanvasLayer::IsDataValid(const Data& aData)
+CopyableCanvasRenderer::IsDataValid(const CanvasInitializeData& aData)
 {
   return mGLContext == aData.mGLContext;
 }
 
+void
+CopyableCanvasRenderer::ClearCachedResources()
+{
+  if (mBufferProvider) {
+    mBufferProvider->ClearCachedResources();
+  }
+
+  mCachedTempSurface = nullptr;
+}
+
+void
+CopyableCanvasRenderer::Destroy()
+{
+  if (mBufferProvider) {
+    mBufferProvider->ClearCachedResources();
+  }
+
+  mCachedTempSurface = nullptr;
+}
+
+already_AddRefed<SourceSurface>
+CopyableCanvasRenderer::ReadbackSurface()
+{
+  FirePreTransactionCallback();
+  if (mAsyncRenderer) {
+    MOZ_ASSERT(!mBufferProvider);
+    MOZ_ASSERT(!mGLContext);
+    return mAsyncRenderer->GetSurface();
+  }
+
+  if (!mGLContext) {
+    return nullptr;
+  }
+
+  SharedSurface* frontbuffer = nullptr;
+  if (mGLFrontbuffer) {
+    frontbuffer = mGLFrontbuffer.get();
+  } else {
+    GLScreenBuffer* screen = mGLContext->Screen();
+    const auto& front = screen->Front();
+    if (front) {
+      frontbuffer = front->Surf();
+    }
+  }
+
+  if (!frontbuffer) {
+    NS_WARNING("Null frame received.");
+    return nullptr;
+  }
+
+  IntSize readSize(frontbuffer->mSize);
+  SurfaceFormat format =
+    mOpaque ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
+  bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
+
+  RefPtr<DataSourceSurface> resultSurf = GetTempSurface(readSize, format);
+  // There will already be a warning from inside of GetTempSurface, but
+  // it doesn't hurt to complain:
+  if (NS_WARN_IF(!resultSurf)) {
+    return nullptr;
+  }
+
+  // Readback handles Flush/MarkDirty.
+  if (!mGLContext->Readback(frontbuffer, resultSurf)) {
+    NS_WARNING("Failed to read back canvas surface.");
+    return nullptr;
+  }
+  if (needsPremult) {
+    gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
+  }
+  MOZ_ASSERT(resultSurf);
+
+  FireDidTransactionCallback();
+
+  return resultSurf.forget();
+}
+
 DataSourceSurface*
-CopyableCanvasLayer::GetTempSurface(const IntSize& aSize,
+CopyableCanvasRenderer::GetTempSurface(const IntSize& aSize,
                                     const SurfaceFormat aFormat)
 {
   if (!mCachedTempSurface ||

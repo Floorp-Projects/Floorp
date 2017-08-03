@@ -932,8 +932,7 @@ public:
 
   static void PreTransactionCallback(void* aData)
   {
-    auto self = static_cast<CanvasRenderingContext2DUserData*>(aData);
-    CanvasRenderingContext2D* context = self->mContext;
+    CanvasRenderingContext2D* context = static_cast<CanvasRenderingContext2D*>(aData);
     if (!context || !context->mTarget)
       return;
 
@@ -942,13 +941,13 @@ public:
 
   static void DidTransactionCallback(void* aData)
   {
-    auto self = static_cast<CanvasRenderingContext2DUserData*>(aData);
-    if (self->mContext) {
-      self->mContext->MarkContextClean();
-      if (self->mContext->mDrawObserver) {
-        if (self->mContext->mDrawObserver->FrameEnd()) {
+    CanvasRenderingContext2D* context = static_cast<CanvasRenderingContext2D*>(aData);
+    if (context) {
+      context->MarkContextClean();
+      if (context->mDrawObserver) {
+        if (context->mDrawObserver->FrameEnd()) {
           // Note that this call deletes and nulls out mDrawObserver:
-          self->mContext->RemoveDrawObserver();
+          context->RemoveDrawObserver();
         }
       }
     }
@@ -6235,7 +6234,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
       static_cast<CanvasRenderingContext2DUserData*>(
         aOldLayer->GetUserData(&g2DContextLayerUserData));
 
-    CanvasLayer::Data data;
+    CanvasInitializeData data;
 
     if (mIsSkiaGL) {
       GLuint skiaGLTex = SkiaGLTex();
@@ -6251,7 +6250,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
     if (userData &&
         userData->IsForContext(this) &&
-        static_cast<CanvasLayer*>(aOldLayer)->IsDataValid(data)) {
+        static_cast<CanvasLayer*>(aOldLayer)->CreateOrGetCanvasRenderer()->IsDataValid(data)) {
       RefPtr<Layer> ret = aOldLayer;
       return ret.forget();
     }
@@ -6278,17 +6277,30 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   // The userData will receive DidTransactionCallbacks, which flush the
   // the invalidation state to indicate that the canvas is up to date.
   userData = new CanvasRenderingContext2DUserData(this);
-  canvasLayer->SetDidTransactionCallback(
-          CanvasRenderingContext2DUserData::DidTransactionCallback, userData);
   canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 
-  CanvasLayer::Data data;
+  CanvasRenderer* canvasRenderer = canvasLayer->CreateOrGetCanvasRenderer();
+  InitializeCanvasRenderer(aBuilder, canvasRenderer, aMirror);
+  uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
+  canvasLayer->SetContentFlags(flags);
+
+  mResetLayer = false;
+
+  return canvasLayer.forget();
+}
+
+void
+CanvasRenderingContext2D::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                                                   CanvasRenderer* aRenderer,
+                                                   bool aMirror)
+{
+  CanvasInitializeData data;
   data.mSize = GetSize();
   data.mHasAlpha = !mOpaque;
-
-  canvasLayer->SetPreTransactionCallback(
-          CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
-
+  data.mPreTransCallback = CanvasRenderingContext2DUserData::PreTransactionCallback;
+  data.mPreTransCallbackData = this;
+  data.mDidTransCallback = CanvasRenderingContext2DUserData::DidTransactionCallback;
+  data.mDidTransCallbackData = this;
 
   if (mIsSkiaGL) {
       GLuint skiaGLTex = SkiaGLTex();
@@ -6302,14 +6314,8 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
   data.mBufferProvider = mBufferProvider;
 
-  canvasLayer->Initialize(data);
-  uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
-  canvasLayer->SetContentFlags(flags);
-  canvasLayer->Updated();
-
-  mResetLayer = false;
-
-  return canvasLayer.forget();
+  aRenderer->Initialize(data);
+  aRenderer->SetDirty();
 }
 
 void

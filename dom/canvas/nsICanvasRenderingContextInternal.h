@@ -26,6 +26,7 @@ class nsDisplayListBuilder;
 namespace mozilla {
 namespace layers {
 class CanvasLayer;
+class CanvasRenderer;
 class Layer;
 class LayerManager;
 } // namespace layers
@@ -40,6 +41,7 @@ class nsICanvasRenderingContextInternal :
 {
 public:
   typedef mozilla::layers::CanvasLayer CanvasLayer;
+  typedef mozilla::layers::CanvasRenderer CanvasRenderer;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
 
@@ -139,6 +141,9 @@ public:
                                                  Layer *oldLayer,
                                                  LayerManager *manager,
                                                  bool aMirror = false) = 0;
+  virtual void InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                                        CanvasRenderer* aRenderer,
+                                        bool aMirror = false) { };
 
   // Return true if the canvas should be forced to be "inactive" to ensure
   // it can be drawn to the screen even if it's too large to be blitted by

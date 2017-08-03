@@ -28,6 +28,7 @@ nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aCont
 class nsHTMLCanvasFrame final : public nsContainerFrame
 {
 public:
+  typedef mozilla::layers::CanvasRenderer CanvasRenderer;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
@@ -52,6 +53,8 @@ public:
                                      LayerManager* aManager,
                                      nsDisplayItem* aItem,
                                      const ContainerLayerParameters& aContainerParameters);
+  void InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+                                CanvasRenderer* aRenderer);
 
   /* get the size of the canvas's image */
   nsIntSize GetCanvasSize();

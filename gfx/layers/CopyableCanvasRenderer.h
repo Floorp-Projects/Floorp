@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GFX_COPYABLECANVASLAYER_H
-#define GFX_COPYABLECANVASLAYER_H
+#ifndef GFX_COPYABLECANVASRENDERER_H
+#define GFX_COPYABLECANVASRENDERER_H
 
 #include <stdint.h>                     // for uint32_t
+#include "CanvasRenderer.h"
 #include "GLContextTypes.h"             // for GLContext
-#include "Layers.h"                     // for CanvasLayer, etc
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxTypes.h"
 #include "gfxPlatform.h"                // for gfxImageFormat
@@ -28,32 +28,43 @@ class SharedSurface;
 namespace layers {
 
 /**
- * A shared CanvasLayer implementation that supports copying
- * its contents into a gfxASurface using UpdateSurface.
+ * A shared CanvasRenderer implementation that supports copying
+ * its contents into a gfxASurface using RebackSurface.
  */
-class CopyableCanvasLayer : public CanvasLayer
+class CopyableCanvasRenderer : public CanvasRenderer
 {
 public:
-  CopyableCanvasLayer(LayerManager* aLayerManager, void *aImplData);
-
-protected:
-  virtual ~CopyableCanvasLayer();
+  CopyableCanvasRenderer();
+  virtual ~CopyableCanvasRenderer();
 
 public:
-  virtual void Initialize(const Data& aData) override;
+  void Initialize(const CanvasInitializeData& aData) override;
+  bool IsDataValid(const CanvasInitializeData& aData) override;
 
-  virtual bool IsDataValid(const Data& aData) override;
+  void ClearCachedResources() override;
+  void Destroy() override;
 
-  bool IsGLLayer() { return !!mGLContext; }
+  CopyableCanvasRenderer* AsCopyableCanvasRenderer() override { return this; }
+
+  bool NeedsYFlip() const { return mOriginPos == gl::OriginPos::BottomLeft; }
+  bool HasGLContext() const { return !!mGLContext; }
+  bool IsOpaque() const { return mOpaque; }
+
+  PersistentBufferProvider* GetBufferProvider() { return mBufferProvider; }
+
+  already_AddRefed<gfx::SourceSurface> ReadbackSurface();
 
 protected:
   RefPtr<gl::GLContext> mGLContext;
   RefPtr<PersistentBufferProvider> mBufferProvider;
   UniquePtr<gl::SharedSurface> mGLFrontbuffer;
+  RefPtr<AsyncCanvasRenderer> mAsyncRenderer;
 
   bool mIsAlphaPremultiplied;
   gl::OriginPos mOriginPos;
   bool mIsMirror;
+
+  bool mOpaque;
 
   RefPtr<gfx::DataSourceSurface> mCachedTempSurface;
 
