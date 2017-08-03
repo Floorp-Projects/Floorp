@@ -44,3 +44,8 @@ fails-if(!styloVsGecko) == webkit-box-ordinal-group-2.html webkit-box-ordinal-gr
 == webkit-box-pack-horiz-1a.html webkit-box-pack-horiz-1-ref.html
 == webkit-box-pack-horiz-1b.html webkit-box-pack-horiz-1-ref.html
 == webkit-box-pack-vert-1.html webkit-box-pack-vert-1-ref.html
+
+# Tests for "display: -webkit-box" container mixed with modern flex properties
+# (which shouldn't influence behavior of -webkit-box)
+== webkit-box-with-modern-css-1.html webkit-box-with-modern-css-1-ref.html
+== webkit-box-with-modern-css-2.html webkit-box-with-modern-css-2-ref.html

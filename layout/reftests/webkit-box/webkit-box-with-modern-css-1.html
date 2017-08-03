@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: "flex-basis" and "flex" shouldn't impact child sizing inside of
+    horizontal "display: -webkit-box" container
+  </title>
+  <style>
+    .box {
+      display: -webkit-box;
+      border: 1px solid black;
+      margin: 5px 20px;
+      width: 100px;
+      float: left; /* For testing in "rows" */
+      font: 10px serif;
+    }
+
+    .box > *:nth-child(1) { background: turquoise; }
+    .box > *:nth-child(2) { background: salmon;    }
+
+    .mw0 {
+      /* Used in some children here, to disable modern-flexbox's
+         "implied-minimum-size" feature, so that it can't inadvertantly
+         be the thing that makes our rendering match the reference . */
+      min-width: 0;
+    }
+
+    br { clear: both; }
+
+    /* The point of this testcase is to verify that none of the modern-flexbox
+       styles below have any effect on the rendering. (This is worth checking
+       because we coopt our modern-flexbox implementation in our emulation of
+       legacy -webkit-box behavior.) */
+    .fb0 { flex-basis: 0; }
+    .f1  { flex: 1;  /* This shorthand sets flex-grow:1; flex-basis: 0 */ }
+
+    .fb30px   { flex-basis: 30px; }
+    .f1_30px  { flex: 1 30px;     }
+  </style>
+</head>
+<body>
+  <!-- FIRST ROW: flex-basis is 0 -->
+  <div class="box">
+    <div class="fb0">a</div>
+    <div class="fb0 mw0">b</div>
+  </div>
+
+  <div class="box">
+    <div class="f1">a</div>
+    <div class="f1 mw0">b</div>
+  </div>
+
+  <br>
+
+  <!-- SECOND ROW: flex-basis is 30px -->
+  <div class="box">
+    <div class="fb30px">a</div>
+    <div class="fb30px mw0">b</div>
+  </div>
+
+  <div class="box">
+    <div class="f1_30px">a</div>
+    <div class="f1_30px mw0">b</div>
+  </div>
+
+</body>
+</html>
