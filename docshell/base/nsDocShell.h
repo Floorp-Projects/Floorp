@@ -64,6 +64,7 @@
 
 namespace mozilla {
 class Encoding;
+class HTMLEditor;
 enum class TaskCategory;
 namespace dom {
 class EventTarget;
@@ -283,6 +284,9 @@ public:
   bool InFrameSwap();
 
   const Encoding* GetForcedCharset() { return mForcedCharset; }
+
+  mozilla::HTMLEditor* GetHTMLEditorInternal();
+  nsresult SetHTMLEditorInternal(mozilla::HTMLEditor* aHTMLEditor);
 
 private:
   bool CanSetOriginAttributes();
