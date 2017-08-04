@@ -9,7 +9,7 @@
 "use strict";
 
 const { PromisesFront } = require("devtools/shared/fronts/promises");
-const { setTimeout } = require("sdk/timers");
+const { setTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 var events = require("sdk/event/core");
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 // This is loaded by head.js, so has the same globals, hence we import the
 // globals from there.
@@ -44,7 +44,7 @@ function eventToString(event) {
                                   event.isExtraState ? event.state : 0);
     info += `, state: ${stateStr}, is enabled: ${event.isEnabled}`;
   } else if (event instanceof nsIAccessibleTextChangeEvent) {
-    let tcType = event.isInserted ? 'inserted' : 'removed';
+    let tcType = event.isInserted ? "inserted" : "removed";
     info += `, start: ${event.start}, length: ${event.length}, ${tcType} text: ${event.modifiedText}`;
   }
 
@@ -94,7 +94,7 @@ function waitForEvent(eventType, matchCriteria) {
   return new Promise(resolve => {
     let eventObserver = {
       observe(subject, topic, data) {
-        if (topic !== 'accessible-event') {
+        if (topic !== "accessible-event") {
           return;
         }
 
@@ -113,14 +113,14 @@ function waitForEvent(eventType, matchCriteria) {
         if (matchEvent(event, matchCriteria)) {
           Logger.log(`Correct event type: ${eventTypeToString(eventType)}`);
           ok(event.accessibleDocument instanceof nsIAccessibleDocument,
-            'Accessible document present.');
+            "Accessible document present.");
 
-          Services.obs.removeObserver(this, 'accessible-event');
+          Services.obs.removeObserver(this, "accessible-event");
           resolve(event);
         }
       }
     };
-    Services.obs.addObserver(eventObserver, 'accessible-event');
+    Services.obs.addObserver(eventObserver, "accessible-event");
   });
 }
 
@@ -128,12 +128,12 @@ class UnexpectedEvents {
   constructor(unexpected) {
     if (unexpected.length) {
       this.unexpected = unexpected;
-      Services.obs.addObserver(this, 'accessible-event');
+      Services.obs.addObserver(this, "accessible-event");
     }
   }
 
   observe(subject, topic, data) {
-    if (topic !== 'accessible-event') {
+    if (topic !== "accessible-event") {
       return;
     }
 
@@ -149,7 +149,7 @@ class UnexpectedEvents {
 
   stop() {
     if (this.unexpected) {
-      Services.obs.removeObserver(this, 'accessible-event');
+      Services.obs.removeObserver(this, "accessible-event");
     }
   }
 }

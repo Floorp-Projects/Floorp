@@ -21,7 +21,6 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
 
@@ -29,6 +28,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
@@ -112,6 +113,11 @@ public class TabsPanel extends LinearLayout
     private View mMenuButton;
     private ImageButton mAddTab;
 
+    // Tab Tray
+    @Nullable private ThemedImageButton mNormalTabsPanel;
+    @Nullable private ThemedImageButton mPrivateTabsPanel;
+
+
     private Panel mCurrentPanel;
     private boolean mVisible;
     private boolean mHeaderVisible;
@@ -158,10 +164,14 @@ public class TabsPanel extends LinearLayout
 
         mTabWidget = (IconTabWidget) findViewById(R.id.tab_widget);
 
-        mTabWidget.addTab(R.drawable.tabs_normal, R.string.tabs_normal);
-        final ThemedImageButton privateTabsPanel =
-                (ThemedImageButton) mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
-        privateTabsPanel.setPrivateMode(true);
+        final View tabNormal = mTabWidget.addTab(R.drawable.tabs_normal, R.string.tabs_normal);
+        mNormalTabsPanel = tabNormal instanceof ThemedImageButton ? ((ThemedImageButton) tabNormal) : null;
+
+        final View tabPrivate = mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
+        mPrivateTabsPanel = tabPrivate instanceof ThemedImageButton ? ((ThemedImageButton) tabPrivate) : null;
+        if (mPrivateTabsPanel != null) {
+            mPrivateTabsPanel.setPrivateMode(true);
+        }
 
         if (!Restrictions.isAllowed(mContext, Restrictable.PRIVATE_BROWSING)) {
             mTabWidget.setVisibility(View.GONE);
@@ -372,13 +382,24 @@ public class TabsPanel extends LinearLayout
 
         int index = panelToShow.ordinal();
         mTabWidget.setCurrentTab(index);
-
         switch (panelToShow) {
             case NORMAL_TABS:
                 mPanel = mPanelNormal;
+                if (mNormalTabsPanel != null) {
+                    mNormalTabsPanel.setColorFilter(ContextCompat.getColor(getContext(), R.color.tab_item_normal_highlight_bg));
+                }
+                if (mPrivateTabsPanel != null) {
+                    mPrivateTabsPanel.setColorFilter(Color.WHITE);
+                }
                 break;
             case PRIVATE_TABS:
                 mPanel = mPanelPrivate;
+                if (mNormalTabsPanel != null) {
+                    mNormalTabsPanel.setColorFilter(Color.WHITE);
+                }
+                if (mPrivateTabsPanel != null) {
+                    mPrivateTabsPanel.setColorFilter(ContextCompat.getColor(getContext(), R.color.tab_item_private_highlight_bg));
+                }
                 break;
 
             default:

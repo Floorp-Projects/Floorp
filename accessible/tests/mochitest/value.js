@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Public methods
 
 /**
@@ -13,8 +13,7 @@
  *                        (nsIAccessibleValue::minimumIncrement)
  */
 function testValue(aAccOrElmOrId, aValue, aCurrValue,
-                   aMinValue, aMaxValue, aMinIncr)
-{
+                   aMinValue, aMaxValue, aMinIncr) {
   var acc = getAccessible(aAccOrElmOrId, [nsIAccessibleValue]);
   if (!acc)
     return;

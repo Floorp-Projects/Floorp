@@ -18,8 +18,7 @@ class Element;
 class ServoStyleContext final : public nsStyleContext
 {
 public:
-  ServoStyleContext(nsStyleContext* aParent,
-                    nsPresContext* aPresContext,
+  ServoStyleContext(nsPresContext* aPresContext,
                     nsIAtom* aPseudoTag,
                     CSSPseudoElementType aPseudoType,
                     ServoComputedDataForgotten aComputedValues);

@@ -5,7 +5,7 @@
 "use strict";
 
 function busyChecker(isBusy) {
-  return function (event) {
+  return function(event) {
     let scEvent;
     try {
       scEvent = event.QueryInterface(nsIAccessibleStateChangeEvent);
@@ -18,13 +18,13 @@ function busyChecker(isBusy) {
 }
 
 function inIframeChecker(iframeId) {
-  return function (event) {
+  return function(event) {
     return getAccessibleDOMNodeID(event.accessibleDocument.parent) == iframeId;
   };
 }
 
 function urlChecker(url) {
-  return function (event) {
+  return function(event) {
     info(`${event.accessibleDocument.URL} == ${url}`);
     return event.accessibleDocument.URL == url;
   };
@@ -33,7 +33,7 @@ function urlChecker(url) {
 async function runTests(browser, accDoc) {
   let onLoadEvents = waitForEvents([
     [EVENT_REORDER, getAccessible(browser)],
-    [EVENT_DOCUMENT_LOAD_COMPLETE, 'body2'],
+    [EVENT_DOCUMENT_LOAD_COMPLETE, "body2"],
     [EVENT_STATE_CHANGE, busyChecker(false)]
   ], [ // unexpected
     [EVENT_DOCUMENT_LOAD_COMPLETE, inIframeChecker("iframe1")],

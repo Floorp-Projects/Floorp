@@ -14,13 +14,12 @@
           src="../layout.js"></script>
 
   <script type="application/javascript">
-    function doTest()
-    {
-      var componentAcc = getAccessible('component1');
+    function doTest() {
+      var componentAcc = getAccessible("component1");
       testChildAtPoint(componentAcc, 1, 1, componentAcc.firstChild,
                        componentAcc.firstChild);
 
-      componentAcc = getAccessible('component2');
+      componentAcc = getAccessible("component2");
       testChildAtPoint(componentAcc, 1, 1, componentAcc.firstChild,
                        componentAcc.firstChild);
       SimpleTest.finish();
@@ -57,7 +56,7 @@
   <script>
     // This routine adds the comment children of each 'component' to its
     // shadow root.
-    var components = document.querySelectorAll('.components');
+    var components = document.querySelectorAll(".components");
     for (var i = 0; i < components.length; i++) {
       var component = components[i];
       var shadow = component.createShadowRoot();

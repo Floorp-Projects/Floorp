@@ -4988,6 +4988,9 @@ BytecodeEmitter::emitScript(ParseNode* body)
             return false;
     }
 
+    if (!updateSourceCoordNotes(body->pn_pos.end))
+        return false;
+
     if (!emit1(JSOP_RETRVAL))
         return false;
 

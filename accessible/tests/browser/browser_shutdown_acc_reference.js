@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
-add_task(async function () {
+add_task(async function() {
   // Create a11y service.
   let a11yInit = initPromise();
-  let accService = Cc['@mozilla.org/accessibilityService;1'].getService(
+  let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
     Ci.nsIAccessibilityService);
 
   await a11yInit;
-  ok(accService, 'Service initialized');
+  ok(accService, "Service initialized");
 
   // Accessible object reference will live longer than the scope of this
   // function.
@@ -24,7 +24,7 @@ add_task(async function () {
       }
     }, 10);
   });
-  ok(acc, 'Accessible object is created');
+  ok(acc, "Accessible object is created");
 
   let canShutdown = false;
   // This promise will resolve only if canShutdown flag is set to true. If
@@ -32,10 +32,10 @@ add_task(async function () {
   // down, the promise will reject.
   let a11yShutdown = new Promise((resolve, reject) =>
     shutdownPromise().then(flag => canShutdown ? resolve() :
-      reject('Accessible service was shut down incorrectly')));
+      reject("Accessible service was shut down incorrectly")));
 
   accService = null;
-  ok(!accService, 'Service is removed');
+  ok(!accService, "Service is removed");
 
   // Force garbage collection that should not trigger shutdown because there is
   // a reference to an accessible object.
@@ -47,7 +47,7 @@ add_task(async function () {
   canShutdown = true;
   // Remove a reference to an accessible object.
   acc = null;
-  ok(!acc, 'Accessible object is removed');
+  ok(!acc, "Accessible object is removed");
 
   // Force garbage collection that should now trigger shutdown.
   forceGC();

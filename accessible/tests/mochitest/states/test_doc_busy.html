@@ -20,10 +20,9 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true; // debugging stuff
+    // gA11yEventDumpToConsole = true; // debugging stuff
 
-    function loadFile()
-    {
+    function loadFile() {
       var eventSeq = [
         new stateChangeChecker(STATE_BUSY, false, true, document, null, false, true),
         new stateChangeChecker(STATE_BUSY, false, false, document)
@@ -36,25 +35,22 @@
       ];
       defineScenario(this, [], unexpectedEventSeq); // events were coalesced
 
-      this.invoke = function loadFile_invoke()
-      {
+      this.invoke = function loadFile_invoke() {
         synthesizeMouse(getNode("link"), 1, 1, {});
       }
 
-      this.getID = function loadFile_getID()
-      {
+      this.getID = function loadFile_getID() {
         return "load file: state busy change events on document";
       }
     }
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       // State busy change event on file loading.
-      //enableLogging("docload"); // debugging
+      // enableLogging("docload"); // debugging
       gQueue = new eventQueue();
       gQueue.push(new loadFile());
-      //gQueue.onFinish = function() { disableLogging(); } // debugging
+      // gQueue.onFinish = function() { disableLogging(); } // debugging
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 

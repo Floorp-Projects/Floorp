@@ -18,11 +18,10 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Helpers
 
-    function testLiAccessibleTree()
-    {
+    function testLiAccessibleTree() {
       // Test accessible tree.
       var accTree = {
         role: ROLE_LISTITEM,
@@ -41,25 +40,21 @@
       testAccessibleTree("li", accTree);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Sequence item processors
 
-    function hideProcessor()
-    {
+    function hideProcessor() {
       this.liNode = getNode("li");
       this.li = getAccessible(this.liNode);
       this.bullet = this.li.firstChild;
 
-      this.process = function hideProcessor_process()
-      {
+      this.process = function hideProcessor_process() {
         this.liNode.style.display = "none";
       }
 
-      this.onProcessed = function hideProcessor_onProcessed()
-      {
+      this.onProcessed = function hideProcessor_onProcessed() {
         window.setTimeout(
-          function(aLiAcc, aLiNode, aBulletAcc)
-          {
+          function(aLiAcc, aLiNode, aBulletAcc) {
             testDefunctAccessible(aLiAcc, aLiNode);
             testDefunctAccessible(aBulletAcc);
 
@@ -70,33 +65,27 @@
       }
     }
 
-    function showProcessor()
-    {
+    function showProcessor() {
       this.liNode = getNode("li");
 
-      this.process = function showProcessor_process()
-      {
+      this.process = function showProcessor_process() {
         this.liNode.style.display = "list-item";
       }
 
-      this.onProcessed = function showProcessor_onProcessed()
-      {
+      this.onProcessed = function showProcessor_onProcessed() {
         testLiAccessibleTree();
         gSequence.processNext();
       }
     }
 
-    function textReplaceProcessor()
-    {
+    function textReplaceProcessor() {
       this.liNode = getNode("li");
 
-      this.process = function textReplaceProcessor_process()
-      {
+      this.process = function textReplaceProcessor_process() {
         this.liNode.textContent = "hey";
       }
 
-      this.onProcessed = function textReplaceProcessor_onProcessed()
-      {
+      this.onProcessed = function textReplaceProcessor_onProcessed() {
         var tree = {
           LISTITEM: [
             { STATICTEXT: [] },
@@ -108,14 +97,13 @@
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
     var gSequence = null;
-    function doTest()
-    {
+    function doTest() {
       testLiAccessibleTree();
 
       gSequence = new sequence();

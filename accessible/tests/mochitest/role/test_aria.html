@@ -15,8 +15,7 @@
 
   <script type="application/javascript">
 
-    function doTest()
-    {
+    function doTest() {
       // ARIA role map.
       testRole("aria_alert", ROLE_ALERT);
       testRole("aria_alertdialog", ROLE_DIALOG);
@@ -121,7 +120,7 @@
           is(accessibleTable.getCellAt(0,0).firstChild.name, "hi", "no cell");
       }
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // test gEmptyRoleMap
       testRole("buttontable_row", ROLE_NOTHING);
       testRole("buttontable_cell", ROLE_NOTHING);
@@ -133,21 +132,21 @@
       for (a in abstract_roles)
         testRole(abstract_roles[a], ROLE_SECTION);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // roles transformed by ARIA state attributes
       testRole("togglebutton", ROLE_TOGGLE_BUTTON);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ignore unknown roles, take first known
       testRole("unknown_roles", ROLE_PUSHBUTTON);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // misc roles
       testRole("note", ROLE_NOTE);
       testRole("scrollbar", ROLE_SCROLLBAR);
       testRole("dir", ROLE_LIST);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // test document role map update
       var testDoc = getAccessible(document, [nsIAccessibleDocument]);
       testRole(testDoc, ROLE_DOCUMENT);

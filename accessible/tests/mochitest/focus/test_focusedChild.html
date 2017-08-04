@@ -19,21 +19,18 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function openWnd()
-    {
+    function openWnd() {
       this.eventSeq = [ new invokerChecker(EVENT_FOCUS,
                                            getDialogAccessible,
                                            this) ];
 
-      this.invoke = function openWnd_invoke()
-      {
+      this.invoke = function openWnd_invoke() {
         this.dialog = window.openDialog("about:mozilla",
                                         "AboutMozilla",
                                         "chrome,width=600,height=600");
       }
 
-      this.finalCheck = function openWnd_finalCheck()
-      {
+      this.finalCheck = function openWnd_finalCheck() {
         var app = getApplicationAccessible();
         is(app.focusedChild, getDialogAccessible(this),
            "Wrong focused child");
@@ -41,13 +38,11 @@
         this.dialog.close();
       }
 
-      this.getID = function openWnd_getID()
-      {
+      this.getID = function openWnd_getID() {
         return "focusedChild for application accessible";
       }
 
-      function getDialogAccessible(aInvoker)
-      {
+      function getDialogAccessible(aInvoker) {
         return getAccessible(aInvoker.dialog.document);
       }
     }
@@ -55,8 +50,7 @@
     gA11yEventDumpToConsole = true;
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       enableLogging("focus,doclifecycle");
       gQueue = new eventQueue();
 

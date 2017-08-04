@@ -61,24 +61,21 @@ nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage)
   if (aPackage.contentBaseURI.spec.Length()) {
     nsresult rv = NS_NewURI(getter_AddRefs(content),
                             aPackage.contentBaseURI.spec,
-                            aPackage.contentBaseURI.charset.get(),
-                            nullptr, io);
+                            nullptr, nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
   if (aPackage.localeBaseURI.spec.Length()) {
     nsresult rv = NS_NewURI(getter_AddRefs(locale),
                             aPackage.localeBaseURI.spec,
-                            aPackage.localeBaseURI.charset.get(),
-                            nullptr, io);
+                            nullptr, nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
   if (aPackage.skinBaseURI.spec.Length()) {
     nsresult rv = NS_NewURI(getter_AddRefs(skin),
                             aPackage.skinBaseURI.spec,
-                            aPackage.skinBaseURI.charset.get(),
-                            nullptr, io);
+                            nullptr, nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
@@ -112,8 +109,7 @@ nsChromeRegistryContent::RegisterSubstitution(const SubstitutionMapping& aSubsti
   if (aSubstitution.resolvedURI.spec.Length()) {
     rv = NS_NewURI(getter_AddRefs(resolvedURI),
                    aSubstitution.resolvedURI.spec,
-                   aSubstitution.resolvedURI.charset.get(),
-                   nullptr, io);
+                   nullptr, nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
@@ -133,13 +129,12 @@ nsChromeRegistryContent::RegisterOverride(const OverrideMapping& aOverride)
   nsCOMPtr<nsIURI> chromeURI, overrideURI;
   nsresult rv = NS_NewURI(getter_AddRefs(chromeURI),
                           aOverride.originalURI.spec,
-                          aOverride.originalURI.charset.get(),
-                          nullptr, io);
+                          nullptr, nullptr, io);
   if (NS_FAILED(rv))
     return;
 
   rv = NS_NewURI(getter_AddRefs(overrideURI), aOverride.overrideURI.spec,
-                 aOverride.overrideURI.charset.get(), nullptr, io);
+                 nullptr, nullptr, io);
   if (NS_FAILED(rv))
     return;
 

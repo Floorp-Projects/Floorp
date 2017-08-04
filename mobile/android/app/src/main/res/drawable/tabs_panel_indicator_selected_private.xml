@@ -5,5 +5,5 @@
 
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
        android:insetTop="@dimen/tabs_panel_indicator_selected_padding_top"
-       android:drawable="@color/private_browsing_purple"
+       android:drawable="@color/tab_item_private_highlight_bg"
        />

@@ -17,11 +17,10 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function runTest()
-    {
+    function runTest() {
       // children change will recreate the table
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, getNode('c1'))
+        new invokerChecker(EVENT_REORDER, getNode("c1"))
       ];
 
       this.invoke = function runTest_invoke() {
@@ -34,9 +33,9 @@
             { TEXT_LEAF: [] } // More text
           ]
         };
-        testAccessibleTree('c1', tree);
+        testAccessibleTree("c1", tree);
 
-        getNode('c1_t').querySelector('span').remove();
+        getNode("c1_t").querySelector("span").remove();
       };
 
       this.finalCheck = function runTest_finalCheck() {
@@ -46,20 +45,18 @@
             { TEXT_LEAF: [] } // More text
           ]
         };
-        testAccessibleTree('c1', tree);
+        testAccessibleTree("c1", tree);
       };
 
-      this.getID = function runTest_getID()
-      {
-        return 'child DOM node is removed before the layout notifies the a11y about parent removal/show';
+      this.getID = function runTest_getID() {
+        return "child DOM node is removed before the layout notifies the a11y about parent removal/show";
       };
     }
 
-    function runShadowTest()
-    {
+    function runShadowTest() {
       // children change will recreate the table
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, 'c2')
+        new invokerChecker(EVENT_REORDER, "c2")
       ];
 
       this.invoke = function runShadowTest_invoke() {
@@ -72,9 +69,9 @@
             { TEXT_LEAF: [] } // More text
           ]
         };
-        testAccessibleTree('c2', tree);
+        testAccessibleTree("c2", tree);
 
-        gShadowRoot.firstElementChild.querySelector('span').remove();
+        gShadowRoot.firstElementChild.querySelector("span").remove();
       };
 
       this.finalCheck = function runShadowTest_finalCheck() {
@@ -84,20 +81,19 @@
             { TEXT_LEAF: [] } // More text
           ]
         };
-        testAccessibleTree('c2', tree);
+        testAccessibleTree("c2", tree);
       };
 
       this.getID = function runShadowTest_getID() {
-        return 'child DOM node is removed before the layout notifies the a11y about parent removal/show in shadow DOM';
+        return "child DOM node is removed before the layout notifies the a11y about parent removal/show in shadow DOM";
       };
     }
 
-    //enableLogging("tree");
-    //gA11yEventDumpToConsole = true;
+    // enableLogging("tree");
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
       gQueue.push(new runTest());
       gQueue.push(new runShadowTest());
@@ -135,8 +131,8 @@
   <div id="c2"><div id="c2_c" role="presentation"></div></div>
 
   <script>
-    var gShadowRoot = document.getElementById('c2_c').createShadowRoot();
-    var tmpl = document.getElementById('tmpl');
+    var gShadowRoot = document.getElementById("c2_c").createShadowRoot();
+    var tmpl = document.getElementById("tmpl");
     gShadowRoot.appendChild(document.importNode(tmpl.content, true));
   </script>
 </body>

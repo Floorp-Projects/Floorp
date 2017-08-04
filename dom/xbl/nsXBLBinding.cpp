@@ -869,7 +869,7 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
     (*aFunc)(rules, aData);
 }
 
-const ServoStyleSet*
+ServoStyleSet*
 nsXBLBinding::GetServoStyleSet() const
 {
   return mPrototypeBinding->GetServoStyleSet();

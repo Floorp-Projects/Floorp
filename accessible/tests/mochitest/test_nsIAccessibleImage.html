@@ -20,8 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
           src="layout.js"></script>
 
   <script type="application/javascript">
-    function testCoordinates(aID, aAcc, aWidth, aHeight)
-    {
+    function testCoordinates(aID, aAcc, aWidth, aHeight) {
       var screenX = {}, screenY = {}, windowX = {}, windowY = {}, parentX = {},
           parentY = {};
 
@@ -80,8 +79,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
     }
 
     function testThis(aID, aSRC, aWidth, aHeight,
-                      aActionCount, aActionNames)
-    {
+                      aActionCount, aActionNames) {
       var acc = getAccessible(aID, [nsIAccessibleImage]);
       if (!acc)
         return;
@@ -102,13 +100,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       if (actionCount) {
         for (index = 0; index < aActionNames.length; index++) {
           is(acc.getActionName(index), aActionNames[index],
-             "Wrong action name for " + aID + ", index " + index +"!");
+             "Wrong action name for " + aID + ", index " + index + "!");
         }
       }
     }
 
-    function doTest()
-    {
+    function doTest() {
       // Test non-linked image
       testThis("nonLinkedImage", "moz.png", 89, 38);
 

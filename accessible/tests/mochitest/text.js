@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Public
 
 const BOUNDARY_CHAR = nsIAccessibleText.BOUNDARY_CHAR;
@@ -23,8 +23,7 @@ const kOk = 2; // a test doesn't fail
  * @param aIDs      [in] array of accessible identifiers to test
  * @param aTodoFlag [in, optional] either kOk or kTodo
  */
-function testCharacterCount(aIDs, aCount, aTodoFlag)
-{
+function testCharacterCount(aIDs, aCount, aTodoFlag) {
   var ids = (aIDs instanceof Array) ? aIDs : [ aIDs ];
   var isFunc = (aTodoFlag == kTodo) ? todo_is : is;
   for (var i = 0; i < ids.length; i++) {
@@ -43,8 +42,7 @@ function testCharacterCount(aIDs, aCount, aTodoFlag)
  * @param aText         [in] the expected result from the test
  * @param aTodoFlag     [in, optional] either kOk or kTodo
  */
-function testText(aIDs, aStartOffset, aEndOffset, aText, aTodoFlag)
-{
+function testText(aIDs, aStartOffset, aEndOffset, aText, aTodoFlag) {
   var ids = (aIDs instanceof Array) ? aIDs : [ aIDs ];
   var isFunc = (aTodoFlag == kTodo) ? todo_is : is;
   for (var i = 0; i < ids.length; i++) {
@@ -73,10 +71,8 @@ function testText(aIDs, aStartOffset, aEndOffset, aText, aTodoFlag)
  * @note  All this function does is test that getText doe snot expose the
  *        password text itself, but something else.
  */
-function testPasswordText(aIDs, aStartOffset, aEndOffset, aText)
-{
-  for (var i = 0; i < aIDs.length; i++)
-  {
+function testPasswordText(aIDs, aStartOffset, aEndOffset, aText) {
+  for (var i = 0; i < aIDs.length; i++) {
     var acc = getAccessible(aIDs[i], nsIAccessibleText);
     try {
       isnot(acc.getText(aStartOffset, aEndOffset), aText,
@@ -100,8 +96,7 @@ function testPasswordText(aIDs, aStartOffset, aEndOffset, aText)
  * @param aStartOffset  [in] expected start offset of the character
  * @param aEndOffset    [in] expected end offset of the character
  */
-function testCharAtOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
-{
+function testCharAtOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset) {
   var IDs = (aIDs instanceof Array) ? aIDs : [ aIDs ];
   for (var i = 0; i < IDs.length; i++) {
     var acc = getAccessible(IDs[i], nsIAccessibleText);
@@ -136,8 +131,7 @@ function testCharAtOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
  *                              kTodo or kOk for returned start offset
  *                              kTodo or kOk for returned offset result
  */
-function testTextAtOffset()
-{
+function testTextAtOffset() {
   testTextSuperHelper("getTextAtOffset", arguments);
 }
 
@@ -151,8 +145,7 @@ function testTextAtOffset()
  * @param aStartOffset  [in] expected start offset of the character
  * @param aEndOffset    [in] expected end offset of the character
  */
-function testCharAfterOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
-{
+function testCharAfterOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset) {
   var IDs = (aIDs instanceof Array) ? aIDs : [ aIDs ];
   for (var i = 0; i < IDs.length; i++) {
     var acc = getAccessible(IDs[i], nsIAccessibleText);
@@ -188,8 +181,7 @@ function testCharAfterOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
  *                              kTodo or kOk for returned offset result
  */
 function testTextAfterOffset(aOffset, aBoundaryType,
-                             aText, aStartOffset, aEndOffset)
-{
+                             aText, aStartOffset, aEndOffset) {
   testTextSuperHelper("getTextAfterOffset", arguments);
 }
 
@@ -203,8 +195,7 @@ function testTextAfterOffset(aOffset, aBoundaryType,
  * @param aStartOffset  [in] expected start offset of the character
  * @param aEndOffset    [in] expected end offset of the character
  */
-function testCharBeforeOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
-{
+function testCharBeforeOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset) {
   var IDs = (aIDs instanceof Array) ? aIDs : [ aIDs ];
   for (var i = 0; i < IDs.length; i++) {
     var acc = getAccessible(IDs[i], nsIAccessibleText);
@@ -240,8 +231,7 @@ function testCharBeforeOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
  *                              kTodo or kOk for returned offset result
  */
 function testTextBeforeOffset(aOffset, aBoundaryType,
-                              aText, aStartOffset, aEndOffset)
-{
+                              aText, aStartOffset, aEndOffset) {
   testTextSuperHelper("getTextBeforeOffset", arguments);
 }
 
@@ -252,8 +242,7 @@ function testTextBeforeOffset(aOffset, aBoundaryType,
  * @param aCount     [in] Expected word count
  * @param aToDoFlag  [in] kTodo or kOk for returned text
  */
-function testWordCount(aElement, aCount, aToDoFlag)
-{
+function testWordCount(aElement, aCount, aToDoFlag) {
   var isFunc = (aToDoFlag == kTodo) ? todo_is : is;
   var acc = getAccessible(aElement, nsIAccessibleText);
   var startOffsetObj = {}, endOffsetObj = {};
@@ -282,8 +271,7 @@ function testWordCount(aElement, aCount, aToDoFlag)
  * @param aText       [in] expected text for that word
  * @param aToDoFlag   [in] kTodo or kOk for returned text
  */
-function testWordAt(aElement, aWordIndex, aText, aToDoFlag)
-{
+function testWordAt(aElement, aWordIndex, aText, aToDoFlag) {
   var isFunc = (aToDoFlag == kTodo) ? todo_is : is;
   var acc = getAccessible(aElement, nsIAccessibleText);
 
@@ -325,7 +313,7 @@ function testWordAt(aElement, aWordIndex, aText, aToDoFlag)
   }
 
   text = acc.getText(startWordOffset, endWordOffset);
-  isFunc(text, aText,  "wrong text for word at index '" + aWordIndex + "': " +
+  isFunc(text, aText, "wrong text for word at index '" + aWordIndex + "': " +
          " of text '" + acc.getText(0, -1) + "' in " + prettyName(aElement));
 }
 
@@ -336,8 +324,7 @@ function testWordAt(aElement, aWordIndex, aText, aToDoFlag)
  * @param aWords     [in]           array of expected words
  * @param aToDoFlag  [in, optional] kTodo or kOk for returned text
  */
-function testWords(aElement, aWords, aToDoFlag)
-{
+function testWords(aElement, aWords, aToDoFlag) {
   if (aToDoFlag == null)
     aToDoFlag = kOk;
 
@@ -353,8 +340,7 @@ function testWords(aElement, aWords, aToDoFlag)
  *
  * @param aID  [in] Id, DOM node, or acc obj
  */
-function cleanTextSelections(aID)
-{
+function cleanTextSelections(aID) {
   var acc = getAccessible(aID, [nsIAccessibleText]);
 
   while (acc.selectionCount > 0)
@@ -369,8 +355,7 @@ function cleanTextSelections(aID)
  * @param aEndOffset        [in] end offset for the new selection
  * @param aSelectionsCount  [in] expected number of selections after addSelection
  */
-function testTextAddSelection(aID, aStartOffset, aEndOffset, aSelectionsCount)
-{
+function testTextAddSelection(aID, aStartOffset, aEndOffset, aSelectionsCount) {
   var acc = getAccessible(aID, [nsIAccessibleText]);
   var text = acc.getText(0, -1);
 
@@ -389,8 +374,7 @@ function testTextAddSelection(aID, aStartOffset, aEndOffset, aSelectionsCount)
  * @param aSelectionsCount  [in] expected number of selections after
  *                               removeSelection
  */
-function testTextRemoveSelection(aID, aSelectionIndex, aSelectionsCount)
-{
+function testTextRemoveSelection(aID, aSelectionIndex, aSelectionsCount) {
   var acc = getAccessible(aID, [nsIAccessibleText]);
   var text = acc.getText(0, -1);
 
@@ -412,8 +396,7 @@ function testTextRemoveSelection(aID, aSelectionIndex, aSelectionsCount)
  *                               setSelectionBounds
  */
 function testTextSetSelection(aID, aStartOffset, aEndOffset,
-                              aSelectionIndex, aSelectionsCount)
-{
+                              aSelectionIndex, aSelectionsCount) {
   var acc = getAccessible(aID, [nsIAccessibleText]);
   var text = acc.getText(0, -1);
 
@@ -430,8 +413,7 @@ function testTextSetSelection(aID, aStartOffset, aEndOffset,
  * @param aID        [in] Id, DOM node, or acc obj
  * @param aCount     [in] expected selection count
  */
-function testTextSelectionCount(aID, aCount)
-{
+function testTextSelectionCount(aID, aCount) {
   var acc = getAccessible(aID, [nsIAccessibleText]);
   var text = acc.getText(0, -1);
 
@@ -446,8 +428,7 @@ function testTextSelectionCount(aID, aCount)
  * @param aEndOffset       [in] expected end offset for the selection
  * @param aSelectionIndex  [in] index of the selection to get
  */
-function testTextGetSelection(aID, aStartOffset, aEndOffset, aSelectionIndex)
-{
+function testTextGetSelection(aID, aStartOffset, aEndOffset, aSelectionIndex) {
   var acc = getAccessible(aID, [nsIAccessibleText]);
   var text = acc.getText(0, -1);
 
@@ -462,8 +443,7 @@ function testTextGetSelection(aID, aStartOffset, aEndOffset, aSelectionIndex)
 
 function testTextRange(aRange, aRangeDescr, aStartContainer, aStartOffset,
                        aEndContainer, aEndOffset, aText,
-                       aCommonContainer, aChildren)
-{
+                       aCommonContainer, aChildren) {
   isObject(aRange.startContainer, getAccessible(aStartContainer),
            "Wrong start container of " + aRangeDescr);
   is(aRange.startOffset, aStartOffset,
@@ -496,11 +476,10 @@ function testTextRange(aRange, aRangeDescr, aStartContainer, aStartOffset,
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Private
 
-function testTextSuperHelper(aFuncName, aArgs)
-{
+function testTextSuperHelper(aFuncName, aArgs) {
   // List of tests.
   if (aArgs[2] instanceof Array) {
     var ids = (aArgs[0] instanceof Array) ? aArgs[0] : [ aArgs[0] ];
@@ -574,8 +553,7 @@ function testTextSuperHelper(aFuncName, aArgs)
 function testTextHelper(aID, aOffset, aBoundaryType,
                         aText, aStartOffset, aEndOffset,
                         aToDoFlag1, aToDoFlag2, aToDoFlag3,
-                        aTextFunc, aTextFuncName)
-{
+                        aTextFunc, aTextFuncName) {
   var exceptionFlag = aToDoFlag1 == undefined ||
                       aToDoFlag2 == undefined ||
                       aToDoFlag3 == undefined;
@@ -617,8 +595,7 @@ function testTextHelper(aID, aOffset, aBoundaryType,
   }
 }
 
-function boundaryToString(aBoundaryType)
-{
+function boundaryToString(aBoundaryType) {
   switch (aBoundaryType) {
     case BOUNDARY_CHAR:
       return "char";

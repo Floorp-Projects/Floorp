@@ -79,7 +79,7 @@ var SidebarUI = {
   toggleSwitcherPanel() {
     if (this._switcherPanel.state == "open" || this._switcherPanel.state == "showing") {
       this.hideSwitcherPanel();
-    } else {
+    } else if (this._switcherPanel.state == "closed") {
       this.showSwitcherPanel();
     }
   },

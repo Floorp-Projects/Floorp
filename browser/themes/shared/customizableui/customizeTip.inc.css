@@ -66,8 +66,6 @@
 }
 
 .customization-tipPanel-closeBox > .close-icon {
-  -moz-appearance: none;
-  border: 0;
   margin-inline-end: -25px;
 }
 

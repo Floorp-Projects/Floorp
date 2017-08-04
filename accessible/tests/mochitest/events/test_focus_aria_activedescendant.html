@@ -20,34 +20,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
           src="../events.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true; // debugging
+    // gA11yEventDumpToConsole = true; // debugging
 
-    function changeARIAActiveDescendant(aID, aItemID)
-    {
+    function changeARIAActiveDescendant(aID, aItemID) {
       this.eventSeq = [
         new focusChecker(aItemID)
       ];
 
-      this.invoke = function changeARIAActiveDescendant_invoke()
-      {
+      this.invoke = function changeARIAActiveDescendant_invoke() {
         getNode(aID).setAttribute("aria-activedescendant", aItemID);
       }
 
-      this.getID = function changeARIAActiveDescendant_getID()
-      {
+      this.getID = function changeARIAActiveDescendant_getID() {
         return "change aria-activedescendant on " + aItemID;
       }
     }
 
-    function insertItemNFocus(aID, aNewItemID)
-    {
+    function insertItemNFocus(aID, aNewItemID) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, aNewItemID),
         new focusChecker(aNewItemID)
       ];
 
-      this.invoke = function insertItemNFocus_invoke()
-      {
+      this.invoke = function insertItemNFocus_invoke() {
         var container  = getNode(aID);
         var itemNode = document.createElement("div");
         itemNode.setAttribute("id", aNewItemID);
@@ -57,15 +52,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
         container.setAttribute("aria-activedescendant", aNewItemID);
       }
 
-      this.getID = function insertItemNFocus_getID()
-      {
+      this.getID = function insertItemNFocus_getID() {
         return "insert new node and focus it with ID: " + aNewItemID;
       }
     }
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
 
       gQueue.push(new synthFocus("listbox", new focusChecker("item1")));
@@ -76,7 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       gQueue.push(new changeARIAActiveDescendant("combobox", "combobox_option2"));
 
       todo(false, "No focus for inserted element, bug 687011");
-      //gQueue.push(new insertItemNFocus("listbox", "item4"));
+      // gQueue.push(new insertItemNFocus("listbox", "item4"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

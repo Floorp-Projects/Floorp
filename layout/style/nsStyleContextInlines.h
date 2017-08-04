@@ -96,42 +96,13 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
       const_cast<nsStyle##name_ *>(newData);                        \
     return newData;                                                 \
   }                                                                 \
-  auto servo = AsServo();                                           \
-  /**                                                               \
-   * Also (conservatively) set the owning bit in the parent style   \
-   * context if we're a text node.                                  \
-   *                                                                \
-   * This causes the parent element's style context to cache any    \
-   * inherited structs we request for a text node, which means we   \
-   * don't have to compute change hints for the text node, as       \
-   * handling the change on the parent element is sufficient.       \
-   *                                                                \
-   * Note, however, that we still need to request the style struct  \
-   * of the text node itself, since we may run some fixups on it,   \
-   * like for text-combine.                                         \
-   *                                                                \
-   * This model is sound because for the fixed-up values to change, \
-   * other properties on the parent need to change too, and we'll   \
-   * handle those change hints correctly.                           \
-   *                                                                \
-   * TODO(emilio): Perhaps we should remove those fixups and handle \
-   * those in layout instead. Those fixups are kind of expensive    \
-   * for style sharing, and computed style of text nodes is not     \
-   * observable. If we do that, we could assert here that the       \
-   * inherited structs of both are the same.                        \
-   */                                                               \
-  if (mPseudoTag == nsCSSAnonBoxes::mozText && aComputeData) {      \
-    MOZ_ASSERT(mParent);                                            \
-    mParent->AddStyleBit(NS_STYLE_INHERIT_BIT(name_));              \
-  }                                                                 \
-                                                                    \
   const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));\
   if (!aComputeData && needToCompute) {                             \
     return nullptr;                                                 \
   }                                                                 \
                                                                     \
-  const nsStyle##name_* data =                                      \
-    servo->ComputedData()->GetStyle##name_();                       \
+  const nsStyle##name_* data = ComputedData()->GetStyle##name_();   \
+                                                                    \
   /* perform any remaining main thread work on the struct */        \
   if (needToCompute) {                                              \
     MOZ_ASSERT(NS_IsMainThread());                                  \
@@ -146,7 +117,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
 #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                              \
 template<bool aComputeData>                                                   \
 const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
-  if (auto gecko = GetAsGecko()) {                                            \
+  if (auto* gecko = GetAsGecko()) {                                           \
     if (gecko->mCachedResetData) {                                            \
       const nsStyle##name_ * cachedData =                                     \
         static_cast<nsStyle##name_*>(                                         \
@@ -158,13 +129,11 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
     AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);                       \
     return gecko->RuleNode()->GetStyle##name_<aComputeData>(gecko);           \
   }                                                                           \
-  auto servo = AsServo();                                                     \
   const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));          \
   if (!aComputeData && needToCompute) {                                       \
     return nullptr;                                                           \
   }                                                                           \
-  const nsStyle##name_* data =                                                \
-    servo->ComputedData()->GetStyle##name_();                                 \
+  const nsStyle##name_* data = ComputedData()->GetStyle##name_();             \
   /* perform any remaining main thread work on the struct */                  \
   if (needToCompute) {                                                        \
     const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());            \

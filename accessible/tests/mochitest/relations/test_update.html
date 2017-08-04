@@ -19,8 +19,7 @@
 
   <script type="application/javascript">
     function testRelated(aRelAttr, aHostRelation, aDependentRelation,
-                         aHostID, aHostNodeID, aDependent1ID, aDependent2ID)
-    {
+                         aHostID, aHostNodeID, aDependent1ID, aDependent2ID) {
       // no attribute
       testRelation(aDependent1ID, aDependentRelation, null);
       testRelation(aDependent2ID, aDependentRelation, null);
@@ -50,14 +49,12 @@
     }
 
     function insertRelated(aHostRelAttr, aDependentID, aInsertHostFirst,
-                           aHostRelation, aDependentRelation)
-    {
+                           aHostRelation, aDependentRelation) {
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, document)
       ];
 
-      this.invoke = function insertRelated_invoke()
-      {
+      this.invoke = function insertRelated_invoke() {
         this.hostNode = document.createElement("div");
         this.hostNode.setAttribute(aHostRelAttr, aDependentID);
 
@@ -73,15 +70,13 @@
         }
       }
 
-      this.finalCheck = function insertRelated_finalCheck()
-      {
+      this.finalCheck = function insertRelated_finalCheck() {
         testRelation(this.dependentNode, aDependentRelation, this.hostNode);
         if (aHostRelation)
           testRelation(this.hostNode, aHostRelation, this.dependentNode);
       }
 
-      this.getID = function insertRelated_getID()
-      {
+      this.getID = function insertRelated_getID() {
         return "Insert " + aHostRelAttr + "='" + aDependentID + "' node" +
           (aInsertHostFirst ? " before" : "after") + " dependent node";
       }
@@ -93,8 +88,7 @@
      * tree due to changes in layout module. It can be changed on any case
      * when accessibles are recreated.
      */
-    function recreateRelatives(aContainerID, aLabelID, aElmID)
-    {
+    function recreateRelatives(aContainerID, aLabelID, aElmID) {
       this.containerNode = getNode(aContainerID);
       this.container = getNode(this.containerNode);
 
@@ -103,32 +97,28 @@
         new invokerChecker(EVENT_SHOW, this.containerNode)
       ];
 
-      this.invoke = function recreateRelatives_invoke()
-      {
+      this.invoke = function recreateRelatives_invoke() {
         testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
         testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
 
         this.containerNode.style.overflow = "visible";
       }
 
-      this.finalCheck = function recreateRelatives_finalCheck()
-      {
+      this.finalCheck = function recreateRelatives_finalCheck() {
         testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
         testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
       }
 
-      this.getID = function recreateRelatives_getID()
-      {
+      this.getID = function recreateRelatives_getID() {
         return "recreate relatives ";
       }
     }
 
-    //gA11yEventDumpToConsole = true; // debug
+    // gA11yEventDumpToConsole = true; // debug
 
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       // Relation updates on ARIA attribute changes.
       testRelated("aria-labelledby",
                   RELATION_LABELLED_BY, RELATION_LABEL_FOR,

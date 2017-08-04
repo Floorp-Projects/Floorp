@@ -19,7 +19,7 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
     /**
@@ -32,8 +32,7 @@
      *   DOM: whitespace img1 whitespace whitespace img3 whitespace,
      *   a11y: img1 whitespace img3
      */
-    function removeImg()
-    {
+    function removeImg() {
       this.containerNode = getNode("container1");
       this.imgNode = getNode("img1");
       this.img = getAccessible(this.imgNode);
@@ -45,8 +44,7 @@
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
-      this.finalCheck = function textLeafUpdate_finalCheck()
-      {
+      this.finalCheck = function textLeafUpdate_finalCheck() {
         var tree =
           { SECTION: [
             { GRAPHIC: [] },
@@ -57,8 +55,7 @@
         testAccessibleTree(this.containerNode, tree);
       }
 
-      this.invoke = function setOnClickAttr_invoke()
-      {
+      this.invoke = function setOnClickAttr_invoke() {
         var tree =
           { SECTION: [
             { GRAPHIC: [] },
@@ -73,8 +70,7 @@
         this.containerNode.removeChild(this.imgNode);
       }
 
-      this.getID = function setOnClickAttr_getID()
-      {
+      this.getID = function setOnClickAttr_getID() {
         return "remove middle img";
       }
     }
@@ -92,8 +88,7 @@
      *   DOM: whitespace linkwithimg whitespace linkwithimg whitespace
      *   a11y: linkwithimg whitespace linkwithimg
      */
-    function insertImg()
-    {
+    function insertImg() {
       this.containerNode = getNode("container2");
       this.topNode = this.containerNode.parentNode;
       this.textNode = this.containerNode.nextSibling;
@@ -107,8 +102,7 @@
         new invokerChecker(EVENT_REORDER, this.topNode)
       ];
 
-      this.invoke = function insertImg_invoke()
-      {
+      this.invoke = function insertImg_invoke() {
         var tree =
           { SECTION: [
             { LINK: [] },
@@ -122,8 +116,7 @@
         this.containerNode.appendChild(this.imgNode);
       }
 
-      this.finalCheck = function insertImg_finalCheck()
-      {
+      this.finalCheck = function insertImg_finalCheck() {
         var tree =
           { SECTION: [
             { LINK: [
@@ -138,22 +131,20 @@
         testAccessibleTree(this.topNode, tree);
       }
 
-      this.getID = function appendImg_getID()
-      {
+      this.getID = function appendImg_getID() {
         return "insert img into internal container";
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
 
       gQueue.push(new removeImg());

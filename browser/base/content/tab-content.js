@@ -979,7 +979,6 @@ var RefreshBlocker = {
 
     let data = {
       URI: aURI.spec,
-      originCharset: aURI.originCharset,
       delay: aDelay,
       sameURI: aSameURI,
       outerWindowID,
@@ -1007,7 +1006,7 @@ var RefreshBlocker = {
                           .getInterface(Ci.nsIDocShell)
                           .QueryInterface(Ci.nsIRefreshURI);
 
-      let URI = Services.io.newURI(data.URI, data.originCharset);
+      let URI = Services.io.newURI(data.URI);
 
       refreshURI.forceRefreshURI(URI, data.delay, true);
     }

@@ -27,11 +27,10 @@
             android:duplicateParentState="true"
             android:clipToPadding="false">
 
-        <org.mozilla.gecko.tabs.TabsPanelThumbnailView android:id="@+id/thumbnail"
-                                                       android:layout_width="@dimen/tab_thumbnail_width"
-                                                       android:layout_height="@dimen/tab_thumbnail_height"
-                                                       android:elevation="2dp"
-                                                       android:outlineProvider="bounds"/>
+        <org.mozilla.gecko.tabs.TabsPanelThumbnailView
+            android:id="@+id/thumbnail"
+            android:layout_width="137dp"
+            android:layout_height="wrap_content"/>
 
     </org.mozilla.gecko.widget.TabThumbnailWrapper>
 
@@ -40,9 +39,9 @@
                   android:orientation="vertical"
                   android:layout_weight="1.0"
                   android:paddingTop="4dip"
-                  android:paddingLeft="8dip"
-                  android:paddingStart="8dip"
-                  android:paddingRight="4dip"
+                  android:paddingLeft="10dp"
+                  android:paddingStart="10dp"
+                  android:paddingRight="2dp"
                   android:paddingEnd="4dip"
                   android:duplicateParentState="true">
 

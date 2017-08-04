@@ -569,7 +569,7 @@ nsXBLPrototypeBinding::GetRuleProcessor()
   return nullptr;
 }
 
-const ServoStyleSet*
+ServoStyleSet*
 nsXBLPrototypeBinding::GetServoStyleSet() const
 {
   return mResources ? mResources->GetServoStyleSet() : nullptr;

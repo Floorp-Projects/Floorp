@@ -19,35 +19,31 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function textLeafUpdate(aID, aIsTextLeafLinkable)
-    {
+    function textLeafUpdate(aID, aIsTextLeafLinkable) {
       this.node = getNode(aID);
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, this.node.parentNode)
       ];
 
-      this.finalCheck = function textLeafUpdate_finalCheck()
-      {
+      this.finalCheck = function textLeafUpdate_finalCheck() {
         var textLeaf = getAccessible(this.node).firstChild;
         is(textLeaf.actionCount, (aIsTextLeafLinkable ? 1 : 0),
            "Wrong action numbers!");
       }
     }
 
-    function setOnClickAttr(aID)
-    {
+    function setOnClickAttr(aID) {
       var node = getNode(aID);
       node.setAttribute("onclick", "alert(3);");
       var textLeaf = getAccessible(node).firstChild;
       is(textLeaf.actionCount, 1, "setOnClickAttr: wrong action numbers!");
     }
 
-    function removeOnClickAttr(aID)
-    {
+    function removeOnClickAttr(aID) {
       var node = getNode(aID);
       node.removeAttribute("onclick");
       var textLeaf = getAccessible(node).firstChild;
@@ -55,24 +51,20 @@
          "removeOnClickAttr: wrong action numbers!");
     }
 
-    function setOnClickNRoleAttrs(aID)
-    {
+    function setOnClickNRoleAttrs(aID) {
       this.__proto__ = new textLeafUpdate(aID, true);
 
-      this.invoke = function setOnClickAttr_invoke()
-      {
+      this.invoke = function setOnClickAttr_invoke() {
         this.node.setAttribute("role", "link");
         this.node.setAttribute("onclick", "alert(3);");
       }
 
-      this.getID = function setOnClickAttr_getID()
-      {
+      this.getID = function setOnClickAttr_getID() {
         return "make " + prettyName(aID) + " linkable";
       }
     }
 
-    function removeTextData(aID, aRole)
-    {
+    function removeTextData(aID, aRole) {
       this.containerNode = getNode(aID);
       this.textNode = this.containerNode.firstChild;
 
@@ -80,8 +72,7 @@
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
-      this.invoke = function removeTextData_invoke()
-      {
+      this.invoke = function removeTextData_invoke() {
         var tree = {
           role: aRole,
           children: [
@@ -96,8 +87,7 @@
         this.textNode.data = "";
       }
 
-      this.finalCheck = function removeTextData_finalCheck()
-      {
+      this.finalCheck = function removeTextData_finalCheck() {
         var tree = {
           role: aRole,
           children: []
@@ -105,22 +95,20 @@
         testAccessibleTree(this.containerNode, tree);
       }
 
-      this.getID = function removeTextData_finalCheck()
-      {
+      this.getID = function removeTextData_finalCheck() {
         return "remove text data of text node inside '" + aID + "'.";
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       // adds onclick on element, text leaf should inherit its action
       setOnClickAttr("div");
       // remove onclick attribute, text leaf shouldn't have any action

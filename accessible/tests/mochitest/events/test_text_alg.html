@@ -17,15 +17,14 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
     const kRemoval = false;
     const kInsertion = true;
     const kUnexpected = true;
 
-    function changeText(aContainerID, aValue, aEventList)
-    {
+    function changeText(aContainerID, aValue, aEventList) {
       this.containerNode = getNode(aContainerID);
       this.textNode = this.containerNode.firstChild;
       this.textData = this.textNode.data;
@@ -49,38 +48,34 @@
           this.eventSeq.push(checker);
       }
 
-      this.invoke = function changeText_invoke()
-      {
+      this.invoke = function changeText_invoke() {
         this.textNode.data = aValue;
       }
 
-      this.getID = function changeText_getID()
-      {
+      this.getID = function changeText_getID() {
         return "change text '" + shortenString(this.textData) + "' -> '" +
           shortenString(this.textNode.data) + "' for " +
           prettyName(this.containerNode);
       }
     }
 
-    function expStr(x, doublings)
-    {
+    function expStr(x, doublings) {
       for (var i = 0; i < doublings; ++i)
         x = x + x;
       return x;
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // wqrema -> tqb: substitution coalesced with removal
 
       var events = [
@@ -91,7 +86,7 @@
       ];
       gQueue.push(new changeText("p1", "tqb", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // b -> insa: substitution coalesced with insertion (complex substitution)
 
       events = [
@@ -100,7 +95,7 @@
       ];
       gQueue.push(new changeText("p2", "insa", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // abc -> def: coalesced substitutions
 
       events = [
@@ -109,7 +104,7 @@
       ];
       gQueue.push(new changeText("p3", "def", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // abcabc -> abcDEFabc: coalesced insertions
 
       events = [
@@ -117,7 +112,7 @@
       ];
       gQueue.push(new changeText("p4", "abcDEFabc", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // abc -> defabc: insertion into begin
 
       events = [
@@ -125,7 +120,7 @@
       ];
       gQueue.push(new changeText("p5", "defabc", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // abc -> abcdef: insertion into end
 
       events = [
@@ -133,7 +128,7 @@
       ];
       gQueue.push(new changeText("p6", "abcdef", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // defabc -> abc: removal from begin
 
       events = [
@@ -141,7 +136,7 @@
       ];
       gQueue.push(new changeText("p7", "abc", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // abcdef -> abc: removal from the end
 
       events = [
@@ -149,7 +144,7 @@
       ];
       gQueue.push(new changeText("p8", "abc", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // abcDEFabc -> abcabc: coalesced removals
 
       events = [
@@ -157,7 +152,7 @@
       ];
       gQueue.push(new changeText("p9", "abcabc", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // !abcdef@ -> @axbcef!: insertion, deletion and substitutions
 
       events = [
@@ -170,7 +165,7 @@
       ];
       gQueue.push(new changeText("p10", "@axbcef!", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // meilenstein -> levenshtein: insertion, complex and simple substitutions
 
       events = [
@@ -182,7 +177,7 @@
       ];
       gQueue.push(new changeText("p11", "levenshtein", events));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // long strings, remove/insert pair as the old string was replaced on
       // new one
 

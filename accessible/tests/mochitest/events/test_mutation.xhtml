@@ -30,14 +30,11 @@
      * Insert a not accessible bound element containing an accessible element
      * in anonymous content.
      */
-    function insertBinding(aContainerID)
-    {
+    function insertBinding(aContainerID) {
       this.containerNode = getNode(aContainerID);
 
-      function getButtonFromBinding(aNode)
-      {
-        try { return document.getAnonymousNodes(aNode.firstChild)[0]; }
-        catch (e) { return null; }
+      function getButtonFromBinding(aNode) {
+        try { return document.getAnonymousNodes(aNode.firstChild)[0]; } catch (e) { return null; }
       }
 
       this.eventSeq = [
@@ -45,15 +42,13 @@
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
-      this.invoke = function insertBinding_invoke()
-      {
+      this.invoke = function insertBinding_invoke() {
         var span = document.createElement("span");
         span.setAttribute("style", "-moz-binding:url(#button)");
         this.containerNode.appendChild(span);
       }
 
-      this.getID = function insertBinding_getID()
-      {
+      this.getID = function insertBinding_getID() {
         return "insert button binding";
       }
     }
@@ -62,11 +57,10 @@
      * Do tests.
      */
     var gQueue = null;
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new insertBinding("testContainer"));

@@ -5,7 +5,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-    <dimen name="tab_panel_item_width">176dip</dimen>
-    <dimen name="tab_thumbnail_height">120dip</dimen>
-    <dimen name="tab_thumbnail_width">168dip</dimen>
+    <dimen name="tab_panel_item_width_autofit">176dip</dimen>
+    <dimen name="tab_thumbnail_width">137dip</dimen>
 </resources>

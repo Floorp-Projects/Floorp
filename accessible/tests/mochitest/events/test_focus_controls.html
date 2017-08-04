@@ -21,11 +21,10 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue(EVENT_FOCUS);
 
       gQueue.push(new synthFocus("textbox"));

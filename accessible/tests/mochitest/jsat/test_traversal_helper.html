@@ -46,52 +46,51 @@
     function testTraversalHelper(aRule, aExpectedSequence) {
       vc.position = null;
 
-      walkSequence('moveNext', aRule, aExpectedSequence);
+      walkSequence("moveNext", aRule, aExpectedSequence);
 
-      ok(!TraversalHelper.move(vc, 'moveNext', aRule), "reached end");
+      ok(!TraversalHelper.move(vc, "moveNext", aRule), "reached end");
 
-      TraversalHelper.move(vc, 'moveLast', 'Simple');
+      TraversalHelper.move(vc, "moveLast", "Simple");
 
-      walkSequence('movePrevious', aRule,
+      walkSequence("movePrevious", aRule,
         Array.from(aExpectedSequence).reverse());
 
-      ok(!TraversalHelper.move(vc, 'movePrevious', aRule), "reached start");
+      ok(!TraversalHelper.move(vc, "movePrevious", aRule), "reached start");
 
       vc.position = null;
 
-      ok(TraversalHelper.move(vc, 'moveFirst', aRule), "moveFirst");
+      ok(TraversalHelper.move(vc, "moveFirst", aRule), "moveFirst");
 
       accessibleIs(vc.position, aExpectedSequence[0],
         "moveFirst to correct accessible");
 
-      ok(TraversalHelper.move(vc, 'moveLast', aRule), "moveLast");
+      ok(TraversalHelper.move(vc, "moveLast", aRule), "moveLast");
 
       accessibleIs(vc.position, aExpectedSequence[aExpectedSequence.length - 1],
         "moveLast to correct accessible");
     }
 
 
-    function doTest()
-    {
+    function doTest() {
       var doc = currentTabDocument();
       var docAcc = getAccessible(doc, [nsIAccessibleDocument]);
       vc = docAcc.virtualCursor;
 
-      testTraversalHelper('Landmark',
-        ['heading-1', 'heading-2', 'statusbar-1']);
+      testTraversalHelper("Landmark",
+        ["heading-1", "heading-2", "statusbar-1"]);
 
-      testTraversalHelper('List',
-        ['Programming Language', 'listitem-2-1', 'listitem-3-1']);
+      testTraversalHelper("List",
+        ["Programming Language", "listitem-2-1", "listitem-3-1"]);
 
-      testTraversalHelper('Section',
-        ['heading-1', 'heading-2', 'heading-3',
-         'heading-5', 'link-1', 'statusbar-1']);
+      testTraversalHelper("Section",
+        ["heading-1", "heading-2", "heading-3",
+         "heading-5", "link-1", "statusbar-1"]);
 
       SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addLoadEvent(function () {
+    addLoadEvent(function() {
       /* We open a new browser because we need to test with a top-level content
          document. */
       openBrowserWindow(

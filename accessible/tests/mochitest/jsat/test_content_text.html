@@ -31,40 +31,40 @@
           // Read-only text tests
           [ContentMessages.simpleMoveFirst,
            new ExpectedCursorChange(
-            ['Text content test document', 'These are my awards, Mother. ' +
-             'From Army. The seal is for marksmanship, and the gorilla is ' +
-             'for sand racing.'])],
-          [ContentMessages.moveNextBy('word'),
-           new ExpectedCursorTextChange('These', 0, 5)],
-          [ContentMessages.moveNextBy('word'),
-           new ExpectedCursorTextChange('are', 6, 9)],
-          [ContentMessages.moveNextBy('word'),
-           new ExpectedCursorTextChange('my', 10, 12)],
-          [ContentMessages.moveNextBy('word'),
-           new ExpectedCursorTextChange('awards,', 13, 20)],
-          [ContentMessages.moveNextBy('word'),
-           new ExpectedCursorTextChange('Mother.', 21, 28)],
-          [ContentMessages.movePreviousBy('word'),
-           new ExpectedCursorTextChange('awards,', 13, 20)],
-          [ContentMessages.movePreviousBy('word'),
-           new ExpectedCursorTextChange('my', 10, 12)],
-          [ContentMessages.movePreviousBy('word'),
-           new ExpectedCursorTextChange('are', 6, 9)],
-          [ContentMessages.movePreviousBy('word'),
-           new ExpectedCursorTextChange('These', 0, 5)],
+            ["Text content test document", "These are my awards, Mother. " +
+             "From Army. The seal is for marksmanship, and the gorilla is " +
+             "for sand racing."])],
+          [ContentMessages.moveNextBy("word"),
+           new ExpectedCursorTextChange("These", 0, 5)],
+          [ContentMessages.moveNextBy("word"),
+           new ExpectedCursorTextChange("are", 6, 9)],
+          [ContentMessages.moveNextBy("word"),
+           new ExpectedCursorTextChange("my", 10, 12)],
+          [ContentMessages.moveNextBy("word"),
+           new ExpectedCursorTextChange("awards,", 13, 20)],
+          [ContentMessages.moveNextBy("word"),
+           new ExpectedCursorTextChange("Mother.", 21, 28)],
+          [ContentMessages.movePreviousBy("word"),
+           new ExpectedCursorTextChange("awards,", 13, 20)],
+          [ContentMessages.movePreviousBy("word"),
+           new ExpectedCursorTextChange("my", 10, 12)],
+          [ContentMessages.movePreviousBy("word"),
+           new ExpectedCursorTextChange("are", 6, 9)],
+          [ContentMessages.movePreviousBy("word"),
+           new ExpectedCursorTextChange("These", 0, 5)],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['You\'re a good guy, mon frere. ' +
-              'That means brother in French. ' +
-              'I don\'t know how I know that. ' +
-              'I took four years of Spanish.'])],
+           new ExpectedCursorChange(["You're a good guy, mon frere. " +
+              "That means brother in French. " +
+              "I don't know how I know that. " +
+              "I took four years of Spanish."])],
           // XXX: Word boundary should be past the apostraphe.
-          [ContentMessages.moveNextBy('word'),
-           new ExpectedCursorTextChange('You\'re', 0, 6,
+          [ContentMessages.moveNextBy("word"),
+           new ExpectedCursorTextChange("You're", 0, 6,
              { android_todo: true /* Bug 980512 */})],
 
           // Editable text tests.
-          [ContentMessages.focusSelector('textarea'),
-           new ExpectedAnnouncement('editing'),
+          [ContentMessages.focusSelector("textarea"),
+           new ExpectedAnnouncement("editing"),
            new ExpectedEditState({
             editing: true,
             multiline: true,
@@ -72,8 +72,8 @@
             atEnd: false
            }),
            new ExpectedCursorChange(
-            ['Please refrain from Mayoneggs during this salmonella scare.',
-             {string: 'textarea'}]),
+            ["Please refrain from Mayoneggs during this salmonella scare.",
+             {string: "textarea"}]),
            new ExpectedTextSelectionChanged(0, 0)
           ],
           [ContentMessages.activateCurrent(10),
@@ -87,27 +87,27 @@
            new ExpectedTextCaretChanged(10, 20),
            new ExpectedTextSelectionChanged(20, 20)
           ],
-          [ContentMessages.moveCaretNextBy('word'),
+          [ContentMessages.moveCaretNextBy("word"),
            new ExpectedTextCaretChanged(20, 29),
            new ExpectedTextSelectionChanged(29, 29)
           ],
-          [ContentMessages.moveCaretNextBy('word'),
+          [ContentMessages.moveCaretNextBy("word"),
            new ExpectedTextCaretChanged(29, 36),
            new ExpectedTextSelectionChanged(36, 36)
           ],
-          [ContentMessages.moveCaretNextBy('character'),
+          [ContentMessages.moveCaretNextBy("character"),
            new ExpectedTextCaretChanged(36, 37),
            new ExpectedTextSelectionChanged(37, 37)
           ],
-          [ContentMessages.moveCaretNextBy('character'),
+          [ContentMessages.moveCaretNextBy("character"),
            new ExpectedTextCaretChanged(37, 38),
            new ExpectedTextSelectionChanged(38, 38)
           ],
-          [ContentMessages.moveCaretNextBy('paragraph'),
+          [ContentMessages.moveCaretNextBy("paragraph"),
            new ExpectedTextCaretChanged(38, 59),
            new ExpectedTextSelectionChanged(59, 59)
           ],
-          [ContentMessages.moveCaretPreviousBy('word'),
+          [ContentMessages.moveCaretPreviousBy("word"),
            new ExpectedTextCaretChanged(53, 59),
            new ExpectedTextSelectionChanged(53, 53)
           ],
@@ -115,9 +115,9 @@
           // bug xxx
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(
-            ['So we don\'t get dessert?', {string: 'label'}],
-            { focused: 'html'}),
-           new ExpectedAnnouncement('navigating'),
+            ["So we don't get dessert?", {string: "label"}],
+            { focused: "html"}),
+           new ExpectedAnnouncement("navigating"),
            new ExpectedEditState({
             editing: false,
             multiline: false,
@@ -125,144 +125,144 @@
             atEnd: false })],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(
-            [{ string: 'entry' }],
-            { focused: 'html'})],
+            [{ string: "entry" }],
+            { focused: "html"})],
           [ContentMessages.activateCurrent(0),
            new ExpectedClickAction(),
-           new ExpectedAnnouncement('editing'),
+           new ExpectedAnnouncement("editing"),
            new ExpectedEditState({
             editing: true,
             multiline: false,
             atStart: true,
             atEnd: true
-           }, { focused: 'input[type=text]' }),
+           }, { focused: "input[type=text]" }),
            new ExpectedTextSelectionChanged(0, 0)
            ],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(
-            ['So we don\'t get dessert?', {string: 'label'}]),
-           new ExpectedAnnouncement('navigating'),
+            ["So we don't get dessert?", {string: "label"}]),
+           new ExpectedAnnouncement("navigating"),
            new ExpectedEditState({
             editing: false,
             multiline: false,
             atStart: true,
             atEnd: false
-           },{ focused: 'html' })
+           },{ focused: "html" })
          ],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(
-            [{ string: 'entry' }],
-            { focused: 'html'})],
+            [{ string: "entry" }],
+            { focused: "html"})],
           [ContentMessages.activateCurrent(0),
            new ExpectedClickAction(),
-           new ExpectedAnnouncement('editing'),
+           new ExpectedAnnouncement("editing"),
            new ExpectedEditState({
             editing: true,
             multiline: false,
             atStart: true,
             atEnd: true
            },
-           { focused: 'input[type=text]' }),
+           { focused: "input[type=text]" }),
            new ExpectedTextSelectionChanged(0, 0)],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(
-            [ 'So we don\'t get dessert?', {string: 'label'} ]),
-           new ExpectedAnnouncement('navigating'),
+            [ "So we don't get dessert?", {string: "label"} ]),
+           new ExpectedAnnouncement("navigating"),
            new ExpectedEditState({
             editing: false,
             multiline: false,
             atStart: true,
             atEnd: false
-           }, { focused: 'html' })],
+           }, { focused: "html" })],
 
-          [ContentMessages.focusSelector('input'),
-           new ExpectedAnnouncement('editing'),
+          [ContentMessages.focusSelector("input"),
+           new ExpectedAnnouncement("editing"),
            new ExpectedEditState({
             editing: true,
             multiline: false,
             atStart: true,
             atEnd: true
            }),
-           new ExpectedCursorChange([{string: 'entry'}]),
+           new ExpectedCursorChange([{string: "entry"}]),
            new ExpectedTextSelectionChanged(0, 0)
           ],
           [function() {
-             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 3]]}, typeKey('a')());
+             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 3]]}, typeKey("a")());
            },
-           new ExpectedTextChanged('a'),
+           new ExpectedTextChanged("a"),
            new ExpectedTextSelectionChanged(1, 1),
           ],
-          [typeKey('b'),
-           new ExpectedTextChanged('b'),
+          [typeKey("b"),
+           new ExpectedTextChanged("b"),
            new ExpectedTextSelectionChanged(2, 2),
           ],
-          [typeKey('c'),
-           new ExpectedTextChanged('c'),
+          [typeKey("c"),
+           new ExpectedTextChanged("c"),
            new ExpectedTextSelectionChanged(3, 3),
           ],
-          [typeKey('d'),
-           new ExpectedTextChanged('d'),
+          [typeKey("d"),
+           new ExpectedTextChanged("d"),
            new ExpectedTextSelectionChanged(4, 4),
           ],
-          [typeKey(' '),
-           new ExpectedTextChanged(' abcd'),
+          [typeKey(" "),
+           new ExpectedTextChanged(" abcd"),
            new ExpectedTextSelectionChanged(5, 5),
           ],
-          [typeKey('e'),
-           new ExpectedTextChanged('e'),
+          [typeKey("e"),
+           new ExpectedTextChanged("e"),
            new ExpectedTextSelectionChanged(6, 6),
           ],
           [function() {
-             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 2]]}, typeKey('a')());
+             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 2]]}, typeKey("a")());
            },
-           new ExpectedTextChanged(''),
+           new ExpectedTextChanged(""),
            new ExpectedTextSelectionChanged(7, 7),
           ],
-          [typeKey('d'),
-           new ExpectedTextChanged(''),
+          [typeKey("d"),
+           new ExpectedTextChanged(""),
            new ExpectedTextSelectionChanged(8, 8),
           ],
-          [typeKey(' '),
-           new ExpectedTextChanged(' ead'),
+          [typeKey(" "),
+           new ExpectedTextChanged(" ead"),
            new ExpectedTextSelectionChanged(9, 9),
           ],
           [function() {
-             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 1]]}, typeKey('f')());
+             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 1]]}, typeKey("f")());
            },
-           new ExpectedTextChanged('f'),
+           new ExpectedTextChanged("f"),
            new ExpectedTextSelectionChanged(10, 10),
           ],
-          [typeKey('g'),
-           new ExpectedTextChanged('g'),
+          [typeKey("g"),
+           new ExpectedTextChanged("g"),
            new ExpectedTextSelectionChanged(11, 11),
           ],
-          [typeKey(' '),
-           new ExpectedTextChanged(' '),
+          [typeKey(" "),
+           new ExpectedTextChanged(" "),
            new ExpectedTextSelectionChanged(12, 12),
           ],
           [function() {
-             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 0]]}, typeKey('f')());
+             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 0]]}, typeKey("f")());
            },
-           new ExpectedTextChanged(''),
+           new ExpectedTextChanged(""),
            new ExpectedTextSelectionChanged(13, 13),
           ],
-          [typeKey('g'),
-           new ExpectedTextChanged(''),
+          [typeKey("g"),
+           new ExpectedTextChanged(""),
            new ExpectedTextSelectionChanged(14, 14),
           ],
-          [typeKey(' '),
-           new ExpectedTextChanged(''),
+          [typeKey(" "),
+           new ExpectedTextChanged(""),
            new ExpectedTextSelectionChanged(15, 15),
           ],
         ]);
 
-      const KEYBOARD_ECHO_SETTING = 'accessibility.accessfu.keyboard_echo';
+      const KEYBOARD_ECHO_SETTING = "accessibility.accessfu.keyboard_echo";
       function typeKey(key) {
         return function() { synthesizeKey(key, {}, currentTabWindow()); };
       }
 
       addA11yLoadEvent(function() {
-        textTest.start(function () {
+        textTest.start(function() {
           closeBrowserWindow();
           SimpleTest.finish();
         });
@@ -271,7 +271,7 @@
 
     SimpleTest.waitForExplicitFinish();
     addLoadEvent(
-      function () {
+      function() {
         openBrowserWindow(
           doTest,
           getRootDirectory(window.location.href) + "doc_content_text.html");

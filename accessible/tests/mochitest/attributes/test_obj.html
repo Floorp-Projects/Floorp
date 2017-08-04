@@ -19,8 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
           src="../attributes.js"></script>
 
   <script type="application/javascript">
-    function doTest()
-    {
+    function doTest() {
       // aria
       testAttrs("atomic", {"atomic": "true", "container-atomic": "true"}, true);
       testAttrs(getNode("atomic").firstChild, {"container-atomic": "true"}, true);

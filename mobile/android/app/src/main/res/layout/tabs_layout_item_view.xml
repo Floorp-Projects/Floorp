@@ -62,12 +62,10 @@
             android:duplicateParentState="true"
             android:clipToPadding="false">
 
-        <org.mozilla.gecko.tabs.TabsPanelThumbnailView android:id="@+id/thumbnail"
-                                                       android:layout_width="match_parent"
-                                                       android:layout_height="wrap_content"
-                                                       android:elevation="2dp"
-                                                       android:outlineProvider="bounds"
-                                                />
+        <org.mozilla.gecko.tabs.TabsPanelThumbnailView
+            android:id="@+id/thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
     </org.mozilla.gecko.widget.TabThumbnailWrapper>
 
