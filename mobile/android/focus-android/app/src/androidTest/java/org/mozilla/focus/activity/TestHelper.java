@@ -37,7 +37,7 @@ import static org.hamcrest.Matchers.allOf;
 // This test visits each page and checks whether some essential elements are being displayed
 public final class TestHelper {
 
-    static UiDevice mDevice =  UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());;
+    static UiDevice mDevice =  UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 4;
 
     /********* First View Locators ***********/
@@ -158,6 +158,11 @@ public final class TestHelper {
     static UiObject menulist = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/list")
             .enabled(true));
+    static String getMenuItemText(UiObject item) throws UiObjectNotFoundException {
+        String text = item.getChild(new UiSelector().index(0))
+                .getChild(new UiSelector().index(0)).getText();
+        return text;
+    }
 
     /********** Share Menu Dialog ********************/
     static UiObject shareMenuHeader = TestHelper.mDevice.findObject(new UiSelector()
