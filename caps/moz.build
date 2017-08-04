@@ -56,6 +56,7 @@ LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
     '/js/xpconnect/src',
+    '/netwerk/base',
 ]
 
 if CONFIG['ENABLE_TESTS']:

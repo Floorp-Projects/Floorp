@@ -226,8 +226,10 @@ ClientPaintedLayer::PaintOffMainThread()
 
   bool didUpdate = false;
   RotatedContentBuffer::DrawIterator iter;
+  Matrix capturedTransform;
   // Debug Protip: Change to BorrowDrawTargetForPainting if using sync OMTP.
-  while (DrawTarget* target = mContentClient->BorrowDrawTargetForRecording(state, &iter)) {
+  while (DrawTarget* target =
+          mContentClient->BorrowDrawTargetForRecording(state, &iter, &capturedTransform)) {
     if (!target || !target->IsValid()) {
       if (target) {
         mContentClient->ReturnDrawTargetToBuffer(target);
@@ -240,12 +242,8 @@ ClientPaintedLayer::PaintOffMainThread()
                                        target->GetSize(),
                                        target->GetFormat());
 
-    Matrix capturedTransform = target->GetTransform();
     captureDT->SetTransform(capturedTransform);
-
-    // TODO: Capture AA Flags and reset them in PaintThread
     SetAntialiasingFlags(this, captureDT);
-    SetAntialiasingFlags(this, target);
 
     RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(captureDT);
     MOZ_ASSERT(ctx); // already checked the target above

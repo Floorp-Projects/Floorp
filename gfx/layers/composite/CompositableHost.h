@@ -89,7 +89,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositableHost)
   explicit CompositableHost(const TextureInfo& aTextureInfo);
 
-  static already_AddRefed<CompositableHost> Create(const TextureInfo& aTextureInfo);
+  static already_AddRefed<CompositableHost> Create(const TextureInfo& aTextureInfo, bool aUseWebRender);
 
   virtual CompositableType GetType() = 0;
 

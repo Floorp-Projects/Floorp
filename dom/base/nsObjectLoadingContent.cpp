@@ -88,11 +88,14 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/IMEStateManager.h"
+#include "mozilla/widget/IMEData.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "nsChannelClassifier.h"
+#include "nsFocusManager.h"
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
@@ -1848,7 +1851,20 @@ nsObjectLoadingContent::UpdateObjectParameters()
   if (newType != mType) {
     retval = (ParameterUpdateFlags)(retval | eParamStateChanged);
     LOG(("OBJLC [%p]: Type changed from %u -> %u", this, mType, newType));
+    bool updateIMEState = (mType == eType_Loading && newType == eType_Plugin);
     mType = newType;
+    // The IME manager needs to know if this is a plugin so it can adjust
+    // input handling to an appropriate mode for plugins.
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsCOMPtr<nsIContent> thisContent =
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+    MOZ_ASSERT(thisContent, "should have content");
+    if (updateIMEState && thisContent && fm && fm->IsFocused(thisContent)) {
+      widget::IMEState state;
+      state.mEnabled = widget::IMEState::PLUGIN;
+      state.mOpen = widget::IMEState::DONT_CHANGE_OPEN_STATE;
+      IMEStateManager::UpdateIMEState(state, thisContent, nullptr);
+    }
   }
 
   if (!URIEquals(mBaseURI, newBaseURI)) {

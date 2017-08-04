@@ -1,11 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This tests that session restore component does restore the right content
-// security policy with the document.
-// The policy being tested disallows inline scripts
+// This test is two fold:
+// a) if security.data_uri.unique_opaque_origin == false, then
+//    this tests that session restore component does restore the right
+//    content security policy with the document. (The policy being
+//    tested disallows inline scripts).
+// b) if security.data_uri.unique_opaque_origin == true, then
+//    this tests that data: URIs do not inherit the CSP from
+//    it's enclosing context.
 
 add_task(async function test() {
+  let dataURIPref = Services.prefs.getBoolPref("security.data_uri.unique_opaque_origin");
   // create a tab that has a CSP
   let testURL = "http://mochi.test:8888/browser/browser/components/sessionstore/test/browser_911547_sample.html";
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, testURL);
@@ -16,23 +22,33 @@ add_task(async function test() {
 
   // this is a baseline to ensure CSP is active
   // attempt to inject and run a script via inline (pre-restore, allowed)
-  await injectInlineScript(browser, `document.getElementById("test_id").value = "fail";`);
+  await injectInlineScript(browser, `document.getElementById("test_id1").value = "id1_modified";`);
 
   let loadedPromise = promiseBrowserLoaded(browser);
   await ContentTask.spawn(browser, null, function() {
-    is(content.document.getElementById("test_id").value, "ok",
+    is(content.document.getElementById("test_id1").value, "id1_initial",
        "CSP should block the inline script that modifies test_id");
 
-    // attempt to click a link to a data: URI (will inherit the CSP of the
-    // origin document) and navigate to the data URI in the link.
+
+    // (a) if security.data_uri.unique_opaque_origin == false:
+    //     attempt to click a link to a data: URI (will inherit the CSP of
+    //     the origin document) and navigate to the data URI in the link.
+    // (b) if security.data_uri.unique_opaque_origin == true:
+    //     attempt to click a link to a data: URI (will *not* inherit the CSP of
+    //     the origin document) and navigate to the data URI in the link.
     content.document.getElementById("test_data_link").click();
   });
 
   await loadedPromise;
 
-  await ContentTask.spawn(browser, null, function() {
-    is(content.document.getElementById("test_id2").value, "ok",
-       "CSP should block the script loaded by the clicked data URI");
+  await ContentTask.spawn(browser, {dataURIPref}, function( {dataURIPref}) { // eslint-disable-line
+    if (dataURIPref) {
+      is(content.document.getElementById("test_id2").value, "id2_modified",
+         "data: URI should *not* inherit the CSP of the enclosing context");
+    } else {
+      is(content.document.getElementById("test_id2").value, "id2_initial",
+        "CSP should block the script loaded by the clicked data URI");
+    }
   });
 
   // close the tab
@@ -43,9 +59,14 @@ add_task(async function test() {
   await promiseTabRestored(tab);
   browser = tab.linkedBrowser;
 
-  await ContentTask.spawn(browser, null, function() {
-    is(content.document.getElementById("test_id2").value, "ok",
-       "CSP should block the script loaded by the clicked data URI after restore");
+  await ContentTask.spawn(browser, {dataURIPref}, function({dataURIPref}) { // eslint-disable-line
+    if (dataURIPref) {
+      is(content.document.getElementById("test_id2").value, "id2_modified",
+         "data: URI should *not* inherit the CSP of the enclosing context");
+    } else {
+      is(content.document.getElementById("test_id2").value, "id2_initial",
+        "CSP should block the script loaded by the clicked data URI after restore");
+    }
   });
 
   // clean up
