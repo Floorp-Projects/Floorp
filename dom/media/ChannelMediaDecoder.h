@@ -66,6 +66,8 @@ public:
 
   void Shutdown() override;
 
+  bool CanClone();
+
   // Create a new decoder of the same type as this one.
   already_AddRefed<ChannelMediaDecoder> Clone(MediaDecoderInit& aInit);
 
