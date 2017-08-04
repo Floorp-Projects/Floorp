@@ -24,6 +24,7 @@
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
@@ -13157,18 +13158,30 @@ nsDocShell::GetEditor(nsIEditor** aEditor)
     return NS_OK;
   }
 
-  return mEditorData->GetEditor(aEditor);
+  RefPtr<HTMLEditor> htmlEditor = mEditorData->GetHTMLEditor();
+  htmlEditor.forget(aEditor);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetEditor(nsIEditor* aEditor)
 {
+  if (!aEditor && !mEditorData) {
+    return NS_OK;
+  }
+
+  HTMLEditor* htmlEditor = aEditor ? aEditor->AsHTMLEditor() : nullptr;
+  // If TextEditor comes, throw an error.
+  if (aEditor && !htmlEditor) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   nsresult rv = EnsureEditorData();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  return mEditorData->SetEditor(aEditor);
+  return mEditorData->SetHTMLEditor(htmlEditor);
 }
 
 NS_IMETHODIMP
