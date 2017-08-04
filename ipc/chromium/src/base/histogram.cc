@@ -84,7 +84,9 @@ const size_t Histogram::kBucketCount_MAX = 16384u;
 Histogram* Histogram::FactoryGet(Sample minimum,
                                  Sample maximum,
                                  size_t bucket_count,
-                                 Flags flags) {
+                                 Flags flags,
+                                 const int* buckets) {
+  DCHECK(buckets);
   Histogram* histogram(NULL);
 
   // Defensive code.
@@ -94,20 +96,12 @@ Histogram* Histogram::FactoryGet(Sample minimum,
     maximum = kSampleType_MAX - 1;
 
   histogram = new Histogram(minimum, maximum, bucket_count);
-  histogram->InitializeBucketRange();
+  histogram->InitializeBucketRangeFromData(buckets);
   histogram->SetFlags(flags);
 
   DCHECK_EQ(HISTOGRAM, histogram->histogram_type());
   DCHECK(histogram->HasConstructorArguments(minimum, maximum, bucket_count));
   return histogram;
-}
-
-Histogram* Histogram::FactoryTimeGet(TimeDelta minimum,
-                                     TimeDelta maximum,
-                                     size_t bucket_count,
-                                     Flags flags) {
-  return FactoryGet(minimum.InMilliseconds(), maximum.InMilliseconds(),
-                    bucket_count, flags);
 }
 
 void Histogram::Add(int value) {
@@ -278,39 +272,10 @@ Histogram::~Histogram() {
   DCHECK(ValidateBucketRanges());
 }
 
-// Calculate what range of values are held in each bucket.
-// We have to be careful that we don't pick a ratio between starting points in
-// consecutive buckets that is sooo small, that the integer bounds are the same
-// (effectively making one bucket get no values).  We need to avoid:
-//   ranges_[i] == ranges_[i + 1]
-// To avoid that, we just do a fine-grained bucket width as far as we need to
-// until we get a ratio that moves us along at least 2 units at a time.  From
-// that bucket onward we do use the exponential growth of buckets.
-void Histogram::InitializeBucketRange() {
-  double log_max = log(static_cast<double>(declared_max()));
-  double log_ratio;
-  double log_next;
-  size_t bucket_index = 1;
-  Sample current = declared_min();
-  SetBucketRange(bucket_index, current);
-  while (bucket_count() > ++bucket_index) {
-    double log_current;
-    log_current = log(static_cast<double>(current));
-    // Calculate the count'th root of the range.
-    log_ratio = (log_max - log_current) / (bucket_count() - bucket_index);
-    // See where the next bucket would start.
-    log_next = log_current + log_ratio;
-    int next;
-    next = static_cast<int>(floor(exp(log_next) + 0.5));
-    if (next > current)
-      current = next;
-    else
-      ++current;  // Just do a narrow bucket, and keep trying.
-    SetBucketRange(bucket_index, current);
-  }
+void Histogram::InitializeBucketRangeFromData(const int* buckets) {
+  ranges_.assign(buckets, buckets + bucket_count());
   ResetRangeChecksum();
-
-  DCHECK_EQ(bucket_count(), bucket_index);
+  DCHECK(ValidateBucketRanges());
 }
 
 bool Histogram::PrintEmptyBucket(size_t index) const {
