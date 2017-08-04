@@ -121,8 +121,8 @@ var HeuristicsRegExp = {
       "iu"
     ),
     "address-level1": new RegExp(
-      // TODO: [Bug 1358960] JS does not support backward matching, and we
-      // should apply this pattern in JS rather than regexp.
+      // JS does not support backward matching, so the following pattern is
+      // applied in FormAutofillHeuristics.getInfo() rather than regexp.
       // "(?<!united )state|county|region|province"
       "state|county|region|province" +
       "|land" + // de-DE

@@ -191,6 +191,40 @@ const TESTCASES = [
       contactType: "",
     },
   },
+  {
+    description: "Exclude United State string",
+    document: `<label>United State
+                 <input id="targetElement" />
+               </label>`,
+    elementId: "targetElement",
+    expectedReturnValue: null,
+  },
+  {
+    description: "\"County\" field with \"United State\" string",
+    document: `<label>United State County
+                 <input id="targetElement" />
+               </label>`,
+    elementId: "targetElement",
+    expectedReturnValue: {
+      fieldName: "address-level1",
+      section: "",
+      addressType: "",
+      contactType: "",
+    },
+  },
+  {
+    description: "\"city\" field with double \"United State\" string",
+    document: `<label>United State united sTATE city
+                 <input id="targetElement" />
+               </label>`,
+    elementId: "targetElement",
+    expectedReturnValue: {
+      fieldName: "address-level2",
+      section: "",
+      addressType: "",
+      contactType: "",
+    },
+  },
 ];
 
 TESTCASES.forEach(testcase => {
