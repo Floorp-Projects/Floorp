@@ -667,6 +667,7 @@ public:
   virtual void ScheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) override;
   virtual void UnscheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) override;
   virtual void ResolveScheduledSVGPresAttrs() override;
+  bool IsSynthesized();
 
 private:
   void AddOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet);

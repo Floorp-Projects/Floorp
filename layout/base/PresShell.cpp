@@ -1602,6 +1602,17 @@ PresShell::GetSelection(RawSelectionType aRawSelectionType,
 }
 
 Selection*
+PresShell::GetDOMSelection(RawSelectionType aRawSelectionType)
+{
+  if (!mSelection) {
+    return nullptr;
+  }
+
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->GetSelection(ToSelectionType(aRawSelectionType));
+}
+
+Selection*
 PresShell::GetCurrentSelection(SelectionType aSelectionType)
 {
   if (!mSelection)

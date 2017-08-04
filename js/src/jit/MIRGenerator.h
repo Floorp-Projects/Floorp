@@ -53,13 +53,16 @@ class MIRGenerator
         return alloc().ensureBallast();
     }
     const JitRuntime* jitRuntime() const {
-        return GetJitContext()->runtime->jitRuntime();
+        return runtime->jitRuntime();
     }
     const CompileInfo& info() const {
         return *info_;
     }
     const OptimizationInfo& optimizationInfo() const {
         return *optimizationInfo_;
+    }
+    bool hasProfilingScripts() const {
+        return runtime && runtime->profilingScripts();
     }
 
     template <typename T>
@@ -91,7 +94,7 @@ class MIRGenerator
 
     MOZ_MUST_USE bool instrumentedProfiling() {
         if (!instrumentedProfilingIsCached_) {
-            instrumentedProfiling_ = GetJitContext()->runtime->geckoProfiler().enabled();
+            instrumentedProfiling_ = runtime->geckoProfiler().enabled();
             instrumentedProfilingIsCached_ = true;
         }
         return instrumentedProfiling_;
@@ -179,6 +182,7 @@ class MIRGenerator
 
   public:
     CompileCompartment* compartment;
+    CompileRuntime* runtime;
 
   protected:
     const CompileInfo* info_;

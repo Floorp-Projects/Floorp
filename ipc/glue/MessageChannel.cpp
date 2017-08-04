@@ -768,7 +768,7 @@ MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
 }
 
 bool
-MessageChannel::Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side aSide)
+MessageChannel::Open(MessageChannel *aTargetChan, nsIEventTarget *aEventTarget, Side aSide)
 {
     // Opens a connection to another thread in the same process.
 
@@ -801,12 +801,12 @@ MessageChannel::Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side
 
     MonitorAutoLock lock(*mMonitor);
     mChannelState = ChannelOpening;
-    aTargetLoop->PostTask(NewNonOwningRunnableMethod<MessageChannel*, Side>(
+    MOZ_ALWAYS_SUCCEEDS(aEventTarget->Dispatch(NewNonOwningRunnableMethod<MessageChannel*, Side>(
       "ipc::MessageChannel::OnOpenAsSlave",
       aTargetChan,
       &MessageChannel::OnOpenAsSlave,
       this,
-      oppSide));
+      oppSide)));
 
     while (ChannelOpening == mChannelState)
         mMonitor->Wait();

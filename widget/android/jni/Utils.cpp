@@ -306,12 +306,22 @@ bool IsFennec()
     return sIsFennec;
 }
 
-int GetAPIVersion() {
+int GetAPIVersion()
+{
     static int32_t apiVersion = 0;
     if (!apiVersion && IsAvailable()) {
         apiVersion = java::sdk::VERSION::SDK_INT();
     }
     return apiVersion;
+}
+
+pid_t GetUIThreadId()
+{
+    static pid_t uiThreadId;
+    if (!uiThreadId) {
+        uiThreadId = pid_t(java::GeckoThread::UiThreadId());
+    }
+    return uiThreadId;
 }
 
 } // jni

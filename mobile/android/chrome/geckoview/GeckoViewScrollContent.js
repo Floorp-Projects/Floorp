@@ -34,9 +34,11 @@ class GeckoViewScrollContent extends GeckoViewContentModule {
 
     switch (aEvent.type) {
       case "scroll":
-        sendAsyncMessage("GeckoView:ScrollChanged",
-                         { scrollX: Math.round(content.scrollX),
-                           scrollY: Math.round(content.scrollY) });
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:ScrollChanged",
+          scrollX: Math.round(content.scrollX),
+          scrollY: Math.round(content.scrollY)
+        });
         break;
     }
   }

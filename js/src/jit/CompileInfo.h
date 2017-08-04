@@ -197,7 +197,7 @@ enum AnalysisMode {
 class CompileInfo
 {
   public:
-    CompileInfo(JSScript* script, JSFunction* fun, jsbytecode* osrPc,
+    CompileInfo(CompileRuntime* runtime, JSScript* script, JSFunction* fun, jsbytecode* osrPc,
                 AnalysisMode analysisMode, bool scriptNeedsArgsObj,
                 InlineScriptTree* inlineScriptTree)
       : script_(script), fun_(fun), osrPc_(osrPc),
@@ -234,7 +234,6 @@ class CompileInfo
         // observable. See isObservableFrameSlot.
         if (script->isDerivedClassConstructor()) {
             MOZ_ASSERT(script->functionHasThisBinding());
-            CompileRuntime* runtime = GetJitContext()->runtime;
             for (BindingIter bi(script); bi; bi++) {
                 if (bi.name() != runtime->names().dotThis)
                     continue;

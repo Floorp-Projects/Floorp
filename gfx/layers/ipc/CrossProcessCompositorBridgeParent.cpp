@@ -218,6 +218,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     // This was observed during Tab move between different windows.
     NS_WARNING("Created child without a matching parent?");
     parent = WebRenderBridgeParent::CreateDestroyed();
+    parent->AddRef(); // IPDL reference
     *aIdNamespace = parent->GetIdNamespace();
     *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     return parent;
@@ -228,8 +229,8 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   RefPtr<AsyncImagePipelineManager> holder = root->AsyncImageManager();
   RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage();
   parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder), Move(animStorage));
-
   parent->AddRef(); // IPDL reference
+
   sIndirectLayerTrees[layersId].mCrossProcessParent = this;
   sIndirectLayerTrees[layersId].mWrBridge = parent;
   *aTextureFactoryIdentifier = parent->GetTextureFactoryIdentifier();

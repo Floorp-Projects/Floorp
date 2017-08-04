@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ContentChild_h
 #define mozilla_dom_ContentChild_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/nsIContentChild.h"
@@ -143,6 +144,8 @@ public:
   bool IsShuttingDown() const;
 
   static void AppendProcessId(nsACString& aName);
+
+  static void UpdateCookieStatus(nsIChannel *aChannel);
 
   mozilla::ipc::IPCResult
   RecvInitContentBridgeChild(Endpoint<PContentBridgeChild>&& aEndpoint) override;
@@ -757,7 +760,7 @@ private:
 
   nsClassHashtable<nsUint64HashKey, AnonymousTemporaryFileCallback> mPendingAnonymousTemporaryFiles;
 
-  bool mShuttingDown;
+  mozilla::Atomic<bool> mShuttingDown;
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };

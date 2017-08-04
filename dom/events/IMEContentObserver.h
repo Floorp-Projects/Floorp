@@ -155,9 +155,9 @@ public:
    * TryToFlushPendingNotifications() should be called when pending events
    * should be flushed.  This tries to run the queued IMENotificationSender.
    * Doesn't do anything in child processes where flushing happens
-   * asynchronously.
+   * asynchronously unless aAllowAsync is false.
    */
-  void TryToFlushPendingNotifications();
+  void TryToFlushPendingNotifications(bool aAllowAsync);
 
   /**
    * MaybeNotifyCompositionEventHandled() posts composition event handled

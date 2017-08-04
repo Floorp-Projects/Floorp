@@ -50,7 +50,10 @@ usb_test(() => {
 
 usb_test(() => {
   return getFakeDevice().then(({ device, fakeDevice }) => {
-    navigator.usb.test.chosenDevice = fakeDevice;
+    navigator.usb.test.onrequestdevice = event => {
+      navigator.usb.test.onrequestdevice = undefined;
+      event.respondWith(fakeDevice);
+    }
     return callWithTrustedClick(() => {
       return navigator.usb.requestDevice({ filters: [] }).then(chosenDevice => {
         assert_equals(chosenDevice, device);
@@ -61,7 +64,10 @@ usb_test(() => {
 
 usb_test(() => {
   return getFakeDevice().then(({ device, fakeDevice }) => {
-    navigator.usb.test.chosenDevice = fakeDevice;
+    navigator.usb.test.onrequestdevice = event => {
+      navigator.usb.test.onrequestdevice = undefined;
+      event.respondWith(fakeDevice);
+    }
     return callWithTrustedClick(() => {
       return navigator.usb.requestDevice({ filters: [] }).then(chosenDevice => {
         assert_equals(chosenDevice, device);
@@ -80,6 +86,17 @@ usb_test(() => {
     { vendorId: 5678, productId: 0xF00F }
   ];
 
+  navigator.usb.test.onrequestdevice = event => {
+    navigator.usb.test.onrequestdevice = undefined;
+
+    assert_equals(event.filters.length, expectedFilters.length);
+    for (var i = 0; i < event.filters.length; ++i) {
+      assert_object_equals(event.filters[i], expectedFilters[i]);
+    }
+
+    event.respondWith(null);
+  }
+
   return callWithTrustedClick(() => {
     return navigator.usb.requestDevice({ filters: expectedFilters })
       .then(device => {
@@ -87,10 +104,6 @@ usb_test(() => {
       })
       .catch(error => {
         assert_equals(error.code, DOMException.NOT_FOUND_ERR);
-        let actualFilters = navigator.usb.test.lastFilters;
-        assert_equals(actualFilters.length, expectedFilters.length);
-        for (var i = 0; i < actualFilters.length; ++i)
-          assert_object_equals(actualFilters[i], expectedFilters[i]);
       });
   });
 }, 'filters are sent correctly');

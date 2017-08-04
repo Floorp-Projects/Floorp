@@ -123,6 +123,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/base',
     '/netwerk/base',
+    '/netwerk/cookie',
 ]
 
 EXTRA_COMPONENTS += [

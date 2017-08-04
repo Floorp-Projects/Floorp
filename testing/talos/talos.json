@@ -48,8 +48,8 @@
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
             ]
         },
-        "quantum-pageload-e10s": {
-            "tests": ["quantum_pageload_google", "quantum_pageload_youtube", "quantum_pageload_amazon", "quantum_pageload_facebook"],
+        "tp6-e10s": {
+            "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
             "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
                 "--mitmproxy",
@@ -57,8 +57,8 @@
                 "--firstNonBlankPaint"
             ]
         },
-        "quantum-pageload-stylo-e10s": {
-            "tests": ["quantum_pageload_google", "quantum_pageload_youtube", "quantum_pageload_amazon", "quantum_pageload_facebook"],
+        "tp6-stylo-e10s": {
+            "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
             "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
                 "--stylo",

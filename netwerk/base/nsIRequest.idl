@@ -131,6 +131,12 @@ interface nsIRequest : nsISupports
      */
     const unsigned long LOAD_HTML_OBJECT_DATA = 1 << 1;
 
+    /**
+     * This flag marks the request as belonging to a document that requires access
+     * to the document.cookies API.
+     */
+    const unsigned long LOAD_DOCUMENT_NEEDS_COOKIE = 1 << 2;
+
     /**************************************************************************
      * The following flags control the flow of data into the cache.
      */
