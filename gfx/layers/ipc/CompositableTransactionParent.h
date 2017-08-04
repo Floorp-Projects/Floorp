@@ -41,7 +41,8 @@ public:
 
   RefPtr<CompositableHost> AddCompositable(
     const CompositableHandle& aHandle,
-    const TextureInfo& aInfo);
+    const TextureInfo& aInfo,
+    bool aUseWebRender);
   RefPtr<CompositableHost> FindCompositable(const CompositableHandle& aHandle);
 
   bool AddReadLocks(ReadLockArray&& aReadLocks);
