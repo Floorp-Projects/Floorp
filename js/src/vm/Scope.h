@@ -73,6 +73,9 @@ enum class ScopeKind : uint8_t
     // ModuleScope
     Module,
 
+    // WasmInstanceScope
+    WasmInstance,
+
     // WasmFunctionScope
     WasmFunction
 };
@@ -949,21 +952,19 @@ class ModuleScope : public Scope
     static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
-// Scope corresponding to the wasm function. A WasmFunctionScope is used by
-// Debugger only, and not for wasm execution.
-//
-class WasmFunctionScope : public Scope
+class WasmInstanceScope : public Scope
 {
     friend class BindingIter;
     friend class Scope;
-    static const ScopeKind classScopeKind_ = ScopeKind::WasmFunction;
+    static const ScopeKind classScopeKind_ = ScopeKind::WasmInstance;
 
   public:
     struct Data
     {
+        uint32_t memoriesStart;
+        uint32_t globalsStart;
         uint32_t length;
         uint32_t nextFrameSlot;
-        uint32_t funcIndex;
 
         // The wasm instance of the scope.
         GCPtr<WasmInstanceObject*> instance;
@@ -973,7 +974,7 @@ class WasmFunctionScope : public Scope
         void trace(JSTracer* trc);
     };
 
-    static WasmFunctionScope* create(JSContext* cx, WasmInstanceObject* instance, uint32_t funcIndex);
+    static WasmInstanceScope* create(JSContext* cx, WasmInstanceObject* instance);
 
     static size_t sizeOfData(uint32_t length) {
         return sizeof(Data) + (length ? length - 1 : 0) * sizeof(BindingName);
@@ -993,6 +994,58 @@ class WasmFunctionScope : public Scope
         return data().instance;
     }
 
+    uint32_t memoriesStart() const {
+        return data().memoriesStart;
+    }
+
+    uint32_t globalsStart() const {
+        return data().globalsStart;
+    }
+
+    uint32_t namesCount() const {
+        return data().length;
+    }
+
+    static Shape* getEmptyEnvironmentShape(JSContext* cx);
+};
+
+// Scope corresponding to the wasm function. A WasmFunctionScope is used by
+// Debugger only, and not for wasm execution.
+//
+class WasmFunctionScope : public Scope
+{
+    friend class BindingIter;
+    friend class Scope;
+    static const ScopeKind classScopeKind_ = ScopeKind::WasmFunction;
+
+  public:
+    struct Data
+    {
+        uint32_t length;
+        uint32_t nextFrameSlot;
+        uint32_t funcIndex;
+
+        BindingName names[1];
+
+        void trace(JSTracer* trc);
+    };
+
+    static WasmFunctionScope* create(JSContext* cx, HandleScope enclosing, uint32_t funcIndex);
+
+    static size_t sizeOfData(uint32_t length) {
+        return sizeof(Data) + (length ? length - 1 : 0) * sizeof(BindingName);
+    }
+
+  private:
+    Data& data() {
+        return *reinterpret_cast<Data*>(data_);
+    }
+
+    const Data& data() const {
+        return *reinterpret_cast<Data*>(data_);
+    }
+
+  public:
     uint32_t funcIndex() const {
         return data().funcIndex;
     }
@@ -1109,6 +1162,7 @@ class BindingIter
     void init(GlobalScope::Data& data);
     void init(EvalScope::Data& data, bool strict);
     void init(ModuleScope::Data& data);
+    void init(WasmInstanceScope::Data& data);
     void init(WasmFunctionScope::Data& data);
 
     bool hasFormalParameterExprs() const {

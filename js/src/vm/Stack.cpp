@@ -159,6 +159,10 @@ AssertScopeMatchesEnvironment(Scope* scope, JSObject* originalEnv)
                 env = &env->as<ModuleEnvironmentObject>().enclosingEnvironment();
                 break;
 
+              case ScopeKind::WasmInstance:
+                env = &env->as<WasmInstanceEnvironmentObject>().enclosingEnvironment();
+                break;
+
               case ScopeKind::WasmFunction:
                 env = &env->as<WasmFunctionCallObject>().enclosingEnvironment();
                 break;

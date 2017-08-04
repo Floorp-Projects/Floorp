@@ -244,3 +244,20 @@ testInitExpr('f64', 13.37, 0.1989, x => +x);
 
     setJitCompilerOption('wasm.test-mode', 0);
 }
+
+// Custom NaN.
+{
+    let dv = new DataView(new ArrayBuffer(8));
+    module = wasmEvalText(`(module
+     (global $g f64 (f64.const -nan:0xe7ffff1591120))
+     (global $h f32 (f32.const -nan:0x651234))
+     (export "nan64" (global $g))(export "nan32" (global $h))
+    )`, {}).exports;
+
+    dv.setFloat64(0, module.nan64, true);
+    assertEq(dv.getUint32(4, true), 0x7ff80000);
+    assertEq(dv.getUint32(0, true), 0x00000000);
+
+    dv.setFloat32(0, module.nan32, true);
+    assertEq(dv.getUint32(0, true), 0x7fc00000);
+}
