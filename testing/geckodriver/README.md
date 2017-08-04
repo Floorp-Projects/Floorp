@@ -74,17 +74,17 @@ geckodriver supports a number of
  </thead>
 
  <tr>
-  <td><code>proxy</code>
-  <td><a href=#proxy-object><code>proxy</code></a>&nbsp;object
-  <td>Sets browser proxy settings.
- </tr>
-
- <tr>
   <td><code>acceptInsecureCerts</code>
   <td>boolean
   <td>Boolean initially set to false,
    indicating the session will not implicitly trust untrusted
    or self-signed TLS certificates on navigation.
+ </tr>
+
+ <tr>
+  <td><code>proxy</code>
+  <td><a href=#proxy-object><code>proxy</code></a>&nbsp;object
+  <td>Sets browser proxy settings.
  </tr>
 </table>
 
