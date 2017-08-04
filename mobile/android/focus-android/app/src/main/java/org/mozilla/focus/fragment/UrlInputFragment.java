@@ -159,6 +159,8 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         if (isOverlay()) {
             view.findViewById(R.id.brand_background).setVisibility(View.GONE);
         } else {
+            view.findViewById(R.id.background).setBackgroundResource(R.drawable.background_home);
+
             dismissView.setVisibility(View.GONE);
             toolbarBackgroundView.setVisibility(View.GONE);
 
