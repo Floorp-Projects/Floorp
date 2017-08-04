@@ -434,6 +434,8 @@ MediaDecoder::Shutdown()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
+  UnpinForSeek();
+
   // Unwatch all watch targets to prevent further notifications.
   mWatchManager.Shutdown();
 
@@ -508,7 +510,6 @@ MediaDecoder::~MediaDecoder()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(IsShutdown());
   MediaMemoryTracker::RemoveMediaDecoder(this);
-  UnpinForSeek();
 }
 
 void
@@ -1578,6 +1579,7 @@ void
 MediaDecoder::UnpinForSeek()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   MediaResource* resource = GetResource();
   if (!resource || !mPinnedForSeek) {
     return;
