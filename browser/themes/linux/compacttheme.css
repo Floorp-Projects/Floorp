@@ -34,14 +34,3 @@
   -moz-image-region: var(--urlbar-dropmarker-region);
 }
 
-/* Fix the bad-looking text-shadow in the sidebar header: */
-.sidebar-header,
-#sidebar-header {
-  text-shadow: none;
-}
-
-.ac-type-icon {
-  /* Left-align the type icon in awesomebar popup results with the icon in the
-     urlbar. */
-  margin-inline-start: 11px;
-}
