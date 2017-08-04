@@ -625,9 +625,9 @@ public:
                        mozilla::dom::HTMLInputElement*  aFocusedRadio,
                        mozilla::dom::HTMLInputElement** aRadioOut) override;
   virtual void AddToRadioGroup(const nsAString& aName,
-                               nsIFormControl* aRadio) override;
+                               mozilla::dom::HTMLInputElement* aRadio) override;
   virtual void RemoveFromRadioGroup(const nsAString& aName,
-                                    nsIFormControl* aRadio) override;
+                                    mozilla::dom::HTMLInputElement* aRadio) override;
   virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const override;
   virtual void RadioRequiredWillChange(const nsAString& aName,
                                        bool aRequiredAdded) override;

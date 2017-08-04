@@ -97,6 +97,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 uint8_t gNotifySubDocInvalidationData;
@@ -2609,7 +2610,7 @@ nsPresContext::NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect)
 
 /* static */ void
 nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
-                                        const nsIntRegion& aRegion)
+                                        const nsIntRegion* aRegion)
 {
   ContainerLayerPresContext *data =
     static_cast<ContainerLayerPresContext*>(
@@ -2618,15 +2619,23 @@ nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
     return;
   }
 
-  nsIntPoint topLeft = aContainer->GetVisibleRegion().ToUnknownRegion().GetBounds().TopLeft();
+  uint64_t transactionId = aContainer->Manager()->GetLastTransactionId();
+  IntRect visibleBounds = aContainer->GetVisibleRegion().GetBounds().ToUnknownRect();
 
-  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+  if (!aRegion) {
+    IntRect rect(IntPoint(0, 0), visibleBounds.Size());
+    data->mPresContext->NotifyInvalidation(transactionId, rect);
+    return;
+  }
+
+  nsIntPoint topLeft = visibleBounds.TopLeft();
+  for (auto iter = aRegion->RectIter(); !iter.Done(); iter.Next()) {
     nsIntRect rect(iter.Get());
     //PresContext coordinate space is relative to the start of our visible
     // region. Is this really true? This feels like the wrong way to get the right
     // answer.
     rect.MoveBy(-topLeft);
-    data->mPresContext->NotifyInvalidation(aContainer->Manager()->GetLastTransactionId(), rect);
+    data->mPresContext->NotifyInvalidation(transactionId, rect);
   }
 }
 

@@ -101,9 +101,6 @@ public:
 
   HTMLEditor();
 
-  virtual HTMLEditor* AsHTMLEditor() override { return this; }
-  virtual const HTMLEditor* AsHTMLEditor() const override { return this; }
-
   bool GetReturnInParagraphCreatesNewParagraph();
   Element* GetSelectionContainer();
 
@@ -123,7 +120,6 @@ public:
                                          nsINode *aNode) override;
   virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) override;
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
-  virtual bool IsEditable(nsINode* aNode) override;
   using EditorBase::IsEditable;
   virtual nsresult RemoveAttributeOrEquivalent(
                      Element* aElement,
@@ -1058,6 +1054,18 @@ private:
                                       const nsAString& aAnonClass,
                                       bool aIsCreatedHidden);
 };
+
+HTMLEditor*
+EditorBase::AsHTMLEditor()
+{
+  return mIsHTMLEditorClass ? static_cast<HTMLEditor*>(this) : nullptr;
+}
+
+const HTMLEditor*
+EditorBase::AsHTMLEditor() const
+{
+  return mIsHTMLEditorClass ? static_cast<const HTMLEditor*>(this) : nullptr;
+}
 
 } // namespace mozilla
 

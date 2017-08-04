@@ -118,7 +118,7 @@ CompositableHost::RemoveMaskEffect()
 }
 
 /* static */ already_AddRefed<CompositableHost>
-CompositableHost::Create(const TextureInfo& aTextureInfo)
+CompositableHost::Create(const TextureInfo& aTextureInfo, bool aUseWebRender)
 {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
@@ -129,21 +129,21 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     result = new TiledContentHost(aTextureInfo);
     break;
   case CompositableType::IMAGE:
-    if (gfxVars::UseWebRender()) {
+    if (aUseWebRender) {
       result = new WebRenderImageHost(aTextureInfo);
     } else {
       result = new ImageHost(aTextureInfo);
     }
     break;
   case CompositableType::CONTENT_SINGLE:
-    if (gfxVars::UseWebRender()) {
+    if (aUseWebRender) {
       result = new WebRenderImageHost(aTextureInfo);
     } else {
       result = new ContentHostSingleBuffered(aTextureInfo);
     }
     break;
   case CompositableType::CONTENT_DOUBLE:
-    MOZ_ASSERT(!gfxVars::UseWebRender());
+    MOZ_ASSERT(!aUseWebRender);
     result = new ContentHostDoubleBuffered(aTextureInfo);
     break;
   default:

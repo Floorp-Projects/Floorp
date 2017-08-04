@@ -144,6 +144,7 @@ EditorBase::EditorBase()
   , mIsInEditAction(false)
   , mHidingCaret(false)
   , mSpellCheckerDictionaryUpdated(true)
+  , mIsHTMLEditorClass(false)
 {
 }
 
@@ -331,8 +332,9 @@ EditorBase::PostCreate()
     IMEState newState;
     rv = GetPreferredIMEState(&newState);
     NS_ENSURE_SUCCESS(rv, NS_OK);
+    // May be null in design mode
     nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
-    IMEStateManager::UpdateIMEState(newState, content, *this);
+    IMEStateManager::UpdateIMEState(newState, content, this);
   }
 
   // FYI: This call might cause destroying this editor.
@@ -530,7 +532,7 @@ EditorBase::SetFlags(uint32_t aFlags)
       // NOTE: When the enabled state isn't going to be modified, this method
       // is going to do nothing.
       nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
-      IMEStateManager::UpdateIMEState(newState, content, *this);
+      IMEStateManager::UpdateIMEState(newState, content, this);
     }
   }
 
@@ -3574,34 +3576,6 @@ EditorBase::IsEditable(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   return IsEditable(content);
-}
-
-bool
-EditorBase::IsEditable(nsINode* aNode)
-{
-  NS_ENSURE_TRUE(aNode, false);
-
-  if (!aNode->IsNodeOfType(nsINode::eCONTENT) || IsMozEditorBogusNode(aNode) ||
-      !IsModifiableNode(aNode)) {
-    return false;
-  }
-
-  switch (aNode->NodeType()) {
-    case nsIDOMNode::ELEMENT_NODE:
-    case nsIDOMNode::TEXT_NODE:
-      return true;
-    default:
-      return false;
-  }
-}
-
-bool
-EditorBase::IsMozEditorBogusNode(nsINode* element)
-{
-  return element && element->IsElement() &&
-         element->AsElement()->AttrValueIs(kNameSpaceID_None,
-             kMOZEditorBogusNodeAttrAtom, kMOZEditorBogusNodeValue,
-             eCaseMatters);
 }
 
 uint32_t

@@ -207,7 +207,6 @@ void WebRenderImageHost::Attach(Layer* aLayer,
                        TextureSourceProvider* aProvider,
                        AttachFlags aFlags)
 {
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
 }
 
 void
