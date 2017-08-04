@@ -148,7 +148,7 @@ this.GeckoDriver = function(appName, server) {
   this.appName = appName;
   this._server = server;
 
-  this.sessionId = null;
+  this.sessionID = null;
   this.wins = new browser.Windows();
   this.browsers = {};
   // points to current browser
@@ -658,13 +658,11 @@ GeckoDriver.prototype.listeningPromise = function() {
 
 /** Create a new session. */
 GeckoDriver.prototype.newSession = function* (cmd, resp) {
-  if (this.sessionId) {
+  if (this.sessionID) {
     throw new SessionNotCreatedError("Maximum number of active sessions");
   }
 
-  this.sessionId = cmd.parameters.sessionId ||
-      cmd.parameters.session_id ||
-      element.generateUUID();
+  this.sessionID = cmd.parameters.sessionId || element.generateUUID();
   this.newSessionCommandId = cmd.id;
 
   try {
@@ -750,7 +748,7 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
   this.dialog = modal.findModalDialogs(this.curBrowser);
 
   return {
-    sessionId: this.sessionId,
+    sessionId: this.sessionID,
     capabilities: this.capabilities,
   };
 };
@@ -2759,7 +2757,7 @@ GeckoDriver.prototype.deleteSession = function(cmd, resp) {
   this.sandboxes.clear();
   cert.uninstallOverride();
 
-  this.sessionId = null;
+  this.sessionID = null;
   this.capabilities = new session.Capabilities();
 };
 
