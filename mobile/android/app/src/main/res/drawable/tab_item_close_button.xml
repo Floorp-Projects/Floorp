@@ -13,6 +13,6 @@
           android:drawable="@drawable/tab_close_active"/>
 
     <!-- normal mode -->
-    <item android:drawable="@drawable/tab_close"/>
+    <item android:drawable="@drawable/tab_close_active"/>
 
 </selector>

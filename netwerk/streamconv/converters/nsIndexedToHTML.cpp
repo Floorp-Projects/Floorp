@@ -494,15 +494,8 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         if (NS_FAILED(rv)) return rv;
     }
 
-    nsXPIDLCString encoding;
-    rv = uri->GetOriginCharset(encoding);
-    if (NS_FAILED(rv)) return rv;
-    if (encoding.IsEmpty()) {
-      encoding.AssignLiteral("UTF-8");
-    }
-
     nsAutoString unEscapeSpec;
-    rv = mTextToSubURI->UnEscapeAndConvert(encoding, titleUri, unEscapeSpec);
+    rv = mTextToSubURI->UnEscapeAndConvert(NS_LITERAL_CSTRING("UTF-8"), titleUri, unEscapeSpec);
     // unescape may fail because
     // 1. file URL may be encoded in platform charset for backward compatibility
     // 2. query part may not be encoded in UTF-8 (see bug 261929)

@@ -21,12 +21,10 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-    function focusElmWhileSubdocIsFocused(aID)
-    {
+    function focusElmWhileSubdocIsFocused(aID) {
       this.DOMNode = getNode(aID);
 
-      this.invoke = function focusElmWhileSubdocIsFocused_invoke()
-      {
+      this.invoke = function focusElmWhileSubdocIsFocused_invoke() {
         this.DOMNode.focus();
       }
 
@@ -38,46 +36,37 @@
         new invokerChecker(EVENT_FOCUS, this.DOMNode.ownerDocument)
       ];
 
-      this.getID = function focusElmWhileSubdocIsFocused_getID()
-      {
+      this.getID = function focusElmWhileSubdocIsFocused_getID() {
         return "Focus element while subdocument is focused " + prettyName(aID);
       }
     }
 
-    function imageMapChecker(aID)
-    {
+    function imageMapChecker(aID) {
       var node = getNode(aID);
       this.type = EVENT_FOCUS;
-      this.match = function imageMapChecker_match(aEvent)
-      {
+      this.match = function imageMapChecker_match(aEvent) {
         return aEvent.DOMNode == node;
       }
     }
 
-    function topMenuChecker()
-    {
+    function topMenuChecker() {
       this.type = EVENT_FOCUS;
-      this.match = function topMenuChecker_match(aEvent)
-      {
+      this.match = function topMenuChecker_match(aEvent) {
         return aEvent.accessible.role == ROLE_PARENT_MENUITEM;
       }
     }
 
-    function contextMenuChecker()
-    {
+    function contextMenuChecker() {
       this.type = EVENT_MENUPOPUP_START;
-      this.match = function contextMenuChecker_match(aEvent)
-      {
+      this.match = function contextMenuChecker_match(aEvent) {
         return aEvent.accessible.role == ROLE_MENUPOPUP;
       }
     }
 
-    function focusContextMenuItemChecker()
-    {
+    function focusContextMenuItemChecker() {
       this.__proto__ = new focusChecker();
 
-      this.match = function focusContextMenuItemChecker_match(aEvent)
-      {
+      this.match = function focusContextMenuItemChecker_match(aEvent) {
         return aEvent.accessible.role == ROLE_MENUITEM;
       }
     }
@@ -86,17 +75,16 @@
      * Do tests.
      */
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
-    function doTests()
-    {
+    function doTests() {
       var frameDoc = document.getElementById("iframe").contentDocument;
 
-      var editableDoc = document.getElementById('editabledoc').contentDocument;
-      editableDoc.designMode = 'on';
+      var editableDoc = document.getElementById("editabledoc").contentDocument;
+      editableDoc.designMode = "on";
 
       gQueue = new eventQueue();
 

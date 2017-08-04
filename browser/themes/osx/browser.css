@@ -1543,20 +1543,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tab-close-button {
-  -moz-appearance: none;
   border: none !important;
   background: none;
   cursor: default;
-}
-
-#TabsToolbar[brighttext] .tab-close-button.close-icon:not([selected=true]):not(:hover) {
-  -moz-image-region: rect(0, 64px, 16px, 48px);
-}
-
-@media (min-resolution: 2dppx) {
-  #TabsToolbar[brighttext] .tab-close-button.close-icon:not([selected=true]):not(:hover) {
-    -moz-image-region: rect(0, 128px, 32px, 96px);
-  }
 }
 
 /* Bookmarks toolbar */

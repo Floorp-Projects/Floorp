@@ -26,8 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
 
   <script type="application/javascript">
     function testThis(aID, aAcc, aRole, aAnchors, aName, aValid, aStartIndex,
-                      aEndIndex)
-    {
+                      aEndIndex) {
       testRole(aAcc, aRole);
       is(aAcc.anchorCount, aAnchors, "Wrong number of anchors for ID "
                                       + aID + "!");
@@ -41,8 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                    + aID + "!");
     }
 
-    function testAction(aId, aAcc, aActionName)
-    {
+    function testAction(aId, aAcc, aActionName) {
       var actionCount = aActionName ? 1 : 0;
       is(aAcc.actionCount, actionCount,
          "Wrong actions number for ID " + aId);
@@ -57,16 +55,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       }
     }
 
-    //gA11yEventDumpToConsole = true; // debug stuff
-    function doPreTest()
-    {
+    // gA11yEventDumpToConsole = true; // debug stuff
+    function doPreTest() {
       waitForImageMap("imgmap", doTest);
     }
 
     var gQueue = null;
-    function doTest()
-    {
-      //////////////////////////////////////////////////////////////////////////
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
       // normal hyperlink
       var normalHyperlinkAcc = getAccessible("NormalHyperlink",
                                              [nsIAccessibleHyperLink]);
@@ -76,7 +72,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
          "URI wrong for normalHyperlinkElement!");
       testStates(normalHyperlinkAcc, STATE_LINKED, 0);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA hyperlink
       var ariaHyperlinkAcc = getAccessible("AriaHyperlink",
                                            [nsIAccessibleHyperLink]);
@@ -85,14 +81,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates(ariaHyperlinkAcc, STATE_LINKED, 0);
       testAction("AriaHyperlink", ariaHyperlinkAcc, "click");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA hyperlink with status invalid
       var invalidAriaHyperlinkAcc = getAccessible("InvalidAriaHyperlink",
                                                   [nsIAccessibleHyperLink]);
       is(invalidAriaHyperlinkAcc.valid, false, "Should not be valid!");
       testStates(invalidAriaHyperlinkAcc, STATE_LINKED, 0);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // image map and its link children
 
       var imageMapHyperlinkAcc = getAccessible("imgmap",
@@ -119,7 +115,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
       testStates(area2, (STATE_LINKED));
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // empty hyperlink
       var EmptyHLAcc = getAccessible("emptyLink",
                                      [nsIAccessibleHyperLink]);
@@ -127,7 +123,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates(EmptyHLAcc, (STATE_FOCUSABLE | STATE_LINKED), 0);
       testAction("emptyLink", EmptyHLAcc, "jump");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // normal hyperlink with embedded span
       var hyperlinkWithSpanAcc = getAccessible("LinkWithSpan",
                                                [nsIAccessibleHyperLink]);
@@ -138,7 +134,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates(hyperlinkWithSpanAcc, STATE_LINKED, 0);
       testAction("LinkWithSpan", hyperlinkWithSpanAcc, "jump");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Named anchor, should never have state_linked
       var namedAnchorAcc = getAccessible("namedAnchor",
                                          [nsIAccessibleHyperLink]);
@@ -148,7 +144,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                  0, (STATE_FOCUSABLE | STATE_LINKED));
       testAction("namedAnchor", namedAnchorAcc, "");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // No link (hasn't any attribute), should never have state_linked
       var noLinkAcc = getAccessible("noLink",
                                     [nsIAccessibleHyperLink]);
@@ -157,7 +153,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates(noLinkAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED));
       testAction("noLink", noLinkAcc, "");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Link with registered 'click' event, should have state_linked
       var linkWithClickAcc = getAccessible("linkWithClick",
                                            [nsIAccessibleHyperLink]);
@@ -166,11 +162,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates(linkWithClickAcc, STATE_LINKED, 0);
       testAction("linkWithClick", linkWithClickAcc, "click");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Maps to group links (bug 431615).
       // var linksMapAcc = getAccessible("linksmap");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Link with title attribute, no name from the subtree (bug 438325).
       var id = "linkWithTitleNoNameFromSubtree";
       var linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
@@ -178,7 +174,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates(linkAcc, STATE_LINKED, 0);
       testAction(id, linkAcc, "jump");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Link with title attribute, name from the subtree - onscreen name
       // (bug 438325).
       id = "linkWithTitleNameFromSubtree";
@@ -188,7 +184,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates(linkAcc, STATE_LINKED, 0);
       testAction(id, linkAcc, "jump");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Link with title attribute, name from the nested html:img (bug 438325).
       id = "linkWithTitleNameFromImg";
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
@@ -197,13 +193,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates(linkAcc, STATE_LINKED, 0);
       testAction(id, linkAcc, "jump");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Text accessible shouldn't implement nsIAccessibleHyperLink
       var res = isAccessible(getNode("namedAnchor").firstChild,
                              [nsIAccessibleHyperLink]);
       ok(!res, "Text accessible shouldn't implement nsIAccessibleHyperLink");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Test focus
       gQueue = new eventQueue();
 

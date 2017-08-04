@@ -5,8 +5,7 @@
     const STATE_BUSY = Components.interfaces.nsIAccessibleStates.STATE_BUSY;
 
     var gService = null;
-    function waitForDocLoad()
-    {
+    function waitForDocLoad() {
       if (!gService) {
         gService = Components.classes["@mozilla.org/accessibilityService;1"].
          getService(Components.interfaces.nsIAccessibilityService);
@@ -24,11 +23,10 @@
       hideIFrame();
     }
 
-    function hideIFrame()
-    {
+    function hideIFrame() {
       var iframe = document.getElementById("iframe");
       gService.getAccessibleFor(iframe.contentDocument);
-      iframe.style.display = 'none';
+      iframe.style.display = "none";
     }
   </script>
 </head>

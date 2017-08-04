@@ -24,8 +24,7 @@
     const kViaDisplayStyle = 0;
     const kViaVisibilityStyle = 1;
 
-    function focusMenu(aMenuBarID, aMenuID, aActiveMenuBarID)
-    {
+    function focusMenu(aMenuBarID, aMenuID, aActiveMenuBarID) {
       this.eventSeq = [];
 
       if (aActiveMenuBarID) {
@@ -36,19 +35,16 @@
       this.eventSeq.push(new invokerChecker(EVENT_MENU_START, getNode(aMenuBarID)));
       this.eventSeq.push(new invokerChecker(EVENT_FOCUS, getNode(aMenuID)));
 
-      this.invoke = function focusMenu_invoke()
-      {
+      this.invoke = function focusMenu_invoke() {
         getNode(aMenuID).focus();
       }
 
-      this.getID = function focusMenu_getID()
-      {
+      this.getID = function focusMenu_getID() {
         return "focus menu '" + aMenuID + "'";
       }
     }
 
-    function showMenu(aMenuID, aParentMenuID, aHow)
-    {
+    function showMenu(aMenuID, aParentMenuID, aHow) {
       this.menuNode = getNode(aMenuID);
 
       // Because of aria-owns processing we may have menupopup start fired before
@@ -59,24 +55,21 @@
         new invokerChecker(EVENT_MENUPOPUP_START, this.menuNode)
       ];
 
-      this.invoke = function showMenu_invoke()
-      {
+      this.invoke = function showMenu_invoke() {
         if (aHow == kViaDisplayStyle)
           this.menuNode.style.display = "block";
         else
           this.menuNode.style.visibility = "visible";
       };
 
-      this.getID = function showMenu_getID()
-      {
+      this.getID = function showMenu_getID() {
         return "Show ARIA menu '" + aMenuID + "' by " +
           (aHow == kViaDisplayStyle ? "display" : "visibility") +
           " style tricks";
       };
     }
 
-    function closeMenu(aMenuID, aParentMenuID, aHow)
-    {
+    function closeMenu(aMenuID, aParentMenuID, aHow) {
       this.menuNode = getNode(aMenuID);
       this.menu = null;
 
@@ -86,8 +79,7 @@
         new invokerChecker(EVENT_REORDER, getNode(aParentMenuID))
       ];
 
-      this.invoke = function closeMenu_invoke()
-      {
+      this.invoke = function closeMenu_invoke() {
         // Store menu accessible reference while menu is still open.
         this.menu = getAccessible(this.menuNode);
 
@@ -98,21 +90,18 @@
           this.menuNode.style.visibility = "hidden";
       }
 
-      this.getID = function closeMenu_getID()
-      {
+      this.getID = function closeMenu_getID() {
         return "Close ARIA menu " + aMenuID + " by " +
           (aHow == kViaDisplayStyle ? "display" : "visibility") +
           " style tricks";
       }
 
-      function getMenu(aThisObj)
-      {
+      function getMenu(aThisObj) {
         return aThisObj.menu;
       }
     }
 
-    function focusInsideMenu(aMenuID, aMenuBarID)
-    {
+    function focusInsideMenu(aMenuID, aMenuBarID) {
       this.eventSeq = [
         new invokerChecker(EVENT_FOCUS, getNode(aMenuID))
       ];
@@ -121,19 +110,16 @@
         new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID))
       ];
 
-      this.invoke = function focusInsideMenu_invoke()
-      {
+      this.invoke = function focusInsideMenu_invoke() {
         getNode(aMenuID).focus();
       }
 
-      this.getID = function focusInsideMenu_getID()
-      {
+      this.getID = function focusInsideMenu_getID() {
         return "focus menu '" + aMenuID + "'";
       }
     }
 
-    function blurMenu(aMenuBarID)
-    {
+    function blurMenu(aMenuBarID) {
       var eventSeq = [
         new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID)),
         new invokerChecker(EVENT_FOCUS, getNode("outsidemenu"))
@@ -141,21 +127,19 @@
 
       this.__proto__ = new synthClick("outsidemenu", eventSeq);
 
-      this.getID = function blurMenu_getID()
-      {
+      this.getID = function blurMenu_getID() {
         return "blur menu";
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
 
-    //gA11yEventDumpToConsole = true; // debuging
-    //enableLogging("tree,events,verbose");
+    // gA11yEventDumpToConsole = true; // debuging
+    // enableLogging("tree,events,verbose");
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new focusMenu("menubar2", "menu-help"));

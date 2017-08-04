@@ -23,82 +23,82 @@
   <script type="application/javascript">
     function doTest() {
       var doc = currentTabDocument();
-      var iframe = doc.createElement('iframe');
-      iframe.id = 'iframe';
+      var iframe = doc.createElement("iframe");
+      iframe.id = "iframe";
       iframe.mozbrowser = true;
-      iframe.addEventListener('mozbrowserloadend', function () {
+      iframe.addEventListener("mozbrowserloadend", function() {
       var contentTest = new AccessFuContentTest(
         [
           // Simple traversal forward
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(
-            ['Traversal Rule test document', 'Phone status bar'],
-            { focused: 'body' })],
+            ["Traversal Rule test document", "Phone status bar"],
+            { focused: "body" })],
           [ContentMessages.simpleMovePrevious, new ExpectedNoMove()],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext, new ExpectedCursorChange(
-            ['such app', 'wow', {'string': 'headingLevel', 'args': [1]}],
-            { focused: 'iframe' })],
+            ["such app", "wow", {"string": "headingLevel", "args": [1]}],
+            { focused: "iframe" })],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['many option', {'string': 'stateNotChecked'},
-            {'string': 'checkbutton'}, {'string': 'listStart'},
-            {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}])],
+           new ExpectedCursorChange(["many option", {"string": "stateNotChecked"},
+            {"string": "checkbutton"}, {"string": "listStart"},
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
 
           // check checkbox
           [ContentMessages.activateCurrent(),
            new ExpectedClickAction({ no_android: true }),
            new ExpectedCheckAction(true)],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['much range', {'string': 'label'}])],
+           new ExpectedCursorChange(["much range", {"string": "label"}])],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['much range', '5', {'string': 'slider'}])],
-          [ContentMessages.moveOrAdjustUp(), new ExpectedValueChange('6')],
+           new ExpectedCursorChange(["much range", "5", {"string": "slider"}])],
+          [ContentMessages.moveOrAdjustUp(), new ExpectedValueChange("6")],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(["apple", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Light', {"string": "stateOff"}, {'string': 'switch'}])],
+           new ExpectedCursorChange(["Light", {"string": "stateOff"}, {"string": "switch"}])],
           // switch on
           [ContentMessages.activateCurrent(),
            new ExpectedClickAction({ no_android: true }),
            new ExpectedSwitchAction(true)],
            [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['slider', '0', {'string': 'slider'}])],
+           new ExpectedCursorChange(["slider", "0", {"string": "slider"}])],
 
           // Simple traversal backward
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['Light', {"string": "stateOn"}, {'string': 'switch'}])],
+           new ExpectedCursorChange(["Light", {"string": "stateOn"}, {"string": "switch"}])],
           // switch off
           [ContentMessages.activateCurrent(),
            new ExpectedClickAction({ no_android: true }),
            new ExpectedSwitchAction(false)],
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(["apple", {"string": "pushbutton"}])],
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['such app', 'much range', '6', {'string': 'slider'}])],
-          [ContentMessages.moveOrAdjustDown(), new ExpectedValueChange('5')],
-          [ContentMessages.androidScrollForward(), new ExpectedValueChange('6')],
-          [ContentMessages.androidScrollBackward(), new ExpectedValueChange('5')],
+           new ExpectedCursorChange(["such app", "much range", "6", {"string": "slider"}])],
+          [ContentMessages.moveOrAdjustDown(), new ExpectedValueChange("5")],
+          [ContentMessages.androidScrollForward(), new ExpectedValueChange("6")],
+          [ContentMessages.androidScrollBackward(), new ExpectedValueChange("5")],
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['much range', {'string': 'label'}])],
+           new ExpectedCursorChange(["much range", {"string": "label"}])],
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['many option', {'string': 'stateChecked'},
-            {'string': 'checkbutton'}, {'string': 'listStart'},
-            {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}])],
+           new ExpectedCursorChange(["many option", {"string": "stateChecked"},
+            {"string": "checkbutton"}, {"string": "listStart"},
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
           // uncheck checkbox
           [ContentMessages.activateCurrent(),
            new ExpectedClickAction({ no_android: true }),
            new ExpectedCheckAction(false)],
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['wow', {'string': 'headingLevel', 'args': [1]}])],
+           new ExpectedCursorChange(["wow", {"string": "headingLevel", "args": [1]}])],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['Phone status bar'])],
+           new ExpectedCursorChange(["Phone status bar"])],
 
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
@@ -106,99 +106,99 @@
           // fails. Bug 972035.
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(
-            ['such app', 'wow', {'string': 'headingLevel', 'args': [1]}])],
+            ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
           // Move from an inner frame to the last element in the parent doc
           [ContentMessages.simpleMoveLast,
             new ExpectedCursorChange(
-              ['slider', '0', {'string': 'slider'}], { b2g_todo: true })],
+              ["slider", "0", {"string": "slider"}], { b2g_todo: true })],
 
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
-          [ContentMessages.moveOrAdjustDown('FormElement'),
-           new ExpectedCursorChange(['Back', {"string": "pushbutton"}])],
-          [ContentMessages.moveOrAdjustDown('FormElement'),
-           new ExpectedCursorChange(['such app', 'many option', {'string': 'stateNotChecked'},
-            {'string': 'checkbutton'}, {'string': 'listStart'},
-            {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}])],
-          [ContentMessages.moveOrAdjustDown('FormElement'),
-           new ExpectedCursorChange(['much range', '5', {'string': 'slider'}])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
+          [ContentMessages.moveOrAdjustDown("FormElement"),
+           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
+          [ContentMessages.moveOrAdjustDown("FormElement"),
+           new ExpectedCursorChange(["such app", "many option", {"string": "stateNotChecked"},
+            {"string": "checkbutton"}, {"string": "listStart"},
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
+          [ContentMessages.moveOrAdjustDown("FormElement"),
+           new ExpectedCursorChange(["much range", "5", {"string": "slider"}])],
           // Calling AdjustOrMove should adjust the range.
-          [ContentMessages.moveOrAdjustDown('FormElement'),
-           new ExpectedValueChange('4')],
-          [ContentMessages.moveOrAdjustUp('FormElement'),
-           new ExpectedValueChange('5')],
+          [ContentMessages.moveOrAdjustDown("FormElement"),
+           new ExpectedValueChange("4")],
+          [ContentMessages.moveOrAdjustUp("FormElement"),
+           new ExpectedValueChange("5")],
           [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(['much range', {'string': 'label'}])],
-          [ContentMessages.moveOrAdjustUp('FormElement'),
-           new ExpectedCursorChange(['many option', {'string': 'stateNotChecked'},
-            {'string': 'checkbutton'}, {'string': 'listStart'},
-            {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}])],
-          [ContentMessages.moveOrAdjustUp('FormElement'),
-           new ExpectedCursorChange(['Back', {"string": "pushbutton"}])],
+           new ExpectedCursorChange(["much range", {"string": "label"}])],
+          [ContentMessages.moveOrAdjustUp("FormElement"),
+           new ExpectedCursorChange(["many option", {"string": "stateNotChecked"},
+            {"string": "checkbutton"}, {"string": "listStart"},
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
+          [ContentMessages.moveOrAdjustUp("FormElement"),
+           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
 
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // Moving to the absolute first item from an embedded document
           // fails. Bug 972035.
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['such app', 'wow', {'string': 'headingLevel', 'args': [1]}])],
+           new ExpectedCursorChange(["such app", "wow", {"string": "headingLevel", "args": [1]}])],
           [ContentMessages.simpleMoveNext, new ExpectedCursorChange(
-            ['many option', {'string': 'stateNotChecked'},
-             {'string': 'checkbutton'}, {'string': 'listStart'},
-             {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}])],
+            ["many option", {"string": "stateNotChecked"},
+             {"string": "checkbutton"}, {"string": "listStart"},
+             {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
           [ContentMessages.simpleMoveFirst,
-            new ExpectedCursorChange(['Phone status bar'], { b2g_todo: true })],
+            new ExpectedCursorChange(["Phone status bar"], { b2g_todo: true })],
 
           // Reset cursors
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // Current virtual cursor's position's name changes
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
-          [ContentMessages.focusSelector('button#fruit', false),
-           new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
-          [doc.defaultView.renameFruit, new ExpectedNameChange('banana')],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
+          [ContentMessages.focusSelector("button#fruit", false),
+           new ExpectedCursorChange(["apple", {"string": "pushbutton"}])],
+          [doc.defaultView.renameFruit, new ExpectedNameChange("banana")],
 
           // Name and value changes inside a live-region (no cursor present)
           [doc.defaultView.renameSlider,
-            new ExpectedNameChange('mover')],
+            new ExpectedNameChange("mover")],
           [doc.defaultView.changeSliderValue,
-            new ExpectedValueChange('medium')],
+            new ExpectedValueChange("medium")],
 
           // Blur button and reset cursor
-          [ContentMessages.focusSelector('button#fruit', true), null],
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.focusSelector("button#fruit", true), null],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // Move cursor with focus in outside document
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
-          [ContentMessages.focusSelector('button#home', false),
-           new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
+          [ContentMessages.focusSelector("button#home", false),
+           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
 
           // Blur button and reset cursor
-          [ContentMessages.focusSelector('button#home', true), null],
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.focusSelector("button#home", true), null],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // Set focus on element outside of embedded frame while
           // cursor is in frame
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['such app', 'wow', {'string': 'headingLevel', 'args': [1]}])],
-          [ContentMessages.focusSelector('button#home', false),
-           new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(["such app", "wow", {"string": "headingLevel", "args": [1]}])],
+          [ContentMessages.focusSelector("button#home", false),
+           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
 
           // Blur button and reset cursor
-          [ContentMessages.focusSelector('button#home', true), null],
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.focusSelector("button#home", true), null],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // XXX: Set focus on iframe itself.
           // XXX: Set focus on element in iframe when cursor is outside of it.
@@ -206,7 +206,7 @@
 
           // aria-hidden element that the virtual cursor is positioned on
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [doc.defaultView.ariaHideBack,
@@ -218,115 +218,116 @@
           [doc.defaultView.ariaShowBack],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // aria-hidden on the iframe that has the vc.
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['such app', 'wow', {'string': 'headingLevel', 'args': [1]}])],
+           new ExpectedCursorChange(["such app", "wow", {"string": "headingLevel", "args": [1]}])],
           [doc.defaultView.ariaHideIframe,
-           new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
           [doc.defaultView.ariaShowIframe],
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // aria-hidden element and auto Move
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
           [doc.defaultView.ariaHideBack],
-          [ContentMessages.focusSelector('button#back', false),
+          [ContentMessages.focusSelector("button#back", false),
             // Must not speak Back button as it is aria-hidden
            new ExpectedCursorChange(
              ["such app", "wow", {"string": "headingLevel","args": [1]}])],
           [doc.defaultView.ariaShowBack],
-          [ContentMessages.focusSelector('button#back', true), null],
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.focusSelector("button#back", true), null],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // Open dialog in outer doc, while cursor is also in outer doc
           [ContentMessages.simpleMoveLast,
-           new ExpectedCursorChange(['Traversal Rule test document', 'mover',
-             'medium', {'string': 'slider'}])],
+           new ExpectedCursorChange(["Traversal Rule test document", "mover",
+             "medium", {"string": "slider"}])],
           [doc.defaultView.showAlert,
-            new ExpectedCursorChange(['This is an alert!',
-              {'string': 'headingLevel', 'args': [1]},
-              {'string': 'dialog'}])],
+            new ExpectedCursorChange(["This is an alert!",
+              {"string": "headingLevel", "args": [1]},
+              {"string": "dialog"}])],
 
           [doc.defaultView.hideAlert,
-           new ExpectedCursorChange(['Traversal Rule test document', 'mover',
-             'medium', {'string': 'slider'}])],
+           new ExpectedCursorChange(["Traversal Rule test document", "mover",
+             "medium", {"string": "slider"}])],
 
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // Open dialog in outer doc, while cursor is in inner frame
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(
-            ['such app', 'wow', {'string': 'headingLevel', 'args': [1]}])],
-          [doc.defaultView.showAlert, new ExpectedCursorChange(['This is an alert!',
-                    {'string': 'headingLevel', 'args': [1]},
-                    {'string': 'dialog'}])],
+            ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
+          [doc.defaultView.showAlert, new ExpectedCursorChange(["This is an alert!",
+                    {"string": "headingLevel", "args": [1]},
+                    {"string": "dialog"}])],
 
           [ContentMessages.simpleMoveNext,
-            new ExpectedCursorChange(['Do you agree?'])],
+            new ExpectedCursorChange(["Do you agree?"])],
           [ContentMessages.simpleMoveNext,
-            new ExpectedCursorChange(['Yes', {'string': 'pushbutton'}])],
+            new ExpectedCursorChange(["Yes", {"string": "pushbutton"}])],
           [ContentMessages.activateCurrent(),
            new ExpectedClickAction(),
            new ExpectedCursorChange(
-            ['such app', 'wow', {'string': 'headingLevel', 'args': [1]}])],
+            ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
 
-          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
           // Open dialog, then focus on something when closing
           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(['Traversal Rule test document', 'Phone status bar'])],
+           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
           [doc.defaultView.showAlert,
-           new ExpectedCursorChange(['This is an alert!',
-            {'string': 'headingLevel', 'args': [1]}, {'string': 'dialog'}])],
+           new ExpectedCursorChange(["This is an alert!",
+            {"string": "headingLevel", "args": [1]}, {"string": "dialog"}])],
 
           [function hideAlertAndFocusHomeButton() {
             doc.defaultView.hideAlert();
-            doc.querySelector('button#home').focus();
-          }, new ExpectedCursorChange(['Traversal Rule test document',
-            'Home', {'string': 'pushbutton'}])],
+            doc.querySelector("button#home").focus();
+          }, new ExpectedCursorChange(["Traversal Rule test document",
+            "Home", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext,
-            new ExpectedCursorChange(['banana', {'string': 'pushbutton'}])]
+            new ExpectedCursorChange(["banana", {"string": "pushbutton"}])]
           [ContentMessages.simpleMoveNext, new ExpectedNoMove()]
         ]);
 
         addA11yLoadEvent(function() {
-          contentTest.start(function () {
+          contentTest.start(function() {
             closeBrowserWindow();
             SimpleTest.finish();
           });
         }, doc.defaultView)
       });
-      iframe.src = 'data:text/html;charset=utf-8,' + doc.defaultView.frameContents;
-      doc.getElementById('appframe').appendChild(iframe);
+      iframe.src = "data:text/html;charset=utf-8," + doc.defaultView.frameContents;
+      doc.getElementById("appframe").appendChild(iframe);
     }
 
     SimpleTest.waitForExplicitFinish();
     addLoadEvent(
-      function () {
+      function() {
         openBrowserWindow(
-          function () {
+          function() {
             SpecialPowers.pushPrefEnv({
-              'set': [
+              "set": [
                 // TODO: remove this as part of bug 820712
-                ['network.disable.ipc.security', true],
+                ["network.disable.ipc.security", true],
 
 
-                ['dom.ipc.browser_frames.oop_by_default', true],
-                ['dom.mozBrowserFramesEnabled', true],
-                ['browser.pagethumbnails.capturing_disabled', true]
+                ["dom.ipc.browser_frames.oop_by_default", true],
+                ["dom.mozBrowserFramesEnabled", true],
+                ["browser.pagethumbnails.capturing_disabled", true]
               ]
-            }, doTest) },
-          getRootDirectory(window.location.href) + 'doc_content_integration.html');
+            }, doTest)
+          },
+          getRootDirectory(window.location.href) + "doc_content_integration.html");
         });
   </script>
 </head>

@@ -18,9 +18,8 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-  function doTest()
-  {
-    ////////////////////////////////////////////////////////////////////////////
+  function doTest() {
+    // //////////////////////////////////////////////////////////////////////////
     // 'editable' and 'multiline' states.
     testStates("input", 0, EXT_STATE_EDITABLE, 0, EXT_STATE_MULTI_LINE);
     testStates("textarea", 0, EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE);
@@ -30,7 +29,7 @@
     testStates("textarea_readonly", 0, EXT_STATE_EDITABLE);
     testStates("textarea_disabled", 0, EXT_STATE_EDITABLE);
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // 'required', 'readonly' and 'unavailable' states.
     var maybe_required = ["input","search","radio","checkbox","textarea"];
     var never_required = ["submit","button","reset","image"];
@@ -61,19 +60,19 @@
       testStates(never_required[i], 0, 0, STATE_REQUIRED | EXT_STATE_EDITABLE);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // inherited 'unavailable' state
     testStates("f", STATE_UNAVAILABLE);
     testStates("f_input", STATE_UNAVAILABLE);
     testStates("f_input_disabled", STATE_UNAVAILABLE);
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // inherited from file control
     var fileBrowseButton = getAccessible("file").firstChild;
     testStates(fileBrowseButton, STATE_UNAVAILABLE | STATE_REQUIRED);
     // No states on the label.
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // 'invalid' state
     var invalid = ["pattern","email","url"];
     for (i in invalid) {
@@ -81,18 +80,18 @@
       testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // not 'invalid' state
     // (per spec, min/maxlength are always valid until interactively edited)
     var validInput = document.createElement("input");
-    validInput.maxLength = '0';
-    validInput.value = 'a';
+    validInput.maxLength = "0";
+    validInput.value = "a";
     ok(validInput.validity.valid,
        "input should be valid despite maxlength (no interactive edits)");
 
     var validInput2 = document.createElement("input");
-    validInput2.minLength = '1';
-    validInput2.value = '';
+    validInput2.minLength = "1";
+    validInput2.value = "";
     ok(validInput2.validity.valid,
        "input should be valid despite minlength (no interactive edits)");
 
@@ -102,7 +101,7 @@
       testStates(valid[i] + "2", 0, 0, STATE_INVALID);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // 'invalid' state
     // (per spec, min/maxlength validity is affected by interactive edits)
     var mininp = document.getElementById("minlength");
@@ -115,7 +114,7 @@
     // inputs currently cannot be made longer than maxlength interactively,
     // so we're not testing that case.
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // autocomplete states
     testStates("autocomplete-default", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-off", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
@@ -126,7 +125,7 @@
     testStates("autocomplete-email", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-search", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // haspopup
     testStates("autocomplete-list", STATE_HASPOPUP);
 

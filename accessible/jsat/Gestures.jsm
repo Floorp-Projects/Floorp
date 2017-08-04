@@ -4,7 +4,7 @@
 
 /* exported GestureSettings, GestureTracker */
 
-/******************************************************************************
+/** ****************************************************************************
   All gestures have the following pathways when being resolved(v)/rejected(x):
                Tap -> DoubleTap        (x)
                    -> Dwell            (x)
@@ -34,24 +34,24 @@
            Explore -> ExploreEnd       (v)
 ******************************************************************************/
 
-'use strict';
+"use strict";
 
 const Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = ['GestureSettings', 'GestureTracker']; // jshint ignore:line
+this.EXPORTED_SYMBOLS = ["GestureSettings", "GestureTracker"]; // jshint ignore:line
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, 'Utils', // jshint ignore:line
-  'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Logger', // jshint ignore:line
-  'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'setTimeout', // jshint ignore:line
-  'resource://gre/modules/Timer.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'clearTimeout', // jshint ignore:line
-  'resource://gre/modules/Timer.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'PromiseUtils', // jshint ignore:line
-  'resource://gre/modules/PromiseUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, "Utils", // jshint ignore:line
+  "resource://gre/modules/accessibility/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Logger", // jshint ignore:line
+  "resource://gre/modules/accessibility/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout", // jshint ignore:line
+  "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout", // jshint ignore:line
+  "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils", // jshint ignore:line
+  "resource://gre/modules/PromiseUtils.jsm");
 
 // Default maximum duration of swipe
 const SWIPE_MAX_DURATION = 200;
@@ -75,7 +75,7 @@ const EDGE = 0.1;
 const TIMEOUT_MULTIPLIER = 1;
 // A single pointer down/up sequence periodically precedes the tripple swipe
 // gesture on Android. This delay acounts for that.
-const IS_ANDROID = Utils.MozBuildApp === 'mobile/android' &&
+const IS_ANDROID = Utils.MozBuildApp === "mobile/android" &&
   Utils.AndroidSdkVersion >= 14;
 
 /**
@@ -202,7 +202,7 @@ this.GestureTracker = { // jshint ignore:line
    */
   _init: function GestureTracker__init(aDetail, aTimeStamp, aGesture) {
     // Only create a new gesture on |pointerdown| event.
-    if (aDetail.type !== 'pointerdown') {
+    if (aDetail.type !== "pointerdown") {
       return;
     }
     let GestureConstructor = aGesture || (IS_ANDROID ? DoubleTap : Tap);
@@ -218,9 +218,9 @@ this.GestureTracker = { // jshint ignore:line
    */
   handle: function GestureTracker_handle(aDetail, aTimeStamp) {
     Logger.gesture(() => {
-      return ['Pointer event', Utils.dpi, 'at:', aTimeStamp, JSON.stringify(aDetail)];
+      return ["Pointer event", Utils.dpi, "at:", aTimeStamp, JSON.stringify(aDetail)];
     });
-    this[this.current ? '_update' : '_init'](aDetail, aTimeStamp);
+    this[this.current ? "_update" : "_init"](aDetail, aTimeStamp);
   },
 
   /**
@@ -279,7 +279,7 @@ this.GestureTracker = { // jshint ignore:line
  * 'startY'.
  * @return {Object} a mozAccessFuGesture detail structure.
  */
-function compileDetail(aType, aPoints, keyMap = {x: 'startX', y: 'startY'}) {
+function compileDetail(aType, aPoints, keyMap = {x: "startX", y: "startY"}) {
   let touches = [];
   let maxDeltaX = 0;
   let maxDeltaY = 0;
@@ -321,7 +321,7 @@ function compileDetail(aType, aPoints, keyMap = {x: 'startX', y: 'startY'}) {
  */
 function Gesture(aTimeStamp, aPoints = {}, aLastEvent = undefined) {
   this.startTime = Date.now();
-  Logger.gesture('Creating', this.id, 'gesture.');
+  Logger.gesture("Creating", this.id, "gesture.");
   this.points = aPoints;
   this.lastEvent = aLastEvent;
   this._deferred = PromiseUtils.defer();
@@ -349,7 +349,7 @@ Gesture.prototype = {
    * Clear the existing timer.
    */
   clearTimer: function Gesture_clearTimer() {
-    Logger.gesture('clearTimeout', this.type);
+    Logger.gesture("clearTimeout", this.type);
     clearTimeout(this._timer);
     delete this._timer;
   },
@@ -360,11 +360,11 @@ Gesture.prototype = {
    * started the gesture resolution sequence.
    */
   startTimer: function Gesture_startTimer(aTimeStamp) {
-    Logger.gesture('startTimer', this.type);
+    Logger.gesture("startTimer", this.type);
     this.clearTimer();
     let delay = this._getDelay(aTimeStamp);
     let handler = () => {
-      Logger.gesture('timer handler');
+      Logger.gesture("timer handler");
       this.clearTimer();
       if (!this._inProgress) {
         this._deferred.reject();
@@ -408,7 +408,7 @@ Gesture.prototype = {
       let identifier = point.identifier;
       let gesturePoint = this.points[identifier];
       if (gesturePoint) {
-        if (aType === 'pointerdown' && aCanCreate) {
+        if (aType === "pointerdown" && aCanCreate) {
           // scratch the previous pointer with that id.
           this.points[identifier] = new Point(point);
         } else {
@@ -440,7 +440,7 @@ Gesture.prototype = {
    * @param  {Object} aDetail a compiled mozAccessFuGesture detail structure.
    */
   _emit: function Gesture__emit(aDetail) {
-    let evt = new Utils.win.CustomEvent('mozAccessFuGesture', {
+    let evt = new Utils.win.CustomEvent("mozAccessFuGesture", {
       bubbles: true,
       cancelable: true,
       detail: aDetail
@@ -455,7 +455,7 @@ Gesture.prototype = {
    */
   pointerdown: function Gesture_pointerdown(aPoints, aTimeStamp) {
     this._inProgress = true;
-    this._update(aPoints, 'pointerdown',
+    this._update(aPoints, "pointerdown",
       aTimeStamp - this.startTime < GestureSettings.maxMultitouch);
   },
 
@@ -464,7 +464,7 @@ Gesture.prototype = {
    * @param  {Array} aPoints A new pointer move points.
    */
   pointermove: function Gesture_pointermove(aPoints) {
-    this._update(aPoints, 'pointermove');
+    this._update(aPoints, "pointermove");
   },
 
   /**
@@ -472,7 +472,7 @@ Gesture.prototype = {
    * @param  {Array} aPoints A new pointer up points.
    */
   pointerup: function Gesture_pointerup(aPoints) {
-    let complete = this._update(aPoints, 'pointerup', false, true);
+    let complete = this._update(aPoints, "pointerup", false, true);
     if (complete) {
       this._deferred.resolve();
     }
@@ -506,7 +506,7 @@ Gesture.prototype = {
     if (this.isComplete) {
       return;
     }
-    Logger.gesture('Resolving', this.id, 'gesture.');
+    Logger.gesture("Resolving", this.id, "gesture.");
     this.isComplete = true;
     this.clearTimer();
     let detail = this.compile();
@@ -531,7 +531,7 @@ Gesture.prototype = {
     if (this.isComplete) {
       return;
     }
-    Logger.gesture('Rejecting', this.id, 'gesture.');
+    Logger.gesture("Rejecting", this.id, "gesture.");
     this.isComplete = true;
     this.clearTimer();
     return {
@@ -558,7 +558,7 @@ function ExploreGesture() {
   this.compile = () => {
     // Unlike most of other gestures explore based gestures compile using the
     // current point position and not the start one.
-    return compileDetail(this.type, this.points, {x: 'x', y: 'y'});
+    return compileDetail(this.type, this.points, {x: "x", y: "y"});
   };
 }
 
@@ -567,7 +567,7 @@ function ExploreGesture() {
  */
 function checkProgressGesture(aGesture) {
   aGesture._inProgress = true;
-  if (aGesture.lastEvent === 'pointerup') {
+  if (aGesture.lastEvent === "pointerup") {
     if (aGesture.test) {
       aGesture.test(true);
     }
@@ -629,7 +629,7 @@ function DwellEnd(aTimeStamp, aPoints, aLastEvent) {
 }
 
 DwellEnd.prototype = Object.create(TravelGesture.prototype);
-DwellEnd.prototype.type = 'dwellend';
+DwellEnd.prototype.type = "dwellend";
 
 /**
  * TapHoldEnd gesture. This gesture can be represented as the following diagram:
@@ -647,7 +647,7 @@ function TapHoldEnd(aTimeStamp, aPoints, aLastEvent) {
 }
 
 TapHoldEnd.prototype = Object.create(TravelGesture.prototype);
-TapHoldEnd.prototype.type = 'tapholdend';
+TapHoldEnd.prototype.type = "tapholdend";
 
 /**
  * DoubleTapHoldEnd gesture. This gesture can be represented as the following
@@ -666,7 +666,7 @@ function DoubleTapHoldEnd(aTimeStamp, aPoints, aLastEvent) {
 }
 
 DoubleTapHoldEnd.prototype = Object.create(TravelGesture.prototype);
-DoubleTapHoldEnd.prototype.type = 'doubletapholdend';
+DoubleTapHoldEnd.prototype.type = "doubletapholdend";
 
 /**
  * A common tap gesture object.
@@ -700,7 +700,7 @@ TapGesture.prototype._getDelay = function TapGesture__getDelay() {
 
 TapGesture.prototype.pointerup = function TapGesture_pointerup(aPoints) {
     if (this._rejectToOnPointerDown) {
-      let complete = this._update(aPoints, 'pointerup', false, true);
+      let complete = this._update(aPoints, "pointerup", false, true);
       if (complete) {
         this.clearTimer();
         if (GestureSettings.maxGestureResolveTimeout) {
@@ -742,7 +742,7 @@ function Tap(aTimeStamp, aPoints, aLastEvent) {
 }
 
 Tap.prototype = Object.create(TapGesture.prototype);
-Tap.prototype.type = 'tap';
+Tap.prototype.type = "tap";
 
 
 /**
@@ -758,7 +758,7 @@ function DoubleTap(aTimeStamp, aPoints, aLastEvent) {
 }
 
 DoubleTap.prototype = Object.create(TapGesture.prototype);
-DoubleTap.prototype.type = 'doubletap';
+DoubleTap.prototype.type = "doubletap";
 
 /**
  * Triple Tap gesture.
@@ -773,7 +773,7 @@ function TripleTap(aTimeStamp, aPoints, aLastEvent) {
 }
 
 TripleTap.prototype = Object.create(TapGesture.prototype);
-TripleTap.prototype.type = 'tripletap';
+TripleTap.prototype.type = "tripletap";
 
 /**
  * Common base object for gestures that are created as resolved.
@@ -802,7 +802,7 @@ function Dwell(aTimeStamp, aPoints, aLastEvent) {
 }
 
 Dwell.prototype = Object.create(ResolvedGesture.prototype);
-Dwell.prototype.type = 'dwell';
+Dwell.prototype.type = "dwell";
 Dwell.prototype.resolveTo = DwellEnd;
 
 /**
@@ -817,7 +817,7 @@ function TapHold(aTimeStamp, aPoints, aLastEvent) {
 }
 
 TapHold.prototype = Object.create(ResolvedGesture.prototype);
-TapHold.prototype.type = 'taphold';
+TapHold.prototype.type = "taphold";
 TapHold.prototype.resolveTo = TapHoldEnd;
 
 /**
@@ -832,7 +832,7 @@ function DoubleTapHold(aTimeStamp, aPoints, aLastEvent) {
 }
 
 DoubleTapHold.prototype = Object.create(ResolvedGesture.prototype);
-DoubleTapHold.prototype.type = 'doubletaphold';
+DoubleTapHold.prototype.type = "doubletaphold";
 DoubleTapHold.prototype.resolveTo = DoubleTapHoldEnd;
 
 /**
@@ -848,7 +848,7 @@ function Explore(aTimeStamp, aPoints, aLastEvent) {
 }
 
 Explore.prototype = Object.create(ResolvedGesture.prototype);
-Explore.prototype.type = 'explore';
+Explore.prototype.type = "explore";
 Explore.prototype.resolveTo = ExploreEnd;
 
 /**
@@ -867,7 +867,7 @@ function ExploreEnd(aTimeStamp, aPoints, aLastEvent) {
 }
 
 ExploreEnd.prototype = Object.create(TravelGesture.prototype);
-ExploreEnd.prototype.type = 'exploreend';
+ExploreEnd.prototype.type = "exploreend";
 
 /**
  * Swipe gesture.
@@ -884,7 +884,7 @@ function Swipe(aTimeStamp, aPoints, aLastEvent) {
 }
 
 Swipe.prototype = Object.create(Gesture.prototype);
-Swipe.prototype.type = 'swipe';
+Swipe.prototype.type = "swipe";
 Swipe.prototype._getDelay = function Swipe__getDelay(aTimeStamp) {
   // Swipe should be completed within the GestureSettings.swipeMaxDuration from
   // the initial pointer down event.
@@ -924,7 +924,7 @@ Swipe.prototype.test = function Swipe_test(aComplete) {
 Swipe.prototype.compile = function Swipe_compile() {
   let type = this.type;
   let detail = compileDetail(type, this.points,
-    {x1: 'startX', y1: 'startY', x2: 'x', y2: 'y'});
+    {x1: "startX", y1: "startY", x2: "x", y2: "y"});
   let deltaX = detail.deltaX;
   let deltaY = detail.deltaY;
   let edge = EDGE * Utils.dpi;
@@ -932,10 +932,10 @@ Swipe.prototype.compile = function Swipe_compile() {
     // Horizontal swipe.
     let startPoints = detail.touches.map(touch => touch.x1);
     if (deltaX > 0) {
-      detail.type = type + 'right';
+      detail.type = type + "right";
       detail.edge = Math.min.apply(null, startPoints) <= edge;
     } else {
-      detail.type = type + 'left';
+      detail.type = type + "left";
       detail.edge =
         Utils.win.screen.width - Math.max.apply(null, startPoints) <= edge;
     }
@@ -943,10 +943,10 @@ Swipe.prototype.compile = function Swipe_compile() {
     // Vertical swipe.
     let startPoints = detail.touches.map(touch => touch.y1);
     if (deltaY > 0) {
-      detail.type = type + 'down';
+      detail.type = type + "down";
       detail.edge = Math.min.apply(null, startPoints) <= edge;
     } else {
-      detail.type = type + 'up';
+      detail.type = type + "up";
       detail.edge =
         Utils.win.screen.height - Math.max.apply(null, startPoints) <= edge;
     }

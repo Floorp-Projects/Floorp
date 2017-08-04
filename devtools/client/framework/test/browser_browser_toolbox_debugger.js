@@ -10,7 +10,6 @@
 // On debug test runner, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
-const { setInterval, clearInterval } = require("sdk/timers");
 const { fetch } = require("devtools/shared/DevToolsUtils");
 
 const debuggerHeadURL = CHROME_URL_ROOT + "../../debugger/new/test/mochitest/head.js";

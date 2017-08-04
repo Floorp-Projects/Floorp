@@ -2353,7 +2353,8 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
         }
       } else {
         // A previous smooth MSD scroll is still in progress, so we just need to
-        // update its destination.
+        // update its range and destination.
+        mAsyncSmoothMSDScroll->SetRange(GetScrollRangeForClamping());
         mAsyncSmoothMSDScroll->SetDestination(mDestination);
       }
 

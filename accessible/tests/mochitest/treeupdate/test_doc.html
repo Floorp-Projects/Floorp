@@ -20,27 +20,23 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Helpers
 
-    function getDocNode(aID)
-    {
+    function getDocNode(aID) {
       return getNode(aID).contentDocument;
     }
-    function getDocChildNode(aID)
-    {
+    function getDocChildNode(aID) {
       return getDocNode(aID).body.firstChild;
     }
 
-    function rootContentReplaced(aID, aTextName, aRootContentRole)
-    {
+    function rootContentReplaced(aID, aTextName, aRootContentRole) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
         new invokerChecker(EVENT_REORDER, getDocNode, aID)
       ];
 
-      this.finalCheck = function rootContentReplaced_finalCheck()
-      {
+      this.finalCheck = function rootContentReplaced_finalCheck() {
         var tree = {
           role: aRootContentRole || ROLE_DOCUMENT,
           children: [
@@ -54,22 +50,19 @@
       }
     }
 
-    function rootContentRemoved(aID)
-    {
+    function rootContentRemoved(aID) {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, null),
         new invokerChecker(EVENT_REORDER, getDocNode, aID)
       ];
 
-      this.preinvoke = function rootContentRemoved_preinvoke()
-      {
+      this.preinvoke = function rootContentRemoved_preinvoke() {
         // Set up target for hide event before we invoke.
         var text = getAccessible(getAccessible(getDocNode(aID)).firstChild);
         this.eventSeq[0].target = text;
       }
 
-      this.finalCheck = function rootContentRemoved_finalCheck()
-      {
+      this.finalCheck = function rootContentRemoved_finalCheck() {
         var tree = {
           role: ROLE_DOCUMENT,
           children: [ ]
@@ -78,15 +71,13 @@
       }
     }
 
-    function rootContentInserted(aID, aTextName)
-    {
+    function rootContentInserted(aID, aTextName) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
         new invokerChecker(EVENT_REORDER, getDocNode, aID)
       ];
 
-      this.finalCheck = function rootContentInserted_finalCheck()
-      {
+      this.finalCheck = function rootContentInserted_finalCheck() {
         var tree = {
           role: ROLE_DOCUMENT,
           children: [
@@ -100,15 +91,13 @@
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function writeIFrameDoc(aID)
-    {
+    function writeIFrameDoc(aID) {
       this.__proto__ = new rootContentReplaced(aID, "hello");
 
-      this.invoke = function writeIFrameDoc_invoke()
-      {
+      this.invoke = function writeIFrameDoc_invoke() {
         var docNode = getDocNode(aID);
 
         // We can't use open/write/close outside of iframe document because of
@@ -118,8 +107,7 @@
         docNode.body.appendChild(script);
       }
 
-      this.getID = function writeIFrameDoc_getID()
-      {
+      this.getID = function writeIFrameDoc_getID() {
         return "write document";
       }
     }
@@ -127,23 +115,20 @@
     /**
      * Replace HTML element.
      */
-    function replaceIFrameHTMLElm(aID)
-    {
+    function replaceIFrameHTMLElm(aID) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
         new invokerChecker(EVENT_REORDER, getDocNode, aID)
       ];
 
-      this.invoke = function replaceIFrameHTMLElm_invoke()
-      {
+      this.invoke = function replaceIFrameHTMLElm_invoke() {
         var docNode = getDocNode(aID);
         var newHTMLNode = docNode.createElement("html");
         newHTMLNode.innerHTML = `<body><p>New Wave</p></body`;
         docNode.replaceChild(newHTMLNode, docNode.documentElement);
       }
 
-      this.finalCheck = function replaceIFrameHTMLElm_finalCheck()
-      {
+      this.finalCheck = function replaceIFrameHTMLElm_finalCheck() {
         var tree = {
           role: ROLE_DOCUMENT,
           children: [
@@ -152,7 +137,7 @@
               children: [
                 {
                   role: ROLE_TEXT_LEAF,
-                  name: 'New Wave'
+                  name: "New Wave"
                 }
               ]
             }
@@ -161,8 +146,7 @@
         testAccessibleTree(getDocNode(aID), tree);
       }
 
-      this.getID = function replaceIFrameHTMLElm_getID()
-      {
+      this.getID = function replaceIFrameHTMLElm_getID() {
         return "replace HTML element";
       }
     }
@@ -170,12 +154,10 @@
     /**
      * Replace HTML body on new body having ARIA role.
      */
-    function replaceIFrameBody(aID)
-    {
+    function replaceIFrameBody(aID) {
       this.__proto__ = new rootContentReplaced(aID, "New Hello");
 
-      this.invoke = function replaceIFrameBody_invoke()
-      {
+      this.invoke = function replaceIFrameBody_invoke() {
         var docNode = getDocNode(aID);
         var newBodyNode = docNode.createElement("body");
         var newTextNode = docNode.createTextNode("New Hello");
@@ -183,8 +165,7 @@
         docNode.documentElement.replaceChild(newBodyNode, docNode.body);
       }
 
-      this.getID = function replaceIFrameBody_getID()
-      {
+      this.getID = function replaceIFrameBody_getID() {
         return "replace body";
       }
     }
@@ -192,13 +173,11 @@
     /**
      * Replace HTML body on new body having ARIA role.
      */
-    function replaceIFrameBodyOnARIARoleBody(aID)
-    {
+    function replaceIFrameBodyOnARIARoleBody(aID) {
       this.__proto__ = new rootContentReplaced(aID, "New Hello",
                                                ROLE_PUSHBUTTON);
 
-      this.invoke = function replaceIFrameBodyOnARIARoleBody_invoke()
-      {
+      this.invoke = function replaceIFrameBodyOnARIARoleBody_invoke() {
         var docNode = getDocNode(aID);
         var newBodyNode = docNode.createElement("body");
         var newTextNode = docNode.createTextNode("New Hello");
@@ -207,8 +186,7 @@
         docNode.documentElement.replaceChild(newBodyNode, docNode.body);
       }
 
-      this.getID = function replaceIFrameBodyOnARIARoleBody_getID()
-      {
+      this.getID = function replaceIFrameBodyOnARIARoleBody_getID() {
         return "replace body on body having ARIA role";
       }
     }
@@ -216,12 +194,10 @@
     /**
      * Open/close document pair.
      */
-    function openIFrameDoc(aID)
-    {
+    function openIFrameDoc(aID) {
       this.__proto__ = new rootContentRemoved(aID);
 
-      this.invoke = function openIFrameDoc_invoke()
-      {
+      this.invoke = function openIFrameDoc_invoke() {
         this.preinvoke();
 
         // Open document.
@@ -231,24 +207,20 @@
         docNode.body.appendChild(script);
       }
 
-      this.getID = function openIFrameDoc_getID()
-      {
+      this.getID = function openIFrameDoc_getID() {
         return "open document";
       }
     }
 
-    function closeIFrameDoc(aID)
-    {
+    function closeIFrameDoc(aID) {
       this.__proto__ = new rootContentInserted(aID, "Works?");
 
-      this.invoke = function closeIFrameDoc_invoke()
-      {
+      this.invoke = function closeIFrameDoc_invoke() {
         // Write and close document.
-        getDocNode(aID).write('Works?'); getDocNode(aID).close();
+        getDocNode(aID).write("Works?"); getDocNode(aID).close();
       }
 
-      this.getID = function closeIFrameDoc_getID()
-      {
+      this.getID = function closeIFrameDoc_getID() {
         return "close document";
       }
     }
@@ -256,12 +228,10 @@
     /**
      * Remove/insert HTML element pair.
      */
-    function removeHTMLFromIFrameDoc(aID)
-    {
+    function removeHTMLFromIFrameDoc(aID) {
       this.__proto__ = new rootContentRemoved(aID);
 
-      this.invoke = function removeHTMLFromIFrameDoc_invoke()
-      {
+      this.invoke = function removeHTMLFromIFrameDoc_invoke() {
         this.preinvoke();
 
         // Remove HTML element.
@@ -269,18 +239,15 @@
         docNode.firstChild.remove();
       }
 
-      this.getID = function removeHTMLFromIFrameDoc_getID()
-      {
+      this.getID = function removeHTMLFromIFrameDoc_getID() {
         return "remove HTML element";
       }
     }
 
-    function insertHTMLToIFrameDoc(aID)
-    {
+    function insertHTMLToIFrameDoc(aID) {
       this.__proto__ = new rootContentInserted(aID, "Haha");
 
-      this.invoke = function insertHTMLToIFrameDoc_invoke()
-      {
+      this.invoke = function insertHTMLToIFrameDoc_invoke() {
         // Insert HTML element.
         var docNode = getDocNode(aID);
         var html = docNode.createElement("html");
@@ -291,8 +258,7 @@
         docNode.appendChild(html);
       }
 
-      this.getID = function insertHTMLToIFrameDoc_getID()
-      {
+      this.getID = function insertHTMLToIFrameDoc_getID() {
         return "insert HTML element document";
       }
     }
@@ -300,12 +266,10 @@
     /**
      * Remove/insert HTML body pair.
      */
-    function removeBodyFromIFrameDoc(aID)
-    {
+    function removeBodyFromIFrameDoc(aID) {
       this.__proto__ = new rootContentRemoved(aID);
 
-      this.invoke = function removeBodyFromIFrameDoc_invoke()
-      {
+      this.invoke = function removeBodyFromIFrameDoc_invoke() {
         this.preinvoke();
 
         // Remove body element.
@@ -313,34 +277,29 @@
         docNode.documentElement.removeChild(docNode.body);
       }
 
-      this.getID = function removeBodyFromIFrameDoc_getID()
-      {
+      this.getID = function removeBodyFromIFrameDoc_getID() {
         return "remove body element";
       }
     }
 
-    function insertElmUnderDocElmWhileBodyMissed(aID)
-    {
+    function insertElmUnderDocElmWhileBodyMissed(aID) {
       this.docNode = null;
       this.inputNode = null;
 
-      function getInputNode()
-        { return this.inputNode; }
+      function getInputNode() { return this.inputNode; }
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getInputNode.bind(this)),
         new invokerChecker(EVENT_REORDER, getDocNode, aID)
       ];
 
-      this.invoke = function invoke()
-      {
+      this.invoke = function invoke() {
         this.docNode = getDocNode(aID);
         this.inputNode = this.docNode.createElement("input");
         this.docNode.documentElement.appendChild(this.inputNode);
       }
 
-      this.finalCheck = function finalCheck()
-      {
+      this.finalCheck = function finalCheck() {
         var tree =
           { DOCUMENT: [
             { ENTRY: [ ] }
@@ -351,18 +310,15 @@
         this.docNode.documentElement.removeChild(this.inputNode);
       }
 
-      this.getID = function getID()
-      {
+      this.getID = function getID() {
         return "Insert element under document element while body is missed.";
       }
     }
 
-    function insertBodyToIFrameDoc(aID)
-    {
+    function insertBodyToIFrameDoc(aID) {
       this.__proto__ = new rootContentInserted(aID, "Yo ho ho i butylka roma!");
 
-      this.invoke = function insertBodyToIFrameDoc_invoke()
-      {
+      this.invoke = function insertBodyToIFrameDoc_invoke() {
         // Insert body element.
         var docNode = getDocNode(aID);
         var body = docNode.createElement("body");
@@ -371,27 +327,23 @@
         docNode.documentElement.appendChild(body);
       }
 
-      this.getID = function insertBodyToIFrameDoc_getID()
-      {
+      this.getID = function insertBodyToIFrameDoc_getID() {
         return "insert body element";
       }
     }
 
-    function changeSrc(aID)
-    {
+    function changeSrc(aID) {
       this.containerNode = getNode(aID);
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
-      this.invoke = function changeSrc_invoke()
-      {
+      this.invoke = function changeSrc_invoke() {
         this.containerNode.src = "data:text/html,<html><input></html>";
       }
 
-      this.finalCheck = function changeSrc_finalCheck()
-      {
+      this.finalCheck = function changeSrc_finalCheck() {
         var tree =
           { INTERNAL_FRAME: [
             { DOCUMENT: [
@@ -401,22 +353,20 @@
         testAccessibleTree(this.containerNode, tree);
       }
 
-      this.getID = function changeSrc_getID()
-      {
+      this.getID = function changeSrc_getID() {
         return "change src on iframe";
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpToConsole = true;
-    //enableLogging('tree,verbose');
+    // gA11yEventDumpToConsole = true;
+    // enableLogging('tree,verbose');
 
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
 
       gQueue.push(new writeIFrameDoc("iframe"));

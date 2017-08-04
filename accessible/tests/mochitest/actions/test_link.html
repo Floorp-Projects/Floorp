@@ -17,8 +17,7 @@
           src="../actions.js"></script>
 
   <script type="application/javascript">
-    function getAnchorTargetDocumentAcc()
-    {
+    function getAnchorTargetDocumentAcc() {
       var thisTabDocAcc = getTabDocAccessible();
       var thisDocTabPanelAcc = thisTabDocAcc.parent.parent;
       var tabPanelsAcc = thisDocTabPanelAcc.parent;
@@ -35,30 +34,26 @@
       return newDocTabPanelAcc.firstChild.firstChild;
     }
 
-    function linkChecker(aID)
-    {
+    function linkChecker(aID) {
       this.type = EVENT_DOCUMENT_LOAD_COMPLETE;
       this.__defineGetter__("target", getAnchorTargetDocumentAcc);
 
-      this.check = function linkChecker_check()
-      {
+      this.check = function linkChecker_check() {
         var anchorTargetWindow =
           getAccessible(getAnchorTargetDocumentAcc(), [nsIAccessibleDocument]).
           window;
         anchorTargetWindow.close();
       }
 
-      this.getID = function linkChecker_getID()
-      {
+      this.getID = function linkChecker_getID() {
         return "link '" + aID + "' states check ";
       }
     }
 
-    //gA11yEventDumpToConsole = true;
-    //enableLogging("tree,eventTree,verbose");
+    // gA11yEventDumpToConsole = true;
+    // enableLogging("tree,eventTree,verbose");
 
-    function doTest()
-    {
+    function doTest() {
       var actionsArray = [
         {
           ID: "link1",

@@ -17,11 +17,7 @@ async function test_setPosition(forward, current, backward) {
                           "test_osfile_async_largefiles.tmp");
 
   // Clear any left-over files from previous runs.
-  try {
-    await OS.File.remove(path);
-  } catch (ex if ex.becauseNoSuchFile) {
-    // ignore
-  }
+  await removeTestFile(path);
 
   try {
     let file = await OS.File.open(path, {write:true, append:false});
@@ -51,12 +47,7 @@ async function test_setPosition(forward, current, backward) {
       await file.close();
     }
   } catch(ex) {
-    try {
-      await OS.File.remove(path);
-    } catch (ex if ex.becauseNoSuchFile) {
-      // ignore.
-    }
-    do_throw(ex);
+    await removeTestFile(path);
   }
 }
 
@@ -66,11 +57,7 @@ async function test_setPosition_failures() {
                           "test_osfile_async_largefiles.tmp");
 
   // Clear any left-over files from previous runs.
-  try {
-    await OS.File.remove(path);
-  } catch (ex if ex.becauseNoSuchFile) {
-    // ignore
-  }
+  await removeTestFile(path);
 
   try {
     let file = await OS.File.open(path, {write:true, append:false});
@@ -114,11 +101,7 @@ async function test_setPosition_failures() {
     } finally {
       await file.setPosition(0, OS.File.POS_START);
       await file.close();
-      try {
-        await OS.File.remove(path);
-      } catch (ex if ex.becauseNoSuchFile) {
-        // ignore.
-      }
+      await removeTestFile(path);
     }
   } catch(ex) {
     do_throw(ex);

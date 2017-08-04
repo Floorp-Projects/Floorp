@@ -14,12 +14,12 @@
   <script type="application/javascript">
 
     function startAccessFu() {
-      SpecialPowers.pushPrefEnv({"set": [['accessibility.accessfu.activate', 1]]});
+      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 1]]});
       AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
     }
 
     function stopAccessFu() {
-      SpecialPowers.pushPrefEnv({"set": [['accessibility.accessfu.activate', 0]]});
+      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 0]]});
       AccessFuTest.once_log("EventManager.stop", () => AccessFuTest.finish());
     }
 
@@ -35,12 +35,12 @@
 
     function ariaHide(id) {
       var element = document.getElementById(id);
-      element.setAttribute('aria-hidden', true);
+      element.setAttribute("aria-hidden", true);
     }
 
     function ariaShow(id) {
       var element = document.getElementById(id);
-      element.setAttribute('aria-hidden', false);
+      element.setAttribute("aria-hidden", false);
     }
 
     function udpate(id, text, property) {
@@ -330,7 +330,7 @@
     function doTest() {
       AccessFuTest.addFunc(startAccessFu);
       tests.forEach(function addTest(test) {
-        AccessFuTest.addFunc(function () {
+        AccessFuTest.addFunc(function() {
           AccessFuTest.once(test.expected, AccessFuTest.nextTest);
           test.action();
         });

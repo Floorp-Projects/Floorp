@@ -942,7 +942,7 @@ impl Stylist {
             if !declarations.is_empty() {
                 let rule_node =
                     self.rule_tree.insert_ordered_rules_with_important(
-                        declarations.into_iter().map(|a| a.order_and_level()),
+                        declarations.drain().map(|a| a.order_and_level()),
                         guards);
                 if rule_node != *self.rule_tree.root() {
                     inputs.visited_rules = Some(rule_node);
@@ -1147,8 +1147,8 @@ impl Stylist {
         };
         let rule_hash_target = element.rule_hash_target();
 
-        // nsXBLPrototypeResources::ComputeServoStyleSet() added XBL stylesheets under author
-        // (doc) level.
+        // nsXBLPrototypeResources::LoadResources() loads Chrome XBL style
+        // sheets under eAuthorSheetFeatures level.
         map.author.get_all_matching_rules(element,
                                           &rule_hash_target,
                                           applicable_declarations,

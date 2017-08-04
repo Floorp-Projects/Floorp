@@ -1,8 +1,8 @@
 // A common module to run tests on the AccessFu module
 
-'use strict';
+"use strict";
 
-/*global isDeeply, getMainChromeWindow, SimpleTest, SpecialPowers, Logger,
+/* global isDeeply, getMainChromeWindow, SimpleTest, SpecialPowers, Logger,
   AccessFu, Utils, addMessageListener, currentTabDocument, currentBrowser*/
 
 /**
@@ -14,7 +14,7 @@ var gTestFuncs = [];
   */
 var gIterator;
 
-Components.utils.import('resource://gre/modules/Services.jsm');
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/accessibility/Utils.jsm");
 Components.utils.import("resource://gre/modules/accessibility/EventManager.jsm");
 Components.utils.import("resource://gre/modules/accessibility/Gestures.jsm");
@@ -70,7 +70,7 @@ var AccessFuTest = {
       isDeeply(data.details, aWaitForData, "Data is correct");
       aListener.apply(listener);
     };
-    Services.obs.addObserver(listener, 'accessibility-output');
+    Services.obs.addObserver(listener, "accessibility-output");
     return listener;
   },
 
@@ -79,12 +79,12 @@ var AccessFuTest = {
   },
 
   off: function AccessFuTest_off(aListener) {
-    Services.obs.removeObserver(aListener, 'accessibility-output');
+    Services.obs.removeObserver(aListener, "accessibility-output");
   },
 
   once: function AccessFuTest_once(aWaitForData, aListener) {
     return this._addObserver(aWaitForData, function observerAndRemove() {
-      Services.obs.removeObserver(this, 'accessibility-output');
+      Services.obs.removeObserver(this, "accessibility-output");
       aListener();
     });
   },
@@ -108,7 +108,7 @@ var AccessFuTest = {
       this.maxGestureResolveTimeout =
       this.originalMaxGestureResolveTimeout;
     // Finish through idle callback to let AccessFu._disable complete.
-    SimpleTest.executeSoon(function () {
+    SimpleTest.executeSoon(function() {
       AccessFu.detach();
       SimpleTest.finish();
     });
@@ -149,7 +149,7 @@ var AccessFuTest = {
       Logger.logLevel = Logger.DEBUG;
     };
 
-    var prefs = [['accessibility.accessfu.notify_output', 1]];
+    var prefs = [["accessibility.accessfu.notify_output", 1]];
     prefs.push.apply(prefs, aAdditionalPrefs);
 
     this.originalDwellThreshold = GestureSettings.dwellThreshold;
@@ -166,7 +166,7 @@ var AccessFuTest = {
     this.maxGestureResolveTimeout = GestureSettings.maxGestureResolveTimeout =
       GestureSettings.maxGestureResolveTimeout * 10;
 
-    SpecialPowers.pushPrefEnv({ 'set': prefs }, function () {
+    SpecialPowers.pushPrefEnv({ "set": prefs }, function() {
       if (AccessFuTest._waitForExplicitFinish) {
         // Run all test functions asynchronously.
         AccessFuTest.nextTest();
@@ -195,9 +195,9 @@ AccessFuContentTest.prototype = {
 
     // Get top content message manager, and set it up.
     this.mms = [Utils.getMessageManager(currentBrowser())];
-    this.setupMessageManager(this.mms[0], function () {
+    this.setupMessageManager(this.mms[0], function() {
       // Get child message managers and set them up
-      var frames = currentTabDocument().querySelectorAll('iframe');
+      var frames = currentTabDocument().querySelectorAll("iframe");
       if (frames.length === 0) {
         self.pump();
         return;
@@ -209,7 +209,7 @@ AccessFuContentTest.prototype = {
         if (mm) {
           toSetup++;
           self.mms.push(mm);
-          self.setupMessageManager(mm, function () {
+          self.setupMessageManager(mm, function() {
             if (--toSetup === 0) {
               // All message managers are loaded and ready to go.
               self.pump();
@@ -223,23 +223,23 @@ AccessFuContentTest.prototype = {
   finish: function() {
     Logger.logLevel = Logger.INFO;
     for (var mm of this.mms) {
-        mm.sendAsyncMessage('AccessFu:Stop');
-        mm.removeMessageListener('AccessFu:Present', this);
-        mm.removeMessageListener('AccessFu:Input', this);
-        mm.removeMessageListener('AccessFu:CursorCleared', this);
-        mm.removeMessageListener('AccessFu:Focused', this);
-        mm.removeMessageListener('AccessFu:AriaHidden', this);
-        mm.removeMessageListener('AccessFu:Ready', this);
-        mm.removeMessageListener('AccessFu:ContentStarted', this);
+        mm.sendAsyncMessage("AccessFu:Stop");
+        mm.removeMessageListener("AccessFu:Present", this);
+        mm.removeMessageListener("AccessFu:Input", this);
+        mm.removeMessageListener("AccessFu:CursorCleared", this);
+        mm.removeMessageListener("AccessFu:Focused", this);
+        mm.removeMessageListener("AccessFu:AriaHidden", this);
+        mm.removeMessageListener("AccessFu:Ready", this);
+        mm.removeMessageListener("AccessFu:ContentStarted", this);
       }
     if (this.finishedCallback) {
       this.finishedCallback();
     }
   },
 
-  setupMessageManager:  function (aMessageManager, aCallback) {
+  setupMessageManager:  function(aMessageManager, aCallback) {
     function contentScript() {
-      addMessageListener('AccessFuTest:Focus', function (aMessage) {
+      addMessageListener("AccessFuTest:Focus", function(aMessage) {
         var elem = content.document.querySelector(aMessage.json.selector);
         if (elem) {
           if (aMessage.json.blur) {
@@ -251,24 +251,24 @@ AccessFuContentTest.prototype = {
       });
     }
 
-    aMessageManager.addMessageListener('AccessFu:Present', this);
-    aMessageManager.addMessageListener('AccessFu:Input', this);
-    aMessageManager.addMessageListener('AccessFu:CursorCleared', this);
-    aMessageManager.addMessageListener('AccessFu:Focused', this);
-    aMessageManager.addMessageListener('AccessFu:AriaHidden', this);
-    aMessageManager.addMessageListener('AccessFu:Ready', function () {
-      aMessageManager.addMessageListener('AccessFu:ContentStarted', aCallback);
-      aMessageManager.sendAsyncMessage('AccessFu:Start',
-        { buildApp: 'browser',
+    aMessageManager.addMessageListener("AccessFu:Present", this);
+    aMessageManager.addMessageListener("AccessFu:Input", this);
+    aMessageManager.addMessageListener("AccessFu:CursorCleared", this);
+    aMessageManager.addMessageListener("AccessFu:Focused", this);
+    aMessageManager.addMessageListener("AccessFu:AriaHidden", this);
+    aMessageManager.addMessageListener("AccessFu:Ready", function() {
+      aMessageManager.addMessageListener("AccessFu:ContentStarted", aCallback);
+      aMessageManager.sendAsyncMessage("AccessFu:Start",
+        { buildApp: "browser",
           androidSdkVersion: Utils.AndroidSdkVersion,
-          logLevel: 'DEBUG',
+          logLevel: "DEBUG",
           inTest: true });
     });
 
     aMessageManager.loadFrameScript(
-      'chrome://global/content/accessibility/content-script.js', false);
+      "chrome://global/content/accessibility/content-script.js", false);
     aMessageManager.loadFrameScript(
-      'data:,(' + contentScript.toString() + ')();', false);
+      "data:,(" + contentScript.toString() + ")();", false);
   },
 
   pump: function() {
@@ -282,7 +282,7 @@ AccessFuContentTest.prototype = {
     if (currentPair) {
       this.actionNum++;
       this.currentAction = currentPair[0];
-      if (typeof this.currentAction === 'function') {
+      if (typeof this.currentAction === "function") {
         this.currentAction(this.mms[0]);
       } else if (this.currentAction) {
         this.mms[0].sendAsyncMessage(this.currentAction.name,
@@ -306,15 +306,15 @@ AccessFuContentTest.prototype = {
       return;
     }
 
-    var actionsString = typeof this.currentAction === 'function' ?
-      this.currentAction.name + '()' : JSON.stringify(this.currentAction);
+    var actionsString = typeof this.currentAction === "function" ?
+      this.currentAction.name + "()" : JSON.stringify(this.currentAction);
 
-    if (typeof expected === 'string') {
-      ok(true, 'Got ' + expected + ' after ' + actionsString);
+    if (typeof expected === "string") {
+      ok(true, "Got " + expected + " after " + actionsString);
       this.pump();
     } else if (expected.ignore && !expected.ignore(aMessage)) {
-      expected.is(aMessage.json, 'after ' + actionsString +
-        ' (' + this.actionNum + ')');
+      expected.is(aMessage.json, "after " + actionsString +
+        " (" + this.actionNum + ")");
       expected.is_correct_focus();
       this.pump();
     }
@@ -325,60 +325,60 @@ AccessFuContentTest.prototype = {
 
 var ContentMessages = {
   simpleMoveFirst: {
-    name: 'AccessFu:MoveCursor',
+    name: "AccessFu:MoveCursor",
     json: {
-      action: 'moveFirst',
-      rule: 'Simple',
-      inputType: 'gesture',
-      origin: 'top'
+      action: "moveFirst",
+      rule: "Simple",
+      inputType: "gesture",
+      origin: "top"
     }
   },
 
   simpleMoveLast: {
-    name: 'AccessFu:MoveCursor',
+    name: "AccessFu:MoveCursor",
     json: {
-      action: 'moveLast',
-      rule: 'Simple',
-      inputType: 'gesture',
-      origin: 'top'
+      action: "moveLast",
+      rule: "Simple",
+      inputType: "gesture",
+      origin: "top"
     }
   },
 
   simpleMoveNext: {
-    name: 'AccessFu:MoveCursor',
+    name: "AccessFu:MoveCursor",
     json: {
-      action: 'moveNext',
-      rule: 'Simple',
-      inputType: 'gesture',
-      origin: 'top'
+      action: "moveNext",
+      rule: "Simple",
+      inputType: "gesture",
+      origin: "top"
     }
   },
 
   simpleMovePrevious: {
-    name: 'AccessFu:MoveCursor',
+    name: "AccessFu:MoveCursor",
     json: {
-      action: 'movePrevious',
-      rule: 'Simple',
-      inputType: 'gesture',
-      origin: 'top'
+      action: "movePrevious",
+      rule: "Simple",
+      inputType: "gesture",
+      origin: "top"
     }
   },
 
   clearCursor: {
-    name: 'AccessFu:ClearCursor',
+    name: "AccessFu:ClearCursor",
     json: {
-      origin: 'top'
+      origin: "top"
     }
   },
 
   moveOrAdjustUp: function moveOrAdjustUp(aRule) {
     return {
-      name: 'AccessFu:MoveCursor',
+      name: "AccessFu:MoveCursor",
       json: {
-        origin: 'top',
-        action: 'movePrevious',
-        inputType: 'gesture',
-        rule: (aRule || 'Simple'),
+        origin: "top",
+        action: "movePrevious",
+        inputType: "gesture",
+        rule: (aRule || "Simple"),
         adjustRange: true
       }
     }
@@ -386,12 +386,12 @@ var ContentMessages = {
 
   moveOrAdjustDown: function moveOrAdjustUp(aRule) {
     return {
-      name: 'AccessFu:MoveCursor',
+      name: "AccessFu:MoveCursor",
       json: {
-        origin: 'top',
-        action: 'moveNext',
-        inputType: 'gesture',
-        rule: (aRule || 'Simple'),
+        origin: "top",
+        action: "moveNext",
+        inputType: "gesture",
+        rule: (aRule || "Simple"),
         adjustRange: true
       }
     }
@@ -399,21 +399,21 @@ var ContentMessages = {
 
   androidScrollForward: function adjustUp() {
     return {
-      name: 'AccessFu:AndroidScroll',
-      json: { origin: 'top', direction: 'forward' }
+      name: "AccessFu:AndroidScroll",
+      json: { origin: "top", direction: "forward" }
     };
   },
 
   androidScrollBackward: function adjustDown() {
     return {
-      name: 'AccessFu:AndroidScroll',
-      json: { origin: 'top', direction: 'backward' }
+      name: "AccessFu:AndroidScroll",
+      json: { origin: "top", direction: "backward" }
     };
   },
 
   focusSelector: function focusSelector(aSelector, aBlur) {
     return {
-      name: 'AccessFuTest:Focus',
+      name: "AccessFuTest:Focus",
       json: {
         selector: aSelector,
         blur: aBlur
@@ -423,9 +423,9 @@ var ContentMessages = {
 
   activateCurrent: function activateCurrent(aOffset) {
     return {
-      name: 'AccessFu:Activate',
+      name: "AccessFu:Activate",
       json: {
-        origin: 'top',
+        origin: "top",
         offset: aOffset
       }
     };
@@ -433,9 +433,9 @@ var ContentMessages = {
 
   moveNextBy: function moveNextBy(aGranularity) {
     return {
-      name: 'AccessFu:MoveByGranularity',
+      name: "AccessFu:MoveByGranularity",
       json: {
-        direction: 'Next',
+        direction: "Next",
         granularity: this._granularityMap[aGranularity]
       }
     };
@@ -443,9 +443,9 @@ var ContentMessages = {
 
   movePreviousBy: function movePreviousBy(aGranularity) {
     return {
-      name: 'AccessFu:MoveByGranularity',
+      name: "AccessFu:MoveByGranularity",
       json: {
-        direction: 'Previous',
+        direction: "Previous",
         granularity: this._granularityMap[aGranularity]
       }
     };
@@ -453,9 +453,9 @@ var ContentMessages = {
 
   moveCaretNextBy: function moveCaretNextBy(aGranularity) {
     return {
-      name: 'AccessFu:MoveCaret',
+      name: "AccessFu:MoveCaret",
       json: {
-        direction: 'Next',
+        direction: "Next",
         granularity: this._granularityMap[aGranularity]
       }
     };
@@ -463,22 +463,22 @@ var ContentMessages = {
 
   moveCaretPreviousBy: function moveCaretPreviousBy(aGranularity) {
     return {
-      name: 'AccessFu:MoveCaret',
+      name: "AccessFu:MoveCaret",
       json: {
-        direction: 'Previous',
+        direction: "Previous",
         granularity: this._granularityMap[aGranularity]
       }
     };
   },
 
   _granularityMap: {
-    'character': 1, // MOVEMENT_GRANULARITY_CHARACTER
-    'word': 2, // MOVEMENT_GRANULARITY_WORD
-    'paragraph': 8 // MOVEMENT_GRANULARITY_PARAGRAPH
+    "character": 1, // MOVEMENT_GRANULARITY_CHARACTER
+    "word": 2, // MOVEMENT_GRANULARITY_WORD
+    "paragraph": 8 // MOVEMENT_GRANULARITY_PARAGRAPH
   }
 };
 
-function ExpectedMessage (aName, aOptions) {
+function ExpectedMessage(aName, aOptions) {
   this.name = aName;
   this.options = aOptions || {};
   this.json = {};
@@ -486,7 +486,7 @@ function ExpectedMessage (aName, aOptions) {
 
 ExpectedMessage.prototype.lazyCompare = function(aReceived, aExpected, aInfo) {
   if (aExpected && !aReceived) {
-    return [false, 'Expected something but got nothing -- ' + aInfo];
+    return [false, "Expected something but got nothing -- " + aInfo];
   }
 
   var matches = true;
@@ -494,28 +494,28 @@ ExpectedMessage.prototype.lazyCompare = function(aReceived, aExpected, aInfo) {
   for (var attr in aExpected) {
     var expected = aExpected[attr];
     var received = aReceived[attr];
-    if (typeof expected === 'object') {
+    if (typeof expected === "object") {
       var [childMatches, childDelta] = this.lazyCompare(received, expected);
       if (!childMatches) {
-        delta.push(attr + ' [ ' + childDelta + ' ]');
+        delta.push(attr + " [ " + childDelta + " ]");
         matches = false;
       }
     } else {
       if (received !== expected) {
         delta.push(
-          attr + ' [ expected ' + JSON.stringify(expected) +
-          ' got ' + JSON.stringify(received) + ' ]');
+          attr + " [ expected " + JSON.stringify(expected) +
+          " got " + JSON.stringify(received) + " ]");
         matches = false;
       }
     }
   }
 
-  var msg = delta.length ? delta.join(' ') : 'Structures lazily match';
-  return [matches, msg + ' -- ' + aInfo];
+  var msg = delta.length ? delta.join(" ") : "Structures lazily match";
+  return [matches, msg + " -- " + aInfo];
 };
 
 ExpectedMessage.prototype.is = function(aReceived, aInfo) {
-  var checkFunc = this.options.todo ? 'todo' : 'ok';
+  var checkFunc = this.options.todo ? "todo" : "ok";
   SimpleTest[checkFunc].apply(
     SimpleTest, this.lazyCompare(aReceived, this.json, aInfo));
 };
@@ -525,11 +525,11 @@ ExpectedMessage.prototype.is_correct_focus = function(aInfo) {
     return;
   }
 
-  var checkFunc = this.options.focused_todo ? 'todo_is' : 'is';
+  var checkFunc = this.options.focused_todo ? "todo_is" : "is";
   var doc = currentTabDocument();
   SimpleTest[checkFunc].apply(SimpleTest,
     [ doc.activeElement, doc.querySelector(this.options.focused),
-      'Correct element is focused: ' + this.options.focused + ' -- ' + aInfo ]);
+      "Correct element is focused: " + this.options.focused + " -- " + aInfo ]);
 };
 
 ExpectedMessage.prototype.ignore = function(aMessage) {
@@ -537,7 +537,7 @@ ExpectedMessage.prototype.ignore = function(aMessage) {
 };
 
 function ExpectedPresent(aB2g, aAndroid, aOptions) {
-  ExpectedMessage.call(this, 'AccessFu:Present', aOptions);
+  ExpectedMessage.call(this, "AccessFu:Present", aOptions);
   if (aB2g) {
     this.json.b2g = aB2g;
   }
@@ -552,12 +552,12 @@ ExpectedPresent.prototype = Object.create(ExpectedMessage.prototype);
 ExpectedPresent.prototype.is = function(aReceived, aInfo) {
   var received = this.extract_presenters(aReceived);
 
-  for (var presenter of ['b2g', 'android']) {
-    if (!this.options['no_' + presenter]) {
-      var todo = this.options.todo || this.options[presenter + '_todo']
-      SimpleTest[todo ? 'todo' : 'ok'].apply(
+  for (var presenter of ["b2g", "android"]) {
+    if (!this.options["no_" + presenter]) {
+      var todo = this.options.todo || this.options[presenter + "_todo"]
+      SimpleTest[todo ? "todo" : "ok"].apply(
         SimpleTest, this.lazyCompare(received[presenter],
-          this.json[presenter], aInfo + ' (' + presenter + ')'));
+          this.json[presenter], aInfo + " (" + presenter + ")"));
     }
   }
 };
@@ -581,14 +581,14 @@ ExpectedPresent.prototype.ignore = function(aMessage) {
 
   var received = this.extract_presenters(aMessage.json);
   return received.count === 0 ||
-    (received.visual && received.visual.eventType === 'viewport-change') ||
+    (received.visual && received.visual.eventType === "viewport-change") ||
     (received.android &&
       received.android[0].eventType === AndroidEvent.VIEW_SCROLLED);
 };
 
 function ExpectedCursorChange(aSpeech, aOptions) {
   ExpectedPresent.call(this, {
-    eventType: 'vc-change',
+    eventType: "vc-change",
     data: aSpeech
   }, [{
     eventType: 0x8000, // VIEW_ACCESSIBILITY_FOCUSED
@@ -599,7 +599,7 @@ ExpectedCursorChange.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedCursorTextChange(aSpeech, aStartOffset, aEndOffset, aOptions) {
   ExpectedPresent.call(this, {
-    eventType: 'vc-change',
+    eventType: "vc-change",
     data: aSpeech
   }, [{
     eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
@@ -616,8 +616,8 @@ ExpectedCursorTextChange.prototype =
 
 function ExpectedClickAction(aOptions) {
   ExpectedPresent.call(this, {
-    eventType: 'action',
-    data: [{ string: 'clickAction' }]
+    eventType: "action",
+    data: [{ string: "clickAction" }]
   }, [{
     eventType: AndroidEvent.VIEW_CLICKED
   }], aOptions);
@@ -627,8 +627,8 @@ ExpectedClickAction.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedCheckAction(aChecked, aOptions) {
   ExpectedPresent.call(this, {
-    eventType: 'action',
-    data: [{ string: aChecked ? 'checkAction' : 'uncheckAction' }]
+    eventType: "action",
+    data: [{ string: aChecked ? "checkAction" : "uncheckAction" }]
   }, [{
     eventType: AndroidEvent.VIEW_CLICKED,
     checked: aChecked
@@ -639,8 +639,8 @@ ExpectedCheckAction.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedSwitchAction(aSwitched, aOptions) {
   ExpectedPresent.call(this, {
-    eventType: 'action',
-    data: [{ string: aSwitched ? 'onAction' : 'offAction' }]
+    eventType: "action",
+    data: [{ string: aSwitched ? "onAction" : "offAction" }]
   }, [{
     eventType: AndroidEvent.VIEW_CLICKED,
     checked: aSwitched
@@ -651,7 +651,7 @@ ExpectedSwitchAction.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedNameChange(aName, aOptions) {
   ExpectedPresent.call(this, {
-    eventType: 'name-change',
+    eventType: "name-change",
     data: aName
   }, null, aOptions);
 }
@@ -660,7 +660,7 @@ ExpectedNameChange.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedValueChange(aValue, aOptions) {
   ExpectedPresent.call(this, {
-    eventType: 'value-change',
+    eventType: "value-change",
     data: aValue
   }, null, aOptions);
 }
@@ -669,7 +669,7 @@ ExpectedValueChange.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedTextChanged(aValue, aOptions) {
   ExpectedPresent.call(this, {
-    eventType: 'text-change',
+    eventType: "text-change",
     data: aValue
   }, null, aOptions);
 }
@@ -677,7 +677,7 @@ function ExpectedTextChanged(aValue, aOptions) {
 ExpectedTextChanged.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedEditState(aEditState, aOptions) {
-  ExpectedMessage.call(this, 'AccessFu:Input', aOptions);
+  ExpectedMessage.call(this, "AccessFu:Input", aOptions);
   this.json = aEditState;
 }
 
@@ -716,7 +716,7 @@ function ExpectedAnnouncement(aAnnouncement, aOptions) {
 ExpectedAnnouncement.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedNoMove(aOptions) {
-  ExpectedPresent.call(this, {eventType: 'no-move' }, null, aOptions);
+  ExpectedPresent.call(this, {eventType: "no-move" }, null, aOptions);
 }
 
 ExpectedNoMove.prototype = Object.create(ExpectedPresent.prototype);

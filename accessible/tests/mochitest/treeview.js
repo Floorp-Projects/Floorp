@@ -1,35 +1,30 @@
 /**
  * Helper method to start a single XUL tree test.
  */
-function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView)
-{
+function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView) {
   var doTestFunc = aDoTestFunc ? aDoTestFunc : gXULTreeLoadContext.doTestFunc;
   var treeID = aTreeID ? aTreeID : gXULTreeLoadContext.treeID;
   var treeView = aTreeView ? aTreeView : gXULTreeLoadContext.treeView;
 
-  function loadXULTree(aTreeID, aTreeView)
-  {
+  function loadXULTree(aTreeID, aTreeView) {
     this.treeNode = getNode(aTreeID);
 
     this.eventSeq = [
       new invokerChecker(EVENT_REORDER, this.treeNode)
     ];
 
-    this.invoke = function loadXULTree_invoke()
-    {
+    this.invoke = function loadXULTree_invoke() {
       this.treeNode.view = aTreeView;
     }
 
-    this.getID = function loadXULTree_getID()
-    {
+    this.getID = function loadXULTree_getID() {
       return "Load XUL tree " + prettyName(aTreeID);
     }
   }
 
   gXULTreeLoadContext.queue = new eventQueue();
   gXULTreeLoadContext.queue.push(new loadXULTree(treeID, treeView));
-  gXULTreeLoadContext.queue.onFinish = function()
-  {
+  gXULTreeLoadContext.queue.onFinish = function() {
     SimpleTest.executeSoon(doTestFunc);
     return DO_NOT_FINISH_TEST;
   }
@@ -39,8 +34,7 @@ function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView)
 /**
  * Analogy of addA11yLoadEvent, nice helper to load XUL tree and start the test.
  */
-function addA11yXULTreeLoadEvent(aDoTestFunc, aTreeID, aTreeView)
-{
+function addA11yXULTreeLoadEvent(aDoTestFunc, aTreeID, aTreeView) {
   gXULTreeLoadContext.doTestFunc = aDoTestFunc;
   gXULTreeLoadContext.treeID = aTreeID;
   gXULTreeLoadContext.treeView = aTreeView;
@@ -49,16 +43,14 @@ function addA11yXULTreeLoadEvent(aDoTestFunc, aTreeID, aTreeView)
 }
 
 
-function nsTableTreeView(aRowCount)
-{
+function nsTableTreeView(aRowCount) {
   this.__proto__ = new nsTreeView();
 
   for (var idx = 0; idx < aRowCount; idx++)
     this.mData.push(new treeItem("row" + String(idx) + "_"));
 }
 
-function nsTreeTreeView()
-{
+function nsTreeTreeView() {
   this.__proto__ = new nsTreeView();
 
   this.mData = [
@@ -69,41 +61,35 @@ function nsTreeTreeView()
   ];
 }
 
-function nsTreeView()
-{
+function nsTreeView() {
   this.mTree = null;
   this.mData = [];
 }
 
 nsTreeView.prototype =
 {
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
   // nsITreeView implementation
 
-  get rowCount()
-  {
+  get rowCount() {
     return this.getRowCountIntl(this.mData);
   },
-  setTree: function setTree(aTree)
-  {
+  setTree: function setTree(aTree) {
     this.mTree = aTree;
   },
-  getCellText: function getCellText(aRow, aCol)
-  {
+  getCellText: function getCellText(aRow, aCol) {
     var data = this.getDataForIndex(aRow);
     if (aCol.id in data.colsText)
       return data.colsText[aCol.id];
 
     return data.text + aCol.id;
   },
-  getCellValue: function getCellValue(aRow, aCol)
-  {
+  getCellValue: function getCellValue(aRow, aCol) {
     var data = this.getDataForIndex(aRow);
     return data.value;
   },
   getRowProperties: function getRowProperties(aIndex) { return ""; },
-  getCellProperties: function getCellProperties(aIndex, aCol)
-  {
+  getCellProperties: function getCellProperties(aIndex, aCol) {
     if (!aCol.cycler)
       return "";
 
@@ -111,38 +97,32 @@ nsTreeView.prototype =
     return this.mCyclerStates[data.cyclerState];
   },
   getColumnProperties: function getColumnProperties(aCol) { return ""; },
-  getParentIndex: function getParentIndex(aRowIndex)
-  {
+  getParentIndex: function getParentIndex(aRowIndex) {
     var info = this.getInfoByIndex(aRowIndex);
     return info.parentIndex;
   },
   hasNextSibling: function hasNextSibling(aRowIndex, aAfterIndex) { },
-  getLevel: function getLevel(aIndex)
-  {
+  getLevel: function getLevel(aIndex) {
     var info = this.getInfoByIndex(aIndex);
     return info.level;
   },
   getImageSrc: function getImageSrc(aRow, aCol) {},
   getProgressMode: function getProgressMode(aRow, aCol) {},
-  isContainer: function isContainer(aIndex)
-  {
+  isContainer: function isContainer(aIndex) {
     var data = this.getDataForIndex(aIndex);
     return data.open != undefined;
   },
-  isContainerOpen: function isContainerOpen(aIndex)
-  {
+  isContainerOpen: function isContainerOpen(aIndex) {
     var data = this.getDataForIndex(aIndex);
     return data.open;
   },
-  isContainerEmpty: function isContainerEmpty(aIndex)
-  {
+  isContainerEmpty: function isContainerEmpty(aIndex) {
     var data = this.getDataForIndex(aIndex);
     return data.open == undefined;
   },
   isSeparator: function isSeparator(aIndex) {},
   isSorted: function isSorted() {},
-  toggleOpenState: function toggleOpenState(aIndex)
-  {
+  toggleOpenState: function toggleOpenState(aIndex) {
     var data = this.getDataForIndex(aIndex);
 
     data.open = !data.open;
@@ -155,25 +135,21 @@ nsTreeView.prototype =
   },
   selectionChanged: function selectionChanged() {},
   cycleHeader: function cycleHeader(aCol) {},
-  cycleCell: function cycleCell(aRow, aCol)
-  {
+  cycleCell: function cycleCell(aRow, aCol) {
     var data = this.getDataForIndex(aRow);
     data.cyclerState = (data.cyclerState + 1) % 3;
 
     this.mTree.invalidateCell(aRow, aCol);
   },
-  isEditable: function isEditable(aRow, aCol)
-  {
+  isEditable: function isEditable(aRow, aCol) {
     return true;
   },
   isSelectable: function isSelectable(aRow, aCol) {},
-  setCellText: function setCellText(aRow, aCol, aValue)
-  {
+  setCellText: function setCellText(aRow, aCol, aValue) {
     var data = this.getDataForIndex(aRow);
     data.colsText[aCol.id] = aValue;
   },
-  setCellValue: function setCellValue(aRow, aCol, aValue)
-  {
+  setCellValue: function setCellValue(aRow, aCol, aValue) {
     var data = this.getDataForIndex(aRow);
     data.value = aValue;
 
@@ -183,24 +159,21 @@ nsTreeView.prototype =
   performActionOnRow: function performActionOnRow(aAction, aRow) {},
   performActionOnCell: function performActionOnCell(aAction, aRow, aCol) {},
 
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
   // public implementation
 
-  appendItem: function appendItem(aText)
-  {
+  appendItem: function appendItem(aText) {
     this.mData.push(new treeItem(aText));
   },
 
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
   // private implementation
 
-  getDataForIndex: function getDataForIndex(aRowIndex)
-  {
+  getDataForIndex: function getDataForIndex(aRowIndex) {
     return this.getInfoByIndex(aRowIndex).data;
   },
 
-  getInfoByIndex: function getInfoByIndex(aRowIndex)
-  {
+  getInfoByIndex: function getInfoByIndex(aRowIndex) {
     var info = {
       data: null,
       parentIndex: -1,
@@ -212,8 +185,7 @@ nsTreeView.prototype =
     return info;
   },
 
-  getRowCountIntl: function getRowCountIntl(aChildren)
-  {
+  getRowCountIntl: function getRowCountIntl(aChildren) {
     var rowCount = 0;
     for (var childIdx = 0; childIdx < aChildren.length; childIdx++) {
       rowCount++;
@@ -227,8 +199,7 @@ nsTreeView.prototype =
   },
 
   getInfoByIndexIntl: function getInfoByIndexIntl(aRowIdx, aInfo,
-                                                  aChildren, aLevel)
-  {
+                                                  aChildren, aLevel) {
     var rowIdx = aRowIdx;
     for (var childIdx = 0; childIdx < aChildren.length; childIdx++) {
       var data = aChildren[childIdx];
@@ -266,8 +237,7 @@ nsTreeView.prototype =
   ]
 };
 
-function treeItem(aText, aOpen, aChildren)
-{
+function treeItem(aText, aOpen, aChildren) {
   this.text = aText;
   this.colsText = {};
   this.open = aOpen;

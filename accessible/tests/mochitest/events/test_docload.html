@@ -38,11 +38,10 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function changeIframeSrc(aIdentifier, aURL)
-    {
+    function changeIframeSrc(aIdentifier, aURL) {
       this.DOMNode = getNode(aIdentifier);
 
       this.eventSeq = [
@@ -50,13 +49,11 @@
         new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getIframeDoc)
       ];
 
-      this.invoke = function changeIframeSrc_invoke()
-      {
+      this.invoke = function changeIframeSrc_invoke() {
         this.DOMNode.src = aURL;
       }
 
-      this.finalCheck = function changeIframeSrc_finalCheck()
-      {
+      this.finalCheck = function changeIframeSrc_finalCheck() {
         var accTree = {
           role: ROLE_INTERNAL_FRAME,
           children: [
@@ -70,13 +67,11 @@
         testAccessibleTree(this.DOMNode, accTree);
       }
 
-      this.getID = function changeIframeSrc_getID()
-      {
+      this.getID = function changeIframeSrc_getID() {
         return "change iframe src on " + aURL;
       }
 
-      function getIframeDoc()
-      {
+      function getIframeDoc() {
         return getAccessible(getNode(aIdentifier).contentDocument);
       }
     }
@@ -84,8 +79,7 @@
     const kHide = 1;
     const kShow = 2;
     const kRemove = 3;
-    function morphIFrame(aIdentifier, aAction)
-    {
+    function morphIFrame(aIdentifier, aAction) {
       this.DOMNode = getNode(aIdentifier);
       this.IFrameContainerDOMNode = this.DOMNode.parentNode;
 
@@ -102,8 +96,7 @@
         new invokerChecker(EVENT_REORDER, this.IFrameContainerDOMNode);
       this.eventSeq.push(reorderChecker);
 
-      this.invoke = function morphIFrame_invoke()
-      {
+      this.invoke = function morphIFrame_invoke() {
         if (aAction == kHide) {
           this.DOMNode.style.display = "none";
         } else if (aAction == kShow) {
@@ -113,8 +106,7 @@
         }
       }
 
-      this.finalCheck = function morphIFrame_finalCheck()
-      {
+      this.finalCheck = function morphIFrame_finalCheck() {
         var accTree = {
           role: ROLE_SECTION,
           children: (aAction == kHide || aAction == kRemove) ? [ ] :
@@ -131,8 +123,7 @@
         testAccessibleTree(this.IFrameContainerDOMNode, accTree);
       }
 
-      this.getID = function morphIFrame_getID()
-      {
+      this.getID = function morphIFrame_getID() {
         if (aAction == kRemove)
           return "remove iframe";
 
@@ -141,27 +132,23 @@
       }
     }
 
-    function makeIFrameVisible(aID)
-    {
+    function makeIFrameVisible(aID) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, this.DOMNode.parentNode)
       ];
 
-      this.invoke = function makeIFrameVisible_invoke()
-      {
+      this.invoke = function makeIFrameVisible_invoke() {
         this.DOMNode.style.visibility = "visible";
       }
 
-      this.getID = function makeIFrameVisible_getID()
-      {
+      this.getID = function makeIFrameVisible_getID() {
         return "The accessible for DOM document loaded before it's shown shouldn't have busy state.";
       }
     }
 
-    function openDialogWnd(aURL)
-    {
+    function openDialogWnd(aURL) {
       // Get application root accessible.
       var docAcc = getAccessible(document);
       while (docAcc) {
@@ -178,18 +165,15 @@
         new invokerChecker(EVENT_REORDER, this.mRootAcc)
       ];
 
-      this.invoke = function openDialogWnd_invoke()
-      {
+      this.invoke = function openDialogWnd_invoke() {
         this.mDialog = window.openDialog(aURL);
       }
 
-      this.finalCheck = function openDialogWnd_finalCheck()
-      {
+      this.finalCheck = function openDialogWnd_finalCheck() {
         this.finalCheckImpl();
       }
 
-      this.finalCheckImpl = function openDialogWnd_finalCheckImpl()
-      {
+      this.finalCheckImpl = function openDialogWnd_finalCheckImpl() {
         var accTree = {
           role: ROLE_APP_ROOT,
           children: [
@@ -223,28 +207,24 @@
         });
       }
 
-      this.getID = function openDialogWnd_getID()
-      {
+      this.getID = function openDialogWnd_getID() {
         return "open dialog '" + aURL + "'";
       }
     }
 
-    function openWndShutdownDoc()
-    {
+    function openWndShutdownDoc() {
       this.__proto__ =
         new openDialogWnd("../events/docload_wnd.html");
 
       var thisObj = this;
       var docChecker = {
         type: EVENT_HIDE,
-        get target()
-        {
+        get target() {
           var iframe = this.invoker.mDialog.document.getElementById("iframe");
           this.invoker.iframeDoc = iframe.contentDocument;
           return iframe;
         },
-        get targetDescr()
-        {
+        get targetDescr() {
           return "inner iframe of docload_wnd.html document";
         },
         invoker: thisObj
@@ -252,8 +232,7 @@
 
       this.eventSeq.push(docChecker);
 
-      this.finalCheck = function openWndShutdownDoc_finalCheck()
-      {
+      this.finalCheck = function openWndShutdownDoc_finalCheck() {
         // After timeout after event hide for iframe was handled the document
         // accessible for iframe's document is in cache still.
         ok(!isAccessibleInCache(this.iframeDoc),
@@ -268,17 +247,16 @@
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
 
     var gQueue = null;
 
     // Debug stuff.
     // gA11yEventDumpID = "eventdump";
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new changeIframeSrc("iframe", "about:"));
@@ -295,9 +273,8 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
-    function doLastCallTests()
-    {
-      //////////////////////////////////////////////////////////////////////////
+    function doLastCallTests() {
+      // ////////////////////////////////////////////////////////////////////////
       // makeIFrameVisible() test, part2
 
       // The document shouldn't have busy state (the DOM document was loaded

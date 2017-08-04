@@ -28,26 +28,22 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
   nsAutoCString refPart;
   aURI->GetRef(refPart);
   // Unescape %-escapes in the reference. The result will be in the
-  // origin charset of the URL, hopefully...
+  // document charset, hopefully...
   NS_UnescapeURL(refPart);
 
-  nsAutoCString charset;
-  aURI->GetOriginCharset(charset);
-  auto encoding = Encoding::ForLabelNoReplacement(charset);
-  if (!encoding) {
-    encoding = UTF_8_ENCODING;
+  // Get the current document
+  nsIDocument *doc = aFromContent->OwnerDoc();
+  if (!doc) {
+    return;
   }
+
+  auto encoding = doc->GetDocumentCharacterSet();
   nsAutoString ref;
   nsresult rv = encoding->DecodeWithoutBOMHandling(refPart, ref);
   if (NS_FAILED(rv) || ref.IsEmpty()) {
     return;
   }
   rv = NS_OK;
-
-  // Get the current document
-  nsIDocument *doc = aFromContent->OwnerDoc();
-  if (!doc)
-    return;
 
   nsIContent* bindingParent = aFromContent->GetBindingParent();
   if (bindingParent) {

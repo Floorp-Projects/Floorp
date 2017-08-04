@@ -31,6 +31,8 @@ public class TabsListLayout extends TabsLayout {
 
         setLayoutManager(new LinearLayoutManager(context));
 
+        setPadding();
+
         final int dragDirections = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
         // A TouchHelper handler for drag and drop and swipe to close.
         final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this, dragDirections, this) {
@@ -44,6 +46,13 @@ public class TabsListLayout extends TabsLayout {
         touchHelper.attachToRecyclerView(this);
 
         setItemAnimator(new TabsListLayoutAnimator(ANIMATION_DURATION));
+    }
+
+    private void setPadding() {
+        final float scale = getResources().getDisplayMetrics().density;
+        final float sizeInDp = getResources().getDimensionPixelSize(R.dimen.tab_panel_list_item_top_padding);
+        final int dpAsPixels = (int) (sizeInDp * scale);
+        super.setPadding(0, dpAsPixels, 0, dpAsPixels);
     }
 
     @Override

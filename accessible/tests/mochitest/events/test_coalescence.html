@@ -20,7 +20,7 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invoker base classes
 
     const kRemoveElm = 1;
@@ -32,12 +32,10 @@
      * Base class to test of mutation events coalescence.
      */
     function coalescenceBase(aChildAction, aParentAction,
-                             aPerformActionOnChildInTheFirstPlace)
-    {
+                             aPerformActionOnChildInTheFirstPlace) {
       // Invoker interface
 
-      this.invoke = function coalescenceBase_invoke()
-      {
+      this.invoke = function coalescenceBase_invoke() {
         if (aPerformActionOnChildInTheFirstPlace) {
           this.invokeAction(this.childNode, aChildAction);
           this.invokeAction(this.parentNode, aParentAction);
@@ -47,8 +45,7 @@
         }
       }
 
-      this.getID = function coalescenceBase_getID()
-      {
+      this.getID = function coalescenceBase_getID() {
         var childAction = this.getActionName(aChildAction) + " child";
         var parentAction = this.getActionName(aParentAction) + " parent";
 
@@ -58,8 +55,7 @@
         return parentAction + " and then " + childAction;
       }
 
-      this.finalCheck = function coalescenceBase_check()
-      {
+      this.finalCheck = function coalescenceBase_check() {
         if (this.getEventType(aChildAction) == EVENT_HIDE) {
           testIsDefunct(this.child);
         }
@@ -70,8 +66,7 @@
 
       // Implementation details
 
-      this.invokeAction = function coalescenceBase_invokeAction(aNode, aAction)
-      {
+      this.invokeAction = function coalescenceBase_invokeAction(aNode, aAction) {
         switch (aAction) {
           case kRemoveElm:
             aNode.remove();
@@ -97,8 +92,7 @@
         }
       }
 
-      this.getEventType = function coalescenceBase_getEventType(aAction)
-      {
+      this.getEventType = function coalescenceBase_getEventType(aAction) {
         switch (aAction) {
           case kRemoveElm: case kHideElm:
             return EVENT_HIDE;
@@ -107,8 +101,7 @@
         }
       }
 
-      this.getActionName = function coalescenceBase_getActionName(aAction)
-      {
+      this.getActionName = function coalescenceBase_getActionName(aAction) {
         switch (aAction) {
           case kRemoveElm:
             return "remove";
@@ -123,8 +116,7 @@
         }
       }
 
-      this.initSequence = function coalescenceBase_initSequence()
-      {
+      this.initSequence = function coalescenceBase_initSequence() {
         // expected events
         var eventType = this.getEventType(aParentAction);
         this.eventSeq = [
@@ -145,13 +137,11 @@
      */
     function removeOrHideCoalescenceBase(aChildID, aParentID,
                                          aChildAction, aParentAction,
-                                         aPerformActionOnChildInTheFirstPlace)
-    {
+                                         aPerformActionOnChildInTheFirstPlace) {
       this.__proto__ = new coalescenceBase(aChildAction, aParentAction,
                                            aPerformActionOnChildInTheFirstPlace);
 
-      this.init = function removeOrHideCoalescenceBase_init()
-      {
+      this.init = function removeOrHideCoalescenceBase_init() {
         this.childNode = getNode(aChildID);
         this.parentNode = getNode(aParentID);
         this.child = getAccessible(this.childNode);
@@ -165,14 +155,13 @@
       this.initSequence();
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
     /**
      * Remove child node and then its parent node from DOM tree.
      */
-    function removeChildNParent(aChildID, aParentID)
-    {
+    function removeChildNParent(aChildID, aParentID) {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kRemoveElm,
                                                        true);
@@ -181,8 +170,7 @@
     /**
      * Remove parent node and then its child node from DOM tree.
      */
-    function removeParentNChild(aChildID, aParentID)
-    {
+    function removeParentNChild(aChildID, aParentID) {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kRemoveElm,
                                                        false);
@@ -191,8 +179,7 @@
     /**
      * Hide child node and then its parent node.
      */
-    function hideChildNParent(aChildID, aParentID)
-    {
+    function hideChildNParent(aChildID, aParentID) {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kHideElm, kHideElm,
                                                        true);
@@ -201,8 +188,7 @@
     /**
      * Hide parent node and then its child node.
      */
-    function hideParentNChild(aChildID, aParentID)
-    {
+    function hideParentNChild(aChildID, aParentID) {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kHideElm, kHideElm,
                                                        false);
@@ -211,8 +197,7 @@
     /**
      * Hide child node and then remove its parent node.
      */
-    function hideChildNRemoveParent(aChildID, aParentID)
-    {
+    function hideChildNRemoveParent(aChildID, aParentID) {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kHideElm, kRemoveElm,
                                                        true);
@@ -221,8 +206,7 @@
     /**
      * Hide parent node and then remove its child node.
      */
-    function hideParentNRemoveChild(aChildID, aParentID)
-    {
+    function hideParentNRemoveChild(aChildID, aParentID) {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kHideElm,
                                                        false);
@@ -231,8 +215,7 @@
     /**
      * Remove child node and then hide its parent node.
      */
-    function removeChildNHideParent(aChildID, aParentID)
-    {
+    function removeChildNHideParent(aChildID, aParentID) {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kHideElm,
                                                        true);
@@ -241,8 +224,7 @@
     /**
      * Remove parent node and then hide its child node.
      */
-    function removeParentNHideChild(aChildID, aParentID)
-    {
+    function removeParentNHideChild(aChildID, aParentID) {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kHideElm, kRemoveElm,
                                                        false);
@@ -251,10 +233,8 @@
     /**
      * Create and append parent node and create and append child node to it.
      */
-    function addParentNChild(aHostID, aPerformActionOnChildInTheFirstPlace)
-    {
-      this.init = function addParentNChild_init()
-      {
+    function addParentNChild(aHostID, aPerformActionOnChildInTheFirstPlace) {
+      this.init = function addParentNChild_init() {
         this.hostNode = getNode(aHostID);
         this.parentNode = document.createElement("select");
         this.childNode = document.createElement("option");
@@ -272,10 +252,8 @@
      * Show parent node and show child node to it.
      */
     function showParentNChild(aParentID, aChildID,
-                              aPerformActionOnChildInTheFirstPlace)
-    {
-      this.init = function showParentNChild_init()
-      {
+                              aPerformActionOnChildInTheFirstPlace) {
+      this.init = function showParentNChild_init() {
         this.parentNode = getNode(aParentID);
         this.hostNode = this.parentNode.parentNode;
         this.childNode = getNode(aChildID);
@@ -292,10 +270,8 @@
      * Create and append child node to the DOM and then show parent node.
      */
     function showParentNAddChild(aParentID,
-                                 aPerformActionOnChildInTheFirstPlace)
-    {
-      this.init = function showParentNAddChild_init()
-      {
+                                 aPerformActionOnChildInTheFirstPlace) {
+      this.init = function showParentNAddChild_init() {
         this.parentNode = getNode(aParentID);
         this.hostNode = this.parentNode.parentNode;
         this.childNode = document.createElement("option");
@@ -312,8 +288,7 @@
     /**
      * Remove children and parent
      */
-    function removeGrandChildrenNHideParent(aChild1Id, aChild2Id, aParentId)
-    {
+    function removeGrandChildrenNHideParent(aChild1Id, aChild2Id, aParentId) {
       this.child1 = getNode(aChild1Id);
       this.child2 = getNode(aChild2Id);
       this.parent = getNode(aParentId);
@@ -326,8 +301,7 @@
         new unexpectedInvokerChecker(EVENT_REORDER, getAccessible(aParentId))
       ];
 
-      this.invoke = function removeGrandChildrenNHideParent_invoke()
-      {
+      this.invoke = function removeGrandChildrenNHideParent_invoke() {
         this.child1.remove();
         this.child2.remove();
         this.parent.hidden = true;
@@ -341,8 +315,7 @@
     /**
      * Remove a child, and then its parent.
      */
-    function test3()
-    {
+    function test3() {
       this.o = getAccessible("t3_o");
       this.ofc = getAccessible("t3_o").firstChild;
 
@@ -353,14 +326,12 @@
         new unexpectedInvokerChecker(EVENT_REORDER, this.o)
       ];
 
-      this.invoke = function test3_invoke()
-      {
+      this.invoke = function test3_invoke() {
         getNode("t3_o").textContent = "";
         getNode("t3_lb").removeChild(getNode("t3_o"));
       }
 
-      this.finalCheck = function test3_finalCheck()
-      {
+      this.finalCheck = function test3_finalCheck() {
         testIsDefunct(this.o);
         testIsDefunct(this.ofc);
       }
@@ -373,8 +344,7 @@
     /**
      * Remove children, and then a parent of 2nd child.
      */
-    function test4()
-    {
+    function test4() {
       this.o1 = getAccessible("t4_o1");
       this.o1fc = this.o1.firstChild;
       this.o2 = getAccessible("t4_o2");
@@ -389,15 +359,13 @@
         new unexpectedInvokerChecker(EVENT_REORDER, this.o2)
       ];
 
-      this.invoke = function test4_invoke()
-      {
+      this.invoke = function test4_invoke() {
         getNode("t4_o1").textContent = "";
         getNode("t4_o2").textContent = "";
         getNode("t4_lb").removeChild(getNode("t4_o2"));
       }
 
-      this.finalCheck = function test4_finalCheck()
-      {
+      this.finalCheck = function test4_finalCheck() {
         testIsDefunct(this.o1fc);
         testIsDefunct(this.o2);
         testIsDefunct(this.o2fc);
@@ -411,8 +379,7 @@
     /**
      * Remove a child, remove a parent sibling, remove the parent
      */
-    function test5()
-    {
+    function test5() {
       this.o = getAccessible("t5_o");
       this.ofc = this.o.firstChild;
       this.b = getAccessible("t5_b");
@@ -427,15 +394,13 @@
         new unexpectedInvokerChecker(EVENT_REORDER, this.lb)
       ];
 
-      this.invoke = function test5_invoke()
-      {
+      this.invoke = function test5_invoke() {
         getNode("t5_o").textContent = "";
         getNode("t5").removeChild(getNode("t5_b"));
         getNode("t5_lb").removeChild(getNode("t5_o"));
       }
 
-      this.finalCheck = function test5_finalCheck()
-      {
+      this.finalCheck = function test5_finalCheck() {
         testIsDefunct(this.ofc);
         testIsDefunct(this.o);
         testIsDefunct(this.b);
@@ -454,8 +419,7 @@
      * </div>
      * <div id="t6_sc" aria-owns="t6_owns"></div>
      */
-    function test6()
-    {
+    function test6() {
       this.parent = getNode("t6");
       this.fc = document.createElement("div");
       this.fc.setAttribute("id", "t6_fc");
@@ -474,8 +438,7 @@
         new unexpectedInvokerChecker(EVENT_SHOW, this.owns)
       ];
 
-      this.invoke = function test6_invoke()
-      {
+      this.invoke = function test6_invoke() {
         getNode("t6").appendChild(this.fc);
         getNode("t6_fc").appendChild(this.owns);
         getNode("t6").appendChild(this.sc);
@@ -498,23 +461,21 @@
      *   <div><div id="t7_c_grandchild">ha</div></div>
      * </div>
      */
-    function test7()
-    {
+    function test7() {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode('t7_c')),
-        new invokerChecker(EVENT_SHOW, getNode('t7_c')),
-        new invokerChecker(EVENT_REORDER, getNode('t7')),
-        new unexpectedInvokerChecker(EVENT_REORDER, getNode('t7_c_directchild')),
-        new unexpectedInvokerChecker(EVENT_REORDER, getNode('t7_c_grandchild')),
-        new unexpectedInvokerChecker(EVENT_SHOW, () => getNode('t7_c_directchild').firstChild),
-        new unexpectedInvokerChecker(EVENT_SHOW, () => getNode('t7_c_grandchild').firstChild)
+        new invokerChecker(EVENT_HIDE, getNode("t7_c")),
+        new invokerChecker(EVENT_SHOW, getNode("t7_c")),
+        new invokerChecker(EVENT_REORDER, getNode("t7")),
+        new unexpectedInvokerChecker(EVENT_REORDER, getNode("t7_c_directchild")),
+        new unexpectedInvokerChecker(EVENT_REORDER, getNode("t7_c_grandchild")),
+        new unexpectedInvokerChecker(EVENT_SHOW, () => getNode("t7_c_directchild").firstChild),
+        new unexpectedInvokerChecker(EVENT_SHOW, () => getNode("t7_c_grandchild").firstChild)
       ];
 
-      this.invoke = function test7_invoke()
-      {
-        getNode('t7_c_directchild').textContent = 'ha';
-        getNode('t7_c_grandchild').textContent = 'ha';
-        getNode('t7_moveplace').setAttribute('aria-owns', 't7_c');
+      this.invoke = function test7_invoke() {
+        getNode("t7_c_directchild").textContent = "ha";
+        getNode("t7_c_grandchild").textContent = "ha";
+        getNode("t7_moveplace").setAttribute("aria-owns", "t7_c");
       };
 
       this.getID = function test7_getID() {
@@ -533,24 +494,22 @@
      *
      * The hide event should be delivered before the paired show event.
      */
-    function test8()
-    {
+    function test8() {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode('t8_c1_child')),
-        new invokerChecker(EVENT_HIDE, 't8_c2_moved'),
-        new invokerChecker(EVENT_SHOW, 't8_c2_moved'),
-        new invokerChecker(EVENT_REORDER, 't8_c2'),
-        new invokerChecker(EVENT_REORDER, 't8_c1'),
+        new invokerChecker(EVENT_HIDE, getNode("t8_c1_child")),
+        new invokerChecker(EVENT_HIDE, "t8_c2_moved"),
+        new invokerChecker(EVENT_SHOW, "t8_c2_moved"),
+        new invokerChecker(EVENT_REORDER, "t8_c2"),
+        new invokerChecker(EVENT_REORDER, "t8_c1"),
       ];
 
-      this.invoke = function test8_invoke()
-      {
+      this.invoke = function test8_invoke() {
         // Remove a node from 't8_c1' container to give the event tree a
         // desired structure (the 't8_c1' container node goes first in the event
         // tree)
-        getNode('t8_c1_child').remove();
+        getNode("t8_c1_child").remove();
         // then move 't8_c2_moved' from 't8_c2' to 't8_c1'.
-        getNode('t8_c1').setAttribute('aria-owns', 't8_c2_moved');
+        getNode("t8_c1").setAttribute("aria-owns", "t8_c2_moved");
       };
 
       this.getID = function test8_getID() {
@@ -574,30 +533,28 @@
      * The hide events for 't9_c2_moved' and 't9_c3_moved' should be delivered
      * before the show event for 't9_c2_moved'.
      */
-    function test9()
-    {
+    function test9() {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode('t9_c1_child')),
-        new invokerChecker(EVENT_HIDE, getNode('t9_c2_child')),
-        new invokerChecker(EVENT_HIDE, 't9_c3_moved'),
-        new invokerChecker(EVENT_HIDE, 't9_c2_moved'),
-        new invokerChecker(EVENT_SHOW, 't9_c2_moved'),
-        new invokerChecker(EVENT_REORDER, 't9_c3'),
-        new invokerChecker(EVENT_REORDER, 't9_c2'),
-        new invokerChecker(EVENT_REORDER, 't9_c1'),
-        new unexpectedInvokerChecker(EVENT_SHOW, 't9_c3_moved')
+        new invokerChecker(EVENT_HIDE, getNode("t9_c1_child")),
+        new invokerChecker(EVENT_HIDE, getNode("t9_c2_child")),
+        new invokerChecker(EVENT_HIDE, "t9_c3_moved"),
+        new invokerChecker(EVENT_HIDE, "t9_c2_moved"),
+        new invokerChecker(EVENT_SHOW, "t9_c2_moved"),
+        new invokerChecker(EVENT_REORDER, "t9_c3"),
+        new invokerChecker(EVENT_REORDER, "t9_c2"),
+        new invokerChecker(EVENT_REORDER, "t9_c1"),
+        new unexpectedInvokerChecker(EVENT_SHOW, "t9_c3_moved")
       ];
 
-      this.invoke = function test9_invoke()
-      {
+      this.invoke = function test9_invoke() {
         // Remove child nodes from 't9_c1' and 't9_c2' containers to give
         // the event tree a needed structure ('t9_c1' and 't9_c2' nodes go
         // first in the event tree),
-        getNode('t9_c1_child').remove();
-        getNode('t9_c2_child').remove();
+        getNode("t9_c1_child").remove();
+        getNode("t9_c2_child").remove();
         // then do aria-owns magic.
-        getNode('t9_c2_moved').setAttribute('aria-owns', 't9_c3_moved');
-        getNode('t9_c1').setAttribute('aria-owns', 't9_c2_moved');
+        getNode("t9_c2_moved").setAttribute("aria-owns", "t9_c3_moved");
+        getNode("t9_c1").setAttribute("aria-owns", "t9_c2_moved");
       };
 
       this.getID = function test9_getID() {
@@ -620,29 +577,27 @@
      * The hide events for 't10_c2_moved' and 't10_c3_moved' should be delivered
      * before the show event for 't10_c2_moved'.
      */
-    function test10()
-    {
+    function test10() {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode('t10_c1_child')),
-        new invokerChecker(EVENT_HIDE, getNode('t10_c2_child')),
-        new invokerChecker(EVENT_HIDE, getNode('t10_c2_moved')),
-        new invokerChecker(EVENT_HIDE, getNode('t10_c3_moved')),
-        new invokerChecker(EVENT_SHOW, getNode('t10_c2_moved')),
-        new invokerChecker(EVENT_REORDER, 't10_c2'),
-        new invokerChecker(EVENT_REORDER, 't10_c1'),
-        new invokerChecker(EVENT_REORDER, 't10_c3')
+        new invokerChecker(EVENT_HIDE, getNode("t10_c1_child")),
+        new invokerChecker(EVENT_HIDE, getNode("t10_c2_child")),
+        new invokerChecker(EVENT_HIDE, getNode("t10_c2_moved")),
+        new invokerChecker(EVENT_HIDE, getNode("t10_c3_moved")),
+        new invokerChecker(EVENT_SHOW, getNode("t10_c2_moved")),
+        new invokerChecker(EVENT_REORDER, "t10_c2"),
+        new invokerChecker(EVENT_REORDER, "t10_c1"),
+        new invokerChecker(EVENT_REORDER, "t10_c3")
       ];
 
-      this.invoke = function test10_invoke()
-      {
+      this.invoke = function test10_invoke() {
         // Remove child nodes from 't10_c1' and 't10_c2' containers to give
         // the event tree a needed structure ('t10_c1' and 't10_c2' nodes go first
         // in the event tree),
-        getNode('t10_c1_child').remove();
-        getNode('t10_c2_child').remove();
+        getNode("t10_c1_child").remove();
+        getNode("t10_c2_child").remove();
         // then do aria-owns stuff.
-        getNode('t10_c1').setAttribute('aria-owns', 't10_c2_moved');
-        getNode('t10_c2_moved').setAttribute('aria-owns', 't10_c3_moved');
+        getNode("t10_c1").setAttribute("aria-owns", "t10_c2_moved");
+        getNode("t10_c2_moved").setAttribute("aria-owns", "t10_c3_moved");
       };
 
       this.getID = function test10_getID() {
@@ -655,32 +610,30 @@
      * move its parent too by aria-owns. No hide event should be fired for
      * original node.
      */
-    function test11()
-    {
+    function test11() {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode('t11_c1_child')),
-        new invokerChecker(EVENT_HIDE, getNode('t11_c2')),
+        new invokerChecker(EVENT_HIDE, getNode("t11_c1_child")),
+        new invokerChecker(EVENT_HIDE, getNode("t11_c2")),
         new orderChecker(),
-        new asyncInvokerChecker(EVENT_SHOW, 't11_c2_child'),
-        new asyncInvokerChecker(EVENT_SHOW, 't11_c2'),
+        new asyncInvokerChecker(EVENT_SHOW, "t11_c2_child"),
+        new asyncInvokerChecker(EVENT_SHOW, "t11_c2"),
         new orderChecker(),
-        new invokerChecker(EVENT_REORDER, 't11'),
-        new unexpectedInvokerChecker(EVENT_HIDE, 't11_c2_child'),
-        new unexpectedInvokerChecker(EVENT_REORDER, 't11_c1'),
-        new unexpectedInvokerChecker(EVENT_REORDER, 't11_c2'),
-        new unexpectedInvokerChecker(EVENT_REORDER, 't11_c3')
+        new invokerChecker(EVENT_REORDER, "t11"),
+        new unexpectedInvokerChecker(EVENT_HIDE, "t11_c2_child"),
+        new unexpectedInvokerChecker(EVENT_REORDER, "t11_c1"),
+        new unexpectedInvokerChecker(EVENT_REORDER, "t11_c2"),
+        new unexpectedInvokerChecker(EVENT_REORDER, "t11_c3")
       ];
 
-      this.invoke = function test11_invoke()
-      {
+      this.invoke = function test11_invoke() {
         // Remove a node from 't11_c1' container to give the event tree a
         // desired structure (the 't11_c1' container node goes first in
         // the event tree),
-        getNode('t11_c1_child').remove();
+        getNode("t11_c1_child").remove();
         // then move 't11_c2_moved' from 't11_c2' to 't11_c1', and then move
         // 't11_c2' to 't11_c3'.
-        getNode('t11_c1').setAttribute('aria-owns', 't11_c2_child');
-        getNode('t11_c3').setAttribute('aria-owns', 't11_c2');
+        getNode("t11_c1").setAttribute("aria-owns", "t11_c2_child");
+        getNode("t11_c3").setAttribute("aria-owns", "t11_c2");
       };
 
       this.getID = function test11_getID() {
@@ -688,15 +641,14 @@
       };
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests.
 
     gA11yEventDumpToConsole = true; // debug stuff
-    //enableLogging("eventTree");
+    // enableLogging("eventTree");
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new removeChildNParent("option1", "select1"));

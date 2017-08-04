@@ -19,10 +19,9 @@
 
   <script type="application/javascript">
     var kX = 10, kY = 10, kWidth = 150, kHeight = 100;
-    function doTest()
-    {
+    function doTest() {
       var canv = document.getElementById("c");
-      var context = canv.getContext('2d');
+      var context = canv.getContext("2d");
       var element = document.getElementById("showA");
       context.beginPath();
       context.rect(kX, kY, kWidth, kHeight);
@@ -43,7 +42,7 @@
 
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(function() {
-      SpecialPowers.pushPrefEnv({"set": [['canvas.hitregions.enabled', true]]}, doTest);
+      SpecialPowers.pushPrefEnv({"set": [["canvas.hitregions.enabled", true]]}, doTest);
     });
 
     </script>

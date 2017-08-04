@@ -17,8 +17,7 @@
 
   <script type="application/javascript">
 
-    function doTest()
-    {
+    function doTest() {
       if (!WIN) {
         ok(true,
            "It's Windows specific test. Feel free to extend the test.");
@@ -43,7 +42,7 @@
       // make sure we handle content changes under the plugin.
       getNode("fallback1").setAttribute("href", "5");
       getNode("fallback2").setAttribute("href", "5");
-      SimpleTest.executeSoon(function () { SimpleTest.finish(); });
+      SimpleTest.executeSoon(function() { SimpleTest.finish(); });
     }
 
     SimpleTest.waitForExplicitFinish();

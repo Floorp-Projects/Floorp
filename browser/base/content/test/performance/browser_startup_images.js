@@ -97,51 +97,14 @@ const whitelist = [
   },
 
   {
-    file: "chrome://browser/skin/places/unfiledBookmarks.png",
-    hidpi: "<not loaded>",
-    platforms: ["win", "macosx"],
-    intermittentNotLoaded: ["win", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/urlbar-history-dropmarker.png",
-    hidpi: "<not loaded>",
-    platforms: ["win", "macosx"],
-    intermittentShown: ["win", "macosx"],
-  },
-
-  {
     file: "chrome://global/skin/icons/chevron.png",
     hidpi: "chrome://global/skin/icons/chevron@2x.png",
     platforms: ["macosx"],
   },
 
   {
-    file: "chrome://pocket/content/panels/img/pocketmenuitem16.png",
-    hidpi: "chrome://pocket/content/panels/img/pocketmenuitem16@2x.png",
-    platforms: ["macosx"],
-  },
-
-  {
-    file: "chrome://browser/skin/places/bookmarksToolbar.png",
-    hidpi: "chrome://browser/skin/places/bookmarksToolbar@2x.png",
-    platforms: ["macosx"],
-  },
-
-  {
-    file: "chrome://global/skin/tree/folder.png",
-    hidpi: "chrome://global/skin/tree/folder@2x.png",
-    platforms: ["macosx"],
-  },
-
-  {
     file: "chrome://global/skin/toolbar/chevron.gif",
     platforms: ["win", "linux"],
-  },
-
-  {
-    file: "chrome://browser/skin/reload-stop-go.png",
-    platforms: ["win", "linux"],
-    intermittentShown: ["win", "linux"],
   },
 
   {

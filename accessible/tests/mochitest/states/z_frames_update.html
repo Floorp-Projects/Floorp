@@ -1,8 +1,7 @@
 <html>
 <head>
 <script>
-function replaceBody()
-{
+function replaceBody() {
   var accService = Components.classes["@mozilla.org/accessibilityService;1"].
     getService(Components.interfaces.nsIAccessibilityService);
   accService.getAccessibleFor(document);

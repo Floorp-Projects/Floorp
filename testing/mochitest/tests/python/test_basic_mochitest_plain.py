@@ -78,6 +78,7 @@ def test_output_fail(runtests):
         assert set(lines[0].values()) == set(lines[1].values())
 
 
+@pytest.mark.skip_mozinfo("!crashreporter")
 def test_output_crash(runtests):
     status, lines = runtests('test_crash.html', environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"])
     assert status == 1
@@ -94,6 +95,23 @@ def test_output_crash(runtests):
 
     lines = filter_action('test_end', lines)
     assert len(lines) == 0
+
+
+@pytest.mark.skip_mozinfo("!asan")
+def test_output_asan(runtests):
+    status, lines = runtests('test_crash.html', environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"])
+    # TODO: mochitest should return non-zero here
+    assert status == 0
+
+    tbpl_status, log_level = get_mozharness_status(lines, status)
+    assert tbpl_status == TBPL_FAILURE
+    assert log_level == ERROR
+
+    crash = filter_action('crash', lines)
+    assert len(crash) == 0
+
+    process_output = filter_action('process_output', lines)
+    assert any('ERROR: AddressSanitizer' in l['data'] for l in process_output)
 
 
 @pytest.mark.skip_mozinfo("!debug")

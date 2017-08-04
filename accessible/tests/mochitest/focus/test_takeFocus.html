@@ -19,34 +19,30 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function takeFocusInvoker(aID)
-    {
+    function takeFocusInvoker(aID) {
       this.accessible = getAccessible(aID);
 
       this.eventSeq = [ new focusChecker(this.accessible) ];
 
-      this.invoke = function takeFocusInvoker_invoke()
-      {
+      this.invoke = function takeFocusInvoker_invoke() {
         this.accessible.takeFocus();
       }
 
-      this.getID = function takeFocusInvoker_getID()
-      {
+      this.getID = function takeFocusInvoker_getID() {
         return "takeFocus for " + prettyName(aID);
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       disableLogging(); // from test_focusedChild
       gQueue = new eventQueue();
 
@@ -65,8 +61,7 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
-    function waitForPlugin()
-    {
+    function waitForPlugin() {
       window.setTimeout((isAccessible("plugin") ? doTest : waitForPlugin), 0);
     }
 

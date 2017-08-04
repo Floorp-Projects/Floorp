@@ -24,12 +24,10 @@
     /**
      * Invokers
      */
-    function synthTabAndCheckPrevTabbed(aID, aPrevID)
-    {
+    function synthTabAndCheckPrevTabbed(aID, aPrevID) {
       this.__proto__ = new synthTab(aID, new focusChecker(aID));
 
-      this.finalCheck = function changeSelection_finalCheck()
-      {
+      this.finalCheck = function changeSelection_finalCheck() {
         var prevTabbed = getAccessible(aPrevID, [ nsIAccessibleText ]);
         is(prevTabbed.selectionCount, 0,
            "Wrong selection count for " + aPrevID);
@@ -45,8 +43,7 @@
         ok(exceptionCaught, "No selection was expected for " + aPrevID);
       }
 
-      this.getID = function changeSelection_getID()
-      {
+      this.getID = function changeSelection_getID() {
         return "Hidden selection check for " + aPrevID;
       }
     }
@@ -55,11 +52,10 @@
      * Do tests
      */
 
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       // Tab to 't2' and then tab out it: it must has no selection.

@@ -64,7 +64,6 @@ var CustomizationHandler = {
       gURLBar = document.getElementById("urlbar");
 
       gHomeButton.updateTooltip();
-      XULBrowserWindow.init();
 
       if (AppConstants.platform != "macosx")
         updateEditUIVisibility();

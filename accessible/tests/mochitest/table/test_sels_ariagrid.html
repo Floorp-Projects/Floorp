@@ -21,9 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
           src="../table.js"></script>
 
   <script type="application/javascript">
-    function doTest()
-    {
-      //////////////////////////////////////////////////////////////////////////
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA grid
       var cellsArray =
       [
@@ -40,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       testSelectTableColumn("table", 0, cellsArray);
       testSelectTableRow("table", 0, cellsArray);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // a bit crazy ARIA grid
       cellsArray =
       [
@@ -54,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       testUnselectTableColumn("grid2", 0, cellsArray);
       testUnselectTableRow("grid2", 0, cellsArray);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA grid (column and row headers)
 
       cellsArray =

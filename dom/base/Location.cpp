@@ -821,7 +821,12 @@ Location::SetSearch(const nsAString& aSearch,
     return;
   }
 
-  aRv = url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+  if (nsIDocument* doc = GetEntryDocument()) {
+    aRv = url->SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
+                                    doc->GetDocumentCharacterSet());
+  } else {
+    aRv = url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+  }
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

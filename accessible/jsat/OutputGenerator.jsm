@@ -4,7 +4,7 @@
 
 /* exported UtteranceGenerator, BrailleGenerator */
 
-'use strict';
+"use strict";
 
 const {utils: Cu, interfaces: Ci} = Components;
 
@@ -17,19 +17,19 @@ const IGNORE_EXPLICIT_NAME = 0x20;
 const OUTPUT_DESC_FIRST = 0;
 const OUTPUT_DESC_LAST = 1;
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Utils', // jshint ignore:line
-  'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'PrefCache', // jshint ignore:line
-  'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Logger', // jshint ignore:line
-  'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Roles', // jshint ignore:line
-  'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'States', // jshint ignore:line
-  'resource://gre/modules/accessibility/Constants.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils", // jshint ignore:line
+  "resource://gre/modules/accessibility/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrefCache", // jshint ignore:line
+  "resource://gre/modules/accessibility/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Logger", // jshint ignore:line
+  "resource://gre/modules/accessibility/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Roles", // jshint ignore:line
+  "resource://gre/modules/accessibility/Constants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "States", // jshint ignore:line
+  "resource://gre/modules/accessibility/Constants.jsm");
 
-this.EXPORTED_SYMBOLS = ['UtteranceGenerator', 'BrailleGenerator']; // jshint ignore:line
+this.EXPORTED_SYMBOLS = ["UtteranceGenerator", "BrailleGenerator"]; // jshint ignore:line
 
 var OutputGenerator = {
 
@@ -57,7 +57,7 @@ var OutputGenerator = {
       // NAME_FROM_SUBTREE_RULE.
       return (((nameRule & INCLUDE_VALUE) && aAccessible.value) ||
               ((nameRule & NAME_FROM_SUBTREE_RULE) &&
-               (Utils.getAttributes(aAccessible)['explicit-name'] === 'true' &&
+               (Utils.getAttributes(aAccessible)["explicit-name"] === "true" &&
                !(nameRule & IGNORE_EXPLICIT_NAME))));
     };
 
@@ -166,7 +166,7 @@ var OutputGenerator = {
    */
   _addName: function _addName(aOutput, aAccessible, aFlags) {
     let name;
-    if ((Utils.getAttributes(aAccessible)['explicit-name'] === 'true' &&
+    if ((Utils.getAttributes(aAccessible)["explicit-name"] === "true" &&
          !(aFlags & IGNORE_EXPLICIT_NAME)) || (aFlags & INCLUDE_NAME)) {
       name = aAccessible.name;
     }
@@ -177,17 +177,17 @@ var OutputGenerator = {
       // so we can make sure we don't speak duplicated descriptions
       let tmpName = name || aAccessible.name;
       if (tmpName && (description !== tmpName)) {
-        name = name || '';
+        name = name || "";
         name = this.outputOrder === OUTPUT_DESC_FIRST ?
-          description + ' - ' + name :
-          name + ' - ' + description;
+          description + " - " + name :
+          name + " - " + description;
       }
     }
 
     if (!name || !name.trim()) {
       return;
     }
-    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift'](name);
+    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? "push" : "unshift"](name);
   },
 
   /**
@@ -200,7 +200,7 @@ var OutputGenerator = {
     if (!landmarkName) {
       return;
     }
-    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'unshift' : 'push']({
+    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? "unshift" : "push"]({
       string: landmarkName
     });
   },
@@ -232,7 +232,7 @@ var OutputGenerator = {
       case Roles.MATHML_UNDER:
       case Roles.MATHML_UNDER_OVER:
         // For scripted accessibles, use the string 'mathmlscripted'.
-        roleStr = 'mathmlscripted';
+        roleStr = "mathmlscripted";
         break;
       case Roles.MATHML_FRACTION:
         // From a semantic point of view, the only important point is to
@@ -244,7 +244,7 @@ var OutputGenerator = {
         if (linethickness) {
             let numberMatch = linethickness.match(/^(?:\d|\.)+/);
             if (numberMatch && !parseFloat(numberMatch[0])) {
-                roleStr += 'withoutbar';
+                roleStr += "withoutbar";
             }
         }
         break;
@@ -258,11 +258,11 @@ var OutputGenerator = {
     // (e.g. numerator for the first child of a mathmlfraction).
     let mathRole = Utils.getMathRole(aAccessible);
     if (mathRole) {
-      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift']({
+      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? "push" : "unshift"]({
         string: this._getOutputName(mathRole)});
     }
     if (roleStr) {
-      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift']({
+      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? "push" : "unshift"]({
         string: this._getOutputName(roleStr)});
     }
   },
@@ -273,10 +273,10 @@ var OutputGenerator = {
    * @param {nsIAccessible} aAccessible current accessible object.
    */
   _addMencloseNotations: function _addMencloseNotations(aOutput, aAccessible) {
-    let notations = Utils.getAttributes(aAccessible).notation || 'longdiv';
-    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift'].apply(
-      aOutput, notations.split(' ').map(notation => {
-        return { string: this._getOutputName('notation-' + notation) };
+    let notations = Utils.getAttributes(aAccessible).notation || "longdiv";
+    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? "push" : "unshift"].apply(
+      aOutput, notations.split(" ").map(notation => {
+        return { string: this._getOutputName("notation-" + notation) };
       }));
   },
 
@@ -287,16 +287,16 @@ var OutputGenerator = {
    * @param {String} aRoleStr aAccessible's role string.
    */
   _addType: function _addType(aOutput, aAccessible, aRoleStr) {
-    if (aRoleStr !== 'entry') {
+    if (aRoleStr !== "entry") {
       return;
     }
 
-    let typeName = Utils.getAttributes(aAccessible)['text-input-type'];
+    let typeName = Utils.getAttributes(aAccessible)["text-input-type"];
     // Ignore the the input type="text" case.
-    if (!typeName || typeName === 'text') {
+    if (!typeName || typeName === "text") {
       return;
     }
-    aOutput.push({string: 'textInputType_' + typeName});
+    aOutput.push({string: "textInputType_" + typeName});
   },
 
   _addState: function _addState(aOutput, aState, aRoleStr) {}, // jshint ignore:line
@@ -305,115 +305,115 @@ var OutputGenerator = {
 
   get outputOrder() {
     if (!this._utteranceOrder) {
-      this._utteranceOrder = new PrefCache('accessibility.accessfu.utterance');
+      this._utteranceOrder = new PrefCache("accessibility.accessfu.utterance");
     }
-    return typeof this._utteranceOrder.value === 'number' ?
+    return typeof this._utteranceOrder.value === "number" ?
       this._utteranceOrder.value : this.defaultOutputOrder;
   },
 
   _getOutputName: function _getOutputName(aName) {
-    return aName.replace(/\s/g, '');
+    return aName.replace(/\s/g, "");
   },
 
   roleRuleMap: {
-    'menubar': INCLUDE_DESC,
-    'scrollbar': INCLUDE_DESC,
-    'grip': INCLUDE_DESC,
-    'alert': INCLUDE_DESC | INCLUDE_NAME,
-    'menupopup': INCLUDE_DESC,
-    'menuitem': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'tooltip': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'columnheader': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'rowheader': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'column': NAME_FROM_SUBTREE_RULE,
-    'row': NAME_FROM_SUBTREE_RULE,
-    'cell': INCLUDE_DESC | INCLUDE_NAME,
-    'application': INCLUDE_NAME,
-    'document': INCLUDE_NAME,
-    'grouping': INCLUDE_DESC | INCLUDE_NAME,
-    'toolbar': INCLUDE_DESC,
-    'table': INCLUDE_DESC | INCLUDE_NAME,
-    'link': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'helpballoon': NAME_FROM_SUBTREE_RULE,
-    'list': INCLUDE_DESC | INCLUDE_NAME,
-    'listitem': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'outline': INCLUDE_DESC,
-    'outlineitem': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'pagetab': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'graphic': INCLUDE_DESC,
-    'switch': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'pushbutton': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'checkbutton': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'radiobutton': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'buttondropdown': NAME_FROM_SUBTREE_RULE,
-    'combobox': INCLUDE_DESC | INCLUDE_VALUE,
-    'droplist': INCLUDE_DESC,
-    'progressbar': INCLUDE_DESC | INCLUDE_VALUE,
-    'slider': INCLUDE_DESC | INCLUDE_VALUE,
-    'spinbutton': INCLUDE_DESC | INCLUDE_VALUE,
-    'diagram': INCLUDE_DESC,
-    'animation': INCLUDE_DESC,
-    'equation': INCLUDE_DESC,
-    'buttonmenu': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'buttondropdowngrid': NAME_FROM_SUBTREE_RULE,
-    'pagetablist': INCLUDE_DESC,
-    'canvas': INCLUDE_DESC,
-    'check menu item': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'label': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'password text': INCLUDE_DESC,
-    'popup menu': INCLUDE_DESC,
-    'radio menu item': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'table column header': NAME_FROM_SUBTREE_RULE,
-    'table row header': NAME_FROM_SUBTREE_RULE,
-    'tear off menu item': NAME_FROM_SUBTREE_RULE,
-    'toggle button': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'parent menuitem': NAME_FROM_SUBTREE_RULE,
-    'header': INCLUDE_DESC,
-    'footer': INCLUDE_DESC,
-    'entry': INCLUDE_DESC | INCLUDE_NAME | INCLUDE_VALUE,
-    'caption': INCLUDE_DESC,
-    'document frame': INCLUDE_DESC,
-    'heading': INCLUDE_DESC,
-    'calendar': INCLUDE_DESC | INCLUDE_NAME,
-    'combobox option': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'listbox option': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'listbox rich option': NAME_FROM_SUBTREE_RULE,
-    'gridcell': NAME_FROM_SUBTREE_RULE,
-    'check rich option': NAME_FROM_SUBTREE_RULE,
-    'term': NAME_FROM_SUBTREE_RULE,
-    'definition': NAME_FROM_SUBTREE_RULE,
-    'key': NAME_FROM_SUBTREE_RULE,
-    'image map': INCLUDE_DESC,
-    'option': INCLUDE_DESC,
-    'listbox': INCLUDE_DESC,
-    'definitionlist': INCLUDE_DESC | INCLUDE_NAME,
-    'dialog': INCLUDE_DESC | INCLUDE_NAME,
-    'chrome window': IGNORE_EXPLICIT_NAME,
-    'app root': IGNORE_EXPLICIT_NAME,
-    'statusbar': NAME_FROM_SUBTREE_RULE,
-    'mathml table': INCLUDE_DESC | INCLUDE_NAME,
-    'mathml labeled row': NAME_FROM_SUBTREE_RULE,
-    'mathml table row': NAME_FROM_SUBTREE_RULE,
-    'mathml cell': INCLUDE_DESC | INCLUDE_NAME,
-    'mathml fraction': INCLUDE_DESC,
-    'mathml square root': INCLUDE_DESC,
-    'mathml root': INCLUDE_DESC,
-    'mathml enclosed': INCLUDE_DESC,
-    'mathml sub': INCLUDE_DESC,
-    'mathml sup': INCLUDE_DESC,
-    'mathml sub sup': INCLUDE_DESC,
-    'mathml under': INCLUDE_DESC,
-    'mathml over': INCLUDE_DESC,
-    'mathml under over': INCLUDE_DESC,
-    'mathml multiscripts': INCLUDE_DESC,
-    'mathml identifier': INCLUDE_DESC,
-    'mathml number': INCLUDE_DESC,
-    'mathml operator': INCLUDE_DESC,
-    'mathml text': INCLUDE_DESC,
-    'mathml string literal': INCLUDE_DESC,
-    'mathml row': INCLUDE_DESC,
-    'mathml style': INCLUDE_DESC,
-    'mathml error': INCLUDE_DESC },
+    "menubar": INCLUDE_DESC,
+    "scrollbar": INCLUDE_DESC,
+    "grip": INCLUDE_DESC,
+    "alert": INCLUDE_DESC | INCLUDE_NAME,
+    "menupopup": INCLUDE_DESC,
+    "menuitem": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "tooltip": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "columnheader": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "rowheader": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "column": NAME_FROM_SUBTREE_RULE,
+    "row": NAME_FROM_SUBTREE_RULE,
+    "cell": INCLUDE_DESC | INCLUDE_NAME,
+    "application": INCLUDE_NAME,
+    "document": INCLUDE_NAME,
+    "grouping": INCLUDE_DESC | INCLUDE_NAME,
+    "toolbar": INCLUDE_DESC,
+    "table": INCLUDE_DESC | INCLUDE_NAME,
+    "link": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "helpballoon": NAME_FROM_SUBTREE_RULE,
+    "list": INCLUDE_DESC | INCLUDE_NAME,
+    "listitem": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "outline": INCLUDE_DESC,
+    "outlineitem": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "pagetab": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "graphic": INCLUDE_DESC,
+    "switch": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "pushbutton": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "checkbutton": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "radiobutton": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "buttondropdown": NAME_FROM_SUBTREE_RULE,
+    "combobox": INCLUDE_DESC | INCLUDE_VALUE,
+    "droplist": INCLUDE_DESC,
+    "progressbar": INCLUDE_DESC | INCLUDE_VALUE,
+    "slider": INCLUDE_DESC | INCLUDE_VALUE,
+    "spinbutton": INCLUDE_DESC | INCLUDE_VALUE,
+    "diagram": INCLUDE_DESC,
+    "animation": INCLUDE_DESC,
+    "equation": INCLUDE_DESC,
+    "buttonmenu": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "buttondropdowngrid": NAME_FROM_SUBTREE_RULE,
+    "pagetablist": INCLUDE_DESC,
+    "canvas": INCLUDE_DESC,
+    "check menu item": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "label": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "password text": INCLUDE_DESC,
+    "popup menu": INCLUDE_DESC,
+    "radio menu item": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "table column header": NAME_FROM_SUBTREE_RULE,
+    "table row header": NAME_FROM_SUBTREE_RULE,
+    "tear off menu item": NAME_FROM_SUBTREE_RULE,
+    "toggle button": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "parent menuitem": NAME_FROM_SUBTREE_RULE,
+    "header": INCLUDE_DESC,
+    "footer": INCLUDE_DESC,
+    "entry": INCLUDE_DESC | INCLUDE_NAME | INCLUDE_VALUE,
+    "caption": INCLUDE_DESC,
+    "document frame": INCLUDE_DESC,
+    "heading": INCLUDE_DESC,
+    "calendar": INCLUDE_DESC | INCLUDE_NAME,
+    "combobox option": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "listbox option": INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    "listbox rich option": NAME_FROM_SUBTREE_RULE,
+    "gridcell": NAME_FROM_SUBTREE_RULE,
+    "check rich option": NAME_FROM_SUBTREE_RULE,
+    "term": NAME_FROM_SUBTREE_RULE,
+    "definition": NAME_FROM_SUBTREE_RULE,
+    "key": NAME_FROM_SUBTREE_RULE,
+    "image map": INCLUDE_DESC,
+    "option": INCLUDE_DESC,
+    "listbox": INCLUDE_DESC,
+    "definitionlist": INCLUDE_DESC | INCLUDE_NAME,
+    "dialog": INCLUDE_DESC | INCLUDE_NAME,
+    "chrome window": IGNORE_EXPLICIT_NAME,
+    "app root": IGNORE_EXPLICIT_NAME,
+    "statusbar": NAME_FROM_SUBTREE_RULE,
+    "mathml table": INCLUDE_DESC | INCLUDE_NAME,
+    "mathml labeled row": NAME_FROM_SUBTREE_RULE,
+    "mathml table row": NAME_FROM_SUBTREE_RULE,
+    "mathml cell": INCLUDE_DESC | INCLUDE_NAME,
+    "mathml fraction": INCLUDE_DESC,
+    "mathml square root": INCLUDE_DESC,
+    "mathml root": INCLUDE_DESC,
+    "mathml enclosed": INCLUDE_DESC,
+    "mathml sub": INCLUDE_DESC,
+    "mathml sup": INCLUDE_DESC,
+    "mathml sub sup": INCLUDE_DESC,
+    "mathml under": INCLUDE_DESC,
+    "mathml over": INCLUDE_DESC,
+    "mathml under over": INCLUDE_DESC,
+    "mathml multiscripts": INCLUDE_DESC,
+    "mathml identifier": INCLUDE_DESC,
+    "mathml number": INCLUDE_DESC,
+    "mathml operator": INCLUDE_DESC,
+    "mathml text": INCLUDE_DESC,
+    "mathml string literal": INCLUDE_DESC,
+    "mathml row": INCLUDE_DESC,
+    "mathml style": INCLUDE_DESC,
+    "mathml error": INCLUDE_DESC },
 
   mathmlRolesSet: new Set([
     Roles.MATHML_MATH,
@@ -464,7 +464,7 @@ var OutputGenerator = {
         }
 
         if (aFlags & INCLUDE_VALUE && aAccessible.value.trim()) {
-          output[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift'](
+          output[this.outputOrder === OUTPUT_DESC_FIRST ? "push" : "unshift"](
             aAccessible.value);
         }
 
@@ -486,7 +486,7 @@ var OutputGenerator = {
     },
 
     entry: function entry(aAccessible, aRoleStr, aState, aFlags) {
-      let rolestr = aState.contains(States.MULTI_LINE) ? 'textarea' : 'entry';
+      let rolestr = aState.contains(States.MULTI_LINE) ? "textarea" : "entry";
       return this.objectOutputFunctions.defaultFunc.apply(
         this, [aAccessible, rolestr, aState, aFlags]);
     },
@@ -499,7 +499,7 @@ var OutputGenerator = {
       this._addState(output, aState);
       this._addRole(output, aAccessible, aRoleStr);
       output.push({
-        string: 'objItemOfN',
+        string: "objItemOfN",
         args: [itemno.value, itemof.value]
       });
 
@@ -525,10 +525,10 @@ var OutputGenerator = {
         }
         this._addRole(output, aAccessible, aRoleStr);
         output.push.call(output, {
-          string: this._getOutputName('tblColumnInfo'),
+          string: this._getOutputName("tblColumnInfo"),
           count: table.columnCount
         }, {
-          string: this._getOutputName('tblRowInfo'),
+          string: this._getOutputName("tblRowInfo"),
           count: table.rowCount
         });
         this._addName(output, aAccessible, aFlags);
@@ -584,25 +584,25 @@ this.UtteranceGenerator = {  // jshint ignore:line
   __proto__: OutputGenerator, // jshint ignore:line
 
   gActionMap: {
-    jump: 'jumpAction',
-    press: 'pressAction',
-    check: 'checkAction',
-    uncheck: 'uncheckAction',
-    on: 'onAction',
-    off: 'offAction',
-    select: 'selectAction',
-    unselect: 'unselectAction',
-    open: 'openAction',
-    close: 'closeAction',
-    switch: 'switchAction',
-    click: 'clickAction',
-    collapse: 'collapseAction',
-    expand: 'expandAction',
-    activate: 'activateAction',
-    cycle: 'cycleAction'
+    jump: "jumpAction",
+    press: "pressAction",
+    check: "checkAction",
+    uncheck: "uncheckAction",
+    on: "onAction",
+    off: "offAction",
+    select: "selectAction",
+    unselect: "unselectAction",
+    open: "openAction",
+    close: "closeAction",
+    switch: "switchAction",
+    click: "clickAction",
+    collapse: "collapseAction",
+    expand: "expandAction",
+    activate: "activateAction",
+    cycle: "cycleAction"
   },
 
-  //TODO: May become more verbose in the future.
+  // TODO: May become more verbose in the future.
   genForAction: function genForAction(aObject, aActionName) {
     return [{string: this.gActionMap[aActionName]}];
   },
@@ -611,7 +611,7 @@ this.UtteranceGenerator = {  // jshint ignore:line
     function genForLiveRegion(aContext, aIsHide, aModifiedText) {
       let utterance = [];
       if (aIsHide) {
-        utterance.push({string: 'hidden'});
+        utterance.push({string: "hidden"});
       }
       return utterance.concat(aModifiedText || this.genForContext(aContext));
     },
@@ -624,23 +624,23 @@ this.UtteranceGenerator = {  // jshint ignore:line
 
   genForTabStateChange: function genForTabStateChange(aObject, aTabState) {
     switch (aTabState) {
-      case 'newtab':
-        return [{string: 'tabNew'}];
-      case 'loading':
-        return [{string: 'tabLoading'}];
-      case 'loaded':
-        return [aObject.name, {string: 'tabLoaded'}];
-      case 'loadstopped':
-        return [{string: 'tabLoadStopped'}];
-      case 'reload':
-        return [{string: 'tabReload'}];
+      case "newtab":
+        return [{string: "tabNew"}];
+      case "loading":
+        return [{string: "tabLoading"}];
+      case "loaded":
+        return [aObject.name, {string: "tabLoaded"}];
+      case "loadstopped":
+        return [{string: "tabLoadStopped"}];
+      case "reload":
+        return [{string: "tabReload"}];
       default:
         return [];
     }
   },
 
   genForEditingMode: function genForEditingMode(aIsEditing) {
-    return [{string: aIsEditing ? 'editingMode' : 'navigationMode'}];
+    return [{string: aIsEditing ? "editingMode" : "navigationMode"}];
   },
 
   objectOutputFunctions: {
@@ -655,7 +655,7 @@ this.UtteranceGenerator = {  // jshint ignore:line
     heading: function heading(aAccessible, aRoleStr, aState, aFlags) {
       let level = {};
       aAccessible.groupPosition(level, {}, {});
-      let utterance = [{string: 'headingLevel', args: [level.value]}];
+      let utterance = [{string: "headingLevel", args: [level.value]}];
 
       this._addName(utterance, aAccessible, aFlags);
       this._addLandmark(utterance, aAccessible);
@@ -670,11 +670,10 @@ this.UtteranceGenerator = {  // jshint ignore:line
       let utterance = [];
       if (itemno.value == 1) {
         // Start of list
-        utterance.push({string: 'listStart'});
-      }
-      else if (itemno.value == itemof.value) {
+        utterance.push({string: "listStart"});
+      } else if (itemno.value == itemof.value) {
         // last item
-        utterance.push({string: 'listEnd'});
+        utterance.push({string: "listEnd"});
       }
 
       this._addName(utterance, aAccessible, aFlags);
@@ -725,12 +724,12 @@ this.UtteranceGenerator = {  // jshint ignore:line
           }
         };
 
-        addCellChanged(utterance, cell.columnChanged, 'columnInfo',
+        addCellChanged(utterance, cell.columnChanged, "columnInfo",
           cell.columnIndex);
-        addCellChanged(utterance, cell.rowChanged, 'rowInfo', cell.rowIndex);
+        addCellChanged(utterance, cell.rowChanged, "rowInfo", cell.rowIndex);
 
-        addExtent(utterance, cell.columnExtent, 'spansColumns');
-        addExtent(utterance, cell.rowExtent, 'spansRows');
+        addExtent(utterance, cell.columnExtent, "spansColumns");
+        addExtent(utterance, cell.rowExtent, "spansRows");
 
         addHeaders(utterance, cell.columnHeaders);
         addHeaders(utterance, cell.rowHeaders);
@@ -774,53 +773,53 @@ this.UtteranceGenerator = {  // jshint ignore:line
   _addState: function _addState(aOutput, aState, aRoleStr) {
 
     if (aState.contains(States.UNAVAILABLE)) {
-      aOutput.push({string: 'stateUnavailable'});
+      aOutput.push({string: "stateUnavailable"});
     }
 
     if (aState.contains(States.READONLY)) {
-      aOutput.push({string: 'stateReadonly'});
+      aOutput.push({string: "stateReadonly"});
     }
 
     // Don't utter this in Jelly Bean, we let TalkBack do it for us there.
     // This is because we expose the checked information on the node itself.
     // XXX: this means the checked state is always appended to the end,
     // regardless of the utterance ordering preference.
-    if ((Utils.AndroidSdkVersion < 16 || Utils.MozBuildApp === 'browser') &&
+    if ((Utils.AndroidSdkVersion < 16 || Utils.MozBuildApp === "browser") &&
       aState.contains(States.CHECKABLE)) {
       let checked = aState.contains(States.CHECKED);
       let statetr;
-      if (aRoleStr === 'switch') {
-        statetr = checked ? 'stateOn' : 'stateOff';
+      if (aRoleStr === "switch") {
+        statetr = checked ? "stateOn" : "stateOff";
       } else {
-        statetr = checked ? 'stateChecked' : 'stateNotChecked';
+        statetr = checked ? "stateChecked" : "stateNotChecked";
       }
       aOutput.push({string: statetr});
     }
 
     if (aState.contains(States.PRESSED)) {
-      aOutput.push({string: 'statePressed'});
+      aOutput.push({string: "statePressed"});
     }
 
     if (aState.contains(States.EXPANDABLE)) {
       let statetr = aState.contains(States.EXPANDED) ?
-        'stateExpanded' : 'stateCollapsed';
+        "stateExpanded" : "stateCollapsed";
       aOutput.push({string: statetr});
     }
 
     if (aState.contains(States.REQUIRED)) {
-      aOutput.push({string: 'stateRequired'});
+      aOutput.push({string: "stateRequired"});
     }
 
     if (aState.contains(States.TRAVERSED)) {
-      aOutput.push({string: 'stateTraversed'});
+      aOutput.push({string: "stateTraversed"});
     }
 
     if (aState.contains(States.HASPOPUP)) {
-      aOutput.push({string: 'stateHasPopup'});
+      aOutput.push({string: "stateHasPopup"});
     }
 
     if (aState.contains(States.SELECTED)) {
-      aOutput.push({string: 'stateSelected'});
+      aOutput.push({string: "stateSelected"});
     }
   },
 
@@ -829,7 +828,7 @@ this.UtteranceGenerator = {  // jshint ignore:line
       let utterance = [];
       this._addRole(utterance, aAccessible, aRoleStr);
       utterance.push({
-        string: this._getOutputName('listItemsCount'),
+        string: this._getOutputName("listItemsCount"),
         count: aItemCount
       });
 
@@ -851,7 +850,7 @@ this.BrailleGenerator = {  // jshint ignore:line
     // add the static text indicating a list item; do this for both listitems or
     // direct first children of listitems, because these are both common
     // browsing scenarios
-    let addListitemIndicator = function addListitemIndicator(indicator = '*') {
+    let addListitemIndicator = function addListitemIndicator(indicator = "*") {
       output.unshift(indicator);
     };
 
@@ -859,14 +858,14 @@ this.BrailleGenerator = {  // jshint ignore:line
         acc.parent.role == Roles.LISTITEM &&
         acc.previousSibling.role == Roles.STATICTEXT) {
       if (acc.parent.parent && acc.parent.parent.DOMNode &&
-          acc.parent.parent.DOMNode.nodeName == 'UL') {
+          acc.parent.parent.DOMNode.nodeName == "UL") {
         addListitemIndicator();
       } else {
         addListitemIndicator(acc.previousSibling.name.trim());
       }
     } else if (acc.role == Roles.LISTITEM && acc.firstChild &&
                acc.firstChild.role == Roles.STATICTEXT) {
-      if (acc.parent.DOMNode.nodeName == 'UL') {
+      if (acc.parent.DOMNode.nodeName == "UL") {
         addListitemIndicator();
       } else {
         addListitemIndicator(acc.firstChild.name.trim());
@@ -905,7 +904,7 @@ this.BrailleGenerator = {  // jshint ignore:line
         };
 
         braille.push({
-          string: this._getOutputName('cellInfo'),
+          string: this._getOutputName("cellInfo"),
           args: [cell.columnIndex + 1, cell.rowIndex + 1]
         });
 
@@ -972,7 +971,7 @@ this.BrailleGenerator = {  // jshint ignore:line
   },
 
   _getOutputName: function _getOutputName(aName) {
-    return OutputGenerator._getOutputName(aName) + 'Abbr';
+    return OutputGenerator._getOutputName(aName) + "Abbr";
   },
 
   _addRole: function _addRole(aBraille, aAccessible, aRoleStr) {
@@ -987,15 +986,15 @@ this.BrailleGenerator = {  // jshint ignore:line
     if (aState.contains(States.CHECKABLE)) {
       aBraille.push({
         string: aState.contains(States.CHECKED) ?
-          this._getOutputName('stateChecked') :
-          this._getOutputName('stateUnchecked')
+          this._getOutputName("stateChecked") :
+          this._getOutputName("stateUnchecked")
       });
     }
-    if (aRoleStr === 'toggle button') {
+    if (aRoleStr === "toggle button") {
       aBraille.push({
         string: aState.contains(States.PRESSED) ?
-          this._getOutputName('statePressed') :
-          this._getOutputName('stateUnpressed')
+          this._getOutputName("statePressed") :
+          this._getOutputName("stateUnpressed")
       });
     }
   }

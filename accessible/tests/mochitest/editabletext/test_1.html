@@ -19,22 +19,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
           src="editabletext.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true;
-    //enableLogging("tree,verbose"); // debug
+    // gA11yEventDumpToConsole = true;
+    // enableLogging("tree,verbose"); // debug
 
-    function addTestEditable(aID, aTestRun, aBeforeContent, aAfterContent)
-    {
+    function addTestEditable(aID, aTestRun, aBeforeContent, aAfterContent) {
       var et = new editableTextTest(aID);
       var startOffset = aBeforeContent ? aBeforeContent.length : 0;
       // XXX afterContent currently is not used
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // setTextContents
       et.scheduleTest(et.setTextContents, "hello", startOffset);
       et.scheduleTest(et.setTextContents, "olleh", startOffset);
       et.scheduleTest(et.setTextContents, "", startOffset);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // insertText
       et.scheduleTest(et.insertText, "hello", startOffset, "hello");
       et.scheduleTest(et.insertText, "ma ", startOffset, "ma hello");
@@ -43,14 +42,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
 
       // XXX: bug 452584
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // deleteText
 //      et.deleteText(0, 5, "hello hello");
 //      et.deleteText(5, 6, "hellohello");
 //      et.deleteText(5, 10, "hello");
 //      et.deleteText(0, 5, "");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // copyNPasteText
 //      et.copyNPasteText(0, 0, 0, "");
 //      et.insertText("hello", 0, "hello");
@@ -58,7 +57,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
 //      et.copyNPasteText(5, 6, 6, "hhelloo");
 //      et.copyNPasteText(3, 4, 1, "hehelloo");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
 //      // cutNPasteText
 //      et.cutNPasteText(0, 1, 1, "ehhelloo");
 //      et.cutNPasteText(1, 2, 0, "hehelloo");
@@ -67,10 +66,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
       aTestRun.add(et);
     }
 
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
 
-    function runTest()
-    {
+    function runTest() {
       var testRun = new editableTextTestRun();
 
       addTestEditable("input", testRun);
@@ -83,8 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
       testRun.run(); // Will call SimpleTest.finish();
     }
 
-    function doTest()
-    {
+    function doTest() {
       // Prepare tested elements.
 
       // Design mode on/off triggers an editable state change event on

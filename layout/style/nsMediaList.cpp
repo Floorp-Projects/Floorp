@@ -389,8 +389,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
           NS_ASSERTION(expr.mValue.IsLengthUnit(), "bad unit");
           // Use 'width' as a property that takes length values
           // written in the normal way.
-          expr.mValue.AppendToString(eCSSProperty_width, aString,
-                                     nsCSSValue::eNormalized);
+          expr.mValue.AppendToString(eCSSProperty_width, aString);
           break;
         case nsMediaFeature::eInteger:
         case nsMediaFeature::eBoolInteger:
@@ -398,8 +397,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
                        "bad unit");
           // Use 'z-index' as a property that takes integer values
           // written without anything extra.
-          expr.mValue.AppendToString(eCSSProperty_z_index, aString,
-                                     nsCSSValue::eNormalized);
+          expr.mValue.AppendToString(eCSSProperty_z_index, aString);
           break;
         case nsMediaFeature::eFloat:
           {
@@ -407,8 +405,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
                          "bad unit");
             // Use 'line-height' as a property that takes float values
             // written in the normal way.
-            expr.mValue.AppendToString(eCSSProperty_line_height, aString,
-                                       nsCSSValue::eNormalized);
+            expr.mValue.AppendToString(eCSSProperty_line_height, aString);
           }
           break;
         case nsMediaFeature::eIntRatio:
@@ -421,11 +418,9 @@ nsMediaQuery::AppendToString(nsAString& aString) const
                          "bad unit");
             NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Integer,
                          "bad unit");
-            array->Item(0).AppendToString(eCSSProperty_z_index, aString,
-                                          nsCSSValue::eNormalized);
+            array->Item(0).AppendToString(eCSSProperty_z_index, aString);
             aString.Append('/');
-            array->Item(1).AppendToString(eCSSProperty_z_index, aString,
-                                          nsCSSValue::eNormalized);
+            array->Item(1).AppendToString(eCSSProperty_z_index, aString);
           }
           break;
         case nsMediaFeature::eResolution:

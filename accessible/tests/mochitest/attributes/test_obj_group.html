@@ -16,50 +16,49 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function doTest()
-    {
-      //////////////////////////////////////////////////////////////////////////
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
       // HTML select with no size attribute.
       testGroupAttrs("opt1-nosize", 1, 4);
       testGroupAttrs("opt2-nosize", 2, 4);
       testGroupAttrs("opt3-nosize", 3, 4);
       testGroupAttrs("opt4-nosize", 4, 4);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // HTML select
       testGroupAttrs("opt1", 1, 2);
       testGroupAttrs("opt2", 2, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // HTML select with options
       // XXX bug 469123
-      //testGroupAttrs("select2_optgroup", 1, 3, 1);
-      //testGroupAttrs("select2_opt3", 2, 3, 1);
-      //testGroupAttrs("select2_opt4", 3, 3, 1);
-      //testGroupAttrs("select2_opt1", 1, 2, 2);
-      //testGroupAttrs("select2_opt2", 2, 2, 2);
+      // testGroupAttrs("select2_optgroup", 1, 3, 1);
+      // testGroupAttrs("select2_opt3", 2, 3, 1);
+      // testGroupAttrs("select2_opt4", 3, 3, 1);
+      // testGroupAttrs("select2_opt1", 1, 2, 2);
+      // testGroupAttrs("select2_opt2", 2, 2, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // HTML input@type="radio" within form
       testGroupAttrs("radio1", 1, 2);
       testGroupAttrs("radio2", 2, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // HTML input@type="radio" within document
       testGroupAttrs("radio3", 1, 2);
       testGroupAttrs("radio4", 2, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Hidden HTML input@type="radio"
       testGroupAttrs("radio5", 1, 1);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // HTML ul/ol
       testGroupAttrs("li1", 1, 3);
       testGroupAttrs("li2", 2, 3);
       testGroupAttrs("li3", 3, 3);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // HTML ul/ol (nested lists)
 
       testGroupAttrs("li4", 1, 3, 1);
@@ -70,13 +69,13 @@
       testGroupAttrs("n_li5", 2, 3, 2);
       testGroupAttrs("n_li6", 3, 3, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA list
       testGroupAttrs("li7", 1, 3);
       testGroupAttrs("li8", 2, 3);
       testGroupAttrs("li9", 3, 3);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA list (nested lists: list -> listitem -> list -> listitem)
       testGroupAttrs("li10", 1, 3, 1);
       testGroupAttrs("li11", 2, 3, 1);
@@ -86,7 +85,7 @@
       testGroupAttrs("n_li11", 2, 3, 2);
       testGroupAttrs("n_li12", 3, 3, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA list (nested lists: list -> listitem -> group -> listitem)
       testGroupAttrs("lgt_li1", 1, 2, 1);
       testGroupAttrs("lgt_li1_nli1", 1, 2, 2);
@@ -95,7 +94,7 @@
       testGroupAttrs("lgt_li2_nli1", 1, 2, 2);
       testGroupAttrs("lgt_li2_nli2", 2, 2, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA menu (menuitem, separator, menuitemradio and menuitemcheckbox)
       testGroupAttrs("menu_item1", 1, 2);
       testGroupAttrs("menu_item2", 2, 2);
@@ -105,19 +104,19 @@
       testGroupAttrs("menu_item1.4", 2, 3);
       testGroupAttrs("menu_item1.5", 3, 3);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA tab
       testGroupAttrs("tab_1", 1, 3);
       testGroupAttrs("tab_2", 2, 3);
       testGroupAttrs("tab_3", 3, 3);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA radio
       testGroupAttrs("r1", 1, 3);
       testGroupAttrs("r2", 2, 3);
       testGroupAttrs("r3", 3, 3);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA tree
       testGroupAttrs("ti1", 1, 3, 1);
       testGroupAttrs("ti2", 1, 2, 2);
@@ -128,7 +127,7 @@
       testGroupAttrs("ti7", 3, 3, 2);
       testGroupAttrs("ti8", 3, 3, 1);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA tree (tree -> treeitem -> group -> treeitem)
       testGroupAttrs("tree2_ti1", 1, 2, 1);
       testGroupAttrs("tree2_ti1a", 1, 2, 2);
@@ -137,7 +136,7 @@
       testGroupAttrs("tree2_ti2a", 1, 2, 2);
       testGroupAttrs("tree2_ti2b", 2, 2, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA tree (tree -> treeitem, group -> treeitem)
       testGroupAttrs("tree3_ti1", 1, 2, 1);
       testGroupAttrs("tree3_ti1a", 1, 2, 2);
@@ -146,7 +145,7 @@
       testGroupAttrs("tree3_ti2a", 1, 2, 2);
       testGroupAttrs("tree3_ti2b", 2, 2, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA grid
       testGroupAttrs("grid_row1", 1, 2);
       testAbsentAttrs("grid_cell1", {"posinset": "", "setsize": ""});
@@ -156,7 +155,7 @@
       testAbsentAttrs("grid_cell3", {"posinset": "", "setsize": ""});
       testAbsentAttrs("grid_cell4", {"posinset": "", "setsize": ""});
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA treegrid
       testGroupAttrs("treegrid_row1", 1, 2, 1);
       testAbsentAttrs("treegrid_cell1", {"posinset": "", "setsize": ""});
@@ -170,7 +169,7 @@
       testAbsentAttrs("treegrid_cell5", {"posinset": "", "setsize": ""});
       testAbsentAttrs("treegrid_cell6", {"posinset": "", "setsize": ""});
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // HTML headings
       testGroupAttrs("h1", 0, 0, 1);
       testGroupAttrs("h2", 0, 0, 2);
@@ -179,19 +178,19 @@
       testGroupAttrs("h5", 0, 0, 5);
       testGroupAttrs("h6", 0, 0, 6);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA combobox
       testGroupAttrs("combo1_opt1", 1, 4);
       testGroupAttrs("combo1_opt2", 2, 4);
       testGroupAttrs("combo1_opt3", 3, 4);
       testGroupAttrs("combo1_opt4", 4, 4);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA table
       testGroupAttrs("table_cell", 3, 4);
       testGroupAttrs("table_row", 2, 2);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // ARIA list constructed by ARIA owns
       testGroupAttrs("t1_li1", 1, 3);
       testGroupAttrs("t1_li2", 2, 3);

@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
-add_task(async function () {
+add_task(async function() {
   // Making sure that the e10s is enabled on Windows for testing.
   await setE10sPrefs();
 
   let a11yInit = initPromise();
-  let accService = Cc['@mozilla.org/accessibilityService;1'].getService(
+  let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
     Ci.nsIAccessibilityService);
-  ok(accService, 'Service initialized');
+  ok(accService, "Service initialized");
   await a11yInit;
 
   await BrowserTestUtils.withNewTab({
@@ -25,11 +25,11 @@ add_task(async function () {
         <body><div id="div" style="visibility: hidden;"></div></body>
       </html>`
   }, async function(browser) {
-    let onShow = waitForEvent(Ci.nsIAccessibleEvent.EVENT_SHOW, 'div');
-    await invokeSetStyle(browser, 'div', 'visibility', 'visible');
+    let onShow = waitForEvent(Ci.nsIAccessibleEvent.EVENT_SHOW, "div");
+    await invokeSetStyle(browser, "div", "visibility", "visible");
     let showEvent = await onShow;
     let divAcc = showEvent.accessible;
-    ok(divAcc, 'Accessible proxy is created');
+    ok(divAcc, "Accessible proxy is created");
     // Remove unnecessary dangling references
     onShow = null;
     showEvent = null;
@@ -38,10 +38,10 @@ add_task(async function () {
     let canShutdown = false;
     let a11yShutdown = new Promise((resolve, reject) =>
     shutdownPromise().then(flag => canShutdown ? resolve() :
-      reject('Accessible service was shut down incorrectly')));
+      reject("Accessible service was shut down incorrectly")));
 
     accService = null;
-    ok(!accService, 'Service is removed');
+    ok(!accService, "Service is removed");
     // Force garbage collection that should not trigger shutdown because there
     // is a reference to an accessible proxy.
     forceGC();
@@ -52,7 +52,7 @@ add_task(async function () {
     canShutdown = true;
     // Remove a last reference to an accessible proxy.
     divAcc = null;
-    ok(!divAcc, 'Accessible proxy is removed');
+    ok(!divAcc, "Accessible proxy is removed");
 
     // Force garbage collection that should now trigger shutdown.
     forceGC();
