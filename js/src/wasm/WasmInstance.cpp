@@ -523,6 +523,12 @@ Instance::trace(JSTracer* trc)
     TraceEdge(trc, &object_, "wasm instance object");
 }
 
+WasmMemoryObject*
+Instance::memory() const
+{
+    return memory_;
+}
+
 SharedMem<uint8_t*>
 Instance::memoryBase() const
 {

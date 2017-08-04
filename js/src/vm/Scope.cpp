@@ -77,6 +77,8 @@ js::ScopeKindString(ScopeKind kind)
         return "non-syntactic";
       case ScopeKind::Module:
         return "module";
+      case ScopeKind::WasmInstance:
+        return "wasm instance";
       case ScopeKind::WasmFunction:
         return "wasm function";
     }
@@ -427,6 +429,7 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
         break;
 
       case ScopeKind::Module:
+      case ScopeKind::WasmInstance:
         MOZ_CRASH("NYI");
         break;
 
@@ -514,6 +517,9 @@ LexicalScope::nextFrameSlot(Scope* scope)
             return 0;
           case ScopeKind::Module:
             return si.scope()->as<ModuleScope>().nextFrameSlot();
+          case ScopeKind::WasmInstance:
+            // TODO return si.scope()->as<WasmInstanceScope>().nextFrameSlot();
+            return 0;
           case ScopeKind::WasmFunction:
             // TODO return si.scope()->as<WasmFunctionScope>().nextFrameSlot();
             return 0;
@@ -1235,16 +1241,16 @@ ModuleScope::script() const
     return module()->script();
 }
 
-// TODO Check what Debugger behavior should be when it evaluates a
-// var declaration.
-static const uint32_t WasmFunctionEnvShapeFlags =
+static const uint32_t WasmInstanceEnvShapeFlags =
     BaseShape::NOT_EXTENSIBLE | BaseShape::DELEGATE;
 
+
+template <size_t ArrayLength>
 static JSAtom*
-GenerateWasmVariableName(JSContext* cx, uint32_t index)
+GenerateWasmName(JSContext* cx, const char (&prefix)[ArrayLength], uint32_t index)
 {
     StringBuffer sb(cx);
-    if (!sb.append("var"))
+    if (!sb.append(prefix))
         return nullptr;
     if (!NumberValueToStringBuffer(cx, Int32Value(index), sb))
         return nullptr;
@@ -1252,44 +1258,108 @@ GenerateWasmVariableName(JSContext* cx, uint32_t index)
     return sb.finishAtom();
 }
 
-/* static */ WasmFunctionScope*
-WasmFunctionScope::create(JSContext* cx, WasmInstanceObject* instance, uint32_t funcIndex)
+/* static */ WasmInstanceScope*
+WasmInstanceScope::create(JSContext* cx, WasmInstanceObject* instance)
 {
-    // WasmFunctionScope::Data has GCManagedDeletePolicy because it contains a
+    // WasmInstanceScope::Data has GCManagedDeletePolicy because it contains a
     // GCPtr. Destruction of |data| below may trigger calls into the GC.
-    Rooted<WasmFunctionScope*> wasmFunctionScope(cx);
+    Rooted<WasmInstanceScope*> wasmInstanceScope(cx);
 
     {
-        // TODO pull the local variable names from the wasm function definition.
-        wasm::ValTypeVector locals;
-        size_t argsLength;
-        if (!instance->instance().debug().debugGetLocalTypes(funcIndex, &locals, &argsLength))
-            return nullptr;
-        uint32_t namesCount = locals.length();
+        size_t namesCount = 0;
+        if (instance->instance().memory()) {
+            namesCount++;
+        }
+        size_t globalsStart = namesCount;
+        size_t globalsCount = instance->instance().metadata().globals.length();
+        namesCount += globalsCount;
 
-        Rooted<UniquePtr<Data>> data(cx, NewEmptyScopeData<WasmFunctionScope>(cx, namesCount));
+        Rooted<UniquePtr<Data>> data(cx, NewEmptyScopeData<WasmInstanceScope>(cx, namesCount));
         if (!data)
             return nullptr;
 
-        Rooted<Scope*> enclosingScope(cx, &cx->global()->emptyGlobalScope());
-
-        data->instance.init(instance);
-        data->funcIndex = funcIndex;
-        data->length = namesCount;
-        for (size_t i = 0; i < namesCount; i++) {
-            RootedAtom name(cx, GenerateWasmVariableName(cx, i));
+        size_t nameIndex = 0;
+        if (instance->instance().memory()) {
+            RootedAtom name(cx, GenerateWasmName(cx, "memory", /* index = */ 0));
             if (!name)
                 return nullptr;
-            data->names[i] = BindingName(name, false);
+            data->names[nameIndex] = BindingName(name, false);
+            nameIndex++;
         }
+        for (size_t i = 0; i < globalsCount; i++) {
+            RootedAtom name(cx, GenerateWasmName(cx, "global", i));
+            if (!name)
+                return nullptr;
+            data->names[nameIndex] = BindingName(name, false);
+            nameIndex++;
+        }
+        MOZ_ASSERT(nameIndex == namesCount);
 
-        Scope* scope = Scope::create(cx, ScopeKind::WasmFunction, enclosingScope, /* envShape = */ nullptr);
+        data->instance.init(instance);
+        data->memoriesStart = 0;
+        data->globalsStart = globalsStart;
+        data->length = namesCount;
+
+        Rooted<Scope*> enclosingScope(cx, &cx->global()->emptyGlobalScope());
+
+        Scope* scope = Scope::create(cx, ScopeKind::WasmInstance, enclosingScope, /* envShape = */ nullptr);
         if (!scope)
             return nullptr;
 
-        wasmFunctionScope = &scope->as<WasmFunctionScope>();
-        wasmFunctionScope->initData(Move(data.get()));
+        wasmInstanceScope = &scope->as<WasmInstanceScope>();
+        wasmInstanceScope->initData(Move(data.get()));
     }
+
+    return wasmInstanceScope;
+}
+
+/* static */ Shape*
+WasmInstanceScope::getEmptyEnvironmentShape(JSContext* cx)
+{
+    const Class* cls = &WasmInstanceEnvironmentObject::class_;
+    return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), WasmInstanceEnvShapeFlags);
+}
+
+// TODO Check what Debugger behavior should be when it evaluates a
+// var declaration.
+static const uint32_t WasmFunctionEnvShapeFlags =
+    BaseShape::NOT_EXTENSIBLE | BaseShape::DELEGATE;
+
+/* static */ WasmFunctionScope*
+WasmFunctionScope::create(JSContext* cx, HandleScope enclosing, uint32_t funcIndex)
+{
+    MOZ_ASSERT(enclosing->is<WasmInstanceScope>());
+
+    Rooted<WasmFunctionScope*> wasmFunctionScope(cx);
+
+    Rooted<WasmInstanceObject*> instance(cx, enclosing->as<WasmInstanceScope>().instance());
+
+    // TODO pull the local variable names from the wasm function definition.
+    wasm::ValTypeVector locals;
+    size_t argsLength;
+    if (!instance->instance().debug().debugGetLocalTypes(funcIndex, &locals, &argsLength))
+        return nullptr;
+    uint32_t namesCount = locals.length();
+
+    Rooted<UniquePtr<Data>> data(cx, NewEmptyScopeData<WasmFunctionScope>(cx, namesCount));
+    if (!data)
+        return nullptr;
+
+    data->funcIndex = funcIndex;
+    data->length = namesCount;
+    for (size_t i = 0; i < namesCount; i++) {
+        RootedAtom name(cx, GenerateWasmName(cx, "var", i));
+        if (!name)
+            return nullptr;
+        data->names[i] = BindingName(name, false);
+    }
+
+    Scope* scope = Scope::create(cx, ScopeKind::WasmFunction, enclosing, /* envShape = */ nullptr);
+    if (!scope)
+        return nullptr;
+
+    wasmFunctionScope = &scope->as<WasmFunctionScope>();
+    wasmFunctionScope->initData(Move(data.get()));
 
     return wasmFunctionScope;
 }
@@ -1351,6 +1421,9 @@ BindingIter::BindingIter(Scope* scope)
         break;
       case ScopeKind::Module:
         init(scope->as<ModuleScope>().data());
+        break;
+      case ScopeKind::WasmInstance:
+        init(scope->as<WasmInstanceScope>().data());
         break;
       case ScopeKind::WasmFunction:
         init(scope->as<WasmFunctionScope>().data());
@@ -1482,6 +1555,22 @@ BindingIter::init(ModuleScope::Data& data)
     init(data.varStart, data.varStart, data.varStart, data.varStart, data.letStart, data.constStart,
          CanHaveFrameSlots | CanHaveEnvironmentSlots,
          0, JSSLOT_FREE(&ModuleEnvironmentObject::class_),
+         data.names, data.length);
+}
+
+void
+BindingIter::init(WasmInstanceScope::Data& data)
+{
+    //            imports - [0, 0)
+    // positional formals - [0, 0)
+    //      other formals - [0, 0)
+    //    top-level funcs - [0, 0)
+    //               vars - [0, data.length)
+    //               lets - [data.length, data.length)
+    //             consts - [data.length, data.length)
+    init(0, 0, 0, 0, data.length, data.length,
+         CanHaveFrameSlots | CanHaveEnvironmentSlots,
+         UINT32_MAX, UINT32_MAX,
          data.names, data.length);
 }
 

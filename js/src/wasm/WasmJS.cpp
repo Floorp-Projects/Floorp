@@ -1035,6 +1035,7 @@ WasmInstanceObject::create(JSContext* cx,
 
     obj->setReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
     obj->setReservedSlot(SCOPES_SLOT, PrivateValue(scopes.release()));
+    obj->setReservedSlot(INSTANCE_SCOPE_SLOT, UndefinedValue());
     MOZ_ASSERT(obj->isNewborn());
 
     MOZ_ASSERT(obj->isTenured(), "assumed by WasmTableObject write barriers");
@@ -1213,6 +1214,21 @@ WasmInstanceObject::getExportedFunctionCodeRange(HandleFunction fun, Tier tier)
     return instance().metadata(tier).codeRanges[funcExport.codeRangeIndex()];
 }
 
+/* static */ WasmInstanceScope*
+WasmInstanceObject::getScope(JSContext* cx, HandleWasmInstanceObject instanceObj)
+{
+    if (!instanceObj->getReservedSlot(INSTANCE_SCOPE_SLOT).isUndefined())
+        return (WasmInstanceScope*)instanceObj->getReservedSlot(INSTANCE_SCOPE_SLOT).toGCThing();
+
+    Rooted<WasmInstanceScope*> instanceScope(cx, WasmInstanceScope::create(cx, instanceObj));
+    if (!instanceScope)
+        return nullptr;
+
+    instanceObj->setReservedSlot(INSTANCE_SCOPE_SLOT, PrivateGCThingValue(instanceScope));
+
+    return instanceScope;
+}
+
 /* static */ WasmFunctionScope*
 WasmInstanceObject::getFunctionScope(JSContext* cx, HandleWasmInstanceObject instanceObj,
                                      uint32_t funcIndex)
@@ -1220,7 +1236,11 @@ WasmInstanceObject::getFunctionScope(JSContext* cx, HandleWasmInstanceObject ins
     if (ScopeMap::Ptr p = instanceObj->scopes().lookup(funcIndex))
         return p->value();
 
-    Rooted<WasmFunctionScope*> funcScope(cx, WasmFunctionScope::create(cx, instanceObj, funcIndex));
+    Rooted<WasmInstanceScope*> instanceScope(cx, WasmInstanceObject::getScope(cx, instanceObj));
+    if (!instanceScope)
+        return nullptr;
+
+    Rooted<WasmFunctionScope*> funcScope(cx, WasmFunctionScope::create(cx, instanceScope, funcIndex));
     if (!funcScope)
         return nullptr;
 
