@@ -38,7 +38,6 @@ UNIFIED_SOURCES += [
     'CParserContext.cpp',
     'nsElementTable.cpp',
     'nsExpatDriver.cpp',
-    'nsHTMLEntities.cpp',
     'nsHTMLTags.cpp',
     'nsHTMLTokenizer.cpp',
     'nsParser.cpp',

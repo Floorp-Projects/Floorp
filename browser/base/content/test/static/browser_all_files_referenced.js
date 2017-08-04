@@ -240,10 +240,6 @@ if (!isDevtools) {
     whitelist.add("resource://services-sync/engines/" + module);
   }
 
-  // intl/unicharutil/nsEntityConverter.h
-  for (let name of ["html40Latin1", "html40Symbols", "html40Special", "mathml20"]) {
-    whitelist.add("resource://gre/res/entityTables/" + name + ".properties");
-  }
 }
 
 const gInterestingCategories = new Set([

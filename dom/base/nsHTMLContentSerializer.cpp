@@ -488,13 +488,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
     return aOutputStr.Append(aStr, mozilla::fallible);
   }
 
-  bool nonBasicEntities =
-    !!(mFlags & (nsIDocumentEncoder::OutputEncodeLatin1Entities |
-                 nsIDocumentEncoder::OutputEncodeHTMLEntities   |
-                 nsIDocumentEncoder::OutputEncodeW3CEntities));
-
-  if (!nonBasicEntities &&
-      (mFlags & (nsIDocumentEncoder::OutputEncodeBasicEntities))) {
+  if (mFlags & (nsIDocumentEncoder::OutputEncodeBasicEntities)) {
     const uint8_t* entityTable = mInAttribute ? kAttrEntities : kEntities;
     uint32_t start = 0;
     const uint32_t len = aStr.Length();
@@ -512,102 +506,6 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
       }
     }
     return true;
-  } else if (nonBasicEntities) {
-    nsIParserService* parserService = nsContentUtils::GetParserService();
-
-    if (!parserService) {
-      NS_ERROR("Can't get parser service");
-      return true;
-    }
-
-    nsReadingIterator<char16_t> done_reading;
-    aStr.EndReading(done_reading);
-
-    // for each chunk of |aString|...
-    uint32_t advanceLength = 0;
-    nsReadingIterator<char16_t> iter;
-
-    const uint8_t* entityTable = mInAttribute ? kAttrEntities : kEntities;
-    nsAutoCString entityReplacement;
-
-    for (aStr.BeginReading(iter);
-         iter != done_reading;
-         iter.advance(int32_t(advanceLength))) {
-      uint32_t fragmentLength = done_reading - iter;
-      uint32_t lengthReplaced = 0; // the number of UTF-16 codepoints
-                                    //  replaced by a particular entity
-      const char16_t* c = iter.get();
-      const char16_t* fragmentStart = c;
-      const char16_t* fragmentEnd = c + fragmentLength;
-      const char* entityText = nullptr;
-      const char* fullConstEntityText = nullptr;
-      char* fullEntityText = nullptr;
-
-      advanceLength = 0;
-      // for each character in this chunk, check if it
-      // needs to be replaced
-      for (; c < fragmentEnd; c++, advanceLength++) {
-        char16_t val = *c;
-        if (val <= kValNBSP && entityTable[val]) {
-          fullConstEntityText = kEntityStrings[entityTable[val]];
-          break;
-        } else if (val > 127 &&
-                  ((val < 256 &&
-                    mFlags & nsIDocumentEncoder::OutputEncodeLatin1Entities) ||
-                    mFlags & nsIDocumentEncoder::OutputEncodeHTMLEntities)) {
-          entityReplacement.Truncate();
-          parserService->HTMLConvertUnicodeToEntity(val, entityReplacement);
-
-          if (!entityReplacement.IsEmpty()) {
-            entityText = entityReplacement.get();
-            break;
-          }
-        }
-        else if (val > 127 &&
-                  mFlags & nsIDocumentEncoder::OutputEncodeW3CEntities &&
-                  mEntityConverter) {
-          if (NS_IS_HIGH_SURROGATE(val) &&
-              c + 1 < fragmentEnd &&
-              NS_IS_LOW_SURROGATE(*(c + 1))) {
-            uint32_t valUTF32 = SURROGATE_TO_UCS4(val, *(++c));
-            if (NS_SUCCEEDED(mEntityConverter->ConvertUTF32ToEntity(valUTF32,
-                              nsIEntityConverter::entityW3C, &fullEntityText))) {
-              lengthReplaced = 2;
-              break;
-            }
-            else {
-              advanceLength++;
-            }
-          }
-          else if (NS_SUCCEEDED(mEntityConverter->ConvertToEntity(val,
-                                nsIEntityConverter::entityW3C,
-                                &fullEntityText))) {
-            lengthReplaced = 1;
-            break;
-          }
-        }
-      }
-
-      bool result = aOutputStr.Append(fragmentStart, advanceLength, mozilla::fallible);
-      if (entityText) {
-        NS_ENSURE_TRUE(aOutputStr.Append(char16_t('&'), mozilla::fallible), false);
-        NS_ENSURE_TRUE(AppendASCIItoUTF16(entityText, aOutputStr, mozilla::fallible), false);
-        NS_ENSURE_TRUE(aOutputStr.Append(char16_t(';'), mozilla::fallible), false);
-        advanceLength++;
-      }
-      else if (fullConstEntityText) {
-        NS_ENSURE_TRUE(aOutputStr.AppendASCII(fullConstEntityText, mozilla::fallible), false);
-        ++advanceLength;
-      }
-      // if it comes from nsIEntityConverter, it already has '&' and ';'
-      else if (fullEntityText) {
-        bool ok = AppendASCIItoUTF16(fullEntityText, aOutputStr, mozilla::fallible);
-        free(fullEntityText);
-        advanceLength += lengthReplaced;
-        NS_ENSURE_TRUE(ok, false);
-      }
-      NS_ENSURE_TRUE(result, false);
-    }
   } else {
     NS_ENSURE_TRUE(nsXMLContentSerializer::AppendAndTranslateEntities(aStr, aOutputStr), false);
   }
