@@ -178,18 +178,17 @@ this.DownloadList.prototype = {
   },
 
   /**
-   * Notifies all the views of a download addition, change, or removal.
+   * Notifies all the views of a download addition, change, removal, or other
+   * event. The additional arguments are passed to the called method.
    *
-   * @param aMethodName
+   * @param methodName
    *        String containing the name of the method to call on the view.
-   * @param aDownload
-   *        The Download object that changed.
    */
-  _notifyAllViews(aMethodName, aDownload) {
+  _notifyAllViews(methodName, ...args) {
     for (let view of this._views) {
       try {
-        if (aMethodName in view) {
-          view[aMethodName](aDownload);
+        if (methodName in view) {
+          view[methodName](...args);
         }
       } catch (ex) {
         Cu.reportError(ex);

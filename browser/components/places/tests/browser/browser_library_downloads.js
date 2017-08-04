@@ -43,12 +43,11 @@ function test() {
 
 
         // Check results.
-        let contentRoot = win.ContentArea.currentView.result.root;
-        let len = contentRoot.childCount;
-        const TEST_URIS = ["http://ubuntu.org/", "http://google.com/"];
-        for (let i = 0; i < len; i++) {
-          is(contentRoot.getChild(i).uri, TEST_URIS[i],
-              "Comparing downloads shown at index " + i);
+        let testURIs = ["http://ubuntu.org/", "http://google.com/"];
+        for (let element of win.ContentArea.currentView
+                                           .associatedElement.children) {
+          is(element._shell.download.source.url, testURIs.shift(),
+             "URI matches");
         }
 
         win.close();
