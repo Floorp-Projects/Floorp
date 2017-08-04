@@ -13,7 +13,7 @@
             EVENT_DOCUMENT_LOAD_COMPLETE, EVENT_HIDE, EVENT_TEXT_CARET_MOVED,
             EVENT_DESCRIPTION_CHANGE, EVENT_NAME_CHANGE, EVENT_STATE_CHANGE,
             EVENT_VALUE_CHANGE, EVENT_TEXT_VALUE_CHANGE, EVENT_FOCUS,
-            EVENT_DOCUMENT_RELOAD,
+            EVENT_DOCUMENT_RELOAD, UnexpectedEvents,
             waitForEvent, waitForEvents, waitForOrderedEvents */
 
 const EVENT_DOCUMENT_LOAD_COMPLETE = nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_COMPLETE;
@@ -112,9 +112,6 @@ function waitForEvent(eventType, matchCriteria) {
 
         if (matchEvent(event, matchCriteria)) {
           Logger.log(`Correct event type: ${eventTypeToString(eventType)}`);
-          ok(event.accessibleDocument instanceof nsIAccessibleDocument,
-            "Accessible document present.");
-
           Services.obs.removeObserver(this, "accessible-event");
           resolve(event);
         }
