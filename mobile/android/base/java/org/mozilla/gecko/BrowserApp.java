@@ -108,6 +108,7 @@ import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.WindowUtil;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.GeckoActionProvider;
@@ -2273,6 +2274,9 @@ public class BrowserApp extends GeckoApp
                 delegate.onTabsTrayShown(this, mTabsPanel);
             }
         }
+
+        // Since tabs tray only has dark theme, always update the status bar with dark color.
+        WindowUtil.invalidateStatusBarColor(this, true);
     }
 
     @Override
@@ -2288,6 +2292,10 @@ public class BrowserApp extends GeckoApp
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onTabsTrayHidden(this, mTabsPanel);
         }
+
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        final boolean darkTheme = (tab != null && tab.isPrivate());
+        WindowUtil.invalidateStatusBarColor(this, darkTheme);
     }
 
     @Override
