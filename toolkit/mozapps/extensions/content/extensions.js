@@ -3643,16 +3643,18 @@ var gDetailView = {
 
     try {
       if (this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_BROWSER) {
-        whenViewLoaded(() => {
-          this.createOptionsBrowser(rows).then(browser => {
-            // Make sure the browser is unloaded as soon as we change views,
-            // rather than waiting for the next detail view to load.
-            document.addEventListener("ViewChanged", function() {
-              browser.remove();
-            }, {once: true});
+        whenViewLoaded(async () => {
+          await this._addon.startupPromise;
 
-            finish(browser);
-          });
+          let browser = await this.createOptionsBrowser(rows);
+
+          // Make sure the browser is unloaded as soon as we change views,
+          // rather than waiting for the next detail view to load.
+          document.addEventListener("ViewChanged", function() {
+            browser.remove();
+          }, {once: true});
+
+          finish(browser);
         });
 
         if (aCallback)
