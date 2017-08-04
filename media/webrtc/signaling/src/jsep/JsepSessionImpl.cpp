@@ -127,7 +127,7 @@ JsepSessionImpl::AddTrack(const RefPtr<JsepTrack>& track)
     std::vector<JsepTrack::JsConstraints> constraints;
     track->GetJsConstraints(&constraints);
     for (auto constraint : constraints) {
-      if (constraint.rid != "") {
+      if (!constraint.rid.empty()) {
         minimumSsrcCount++;
       }
     }
@@ -311,7 +311,7 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
   SdpDirectionAttribute::Direction addVideoExt = SdpDirectionAttribute::kInactive;
   SdpDirectionAttribute::Direction addAudioExt = SdpDirectionAttribute::kInactive;
   for (auto constraintEntry: constraints) {
-    if (constraintEntry.rid != "") {
+    if (!constraintEntry.rid.empty()) {
       switch (it->mTrack->GetMediaType()) {
         case SdpMediaSection::kVideo: {
           addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
@@ -344,7 +344,7 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
     std::vector<JsepTrack::JsConstraints> constraints;
     track->GetJsConstraints(&constraints);
     for (auto constraint : constraints) {
-      if (constraint.rid != "") {
+      if (!constraint.rid.empty()) {
         minimumSsrcCount++;
       }
     }
@@ -673,7 +673,7 @@ JsepSessionImpl::SetupBundle(Sdp* sdp) const
     }
   }
 
-  if (mids.size() >= 1) {
+  if (!mids.empty()) {
     UniquePtr<SdpGroupAttributeList> groupAttr(new SdpGroupAttributeList);
     groupAttr->PushEntry(SdpGroupAttributeList::kBundle, mids);
     sdp->GetAttributeList().SetAttribute(groupAttr.release());
