@@ -101,7 +101,7 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.loadJpegStream = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isNodeJS = exports.isSpace = exports.isString = exports.isNum = exports.isInt = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.isArray = exports.info = exports.globalScope = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.StatTimer = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VERBOSITY_LEVELS = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
+exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.loadJpegStream = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isNodeJS = exports.isSpace = exports.isString = exports.isNum = exports.isInt = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.isArray = exports.info = exports.globalScope = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.StatTimer = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VERBOSITY_LEVELS = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
 __w_pdfjs_require__(15);
 
@@ -511,6 +511,15 @@ let FormatError = function FormatErrorClosure() {
   FormatError.prototype.name = 'FormatError';
   FormatError.constructor = FormatError;
   return FormatError;
+}();
+let AbortException = function AbortExceptionClosure() {
+  function AbortException(msg) {
+    this.name = 'AbortException';
+    this.message = msg;
+  }
+  AbortException.prototype = new Error();
+  AbortException.constructor = AbortException;
+  return AbortException;
 }();
 var NullCharactersRegExp = /\x00/g;
 function removeNullCharacters(str) {
@@ -1005,6 +1014,8 @@ function wrapReason(reason) {
     return reason;
   }
   switch (reason.name) {
+    case 'AbortException':
+      return new AbortException(reason.message);
     case 'MissingPDFException':
       return new MissingPDFException(reason.message);
     case 'UnexpectedResponseException':
@@ -1047,7 +1058,7 @@ function MessageHandler(sourceName, targetName, comObj) {
         let callback = callbacksCapabilities[callbackId];
         delete callbacksCapabilities[callbackId];
         if ('error' in data) {
-          callback.reject(data.error);
+          callback.reject(wrapReason(data.error));
         } else {
           callback.resolve(data.data);
         }
@@ -1387,6 +1398,7 @@ exports.AnnotationType = AnnotationType;
 exports.FontType = FontType;
 exports.ImageKind = ImageKind;
 exports.CMapCompressionType = CMapCompressionType;
+exports.AbortException = AbortException;
 exports.InvalidPDFException = InvalidPDFException;
 exports.MessageHandler = MessageHandler;
 exports.MissingDataException = MissingDataException;
@@ -3160,6 +3172,7 @@ var PDFWorker = function PDFWorkerClosure() {
         this._webWorker.terminate();
         this._webWorker = null;
       }
+      pdfWorkerPorts.delete(this._port);
       this._port = null;
       if (this._messageHandler) {
         this._messageHandler.destroy();
@@ -3813,8 +3826,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.8.593';
-  exports.build = build = 'f62d0a10';
+  exports.version = version = '1.8.605';
+  exports.build = build = 'ace9de6f';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -4233,7 +4246,7 @@ var renderTextLayer = function renderTextLayerClosure() {
     },
     cancel: function TextLayer_cancel() {
       if (this._reader) {
-        this._reader.cancel();
+        this._reader.cancel(new _util.AbortException('text layer task cancelled'));
         this._reader = null;
       }
       this._canceled = true;
@@ -4864,8 +4877,8 @@ if (!_util.globalScope.PDFJS) {
 }
 var PDFJS = _util.globalScope.PDFJS;
 {
-  PDFJS.version = '1.8.593';
-  PDFJS.build = 'f62d0a10';
+  PDFJS.version = '1.8.605';
+  PDFJS.build = 'ace9de6f';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -10431,8 +10444,8 @@ exports.PDFDataTransportStream = PDFDataTransportStream;
 "use strict";
 
 
-var pdfjsVersion = '1.8.593';
-var pdfjsBuild = 'f62d0a10';
+var pdfjsVersion = '1.8.605';
+var pdfjsBuild = 'ace9de6f';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -10487,7 +10500,18 @@ exports.StatTimer = pdfjsSharedUtil.StatTimer;
 "use strict";
 
 
+let isReadableStreamSupported = false;
 if (typeof ReadableStream !== 'undefined') {
+  try {
+    new ReadableStream({
+      start(controller) {
+        controller.close();
+      }
+    });
+    isReadableStreamSupported = true;
+  } catch (e) {}
+}
+if (isReadableStreamSupported) {
   exports.ReadableStream = ReadableStream;
 } else {
   exports.ReadableStream = __w_pdfjs_require__(9).ReadableStream;
