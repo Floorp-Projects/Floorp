@@ -225,7 +225,7 @@ MediaSystemResourceService::UpdateRequests(MediaSystemResourceType aResourceType
     resource->mWaitingRequests;
 
   while ((acquiredRequests.size() < resource->mResourceCount) &&
-         (waitingRequests.size() > 0)) {
+         (!waitingRequests.empty())) {
     MediaSystemResourceRequest& request = waitingRequests.front();
     MOZ_ASSERT(request.mParent);
     // Send response
