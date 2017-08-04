@@ -64,7 +64,6 @@ const startupPhases = {
       "nsSearchService.js",
     ]),
     modules: new Set([
-      "chrome://webcompat-reporter/content/TabListener.jsm",
       "chrome://webcompat-reporter/content/WebCompatReporter.jsm",
       "resource:///modules/AboutNewTab.jsm",
       "resource:///modules/BrowserUITelemetry.jsm",
