@@ -51,8 +51,8 @@ function loadFileContent(aFile, aCharset) {
 }
 
 function isRoughly(actual, expected, message) {
-  return is(actual.replace("<!DOCTYPE HTML", "<!DOCTYPE html"), 
-            expected, 
+  return is(actual.replace("<!DOCTYPE HTML", "<!DOCTYPE html"),
+            expected,
             message);
 }
 
@@ -64,15 +64,9 @@ function testHtmlSerializer_1 () {
   var doc = $("testframe").contentDocument;
   var out, expected;
 
-  // in the following tests, we must use the OutputLFLineBreak flag, to avoid
+  // in the following test, we must use the OutputLFLineBreak flag, to avoid
   // to have the default line break of the platform in the result, so the test
   // can pass on all platform
-
-  //------------ OutputEncodeW3CEntities
-  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputEncodeW3CEntities);
-  out = encoder.encodeToString();
-  expected = loadFileContent("file_htmlserializer_2_entw3c.html");
-  isRoughly(out, expected, "test OutputEncodeW3CEntities");
 
   //------------ OutputEncodeBasicEntities
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputEncodeBasicEntities);
@@ -80,25 +74,12 @@ function testHtmlSerializer_1 () {
   expected = loadFileContent("file_htmlserializer_2_basic.html");
   isRoughly(out, expected, "test OutputEncodeBasicEntities");
 
-  //------------ OutputEncodeLatin1Entities
-  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputEncodeLatin1Entities);
-  out = encoder.encodeToString();
-  expected = loadFileContent("file_htmlserializer_2_latin1.html");
-  isRoughly(out, expected, "test OutputEncodeLatin1Entities");
-
-  //------------ OutputEncodeHTMLEntities
-  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputEncodeHTMLEntities);
-  out = encoder.encodeToString();
-  expected = loadFileContent("file_htmlserializer_2_enthtml.html");
-  isRoughly(out, expected, "test OutputEncodeHTMLEntities");
-
-
   // tests on the serialization of selections
 
   var node = document.getElementById('draggable');
 
   var select = window.getSelection();
-  select.selectAllChildren(node);  
+  select.selectAllChildren(node);
 
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
@@ -122,7 +103,7 @@ function testHtmlSerializer_1 () {
   node = document.getElementById('aList');
 
   var select = window.getSelection();
-  select.selectAllChildren(node);  
+  select.selectAllChildren(node);
 
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);

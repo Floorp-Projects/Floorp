@@ -15,7 +15,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsXHTMLContentSerializer.h"
-#include "nsIEntityConverter.h"
 #include "nsString.h"
 
 class nsIContent;

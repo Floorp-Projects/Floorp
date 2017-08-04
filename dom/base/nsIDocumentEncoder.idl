@@ -40,9 +40,9 @@ interface nsIDocumentEncoder : nsISupports
 {
   // Output methods flag bits. There are a frightening number of these,
   // because everyone wants something a little bit different
-   
 
-  /** 
+
+  /**
    * Output only the selection (as opposed to the whole document).
    */
   const unsigned long OutputSelectionOnly = (1 << 0);
@@ -63,7 +63,7 @@ interface nsIDocumentEncoder : nsISupports
    */
   const unsigned long OutputRaw           = (1 << 2);
 
-  /** 
+  /**
    * Do not print html head tags.
    * XHTML/HTML output only.
    */
@@ -107,15 +107,6 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputAbsoluteLinks = (1 << 7);
 
   /**
-   * Attempt to encode entities standardized at W3C (HTML, MathML, etc).
-   * This is a catch-all flag for documents with mixed contents. Beware of
-   * interoperability issues. See below for other flags which might likely
-   * do what you want.
-   * HTML output only.
-   */
-  const unsigned long OutputEncodeW3CEntities = (1 << 8);
-
-  /** 
    * LineBreak processing: if this flag is set than CR line breaks will
    * be written. If neither this nor OutputLFLineBreak is set, then we
    * will use platform line breaks. The combination of the two flags will
@@ -123,7 +114,7 @@ interface nsIDocumentEncoder : nsISupports
    */
   const unsigned long OutputCRLineBreak = (1 << 9);
 
-  /** 
+  /**
    * LineBreak processing: if this flag is set than LF line breaks will
    * be written. If neither this nor OutputCRLineBreak is set, then we
    * will use platform line breaks. The combination of the two flags will
@@ -158,22 +149,6 @@ interface nsIDocumentEncoder : nsISupports
    * HTML output only.
    */
   const unsigned long OutputEncodeBasicEntities = (1 << 14);
-    
-  /**
-   * Encode entities when outputting to a string.
-   * The Latin1 entity set additionally includes 8bit accented letters
-   * between 128 and 255.
-   * HTML output only.
-   */
-  const unsigned long OutputEncodeLatin1Entities = (1 << 15);
-  
-  /**
-   * Encode entities when outputting to a string.
-   * The HTML entity set additionally includes accented letters, greek
-   * letters, and other special markup symbols as defined in HTML4.
-   * HTML output only.
-   */
-  const unsigned long OutputEncodeHTMLEntities = (1 << 16);
 
   /**
    * Normally &nbsp; is replaced with a space character when
@@ -184,26 +159,26 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputPersistNBSP = (1 << 17);
 
   /**
-   * Normally when serializing the whole document using the HTML or 
+   * Normally when serializing the whole document using the HTML or
    * XHTML serializer, the encoding declaration is rewritten to match.
    * This flag suppresses that behavior.
    */
   const unsigned long OutputDontRewriteEncodingDeclaration = (1 << 18);
- 
+
   /**
    * When using the HTML or XHTML serializer, skip elements that are not
    * visible when this flag is set.  Elements are not visible when they
    * have CSS style display:none or visibility:collapse, for example.
    */
   const unsigned long SkipInvisibleContent = (1 << 19);
-  
+
   /**
    * Output for delsp=yes (RFC 3676). This is used with OutputFormatFlowed
    * when converting to text for mail sending.
    * PlainText output only.
    */
   const unsigned long OutputFormatDelSp  = (1 << 20);
- 
+
   /**
    * Drop <br> elements considered "invisible" by the editor. OutputPreformatted
    * implies this flag.
@@ -326,7 +301,7 @@ interface nsIDocumentEncoder : nsISupports
    *  Call this AFTER Init() and SetSelection() have both been called.
    */
   readonly attribute AString mimeType;
-  
+
   /**
    *  Encode the document and send the result to the nsIOutputStream.
    *
@@ -351,7 +326,7 @@ interface nsIDocumentEncoder : nsISupports
    * @param [OUT] aInfoString The string where extra context info will
    *              be stored.
    * @return The document encoded as a string.
-   * 
+   *
    */
   AString encodeToStringWithContext( out AString aContextString,
                                      out AString aInfoString);

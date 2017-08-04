@@ -487,7 +487,6 @@
 @BINPATH@/res/dtd/*
 @BINPATH@/res/html/*
 @BINPATH@/res/language.properties
-@BINPATH@/res/entityTables/*
 
 #ifndef MOZ_ANDROID_EXCLUDE_FONTS
 @BINPATH@/res/fonts/*

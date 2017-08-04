@@ -559,7 +559,7 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
   // init encoder with document and node
   rv = docEncoder->NativeInit(document, NS_LITERAL_STRING(kHTMLMime),
                               nsIDocumentEncoder::OutputAbsoluteLinks |
-                              nsIDocumentEncoder::OutputEncodeW3CEntities);
+                              nsIDocumentEncoder::OutputEncodeBasicEntities);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = docEncoder->SetNativeNode(aDOMNode);
