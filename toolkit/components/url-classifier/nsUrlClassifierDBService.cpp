@@ -1289,9 +1289,9 @@ nsUrlClassifierLookupCallback::HandleResults()
     }
 
     if (classifyCallback) {
-      nsCString prefixString;
-      result.hash.fixedLengthPrefix.ToString(prefixString);
-      classifyCallback->HandleResult(result.mTableName, prefixString);
+      nsCString fullHashString;
+      result.hash.complete.ToString(fullHashString);
+      classifyCallback->HandleResult(result.mTableName, fullHashString);
     }
   }
 
@@ -1378,7 +1378,7 @@ private:
 
   struct ClassifyMatchedInfo {
     nsCString table;
-    nsCString prefix;
+    nsCString fullhash;
     Provider provider;
     nsresult errorCode;
   };
@@ -1413,27 +1413,27 @@ nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
   }
 
   nsCString provider = matchedInfo ? matchedInfo->provider.name : EmptyCString();
-  nsCString prefix = matchedInfo ? matchedInfo->prefix : EmptyCString();
+  nsCString fullhash = matchedInfo ? matchedInfo->fullhash : EmptyCString();
   nsCString table = matchedInfo ? matchedInfo->table : EmptyCString();
 
-  mCallback->OnClassifyComplete(response, table, provider, prefix);
+  mCallback->OnClassifyComplete(response, table, provider, fullhash);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsUrlClassifierClassifyCallback::HandleResult(const nsACString& aTable,
-                                              const nsACString& aPrefix)
+                                              const nsACString& aFullHash)
 {
-  LOG(("nsUrlClassifierClassifyCallback::HandleResult [%p, table %s prefix %s]",
-        this, PromiseFlatCString(aTable).get(), PromiseFlatCString(aPrefix).get()));
+  LOG(("nsUrlClassifierClassifyCallback::HandleResult [%p, table %s full hash %s]",
+        this, PromiseFlatCString(aTable).get(), PromiseFlatCString(aFullHash).get()));
 
-  if (NS_WARN_IF(aTable.IsEmpty()) || NS_WARN_IF(aPrefix.IsEmpty())) {
+  if (NS_WARN_IF(aTable.IsEmpty()) || NS_WARN_IF(aFullHash.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
   }
 
   ClassifyMatchedInfo* matchedInfo = mMatchedArray.AppendElement();
   matchedInfo->table = aTable;
-  matchedInfo->prefix = aPrefix;
+  matchedInfo->fullhash = aFullHash;
 
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
     do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);

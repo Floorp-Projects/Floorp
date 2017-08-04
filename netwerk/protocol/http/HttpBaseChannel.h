@@ -664,7 +664,7 @@ protected:
   // Classified channel's matched information
   nsCString mMatchedList;
   nsCString mMatchedProvider;
-  nsCString mMatchedPrefix;
+  nsCString mMatchedFullHash;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)

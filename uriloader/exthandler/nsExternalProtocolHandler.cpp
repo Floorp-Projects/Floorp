@@ -423,7 +423,7 @@ NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingProtectionDisabled()
 
 NS_IMETHODIMP nsExtProtocolChannel::SetClassifierMatchedInfo(const nsACString& aList,
                                                              const nsACString& aProvider,
-                                                             const nsACString& aPrefix)
+                                                             const nsACString& aFullHash)
 {
   // nothing to do
   return NS_OK;
