@@ -136,7 +136,8 @@ NotifySubdocumentInvalidation(Layer* aLayer, NotifySubDocInvalidationFunc aCallb
       {
         ContainerLayer* container = layer->AsContainerLayer();
         if (container) {
-          aCallback(container, container->GetLocalVisibleRegion().ToUnknownRegion());
+          nsIntRegion region = container->GetLocalVisibleRegion().ToUnknownRegion();
+          aCallback(container, &region);
         }
       });
 }
@@ -471,7 +472,7 @@ public:
     }
 
     if (aCallback) {
-      aCallback(container, result);
+      aCallback(container, areaOverflowed ? nullptr : &result);
     }
 
     if (childrenChanged || areaOverflowed) {
