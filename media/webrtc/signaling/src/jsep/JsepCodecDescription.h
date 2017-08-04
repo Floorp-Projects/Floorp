@@ -325,7 +325,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       h264Params.level_asymmetry_allowed = true;
 
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, h264Params));
-    } else if (mName == "red" && mRedundantEncodings.size()) {
+    } else if (mName == "red" && !mRedundantEncodings.empty()) {
       SdpFmtpAttributeList::RedParameters redParams(
           GetRedParameters(mDefaultPt, msection));
       redParams.encodings = mRedundantEncodings;

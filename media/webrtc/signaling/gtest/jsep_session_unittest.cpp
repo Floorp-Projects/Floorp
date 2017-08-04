@@ -1605,10 +1605,10 @@ TEST_P(JsepSessionTest, RenegotiationBothAddTracksToExistingStream)
 
   auto oHasStream = HasMediaStream(mSessionOff->GetLocalTracks());
   auto aHasStream = HasMediaStream(mSessionAns->GetLocalTracks());
-  ASSERT_EQ(oHasStream, GetLocalUniqueStreamIds(*mSessionOff).size() > 0);
-  ASSERT_EQ(aHasStream, GetLocalUniqueStreamIds(*mSessionAns).size() > 0);
-  ASSERT_EQ(aHasStream, GetRemoteUniqueStreamIds(*mSessionOff).size()> 0);
-  ASSERT_EQ(oHasStream, GetRemoteUniqueStreamIds(*mSessionAns).size() > 0);
+  ASSERT_EQ(oHasStream, !GetLocalUniqueStreamIds(*mSessionOff).empty());
+  ASSERT_EQ(aHasStream, !GetLocalUniqueStreamIds(*mSessionAns).empty());
+  ASSERT_EQ(aHasStream, !GetRemoteUniqueStreamIds(*mSessionOff).empty());
+  ASSERT_EQ(oHasStream, !GetRemoteUniqueStreamIds(*mSessionAns).empty());
 
   auto firstOffId = GetFirstLocalStreamId(*mSessionOff);
   auto firstAnsId = GetFirstLocalStreamId(*mSessionAns);
@@ -1628,10 +1628,10 @@ TEST_P(JsepSessionTest, RenegotiationBothAddTracksToExistingStream)
   oHasStream = HasMediaStream(mSessionOff->GetLocalTracks());
   aHasStream = HasMediaStream(mSessionAns->GetLocalTracks());
 
-  ASSERT_EQ(oHasStream, GetLocalUniqueStreamIds(*mSessionOff).size() > 0);
-  ASSERT_EQ(aHasStream, GetLocalUniqueStreamIds(*mSessionAns).size() > 0);
-  ASSERT_EQ(aHasStream, GetRemoteUniqueStreamIds(*mSessionOff).size() > 0);
-  ASSERT_EQ(oHasStream, GetRemoteUniqueStreamIds(*mSessionAns).size() > 0);
+  ASSERT_EQ(oHasStream, !GetLocalUniqueStreamIds(*mSessionOff).empty());
+  ASSERT_EQ(aHasStream, !GetLocalUniqueStreamIds(*mSessionAns).empty());
+  ASSERT_EQ(aHasStream, !GetRemoteUniqueStreamIds(*mSessionOff).empty());
+  ASSERT_EQ(oHasStream, !GetRemoteUniqueStreamIds(*mSessionAns).empty());
   if (oHasStream) {
     ASSERT_STREQ(firstOffId.c_str(),
                  GetFirstLocalStreamId(*mSessionOff).c_str());
@@ -1642,8 +1642,8 @@ TEST_P(JsepSessionTest, RenegotiationBothAddTracksToExistingStream)
 
   auto oHasStream = HasMediaStream(mSessionOff->GetLocalTracks());
   auto aHasStream = HasMediaStream(mSessionAns->GetLocalTracks());
-  ASSERT_EQ(oHasStream, GetLocalUniqueStreamIds(*mSessionOff).size() > 0);
-  ASSERT_EQ(aHasStream, GetLocalUniqueStreamIds(*mSessionAns).size() > 0);
+  ASSERT_EQ(oHasStream, !GetLocalUniqueStreamIds(*mSessionOff).empty());
+  ASSERT_EQ(aHasStream, !GetLocalUniqueStreamIds(*mSessionAns).empty());
   }
 }
 

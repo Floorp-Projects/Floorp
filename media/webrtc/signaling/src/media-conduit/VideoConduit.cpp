@@ -997,8 +997,8 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
       return false;
     }
     const webrtc::VideoSendStream::Stats& sendStats = mSendStream->GetStats();
-    if (sendStats.substreams.size() == 0
-        || mSendStreamConfig.rtp.ssrcs.size() == 0) {
+    if (sendStats.substreams.empty()
+        || mSendStreamConfig.rtp.ssrcs.empty()) {
       return false;
     }
     uint32_t ssrc = mSendStreamConfig.rtp.ssrcs.front();
