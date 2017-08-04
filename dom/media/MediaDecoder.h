@@ -315,7 +315,7 @@ private:
 
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
-  virtual bool CanPlayThrough();
+  bool CanPlayThrough();
 
   dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
@@ -531,6 +531,8 @@ private:
 
   void ConnectMirrors(MediaDecoderStateMachine* aObject);
   void DisconnectMirrors();
+
+  virtual bool CanPlayThroughImpl();
 
   // The state machine object for handling the decoding. It is safe to
   // call methods of this object from other threads. Its internal data
@@ -773,6 +775,7 @@ private:
 
   bool mTelemetryReported;
   const MediaContainerType mContainerType;
+  bool mCanPlayThrough = false;
 };
 
 } // namespace mozilla

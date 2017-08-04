@@ -2583,7 +2583,7 @@ BufferingState::Step()
   if (Reader()->UseBufferingHeuristics()) {
     TimeDuration elapsed = now - mBufferingStart;
     bool isLiveStream = Resource()->IsLiveStream();
-    if ((isLiveStream || !mMaster->CanPlayThrough())
+    if ((isLiveStream || !mMaster->mCanPlayThrough)
         && elapsed
            < TimeDuration::FromSeconds(mBufferingWait * mMaster->mPlaybackRate)
         && mMaster->HasLowBufferedData(TimeUnit::FromSeconds(mBufferingWait))
