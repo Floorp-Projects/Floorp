@@ -5,7 +5,7 @@
 
 var prefBranch = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService).getBranch(null)
-                    .QueryInterface(Ci.nsIPrefBranch2);
+                    .QueryInterface(Ci.nsIPrefBranch);
 
 const TEST_URI = "data:text/html;charset=utf-8,gcli-pref2";
 
