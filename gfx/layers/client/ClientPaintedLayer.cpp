@@ -262,13 +262,13 @@ ClientPaintedLayer::PaintOffMainThread()
     DrawTarget* targetOnWhite = nullptr;
     RefPtr<CapturedPaintState> capturedState
       = MakeAndAddRef<CapturedPaintState>(state.mRegionToDraw,
+                                          captureDT,
                                           target, targetOnWhite,
                                           capturedTransform,
                                           state.mMode,
                                           state.mContentType);
 
-    PaintThread::Get()->PaintContents(captureDT,
-                                      capturedState,
+    PaintThread::Get()->PaintContents(capturedState,
                                       RotatedContentBuffer::PrepareDrawTargetForPainting);
 
     mContentClient->ReturnDrawTargetToBuffer(target);
