@@ -245,7 +245,6 @@
   background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-indicator.png);
   background-size: 100% 100%;
   width: 19px;
-  margin-bottom: var(--tab-toolbar-navbar-overlap);
   pointer-events: none;
   position: relative;
   z-index: 3; /* the selected tab's z-index + 1 */
