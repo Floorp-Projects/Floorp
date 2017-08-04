@@ -119,8 +119,10 @@ def run(paths, linters, fmt, outgoing, workdir, **lintargs):
 
     # Encode output with 'replace' to avoid UnicodeEncodeErrors on
     # environments that aren't using utf-8.
-    print(formatter(results, failed=lint.failed).encode(
-        sys.stdout.encoding or 'ascii', 'replace'))
+    out = formatter(results, failed=lint.failed).encode(
+                    sys.stdout.encoding or 'ascii', 'replace')
+    if out:
+        print(out)
     return 1 if results or lint.failed else 0
 
 
