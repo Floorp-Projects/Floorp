@@ -283,61 +283,14 @@ add_test(function test_Capabilities_fromJSON() {
 
   // plain
   for (let typ of [{}, null, undefined]) {
-    ok(fromJSON(typ, {merge: true}).has("browserName"));
-    ok(fromJSON(typ, {merge: false}).has("browserName"));
+    ok(fromJSON(typ).has("browserName"));
   }
   for (let typ of [true, 42, "foo", []]) {
-    Assert.throws(() =>
-        fromJSON(typ, {merge: true}), InvalidArgumentError);
-    Assert.throws(() =>
-        fromJSON(typ, {merge: false}), InvalidArgumentError);
-  }
-
-  // merging
-  let desired = {"moz:accessibilityChecks": false};
-  let required = {"moz:accessibilityChecks": true};
-  let matched = fromJSON(
-      {desiredCapabilities: desired, requiredCapabilities: required},
-      {merge: true});
-  ok(matched.has("moz:accessibilityChecks"));
-  equal(true, matched.get("moz:accessibilityChecks"));
-
-  // desiredCapabilities/requriedCapabilities types
-  for (let typ of [undefined, null, {}]) {
-    ok(fromJSON({desiredCapabilities: typ}, {merge: true}));
-    ok(fromJSON({requiredCapabilities: typ}, {merge: true}));
-  }
-  for (let typ of [true, 42, "foo", []]) {
-    Assert.throws(() => fromJSON({desiredCapabilities: typ}, {merge: true}));
-    Assert.throws(() => fromJSON({requiredCapabilities: typ}, {merge: true}));
+    Assert.throws(() => fromJSON(typ), InvalidArgumentError);
   }
 
   // matching
   let caps = new session.Capabilities();
-
-  ok(fromJSON({browserName: caps.get("browserName")}));
-  ok(fromJSON({browserName: null}));
-  ok(fromJSON({browserName: undefined}));
-  ok(fromJSON({browserName: "*"}));
-  Assert.throws(() => fromJSON({browserName: "foo"}));
-
-  ok(fromJSON({browserVersion: caps.get("browserVersion")}));
-  ok(fromJSON({browserVersion: null}));
-  ok(fromJSON({browserVersion: undefined}));
-  ok(fromJSON({browserVersion: "*"}));
-  Assert.throws(() => fromJSON({browserVersion: "foo"}));
-
-  ok(fromJSON({platformName: caps.get("platformName")}));
-  ok(fromJSON({platformName: null}));
-  ok(fromJSON({platformName: undefined}));
-  ok(fromJSON({platformName: "*"}));
-  Assert.throws(() => fromJSON({platformName: "foo"}));
-
-  ok(fromJSON({platformVersion: caps.get("platformVersion")}));
-  ok(fromJSON({platformVersion: null}));
-  ok(fromJSON({platformVersion: undefined}));
-  ok(fromJSON({platformVersion: "*"}));
-  Assert.throws(() => fromJSON({platformVersion: "foo"}));
 
   caps = fromJSON({acceptInsecureCerts: true});
   equal(true, caps.get("acceptInsecureCerts"));
