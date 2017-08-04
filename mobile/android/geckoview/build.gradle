@@ -76,6 +76,11 @@ android {
 
                 if (!mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
                     exclude 'com/google/android/exoplayer2/**'
+                    exclude 'org/mozilla/gecko/media/GeckoHlsAudioRenderer.java'
+                    exclude 'org/mozilla/gecko/media/GeckoHlsPlayer.java'
+                    exclude 'org/mozilla/gecko/media/GeckoHlsRendererBase.java'
+                    exclude 'org/mozilla/gecko/media/GeckoHlsVideoRenderer.java'
+                    exclude 'org/mozilla/gecko/media/Utils.java'
                 }
 
                 if (mozconfig.substs.MOZ_WEBRTC) {
