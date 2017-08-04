@@ -60,6 +60,8 @@ interface nsIStringBundle : nsISupports
   Implements nsISimpleEnumerator, replaces nsIEnumerator 
   */
   nsISimpleEnumerator getSimpleEnumeration();
+  // Preloads string bundle data asynchronously
+  void asyncPreload();
 };
 
 [scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
