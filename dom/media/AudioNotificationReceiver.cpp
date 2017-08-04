@@ -54,6 +54,10 @@ AudioNotificationReceiver::Unregister(AudioStream* aAudioStream)
   MOZ_ASSERT(!sSubscribers->IsEmpty(), "No subscriber.");
 
   sSubscribers->RemoveElement(aAudioStream);
+  if (sSubscribers->IsEmpty()) {
+    // Clear the static pointer here to prevent memory leak.
+    sSubscribers = nullptr;
+  }
 
   ANR_LOG("The AudioStream: %p is unregistered successfully.", aAudioStream);
 }
