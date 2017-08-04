@@ -12,7 +12,6 @@ const nsIFileView = Components.interfaces.nsIFileView;
 const NS_FILEVIEW_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
 const nsITreeView = Components.interfaces.nsITreeView;
 const nsIFile = Components.interfaces.nsIFile;
-const nsIFile = Components.interfaces.nsIFile;
 const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const NS_PROMPTSERVICE_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
 

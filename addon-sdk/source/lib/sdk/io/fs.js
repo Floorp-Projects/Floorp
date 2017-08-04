@@ -18,7 +18,7 @@ const { ns } = require("../core/namespace");
 const { Class } = require("../core/heritage");
 
 
-const nsIFile = CC("@mozilla.org/file/local;1", "nsIFile",
+const LocalFile = CC("@mozilla.org/file/local;1", "nsIFile",
                         "initWithPath");
 const FileOutputStream = CC("@mozilla.org/network/file-output-stream;1",
                             "nsIFileOutputStream", "init");
@@ -110,7 +110,7 @@ function getFileName(file) {
 
 
 function remove(path, recursive) {
-  let fd = new nsIFile(path)
+  let fd = new LocalFile(path)
   if (fd.exists()) {
     fd.remove(recursive || false);
   }
@@ -256,7 +256,7 @@ exports.createWriteStream = function createWriteStream(path, options) {
 
 const Stats = Class({
   initialize: function initialize(path) {
-    let file = new nsIFile(path);
+    let file = new LocalFile(path);
     if (!file.exists()) throw FSError("stat", "ENOENT", 34, path);
     nsIFile(this, file);
   },
@@ -358,8 +358,8 @@ function Async(wrapped) {
  * Synchronous rename(2)
  */
 function renameSync(oldPath, newPath) {
-  let source = new nsIFile(oldPath);
-  let target = new nsIFile(newPath);
+  let source = new LocalFile(oldPath);
+  let target = new LocalFile(newPath);
   if (!source.exists()) throw FSError("rename", "ENOENT", 34, oldPath);
   return source.moveTo(target.parent, target.leafName);
 };
@@ -376,7 +376,7 @@ exports.rename = rename;
  * Test whether or not the given path exists by checking with the file system.
  */
 function existsSync(path) {
-  return new nsIFile(path).exists();
+  return new LocalFile(path).exists();
 }
 exports.existsSync = existsSync;
 
@@ -447,7 +447,7 @@ exports.lchown = lchown;
 function chmodSync (path, mode) {
   let file;
   try {
-    file = new nsIFile(path);
+    file = new LocalFile(path);
   } catch(e) {
     throw FSError("chmod", "ENOENT", 34, path);
   }
@@ -558,7 +558,7 @@ exports.symlink = symlink;
  * Synchronous readlink(2). Returns the resolved path.
  */
 function readlinkSync(path) {
-  return new nsIFile(path).target;
+  return new LocalFile(path).target;
 };
 exports.readlinkSync = readlinkSync;
 
@@ -573,7 +573,7 @@ exports.readlink = readlink;
  * Synchronous realpath(2). Returns the resolved path.
  */
 function realpathSync(path) {
-  return new nsIFile(path).path;
+  return new LocalFile(path).path;
 };
 exports.realpathSync = realpathSync;
 
@@ -615,7 +615,7 @@ exports.rmdir = rmdir;
  */
 function mkdirSync(path, mode) {
   try {
-    return nsIFile(path).create(DIRECTORY_TYPE, Mode(mode));
+    return LocalFile(path).create(DIRECTORY_TYPE, Mode(mode));
   } catch (error) {
     // Adjust exception thorw to match ones thrown by node.
     if (error.name === "NS_ERROR_FILE_ALREADY_EXISTS") {
@@ -640,7 +640,7 @@ exports.mkdir = mkdir;
  */
 function readdirSync(path) {
   try {
-    return toArray(new nsIFile(path).directoryEntries).map(getFileName);
+    return toArray(new LocalFile(path).directoryEntries).map(getFileName);
   }
   catch (error) {
     // Adjust exception thorw to match ones thrown by node.
@@ -694,7 +694,7 @@ exports.close = close;
  */
 function openSync(aPath, aFlag, aMode) {
   let [ fd, flags, mode, file ] =
-      [ { path: aPath }, Flags(aFlag), Mode(aMode), nsIFile(aPath) ];
+      [ { path: aPath }, Flags(aFlag), Mode(aMode), LocalFile(aPath) ];
 
   nsIFile(fd, file);
 
