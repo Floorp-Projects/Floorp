@@ -550,7 +550,8 @@ private:
                                nsIAtom* aPseudoTag,
                                const ServoStyleContext* aParentContext,
                                StyleRuleInclusion aRules =
-                                 StyleRuleInclusion::All);
+                                 StyleRuleInclusion::All,
+                               bool aIgnoreExistingStyles = false);
 
   void RunPostTraversalTasks();
 
