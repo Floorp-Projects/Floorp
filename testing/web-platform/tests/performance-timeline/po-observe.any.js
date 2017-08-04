@@ -33,9 +33,29 @@
   }, "Filter unsupported entryType entryType names within the entryTypes sequence");
 
   async_test(function (t) {
+    var finish = t.step_func(function () { t.done(); });
+    var observer = new PerformanceObserver(
+      function (entryList, obs) {
+        var self = this;
+        t.step(function () {
+          assert_true(entryList instanceof PerformanceObserverEntryList, "first callback parameter must be a PerformanceObserverEntryList instance");
+          assert_true(obs instanceof PerformanceObserver, "second callback parameter must be a PerformanceObserver instance");
+          assert_equals(observer, self, "observer is the this value");
+          assert_equals(observer, obs, "observer is second parameter");
+          assert_equals(self, obs, "this and second parameter are the same");
+          observer.disconnect();
+          finish();
+        });
+      }
+    );
+    self.performance.clearMarks();
+    observer.observe({entryTypes: ["mark"]});
+    self.performance.mark("mark1");
+  }, "Check observer callback parameter and this values");
+
+  async_test(function (t) {
   var observer = new PerformanceObserver(
       t.step_func(function (entryList, obs) {
-        assert_equals(observer, obs, "observer is second parameter");
         checkEntries(entryList.getEntries(),
           [{ entryType: "measure", name: "measure1"}]);
         observer.disconnect();

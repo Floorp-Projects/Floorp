@@ -73,8 +73,6 @@ public:
   NS_DECL_NSISELECTION
   NS_DECL_NSISELECTIONPRIVATE
 
-  virtual Selection* AsSelection() override { return this; }
-
   nsresult EndBatchChangesInternal(int16_t aReason = nsISelectionListener::NO_REASON);
 
   nsIDocument* GetParentObject() const;
@@ -517,6 +515,60 @@ public:
 };
 
 } // namespace dom
+
+inline bool
+IsValidSelectionType(RawSelectionType aRawSelectionType)
+{
+  switch (static_cast<SelectionType>(aRawSelectionType)) {
+    case SelectionType::eNone:
+    case SelectionType::eNormal:
+    case SelectionType::eSpellCheck:
+    case SelectionType::eIMERawClause:
+    case SelectionType::eIMESelectedRawClause:
+    case SelectionType::eIMEConvertedClause:
+    case SelectionType::eIMESelectedClause:
+    case SelectionType::eAccessibility:
+    case SelectionType::eFind:
+    case SelectionType::eURLSecondary:
+    case SelectionType::eURLStrikeout:
+      return true;
+    default:
+      return false;
+  }
+}
+
+inline SelectionType
+ToSelectionType(RawSelectionType aRawSelectionType)
+{
+  if (!IsValidSelectionType(aRawSelectionType)) {
+    return SelectionType::eInvalid;
+  }
+  return static_cast<SelectionType>(aRawSelectionType);
+}
+
+inline RawSelectionType
+ToRawSelectionType(SelectionType aSelectionType)
+{
+  return static_cast<RawSelectionType>(aSelectionType);
+}
+
+inline RawSelectionType ToRawSelectionType(TextRangeType aTextRangeType)
+{
+  return ToRawSelectionType(ToSelectionType(aTextRangeType));
+}
+
+inline bool operator &(SelectionType aSelectionType,
+                       RawSelectionType aRawSelectionTypes)
+{
+  return (ToRawSelectionType(aSelectionType) & aRawSelectionTypes) != 0;
+}
+
 } // namespace mozilla
+
+inline mozilla::dom::Selection*
+nsISelection::AsSelection()
+{
+  return static_cast<mozilla::dom::Selection*>(this);
+}
 
 #endif // mozilla_Selection_h__

@@ -8,12 +8,19 @@
 
 %{C++
 typedef short SelectionRegion;
+namespace mozilla {
+namespace dom {
+class Selection;
+} // namespace dom
+} // namespace mozilla
 %}
 
 interface nsIContent;
 interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
+
+[ptr] native SelectionPtr(mozilla::dom::Selection);
 
 [scriptable, uuid(3801c9d4-8e69-4bfc-9edb-b58278621f8f)]
 interface nsISelectionController : nsISelectionDisplay
@@ -63,6 +70,11 @@ interface nsISelectionController : nsISelectionDisplay
    * @param _return will hold the return value
    */
     nsISelection getSelection(in short type);
+
+   /**
+   * Return the selection object corresponding to a selection type.
+   */
+    [noscript,nostdcall,notxpcom] SelectionPtr getDOMSelection(in short aType);
 
    const short SCROLL_SYNCHRONOUS = 1<<1;
    const short SCROLL_FIRST_ANCESTOR_ONLY = 1<<2;
@@ -312,11 +324,12 @@ enum : size_t
   kPresentSelectionTypeCount = kSelectionTypeCount - 1
 };
 
+// Please include mozilla/dom/Selection.h for the following APIs.
 const char* ToChar(SelectionType aSelectionType);
-SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
-RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
-bool operator &(SelectionType aSelectionType,
-                RawSelectionType aRawSelectionTypes);
+inline SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
+inline RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
+inline bool operator &(SelectionType aSelectionType,
+                       RawSelectionType aRawSelectionTypes);
 
 } // namespace mozilla
 %}

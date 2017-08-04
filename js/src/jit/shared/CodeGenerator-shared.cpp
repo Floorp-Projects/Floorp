@@ -1348,7 +1348,7 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
 {
     // If we're calling a function with an out parameter type of double, make
     // sure we have an FPU.
-    MOZ_ASSERT_IF(fun.outParam == Type_Double, GetJitContext()->runtime->jitSupportsFloatingPoint());
+    MOZ_ASSERT_IF(fun.outParam == Type_Double, gen->runtime->jitSupportsFloatingPoint());
 
 #ifdef DEBUG
     if (ins->mirRaw()) {

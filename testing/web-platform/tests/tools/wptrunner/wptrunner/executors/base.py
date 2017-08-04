@@ -93,7 +93,7 @@ class TestExecutor(object):
     convert_result = None
 
     def __init__(self, browser, server_config, timeout_multiplier=1,
-                 debug_info=None):
+                 debug_info=None, **kwargs):
         """Abstract Base class for object that actually executes the tests in a
         specific browser. Typically there will be a different TestExecutor
         subclass for each test type and method of executing tests.
@@ -196,7 +196,7 @@ class RefTestExecutor(TestExecutor):
     convert_result = reftest_result_converter
 
     def __init__(self, browser, server_config, timeout_multiplier=1, screenshot_cache=None,
-                 debug_info=None):
+                 debug_info=None, **kwargs):
         TestExecutor.__init__(self, browser, server_config,
                               timeout_multiplier=timeout_multiplier,
                               debug_info=debug_info)

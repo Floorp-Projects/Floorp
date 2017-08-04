@@ -1616,7 +1616,8 @@ audiounit_activate_clock_drift_compensation(const AudioDeviceID aggregate_device
                                                kAudioObjectPropertyScopeGlobal,
                                                kAudioObjectPropertyElementMaster };
 
-  for (UInt32 i = 0; i < subdevices_num; ++i) {
+  // Start from the second device since the first is the master clock
+  for (UInt32 i = 1; i < subdevices_num; ++i) {
     UInt32 drift_compensation_value = 1;
     rv = AudioObjectSetPropertyData(sub_devices[i],
                                     &address_drift,
@@ -1690,6 +1691,9 @@ audiounit_create_aggregate_device(cubeb_stream * stm)
 static int
 audiounit_destroy_aggregate_device(AudioObjectID plugin_id, AudioDeviceID * aggregate_device_id)
 {
+  assert(aggregate_device_id &&
+         *aggregate_device_id != kAudioDeviceUnknown &&
+         plugin_id != kAudioObjectUnknown);
   AudioObjectPropertyAddress destroy_aggregate_device_addr = { kAudioPlugInDestroyAggregateDevice,
                                                                kAudioObjectPropertyScopeGlobal,
                                                                kAudioObjectPropertyElementMaster};
@@ -2262,7 +2266,8 @@ audiounit_setup_stream(cubeb_stream * stm)
   device_info in_dev_info = stm->input_device;
   device_info out_dev_info = stm->output_device;
 
-  if (has_input(stm) && has_output(stm)) {
+  if (has_input(stm) && has_output(stm) &&
+      stm->input_device.id != stm->output_device.id) {
     r = audiounit_create_aggregate_device(stm);
     if (r != CUBEB_OK) {
       stm->aggregate_device_id = 0;

@@ -1,8 +1,6 @@
 import os
 from collections import defaultdict
 
-import mozinfo
-
 from wptmanifest.parser import atoms
 
 atom_reset = atoms["Reset"]
@@ -67,6 +65,8 @@ def get_run_info(metadata_root, product, **kwargs):
 
 class RunInfo(dict):
     def __init__(self, metadata_root, product, debug, extras=None):
+        import mozinfo
+
         self._update_mozinfo(metadata_root)
         self.update(mozinfo.info)
         self["product"] = product
@@ -85,6 +85,8 @@ class RunInfo(dict):
     def _update_mozinfo(self, metadata_root):
         """Add extra build information from a mozinfo.json file in a parent
         directory"""
+        import mozinfo
+
         path = metadata_root
         dirs = set()
         while path != os.path.expanduser('~'):

@@ -83,17 +83,17 @@ class GeckoViewContent extends GeckoViewContentModule {
         let hrefNode = nearestParentHref(node);
         let isImageNode = node instanceof Ci.nsIDOMHTMLImageElement;
         let isMediaNode = node instanceof Ci.nsIDOMHTMLMediaElement;
-        let msg = {
-          screenX: aEvent.screenX,
-          screenY: aEvent.screenY,
-          uri: hrefNode,
-          elementSrc: isImageNode || isMediaNode
-                      ? node.currentSrc || node.src
-                      : null
-        };
 
         if (hrefNode || isImageNode || isMediaNode) {
-          sendAsyncMessage("GeckoView:ContextMenu", msg);
+          this.eventDispatcher.sendRequest({
+            type: "GeckoView:ContextMenu",
+            screenX: aEvent.screenX,
+            screenY: aEvent.screenY,
+            uri: hrefNode,
+            elementSrc: isImageNode || isMediaNode
+                        ? node.currentSrc || node.src
+                        : null
+          });
           aEvent.preventDefault();
         }
         break;
@@ -113,8 +113,10 @@ class GeckoViewContent extends GeckoViewContentModule {
         sendAsyncMessage("GeckoView:DOMFullscreenExit");
         break;
       case "DOMTitleChanged":
-        sendAsyncMessage("GeckoView:DOMTitleChanged",
-                         { title: content.document.title });
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:DOMTitleChanged",
+          title: content.document.title
+        });
         break;
     }
   }

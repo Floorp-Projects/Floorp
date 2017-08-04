@@ -2,7 +2,7 @@
 
 partial interface Navigator {
   [SecureContext]
-  Promise<void> share(ShareData data);
+  Promise<void> share(optional ShareData data);
 };
 
 dictionary ShareData {

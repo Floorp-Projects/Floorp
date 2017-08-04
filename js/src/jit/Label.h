@@ -18,7 +18,10 @@ struct LabelBase
     // offset_ >= 0 means that the label is either bound or has incoming
     // uses and needs to be bound.
     int32_t offset_ : 31;
-    bool bound_   : 1;
+
+    // We use uint32_t instead of bool to ensure MSVC packs these fields
+    // correctly.
+    uint32_t bound_ : 1;
 
     void operator =(const LabelBase& label) = delete;
 
@@ -95,6 +98,8 @@ class Label : public LabelBase
 #endif
     }
 };
+
+static_assert(sizeof(Label) == sizeof(uint32_t), "Label should have same size as uint32_t");
 
 // Label's destructor asserts that if it has been used it has also been bound.
 // In the case long-lived labels, however, failed compilation (e.g. OOM) will

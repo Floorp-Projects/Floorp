@@ -223,6 +223,9 @@ class BrowserManager(object):
             self.init_timer.cancel()
         self.browser.cleanup()
 
+    def check_for_crashes(self):
+        self.browser.check_for_crashes()
+
     def log_crash(self, test_id):
         self.browser.log_crash(process=self.browser_pid, test=test_id)
 
@@ -548,6 +551,11 @@ class TestRunnerManager(threading.Thread):
         # Write the result of the test harness
         expected = test.expected()
         status = file_result.status if file_result.status != "EXTERNAL-TIMEOUT" else "TIMEOUT"
+
+        if file_result.status in  ("TIMEOUT", "EXTERNAL-TIMEOUT"):
+            if self.browser.check_for_crashes():
+                status = "CRASH"
+
         is_unexpected = expected != status
         if is_unexpected:
             self.unexpected_count += 1

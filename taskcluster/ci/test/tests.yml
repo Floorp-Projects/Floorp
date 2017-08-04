@@ -1537,58 +1537,6 @@ talos-perf-reftest-singletons:
         extra-options:
             - --suite=perf-reftest-singletons
 
-talos-quantum-pageload:
-    description: "Talos quantum-pageload"
-    suite: talos
-    try-name: quantum-pageload
-    treeherder-symbol: tc-T(tp6)
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
-            default: []
-    max-run-time: 3600
-    mozharness:
-        script: talos_script.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                macosx.*:
-                    - talos/mac_config.py
-                windows.*:
-                    - talos/windows_config.py
-                default:
-                    - talos/linux_config.py
-        extra-options:
-            - --suite=quantum-pageload
-            - --add-option
-            - --webServer,localhost
-
-talos-quantum-pageload-stylo:
-    description: "Talos Quantum Pageload Stylo"
-    suite: talos
-    try-name: quantum-pageload-stylo
-    treeherder-symbol: tc-T(tp6s)
-    virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-            macosx64-stylo/.*: ['autoland', 'mozilla-central', 'try']
-            default: []
-    max-run-time: 3600
-    mozharness:
-        script: talos_script.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                macosx.*:
-                    - talos/mac_config.py
-                windows.*:
-                    - talos/windows_config.py
-                default:
-                    - talos/linux_config.py
-        extra-options:
-            - --suite=quantum-pageload-stylo
-
 talos-svgr:
     description: "Talos svgr"
     suite: talos
@@ -1646,6 +1594,84 @@ talos-tp5o:
             - --suite=tp5o
             - --add-option
             - --webServer,localhost
+
+talos-tp6:
+    description: "Talos Tp6"
+    suite: talos
+    try-name: tp6
+    treeherder-symbol: tc-T(tp6)
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
+            default: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=tp6
+            - --add-option
+            - --webServer,localhost
+
+talos-tp6-stylo:
+    description: "Talos Tp6 Stylo"
+    suite: talos
+    try-name: tp6-stylo
+    treeherder-symbol: tc-T(tp6s)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            macosx64-stylo/.*: []
+            default: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=tp6-stylo
+
+talos-tp6-stylo-threads:
+    description: "Talos Tp6 Stylo Threads"
+    suite: talos
+    try-name: tp6-stylo-threads
+    treeherder-symbol: tc-T(tp6st)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            macosx64-stylo/.*: []
+            default: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=tp6-stylo-threads
 
 talos-xperf:
     description: "Talos xperf"
@@ -1781,18 +1807,8 @@ xpcshell:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
-            # Deactivate try on Buildbot, by default. We don't have enough machines
-            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
-            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             default: built-projects
-    worker-type:
-        by-test-platform:
-            windows8-64.*: buildbot-bridge/buildbot-bridge
-            default: null
-    tier:
-        by-test-platform:
-            default: default
     chunks:
         by-test-platform:
             linux64/debug: 10

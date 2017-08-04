@@ -197,6 +197,7 @@
     _(CharCodeAt)                   \
     _(FromCharCode)                 \
     _(FromCodePoint)                \
+    _(StringConvertCase)            \
     _(SinCos)                       \
     _(StringSplit)                  \
     _(Int32ToDouble)                \

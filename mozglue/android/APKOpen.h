@@ -6,7 +6,6 @@
 #define APKOpen_h
 
 #include <jni.h>
-#include <pthread.h>
 
 #ifndef APKOPEN_EXPORT
 #define APKOPEN_EXPORT __attribute__ ((visibility("default")))
@@ -21,7 +20,6 @@ struct mapping_info {
 
 APKOPEN_EXPORT const struct mapping_info * getLibraryMapping();
 APKOPEN_EXPORT void abortThroughJava(const char* msg);
-APKOPEN_EXPORT pthread_t getJavaUiThread();
 
 static const int SUCCESS = 0;
 static const int FAILURE = 1;

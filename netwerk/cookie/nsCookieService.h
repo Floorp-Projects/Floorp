@@ -13,6 +13,7 @@
 #include "nsWeakReference.h"
 
 #include "nsCookie.h"
+#include "nsCookieKey.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsHashKeys.h"
@@ -46,73 +47,16 @@ class mozIStorageService;
 class mozIThirdPartyUtil;
 class ReadCookieDBListener;
 
-struct nsCookieAttributes;
 struct nsListIter;
 
 namespace mozilla {
 namespace net {
+class nsCookieKey;
 class CookieServiceParent;
 } // namespace net
 } // namespace mozilla
 
-// hash key class
-class nsCookieKey : public PLDHashEntryHdr
-{
-public:
-  typedef const nsCookieKey& KeyType;
-  typedef const nsCookieKey* KeyTypePointer;
-
-  nsCookieKey()
-  {}
-
-  nsCookieKey(const nsCString &baseDomain, const OriginAttributes &attrs)
-    : mBaseDomain(baseDomain)
-    , mOriginAttributes(attrs)
-  {}
-
-  explicit nsCookieKey(KeyTypePointer other)
-    : mBaseDomain(other->mBaseDomain)
-    , mOriginAttributes(other->mOriginAttributes)
-  {}
-
-  nsCookieKey(KeyType other)
-    : mBaseDomain(other.mBaseDomain)
-    , mOriginAttributes(other.mOriginAttributes)
-  {}
-
-  ~nsCookieKey()
-  {}
-
-  bool KeyEquals(KeyTypePointer other) const
-  {
-    return mBaseDomain == other->mBaseDomain &&
-           mOriginAttributes == other->mOriginAttributes;
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey)
-  {
-    return &aKey;
-  }
-
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  {
-    // TODO: more efficient way to generate hash?
-    nsAutoCString temp(aKey->mBaseDomain);
-    temp.Append('#');
-    nsAutoCString suffix;
-    aKey->mOriginAttributes.CreateSuffix(suffix);
-    temp.Append(suffix);
-    return mozilla::HashString(temp);
-  }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  enum { ALLOW_MEMMOVE = true };
-
-  nsCString        mBaseDomain;
-  OriginAttributes mOriginAttributes;
-};
-
+using mozilla::net::nsCookieKey;
 // Inherit from nsCookieKey so this can be stored in nsTHashTable
 // TODO: why aren't we using nsClassHashTable<nsCookieKey, ArrayType>?
 class nsCookieEntry : public nsCookieKey
@@ -238,6 +182,21 @@ enum OpenDBResult
  * class declaration
  ******************************************************************************/
 
+// struct for temporarily storing cookie attributes during header parsing
+struct nsCookieAttributes
+{
+  nsAutoCString name;
+  nsAutoCString value;
+  nsAutoCString host;
+  nsAutoCString path;
+  nsAutoCString expires;
+  nsAutoCString maxage;
+  int64_t expiryTime;
+  bool isSession;
+  bool isSecure;
+  bool isHttpOnly;
+};
+
 class nsCookieService final : public nsICookieService
                             , public nsICookieManager2
                             , public nsIObserver
@@ -266,6 +225,15 @@ class nsCookieService final : public nsICookieService
    * app.
    */
   static void AppClearDataObserverInit();
+  static nsCString GetPathFromURI(nsIURI *aHostURI);
+  static nsresult GetBaseDomain(nsIEffectiveTLDService *aTLDService, nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
+  static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService *aTLDService, const nsACString &aHost, nsCString &aBaseDomain);
+  static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
+  static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
+  static bool CanSetCookie(nsIURI *aHostURI, const nsCookieKey& aKey, nsCookieAttributes &aCookieAttributes, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel, bool aLeaveSercureAlone, bool &aSetCookie);
+  static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartyUtil, nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader, const int aNumOfCookies);
+  static int64_t ParseServerTime(const nsCString &aServerTime);
+  void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList);
 
   protected:
     virtual ~nsCookieService();
@@ -291,8 +259,6 @@ class nsCookieService final : public nsICookieService
     void                          EnsureReadDomain(const nsCookieKey &aKey);
     void                          EnsureReadComplete();
     nsresult                      NormalizeHost(nsCString &aHost);
-    nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
-    nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     nsresult                      GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel, bool aHttpBound, char** aCookie);
     void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsCString &aCookie);
     nsresult                      SetCookieStringCommon(nsIURI *aHostURI, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, bool aFromHttp);
@@ -305,8 +271,7 @@ class nsCookieService final : public nsICookieService
     static bool                   GetTokenValue(nsACString::const_char_iterator &aIter, nsACString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, bool &aEqualsFound);
     static bool                   ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     bool                          RequireThirdPartyCheck();
-    CookieStatus                  CheckPrefs(nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader);
-    bool                          CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, bool aRequireHostMatch);
+    static bool                   CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, bool aRequireHostMatch);
     static bool                   CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static bool                   CheckPrefixes(nsCookieAttributes &aCookie, bool aSecureRequest);
     static bool                   GetExpiry(nsCookieAttributes &aCookie, int64_t aServerTime, int64_t aCurrentTime);
