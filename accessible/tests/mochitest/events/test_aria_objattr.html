@@ -22,8 +22,7 @@
      * Do tests.
      */
     var gQueue = null;
-    function updateAttribute(aID, aAttr, aValue)
-    {
+    function updateAttribute(aID, aAttr, aValue) {
       this.node = getNode(aID);
       this.accessible = getAccessible(this.node);
 
@@ -31,24 +30,20 @@
         new objAttrChangedChecker(aID, aAttr),
       ];
 
-      this.invoke = function updateAttribute_invoke()
-      {
+      this.invoke = function updateAttribute_invoke() {
         this.node.setAttribute(aAttr, aValue);
       };
 
-      this.getID = function updateAttribute_getID()
-      {
+      this.getID = function updateAttribute_getID() {
         return aAttr + " for " + aID + " " + aValue;
       };
     }
 
-    function updateARIAHidden(aID, aIsDefined, aChildId)
-    {
+    function updateARIAHidden(aID, aIsDefined, aChildId) {
       this.__proto__ = new updateAttribute(aID, "aria-hidden",
                                            aIsDefined ? "true" : "false");
 
-      this.finalCheck = function updateARIAHidden()
-      {
+      this.finalCheck = function updateARIAHidden() {
         if (aIsDefined) {
           testAttrs(aID, {"hidden": "true"}, true);
           testAttrs(aChildId, {"hidden": "true"}, true);
@@ -61,10 +56,9 @@
 
     // Debug stuff.
     // gA11yEventDumpID = "eventdump";
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new updateARIAHidden("hideable", true, "hideable_child"));

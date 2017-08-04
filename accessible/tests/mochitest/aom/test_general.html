@@ -8,7 +8,7 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script>
-  'use strict';
+  "use strict";
 
   SimpleTest.waitForExplicitFinish();
   const finish = SimpleTest.finish.bind(SimpleTest);
@@ -46,8 +46,8 @@
     let anode = ifrDoc.accessibleNode;
     ok(anode, "DOM document has accessible node");
 
-    is(anode.role, 'document', 'correct role of a document accessible node');
-    is(anode.DOMNode, ifrDoc, 'correct DOM Node of a document accessible node');
+    is(anode.role, "document", "correct role of a document accessible node");
+    is(anode.DOMNode, ifrDoc, "correct DOM Node of a document accessible node");
 
     // States may differ depending on the document state, for example, if it is
     // loaded or is loading still.
@@ -55,21 +55,21 @@
     switch (anode.states.length) {
       case 5:
         states = [
-          'readonly', 'focusable', 'opaque', 'enabled', 'sensitive'
+          "readonly", "focusable", "opaque", "enabled", "sensitive"
         ];
         break;
       case 6:
         states = [
-          'readonly', 'busy', 'focusable', 'opaque', 'enabled', 'sensitive'
+          "readonly", "busy", "focusable", "opaque", "enabled", "sensitive"
         ];
         break;
       case 7:
         states = [
-          'readonly', 'busy', 'focusable', 'opaque', 'stale', 'enabled', 'sensitive'
+          "readonly", "busy", "focusable", "opaque", "stale", "enabled", "sensitive"
         ];
         break;
       default:
-        ok(false, 'Unexpected amount of states');
+        ok(false, "Unexpected amount of states");
     }
     if (states) {
       for (var i = 0; i < states.length; i++) {
@@ -77,25 +77,25 @@
       }
     }
 
-    ok(anode.is('document', 'focusable'),
-       'correct role and state on an accessible node');
+    ok(anode.is("document", "focusable"),
+       "correct role and state on an accessible node");
 
-    is(anode.get('explicit-name'), 'true',
-       'correct object attribute value on an accessible node');
+    is(anode.get("explicit-name"), "true",
+       "correct object attribute value on an accessible node");
 
-    ok(anode.has('explicit-name'),
-       'object attributes are present');
+    ok(anode.has("explicit-name"),
+       "object attributes are present");
 
-    var attrs = [ 'explicit-name' ];
+    var attrs = [ "explicit-name" ];
     if (anode.attributes.length > 1) {
       attrs = [
-        'margin-left', 'text-align', 'text-indent', 'margin-right',
-        'tag', 'margin-top', 'margin-bottom', 'display',
-        'explicit-name'
+        "margin-left", "text-align", "text-indent", "margin-right",
+        "tag", "margin-top", "margin-bottom", "display",
+        "explicit-name"
       ];
     }
 
-    is(anode.attributes.length, attrs.length, 'correct number of attributes');
+    is(anode.attributes.length, attrs.length, "correct number of attributes");
     for (var i = 0; i < attrs.length; i++) {
       ok(attrs.indexOf(anode.attributes[i]) >= 0,
          `${anode.attributes[i]} attribute is expected and found`);

@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 /* import-globals-from ../../mochitest/role.js */
 /* import-globals-from ../../mochitest/states.js */
-loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR },
-            { name: 'states.js', dir: MOCHITESTS_DIR });
+loadScripts({ name: "role.js", dir: MOCHITESTS_DIR },
+            { name: "states.js", dir: MOCHITESTS_DIR });
 
 async function runTest(browser, accDoc) {
   let getAcc = id => findAccessibleChildByID(accDoc, id);
@@ -23,7 +23,7 @@ async function runTest(browser, accDoc) {
 
   // scroll into view the item
   await ContentTask.spawn(browser, {}, () => {
-    content.document.getElementById('li_last').scrollIntoView(true);
+    content.document.getElementById("li_last").scrollIntoView(true);
   });
   testStates(lastLi, 0, 0, STATE_OFFSCREEN | STATE_INVISIBLE);
 

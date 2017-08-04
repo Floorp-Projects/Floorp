@@ -20,12 +20,10 @@
     /**
      * Checker for invokers.
      */
-    function actionChecker(aID, aDescription)
-    {
+    function actionChecker(aID, aDescription) {
       this.__proto__ = new invokerChecker(EVENT_FOCUS, aID);
 
-      this.check = function actionChecker_check(aEvent)
-      {
+      this.check = function actionChecker_check(aEvent) {
         var target = aEvent.accessible;
         is(target.description, aDescription,
            "Wrong description for " + prettyName(target));
@@ -59,7 +57,7 @@
      */
 
     // gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
@@ -67,8 +65,7 @@
     var gTextboxElm = null;
     var gTooltipElm = null;
 
-    function doTests()
-    {
+    function doTests() {
       gButtonElm = getNode("button");
       gTextboxElm = getNode("textbox");
       gTooltipElm = getNode("tooltip");
@@ -81,8 +78,7 @@
       // The aria-describedby is changed on DOM focus. Accessible description
       // should be updated when a11y focus is fired.
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_FOCUS);
-      gQueue.onFinish = function()
-      {
+      gQueue.onFinish = function() {
         gButtonElm.removeEventListener("focus", gFocusHandler);
         gButtonElm.removeEventListener("blur", gBlurHandler);
         gTextboxElm.removeEventListener("focus", gFocusHandler);

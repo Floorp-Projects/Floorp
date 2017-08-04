@@ -365,13 +365,6 @@ RustURL::GetAsciiHost(nsACString & aAsciiHost)
 }
 
 NS_IMETHODIMP
-RustURL::GetOriginCharset(nsACString & aOriginCharset)
-{
-  aOriginCharset.AssignLiteral("UTF-8");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 RustURL::GetRef(nsACString & aRef)
 {
   return rusturl_get_fragment(mURL.get(), &aRef);
@@ -492,6 +485,15 @@ NS_IMETHODIMP
 RustURL::SetQuery(const nsACString & aQuery)
 {
   ENSURE_MUTABLE();
+  return rusturl_set_query(mURL.get(), &aQuery);
+}
+
+NS_IMETHODIMP
+RustURL::SetQueryWithEncoding(const nsACString& aQuery,
+                              const Encoding* aEncoding)
+{
+  ENSURE_MUTABLE();
+  //XXX rust-url-capi should support the concept of "encoding override"
   return rusturl_set_query(mURL.get(), &aQuery);
 }
 

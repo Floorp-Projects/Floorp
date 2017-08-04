@@ -16,17 +16,16 @@
 namespace mozilla {
 
 ServoStyleContext::ServoStyleContext(
-    nsStyleContext* aParent,
     nsPresContext* aPresContext,
     nsIAtom* aPseudoTag,
     CSSPseudoElementType aPseudoType,
     ServoComputedDataForgotten aComputedValues)
-  : nsStyleContext(aParent, aPseudoTag, aPseudoType)
+  : nsStyleContext(aPseudoTag, aPseudoType)
   , mPresContext(aPresContext)
   , mSource(aComputedValues)
 {
   AddStyleBit(Servo_ComputedValues_GetStyleBits(this));
-  FinishConstruction();
+  MOZ_ASSERT(ComputedData());
 
   // No need to call ApplyStyleFixups here, since fixups are handled by Servo when
   // producing the ServoComputedData.

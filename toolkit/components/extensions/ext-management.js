@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "promptService",
                                    "@mozilla.org/embedcomp/prompt-service;1",
                                    "nsIPromptService");
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource://devtools/shared/event-emitter.js");
+                                  "resource://gre/modules/EventEmitter.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "GlobalManager", () => {
   const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm", {});

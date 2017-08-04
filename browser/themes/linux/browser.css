@@ -1023,20 +1023,6 @@ html|span.ac-emphasize-text-url {
   z-index: 3;
 }
 
-/* Tab close button */
-.tab-close-button:not([selected]):not(:hover) {
-  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 64, 16, 48);
-}
-
-.tab-close-button:not(:hover):-moz-lwtheme-brighttext,
-#TabsToolbar[brighttext] .tab-close-button:not([selected]):not(:hover) {
-  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
-}
-
-.tab-close-button:not(:hover):-moz-lwtheme-darktext {
-  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 96, 16, 80);
-}
-
 /* Tab bar scroll arrows */
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon,
@@ -1101,11 +1087,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 %include ../shared/fullscreen/warning.inc.css
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
-
-notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:hover) {
-  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
-}
-
 
 %include downloads/indicator.css
 
@@ -1173,11 +1154,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   border-left: 3px solid transparent;
 }
 %endif
-
-/* The :hover:active style from toolkit doesn't seem to work in this panel so just use :active. */
-.customization-tipPanel-closeBox > .close-icon:active {
-  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 48, 16, 32);
-}
 
 /* End customization mode */
 

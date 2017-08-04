@@ -6,7 +6,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 notification {
-  padding: 3px 3px 4px;
+  padding: 2px 3px 3px;
   text-shadow: none;
 }
 
@@ -75,32 +75,6 @@ notificationbox[notificationside="bottom"] > notification {
   padding: 0;
   margin: 0 2px;
   border: none;
-}
-
-/*
- Invert the close icon for @type=info since both are normally dark. It's unclear
- why !important is necessary here so remove it if it's no longer needed.
-*/
-notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
-  -moz-image-region: rect(0, 64px, 16px, 48px) !important;
-}
-
-@media (min-resolution: 2dppx) {
-  notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
-    -moz-image-region: rect(0, 128px, 32px, 96px) !important;
-  }
-}
-
-.messageCloseButton:-moz-focusring > .toolbarbutton-icon {
-  border-radius: 10000px;
-  box-shadow: 0 0 2px 1px -moz-mac-focusring,
-              0 0 0 2px -moz-mac-focusring inset;
-}
-
-@media (min-resolution: 2dppx) {
-  .messageCloseButton > .toolbarbutton-icon {
-    width: 16px;
-  }
 }
 
 %include ../../shared/popupnotification.inc.css

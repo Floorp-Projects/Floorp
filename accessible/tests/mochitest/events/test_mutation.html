@@ -41,8 +41,7 @@
      * @param aEventTypes        [in] events to register (see constants above)
      * @param aDoNotExpectEvents [in] boolean indicates if events are expected
      */
-    function mutateA11yTree(aNodeOrID, aEventTypes, aDoNotExpectEvents)
-    {
+    function mutateA11yTree(aNodeOrID, aEventTypes, aDoNotExpectEvents) {
       // Interface
       this.DOMNode = getNode(aNodeOrID);
       this.doNotExpectEvents = aDoNotExpectEvents;
@@ -52,8 +51,7 @@
       /**
        * Change default target (aNodeOrID) registered for the given event type.
        */
-      this.setTarget = function mutateA11yTree_setTarget(aEventType, aTarget)
-      {
+      this.setTarget = function mutateA11yTree_setTarget(aEventType, aTarget) {
         var type = this.getA11yEventType(aEventType);
         for (var idx = 0; idx < this.getEventSeq().length; idx++) {
           if (this.getEventSeq()[idx].type == type) {
@@ -79,8 +77,7 @@
       }
 
       // Implementation
-      this.getA11yEventType = function mutateA11yTree_getA11yEventType(aEventType)
-      {
+      this.getA11yEventType = function mutateA11yTree_getA11yEventType(aEventType) {
         if (aEventType == kReorderEvent)
           return nsIAccessibleEvent.EVENT_REORDER;
 
@@ -91,8 +88,7 @@
           return nsIAccessibleEvent.EVENT_SHOW;
       }
 
-      this.getEventSeq = function mutateA11yTree_getEventSeq()
-      {
+      this.getEventSeq = function mutateA11yTree_getEventSeq() {
         return this.doNotExpectEvents ? this.unexpectedEventSeq : this.eventSeq;
       }
 
@@ -118,17 +114,14 @@
     /**
      * Change CSS style for the given node.
      */
-    function changeStyle(aNodeOrID, aProp, aValue, aEventTypes)
-    {
+    function changeStyle(aNodeOrID, aProp, aValue, aEventTypes) {
       this.__proto__ = new mutateA11yTree(aNodeOrID, aEventTypes, false);
 
-      this.invoke = function changeStyle_invoke()
-      {
+      this.invoke = function changeStyle_invoke() {
         this.DOMNode.style[aProp] = aValue;
       }
 
-      this.getID = function changeStyle_getID()
-      {
+      this.getID = function changeStyle_getID() {
         return aNodeOrID + " change style " + aProp + " on value " + aValue;
       }
     }
@@ -136,17 +129,14 @@
     /**
      * Change class name for the given node.
      */
-    function changeClass(aParentNodeOrID, aNodeOrID, aClassName, aEventTypes)
-    {
+    function changeClass(aParentNodeOrID, aNodeOrID, aClassName, aEventTypes) {
       this.__proto__ = new mutateA11yTree(aNodeOrID, aEventTypes, false);
 
-      this.invoke = function changeClass_invoke()
-      {
+      this.invoke = function changeClass_invoke() {
         this.parentDOMNode.className = aClassName;
       }
 
-      this.getID = function changeClass_getID()
-      {
+      this.getID = function changeClass_getID() {
         return aNodeOrID + " change class " + aClassName;
       }
 
@@ -157,18 +147,16 @@
      * Clone the node and append it to its parent.
      */
     function cloneAndAppendToDOM(aNodeOrID, aEventTypes,
-                                 aTargetsFunc, aReorderTargetFunc)
-    {
+                                 aTargetsFunc, aReorderTargetFunc) {
       var eventTypes = aEventTypes || kShowEvents;
       var doNotExpectEvents = (aEventTypes == kNoEvents);
 
       this.__proto__ = new mutateA11yTree(aNodeOrID, eventTypes,
                                           doNotExpectEvents);
 
-      this.invoke = function cloneAndAppendToDOM_invoke()
-      {
+      this.invoke = function cloneAndAppendToDOM_invoke() {
         var newElm = this.DOMNode.cloneNode(true);
-        newElm.removeAttribute('id');
+        newElm.removeAttribute("id");
 
         var targets = aTargetsFunc ?
           aTargetsFunc.call(null, newElm) : [newElm];
@@ -182,8 +170,7 @@
         this.DOMNode.parentNode.appendChild(newElm);
       }
 
-      this.getID = function cloneAndAppendToDOM_getID()
-      {
+      this.getID = function cloneAndAppendToDOM_getID() {
         return aNodeOrID + " clone and append to DOM.";
       }
     }
@@ -192,21 +179,18 @@
      * Removes the node from DOM.
      */
     function removeFromDOM(aNodeOrID, aEventTypes,
-                           aTargetsFunc, aReorderTargetFunc)
-    {
+                           aTargetsFunc, aReorderTargetFunc) {
       var eventTypes = aEventTypes || kHideEvents;
       var doNotExpectEvents = (aEventTypes == kNoEvents);
 
       this.__proto__ = new mutateA11yTree(aNodeOrID, eventTypes,
                                           doNotExpectEvents);
 
-      this.invoke = function removeFromDOM_invoke()
-      {
+      this.invoke = function removeFromDOM_invoke() {
         this.DOMNode.remove();
       }
 
-      this.getID = function removeFromDOM_getID()
-      {
+      this.getID = function removeFromDOM_getID() {
         return prettyName(aNodeOrID) + " remove from DOM.";
       }
 
@@ -221,23 +205,20 @@
     /**
      * Clone the node and replace the original node by cloned one.
      */
-    function cloneAndReplaceInDOM(aNodeOrID)
-    {
+    function cloneAndReplaceInDOM(aNodeOrID) {
       this.__proto__ = new mutateA11yTree(aNodeOrID, kHideAndShowEvents,
                                           false);
 
-      this.invoke = function cloneAndReplaceInDOM_invoke()
-      {
+      this.invoke = function cloneAndReplaceInDOM_invoke() {
         this.DOMNode.parentNode.replaceChild(this.newElm, this.DOMNode);
       }
 
-      this.getID = function cloneAndReplaceInDOM_getID()
-      {
+      this.getID = function cloneAndReplaceInDOM_getID() {
         return aNodeOrID + " clone and replace in DOM.";
       }
 
       this.newElm = this.DOMNode.cloneNode(true);
-      this.newElm.removeAttribute('id');
+      this.newElm.removeAttribute("id");
       this.setTarget(kShowEvent, this.newElm);
     }
 
@@ -245,8 +226,7 @@
      * Trigger content insertion (flush layout), removal and insertion of
      * the same element for the same parent.
      */
-    function test1(aContainerID)
-    {
+    function test1(aContainerID) {
       this.divNode = document.createElement("div");
       this.divNode.setAttribute("id", "div-test1");
       this.containerNode = getNode(aContainerID);
@@ -256,16 +236,14 @@
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
-      this.invoke = function test1_invoke()
-      {
+      this.invoke = function test1_invoke() {
         this.containerNode.appendChild(this.divNode);
         getComputedStyle(this.divNode, "").color;
         this.containerNode.removeChild(this.divNode);
         this.containerNode.appendChild(this.divNode);
       }
 
-      this.getID = function test1_getID()
-      {
+      this.getID = function test1_getID() {
         return "fuzzy test #1: content insertion (flush layout), removal and" +
           "reinsertion";
       }
@@ -275,8 +253,7 @@
      * Trigger content insertion (flush layout), removal and insertion of
      * the same element for the different parents.
      */
-    function test2(aContainerID, aTmpContainerID)
-    {
+    function test2(aContainerID, aTmpContainerID) {
       this.divNode = document.createElement("div");
       this.divNode.setAttribute("id", "div-test2");
       this.containerNode = getNode(aContainerID);
@@ -293,16 +270,14 @@
         new invokerChecker(EVENT_REORDER, this.tmpContainerNode)
       ];
 
-      this.invoke = function test2_invoke()
-      {
+      this.invoke = function test2_invoke() {
         this.tmpContainerNode.appendChild(this.divNode);
         getComputedStyle(this.divNode, "").color;
         this.tmpContainerNode.removeChild(this.divNode);
         this.containerNode.appendChild(this.divNode);
       }
 
-      this.getID = function test2_getID()
-      {
+      this.getID = function test2_getID() {
         return "fuzzy test #2: content insertion (flush layout), removal and" +
           "reinsertion under another container";
       }
@@ -311,8 +286,7 @@
     /**
      * Content insertion (flush layout) and then removal (nothing was changed).
      */
-    function test3(aContainerID)
-    {
+    function test3(aContainerID) {
       this.divNode = document.createElement("div");
       this.divNode.setAttribute("id", "div-test3");
       this.containerNode = getNode(aContainerID);
@@ -323,21 +297,18 @@
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
-      this.invoke = function test3_invoke()
-      {
+      this.invoke = function test3_invoke() {
         this.containerNode.appendChild(this.divNode);
         getComputedStyle(this.divNode, "").color;
         this.containerNode.removeChild(this.divNode);
       }
 
-      this.getID = function test3_getID()
-      {
+      this.getID = function test3_getID() {
         return "fuzzy test #3: content insertion (flush layout) and removal";
       }
     }
 
-    function insertReferredElm(aContainerID)
-    {
+    function insertReferredElm(aContainerID) {
       this.containerNode = getNode(aContainerID);
 
       this.eventSeq = [
@@ -346,71 +317,60 @@
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
-      this.invoke = function insertReferredElm_invoke()
-      {
+      this.invoke = function insertReferredElm_invoke() {
         this.containerNode.innerHTML =
           "<span id='insertReferredElms_span'></span><input aria-labelledby='insertReferredElms_span'>";
       }
 
-      this.getID = function insertReferredElm_getID()
-      {
+      this.getID = function insertReferredElm_getID() {
         return "insert inaccessible element and then insert referring element to make it accessible";
       }
     }
 
-    function showHiddenParentOfVisibleChild()
-    {
+    function showHiddenParentOfVisibleChild() {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode("c4_child")),
         new invokerChecker(EVENT_SHOW, getNode("c4_middle")),
         new invokerChecker(EVENT_REORDER, getNode("c4"))
       ];
 
-      this.invoke = function showHiddenParentOfVisibleChild_invoke()
-      {
-        getNode("c4_middle").style.visibility = 'visible';
+      this.invoke = function showHiddenParentOfVisibleChild_invoke() {
+        getNode("c4_middle").style.visibility = "visible";
       }
 
-      this.getID = function showHiddenParentOfVisibleChild_getID()
-      {
+      this.getID = function showHiddenParentOfVisibleChild_getID() {
         return "show hidden parent of visible child";
       }
     }
 
-    function hideNDestroyDoc()
-    {
+    function hideNDestroyDoc() {
       this.txt = null;
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, () => { return this.txt; })
       ];
 
-      this.invoke = function hideNDestroyDoc_invoke()
-      {
-        this.txt = getAccessible('c5').firstChild.firstChild;
+      this.invoke = function hideNDestroyDoc_invoke() {
+        this.txt = getAccessible("c5").firstChild.firstChild;
         this.txt.DOMNode.remove();
       }
 
-      this.check = function hideNDestroyDoc_check()
-      {
-        getNode('c5').remove();
+      this.check = function hideNDestroyDoc_check() {
+        getNode("c5").remove();
       }
 
-      this.getID = function hideNDestroyDoc_getID()
-      {
+      this.getID = function hideNDestroyDoc_getID() {
         return "remove text node and destroy a document on hide event";
       }
     }
 
-    function hideHideNDestroyDoc()
-    {
+    function hideHideNDestroyDoc() {
       this.target = null;
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, () => { return this.target; })
       ];
 
-      this.invoke = function hideHideNDestroyDoc_invoke()
-      {
-        var doc = getAccessible('c6').firstChild;
+      this.invoke = function hideHideNDestroyDoc_invoke() {
+        var doc = getAccessible("c6").firstChild;
         var l1 = doc.firstChild;
         this.target = l1.firstChild;
         var l2 = doc.lastChild;
@@ -418,13 +378,11 @@
         l2.DOMNode.firstChild.remove();
       }
 
-      this.check = function hideHideNDestroyDoc_check()
-      {
-        getNode('c6').remove();
+      this.check = function hideHideNDestroyDoc_check() {
+        getNode("c6").remove();
       }
 
-      this.getID = function hideHideNDestroyDoc_getID()
-      {
+      this.getID = function hideHideNDestroyDoc_getID() {
         return "remove text nodes (2 events in the queue) and destroy a document on first hide event";
       }
     }
@@ -432,24 +390,20 @@
     /**
      * Target getters.
      */
-    function getFirstChild(aNode)
-    {
+    function getFirstChild(aNode) {
       return [aNode.firstChild];
     }
-    function getLastChild(aNode)
-    {
+    function getLastChild(aNode) {
       return [aNode.lastChild];
     }
 
-    function getNEnsureFirstChild(aNode)
-    {
+    function getNEnsureFirstChild(aNode) {
       var node = aNode.firstChild;
       getAccessible(node);
       return [node];
     }
 
-    function getNEnsureChildren(aNode)
-    {
+    function getNEnsureChildren(aNode) {
       var children = [];
       var node = aNode.firstChild;
       do {
@@ -461,21 +415,19 @@
       return children;
     }
 
-    function getParent(aNode)
-    {
+    function getParent(aNode) {
       return aNode.parentNode;
     }
 
-    //gA11yEventDumpToConsole = true; // debug stuff
-    //enableLogging("events,verbose");
+    // gA11yEventDumpToConsole = true; // debug stuff
+    // enableLogging("events,verbose");
 
     /**
      * Do tests.
      */
     var gQueue = null;
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       // Show/hide events by changing of display style of accessible DOM node

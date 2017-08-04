@@ -43,7 +43,6 @@ struct StandardURLParams
   StandardURLSegment extension;
   StandardURLSegment query;
   StandardURLSegment ref;
-  nsCString originCharset;
   bool isMutable;
   bool supportsFileURL;
 };

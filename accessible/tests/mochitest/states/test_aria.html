@@ -27,8 +27,7 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-    function testAriaDisabledTree(aAccOrElmOrID)
-    {
+    function testAriaDisabledTree(aAccOrElmOrID) {
       // test accessible and its subtree for propagated state.
       var acc = getAccessible(aAccOrElmOrID);
       if (!acc)
@@ -47,7 +46,7 @@
       try {
         children = acc.children;
       } catch (e) {}
-      ok(children, "Could not get children for " + aAccOrElmOrID +"!");
+      ok(children, "Could not get children for " + aAccOrElmOrID + "!");
 
       if (children) {
         for (var i = 0; i < children.length; i++) {
@@ -57,8 +56,7 @@
       }
     }
 
-    function doTest()
-    {
+    function doTest() {
       // aria_autocomplete
       testStates("textbox_autocomplete_inline", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
       testStates("textbox_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);

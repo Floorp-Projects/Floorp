@@ -19,23 +19,19 @@
   /**
    * Return true if TD element has a generic accessible.
    */
-  function isTDGeneric(aID)
-  {
+  function isTDGeneric(aID) {
     return isAccessible(aID) && !isAccessible(aID, nsIAccessibleTableCell);
   }
 
-  function checkIfNotAccessible(aID)
-  {
+  function checkIfNotAccessible(aID) {
     ok(!isAccessible(aID), "'" + aID + "' shouldn't be accessible");
   }
-  function checkIfTDGeneric(aID)
-  {
+  function checkIfTDGeneric(aID) {
     ok(isTDGeneric(aID), "'" + aID + "' shouldn't have cell accessible");
   }
 
-  function doTest()
-  {
-    ////////////////////////////////////////////////////////////////////////////
+  function doTest() {
+    // //////////////////////////////////////////////////////////////////////////
     // HTML table elements outside table context.
 
     // HTML table role="presentation"
@@ -75,7 +71,7 @@
     checkIfNotAccessible("tr_in_block_table");
     checkIfTDGeneric("td_in_block_table");
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // HTML list elements outside list context.
 
     ok(!isAccessible("presentation_ul"),
@@ -130,7 +126,7 @@
       ] };
     testAccessibleTree("button_dl", tree);
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Styled as HTML table elements, accessible is created by tag name
 
     tree =

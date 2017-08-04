@@ -263,3 +263,12 @@ tasks' labels and their dependencies:
 
     jq 'to_entries | map({label: .value.label, dependencies: .value.dependencies})'
 
+An alternate way of searching the output of ``mach taskgraph`` is
+`gron <https://github.com/tomnomnom/gron>`_, which converts json into a format
+that's easily searched with ``grep``
+
+.. code-block:: shell
+
+    gron taskgraph.json | grep -E 'test.*machine.platform = "linux64";'
+    ./mach taskgraph -p parameters.yml --json | gron | grep ...
+

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Object attributes.
 
 /**
@@ -10,8 +10,7 @@
  * @param aSkipUnexpectedAttrs  [in] points this function doesn't fail if
  *                              unexpected attribute is encountered
  */
-function testAttrs(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs)
-{
+function testAttrs(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs) {
   testAttrsInternal(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs);
 }
 
@@ -22,16 +21,14 @@ function testAttrs(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs)
  * @param aAbsentAttrs          [in] map of attributes that should not be
  *                              present (name/value pairs)
  */
-function testAbsentAttrs(aAccOrElmOrID, aAbsentAttrs)
-{
+function testAbsentAttrs(aAccOrElmOrID, aAbsentAttrs) {
   testAttrsInternal(aAccOrElmOrID, {}, true, aAbsentAttrs);
 }
 
 /**
  * Test CSS based object attributes.
  */
-function testCSSAttrs(aID)
-{
+function testCSSAttrs(aID) {
   var node = document.getElementById(aID);
   var computedStyle = document.defaultView.getComputedStyle(node);
 
@@ -50,8 +47,7 @@ function testCSSAttrs(aID)
 /**
  * Test the accessible that it doesn't have CSS-based object attributes.
  */
-function testAbsentCSSAttrs(aID)
-{
+function testAbsentCSSAttrs(aID) {
   var attrs = {
     "display": "",
     "text-align": "",
@@ -73,8 +69,7 @@ function testAbsentCSSAttrs(aID)
  * @param aSetSize       [in] the value of 'setsize' attribute
  * @param aLevel         [in, optional] the value of 'level' attribute
  */
-function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel)
-{
+function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel) {
   var acc = getAccessible(aAccOrElmOrID);
   var levelObj = {}, posInSetObj = {}, setSizeObj = {};
   acc.groupPosition(levelObj, setSizeObj, posInSetObj);
@@ -101,7 +96,7 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Text attributes.
 
 /**
@@ -124,8 +119,7 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel)
  *                              unexpected attribute is encountered
  */
 function testTextAttrs(aID, aOffset, aAttrs, aDefAttrs,
-                       aStartOffset, aEndOffset, aSkipUnexpectedAttrs)
-{
+                       aStartOffset, aEndOffset, aSkipUnexpectedAttrs) {
   var accessible = getAccessible(aID, [nsIAccessibleText]);
   if (!accessible)
     return;
@@ -176,8 +170,7 @@ function testTextAttrs(aID, aOffset, aAttrs, aDefAttrs,
  * @param aSkipUnexpectedAttrs  [in] points the function doesn't fail if
  *                              unexpected attribute is encountered
  */
-function testDefaultTextAttrs(aID, aDefAttrs, aSkipUnexpectedAttrs)
-{
+function testDefaultTextAttrs(aID, aDefAttrs, aSkipUnexpectedAttrs) {
   var accessible = getAccessible(aID, [nsIAccessibleText]);
   if (!accessible)
     return;
@@ -200,8 +193,7 @@ function testDefaultTextAttrs(aID, aDefAttrs, aSkipUnexpectedAttrs)
 /**
  * Test text attributes for wrong offset.
  */
-function testTextAttrsWrongOffset(aID, aOffset)
-{
+function testTextAttrsWrongOffset(aID, aOffset) {
   var res = false;
   try {
   var s = {}, e = {};
@@ -242,8 +234,7 @@ const kCursiveFontFamily = LINUX ? "DejaVu Serif" : "Comic Sans MS";
 /**
  * Return used font from the given computed style.
  */
-function fontFamily(aComputedStyle)
-{
+function fontFamily(aComputedStyle) {
   var name = aComputedStyle.fontFamily;
   switch (name) {
     case "monospace":
@@ -265,8 +256,7 @@ function fontFamily(aComputedStyle)
  * @param aFontWeight  [in, optional] kBoldFontWeight or kNormalFontWeight,
  *                      default value is kNormalFontWeight
  */
-function buildDefaultTextAttrs(aID, aFontSize, aFontWeight, aFontFamily)
-{
+function buildDefaultTextAttrs(aID, aFontSize, aFontWeight, aFontFamily) {
   var elm = getNode(aID);
   var computedStyle = document.defaultView.getComputedStyle(elm);
   var bgColor = computedStyle.backgroundColor == "rgba(0, 0, 0, 0)" ?
@@ -285,12 +275,11 @@ function buildDefaultTextAttrs(aID, aFontSize, aFontWeight, aFontFamily)
   return defAttrs;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Private.
 
 function getTextAttributes(aID, aAccessible, aIncludeDefAttrs, aOffset,
-                           aStartOffset, aEndOffset)
-{
+                           aStartOffset, aEndOffset) {
   // This function expects the passed in accessible to already be queried for
   // nsIAccessibleText.
   var attrs = null;
@@ -308,8 +297,7 @@ function getTextAttributes(aID, aAccessible, aIncludeDefAttrs, aOffset,
 }
 
 function testAttrsInternal(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs,
-                   aAbsentAttrs)
-{
+                   aAbsentAttrs) {
   var accessible = getAccessible(aAccOrElmOrID);
   if (!accessible)
     return;
@@ -329,8 +317,7 @@ function testAttrsInternal(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs,
 }
 
 function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs,
-                      aAbsentAttrs)
-{
+                      aAbsentAttrs) {
   // Check if all obtained attributes are expected and have expected value.
   var enumerate = aAttrs.enumerate();
   while (enumerate.hasMoreElements()) {

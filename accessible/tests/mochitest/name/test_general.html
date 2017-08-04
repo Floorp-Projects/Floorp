@@ -15,8 +15,7 @@
 
   <script type="application/javascript">
 
-    function doTest()
-    {
+    function doTest() {
       // aria-label
 
       // Simple label provided via ARIA
@@ -25,7 +24,7 @@
       // aria-label and aria-labelledby, expect aria-labelledby
       testName("btn_both_aria_labels", "text I am a button, two");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // aria-labelledby
     
       // Single relation. The value of 'aria-labelledby' contains the ID of
@@ -36,12 +35,12 @@
       // of elements. Gets the name from text nodes of those elements.
       testName("btn_labelledby_texts", "text1 text2");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Name from named accessible
 
       testName("input_labelledby_namedacc", "Data");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // Name from subtree (single relation labelled_by).
     
       // Gets the name from text nodes contained by nested elements
@@ -97,7 +96,7 @@
       // Gets the name from @title, ignore whitespace content
       testName("from_label_ignore_ws_subtree", "about");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // label element
 
       // The label element contains the button. The name is calculated from
@@ -125,7 +124,7 @@
       testName("ctrl_in_label_2", "button");
 
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // name from children
 
       // ARIA role button is presented allowing the name calculation from
@@ -149,13 +148,13 @@
 
       testName("testArticle", "Test article");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // title attribute
 
       // If nothing is left. Let's try title attribute.
       testName("btn_title", "title");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // textarea name
 
       // textarea's name should have the value, which initially is specified by
@@ -168,7 +167,7 @@
 
       testName("textareawithchild", "Story Bar is ended.");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // controls having a value used as a part of computed name
 
       testName("ctrlvalue_progressbar:input", "foo 5 baz");
@@ -178,7 +177,7 @@
       testName("ctrlvalue_combobox:input", "foo 5 baz");
 
 
-      /////////////////////////////////////////////////////////////////////////
+      // ///////////////////////////////////////////////////////////////////////
       // label with nested combobox (test for 'f' item of name computation guide)
 
       testName("comboinstart", "One day(s).");
@@ -215,7 +214,7 @@
       testName("input_img_eq", "x^2 + y^2 + z^2")
       testName("txt_eq", "x^2 + y^2 + z^2")
 
-      ////////////////////////////////////////////////////////////////////////
+      // //////////////////////////////////////////////////////////////////////
       // tests for duplicate announcement of content
 
       testName("test_note", null);

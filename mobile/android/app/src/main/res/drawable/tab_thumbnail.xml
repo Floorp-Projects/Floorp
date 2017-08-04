@@ -10,7 +10,7 @@
 
         <shape android:shape="rectangle">
             <!-- @color/fennec_ui_orange with alpha -->
-            <solid android:color="#B3FF9500"/>
+            <solid android:color="@color/tab_item_normal_highlight_bg"/>
             <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
@@ -21,7 +21,7 @@
 
         <shape android:shape="rectangle">
             <!-- @color/private_browsing_purple with alpha -->
-            <solid android:color="#B3CF68FF"/>
+            <solid android:color="@color/tab_item_private_highlight_bg"/>
             <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
@@ -32,17 +32,17 @@
 
         <shape android:shape="rectangle">
             <!-- @color/private_browsing_purple with alpha -->
-            <solid android:color="#B3CF68FF"/>
+            <solid android:color="@color/tab_item_private_highlight_bg_80"/>
             <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
 
-    <item android:state_pressed="true">
+    <item android:state_pressed="true"
+          gecko:state_private="false">
 
         <shape android:shape="rectangle">
-            <!-- @color/fennec_ui_orange with alpha -->
-            <solid android:color="#B3FF9500"/>
+            <solid android:color="@color/tab_item_normal_highlight_bg_80"/>
             <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
@@ -72,16 +72,40 @@
 
     <item android:state_focused="false"
           android:state_pressed="false"
-          android:state_checked="true"
-          gecko:state_recording="false">
+          android:state_checked="false"
+          gecko:state_recording="false"
+          gecko:state_private="true">
 
         <shape android:shape="rectangle">
-            <solid android:color="@color/fennec_ui_orange"/>
+            <solid android:color="@color/tab_item_private_bg"/>
             <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
 
+    <item android:state_focused="false"
+          android:state_pressed="false"
+          android:state_checked="true"
+          gecko:state_recording="false">
+
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tab_item_normal_highlight_bg"/>
+            <corners android:radius="@dimen/standard_corner_radius"/>
+        </shape>
+
+    </item>
+
+    <item android:state_focused="false"
+          android:state_pressed="false"
+          android:state_checked="false"
+          gecko:state_recording="false">
+
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tab_item_normal_bg"/>
+            <corners android:radius="@dimen/standard_corner_radius"/>
+        </shape>
+
+    </item>
     <item android:drawable="@android:color/transparent"/>
 
 </selector>

@@ -17,13 +17,11 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function doPreTest()
-    {
+    function doPreTest() {
       waitForImageMap("imgmap", doTest);
     }
 
-    function doTest()
-    {
+    function doTest() {
       // Not specific case, child and deepchild testing.
       var list = getAccessible("list");
       var listitem = getAccessible("listitem");

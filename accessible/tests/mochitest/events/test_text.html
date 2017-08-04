@@ -17,14 +17,13 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
     /**
      * Base text remove invoker and checker.
      */
-    function textRemoveInvoker(aID, aStart, aEnd, aText)
-    {
+    function textRemoveInvoker(aID, aStart, aEnd, aText) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
@@ -32,8 +31,7 @@
       ];
     }
 
-    function textInsertInvoker(aID, aStart, aEnd, aText)
-    {
+    function textInsertInvoker(aID, aStart, aEnd, aText) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
@@ -44,18 +42,15 @@
     /**
      * Remove inaccessible child node containing accessibles.
      */
-    function removeChildSpan(aID)
-    {
+    function removeChildSpan(aID) {
       this.__proto__ = new textRemoveInvoker(aID, 0, 5, "33322");
 
-      this.invoke = function removeChildSpan_invoke()
-      {
+      this.invoke = function removeChildSpan_invoke() {
         // remove HTML span, a first child of the node
         this.DOMNode.firstChild.remove();
       }
 
-      this.getID = function removeChildSpan_getID()
-      {
+      this.getID = function removeChildSpan_getID() {
         return "Remove inaccessible span containing accessible nodes" + prettyName(aID);
       }
     }
@@ -63,12 +58,10 @@
     /**
      * Insert inaccessible child node containing accessibles.
      */
-    function insertChildSpan(aID, aInsertAllTogether)
-    {
+    function insertChildSpan(aID, aInsertAllTogether) {
       this.__proto__ = new textInsertInvoker(aID, 0, 5, "33322");
 
-      this.invoke = function insertChildSpan_invoke()
-      {
+      this.invoke = function insertChildSpan_invoke() {
         // <span><span>333</span><span>22</span></span>
         if (aInsertAllTogether) {
           var topSpan = document.createElement("span");
@@ -95,8 +88,7 @@
         }
       }
 
-      this.getID = function insertChildSpan_getID()
-      {
+      this.getID = function insertChildSpan_getID() {
        return "Insert inaccessible span containing accessibles" +
           prettyName(aID);
       }
@@ -105,12 +97,10 @@
     /**
      * Remove child embedded accessible.
      */
-    function removeChildDiv(aID)
-    {
+    function removeChildDiv(aID) {
       this.__proto__ = new textRemoveInvoker(aID, 5, 6, kEmbedChar);
 
-      this.invoke = function removeChildDiv_invoke()
-      {
+      this.invoke = function removeChildDiv_invoke() {
         var childDiv = this.DOMNode.childNodes[1];
 
         // Ensure accessible is created to get text remove event when it's
@@ -120,8 +110,7 @@
         this.DOMNode.removeChild(childDiv);
       }
 
-      this.getID = function removeChildDiv_getID()
-      {
+      this.getID = function removeChildDiv_getID() {
         return "Remove accessible div from the middle of text accessible " +
           prettyName(aID);
       }
@@ -130,18 +119,15 @@
     /**
      * Insert child embedded accessible.
      */
-    function insertChildDiv(aID)
-    {
+    function insertChildDiv(aID) {
       this.__proto__ = new textInsertInvoker(aID, 5, 6, kEmbedChar);
 
-      this.invoke = function insertChildDiv_invoke()
-      {
+      this.invoke = function insertChildDiv_invoke() {
         var childDiv = document.createElement("div");
         this.DOMNode.insertBefore(childDiv, this.DOMNode.childNodes[1]);
       }
 
-      this.getID = function insertChildDiv_getID()
-      {
+      this.getID = function insertChildDiv_getID() {
         return "Insert accessible div into the middle of text accessible " +
           prettyName(aID);
       }
@@ -151,12 +137,10 @@
      * Remove children from text container from first to last child or vice
      * versa.
      */
-    function removeChildren(aID, aLastToFirst, aStart, aEnd, aText)
-    {
+    function removeChildren(aID, aLastToFirst, aStart, aEnd, aText) {
       this.__proto__ = new textRemoveInvoker(aID, aStart, aEnd, aText);
 
-      this.invoke = function removeChildren_invoke()
-      {
+      this.invoke = function removeChildren_invoke() {
         if (aLastToFirst) {
           while (this.DOMNode.firstChild)
             this.DOMNode.removeChild(this.DOMNode.lastChild);
@@ -166,8 +150,7 @@
         }
       }
 
-      this.getID = function removeChildren_getID()
-      {
+      this.getID = function removeChildren_getID() {
         return "remove children of " + prettyName(aID) +
           (aLastToFirst ? " from last to first" : " from first to last");
       }
@@ -176,23 +159,20 @@
     /**
      * Remove text from HTML input.
      */
-    function removeTextFromInput(aID, aStart, aEnd, aText)
-    {
+    function removeTextFromInput(aID, aStart, aEnd, aText) {
       this.__proto__ = new textRemoveInvoker(aID, aStart, aEnd, aText);
 
       this.eventSeq.push(new invokerChecker(EVENT_TEXT_VALUE_CHANGE,
                                             this.DOMNode));
 
-      this.invoke = function removeTextFromInput_invoke()
-      {
+      this.invoke = function removeTextFromInput_invoke() {
         this.DOMNode.focus();
         this.DOMNode.setSelectionRange(aStart, aEnd);
 
         synthesizeKey("VK_DELETE", {});
       }
 
-      this.getID = function removeTextFromInput_getID()
-      {
+      this.getID = function removeTextFromInput_getID() {
         return "Remove text from " + aStart + " to " + aEnd + " for " +
           prettyName(aID);
       }
@@ -201,21 +181,18 @@
     /**
      * Add text into HTML input.
      */
-    function insertTextIntoInput(aID, aStart, aEnd, aText)
-    {
+    function insertTextIntoInput(aID, aStart, aEnd, aText) {
       this.__proto__ = new textInsertInvoker(aID, aStart, aEnd, aText);
 
       this.eventSeq.push(new invokerChecker(EVENT_TEXT_VALUE_CHANGE,
                                             this.DOMNode));
 
-      this.invoke = function insertTextIntoInput_invoke()
-      {
+      this.invoke = function insertTextIntoInput_invoke() {
         this.DOMNode.focus();
         synthesizeKey("a", {});
       }
 
-      this.getID = function insertTextIntoInput_getID()
-      {
+      this.getID = function insertTextIntoInput_getID() {
         return "Insert text to " + aStart + " for " + prettyName(aID);
       }
     }
@@ -223,12 +200,10 @@
     /**
      * Remove text data from text node of editable area.
      */
-    function removeTextFromEditable(aID, aStart, aEnd, aText, aTextNode)
-    {
+    function removeTextFromEditable(aID, aStart, aEnd, aText, aTextNode) {
       this.__proto__ = new textRemoveInvoker(aID, aStart, aEnd, aText);
 
-      this.invoke = function removeTextFromEditable_invoke()
-      {
+      this.invoke = function removeTextFromEditable_invoke() {
         this.DOMNode.focus();
 
         var selection = window.getSelection();
@@ -240,8 +215,7 @@
         synthesizeKey("VK_DELETE", {});
       }
 
-      this.getID = function removeTextFromEditable_getID()
-      {
+      this.getID = function removeTextFromEditable_getID() {
         return "Remove text from " + aStart + " to " + aEnd + " for " +
           prettyName(aID);
       }
@@ -249,13 +223,12 @@
       this.textNode = getNode(aTextNode);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
     gA11yEventDumpToConsole = true; // debugging
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       // Text remove event on inaccessible child HTML span removal containing
@@ -279,10 +252,10 @@
 
       // bug 570691
       todo(false, "Fix text change events from editable area, see bug 570691");
-      //var textNode = getNode("editable").firstChild;
-      //gQueue.push(new removeTextFromEditable("editable", 1, 3, "al", textNode));
-      //textNode = getNode("editable2").firstChild.firstChild;
-      //gQueue.push(new removeTextFromEditable("editable2", 1, 3, "al", textNode));
+      // var textNode = getNode("editable").firstChild;
+      // gQueue.push(new removeTextFromEditable("editable", 1, 3, "al", textNode));
+      // textNode = getNode("editable2").firstChild.firstChild;
+      // gQueue.push(new removeTextFromEditable("editable2", 1, 3, "al", textNode));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

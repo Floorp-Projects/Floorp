@@ -64,11 +64,6 @@
   height: 16px;
 }
 
-/* The toolkit close button is low contrast in the dark theme so invert it. */
-#browser-bottombox[devtoolstheme="dark"] #developer-toolbar > .close-icon:not(:hover) > image {
-  filter: invert(1);
-}
-
 #developer-toolbar-toolbox-button {
   list-style-image: url("chrome://devtools/skin/images/toggle-tools.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);

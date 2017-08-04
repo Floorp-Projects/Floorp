@@ -26,32 +26,34 @@ const RELOAD_ACTION_MOVE = 3;
 /**
  * Represents an insertion point within a container where we can insert
  * items.
- * @param   aItemId
- *          The identifier of the parent container
- * @param   aIndex
- *          The index within the container where we should insert
- * @param   aOrientation
- *          The orientation of the insertion. NOTE: the adjustments to the
- *          insertion point to accommodate the orientation should be done by
- *          the person who constructs the IP, not the user. The orientation
- *          is provided for informational purposes only!
- * @param   [optional] aTag
- *          The tag name if this IP is set to a tag, null otherwise.
- * @param   [optional] aDropNearNode
- *          When defined we will calculate index based on this node
- * @param   [optional] aGuid
- *          The guid of the parent container
- * @constructor
+ * @param {object} an object containing the following properties:
+ *   - parentId
+ *     The identifier of the parent container
+ *   - parentGuid
+ *     The unique identifier of the parent container
+ *   - index
+ *     The index within the container where to insert, defaults to appending
+ *   - orientation
+ *     The orientation of the insertion. NOTE: the adjustments to the
+ *     insertion point to accommodate the orientation should be done by
+ *     the person who constructs the IP, not the user. The orientation
+ *     is provided for informational purposes only! Defaults to DROP_ON.
+ *   - tagName
+ *     The tag name if this IP is set to a tag, null otherwise.
+ *   - dropNearNode
+ *     When defined index will be calculated based on this node
  */
-function InsertionPoint(aItemId, aIndex, aOrientation, aTagName = null,
-                        aDropNearNode = null, aGuid = null) {
-
-  this.itemId = aItemId;
-  this.guid = aGuid;
-  this._index = aIndex;
-  this.orientation = aOrientation;
-  this.tagName = aTagName;
-  this.dropNearNode = aDropNearNode;
+function InsertionPoint({ parentId, parentGuid,
+                          index = PlacesUtils.bookmarks.DEFAULT_INDEX,
+                          orientation = Components.interfaces.nsITreeView.DROP_ON,
+                          tagName = null,
+                          dropNearNode = null }) {
+  this.itemId = parentId;
+  this.guid = parentGuid;
+  this._index = index;
+  this.orientation = orientation;
+  this.tagName = tagName;
+  this.dropNearNode = dropNearNode;
 }
 
 InsertionPoint.prototype = {
@@ -59,29 +61,7 @@ InsertionPoint.prototype = {
     return this._index = val;
   },
 
- // TODO (Bug 1382991): Remove this backwards compatibility shim.
-  promiseGuid() {
-    return this.guid || PlacesUtils.promiseItemGuid(this.itemId);
-  },
-
-  // TODO (Bug 1382991): Remove this backwards compatibility shim.
-  get index() {
-    if (this.dropNearNode && typeof this.dropNearNode != "number")
-      throw new Error("dropNearNode is not a number, use getIndex() instead?");
-    if (this.dropNearNode > 0) {
-      // If dropNearItemId is set up we must calculate the real index of
-      // the item near which we will drop.
-      var index = PlacesUtils.bookmarks.getItemIndex(this.dropNearNode);
-      return this.orientation == Ci.nsITreeView.DROP_BEFORE ? index : index + 1;
-    }
-    return this._index;
-  },
-
   async getIndex() {
-    // TODO (Bug 1382991): Remove this backwards compatibility check.
-    if (typeof this.dropNearNode == "number")
-      return this.index;
-
     if (this.dropNearNode) {
       // If dropNearNode is set up we must calculate the index of the item near
       // which we will drop.
@@ -788,8 +768,7 @@ PlacesController.prototype = {
       return;
     }
 
-    let txn = PlacesTransactions.NewSeparator({ parentGuid: await ip.promiseGuid(),
-                                                index });
+    let txn = PlacesTransactions.NewSeparator({ parentGuid: ip.guid, index });
     let guid = await txn.transact();
     let itemId = await PlacesUtils.promiseItemId(guid);
     // Select the new item.
@@ -1299,7 +1278,7 @@ PlacesController.prototype = {
       } else {
         await PlacesTransactions.batch(async function() {
           let insertionIndex = await ip.getIndex();
-          let parent = await ip.promiseGuid();
+          let parent = ip.guid;
 
           for (let item of items) {
             let doCopy = action == "copy";
@@ -1583,8 +1562,7 @@ var PlacesControllerDragHelper = {
     let transactions = [];
     let dropCount = dt.mozItemCount;
     let movedCount = 0;
-    let parentGuid = PlacesUIUtils.useAsyncTransactions ?
-                       (await insertionPoint.promiseGuid()) : null;
+    let parentGuid = insertionPoint.guid;
     let tagName = insertionPoint.tagName;
 
     // Following flavors may contain duplicated data.

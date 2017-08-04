@@ -64,7 +64,7 @@ public:
   // the Servo style backend.
   void ComputeServoStyleSet(nsPresContext* aPresContext);
 
-  const mozilla::ServoStyleSet* GetServoStyleSet() const { return mServoStyleSet.get(); }
+  mozilla::ServoStyleSet* GetServoStyleSet() const { return mServoStyleSet.get(); }
 
 private:
   // A loader object. Exists only long enough to load resources, and then it dies.

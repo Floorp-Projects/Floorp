@@ -90,12 +90,10 @@
 
             if (!elt._placesNode) {
               // If we are dragging over a non places node drop at the end.
-              dropPoint.ip = new InsertionPoint(
-                                  PlacesUtils.getConcreteItemId(resultNode),
-                                  -1,
-                                  Ci.nsITreeView.DROP_ON,
-                                  null,
-                                  PlacesUtils.getConcreteItemGuid(resultNode));
+              dropPoint.ip = new InsertionPoint({
+                parentId: PlacesUtils.getConcreteItemId(resultNode),
+                parentGuid: PlacesUtils.getConcreteItemGuid(resultNode)
+              });
               // We can set folderElt if we are dropping over a static menu that
               // has an internal placespopup.
               let isMenu = elt.localName == "menu" ||
@@ -115,47 +113,45 @@
               // This is a folder or a tag container.
               if (eventY - eltY < eltHeight * 0.20) {
                 // If mouse is in the top part of the element, drop above folder.
-                dropPoint.ip = new InsertionPoint(
-                                    PlacesUtils.getConcreteItemId(resultNode),
-                                    -1,
-                                    Ci.nsITreeView.DROP_BEFORE,
-                                    tagName,
-                                    elt._placesNode,
-                                    PlacesUtils.getConcreteItemGuid(resultNode));
+                dropPoint.ip = new InsertionPoint({
+                  parentId: PlacesUtils.getConcreteItemId(resultNode),
+                  parentGuid: PlacesUtils.getConcreteItemGuid(resultNode),
+                  orientation: Ci.nsITreeView.DROP_BEFORE,
+                  tagName,
+                  dropNearNode: elt._placesNode
+                });
                 return dropPoint;
               } else if (eventY - eltY < eltHeight * 0.80) {
                 // If mouse is in the middle of the element, drop inside folder.
-                dropPoint.ip = new InsertionPoint(
-                                    PlacesUtils.getConcreteItemId(elt._placesNode),
-                                    -1,
-                                    Ci.nsITreeView.DROP_ON,
-                                    tagName,
-                                    null,
-                                    PlacesUtils.getConcreteItemGuid(elt._placesNode));
+                dropPoint.ip = new InsertionPoint({
+                  parentId: PlacesUtils.getConcreteItemId(elt._placesNode),
+                  parentGuid: PlacesUtils.getConcreteItemGuid(elt._placesNode),
+                  tagName
+                });
                 dropPoint.folderElt = elt;
                 return dropPoint;
               }
             } else if (eventY - eltY <= eltHeight / 2) {
               // This is a non-folder node or a readonly folder.
               // If the mouse is above the middle, drop above this item.
-              dropPoint.ip = new InsertionPoint(
-                                  PlacesUtils.getConcreteItemId(resultNode),
-                                  -1,
-                                  Ci.nsITreeView.DROP_BEFORE,
-                                  tagName,
-                                  elt._placesNode,
-                                  PlacesUtils.getConcreteItemGuid(resultNode));
+              dropPoint.ip = new InsertionPoint({
+                parentId: PlacesUtils.getConcreteItemId(resultNode),
+                parentGuid: PlacesUtils.getConcreteItemGuid(resultNode),
+                orientation: Ci.nsITreeView.DROP_BEFORE,
+                tagName,
+                dropNearNode: elt._placesNode
+              });
               return dropPoint;
             }
 
             // Drop below the item.
-            dropPoint.ip = new InsertionPoint(
-                                PlacesUtils.getConcreteItemId(resultNode),
-                                -1,
-                                Ci.nsITreeView.DROP_AFTER,
-                                tagName,
-                                elt._placesNode,
-                                PlacesUtils.getConcreteItemGuid(resultNode));
+            dropPoint.ip = new InsertionPoint({
+              parentId: PlacesUtils.getConcreteItemId(resultNode),
+              parentGuid: PlacesUtils.getConcreteItemGuid(resultNode),
+              orientation: Ci.nsITreeView.DROP_AFTER,
+              tagName,
+              dropNearNode: elt._placesNode,
+            });
             return dropPoint;
         ]]></body>
       </method>

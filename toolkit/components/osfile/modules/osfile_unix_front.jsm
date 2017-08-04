@@ -1052,14 +1052,14 @@
      File.getCurrentDirectory = function getCurrentDirectory() {
        let path, buf;
        if (UnixFile.get_current_dir_name) {
-	 path = UnixFile.get_current_dir_name();
+         path = UnixFile.get_current_dir_name();
        } else if (UnixFile.getwd_auto) {
          path = UnixFile.getwd_auto(null);
        } else {
-	 for (let length = Const.PATH_MAX; !path; length *= 2) {
-	   buf = new (ctypes.char.array(length));
-	   path = UnixFile.getcwd(buf, length);
-	 };
+         for (let length = Const.PATH_MAX; !path; length *= 2) {
+           buf = new (ctypes.char.array(length));
+           path = UnixFile.getcwd(buf, length);
+         }
        }
        throw_on_null("getCurrentDirectory", path);
        return path.readString();

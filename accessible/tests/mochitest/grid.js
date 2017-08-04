@@ -3,29 +3,23 @@ const nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
 /**
  * Create grid object based on HTML table.
  */
-function grid(aTableIdentifier)
-{
-  this.getRowCount = function getRowCount()
-  {
+function grid(aTableIdentifier) {
+  this.getRowCount = function getRowCount() {
     return this.table.rows.length - (this.table.tHead ? 1 : 0);
   }
-  this.getColsCount = function getColsCount()
-  {
+  this.getColsCount = function getColsCount() {
     return this.table.rows[0].cells.length;
   }
 
-  this.getRowAtIndex = function getRowAtIndex(aIndex)
-  {
+  this.getRowAtIndex = function getRowAtIndex(aIndex) {
     return this.table.rows[this.table.tHead ? aIndex + 1 : aIndex];
   }
 
-  this.getMaxIndex = function getMaxIndex()
-  {
+  this.getMaxIndex = function getMaxIndex() {
     return this.getRowCount() * this.getColsCount() - 1;
   }
 
-  this.getCellAtIndex = function getCellAtIndex(aIndex)
-  {
+  this.getCellAtIndex = function getCellAtIndex(aIndex) {
     var colsCount = this.getColsCount();
 
     var rowIdx = Math.floor(aIndex / colsCount);
@@ -35,8 +29,7 @@ function grid(aTableIdentifier)
     return row.cells[colIdx];
   }
 
-  this.getIndexByCell = function getIndexByCell(aCell)
-  {
+  this.getIndexByCell = function getIndexByCell(aCell) {
     var colIdx = aCell.cellIndex;
 
     var rowIdx = aCell.parentNode.rowIndex;
@@ -47,8 +40,7 @@ function grid(aTableIdentifier)
     return rowIdx * colsCount + colIdx;
   }
 
-  this.getCurrentCell = function getCurrentCell()
-  {
+  this.getCurrentCell = function getCurrentCell() {
     var rowCount = this.table.rows.length;
     var colsCount = this.getColsCount();
     for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
@@ -61,22 +53,19 @@ function grid(aTableIdentifier)
     return null;
   }
 
-  this.initGrid = function initGrid()
-  {
+  this.initGrid = function initGrid() {
     this.table.addEventListener("keypress", this);
     this.table.addEventListener("click", this);
   }
 
-  this.handleEvent = function handleEvent(aEvent)
-  {
+  this.handleEvent = function handleEvent(aEvent) {
     if (aEvent instanceof nsIDOMKeyEvent)
       this.handleKeyEvent(aEvent);
     else
       this.handleClickEvent(aEvent);
   }
 
-  this.handleKeyEvent = function handleKeyEvent(aEvent)
-  {
+  this.handleKeyEvent = function handleKeyEvent(aEvent) {
     if (aEvent.target.localName != "td")
       return;
 
@@ -128,8 +117,7 @@ function grid(aTableIdentifier)
     }
   }
 
-  this.handleClickEvent = function handleClickEvent(aEvent)
-  {
+  this.handleClickEvent = function handleClickEvent(aEvent) {
     if (aEvent.target.localName != "td")
       return;
 

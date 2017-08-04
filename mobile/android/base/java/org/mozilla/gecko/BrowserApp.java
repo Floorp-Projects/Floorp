@@ -181,6 +181,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
+
 public class BrowserApp extends GeckoApp
                         implements ActionModePresenter,
                                    AnchoredPopup.OnVisibilityChangeListener,
@@ -2184,6 +2186,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void addTab() {
+        MmaDelegate.track(NEW_TAB);
         Tabs.getInstance().addTab();
     }
 

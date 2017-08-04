@@ -2,19 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 /* import-globals-from ../../mochitest/role.js */
-loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
+loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 async function testImageMap(browser, accDoc) {
-  const id = 'imgmap';
+  const id = "imgmap";
   const acc = findAccessibleChildByID(accDoc, id);
 
   /* ================= Initial tree test ==================================== */
   let tree = {
     IMAGE_MAP: [
-      { role: ROLE_LINK, name: 'b', children: [ ] }
+      { role: ROLE_LINK, name: "b", children: [ ] }
     ]
   };
   testAccessibleTree(acc, tree);
@@ -22,21 +22,21 @@ async function testImageMap(browser, accDoc) {
   /* ================= Insert area ========================================== */
   let onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, {}, () => {
-    let areaElm = content.document.createElement('area');
-    let mapNode = content.document.getElementById('map');
-    areaElm.setAttribute('href',
-                         'http://www.bbc.co.uk/radio4/atoz/index.shtml#a');
-    areaElm.setAttribute('coords', '0,0,13,14');
-    areaElm.setAttribute('alt', 'a');
-    areaElm.setAttribute('shape', 'rect');
+    let areaElm = content.document.createElement("area");
+    let mapNode = content.document.getElementById("map");
+    areaElm.setAttribute("href",
+                         "http://www.bbc.co.uk/radio4/atoz/index.shtml#a");
+    areaElm.setAttribute("coords", "0,0,13,14");
+    areaElm.setAttribute("alt", "a");
+    areaElm.setAttribute("shape", "rect");
     mapNode.insertBefore(areaElm, mapNode.firstChild);
   });
   await onReorder;
 
   tree = {
     IMAGE_MAP: [
-      { role: ROLE_LINK, name: 'a', children: [ ] },
-      { role: ROLE_LINK, name: 'b', children: [ ] }
+      { role: ROLE_LINK, name: "a", children: [ ] },
+      { role: ROLE_LINK, name: "b", children: [ ] }
     ]
   };
   testAccessibleTree(acc, tree);
@@ -44,22 +44,22 @@ async function testImageMap(browser, accDoc) {
   /* ================= Append area ========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, {}, () => {
-    let areaElm = content.document.createElement('area');
-    let mapNode = content.document.getElementById('map');
-    areaElm.setAttribute('href',
-                         'http://www.bbc.co.uk/radio4/atoz/index.shtml#c');
-    areaElm.setAttribute('coords', '34,0,47,14');
-    areaElm.setAttribute('alt', 'c');
-    areaElm.setAttribute('shape', 'rect');
+    let areaElm = content.document.createElement("area");
+    let mapNode = content.document.getElementById("map");
+    areaElm.setAttribute("href",
+                         "http://www.bbc.co.uk/radio4/atoz/index.shtml#c");
+    areaElm.setAttribute("coords", "34,0,47,14");
+    areaElm.setAttribute("alt", "c");
+    areaElm.setAttribute("shape", "rect");
     mapNode.appendChild(areaElm);
   });
   await onReorder;
 
   tree = {
     IMAGE_MAP: [
-      { role: ROLE_LINK, name: 'a', children: [ ] },
-      { role: ROLE_LINK, name: 'b', children: [ ] },
-      { role: ROLE_LINK, name: 'c', children: [ ] }
+      { role: ROLE_LINK, name: "a", children: [ ] },
+      { role: ROLE_LINK, name: "b", children: [ ] },
+      { role: ROLE_LINK, name: "c", children: [ ] }
     ]
   };
   testAccessibleTree(acc, tree);
@@ -67,25 +67,25 @@ async function testImageMap(browser, accDoc) {
   /* ================= Remove area ========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, {}, () => {
-    let mapNode = content.document.getElementById('map');
+    let mapNode = content.document.getElementById("map");
     mapNode.removeChild(mapNode.firstElementChild);
   });
   await onReorder;
 
   tree = {
     IMAGE_MAP: [
-      { role: ROLE_LINK, name: 'b', children: [ ] },
-      { role: ROLE_LINK, name: 'c', children: [ ] }
+      { role: ROLE_LINK, name: "b", children: [ ] },
+      { role: ROLE_LINK, name: "c", children: [ ] }
     ]
   };
   testAccessibleTree(acc, tree);
 }
 
 async function testContainer(browser) {
-  const id = 'container';
+  const id = "container";
   /* ================= Remove name on map =================================== */
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  await invokeSetAttribute(browser, 'map', 'name');
+  await invokeSetAttribute(browser, "map", "name");
   let event = await onReorder;
   const acc = event.accessible;
 
@@ -98,10 +98,10 @@ async function testContainer(browser) {
 
   /* ================= Restore name on map ================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await invokeSetAttribute(browser, 'map', 'name', 'atoz_map');
+  await invokeSetAttribute(browser, "map", "name", "atoz_map");
   // XXX: force repainting of the image (see bug 745788 for details).
-  await BrowserTestUtils.synthesizeMouse('#imgmap', 10, 10,
-    { type: 'mousemove' }, browser);
+  await BrowserTestUtils.synthesizeMouse("#imgmap", 10, 10,
+    { type: "mousemove" }, browser);
   await onReorder;
 
   tree = {
@@ -117,7 +117,7 @@ async function testContainer(browser) {
   /* ================= Remove map =========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, {}, () => {
-    let mapNode = content.document.getElementById('map');
+    let mapNode = content.document.getElementById("map");
     mapNode.remove();
   });
   await onReorder;
@@ -132,17 +132,17 @@ async function testContainer(browser) {
   /* ================= Insert map =========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, id, contentId => {
-    let map = content.document.createElement('map');
-    let area = content.document.createElement('area');
+    let map = content.document.createElement("map");
+    let area = content.document.createElement("area");
 
-    map.setAttribute('name', 'atoz_map');
-    map.setAttribute('id', 'map');
+    map.setAttribute("name", "atoz_map");
+    map.setAttribute("id", "map");
 
-    area.setAttribute('href',
-                      'http://www.bbc.co.uk/radio4/atoz/index.shtml#b');
-    area.setAttribute('coords', '17,0,30,14');
-    area.setAttribute('alt', 'b');
-    area.setAttribute('shape', 'rect');
+    area.setAttribute("href",
+                      "http://www.bbc.co.uk/radio4/atoz/index.shtml#b");
+    area.setAttribute("coords", "17,0,30,14");
+    area.setAttribute("alt", "b");
+    area.setAttribute("shape", "rect");
 
     map.appendChild(area);
     content.document.getElementById(contentId).appendChild(map);
@@ -160,7 +160,7 @@ async function testContainer(browser) {
 
   /* ================= Hide image map ======================================= */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await invokeSetStyle(browser, 'imgmap', 'display', 'none');
+  await invokeSetStyle(browser, "imgmap", "display", "none");
   await onReorder;
 
   tree = {
@@ -170,7 +170,7 @@ async function testContainer(browser) {
 }
 
 async function waitForImageMap(browser, accDoc) {
-  const id = 'imgmap';
+  const id = "imgmap";
   const acc = findAccessibleChildByID(accDoc, id);
   if (acc.firstChild) {
     return;
@@ -179,11 +179,11 @@ async function waitForImageMap(browser, accDoc) {
   const onReorder = waitForEvent(EVENT_REORDER, id);
   // Wave over image map
   await BrowserTestUtils.synthesizeMouse(`#${id}`, 10, 10,
-                                         { type: 'mousemove' }, browser);
+                                         { type: "mousemove" }, browser);
   await onReorder;
 }
 
-addAccessibleTask('doc_treeupdate_imagemap.html', async function(browser, accDoc) {
+addAccessibleTask("doc_treeupdate_imagemap.html", async function(browser, accDoc) {
   await waitForImageMap(browser, accDoc);
   await testImageMap(browser, accDoc);
   await testContainer(browser);

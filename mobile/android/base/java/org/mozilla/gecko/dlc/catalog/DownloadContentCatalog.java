@@ -227,18 +227,11 @@ public class DownloadContentCatalog {
                 loadedContent.put(currentContent.getId(), currentContent);
             }
         } catch (FileNotFoundException e) {
-            Log.d(LOGTAG, "Catalog file does not exist: Bootstrapping initial catalog");
-            loadedContent = DownloadContentBootstrap.createInitialDownloadContentList();
-        } catch (JSONException e) {
-            Log.w(LOGTAG, "Unable to parse catalog JSON. Re-creating catalog.", e);
-            // Catalog seems to be broken. Re-create catalog:
-            loadedContent = DownloadContentBootstrap.createInitialDownloadContentList();
-            hasCatalogChanged = true; // Indicate that we want to persist the new catalog
-        } catch (NullPointerException e) {
-            // Bad content can produce an NPE in JSON code -- bug 1300139
-            Log.w(LOGTAG, "Unable to parse catalog JSON. Re-creating catalog.", e);
-            // Catalog seems to be broken. Re-create catalog:
-            loadedContent = DownloadContentBootstrap.createInitialDownloadContentList();
+            Log.d(LOGTAG, "Catalog file does not exist: Starting with empty catalog.");
+            loadedContent = new ArrayMap<>();
+        } catch (JSONException | NullPointerException e) {
+            Log.w(LOGTAG, "Unable to parse catalog JSON. Re-creating empty catalog.", e);
+            loadedContent = new ArrayMap<>();
             hasCatalogChanged = true; // Indicate that we want to persist the new catalog
         } catch (UnsupportedEncodingException e) {
             AssertionError error = new AssertionError("Should not happen: This device does not speak UTF-8");

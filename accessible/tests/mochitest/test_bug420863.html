@@ -20,12 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
   <script type="application/javascript">
     var gClickHandler = null;
 
-    function doTest()
-    {
+    function doTest() {
       // Actions should be exposed on any accessible having related DOM node
       // with registered 'click' event handler.
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // generic td
       var td1Acc = getAccessible("td1");
       if (!td1Acc) {
@@ -36,14 +35,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
       is(td1Acc.actionCount, 0,
            "Simple table cell shouldn't have any actions");
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // one td with 'onclick' attribute and one with registered click handler
       var td3Node = getNode("td3");
 
       // register 'click' event handler
       gClickHandler = {
-        handleEvent: function handleEvent(aEvent)
-        {
+        handleEvent: function handleEvent(aEvent) {
         }
       };
       td3Node.addEventListener("click", gClickHandler);
@@ -61,8 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
           actionName: "click",
           actionIndex: 0,
           events: CLICK_EVENTS,
-          checkOnClickEvent: function check(aEvent)
-          {
+          checkOnClickEvent: function check(aEvent) {
             // unregister click event handler
             this.ID.removeEventListener("click", gClickHandler);
 

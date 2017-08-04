@@ -107,7 +107,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
       return;
     }
 
-    if (newVersion >= 3) {
+    if (oldVersion < 3 && newVersion >= 3) {
       // Add the optional columns to clients.
       db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_FORMFACTOR + " TEXT");
       db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_OS + " TEXT");
@@ -116,7 +116,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
       db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_DEVICE + " TEXT");
     }
 
-    if (newVersion >= 4) {
+    if (oldVersion < 4 && newVersion >= 4) {
       db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_FXA_DEVICE_ID + " TEXT");
       db.execSQL("CREATE INDEX idx_fxa_device_id ON " + TBL_CLIENTS + "(" + COL_FXA_DEVICE_ID + ")");
     }

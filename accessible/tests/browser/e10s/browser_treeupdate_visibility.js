@@ -2,17 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 /* import-globals-from ../../mochitest/role.js */
-loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
+loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 async function testTreeOnHide(browser, accDoc, containerID, id, before, after) {
   let acc = findAccessibleChildByID(accDoc, containerID);
   testAccessibleTree(acc, before);
 
   let onReorder = waitForEvent(EVENT_REORDER, containerID);
-  await invokeSetStyle(browser, id, 'visibility', 'hidden');
+  await invokeSetStyle(browser, id, "visibility", "hidden");
   await onReorder;
 
   testAccessibleTree(acc, after);
@@ -34,12 +34,12 @@ async function test3(browser, accessible) {
     ] };
   testAccessibleTree(accessible, tree);
 
-  let onReorder = waitForEvent(EVENT_REORDER, 't3_container');
+  let onReorder = waitForEvent(EVENT_REORDER, "t3_container");
   await ContentTask.spawn(browser, {}, () => {
     let doc = content.document;
-    doc.getElementById('t3_container').style.color = 'red';
-    doc.getElementById('t3_parent').style.visibility = 'hidden';
-    doc.getElementById('t3_parent2').style.visibility = 'hidden';
+    doc.getElementById("t3_container").style.color = "red";
+    doc.getElementById("t3_parent").style.visibility = "hidden";
+    doc.getElementById("t3_parent2").style.visibility = "hidden";
   });
   await onReorder;
 
@@ -66,11 +66,11 @@ async function test4(browser, accessible) {
     ] };
   testAccessibleTree(accessible, tree);
 
-  let onReorder = waitForEvent(EVENT_REORDER, 't4_parent');
+  let onReorder = waitForEvent(EVENT_REORDER, "t4_parent");
   await ContentTask.spawn(browser, {}, () => {
     let doc = content.document;
-    doc.getElementById('t4_container').style.color = 'red';
-    doc.getElementById('t4_child').style.visibility = 'visible';
+    doc.getElementById("t4_container").style.color = "red";
+    doc.getElementById("t4_child").style.visibility = "visible";
   });
   await onReorder;
 
@@ -90,11 +90,11 @@ async function test4(browser, accessible) {
   testAccessibleTree(accessible, tree);
 }
 
-addAccessibleTask('doc_treeupdate_visibility.html', async function(browser, accDoc) {
-  let t3Container = findAccessibleChildByID(accDoc, 't3_container');
-  let t4Container = findAccessibleChildByID(accDoc, 't4_container');
+addAccessibleTask("doc_treeupdate_visibility.html", async function(browser, accDoc) {
+  let t3Container = findAccessibleChildByID(accDoc, "t3_container");
+  let t4Container = findAccessibleChildByID(accDoc, "t4_container");
 
-  await testTreeOnHide(browser, accDoc, 't1_container', 't1_parent', {
+  await testTreeOnHide(browser, accDoc, "t1_container", "t1_parent", {
     SECTION: [{
       SECTION: [{
         SECTION: [ { TEXT_LEAF: [] } ]
@@ -106,7 +106,7 @@ addAccessibleTask('doc_treeupdate_visibility.html', async function(browser, accD
     } ]
   });
 
-  await testTreeOnHide(browser, accDoc, 't2_container', 't2_grandparent', {
+  await testTreeOnHide(browser, accDoc, "t2_container", "t2_grandparent", {
     SECTION: [{ // container
       SECTION: [{ // grand parent
         SECTION: [{
@@ -135,7 +135,7 @@ addAccessibleTask('doc_treeupdate_visibility.html', async function(browser, accD
   await test3(browser, t3Container);
   await test4(browser, t4Container);
 
-  await testTreeOnHide(browser, accDoc, 't5_container', 't5_subcontainer', {
+  await testTreeOnHide(browser, accDoc, "t5_container", "t5_subcontainer", {
     SECTION: [{ // container
       SECTION: [{ // subcontainer
         TABLE: [{
@@ -157,7 +157,7 @@ addAccessibleTask('doc_treeupdate_visibility.html', async function(browser, accD
     }]
   });
 
-  await testTreeOnHide(browser, accDoc, 't6_container', 't6_subcontainer', {
+  await testTreeOnHide(browser, accDoc, "t6_container", "t6_subcontainer", {
     SECTION: [{ // container
       SECTION: [{ // subcontainer
         TABLE: [{

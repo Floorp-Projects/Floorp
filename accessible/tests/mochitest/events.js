@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Constants
 
 const EVENT_ALERT = nsIAccessibleEvent.EVENT_ALERT;
@@ -34,7 +34,7 @@ const EVENT_VIRTUALCURSOR_CHANGED = nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANG
 const kNotFromUserInput = 0;
 const kFromUserInput = 1;
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // General
 
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -70,8 +70,7 @@ var gA11yEventDumpFeature = "";
  * @param aArg1       [in, optional] argument passed into the function
  * @param aArg2       [in, optional] argument passed into the function
  */
-function waitForEvent(aEventType, aTargetOrFunc, aFunc, aContext, aArg1, aArg2)
-{
+function waitForEvent(aEventType, aTargetOrFunc, aFunc, aContext, aArg1, aArg2) {
   var handler = {
     handleEvent: function handleEvent(aEvent) {
 
@@ -92,8 +91,7 @@ function waitForEvent(aEventType, aTargetOrFunc, aFunc, aContext, aArg1, aArg2)
       unregisterA11yEventListener(aEventType, this);
 
       window.setTimeout(
-        function ()
-        {
+        function() {
           aFunc.call(aContext, aArg1, aArg2);
         },
         0
@@ -108,8 +106,7 @@ function waitForEvent(aEventType, aTargetOrFunc, aFunc, aContext, aArg1, aArg2)
  * Generate mouse move over image map what creates image map accessible (async).
  * See waitForImageMap() function.
  */
-function waveOverImageMap(aImageMapID)
-{
+function waveOverImageMap(aImageMapID) {
   var imageMapNode = getNode(aImageMapID);
   synthesizeMouse(imageMapNode, 10, 10, { type: "mousemove" },
                   imageMapNode.ownerGlobal);
@@ -118,8 +115,7 @@ function waveOverImageMap(aImageMapID)
 /**
  * Call the given function when the tree of the given image map is built.
  */
-function waitForImageMap(aImageMapID, aTestFunc)
-{
+function waitForImageMap(aImageMapID, aTestFunc) {
   waveOverImageMap(aImageMapID);
 
   var imageMapAcc = getAccessible(aImageMapID);
@@ -139,8 +135,7 @@ function waitForImageMap(aImageMapID, aTestFunc)
  *                       this object is invoked with nsIAccessibleEvent object
  *                       as the first argument.
  */
-function registerA11yEventListener(aEventType, aEventHandler)
-{
+function registerA11yEventListener(aEventType, aEventHandler) {
   listenA11yEvents(true);
   addA11yEventListener(aEventType, aEventHandler);
 }
@@ -150,14 +145,13 @@ function registerA11yEventListener(aEventType, aEventHandler)
  * event listener (see registerA11yEventListener() function) when the listener
  * is not needed.
  */
-function unregisterA11yEventListener(aEventType, aEventHandler)
-{
+function unregisterA11yEventListener(aEventType, aEventHandler) {
   removeA11yEventListener(aEventType, aEventHandler);
   listenA11yEvents(false);
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Event queue
 
 /**
@@ -254,23 +248,20 @@ const DO_NOT_FINISH_TEST = 1;
  * @param  aEventType  [in, optional] the default event type (isn't used if
  *                      invoker defines eventSeq property).
  */
-function eventQueue(aEventType)
-{
+function eventQueue(aEventType) {
   // public
 
   /**
    * Add invoker object into queue.
    */
-  this.push = function eventQueue_push(aEventInvoker)
-  {
+  this.push = function eventQueue_push(aEventInvoker) {
     this.mInvokers.push(aEventInvoker);
   }
 
   /**
    * Start the queue processing.
    */
-  this.invoke = function eventQueue_invoke()
-  {
+  this.invoke = function eventQueue_invoke() {
     listenA11yEvents(true);
 
     // XXX: Intermittent test_events_caretmove.html fails withouth timeout,
@@ -282,8 +273,7 @@ function eventQueue(aEventType)
    * This function is called when all events in the queue were handled.
    * Override it if you need to be notified of this.
    */
-  this.onFinish = function eventQueue_finish()
-  {
+  this.onFinish = function eventQueue_finish() {
   }
 
   // private
@@ -291,8 +281,7 @@ function eventQueue(aEventType)
   /**
    * Process next invoker.
    */
-  this.processNextInvoker = function eventQueue_processNextInvoker()
-  {
+  this.processNextInvoker = function eventQueue_processNextInvoker() {
     // Some scenario was matched, we wait on next invoker processing.
     if (this.mNextInvokerStatus == kInvokerCanceled) {
       this.setInvokerStatus(kInvokerNotScheduled,
@@ -347,12 +336,10 @@ function eventQueue(aEventType)
 
                 if (checker.unexpected) {
                   ok(true, msg + `There's no unexpected '${typeStr}' event.`);
-                }
-                else {
+                } else {
                   if (checker.todo) {
                     todo(false, `Todo event '${typeStr}' was caught`);
-                  }
-                  else {
+                  } else {
                     ok(true, `${msg} Event '${typeStr}' was handled.`);
                   }
                 }
@@ -381,8 +368,7 @@ function eventQueue(aEventType)
                 if (checker.wasCaught) {
                   ok(false, msg + "There's unexpected " + typeStr + " event.");
                 }
-              }
-              else if (!checker.wasCaught) {
+              } else if (!checker.wasCaught) {
                 var rf = checker.todo ? todo : ok;
                 rf(false, `${msg} '${typeStr} event is missed.`);
               }
@@ -444,8 +430,7 @@ function eventQueue(aEventType)
   }
 
   this.processNextInvokerInTimeout =
-    function eventQueue_processNextInvokerInTimeout(aUncondProcess)
-  {
+    function eventQueue_processNextInvokerInTimeout(aUncondProcess) {
     this.setInvokerStatus(kInvokerPending, "Process next invoker in timeout");
 
     // No need to wait extra timeout when a) we know we don't need to do that
@@ -465,8 +450,7 @@ function eventQueue(aEventType)
   /**
    * Handle events for the current invoker.
    */
-  this.handleEvent = function eventQueue_handleEvent(aEvent)
-  {
+  this.handleEvent = function eventQueue_handleEvent(aEvent) {
     var invoker = this.getInvoker();
     if (!invoker) // skip events before test was started
       return;
@@ -593,8 +577,7 @@ function eventQueue(aEventType)
 
   // Helpers
   this.processMatchedChecker =
-    function eventQueue_function(aEvent, aMatchedChecker, aScenarioIdx, aEventIdx)
-  {
+    function eventQueue_function(aEvent, aMatchedChecker, aScenarioIdx, aEventIdx) {
     aMatchedChecker.wasCaught++;
 
     if ("check" in aMatchedChecker)
@@ -606,8 +589,7 @@ function eventQueue(aEventType)
   }
 
   this.getNextExpectedEvent =
-    function eventQueue_getNextExpectedEvent(aEventSeq)
-  {
+    function eventQueue_getNextExpectedEvent(aEventSeq) {
     if (!("idx" in aEventSeq))
       aEventSeq.idx = 0;
 
@@ -624,35 +606,32 @@ function eventQueue(aEventType)
   }
 
   this.areExpectedEventsLeft =
-    function eventQueue_areExpectedEventsLeft(aScenario)
-  {
-    function scenarioHasUnhandledExpectedEvent(aEventSeq)
-    {
-      // Check if we have unhandled async (can be anywhere in the sequance) or
-      // sync expcected events yet.
-      for (var idx = 0; idx < aEventSeq.length; idx++) {
-        if (!aEventSeq[idx].unexpected && !aEventSeq[idx].todo &&
-            !aEventSeq[idx].wasCaught && !(aEventSeq[idx] instanceof orderChecker))
-          return true;
+    function eventQueue_areExpectedEventsLeft(aScenario) {
+      function scenarioHasUnhandledExpectedEvent(aEventSeq) {
+        // Check if we have unhandled async (can be anywhere in the sequance) or
+        // sync expcected events yet.
+        for (var idx = 0; idx < aEventSeq.length; idx++) {
+          if (!aEventSeq[idx].unexpected && !aEventSeq[idx].todo &&
+              !aEventSeq[idx].wasCaught && !(aEventSeq[idx] instanceof orderChecker))
+            return true;
+        }
+
+        return false;
       }
 
+      if (aScenario)
+        return scenarioHasUnhandledExpectedEvent(aScenario);
+
+      for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+        var eventSeq = this.mScenarios[scnIdx];
+        if (scenarioHasUnhandledExpectedEvent(eventSeq))
+          return true;
+      }
       return false;
     }
 
-    if (aScenario)
-      return scenarioHasUnhandledExpectedEvent(aScenario);
-
-    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
-      var eventSeq = this.mScenarios[scnIdx];
-      if (scenarioHasUnhandledExpectedEvent(eventSeq))
-        return true;
-    }
-    return false;
-  }
-
   this.areAllEventsExpected =
-    function eventQueue_areAllEventsExpected()
-  {
+    function eventQueue_areAllEventsExpected() {
     for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
       var eventSeq = this.mScenarios[scnIdx];
       for (var idx = 0; idx < eventSeq.length; idx++) {
@@ -665,8 +644,7 @@ function eventQueue(aEventType)
   }
 
   this.isUnexpectedEventScenario =
-    function eventQueue_isUnexpectedEventsScenario(aScenario)
-  {
+    function eventQueue_isUnexpectedEventsScenario(aScenario) {
     for (var idx = 0; idx < aScenario.length; idx++) {
       if (!aScenario[idx].unexpected && !aScenario[idx].todo)
         break;
@@ -676,8 +654,7 @@ function eventQueue(aEventType)
   }
 
   this.hasUnexpectedEventsScenario =
-    function eventQueue_hasUnexpectedEventsScenario()
-  {
+    function eventQueue_hasUnexpectedEventsScenario() {
     if (this.getInvoker().noEventsOnAction)
       return true;
 
@@ -690,8 +667,7 @@ function eventQueue(aEventType)
   }
 
   this.hasMatchedScenario =
-    function eventQueue_hasMatchedScenario()
-  {
+    function eventQueue_hasMatchedScenario() {
     for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
       var scn = this.mScenarios[scnIdx];
       if (!this.isUnexpectedEventScenario(scn) && !this.areExpectedEventsLeft(scn))
@@ -700,18 +676,15 @@ function eventQueue(aEventType)
     return false;
   }
 
-  this.getInvoker = function eventQueue_getInvoker()
-  {
+  this.getInvoker = function eventQueue_getInvoker() {
     return this.mInvokers[this.mIndex];
   }
 
-  this.getNextInvoker = function eventQueue_getNextInvoker()
-  {
+  this.getNextInvoker = function eventQueue_getNextInvoker() {
     return this.mInvokers[++this.mIndex];
   }
 
-  this.setEventHandler = function eventQueue_setEventHandler(aInvoker)
-  {
+  this.setEventHandler = function eventQueue_setEventHandler(aInvoker) {
     if (!("scenarios" in aInvoker) || aInvoker.scenarios.length == 0) {
       var eventSeq = aInvoker.eventSeq;
       var unexpectedEventSeq = aInvoker.unexpectedEventSeq;
@@ -791,8 +764,7 @@ function eventQueue(aEventType)
     return true;
   }
 
-  this.clearEventHandler = function eventQueue_clearEventHandler()
-  {
+  this.clearEventHandler = function eventQueue_clearEventHandler() {
     if (!this.mScenarios)
       return;
 
@@ -815,8 +787,7 @@ function eventQueue(aEventType)
     this.mScenarios = null;
   }
 
-  this.getEventID = function eventQueue_getEventID(aChecker)
-  {
+  this.getEventID = function eventQueue_getEventID(aChecker) {
     if ("getID" in aChecker)
       return aChecker.getID();
 
@@ -824,12 +795,11 @@ function eventQueue(aEventType)
     return invoker.getID();
   }
 
-  this.setInvokerStatus = function eventQueue_setInvokerStatus(aStatus, aLogMsg)
-  {
+  this.setInvokerStatus = function eventQueue_setInvokerStatus(aStatus, aLogMsg) {
     this.mNextInvokerStatus = aStatus;
 
     // Uncomment it to debug invoker processing logic.
-    //gLogger.log(eventQueue.invokerStatusToMsg(aStatus, aLogMsg));
+    // gLogger.log(eventQueue.invokerStatusToMsg(aStatus, aLogMsg));
   }
 
   this.mDefEventType = aEventType;
@@ -841,7 +811,7 @@ function eventQueue(aEventType)
   this.mNextInvokerStatus = kInvokerNotScheduled;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // eventQueue static members and constants
 
 const kInvokerNotScheduled = 0;
@@ -849,8 +819,7 @@ const kInvokerPending = 1;
 const kInvokerCanceled = 2;
 
 eventQueue.getEventTypeAsString =
-  function eventQueue_getEventTypeAsString(aEventOrChecker)
-{
+  function eventQueue_getEventTypeAsString(aEventOrChecker) {
   if (aEventOrChecker instanceof nsIDOMEvent)
     return aEventOrChecker.type;
 
@@ -862,8 +831,7 @@ eventQueue.getEventTypeAsString =
 }
 
 eventQueue.getEventTargetDescr =
-  function eventQueue_getEventTargetDescr(aEventOrChecker, aDontForceTarget)
-{
+  function eventQueue_getEventTargetDescr(aEventOrChecker, aDontForceTarget) {
   if (aEventOrChecker instanceof nsIDOMEvent)
     return prettyName(aEventOrChecker.originalTarget);
 
@@ -881,21 +849,18 @@ eventQueue.getEventTargetDescr =
   return prettyName(target);
 }
 
-eventQueue.getEventPhase = function eventQueue_getEventPhase(aChecker)
-{
+eventQueue.getEventPhase = function eventQueue_getEventPhase(aChecker) {
   return ("phase" in aChecker) ? aChecker.phase : true;
 }
 
 eventQueue.compareEventTypes =
-  function eventQueue_compareEventTypes(aChecker, aEvent)
-{
+  function eventQueue_compareEventTypes(aChecker, aEvent) {
   var eventType = (aEvent instanceof nsIDOMEvent) ?
     aEvent.type : aEvent.eventType;
   return aChecker.type == eventType;
 }
 
-eventQueue.compareEvents = function eventQueue_compareEvents(aChecker, aEvent)
-{
+eventQueue.compareEvents = function eventQueue_compareEvents(aChecker, aEvent) {
   if (!eventQueue.compareEventTypes(aChecker, aEvent))
     return false;
 
@@ -919,8 +884,7 @@ eventQueue.compareEvents = function eventQueue_compareEvents(aChecker, aEvent)
   return target1 == target2;
 }
 
-eventQueue.isSameEvent = function eventQueue_isSameEvent(aChecker, aEvent)
-{
+eventQueue.isSameEvent = function eventQueue_isSameEvent(aChecker, aEvent) {
   // We don't have stored info about handled event other than its type and
   // target, thus we should filter text change and state change events since
   // they may occur on the same element because of complex changes.
@@ -930,8 +894,7 @@ eventQueue.isSameEvent = function eventQueue_isSameEvent(aChecker, aEvent)
 }
 
 eventQueue.invokerStatusToMsg =
-  function eventQueue_invokerStatusToMsg(aInvokerStatus, aMsg)
-{
+  function eventQueue_invokerStatusToMsg(aInvokerStatus, aMsg) {
   var msg = "invoker status: ";
   switch (aInvokerStatus) {
     case kInvokerNotScheduled:
@@ -954,8 +917,7 @@ eventQueue.invokerStatusToMsg =
 eventQueue.logEvent = function eventQueue_logEvent(aOrigEvent, aMatchedChecker,
                                                    aScenarioIdx, aEventIdx,
                                                    aAreExpectedEventsLeft,
-                                                   aInvokerStatus)
-{
+                                                   aInvokerStatus) {
   // Dump DOM event information. Skip a11y event since it is dumped by
   // gA11yEventObserver.
   if (aOrigEvent instanceof nsIDOMEvent) {
@@ -965,7 +927,7 @@ eventQueue.logEvent = function eventQueue_logEvent(aOrigEvent, aMatchedChecker,
   }
 
   var infoMsg = "unhandled expected events: " + aAreExpectedEventsLeft +
-    ", "  + eventQueue.invokerStatusToMsg(aInvokerStatus);
+    ", " + eventQueue.invokerStatusToMsg(aInvokerStatus);
 
   var currType = eventQueue.getEventTypeAsString(aMatchedChecker);
   var currTargetDescr = eventQueue.getEventTargetDescr(aMatchedChecker);
@@ -980,15 +942,14 @@ eventQueue.logEvent = function eventQueue_logEvent(aOrigEvent, aMatchedChecker,
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Action sequence
 
 /**
  * Deal with action sequence. Used when you need to execute couple of actions
  * each after other one.
  */
-function sequence()
-{
+function sequence() {
   /**
    * Append new sequence item.
    *
@@ -1004,8 +965,7 @@ function sequence()
    * @param  aItemID     [in] identifier of item
    */
   this.append = function sequence_append(aProcessor, aEventType, aTarget,
-                                         aItemID)
-  {
+                                         aItemID) {
     var item = new sequenceItem(aProcessor, aEventType, aTarget, aItemID);
     this.items.push(item);
   }
@@ -1013,8 +973,7 @@ function sequence()
   /**
    * Process next sequence item.
    */
-  this.processNext = function sequence_processNext()
-  {
+  this.processNext = function sequence_processNext() {
     this.idx++;
     if (this.idx >= this.items.length) {
       ok(false, "End of sequence: nothing to process!");
@@ -1030,15 +989,14 @@ function sequence()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Event queue invokers
 
 /**
  * Defines a scenario of expected/unexpected events. Each invoker can have
  * one or more scenarios of events. Only one scenario must be completed.
  */
-function defineScenario(aInvoker, aEventSeq, aUnexpectedEventSeq)
-{
+function defineScenario(aInvoker, aEventSeq, aUnexpectedEventSeq) {
   if (!("scenarios" in aInvoker))
     aInvoker.scenarios = [];
 
@@ -1076,12 +1034,10 @@ function defineScenario(aInvoker, aEventSeq, aUnexpectedEventSeq)
 /**
  * Click invoker.
  */
-function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs)
-{
+function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
   this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq);
 
-  this.invoke = function synthClick_invoke()
-  {
+  this.invoke = function synthClick_invoke() {
     var targetNode = this.DOMNode;
     if (targetNode instanceof nsIDOMDocument) {
       targetNode =
@@ -1106,14 +1062,12 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs)
     synthesizeMouse(targetNode, x, y, aArgs ? aArgs : {});
   }
 
-  this.finalCheck = function synthClick_finalCheck()
-  {
+  this.finalCheck = function synthClick_finalCheck() {
     // Scroll top window back.
     window.top.scrollTo(0, 0);
   }
 
-  this.getID = function synthClick_getID()
-  {
+  this.getID = function synthClick_getID() {
     return prettyName(aNodeOrID) + " click";
   }
 }
@@ -1121,18 +1075,15 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs)
 /**
  * Mouse move invoker.
  */
-function synthMouseMove(aID, aCheckerOrEventSeq)
-{
+function synthMouseMove(aID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aID, aCheckerOrEventSeq);
 
-  this.invoke = function synthMouseMove_invoke()
-  {
+  this.invoke = function synthMouseMove_invoke() {
     synthesizeMouse(this.DOMNode, 1, 1, { type: "mousemove" });
     synthesizeMouse(this.DOMNode, 2, 2, { type: "mousemove" });
   }
 
-  this.getID = function synthMouseMove_getID()
-  {
+  this.getID = function synthMouseMove_getID() {
     return prettyName(aID) + " mouse move";
   }
 }
@@ -1140,17 +1091,14 @@ function synthMouseMove(aID, aCheckerOrEventSeq)
 /**
  * General key press invoker.
  */
-function synthKey(aNodeOrID, aKey, aArgs, aCheckerOrEventSeq)
-{
+function synthKey(aNodeOrID, aKey, aArgs, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq);
 
-  this.invoke = function synthKey_invoke()
-  {
+  this.invoke = function synthKey_invoke() {
     synthesizeKey(this.mKey, this.mArgs, this.mWindow);
   }
 
-  this.getID = function synthKey_getID()
-  {
+  this.getID = function synthKey_getID() {
     var key = this.mKey;
     switch (this.mKey) {
       case "VK_TAB":
@@ -1200,8 +1148,7 @@ function synthKey(aNodeOrID, aKey, aArgs, aCheckerOrEventSeq)
 /**
  * Tab key invoker.
  */
-function synthTab(aNodeOrID, aCheckerOrEventSeq, aWindow)
-{
+function synthTab(aNodeOrID, aCheckerOrEventSeq, aWindow) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_TAB",
                                 { shiftKey: false, window: aWindow },
                                 aCheckerOrEventSeq);
@@ -1210,8 +1157,7 @@ function synthTab(aNodeOrID, aCheckerOrEventSeq, aWindow)
 /**
  * Shift tab key invoker.
  */
-function synthShiftTab(aNodeOrID, aCheckerOrEventSeq)
-{
+function synthShiftTab(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_TAB", { shiftKey: true },
                                 aCheckerOrEventSeq);
 }
@@ -1219,8 +1165,7 @@ function synthShiftTab(aNodeOrID, aCheckerOrEventSeq)
 /**
  * Escape key invoker.
  */
-function synthEscapeKey(aNodeOrID, aCheckerOrEventSeq)
-{
+function synthEscapeKey(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_ESCAPE", null,
                                 aCheckerOrEventSeq);
 }
@@ -1228,8 +1173,7 @@ function synthEscapeKey(aNodeOrID, aCheckerOrEventSeq)
 /**
  * Down arrow key invoker.
  */
-function synthDownKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
-{
+function synthDownKey(aNodeOrID, aCheckerOrEventSeq, aArgs) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_DOWN", aArgs,
                                 aCheckerOrEventSeq);
 }
@@ -1237,8 +1181,7 @@ function synthDownKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
 /**
  * Up arrow key invoker.
  */
-function synthUpKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
-{
+function synthUpKey(aNodeOrID, aCheckerOrEventSeq, aArgs) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_UP", aArgs,
                                 aCheckerOrEventSeq);
 }
@@ -1246,52 +1189,45 @@ function synthUpKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
 /**
  * Left arrow key invoker.
  */
-function synthLeftKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
-{
+function synthLeftKey(aNodeOrID, aCheckerOrEventSeq, aArgs) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_LEFT", aArgs, aCheckerOrEventSeq);
 }
 
 /**
  * Right arrow key invoker.
  */
-function synthRightKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
-{
+function synthRightKey(aNodeOrID, aCheckerOrEventSeq, aArgs) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_RIGHT", aArgs, aCheckerOrEventSeq);
 }
 
 /**
  * Home key invoker.
  */
-function synthHomeKey(aNodeOrID, aCheckerOrEventSeq)
-{
+function synthHomeKey(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_HOME", null, aCheckerOrEventSeq);
 }
 
 /**
  * End key invoker.
  */
-function synthEndKey(aNodeOrID, aCheckerOrEventSeq)
-{
+function synthEndKey(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthKey(aNodeOrID, "VK_END", null, aCheckerOrEventSeq);
 }
 
 /**
  * Enter key invoker
  */
-function synthEnterKey(aID, aCheckerOrEventSeq)
-{
+function synthEnterKey(aID, aCheckerOrEventSeq) {
   this.__proto__ = new synthKey(aID, "VK_RETURN", null, aCheckerOrEventSeq);
 }
 
 /**
  * Synth alt + down arrow to open combobox.
  */
-function synthOpenComboboxKey(aID, aCheckerOrEventSeq)
-{
+function synthOpenComboboxKey(aID, aCheckerOrEventSeq) {
   this.__proto__ = new synthDownKey(aID, aCheckerOrEventSeq, { altKey: true });
 
-  this.getID = function synthOpenComboboxKey_getID()
-  {
+  this.getID = function synthOpenComboboxKey_getID() {
     return "open combobox (atl + down arrow) " + prettyName(aID);
   }
 }
@@ -1299,14 +1235,12 @@ function synthOpenComboboxKey(aID, aCheckerOrEventSeq)
 /**
  * Focus invoker.
  */
-function synthFocus(aNodeOrID, aCheckerOrEventSeq)
-{
+function synthFocus(aNodeOrID, aCheckerOrEventSeq) {
   var checkerOfEventSeq =
     aCheckerOrEventSeq ? aCheckerOrEventSeq : new focusChecker(aNodeOrID);
   this.__proto__ = new synthAction(aNodeOrID, checkerOfEventSeq);
 
-  this.invoke = function synthFocus_invoke()
-  {
+  this.invoke = function synthFocus_invoke() {
     if (this.DOMNode instanceof Components.interfaces.nsIDOMNSEditableElement &&
         this.DOMNode.editor ||
         this.DOMNode instanceof Components.interfaces.nsIDOMXULTextBoxElement) {
@@ -1315,8 +1249,7 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq)
     this.DOMNode.focus();
   }
 
-  this.getID = function synthFocus_getID()
-  {
+  this.getID = function synthFocus_getID() {
     return prettyName(aNodeOrID) + " focus";
   }
 }
@@ -1324,20 +1257,17 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq)
 /**
  * Focus invoker. Focus the HTML body of content document of iframe.
  */
-function synthFocusOnFrame(aNodeOrID, aCheckerOrEventSeq)
-{
+function synthFocusOnFrame(aNodeOrID, aCheckerOrEventSeq) {
   var frameDoc = getNode(aNodeOrID).contentDocument;
   var checkerOrEventSeq =
     aCheckerOrEventSeq ? aCheckerOrEventSeq : new focusChecker(frameDoc);
   this.__proto__ = new synthAction(frameDoc, checkerOrEventSeq);
 
-  this.invoke = function synthFocus_invoke()
-  {
+  this.invoke = function synthFocus_invoke() {
     this.DOMNode.body.focus();
   }
 
-  this.getID = function synthFocus_getID()
-  {
+  this.getID = function synthFocus_getID() {
     return prettyName(aNodeOrID) + " frame document focus";
   }
 }
@@ -1345,12 +1275,10 @@ function synthFocusOnFrame(aNodeOrID, aCheckerOrEventSeq)
 /**
  * Change the current item when the widget doesn't have a focus.
  */
-function changeCurrentItem(aID, aItemID)
-{
+function changeCurrentItem(aID, aItemID) {
   this.eventSeq = [ new nofocusChecker() ];
 
-  this.invoke = function changeCurrentItem_invoke()
-  {
+  this.invoke = function changeCurrentItem_invoke() {
     var controlNode = getNode(aID);
     var itemNode = getNode(aItemID);
 
@@ -1394,13 +1322,11 @@ function changeCurrentItem(aID, aItemID)
     controlNode.currentItem = itemNode;
   }
 
-  this.getID = function changeCurrentItem_getID()
-  {
+  this.getID = function changeCurrentItem_getID() {
     return "current item change for " + prettyName(aID);
   }
 
-  this.reportError = function changeCurrentItem_reportError()
-  {
+  this.reportError = function changeCurrentItem_reportError() {
     ok(false,
        "Error in test: proposed current item '" + aItemID + "' is already current");
   }
@@ -1409,13 +1335,11 @@ function changeCurrentItem(aID, aItemID)
 /**
  * Toggle top menu invoker.
  */
-function toggleTopMenu(aID, aCheckerOrEventSeq)
-{
+function toggleTopMenu(aID, aCheckerOrEventSeq) {
   this.__proto__ = new synthKey(aID, "VK_ALT", null,
                                 aCheckerOrEventSeq);
 
-  this.getID = function toggleTopMenu_getID()
-  {
+  this.getID = function toggleTopMenu_getID() {
     return "toggle top menu on " + prettyName(aID);
   }
 }
@@ -1423,13 +1347,11 @@ function toggleTopMenu(aID, aCheckerOrEventSeq)
 /**
  * Context menu invoker.
  */
-function synthContextMenu(aID, aCheckerOrEventSeq)
-{
+function synthContextMenu(aID, aCheckerOrEventSeq) {
   this.__proto__ = new synthClick(aID, aCheckerOrEventSeq,
                                   { button: 0, type: "contextmenu" });
 
-  this.getID = function synthContextMenu_getID()
-  {
+  this.getID = function synthContextMenu_getID() {
     return "context menu on " + prettyName(aID);
   }
 }
@@ -1437,20 +1359,17 @@ function synthContextMenu(aID, aCheckerOrEventSeq)
 /**
  * Open combobox, autocomplete and etc popup, check expandable states.
  */
-function openCombobox(aComboboxID)
-{
+function openCombobox(aComboboxID) {
   this.eventSeq = [
     new stateChangeChecker(STATE_EXPANDED, false, true, aComboboxID)
   ];
 
-  this.invoke = function openCombobox_invoke()
-  {
+  this.invoke = function openCombobox_invoke() {
     getNode(aComboboxID).focus();
     synthesizeKey("VK_DOWN", { altKey: true });
   }
 
-  this.getID = function openCombobox_getID()
-  {
+  this.getID = function openCombobox_getID() {
     return "open combobox " + prettyName(aComboboxID);
   }
 }
@@ -1458,19 +1377,16 @@ function openCombobox(aComboboxID)
 /**
  * Close combobox, autocomplete and etc popup, check expandable states.
  */
-function closeCombobox(aComboboxID)
-{
+function closeCombobox(aComboboxID) {
   this.eventSeq = [
     new stateChangeChecker(STATE_EXPANDED, false, false, aComboboxID)
   ];
 
-  this.invoke = function closeCombobox_invoke()
-  {
+  this.invoke = function closeCombobox_invoke() {
     synthesizeKey("VK_ESCAPE", { });
   }
 
-  this.getID = function closeCombobox_getID()
-  {
+  this.getID = function closeCombobox_getID() {
     return "close combobox " + prettyName(aComboboxID);
   }
 }
@@ -1479,12 +1395,10 @@ function closeCombobox(aComboboxID)
 /**
  * Select all invoker.
  */
-function synthSelectAll(aNodeOrID, aCheckerOrEventSeq)
-{
+function synthSelectAll(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq);
 
-  this.invoke = function synthSelectAll_invoke()
-  {
+  this.invoke = function synthSelectAll_invoke() {
     if (this.DOMNode instanceof Components.interfaces.nsIDOMHTMLInputElement ||
         this.DOMNode instanceof Components.interfaces.nsIDOMXULTextBoxElement) {
       this.DOMNode.select();
@@ -1494,8 +1408,7 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq)
     }
   }
 
-  this.getID = function synthSelectAll_getID()
-  {
+  this.getID = function synthSelectAll_getID() {
     return aNodeOrID + " selectall";
   }
 }
@@ -1503,8 +1416,7 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq)
 /**
  * Move the caret to the end of line.
  */
-function moveToLineEnd(aID, aCaretOffset)
-{
+function moveToLineEnd(aID, aCaretOffset) {
   if (MAC) {
     this.__proto__ = new synthKey(aID, "VK_RIGHT", { metaKey: true },
                                   new caretMoveChecker(aCaretOffset, aID));
@@ -1513,8 +1425,7 @@ function moveToLineEnd(aID, aCaretOffset)
                                      new caretMoveChecker(aCaretOffset, aID));
   }
 
-  this.getID = function moveToLineEnd_getID()
-  {
+  this.getID = function moveToLineEnd_getID() {
     return "move to line end in " + prettyName(aID);
   }
 }
@@ -1522,12 +1433,10 @@ function moveToLineEnd(aID, aCaretOffset)
 /**
  * Move the caret to the end of previous line if any.
  */
-function moveToPrevLineEnd(aID, aCaretOffset)
-{
+function moveToPrevLineEnd(aID, aCaretOffset) {
   this.__proto__ = new synthAction(aID, new caretMoveChecker(aCaretOffset, aID));
 
-  this.invoke = function moveToPrevLineEnd_invoke()
-  {
+  this.invoke = function moveToPrevLineEnd_invoke() {
     synthesizeKey("VK_UP", { });
 
     if (MAC)
@@ -1536,8 +1445,7 @@ function moveToPrevLineEnd(aID, aCaretOffset)
       synthesizeKey("VK_END", { });
   }
 
-  this.getID = function moveToPrevLineEnd_getID()
-  {
+  this.getID = function moveToPrevLineEnd_getID() {
     return "move to previous line end in " + prettyName(aID);
   }
 }
@@ -1545,8 +1453,7 @@ function moveToPrevLineEnd(aID, aCaretOffset)
 /**
  * Move the caret to begining of the line.
  */
-function moveToLineStart(aID, aCaretOffset)
-{
+function moveToLineStart(aID, aCaretOffset) {
   if (MAC) {
     this.__proto__ = new synthKey(aID, "VK_LEFT", { metaKey: true },
                                   new caretMoveChecker(aCaretOffset, aID));
@@ -1555,8 +1462,7 @@ function moveToLineStart(aID, aCaretOffset)
                                       new caretMoveChecker(aCaretOffset, aID));
   }
 
-  this.getID = function moveToLineEnd_getID()
-  {
+  this.getID = function moveToLineEnd_getID() {
     return "move to line start in " + prettyName(aID);
   }
 }
@@ -1564,8 +1470,7 @@ function moveToLineStart(aID, aCaretOffset)
 /**
  * Move the caret to begining of the text.
  */
-function moveToTextStart(aID)
-{
+function moveToTextStart(aID) {
   if (MAC) {
     this.__proto__ = new synthKey(aID, "VK_UP", { metaKey: true },
                                   new caretMoveChecker(0, aID));
@@ -1574,8 +1479,7 @@ function moveToTextStart(aID)
                                   new caretMoveChecker(0, aID));
   }
 
-  this.getID = function moveToTextStart_getID()
-  {
+  this.getID = function moveToTextStart_getID() {
     return "move to text start in " + prettyName(aID);
   }
 }
@@ -1585,15 +1489,13 @@ function moveToTextStart(aID)
  */
 function moveCaretToDOMPoint(aID, aDOMPointNodeID, aDOMPointOffset,
                              aExpectedOffset, aFocusTargetID,
-                             aCheckFunc)
-{
+                             aCheckFunc) {
   this.target = getAccessible(aID, [nsIAccessibleText]);
   this.DOMPointNode = getNode(aDOMPointNodeID);
   this.focus = aFocusTargetID ? getAccessible(aFocusTargetID) : null;
   this.focusNode = this.focus ? this.focus.DOMNode : null;
 
-  this.invoke = function moveCaretToDOMPoint_invoke()
-  {
+  this.invoke = function moveCaretToDOMPoint_invoke() {
     if (this.focusNode)
       this.focusNode.focus();
 
@@ -1606,14 +1508,12 @@ function moveCaretToDOMPoint(aID, aDOMPointNodeID, aDOMPointOffset,
     selection.addRange(selRange);
   }
 
-  this.getID = function moveCaretToDOMPoint_getID()
-  {
+  this.getID = function moveCaretToDOMPoint_getID() {
    return "Set caret on " + prettyName(aID) + " at point: " +
      prettyName(aDOMPointNodeID) + " node with offset " + aDOMPointOffset;
   }
 
-  this.finalCheck = function moveCaretToDOMPoint_finalCheck()
-  {
+  this.finalCheck = function moveCaretToDOMPoint_finalCheck() {
     if (aCheckFunc)
       aCheckFunc.call();
   }
@@ -1629,19 +1529,16 @@ function moveCaretToDOMPoint(aID, aDOMPointNodeID, aDOMPointOffset,
 /**
  * Set caret offset in text accessible.
  */
-function setCaretOffset(aID, aOffset, aFocusTargetID)
-{
+function setCaretOffset(aID, aOffset, aFocusTargetID) {
   this.target = getAccessible(aID, [nsIAccessibleText]);
-  this.offset = aOffset == -1 ? this.target.characterCount: aOffset;
+  this.offset = aOffset == -1 ? this.target.characterCount : aOffset;
   this.focus = aFocusTargetID ? getAccessible(aFocusTargetID) : null;
 
-  this.invoke = function setCaretOffset_invoke()
-  {
+  this.invoke = function setCaretOffset_invoke() {
     this.target.caretOffset = this.offset;
   }
 
-  this.getID = function setCaretOffset_getID()
-  {
+  this.getID = function setCaretOffset_getID() {
    return "Set caretOffset on " + prettyName(aID) + " at " + this.offset;
   }
 
@@ -1654,14 +1551,13 @@ function setCaretOffset(aID, aOffset, aFocusTargetID)
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Event queue checkers
 
 /**
  * Common invoker checker (see eventSeq of eventQueue).
  */
-function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg, aIsAsync)
-{
+function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg, aIsAsync) {
   this.type = aEventType;
   this.async = aIsAsync;
 
@@ -1669,8 +1565,7 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg, aIsAsync)
   this.__defineSetter__("target", invokerChecker_targetSetter);
 
   // implementation details
-  function invokerChecker_targetGetter()
-  {
+  function invokerChecker_targetGetter() {
     if (typeof this.mTarget == "function")
       return this.mTarget.call(null, this.mTargetFuncArg);
     if (typeof this.mTarget == "string")
@@ -1679,16 +1574,14 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg, aIsAsync)
     return this.mTarget;
   }
 
-  function invokerChecker_targetSetter(aValue)
-  {
+  function invokerChecker_targetSetter(aValue) {
     this.mTarget = aValue;
     return this.mTarget;
   }
 
   this.__defineGetter__("targetDescr", invokerChecker_targetDescrGetter);
 
-  function invokerChecker_targetDescrGetter()
-  {
+  function invokerChecker_targetDescrGetter() {
     if (typeof this.mTarget == "function")
       return this.mTarget.name + ", arg: " + this.mTargetFuncArg;
 
@@ -1703,8 +1596,7 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg, aIsAsync)
  * event checker that forces preceeding async events to happen before this
  * checker.
  */
-function orderChecker()
-{
+function orderChecker() {
   // XXX it doesn't actually work to inherit from invokerChecker, but maybe we
   // should fix that?
   //  this.__proto__ = new invokerChecker(null, null, null, false);
@@ -1713,8 +1605,7 @@ function orderChecker()
 /**
  * Generic invoker checker for todo events.
  */
-function todo_invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
-{
+function todo_invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg) {
   this.__proto__ = new invokerChecker(aEventType, aTargetOrFunc,
                                       aTargetFuncArg, true);
   this.todo = true;
@@ -1723,8 +1614,7 @@ function todo_invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
 /**
  * Generic invoker checker for unexpected events.
  */
-function unexpectedInvokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
-{
+function unexpectedInvokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg) {
   this.__proto__ = new invokerChecker(aEventType, aTargetOrFunc,
                                       aTargetFuncArg, true);
 
@@ -1734,27 +1624,23 @@ function unexpectedInvokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
 /**
  * Common invoker checker for async events.
  */
-function asyncInvokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
-{
+function asyncInvokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg) {
   this.__proto__ = new invokerChecker(aEventType, aTargetOrFunc,
                                       aTargetFuncArg, true);
 }
 
-function focusChecker(aTargetOrFunc, aTargetFuncArg)
-{
+function focusChecker(aTargetOrFunc, aTargetFuncArg) {
   this.__proto__ = new invokerChecker(EVENT_FOCUS, aTargetOrFunc,
                                       aTargetFuncArg, false);
 
   this.unique = true; // focus event must be unique for invoker action
 
-  this.check = function focusChecker_check(aEvent)
-  {
+  this.check = function focusChecker_check(aEvent) {
     testStates(aEvent.accessible, STATE_FOCUSED);
   }
 }
 
-function nofocusChecker(aID)
-{
+function nofocusChecker(aID) {
   this.__proto__ = new focusChecker(aID);
   this.unexpected = true;
 }
@@ -1763,8 +1649,7 @@ function nofocusChecker(aID)
  * Text inserted/removed events checker.
  * @param aFromUser  [in, optional] kNotFromUserInput or kFromUserInput
  */
-function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUser, aAsync)
-{
+function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUser, aAsync) {
   this.target = getNode(aID);
   this.type = aIsInserted ? EVENT_TEXT_INSERTED : EVENT_TEXT_REMOVED;
   this.startOffset = aStart;
@@ -1772,8 +1657,7 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUse
   this.textOrFunc = aTextOrFunc;
   this.async = aAsync;
 
-  this.match = function stextChangeChecker_match(aEvent)
-  {
+  this.match = function stextChangeChecker_match(aEvent) {
     if (!(aEvent instanceof nsIAccessibleTextChangeEvent) ||
         aEvent.accessible !== getAccessible(this.target)) {
       return false;
@@ -1785,8 +1669,7 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUse
     return modifiedText === tcEvent.modifiedText;
   };
 
-  this.check = function textChangeChecker_check(aEvent)
-  {
+  this.check = function textChangeChecker_check(aEvent) {
     aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
 
     var modifiedText = (typeof this.textOrFunc == "function") ?
@@ -1812,21 +1695,18 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUse
  * Caret move events checker.
  */
 function caretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg,
-                          aIsAsync)
-{
+                          aIsAsync) {
   this.__proto__ = new invokerChecker(EVENT_TEXT_CARET_MOVED,
                                       aTargetOrFunc, aTargetFuncArg, aIsAsync);
 
-  this.check = function caretMoveChecker_check(aEvent)
-  {
+  this.check = function caretMoveChecker_check(aEvent) {
     is(aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
        aCaretOffset,
        "Wrong caret offset for " + prettyName(aEvent.accessible));
   }
 }
 
-function asyncCaretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg)
-{
+function asyncCaretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg) {
   this.__proto__ = new caretMoveChecker(aCaretOffset, aTargetOrFunc,
                                         aTargetFuncArg, true);
 }
@@ -1834,12 +1714,10 @@ function asyncCaretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg)
 /**
  * Text selection change checker.
  */
-function textSelectionChecker(aID, aStartOffset, aEndOffset)
-{
+function textSelectionChecker(aID, aStartOffset, aEndOffset) {
   this.__proto__ = new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID);
 
-  this.check = function textSelectionChecker_check(aEvent)
-  {
+  this.check = function textSelectionChecker_check(aEvent) {
     if (aStartOffset == aEndOffset) {
       ok(true, "Collapsed selection triggered text selection change event.");
     } else {
@@ -1851,12 +1729,10 @@ function textSelectionChecker(aID, aStartOffset, aEndOffset)
 /**
  * Object attribute changed checker
  */
-function objAttrChangedChecker(aID, aAttr)
-{
+function objAttrChangedChecker(aID, aAttr) {
   this.__proto__ = new invokerChecker(EVENT_OBJECT_ATTRIBUTE_CHANGED, aID);
 
-  this.check = function objAttrChangedChecker_check(aEvent)
-  {
+  this.check = function objAttrChangedChecker_check(aEvent) {
     var event = null;
     try {
       var event = aEvent.QueryInterface(
@@ -1873,8 +1749,7 @@ function objAttrChangedChecker(aID, aAttr)
       "Wrong attribute name of the object attribute changed event.");
   };
 
-  this.match = function objAttrChangedChecker_match(aEvent)
-  {
+  this.match = function objAttrChangedChecker_match(aEvent) {
     if (aEvent instanceof nsIAccessibleObjectAttributeChangedEvent) {
       var scEvent = aEvent.QueryInterface(
         nsIAccessibleObjectAttributeChangedEvent);
@@ -1890,13 +1765,11 @@ function objAttrChangedChecker(aID, aAttr)
  */
 function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
                             aTargetOrFunc, aTargetFuncArg, aIsAsync,
-                            aSkipCurrentStateCheck)
-{
+                            aSkipCurrentStateCheck) {
   this.__proto__ = new invokerChecker(EVENT_STATE_CHANGE, aTargetOrFunc,
                                       aTargetFuncArg, aIsAsync);
 
-  this.check = function stateChangeChecker_check(aEvent)
-  {
+  this.check = function stateChangeChecker_check(aEvent) {
     var event = null;
     try {
       var event = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
@@ -1926,8 +1799,7 @@ function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
     testStates(event.accessible, state, extraState, unxpdState, unxpdExtraState);
   }
 
-  this.match = function stateChangeChecker_match(aEvent)
-  {
+  this.match = function stateChangeChecker_match(aEvent) {
     if (aEvent instanceof nsIAccessibleStateChangeEvent) {
       var scEvent = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
       return (aEvent.accessible == getAccessible(this.target)) &&
@@ -1938,8 +1810,7 @@ function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
 }
 
 function asyncStateChangeChecker(aState, aIsExtraState, aIsEnabled,
-                                 aTargetOrFunc, aTargetFuncArg)
-{
+                                 aTargetOrFunc, aTargetFuncArg) {
   this.__proto__ = new stateChangeChecker(aState, aIsExtraState, aIsEnabled,
                                           aTargetOrFunc, aTargetFuncArg, true);
 }
@@ -1947,13 +1818,11 @@ function asyncStateChangeChecker(aState, aIsExtraState, aIsEnabled,
 /**
  * Expanded state change checker.
  */
-function expandedStateChecker(aIsEnabled, aTargetOrFunc, aTargetFuncArg)
-{
+function expandedStateChecker(aIsEnabled, aTargetOrFunc, aTargetFuncArg) {
   this.__proto__ = new invokerChecker(EVENT_STATE_CHANGE, aTargetOrFunc,
                                       aTargetFuncArg);
 
-  this.check = function expandedStateChecker_check(aEvent)
-  {
+  this.check = function expandedStateChecker_check(aEvent) {
     var event = null;
     try {
       var event = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
@@ -1975,14 +1844,13 @@ function expandedStateChecker(aIsEnabled, aTargetOrFunc, aTargetFuncArg)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Event sequances (array of predefined checkers)
 
 /**
  * Event seq for single selection change.
  */
-function selChangeSeq(aUnselectedID, aSelectedID)
-{
+function selChangeSeq(aUnselectedID, aSelectedID) {
   if (!aUnselectedID) {
     return [
       new stateChangeChecker(STATE_SELECTED, false, true, aSelectedID),
@@ -2009,8 +1877,7 @@ function selChangeSeq(aUnselectedID, aSelectedID)
 /**
  * Event seq for item removed form the selection.
  */
-function selRemoveSeq(aUnselectedID)
-{
+function selRemoveSeq(aUnselectedID) {
   return [
     new stateChangeChecker(STATE_SELECTED, false, false, aUnselectedID),
     new invokerChecker(EVENT_SELECTION_REMOVE, aUnselectedID)
@@ -2020,20 +1887,19 @@ function selRemoveSeq(aUnselectedID)
 /**
  * Event seq for item added to the selection.
  */
-function selAddSeq(aSelectedID)
-{
+function selAddSeq(aSelectedID) {
   return [
     new stateChangeChecker(STATE_SELECTED, false, true, aSelectedID),
     new invokerChecker(EVENT_SELECTION_ADD, aSelectedID)
   ];
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Private implementation details.
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // General
 
 var gA11yEventListeners = {};
@@ -2041,8 +1907,7 @@ var gA11yEventApplicantsCount = 0;
 
 var gA11yEventObserver =
 {
-  observe: function observe(aSubject, aTopic, aData)
-  {
+  observe: function observe(aSubject, aTopic, aData) {
     if (aTopic != "accessible-event")
       return;
 
@@ -2115,8 +1980,7 @@ var gA11yEventObserver =
   }
 };
 
-function listenA11yEvents(aStartToListen)
-{
+function listenA11yEvents(aStartToListen) {
   if (aStartToListen) {
     // Add observer when adding the first applicant only.
     if (!(gA11yEventApplicantsCount++))
@@ -2129,8 +1993,7 @@ function listenA11yEvents(aStartToListen)
   }
 }
 
-function addA11yEventListener(aEventType, aEventHandler)
-{
+function addA11yEventListener(aEventType, aEventHandler) {
   if (!(aEventType in gA11yEventListeners))
     gA11yEventListeners[aEventType] = [];
 
@@ -2140,8 +2003,7 @@ function addA11yEventListener(aEventType, aEventHandler)
     listenersArray.push(aEventHandler);
 }
 
-function removeA11yEventListener(aEventType, aEventHandler)
-{
+function removeA11yEventListener(aEventType, aEventHandler) {
   var listenersArray = gA11yEventListeners[aEventType];
   if (!listenersArray)
     return false;
@@ -2168,8 +2030,7 @@ var gLogger =
   /**
    * Return true if dump is enabled.
    */
-  isEnabled: function debugOutput_isEnabled()
-  {
+  isEnabled: function debugOutput_isEnabled() {
     return gA11yEventDumpID || gA11yEventDumpToConsole ||
       gA11yEventDumpToAppConsole;
   },
@@ -2177,8 +2038,7 @@ var gLogger =
   /**
    * Dump information into DOM and console if applicable.
    */
-  log: function logger_log(aMsg)
-  {
+  log: function logger_log(aMsg) {
     this.logToConsole(aMsg);
     this.logToAppConsole(aMsg);
     this.logToDOM(aMsg);
@@ -2192,8 +2052,7 @@ var gLogger =
    * @param aPreEmphText  [in, optional] the text is colored and appended prior
    *                        primary message
    */
-  logToDOM: function logger_logToDOM(aMsg, aHasIndent, aPreEmphText)
-  {
+  logToDOM: function logger_logToDOM(aMsg, aHasIndent, aPreEmphText) {
     if (gA11yEventDumpID == "")
       return;
 
@@ -2230,8 +2089,7 @@ var gLogger =
   /**
    * Log message to console.
    */
-  logToConsole: function logger_logToConsole(aMsg)
-  {
+  logToConsole: function logger_logToConsole(aMsg) {
     if (gA11yEventDumpToConsole)
       dump("\n" + aMsg + "\n");
   },
@@ -2239,8 +2097,7 @@ var gLogger =
   /**
    * Log message to error console.
    */
-  logToAppConsole: function logger_logToAppConsole(aMsg)
-  {
+  logToAppConsole: function logger_logToAppConsole(aMsg) {
     if (gA11yEventDumpToAppConsole)
       Services.console.logStringMessage("events: " + aMsg);
   },
@@ -2248,8 +2105,7 @@ var gLogger =
   /**
    * Return true if logging feature is enabled.
    */
-  hasFeature: function logger_hasFeature(aFeature)
-  {
+  hasFeature: function logger_hasFeature(aFeature) {
     var startIdx = gA11yEventDumpFeature.indexOf(aFeature);
     if (startIdx == - 1)
       return false;
@@ -2261,24 +2117,21 @@ var gLogger =
 };
 
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Sequence
 
 /**
  * Base class of sequence item.
  */
-function sequenceItem(aProcessor, aEventType, aTarget, aItemID)
-{
+function sequenceItem(aProcessor, aEventType, aTarget, aItemID) {
   // private
 
-  this.startProcess = function sequenceItem_startProcess()
-  {
+  this.startProcess = function sequenceItem_startProcess() {
     this.queue.invoke();
   }
 
   this.queue = new eventQueue();
-  this.queue.onFinish = function()
-  {
+  this.queue.onFinish = function() {
     aProcessor.onProcessed();
     return DO_NOT_FINISH_TEST;
   }
@@ -2287,8 +2140,7 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID)
     invoke: function invoker_invoke() {
       return aProcessor.process();
     },
-    getID: function invoker_getID()
-    {
+    getID: function invoker_getID() {
       return aItemID;
     },
     eventSeq: [ new invokerChecker(aEventType, aTarget) ]
@@ -2297,14 +2149,13 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID)
   this.queue.push(invoker);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Event queue invokers
 
 /**
  * Invoker base class for prepare an action.
  */
-function synthAction(aNodeOrID, aEventsObj)
-{
+function synthAction(aNodeOrID, aEventsObj) {
   this.DOMNode = getNode(aNodeOrID);
 
   if (aEventsObj) {
@@ -2322,6 +2173,5 @@ function synthAction(aNodeOrID, aEventsObj)
       defineScenario(this, scenarios[i]);
   }
 
-  this.getID = function synthAction_getID()
-    { return prettyName(aNodeOrID) + " action"; }
+  this.getID = function synthAction_getID() { return prettyName(aNodeOrID) + " action"; }
 }

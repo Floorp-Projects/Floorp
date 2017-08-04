@@ -43,7 +43,7 @@
       <xul:scrollbox class="arrowscrollbox-scrollbox"
                      anonid="scrollbox"
                      flex="1"
-                     xbl:inherits="orient,align,pack,dir">
+                     xbl:inherits="orient,align,pack,dir,smoothscroll">
         <children/>
       </xul:scrollbox>
       <xul:spacer class="arrowscrollbox-overflow-end-indicator"
@@ -56,13 +56,14 @@
 
     <implementation>
       <constructor><![CDATA[
+        if (!this.hasAttribute("smoothscroll")) {
+          this.smoothScroll = this._prefBranch
+                                  .getBoolPref("toolkit.scrollbox.smoothScroll", true);
+        }
+
         this.setAttribute("notoverflowing", "true");
         this._updateScrollButtonsDisabledState();
       ]]></constructor>
-
-      <destructor><![CDATA[
-        this._stopSmoothScroll();
-      ]]></destructor>
 
       <field name="_scrollbox">
         document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
@@ -96,21 +97,12 @@
         ]]></getter>
       </property>
 
-      <field name="_smoothScroll">null</field>
       <property name="smoothScroll">
         <getter><![CDATA[
-          if (this._smoothScroll === null) {
-            if (this.hasAttribute("smoothscroll")) {
-              this._smoothScroll = (this.getAttribute("smoothscroll") == "true");
-            } else {
-              this._smoothScroll = this._prefBranch
-                                       .getBoolPref("toolkit.scrollbox.smoothScroll", true);
-            }
-          }
-          return this._smoothScroll;
+          return this.getAttribute("smoothscroll") == "true";
         ]]></getter>
         <setter><![CDATA[
-          this._smoothScroll = val;
+          this.setAttribute("smoothscroll", !!val);
           return val;
         ]]></setter>
       </property>
@@ -254,176 +246,9 @@
           if (!this._canScrollToElement(element))
             return;
 
-          var vertical = this.orient == "vertical";
-          var rect = this.scrollClientRect;
-          var containerStart = vertical ? rect.top : rect.left;
-          var containerEnd = vertical ? rect.bottom : rect.right;
-          rect = element.getBoundingClientRect();
-          var elementStart = vertical ? rect.top : rect.left;
-          var elementEnd = vertical ? rect.bottom : rect.right;
-
-          var scrollPaddingRect = this.scrollPaddingRect;
-          let style = window.getComputedStyle(this._scrollbox);
-          var scrollContentRect = {
-            left: scrollPaddingRect.left + parseFloat(style.paddingLeft),
-            top: scrollPaddingRect.top + parseFloat(style.paddingTop),
-            right: scrollPaddingRect.right - parseFloat(style.paddingRight),
-            bottom: scrollPaddingRect.bottom - parseFloat(style.paddingBottom)
-          };
-
-          if (elementStart <= (vertical ? scrollContentRect.top : scrollContentRect.left)) {
-            elementStart = vertical ? scrollPaddingRect.top : scrollPaddingRect.left;
-          }
-          if (elementEnd >= (vertical ? scrollContentRect.bottom : scrollContentRect.right)) {
-            elementEnd = vertical ? scrollPaddingRect.bottom : scrollPaddingRect.right;
-          }
-
-          var amountToScroll;
-
-          if (elementStart < containerStart) {
-            amountToScroll = elementStart - containerStart;
-          } else if (containerEnd < elementEnd) {
-            amountToScroll = elementEnd - containerEnd;
-          } else if (this._isScrolling) {
-            // decelerate if a currently-visible element is selected during the scroll
-            const STOP_DISTANCE = 15;
-            if (this._isScrolling == -1 && elementStart - STOP_DISTANCE < containerStart)
-              amountToScroll = elementStart - containerStart;
-            else if (this._isScrolling == 1 && containerEnd - STOP_DISTANCE < elementEnd)
-              amountToScroll = elementEnd - containerEnd;
-            else
-              amountToScroll = this._isScrolling * STOP_DISTANCE;
-          } else {
-            return;
-          }
-
-          this._stopSmoothScroll();
-
-          if (aSmoothScroll != false && this.smoothScroll) {
-            this._smoothScrollByPixels(amountToScroll, element);
-          } else {
-            this.scrollByPixels(amountToScroll);
-          }
+          element.scrollIntoView({ behavior: aSmoothScroll == false ? "instant" : "auto" });
         ]]></body>
       </method>
-
-      <method name="_smoothScrollByPixels">
-        <parameter name="amountToScroll"/>
-        <parameter name="element"/><!-- optional -->
-        <body><![CDATA[
-          if (amountToScroll == 0)
-            return;
-
-          // Shouldn't forget pending scroll amount if the scroll direction
-          // isn't changed because this may be called high frequency with very
-          // small pixel values.
-          var scrollDirection = 0;
-          if (amountToScroll) {
-            // Positive amountToScroll makes us scroll right (elements fly left),
-            // negative scrolls left.
-            scrollDirection = amountToScroll < 0 ? -1 : 1;
-          }
-
-          // However, if the scroll direction is changed, let's cancel the
-          // pending scroll because user must want to scroll from current
-          // position.
-          if (this._isScrolling && this._isScrolling != scrollDirection)
-            this._stopSmoothScroll();
-
-          this._scrollTarget = element;
-          this._isScrolling = scrollDirection;
-
-          this._scrollAnim.start(amountToScroll, !this._scrollTarget);
-        ]]></body>
-      </method>
-
-      <field name="_scrollAnim"><![CDATA[({
-        scrollbox: this,
-        distance: 0.0,
-        requestHandle: 0, /* 0 indicates there is no pending request */
-
-        // Be aware, |distance| may be dounble. I.e., the absolute value of it can
-        // be less than 1.  Set |isContinuousScroll| to true when the scroll may be
-        // a part of continous scroll, for example, it's caused by turning mosue wheel.
-        start: function scrollAnim_start(distance, isContinuousScroll) {
-          // When it's a continous scroll and the scroll was started, this needs to
-          // respect preceding scroll requests.  For example, 1.5px scroll occurs 2 times,
-          // 3px should be scrolled.  So, fractional values shouldn't be discarded.
-          if (isContinuousScroll && this.distance) {
-            // |this.startPos| is integer due to cache of |.scrollPosition|.  Therefore,
-            // we need to manage actual destination with |this.destination|.
-            var oldDestination = this.destination;
-            this.destination = this._clampPosition(this.destination + distance);
-
-            // If scroll position has already reached the ends, we need to do nothing.
-            if (oldDestination == this.destination)
-              return;
-
-            // If the integer part of the destination isn't changed, we need to do
-            // nothing now, wait next event.
-            if (Math.trunc(this.destination) == Math.trunc(this.destination - distance))
-              return;
-
-            // Let's restart animation from current position to the new destination.
-            if (this.requestHandle) {
-              this.stop();
-              this.startPos = this.scrollbox.scrollPosition;
-              // The call of |.stop()| causes clearing |this.distance| but let's recover it
-              // for keeping continuous scroll.
-              this.distance = this.destination - this.startPos;
-            }
-          } else {
-            this.startPos = this.scrollbox.scrollPosition;
-            this.destination = this._clampPosition(this.startPos + distance);
-            this.distance = this.destination - this.startPos;
-
-            // If absolute value of |this.distance| is less than 1px and this call is
-            // start of a continous scroll, should wait to scroll until accumulated
-            // scroll amount becomes 1px or greater.
-            if (isContinuousScroll && Math.abs(this.distance) < 1)
-              return;
-          }
-          this.duration = Math.min(1000, Math.round(50 * Math.sqrt(Math.abs(distance))));
-          this.startTime = window.performance.now();
-
-          if (!this.requestHandle)
-            this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
-        },
-
-        stop: function scrollAnim_stop() {
-          window.cancelAnimationFrame(this.requestHandle);
-          this.requestHandle = 0;
-          // Reset continouos scroll transaction at stopping the scroll animation.
-          this.distance = 0;
-        },
-
-        sample: function scrollAnim_handleEvent(timeStamp) {
-          // Note that timeStamp sometimes older than start time.  If we use
-          // native value below, it causes scrolling revese direction.
-          // So, if the timeStamp is older, let's treat it as same as the start time.
-          const timePassed = Math.max(0, timeStamp - this.startTime);
-          const pos = timePassed >= this.duration ? 1 :
-                      1 - Math.pow(1 - timePassed / this.duration, 4);
-
-          this.scrollbox.scrollPosition = this.startPos + (this.distance * pos);
-
-          if (pos == 1)
-            this.scrollbox._stopSmoothScroll();
-          else
-            this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
-        },
-
-        _clampPosition: function scrollAnim_clampPosition(aScrollPosition) {
-          if (aScrollPosition < 0) {
-            return 0;
-          }
-          var maxPos = this.scrollbox.scrollSize - this.scrollbox.scrollClientSize;
-          if (aScrollPosition > maxPos) {
-            return maxPos;
-          }
-          return aScrollPosition;
-        }
-      })]]></field>
 
       <method name="scrollByIndex">
         <parameter name="index"/>
@@ -605,23 +430,9 @@
         ]]></body>
       </method>
 
-      <!-- 0: idle
-           1: scrolling right
-          -1: scrolling left -->
-      <field name="_isScrolling">0</field>
       <field name="_prevMouseScrolls">[null, null]</field>
 
       <field name="_touchStart">-1</field>
-
-      <method name="_stopSmoothScroll">
-        <body><![CDATA[
-          if (this._isScrolling) {
-            this._scrollAnim.stop();
-            this._isScrolling = 0;
-            this._scrollTarget = null;
-          }
-        ]]></body>
-      </method>
 
       <field name="_scrollButtonUpdatePending">false</field>
       <method name="_updateScrollButtonsDisabledState">
@@ -691,7 +502,6 @@
     <handlers>
       <handler event="wheel"><![CDATA[
         let doScroll = false;
-        let useSmoothScroll = event.deltaMode != event.DOM_DELTA_PIXEL && this.smoothScroll;
         let scrollAmount = 0;
         if (this.orient == "vertical") {
           doScroll = true;
@@ -730,10 +540,7 @@
         }
 
         if (doScroll) {
-          if (useSmoothScroll)
-            this._smoothScrollByPixels(scrollAmount);
-          else
-            this.scrollByPixels(scrollAmount);
+          this.scrollByPixels(scrollAmount);
         }
 
         event.stopPropagation();
@@ -862,7 +669,7 @@
       <xul:scrollbox class="arrowscrollbox-scrollbox"
                      anonid="scrollbox"
                      flex="1"
-                     xbl:inherits="orient,align,pack,dir">
+                     xbl:inherits="orient,align,pack,dir,smoothscroll">
         <children/>
       </xul:scrollbox>
       <xul:spacer class="arrowscrollbox-overflow-end-indicator"
@@ -906,30 +713,6 @@
         </body>
       </method>
 
-      <field name="_arrowScrollAnim"><![CDATA[({
-        scrollbox: this,
-        requestHandle: 0, /* 0 indicates there is no pending request */
-        start: function arrowSmoothScroll_start() {
-          this.lastFrameTime = window.performance.now();
-          if (!this.requestHandle)
-            this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
-        },
-        stop: function arrowSmoothScroll_stop() {
-          window.cancelAnimationFrame(this.requestHandle);
-          this.requestHandle = 0;
-        },
-        sample: function arrowSmoothScroll_handleEvent(timeStamp) {
-          const scrollIndex = this.scrollbox._scrollIndex;
-          const timePassed = timeStamp - this.lastFrameTime;
-          this.lastFrameTime = timeStamp;
-
-          const scrollDelta = 0.5 * timePassed * scrollIndex;
-          this.scrollbox.scrollPosition += scrollDelta;
-
-          this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
-        }
-      })]]></field>
-
       <method name="_startScroll">
         <parameter name="index"/>
         <body><![CDATA[
@@ -937,10 +720,6 @@
             index *= -1;
           this._scrollIndex = index;
           this._mousedown = true;
-          if (this.smoothScroll) {
-            this._arrowScrollAnim.start();
-            return;
-          }
 
           if (!this._scrollTimer)
             this._scrollTimer =
@@ -961,12 +740,7 @@
           if (this._scrollTimer)
             this._scrollTimer.cancel();
           this._mousedown = false;
-          if (!this._scrollIndex || !this.smoothScroll)
-            return;
-
-          this.scrollByIndex(this._scrollIndex);
           this._scrollIndex = 0;
-          this._arrowScrollAnim.stop();
         ]]></body>
       </method>
 
