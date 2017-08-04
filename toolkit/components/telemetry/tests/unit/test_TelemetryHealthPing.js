@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryHealthPing",
                                   "resource://gre/modules/TelemetryHealthPing.jsm");
@@ -28,6 +29,18 @@ function fakeHealthSchedulerTimer(set, clear) {
   let telemetryHealthPing = Cu.import("resource://gre/modules/TelemetryHealthPing.jsm", {});
   telemetryHealthPing.Policy.setSchedulerTickTimeout = set;
   telemetryHealthPing.Policy.clearSchedulerTickTimeout = clear;
+}
+
+async function waitForConditionWithPromise(promiseFn, timeoutMsg, tryCount = 30) {
+  const SINGLE_TRY_TIMEOUT = 100;
+  let tries = 0;
+  do {
+    try {
+      return await promiseFn();
+    } catch (ex) {}
+    await new Promise(resolve => do_timeout(SINGLE_TRY_TIMEOUT, resolve));
+  } while (++tries <= tryCount);
+  throw new Error(timeoutMsg);
 }
 
 add_task(async function setup() {
@@ -110,34 +123,56 @@ add_task(async function test_sendOverSizedPing() {
 
 add_task(async function test_sendOnTimeout() {
   TelemetryHealthPing.testReset();
+  await TelemetrySend.reset();
   PingServer.clearRequests();
   let PING_TYPE = "ping-on-timeout";
+
+  // Disable send retry to make this test more deterministic.
+  fakePingSendTimer(() => {}, () => {});
 
   // Set up small ping submission timeout to always have timeout error.
   TelemetrySend.testSetTimeoutForPingSubmit(2);
 
-  // Reset the timeout after receiving the first ping to be able to send health ping.
-  PingServer.registerPingHandler((request, result) => {
+  await TelemetryController.submitExternalPing(PING_TYPE, {});
+
+  let response;
+  PingServer.registerPingHandler((req, res) => {
     PingServer.resetPingHandler();
-    TelemetrySend.testResetTimeOutToDefault();
+    // We don't finish the response yet to make sure to trigger a timeout.
+    res.processAsync();
+    response = res;
   });
 
-  await TelemetryController.submitExternalPing(PING_TYPE, {});
-  let ping = await PingServer.promiseNextPing();
-  checkHealthPingStructure(ping, {
+  // Wait for health ping.
+  let ac = new TelemetryArchiveTesting.Checker();
+  await ac.promiseInit();
+  await waitForConditionWithPromise(() => {
+    ac.promiseFindPing("health", []);
+  }, "Failed to find health ping");
+
+  if (response) {
+    response.finish();
+  }
+
+  TelemetrySend.testResetTimeOutToDefault();
+  PingServer.resetPingHandler();
+  TelemetrySend.notifyCanUpload();
+
+  let pings = await PingServer.promiseNextPings(2);
+  let healthPing = pings.find(ping => ping.type === "health");
+  checkHealthPingStructure(healthPing, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
       "timeout": 1
     },
     "os": TelemetryHealthPing.OsInfo,
     "reason": TelemetryHealthPing.Reason.IMMEDIATE
   });
-
-  // Clear pending pings to avoid resending pings which fail with time out error.
   await TelemetryStorage.testClearPendingPings();
 });
 
 add_task(async function test_sendOnlyTopTenDiscardedPings() {
   TelemetryHealthPing.testReset();
+  await TelemetrySend.reset();
   PingServer.clearRequests();
   let PING_TYPE = "sort-discarded";
 
@@ -155,10 +190,11 @@ add_task(async function test_sendOnlyTopTenDiscardedPings() {
   // Add failures
   for (let i = 1; i < 12; i++) {
     for (let j = 1; j < i; j++) {
-      await TelemetryHealthPing.recordDiscardedPing(PING_TYPE + i);
+      TelemetryHealthPing.recordDiscardedPing(PING_TYPE + i);
     }
   }
 
+  await TelemetrySend.reset();
   await pingSubmissionCallBack();
   let ping = await PingServer.promiseNextPing();
 
