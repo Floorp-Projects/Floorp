@@ -549,17 +549,42 @@ Toolbox.prototype = {
     // Provide a wrapper for the service that reports errors more nicely.
     this._sourceMapService = new Proxy(service, {
       get: (target, name) => {
-        if (name === "getOriginalURLs") {
-          return (urlInfo) => {
-            return target.getOriginalURLs(urlInfo)
-              .catch(text => {
-                let message = L10N.getFormatStr("toolbox.sourceMapFailure",
-                                                text, urlInfo.url, urlInfo.sourceMapURL);
-                this.target.logErrorInPage(message, "source map");
-              });
-          };
+        switch (name) {
+          case "getOriginalURLs":
+            return (urlInfo) => {
+              return target.getOriginalURLs(urlInfo)
+                .catch(text => {
+                  let message = L10N.getFormatStr("toolbox.sourceMapFailure",
+                                                  text, urlInfo.url,
+                                                  urlInfo.sourceMapURL);
+                  this.target.logErrorInPage(message, "source map");
+                  // It's ok to swallow errors here, because a null
+                  // result just means that no source map was found.
+                  return null;
+                });
+            };
+
+          case "getOriginalSourceText":
+            return (originalSource) => {
+              return target.getOriginalSourceText(originalSource)
+                .catch(text => {
+                  let message = L10N.getFormatStr("toolbox.sourceMapSourceFailure",
+                                                  text, originalSource.url);
+                  this.target.logErrorInPage(message, "source map");
+                  // Also replace the result with the error text.
+                  // Note that this result has to have the same form
+                  // as whatever the upstream getOriginalSourceText
+                  // returns.
+                  return {
+                    text: message,
+                    contentType: "text/plain",
+                  };
+                });
+            };
+
+          default:
+            return target[name];
         }
-        return target[name];
       },
     });
 
