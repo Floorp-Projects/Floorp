@@ -932,7 +932,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
 
       nsresult rv;
-      nsXPIDLString message;
+      nsAutoString message;
       if (otherAtom) {
         const char16_t* params[] = { atom->GetUTF16String(),
                                       otherAtom->GetUTF16String() };

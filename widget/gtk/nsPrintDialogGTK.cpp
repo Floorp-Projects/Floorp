@@ -53,9 +53,9 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
 
   nsCOMPtr<nsIStringBundle> printBundle;
   bundleSvc->CreateBundle("chrome://global/locale/printdialog.properties", getter_AddRefs(printBundle));
-  nsXPIDLString intlString;
+  nsAutoString intlString;
 
-  printBundle->GetStringFromName("headerFooterCustom", getter_Copies(intlString));
+  printBundle->GetStringFromName("headerFooterCustom", intlString);
   GtkWidget* prompt_dialog = gtk_dialog_new_with_buttons(NS_ConvertUTF16toUTF8(intlString).get(), printDialog,
 #if (MOZ_WIDGET_GTK == 2)
                                                          (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
@@ -71,7 +71,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
                                           GTK_RESPONSE_REJECT,
                                           -1);
 
-  printBundle->GetStringFromName("customHeaderFooterPrompt", getter_Copies(intlString));
+  printBundle->GetStringFromName("customHeaderFooterPrompt", intlString);
   GtkWidget* custom_label = gtk_label_new(NS_ConvertUTF16toUTF8(intlString).get());
   GtkWidget* custom_entry = gtk_entry_new();
   GtkWidget* question_icon = gtk_image_new_from_stock(GTK_STOCK_DIALOG_QUESTION, GTK_ICON_SIZE_DIALOG);
@@ -327,8 +327,8 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter *aParent,
 NS_ConvertUTF16toUTF8
 nsPrintDialogWidgetGTK::GetUTF8FromBundle(const char *aKey)
 {
-  nsXPIDLString intlString;
-  printBundle->GetStringFromName(aKey, getter_Copies(intlString));
+  nsAutoString intlString;
+  printBundle->GetStringFromName(aKey, intlString);
   return NS_ConvertUTF16toUTF8(intlString);  // Return the actual object so we don't lose reference
 }
 

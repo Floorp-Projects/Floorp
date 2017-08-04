@@ -1243,13 +1243,12 @@ EventSourceImpl::PrintErrorOnConsole(const char* aBundleURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Localize the error message
-  nsXPIDLString message;
+  nsAutoString message;
   if (aFormatStrings) {
     rv = strBundle->FormatStringFromName(aError, aFormatStrings,
-                                         aFormatStringsLen,
-                                         getter_Copies(message));
+                                         aFormatStringsLen, message);
   } else {
-    rv = strBundle->GetStringFromName(aError, getter_Copies(message));
+    rv = strBundle->GetStringFromName(aError, message);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

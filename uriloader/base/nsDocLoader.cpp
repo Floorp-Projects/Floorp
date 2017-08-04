@@ -1162,9 +1162,8 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
       mozilla::services::GetStringBundleService();
     if (!sbs)
       return NS_ERROR_FAILURE;
-    nsXPIDLString msg;
-    nsresult rv = sbs->FormatStatusMessage(aStatus, aStatusArg,
-                                           getter_Copies(msg));
+    nsAutoString msg;
+    nsresult rv = sbs->FormatStatusMessage(aStatus, aStatusArg, msg);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1185,7 +1184,7 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
       // Put the info at the front of the list
       mStatusInfoList.insertFront(info->mLastStatus);
     }
-    FireOnStatusChange(this, aRequest, aStatus, msg);
+    FireOnStatusChange(this, aRequest, aStatus, msg.get());
   }
   return NS_OK;
 }

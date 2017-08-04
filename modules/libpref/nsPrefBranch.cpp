@@ -325,8 +325,8 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     // if we need to fetch the default value, do that instead, otherwise use the
     // value we pulled in at the top of this function
     if (bNeedDefault) {
-      nsXPIDLString utf16String;
-      rv = GetDefaultFromPropertiesFile(pref.get(), getter_Copies(utf16String));
+      nsAutoString utf16String;
+      rv = GetDefaultFromPropertiesFile(pref.get(), utf16String);
       if (NS_SUCCEEDED(rv)) {
         theString->SetData(utf16String.get());
       }
@@ -836,7 +836,9 @@ nsPrefBranch::RemoveExpiredCallback(PrefCallback *aCallback)
   mObservers.Remove(aCallback);
 }
 
-nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, char16_t **return_buf)
+nsresult
+nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName,
+                                           nsAString& aReturn)
 {
   nsresult rv;
 
@@ -858,7 +860,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, char1
   if (NS_FAILED(rv))
     return rv;
 
-  return bundle->GetStringFromName(aPrefName, return_buf);
+  return bundle->GetStringFromName(aPrefName, aReturn);
 }
 
 nsPrefBranch::PrefName

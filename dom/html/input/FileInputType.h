@@ -21,7 +21,7 @@ public:
 
   bool IsValueMissing() const override;
 
-  nsresult GetValueMissingMessage(nsXPIDLString& aMessage) override;
+  nsresult GetValueMissingMessage(nsAString& aMessage) override;
 
 private:
   explicit FileInputType(mozilla::dom::HTMLInputElement* aInputElement)

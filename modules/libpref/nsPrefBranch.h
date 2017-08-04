@@ -242,7 +242,7 @@ protected:
 
   virtual ~nsPrefBranch();
 
-  nsresult   GetDefaultFromPropertiesFile(const char *aPrefName, char16_t **return_buf);
+  nsresult   GetDefaultFromPropertiesFile(const char *aPrefName, nsAString& aReturn);
   // As SetCharPref, but without any check on the length of |aValue|
   nsresult   SetCharPrefInternal(const char *aPrefName, const char *aValue);
   // Reject strings that are more than 1Mb, warn if strings are more than 16kb
