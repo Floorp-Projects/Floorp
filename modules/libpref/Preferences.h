@@ -12,7 +12,6 @@
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -49,7 +48,7 @@ class PrefSetting;
 
 class Preferences final : public nsIPrefService,
                           public nsIObserver,
-                          public nsIPrefBranchInternal,
+                          public nsIPrefBranch,
                           public nsSupportsWeakReference
 {
 public:
