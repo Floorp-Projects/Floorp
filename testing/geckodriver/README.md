@@ -69,6 +69,7 @@ geckodriver supports a number of
   <tr>
    <th>Name
    <th>Type
+   <th>Default
    <th>Description
   </tr>
  </thead>
@@ -79,6 +80,20 @@ geckodriver supports a number of
   <td>Boolean initially set to false,
    indicating the session will not implicitly trust untrusted
    or self-signed TLS certificates on navigation.
+ </tr>
+
+ <tr>
+  <td><code>pageLoadStrategy</code>
+  <td>string
+  <td>Defines the page load strategy
+   to use for the duration of the session.
+   Setting a page load strategy will cause navigation
+   to be "<code>eager</code>",
+   waiting for the <code>interactive</code> document ready state;
+   "<code>normal</code>" (the default),
+   waiting for the <code>complete</code> ready state;
+   or "<code>none</code>",
+   which will return immediately after starting navigation.
  </tr>
 
  <tr>
