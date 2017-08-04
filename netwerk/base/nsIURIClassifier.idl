@@ -34,13 +34,13 @@ interface nsIURIClassifierCallback : nsISupports
    *        Name of the list that matched
    * @param aProvider
    *        Name of provider that matched
-   * @param aPrefix
-   *        Hash prefix of URL that matched
+   * @param aFullHash
+   *        Full hash of URL that matched
    */
   void onClassifyComplete(in nsresult aErrorCode,
                           in ACString aList,
                           in ACString aProvider,
-                          in ACString aPrefix);
+                          in ACString aFullHash);
 };
 
 /**

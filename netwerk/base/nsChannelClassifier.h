@@ -45,7 +45,7 @@ public:
     nsresult OnClassifyCompleteInternal(nsresult aErrorCode,
                                         const nsACString& aList,
                                         const nsACString& aProvider,
-                                        const nsACString& aPrefix);
+                                        const nsACString& aFullHash);
 
     // Check a tracking URI against the local blacklist and whitelist.
     // Returning NS_OK means the check will be processed
@@ -96,7 +96,7 @@ public:
                                       nsresult aErrorCode,
                                       const nsACString& aList,
                                       const nsACString& aProvider,
-                                      const nsACString& aPrefix);
+                                      const nsACString& aFullHash);
     static nsresult NotifyTrackingProtectionDisabled(nsIChannel *aChannel);
 };
 
