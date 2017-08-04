@@ -1856,16 +1856,7 @@ public:
     }
 
     mBufferingStart = TimeStamp::Now();
-
-    MediaStatistics stats = mMaster->GetStatistics();
-    SLOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
-         stats.mPlaybackRate / 1024,
-         stats.mPlaybackRateReliable ? "" : " (unreliable)",
-         stats.mDownloadRate / 1024,
-         stats.mDownloadRateReliable ? "" : " (unreliable)");
-
     mMaster->ScheduleStateMachineIn(TimeUnit::FromMicroseconds(USECS_PER_S));
-
     mMaster->UpdateNextFrameStatus(
       MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING);
   }
@@ -2680,9 +2671,6 @@ ShutdownState::Enter()
   master->mLooping.DisconnectIfConnected();
   master->mSameOriginMedia.DisconnectIfConnected();
   master->mMediaPrincipalHandle.DisconnectIfConnected();
-  master->mPlaybackBytesPerSecond.DisconnectIfConnected();
-  master->mPlaybackRateReliable.DisconnectIfConnected();
-  master->mDecoderPosition.DisconnectIfConnected();
 
   master->mDuration.DisconnectAll();
   master->mNextFrameStatus.DisconnectAll();
@@ -2739,9 +2727,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mLooping, false),
   INIT_MIRROR(mSameOriginMedia, false),
   INIT_MIRROR(mMediaPrincipalHandle, PRINCIPAL_HANDLE_NONE),
-  INIT_MIRROR(mPlaybackBytesPerSecond, 0.0),
-  INIT_MIRROR(mPlaybackRateReliable, true),
-  INIT_MIRROR(mDecoderPosition, 0),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
   INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE),
   INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
@@ -2784,9 +2769,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mLooping.Connect(aDecoder->CanonicalLooping());
   mSameOriginMedia.Connect(aDecoder->CanonicalSameOriginMedia());
   mMediaPrincipalHandle.Connect(aDecoder->CanonicalMediaPrincipalHandle());
-  mPlaybackBytesPerSecond.Connect(aDecoder->CanonicalPlaybackBytesPerSecond());
-  mPlaybackRateReliable.Connect(aDecoder->CanonicalPlaybackRateReliable());
-  mDecoderPosition.Connect(aDecoder->CanonicalDecoderPosition());
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered,
@@ -3644,29 +3626,6 @@ MediaDecoderStateMachine::UpdateNextFrameStatus(NextFrameStatus aStatus)
     LOG("Changed mNextFrameStatus to %s", ToStr(aStatus));
     mNextFrameStatus = aStatus;
   }
-}
-
-bool
-MediaDecoderStateMachine::CanPlayThrough()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return GetStatistics().CanPlayThrough();
-}
-
-MediaStatistics
-MediaDecoderStateMachine::GetStatistics()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MediaStatistics result;
-  result.mDownloadRate =
-    mResource->GetDownloadRate(&result.mDownloadRateReliable);
-  result.mDownloadPosition = mResource->GetCachedDataEnd(mDecoderPosition);
-  result.mTotalBytes = mResource->GetLength();
-  result.mPlaybackRate = mPlaybackBytesPerSecond;
-  result.mPlaybackRateReliable = mPlaybackRateReliable;
-  result.mDecoderPosition = mDecoderPosition;
-  result.mPlaybackPosition = mPlaybackOffset;
-  return result;
 }
 
 void
