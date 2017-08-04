@@ -315,8 +315,7 @@
         new invokerChecker(EVENT_REORDER, getNode("t3_container3"))
       ];
 
-      this.invoke = function stealFromOtherARIAOwns_invoke()
-      {
+      this.invoke = function stealFromOtherARIAOwns_invoke() {
         getNode("t3_container3").setAttribute("aria-owns", "t3_child t3_child2");
       }
 
@@ -341,8 +340,7 @@
         testAccessibleTree("t3_container3", tree);
       }
 
-      this.getID = function stealFromOtherARIAOwns_getID()
-      {
+      this.getID = function stealFromOtherARIAOwns_getID() {
         return "Steal an element from other ARIA owns element";
       }
     }
