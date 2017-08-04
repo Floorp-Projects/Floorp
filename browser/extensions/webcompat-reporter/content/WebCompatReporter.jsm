@@ -9,20 +9,14 @@ let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const TABLISTENER_JSM = "chrome://webcompat-reporter/content/TabListener.jsm";
-const WIDGET_ID = "webcompat-reporter-button";
 const PREF_STYLO_ENABLED = "layout.css.servo.enabled";
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+  "resource:///modules/PageActions.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "wcStrings", function() {
   return Services.strings.createBundle(
     "chrome://webcompat-reporter/locale/webcompat.properties");
-});
-
-XPCOMUtils.defineLazyGetter(this, "wcStyleURI", function() {
-  return Services.io.newURI("chrome://webcompat-reporter/skin/lightbulb.css");
 });
 
 let WebCompatReporter = {
@@ -32,61 +26,27 @@ let WebCompatReporter = {
   },
 
   init() {
-    let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
-      .getService(Ci.nsIStyleSheetService);
-    this._sheetType = styleSheetService.AUTHOR_SHEET;
-    this._cachedSheet = styleSheetService.preloadSheet(wcStyleURI,
-                                                       this._sheetType);
-
-    XPCOMUtils.defineLazyModuleGetter(this, "TabListener", TABLISTENER_JSM);
-
-    CustomizableUI.createWidget({
-      id: WIDGET_ID,
-      label: wcStrings.GetStringFromName("wc-reporter.label"),
-      tooltiptext: wcStrings.GetStringFromName("wc-reporter.tooltip"),
-      defaultArea: CustomizableUI.AREA_PANEL,
-      disabled: true,
-      onCommand: (e) => this.reportIssue(e.target.ownerDocument),
-    });
-
-    for (let win of CustomizableUI.windows) {
-      this.onWindowOpened(win);
-    }
-
-    CustomizableUI.addListener(this);
-  },
-
-  onWindowOpened(win) {
-    // Attach stylesheet for the button icon.
-    win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils)
-      .addSheet(this._cachedSheet, this._sheetType);
-    // Attach listeners to new window.
-    win._webcompatReporterTabListener = new this.TabListener(win);
-  },
-
-  onWindowClosed(win) {
-    if (win._webcompatReporterTabListener) {
-      win._webcompatReporterTabListener.removeListeners();
-      delete win._webcompatReporterTabListener;
-    }
+    PageActions.addAction(new PageActions.Action({
+      id: "webcompat-reporter-button",
+      title: wcStrings.GetStringFromName("wc-reporter.label"),
+      iconURL: "chrome://webcompat-reporter/skin/lightbulb.svg",
+      onCommand: (e) => this.reportIssue(e.target.ownerGlobal),
+      onShowingInPanel: (buttonNode) => this.onShowingInPanel(buttonNode)
+    }));
   },
 
   uninit() {
-    CustomizableUI.destroyWidget(WIDGET_ID);
+    let action = PageActions.actionForID("webcompat-reporter-button");
+    action.remove();
+  },
 
-    for (let win of CustomizableUI.windows) {
-      this.onWindowClosed(win);
-
-      win.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .removeSheet(wcStyleURI, this._sheetType);
-    }
-
-    CustomizableUI.removeListener(this);
-
-    if (Cu.isModuleLoaded(TABLISTENER_JSM)) {
-      Cu.unload(TABLISTENER_JSM);
+  onShowingInPanel(buttonNode) {
+    let browser = buttonNode.ownerGlobal.gBrowser;
+    let scheme = browser.currentURI.scheme;
+    if (["http", "https"].includes(scheme)) {
+      buttonNode.removeAttribute("disabled");
+    } else {
+      buttonNode.setAttribute("disabled", "true");
     }
   },
 
@@ -169,8 +129,8 @@ let WebCompatReporter = {
     }
   },
 
-  reportIssue(xulDoc) {
-    this.getScreenshot(xulDoc.defaultView.gBrowser).then(this.openWebCompatTab)
-                                                   .catch(Cu.reportError);
+  reportIssue(global) {
+    this.getScreenshot(global.gBrowser).then(this.openWebCompatTab)
+                                       .catch(Cu.reportError);
   }
 };
