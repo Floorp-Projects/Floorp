@@ -133,21 +133,21 @@ function gen_rtcd_header {
 
   $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
     --arch=$2 \
-    --sym=aom_rtcd $DISABLE_AVX $3 \
+    --sym=aom_rtcd $3 \
     --config=$TEMP_DIR/libaom.config \
     $BASE_DIR/$LIBAOM_SRC_DIR/av1/common/av1_rtcd_defs.pl \
     > $BASE_DIR/$LIBAOM_CONFIG_DIR/$1/av1_rtcd.h
 
   $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
     --arch=$2 \
-    --sym=aom_scale_rtcd $DISABLE_AVX $3 \
+    --sym=aom_scale_rtcd $3 \
     --config=$TEMP_DIR/libaom.config \
     $BASE_DIR/$LIBAOM_SRC_DIR/aom_scale/aom_scale_rtcd.pl \
     > $BASE_DIR/$LIBAOM_CONFIG_DIR/$1/aom_scale_rtcd.h
 
   $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
     --arch=$2 \
-    --sym=aom_dsp_rtcd $DISABLE_AVX $3 \
+    --sym=aom_dsp_rtcd $3 \
     --config=$TEMP_DIR/libaom.config \
     $BASE_DIR/$LIBAOM_SRC_DIR/aom_dsp/aom_dsp_rtcd_defs.pl \
     > $BASE_DIR/$LIBAOM_CONFIG_DIR/$1/aom_dsp_rtcd.h
