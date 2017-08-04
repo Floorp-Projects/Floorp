@@ -11,7 +11,6 @@
 #include "nsParserCIID.h"
 #include "nsParser.h"
 #include "CNavDTD.h"
-#include "nsHTMLEntities.h"
 #include "nsHTMLTokenizer.h"
 //#include "nsTextTokenizer.h"
 #include "nsElementTable.h"
@@ -71,11 +70,6 @@ Initialize()
   nsresult rv = nsHTMLTags::AddRefTable();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsHTMLEntities::AddRefTable();
-  if (NS_FAILED(rv)) {
-    nsHTMLTags::ReleaseTable();
-    return rv;
-  }
 #ifdef DEBUG
   CheckElementTable();
 #endif
@@ -91,7 +85,6 @@ static void
 Shutdown()
 {
   nsHTMLTags::ReleaseTable();
-  nsHTMLEntities::ReleaseTable();
 }
 
 static mozilla::Module kParserModule = {

@@ -7,7 +7,6 @@
 #include "nsError.h"
 #include "nsIAtom.h"
 #include "nsParserService.h"
-#include "nsHTMLEntities.h"
 #include "nsElementTable.h"
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
@@ -50,18 +49,6 @@ nsIAtom*
 nsParserService::HTMLIdToAtomTag(int32_t aId) const
 {
   return nsHTMLTags::GetAtom((nsHTMLTag)aId);
-}
-
-NS_IMETHODIMP
-nsParserService::HTMLConvertUnicodeToEntity(int32_t aUnicode,
-                                            nsCString& aEntity) const
-{
-  const char* str = nsHTMLEntities::UnicodeToEntity(aUnicode);
-  if (str) {
-    aEntity.Assign(str);
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

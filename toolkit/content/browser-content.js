@@ -1460,35 +1460,8 @@ var ViewSelectionSource = {
       return charTable[letter];
     }
 
-    function convertEntity(letter) {
-      try {
-        var unichar = this._entityConverter
-                          .ConvertToEntity(letter, entityVersion);
-        var entity = unichar.substring(1); // extract '&'
-        return '&amp;<span class="entity">' + entity + "</span>";
-      } catch (ex) {
-        return letter;
-      }
-    }
-
-    if (!this._entityConverter) {
-      try {
-        this._entityConverter = Cc["@mozilla.org/intl/entityconverter;1"]
-                                  .createInstance(Ci.nsIEntityConverter);
-      } catch (e) { }
-    }
-
-    const entityVersion = Ci.nsIEntityConverter.entityW3C;
-
-    var str = text;
-
     // replace chars in our charTable
-    str = str.replace(/[<>&"]/g, charTableLookup);
-
-    // replace chars > 0x7f via nsIEntityConverter
-    str = str.replace(/[^\0-\u007f]/g, convertEntity);
-
-    return str;
+    return text.replace(/[<>&"]/g, charTableLookup);
   }
 };
 

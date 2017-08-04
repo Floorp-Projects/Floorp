@@ -73,12 +73,12 @@ interface nsIWebBrowserPersist : nsICancelable
   const unsigned long PERSIST_FLAGS_FORCE_ALLOW_COOKIES = 65536;
 
   /**
-   * Flags governing how data is fetched and saved from the network. 
+   * Flags governing how data is fetched and saved from the network.
    * It is best to set this value explicitly unless you are prepared
    * to accept the default values.
    */
   attribute unsigned long persistFlags;
-    
+
   /** Persister is ready to save data */
   const unsigned long PERSIST_STATE_READY = 1;
   /** Persister is saving data */
@@ -199,14 +199,6 @@ interface nsIWebBrowserPersist : nsICancelable
   /** Convert links to absolute links where possible. */
   const unsigned long ENCODE_FLAGS_ABSOLUTE_LINKS = 128;
 
-  /** 
-   * Attempt to encode entities standardized at W3C (HTML, MathML, etc).
-   * This is a catch-all flag for documents with mixed contents. Beware of
-   * interoperability issues. See below for other flags which might likely
-   * do what you want.
-   */
-  const unsigned long ENCODE_FLAGS_ENCODE_W3C_ENTITIES = 256;
-
   /**
    * Output with carriage return line breaks. May also be combined with
    * ENCODE_FLAGS_LF_LINEBREAKS and if neither is specified, the platform
@@ -225,21 +217,11 @@ interface nsIWebBrowserPersist : nsICancelable
   const unsigned long ENCODE_FLAGS_NOFRAMES_CONTENT = 4096;
 
   /**
-   * Encode basic entities, e.g. output &nbsp; instead of character code 0xa0. 
+   * Encode basic entities, e.g. output &nbsp; instead of character code 0xa0.
    * The basic set is just &nbsp; &amp; &lt; &gt; &quot; for interoperability
    * with older products that don't support &alpha; and friends.
    */
   const unsigned long ENCODE_FLAGS_ENCODE_BASIC_ENTITIES = 8192;
-  /**
-   * Encode Latin1 entities. This includes the basic set and
-   * accented letters between 128 and 255.
-   */
-  const unsigned long ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES = 16384;
-  /**
-   * Encode HTML4 entities. This includes the basic set, accented
-   * letters, greek letters and certain special markup symbols.
-   */
-  const unsigned long ENCODE_FLAGS_ENCODE_HTML_ENTITIES = 32768;
 
   /**
    * Save the specified DOM document to file and optionally all linked files
@@ -257,7 +239,7 @@ interface nsIWebBrowserPersist : nsICancelable
    *                           are saved or nullptr if no linked URIs should be saved.
    *                           This may be a nsIFile object or an nsIURI object
    *                           with a file scheme.
-   * @param aOutputContentType The desired MIME type format to save the 
+   * @param aOutputContentType The desired MIME type format to save the
    *                           document and all subdocuments into or nullptr to use
    *                           the default behaviour.
    * @param aEncodingFlags     Flags to pass to the encoder.

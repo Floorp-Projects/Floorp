@@ -1263,12 +1263,6 @@ ConvertEncoderFlags(uint32_t aEncoderFlags)
         encoderFlags |= nsIDocumentEncoder::OutputAbsoluteLinks;
     if (aEncoderFlags & nsIWebBrowserPersist::ENCODE_FLAGS_ENCODE_BASIC_ENTITIES)
         encoderFlags |= nsIDocumentEncoder::OutputEncodeBasicEntities;
-    if (aEncoderFlags & nsIWebBrowserPersist::ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES)
-        encoderFlags |= nsIDocumentEncoder::OutputEncodeLatin1Entities;
-    if (aEncoderFlags & nsIWebBrowserPersist::ENCODE_FLAGS_ENCODE_HTML_ENTITIES)
-        encoderFlags |= nsIDocumentEncoder::OutputEncodeHTMLEntities;
-    if (aEncoderFlags & nsIWebBrowserPersist::ENCODE_FLAGS_ENCODE_W3C_ENTITIES)
-        encoderFlags |= nsIDocumentEncoder::OutputEncodeW3CEntities;
     if (aEncoderFlags & nsIWebBrowserPersist::ENCODE_FLAGS_CR_LINEBREAKS)
         encoderFlags |= nsIDocumentEncoder::OutputCRLineBreak;
     if (aEncoderFlags & nsIWebBrowserPersist::ENCODE_FLAGS_LF_LINEBREAKS)
