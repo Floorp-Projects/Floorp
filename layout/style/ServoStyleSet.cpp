@@ -352,6 +352,32 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   return postTraversalRequired;
 }
 
+static inline already_AddRefed<ServoStyleContext>
+ResolveStyleForTextOrFirstLetterContinuation(
+    RawServoStyleSetBorrowed aStyleSet,
+    ServoStyleContext& aParent,
+    nsIAtom* aAnonBox)
+{
+  MOZ_ASSERT(aAnonBox == nsCSSAnonBoxes::mozText ||
+             aAnonBox == nsCSSAnonBoxes::firstLetterContinuation);
+  auto inheritTarget = aAnonBox == nsCSSAnonBoxes::mozText
+    ? InheritTarget::Text
+    : InheritTarget::FirstLetterContinuation;
+
+  RefPtr<ServoStyleContext> style =
+    aParent.GetCachedInheritingAnonBoxStyle(aAnonBox);
+  if (!style) {
+    style = Servo_ComputedValues_Inherit(aStyleSet,
+                                         aAnonBox,
+                                         &aParent,
+                                         inheritTarget).Consume();
+    MOZ_ASSERT(style);
+    aParent.SetCachedInheritedAnonBoxStyle(aAnonBox, *style);
+  }
+
+  return style.forget();
+}
+
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
                                    ServoStyleContext* aParentContext)
@@ -360,29 +386,17 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   MOZ_ASSERT(aTextNode->GetParent());
   MOZ_ASSERT(aParentContext);
 
-  // Gecko expects text node style contexts to be like elements that match no
-  // rules: inherit the inherit structs, reset the reset structs. This is cheap
-  // enough to do on the main thread, which means that the parallel style system
-  // can avoid worrying about text nodes.
-  RefPtr<ServoStyleContext> computedValues =
-    Servo_ComputedValues_Inherit(mRawSet.get(),
-                                 nsCSSAnonBoxes::mozText,
-                                 aParentContext,
-                                 InheritTarget::Text).Consume();
-  return computedValues.forget();
+  return ResolveStyleForTextOrFirstLetterContinuation(
+      mRawSet.get(), *aParentContext, nsCSSAnonBoxes::mozText);
 }
 
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleForFirstLetterContinuation(ServoStyleContext* aParentContext)
 {
-  RefPtr<ServoStyleContext> computedValues =
-    Servo_ComputedValues_Inherit(mRawSet.get(),
-                                 nsCSSAnonBoxes::firstLetterContinuation,
-                                 aParentContext,
-                                 InheritTarget::FirstLetterContinuation)
-                                 .Consume();
-  MOZ_ASSERT(computedValues);
-  return computedValues.forget();
+  MOZ_ASSERT(aParentContext);
+
+  return ResolveStyleForTextOrFirstLetterContinuation(
+      mRawSet.get(), *aParentContext, nsCSSAnonBoxes::firstLetterContinuation);
 }
 
 already_AddRefed<ServoStyleContext>
@@ -466,24 +480,28 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
              !nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag));
+  MOZ_ASSERT_IF(aParentContext, !StylistNeedsUpdate());
 
   UpdateStylistIfNeeded();
 
-  RefPtr<ServoStyleContext> computedValues =
-    Servo_ComputedValues_GetForAnonymousBox(aParentContext,
-                                            aPseudoTag,
-                                            mRawSet.get()).Consume();
-#ifdef DEBUG
-  if (!computedValues) {
-    nsString pseudo;
-    aPseudoTag->ToString(pseudo);
-    NS_ERROR(nsPrintfCString("stylo: could not get anon-box: %s",
-             NS_ConvertUTF16toUTF8(pseudo).get()).get());
-    MOZ_CRASH();
-  }
-#endif
+  RefPtr<ServoStyleContext> style = nullptr;
 
-  return computedValues.forget();
+  if (aParentContext) {
+    style = aParentContext->GetCachedInheritingAnonBoxStyle(aPseudoTag);
+  }
+
+  if (!style) {
+    style =
+      Servo_ComputedValues_GetForAnonymousBox(aParentContext,
+                                              aPseudoTag,
+                                              mRawSet.get()).Consume();
+    MOZ_ASSERT(style);
+    if (aParentContext) {
+      aParentContext->SetCachedInheritedAnonBoxStyle(aPseudoTag, *style);
+    }
+  }
+
+  return style.forget();
 }
 
 already_AddRefed<ServoStyleContext>
