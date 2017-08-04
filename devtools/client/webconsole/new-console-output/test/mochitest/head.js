@@ -4,7 +4,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../../framework/test/shared-head.js */
 /* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitFor, findMessage,
-   openContextMenu, hideContextMenu, loadDocument, waitForNodeMutation */
+   openContextMenu, hideContextMenu, loadDocument,
+   waitForNodeMutation, testOpenInDebugger, checkClickOnNode */
 
 "use strict";
 
@@ -202,4 +203,52 @@ function waitForNodeMutation(node, observeConfig = {}) {
     });
     observer.observe(node, observeConfig);
   });
+}
+
+/**
+ * Search for a given message.  When found, simulate a click on the
+ * message's location, checking to make sure that the debugger opens
+ * the corresponding URL.
+ *
+ * @param {Object} hud
+ *        The webconsole
+ * @param {Object} toolbox
+ *        The toolbox
+ * @param {String} text
+ *        The text to search for.  This should be contained in the
+ *        message.  The searching is done with @see findMessage.
+ */
+function* testOpenInDebugger(hud, toolbox, text) {
+  info(`Finding message for open-in-debugger test; text is "${text}"`);
+  let messageNode = yield waitFor(() => findMessage(hud, text));
+  let frameLinkNode = messageNode.querySelector(".message-location .frame-link");
+  ok(frameLinkNode, "The message does have a location link");
+  yield checkClickOnNode(hud, toolbox, frameLinkNode);
+}
+
+/**
+ * Helper function for testOpenInDebugger.
+ */
+function* checkClickOnNode(hud, toolbox, frameLinkNode) {
+  info("checking click on node location");
+
+  let url = frameLinkNode.getAttribute("data-url");
+  ok(url, `source url found ("${url}")`);
+
+  let line = frameLinkNode.getAttribute("data-line");
+  ok(line, `source line found ("${line}")`);
+
+  let onSourceInDebuggerOpened = once(hud.ui, "source-in-debugger-opened");
+
+  EventUtils.sendMouseEvent({ type: "click" },
+    frameLinkNode.querySelector(".frame-link-filename"));
+
+  yield onSourceInDebuggerOpened;
+
+  let dbg = toolbox.getPanel("jsdebugger");
+  is(
+    dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
+    url,
+    "expected source url"
+  );
 }
