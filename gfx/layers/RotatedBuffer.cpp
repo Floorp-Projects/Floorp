@@ -836,6 +836,7 @@ RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
   // Can't stack allocate refcounted objects.
   RefPtr<CapturedPaintState> capturedPaintState =
     MakeAndAddRef<CapturedPaintState>(regionToDraw,
+                                      nullptr,
                                       mDTBuffer,
                                       mDTBufferOnWhite,
                                       Matrix(),
