@@ -496,7 +496,10 @@ LayerManagerComposite::UpdateAndRender()
     // immediately use the resulting damage area, since ComputeDifferences
     // is also responsible for invalidates intermediate surfaces in
     // ContainerLayers.
-    nsIntRegion changed = mClonedLayerTreeProperties->ComputeDifferences(mRoot, nullptr);
+    nsIntRegion changed;
+    if (!mClonedLayerTreeProperties->ComputeDifferences(mRoot, changed, nullptr)) {
+      changed = mTargetBounds;
+    }
 
     if (mTarget) {
       // Since we're composing to an external target, we're not going to use

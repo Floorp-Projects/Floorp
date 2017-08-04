@@ -181,13 +181,15 @@ protected:
   LayerPropertiesBase& operator=(const LayerPropertiesBase& a) = delete;
 
 public:
-  nsIntRegion ComputeDifferences(Layer* aRoot,
-                                 NotifySubDocInvalidationFunc aCallback) override;
+  bool ComputeDifferences(Layer* aRoot,
+                          nsIntRegion& aOutRegion,
+                          NotifySubDocInvalidationFunc aCallback) override;
 
   void MoveBy(const IntPoint& aOffset) override;
 
-  nsIntRegion ComputeChange(const char* aPrefix,
-                            NotifySubDocInvalidationFunc aCallback)
+  bool ComputeChange(const char* aPrefix,
+                     nsIntRegion& aOutRegion,
+                     NotifySubDocInvalidationFunc aCallback)
   {
     // Bug 1251615: This canary is sometimes hit. We're still not sure why.
     mCanary.Check();
@@ -207,6 +209,8 @@ public:
       }
     }
 
+    bool areaOverflowed = false;
+
     Layer* otherMask = mLayer->GetMaskLayer();
     if ((mMaskLayer ? mMaskLayer->mLayer : nullptr) != otherMask ||
         ancestorMaskChanged ||
@@ -223,14 +227,19 @@ public:
     }
 
     nsIntRegion internal;
-    ComputeChangeInternal(aPrefix, internal, aCallback);
+    if (!ComputeChangeInternal(aPrefix, internal, aCallback)) {
+      areaOverflowed = true;
+    }
     LTI_DUMP(internal, "internal");
     AddRegion(result, internal);
     LTI_DUMP(mLayer->GetInvalidRegion().GetRegion(), "invalid");
     AddTransformedRegion(result, mLayer->GetInvalidRegion().GetRegion(), mTransform);
 
     if (mMaskLayer && otherMask) {
-      nsIntRegion mask = mMaskLayer->ComputeChange(aPrefix, aCallback);
+      nsIntRegion mask;
+      if (!mMaskLayer->ComputeChange(aPrefix, mask, aCallback)) {
+        areaOverflowed = true;
+      }
       LTI_DUMP(mask, "mask");
       AddTransformedRegion(result, mask, mTransform);
     }
@@ -239,7 +248,10 @@ public:
          i < std::min(mAncestorMaskLayers.Length(), mLayer->GetAncestorMaskLayerCount());
          i++)
     {
-      nsIntRegion mask = mAncestorMaskLayers[i]->ComputeChange(aPrefix, aCallback);
+      nsIntRegion mask;
+      if (!mAncestorMaskLayers[i]->ComputeChange(aPrefix, mask, aCallback)) {
+        areaOverflowed = true;
+      }
       LTI_DUMP(mask, "ancestormask");
       AddTransformedRegion(result, mask, mTransform);
     }
@@ -254,7 +266,13 @@ public:
     }
 
     mLayer->ClearInvalidRegion();
-    return result;
+
+    if (areaOverflowed) {
+      return false;
+    }
+
+    aOutRegion = Move(result);
+    return true;
   }
 
   void CheckCanary()
@@ -372,7 +390,8 @@ public:
               MOZ_CRASH("Out of bounds");
             }
             // Invalidate any regions of the child that have changed:
-            nsIntRegion region = mChildren[childsOldIndex]->ComputeChange(LTI_DEEPER(aPrefix), aCallback);
+            nsIntRegion region;
+            mChildren[childsOldIndex]->ComputeChange(LTI_DEEPER(aPrefix), region, aCallback);
             i = childsOldIndex + 1;
             if (!region.IsEmpty()) {
               LTI_LOG("%s%p: child %p produced %s\n", aPrefix, mLayer.get(),
@@ -395,7 +414,7 @@ public:
         invalidateChildsCurrentArea = true;
       }
       if (invalidateChildsCurrentArea) {
-        LTI_DUMP(child->GetLocalVisibleRegion().ToUnknownRegion(), "invalidateChidlsCurrentArea");
+        LTI_DUMP(child->GetLocalVisibleRegion().ToUnknownRegion(), "invalidateChildsCurrentArea");
         AddTransformedRegion(result, child->GetLocalVisibleRegion().ToUnknownRegion(),
                              GetTransformForInvalidation(child));
         if (aCallback) {
@@ -787,8 +806,8 @@ LayerProperties::ClearInvalidations(Layer *aLayer)
       );
 }
 
-nsIntRegion
-LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFunc aCallback)
+bool
+LayerPropertiesBase::ComputeDifferences(Layer* aRoot, nsIntRegion& aOutRegion, NotifySubDocInvalidationFunc aCallback)
 {
   NS_ASSERTION(aRoot, "Must have a layer tree to compare against!");
   if (mLayer != aRoot) {
@@ -801,10 +820,10 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFu
       aRoot->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
       aRoot->GetLocalTransform());
     result = result.Union(OldTransformedBounds());
-    return result;
+    aOutRegion = result;
+    return true;
   }
-  nsIntRegion invalid = ComputeChange("  ", aCallback);
-  return invalid;
+  return ComputeChange("  ", aOutRegion, aCallback);
 }
 
 void
