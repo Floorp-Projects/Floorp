@@ -869,7 +869,7 @@ IMEStateManager::OnEditorDestroying(EditorBase& aEditorBase)
 void
 IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
                                 nsIContent* aContent,
-                                EditorBase& aEditorBase)
+                                EditorBase* aEditorBase)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("UpdateIMEState(aNewIMEState={ mEnabled=%s, "
@@ -877,7 +877,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
      "sPresContext=0x%p, sContent=0x%p, sWidget=0x%p (available: %s), "
      "sActiveIMEContentObserver=0x%p, sIsGettingNewIMEState=%s",
      GetIMEStateEnabledName(aNewIMEState.mEnabled),
-     GetIMEStateSetOpenName(aNewIMEState.mOpen), aContent, &aEditorBase,
+     GetIMEStateSetOpenName(aNewIMEState.mOpen), aContent, aEditorBase,
      sPresContext.get(), sContent.get(),
      sWidget, GetBoolName(sWidget && !sWidget->Destroyed()),
      sActiveIMEContentObserver.get(),
@@ -890,7 +890,15 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     return;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = aEditorBase.GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell;
+  if (!aEditorBase) {
+    MOZ_ASSERT(aContent, "we must have content");
+    nsIDocument* doc = aContent->OwnerDoc();
+    presShell = doc->GetShell();
+  } else {
+    presShell = aEditorBase->GetPresShell();
+  }
+
   if (NS_WARN_IF(!presShell)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
       ("  UpdateIMEState(), FAILED due to "
@@ -951,7 +959,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
        "active IMEContentObserver"));
     RefPtr<IMEContentObserver> contentObserver = sActiveIMEContentObserver;
     if (!contentObserver->MaybeReinitialize(widget, sPresContext,
-                                            aContent, &aEditorBase)) {
+                                            aContent, aEditorBase)) {
       MOZ_LOG(sISMLog, LogLevel::Error,
         ("  UpdateIMEState(), failed to reinitialize the "
          "active IMEContentObserver"));
@@ -1007,7 +1015,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     // XXX In this case, it might not be enough safe to notify IME of anything.
     //     So, don't try to flush pending notifications of IMEContentObserver
     //     here.
-    CreateIMEContentObserver(&aEditorBase);
+    CreateIMEContentObserver(aEditorBase);
   }
 }
 

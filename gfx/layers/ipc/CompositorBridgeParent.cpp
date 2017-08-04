@@ -537,7 +537,7 @@ CompositorBridgeParent::RecvWaitOnTransactionProcessed()
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
-  if (gfxVars::UseWebRender()) {
+  if (mOptions.UseWebRender()) {
     mWrBridge->FlushRendering(/* aIsSync */ true);
     return IPC_OK();
   }
@@ -552,7 +552,7 @@ CompositorBridgeParent::RecvFlushRendering()
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRenderingAsync()
 {
-  if (gfxVars::UseWebRender()) {
+  if (mOptions.UseWebRender()) {
     mWrBridge->FlushRendering(/* aIsSync */ false);
     return IPC_OK();
   }
@@ -706,7 +706,7 @@ CompositorBridgeParent::PauseComposition()
   if (!mPaused) {
     mPaused = true;
 
-    if (!gfxVars::UseWebRender()) {
+    if (!mOptions.UseWebRender()) {
       mCompositor->Pause();
     } else {
       mWrBridge->Pause();
@@ -727,7 +727,7 @@ CompositorBridgeParent::ResumeComposition()
 
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
-  bool resumed = gfxVars::UseWebRender() ? mWrBridge->Resume() : mCompositor->Resume();
+  bool resumed = mOptions.UseWebRender() ? mWrBridge->Resume() : mCompositor->Resume();
   if (!resumed) {
 #ifdef MOZ_WIDGET_ANDROID
     // We can't get a surface. This could be because the activity changed between

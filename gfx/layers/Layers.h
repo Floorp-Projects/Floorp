@@ -2331,7 +2331,9 @@ public:
 
   nsTArray<CSSFilter>& GetFilterChain() { return mFilterChain; }
   
-  virtual void SetInvalidCompositeRect(const gfx::IntRect& aRect) {}
+  // If |aRect| is null, the entire layer should be considered invalid for
+  // compositing.
+  virtual void SetInvalidCompositeRect(const gfx::IntRect* aRect) {}
 
 protected:
   friend class ReadbackProcessor;

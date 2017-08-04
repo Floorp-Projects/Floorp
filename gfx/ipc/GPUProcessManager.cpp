@@ -13,6 +13,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -411,6 +412,27 @@ GPUProcessManager::SimulateDeviceReset()
 {
   // Make sure we rebuild environment and configuration for accelerated features.
   gfxPlatform::GetPlatform()->CompositorUpdated();
+
+  if (mProcess) {
+    OnRemoteProcessDeviceReset(mProcess);
+  } else {
+    OnInProcessDeviceReset();
+  }
+}
+
+void
+GPUProcessManager::DisableWebRender()
+{
+  MOZ_ASSERT(gfx::gfxVars::UseWebRender());
+  if (!gfx::gfxVars::UseWebRender()) {
+    return;
+  }
+  // Disable WebRender
+  gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER).ForceDisable(
+    gfx::FeatureStatus::Unavailable,
+    "WebRender initialization failed",
+    NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_INITIALIZE"));
+  gfx::gfxVars::SetUseWebRender(false);
 
   if (mProcess) {
     OnRemoteProcessDeviceReset(mProcess);

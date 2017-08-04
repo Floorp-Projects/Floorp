@@ -1327,12 +1327,10 @@ TimeDuration
 TimeSince(TimeStamp prev)
 {
     TimeStamp now = TimeStamp::Now();
-#ifdef ANDROID
     // Sadly this happens sometimes.
+    MOZ_ASSERT(now >= prev);
     if (now < prev)
         now = prev;
-#endif
-    MOZ_RELEASE_ASSERT(now >= prev);
     return now - prev;
 }
 

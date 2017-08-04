@@ -21,6 +21,8 @@
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
 
+#include "vm/GeckoProfiler-inl.h"
+
 using namespace js;
 
 using mozilla::IsSame;

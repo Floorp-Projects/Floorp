@@ -356,7 +356,9 @@ nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsFrameSelection *aSel,
   {
     mFrameSelection = aSel;//we are the owner now!
     mLimiter = aLimiter;
-    mFrameSelection->Init(aShell, mLimiter);
+    bool accessibleCaretEnabled =
+      PresShell::AccessibleCaretEnabled(aLimiter->OwnerDoc()->GetDocShell());
+    mFrameSelection->Init(aShell, mLimiter, accessibleCaretEnabled);
     mPresShellWeak = do_GetWeakReference(aShell);
   }
 }

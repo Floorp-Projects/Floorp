@@ -30,7 +30,7 @@ public:
   void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
-  void SetInvalidCompositeRect(const gfx::IntRect &aRect) override;
+  void SetInvalidCompositeRect(const gfx::IntRect* aRect) override;
   void ClearCachedResources() override;
 
   RefPtr<MLGRenderTarget> UpdateRenderTarget(
