@@ -557,6 +557,7 @@ PeerConnectionMedia::ActivateOrRemoveTransport_s(
                 static_cast<unsigned>(aComponentCount));
 
     std::vector<std::string> attrs;
+    attrs.reserve(aCandidateList.size() + 2 /* ufrag + pwd */);
     for (const auto& candidate : aCandidateList) {
       attrs.push_back("candidate:" + candidate);
     }
