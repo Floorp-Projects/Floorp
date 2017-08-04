@@ -873,6 +873,8 @@ element.isObscured = function(el) {
   return !el.contains(tree[0]);
 };
 
+// TODO(ato): Only used by deprecated action API
+// https://bugzil.la/1354578
 /**
  * Calculate the in-view centre point of the area of the given DOM client
  * rectangle that is inside the viewport.
