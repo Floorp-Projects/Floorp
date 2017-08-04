@@ -9,6 +9,7 @@
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "Role.h"
+#include "gfxPlatform.h"
 
 #import "mozAccessible.h"
 #import "mozActionElements.h"
@@ -185,6 +186,12 @@ void
 a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Under headless mode we don't have access to a native window, so we skip
+  // dispatching native events.
+  if (gfxPlatform::IsHeadless()) {
+    return;
+  }
 
   switch (aEventType) {
     case nsIAccessibleEvent::EVENT_FOCUS:

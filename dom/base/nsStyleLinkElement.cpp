@@ -33,7 +33,7 @@
 #include "nsContentUtils.h"
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
-#include "nsIContentPolicyBase.h"
+#include "nsIContentPolicy.h"
 #include "nsMimeTypes.h"
 #include "imgLoader.h"
 #include "MediaContainerType.h"

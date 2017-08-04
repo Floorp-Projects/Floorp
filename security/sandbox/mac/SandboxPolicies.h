@@ -190,13 +190,11 @@ static const char contentSandboxRules[] = R"(
       (global-name "com.apple.windowserver.active")
       (global-name "com.apple.audio.coreaudiod")
       (global-name "com.apple.audio.audiohald")
-      (global-name "com.apple.PowerManagement.control")
       (global-name "com.apple.SystemConfiguration.configd")
       (global-name "com.apple.iconservices")
       (global-name "com.apple.cache_delete")
       (global-name "com.apple.pluginkit.pkd")
-      (global-name "com.apple.bird")
-      (global-name "com.apple.DesktopServicesHelper"))
+      (global-name "com.apple.bird"))
 
 ; bug 1376163
   (if (>= macosMinorVersion 13)

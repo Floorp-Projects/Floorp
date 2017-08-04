@@ -11,15 +11,12 @@ function isFullscreenSizeMode() {
 
 // Observers should be disabled when in customization mode.
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  // Open and close the panel to make sure that the
-  // area is generated before getting a child of the area.
-  let shownPanelPromise = promisePanelShown(window);
-  PanelUI.toggle({type: "command"});
-  await shownPanelPromise;
-  let hiddenPanelPromise = promisePanelHidden(window);
-  PanelUI.toggle({type: "command"});
-  await hiddenPanelPromise;
+  CustomizableUI.addWidgetToArea("fullscreen-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  // Show the panel so it isn't hidden and has bindings applied etc.:
+  await document.getElementById("nav-bar").overflowable.show();
+
+  // Hide it again.
+  document.getElementById("widget-overflow").hidePopup();
 
   let fullscreenButton = document.getElementById("fullscreen-button");
   ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.")
@@ -43,4 +40,5 @@ add_task(async function() {
   fullscreenButton = document.getElementById("fullscreen-button");
   await waitForCondition(() => !isFullscreenSizeMode());
   ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.")
+  CustomizableUI.reset();
 });

@@ -98,6 +98,7 @@ import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ContextUtils;
+import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -107,6 +108,7 @@ import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.WindowUtil;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.GeckoActionProvider;
@@ -141,6 +143,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -2271,6 +2274,9 @@ public class BrowserApp extends GeckoApp
                 delegate.onTabsTrayShown(this, mTabsPanel);
             }
         }
+
+        // Since tabs tray only has dark theme, always update the status bar with dark color.
+        WindowUtil.invalidateStatusBarColor(this, true);
     }
 
     @Override
@@ -2286,6 +2292,10 @@ public class BrowserApp extends GeckoApp
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onTabsTrayHidden(this, mTabsPanel);
         }
+
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        final boolean darkTheme = (tab != null && tab.isPrivate());
+        WindowUtil.invalidateStatusBarColor(this, darkTheme);
     }
 
     @Override
@@ -3537,8 +3547,9 @@ public class BrowserApp extends GeckoApp
         bookmark.setChecked(tab.isBookmark());
         bookmark.setTitle(resolveBookmarkTitleID(tab.isBookmark()));
 
+        final boolean isPrivate = tab.isPrivate();
         // We don't use icons on GB builds so not resolving icons might conserve resources.
-        bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
+        bookmark.setIcon(resolveBookmarkIconDrawable(tab.isBookmark(), resolveMenuIconTint(isPrivate)));
 
         back.setEnabled(tab.canDoBack());
         forward.setEnabled(tab.canDoForward());
@@ -3700,12 +3711,23 @@ public class BrowserApp extends GeckoApp
         return true;
     }
 
-    private int resolveBookmarkIconID(final boolean isBookmark) {
+    private Drawable resolveBookmarkIconDrawable(final boolean isBookmark, final int tint) {
         if (isBookmark) {
-            return R.drawable.star_blue;
+            return ResourcesCompat.getDrawable(getResources(), R.drawable.star_blue, null);
         } else {
-            return R.drawable.ic_menu_bookmark_add;
+            return DrawableUtil.tintDrawable(this, R.drawable.ic_menu_bookmark_add, tint);
         }
+    }
+
+    private int resolveMenuIconTint(final boolean isPrivate) {
+        final int tintResId;
+
+        if (isPrivate && HardwareUtils.isTablet()) {
+            tintResId = R.color.menu_item_tint_private;
+        } else {
+            tintResId = R.color.menu_item_tint;
+        }
+        return ResourcesCompat.getColor(getResources(), tintResId, null);
     }
 
     private int resolveBookmarkTitleID(final boolean isBookmark) {
@@ -3741,16 +3763,17 @@ public class BrowserApp extends GeckoApp
                     extra = "bookmark";
                 }
 
+                final boolean isPrivate = tab.isPrivate();
                 if (item.isChecked()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, extra);
                     tab.removeBookmark();
                     item.setTitle(resolveBookmarkTitleID(false));
-                    item.setIcon(resolveBookmarkIconID(false));
+                    item.setIcon(resolveBookmarkIconDrawable(false, resolveMenuIconTint(isPrivate)));
                 } else {
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, extra);
                     tab.addBookmark();
                     item.setTitle(resolveBookmarkTitleID(true));
-                    item.setIcon(resolveBookmarkIconID(true));
+                    item.setIcon(resolveBookmarkIconDrawable(true, resolveMenuIconTint(isPrivate)));
                 }
             }
             return true;

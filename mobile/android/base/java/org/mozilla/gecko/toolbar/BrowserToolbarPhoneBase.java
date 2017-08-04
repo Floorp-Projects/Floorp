@@ -15,6 +15,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.skin.SkinConfig;
+import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 
 import android.content.Context;
@@ -36,7 +37,7 @@ import android.widget.ImageView;
 abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
 
     protected final ImageView urlBarTranslatingEdge;
-    protected final ThemedImageView editCancel;
+    protected final View editCancel;
 
     private final Path roundCornerShape;
     private final Paint roundCornerPaint;
@@ -52,7 +53,7 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
         // This will clip the translating edge's image at 60% of its width
         urlBarTranslatingEdge.getDrawable().setLevel(6000);
 
-        editCancel = (ThemedImageView) findViewById(R.id.edit_cancel);
+        editCancel = findViewById(R.id.edit_cancel);
 
         focusOrder.add(this);
         focusOrder.addAll(urlDisplayLayout.getFocusOrder());
@@ -111,7 +112,12 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     @Override
     public void setPrivateMode(final boolean isPrivate) {
         super.setPrivateMode(isPrivate);
-        editCancel.setPrivateMode(isPrivate);
+
+        if (SkinConfig.isAustralis()) {
+            ((ThemedImageView) editCancel).setPrivateMode(isPrivate);
+        } else {
+            ((ThemedImageButton) editCancel).setPrivateMode(isPrivate);
+        }
     }
 
     @Override
@@ -255,12 +261,22 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     @Override
     public void onLightweightThemeChanged() {
         super.onLightweightThemeChanged();
-        editCancel.onLightweightThemeChanged();
+
+        if (SkinConfig.isAustralis()) {
+            ((ThemedImageView) editCancel).onLightweightThemeChanged();
+        } else {
+            ((ThemedImageButton) editCancel).onLightweightThemeChanged();
+        }
     }
 
     @Override
     public void onLightweightThemeReset() {
         super.onLightweightThemeReset();
-        editCancel.onLightweightThemeReset();
+
+        if (SkinConfig.isAustralis()) {
+            ((ThemedImageView) editCancel).onLightweightThemeReset();
+        } else {
+            ((ThemedImageButton) editCancel).onLightweightThemeReset();
+        }
     }
 }

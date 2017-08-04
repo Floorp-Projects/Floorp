@@ -77,16 +77,21 @@ add_task(function* () {
  * not `state`.
  */
 function* setBooleanPref(pref, state) {
-  let oncePrefChanged = defer();
   let prefObserver = new PrefObserver("devtools.");
-  prefObserver.on(pref, oncePrefChanged.resolve);
+  let oncePrefChanged = new Promise(resolve => {
+    prefObserver.on(pref, onPrefChanged);
+
+    function onPrefChanged() {
+      prefObserver.off(pref, onPrefChanged);
+      resolve();
+    }
+  });
 
   info("Set the pref " + pref + " to: " + state);
   Services.prefs.setBoolPref(pref, state);
 
   info("Wait for prefObserver to call back so the UI can update");
-  yield oncePrefChanged.promise;
-  prefObserver.off(pref, oncePrefChanged.resolve);
+  yield oncePrefChanged;
 }
 
 /**

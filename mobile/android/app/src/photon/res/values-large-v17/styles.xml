@@ -16,7 +16,6 @@
     <style name="UrlBar.MenuItem" parent="UrlBar.V17.MenuItem" />
 
     <style name="UrlBar.V17.MenuItem" parent="UrlBar.Base.MenuItem">
-        <item name="android:layout_marginStart">6dp</item>
         <item name="android:layout_toStartOf">@id/tabs</item>
     </style>
 
@@ -31,8 +30,6 @@
     <style name="UrlBar.V17.TabCounter" parent="UrlBar.Base.TabCounter">
         <item name="android:layout_alignStart">@id/tabs</item>
         <item name="android:layout_alignEnd">@id/tabs</item>
-        <item name="android:layout_marginStart">16dp</item>
-        <item name="android:layout_marginEnd">16dp</item>
     </style>
 
     <style name="UrlBar.Entry" parent="UrlBar.V17.Entry" />
@@ -46,8 +43,7 @@
     <style name="UrlBar.ForwardButton" parent="UrlBar.V17.ForwardButton" />
 
     <style name="UrlBar.V17.ForwardButton" parent="UrlBar.Base.ForwardButton">
-        <item name="android:layout_alignStart">@id/back</item>
-        <item name="android:layout_marginStart">@dimen/tablet_nav_button_width_half</item>
+        <item name="android:layout_toEndOf">@id/back</item>
         <item name="android:paddingStart">@dimen/tablet_fwd_button_padding_start</item>
         <item name="android:paddingEnd">@dimen/tablet_fwd_button_padding_end</item>
     </style>
@@ -62,23 +58,27 @@
     <style name="UrlBar.EditLayout" parent="UrlBar.V17.EditLayout" />
 
     <style name="UrlBar.V17.EditLayout" parent="UrlBar.Base.EditLayout">
-        <item name="android:paddingStart">0dp</item>
-        <item name="android:paddingEnd">12dp</item>
         <item name="android:layout_toStartOf">@id/menu_items</item>
-        <item name="android:layout_toEndOf">@id/back</item>
+        <item name="android:layout_toEndOf">@id/forward</item>
     </style>
 
     <style name="UrlBar.DisplayLayout" parent="UrlBar.V17.DisplayLayout" />
 
     <style name="UrlBar.V17.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
         <item name="android:layout_toStartOf">@id/menu_items</item>
-        <item name="android:layout_toEndOf">@id/back</item>
+        <item name="android:layout_toEndOf">@id/forward</item>
     </style>
 
     <style name="UrlBar.EditCancel" parent="UrlBar.V17.EditCancel" />
 
     <style name="UrlBar.V17.EditCancel" parent="UrlBar.Base.EditCancel">
         <item name="android:layout_alignParentEnd">true</item>
+    </style>
+
+    <style name="UrlBar.SiteIdentity" parent="UrlBar.V17.SiteIdentity" />
+
+    <style name="UrlBar.V17.SiteIdentity" parent="UrlBar.Base.SiteIdentity">
+        <item name="android:layout_marginStart">8dp</item>
     </style>
 
 </resources>

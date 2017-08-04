@@ -10,7 +10,6 @@ const ToolDefinitions = require("devtools/client/definitions").Tools;
 const CssLogic = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const promise = require("promise");
-const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const OutputParser = require("devtools/client/shared/output-parser");
 const {PrefObserver} = require("devtools/client/shared/prefs");
@@ -402,40 +401,40 @@ CssComputedView.prototype = {
       return this._createViewsPromise;
     }
 
-    let deferred = defer();
-    this._createViewsPromise = deferred.promise;
-
     this.refreshSourceFilter();
     this.numVisibleProperties = 0;
     let fragment = this.styleDocument.createDocumentFragment();
 
-    this._createViewsProcess = new UpdateProcess(
-      this.styleWindow, CssComputedView.propertyNames, {
-        onItem: (propertyName) => {
-          // Per-item callback.
-          let propView = new PropertyView(this, propertyName);
-          fragment.appendChild(propView.buildMain());
-          fragment.appendChild(propView.buildSelectorContainer());
+    this._createViewsPromise = new Promise((resolve, reject) => {
+      this._createViewsProcess = new UpdateProcess(
+        this.styleWindow, CssComputedView.propertyNames, {
+          onItem: (propertyName) => {
+            // Per-item callback.
+            let propView = new PropertyView(this, propertyName);
+            fragment.appendChild(propView.buildMain());
+            fragment.appendChild(propView.buildSelectorContainer());
 
-          if (propView.visible) {
-            this.numVisibleProperties++;
+            if (propView.visible) {
+              this.numVisibleProperties++;
+            }
+            this.propertyViews.push(propView);
+          },
+          onCancel: () => {
+            reject("_createPropertyViews cancelled");
+          },
+          onDone: () => {
+            // Completed callback.
+            this.element.appendChild(fragment);
+            this.noResults.hidden = this.numVisibleProperties > 0;
+            resolve(undefined);
           }
-          this.propertyViews.push(propView);
-        },
-        onCancel: () => {
-          deferred.reject("_createPropertyViews cancelled");
-        },
-        onDone: () => {
-          // Completed callback.
-          this.element.appendChild(fragment);
-          this.noResults.hidden = this.numVisibleProperties > 0;
-          deferred.resolve(undefined);
         }
-      }
-    );
+      );
+    });
 
     this._createViewsProcess.schedule();
-    return deferred.promise;
+
+    return this._createViewsPromise;
   },
 
   /**
@@ -482,35 +481,35 @@ CssComputedView.prototype = {
       // Reset zebra striping.
       this._darkStripe = true;
 
-      let deferred = defer();
-      this._refreshProcess = new UpdateProcess(
-        this.styleWindow, this.propertyViews, {
-          onItem: (propView) => {
-            propView.refresh();
-          },
-          onCancel: () => {
-            deferred.reject("_refreshProcess of computed view cancelled");
-          },
-          onDone: () => {
-            this._refreshProcess = null;
-            this.noResults.hidden = this.numVisibleProperties > 0;
+      return new Promise((resolve, reject) => {
+        this._refreshProcess = new UpdateProcess(
+          this.styleWindow, this.propertyViews, {
+            onItem: (propView) => {
+              propView.refresh();
+            },
+            onCancel: () => {
+              reject("_refreshProcess of computed view cancelled");
+            },
+            onDone: () => {
+              this._refreshProcess = null;
+              this.noResults.hidden = this.numVisibleProperties > 0;
 
-            if (this.searchField.value.length > 0 &&
-                !this.numVisibleProperties) {
-              this.searchField.classList
-                              .add("devtools-style-searchbox-no-match");
-            } else {
-              this.searchField.classList
-                              .remove("devtools-style-searchbox-no-match");
+              if (this.searchField.value.length > 0 &&
+                  !this.numVisibleProperties) {
+                this.searchField.classList
+                                .add("devtools-style-searchbox-no-match");
+              } else {
+                this.searchField.classList
+                                .remove("devtools-style-searchbox-no-match");
+              }
+
+              this.inspector.emit("computed-view-refreshed");
+              resolve(undefined);
             }
-
-            this.inspector.emit("computed-view-refreshed");
-            deferred.resolve(undefined);
           }
-        }
-      );
-      this._refreshProcess.schedule();
-      return deferred.promise;
+        );
+        this._refreshProcess.schedule();
+      });
     }).catch((err) => console.error(err));
   },
 
@@ -1379,18 +1378,14 @@ SelectorView.prototype = {
     let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
 
     if (showOrig && rule.type !== ELEMENT_STYLE) {
-      let deferred = defer();
-
       // set as this first so we show something while we're fetching
       this.source = CssLogic.shortSource(this.sheet) + ":" + rule.line;
 
-      rule.getOriginalLocation().then(({href, line}) => {
+      return rule.getOriginalLocation().then(({href, line}) => {
         let oldSource = this.source;
         this.source = CssLogic.shortSource({href: href}) + ":" + line;
-        deferred.resolve(oldSource);
+        return oldSource;
       });
-
-      return deferred.promise;
     }
 
     let oldSource = this.source;

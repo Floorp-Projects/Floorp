@@ -261,7 +261,7 @@ private:
 
 class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsPIDOMWindow<nsISupports>,
-                       private nsIDOMWindowInternal,
+                       private nsIDOMWindow,
                        public nsIScriptGlobalObject,
                        public nsIScriptObjectPrincipal,
                        public nsSupportsWeakReference,
@@ -2087,7 +2087,6 @@ protected:
   friend class IdleRequestExecutor;
 
   static WindowByIdTable* sWindowsById;
-  static bool sWarnedAboutWindowInternal;
 };
 
 inline nsISupports*

@@ -13,6 +13,11 @@
 namespace mozilla {
 namespace widget {
 
+#if defined(MOZ_WIDGET_GTK)
+
+// Our nsLookAndFeel for GTK relies on APIs that aren't available in headless
+// mode, so we use an implementation with hardcoded values.
+
 class HeadlessLookAndFeel: public nsXPLookAndFeel {
 public:
   HeadlessLookAndFeel();
@@ -30,6 +35,15 @@ public:
   virtual char16_t GetPasswordCharacterImpl();
   virtual bool GetEchoPasswordImpl();
 };
+
+#else
+
+// When possible, we simply reuse the platform's existing nsLookAndFeel
+// implementation in headless mode.
+
+typedef nsLookAndFeel HeadlessLookAndFeel;
+
+#endif
 
 } // namespace widget
 } // namespace mozilla

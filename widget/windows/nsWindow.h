@@ -12,6 +12,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "nsBaseWidget.h"
+#include "CompositorWidget.h"
 #include "nsWindowBase.h"
 #include "nsdefs.h"
 #include "nsIdleService.h"
@@ -76,6 +77,7 @@ class nsWindow final : public nsWindowBase
   typedef mozilla::widget::NativeKey NativeKey;
   typedef mozilla::widget::MSGResult MSGResult;
   typedef mozilla::widget::IMEContext IMEContext;
+  typedef mozilla::widget::PlatformCompositorWidgetDelegate PlatformCompositorWidgetDelegate;
 
 public:
   explicit nsWindow(bool aIsChildWindow = false);
@@ -177,6 +179,7 @@ public:
   virtual LayerManager*   GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
+  void                    SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
   virtual MOZ_MUST_USE nsresult OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override;
   virtual nsresult        SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                    int32_t aNativeKeyCode,
@@ -558,6 +561,8 @@ protected:
   static bool           sJustGotActivate;
   static bool           sIsInMouseCapture;
   static bool           sHaveInitializedPrefs;
+
+  PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
 
   // Always use the helper method to read this property.  See bug 603793.
   static TriStateBool   sHasBogusPopupsDropShadowOnMultiMonitor;

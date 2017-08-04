@@ -39,7 +39,6 @@ let mockedInternal = {
 
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let oldInternal = SyncedTabs._internal;
   SyncedTabs._internal = mockedInternal;
 
@@ -62,9 +61,10 @@ add_task(async function setup() {
 async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   info("Check Sync button functionality");
   Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", "http://example.com/");
+  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   // check the button's functionality
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
 
   if (entryPoint == "uitour") {
     UITour.tourBrowsersByWindow.set(window, new Set());
@@ -75,9 +75,10 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   ok(syncButton, "The Sync button was added to the Panel Menu");
 
   let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
-  syncButton.click();
-  await tabsUpdatedPromise;
   let syncPanel = document.getElementById("PanelUI-remotetabs");
+  let viewShownPromise = BrowserTestUtils.waitForEvent(syncPanel, "ViewShown");
+  syncButton.click();
+  await Promise.all([tabsUpdatedPromise, viewShownPromise]);
   ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
 
   // Sync is not configured - verify that state is reflected.
@@ -105,16 +106,16 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
 
   is(gBrowser.currentURI.spec, "about:preferences?entrypoint=" + entryPoint + "#sync",
     "Firefox Sync preference page opened with `menupanel` entrypoint");
-  ok(!isPanelUIOpen(), "The panel closed");
+  ok(!isOverflowOpen(), "The panel closed");
 
-  if (isPanelUIOpen()) {
-    await panelUIHide();
+  if (isOverflowOpen()) {
+    await hideOverflow();
   }
 }
 
-function panelUIHide() {
-  let panelHidePromise = promisePanelHidden(window);
-  PanelUI.hide();
+function hideOverflow() {
+  let panelHidePromise = promiseOverflowHidden(window);
+  PanelUI.overflowPanel.hidePopup();
   return panelHidePromise;
 }
 
@@ -166,10 +167,10 @@ add_task(async function() {
   // test each link and left and middle mouse buttons
   for (let link of links) {
     for (let button = 0; button < 2; button++) {
-      await PanelUI.show();
+      await document.getElementById("nav-bar").overflowable.show();
       EventUtils.sendMouseEvent({ type: "click", button }, link, window);
       // the panel should have been closed.
-      ok(!isPanelUIOpen(), "click closed the panel");
+      ok(!isOverflowOpen(), "click closed the panel");
       // should be a new tab - wait for the load.
       is(gBrowser.tabs.length, 2, "there's a new tab");
       await new Promise(resolve => {
@@ -192,14 +193,14 @@ add_task(async function() {
   }
 
   // test each link and right mouse button - should be a noop.
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   for (let link of links) {
     EventUtils.sendMouseEvent({ type: "click", button: 2 }, link, window);
     // the panel should still be open
-    ok(isPanelUIOpen(), "panel remains open after right-click");
+    ok(isOverflowOpen(), "panel remains open after right-click");
     is(gBrowser.tabs.length, 1, "no new tab was opened");
   }
-  await panelUIHide();
+  await hideOverflow();
 
   Services.prefs.clearUserPref("identity.mobilepromo.android");
   Services.prefs.clearUserPref("identity.mobilepromo.ios");
@@ -212,11 +213,13 @@ add_task(async function() {
   document.getElementById("sync-setup-state").hidden = true;
   document.getElementById("sync-syncnow-state").hidden = false;
 
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
-  document.getElementById("sync-button").click();
-  await tabsUpdatedPromise;
   let syncPanel = document.getElementById("PanelUI-remotetabs");
+  let viewShownPromise = BrowserTestUtils.waitForEvent(syncPanel, "ViewShown");
+  let syncButton = document.getElementById("sync-button");
+  syncButton.click();
+  await Promise.all([tabsUpdatedPromise, viewShownPromise]);
   ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
 
   let subpanel = document.getElementById("PanelUI-remotetabs-main")
@@ -344,7 +347,7 @@ add_task(async function() {
   node = node.nextSibling;
   is(node, null, "no more entries");
 
-  await panelUIHide();
+  await hideOverflow();
 });
 
 // Test the pagination capabilities (Show More/All tabs)
@@ -375,13 +378,15 @@ add_task(async function() {
   document.getElementById("sync-setup-state").hidden = true;
   document.getElementById("sync-syncnow-state").hidden = false;
 
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
-  document.getElementById("sync-button").click();
-  await tabsUpdatedPromise;
+  let syncPanel = document.getElementById("PanelUI-remotetabs");
+  let viewShownPromise = BrowserTestUtils.waitForEvent(syncPanel, "ViewShown");
+  let syncButton = document.getElementById("sync-button");
+  syncButton.click();
+  await Promise.all([tabsUpdatedPromise, viewShownPromise]);
 
   // Check pre-conditions
-  let syncPanel = document.getElementById("PanelUI-remotetabs");
   ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
   let subpanel = document.getElementById("PanelUI-remotetabs-main")
   ok(!subpanel.hidden, "main pane is visible");
@@ -428,5 +433,5 @@ add_task(async function() {
 
   checkTabsPage(77, null);
 
-  await panelUIHide();
+  await hideOverflow();
 });

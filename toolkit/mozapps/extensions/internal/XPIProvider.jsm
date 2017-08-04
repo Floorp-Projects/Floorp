@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ChromeManifestParser",
                                   "resource://gre/modules/ChromeManifestParser.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Locale",
-                                  "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils",
@@ -4811,8 +4809,49 @@ AddonInternal.prototype = {
   get selectedLocale() {
     if (this._selectedLocale)
       return this._selectedLocale;
-    let locale = Locale.findClosestLocale(this.locales);
-    this._selectedLocale = locale ? locale : this.defaultLocale;
+
+    /**
+     * this.locales is a list of objects that have property `locales`.
+     * It's value is an array of locale codes.
+     *
+     * First, we reduce this nested structure to a flat list of locale codes.
+     */
+    const locales = [].concat(...this.locales.map(loc => loc.locales));
+
+    let requestedLocales = Services.locale.getRequestedLocales();
+
+    /**
+     * If en is not the top locale, add "en-US" to the list.
+     */
+    if (!requestedLocales[0].startsWith("en")) {
+      requestedLocales.push("en-US");
+    }
+
+    /**
+     * Then we negotiate best locale code matching the app locales.
+     */
+    let bestLocale = Services.locale.negotiateLanguages(
+      requestedLocales,
+      locales,
+      "und",
+      Services.locale.langNegStrategyLookup
+    )[0];
+
+    /**
+     * If no match has been found, we'll assign the default locale as
+     * the selected one.
+     */
+    if (bestLocale === "und") {
+      this._selectedLocale = this.defaultLocale;
+    } else {
+      /**
+       * Otherwise, we'll go through all locale entries looking for the one
+       * that has the best match in it's locales list.
+       */
+      this._selectedLocale = this.locales.find(loc =>
+        loc.locales.includes(bestLocale));
+    }
+
     return this._selectedLocale;
   },
 

@@ -35,6 +35,15 @@
   <color name="restricted_profile_background_gold">#ffffcb51</color>
   <color name="restricted_profile_background_green">#1aaa86</color>
 
+  <!-- Status bar background color -->
+  <color name="status_bar_bg_color">@android:color/transparent</color>
+  <color name="status_bar_bg_color_private">@android:color/transparent</color>
+  <color name="status_bar_bg_color_tablet">@android:color/transparent</color>
+
+  <!-- Toolbar menu item tint color -->
+  <color name="menu_item_tint">@color/toolbar_icon_grey</color>
+  <color name="menu_item_tint_private">@color/toolbar_icon_grey</color>
+
   <!-- Non-palette colors -->
 
   <!-- Synced w/ toolbar_grey -->

@@ -176,5 +176,10 @@
         <attr name="drawableTintList" format="color" />
     </declare-styleable>
 
+    <declare-styleable name="NavButton">
+        <attr name="borderColor" format="color" />
+        <attr name="borderColorPrivate" format="color" />
+    </declare-styleable>
+
 </resources>
 

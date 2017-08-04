@@ -336,6 +336,7 @@ public class BrowserContract {
 
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
+        public static final String HISTORY_GUID = "history_guid"; // sync GUID to merge with the PageMetadata table.
 
         public static final String REMOTE_VISITS_COUNT = "remoteVisitCount";
         public static final String REMOTE_DATE_LAST_VISITED = "remoteDateLastVisited";
@@ -622,6 +623,7 @@ public class BrowserContract {
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
         public static final String TYPE = "type";
+        public static final String PAGE_METADATA_JSON = "page_metadata_json";
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "topsites");
     }

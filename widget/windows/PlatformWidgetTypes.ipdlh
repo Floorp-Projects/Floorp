@@ -4,19 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This file is a stub, for platforms that do not yet support out-of-process
-// compositing or do not need specialized types to do so.
+include HeadlessWidgetTypes;
 
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace widget {
 
-struct CompositorWidgetInitData
+struct WinCompositorWidgetInitData
 {
   WindowsHandle hWnd;
   uintptr_t widgetKey;
   int32_t transparencyMode;
+};
+
+union CompositorWidgetInitData
+{
+  WinCompositorWidgetInitData;
+  HeadlessCompositorWidgetInitData;
 };
 
 } // namespace widget

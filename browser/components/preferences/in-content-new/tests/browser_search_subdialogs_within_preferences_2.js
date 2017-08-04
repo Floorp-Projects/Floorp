@@ -51,6 +51,6 @@ add_task(async function() {
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  evaluateSearchResults("request permission again", "permissionsGroup");
+  evaluateSearchResults("send notifications", "permissionsGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

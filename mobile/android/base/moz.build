@@ -239,6 +239,10 @@ if CONFIG['ANDROID_PALETTE_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.palette']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PALETTE_V7_AAR_RES']]
 # (no resources) resjar.generated_sources += ['generated/android/support/v7/palette/R.java']
+if CONFIG['ANDROID_CONSTRAINT_LAYOUT_AAR']:
+    ANDROID_EXTRA_PACKAGES += ['android.support.constraint']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_CONSTRAINT_LAYOUT_AAR_RES']]
+    resjar.generated_sources += ['generated/android/support/constraint/R.java']
 
 resjar.javac_flags += ['-Xlint:all']
 
@@ -524,6 +528,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'activitystream/homepanel/topsites/TopSitesPage.java',
     'activitystream/homepanel/topsites/TopSitesPageAdapter.java',
     'activitystream/homepanel/topsites/TopSitesPagerAdapter.java',
+    'activitystream/homepanel/topstories/PocketStoriesLoader.java',
     'activitystream/ranking/HighlightCandidate.java',
     'activitystream/ranking/HighlightCandidateCursorIndices.java',
     'activitystream/ranking/HighlightsRanking.java',
@@ -923,10 +928,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'toolbar/BrowserToolbar.java',
     'toolbar/BrowserToolbarPhone.java',
     'toolbar/BrowserToolbarPhoneBase.java',
-    'toolbar/BrowserToolbarTablet.java',
-    'toolbar/BrowserToolbarTabletBase.java',
     'toolbar/CanvasDelegate.java',
-    'toolbar/ForwardButton.java',
     'toolbar/NavButton.java',
     'toolbar/PageActionLayout.java',
     'toolbar/PhoneTabsButton.java',
@@ -934,7 +936,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'toolbar/ShapedButton.java',
     'toolbar/ShapedButtonFrameLayout.java',
     'toolbar/SiteIdentityPopup.java',
-    'toolbar/ToolbarDisplayLayout.java',
     'toolbar/ToolbarEditLayout.java',
     'toolbar/ToolbarEditText.java',
     'toolbar/ToolbarPrefs.java',
@@ -950,6 +951,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'util/TouchTargetUtil.java',
     'util/URIUtils.java',
     'util/ViewUtil.java',
+    'util/WindowUtil.java',
     'webapps/WebAppActivity.java',
     'webapps/WebAppIndexer.java',
     'webapps/WebApps.java',
@@ -1014,13 +1016,23 @@ if CONFIG['MOZ_ANDROID_PHOTON']:
         'home/SearchEngineRow.java',
         'home/SuggestionItem.java',
         'skin/SkinConfig.java',
+        'toolbar/BrowserToolbarTablet.java',
+        'toolbar/BrowserToolbarTabletBase.java',
+        'toolbar/ForwardButton.java',
         'toolbar/TabCounter.java',
+        'toolbar/ToolbarDisplayLayout.java',
+        'toolbar/ToolbarRoundButton.java',
     ]]
 else:
     gbjar.sources += ['../app/src/australis/java/org/mozilla/gecko/' + x for x in [
         'home/SearchEngineRow.java',
         'skin/SkinConfig.java',
+        'toolbar/BrowserToolbarTablet.java',
+        'toolbar/BrowserToolbarTabletBase.java',
+        'toolbar/ForwardButton.java',
         'toolbar/TabCounter.java',
+        'toolbar/ToolbarDisplayLayout.java',
+        'toolbar/ToolbarRoundButton.java',
     ]]
 
 android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
@@ -1168,6 +1180,8 @@ gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_CUSTOMTABS_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_PALETTE_V7_AAR_LIB']]
+gbjar.extra_jars += [CONFIG['ANDROID_CONSTRAINT_LAYOUT_AAR_LIB']]
+gbjar.extra_jars += [CONFIG['ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
 

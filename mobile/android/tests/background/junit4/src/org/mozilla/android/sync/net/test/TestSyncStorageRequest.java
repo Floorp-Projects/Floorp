@@ -250,8 +250,6 @@ public class TestSyncStorageRequest {
   public class DeleteMockServer extends MockServer {
     @Override
     public void handle(Request request, Response response) {
-      assertNotNull(request.getValue("x-confirm-delete"));
-      assertEquals("1", request.getValue("x-confirm-delete"));
       super.handle(request, response);
     }
   }

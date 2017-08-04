@@ -450,12 +450,6 @@ pref("browser.link.open_newwindow.disabled_in_fullscreen", true);
 pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
 #endif
 
-#ifdef NIGHTLY_BUILD
-pref("browser.photon.structure.enabled", true);
-#else
-pref("browser.photon.structure.enabled", false);
-#endif
-
 // Tabbed browser
 pref("browser.tabs.closeWindowWithLastTab", true);
 pref("browser.tabs.insertRelatedAfterCurrent", true);
@@ -1695,6 +1689,7 @@ pref("extensions.formautofill.available", "on");
 pref("extensions.formautofill.available", "detect");
 #endif
 pref("extensions.formautofill.addresses.enabled", true);
+pref("extensions.formautofill.creditCards.enabled", true);
 pref("extensions.formautofill.firstTimeUse", true);
 pref("extensions.formautofill.heuristics.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
@@ -1723,13 +1718,5 @@ pref("browser.onboarding.notification.max-prompt-count-per-tour", 8);
 pref("browser.onboarding.newtour", "private,addons,customize,search,default,sync");
 pref("browser.onboarding.updatetour", "");
 
-// Preferences for the Screenshots feature:
-// Temporarily disable Screenshots in Beta & Release, so that we can gradually
-// roll out the feature using SHIELD pref flipping.
-#ifdef NIGHTLY_BUILD
-pref("extensions.screenshots.system-disabled", false);
-#else
-pref("extensions.screenshots.system-disabled", true);
-#endif
-// Permanent pref that allows individual users to disable Screenshots.
+// Preference that allows individual users to disable Screenshots.
 pref("extensions.screenshots.disabled", false);

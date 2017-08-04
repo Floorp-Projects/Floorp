@@ -7,7 +7,6 @@
 #define MP4Decoder_h_
 
 #include "ChannelMediaDecoder.h"
-#include "MediaFormatReader.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/layers/KnowsCompositor.h"
 
@@ -28,8 +27,6 @@ public:
     }
     return new MP4Decoder(aInit);
   }
-
-  MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if aContainerType is an MP4 type that we think we can render
   // with the a platform decoder backend.

@@ -8,8 +8,6 @@ const kButton = "test_button_for_addon";
 var initialLocation = gBrowser.currentURI.spec;
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-
   info("Check addon button functionality");
 
   // create mocked addon button on the navigation bar
@@ -33,12 +31,12 @@ add_task(async function() {
   resetTabs();
 
   // move the add-on button in the Panel Menu
-  CustomizableUI.addWidgetToArea(kButton, CustomizableUI.AREA_PANEL);
+  CustomizableUI.addWidgetToArea(kButton, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   ok(!navBar.contains(addonButton), "Addon button was removed from the browser bar");
 
   // check the addon button's functionality in the Panel Menu
-  await PanelUI.show();
-  var panelMenu = document.getElementById("PanelUI-mainView");
+  await document.getElementById("nav-bar").overflowable.show();
+  var panelMenu = document.getElementById("widget-overflow-mainView");
   let addonButtonInPanel = panelMenu.getElementsByAttribute("id", kButton);
   ok(panelMenu.contains(addonButton), "Addon button was added to the Panel Menu");
   await checkButtonFunctionality(addonButtonInPanel[0]);

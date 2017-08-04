@@ -41,6 +41,7 @@ def validate(config, jobs):
 def make_repackage_signing_description(config, jobs):
     for job in jobs:
         dep_job = job['dependent-task']
+        attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
         treeherder.setdefault('symbol', 'tc-rs(N)')
@@ -51,7 +52,16 @@ def make_repackage_signing_description(config, jobs):
         treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')
 
-        label = job.get('label', "repackage-signing-{}".format(dep_job.label))
+        label = job['label']
+        description = (
+            "Signing of repackaged artifacts for locale '{locale}' for build '"
+            "{build_platform}/{build_type}'".format(
+                locale=attributes.get('locale', 'en-US'),
+                build_platform=attributes.get('build_platform'),
+                build_type=attributes.get('build_type')
+            )
+        )
+
         dependencies = {"repackage": dep_job.label}
 
         signing_dependencies = dep_job.dependencies
@@ -103,8 +113,7 @@ def make_repackage_signing_description(config, jobs):
 
         task = {
             'label': label,
-            'description': "Repackage signing {} ".format(
-                dep_job.task["metadata"]["description"]),
+            'description': description,
             'worker-type': "scriptworker-prov-v1/signing-linux-v1",
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': upstream_artifacts,

@@ -54,6 +54,8 @@ class nsXBLBinding;
 using mozilla::dom::StyleChildrenIterator;
 using mozilla::ServoElementSnapshot;
 
+typedef void* RawServoAnimationValueTableBorrowed;
+
 typedef nsINode RawGeckoNode;
 typedef mozilla::dom::Element RawGeckoElement;
 typedef nsIDocument RawGeckoDocument;

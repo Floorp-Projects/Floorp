@@ -2880,7 +2880,6 @@
             // We're animating, so we can cancel the non-animation stopwatch.
             TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
 
-            this._blurTab(aTab);
             aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
 
@@ -2915,10 +2914,17 @@
 
             var browser = this.getBrowserForTab(aTab);
 
-            if (!aTab._pendingPermitUnload &&
-                !aSkipPermitUnload &&
-                aTab.linkedPanel &&
-                !aAdoptedByTab) {
+            let checkPermitUnload = !aSkipPermitUnload &&
+                                    !aAdoptedByTab &&
+                                    aTab.linkedPanel &&
+                                    !aTab._pendingPermitUnload;
+
+            if (checkPermitUnload && browser.isRemoteBrowser) {
+              checkPermitUnload = browser.frameLoader.tabParent &&
+                                  browser.frameLoader.tabParent.hasBeforeUnload;
+            }
+
+            if (checkPermitUnload) {
               TelemetryStopwatch.start("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", aTab);
 
               // We need to block while calling permitUnload() because it
@@ -2938,6 +2944,7 @@
               }
             }
 
+            this._blurTab(aTab);
 
             var closeWindow = false;
             var newTab = false;
@@ -7345,7 +7352,7 @@
                      class="tab-icon-image"
                      validate="never"
                      role="presentation"/>
-          <xul:image xbl:inherits="sharing,selected=visuallyselected"
+          <xul:image xbl:inherits="sharing,selected=visuallyselected,pinned"
                      anonid="sharing-icon"
                      class="tab-sharing-icon-overlay"
                      role="presentation"/>

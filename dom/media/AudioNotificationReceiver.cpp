@@ -54,6 +54,10 @@ AudioNotificationReceiver::Unregister(AudioStream* aAudioStream)
   MOZ_ASSERT(!sSubscribers->IsEmpty(), "No subscriber.");
 
   sSubscribers->RemoveElement(aAudioStream);
+  if (sSubscribers->IsEmpty()) {
+    // Clear the static pointer here to prevent memory leak.
+    sSubscribers = nullptr;
+  }
 
   ANR_LOG("The AudioStream: %p is unregistered successfully.", aAudioStream);
 }
@@ -64,6 +68,12 @@ AudioNotificationReceiver::NotifyDefaultDeviceChanged()
   MOZ_ASSERT(XRE_IsContentProcess());
 
   StaticMutexAutoLock lock(sMutex);
+
+  // Do nothing when there is no AudioStream.
+  if (!sSubscribers) {
+    return;
+  }
+
   for (AudioStream* stream : *sSubscribers) {
     ANR_LOG("Notify the AudioStream: %p that the default device has been changed.", stream);
     stream->ResetDefaultDevice();

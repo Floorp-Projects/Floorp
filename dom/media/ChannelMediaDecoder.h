@@ -35,7 +35,6 @@ class ChannelMediaDecoder : public MediaDecoder
   private:
     /* MediaResourceCallback functions */
     MediaDecoderOwner* GetMediaOwner() const override;
-    void SetInfinite(bool aInfinite) override;
     void NotifyNetworkError() override;
     void NotifyDataArrived() override;
     void NotifyDataEnded(nsresult aStatus) override;
@@ -54,9 +53,14 @@ class ChannelMediaDecoder : public MediaDecoder
 
 protected:
   RefPtr<ResourceCallback> mResourceCallback;
+  RefPtr<MediaResource> mResource;
 
 public:
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
+
+  MediaDecoderStateMachine* CreateStateMachine() override;
+
+  MediaResource* GetResource() const override final;
 
   void Shutdown() override;
 

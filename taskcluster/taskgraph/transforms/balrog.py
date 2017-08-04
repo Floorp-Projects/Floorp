@@ -70,7 +70,15 @@ def make_task_description(config, jobs):
             treeherder['symbol'] = 'tc-Up({})'.format(dep_job.attributes.get('locale'))
             attributes['locale'] = dep_job.attributes.get('locale')
 
-        label = job.get('label', "balrog-{}".format(dep_job.label))
+        label = job['label']
+        description = (
+            "Balrog submission for locale '{locale}' for build '"
+            "{build_platform}/{build_type}'".format(
+                locale=attributes.get('locale', 'en-US'),
+                build_platform=attributes.get('build_platform'),
+                build_type=attributes.get('build_type')
+            )
+        )
 
         upstream_artifacts = [{
             "taskId": {"task-reference": "<beetmover>"},
@@ -85,8 +93,7 @@ def make_task_description(config, jobs):
 
         task = {
             'label': label,
-            'description': "{} Balrog".format(
-                dep_job.task["metadata"]["description"]),
+            'description': description,
             # do we have to define worker type somewhere?
             'worker-type': 'scriptworker-prov-v1/balrogworker-v1',
             'worker': {

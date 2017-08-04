@@ -2690,6 +2690,18 @@ Selection::GetRangeCount(int32_t* aRangeCount)
   return NS_OK;
 }
 
+void
+Selection::GetType(nsAString& aOutType) const
+{
+  if (!RangeCount()) {
+    aOutType.AssignLiteral("None");
+  } else if (IsCollapsed()) {
+    aOutType.AssignLiteral("Caret");
+  } else {
+    aOutType.AssignLiteral("Range");
+  }
+}
+
 NS_IMETHODIMP
 Selection::GetRangeAt(int32_t aIndex, nsIDOMRange** aReturn)
 {

@@ -1195,8 +1195,6 @@ var PlacesToolbarHelper = {
     if (forceToolbarOverflowCheck) {
       viewElt._placesView.updateOverflowStatus();
     }
-    this._shouldWrap = false;
-    this._setupPlaceholder();
   },
 
   uninit: function PTH_uninit() {
@@ -1211,40 +1209,11 @@ var PlacesToolbarHelper = {
     } finally {
       this._isCustomizing = true;
     }
-    this._shouldWrap = this._getShouldWrap();
-  },
-
-  customizeChange: function PTH_customizeChange() {
-    this._setupPlaceholder();
-  },
-
-  _setupPlaceholder: function PTH_setupPlaceholder() {
-    let placeholder = this._placeholder;
-    if (!placeholder) {
-      return;
-    }
-
-    let shouldWrapNow = this._getShouldWrap();
-    if (this._shouldWrap != shouldWrapNow) {
-      if (shouldWrapNow) {
-        placeholder.setAttribute("wrap", "true");
-      } else {
-        placeholder.removeAttribute("wrap");
-      }
-      this._shouldWrap = shouldWrapNow;
-    }
   },
 
   customizeDone: function PTH_customizeDone() {
     this._isCustomizing = false;
     this.init(true);
-  },
-
-  _getShouldWrap: function PTH_getShouldWrap() {
-    let placement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
-    let area = placement && placement.area;
-    let areaType = area && CustomizableUI.getAreaType(area);
-    return !area || CustomizableUI.TYPE_MENU_PANEL == areaType;
   },
 
   onPlaceholderCommand() {
@@ -2014,27 +1983,17 @@ var BookmarkingUI = {
     for (let i = 0, l = staticButtons.length; i < l; ++i)
       CustomizableUI.addShortcut(staticButtons[i]);
     // Setup the Places view.
-    if (gPhotonStructure) {
-      // We restrict the amount of results to 42. Not 50, but 42. Why? Because 42.
-      let query = "place:queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-        "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
-        "&maxResults=42&excludeQueries=1";
+    // We restrict the amount of results to 42. Not 50, but 42. Why? Because 42.
+    let query = "place:queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+      "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+      "&maxResults=42&excludeQueries=1";
 
-      // XPCOMUtils.defineLazyScriptGetter can't return class constructors, so
-      // trigger the getter once without using the result before calling
-      // PlacesPanelview as a constructor.
-      PlacesPanelview;
-      this._panelMenuView = new PlacesPanelview(document.getElementById("panelMenu_bookmarksMenu"),
-        panelview, query);
-    } else {
-      this._panelMenuView = new PlacesPanelMenuView("place:folder=BOOKMARKS_MENU",
-        "panelMenu_bookmarksMenu", "panelMenu_bookmarksMenu", {
-          extraClasses: {
-            entry: "subviewbutton",
-            footer: "panel-subview-footer"
-          }
-        });
-    }
+    // XPCOMUtils.defineLazyScriptGetter can't return class constructors, so
+    // trigger the getter once without using the result before calling
+    // PlacesPanelview as a constructor.
+    PlacesPanelview;
+    this._panelMenuView = new PlacesPanelview(document.getElementById("panelMenu_bookmarksMenu"),
+      panelview, query);
     panelview.removeEventListener("ViewShowing", this);
   },
 

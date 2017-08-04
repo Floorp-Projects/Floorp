@@ -3,6 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gfxPlatform.h"
+#include "HeadlessCompositorWidget.h"
+#include "HeadlessWidget.h"
+#include "mozilla/widget/PlatformWidgetTypes.h"
+
 #include "InProcessWinCompositorWidget.h"
 #include "nsWindow.h"
 
@@ -14,10 +19,16 @@ CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData,
                               const layers::CompositorOptions& aOptions,
                               nsIWidget* aWidget)
 {
-  return new InProcessWinCompositorWidget(aInitData, aOptions, static_cast<nsWindow*>(aWidget));
+  if (aInitData.type() == CompositorWidgetInitData::THeadlessCompositorWidgetInitData) {
+    return new HeadlessCompositorWidget(aInitData.get_HeadlessCompositorWidgetInitData(),
+                                        aOptions, static_cast<HeadlessWidget*>(aWidget));
+  } else {
+    return new InProcessWinCompositorWidget(aInitData.get_WinCompositorWidgetInitData(),
+                                            aOptions, static_cast<nsWindow*>(aWidget));
+  }
 }
 
-InProcessWinCompositorWidget::InProcessWinCompositorWidget(const CompositorWidgetInitData& aInitData,
+InProcessWinCompositorWidget::InProcessWinCompositorWidget(const WinCompositorWidgetInitData& aInitData,
                                                            const layers::CompositorOptions& aOptions,
                                                            nsWindow* aWindow)
  : WinCompositorWidget(aInitData, aOptions),
