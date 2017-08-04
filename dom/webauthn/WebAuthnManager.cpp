@@ -42,7 +42,10 @@ StaticRefPtr<WebAuthnManager> gWebAuthnManager;
 static mozilla::LazyLogModule gWebAuthnManagerLog("webauthnmanager");
 }
 
-NS_IMPL_ISUPPORTS(WebAuthnManager, nsIIPCBackgroundChildCreateCallback);
+NS_NAMED_LITERAL_STRING(kVisibilityChange, "visibilitychange");
+
+NS_IMPL_ISUPPORTS(WebAuthnManager, nsIIPCBackgroundChildCreateCallback,
+                  nsIDOMEventListener);
 
 /***********************************************************************
  * Utility Functions
@@ -131,6 +134,7 @@ nsresult
 GetOrigin(nsPIDOMWindowInner* aParent,
           /*out*/ nsAString& aOrigin, /*out*/ nsACString& aHost)
 {
+  MOZ_ASSERT(aParent);
   nsCOMPtr<nsIDocument> doc = aParent->GetDoc();
   MOZ_ASSERT(doc);
 
@@ -168,6 +172,7 @@ RelaxSameOrigin(nsPIDOMWindowInner* aParent,
   MOZ_ASSERT(aParent);
   nsCOMPtr<nsIDocument> doc = aParent->GetDoc();
   MOZ_ASSERT(doc);
+
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
   nsCOMPtr<nsIURI> uri;
   if (NS_FAILED(principal->GetURI(getter_AddRefs(uri)))) {
@@ -212,6 +217,41 @@ RelaxSameOrigin(nsPIDOMWindowInner* aParent,
   return NS_OK;
 }
 
+static void
+ListenForVisibilityEvents(nsPIDOMWindowInner* aParent,
+                          WebAuthnManager* aListener)
+{
+  MOZ_ASSERT(aParent);
+  MOZ_ASSERT(aListener);
+
+  nsCOMPtr<nsIDocument> doc = aParent->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return;
+  }
+
+  nsresult rv = doc->AddSystemEventListener(kVisibilityChange, aListener,
+                                            /* use capture */ true,
+                                            /* wants untrusted */ false);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
+static void
+StopListeningForVisibilityEvents(nsPIDOMWindowInner* aParent,
+                                 WebAuthnManager* aListener)
+{
+  MOZ_ASSERT(aParent);
+  MOZ_ASSERT(aListener);
+
+  nsCOMPtr<nsIDocument> doc = aParent->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return;
+  }
+
+  nsresult rv = doc->RemoveSystemEventListener(kVisibilityChange, aListener,
+                                               /* use capture */ true);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
 /***********************************************************************
  * WebAuthnManager Implementation
  **********************************************************************/
@@ -227,6 +267,11 @@ WebAuthnManager::MaybeClearTransaction()
   mClientData.reset();
   mInfo.reset();
   mTransactionPromise = nullptr;
+  if (mCurrentParent) {
+    StopListeningForVisibilityEvents(mCurrentParent, this);
+    mCurrentParent = nullptr;
+  }
+
   if (mChild) {
     RefPtr<WebAuthnTransactionChild> c;
     mChild.swap(c);
@@ -503,6 +548,8 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   mClientData = Some(clientDataJSON);
   mCurrentParent = aParent;
   mInfo = Some(info);
+  ListenForVisibilityEvents(aParent, this);
+
   return promise.forget();
 }
 
@@ -517,6 +564,13 @@ void
 WebAuthnManager::StartSign() {
   if (mChild) {
     mChild->SendRequestSign(mInfo.ref());
+  }
+}
+
+void
+WebAuthnManager::StartCancel() {
+  if (mChild) {
+    mChild->SendRequestCancel();
   }
 }
 
@@ -669,6 +723,8 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   mClientData = Some(clientDataJSON);
   mCurrentParent = aParent;
   mInfo = Some(info);
+  ListenForVisibilityEvents(aParent, this);
+
   return promise.forget();
 }
 
@@ -877,10 +933,39 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
 void
 WebAuthnManager::Cancel(const nsresult& aError)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mTransactionPromise) {
     mTransactionPromise->MaybeReject(aError);
   }
+
   MaybeClearTransaction();
+}
+
+NS_IMETHODIMP
+WebAuthnManager::HandleEvent(nsIDOMEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent);
+
+  nsAutoString type;
+  aEvent->GetType(type);
+  if (!type.Equals(kVisibilityChange)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocument> doc =
+    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+  MOZ_ASSERT(doc);
+
+  if (doc && doc->Hidden()) {
+    MOZ_LOG(gWebAuthnManagerLog, LogLevel::Debug,
+            ("Visibility change: WebAuthn window is hidden, cancelling job."));
+
+    StartCancel();
+    Cancel(NS_ERROR_ABORT);
+  }
+
+  return NS_OK;
 }
 
 void
