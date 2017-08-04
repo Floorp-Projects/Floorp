@@ -6,9 +6,7 @@
 package org.mozilla.gecko.toolbar;
 
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -21,7 +19,6 @@ import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -176,18 +173,10 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
     private ThemedImageButton createImageButton() {
         ThreadUtils.assertOnUiThread();
 
-        ThemedImageButton imageButton = new ThemedImageButton(mContext, null, R.style.UrlBar_ImageButton);
-        // bug 1375351: different appearance in two skin
-        if (SkinConfig.isAustralis()) {
-            final int width = mContext.getResources().getDimensionPixelSize(R.dimen.page_action_button_width);
-            imageButton.setLayoutParams(new LayoutParams(width, LayoutParams.MATCH_PARENT));
-            imageButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        } else {
-            final int width = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_image_button_width);
-            imageButton.setLayoutParams(new LayoutParams(width, LayoutParams.MATCH_PARENT));
-            imageButton.setBackgroundResource(R.drawable.action_bar_button);
-            imageButton.setScaleType(ImageView.ScaleType.CENTER);
-        }
+        final ToolbarRoundButton imageButton = new ToolbarRoundButton(mContext, null, R.style.UrlBar_ImageButton);
+        final int width = mContext.getResources().getDimensionPixelSize(R.dimen.page_action_button_width);
+        imageButton.setLayoutParams(new LayoutParams(width, LayoutParams.MATCH_PARENT));
+        imageButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         imageButton.setOnClickListener(this);
         imageButton.setOnLongClickListener(this);
         return imageButton;
