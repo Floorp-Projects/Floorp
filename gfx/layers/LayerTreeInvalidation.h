@@ -21,10 +21,10 @@ class ContainerLayer;
  *
  * @param aContainer ContainerLayer being invalidated.
  * @param aRegion Invalidated region in the ContainerLayer's coordinate
- * space.
+ * space. If null, then the entire region must be invalidated.
  */
 typedef void (*NotifySubDocInvalidationFunc)(ContainerLayer* aLayer,
-                                             const nsIntRegion& aRegion);
+                                             const nsIntRegion* aRegion);
 
 /**
  * A set of cached layer properties (including those of child layers),
