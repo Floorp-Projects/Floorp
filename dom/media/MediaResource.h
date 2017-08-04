@@ -174,12 +174,6 @@ public:
   virtual void Resume() = 0;
   // Get the current principal for the channel
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
-  // If this returns false, then we shouldn't try to clone this MediaResource
-  // because its underlying resources are not suitable for reuse (e.g.
-  // because the underlying connection has been lost, or this resource
-  // just can't be safely cloned). If this returns true, CloneData could
-  // still fail. If this returns false, CloneData should not be called.
-  virtual bool CanClone() { return false; }
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -330,6 +324,13 @@ public:
     MediaResourceCallback* aCallback,
     nsIChannel* aChannel,
     bool aIsPrivateBrowsing);
+
+  // If this returns false, then we shouldn't try to clone this MediaResource
+  // because its underlying resources are not suitable for reuse (e.g.
+  // because the underlying connection has been lost, or this resource
+  // just can't be safely cloned). If this returns true, CloneData could
+  // still fail. If this returns false, CloneData should not be called.
+  virtual bool CanClone() { return false; }
 
   // Create a new stream of the same type that refers to the same URI
   // with a new channel. Any cached data associated with the original
