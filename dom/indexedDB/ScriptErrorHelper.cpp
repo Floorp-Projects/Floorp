@@ -81,7 +81,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!aMessageName.IsEmpty());
 
-    nsXPIDLString localizedMessage;
+    nsAutoString localizedMessage;
     if (NS_WARN_IF(NS_FAILED(
       nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                          aMessageName.BeginReading(),

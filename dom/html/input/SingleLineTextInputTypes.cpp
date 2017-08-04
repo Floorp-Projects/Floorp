@@ -121,7 +121,7 @@ URLInputType::HasTypeMismatch() const
 }
 
 nsresult
-URLInputType::GetTypeMismatchMessage(nsXPIDLString& aMessage)
+URLInputType::GetTypeMismatchMessage(nsAString& aMessage)
 {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                             "FormValidationInvalidURL",
@@ -165,7 +165,7 @@ EmailInputType::HasBadInput() const
 }
 
 nsresult
-EmailInputType::GetTypeMismatchMessage(nsXPIDLString& aMessage)
+EmailInputType::GetTypeMismatchMessage(nsAString& aMessage)
 {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                             "FormValidationInvalidEmail",
@@ -173,7 +173,7 @@ EmailInputType::GetTypeMismatchMessage(nsXPIDLString& aMessage)
 }
 
 nsresult
-EmailInputType::GetBadInputMessage(nsXPIDLString& aMessage)
+EmailInputType::GetBadInputMessage(nsAString& aMessage)
 {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                             "FormValidationInvalidEmail",

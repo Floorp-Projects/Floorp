@@ -12,7 +12,7 @@
 #include "mozilla/Maybe.h"
 #include "nsTArray.h"
 
-class nsXPIDLString;
+class nsAString;
 
 namespace mozilla {
 
@@ -62,10 +62,10 @@ struct AnimationPerformanceWarning
   // Optional parameters that may be used for localization.
   Maybe<nsTArray<int32_t>> mParams;
 
-  bool ToLocalizedString(nsXPIDLString& aLocalizedString) const;
+  bool ToLocalizedString(nsAString& aLocalizedString) const;
   template<uint32_t N>
   nsresult ToLocalizedStringWithIntParams(
-    const char* aKey, nsXPIDLString& aLocalizedString) const;
+    const char* aKey, nsAString& aLocalizedString) const;
 
   bool operator==(const AnimationPerformanceWarning& aOther) const
   {

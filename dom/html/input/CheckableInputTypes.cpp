@@ -25,7 +25,7 @@ CheckboxInputType::IsValueMissing() const
 }
 
 nsresult
-CheckboxInputType::GetValueMissingMessage(nsXPIDLString& aMessage)
+CheckboxInputType::GetValueMissingMessage(nsAString& aMessage)
 {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                             "FormValidationCheckboxMissing",
@@ -35,7 +35,7 @@ CheckboxInputType::GetValueMissingMessage(nsXPIDLString& aMessage)
 /* input type=radio */
 
 nsresult
-RadioInputType::GetValueMissingMessage(nsXPIDLString& aMessage)
+RadioInputType::GetValueMissingMessage(nsAString& aMessage)
 {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                             "FormValidationRadioMissing",

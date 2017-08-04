@@ -1957,23 +1957,21 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
     const char16_t* params[] = {appName.get(), appName.get()};
 
-    nsXPIDLString killMessage;
+    nsAutoString killMessage;
 #ifndef XP_MACOSX
-    sb->FormatStringFromName(aUnlocker ? "restartMessageUnlocker"
-                                       : "restartMessageNoUnlocker",
-                             params, 2, getter_Copies(killMessage));
+    rv = sb->FormatStringFromName(aUnlocker ? "restartMessageUnlocker"
+                                            : "restartMessageNoUnlocker",
+                                  params, 2, killMessage);
 #else
-    sb->FormatStringFromName(aUnlocker ? "restartMessageUnlockerMac"
-                                       : "restartMessageNoUnlockerMac",
-                             params, 2, getter_Copies(killMessage));
+    rv = sb->FormatStringFromName(aUnlocker ? "restartMessageUnlockerMac"
+                                            : "restartMessageNoUnlockerMac",
+                                  params, 2, killMessage);
 #endif
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    nsXPIDLString killTitle;
-    sb->FormatStringFromName("restartTitle",
-                             params, 1, getter_Copies(killTitle));
-
-    if (!killMessage || !killTitle)
-      return NS_ERROR_FAILURE;
+    nsAutoString killTitle;
+    rv = sb->FormatStringFromName("restartTitle", params, 1, killTitle);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     if (gfxPlatform::IsHeadless()) {
       // TODO: make a way to turn off all dialogs when headless.
@@ -1998,8 +1996,8 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
          nsIPromptService::BUTTON_POS_1);
 
       bool checkState = false;
-      rv = ps->ConfirmEx(nullptr, killTitle, killMessage, flags,
-                         killTitle, nullptr, nullptr, nullptr,
+      rv = ps->ConfirmEx(nullptr, killTitle.get(), killMessage.get(), flags,
+                         killTitle.get(), nullptr, nullptr, nullptr,
                          &checkState, &button);
       NS_ENSURE_SUCCESS_LOG(rv, rv);
 #endif
@@ -2022,7 +2020,7 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
                                   nullptr, aResult);
       }
 #else
-      rv = ps->Alert(nullptr, killTitle, killMessage);
+      rv = ps->Alert(nullptr, killTitle.get(), killMessage.get());
       NS_ENSURE_SUCCESS_LOG(rv, rv);
 #endif
     }
@@ -2055,23 +2053,19 @@ ProfileMissingDialog(nsINativeAppSupport* aNative)
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
     const char16_t* params[] = {appName.get(), appName.get()};
 
-    nsXPIDLString missingMessage;
-
     // profileMissing
-    sb->FormatStringFromName("profileMissing",
-                             params, 2, getter_Copies(missingMessage));
+    nsAutoString missingMessage;
+    rv = sb->FormatStringFromName("profileMissing", params, 2, missingMessage);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
 
-    nsXPIDLString missingTitle;
-    sb->FormatStringFromName("profileMissingTitle",
-                             params, 1, getter_Copies(missingTitle));
+    nsAutoString missingTitle;
+    rv = sb->FormatStringFromName("profileMissingTitle", params, 1, missingTitle);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
 
-    if (missingMessage && missingTitle) {
-      nsCOMPtr<nsIPromptService> ps
-        (do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-      NS_ENSURE_TRUE(ps, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIPromptService> ps(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+    NS_ENSURE_TRUE(ps, NS_ERROR_FAILURE);
 
-      ps->Alert(nullptr, missingTitle, missingMessage);
-    }
+    ps->Alert(nullptr, missingTitle.get(), missingMessage.get());
 
     return NS_ERROR_ABORT;
   }

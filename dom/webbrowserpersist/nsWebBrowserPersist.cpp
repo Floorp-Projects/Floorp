@@ -1228,13 +1228,14 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(
     rv = s->CreateBundle(kWebBrowserPersistStringBundle, getter_AddRefs(bundle));
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && bundle, NS_ERROR_FAILURE);
 
-    nsXPIDLString msgText;
+    nsAutoString msgText;
     const char16_t *strings[1];
     strings[0] = path.get();
-    rv = bundle->FormatStringFromName(msgId, strings, 1, getter_Copies(msgText));
+    rv = bundle->FormatStringFromName(msgId, strings, 1, msgText);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    mProgressListener->OnStatusChange(nullptr, aRequest, aResult, msgText);
+    mProgressListener->OnStatusChange(nullptr, aRequest, aResult,
+                                      msgText.get());
 
     return NS_OK;
 }

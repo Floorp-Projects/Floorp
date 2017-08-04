@@ -1077,11 +1077,10 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
         nsCOMPtr<nsIStringBundleService> sbs =
             mozilla::services::GetStringBundleService();
         if (sbs) {
-            nsXPIDLString errorText;
-            sbs->FormatStatusMessage(aResult, EmptyString().get(),
-                                     getter_Copies(errorText));
+            nsAutoString errorText;
+            sbs->FormatStatusMessage(aResult, EmptyString().get(), errorText);
 
-            nsXPIDLString errorMessage;
+            nsAutoString errorMessage;
             nsCOMPtr<nsIStringBundle> bundle;
             sbs->CreateBundle(XSLT_MSGS_URL, getter_AddRefs(bundle));
 
@@ -1089,13 +1088,11 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
                 const char16_t* error[] = { errorText.get() };
                 if (mStylesheet) {
                     bundle->FormatStringFromName("TransformError",
-                                                 error, 1,
-                                                 getter_Copies(errorMessage));
+                                                 error, 1, errorMessage);
                 }
                 else {
                     bundle->FormatStringFromName("LoadingError",
-                                                 error, 1,
-                                                 getter_Copies(errorMessage));
+                                                 error, 1, errorMessage);
                 }
             }
             mErrorText.Assign(errorMessage);

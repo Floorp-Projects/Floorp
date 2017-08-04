@@ -919,11 +919,11 @@ HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
   nsAutoString message;
   nsAutoString cont;
   stringBundle->GetStringFromName(
-    "formPostSecureToInsecureWarning.title", getter_Copies(title));
+    "formPostSecureToInsecureWarning.title", title);
   stringBundle->GetStringFromName(
-    "formPostSecureToInsecureWarning.message", getter_Copies(message));
+    "formPostSecureToInsecureWarning.message", message);
   stringBundle->GetStringFromName(
-    "formPostSecureToInsecureWarning.continue", getter_Copies(cont));
+    "formPostSecureToInsecureWarning.continue", cont);
   int32_t buttonPressed;
   bool checkState = false; // this is unused (ConfirmEx requires this parameter)
   rv = prompt->ConfirmEx(title.get(), message.get(),

@@ -1102,11 +1102,12 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
                                          getter_AddRefs(bundle));
 
         if (NS_SUCCEEDED(rv) && bundle) {
-          nsXPIDLString keyName;
+          nsAutoString keyName;
           rv = bundle->GetStringFromName(NS_ConvertUTF16toUTF8(keyCode).get(),
-                                         getter_Copies(keyName));
-          if (keyName)
+                                         keyName);
+          if (NS_SUCCEEDED(rv)) {
             accelString = keyName;
+          }
         }
       }
 

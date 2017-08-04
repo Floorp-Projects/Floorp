@@ -854,7 +854,7 @@ HTMLInputElement::InitColorPicker()
   }
 
   // Get Loc title
-  nsXPIDLString title;
+  nsAutoString title;
   nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                      "ColorPicker", title);
 
@@ -901,8 +901,8 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
   }
 
   // Get Loc title
-  nsXPIDLString title;
-  nsXPIDLString okButtonLabel;
+  nsAutoString title;
+  nsAutoString okButtonLabel;
   if (aType == FILE_PICKER_DIRECTORY) {
     nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                        "DirectoryUpload", title);
@@ -2769,7 +2769,7 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
     return;
   }
 
-  nsXPIDLString value;
+  nsAutoString value;
 
   if (mFileData->mFilesOrDirectories.IsEmpty()) {
     if ((IsDirPickerEnabled() && Allowdirs()) ||
@@ -6415,7 +6415,7 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
   if (mType == NS_FORM_INPUT_SUBMIT && value.IsEmpty() &&
       !HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
     // Get our default value, which is the same as our default label
-    nsXPIDLString defaultValue;
+    nsAutoString defaultValue;
     nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                        "Submit", defaultValue);
     value = defaultValue;
@@ -7570,15 +7570,15 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
     if (token.EqualsLiteral("image/*")) {
       filterMask = nsIFilePicker::filterImages;
       filterBundle->GetStringFromName("imageFilter",
-                                      getter_Copies(extensionListStr));
+                                      extensionListStr);
     } else if (token.EqualsLiteral("audio/*")) {
       filterMask = nsIFilePicker::filterAudio;
       filterBundle->GetStringFromName("audioFilter",
-                                      getter_Copies(extensionListStr));
+                                      extensionListStr);
     } else if (token.EqualsLiteral("video/*")) {
       filterMask = nsIFilePicker::filterVideo;
       filterBundle->GetStringFromName("videoFilter",
-                                      getter_Copies(extensionListStr));
+                                      extensionListStr);
     } else if (token.First() == '.') {
       if (token.Contains(';') || token.Contains('*')) {
         // Ignore this filter as it contains reserved characters
@@ -7681,7 +7681,7 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
 
   // Add "All Supported Types" filter
   if (filters.Length() > 1) {
-    nsXPIDLString title;
+    nsAutoString title;
     nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                        "AllSupportedTypes", title);
     filePicker->AppendFilter(title, allExtensionsList);
