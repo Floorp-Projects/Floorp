@@ -217,6 +217,14 @@ HttpChannelChild::ReleaseMainThreadOnlyReferences()
 
   nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
   arrayToRelease.AppendElement(mCacheKey.forget());
+  arrayToRelease.AppendElement(mRedirectChannelChild.forget());
+
+  // To solve multiple inheritence of nsISupports in InterceptStreamListener
+  already_AddRefed<nsIStreamListener> listener = mInterceptListener.forget();
+  arrayToRelease.AppendElement(listener.take());
+
+  arrayToRelease.AppendElement(mInterceptedRedirectListener.forget());
+  arrayToRelease.AppendElement(mInterceptedRedirectContext.forget());
 
   NS_DispatchToMainThread(new ProxyReleaseRunnable(Move(arrayToRelease)));
 }
