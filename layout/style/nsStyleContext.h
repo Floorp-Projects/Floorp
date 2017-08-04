@@ -94,11 +94,18 @@ public:
              mBits >> NS_STYLE_CONTEXT_TYPE_SHIFT);
   }
 
-  bool IsAnonBox() const {
-    return
-      GetPseudoType() == mozilla::CSSPseudoElementType::InheritingAnonBox ||
-      GetPseudoType() == mozilla::CSSPseudoElementType::NonInheritingAnonBox;
+  bool IsInheritingAnonBox() const {
+    return GetPseudoType() == mozilla::CSSPseudoElementType::InheritingAnonBox;
   }
+
+  bool IsNonInheritingAnonBox() const {
+    return GetPseudoType() == mozilla::CSSPseudoElementType::NonInheritingAnonBox;
+  }
+
+  bool IsAnonBox() const {
+    return IsInheritingAnonBox() || IsNonInheritingAnonBox();
+  }
+
   bool IsPseudoElement() const { return mPseudoTag && !IsAnonBox(); }
 
 

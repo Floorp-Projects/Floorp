@@ -59,6 +59,22 @@ public:
       false;
   }
 
+#ifdef DEBUG
+  // NOTE(emilio): DEBUG only because this does a pretty slow linear search. Try
+  // to use IsNonInheritingAnonBox if you know the atom is an anon box already
+  // or, even better, nothing like this.
+  static bool IsInheritingAnonBox(nsIAtom* aPseudo)
+  {
+    return
+#define CSS_ANON_BOX(_name, _value) _name == aPseudo ||
+#define CSS_NON_INHERITING_ANON_BOX(_name, _value) /* nothing */
+#include "nsCSSAnonBoxList.h"
+#undef CSS_NON_INHERITING_ANON_BOX
+#undef CSS_ANON_BOX
+      false;
+  }
+#endif
+
   // Get the NonInheriting type for a given pseudo tag.  The pseudo tag must
   // test true for IsNonInheritingAnonBox.
   static NonInheriting NonInheritingTypeForPseudoTag(nsIAtom* aPseudo);
