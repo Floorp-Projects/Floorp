@@ -221,7 +221,7 @@ with Files("tests/web-animations/**"):
     BUG_COMPONENT = ("Core", "DOM: Animation")
 
 with Files("tests/webaudio/**"):
-    BUG_COMPONENT = ("Core", "DOM: Web Audio")
+    BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("tests/webauthn/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
