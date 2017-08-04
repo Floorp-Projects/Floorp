@@ -711,18 +711,6 @@ protected:
   // main-thread induced principal changes get reflected on MSG thread.
   Canonical<PrincipalHandle> mMediaPrincipalHandle;
 
-  // Estimate of the current playback rate (bytes/second).
-  Canonical<double> mPlaybackBytesPerSecond;
-
-  // True if mPlaybackBytesPerSecond is a reliable estimate.
-  Canonical<bool> mPlaybackRateReliable;
-
-  // Current decoding position in the stream. This is where the decoder
-  // is up to consuming the stream. This is not adjusted during decoder
-  // seek operations, but it's updated at the end when we start playing
-  // back again.
-  Canonical<int64_t> mDecoderPosition;
-
   // We can allow video decoding in background when we match some special
   // conditions, eg. when the cursor is hovering over the tab. This observer is
   // used to listen the related events.
@@ -732,6 +720,12 @@ protected:
   // True if we want to resume video decoding even the media element is in the
   // background.
   bool mIsBackgroundVideoDecodingAllowed;
+
+  // Current decoding position in the stream. This is where the decoder
+  // is up to consuming the stream. This is not adjusted during decoder
+  // seek operations, but it's updated at the end when we start playing
+  // back again.
+  int64_t mDecoderPosition = 0;
 
 public:
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
@@ -756,18 +750,6 @@ public:
   {
     return &mMediaPrincipalHandle;
   }
-  AbstractCanonical<double>* CanonicalPlaybackBytesPerSecond()
-  {
-    return &mPlaybackBytesPerSecond;
-  }
-  AbstractCanonical<bool>* CanonicalPlaybackRateReliable()
-  {
-    return &mPlaybackRateReliable;
-  }
-  AbstractCanonical<int64_t>* CanonicalDecoderPosition()
-  {
-    return &mDecoderPosition;
-  }
 
 private:
   // Notify owner when the audible state changed
@@ -776,6 +758,12 @@ private:
   bool mTelemetryReported;
   const MediaContainerType mContainerType;
   bool mCanPlayThrough = false;
+
+  // Estimate of the current playback rate (bytes/second).
+  double mPlaybackBytesPerSecond = 0;
+
+  // True if mPlaybackBytesPerSecond is a reliable estimate.
+  bool mPlaybackRateReliable = true;
 };
 
 } // namespace mozilla
