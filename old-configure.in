@@ -2103,7 +2103,6 @@ MOZ_SPELLCHECK=1
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
-MOZ_URL_CLASSIFIER=
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
@@ -3726,18 +3725,6 @@ if test -n "$MOZ_SYSTEM_SQLITE"; then
     AC_DEFINE(MOZ_SYSTEM_SQLITE)
 fi
 AC_SUBST(MOZ_SYSTEM_SQLITE)
-
-dnl ========================================================
-dnl = Enable url-classifier
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(url-classifier,
-[  --enable-url-classifier Enable url classifier module],
-    MOZ_URL_CLASSIFIER=1,
-    MOZ_URL_CLASSIFIER= )
-if test -n "$MOZ_URL_CLASSIFIER"; then
-    AC_DEFINE(MOZ_URL_CLASSIFIER)
-fi
-AC_SUBST(MOZ_URL_CLASSIFIER)
 
 dnl ========================================================
 dnl = Disable zipwriter
