@@ -120,7 +120,7 @@ function createTempFile(aName, aContent, aCallback = function () {})
   // Write the temporary file.
   let fout = Cc["@mozilla.org/network/file-output-stream;1"].
              createInstance(Ci.nsIFileOutputStream);
-  fout.init(file.QueryInterface(Ci.nsILocalFile), 0x02 | 0x08 | 0x20,
+  fout.init(file.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             parseInt("644", 8), fout.DEFER_OPEN);
 
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].

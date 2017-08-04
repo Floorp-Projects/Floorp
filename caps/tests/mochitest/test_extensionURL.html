@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
 
     // Gets a normalized (de-symlinked) path in the parent process
     this.addMessageListener("ResolvePath", (path) => {
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(path);
       file.normalize();
       return file.path;
@@ -133,7 +133,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
     // resolve in the child process.
     let resolvedPath = script.sendSyncMessage("ResolvePath", resFile.path);
     let file = SpecialPowers.Cc["@mozilla.org/file/local;1"]
-                            .createInstance(SpecialPowers.Ci.nsILocalFile);
+                            .createInstance(SpecialPowers.Ci.nsIFile);
     info(`resolved test file path: ${resolvedPath}`);
     file.initWithPath(resolvedPath);
 

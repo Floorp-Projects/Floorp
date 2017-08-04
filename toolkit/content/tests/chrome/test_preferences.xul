@@ -31,7 +31,7 @@
         unichar: Components.classes["@mozilla.org/supports-string;1"]
                            .createInstance(Components.interfaces.nsISupportsString),
         file:    Components.classes["@mozilla.org/file/local;1"]
-                           .createInstance(Components.interfaces.nsILocalFile)
+                           .createInstance(Components.interfaces.nsIFile)
     };
     kPrefValueSet1.wstring.data = kPrefValueSet1.wstring_data;
     kPrefValueSet1.unichar.data = kPrefValueSet1.unichar_data;
@@ -52,7 +52,7 @@
         unichar: Components.classes["@mozilla.org/supports-string;1"]
                            .createInstance(Components.interfaces.nsISupportsString),
         file:    Components.classes["@mozilla.org/file/local;1"]
-                           .createInstance(Components.interfaces.nsILocalFile)
+                           .createInstance(Components.interfaces.nsIFile)
     };
     kPrefValueSet2.wstring.data = kPrefValueSet2.wstring_data;
     kPrefValueSet2.unichar.data = kPrefValueSet2.unichar_data;
@@ -99,7 +99,7 @@
                             Components.interfaces.nsISupportsString,
                             aPrefValueSet.unichar);
       kPref.setComplexValue("tests.static_preference_file",
-                            Components.interfaces.nsILocalFile,
+                            Components.interfaces.nsIFile,
                             aPrefValueSet.file);
     }
 
@@ -127,7 +127,7 @@
       try
       {
         result.file = kPref.getComplexValue("tests.static_preference_file",
-                                            Components.interfaces.nsILocalFile);
+                                            Components.interfaces.nsIFile);
         result.file_data    = result.file.data;
       }
       catch (ignored) {};
@@ -166,7 +166,7 @@
         unichar: Components.classes["@mozilla.org/supports-string;1"]
                            .createInstance(Components.interfaces.nsISupportsString),
         file:    Components.classes["@mozilla.org/file/local;1"]
-                           .createInstance(Components.interfaces.nsILocalFile)
+                           .createInstance(Components.interfaces.nsIFile)
       }
       result.wstring.data = result.wstring_data;
       result.unichar.data = result.unichar_data;
@@ -201,7 +201,7 @@
         unichar: Components.classes["@mozilla.org/supports-string;1"]
                            .createInstance(Components.interfaces.nsISupportsString),
         file:    Components.classes["@mozilla.org/file/local;1"]
-                           .createInstance(Components.interfaces.nsILocalFile)
+                           .createInstance(Components.interfaces.nsIFile)
       }
       result.wstring.data = result.wstring_data;
       result.unichar.data = result.unichar_data;

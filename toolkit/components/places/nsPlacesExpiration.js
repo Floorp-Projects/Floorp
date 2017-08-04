@@ -738,7 +738,7 @@ nsPlacesExpiration.prototype = {
       try {
         // Protect against a full disk or tiny quota.
         let dbFile = this._db.databaseFile;
-        dbFile.QueryInterface(Ci.nsILocalFile);
+        dbFile.QueryInterface(Ci.nsIFile);
         diskAvailableBytes = dbFile.diskSpaceAvailable;
       } catch (ex) {}
       if (diskAvailableBytes <= 0) {

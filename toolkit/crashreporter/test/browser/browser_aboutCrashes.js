@@ -6,7 +6,7 @@ add_task(async function test() {
   // sanity check
   let dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                          .getService(Components.interfaces.nsIProperties);
-  let appDtest = dirSvc.get("UAppData", Components.interfaces.nsILocalFile);
+  let appDtest = dirSvc.get("UAppData", Components.interfaces.nsIFile);
   ok(appD.equals(appDtest), "directory service provider registered ok");
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" }, function(browser) {

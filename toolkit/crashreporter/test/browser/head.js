@@ -17,7 +17,7 @@ function make_fake_appdir() {
   // just because we know that will get cleaned up after the mochitest run.
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
                .getService(Ci.nsIProperties);
-  let profD = dirSvc.get("ProfD", Ci.nsILocalFile);
+  let profD = dirSvc.get("ProfD", Ci.nsIFile);
   // create a subdir just to keep our files out of the way
   let appD = create_subdir(profD, "UAppData");
 

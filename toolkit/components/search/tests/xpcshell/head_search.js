@@ -74,7 +74,7 @@ function configureToLoadJarEngines() {
  */
 function installAddonEngine(name = "engine-addon") {
   const XRE_EXTENSIONS_DIR_LIST = "XREExtDL";
-  const profD = do_get_profile().QueryInterface(Ci.nsILocalFile);
+  const profD = do_get_profile().QueryInterface(Ci.nsIFile);
 
   let dir = profD.clone();
   dir.append("extensions");
@@ -125,7 +125,7 @@ function installAddonEngine(name = "engine-addon") {
 function installDistributionEngine() {
   const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
 
-  const profD = do_get_profile().QueryInterface(Ci.nsILocalFile);
+  const profD = do_get_profile().QueryInterface(Ci.nsIFile);
 
   let dir = profD.clone();
   dir.append("distribution");

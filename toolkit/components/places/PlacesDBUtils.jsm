@@ -776,7 +776,7 @@ this.PlacesDBUtils = {
    */
   async vacuum() { // eslint-disable-line require-await
     let logs = [];
-    let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    let DBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
     DBFile.append("places.sqlite");
     logs.push("Initial database size is " +
                 parseInt(DBFile.fileSize / 1024) + " KiB");
@@ -786,7 +786,7 @@ this.PlacesDBUtils = {
         await db.execute("VACUUM");
       }).then(() => {
         logs.push("The database has been vacuumed");
-        let vacuumedDBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+        let vacuumedDBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
         vacuumedDBFile.append("places.sqlite");
         logs.push("Final database size is " +
                    parseInt(vacuumedDBFile.fileSize / 1024) + " KiB");
@@ -835,7 +835,7 @@ this.PlacesDBUtils = {
    */
   async stats() {
     let logs = [];
-    let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    let DBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
     DBFile.append("places.sqlite");
     logs.push("Database size is " + parseInt(DBFile.fileSize / 1024) + " KiB");
 
@@ -968,7 +968,7 @@ this.PlacesDBUtils = {
 
       { histogram: "PLACES_DATABASE_FILESIZE_MB",
         callback() {
-          let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+          let DBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
           DBFile.append("places.sqlite");
           return parseInt(DBFile.fileSize / BYTES_PER_MEBIBYTE);
         }

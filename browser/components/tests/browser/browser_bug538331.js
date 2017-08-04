@@ -407,7 +407,7 @@ function writeUpdatesToXMLFile(aText) {
   let fos = Cc["@mozilla.org/network/file-output-stream;1"].
             createInstance(Ci.nsIFileOutputStream);
   if (!file.exists()) {
-    file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   }
   fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE, 0);
   fos.write(aText, aText.length);

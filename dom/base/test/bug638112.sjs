@@ -2,7 +2,7 @@ function getInputStream(path)
 {
   var file = Components.classes["@mozilla.org/file/directory_service;1"].
                         getService(Components.interfaces.nsIProperties).
-                        get("CurWorkD", Components.interfaces.nsILocalFile);
+                        get("CurWorkD", Components.interfaces.nsIFile);
   var fis  = Components.classes['@mozilla.org/network/file-input-stream;1'].
                         createInstance(Components.interfaces.nsIFileInputStream);
   var split = path.split("/");

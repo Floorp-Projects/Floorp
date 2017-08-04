@@ -114,7 +114,7 @@ function checkLogFile(prefix) {
   } else {
     // expecting 1 file.
     ok(entries.hasMoreElements());
-    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+    let logfile = entries.getNext().QueryInterface(Ci.nsIFile);
     equal(logfile.leafName.slice(-4), ".txt");
     ok(logfile.leafName.startsWith(prefix + "-test-"), logfile.leafName);
     // and remove it ready for the next check.

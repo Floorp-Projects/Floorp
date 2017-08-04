@@ -16,7 +16,7 @@ function run_test() {
     if (link.exists())
       link.remove(false);
 
-    var ln = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    var ln = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     ln.initWithPath("/bin/ln");
     var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(ln);

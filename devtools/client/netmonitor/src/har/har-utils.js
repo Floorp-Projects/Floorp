@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyGetter(this, "ZipWriter", function () {
 });
 
 XPCOMUtils.defineLazyGetter(this, "LocalFile", function () {
-  return new CC("@mozilla.org/file/local;1", "nsILocalFile", "initWithPath");
+  return new CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 });
 
 XPCOMUtils.defineLazyGetter(this, "getMostRecentBrowserWindow", function () {
@@ -127,7 +127,7 @@ var HarUtils = {
 
       // Create compressed file with the original file path name.
       let zipFile = Cc["@mozilla.org/file/local;1"]
-        .createInstance(Ci.nsILocalFile);
+        .createInstance(Ci.nsIFile);
       zipFile.initWithPath(originalFilePath);
 
       // The file within the zipped file doesn't use .zip extension.
@@ -159,11 +159,11 @@ var HarUtils = {
     let dir;
 
     if (!path) {
-      dir = dirService.get("ProfD", Ci.nsILocalFile);
+      dir = dirService.get("ProfD", Ci.nsIFile);
       dir.append("har");
       dir.append("logs");
     } else {
-      dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       dir.initWithPath(path);
     }
 

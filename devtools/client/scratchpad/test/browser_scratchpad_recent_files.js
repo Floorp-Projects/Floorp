@@ -192,11 +192,11 @@ function createAndLoadTemporaryFile(aFile, aFileName, aFileContent)
   // Write the temporary file.
   let fout = Cc["@mozilla.org/network/file-output-stream;1"].
              createInstance(Ci.nsIFileOutputStream);
-  fout.init(aFile.QueryInterface(Ci.nsILocalFile), 0x02 | 0x08 | 0x20,
+  fout.init(aFile.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             0o644, fout.DEFER_OPEN);
 
   gScratchpad.setFilename(aFile.path);
-  gScratchpad.importFromFile(aFile.QueryInterface(Ci.nsILocalFile), true,
+  gScratchpad.importFromFile(aFile.QueryInterface(Ci.nsIFile), true,
                             fileImported);
   gScratchpad.saveFile(fileSaved);
 

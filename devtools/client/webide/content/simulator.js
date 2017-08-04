@@ -143,7 +143,7 @@ var SimulatorEditor = {
 
     // Show the profile directory.
     let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
-                                           "nsILocalFile", "initWithPath");
+                                           "nsIFile", "initWithPath");
     new nsLocalFile(profileDir).reveal();
   },
 

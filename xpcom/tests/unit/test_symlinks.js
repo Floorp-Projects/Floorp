@@ -17,7 +17,7 @@ var process;
 function createSymLink(from, to) {
   if (!process) {
     var ln = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
+                       .createInstance(Components.interfaces.nsIFile);
     ln.initWithPath("/bin/ln");
 
     process = Components.classes["@mozilla.org/process/util;1"]

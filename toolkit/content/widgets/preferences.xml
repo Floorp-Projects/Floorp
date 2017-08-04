@@ -374,7 +374,7 @@
               return fontEnumerator.getStandardFamilyName(family);
             case "file":
               var f = this._branch
-                          .getComplexValue(this.name, Components.interfaces.nsILocalFile);
+                          .getComplexValue(this.name, Components.interfaces.nsIFile);
               return f;
             default:
               this._reportUnknownType();
@@ -419,14 +419,14 @@
             var lf;
             if (typeof(val) == "string") {
               lf = Components.classes["@mozilla.org/file/local;1"]
-                             .createInstance(Components.interfaces.nsILocalFile);
+                             .createInstance(Components.interfaces.nsIFile);
               lf.persistentDescriptor = val;
               if (!lf.exists())
                 lf.initWithPath(val);
             } else
-              lf = val.QueryInterface(Components.interfaces.nsILocalFile);
+              lf = val.QueryInterface(Components.interfaces.nsIFile);
             this.preferences.rootBranch
-                .setComplexValue(this.name, Components.interfaces.nsILocalFile, lf);
+                .setComplexValue(this.name, Components.interfaces.nsIFile, lf);
             break;
           default:
             this._reportUnknownType();

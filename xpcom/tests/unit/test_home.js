@@ -3,7 +3,7 @@ var Cc = Components.classes;
 
 const CWD = do_get_cwd();
 function checkOS(os) {
-  const nsILocalFile_ = "nsILocalFile" + os;
+  const nsILocalFile_ = "nsIFile" + os;
   return nsILocalFile_ in Components.interfaces &&
          CWD instanceof Components.interfaces[nsILocalFile_];
 }
@@ -17,7 +17,7 @@ function run_test() {
   var homeDir = dirSvc.get("Home", Ci.nsIFile);
 
   var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  var expected = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  var expected = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   expected.initWithPath(env.get(envVar));
 
   do_check_eq(homeDir.path, expected.path);

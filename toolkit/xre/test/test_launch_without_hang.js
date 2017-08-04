@@ -66,12 +66,12 @@ function wrapLaunchInShell(file, args) {
   let ret = { };
 
   if (AppConstants.platform === "win") {
-    ret.file = Services.dirsvc.get("WinD", Ci.nsILocalFile);
+    ret.file = Services.dirsvc.get("WinD", Ci.nsIFile);
     ret.file.append("System32");
     ret.file.append("cmd.exe");
     ret.args = ["/D", "/Q", "/C", file.path].concat(args).concat([">nul"]);
   } else {
-    ret.file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    ret.file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     ret.file.initWithPath("/usr/bin/env");
     ret.args = [file.path].concat(args).concat(["> /dev/null"]);
   }
@@ -89,12 +89,12 @@ function terminateFirefox(completion) {
   let args;
 
   if (AppConstants.platform === "win") {
-    file = Services.dirsvc.get("WinD", Ci.nsILocalFile);
+    file = Services.dirsvc.get("WinD", Ci.nsIFile);
     file.append("System32");
     file.append("taskkill.exe");
     args = ["/F", "/IM", executableName];
   } else {
-    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath("/usr/bin/killall");
     args = [executableName];
   }

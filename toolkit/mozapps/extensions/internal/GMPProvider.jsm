@@ -573,7 +573,7 @@ var GMPProvider = {
 
     try {
       let greDir = Services.dirsvc.get(NS_GRE_DIR,
-                                       Ci.nsILocalFile);
+                                       Ci.nsIFile);
       let clearkeyPath = OS.Path.join(greDir.path,
                                       CLEARKEY_PLUGIN_ID,
                                       CLEARKEY_VERSION);

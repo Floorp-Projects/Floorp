@@ -458,7 +458,7 @@ function Collector() {
 }
 
 Collector.prototype.addHttpResource = function (aDirectory, aPath) {
-  var fp = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  var fp = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   fp.initWithPath(os.abspath(aDirectory, this.current_file));
 
   return httpd.addHttpResource(fp, aPath);
@@ -514,7 +514,7 @@ Collector.prototype.loadFile = function (path, collector) {
   });
 
   // load a test module from a file and add some candy
-  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(path);
   var uri = Services.io.newFileURI(file).spec;
 

@@ -866,7 +866,7 @@ class Marionette(object):
                                value if set is returned. Defaults to `False`.
         :param value_type: Optional, XPCOM interface of the pref's complex value.
                            Defaults to `nsISupportsString`. Other possible values are:
-                           `nsILocalFile`, and `nsIPrefLocalizedString`.
+                           `nsIFile`, and `nsIPrefLocalizedString`.
 
         Usage example::
 

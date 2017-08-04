@@ -10,7 +10,7 @@ const { classes: Cc, interfaces: Ci } = Components;
 
 function getTestDataFile(aFilename) {
   let file = Cc["@mozilla.org/file/directory_service;1"].
-            getService(Ci.nsIProperties).get("CurWorkD", Ci.nsILocalFile);
+            getService(Ci.nsIProperties).get("CurWorkD", Ci.nsIFile);
   let pathParts = REL_PATH_DATA.split("/");
   for (let i = 0; i < pathParts.length; ++i) {
     file.append(pathParts[i]);
@@ -29,7 +29,7 @@ function loadHelperScript(aScriptFile) {
   scriptloader.loadSubScript(scriptSpec, this);
 }
 
-var scriptFile = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsILocalFile);
+var scriptFile = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
 scriptFile.initWithPath(getState("__LOCATION__"));
 scriptFile = scriptFile.parent;
 scriptFile.append("testConstants.js");

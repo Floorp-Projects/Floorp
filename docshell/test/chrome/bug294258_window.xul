@@ -42,7 +42,7 @@
       $("checkbox").checked = true;
       var file = Components.classes["@mozilla.org/file/directory_service;1"]
              .getService(Components.interfaces.nsIProperties)
-             .get("TmpD", Components.interfaces.nsILocalFile);
+             .get("TmpD", Components.interfaces.nsIFile);
       file.append("294258_test.file");
       file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
       filePath = file.path;

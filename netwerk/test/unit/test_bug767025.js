@@ -70,7 +70,7 @@ function init_profile() {
   dump(ps.getBoolPref("browser.cache.offline.enable"));
   ps.setBoolPref("browser.cache.offline.enable", true);
   ps.setComplexValue("browser.cache.offline.parent_directory",
-		     Ci.nsILocalFile, do_get_profile());
+		     Ci.nsIFile, do_get_profile());
   do_print("profile " + do_get_profile());
 }
 

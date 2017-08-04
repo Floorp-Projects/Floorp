@@ -27,7 +27,7 @@ const Ci = SpecialPowers.Ci;
 function getTempDir() {
     return Cc["@mozilla.org/file/directory_service;1"]
             .getService(Ci.nsIProperties)
-            .get("TmpD", Ci.nsILocalFile);
+            .get("TmpD", Ci.nsIFile);
 }
 
 // STATE_STOP from nsIWebProgressListener.idl

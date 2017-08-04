@@ -410,7 +410,7 @@ exports.getSnapshotTotals = function (census) {
  *        The default name chosen by the file picker window.
  * @param {String} .mode
  *        The mode that this filepicker should open in. Can be "open" or "save".
- * @return {Promise<?nsILocalFile>}
+ * @return {Promise<?nsIFile>}
  *        The file selected by the user, or null, if cancelled.
  */
 exports.openFilePicker = function ({ title, filters, defaultName, mode }) {

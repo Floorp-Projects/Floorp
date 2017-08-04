@@ -68,7 +68,7 @@ function handleRequest(request, response) {
   // Ugly hack, but effective - copied from dom/media/test/contentDuration1.sjs
   var pngFile = Components.classes["@mozilla.org/file/directory_service;1"].
                            getService(Components.interfaces.nsIProperties).
-                           get("CurWorkD", Components.interfaces.nsILocalFile);
+                           get("CurWorkD", Components.interfaces.nsIFile);
   var paths = "tests/layout/generic/test/file_Dolske.png";
   var split = paths.split("/");
   for(var i = 0; i < split.length; ++i) {

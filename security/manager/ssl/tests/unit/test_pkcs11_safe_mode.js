@@ -40,7 +40,7 @@ function run_test() {
   // When starting in safe mode, the test module should fail to load.
   let pkcs11 = Cc["@mozilla.org/security/pkcs11;1"].getService(Ci.nsIPKCS11);
   let libraryName = ctypes.libraryName("pkcs11testmodule");
-  let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsILocalFile);
+  let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   libraryFile.append("pkcs11testmodule");
   libraryFile.append(libraryName);
   ok(libraryFile.exists(), "The pkcs11testmodule file should exist");

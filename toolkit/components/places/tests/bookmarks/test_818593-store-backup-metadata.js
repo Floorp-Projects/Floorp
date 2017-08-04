@@ -16,7 +16,7 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
 
   // Test saveBookmarksToJSONFile()
   let backupFile = FileUtils.getFile("TmpD", ["bookmarks.json"]);
-  backupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, parseInt("0600", 8));
+  backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0600", 8));
 
   let nodeCount = await PlacesBackups.saveBookmarksToJSONFile(backupFile, true);
   do_check_true(nodeCount > 0);

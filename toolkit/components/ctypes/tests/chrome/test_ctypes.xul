@@ -23,7 +23,7 @@
 
     /*
      * input: string of the url where we are running from
-     * return: nsILocalFile
+     * return: nsIFile
      */
     function getCurrentDir(path) {
       var rootDir = getRootDirectory(window.location.href);
@@ -39,7 +39,7 @@
     function getLocalDir(path) {
       let dir = Components.classes["@mozilla.org/file/directory_service;1"]
                           .getService(Components.interfaces.nsIProperties)
-                          .get("CurWorkD", Components.interfaces.nsILocalFile);
+                          .get("CurWorkD", Components.interfaces.nsIFile);
       path = location.pathname;
       path = path.slice("content/".length,
                                          -1 * "/test_ctypes.xul".length);

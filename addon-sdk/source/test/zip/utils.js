@@ -19,7 +19,7 @@ const PR_EXCL        = 0x80;
 const { COMPRESSION_DEFAULT } = Ci.nsIZipWriter;
 
 function createNsFile(path) {
-  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   try {
     file.initWithPath(path);
   } catch(e) {

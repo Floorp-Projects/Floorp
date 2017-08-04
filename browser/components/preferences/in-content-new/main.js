@@ -52,7 +52,7 @@ const PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS =
  * - the URL of the currently selected web service used to read feeds
  *
  * browser.feeds.handlers.application
- * - nsILocalFile, stores the current client-side feed reading app if one has
+ * - nsIFile, stores the current client-side feed reading app if one has
  *   been chosen
  */
 const PREF_FEED_SELECTED_APP    = "browser.feeds.handlers.application";
@@ -2378,7 +2378,7 @@ var gMainPane = {
       case "Desktop":
         var fileLoc = Components.classes["@mozilla.org/file/directory_service;1"]
                                     .getService(Components.interfaces.nsIProperties);
-        return fileLoc.get("Desk", Components.interfaces.nsILocalFile);
+        return fileLoc.get("Desk", Components.interfaces.nsIFile);
       case "Downloads":
         let downloadsDir = await Downloads.getSystemDownloadsDirectory();
         return new FileUtils.File(downloadsDir);

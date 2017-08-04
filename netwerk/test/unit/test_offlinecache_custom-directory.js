@@ -115,7 +115,7 @@ function run_test()
     .getService(Ci.nsIPrefBranch);
   ps.setBoolPref("browser.cache.offline.enable", true);
   // Set this pref to mimic the default browser behavior.
-  ps.setComplexValue("browser.cache.offline.parent_directory", Ci.nsILocalFile, profileDir);
+  ps.setComplexValue("browser.cache.offline.parent_directory", Ci.nsIFile, profileDir);
 
   var us = Cc["@mozilla.org/offlinecacheupdate-service;1"].
            getService(Ci.nsIOfflineCacheUpdateService);

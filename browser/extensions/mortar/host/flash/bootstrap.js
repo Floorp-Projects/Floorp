@@ -53,7 +53,7 @@ function startup(data) {
     return rng.generateRandomBytes(data);
   });
 
-  let moduleLocalFiles = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  let moduleLocalFiles = Services.dirsvc.get("ProfD", Ci.nsIFile);
   moduleLocalFiles.append("Flash PPAPI Data");
   try {
     moduleLocalFiles.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);

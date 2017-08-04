@@ -1055,7 +1055,7 @@ var Scratchpad = {
   /**
    * Export the textbox content to a file.
    *
-   * @param nsILocalFile aFile
+   * @param nsIFile aFile
    *        The file where you want to save the textbox content.
    * @param boolean aNoConfirmation
    *        If the file already exists, ask for confirmation?
@@ -1141,7 +1141,7 @@ var Scratchpad = {
   /**
    * Read the content of a file and put it into the textbox.
    *
-   * @param nsILocalFile aFile
+   * @param nsIFile aFile
    *        The file you want to save the textbox content into.
    * @param boolean aSilentError
    *        True if you do not want to display an error when file load fails,
@@ -1234,7 +1234,7 @@ var Scratchpad = {
             file = aFile;
           } else {
             file = Components.classes["@mozilla.org/file/local;1"].
-                   createInstance(Components.interfaces.nsILocalFile);
+                   createInstance(Components.interfaces.nsIFile);
             let filePath = this.getRecentFiles()[aIndex];
             file.initWithPath(filePath);
           }
@@ -1298,8 +1298,8 @@ var Scratchpad = {
   /**
    * Save a recent file in a JSON parsable string.
    *
-   * @param nsILocalFile aFile
-   *        The nsILocalFile we want to save as a recent file.
+   * @param nsIFile aFile
+   *        The nsIFile we want to save as a recent file.
    */
   setRecentFile: function SP_setRecentFile(aFile)
   {
@@ -1454,7 +1454,7 @@ var Scratchpad = {
       return this.saveFileAs(aCallback);
     }
 
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(this.filename);
 
     this.exportToFile(file, true, false, aStatus => {
@@ -1509,7 +1509,7 @@ var Scratchpad = {
    */
   revertFile: function SP_revertFile(aCallback)
   {
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(this.filename);
 
     if (!file.exists()) {

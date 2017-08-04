@@ -478,7 +478,7 @@ function copyToProfile(filename)
     parentURI = fileHandler.getFileFromURLSpec(parentURI.spec);
   }
 
-  parentURI = parentURI.QueryInterface(Ci.nsILocalFile);
+  parentURI = parentURI.QueryInterface(Ci.nsIFile);
   parentURI.append(filename);
   try {
     var retVal = parentURI.copyToFollowingLinks(file.parent, filename);

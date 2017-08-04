@@ -64,7 +64,7 @@ function getFileName(filePath, dir) {
   let testFile =
     Cc["@mozilla.org/file/directory_service;1"].
       getService(Components.interfaces.nsIProperties).
-      get(dir, Components.interfaces.nsILocalFile);
+      get(dir, Components.interfaces.nsIFile);
   let dirs = filePath.split("/");
   for (let i = 0; i < dirs.length; i++) {
     testFile.append(dirs[i]);

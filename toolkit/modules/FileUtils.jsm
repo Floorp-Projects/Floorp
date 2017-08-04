@@ -170,5 +170,5 @@ this.FileUtils = {
     stream.close();
   },
 
-  File: Components.Constructor("@mozilla.org/file/local;1", Ci.nsILocalFile, "initWithPath")
+  File: Components.Constructor("@mozilla.org/file/local;1", Ci.nsIFile, "initWithPath")
 };

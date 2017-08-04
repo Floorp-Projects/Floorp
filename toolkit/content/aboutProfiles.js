@@ -84,7 +84,7 @@ function refreshUI() {
 
 function openDirectory(dir) {
   let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
-                                           "nsILocalFile", "initWithPath");
+                                           "nsIFile", "initWithPath");
   new nsLocalFile(dir).reveal();
 }
 
