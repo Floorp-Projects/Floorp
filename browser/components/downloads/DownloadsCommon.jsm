@@ -196,15 +196,21 @@ this.DownloadsCommon = {
   },
 
   /**
-   * Get access to one of the DownloadsData or PrivateDownloadsData objects,
-   * depending on the privacy status of the window in question.
+   * Get access to one of the DownloadsData, PrivateDownloadsData, or
+   * HistoryDownloadsData objects, depending on the privacy status of the
+   * specified window and on whether history downloads should be included.
    *
-   * @param aWindow
+   * @param window
    *        The browser window which owns the download button.
+   * @param [optional] history
+   *        True to include history downloads when the window is public.
    */
-  getData(aWindow) {
-    if (PrivateBrowsingUtils.isContentWindowPrivate(aWindow)) {
+  getData(window, history = false) {
+    if (PrivateBrowsingUtils.isContentWindowPrivate(window)) {
       return PrivateDownloadsData;
+    }
+    if (history) {
+      return HistoryDownloadsData;
     }
     return DownloadsData;
   },
@@ -282,17 +288,6 @@ this.DownloadsCommon = {
       return DownloadsCommon.DOWNLOAD_CANCELED;
     }
     return DownloadsCommon.DOWNLOAD_NOTSTARTED;
-  },
-
-  /**
-   * Helper function required because the Downloads Panel and the Downloads View
-   * don't share the controller yet.
-   */
-  removeAndFinalizeDownload(download) {
-    Downloads.getList(Downloads.ALL)
-             .then(list => list.remove(download))
-             .then(() => download.finalize(true))
-             .catch(Cu.reportError);
   },
 
   /**
@@ -649,24 +644,34 @@ XPCOMUtils.defineLazyGetter(DownloadsCommon, "isWinVistaOrHigher", function() {
  * downloads. This is useful to display a neutral progress indicator in
  * the main browser window until the autostart timeout elapses.
  *
- * Note that DownloadsData and PrivateDownloadsData are two equivalent singleton
- * objects, one accessing non-private downloads, and the other accessing private
- * ones.
+ * This powers the DownloadsData, PrivateDownloadsData, and HistoryDownloadsData
+ * singleton objects.
  */
-function DownloadsDataCtor(aPrivate) {
-  this._isPrivate = aPrivate;
+function DownloadsDataCtor({ isPrivate, isHistory } = {}) {
+  this._isPrivate = !!isPrivate;
 
   // Contains all the available Download objects and their integer state.
   this.oldDownloadStates = new Map();
+
+  // For the history downloads list we don't need to register this as a view,
+  // but we have to ensure that the DownloadsData object is initialized before
+  // we register more views. This ensures that the view methods of DownloadsData
+  // are invoked before those of views registered on HistoryDownloadsData,
+  // allowing the endTime property to be set correctly.
+  if (isHistory) {
+    DownloadsData.initializeDataLink();
+    this._promiseList = DownloadsData._promiseList
+                                     .then(() => DownloadHistory.getList());
+    return;
+  }
 
   // This defines "initializeDataLink" and "_promiseList" synchronously, then
   // continues execution only when "initializeDataLink" is called, allowing the
   // underlying data to be loaded only when actually needed.
   this._promiseList = (async () => {
     await new Promise(resolve => this.initializeDataLink = resolve);
-
-    let list = await Downloads.getList(this._isPrivate ? Downloads.PRIVATE
-                                                       : Downloads.PUBLIC);
+    let list = await Downloads.getList(isPrivate ? Downloads.PRIVATE
+                                                 : Downloads.PUBLIC);
     await list.addView(this);
     return list;
   })();
@@ -710,7 +715,9 @@ DownloadsDataCtor.prototype = {
    * is only called after the data link has been initialized.
    */
   removeFinished() {
-    this._promiseList.then(list => list.removeFinished()).catch(Cu.reportError);
+    Downloads.getList(this._isPrivate ? Downloads.PRIVATE : Downloads.PUBLIC)
+             .then(list => list.removeFinished())
+             .catch(Cu.reportError);
     let indicatorData = this._isPrivate ? PrivateDownloadsIndicatorData
                                         : DownloadsIndicatorData;
     indicatorData.attention = DownloadsCommon.ATTENTION_NONE;
@@ -835,12 +842,16 @@ DownloadsDataCtor.prototype = {
   }
 };
 
+XPCOMUtils.defineLazyGetter(this, "HistoryDownloadsData", function() {
+  return new DownloadsDataCtor({ isHistory: true });
+});
+
 XPCOMUtils.defineLazyGetter(this, "PrivateDownloadsData", function() {
-  return new DownloadsDataCtor(true);
+  return new DownloadsDataCtor({ isPrivate: true });
 });
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsData", function() {
-  return new DownloadsDataCtor(false);
+  return new DownloadsDataCtor();
 });
 
 // DownloadsViewPrototype

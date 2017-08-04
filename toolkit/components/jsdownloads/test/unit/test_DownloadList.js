@@ -341,7 +341,7 @@ add_task(async function test_history_expiration() {
 
   // We must replace the visits added while executing the downloads with visits
   // that are older than 7 days, otherwise they will not be expired.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await promiseExpirableDownloadVisit();
   await promiseExpirableDownloadVisit(httpUrl("interruptible.txt"));
 
@@ -383,7 +383,7 @@ add_task(async function test_history_clear() {
   await downloadOne.start();
   await downloadTwo.start();
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   // Wait for the removal notifications that may still be pending.
   await deferred.promise;
