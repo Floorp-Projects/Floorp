@@ -87,7 +87,8 @@ function step2() {
   // Test results are only significant if there's a gap between
   // top window time and iframe window time.
   assert_greater_than(topWindowTimeBeforeNotification, iframeWindowTimeAfterNotification,
-    "Time ranges for top and iframe windows are disjoint.");
+    "Time ranges for top and iframe windows are disjoint. Times: " +
+      [topWindowTimeOnTestStart, topWindowTimeBeforeCreatingIframe, topWindowTimeBeforeNotification, topWindowTimeAfterNotification, iframeWindowTimeBeforeNotification, iframeWindowTimeAfterNotification]);
 
   assert_equals(topWindowEntries.length, 2, "Top window observer has two notifications.");
   assert_between_inclusive(
