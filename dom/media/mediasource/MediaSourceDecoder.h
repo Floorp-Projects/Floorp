@@ -69,7 +69,6 @@ public:
   void AddSizeOfResources(ResourceSizes* aSizes) override;
 
   MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus() override;
-  bool CanPlayThrough() override;
 
   bool IsMSE() const override { return true; }
 
@@ -78,6 +77,7 @@ public:
 private:
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
+  bool CanPlayThroughImpl() override;
 
   RefPtr<MediaSourceResource> mResource;
 

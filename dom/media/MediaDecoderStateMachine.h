@@ -208,6 +208,17 @@ public:
     OwnerThread()->Dispatch(r.forget());
   }
 
+  void DispatchCanPlayThrough(bool aCanPlayThrough)
+  {
+    RefPtr<MediaDecoderStateMachine> self = this;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "MediaDecoderStateMachine::DispatchCanPlayThrough",
+      [self, aCanPlayThrough]() {
+        self->mCanPlayThrough = aCanPlayThrough;
+      });
+    OwnerThread()->DispatchStateChange(r.forget());
+  }
+
   // Drop reference to mResource. Only called during shutdown dance.
   void BreakCycles() {
     MOZ_ASSERT(NS_IsMainThread());
@@ -575,6 +586,8 @@ private:
 
   void OnSuspendTimerResolved();
   void CancelSuspendTimer();
+
+  bool mCanPlayThrough = false;
 
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, the audio thread will never start again after

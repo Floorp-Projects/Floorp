@@ -1575,11 +1575,25 @@ MediaDecoder::UnpinForSeek()
 }
 
 bool
-MediaDecoder::CanPlayThrough()
+MediaDecoder::CanPlayThroughImpl()
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(mDecoderStateMachine, false);
   return GetStatistics().CanPlayThrough();
+}
+
+bool
+MediaDecoder::CanPlayThrough()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+  bool val = CanPlayThroughImpl();
+  if (val != mCanPlayThrough) {
+    mCanPlayThrough = val;
+    mDecoderStateMachine->DispatchCanPlayThrough(val);
+  }
+  return val;
 }
 
 RefPtr<MediaDecoder::CDMProxyPromise>
