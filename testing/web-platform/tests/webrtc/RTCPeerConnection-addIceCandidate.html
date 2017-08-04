@@ -2,15 +2,11 @@
 <title>Test RTCPeerConnection.prototype.addIceCandidate</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="RTCPeerConnection-helper.js"></script>
 <script>
   'use strict';
 
   // Test is based on the following editor draft:
   // https://w3c.github.io/webrtc-pc/archives/20170605/webrtc.htm
-
-  // The following helper functions are called from RTCPeerConnection-helper.js:
-  // test_never_resolve
 
   /*
     4.3.2.  Interface Definition
@@ -167,27 +163,6 @@ a=rtcp-rsize
         sdpMid, sdpMLineIndex, ufrag
       }));
   }, 'Add ICE candidate before setting remote description should reject with InvalidStateError');
-
-  /*
-    4.3.1.2.  Enqueue an operation
-      7.1.  If connection's [[isClosed]] slot is true, abort these steps.
-
-     4.3.2.  addIceCandidate
-      4.  Return the result of enqueuing the following steps:
-        1.  If remoteDescription is null return a promise rejected with a
-            newly created InvalidStateError.
-   */
-  test_never_resolve(t => {
-    const pc = new RTCPeerConnection();
-
-    const promise = pc.addIceCandidate({
-      candidate: candidateStr1,
-      sdpMid, sdpMLineIndex, ufrag
-    });
-
-    pc.close();
-    return promise;
-  }, 'Add candidate when remote description is null should never resolve when pc is closed');
 
   /*
     Success cases
@@ -522,110 +497,6 @@ a=rtcp-rsize
           ufrag: ufrag
         })));
   }, 'Add candidate with sdpMid belonging to different ufrag should reject with OperationError');
-
-  /*
-    4.3.2.  addIceCandidate
-      3.  If both sdpMid and sdpMLineIndex are null, return a promise rejected
-          with a newly created TypeError.
-      4.  Return the result of enqueuing the following steps
-
-      (Rejects because step 3 comes first)
-
-    this test is being deferred until w3c/webrtc-pc#1345 is resolved
-
-  promise_test(t => {
-    const pc = new RTCPeerConnection();
-
-    return pc.setRemoteDescription(sessionDesc)
-    .then(() => {
-      const promise = pc.addIceCandidate({
-        candidate: candidateStr1,
-        sdpMid: null,
-        sdpMLineIndex: null
-      });
-
-      pc.close();
-      return promise_rejects(t, new TypeError(), promise);
-    });
-  }, 'Add candidate with both sdpMid and sdpMLineIndex null should still reject with TypeError after pc is closed');
-   */
-
-  /*
-    4.3.1.2.  Enqueue an operation
-      7.1.  If connection's [[isClosed]] slot is true, abort these steps.
-
-    4.3.2.  addIceCandidate
-      4.  Return the result of enqueuing the following steps
-   */
-  test_never_resolve(t => {
-    const pc = new RTCPeerConnection();
-
-    return pc.setRemoteDescription(sessionDesc)
-    .then(() => {
-      const promise = pc.addIceCandidate({
-        candidate: candidateStr1,
-        sdpMid, sdpMLineIndex, ufrag
-      });
-
-      pc.close();
-
-      // When pc is closed, the remote description is not modified
-      // even if succeed
-      t.step_timeout(t.step_func(() => {
-        assert_false(pc.remoteDescription.sdp.includes(candidateLine1),
-          'Candidate should not be added to SDP because pc is closed');
-      }), 80);
-
-      return promise;
-    });
-  }, 'Add valid candidate should never resolve when pc is closed');
-
-  test_never_resolve(t => {
-    const pc = new RTCPeerConnection();
-
-    return pc.setRemoteDescription(sessionDesc)
-    .then(() => {
-      const promise = pc.addIceCandidate({
-        candidate: invalidCandidateStr,
-        sdpMid, sdpMLineIndex, ufrag
-      });
-
-      pc.close();
-      return promise;
-    });
-  }, 'Add candidate with invalid candidate string should never resolve when pc is closed');
-
-  test_never_resolve(t => {
-    const pc = new RTCPeerConnection();
-
-    return pc.setRemoteDescription(sessionDesc)
-    .then(() => {
-      const promise = pc.addIceCandidate({
-        candidate: candidateStr1,
-        sdpMid: 'invalid',
-        sdpMLineIndex, ufrag
-      });
-
-      pc.close();
-      return promise;
-    });
-  }, 'Add candidate with invalid sdpMid should never resolve when pc is closed');
-
-  test_never_resolve(t => {
-    const pc = new RTCPeerConnection();
-
-    return pc.setRemoteDescription(sessionDesc)
-    .then(() => {
-      const promise = pc.addIceCandidate({
-        candidate: candidateStr1,
-        sdpMLineIndex: 2,
-        ufrag
-      });
-
-      pc.close();
-      return promise;
-    });
-  }, 'Add candidate with invalid sdpMLineIndex should never resolve when pc is closed');
 
   /*
     TODO

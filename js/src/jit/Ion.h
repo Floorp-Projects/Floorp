@@ -76,10 +76,6 @@ class JitContext
     CompileRuntime* runtime;
     CompileCompartment* compartment;
 
-    bool hasProfilingScripts() const {
-        return runtime && !!runtime->profilingScripts();
-    }
-
     int getNextAssemblerId() {
         return assemblerCount_++;
     }

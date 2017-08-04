@@ -486,10 +486,10 @@ str_replace_string_raw(JSContext* cx, HandleString string, HandleString pattern,
                        HandleString replacement);
 
 extern JSString*
-StringToLowerCase(JSContext* cx, HandleLinearString string);
+StringToLowerCase(JSContext* cx, HandleString string);
 
 extern JSString*
-StringToUpperCase(JSContext* cx, HandleLinearString string);
+StringToUpperCase(JSContext* cx, HandleString string);
 
 extern bool
 StringConstructor(JSContext* cx, unsigned argc, Value* vp);

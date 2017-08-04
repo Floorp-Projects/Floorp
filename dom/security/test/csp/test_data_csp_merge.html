@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1386183 - Meta CSP on data: URI iframe should be merged with toplevel CSP</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We load an iframe using a meta CSP which includes another iframe
+ * using a data: URI which also defines a meta CSP. We make sure the
+ * CSP from the including document gets merged with the data: URI
+ * CSP and applies to the data: URI iframe.
+ */
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  window.removeEventListener("message", receiveMessage);
+  // toplevel CSP + data: URI iframe meta CSP => 2 CSP policies
+  is(event.data.result, 2,
+     "CSP on data: URI iframe gets merged with CSP from including context");
+  SimpleTest.finish();
+}
+
+document.getElementById("testframe").src = "file_data_csp_merge.html";
+
+</script>
+</body>
+</html>
