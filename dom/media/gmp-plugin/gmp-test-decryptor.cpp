@@ -176,7 +176,7 @@ public:
     : mTestmanager(aTestManager), mTestID(aTestID) {}
 
   void ReadComplete(GMPErr aErr, const std::string& aData) override {
-    if (aData != "") {
+    if (!aData.empty()) {
       FakeDecryptor::Message("FAIL TestEmptyContinuation record was not truncated");
     }
     mTestmanager->EndTest(mTestID);
