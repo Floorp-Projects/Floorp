@@ -61,6 +61,9 @@ IsFlagSet(DWORD flags, DWORD pattern)
   return (flags & pattern) == pattern;
 }
 
+// Will return %ProgramW6432% value as per:
+// https://msdn.microsoft.com/library/windows/desktop/aa384274.aspx
+nsString GetProgramW6432Path();
 } // namespace mozilla
 
 #endif
