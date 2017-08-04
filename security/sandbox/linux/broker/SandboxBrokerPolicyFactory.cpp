@@ -282,7 +282,7 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
           nsAutoCString tmpPath;
           rv = workDir->GetNativePath(tmpPath);
           if (NS_SUCCEEDED(rv)) {
-            policy->AddPath(rdonly, tmpPath.get());
+            policy->AddDir(rdonly, tmpPath.get());
           }
         }
       }
