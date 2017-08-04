@@ -27,6 +27,7 @@
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 #include "mozilla/a11y/AccessibleWrap.h"
 #endif
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/DataStorage.h"
@@ -80,6 +81,8 @@
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Move.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/net/CookieServiceParent.h"
+#include "mozilla/net/PCookieServiceParent.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitor.h"
@@ -108,6 +111,7 @@
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
 #include "nsIClipboard.h"
+#include "nsICookie.h"
 #include "nsContentPermissionHelper.h"
 #include "nsIContentProcess.h"
 #include "nsICycleCollectorListener.h"
@@ -588,6 +592,8 @@ static const char* sObserverTopics[] = {
   "cacheservice:empty-cache",
   "intl:app-locales-changed",
   "intl:requested-locales-changed",
+  "cookie-changed",
+  "private-cookie-changed",
 };
 
 // PreallocateProcess is called by the PreallocatedProcessManager.
@@ -2788,6 +2794,41 @@ ContentParent::Observe(nsISupports* aSubject,
     nsTArray<nsCString> requestedLocales;
     LocaleService::GetInstance()->GetRequestedLocales(requestedLocales);
     Unused << SendUpdateRequestedLocales(requestedLocales);
+  }
+  else if (!strcmp(aTopic, "cookie-changed") ||
+           !strcmp(aTopic, "private-cookie-changed")) {
+    if (!aData) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    PNeckoParent *neckoParent = LoneManagedOrNullAsserts(ManagedPNeckoParent());
+    if (!neckoParent) {
+      return NS_OK;
+    }
+    PCookieServiceParent *csParent = LoneManagedOrNullAsserts(neckoParent->ManagedPCookieServiceParent());
+    if (!csParent) {
+      return NS_OK;
+    }
+    auto *cs = static_cast<CookieServiceParent*>(csParent);
+    if (!nsCRT::strcmp(aData, u"batch-deleted")) {
+      nsCOMPtr<nsIArray> cookieList = do_QueryInterface(aSubject);
+      NS_ASSERTION(cookieList, "couldn't get cookie list");
+      cs->RemoveBatchDeletedCookies(cookieList);
+      return NS_OK;
+    }
+
+    if (!nsCRT::strcmp(aData, u"cleared")) {
+      cs->RemoveAll();
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsICookie> xpcCookie = do_QueryInterface(aSubject);
+    NS_ASSERTION(xpcCookie, "couldn't get cookie");
+    if (!nsCRT::strcmp(aData, u"deleted")) {
+      cs->RemoveCookie(xpcCookie);
+    } else if ((!nsCRT::strcmp(aData, u"added")) ||
+               (!nsCRT::strcmp(aData, u"changed"))) {
+      cs->AddCookie(xpcCookie);
+    }
   }
   return NS_OK;
 }
@@ -5045,6 +5086,17 @@ ContentParent::ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch
   ProcessHangMonitor::ForcePaint(mHangMonitorActor, aTabParent, aLayerObserverEpoch);
 }
 
+void
+ContentParent::UpdateCookieStatus(nsIChannel   *aChannel)
+{
+  PNeckoParent *neckoParent = LoneManagedOrNullAsserts(ManagedPNeckoParent());
+  PCookieServiceParent *csParent = LoneManagedOrNullAsserts(neckoParent->ManagedPCookieServiceParent());
+  if (csParent) {
+    auto *cs = static_cast<CookieServiceParent*>(csParent);
+    cs->TrackCookieLoad(aChannel);
+  }
+}
+
 nsresult
 ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild(nsIChannel* aChannel)
 {
@@ -5068,6 +5120,14 @@ ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild(nsIChannel* aChannel)
 
   rv = TransmitPermissionsForPrincipal(principal);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsLoadFlags newLoadFlags;
+  aChannel->GetLoadFlags(&newLoadFlags);
+  bool isDocument = false;
+  aChannel->GetIsDocument(&isDocument);
+  if (newLoadFlags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE && isDocument) {
+    UpdateCookieStatus(aChannel);
+  }
 
   return NS_OK;
 }

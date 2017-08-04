@@ -801,6 +801,19 @@ auto GeckoThread::MsgQueue(mozilla::jni::Object::Param a0) -> void
     return mozilla::jni::Field<MsgQueue_t>::Set(GeckoThread::Context(), nullptr, a0);
 }
 
+constexpr char GeckoThread::UiThreadId_t::name[];
+constexpr char GeckoThread::UiThreadId_t::signature[];
+
+auto GeckoThread::UiThreadId() -> int32_t
+{
+    return mozilla::jni::Field<UiThreadId_t>::Get(GeckoThread::Context(), nullptr);
+}
+
+auto GeckoThread::UiThreadId(int32_t a0) -> void
+{
+    return mozilla::jni::Field<UiThreadId_t>::Set(GeckoThread::Context(), nullptr, a0);
+}
+
 const char GeckoThread::State::name[] =
         "org/mozilla/gecko/GeckoThread$State";
 

@@ -65,15 +65,21 @@
             "IAccessible2" : [
                [
                   "property",
-                  "states",
-                  "doesNotContain",
-                  "IA2_STATE_HORIZONTAL cleared"
+                  "role",
+                  "is",
+                  "ROLE_SYSTEM_SCROLLBAR"
                ],
                [
                   "property",
                   "states",
                   "doesNotContain",
-                  "IA2_STATE_VERTICAL set"
+                  "IA2_STATE_HORIZONTAL"
+               ],
+               [
+                  "property",
+                  "states",
+                  "contains",
+                  "IA2_STATE_VERTICAL"
                ]
             ],
             "MSAA" : [

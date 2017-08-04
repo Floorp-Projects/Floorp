@@ -59,6 +59,7 @@ namespace mozilla {
 
 namespace dom {
 class Element;
+class Selection;
 }  // namespace dom
 
 class EventDispatchingCallback;
@@ -105,6 +106,7 @@ public:
 
   NS_IMETHOD GetSelection(RawSelectionType aRawSelectionType,
                           nsISelection** aSelection) override;
+  dom::Selection* GetDOMSelection(RawSelectionType aRawSelectionType) override;
   virtual mozilla::dom::Selection*
     GetCurrentSelection(SelectionType aSelectionType) override;
   virtual already_AddRefed<nsISelectionController>

@@ -27,6 +27,7 @@
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "gfx2DGlue.h"
 #include "nsLayoutUtils.h"              // for invalidation debugging
+#include "PaintThread.h"
 
 namespace mozilla {
 
@@ -731,6 +732,77 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
 }
 
 DrawTarget*
+RotatedContentBuffer::BorrowDrawTargetForRecording(PaintState& aPaintState,
+                                                   DrawIterator* aIter /* = nullptr */)
+{
+  if (aPaintState.mMode == SurfaceMode::SURFACE_NONE) {
+    return nullptr;
+  }
+
+  DrawTarget* result = BorrowDrawTargetForQuadrantUpdate(aPaintState.mRegionToDraw.GetBounds(),
+                                                         BUFFER_BOTH, aIter);
+  if (!result) {
+    return nullptr;
+  }
+
+  ExpandDrawRegion(aPaintState, aIter, result->GetBackendType());
+  return result;
+}
+
+/*static */ bool
+RotatedContentBuffer::PrepareDrawTargetForPainting(CapturedPaintState* aState)
+{
+  RefPtr<DrawTarget> target = aState->mTarget;
+  RefPtr<DrawTarget> whiteTarget = aState->mTargetOnWhite;
+
+  if (aState->mSurfaceMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
+    if (!target || !target->IsValid() ||
+        !aState->mTargetOnWhite || !aState->mTargetOnWhite->IsValid()) {
+      // This can happen in release builds if allocating one of the two buffers
+      // failed. This in turn can happen if unreasonably large textures are
+      // requested.
+      return false;
+    }
+    for (auto iter = aState->mRegionToDraw.RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& rect = iter.Get();
+      target->FillRect(Rect(rect.x, rect.y, rect.width, rect.height),
+                            ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
+      whiteTarget->FillRect(Rect(rect.x, rect.y, rect.width, rect.height),
+                                 ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+    }
+  } else if (aState->mContentType == gfxContentType::COLOR_ALPHA &&
+             target->IsValid()) {
+    // HaveBuffer() => we have an existing buffer that we must clear
+    for (auto iter = aState->mRegionToDraw.RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& rect = iter.Get();
+      target->ClearRect(Rect(rect.x, rect.y, rect.width, rect.height));
+    }
+  }
+
+  return true;
+}
+
+void
+RotatedContentBuffer::ExpandDrawRegion(PaintState& aPaintState,
+                                       DrawIterator* aIter,
+                                       BackendType aBackendType)
+{
+  nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
+  if (aIter) {
+    // The iterators draw region currently only contains the bounds of the region,
+    // this makes it the precise region.
+    aIter->mDrawRegion.And(aIter->mDrawRegion, aPaintState.mRegionToDraw);
+    drawPtr = &aIter->mDrawRegion;
+  }
+  if (aBackendType == BackendType::DIRECT2D ||
+      aBackendType == BackendType::DIRECT2D1_1) {
+    // Simplify the draw region to avoid hitting expensive drawing paths
+    // for complex regions.
+    drawPtr->SimplifyOutwardByArea(100 * 100);
+  }
+}
+
+DrawTarget*
 RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
                                                   DrawIterator* aIter /* = nullptr */)
 {
@@ -744,41 +816,22 @@ RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
     return nullptr;
   }
 
-  nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
-  if (aIter) {
-    // The iterators draw region currently only contains the bounds of the region,
-    // this makes it the precise region.
-    aIter->mDrawRegion.And(aIter->mDrawRegion, aPaintState.mRegionToDraw);
-    drawPtr = &aIter->mDrawRegion;
-  }
-  if (result->GetBackendType() == BackendType::DIRECT2D ||
-      result->GetBackendType() == BackendType::DIRECT2D1_1) {
-    // Simplify the draw region to avoid hitting expensive drawing paths
-    // for complex regions.
-    drawPtr->SimplifyOutwardByArea(100 * 100);
-  }
+  ExpandDrawRegion(aPaintState, aIter, result->GetBackendType());
 
-  if (aPaintState.mMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-    if (!mDTBuffer || !mDTBuffer->IsValid() ||
-        !mDTBufferOnWhite || !mDTBufferOnWhite->IsValid()) {
-      // This can happen in release builds if allocating one of the two buffers
-      // failed. This in turn can happen if unreasonably large textures are
-      // requested.
-      return nullptr;
-    }
-    for (auto iter = drawPtr->RectIter(); !iter.Done(); iter.Next()) {
-      const IntRect& rect = iter.Get();
-      mDTBuffer->FillRect(Rect(rect.x, rect.y, rect.width, rect.height),
-                          ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-      mDTBufferOnWhite->FillRect(Rect(rect.x, rect.y, rect.width, rect.height),
-                                 ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
-    }
-  } else if (aPaintState.mContentType == gfxContentType::COLOR_ALPHA && HaveBuffer()) {
-    // HaveBuffer() => we have an existing buffer that we must clear
-    for (auto iter = drawPtr->RectIter(); !iter.Done(); iter.Next()) {
-      const IntRect& rect = iter.Get();
-      result->ClearRect(Rect(rect.x, rect.y, rect.width, rect.height));
-    }
+  nsIntRegion regionToDraw = aIter ? aIter->mDrawRegion
+                                   : aPaintState.mRegionToDraw;
+
+  // Can't stack allocate refcounted objects.
+  RefPtr<CapturedPaintState> capturedPaintState =
+    MakeAndAddRef<CapturedPaintState>(regionToDraw,
+                                      mDTBuffer,
+                                      mDTBufferOnWhite,
+                                      Matrix(),
+                                      aPaintState.mMode,
+                                      aPaintState.mContentType);
+
+  if (!RotatedContentBuffer::PrepareDrawTargetForPainting(capturedPaintState)) {
+    return nullptr;
   }
 
   return result;

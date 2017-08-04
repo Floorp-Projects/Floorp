@@ -376,7 +376,7 @@ linux64-asan/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/asan.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -407,7 +407,7 @@ linux64-asan-fuzzing/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/fuzzing.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -437,7 +437,7 @@ linux64-asan/debug:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/asan.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         max-run-time: 36000
     run:
         using: mozharness

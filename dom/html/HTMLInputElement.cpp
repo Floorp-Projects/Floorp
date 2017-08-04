@@ -1453,6 +1453,13 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         UpdateDisabledState(aNotify);
       }
 
+      if (aName == nsGkAtoms::required && DoesRequiredApply()) {
+        // This *has* to be called *before* UpdateValueMissingValidityState
+        // because UpdateValueMissingValidityState depends on our required
+        // state.
+        UpdateRequiredState(!!aValue, aNotify);
+      }
+
       UpdateValueMissingValidityState();
 
       // This *has* to be called *after* validity has changed.
@@ -5005,6 +5012,17 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify)
     mFocusedValue.Truncate();
   }
 
+  // Update or clear our required states since we may have changed from a
+  // required input type to a non-required input type or viceversa.
+  if (DoesRequiredApply()) {
+    bool isRequired = HasAttr(kNameSpaceID_None, nsGkAtoms::required);
+    UpdateRequiredState(isRequired, aNotify);
+  } else if (aNotify) {
+    RemoveStates(REQUIRED_STATES);
+  } else {
+    RemoveStatesSilently(REQUIRED_STATES);
+  }
+
   UpdateHasRange();
 
   // Do not notify, it will be done after if needed.
@@ -6554,12 +6572,6 @@ HTMLInputElement::IntrinsicState() const
     state |= nsImageLoadingContent::ImageState();
   }
 
-  if (DoesRequiredApply() && HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
-    state |= NS_EVENT_STATE_REQUIRED;
-  } else {
-    state |= NS_EVENT_STATE_OPTIONAL;
-  }
-
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
       state |= NS_EVENT_STATE_VALID;
@@ -7232,6 +7244,9 @@ HTMLInputElement::UpdateTooShortValidityState()
 void
 HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
 {
+  MOZ_ASSERT(mType == NS_FORM_INPUT_RADIO,
+             "This should be called only for radio input types");
+
   bool notify = mDoneCreating;
   nsCOMPtr<nsIDOMHTMLInputElement> selection = GetSelectedRadioButton();
 
@@ -7240,7 +7255,7 @@ HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
   // If there is no selection, that might mean the radio is not in a group.
   // In that case, we can look for the checked state of the radio.
   bool selected = selection || (!aIgnoreSelf && mChecked);
-  bool required = !aIgnoreSelf && HasAttr(kNameSpaceID_None, nsGkAtoms::required);
+  bool required = !aIgnoreSelf && IsRequired();
   bool valueMissing = false;
 
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
@@ -7257,7 +7272,7 @@ HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
   // If the current radio is required and not ignored, we can assume the entire
   // group is required.
   if (!required) {
-    required = (aIgnoreSelf && HasAttr(kNameSpaceID_None, nsGkAtoms::required))
+    required = (aIgnoreSelf && IsRequired())
                  ? container->GetRequiredRadioCount(name) - 1
                  : container->GetRequiredRadioCount(name);
   }

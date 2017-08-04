@@ -55,13 +55,19 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_SYSTEM_LINK + STATE_LINKED"
+                  "ROLE_SYSTEM_LINK"
                ],
                [
                   "property",
-                  "active",
-                  "is",
-                  "page"
+                  "objectAttributes",
+                  "contains",
+                  "current:page"
+               ],
+               [
+                  "property",
+                  "interfaces",
+                  "contains",
+                  "IAccessibleHypertext"
                ]
             ],
             "MSAA" : [
@@ -69,13 +75,13 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_SYSTEM_LINK + STATE_LINKED"
+                  "ROLE_SYSTEM_LINK"
                ],
                [
                   "property",
-                  "active",
-                  "is",
-                  "page"
+                  "states",
+                  "contains",
+                  "STATE_SYSTEM_LINKED"
                ]
             ],
             "UIA" : [

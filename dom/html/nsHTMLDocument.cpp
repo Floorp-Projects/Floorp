@@ -2438,6 +2438,9 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
     nsLoadFlags loadFlags = 0;
     channel->GetLoadFlags(&loadFlags);
     loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
+    if (nsDocShell::SandboxFlagsImplyCookies(mSandboxFlags)) {
+      loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
+    }
     channel->SetLoadFlags(loadFlags);
 
     channel->SetOriginalURI(wcwgURI);

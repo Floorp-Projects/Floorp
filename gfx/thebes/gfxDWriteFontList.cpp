@@ -1266,6 +1266,7 @@ gfxDWriteFontList::GetStandardFamilyName(const nsAString& aFontName,
 bool
 gfxDWriteFontList::FindAndAddFamilies(const nsAString& aFamily,
                                       nsTArray<gfxFontFamily*>* aOutput,
+                                      bool aDeferOtherFamilyNamesLoading,
                                       gfxFontStyle* aStyle,
                                       gfxFloat aDevToCssSize)
 {
@@ -1282,7 +1283,10 @@ gfxDWriteFontList::FindAndAddFamilies(const nsAString& aFamily,
         return false;
     }
 
-    return gfxPlatformFontList::FindAndAddFamilies(aFamily, aOutput, aStyle,
+    return gfxPlatformFontList::FindAndAddFamilies(aFamily,
+                                                   aOutput,
+                                                   aDeferOtherFamilyNamesLoading,
+                                                   aStyle,
                                                    aDevToCssSize);
 }
 

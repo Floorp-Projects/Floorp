@@ -942,10 +942,10 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
         // Look for the first character that changes when lowercased.
         size_t i = 0;
         for (; i < length; i++) {
-            char16_t c = chars[i];
+            CharT c = chars[i];
             if (!IsSame<CharT, Latin1Char>::value) {
                 if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
-                    char16_t trail = chars[i + 1];
+                    CharT trail = chars[i + 1];
                     if (unicode::IsTrailSurrogate(trail)) {
                         if (unicode::CanLowerCaseNonBMP(c, trail))
                             break;
@@ -987,11 +987,15 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
 }
 
 JSString*
-js::StringToLowerCase(JSContext* cx, HandleLinearString string)
+js::StringToLowerCase(JSContext* cx, HandleString string)
 {
-    if (string->hasLatin1Chars())
-        return ToLowerCase<Latin1Char>(cx, string);
-    return ToLowerCase<char16_t>(cx, string);
+    JSLinearString* linear = string->ensureLinear(cx);
+    if (!linear)
+        return nullptr;
+
+    if (linear->hasLatin1Chars())
+        return ToLowerCase<Latin1Char>(cx, linear);
+    return ToLowerCase<char16_t>(cx, linear);
 }
 
 bool
@@ -1003,11 +1007,7 @@ js::str_toLowerCase(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    RootedLinearString linear(cx, str->ensureLinear(cx));
-    if (!linear)
-        return false;
-
-    JSString* result = StringToLowerCase(cx, linear);
+    JSString* result = StringToLowerCase(cx, str);
     if (!result)
         return false;
 
@@ -1252,10 +1252,10 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
         // Look for the first character that changes when uppercased.
         size_t i = 0;
         for (; i < length; i++) {
-            char16_t c = chars[i];
+            CharT c = chars[i];
             if (!IsSame<CharT, Latin1Char>::value) {
                 if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
-                    char16_t trail = chars[i + 1];
+                    CharT trail = chars[i + 1];
                     if (unicode::IsTrailSurrogate(trail)) {
                         if (unicode::CanUpperCaseNonBMP(c, trail))
                             break;
@@ -1267,7 +1267,7 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
             }
             if (unicode::CanUpperCase(c))
                 break;
-            if (MOZ_UNLIKELY(c > 0x7f && CanUpperCaseSpecialCasing(static_cast<CharT>(c))))
+            if (MOZ_UNLIKELY(c > 0x7f && CanUpperCaseSpecialCasing(c)))
                 break;
         }
 
@@ -1324,11 +1324,15 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
 }
 
 JSString*
-js::StringToUpperCase(JSContext* cx, HandleLinearString string)
+js::StringToUpperCase(JSContext* cx, HandleString string)
 {
-    if (string->hasLatin1Chars())
-        return ToUpperCase<Latin1Char>(cx, string);
-    return ToUpperCase<char16_t>(cx, string);
+    JSLinearString* linear = string->ensureLinear(cx);
+    if (!linear)
+        return nullptr;
+
+    if (linear->hasLatin1Chars())
+        return ToUpperCase<Latin1Char>(cx, linear);
+    return ToUpperCase<char16_t>(cx, linear);
 }
 
 bool
@@ -1340,11 +1344,7 @@ js::str_toUpperCase(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    RootedLinearString linear(cx, str->ensureLinear(cx));
-    if (!linear)
-        return false;
-
-    JSString* result = StringToUpperCase(cx, linear);
+    JSString* result = StringToUpperCase(cx, str);
     if (!result)
         return false;
 
@@ -3161,8 +3161,8 @@ static const JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     JS_FN(js_toString_str,     str_toString,          0,0),
     JS_FN(js_valueOf_str,      str_toString,          0,0),
-    JS_FN("toLowerCase",       str_toLowerCase,       0,0),
-    JS_FN("toUpperCase",       str_toUpperCase,       0,0),
+    JS_INLINABLE_FN("toLowerCase", str_toLowerCase,   0,0, StringToLowerCase),
+    JS_INLINABLE_FN("toUpperCase", str_toUpperCase,   0,0, StringToUpperCase),
     JS_INLINABLE_FN("charAt",  str_charAt,            1,0, StringCharAt),
     JS_INLINABLE_FN("charCodeAt", str_charCodeAt,     1,0, StringCharCodeAt),
     JS_SELF_HOSTED_FN("substring", "String_substring", 2,0),

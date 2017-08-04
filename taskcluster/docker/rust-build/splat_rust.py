@@ -60,12 +60,7 @@ def update_manifest(source_manifest, target, target_filename):
 TARGETS = {
         'x86_64-unknown-linux-gnu-repack': [
             'browser/config/tooltool-manifests/linux32/releng.manifest',
-            'browser/config/tooltool-manifests/linux64/asan.manifest',
-            'browser/config/tooltool-manifests/linux64/clang.manifest',
-            'browser/config/tooltool-manifests/linux64/clang.manifest.centos6',
-            'browser/config/tooltool-manifests/linux64/fuzzing.manifest',
             'browser/config/tooltool-manifests/linux64/hazard.manifest',
-            'browser/config/tooltool-manifests/linux64/msan.manifest',
             'browser/config/tooltool-manifests/linux64/releng.manifest',
             ],
         'x86_64-unknown-linux-gnu-android-cross-repack': [

@@ -149,8 +149,9 @@ windows-talos:
     - talos-svgr
     - talos-tp5o
     - talos-xperf
-    - talos-quantum-pageload
-    - talos-quantum-pageload-stylo
+    - talos-tp6
+    - talos-tp6-stylo
+    - talos-tp6-stylo-threads
 
 macosx64-tests:
     - cppunit
@@ -261,4 +262,3 @@ windows8-tests:
     - mochitest-webgl
     - mochitest-clipboard
     - mochitest-chrome
-    - xpcshell

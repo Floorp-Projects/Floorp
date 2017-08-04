@@ -958,12 +958,6 @@ HTMLTextAreaElement::IntrinsicState() const
 {
   EventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
-    state |= NS_EVENT_STATE_REQUIRED;
-  } else {
-    state |= NS_EVENT_STATE_OPTIONAL;
-  }
-
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
       state |= NS_EVENT_STATE_VALID;
@@ -1114,6 +1108,13 @@ HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         UpdateDisabledState(aNotify);
       }
 
+      if (aName == nsGkAtoms::required) {
+        // This *has* to be called *before* UpdateValueMissingValidityState
+        // because UpdateValueMissingValidityState depends on our required
+        // state.
+        UpdateRequiredState(!!aValue, aNotify);
+      }
+
       UpdateValueMissingValidityState();
 
       // This *has* to be called *after* validity has changed.
@@ -1218,7 +1219,7 @@ HTMLTextAreaElement::IsTooShort()
 bool
 HTMLTextAreaElement::IsValueMissing() const
 {
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) || !IsMutable()) {
+  if (!Required() || !IsMutable()) {
     return false;
   }
 

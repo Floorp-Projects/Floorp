@@ -4,18 +4,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
+#include "nsCookie.h"
+#include "nsCookieService.h"
+#include "nsContentUtils.h"
+#include "nsNetCID.h"
 #include "nsIChannel.h"
+#include "nsICookiePermission.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 
 using namespace mozilla::ipc;
+using mozilla::OriginAttributes;
 
 namespace mozilla {
 namespace net {
@@ -24,6 +32,8 @@ namespace net {
 static const char kPrefCookieBehavior[] = "network.cookie.cookieBehavior";
 static const char kPrefThirdPartySession[] =
   "network.cookie.thirdparty.sessionOnly";
+static const char kPrefCookieIPCSync[] = "network.cookie.ipc.sync";
+static const char kCookieLeaveSecurityAlone[] = "network.cookie.leave-secure-alone";
 
 static CookieServiceChild *gCookieService;
 
@@ -45,6 +55,8 @@ NS_IMPL_ISUPPORTS(CookieServiceChild,
 CookieServiceChild::CookieServiceChild()
   : mCookieBehavior(nsICookieService::BEHAVIOR_ACCEPT)
   , mThirdPartySession(false)
+  , mIPCSync(false)
+  , mLeaveSecureAlone(true)
 {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
 
@@ -61,6 +73,9 @@ CookieServiceChild::CookieServiceChild()
   NeckoChild::InitNeckoChild();
   gNeckoChild->SendPCookieServiceConstructor(this);
 
+  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  NS_ASSERTION(mTLDService, "couldn't get TLDService");
+
   // Init our prefs and observer.
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -68,6 +83,8 @@ CookieServiceChild::CookieServiceChild()
   if (prefBranch) {
     prefBranch->AddObserver(kPrefCookieBehavior, this, true);
     prefBranch->AddObserver(kPrefThirdPartySession, this, true);
+    prefBranch->AddObserver(kPrefCookieIPCSync, this, true);
+    prefBranch->AddObserver(kCookieLeaveSecurityAlone, this, true);
     PrefChanged(prefBranch);
   }
 }
@@ -75,6 +92,112 @@ CookieServiceChild::CookieServiceChild()
 CookieServiceChild::~CookieServiceChild()
 {
   gCookieService = nullptr;
+}
+
+void
+CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
+{
+  bool isForeign = false;
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+  if (RequireThirdPartyCheck()) {
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  mozilla::OriginAttributes attrs;
+  if (loadInfo) {
+    attrs = loadInfo->GetOriginAttributes();
+  }
+  URIParams uriParams;
+  SerializeURI(uri, uriParams);
+  SendPrepareCookieList(uriParams, isForeign, attrs);
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvRemoveAll(){
+  mCookiesMap.Clear();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvRemoveCookie(const CookieStruct     &aCookie,
+                                     const OriginAttributes &aAttrs)
+{
+  nsCString baseDomain;
+  nsCookieService::
+    GetBaseDomainFromHost(mTLDService, aCookie.host(), baseDomain);
+  nsCookieKey key(baseDomain, aAttrs);
+  CookiesList *cookiesList = nullptr;
+  mCookiesMap.Get(key, &cookiesList);
+
+  if (!cookiesList) {
+    return IPC_OK();
+  }
+
+  for (uint32_t i = 0; i < cookiesList->Length(); i++) {
+    nsCookie *cookie = cookiesList->ElementAt(i);
+    if (cookie->Name().Equals(aCookie.name()) &&
+        cookie->Host().Equals(aCookie.host()) &&
+        cookie->Path().Equals(aCookie.path())) {
+      cookiesList->RemoveElementAt(i);
+      break;
+    }
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvAddCookie(const CookieStruct     &aCookie,
+                                  const OriginAttributes &aAttrs)
+{
+  RefPtr<nsCookie> cookie = nsCookie::Create(aCookie.name(),
+                                             aCookie.value(),
+                                             aCookie.host(),
+                                             aCookie.path(),
+                                             aCookie.expiry(),
+                                             aCookie.lastAccessed(),
+                                             aCookie.creationTime(),
+                                             aCookie.isSession(),
+                                             aCookie.isSecure(),
+                                             false,
+                                             aAttrs);
+  RecordDocumentCookie(cookie, aAttrs);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvRemoveBatchDeletedCookies(nsTArray<CookieStruct>&& aCookiesList,
+                                                  nsTArray<OriginAttributes>&& aAttrsList)
+{
+  MOZ_ASSERT(aCookiesList.Length() == aAttrsList.Length());
+  for (uint32_t i = 0; i < aCookiesList.Length(); i++) {
+    CookieStruct cookieStruct = aCookiesList.ElementAt(i);
+    RecvRemoveCookie(cookieStruct, aAttrsList.ElementAt(i));
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+CookieServiceChild::RecvTrackCookiesLoad(nsTArray<CookieStruct>&& aCookiesList,
+                                         const OriginAttributes &aAttrs)
+{
+  for (uint32_t i = 0; i < aCookiesList.Length(); i++) {
+    RefPtr<nsCookie> cookie = nsCookie::Create(aCookiesList[i].name(),
+                                               aCookiesList[i].value(),
+                                               aCookiesList[i].host(),
+                                               aCookiesList[i].path(),
+                                               aCookiesList[i].expiry(),
+                                               aCookiesList[i].lastAccessed(),
+                                               aCookiesList[i].creationTime(),
+                                               aCookiesList[i].isSession(),
+                                               aCookiesList[i].isSecure(),
+                                               false,
+                                               aAttrs);
+    RecordDocumentCookie(cookie, aAttrs);
+  }
+
+  return IPC_OK();
 }
 
 void
@@ -91,10 +214,143 @@ CookieServiceChild::PrefChanged(nsIPrefBranch *aPrefBranch)
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartySession, &boolval)))
     mThirdPartySession = !!boolval;
 
+  if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefCookieIPCSync, &boolval)))
+    mIPCSync = !!boolval;
+
+  if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookieLeaveSecurityAlone, &boolval)))
+   mLeaveSecureAlone = !!boolval;
+
   if (!mThirdPartyUtil && RequireThirdPartyCheck()) {
     mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
     NS_ASSERTION(mThirdPartyUtil, "require ThirdPartyUtil service");
   }
+}
+
+void
+CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *aHostURI,
+                                                       bool                   aIsForeign,
+                                                       const OriginAttributes &aOriginAttrs,
+                                                       nsCString              &aCookieString)
+{
+  nsCOMPtr<nsIEffectiveTLDService> TLDService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  NS_ASSERTION(TLDService, "Can't get TLDService");
+  bool requireHostMatch;
+  nsAutoCString baseDomain;
+  nsCookieService::
+    GetBaseDomain(TLDService, aHostURI, baseDomain, requireHostMatch);
+  nsCookieKey key(baseDomain, aOriginAttrs);
+  CookiesList *cookiesList = nullptr;
+  mCookiesMap.Get(key, &cookiesList);
+
+  if (!cookiesList) {
+    return;
+  }
+
+  nsAutoCString hostFromURI, pathFromURI;
+  bool isSecure;
+  aHostURI->GetAsciiHost(hostFromURI);
+  aHostURI->GetPathQueryRef(pathFromURI);
+  aHostURI->SchemeIs("https", &isSecure);
+  int64_t currentTimeInUsec = PR_Now();
+  int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
+
+  nsCOMPtr<nsICookiePermission> permissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
+  CookieStatus cookieStatus =
+    nsCookieService::CheckPrefs(permissionService, mCookieBehavior,
+                                mThirdPartySession, aHostURI,
+                                aIsForeign, nullptr,
+                                CountCookiesFromHashTable(baseDomain, aOriginAttrs));
+
+  if (cookieStatus != STATUS_ACCEPTED && cookieStatus != STATUS_ACCEPT_SESSION) {
+    return;
+  }
+
+  cookiesList->Sort(CompareCookiesForSending());
+  for (uint32_t i = 0; i < cookiesList->Length(); i++) {
+    nsCookie *cookie = cookiesList->ElementAt(i);
+    // check the host, since the base domain lookup is conservative.
+    if (!nsCookieService::DomainMatches(cookie, hostFromURI))
+      continue;
+
+    // if the cookie is secure and the host scheme isn't, we can't send it
+    if (cookie->IsSecure() && !isSecure)
+      continue;
+
+    // if the nsIURI path doesn't match the cookie path, don't send it back
+    if (!nsCookieService::PathMatches(cookie, pathFromURI))
+      continue;
+
+    // check if the cookie has expired
+    if (cookie->Expiry() <= currentTime) {
+      continue;
+    }
+
+    if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {
+      if (!aCookieString.IsEmpty()) {
+        aCookieString.Append("; ");
+      }
+      if (!cookie->Name().IsEmpty()) {
+        aCookieString.Append(cookie->Name().get());
+        aCookieString.Append("=");
+        aCookieString.Append(cookie->Value().get());
+      } else {
+        aCookieString.Append(cookie->Value().get());
+      }
+    }
+  }
+}
+
+void
+CookieServiceChild::GetCookieStringSyncIPC(nsIURI                 *aHostURI,
+                                           bool                   aIsForeign,
+                                           const OriginAttributes &aAttrs,
+                                           nsAutoCString          &aCookieString)
+{
+  URIParams uriParams;
+  SerializeURI(aHostURI, uriParams);
+
+  SendGetCookieString(uriParams, aIsForeign, aAttrs, &aCookieString);
+}
+
+uint32_t
+CookieServiceChild::CountCookiesFromHashTable(const nsCString &aBaseDomain,
+                                              const OriginAttributes &aOriginAttrs)
+{
+  CookiesList *cookiesList = nullptr;
+
+  nsCString baseDomain;
+  nsCookieKey key(aBaseDomain, aOriginAttrs);
+  mCookiesMap.Get(key, &cookiesList);
+
+  return cookiesList ? cookiesList->Length() : 0;
+}
+
+void
+CookieServiceChild::SetCookieInternal(nsCookieAttributes              &aCookieAttributes,
+                                      const mozilla::OriginAttributes &aAttrs,
+                                      nsIChannel                      *aChannel,
+                                      bool                             aFromHttp,
+                                      nsICookiePermission             *aPermissionService)
+{
+  if (aCookieAttributes.isHttpOnly) {
+    return;
+  }
+  int64_t currentTimeInUsec = PR_Now();
+  RefPtr<nsCookie> cookie =
+    nsCookie::Create(aCookieAttributes.name,
+                     aCookieAttributes.value,
+                     aCookieAttributes.host,
+                     aCookieAttributes.path,
+                     aCookieAttributes.expiryTime,
+                     currentTimeInUsec,
+                     nsCookie::GenerateUniqueCreationTime(currentTimeInUsec),
+                     aCookieAttributes.isSession,
+                     aCookieAttributes.isSecure,
+                     aCookieAttributes.isHttpOnly,
+                     aAttrs);
+
+  RecordDocumentCookie(cookie, aAttrs);
 }
 
 bool
@@ -103,6 +359,47 @@ CookieServiceChild::RequireThirdPartyCheck()
   return mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
     mCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
     mThirdPartySession;
+}
+
+void
+CookieServiceChild::RecordDocumentCookie(nsCookie               *aCookie,
+                                         const OriginAttributes &aAttrs)
+{
+  nsAutoCString baseDomain;
+  nsCookieService::
+    GetBaseDomainFromHost(mTLDService, aCookie->Host(), baseDomain);
+
+  nsCookieKey key(baseDomain, aAttrs);
+  CookiesList *cookiesList = nullptr;
+  mCookiesMap.Get(key, &cookiesList);
+
+  if (!cookiesList) {
+    cookiesList = mCookiesMap.LookupOrAdd(key);
+  }
+  for (uint32_t i = 0; i < cookiesList->Length(); i++) {
+    nsCookie *cookie = cookiesList->ElementAt(i);
+    if (cookie->Name().Equals(aCookie->Name()) &&
+        cookie->Host().Equals(aCookie->Host()) &&
+        cookie->Path().Equals(aCookie->Path())) {
+      if (cookie->Value().Equals(aCookie->Value()) &&
+          cookie->Expiry() == aCookie->Expiry() &&
+          cookie->IsSecure() == aCookie->IsSecure() &&
+          cookie->IsSession() == aCookie->IsSession() &&
+          cookie->IsHttpOnly() == aCookie->IsHttpOnly()) {
+        cookie->SetLastAccessed(aCookie->LastAccessed());
+        return;
+      }
+      cookiesList->RemoveElementAt(i);
+      break;
+    }
+  }
+
+  int64_t currentTime = PR_Now() / PR_USEC_PER_SEC;
+  if (aCookie->Expiry() <= currentTime) {
+    return;
+  }
+
+  cookiesList->AppendElement(aCookie);
 }
 
 nsresult
@@ -122,14 +419,6 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   if (scheme.EqualsLiteral("moz-nullprincipal"))
     return NS_OK;
 
-  // Determine whether the request is foreign. Failure is acceptable.
-  bool isForeign = true;
-  if (RequireThirdPartyCheck())
-    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
-
-  URIParams uriParams;
-  SerializeURI(aHostURI, uriParams);
-
   mozilla::OriginAttributes attrs;
   if (aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
@@ -138,9 +427,17 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
     }
   }
 
-  // Synchronously call the parent.
+  // Asynchronously call the parent.
+  bool isForeign = true;
+  if (RequireThirdPartyCheck())
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
   nsAutoCString result;
-  SendGetCookieString(uriParams, !!isForeign, attrs, &result);
+  if (!mIPCSync) {
+    GetCookieStringFromCookieHashTable(aHostURI, !!isForeign, attrs, result);
+  } else {
+    GetCookieStringSyncIPC(aHostURI, !!isForeign, attrs, result);
+  }
+
   if (!result.IsEmpty())
     *aCookieString = ToNewCString(result);
 
@@ -170,9 +467,9 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   nsDependentCString cookieString(aCookieString);
-  nsDependentCString serverTime;
+  nsDependentCString stringServerTime;
   if (aServerTime)
-    serverTime.Rebind(aServerTime);
+    stringServerTime.Rebind(aServerTime);
 
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
@@ -185,9 +482,53 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     }
   }
 
-  // Synchronously call the parent.
-  SendSetCookieString(uriParams, !!isForeign, cookieString, serverTime,
-                      attrs, aFromHttp);
+  // Asynchronously call the parent.
+  SendSetCookieString(uriParams, !!isForeign, cookieString,
+                      stringServerTime, attrs, aFromHttp);
+  if (mIPCSync) {
+    return NS_OK;
+  }
+
+  bool requireHostMatch;
+  nsCString baseDomain;
+  nsCookieService::
+    GetBaseDomain(mTLDService, aHostURI, baseDomain, requireHostMatch);
+
+  nsCOMPtr<nsICookiePermission> permissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
+
+  CookieStatus cookieStatus =
+    nsCookieService::CheckPrefs(permissionService, mCookieBehavior,
+                                mThirdPartySession, aHostURI,
+                                !!isForeign, aCookieString,
+                                CountCookiesFromHashTable(baseDomain, attrs));
+
+  if (cookieStatus != STATUS_ACCEPTED && cookieStatus != STATUS_ACCEPT_SESSION) {
+    return NS_OK;
+  }
+
+  nsCString serverTimeString(aServerTime);
+  int64_t serverTime = nsCookieService::ParseServerTime(serverTimeString);
+  bool moreCookies;
+  do {
+    nsCookieAttributes cookieAttributes;
+    bool canSetCookie = false;
+    nsCookieKey key(baseDomain, attrs);
+    moreCookies = nsCookieService::CanSetCookie(aHostURI, key, cookieAttributes,
+                                                requireHostMatch, cookieStatus,
+                                                cookieString, serverTime, aFromHttp,
+                                                aChannel, mLeaveSecureAlone, canSetCookie);
+
+    if (canSetCookie) {
+      SetCookieInternal(cookieAttributes, attrs, aChannel,
+                        aFromHttp, permissionService);
+    }
+
+    // document.cookie can only set one cookie at a time.
+    if (!aFromHttp) {
+      break;
+    }
+
+  } while (moreCookies);
   return NS_OK;
 }
 

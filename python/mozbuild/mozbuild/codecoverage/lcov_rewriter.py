@@ -684,7 +684,7 @@ class LcovFileRewriter(object):
                 return None
 
             source_file, objdir_file, preprocessed = res
-            assert os.path.isfile(source_file), "Couldn't find mapped source file at %s!" % source_file
+            assert os.path.isfile(source_file), "Couldn't find mapped source file %s at %s!" % (url, source_file)
             if preprocessed and not self.pp_rewriter.has_pp_info(source_file):
                 obj_path = os.path.join(self.topobjdir, objdir_file)
                 with open(obj_path) as fh:

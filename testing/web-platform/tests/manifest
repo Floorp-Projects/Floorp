@@ -4,5 +4,4 @@ import sys
 
 from tools.manifest import update
 
-update.main(default_tests_root=
-            os.path.abspath(os.path.dirname(__file__)))
+update.main()

@@ -98,11 +98,9 @@ test(() => {
   };
 
   ReadableStream.prototype.pipeThrough.call(thisValue, { readable: {}, writable: {} });
-  ReadableStream.prototype.pipeThrough.call(thisValue, { readable: {} }, {});
-  ReadableStream.prototype.pipeThrough.call(thisValue, { writable: {} }, {});
 
-  assert_equals(count, 3, 'pipeTo was called 3 times');
+  assert_equals(count, 1, 'pipeTo was called once');
 
-}, 'ReadableStream.prototype.pipeThrough should work with missing readable, writable, or options');
+}, 'ReadableStream.prototype.pipeThrough should work with missing options');
 
 done();

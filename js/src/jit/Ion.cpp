@@ -2132,7 +2132,8 @@ IonCompile(JSContext* cx, JSScript* script,
     if (!inlineScriptTree)
         return AbortReason::Alloc;
 
-    CompileInfo* info = alloc->new_<CompileInfo>(script, script->functionNonDelazifying(), osrPc,
+    CompileInfo* info = alloc->new_<CompileInfo>(CompileRuntime::get(cx->runtime()),
+                                                 script, script->functionNonDelazifying(), osrPc,
                                                  Analysis_None,
                                                  script->needsArgsObj(), inlineScriptTree);
     if (!info)
@@ -2483,7 +2484,7 @@ jit::CanEnter(JSContext* cx, RunState& state)
 {
     MOZ_ASSERT(jit::IsIonEnabled(cx));
 
-    JSScript* script = state.script();
+    HandleScript script = state.script();
 
     // Skip if the script has been disabled.
     if (!script->canIonCompile())
@@ -2496,8 +2497,6 @@ jit::CanEnter(JSContext* cx, RunState& state)
     // Skip if the code is expected to result in a bailout.
     if (script->hasIonScript() && script->ionScript()->bailoutExpected())
         return Method_Skipped;
-
-    RootedScript rscript(cx, script);
 
     // If constructing, allocate a new |this| object before building Ion.
     // Creating |this| is done before building Ion because it may change the
@@ -2528,7 +2527,7 @@ jit::CanEnter(JSContext* cx, RunState& state)
 
     // If --ion-eager is used, compile with Baseline first, so that we
     // can directly enter IonMonkey.
-    if (JitOptions.eagerCompilation && !rscript->hasBaselineScript()) {
+    if (JitOptions.eagerCompilation && !script->hasBaselineScript()) {
         MethodStatus status = CanEnterBaselineMethod(cx, state);
         if (status != Method_Compiled)
             return status;
@@ -2537,14 +2536,14 @@ jit::CanEnter(JSContext* cx, RunState& state)
     // Skip if the script is being compiled off thread or can't be
     // Ion-compiled (again). MaybeCreateThisForConstructor could have
     // started an Ion compilation or marked the script as uncompilable.
-    if (rscript->isIonCompilingOffThread() || !rscript->canIonCompile())
+    if (script->isIonCompilingOffThread() || !script->canIonCompile())
         return Method_Skipped;
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    MethodStatus status = Compile(cx, rscript, nullptr, nullptr);
+    MethodStatus status = Compile(cx, script, nullptr, nullptr);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
-            ForbidCompilation(cx, rscript);
+            ForbidCompilation(cx, script);
         return status;
     }
 
@@ -2634,8 +2633,7 @@ BaselineCanEnterAtBranch(JSContext* cx, HandleScript script, BaselineFrame* osrF
     //   (Meaning it was present or a sequantial compile finished)
     // - Returns Method_Skipped if pc doesn't match
     //   (This means a background thread compilation with that pc could have started or not.)
-    RootedScript rscript(cx, script);
-    MethodStatus status = Compile(cx, rscript, osrFrame, pc, force);
+    MethodStatus status = Compile(cx, script, osrFrame, pc, force);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);

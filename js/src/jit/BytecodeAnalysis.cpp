@@ -78,8 +78,8 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
             MOZ_ASSERT(!infos_[script_->pcToOffset(chkpc)].initialized);
 #endif
 
-        unsigned nuses = GetUseCount(script_, offset);
-        unsigned ndefs = GetDefCount(script_, offset);
+        unsigned nuses = GetUseCount(pc);
+        unsigned ndefs = GetDefCount(pc);
 
         MOZ_ASSERT(stackDepth >= nuses);
         stackDepth -= nuses;

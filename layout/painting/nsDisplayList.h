@@ -4160,6 +4160,11 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
                                 mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -4185,6 +4190,7 @@ protected:
   // and can be ignored.
   ScrollThumbData mThumbData;
   bool mForceActive;
+  uint64_t mWrAnimationId;
 };
 
 /**
@@ -4586,6 +4592,12 @@ public:
   void PaintAsLayer(nsDisplayListBuilder* aBuilder,
                     gfxContext* aCtx,
                     LayerManager* aManager);
+
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 
 /* A display item that applies a transformation to all of its descendant

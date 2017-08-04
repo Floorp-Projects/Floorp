@@ -68,9 +68,6 @@ public class Experiments {
     // Show AddOns menu-item in top level menu
     public static final String TOP_ADDONS_MENU = "top-addons-menu";
 
-    // Tabs tray: Arrange tabs in two columns in portrait mode
-    public static final String COMPACT_TABS = "compact-tabs";
-
     // Enable full bookmark management(full-page dialog, bookmark/folder modification, etc.)
     public static final String FULL_BOOKMARK_MANAGEMENT = "full-bookmark-management";
 
