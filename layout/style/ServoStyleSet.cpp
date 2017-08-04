@@ -179,7 +179,7 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
   RefPtr<ServoStyleContext> computedValues;
   if (aMayCompute == LazyComputeBehavior::Allow) {
     PreTraverseSync();
-    return ResolveStyleLazily(
+    return ResolveStyleLazilyInternal(
         aElement, CSSPseudoElementType::NotPseudo, nullptr, aParentContext);
   }
 
@@ -429,25 +429,14 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
 }
 
 already_AddRefed<ServoStyleContext>
-ServoStyleSet::ResolveTransientStyle(Element* aElement,
-                                     CSSPseudoElementType aPseudoType,
-                                     nsIAtom* aPseudoTag,
-                                     StyleRuleInclusion aRuleInclusion)
-{
-  RefPtr<ServoStyleContext> result =
-    ResolveTransientServoStyle(aElement, aPseudoType, aPseudoTag, aRuleInclusion);
-  return result.forget();
-}
-
-already_AddRefed<ServoStyleContext>
-ServoStyleSet::ResolveTransientServoStyle(
-    Element* aElement,
-    CSSPseudoElementType aPseudoType,
-    nsIAtom* aPseudoTag,
-    StyleRuleInclusion aRuleInclusion)
+ServoStyleSet::ResolveStyleLazily(Element* aElement,
+                                  CSSPseudoElementType aPseudoType,
+                                  nsIAtom* aPseudoTag,
+                                  StyleRuleInclusion aRuleInclusion)
 {
   PreTraverseSync();
-  return ResolveStyleLazily(aElement, aPseudoType, aPseudoTag, nullptr, aRuleInclusion);
+  return ResolveStyleLazilyInternal(aElement, aPseudoType, aPseudoTag,
+                                    nullptr, aRuleInclusion);
 }
 
 already_AddRefed<ServoStyleContext>
@@ -1066,11 +1055,11 @@ ServoStyleSet::ClearNonInheritingStyleContexts()
 }
 
 already_AddRefed<ServoStyleContext>
-ServoStyleSet::ResolveStyleLazily(Element* aElement,
-                                  CSSPseudoElementType aPseudoType,
-                                  nsIAtom* aPseudoTag,
-                                  const ServoStyleContext* aParentContext,
-                                  StyleRuleInclusion aRuleInclusion)
+ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
+                                          CSSPseudoElementType aPseudoType,
+                                          nsIAtom* aPseudoTag,
+                                          const ServoStyleContext* aParentContext,
+                                          StyleRuleInclusion aRuleInclusion)
 {
   mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoType);
   MOZ_ASSERT(!StylistNeedsUpdate());
