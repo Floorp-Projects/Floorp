@@ -79,7 +79,7 @@ class VRControllerOpenVR : public VRControllerHost
 public:
   explicit VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aDisplayID, uint32_t aNumButtons,
                               uint32_t aNumTriggers, uint32_t aNumAxes,
-                              ::vr::ETrackedDeviceClass aDeviceType);
+                              const nsCString& aId);
   void SetTrackedIndex(uint32_t aTrackedIndex);
   uint32_t GetTrackedIndex();
   float GetAxisMove(uint32_t aAxis);
@@ -157,6 +157,9 @@ private:
                           VRControllerHost* aController);
   dom::GamepadHand GetGamepadHandFromControllerRole(
                           ::vr::ETrackedControllerRole aRole);
+  void GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceType,
+                             ::vr::TrackedDeviceIndex_t aDeviceIndex,
+                             nsCString& aId);
 
   // there can only be one
   RefPtr<impl::VRDisplayOpenVR> mOpenVRHMD;
