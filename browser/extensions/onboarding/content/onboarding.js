@@ -401,7 +401,6 @@ class Onboarding {
 
     this._overlay = this._renderOverlay();
     this._overlay.addEventListener("click", this);
-    this._overlay.addEventListener("keypress", this);
     body.appendChild(this._overlay);
 
     this._loadJS(TOUR_AGENT_JS_URI);
@@ -465,15 +464,16 @@ class Onboarding {
     }
   }
 
-  handleClick(target) {
-    let { id, classList } = target;
-    // Only containers receive pointer events in onboarding tour tab list,
-    // actual semantic tab is their first child.
-    if (classList.contains("onboarding-tour-item-container")) {
-      ({ id, classList } = target.firstChild);
+  handleEvent(evt) {
+    if (evt.type === "resize") {
+      this._window.cancelIdleCallback(this._resizeTimerId);
+      this._resizeTimerId =
+        this._window.requestIdleCallback(() => this._resizeUI());
+
+      return;
     }
 
-    switch (id) {
+    switch (evt.target.id) {
       case "onboarding-overlay-button":
       case "onboarding-overlay-close-btn":
       // If the clicking target is directly on the outer-most overlay,
@@ -498,79 +498,15 @@ class Onboarding {
       case "onboarding-tour-default-browser":
       case "onboarding-tour-sync":
       case "onboarding-tour-performance":
-        this.setToursCompleted([ id ]);
+        this.setToursCompleted([ evt.target.id ]);
         break;
     }
+    let classList = evt.target.classList;
     if (classList.contains("onboarding-tour-item")) {
-      this.gotoPage(id);
-      // Keep focus (not visible) on current item for potential keyboard
-      // navigation.
-      target.focus();
+      this.gotoPage(evt.target.id);
     } else if (classList.contains("onboarding-tour-action-button")) {
       let activeItem = this._tourItems.find(item => item.classList.contains("onboarding-active"));
       this.setToursCompleted([ activeItem.id ]);
-    }
-  }
-
-  handleKeypress(event) {
-    let { target, key } = event;
-    // Current focused item can be tab container if previous navigation was done
-    // via mouse.
-    if (target.classList.contains("onboarding-tour-item-container")) {
-      target = target.firstChild;
-    }
-    let targetIndex;
-    switch (key) {
-      case " ":
-      case "Enter":
-        // Assume that the handle function should be identical for keyboard
-        // activation if there is a click handler for the target.
-        if (target.classList.contains("onboarding-tour-item")) {
-          this.handleClick(target);
-          target.focus();
-        }
-        break;
-      case "ArrowUp":
-        // Go to and focus on the previous tab if it's available.
-        targetIndex = this._tourItems.indexOf(target);
-        if (targetIndex > 0) {
-          let previous = this._tourItems[targetIndex - 1];
-          this.handleClick(previous);
-          previous.focus();
-        }
-        event.preventDefault();
-        break;
-      case "ArrowDown":
-        // Go to and focus on the next tab if it's available.
-        targetIndex = this._tourItems.indexOf(target);
-        if (targetIndex > -1 && targetIndex < this._tourItems.length - 1) {
-          let next = this._tourItems[targetIndex + 1];
-          this.handleClick(next);
-          next.focus();
-        }
-        event.preventDefault();
-        break;
-      default:
-        break;
-    }
-    event.stopPropagation();
-  }
-
-  handleEvent(evt) {
-    switch (evt.type) {
-      case "resize":
-        this._window.cancelIdleCallback(this._resizeTimerId);
-        this._resizeTimerId =
-          this._window.requestIdleCallback(() => this._resizeUI());
-        break;
-      case "keypress":
-        this.handleKeypress(evt);
-        break;
-      case "click":
-        this.handleClick(evt.target);
-        break;
-      default:
-        break;
     }
   }
 
@@ -616,13 +552,11 @@ class Onboarding {
         page.style.display = "none";
       }
     }
-    for (let tab of this._tourItems) {
-      if (tab.id == tourId) {
-        tab.classList.add("onboarding-active");
-        tab.setAttribute("aria-selected", true);
+    for (let li of this._tourItems) {
+      if (li.id == tourId) {
+        li.classList.add("onboarding-active");
       } else {
-        tab.classList.remove("onboarding-active");
-        tab.setAttribute("aria-selected", false);
+        li.classList.remove("onboarding-active");
       }
     }
   }
@@ -648,33 +582,9 @@ class Onboarding {
 
   markTourCompletionState(tourId) {
     // We are doing lazy load so there might be no items.
-    if (!this._tourItems || this._tourItems.length === 0) {
-      return;
-    }
-
-    let completed = this.isTourCompleted(tourId);
-    let targetItem = this._tourItems.find(item => item.id == tourId);
-    let completedTextId = `onboarding-complete-${tourId}-text`;
-    // Accessibility: Text version of the auxiliary information about the tour
-    // item completion is provided via an invisible node with an aria-label that
-    // the tab is pointing to via aria-described by.
-    let completedText = targetItem.querySelector(`#${completedTextId}`);
-    if (completed) {
+    if (this._tourItems && this._tourItems.length > 0 && this.isTourCompleted(tourId)) {
+      let targetItem = this._tourItems.find(item => item.id == tourId);
       targetItem.classList.add("onboarding-complete");
-      if (!completedText) {
-        completedText = this._window.document.createElement("span");
-        completedText.id = completedTextId;
-        completedText.setAttribute("aria-label",
-          this._bundle.GetStringFromName("onboarding.complete"));
-        targetItem.appendChild(completedText);
-        targetItem.setAttribute("aria-describedby", completedTextId);
-      }
-    } else {
-      targetItem.classList.remove("onboarding-complete");
-      targetItem.removeAttribute("aria-describedby");
-      if (completedText) {
-        completedText.remove();
-      }
     }
   }
 
@@ -892,7 +802,7 @@ class Onboarding {
       <div id="onboarding-overlay-dialog">
         <header id="onboarding-header"></header>
         <nav>
-          <ul id="onboarding-tour-list" role="tablist"></ul>
+          <ul id="onboarding-tour-list"></ul>
         </nav>
         <footer id="onboarding-footer">
           <input type="checkbox" id="onboarding-tour-hidden-checkbox" /><label for="onboarding-tour-hidden-checkbox"></label>
@@ -934,24 +844,9 @@ class Onboarding {
     for (let tour of tours) {
       // Create tour navigation items dynamically
       let li = this._window.document.createElement("li");
-      // List item should have no semantics. It is just a container for an
-      // actual tab.
-      li.setAttribute("role", "presentation");
-      li.className = "onboarding-tour-item-container";
-      // Focusable but not tabbable.
-      li.tabIndex = -1;
-
-      let tab = this._window.document.createElement("span");
-      tab.id = tour.id;
-      tab.textContent = this._bundle.GetStringFromName(tour.tourNameId);
-      tab.className = "onboarding-tour-item";
-      tab.tabIndex = 0;
-      tab.setAttribute("role", "tab");
-
-      let tourPanelId = `${tour.id}-page`;
-      tab.setAttribute("aria-controls", tourPanelId);
-
-      li.appendChild(tab);
+      li.textContent = this._bundle.GetStringFromName(tour.tourNameId);
+      li.id = tour.id;
+      li.className = "onboarding-tour-item";
       itemsFrag.appendChild(li);
       // Dynamically create tour pages
       let div = tour.getPage(this._window, this._bundle);
@@ -967,14 +862,12 @@ class Onboarding {
                                 element.dataset.l10nId, [BRAND_SHORT_NAME], 1);
       }
 
-      div.id = tourPanelId;
+      div.id = `${tour.id}-page`;
       div.classList.add("onboarding-tour-page");
-      div.setAttribute("role", "tabpanel");
-      div.setAttribute("aria-labelledby", tour.id);
       div.style.display = "none";
       pagesFrag.appendChild(div);
       // Cache elements in arrays for later use to avoid cost of querying elements
-      this._tourItems.push(tab);
+      this._tourItems.push(li);
       this._tourPages.push(div);
 
       this.markTourCompletionState(tour.id);
