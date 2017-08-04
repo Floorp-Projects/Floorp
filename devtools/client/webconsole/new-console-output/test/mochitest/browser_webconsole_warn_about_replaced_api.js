@@ -20,8 +20,7 @@ add_task(async function () {
   await testWarningNotPresent(hud);
   await closeToolbox();
 
-  const currentTab = gBrowser.selectedTab;
-  await loadDocument(currentTab.linkedBrowser, TEST_URI_REPLACED);
+  await loadDocument(TEST_URI_REPLACED);
 
   let toolbox = await openToolboxForTab(gBrowser.selectedTab, "webconsole");
   hud = toolbox.getCurrentPanel().hud;
