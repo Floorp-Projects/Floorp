@@ -642,7 +642,8 @@ bool ChannelMediaResource::CanClone()
   return mCacheStream.IsAvailableForSharing();
 }
 
-already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
+already_AddRefed<BaseMediaResource>
+ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
@@ -1413,9 +1414,10 @@ int64_t FileMediaResource::Tell()
   return offset;
 }
 
-already_AddRefed<MediaResource>
-MediaResource::Create(MediaResourceCallback* aCallback,
-                      nsIChannel* aChannel, bool aIsPrivateBrowsing)
+already_AddRefed<BaseMediaResource>
+BaseMediaResource::Create(MediaResourceCallback* aCallback,
+                          nsIChannel* aChannel,
+                          bool aIsPrivateBrowsing)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "MediaResource::Open called on non-main thread");
@@ -1434,7 +1436,7 @@ MediaResource::Create(MediaResourceCallback* aCallback,
     return nullptr;
   }
 
-  RefPtr<MediaResource> resource;
+  RefPtr<BaseMediaResource> resource;
 
   // Let's try to create a FileMediaResource in case the channel is a nsIFile
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
