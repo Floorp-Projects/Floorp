@@ -285,6 +285,10 @@ typedef GenericFlingAnimation FlingAnimation;
  * reflect the value of the async scroll offset and async zoom at the last time
  * SampleCompositedAsyncTransform() was called.
  *
+ * \li\b apz.keyboard.enabled
+ * Determines whether scrolling with the keyboard will be allowed to be handled
+ * by APZ.
+ *
  * \li\b apz.keyboard.passive-listeners
  * When enabled, APZ will interpret the passive event listener flag to mean
  * that the event listener won't change the focused element or selection of
