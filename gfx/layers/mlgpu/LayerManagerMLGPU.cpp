@@ -463,7 +463,9 @@ LayerManagerMLGPU::ComputeInvalidRegion()
 
   nsIntRegion changed;
   if (mClonedLayerTreeProperties) {
-    changed = mClonedLayerTreeProperties->ComputeDifferences(mRoot, nullptr);
+    if (!mClonedLayerTreeProperties->ComputeDifferences(mRoot, changed, nullptr)) {
+      changed = mRenderBounds;
+    }
   } else {
     changed = mRenderBounds;
   }

@@ -228,14 +228,17 @@ class MOZ_RAII GeckoProfilerEntryMarker
 class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry
 {
   public:
-    explicit AutoGeckoProfilerEntry(JSContext* cx, const char* label,
-                                    ProfileEntry::Category category = ProfileEntry::Category::JS
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoGeckoProfilerEntry();
+    explicit MOZ_ALWAYS_INLINE
+    AutoGeckoProfilerEntry(JSContext* cx, const char* label,
+                           ProfileEntry::Category category = ProfileEntry::Category::JS
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    MOZ_ALWAYS_INLINE ~AutoGeckoProfilerEntry();
 
   private:
     GeckoProfilerThread* profiler_;
-    mozilla::DebugOnly<uint32_t> spBefore_;
+#ifdef DEBUG
+    uint32_t spBefore_;
+#endif
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
