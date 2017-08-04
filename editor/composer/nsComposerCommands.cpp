@@ -7,6 +7,7 @@
 #include <stdio.h>                      // for printf
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/EditorBase.h"         // for EditorBase
 #include "mozilla/HTMLEditor.h"         // for HTMLEditor
 #include "nsAString.h"
 #include "nsCOMPtr.h"                   // for nsCOMPtr, do_QueryInterface, etc
@@ -21,7 +22,6 @@
 #include "nsID.h"
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIEditor.h"                  // for nsIEditor
-#include "nsIHTMLAbsPosEditor.h"        // for nsIHTMLAbsPosEditor
 #include "nsIHTMLEditor.h"              // for nsIHTMLEditor, etc
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsReadableUtils.h"            // for EmptyString
@@ -34,9 +34,12 @@ class nsISupports;
 nsresult GetListState(mozilla::HTMLEditor* aHTMLEditor,
                       bool* aMixed,
                       nsAString& aLocalName);
-nsresult RemoveOneProperty(nsIHTMLEditor* aEditor, const nsAString& aProp);
-nsresult RemoveTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp);
-nsresult SetTextProperty(nsIHTMLEditor *aEditor, const nsAString& aProp);
+nsresult RemoveOneProperty(mozilla::HTMLEditor* aHTMLEditor,
+                           const nsAString& aProp);
+nsresult RemoveTextProperty(mozilla::HTMLEditor* aHTMLEditor,
+                            const nsAString& aProp);
+nsresult SetTextProperty(mozilla::HTMLEditor* aHTMLEditor,
+                         const nsAString& aProp);
 
 
 //defines
@@ -76,11 +79,13 @@ nsBaseStateUpdatingCommand::IsCommandEnabled(const char *aCommandName,
                                              bool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
 
 
@@ -90,11 +95,11 @@ nsBaseStateUpdatingCommand::DoCommand(const char *aCommandName,
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_FAILURE;
   }
   mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_FAILURE;
   }
   return ToggleState(htmlEditor);
 }
@@ -118,7 +123,7 @@ nsBaseStateUpdatingCommand::GetCommandStateParams(const char *aCommandName,
   }
   mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_FAILURE;
   }
   return GetCurrentState(htmlEditor, aParams);
 }
@@ -131,26 +136,33 @@ nsPasteNoFormattingCommand::IsCommandEnabled(const char * aCommandName,
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   *outCmdEnabled = false;
 
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // This command is only implemented by nsIHTMLEditor, since
   //  pasting in a plaintext editor automatically only supplies
   //  "unformatted" text
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_NOT_IMPLEMENTED);
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(htmlEditor);
-  NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
-
-  return editor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
+  return htmlEditor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
 }
-
 
 NS_IMETHODIMP
 nsPasteNoFormattingCommand::DoCommand(const char *aCommandName,
                                       nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_NOT_IMPLEMENTED);
-
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
   return htmlEditor->PasteNoFormatting(nsIClipboard::kGlobalClipboard);
 }
 
@@ -401,10 +413,15 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
 {
   *outCmdEnabled = false;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(editor, NS_OK);
+  if (!editor) {
+    return NS_OK;
+  }
+
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
 
   bool isEditable = false;
-  nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+  nsresult rv = editorBase->GetIsSelectionEditable(&isEditable);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!isEditable) {
     return NS_OK;
@@ -413,7 +430,7 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
   // It is enabled if we are in any list type
   mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_FAILURE;
   }
 
   bool bMixed;
@@ -429,15 +446,16 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
 NS_IMETHODIMP
 nsRemoveListCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor) {
-    // This removes any list type
-    rv = editor->RemoveList(EmptyString());
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    return NS_OK;
   }
-
-  return rv;
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return NS_OK;
+  }
+  // This removes any list type
+  return htmlEditor->RemoveList(EmptyString());
 }
 
 NS_IMETHODIMP
@@ -463,25 +481,27 @@ nsIndentCommand::IsCommandEnabled(const char * aCommandName,
                                   nsISupports *refCon, bool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
-
 
 NS_IMETHODIMP
 nsIndentCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor) {
-    rv = editor->Indent(NS_LITERAL_STRING("indent"));
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    return NS_OK;
   }
-
-  return rv;
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return NS_OK;
+  }
+  return htmlEditor->Indent(NS_LITERAL_STRING("indent"));
 }
 
 NS_IMETHODIMP
@@ -510,26 +530,28 @@ nsOutdentCommand::IsCommandEnabled(const char * aCommandName,
                                    nsISupports *refCon,
                                    bool *outCmdEnabled)
 {
-  *outCmdEnabled = false;
-
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor) {
-    nsresult rv = editor->GetIsSelectionEditable(outCmdEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
   }
-
-  return NS_OK;
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
-
 
 NS_IMETHODIMP
 nsOutdentCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(refCon);
-  if (htmlEditor)
-    return htmlEditor->Indent(NS_LITERAL_STRING("outdent"));
-
-  return NS_OK;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    return NS_OK;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return NS_OK;
+  }
+  return htmlEditor->Indent(NS_LITERAL_STRING("outdent"));
 }
 
 NS_IMETHODIMP
@@ -567,14 +589,15 @@ nsMultiStateCommand::IsCommandEnabled(const char * aCommandName,
                                       bool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
   // should be disabled sometimes, like if the current selection is an image
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
-
 
 NS_IMETHODIMP
 nsMultiStateCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
@@ -598,7 +621,7 @@ nsMultiStateCommand::DoCommandParams(const char *aCommandName,
   }
   mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_FAILURE;
   }
 
   nsAutoString tString;
@@ -624,7 +647,7 @@ nsMultiStateCommand::GetCommandStateParams(const char *aCommandName,
   }
   mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_FAILURE;
   }
   return GetCurrentState(htmlEditor, aParams);
 }
@@ -877,11 +900,13 @@ nsHighlightColorStateCommand::IsCommandEnabled(const char * aCommandName,
                                                bool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
 
 
@@ -985,18 +1010,25 @@ nsAbsolutePositioningCommand::IsCommandEnabled(const char * aCommandName,
                                                nsISupports *aCommandRefCon,
                                                bool *outCmdEnabled)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  nsCOMPtr<nsIHTMLAbsPosEditor> htmlEditor = do_QueryInterface(aCommandRefCon);
-  if (htmlEditor) {
-    bool isEditable = false;
-    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (isEditable)
-      return htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
-  }
-
   *outCmdEnabled = false;
-  return NS_OK;
+
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (!editor) {
+    return NS_OK;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return NS_OK;
+  }
+  bool isEditable = false;
+  nsresult rv = htmlEditor->GetIsSelectionEditable(&isEditable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (!isEditable) {
+    return NS_OK;
+  }
+  return htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
 }
 
 nsresult
@@ -1050,8 +1082,14 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
                                           nsISupports *refCon,
                                           bool *outCmdEnabled)
 {
-  nsCOMPtr<nsIHTMLAbsPosEditor> htmlEditor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
   htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
   if (!(*outCmdEnabled))
@@ -1060,13 +1098,16 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
   nsCOMPtr<nsIDOMElement> positionedElement;
   htmlEditor->GetPositionedElement(getter_AddRefs(positionedElement));
   *outCmdEnabled = false;
-  if (positionedElement) {
-    int32_t z;
-    nsresult rv = htmlEditor->GetElementZIndex(positionedElement, &z);
-    NS_ENSURE_SUCCESS(rv, rv);
-    *outCmdEnabled = (z > 0);
+  if (!positionedElement) {
+    return NS_OK;
   }
 
+  int32_t z;
+  nsresult rv = htmlEditor->GetElementZIndex(positionedElement, &z);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  *outCmdEnabled = (z > 0);
   return NS_OK;
 }
 
@@ -1074,9 +1115,14 @@ NS_IMETHODIMP
 nsDecreaseZIndexCommand::DoCommand(const char *aCommandName,
                                    nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLAbsPosEditor> htmlEditor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_NOT_IMPLEMENTED);
-
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
   return htmlEditor->RelativeChangeZIndex(-1);
 }
 
@@ -1107,8 +1153,14 @@ nsIncreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
                                           nsISupports *refCon,
                                           bool *outCmdEnabled)
 {
-  nsCOMPtr<nsIHTMLAbsPosEditor> htmlEditor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
   htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
   if (!(*outCmdEnabled))
@@ -1124,9 +1176,14 @@ NS_IMETHODIMP
 nsIncreaseZIndexCommand::DoCommand(const char *aCommandName,
                                    nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLAbsPosEditor> htmlEditor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_NOT_IMPLEMENTED);
-
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
   return htmlEditor->RelativeChangeZIndex(1);
 }
 
@@ -1152,35 +1209,35 @@ nsIncreaseZIndexCommand::GetCommandStateParams(const char *aCommandName,
   return aParams->SetBooleanValue(STATE_ENABLED, enabled);
 }
 
-
 NS_IMETHODIMP
 nsRemoveStylesCommand::IsCommandEnabled(const char * aCommandName,
                                         nsISupports *refCon,
                                         bool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
   // test if we have any styles?
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
-
-
 
 NS_IMETHODIMP
 nsRemoveStylesCommand::DoCommand(const char *aCommandName,
                                  nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor) {
-    rv = editor->RemoveAllInlineProperties();
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    return NS_OK;
   }
-
-  return rv;
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return NS_OK;
+  }
+  return htmlEditor->RemoveAllInlineProperties();
 }
 
 NS_IMETHODIMP
@@ -1207,12 +1264,14 @@ nsIncreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName,
                                             bool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
   // test if we are at max size?
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
 
 
@@ -1220,14 +1279,15 @@ NS_IMETHODIMP
 nsIncreaseFontSizeCommand::DoCommand(const char *aCommandName,
                                      nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor) {
-    rv = editor->IncreaseFontSize();
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    return NS_OK;
   }
-
-  return rv;
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return NS_OK;
+  }
+  return htmlEditor->IncreaseFontSize();
 }
 
 NS_IMETHODIMP
@@ -1254,27 +1314,29 @@ nsDecreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName,
                                             bool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
   // test if we are at min size?
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
-
 
 NS_IMETHODIMP
 nsDecreaseFontSizeCommand::DoCommand(const char *aCommandName,
                                      nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor) {
-    rv = editor->DecreaseFontSize();
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) {
+    return NS_OK;
   }
-
-  return rv;
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return NS_OK;
+  }
+  return htmlEditor->DecreaseFontSize();
 }
 
 NS_IMETHODIMP
@@ -1302,13 +1364,14 @@ nsInsertHTMLCommand::IsCommandEnabled(const char * aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
-
 
 NS_IMETHODIMP
 nsInsertHTMLCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
@@ -1317,11 +1380,16 @@ nsInsertHTMLCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
   // an empty string parameter ''. In this case, it should act the same as the delete command
   NS_ENSURE_ARG_POINTER(refCon);
 
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(editor, NS_ERROR_NOT_IMPLEMENTED);
-
-  nsString html = EmptyString();
-  return editor->InsertHTML(html);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsAutoString html;
+  return htmlEditor->InsertHTML(html);
 }
 
 NS_IMETHODIMP
@@ -1332,15 +1400,21 @@ nsInsertHTMLCommand::DoCommandParams(const char *aCommandName,
   NS_ENSURE_ARG_POINTER(aParams);
   NS_ENSURE_ARG_POINTER(refCon);
 
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(editor, NS_ERROR_NOT_IMPLEMENTED);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Get HTML source string to insert from command params
   nsAutoString html;
   nsresult rv = aParams->GetStringValue(STATE_DATA, html);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return editor->InsertHTML(html);
+  return htmlEditor->InsertHTML(html);
 }
 
 NS_IMETHODIMP
@@ -1376,13 +1450,14 @@ nsInsertTagCommand::IsCommandEnabled(const char * aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
-  *outCmdEnabled = false;
-  return NS_OK;
+  if (!editor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  mozilla::EditorBase* editorBase = editor->AsEditorBase();
+  MOZ_ASSERT(editorBase);
+  return editorBase->GetIsSelectionEditable(outCmdEnabled);
 }
-
 
 // corresponding STATE_ATTRIBUTE is: src (img) and href (a)
 NS_IMETHODIMP
@@ -1390,15 +1465,21 @@ nsInsertTagCommand::DoCommand(const char *aCmdName, nsISupports *refCon)
 {
   NS_ENSURE_TRUE(mTagName == nsGkAtoms::hr, NS_ERROR_NOT_IMPLEMENTED);
 
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(editor, NS_ERROR_NOT_IMPLEMENTED);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMElement> domElem;
-  nsresult rv = editor->CreateElementWithDefaults(
+  nsresult rv = htmlEditor->CreateElementWithDefaults(
     nsDependentAtomString(mTagName), getter_AddRefs(domElem));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return editor->InsertElementAtSelection(domElem, true);
+  return htmlEditor->InsertElementAtSelection(domElem, true);
 }
 
 NS_IMETHODIMP
@@ -1415,8 +1496,14 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
 
   NS_ENSURE_ARG_POINTER(aParams);
 
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-  NS_ENSURE_TRUE(editor, NS_ERROR_NOT_IMPLEMENTED);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // do we have an href to use for creating link?
   nsXPIDLCString s;
@@ -1439,18 +1526,18 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
   }
 
   nsCOMPtr<nsIDOMElement> domElem;
-  rv = editor->CreateElementWithDefaults(nsDependentAtomString(mTagName),
-                                         getter_AddRefs(domElem));
+  rv = htmlEditor->CreateElementWithDefaults(nsDependentAtomString(mTagName),
+                                             getter_AddRefs(domElem));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = domElem->SetAttribute(attributeType, attrib);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // do actual insertion
-  if (mTagName == nsGkAtoms::a)
-    return editor->InsertLinkAroundSelection(domElem);
-
-  return editor->InsertElementAtSelection(domElem, true);
+  if (mTagName == nsGkAtoms::a) {
+    return htmlEditor->InsertLinkAroundSelection(domElem);
+  }
+  return htmlEditor->InsertElementAtSelection(domElem, true);
 }
 
 NS_IMETHODIMP
@@ -1501,42 +1588,46 @@ GetListState(mozilla::HTMLEditor* aHTMLEditor,
 }
 
 nsresult
-RemoveOneProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
+RemoveOneProperty(mozilla::HTMLEditor* aHTMLEditor,
+                  const nsAString& aProp)
 {
-  MOZ_ASSERT(aEditor);
+  MOZ_ASSERT(aHTMLEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
   nsCOMPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  return aEditor->RemoveInlineProperty(styleAtom, EmptyString());
+  return aHTMLEditor->RemoveInlineProperty(styleAtom, EmptyString());
 }
 
 
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
 nsresult
-RemoveTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
+RemoveTextProperty(mozilla::HTMLEditor* aHTMLEditor,
+                   const nsAString& aProp)
 {
-  MOZ_ASSERT(aEditor);
+  MOZ_ASSERT(aHTMLEditor);
 
   if (aProp.LowerCaseEqualsLiteral("all")) {
-    return aEditor->RemoveAllInlineProperties();
+    return aHTMLEditor->RemoveAllInlineProperties();
   }
 
-  return RemoveOneProperty(aEditor, aProp);
+  return RemoveOneProperty(aHTMLEditor, aProp);
 }
 
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
 nsresult
-SetTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
+SetTextProperty(mozilla::HTMLEditor* aHTMLEditor,
+                const nsAString& aProp)
 {
-  MOZ_ASSERT(aEditor);
+  MOZ_ASSERT(aHTMLEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
   nsCOMPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  return aEditor->SetInlineProperty(styleAtom, EmptyString(), EmptyString());
+  return aHTMLEditor->SetInlineProperty(styleAtom,
+                                        EmptyString(), EmptyString());
 }
