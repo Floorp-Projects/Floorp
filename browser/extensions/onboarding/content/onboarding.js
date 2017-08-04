@@ -20,7 +20,6 @@ const BRAND_SHORT_NAME = Services.strings
                      .createBundle("chrome://branding/locale/brand.properties")
                      .GetStringFromName("brandShortName");
 const PROMPT_COUNT_PREF = "browser.onboarding.notification.prompt-count";
-const ONBOARDING_DIALOG_ID = "onboarding-overlay-dialog";
 
 /**
  * Add any number of tours, key is the tourId, value should follow the format below
@@ -405,8 +404,6 @@ class Onboarding {
     this._overlay.addEventListener("keypress", this);
     body.appendChild(this._overlay);
 
-    this._dialog = this._overlay.querySelector(`#${ONBOARDING_DIALOG_ID}`);
-
     this._loadJS(TOUR_AGENT_JS_URI);
 
     this._initPrefObserver();
@@ -468,15 +465,6 @@ class Onboarding {
     }
   }
 
-  /**
-   * Find a tour that should be selected. It is either a first tour that was not
-   * yet complete or the first one in the tab list.
-   */
-  get selectedTour() {
-    return this._tours.find(tour => !this.isTourCompleted(tour.id)) ||
-           this._tours[0];
-  }
-
   handleClick(target) {
     let { id, classList } = target;
     // Only containers receive pointer events in onboarding tour tab list,
@@ -493,7 +481,8 @@ class Onboarding {
       // Let's toggle the overlay.
       case "onboarding-overlay":
         this.toggleOverlay();
-        this.gotoPage(this.selectedTour.id);
+        let selectedTour = this._tours.find(tour => !this.isTourCompleted(tour.id)) || this._tours[0];
+        this.gotoPage(selectedTour.id);
         break;
       case "onboarding-notification-close-btn":
         this.hideNotification();
@@ -523,34 +512,8 @@ class Onboarding {
     }
   }
 
-  /**
-   * Wrap keyboard focus within the dialog and focus on first element after last
-   * when moving forward or last element after first when moving backwards. Do
-   * nothing if focus is moving in the middle of the list of dialog's focusable
-   * elements.
-   *
-   * @param  {DOMNode} current  currently focused element
-   * @param  {Boolean} back     direction
-   * @return {DOMNode}          newly focused element if any
-   */
-  wrapMoveFocus(current, back) {
-    let elms = [...this._dialog.querySelectorAll(
-      `button, input[type="checkbox"], input[type="email"], [tabindex="0"]`)];
-    let next;
-    if (back) {
-      if (elms.indexOf(current) === 0) {
-        next = elms[elms.length - 1];
-        next.focus();
-      }
-    } else if (elms.indexOf(current) === elms.length - 1) {
-      next = elms[0];
-      next.focus();
-    }
-    return next;
-  }
-
   handleKeypress(event) {
-    let { target, key, shiftKey } = event;
+    let { target, key } = event;
     // Current focused item can be tab container if previous navigation was done
     // via mouse.
     if (target.classList.contains("onboarding-tour-item-container")) {
@@ -586,16 +549,6 @@ class Onboarding {
           next.focus();
         }
         event.preventDefault();
-        break;
-      case "Escape":
-        this.toggleOverlay();
-        break;
-      case "Tab":
-        let next = this.wrapMoveFocus(target, shiftKey);
-        // If focus was wrapped, prevent Tab key default action.
-        if (next) {
-          event.preventDefault();
-        }
         break;
       default:
         break;
@@ -646,51 +599,10 @@ class Onboarding {
 
     this.hideNotification();
     this._overlay.classList.toggle("onboarding-opened");
-    this.toggleModal(this._overlay.classList.contains("onboarding-opened"));
 
     let hiddenCheckbox = this._window.document.getElementById("onboarding-tour-hidden-checkbox");
     if (hiddenCheckbox.checked) {
       this.hide();
-    }
-  }
-
-  /**
-   * Set modal dialog state and properties for accessibility purposes.
-   * @param  {Boolean} opened  whether the dialog is opened or closed.
-   */
-  toggleModal(opened) {
-    let { document: doc } = this._window;
-    if (opened) {
-      // Set aria-hidden to true for the rest of the document.
-      [...doc.body.children].forEach(
-        child => child.id !== "onboarding-overlay" &&
-                 child.setAttribute("aria-hidden", true));
-      // When focus is on the overlay button, assume dialog is opened with the
-      // keyboard.
-      if (doc.activeElement === this._overlayIcon) {
-        // Remember that the dialog was opened with a keyboard.
-        this._overlayIcon.dataset.keyboardFocus = true;
-        // When dialog is opened with the keyboard, focus on the selected or
-        // first tour item.
-        doc.getElementById(this.selectedTour.id).focus();
-      } else {
-        // When dialog is opened with mouse, focus on the dialog itself to avoid
-        // visible keyboard focus styling.
-        this._dialog.focus();
-        delete this._overlayIcon.dataset.keyboardFocus;
-      }
-    } else {
-      // Remove all set aria-hidden attributes.
-      [...doc.body.children].forEach(
-        child => child.removeAttribute("aria-hidden"));
-      // If dialog was opened with a keyboard, set the focus back on the overlay
-      // button.
-      if (this._overlayIcon.dataset.keyboardFocus) {
-        delete this._overlayIcon.dataset.keyboardFocus;
-        this._overlayIcon.focus();
-      } else {
-        this._window.document.activeElement.blur();
-      }
     }
   }
 
@@ -977,7 +889,7 @@ class Onboarding {
     // We use `innerHTML` for more friendly reading.
     // The security should be fine because this is not from an external input.
     div.innerHTML = `
-      <div id="${ONBOARDING_DIALOG_ID}" role="dialog" tabindex="-1" aria-labelledby="onboarding-header">
+      <div id="onboarding-overlay-dialog">
         <header id="onboarding-header"></header>
         <nav>
           <ul id="onboarding-tour-list" role="tablist"></ul>
@@ -1007,7 +919,7 @@ class Onboarding {
     button.setAttribute("aria-label", tooltip);
     button.id = "onboarding-overlay-button";
     button.setAttribute("aria-haspopup", true);
-    button.setAttribute("aria-controls", `${ONBOARDING_DIALOG_ID}`);
+    button.setAttribute("aria-controls", "onboarding-overlay-dialog");
     let img = this._window.document.createElement("img");
     img.id = "onboarding-overlay-button-icon";
     img.setAttribute("role", "presentation");
@@ -1068,10 +980,11 @@ class Onboarding {
       this.markTourCompletionState(tour.id);
     }
 
+    let dialog = this._window.document.getElementById("onboarding-overlay-dialog");
     let ul = this._window.document.getElementById("onboarding-tour-list");
     ul.appendChild(itemsFrag);
     let footer = this._window.document.getElementById("onboarding-footer");
-    this._dialog.insertBefore(pagesFrag, footer);
+    dialog.insertBefore(pagesFrag, footer);
   }
 
   _loadCSS() {

@@ -199,17 +199,9 @@ function assertOverlaySemantics(browser) {
   return ContentTask.spawn(browser, {}, function() {
     let doc = content.document;
 
-    info("Checking dialog");
-    let dialog = doc.getElementById("onboarding-overlay-dialog");
-    is(dialog.getAttribute("role"), "dialog",
-      "Dialog should have a dialog role attribute set");
-    is(dialog.tabIndex, "-1", "Dialog should be focusable but not in tab order");
-    is(dialog.getAttribute("aria-labelledby"), "onboarding-header",
-      "Dialog should be labaled by its header");
-
     info("Checking the tablist container");
     is(doc.getElementById("onboarding-tour-list").getAttribute("role"), "tablist",
-      "Tour list should have a tablist role attribute set");
+      "Tour list should have a tablist role argument set");
 
     info("Checking each tour item that represents the tab");
     let items = [...doc.querySelectorAll(".onboarding-tour-item")];
@@ -220,13 +212,13 @@ function assertOverlaySemantics(browser) {
          item.classList.contains("onboarding-active") ? "true" : "false",
          "Active item should have aria-selected set to true and inactive to false");
       is(item.tabIndex, "0", "Item tab index must be set for keyboard accessibility");
-      is(item.getAttribute("role"), "tab", "Item should have a tab role attribute set");
+      is(item.getAttribute("role"), "tab", "Item should have a tab role argument set");
       let tourPanelId = `${item.id}-page`;
       is(item.getAttribute("aria-controls"), tourPanelId,
         "Item should have aria-controls attribute point to its tabpanel");
       let panel = doc.getElementById(tourPanelId);
       is(panel.getAttribute("role"), "tabpanel",
-        "Tour panel should have a tabpanel role attribute set");
+        "Tour panel should have a tabpanel role argument set");
       is(panel.getAttribute("aria-labelledby"), item.id,
         "Tour panel should have aria-labelledby attribute point to its tab");
     });
