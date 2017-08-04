@@ -43,7 +43,8 @@
         android:layout_width="match_parent"
         android:layout_height="81dp"
         android:orientation="horizontal"
-        android:elevation="4dp">
+        android:elevation="4dp"
+        android:clipChildren="false">
 
         <View
             android:id="@+id/toolbar_background"
@@ -56,7 +57,8 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_gravity="bottom"
-            android:layout_margin="8dp">
+            android:layout_margin="8dp"
+            android:clipChildren="false">
 
             <View
                 android:id="@+id/url_input_background"
@@ -67,8 +69,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:transitionName="urlbar">
+                android:orientation="horizontal">
 
                 <org.mozilla.focus.widget.InlineAutocompleteEditText
                     android:id="@+id/url_edit"
