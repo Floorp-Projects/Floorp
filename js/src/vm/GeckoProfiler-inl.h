@@ -47,6 +47,38 @@ class MOZ_RAII AutoSuppressProfilerSampling
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+MOZ_ALWAYS_INLINE
+AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSContext* cx, const char* label,
+                                               ProfileEntry::Category category
+                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : profiler_(&cx->geckoProfiler())
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (MOZ_LIKELY(!profiler_->installed())) {
+        profiler_ = nullptr;
+        return;
+    }
+#ifdef DEBUG
+    spBefore_ = profiler_->stackPointer();
+#endif
+    profiler_->pseudoStack_->pushCppFrame(label,
+                                          /* dynamicString = */ nullptr,
+                                          /* sp = */ this,
+                                          /* line = */ 0,
+                                          ProfileEntry::Kind::CPP_NORMAL,
+                                          category);
+}
+
+MOZ_ALWAYS_INLINE
+AutoGeckoProfilerEntry::~AutoGeckoProfilerEntry()
+{
+    if (MOZ_LIKELY(!profiler_))
+        return;
+
+    profiler_->pseudoStack_->pop();
+    MOZ_ASSERT(spBefore_ == profiler_->stackPointer());
+}
+
 } // namespace js
 
 #endif // vm_GeckoProfiler_inl_h
