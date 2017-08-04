@@ -737,7 +737,7 @@ if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing']
 
 # Suppress warnings in third-party code.
-if CONFIG['CLANG_CXX']:
+if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
     SOURCES['jsdtoa.cpp'].flags += ['-Wno-implicit-fallthrough']
 
 # Generate GC statistics phase data.
