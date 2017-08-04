@@ -236,13 +236,6 @@ public:
    */
   EditorBase();
 
-  // Please include TextEditor.h.
-  inline TextEditor* AsTextEditor();
-  inline const TextEditor* AsTextEditor() const;
-  // Please include HTMLEditor.h.
-  inline HTMLEditor* AsHTMLEditor();
-  inline const HTMLEditor* AsHTMLEditor() const;
-
 protected:
   /**
    * The default destructor. This should suffice. Should this be pure virtual
@@ -1253,8 +1246,21 @@ protected:
   friend class AutoSelectionRestorer;
   friend class AutoTransactionsConserveSelection;
   friend class RangeUpdater;
+  friend class nsIEditor;
 };
 
 } // namespace mozilla
+
+mozilla::EditorBase*
+nsIEditor::AsEditorBase()
+{
+  return static_cast<mozilla::EditorBase*>(this);
+}
+
+const mozilla::EditorBase*
+nsIEditor::AsEditorBase() const
+{
+  return static_cast<const mozilla::EditorBase*>(this);
+}
 
 #endif // #ifndef mozilla_EditorBase_h

@@ -1054,18 +1054,20 @@ private:
                                       bool aIsCreatedHidden);
 };
 
-HTMLEditor*
-EditorBase::AsHTMLEditor()
-{
-  return mIsHTMLEditorClass ? static_cast<HTMLEditor*>(this) : nullptr;
-}
-
-const HTMLEditor*
-EditorBase::AsHTMLEditor() const
-{
-  return mIsHTMLEditorClass ? static_cast<const HTMLEditor*>(this) : nullptr;
-}
-
 } // namespace mozilla
+
+mozilla::HTMLEditor*
+nsIEditor::AsHTMLEditor()
+{
+  return static_cast<mozilla::EditorBase*>(this)->mIsHTMLEditorClass ?
+           static_cast<mozilla::HTMLEditor*>(this) : nullptr;
+}
+
+const mozilla::HTMLEditor*
+nsIEditor::AsHTMLEditor() const
+{
+  return static_cast<const mozilla::EditorBase*>(this)->mIsHTMLEditorClass ?
+           static_cast<const mozilla::HTMLEditor*>(this) : nullptr;
+}
 
 #endif // #ifndef mozilla_HTMLEditor_h
