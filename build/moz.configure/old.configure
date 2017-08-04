@@ -230,7 +230,6 @@ def old_configure_options(*options):
     '--enable-ui-locale',
     '--enable-universalchardet',
     '--enable-updater',
-    '--enable-url-classifier',
     '--enable-valgrind',
     '--enable-verify-mar',
     '--enable-webrtc',
