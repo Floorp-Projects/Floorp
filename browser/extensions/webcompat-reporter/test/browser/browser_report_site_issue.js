@@ -1,7 +1,6 @@
 /* Test that clicking on the Report Site Issue button opens a new tab
    and sends a postMessaged blob to it. */
 add_task(async function test_screenshot() {
-  CustomizableUI.addWidgetToArea("webcompat-reporter-button", "nav-bar");
   requestLongerTimeout(2);
 
   // ./head.js sets the value for PREF_WC_REPORTER_ENDPOINT
@@ -9,10 +8,11 @@ add_task(async function test_screenshot() {
 
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
 
-  let webcompatButton = document.getElementById("webcompat-reporter-button");
+  let webcompatButton = document.getElementById(WC_PAGE_ACTION_ID);
   ok(webcompatButton, "Report Site Issue button exists.");
 
   let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+  openPageActions();
   webcompatButton.click();
   let tab2 = await newTabPromise;
 
@@ -30,5 +30,4 @@ add_task(async function test_screenshot() {
 
   await BrowserTestUtils.removeTab(tab2);
   await BrowserTestUtils.removeTab(tab1);
-  CustomizableUI.reset();
 });
