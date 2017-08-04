@@ -70,14 +70,12 @@ function* checkToggleKeyBinding(win, key, rulesTable, inspector) {
 
 function checkHelpLinkKeybinding(view) {
   info("Check that MDN link is opened on \"F1\"");
-  let def = defer();
-
   let propView = getFirstVisiblePropertyView(view);
-  propView.mdnLinkClick = function (event) {
-    ok(true, "Pressing F1 opened the MDN link");
-    def.resolve();
-  };
-
-  EventUtils.synthesizeKey("VK_F1", {}, view.styleWindow);
-  return def.promise;
+  return new Promise(resolve => {
+    propView.mdnLinkClick = function (event) {
+      ok(true, "Pressing F1 opened the MDN link");
+      resolve();
+    };
+    EventUtils.synthesizeKey("VK_F1", {}, view.styleWindow);
+  });
 }

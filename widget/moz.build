@@ -292,6 +292,7 @@ LOCAL_INCLUDES += [
 
 if toolkit == 'windows':
     IPDL_SOURCES = [
+        'headless/HeadlessWidgetTypes.ipdlh',
         'windows/PCompositorWidget.ipdl',
         'windows/PlatformWidgetTypes.ipdlh',
     ]
@@ -299,9 +300,11 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT'] and CONFIG['MOZ_X11']:
     IPDL_SOURCES = [
         'gtk/PCompositorWidget.ipdl',
         'gtk/PlatformWidgetTypes.ipdlh',
+        'headless/HeadlessWidgetTypes.ipdlh',
     ]
 else:
     IPDL_SOURCES = [
+        'headless/HeadlessWidgetTypes.ipdlh',
         'PCompositorWidget.ipdl',
         'PlatformWidgetTypes.ipdlh',
     ]

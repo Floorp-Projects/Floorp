@@ -13,7 +13,7 @@ REQUIRED_ARCHITECTURES = {
     'android-x86-nightly',
     'android-api-15-nightly',
 }
-PLATFORM_REGEX = re.compile(r'signing-android-(\S+)-nightly')
+PLATFORM_REGEX = re.compile(r'build-signing-android-(\S+)-nightly')
 
 
 def fill_labels_tranform(_, jobs):

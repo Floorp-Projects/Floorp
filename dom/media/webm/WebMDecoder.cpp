@@ -9,23 +9,12 @@
 #include "AOMDecoder.h"
 #endif
 #include "MediaContainerType.h"
-#include "MediaDecoderStateMachine.h"
+#include "MediaFormatReader.h"
 #include "WebMDemuxer.h"
 #include "WebMDecoder.h"
 #include "VideoUtils.h"
 
 namespace mozilla {
-
-MediaDecoderStateMachine* WebMDecoder::CreateStateMachine()
-{
-  MediaFormatReaderInit init;
-  init.mVideoFrameContainer = GetVideoFrameContainer();
-  init.mKnowsCompositor = GetCompositor();
-  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
-  init.mFrameStats = mFrameStats;
-  mReader = new MediaFormatReader(init, new WebMDemuxer(mResource));
-  return new MediaDecoderStateMachine(this, mReader);
-}
 
 /* static */
 bool

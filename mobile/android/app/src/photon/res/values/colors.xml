@@ -31,12 +31,12 @@
     <color name="photon_content_bg">#FFFFFF</color>
 
     <!-- opacity: 10% -->
-    <color name="photon_content_bg_pressed">#19272727</color>
+    <color name="photon_content_bg_pressed">#1A272727</color>
 
     <color name="photon_content_bg_private">#414146</color>
 
     <!-- opacity: 10% -->
-    <color name="photon_content_bg_private_pressed">#19272727</color>
+    <color name="photon_content_bg_private_pressed">#1A272727</color>
 
     <color name="photon_tabs_tray_bg">#272727</color>
     <color name="photon_highlight">#00A2FE</color>
@@ -48,7 +48,11 @@
     <color name="photon_menu_bg">#F9F9FA</color>
     <color name="photon_menu_bg_private">#38383D</color>
     <color name="photon_icon">#272727</color>
+    <color name="photon_icon_disabled">#33272727</color>
+    <color name="photon_icon_pressed">@color/photon_icon</color>
     <color name="photon_icon_private">#FFFFFF</color>
+    <color name="photon_icon_private_disabled">#33FFFFFF</color>
+    <color name="photon_icon_private_pressed">@color/photon_icon_private</color>
     <color name="photon_icon_lock">#16DA00</color>
 
     <color name="photon_notification_bg">#0096DD</color>
@@ -73,8 +77,7 @@
     <color name="photon_search_item_text_private">@color/photon_text_main_private</color>
 
     <color name="photon_home_list_divider">@color/photon_two_line_page_row_bg</color>
-    <color name="photon_home_list_divider_private">@color/photon_two_line_page_row_bg_private
-    </color>
+    <color name="photon_home_list_divider_private">@color/photon_two_line_page_row_bg_private</color>
 
     <color name="progress_start">#00DCFC</color>
     <color name="progress_end">#00A2FE</color>
@@ -86,12 +89,41 @@
     <color name="photon_url_bar_domain">@color/photon_text_main</color>
     <color name="photon_url_bar_domain_private">@color/photon_text_main_private</color>
 
-    <!-- Tab strip colors on tablet -->
+    <!-- Tab strip color on tablet -->
     <color name="photon_tab_strip_bg">#272727</color>
-    <color name="photon_tab_strip_item_checked_pressed">#19272727</color>
-    <color name="photon_tab_strip_item_checked_pressed_private">#19FFFFFF</color>
+
+    <!-- Tab strip item color on tablet -->
+    <color name="photon_tab_strip_item">#272727</color>
     <color name="photon_tab_strip_item_checked">#F9F9FA</color>
-    <color name="photon_tab_strip_item_checked_private">#38383D</color>
+    <color name="photon_tab_strip_item_checked_pressed">#E4E4E5</color> <!-- #F9F9FA + #272727@10% Alpha -->
+    <color name="photon_tab_strip_item_pressed">#3D3C3D</color> <!-- #272727 + #FFFFFF@10% Alpha -->
+    <color name="photon_tab_strip_item_private_checked">#38383D</color>
+    <color name="photon_tab_strip_item_private_checked_pressed">#4C4B51</color> <!-- #38383D + #FFFFFF@10% Alpha -->
+    <color name="photon_tab_strip_item_private_pressed">#3D3C3D</color> <!-- #272727 + #FFFFFF@10% Alpha -->
+
+    <!-- Status bar background color -->
+    <color name="status_bar_bg_color">@color/photon_toolbar_bg</color>
+    <color name="status_bar_bg_color_private">@color/photon_toolbar_bg_private</color>
+    <color name="status_bar_bg_color_tablet">@color/photon_tabs_tray_bg</color>
+
+    <!-- Toolbar menu item tint color -->
+    <color name="menu_item_tint">@color/photon_icon</color>
+    <color name="menu_item_tint_private">@color/photon_icon_private</color>
+
+    <!-- Navigation button background color -->
+    <color name="nav_button_bg_color">#F9F9FA</color>
+    <color name="nav_button_bg_color_disabled">#0D272727</color>
+    <color name="nav_button_bg_color_focused">#1A272727</color>
+    <color name="nav_button_bg_color_pressed">#33272727</color>
+    <color name="nav_button_bg_color_private">#2A2A2A</color>
+    <color name="nav_button_bg_color_private_disabled">#0DFFFFFF</color>
+    <color name="nav_button_bg_color_private_focused">#1AFFFFFF</color>
+    <color name="nav_button_bg_color_private_pressed">#33FFFFFF</color>
+    <color name="nav_button_border_color">#E4E4E4</color>
+    <color name="nav_button_border_color_private">#272727</color>
+
+    <color name="action_bar_item_bg_color_pressed">#33272727</color>
+    <color name="action_bar_item_bg_color_private_pressed">#33FFFFFF</color>
 
     <!-- Fennec color palette (bug 1127517) -->
     <color name="fennec_ui_orange">#FF9500</color>
@@ -117,7 +149,7 @@
     <color name="toolbar_grey">#EBEBF0</color>
     <color name="about_page_header_grey">#F5F5F5</color>
 
-    <color name="url_bar_shadow_private">#7878A5</color>
+    <color name="url_bar_shadow_private">#272727</color>
 
     <!-- Restricted profiles palette -->
 
@@ -209,9 +241,7 @@
     <color name="url_bar_blockedtext">@color/photon_url_bar_blocked</color>
     <color name="url_bar_blockedtext_private">@color/photon_url_bar_blocked_private</color>
     <color name="url_bar_certificate_owner">@color/photon_url_bar_certificate_owner</color>
-    <color name="url_bar_certificate_owner_private">
-        @color/photon_url_bar_certificate_owner_private
-    </color>
+    <color name="url_bar_certificate_owner_private">@color/photon_url_bar_certificate_owner_private</color>
     <color name="url_bar_shadow">#12000000</color>
 
     <color name="panel_image_item_background">#D1D9E1</color>
@@ -248,7 +278,7 @@
     <color name="activity_stream_timestamp">#FFD3D3D3</color>
     <color name="activity_stream_icon">#FF919191</color>
 
-    <color name="tablet_tab_strip_divider_color">#555555</color>
+    <color name="tablet_tab_strip_divider_color">#414146</color>
 
     <color name="bookmark_folder_bg_color">#FCFCFC</color>
 </resources>

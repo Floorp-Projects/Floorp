@@ -15,7 +15,6 @@ TEST_DIRS += ['test']
 XPIDL_SOURCES += [
     'mozIDOMWindow.idl',
     'nsIContentPolicy.idl',
-    'nsIContentPolicyBase.idl',
     'nsIDocumentEncoder.idl',
     'nsIDOMDataChannel.idl',
     'nsIDOMDOMCursor.idl',
@@ -35,7 +34,6 @@ XPIDL_SOURCES += [
     'nsISelectionDisplay.idl',
     'nsISelectionListener.idl',
     'nsISelectionPrivate.idl',
-    'nsISimpleContentPolicy.idl',
     'nsISlowScriptDebug.idl',
 ]
 

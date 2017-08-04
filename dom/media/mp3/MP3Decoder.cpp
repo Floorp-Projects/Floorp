@@ -8,8 +8,6 @@
 #include "MP3Decoder.h"
 
 #include "MediaContainerType.h"
-#include "MediaDecoderStateMachine.h"
-#include "MediaFormatReader.h"
 #include "MP3Demuxer.h"
 #include "PDMFactory.h"
 
@@ -22,15 +20,6 @@ MP3Decoder::Clone(MediaDecoderInit& aInit)
     return nullptr;
   }
   return new MP3Decoder(aInit);
-}
-
-MediaDecoderStateMachine*
-MP3Decoder::CreateStateMachine() {
-  MediaFormatReaderInit init;
-  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
-  init.mFrameStats = mFrameStats;
-  mReader = new MediaFormatReader(init, new MP3Demuxer(mResource));
-  return new MediaDecoderStateMachine(this, mReader);
 }
 
 /* static */

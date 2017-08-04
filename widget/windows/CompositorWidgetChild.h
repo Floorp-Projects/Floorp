@@ -17,7 +17,7 @@ namespace widget {
 
 class CompositorWidgetChild final
  : public PCompositorWidgetChild,
-   public CompositorWidgetDelegate
+   public PlatformCompositorWidgetDelegate
 {
 public:
   CompositorWidgetChild(RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,

@@ -5,11 +5,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:layout_height="@dimen/browser_toolbar_height"
-    tools:layout_width="match_parent"
-    tools:parentTag="LinearLayout">
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
+       xmlns:tools="http://schemas.android.com/tools"
+       tools:layout_height="@dimen/browser_toolbar_height"
+       tools:layout_width="match_parent"
+       tools:parentTag="LinearLayout">
 
     <!-- The site security icon is misaligned with the page title so
          we add a bottom margin to align their bottoms.
@@ -27,7 +27,7 @@
         android:contentDescription="@string/site_security"
         android:src="@drawable/security_mode_icon"
         tools:background="#88FF0000"
-        tools:src="@drawable/ic_lock" />
+        tools:src="@drawable/ic_lock"/>
 
     <org.mozilla.gecko.widget.FadedMultiColorTextView
         android:id="@+id/url_bar_title"
@@ -37,21 +37,23 @@
         android:layout_weight="1.0"
         gecko:autoUpdateTheme="false"
         gecko:fadeBackgroundColor="@android:color/transparent"
-        gecko:fadeWidth="40dip" />
+        gecko:fadeWidth="40dip"/>
 
     <org.mozilla.gecko.toolbar.PageActionLayout
         android:id="@+id/page_action_layout"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:visibility="gone" />
+        android:visibility="gone"
+        tools:visibility="visible"/>
 
-    <org.mozilla.gecko.widget.themed.ThemedImageButton
+    <org.mozilla.gecko.toolbar.ToolbarRoundButton
         android:id="@+id/stop"
         style="@style/UrlBar.ImageButton"
-        android:background="@drawable/action_bar_button"
+        android:background="@drawable/url_bar_action_button"
         android:contentDescription="@string/stop"
         android:src="@drawable/ic_cancel"
-        android:visibility="gone" />
+        android:visibility="gone"
+        tools:visibility="visible"/>
 
 </merge>

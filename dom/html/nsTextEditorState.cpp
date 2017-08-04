@@ -2229,6 +2229,8 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   }
 
   mBoundFrame = nullptr;
+  // Clear mRootNode so that we don't unexpectedly notify below.
+  nsCOMPtr<Element> rootNode = mRootNode.forget();
 
   // Now that we don't have a frame any more, store the value in the text buffer.
   // The only case where we don't do this is if a value transfer is in progress.
@@ -2238,15 +2240,15 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
     NS_ENSURE_TRUE_VOID(success);
   }
 
-  if (mRootNode && mMutationObserver) {
-    mRootNode->RemoveMutationObserver(mMutationObserver);
+  if (rootNode && mMutationObserver) {
+    rootNode->RemoveMutationObserver(mMutationObserver);
     mMutationObserver = nullptr;
   }
 
   // Unbind the anonymous content from the tree.
   // We actually hold a reference to the content nodes so that
   // they're not actually destroyed.
-  nsContentUtils::DestroyAnonymousContent(&mRootNode);
+  nsContentUtils::DestroyAnonymousContent(&rootNode);
   nsContentUtils::DestroyAnonymousContent(&mPlaceholderDiv);
   nsContentUtils::DestroyAnonymousContent(&mPreviewDiv);
 }

@@ -158,9 +158,6 @@ public class SyncStorageRequest implements Resource {
         Logger.debug(LOG_TAG, "Making request with X-If-Unmodified-Since = " + ifUnmodifiedSince);
         request.setHeader("x-if-unmodified-since", ifUnmodifiedSince);
       }
-      if (request.getMethod().equalsIgnoreCase("DELETE")) {
-        request.addHeader("x-confirm-delete", "1");
-      }
     }
   }
 

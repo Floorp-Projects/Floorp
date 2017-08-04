@@ -3950,7 +3950,7 @@ HttpBaseChannel::GetPerformance()
   }
 
   // We don't need to report the resource timing entry for a TYPE_DOCUMENT load.
-  if (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicyBase::TYPE_DOCUMENT) {
+  if (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
     return nullptr;
   }
 

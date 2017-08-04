@@ -8,6 +8,7 @@
 #include "mozilla/widget/CompositorWidgetVsyncObserver.h"
 #include "nsBaseWidget.h"
 #include "VsyncDispatcher.h"
+#include "gfxPlatform.h"
 
 namespace mozilla {
 namespace widget {
@@ -18,6 +19,7 @@ CompositorWidgetChild::CompositorWidgetChild(RefPtr<CompositorVsyncDispatcher> a
    mVsyncObserver(aVsyncObserver)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(!gfxPlatform::IsHeadless());
 }
 
 CompositorWidgetChild::~CompositorWidgetChild()

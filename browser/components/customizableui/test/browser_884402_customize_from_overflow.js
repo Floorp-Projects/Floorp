@@ -2,8 +2,6 @@
 
 var overflowPanel = document.getElementById("widget-overflow");
 
-const isOSX = (Services.appinfo.OS === "Darwin");
-
 var originalWindowWidth;
 registerCleanupFunction(function() {
   overflowPanel.removeAttribute("animate");
@@ -13,8 +11,6 @@ registerCleanupFunction(function() {
 // Right-click on an item within the overflow panel should
 // show a context menu with options to move it.
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-
   overflowPanel.setAttribute("animate", "false");
 
   originalWindowWidth = window.outerWidth;
@@ -30,7 +26,7 @@ add_task(async function() {
   chevron.click();
   await shownPanelPromise;
 
-  let contextMenu = document.getElementById("toolbar-context-menu");
+  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
   let shownContextPromise = popupShown(contextMenu);
   let sidebarButton = document.getElementById("sidebar-button");
   ok(sidebarButton, "sidebar-button was found");
@@ -42,17 +38,10 @@ add_task(async function() {
 
   let expectedEntries = [
     [".customize-context-moveToPanel", true],
-    [".customize-context-removeFromToolbar", true],
-    ["---"]
-  ];
-  if (!isOSX) {
-    expectedEntries.push(["#toggle_toolbar-menubar", true]);
-  }
-  expectedEntries.push(
-    ["#toggle_PersonalToolbar", true],
+    [".customize-context-removeFromPanel", true],
     ["---"],
     [".viewCustomizeToolbar", true]
-  );
+  ];
   checkContextMenu(contextMenu, expectedEntries);
 
   let hiddenContextPromise = popupHidden(contextMenu);
@@ -67,7 +56,8 @@ add_task(async function() {
 
   let sidebarButtonPlacement = CustomizableUI.getPlacementOfWidget("sidebar-button");
   ok(sidebarButtonPlacement, "Sidebar button should still have a placement");
-  is(sidebarButtonPlacement && sidebarButtonPlacement.area, "PanelUI-contents", "Sidebar button should be in the panel now");
+  is(sidebarButtonPlacement && sidebarButtonPlacement.area,
+     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Sidebar button should be pinned now");
   CustomizableUI.reset();
 
   // In some cases, it can take a tick for the navbar to overflow again. Wait for it:

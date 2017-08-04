@@ -7,7 +7,6 @@
 #define WebMDecoder_h_
 
 #include "ChannelMediaDecoder.h"
-#include "MediaFormatReader.h"
 
 namespace mozilla {
 
@@ -27,7 +26,6 @@ public:
     }
     return new WebMDecoder(aInit);
   }
-  MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if aContainerType is a WebM type that we think we can render
   // with an enabled platform decoder backend.

@@ -5,10 +5,12 @@
 "use strict";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check fullscreen button existence and functionality");
 
-  await PanelUI.show();
+  CustomizableUI.addWidgetToArea("fullscreen-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  registerCleanupFunction(() => CustomizableUI.reset());
+
+  await document.getElementById("nav-bar").overflowable.show();
 
   let fullscreenButton = document.getElementById("fullscreen-button");
   ok(fullscreenButton, "Fullscreen button appears in Panel Menu");

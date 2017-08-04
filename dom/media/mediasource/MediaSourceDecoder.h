@@ -18,12 +18,12 @@ class nsIStreamListener;
 
 namespace mozilla {
 
-class MediaResource;
 class MediaDecoderStateMachine;
 class SourceBufferDecoder;
 class TrackBuffer;
 enum MSRangeRemovalAction : uint8_t;
 class MediaSourceDemuxer;
+class MediaSourceResource;
 
 namespace dom {
 
@@ -36,6 +36,8 @@ class MediaSourceDecoder : public MediaDecoder
 {
 public:
   explicit MediaSourceDecoder(MediaDecoderInit& aInit);
+
+  MediaResource* GetResource() const override final;
 
   MediaDecoderStateMachine* CreateStateMachine() override;
   nsresult Load(nsIPrincipal* aPrincipal);
@@ -76,6 +78,8 @@ public:
 private:
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
+
+  RefPtr<MediaSourceResource> mResource;
 
   // The owning MediaSource holds a strong reference to this decoder, and
   // calls Attach/DetachMediaSource on this decoder to set and clear

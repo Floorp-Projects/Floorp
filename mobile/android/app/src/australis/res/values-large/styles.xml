@@ -16,8 +16,6 @@
     </style>
 
     <style name="UrlBar.Button.Container">
-        <item name="android:layout_marginTop">6dp</item>
-        <item name="android:layout_marginBottom">6dp</item>
         <!-- Start with forward hidden -->
         <item name="android:orientation">horizontal</item>
     </style>

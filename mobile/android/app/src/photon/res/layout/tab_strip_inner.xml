@@ -17,7 +17,6 @@
         android:layout_height="match_parent"
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
         android:layout_weight="1"
         tools:listitem="@layout/tab_strip_item"/>
 
@@ -26,7 +25,7 @@
     <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/tablet_add_tab"
         style="@style/UrlBar.ImageButton"
-        android:layout_width="@dimen/tablet_tab_strip_height"
+        android:layout_width="@dimen/browser_toolbar_icon_width"
         android:layout_marginEnd="6dp"
         android:layout_marginRight="6dp"
         android:background="@drawable/tab_strip_button"

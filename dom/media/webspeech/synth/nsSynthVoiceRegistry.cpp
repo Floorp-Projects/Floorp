@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsILocaleService.h"
 #include "nsISpeechService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCategoryManagerUtils.h"
@@ -20,10 +19,13 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/Unused.h"
 
 #include "SpeechSynthesisChild.h"
 #include "SpeechSynthesisParent.h"
+
+using mozilla::intl::LocaleService;
 
 #undef LOG
 extern mozilla::LogModule* GetSpeechSynthLog();
@@ -617,22 +619,13 @@ nsSynthVoiceRegistry::FindBestMatch(const nsAString& aUri,
   }
 
   // Try UI language.
-  nsresult rv;
-  nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  nsAutoCString uiLang;
+  LocaleService::GetInstance()->GetAppLocaleAsLangTag(uiLang);
 
-  nsAutoString uiLang;
-  rv = localeService->GetLocaleComponentForUserAgent(uiLang);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  if (FindVoiceByLang(uiLang, &retval)) {
+  if (FindVoiceByLang(NS_ConvertASCIItoUTF16(uiLang), &retval)) {
     LOG(LogLevel::Debug,
         ("nsSynthVoiceRegistry::FindBestMatch - Matched UI language (%s ~= %s)",
-         NS_ConvertUTF16toUTF8(uiLang).get(),
+         uiLang.get(),
          NS_ConvertUTF16toUTF8(retval->mLang).get()));
 
     return retval;

@@ -7,28 +7,28 @@
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check Character Encoding button functionality");
 
   // add the Character Encoding button to the panel
   CustomizableUI.addWidgetToArea("characterencoding-button",
-                                  CustomizableUI.AREA_PANEL);
+                                  CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
-  // check the button's functionality
-  await PanelUI.show();
+  registerCleanupFunction(() => CustomizableUI.reset());
+
+  await document.getElementById("nav-bar").overflowable.show();
 
   let charEncodingButton = document.getElementById("characterencoding-button");
   ok(charEncodingButton, "The Character Encoding button was added to the Panel Menu");
   is(charEncodingButton.getAttribute("disabled"), "true",
      "The Character encoding button is initially disabled");
 
-  let panelHidePromise = promisePanelHidden(window);
-  PanelUI.hide();
+  let panelHidePromise = promiseOverflowHidden(window);
+  await document.getElementById("nav-bar").overflowable._panel.hidePopup();
   await panelHidePromise;
 
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
 
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   ok(!charEncodingButton.hasAttribute("disabled"), "The Character encoding button gets enabled");
   let characterEncodingView = document.getElementById("PanelUI-characterEncodingView");
   let subviewShownPromise = subviewShown(characterEncodingView);
@@ -49,8 +49,8 @@ add_task(async function() {
      1,
      "There should be 1 checked detector.");
 
-  panelHidePromise = promisePanelHidden(window);
-  PanelUI.hide();
+  panelHidePromise = promiseOverflowHidden(window);
+  await document.getElementById("nav-bar").overflowable._panel.hidePopup();
   await panelHidePromise;
 
   await BrowserTestUtils.removeTab(newTab);

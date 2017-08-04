@@ -303,7 +303,7 @@ nsAppShell::Init()
   // context.version = 0;
   context.info = this;
   context.perform = ProcessGeckoEvents;
-  
+
   mCFRunLoopSource = ::CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &context);
   NS_ENSURE_STATE(mCFRunLoopSource);
 
@@ -678,11 +678,15 @@ nsAppShell::Run(void)
 
   mStarted = true;
 
-  AddScreenWakeLockListener();
+  if (XRE_IsParentProcess()) {
+    AddScreenWakeLockListener();
+  }
 
   NS_OBJC_TRY_ABORT([NSApp run]);
 
-  RemoveScreenWakeLockListener();
+  if (XRE_IsParentProcess()) {
+    RemoveScreenWakeLockListener();
+  }
 
   return NS_OK;
 }

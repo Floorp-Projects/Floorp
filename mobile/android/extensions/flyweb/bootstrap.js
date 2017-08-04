@@ -62,7 +62,7 @@ function Factory(component) {
 let windowListener = {
   onOpenWindow: function(aWindow) {
     // Wait for the window to finish loading
-    let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal || Ci.nsIDOMWindow);
+    let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
     domWindow.addEventListener("UIReady", function() {
       loadIntoWindow(domWindow);
     }, {once: true});

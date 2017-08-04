@@ -92,11 +92,13 @@ linux64-stylo/debug:
     build-platform: linux64/debug
     test-sets:
         - stylo-tests
+        - devtools-tests
 linux64-stylo/opt:
     build-platform: linux64/opt
     test-sets:
         - awsy-stylo
         - stylo-tests
+        - devtools-tests
         - talos
 linux64-stylo-sequential/debug:
     build-platform: linux64/debug

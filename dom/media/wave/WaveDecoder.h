@@ -21,7 +21,6 @@ public:
   {
   }
   ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override;
-  MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if the Wave backend is pref'ed on, and we're running on a
   // platform that is likely to have decoders for the format.

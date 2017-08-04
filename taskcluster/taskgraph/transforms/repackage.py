@@ -157,10 +157,18 @@ def make_job_description(config, jobs):
             cot = job.setdefault('extra', {}).setdefault('chainOfTrust', {})
             cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}
 
+        description = (
+            "Repackaging for locale '{locale}' for build '"
+            "{build_platform}/{build_type}'".format(
+                locale=attributes.get('locale', 'en-US'),
+                build_platform=attributes.get('build_platform'),
+                build_type=attributes.get('build_type')
+            )
+        )
+
         task = {
             'label': job['label'],
-            'description': "{} Repackage".format(
-                dep_job.task["metadata"]["description"]),
+            'description': description,
             'worker-type': worker_type,
             'dependencies': dependencies,
             'attributes': attributes,

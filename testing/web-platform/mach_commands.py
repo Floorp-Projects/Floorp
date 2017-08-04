@@ -125,7 +125,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         ahem_src = os.path.join(self.topsrcdir, "testing", "web-platform", "tests", "fonts", "Ahem.ttf")
         ahem_dest = os.path.join(font_path, "Ahem.ttf")
         if not os.path.exists(ahem_dest) and os.path.exists(ahem_src):
-            with open(ahem_src) as src, open(ahem_dest, "w") as dest:
+            with open(ahem_src, "rb") as src, open(ahem_dest, "wb") as dest:
                 dest.write(src.read())
 
 

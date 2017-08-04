@@ -49,7 +49,6 @@
 #include "prtime.h"
 #include "rdf.h"
 #include "nsContentUtils.h"
-#include "nsIScriptableDateFormat.h"
 #include "nsICollation.h"
 #include "nsCollationCID.h"
 #include "nsIConsoleService.h"
