@@ -7,35 +7,25 @@
           xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <!-- private browsing mode -->
-    <item android:drawable="@color/nav_button_bg_color_private_disabled"
-          android:state_enabled="false"
-          gecko:state_private="true"/>
-
-    <item android:drawable="@color/nav_button_bg_color_private_focused"
+    <item android:drawable="@color/action_bar_item_bg_color_private_pressed"
           android:state_enabled="true"
           android:state_focused="true"
           gecko:state_private="true"/>
 
-    <item android:drawable="@color/nav_button_bg_color_private_pressed"
+    <item android:drawable="@color/action_bar_item_bg_color_private_pressed"
           android:state_enabled="true"
           android:state_pressed="true"
           gecko:state_private="true"/>
 
-    <item android:drawable="@color/nav_button_bg_color_private"
-          gecko:state_private="true"/>
-
     <!-- normal mode -->
-    <item android:drawable="@color/nav_button_bg_color_disabled"
-          android:state_enabled="false"/>
-
-    <item android:drawable="@color/nav_button_bg_color_focused"
+    <item android:drawable="@color/action_bar_item_bg_color_pressed"
           android:state_enabled="true"
           android:state_focused="true"/>
 
-    <item android:drawable="@color/nav_button_bg_color_pressed"
+    <item android:drawable="@color/action_bar_item_bg_color_pressed"
           android:state_enabled="true"
           android:state_pressed="true"/>
 
-    <item android:drawable="@color/nav_button_bg_color"/>
+    <item android:drawable="@android:color/transparent"/>
 
 </selector>

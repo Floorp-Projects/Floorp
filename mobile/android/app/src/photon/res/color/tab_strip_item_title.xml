@@ -9,7 +9,7 @@
     <item android:color="@color/photon_text_secondary_private"
           gecko:state_private="true"/>
 
-    <item android:color="@color/photon_text_main_private"
+    <item android:color="@color/photon_text_main"
           android:state_checked="true"
           gecko:state_dark="true"/>
 
