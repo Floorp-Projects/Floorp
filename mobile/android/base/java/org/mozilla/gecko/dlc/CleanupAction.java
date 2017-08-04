@@ -6,7 +6,6 @@
 package org.mozilla.gecko.dlc;
 
 import android.content.Context;
-import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
@@ -25,30 +24,26 @@ public class CleanupAction extends BaseAction {
                           // download it anyways.
             }
 
-            cleanupContent(context, catalog, content);
-        }
-    }
+            try {
+                File file = getDestinationFile(context, content);
 
-    @VisibleForTesting void cleanupContent(Context context, DownloadContentCatalog catalog, DownloadContent content) {
-        try {
-            final File file = getDestinationFile(context, content);
+                if (!file.exists()) {
+                    // File does not exist. As good as deleting.
+                    catalog.remove(content);
+                    return;
+                }
 
-            if (!file.exists()) {
-                // File does not exist. As good as deleting.
+                if (file.delete()) {
+                    // File has been deleted. Now remove it from the catalog.
+                    catalog.remove(content);
+                }
+            } catch (UnrecoverableDownloadContentException e) {
+                // We can't recover. Pretend the content is removed. It probably never existed in
+                // the first place.
                 catalog.remove(content);
-                return;
+            } catch (RecoverableDownloadContentException e) {
+                // Try again next time.
             }
-
-            if (file.delete()) {
-                // File has been deleted. Now remove it from the catalog.
-                catalog.remove(content);
-            }
-        } catch (UnrecoverableDownloadContentException e) {
-            // We can't recover. Pretend the content is removed. It probably never existed in
-            // the first place.
-            catalog.remove(content);
-        } catch (RecoverableDownloadContentException e) {
-            // Try again next time.
         }
     }
 }
