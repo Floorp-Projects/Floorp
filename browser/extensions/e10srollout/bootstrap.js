@@ -21,7 +21,7 @@ const TEST_THRESHOLD = {
 // If a user qualifies for the e10s-multi experiement, this is how many
 // content processes to use and whether to allow addons for the experiment.
 const MULTI_EXPERIMENT = {
-  "beta": { buckets: { 1: .5, 4: 1, }, // 1 process: 50%, 4 processes: 50%
+  "beta": { buckets: { 4: 1, }, // 4 processes: 100%
 
             // When on the "beta" channel, getAddonsDisqualifyForMulti
             // will return true if any addon installed is not a web extension.
