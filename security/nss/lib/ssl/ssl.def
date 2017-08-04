@@ -234,3 +234,9 @@ SSL_AlertSentCallback;
 ;+    local:
 ;+*;
 ;+};
+;+NSS_3.33 {    # NSS 3.33 release
+;+    global:
+SSL_GetExperimentalAPI;
+;+    local:
+;+*;
+;+};

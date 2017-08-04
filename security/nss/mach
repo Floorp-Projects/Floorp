@@ -20,12 +20,16 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 
 class cfAction(argparse.Action):
     docker_command = ["docker"]
+    restorecon = None
 
     def __call__(self, parser, args, values, option_string=None):
         if "noroot" not in values:
             self.setDockerCommand()
         else:
             values.remove("noroot")
+        files = [os.path.join('/home/worker/nss',
+                              os.path.relpath(os.path.abspath(x), start=cwd))
+                     for x in values]
 
         # First check if we can run docker.
         try:
@@ -55,10 +59,12 @@ class cfAction(argparse.Action):
             self.buildImage(docker_image, cf_docker_folder)
 
         command = self.docker_command + [
-            'run', '-v', cwd + ':/home/worker/nss', '--rm', '-ti', docker_image
+                'run', '-v', cwd + ':/home/worker/nss:Z', '--rm', '-ti', docker_image
         ]
         # The clang format script returns 1 if something's to do. We don't care.
-        subprocess.call(command + values)
+        subprocess.call(command + files)
+        if self.restorecon is not None:
+            subprocess.call([self.restorecon, '-R', cwd])
 
     def filesChanged(self, path):
         hash = sha256()
@@ -87,6 +93,8 @@ class cfAction(argparse.Action):
 
     def setDockerCommand(self):
         if platform.system() == "Linux":
+            from distutils.spawn import find_executable
+            self.restorecon = find_executable('restorecon')
             self.docker_command = ["sudo"] + self.docker_command
 
 
@@ -112,6 +120,13 @@ class testAction(argparse.Action):
 
     def __call__(self, parser, args, values, option_string=None):
         self.runTest(values)
+
+
+class commandsAction(argparse.Action):
+    commands = []
+    def __call__(self, parser, args, values, option_string=None):
+        for c in commandsAction.commands:
+            print(c)
 
 
 def parse_arguments():
@@ -143,6 +158,16 @@ def parse_arguments():
     ]
     parser_test.add_argument(
         'test', choices=tests, help="Available tests", action=testAction)
+
+    parser_commands = subparsers.add_parser(
+        'mach-commands',
+        help="list commands")
+    parser_commands.add_argument(
+        'mach-commands',
+        nargs='*',
+        action=commandsAction)
+
+    commandsAction.commands = [c for c in subparsers.choices]
     return parser.parse_args()
 
 

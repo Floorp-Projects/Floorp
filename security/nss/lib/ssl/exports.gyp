@@ -15,6 +15,7 @@
             'preenc.h',
             'ssl.h',
             'sslerr.h',
+            'sslexp.h',
             'sslproto.h',
             'sslt.h'
           ],

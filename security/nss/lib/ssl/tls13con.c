@@ -4475,6 +4475,17 @@ tls13_EncodeDraftVersion(SSL3ProtocolVersion version)
     return (PRUint16)version;
 }
 
+PRUint16
+tls13_EncodeAltDraftVersion(SSL3ProtocolVersion version)
+{
+#ifdef TLS_1_3_DRAFT_VERSION
+    if (version == SSL_LIBRARY_VERSION_TLS_1_3) {
+        return 0x7a00 | TLS_1_3_DRAFT_VERSION;
+    }
+#endif
+    return (PRUint16)version;
+}
+
 /* Pick the highest version we support that is also advertised. */
 SECStatus
 tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supported_versions)
@@ -4496,6 +4507,7 @@ tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supported_versions)
     }
     for (version = ss->vrange.max; version >= ss->vrange.min; --version) {
         PRUint16 wire = tls13_EncodeDraftVersion(version);
+        PRUint16 alt_wire = tls13_EncodeAltDraftVersion(version);
         unsigned long offset;
 
         for (offset = 0; offset < versions.len; offset += 2) {
@@ -4505,9 +4517,33 @@ tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supported_versions)
                 ss->version = version;
                 return SECSuccess;
             }
+            if (ss->opt.enableAltHandshaketype && !IS_DTLS(ss) &&
+                supported == alt_wire) {
+                ss->version = version;
+                ss->ssl3.hs.altHandshakeType = PR_TRUE;
+                return SECSuccess;
+            }
         }
     }
 
     FATAL_ERROR(ss, SSL_ERROR_UNSUPPORTED_VERSION, protocol_version);
     return SECFailure;
+}
+
+SECStatus
+SSLExp_UseAltServerHelloType(PRFileDesc *fd, PRBool enable)
+{
+    sslSocket *ss;
+
+    ss = ssl_FindSocket(fd);
+    if (!ss) {
+        SSL_DBG(("%d: SSL[%d]: bad socket in SSLExp_UseAltServerHelloType",
+                 SSL_GETPID(), fd));
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    ss->opt.enableAltHandshaketype = enable;
+
+    return SECSuccess;
 }
