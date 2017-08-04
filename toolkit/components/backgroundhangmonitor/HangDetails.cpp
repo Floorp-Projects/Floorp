@@ -144,10 +144,33 @@ nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
 NS_IMETHODIMP
 nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal)
 {
-  size_t length = 0;
+  auto& modules = mDetails.mStack.GetModules();
+  size_t length = modules.Length();
   JS::RootedObject retObj(aCx, JS_NewArrayObject(aCx, length));
   if (!retObj) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (size_t i = 0; i < length; ++i) {
+    const HangStack::Module& module = modules[i];
+    JS::RootedObject jsModule(aCx, JS_NewArrayObject(aCx, 2));
+    if (!jsModule) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    JS::RootedString name(aCx, JS_NewUCStringCopyN(aCx, module.mName.BeginReading(), module.mName.Length()));
+    if (!JS_DefineElement(aCx, jsModule, 0, name, JSPROP_ENUMERATE)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    JS::RootedString breakpadId(aCx, JS_NewStringCopyN(aCx, module.mBreakpadId.BeginReading(), module.mBreakpadId.Length()));
+    if (!JS_DefineElement(aCx, jsModule, 1, breakpadId, JSPROP_ENUMERATE)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (!JS_DefineElement(aCx, retObj, i, jsModule, JSPROP_ENUMERATE)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   aVal.setObject(*retObj);
