@@ -180,11 +180,8 @@ class Histogram {
   static Histogram* FactoryGet(Sample minimum,
                                Sample maximum,
                                size_t bucket_count,
-                               Flags flags);
-  static Histogram* FactoryTimeGet(base::TimeDelta minimum,
-                                   base::TimeDelta maximum,
-                                   size_t bucket_count,
-                                   Flags flags);
+                               Flags flags,
+                               const int* buckets);
 
   virtual ~Histogram();
 
@@ -248,8 +245,8 @@ class Histogram {
   Histogram(Sample minimum, Sample maximum, size_t bucket_count);
   Histogram(TimeDelta minimum, TimeDelta maximum, size_t bucket_count);
 
-  // Initialize ranges_ mapping.
-  void InitializeBucketRange();
+  // Initialize ranges_ mapping from raw data.
+  void InitializeBucketRangeFromData(const int* buckets);
 
   // Method to override to skip the display of the i'th bucket if it's empty.
   virtual bool PrintEmptyBucket(size_t index) const;
