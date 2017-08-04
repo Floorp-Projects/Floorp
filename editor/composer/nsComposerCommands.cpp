@@ -593,24 +593,24 @@ nsMultiStateCommand::DoCommandParams(const char *aCommandName,
                                      nsISupports *refCon)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor) {
-      nsAutoString tString;
-
-      if (aParams) {
-        nsXPIDLCString s;
-        rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
-        if (NS_SUCCEEDED(rv))
-          CopyASCIItoUTF16(s, tString);
-        else
-          rv = aParams->GetStringValue(STATE_ATTRIBUTE, tString);
-      }
-
-      rv = SetState(editor, tString);
+  if (!editor) {
+    return NS_OK;
+  }
+  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (NS_WARN_IF(!htmlEditor)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  return rv;
+  nsAutoString tString;
+  if (aParams) {
+    nsXPIDLCString s;
+    nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
+    if (NS_SUCCEEDED(rv))
+      CopyASCIItoUTF16(s, tString);
+    else
+      aParams->GetStringValue(STATE_ATTRIBUTE, tString);
+  }
+  return SetState(htmlEditor, tString);
 }
 
 NS_IMETHODIMP
@@ -654,15 +654,14 @@ nsParagraphStateCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
   return rv;
 }
 
-
 nsresult
-nsParagraphStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
+nsParagraphStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
+                                  nsString& newState)
 {
-  NS_ASSERTION(aEditor, "Need an editor here");
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
-
-  return htmlEditor->SetParagraphFormat(newState);
+  if (NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return aHTMLEditor->SetParagraphFormat(newState);
 }
 
 nsFontFaceStateCommand::nsFontFaceStateCommand()
@@ -689,33 +688,34 @@ nsFontFaceStateCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
 }
 
 nsresult
-nsFontFaceStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
+nsFontFaceStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
+                                 nsString& newState)
 {
-  NS_ASSERTION(aEditor, "Need an editor here");
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   if (newState.EqualsLiteral("tt")) {
     // The old "teletype" attribute
-    nsresult rv = htmlEditor->SetInlineProperty(nsGkAtoms::tt, EmptyString(),
-                                                EmptyString());
+    nsresult rv = aHTMLEditor->SetInlineProperty(nsGkAtoms::tt, EmptyString(),
+                                                 EmptyString());
     NS_ENSURE_SUCCESS(rv, rv);
     // Clear existing font face
-    return htmlEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                            NS_LITERAL_STRING("face"));
+    return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
+                                             NS_LITERAL_STRING("face"));
   }
 
   // Remove any existing TT nodes
-  nsresult rv = htmlEditor->RemoveInlineProperty(nsGkAtoms::tt, EmptyString());
+  nsresult rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::tt, EmptyString());
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
-    return htmlEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                            NS_LITERAL_STRING("face"));
+    return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
+                                             NS_LITERAL_STRING("face"));
   }
 
-  return htmlEditor->SetInlineProperty(nsGkAtoms::font,
-                                       NS_LITERAL_STRING("face"), newState);
+  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
+                                        NS_LITERAL_STRING("face"), newState);
 }
 
 nsFontSizeStateCommand::nsFontSizeStateCommand()
@@ -761,28 +761,29 @@ nsFontSizeStateCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
 //   medium
 //   normal
 nsresult
-nsFontSizeStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
+nsFontSizeStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
+                                 nsString& newState)
 {
-  NS_ASSERTION(aEditor, "Need an editor here");
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_INVALID_ARG);
+  if (NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   if (!newState.IsEmpty() &&
       !newState.EqualsLiteral("normal") &&
       !newState.EqualsLiteral("medium")) {
-    return htmlEditor->SetInlineProperty(nsGkAtoms::font,
-                                         NS_LITERAL_STRING("size"), newState);
+    return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
+                                          NS_LITERAL_STRING("size"), newState);
   }
 
   // remove any existing font size, big or small
-  nsresult rv = htmlEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                                 NS_LITERAL_STRING("size"));
+  nsresult rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
+                                                  NS_LITERAL_STRING("size"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = htmlEditor->RemoveInlineProperty(nsGkAtoms::big, EmptyString());
+  rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::big, EmptyString());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return htmlEditor->RemoveInlineProperty(nsGkAtoms::small, EmptyString());
+  return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::small, EmptyString());
 }
 
 nsFontColorStateCommand::nsFontColorStateCommand()
@@ -811,19 +812,20 @@ nsFontColorStateCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
 }
 
 nsresult
-nsFontColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
+nsFontColorStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
+                                  nsString& newState)
 {
-  NS_ASSERTION(aEditor, "Need an editor here");
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
-
-  if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
-    return htmlEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                            NS_LITERAL_STRING("color"));
+  if (NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  return htmlEditor->SetInlineProperty(nsGkAtoms::font,
-                                       NS_LITERAL_STRING("color"), newState);
+  if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
+    return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
+                                             NS_LITERAL_STRING("color"));
+  }
+
+  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
+                                        NS_LITERAL_STRING("color"), newState);
 }
 
 nsHighlightColorStateCommand::nsHighlightColorStateCommand()
@@ -852,20 +854,21 @@ nsHighlightColorStateCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
 }
 
 nsresult
-nsHighlightColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
+nsHighlightColorStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
+                                       nsString& newState)
 {
-  NS_ASSERTION(aEditor, "Need an editor here");
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
-
-  if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
-    return htmlEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                            NS_LITERAL_STRING("bgcolor"));
+  if (NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  return htmlEditor->SetInlineProperty(nsGkAtoms::font,
-                                       NS_LITERAL_STRING("bgcolor"),
-                                       newState);
+  if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
+    return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
+                                             NS_LITERAL_STRING("bgcolor"));
+  }
+
+  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
+                                        NS_LITERAL_STRING("bgcolor"),
+                                        newState);
 }
 
 NS_IMETHODIMP
@@ -908,14 +911,13 @@ nsBackgroundColorStateCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
 }
 
 nsresult
-nsBackgroundColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
+nsBackgroundColorStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
+                                        nsString& newState)
 {
-  NS_ASSERTION(aEditor, "Need an editor here");
-
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
-
-  return htmlEditor->SetBackgroundColor(newState);
+  if (NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return aHTMLEditor->SetBackgroundColor(newState);
 }
 
 nsAlignCommand::nsAlignCommand()
@@ -964,14 +966,13 @@ nsAlignCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
 }
 
 nsresult
-nsAlignCommand::SetState(nsIEditor *aEditor, nsString& newState)
+nsAlignCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
+                         nsString& newState)
 {
-  NS_ASSERTION(aEditor, "Need an editor here");
-
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
-
-  return htmlEditor->Align(newState);
+  if (NS_WARN_IF(!aHTMLEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return aHTMLEditor->Align(newState);
 }
 
 nsAbsolutePositioningCommand::nsAbsolutePositioningCommand()
