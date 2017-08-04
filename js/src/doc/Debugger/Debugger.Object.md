@@ -58,8 +58,9 @@ A `Debugger.Object` instance inherits the following accessor properties
 from its prototype:
 
 `proto`
-:   The referent's prototype (as a new `Debugger.Object` instance), or
-    `null` if it has no prototype.
+:   The referent's prototype (as a new `Debugger.Object` instance), or `null` if
+    it has no prototype. This accessor may throw if the referent is a scripted
+    proxy or some other sort of exotic object (an opaque wrapper, for example).
 
 `class`
 :   A string naming the ECMAScript `[[Class]]` of the referent.
@@ -336,6 +337,10 @@ Unless otherwise specified, these methods are not
 (say, because it gets or sets an accessor property whose handler is
 debuggee code, or because the referent is a proxy whose traps are debuggee
 code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
+
+These methods may throw if the referent is not a native object. Even simple
+accessors like `isExtensible` may throw if the referent is a proxy or some sort
+of exotic object like an opaque wrapper.
 
 <code>getProperty(<i>name</i>)</code>
 :   Return the value of the referent's property named <i>name</i>, or

@@ -75,8 +75,10 @@ public:
                                 HTMLInputElement** aRadioOut) override;
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
                             bool aFlushContent) override;
-  void AddToRadioGroup(const nsAString& aName, nsIFormControl* aRadio) override;
-  void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio) override;
+  void AddToRadioGroup(const nsAString& aName,
+                       HTMLInputElement* aRadio) override;
+  void RemoveFromRadioGroup(const nsAString& aName,
+                            HTMLInputElement* aRadio) override;
   virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const override;
   virtual void RadioRequiredWillChange(const nsAString& aName,
                                        bool aRequiredAdded) override;

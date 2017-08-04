@@ -1003,7 +1003,7 @@ LayerTransactionParent::AsLayer(const LayerHandle& aHandle)
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvNewCompositable(const CompositableHandle& aHandle, const TextureInfo& aInfo)
 {
-  if (!AddCompositable(aHandle, aInfo)) {
+  if (!AddCompositable(aHandle, aInfo, /* aUseWebRender */ false)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

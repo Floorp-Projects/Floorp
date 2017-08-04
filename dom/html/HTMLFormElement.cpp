@@ -2309,15 +2309,9 @@ HTMLFormElement::WalkRadioGroup(const nsAString& aName,
 
 void
 HTMLFormElement::AddToRadioGroup(const nsAString& aName,
-                                 nsIFormControl* aRadio)
+                                 HTMLInputElement* aRadio)
 {
-  nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
-  NS_ASSERTION(element, "radio controls have to be content elements!");
-
-  HTMLInputElement* input = HTMLInputElement::FromContent(element);
-  NS_ASSERTION(input, "radio controls have to be input elements!");
-
-  if (input->IsRequired()) {
+  if (aRadio->IsRequired()) {
     auto entry = mRequiredRadioButtonCounts.LookupForAdd(aName);
     if (!entry) {
       entry.OrInsert([]() { return 1; });
@@ -2329,15 +2323,9 @@ HTMLFormElement::AddToRadioGroup(const nsAString& aName,
 
 void
 HTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
-                                      nsIFormControl* aRadio)
+                                      HTMLInputElement* aRadio)
 {
-  nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
-  NS_ASSERTION(element, "radio controls have to be content elements");
-
-  HTMLInputElement* input = HTMLInputElement::FromContent(element);
-  NS_ASSERTION(input, "radio controls have to be input elements!");
-
-  if (input->IsRequired()) {
+  if (aRadio->IsRequired()) {
     auto entry = mRequiredRadioButtonCounts.Lookup(aName);
     if (!entry) {
       MOZ_ASSERT_UNREACHABLE("At least one radio button has to be required!");
