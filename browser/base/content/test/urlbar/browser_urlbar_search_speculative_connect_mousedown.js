@@ -5,22 +5,29 @@
 "use strict";
 
 // This test ensures that we setup a speculative network connection to
-// current search engine if the first result is 'searchengine'.
+// the site in mousedown event before the http request happens(in mouseup).
 
 let gHttpServer = null;
 let gScheme = "http";
 let gHost = "localhost"; // 'localhost' by default.
-let gPort = 20709; // the port number must be identical to what we said in searchSuggestionEngine2.xml
-const TEST_ENGINE_BASENAME = "searchSuggestionEngine2.xml";
+let gPort = -1;
+let gIsSpeculativeConnected = false;
 
 add_task(async function setup() {
   gHttpServer = runHttpServer(gScheme, gHost, gPort);
+  // The server will be run on a random port if the port number wasn't given.
+  gPort = gHttpServer.identity.primaryPort;
+
+  await PlacesTestUtils.addVisits([{
+    uri: `${gScheme}://${gHost}:${gPort}`,
+    title: "test visit for speculative connection",
+    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
+  }]);
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.autoFill", true],
-          // Make sure search suggestion for location bar is enabled
-          ["browser.search.suggest.enabled", true],
-          ["browser.urlbar.suggest.searches", true],
+          // Turn off search suggestion so we won't speculative connect to the search engine.
+          ["browser.search.suggest.enabled", false],
           ["browser.urlbar.speculativeConnect.enabled", true],
           // In mochitest this number is 0 by default but we have to turn it on.
           ["network.http.speculative-parallel-limit", 6],
@@ -29,13 +36,8 @@ add_task(async function setup() {
           ["network.dns.disableIPv6", true]],
   });
 
-  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
-
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
-    Services.search.currentEngine = oldCurrentEngine;
     gHttpServer.identity.remove(gScheme, gHost, gPort);
     gHttpServer.stop(() => {
       gHttpServer = null;
@@ -44,13 +46,23 @@ add_task(async function setup() {
 });
 
 add_task(async function autofill_tests() {
-  info("Searching for 'foo'");
-  await promiseAutocompleteResultPopup("foo", window, true);
+  const test = {
+    // To not trigger autofill, search keyword starts from the second character.
+    search: gHost.substr(1, 4),
+    completeValue: `${gScheme}://${gHost}:${gPort}/`
+  };
+  info(`Searching for '${test.search}'`);
+  await promiseAutocompleteResultPopup(test.search, window, true);
   // Check if the first result is with type "searchengine"
   let controller = gURLBar.popup.input.controller;
-  let style = controller.getStyleAt(0);
-  is(style.includes("searchengine"), true, "The first result type is searchengine");
+  // The first item should be 'Search with ...' thus we wan the second.
+  let value = controller.getFinalCompleteValueAt(1);
+  info(`The value of the second item is ${value}`);
+  is(value, test.completeValue, "The second item has the url we visited.");
+
+  let listitem = gURLBar.popup.richlistbox.childNodes[1];
+  EventUtils.synthesizeMouse(listitem, 10, 10, {type: "mousedown"}, window);
+  is(gURLBar.popup.richlistbox.selectedIndex, 1, "The second item is selected");
   await promiseSpeculativeConnection(gHttpServer);
   is(gHttpServer.connectionNumber, 1, `${gHttpServer.connectionNumber} speculative connection has been setup.`);
 });
-
