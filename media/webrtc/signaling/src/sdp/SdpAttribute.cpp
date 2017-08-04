@@ -244,7 +244,7 @@ static std::ostream& operator<<(std::ostream& os, SkipFirstDelimiter& delim)
 void
 SdpImageattrAttributeList::XYRange::Serialize(std::ostream& os) const
 {
-  if (discreteValues.size() == 0) {
+  if (discreteValues.empty()) {
     os << "[" << min << ":";
     if (step != 1) {
       os << step << ":";
@@ -500,7 +500,7 @@ void
 SdpImageattrAttributeList::SRange::Serialize(std::ostream& os) const
 {
   os << std::setprecision(4) << std::fixed;
-  if (discreteValues.size() == 0) {
+  if (discreteValues.empty()) {
     os << "[" << min << "-" << max << "]";
   } else if (discreteValues.size() == 1) {
     os << discreteValues.front();

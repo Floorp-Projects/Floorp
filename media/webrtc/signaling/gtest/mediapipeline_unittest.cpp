@@ -310,7 +310,7 @@ class TestAgent {
   uint32_t GetLocalSSRC() {
     std::vector<uint32_t> res;
     res = audio_conduit_->GetLocalSSRCs();
-    return res.size() > 0 ? res[0] : 0;
+    return res.empty() ? 0 : res[0];
   }
 
   int GetAudioRtpCountSent() {

@@ -36,7 +36,7 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header,
   }
 
   if (!header.extension.rtpStreamId.empty() &&
-      remote_rid_set_.size() &&
+      !remote_rid_set_.empty() &&
       remote_rid_set_.count(header.extension.rtpStreamId.data())) {
     return true;
   }

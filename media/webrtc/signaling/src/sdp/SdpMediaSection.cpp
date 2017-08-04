@@ -92,7 +92,7 @@ SdpMediaSection::GetSctpmap() const
   }
 
   const SdpSctpmapAttributeList& sctpmap = attrs.GetSctpmap();
-  if (!sctpmap.mSctpmaps.size()) {
+  if (sctpmap.mSctpmaps.empty()) {
     return nullptr;
   }
 
