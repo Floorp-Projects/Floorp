@@ -168,8 +168,8 @@ function gen_config_files {
   local ASM_CONV=ads2gas.pl
 
   # Generate aom_config.asm.
-  if [[ "$1" == *x64* ]] || [[ "$1" == *ia32* ]]; then
-    egrep "#define [A-Z0-9_]+ [01]" aom_config.h | awk '{print "%define " $2 " " $3}' > aom_config.asm
+  if [[ "$1" == *x64* ]] || [[ "$1" == *ia32* ]] || [[ "$1" == *mingw* ]]; then
+    egrep "#define [A-Z0-9_]+ [01]" aom_config.h | awk '{print $2 " equ " $3}' > aom_config.asm
   else
     egrep "#define [A-Z0-9_]+ [01]" aom_config.h | awk '{print $2 " EQU " $3}' | perl $BASE_DIR/$LIBAOM_SRC_DIR/build/make/$ASM_CONV > aom_config.asm
   fi
