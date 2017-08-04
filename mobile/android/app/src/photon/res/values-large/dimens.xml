@@ -15,7 +15,12 @@
 
     <dimen name="browser_toolbar_height_flipper">@dimen/browser_toolbar_height</dimen>
     <dimen name="browser_toolbar_button_padding">16dp</dimen>
+    <dimen name="browser_toolbar_icon_width">@dimen/browser_toolbar_height</dimen>
+    <dimen name="browser_toolbar_menu_radius">4dp</dimen>
     <dimen name="browser_toolbar_favicon_size">16dp</dimen>
+
+    <dimen name="browser_toolbar_image_button_width">56dp</dimen>
+    <dimen name="browser_toolbar_image_button_h_spacing">4dp</dimen>
 
     <dimen name="browser_toolbar_site_security_height">60dp</dimen>
     <dimen name="browser_toolbar_site_security_width">34dp</dimen>
@@ -34,18 +39,12 @@
 
     <item name="tab_strip_content_start" type="dimen">72dp</item>
 
-
     <dimen name="tab_panel_grid_hpadding_autofit">30dp</dimen>
     <dimen name="tab_panel_grid_vpadding_autofit">30dp</dimen>
     <dimen name="tab_panel_grid_item_hpadding_autofit">20dp</dimen>
     <dimen name="tab_panel_grid_item_vpadding_autofit">8dp</dimen>
 
-
-
-
-
-
-
-
+    <!-- PageActionButtons dimensions -->
+    <dimen name="page_action_button_width">56dp</dimen>
 
 </resources>

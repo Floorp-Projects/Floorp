@@ -8,14 +8,14 @@
 
     <item gecko:state_private="true"
           android:state_enabled="false"
-          android:color="@color/photon_icon_private"/>
+          android:color="@color/photon_icon_private_disabled"/>
 
     <item gecko:state_private="true"
           android:state_enabled="true"
           android:color="@color/photon_icon_private"/>
 
     <item android:state_enabled="false"
-          android:color="@color/photon_icon"/>
+          android:color="@color/photon_icon_disabled"/>
 
     <item android:color="@color/photon_icon"/>
 
