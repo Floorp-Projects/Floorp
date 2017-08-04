@@ -245,7 +245,7 @@ private:
   void ProcessNotifyTrackingResource();
   void ProcessSetClassifierMatchedInfo(const nsCString& aList,
                                        const nsCString& aProvider,
-                                       const nsCString& aPrefix);
+                                       const nsCString& aFullHash);
 
 
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
