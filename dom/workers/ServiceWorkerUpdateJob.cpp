@@ -401,7 +401,7 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
   }
 
   if (!StringBeginsWith(mRegistration->mScope, maxPrefix)) {
-    nsXPIDLString message;
+    nsAutoString message;
     NS_ConvertUTF8toUTF16 reportScope(mRegistration->mScope);
     NS_ConvertUTF8toUTF16 reportMaxPrefix(maxPrefix);
     const char16_t* params[] = { reportScope.get(), reportMaxPrefix.get() };

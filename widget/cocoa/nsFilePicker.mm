@@ -119,9 +119,9 @@ NSView* nsFilePicker::GetAccessoryView()
   nsCOMPtr<nsIStringBundle> bundle;
   nsresult rv = sbs->CreateBundle("chrome://global/locale/filepicker.properties", getter_AddRefs(bundle));
   if (NS_SUCCEEDED(rv)) {
-    nsXPIDLString locaLabel;
-    bundle->GetStringFromName("formatLabel", getter_Copies(locaLabel));
-    if (locaLabel) {
+    nsAutoString locaLabel;
+    rv = bundle->GetStringFromName("formatLabel", locaLabel);
+    if (NS_SUCCEEDED(rv)) {
       label = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(locaLabel.get())
                                       length:locaLabel.Length()];
     }

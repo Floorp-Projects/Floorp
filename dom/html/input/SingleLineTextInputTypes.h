@@ -88,7 +88,7 @@ public:
 
   bool HasTypeMismatch() const override;
 
-  nsresult GetTypeMismatchMessage(nsXPIDLString& aMessage) override;
+  nsresult GetTypeMismatchMessage(nsAString& aMessage) override;
 
 private:
   explicit URLInputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -109,8 +109,8 @@ public:
   bool HasTypeMismatch() const override;
   bool HasBadInput() const override;
 
-  nsresult GetTypeMismatchMessage(nsXPIDLString& aMessage) override;
-  nsresult GetBadInputMessage(nsXPIDLString& aMessage) override;
+  nsresult GetTypeMismatchMessage(nsAString& aMessage) override;
+  nsresult GetBadInputMessage(nsAString& aMessage) override;
 
 private:
   explicit EmailInputType(mozilla::dom::HTMLInputElement* aInputElement)

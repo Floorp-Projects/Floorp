@@ -298,11 +298,11 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
 
   if (!hostPort.IsEmpty() && bundle) {
     const char16_t* formatStrings[] = { hostPort.get() };
-    nsXPIDLString notificationSource;
+    nsAutoString notificationSource;
     bundle->FormatStringFromName("source.label",
                                  formatStrings,
                                  ArrayLength(formatStrings),
-                                 getter_Copies(notificationSource));
+                                 notificationSource);
     notification.subtitle = nsCocoaUtils::ToNSString(notificationSource);
   }
 
@@ -317,20 +317,17 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   // If this is not an application/extension alert, show additional actions dealing with permissions.
   bool isActionable;
   if (bundle && NS_SUCCEEDED(aAlert->GetActionable(&isActionable)) && isActionable) {
-    nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
-    bundle->GetStringFromName("closeButton.title",
-                              getter_Copies(closeButtonTitle));
-    bundle->GetStringFromName("actionButton.label",
-                              getter_Copies(actionButtonTitle));
+    nsAutoString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
+    bundle->GetStringFromName("closeButton.title", closeButtonTitle);
+    bundle->GetStringFromName("actionButton.label", actionButtonTitle);
     if (!hostPort.IsEmpty()) {
       const char16_t* formatStrings[] = { hostPort.get() };
       bundle->FormatStringFromName("webActions.disableForOrigin.label",
                                    formatStrings,
                                    ArrayLength(formatStrings),
-                                   getter_Copies(disableButtonTitle));
+                                   disableButtonTitle);
     }
-    bundle->GetStringFromName("webActions.settings.label",
-                              getter_Copies(settingsButtonTitle));
+    bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
 
     notification.otherButtonTitle = nsCocoaUtils::ToNSString(closeButtonTitle);
 

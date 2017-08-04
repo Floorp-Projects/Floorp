@@ -222,7 +222,7 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
 nsresult
 CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
            const nsCString& aRootName, const nsCString& aGuid,
-           const nsXPIDLString& titleString)
+           const nsAString& titleString)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1220,36 +1220,32 @@ Database::CreateBookmarkRoots()
   nsresult rv = bundleService->CreateBundle(PLACES_BUNDLE, getter_AddRefs(bundle));
   if (NS_FAILED(rv)) return rv;
 
-  nsXPIDLString rootTitle;
+  nsAutoString rootTitle;
   // The first root's title is an empty string.
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("places"),
                   NS_LITERAL_CSTRING("root________"), rootTitle);
   if (NS_FAILED(rv)) return rv;
 
   // Fetch the internationalized folder name from the string bundle.
-  rv = bundle->GetStringFromName("BookmarksMenuFolderTitle",
-                                 getter_Copies(rootTitle));
+  rv = bundle->GetStringFromName("BookmarksMenuFolderTitle", rootTitle);
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("menu"),
                   NS_LITERAL_CSTRING("menu________"), rootTitle);
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName("BookmarksToolbarFolderTitle",
-                                 getter_Copies(rootTitle));
+  rv = bundle->GetStringFromName("BookmarksToolbarFolderTitle", rootTitle);
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("toolbar"),
                   NS_LITERAL_CSTRING("toolbar_____"), rootTitle);
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName("TagsFolderTitle",
-                                 getter_Copies(rootTitle));
+  rv = bundle->GetStringFromName("TagsFolderTitle", rootTitle);
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("tags"),
                   NS_LITERAL_CSTRING("tags________"), rootTitle);
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName("OtherBookmarksFolderTitle",
-                                 getter_Copies(rootTitle));
+  rv = bundle->GetStringFromName("OtherBookmarksFolderTitle", rootTitle);
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("unfiled"),
                   NS_LITERAL_CSTRING("unfiled_____"), rootTitle);
@@ -1401,9 +1397,8 @@ Database::UpdateBookmarkRootTitles()
                                  };
 
   for (uint32_t i = 0; i < ArrayLength(rootGuids); ++i) {
-    nsXPIDLString title;
-    rv = bundle->GetStringFromName(titleStringIDs[i],
-                                   getter_Copies(title));
+    nsAutoString title;
+    rv = bundle->GetStringFromName(titleStringIDs[i], title);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<mozIStorageBindingParams> params;

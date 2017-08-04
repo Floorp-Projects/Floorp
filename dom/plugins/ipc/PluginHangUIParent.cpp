@@ -155,7 +155,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   exePath = exePath.AppendASCII(MOZ_HANGUI_PROCESS_NAME);
   CommandLine commandLine(exePath.value());
 
-  nsXPIDLString localizedStr;
+  nsAutoString localizedStr;
   const char16_t* formatParams[] = { aPluginName.get() };
   rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                              "PluginHangUIMessage",

@@ -1003,14 +1003,14 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
                              &hasSubsumersFlag);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!hasFlags && !hasSubsumersFlag) {
-        nsXPIDLString message;
+        nsAutoString message;
         NS_ConvertASCIItoUTF16 ucsTargetScheme(targetScheme);
         const char16_t* formatStrings[] = { ucsTargetScheme.get() };
         rv = sStrBundle->
             FormatStringFromName("ProtocolFlagError",
                                  formatStrings,
                                  ArrayLength(formatStrings),
-                                 getter_Copies(message));
+                                 message);
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIConsoleService> console(
               do_GetService("@mozilla.org/consoleservice;1"));
@@ -1041,14 +1041,14 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const char* aMessageTag,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Localize the error message
-    nsXPIDLString message;
+    nsAutoString message;
     NS_ConvertASCIItoUTF16 ucsSourceSpec(sourceSpec);
     NS_ConvertASCIItoUTF16 ucsTargetSpec(targetSpec);
     const char16_t *formatStrings[] = { ucsSourceSpec.get(), ucsTargetSpec.get() };
     rv = sStrBundle->FormatStringFromName(aMessageTag,
                                           formatStrings,
                                           ArrayLength(formatStrings),
-                                          getter_Copies(message));
+                                          message);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If a JS context was passed in, set a JS exception.
@@ -1285,20 +1285,20 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     NS_ConvertUTF8toUTF16 originUnicode(origin);
     NS_ConvertUTF8toUTF16 classInfoName(objClassInfo.GetName());
     nsresult rv;
-    nsXPIDLString errorMsg;
+    nsAutoString errorMsg;
     if (originUnicode.IsEmpty()) {
         const char16_t* formatStrings[] = { classInfoName.get() };
         rv = sStrBundle->FormatStringFromName("CreateWrapperDenied",
                                               formatStrings,
                                               1,
-                                              getter_Copies(errorMsg));
+                                              errorMsg);
     } else {
         const char16_t* formatStrings[] = { classInfoName.get(),
                                             originUnicode.get() };
         rv = sStrBundle->FormatStringFromName("CreateWrapperDeniedForOrigin",
                                               formatStrings,
                                               2,
-                                              getter_Copies(errorMsg));
+                                              errorMsg);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
