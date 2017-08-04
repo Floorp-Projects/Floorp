@@ -13,6 +13,9 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
+#include "prenv.h"
+#include <Shlobj.h>
+#include <Shlwapi.h>
 #include <initguid.h>
 #include <stdint.h>
 #include "mozilla/mscom/EnsureMTA.h"
@@ -144,6 +147,20 @@ GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion)
 
   aOutPictureRegion = nsIntRect(0, 0, width, height);
   return S_OK;
+}
+
+nsString
+GetProgramW6432Path()
+{
+  char* programPath = PR_GetEnvSecure("ProgramW6432");
+  if (!programPath) {
+    programPath = PR_GetEnvSecure("ProgramFiles");
+  }
+
+  if (!programPath) {
+    return NS_LITERAL_STRING("C:\\Program Files");
+  }
+  return NS_ConvertUTF8toUTF16(programPath);
 }
 
 namespace wmf {
