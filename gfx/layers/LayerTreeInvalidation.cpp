@@ -209,6 +209,9 @@ public:
       }
     }
 
+    // Note that we don't bailout early in general since this function
+    // clears some persistent state at the end. Instead we set an overflow
+    // flag and check it right before returning.
     bool areaOverflowed = false;
 
     Layer* otherMask = mLayer->GetMaskLayer();
@@ -218,10 +221,16 @@ public:
         mLayer->GetLocalOpacity() != mOpacity ||
         transformChanged)
     {
-      result = OldTransformedBounds();
-      LTI_DUMP(result, "oldtransform");
-      LTI_DUMP(NewTransformedBounds(), "newtransform");
-      AddRegion(result, NewTransformedBounds());
+      Maybe<IntRect> oldBounds = OldTransformedBounds();
+      Maybe<IntRect> newBounds = NewTransformedBounds();
+      if (oldBounds && newBounds) {
+        LTI_DUMP(oldBounds.value(), "oldtransform");
+        LTI_DUMP(newBounds.value(), "newtransform");
+        result = oldBounds.value();
+        AddRegion(result, newBounds.value());
+      } else {
+        areaOverflowed = true;
+      }
 
       // We can't bail out early because we need to update mChildrenChanged.
     }
@@ -281,15 +290,24 @@ public:
     mLayer->CheckCanary();
   }
 
-  virtual IntRect NewTransformedBounds()
-  {
+  IntRect NewTransformedBoundsForLeaf() {
     return TransformRect(mLayer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
                          GetTransformForInvalidation(mLayer));
   }
 
-  virtual IntRect OldTransformedBounds()
-  {
+  IntRect OldTransformedBoundsForLeaf() {
     return TransformRect(mVisibleRegion.ToUnknownRegion().GetBounds(), mTransform);
+  }
+
+  virtual Maybe<IntRect> NewTransformedBounds()
+  {
+    return Some(TransformRect(mLayer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
+                              GetTransformForInvalidation(mLayer)));
+  }
+
+  virtual Maybe<IntRect> OldTransformedBounds()
+  {
+    return Some(TransformRect(mVisibleRegion.ToUnknownRegion().GetBounds(), mTransform));
   }
 
   virtual bool ComputeChangeInternal(const char* aPrefix,
@@ -346,9 +364,16 @@ public:
     bool invalidateWholeLayer = false;
     bool areaOverflowed = false;
     if (mPreXScale != container->GetPreXScale() ||
-        mPreYScale != container->GetPreYScale()) {
-      invalidOfLayer = OldTransformedBounds();
-      AddRegion(invalidOfLayer, NewTransformedBounds());
+        mPreYScale != container->GetPreYScale())
+    {
+      Maybe<IntRect> oldBounds = OldTransformedBounds();
+      Maybe<IntRect> newBounds = NewTransformedBounds();
+      if (oldBounds && newBounds) {
+        invalidOfLayer = oldBounds.value();
+        AddRegion(invalidOfLayer, newBounds.value());
+      } else {
+        areaOverflowed = true;
+      }
       childrenChanged = true;
       invalidateWholeLayer = true;
 
@@ -383,8 +408,12 @@ public:
             // rather than removed, we will invalidate their new area when we
             // encounter them in the new list):
             for (uint32_t j = i; j < childsOldIndex; ++j) {
-              LTI_DUMP(mChildren[j]->OldTransformedBounds(), "reordered child");
-              AddRegion(result, mChildren[j]->OldTransformedBounds());
+              if (Maybe<IntRect> bounds = mChildren[j]->OldTransformedBounds()) {
+                LTI_DUMP(bounds.value(), "reordered child");
+                AddRegion(result, bounds.value());
+              } else {
+                areaOverflowed = true;
+              }
               childrenChanged |= true;
             }
             if (childsOldIndex >= mChildren.Length()) {
@@ -432,8 +461,12 @@ public:
     // Process remaining removed children.
     while (i < mChildren.Length()) {
       childrenChanged |= true;
-      LTI_DUMP(mChildren[i]->OldTransformedBounds(), "removed child");
-      AddRegion(result, mChildren[i]->OldTransformedBounds());
+      if (Maybe<IntRect> bounds = mChildren[i]->OldTransformedBounds()) {
+        LTI_DUMP(bounds.value(), "removed child");
+        AddRegion(result, bounds.value());
+      } else {
+        areaOverflowed = true;
+      }
       i++;
     }
 
@@ -441,7 +474,7 @@ public:
       aCallback(container, result);
     }
 
-    if (childrenChanged) {
+    if (childrenChanged || areaOverflowed) {
       container->SetChildrenChanged(true);
     }
 
@@ -460,6 +493,11 @@ public:
       container->SetInvalidCompositeRect(bounds ? bounds.ptr() : nullptr);
     }
 
+    // Safe to bail out early now, persistent state has been set.
+    if (areaOverflowed) {
+      return false;
+    }
+
     if (!mLayer->Extend3DContext()) {
       // |result| contains invalid regions only of children.
       result.Transform(GetTransformForInvalidation(mLayer));
@@ -473,27 +511,45 @@ public:
     return true;
   }
 
-  IntRect NewTransformedBounds() override
+  Maybe<IntRect> NewTransformedBounds() override
   {
     if (mLayer->Extend3DContext()) {
       IntRect result;
       for (UniquePtr<LayerPropertiesBase>& child : mChildren) {
-        result = result.Union(child->NewTransformedBounds());
+        Maybe<IntRect> childBounds = child->NewTransformedBounds();
+        if (!childBounds) {
+          return Nothing();
+        }
+        Maybe<IntRect> combined = result.SafeUnion(childBounds.value());
+        if (!combined) {
+          LTI_LOG("overflowed bounds of container %p accumulating child %p\n", this, child->mLayer);
+          return Nothing();
+        }
+        result = combined.value();
       }
-      return result;
+      return Some(result);
     }
 
     return LayerPropertiesBase::NewTransformedBounds();
   }
 
-  IntRect OldTransformedBounds() override
+  Maybe<IntRect> OldTransformedBounds() override
   {
     if (mLayer->Extend3DContext()) {
       IntRect result;
       for (UniquePtr<LayerPropertiesBase>& child : mChildren) {
-        result = result.Union(child->OldTransformedBounds());
+        Maybe<IntRect> childBounds = child->OldTransformedBounds();
+        if (!childBounds) {
+          return Nothing();
+        }
+        Maybe<IntRect> combined = result.SafeUnion(childBounds.value());
+        if (!combined) {
+          LTI_LOG("overflowed bounds of container %p accumulating child %p\n", this, child->mLayer);
+          return Nothing();
+        }
+        result = combined.value();
       }
-      return result;
+      return Some(result);
     }
     return LayerPropertiesBase::OldTransformedBounds();
   }
@@ -525,8 +581,8 @@ public:
     ColorLayer* color = static_cast<ColorLayer*>(mLayer.get());
 
     if (mColor != color->GetColor()) {
-      LTI_DUMP(NewTransformedBounds(), "color");
-      aOutRegion = NewTransformedBounds();
+      LTI_DUMP(NewTransformedBoundsForLeaf(), "color");
+      aOutRegion = NewTransformedBoundsForLeaf();
       return true;
     }
 
@@ -564,8 +620,8 @@ public:
     BorderLayer* border = static_cast<BorderLayer*>(mLayer.get());
 
     if (!border->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
-      IntRect result = NewTransformedBounds();
-      result = result.Union(OldTransformedBounds());
+      IntRect result = NewTransformedBoundsForLeaf();
+      result = result.Union(OldTransformedBoundsForLeaf());
       aOutRegion = result;
       return true;
     }
@@ -574,8 +630,8 @@ public:
         !PodEqual(&mWidths[0], &border->GetWidths()[0], 4) ||
         !PodEqual(&mCorners[0], &border->GetCorners()[0], 4) ||
         !mRect.IsEqualEdges(border->GetRect())) {
-      LTI_DUMP(NewTransformedBounds(), "bounds");
-      aOutRegion = NewTransformedBounds();
+      LTI_DUMP(NewTransformedBoundsForLeaf(), "bounds");
+      aOutRegion = NewTransformedBoundsForLeaf();
       return true;
     }
 
@@ -609,8 +665,8 @@ public:
     TextLayer* text = static_cast<TextLayer*>(mLayer.get());
 
     if (!text->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
-      IntRect result = NewTransformedBounds();
-      result = result.Union(OldTransformedBounds());
+      IntRect result = NewTransformedBoundsForLeaf();
+      result = result.Union(OldTransformedBoundsForLeaf());
       aOutRegion = result;
       return true;
     }
@@ -618,8 +674,8 @@ public:
     if (!mBounds.IsEqualEdges(text->GetBounds()) ||
         mGlyphs != text->GetGlyphs() ||
         mFont != text->GetScaledFont()) {
-      LTI_DUMP(NewTransformedBounds(), "bounds");
-      aOutRegion = NewTransformedBounds();
+      LTI_DUMP(NewTransformedBoundsForLeaf(), "bounds");
+      aOutRegion = NewTransformedBoundsForLeaf();
       return true;
     }
 
@@ -666,8 +722,8 @@ struct ImageLayerProperties : public LayerPropertiesBase
     ImageLayer* imageLayer = static_cast<ImageLayer*>(mLayer.get());
 
     if (!imageLayer->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
-      IntRect result = NewTransformedBounds();
-      result = result.Union(OldTransformedBounds());
+      IntRect result = NewTransformedBoundsForLeaf();
+      result = result.Union(OldTransformedBoundsForLeaf());
       aOutRegion = result;
       return true;
     }
@@ -697,8 +753,8 @@ struct ImageLayerProperties : public LayerPropertiesBase
         aOutRegion = TransformRect(rect, GetTransformForInvalidation(mLayer));
         return true;
       }
-      LTI_DUMP(NewTransformedBounds(), "bounds");
-      aOutRegion = NewTransformedBounds();
+      LTI_DUMP(NewTransformedBoundsForLeaf(), "bounds");
+      aOutRegion = NewTransformedBoundsForLeaf();
       return true;
     }
 
@@ -732,8 +788,8 @@ struct CanvasLayerProperties : public LayerPropertiesBase
 
     ImageHost* host = GetImageHost(canvasLayer);
     if (host && host->GetFrameID() != mFrameID) {
-      LTI_DUMP(NewTransformedBounds(), "frameId");
-      aOutRegion = NewTransformedBounds();
+      LTI_DUMP(NewTransformedBoundsForLeaf(), "frameId");
+      aOutRegion = NewTransformedBoundsForLeaf();
       return true;
     }
 
@@ -815,11 +871,19 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, nsIntRegion& aOutRegion, N
     } else {
       ClearInvalidations(aRoot);
     }
-    IntRect result = TransformRect(
+    IntRect bounds = TransformRect(
       aRoot->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
       aRoot->GetLocalTransform());
-    result = result.Union(OldTransformedBounds());
-    aOutRegion = result;
+    Maybe<IntRect> oldBounds = OldTransformedBounds();
+    if (!oldBounds) {
+      return false;
+    }
+    Maybe<IntRect> result = bounds.SafeUnion(oldBounds.value());
+    if (!result) {
+      LTI_LOG("overflowed bounds computing the union of layers %p and %p\n", mLayer.get(), aRoot);
+      return false;
+    }
+    aOutRegion = result.value();
     return true;
   }
   return ComputeChange("  ", aOutRegion, aCallback);
