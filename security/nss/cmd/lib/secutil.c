@@ -991,7 +991,7 @@ secu_PrintUniversalString(FILE *out, const SECItem *i, const char *m, int level)
     for (s = my.data, d = tmp.data; len > 0; len--) {
         PRUint32 bmpChar = (s[0] << 24) | (s[1] << 16) | (s[2] << 8) | s[3];
         s += 4;
-        if (!isprint(bmpChar))
+        if (!isprint(bmpChar & 0xFF))
             goto loser;
         *d++ = (unsigned char)bmpChar;
     }
