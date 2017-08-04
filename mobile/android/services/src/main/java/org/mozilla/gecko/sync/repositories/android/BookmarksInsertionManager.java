@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 
 /**
@@ -97,9 +98,9 @@ public class BookmarksInsertionManager {
    * @param record
    *          the <code>BookmarkRecord</code> to enqueue.
    */
-  protected void recursivelyEnqueueRecordAndChildren(BookmarkRecord record) {
+  protected void recursivelyEnqueueRecordAndChildren(RepositorySessionStoreDelegate delegate, BookmarkRecord record) {
     if (record.isFolder()) {
-      if (!inserter.insertFolder(record)) {
+      if (!inserter.insertFolder(delegate, record)) {
         Logger.warn(LOG_TAG, "Folder with known parent with guid " + record.parentID + " failed to insert!");
         return;
       }
@@ -116,7 +117,7 @@ public class BookmarksInsertionManager {
       return;
     }
     for (BookmarkRecord waiter : waiting) {
-      recursivelyEnqueueRecordAndChildren(waiter);
+      recursivelyEnqueueRecordAndChildren(delegate, waiter);
     }
   }
 
@@ -126,7 +127,7 @@ public class BookmarksInsertionManager {
    * @param record
    *          the folder to enqueue.
    */
-  protected void enqueueFolder(BookmarkRecord record) {
+  protected void enqueueFolder(RepositorySessionStoreDelegate delegate, BookmarkRecord record) {
     Logger.debug(LOG_TAG, "Inserting folder with guid " + record.guid);
 
     if (!insertedFolders.contains(record.parentID)) {
@@ -136,8 +137,8 @@ public class BookmarksInsertionManager {
     }
 
     // Parent is known; add as much of the tree as this roots.
-    recursivelyEnqueueRecordAndChildren(record);
-    flushNonFoldersIfNecessary();
+    recursivelyEnqueueRecordAndChildren(delegate, record);
+    flushNonFoldersIfNecessary(delegate);
   }
 
   /**
@@ -146,7 +147,7 @@ public class BookmarksInsertionManager {
    * @param record
    *          the non-folder to enqueue.
    */
-  protected void enqueueNonFolder(BookmarkRecord record) {
+  protected void enqueueNonFolder(RepositorySessionStoreDelegate delegate, BookmarkRecord record) {
     Logger.debug(LOG_TAG, "Inserting non-folder with guid " + record.guid);
 
     if (!insertedFolders.contains(record.parentID)) {
@@ -158,7 +159,7 @@ public class BookmarksInsertionManager {
     // Parent is known; add to insertion queue and maybe write.
     Logger.debug(LOG_TAG, "Non-folder has known parent with guid " + record.parentID + "; adding to insertion queue.");
     nonFoldersToWrite.add(record);
-    flushNonFoldersIfNecessary();
+    flushNonFoldersIfNecessary(delegate);
   }
 
   /**
@@ -167,11 +168,11 @@ public class BookmarksInsertionManager {
    * @param record
    *          the <code>BookmarkRecord</code> to enqueue.
    */
-  public void enqueueRecord(BookmarkRecord record) {
+  public void enqueueRecord(RepositorySessionStoreDelegate delegate, BookmarkRecord record) {
     if (record.isFolder()) {
-      enqueueFolder(record);
+      enqueueFolder(delegate, record);
     } else {
-      enqueueNonFolder(record);
+      enqueueNonFolder(delegate, record);
     }
     if (DEBUG) {
       dumpState();
@@ -181,8 +182,8 @@ public class BookmarksInsertionManager {
   /**
    * Flush non-folders; empties the insertion queue entirely.
    */
-  protected void flushNonFolders() {
-    inserter.bulkInsertNonFolders(nonFoldersToWrite); // All errors are handled in bulkInsertNonFolders.
+  protected void flushNonFolders(RepositorySessionStoreDelegate delegate) {
+    inserter.bulkInsertNonFolders(delegate, nonFoldersToWrite); // All errors are handled in bulkInsertNonFolders.
     nonFoldersToWrite.clear();
   }
 
@@ -190,21 +191,21 @@ public class BookmarksInsertionManager {
    * Flush non-folder insertions if there are many of them; empties the
    * insertion queue entirely.
    */
-  protected void flushNonFoldersIfNecessary() {
+  protected void flushNonFoldersIfNecessary(RepositorySessionStoreDelegate delegate) {
     int num = nonFoldersToWrite.size();
     if (num < flushThreshold) {
       Logger.debug(LOG_TAG, "Incremental flush called with " + num + " < " + flushThreshold + " non-folders; not flushing.");
       return;
     }
     Logger.debug(LOG_TAG, "Incremental flush called with " + num + " non-folders; flushing.");
-    flushNonFolders();
+    flushNonFolders(delegate);
   }
 
   /**
    * Insert all remaining folders followed by all remaining non-folders,
    * regardless of whether parent records have been successfully inserted.
    */
-  public void finishUp() {
+  public void finishUp(RepositorySessionStoreDelegate delegate) {
     // Iterate through all waiting records, writing the folders and collecting
     // the non-folders for bulk insertion.
     int numFolders = 0;
@@ -218,7 +219,7 @@ public class BookmarksInsertionManager {
         }
 
         numFolders += 1;
-        if (!inserter.insertFolder(record)) {
+        if (!inserter.insertFolder(delegate, record)) {
           Logger.warn(LOG_TAG, "Folder with known parent with guid " + record.parentID + " failed to insert!");
           continue;
         }
@@ -228,7 +229,7 @@ public class BookmarksInsertionManager {
       }
     }
     recordsWaitingForParent.clear();
-    flushNonFolders();
+    flushNonFolders(delegate);
 
     Logger.debug(LOG_TAG, "finishUp inserted " +
         numFolders + " folders without known parents and " +
@@ -280,7 +281,7 @@ public class BookmarksInsertionManager {
      * @return
      *          <code>true</code> if the folder was inserted; <code>false</code> otherwise.
      */
-    public boolean insertFolder(BookmarkRecord record);
+    public boolean insertFolder(RepositorySessionStoreDelegate delegate, BookmarkRecord record);
 
     /**
      * Insert many non-folders. Each non-folder's parent was already present in
@@ -293,6 +294,6 @@ public class BookmarksInsertionManager {
      * @param records
      *          the records to insert.
      */
-    public void bulkInsertNonFolders(Collection<BookmarkRecord> records);
+    public void bulkInsertNonFolders(RepositorySessionStoreDelegate delegate, Collection<BookmarkRecord> records);
   }
 }

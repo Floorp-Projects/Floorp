@@ -669,4 +669,8 @@ public class PasswordsRepositorySession extends
     cv.put(BrowserContract.Passwords.TIMES_USED,            rec.timesUsed);
     return cv;
   }
+
+  private static void trace(String message) {
+    Logger.trace(LOG_TAG, message);
+  }
 }
