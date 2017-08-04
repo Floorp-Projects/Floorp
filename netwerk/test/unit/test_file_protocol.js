@@ -18,7 +18,7 @@ const special_type = "application/x-our-special-type";
 function getFile(key) {
   var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                          .getService(Components.interfaces.nsIProperties);
-  return dirSvc.get(key, Components.interfaces.nsILocalFile);
+  return dirSvc.get(key, Components.interfaces.nsIFile);
 }
 
 function new_file_input_stream(file, buffered) {

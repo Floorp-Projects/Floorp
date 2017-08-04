@@ -56,7 +56,7 @@ function runTests() {
     ok(Components.isSuccessCode(aStatus), "File was saved successfully");
 
     gFile = aFile;
-    gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true, fileImported);
+    gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true, fileImported);
   });
 }
 
@@ -70,7 +70,7 @@ function fileImported(status, content) {
   // Set the pref and try again.
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
-  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true, function (status, content) {
+  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true, function (status, content) {
     ok(Components.isSuccessCode(status), "File was imported successfully");
     is(gScratchpad.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER);
 

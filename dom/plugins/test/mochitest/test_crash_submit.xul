@@ -58,7 +58,7 @@ var testObserver = {
 
     // Cleanup
     // First remove our fake submitted report
-    let file = Services.dirsvc.get("UAppData", Components.interfaces.nsILocalFile);
+    let file = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);
     file.append("Crash Reports");
     file.append("submitted");
     file.append(remoteID + ".txt");

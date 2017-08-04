@@ -32,7 +32,7 @@ function runTests()
       "The temporary file was saved successfully");
 
     gFile = aFile;
-    gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true,
+    gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true,
         fileImported);
   });
 }
@@ -55,7 +55,7 @@ function fileImported(aStatus, aFileContent)
   gFileContent += "// omg, saved!";
   gScratchpad.editor.setText(gFileContent);
 
-  gScratchpad.exportToFile(gFile.QueryInterface(Ci.nsILocalFile), true, true,
+  gScratchpad.exportToFile(gFile.QueryInterface(Ci.nsIFile), true, true,
                           fileExported);
 }
 
@@ -77,7 +77,7 @@ function fileExported(aStatus)
     return false;
   };
 
-  gScratchpad.exportToFile(gFile.QueryInterface(Ci.nsILocalFile), false, true,
+  gScratchpad.exportToFile(gFile.QueryInterface(Ci.nsIFile), false, true,
                           fileExported2);
 
   gScratchpadWindow.confirm = oldConfirm;

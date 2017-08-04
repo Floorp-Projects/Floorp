@@ -392,7 +392,7 @@ function waitForAResponse(outputList) {
 
 function readCurrentList(filename) {
   var currentHosts = {};
-  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(filename);
   var fis = Cc["@mozilla.org/network/file-input-stream;1"]
               .createInstance(Ci.nsILineInputStream);

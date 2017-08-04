@@ -11,7 +11,7 @@ var Ci = Components.interfaces;
 const MAX_TIME_DIFFERENCE = 2500;
 const MILLIS_PER_DAY      = 1000 * 60 * 60 * 24;
 
-var LocalFile = CC("@mozilla.org/file/local;1", "nsILocalFile", "initWithPath");
+var LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
 function run_test()
 {
@@ -134,7 +134,7 @@ function test_directory_modification_time()
 function test_diskSpaceAvailable()
 {
   let file = do_get_profile();
-  file.QueryInterface(Ci.nsILocalFile);
+  file.QueryInterface(Ci.nsIFile);
 
   let bytes = file.diskSpaceAvailable;
   do_check_true(bytes > 0);

@@ -116,7 +116,7 @@ function getRequestBody(req) {
 function getInputStream(path) {
   let file = Cc["@mozilla.org/file/directory_service;1"]
                .getService(Ci.nsIProperties)
-               .get("CurWorkD", Ci.nsILocalFile);
+               .get("CurWorkD", Ci.nsIFile);
   for (let part of path.split("/"))
     file.append(part);
   let fileStream  = Cc["@mozilla.org/network/file-input-stream;1"]

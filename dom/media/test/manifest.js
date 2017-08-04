@@ -468,7 +468,7 @@ function fileUriToSrc(path, mustExist) {
   const Cr = SpecialPowers.Cr;
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
-  var f = dirSvc.get("CurWorkD", Ci.nsILocalFile);
+  var f = dirSvc.get("CurWorkD", Ci.nsIFile);
   var split = path.split("/");
   for(var i = 0; i < split.length; ++i) {
     f.append(split[i]);

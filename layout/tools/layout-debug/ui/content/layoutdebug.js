@@ -303,7 +303,7 @@ RTestIndexList.prototype = {
 const nsIFileInputStream = Components.interfaces.nsIFileInputStream;
 const nsILineInputStream = Components.interfaces.nsILineInputStream;
 const nsIFile = Components.interfaces.nsIFile;
-const nsILocalFile = Components.interfaces.nsILocalFile;
+const nsIFile = Components.interfaces.nsIFile;
 const nsIFileURL = Components.interfaces.nsIFileURL;
 const nsIIOService = Components.interfaces.nsIIOService;
 const nsILayoutRegressionTester = Components.interfaces.nsILayoutRegressionTester;
@@ -325,7 +325,7 @@ function RunRTest(aFilename, aIsBaseline, aIsPrinting)
       (aIsPrinting?" PrintMode":"") + " test for " + aFilename + ".\n");
 
   var listFile = Components.classes[NS_LOCAL_FILE_CONTRACTID].
-                    createInstance(nsILocalFile);
+                    createInstance(nsIFile);
   listFile.persistentDescriptor = aFilename;
   gRTestURLList = new RTestURLList(listFile, aIsBaseline, aIsPrinting);
   gRTestURLList.startURL();
@@ -390,7 +390,7 @@ RTestURLList.prototype = {
     data.append(basename);
 
     dump("Writing regression data to " +
-         data.QueryInterface(nsILocalFile).persistentDescriptor + "\n");
+         data.QueryInterface(nsIFile).persistentDescriptor + "\n");
     if (this.mIsPrinting) {
       this.mRegressionTester.dumpFrameModel(gBrowser.contentWindow, data,
         nsILayoutRegressionTester.DUMP_FLAGS_MASK_PRINT_MODE);
@@ -406,7 +406,7 @@ RTestURLList.prototype = {
       base_data.append("baseline");
       base_data.append(basename);
       dump("Comparing to regression data from " +
-           base_data.QueryInterface(nsILocalFile).persistentDescriptor + "\n");
+           base_data.QueryInterface(nsIFile).persistentDescriptor + "\n");
       var filesDiffer =
         this.mRegressionTester.compareFrameModels(base_data, data,
           nsILayoutRegressionTester.COMPARE_FLAGS_BRIEF)

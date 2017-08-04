@@ -215,7 +215,7 @@ add_test(function test_newFile() {
   let testfile = FileUtils.getFile("ProfD", ["test"]);
   let testpath = testfile.path;
   let file = new FileUtils.File(testpath);
-  do_check_true(file instanceof Components.interfaces.nsILocalFile);
+  do_check_true(file instanceof Components.interfaces.nsIFile);
   do_check_true(file.equals(testfile));
   do_check_eq(file.path, testpath);
   run_next_test();

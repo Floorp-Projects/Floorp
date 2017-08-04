@@ -191,7 +191,7 @@ AppPicker.prototype =
         startLocation = "Home";
       }
       fp.displayDirectory =
-        fileLoc.get(startLocation, Components.interfaces.nsILocalFile);
+        fileLoc.get(startLocation, Components.interfaces.nsIFile);
 
       fp.open(rv => {
           if (rv == nsIFilePicker.returnOK && fp.file) {

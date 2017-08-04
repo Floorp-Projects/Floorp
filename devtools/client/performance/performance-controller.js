@@ -291,7 +291,7 @@ var PerformanceController = {
    *
    * @param PerformanceRecording recording
    *        The model that holds the recording data.
-   * @param nsILocalFile file
+   * @param nsIFile file
    *        The file to stream the data into.
    */
   exportRecording: Task.async(function* (_, recording, file) {
@@ -335,7 +335,7 @@ var PerformanceController = {
    * Loads a recording from a file, adding it to the recordings list. Emits
    * `EVENTS.RECORDING_IMPORTED` when the file was loaded.
    *
-   * @param nsILocalFile file
+   * @param nsIFile file
    *        The file to import the data from.
    */
   importRecording: Task.async(function* (_, file) {

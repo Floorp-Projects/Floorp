@@ -11,7 +11,7 @@ const dirService = Cc["@mozilla.org/file/directory_service;1"]
                       .getService(Ci.nsIProperties);
 
 function showFolder(path) {
-  let NSLocalFile = CC("@mozilla.org/file/local;1", "nsILocalFile",
+  let NSLocalFile = CC("@mozilla.org/file/local;1", "nsIFile",
                         "initWithPath");
 
   try {

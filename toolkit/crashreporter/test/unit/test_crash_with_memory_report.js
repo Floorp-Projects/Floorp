@@ -20,7 +20,7 @@ function run_test() {
                   .getService(Ci.nsIEnvironment);
       let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
       let file = Cc["@mozilla.org/file/local;1"]
-                   .createInstance(Ci.nsILocalFile);
+                   .createInstance(Ci.nsIFile);
       file.initWithPath(profd);
 
       let dirSvc = Cc["@mozilla.org/file/directory_service;1"]

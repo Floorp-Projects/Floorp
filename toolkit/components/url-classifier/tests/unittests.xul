@@ -108,7 +108,7 @@
     var baseName = (new Date().getTime()) + ".tmp";
     var tempDir = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties)
-                  .get("TmpD", Ci.nsILocalFile);
+                  .get("TmpD", Ci.nsIFile);
     tempDir.append(baseName);
     tempDir.createUnique(tempDir.DIRECTORY_TYPE, 0744);
 

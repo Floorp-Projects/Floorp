@@ -354,7 +354,7 @@ function _register_modules_protocol_handler() {
        .QueryInterface(Components.interfaces.nsIResProtocolHandler);
 
   let modulesFile = Components.classes["@mozilla.org/file/local;1"].
-                    createInstance(Components.interfaces.nsILocalFile);
+                    createInstance(Components.interfaces.nsIFile);
   modulesFile.initWithPath(_TESTING_MODULES_DIR);
 
   if (!modulesFile.exists()) {
@@ -1019,7 +1019,7 @@ function do_get_file(path, allowNonexistent) {
   try {
     let lf = Components.classes["@mozilla.org/file/directory_service;1"]
       .getService(Components.interfaces.nsIProperties)
-      .get("CurWorkD", Components.interfaces.nsILocalFile);
+      .get("CurWorkD", Components.interfaces.nsIFile);
 
     let bits = path.split("/");
     for (let i = 0; i < bits.length; i++) {
@@ -1113,7 +1113,7 @@ function do_register_cleanup(aFunction) {
  * Returns the directory for a temp dir, which is created by the
  * test harness. Every test gets its own temp dir.
  *
- * @return nsILocalFile of the temporary directory
+ * @return nsIFile of the temporary directory
  */
 function do_get_tempdir() {
   let env = Components.classes["@mozilla.org/process/environment;1"]
@@ -1121,7 +1121,7 @@ function do_get_tempdir() {
   // the python harness sets this in the environment for us
   let path = env.get("XPCSHELL_TEST_TEMP_DIR");
   let file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
+                       .createInstance(Components.interfaces.nsIFile);
   file.initWithPath(path);
   return file;
 }
@@ -1129,7 +1129,7 @@ function do_get_tempdir() {
 /**
  * Returns the directory for crashreporter minidumps.
  *
- * @return nsILocalFile of the minidump directory
+ * @return nsIFile of the minidump directory
  */
 function do_get_minidumpdir() {
   let env = Components.classes["@mozilla.org/process/environment;1"]
@@ -1138,7 +1138,7 @@ function do_get_minidumpdir() {
   let path = env.get("XPCSHELL_MINIDUMP_DIR");
   if (path) {
     let file = Components.classes["@mozilla.org/file/local;1"]
-                         .createInstance(Components.interfaces.nsILocalFile);
+                         .createInstance(Components.interfaces.nsIFile);
     file.initWithPath(path);
     return file;
   }
@@ -1147,10 +1147,10 @@ function do_get_minidumpdir() {
 
 /**
  * Registers a directory with the profile service,
- * and return the directory as an nsILocalFile.
+ * and return the directory as an nsIFile.
  *
  * @param notifyProfileAfterChange Whether to notify for "profile-after-change".
- * @return nsILocalFile of the profile directory.
+ * @return nsIFile of the profile directory.
  */
 function do_get_profile(notifyProfileAfterChange = false) {
   if (!runningInParent) {
@@ -1163,7 +1163,7 @@ function do_get_profile(notifyProfileAfterChange = false) {
   // the python harness sets this in the environment for us
   let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
   let file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
+                       .createInstance(Components.interfaces.nsIFile);
   file.initWithPath(profd);
 
   let dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]

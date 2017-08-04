@@ -69,7 +69,7 @@ var gStaticPins = parseJson(arguments[0]);
 // arguments[1] is ignored for now. See bug 1205406.
 
 // Open the output file.
-var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 file.initWithPath(arguments[2]);
 var gFileOutputStream = FileUtils.openSafeFileOutputStream(file);
 
@@ -78,7 +78,7 @@ function writeString(string) {
 }
 
 function readFileToString(filename) {
-  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(filename);
   let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                  .createInstance(Ci.nsIFileInputStream);

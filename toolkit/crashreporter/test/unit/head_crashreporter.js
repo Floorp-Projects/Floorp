@@ -25,7 +25,7 @@ function getEventDir() {
  * @param callback
  *        A JavaScript function to be called after the subprocess
  *        crashes. It will be passed (minidump, extra), where
- *         minidump is an nsILocalFile of the minidump file produced,
+ *         minidump is an nsIFile of the minidump file produced,
  *         and extra is an object containing the key,value pairs from
  *         the .extra file.
  *
@@ -38,13 +38,13 @@ function do_crash(setup, callback, canReturnZero) {
   // get current process filename (xpcshell)
   let ds = Components.classes["@mozilla.org/file/directory_service;1"]
     .getService(Components.interfaces.nsIProperties);
-  let bin = ds.get("XREExeF", Components.interfaces.nsILocalFile);
+  let bin = ds.get("XREExeF", Components.interfaces.nsIFile);
   if (!bin.exists()) {
     // weird, can't find xpcshell binary?
     do_throw("Can't find xpcshell binary!");
   }
   // get Gre dir (GreD)
-  let greD = ds.get("GreD", Components.interfaces.nsILocalFile);
+  let greD = ds.get("GreD", Components.interfaces.nsIFile);
   let headfile = do_get_file("crasher_subprocess_head.js");
   let tailfile = do_get_file("crasher_subprocess_tail.js");
   // run xpcshell -g GreD -f head -e "some setup code" -f tail
@@ -91,7 +91,7 @@ function do_crash(setup, callback, canReturnZero) {
 function getMinidump() {
   let en = do_get_tempdir().directoryEntries;
   while (en.hasMoreElements()) {
-    let f = en.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+    let f = en.getNext().QueryInterface(Components.interfaces.nsIFile);
     if (f.leafName.substr(-4) == ".dmp") {
       return f;
     }

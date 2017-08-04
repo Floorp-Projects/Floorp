@@ -113,7 +113,7 @@ SpecialPowersObserver.prototype.init = function() {
   // Register special testing modules.
   var testsURI = Cc["@mozilla.org/file/directory_service;1"].
                    getService(Ci.nsIProperties).
-                   get("ProfD", Ci.nsILocalFile);
+                   get("ProfD", Ci.nsIFile);
   testsURI.append("tests.manifest");
   var ioSvc = Cc["@mozilla.org/network/io-service;1"].
                 getService(Ci.nsIIOService);

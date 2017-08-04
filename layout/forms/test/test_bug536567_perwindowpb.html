@@ -26,13 +26,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-var tmpDir = Services.dirsvc.get("TmpD", Ci.nsILocalFile);
-var homeDir = Services.dirsvc.get("Desk", Ci.nsILocalFile);
+var tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
+var homeDir = Services.dirsvc.get("Desk", Ci.nsIFile);
 
 function newDir() {
   var dir = tmpDir.clone();
   dir.append("testdir" + Math.floor(Math.random() * 10000));
-  dir.QueryInterface(Ci.nsILocalFile);
+  dir.QueryInterface(Ci.nsIFile);
   dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0700);
   return dir;
 }
@@ -172,7 +172,7 @@ MockFilePicker.showCallback = function(filepicker) {
   for (var i = 0; i < dirs.length; i++) {
      var dir = MockFilePicker.displayDirectory
                  ? MockFilePicker.displayDirectory
-                 : Services.dirsvc.get(MockFilePicker.displaySpecialDirectory, Ci.nsILocalFile);
+                 : Services.dirsvc.get(MockFilePicker.displaySpecialDirectory, Ci.nsIFile);
     if (dirs[i].path == dir.path) {
       returned = i;
       break;

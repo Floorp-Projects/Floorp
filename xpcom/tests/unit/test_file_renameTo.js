@@ -11,7 +11,7 @@ function run_test()
   // Create the base directory.
   let base = Cc['@mozilla.org/file/directory_service;1']
              .getService(Ci.nsIProperties)
-             .get('TmpD', Ci.nsILocalFile);
+             .get('TmpD', Ci.nsIFile);
   base.append('renameTesting');
   if (base.exists()) {
     base.remove(true);

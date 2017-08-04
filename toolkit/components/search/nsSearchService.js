@@ -1199,7 +1199,7 @@ EngineURL.prototype = {
 /**
  * nsISearchEngine constructor.
  * @param aLocation
- *        A nsILocalFile or nsIURI object representing the location of the
+ *        A nsIFile or nsIURI object representing the location of the
  *        search engine data file.
  * @param aIsReadOnly
  *        Boolean indicating whether the engine should be treated as read-only.
@@ -1212,7 +1212,7 @@ function Engine(aLocation, aIsReadOnly) {
   let file, uri;
   if (typeof aLocation == "string") {
     this._shortName = aLocation;
-  } else if (aLocation instanceof Ci.nsILocalFile) {
+  } else if (aLocation instanceof Ci.nsIFile) {
     if (!aIsReadOnly) {
       // This is an engine that was installed in NS_APP_USER_SEARCH_DIR by a
       // previous version. We are converting the file to an engine stored only
@@ -3465,7 +3465,7 @@ SearchService.prototype = {
 
       let addedEngine = null;
       try {
-        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(osfile.path);
         addedEngine = new Engine(file, !isInProfile);
         await checkForSyncCompletion(addedEngine._asyncInitFromFile(file));
@@ -4097,7 +4097,7 @@ SearchService.prototype = {
     } else {
       // Remove the engine file from disk if we had a legacy file in the profile.
       if (engineToRemove._filePath) {
-        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.persistentDescriptor = engineToRemove._filePath;
         if (file.exists()) {
           file.remove(false);

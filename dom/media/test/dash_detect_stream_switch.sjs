@@ -59,7 +59,7 @@ function handleRequest(request, response)
       var endOffset = parseInt(offsets[1]);
       var file = Components.classes["@mozilla.org/file/directory_service;1"].
                             getService(Components.interfaces.nsIProperties).
-                            get("CurWorkD", Components.interfaces.nsILocalFile);
+                            get("CurWorkD", Components.interfaces.nsIFile);
       var fis  = Components.classes['@mozilla.org/network/file-input-stream;1'].
                             createInstance(Components.interfaces.nsIFileInputStream);
       var bis  = Components.classes["@mozilla.org/binaryinputstream;1"].

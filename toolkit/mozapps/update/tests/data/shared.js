@@ -280,7 +280,7 @@ function writeFile(aFile, aText) {
   let fos = Cc["@mozilla.org/network/file-output-stream;1"].
             createInstance(Ci.nsIFileOutputStream);
   if (!aFile.exists()) {
-    aFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    aFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   }
   fos.init(aFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE, 0);
   fos.write(aText, aText.length);

@@ -77,7 +77,7 @@ function* runTests() {
 }
 
 function changeLocation(aLocation, aNewDir) {
-  let oldDir = gDirSvc.get(aLocation, Ci.nsILocalFile);
+  let oldDir = gDirSvc.get(aLocation, Ci.nsIFile);
   gDirSvc.undefine(aLocation);
   gDirSvc.set(aLocation, aNewDir);
 

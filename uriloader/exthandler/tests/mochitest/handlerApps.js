@@ -54,7 +54,7 @@ function test() {
                getService(SpecialPowers.Ci.nsIDirectoryServiceProvider);
   if (osString == "WINNT") {
     var windowsDir = dirSvc.getFile("WinD", {});
-    var exe = windowsDir.clone().QueryInterface(SpecialPowers.Ci.nsILocalFile);
+    var exe = windowsDir.clone().QueryInterface(SpecialPowers.Ci.nsIFile);
     exe.appendRelativePath("SYSTEM32\\HOSTNAME.EXE");
 
   } else if (osString == "Darwin") { 
@@ -72,13 +72,13 @@ function test() {
 
       // assume a generic UNIX variant
       exe = Cc["@mozilla.org/file/local;1"].
-            createInstance(SpecialPowers.Ci.nsILocalFile);
+            createInstance(SpecialPowers.Ci.nsIFile);
       exe.initWithPath("/bin/echo");
     }
   } else {
     // assume a generic UNIX variant
     exe = Cc["@mozilla.org/file/local;1"].
-          createInstance(SpecialPowers.Ci.nsILocalFile);
+          createInstance(SpecialPowers.Ci.nsIFile);
     exe.initWithPath("/bin/echo");
   }
 
@@ -93,7 +93,7 @@ function test() {
   if (osString == "NOTDarwin") {
 
     var killall = Cc["@mozilla.org/file/local;1"].
-                  createInstance(SpecialPowers.Ci.nsILocalFile);
+                  createInstance(SpecialPowers.Ci.nsIFile);
     killall.initWithPath("/usr/bin/killall");
   
     var process = Cc["@mozilla.org/process/util;1"].

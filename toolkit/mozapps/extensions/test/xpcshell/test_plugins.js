@@ -39,7 +39,7 @@ function run_test() {
 function get_test_plugin() {
   var pluginEnum = Services.dirsvc.get("APluginsDL", AM_Ci.nsISimpleEnumerator);
   while (pluginEnum.hasMoreElements()) {
-    let dir = pluginEnum.getNext().QueryInterface(AM_Ci.nsILocalFile);
+    let dir = pluginEnum.getNext().QueryInterface(AM_Ci.nsIFile);
     let plugin = dir.clone();
     // OSX plugin
     plugin.append("npswftest.plugin");

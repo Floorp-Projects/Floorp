@@ -207,7 +207,7 @@ function autoRegister(path) {
   var platformVersion = require("../system/xul-app").platformVersion.substring(0, 5);
 
   var file = Cc['@mozilla.org/file/local;1']
-             .createInstance(Ci.nsILocalFile);
+             .createInstance(Ci.nsIFile);
   file.initWithPath(path);
   file.append(osDirName);
   file.append(platformVersion);

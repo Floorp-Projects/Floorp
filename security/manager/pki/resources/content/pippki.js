@@ -147,7 +147,7 @@ function exportToFile(parent, cert) {
   var written = 0;
   try {
     var file = Components.classes["@mozilla.org/file/local;1"].
-               createInstance(Components.interfaces.nsILocalFile);
+               createInstance(Components.interfaces.nsIFile);
     file.initWithPath(fp.file.path);
     var fos = Components.classes["@mozilla.org/network/file-output-stream;1"].
               createInstance(Components.interfaces.nsIFileOutputStream);

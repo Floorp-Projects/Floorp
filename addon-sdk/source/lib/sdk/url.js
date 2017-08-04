@@ -56,7 +56,7 @@ function resolveResourceURI(uri) {
 
 var fromFilename = exports.fromFilename = function fromFilename(path) {
   var file = Cc['@mozilla.org/file/local;1']
-             .createInstance(Ci.nsILocalFile);
+             .createInstance(Ci.nsIFile);
   file.initWithPath(path);
   return ios.newFileURI(file).spec;
 };

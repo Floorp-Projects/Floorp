@@ -189,7 +189,7 @@ add_task(async function test_json_restore_nonexist() {
   let expectPromises = registerObservers(false);
 
   do_print("JSON restore: nonexistent file should fail");
-  let file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 1");
   try {
     await BookmarkJSONUtils.importFromFile(file, true);
@@ -251,7 +251,7 @@ add_task(async function test_html_restore_nonexist() {
   let expectPromises = registerObservers(false);
 
   do_print("HTML restore: nonexistent file should fail");
-  let file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 2");
   try {
     await BookmarkHTMLUtils.importFromFile(file, false);
@@ -313,7 +313,7 @@ add_task(async function test_html_init_restore_nonexist() {
   let expectPromises = registerObservers(false);
 
   do_print("HTML initial restore: nonexistent file should fail");
-  let file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 3");
   try {
     await BookmarkHTMLUtils.importFromFile(file, true);

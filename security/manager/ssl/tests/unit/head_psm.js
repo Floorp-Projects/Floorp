@@ -217,7 +217,7 @@ function _getLibraryFunctionWithNoArguments(functionName, libraryName,
   } catch (e) {
     // In case opening the library without a full path fails,
     // try again with a full path.
-    let file = Services.dirsvc.get("GreBinD", Ci.nsILocalFile);
+    let file = Services.dirsvc.get("GreBinD", Ci.nsIFile);
     file.append(path);
     nsslib = ctypes.open(file.path);
   }
@@ -469,12 +469,12 @@ function _getBinaryUtil(binaryUtilName) {
   let directoryService = Cc["@mozilla.org/file/directory_service;1"]
                            .getService(Ci.nsIProperties);
 
-  let utilBin = directoryService.get("CurProcD", Ci.nsILocalFile);
+  let utilBin = directoryService.get("CurProcD", Ci.nsIFile);
   utilBin.append(binaryUtilName + mozinfo.bin_suffix);
   // If we're testing locally, the above works. If not, the server executable
   // is in another location.
   if (!utilBin.exists()) {
-    utilBin = directoryService.get("CurWorkD", Ci.nsILocalFile);
+    utilBin = directoryService.get("CurWorkD", Ci.nsIFile);
     while (utilBin.path.indexOf("xpcshell") != -1) {
       utilBin = utilBin.parent;
     }
@@ -527,7 +527,7 @@ function _setupTLSServerTest(serverBinName, certsPath) {
   let serverBin = _getBinaryUtil(serverBinName);
   let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(serverBin);
-  let certDir = directoryService.get("CurWorkD", Ci.nsILocalFile);
+  let certDir = directoryService.get("CurWorkD", Ci.nsIFile);
   certDir.append(`${certsPath}`);
   Assert.ok(certDir.exists(), `certificate folder (${certsPath}) should exist`);
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
@@ -842,7 +842,7 @@ function asyncTestCertificateUsages(certdb, cert, expectedUsages) {
  *                  module gets reported.
  */
 function loadPKCS11TestModule(expectModuleUnloadToFail) {
-  let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsILocalFile);
+  let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   libraryFile.append("pkcs11testmodule");
   libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
   ok(libraryFile.exists(), "The pkcs11testmodule file should exist");

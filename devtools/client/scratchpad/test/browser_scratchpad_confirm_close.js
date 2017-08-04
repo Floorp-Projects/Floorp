@@ -193,7 +193,7 @@ function createTempFile(name)
 {
   let file = FileUtils.getFile("TmpD", [name]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
-  file.QueryInterface(Ci.nsILocalFile);
+  file.QueryInterface(Ci.nsIFile);
   return file;
 }
 
@@ -201,7 +201,7 @@ function writeFile(file, content, callback)
 {
   let fout = Cc["@mozilla.org/network/file-output-stream;1"].
              createInstance(Ci.nsIFileOutputStream);
-  fout.init(file.QueryInterface(Ci.nsILocalFile), 0x02 | 0x08 | 0x20,
+  fout.init(file.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
             0o644, fout.DEFER_OPEN);
 
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].

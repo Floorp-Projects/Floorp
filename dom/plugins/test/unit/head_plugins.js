@@ -20,7 +20,7 @@ function allow_all_plugins() {
 function get_test_plugin(secondplugin=false) {
   var pluginEnum = gDirSvc.get("APluginsDL", Ci.nsISimpleEnumerator);
   while (pluginEnum.hasMoreElements()) {
-    let dir = pluginEnum.getNext().QueryInterface(Ci.nsILocalFile);
+    let dir = pluginEnum.getNext().QueryInterface(Ci.nsIFile);
     let name = get_platform_specific_plugin_name(secondplugin);
     let plugin = dir.clone();
     plugin.append(name);
@@ -56,7 +56,7 @@ function do_get_profile_startup() {
   // the python harness sets this in the environment for us
   let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
   let file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
+                       .createInstance(Components.interfaces.nsIFile);
   file.initWithPath(profd);
 
   let dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
@@ -107,7 +107,7 @@ function get_test_plugin_no_symlink() {
                 .getService(Ci.nsIProperties);
   let pluginEnum = dirSvc.get("APluginsDL", Ci.nsISimpleEnumerator);
   while (pluginEnum.hasMoreElements()) {
-    let dir = pluginEnum.getNext().QueryInterface(Ci.nsILocalFile);
+    let dir = pluginEnum.getNext().QueryInterface(Ci.nsIFile);
     let plugin = dir.clone();
     plugin.append(get_platform_specific_plugin_name());
     if (plugin.exists()) {

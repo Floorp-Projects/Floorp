@@ -583,7 +583,7 @@ function do_get_file(path, allowNonexistent) {
   try {
     let lf = Components.classes["@mozilla.org/file/directory_service;1"]
       .getService(Components.interfaces.nsIProperties)
-      .get("CurWorkD", Components.interfaces.nsILocalFile);
+      .get("CurWorkD", Components.interfaces.nsIFile);
 
     let bits = path.split("/");
     for (let i = 0; i < bits.length; i++) {

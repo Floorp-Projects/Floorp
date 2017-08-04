@@ -846,7 +846,7 @@ function setupTestCommon() {
   }
   grePrefsFile.append("greprefs.js");
   if (!grePrefsFile.exists()) {
-    grePrefsFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    grePrefsFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   }
 
   // Remove the updates directory on Windows and Mac OS X which is located
@@ -1287,12 +1287,12 @@ function getMaintSvcDir() {
 }
 
 /**
- * Get the nsILocalFile for a Windows special folder determined by the CSIDL
+ * Get the nsIFile for a Windows special folder determined by the CSIDL
  * passed.
  *
  * @param   aCSIDL
  *          The CSIDL for the Windows special folder.
- * @return  The nsILocalFile for the Windows special folder.
+ * @return  The nsIFile for the Windows special folder.
  * @throws  If called from a platform other than Windows.
  */
 function getSpecialFolderDir(aCSIDL) {
@@ -1318,7 +1318,7 @@ function getSpecialFolderDir(aCSIDL) {
     return null;
   }
   debugDump("SHGetSpecialFolderPath returned path: " + path);
-  let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   dir.initWithPath(path);
   return dir;
 }
@@ -1441,7 +1441,7 @@ function getMockUpdRootDWin() {
   }
 
   let updatesDir = Cc["@mozilla.org/file/local;1"].
-                   createInstance(Ci.nsILocalFile);
+                   createInstance(Ci.nsIFile);
   updatesDir.initWithPath(localAppDataDir.path + "\\" + relPathUpdates);
   return updatesDir;
 }
@@ -1451,7 +1451,7 @@ XPCOMUtils.defineLazyGetter(this, "gUpdatesRootDir", function test_gURD() {
     do_throw("Mac OS X only function called by a different platform!");
   }
 
-  let dir = Services.dirsvc.get("ULibDir", Ci.nsILocalFile);
+  let dir = Services.dirsvc.get("ULibDir", Ci.nsIFile);
   dir.append("Caches");
   if (MOZ_APP_VENDOR || MOZ_APP_BASENAME) {
     dir.append(MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME);
@@ -1480,7 +1480,7 @@ function getMockUpdRootDMac() {
 
   let pathUpdates = gUpdatesRootDir.path + appDirPath;
   let updatesDir = Cc["@mozilla.org/file/local;1"].
-                   createInstance(Ci.nsILocalFile);
+                   createInstance(Ci.nsIFile);
   updatesDir.initWithPath(pathUpdates);
   return updatesDir;
 }
@@ -2256,7 +2256,7 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
       if (destFile.exists()) {
         destFile.remove(false);
       }
-      let ln = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let ln = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       ln.initWithPath("/bin/ln");
       let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
       process.init(ln);
@@ -2410,7 +2410,7 @@ function getLaunchBin() {
     launchBin.append("cmd.exe");
   } else {
     launchBin = Cc["@mozilla.org/file/local;1"].
-                createInstance(Ci.nsILocalFile);
+                createInstance(Ci.nsIFile);
     launchBin.initWithPath("/bin/sh");
   }
   Assert.ok(launchBin.exists(),
@@ -3700,7 +3700,7 @@ function getProcessArgs(aExtraArgs) {
   if (IS_UNIX) {
     let launchScript = getLaunchScript();
     // Precreate the script with executable permissions
-    launchScript.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_DIRECTORY);
+    launchScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_DIRECTORY);
 
     let scriptContents = "#! /bin/sh\n";
     scriptContents += appBinPath + " -no-remote -test-process-updates " +
@@ -3992,7 +3992,7 @@ function setEnvironment() {
   if (IS_UNIX) {
     let appGreBinDir = gGREBinDirOrig.clone();
     let envGreBinDir = Cc["@mozilla.org/file/local;1"].
-                       createInstance(Ci.nsILocalFile);
+                       createInstance(Ci.nsIFile);
     let shouldSetEnv = true;
     if (IS_MACOSX) {
       if (gEnv.exists("DYLD_LIBRARY_PATH")) {

@@ -1194,7 +1194,7 @@ function interpolateAndServeFile(request, response) {
  * @param  url
  *         the actual URL
  * @param  file
- *         nsILocalFile representing a static file
+ *         nsIFile representing a static file
  */
 function mapUrlToFile(url, file, server) {
   server.registerPathHandler(url, interpolateAndServeFile);

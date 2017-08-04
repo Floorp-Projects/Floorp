@@ -346,7 +346,7 @@ function copyTestUpdater(attempt = 0) {
     try {
       // Copy the test updater
       let baseAppDir = getAppBaseDir();
-      let testUpdaterDir = Services.dirsvc.get("CurWorkD", Ci.nsILocalFile);
+      let testUpdaterDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
       let relPath = REL_PATH_DATA;
       let pathParts = relPath.split("/");
       for (let i = 0; i < pathParts.length; ++i) {
