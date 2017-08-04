@@ -1294,12 +1294,7 @@ nsBaseWidget::CreateCompositorSession(int aWidth,
       if (textureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_WR) {
         retry = true;
         DestroyCompositor();
-        // Disable WebRender
-        gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER).ForceDisable(
-          gfx::FeatureStatus::Unavailable,
-          "WebRender initialization failed",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_INITIALIZE"));
-        gfx::gfxVars::SetUseWebRender(false);
+        gfx::GPUProcessManager::Get()->DisableWebRender();
       }
     }
 

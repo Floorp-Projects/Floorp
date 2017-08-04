@@ -809,7 +809,6 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const ExternalImage
   MOZ_ASSERT(!mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
 
   RefPtr<CompositableHost> host = FindCompositable(aHandle);
-  MOZ_ASSERT(host->AsWebRenderImageHost());
   WebRenderImageHost* wrHost = host->AsWebRenderImageHost();
   if (!wrHost) {
     return IPC_OK();
@@ -1392,7 +1391,7 @@ WebRenderBridgeParent::RecvNewCompositable(const CompositableHandle& aHandle,
   if (mDestroyed) {
     return IPC_OK();
   }
-  if (!AddCompositable(aHandle, aInfo)) {
+  if (!AddCompositable(aHandle, aInfo, /* aUseWebRender */ true)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
