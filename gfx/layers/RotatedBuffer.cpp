@@ -246,7 +246,9 @@ RotatedContentBuffer::DrawTo(PaintedLayer* aLayer,
 DrawTarget*
 RotatedContentBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
                                                         ContextSource aSource,
-                                                        DrawIterator* aIter)
+                                                        DrawIterator* aIter,
+                                                        bool aSetTransform,
+                                                        Matrix* aOutMatrix)
 {
   IntRect bounds = aBounds;
   if (aIter) {
@@ -301,10 +303,17 @@ RotatedContentBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
   NS_ASSERTION(quadrantRect.Contains(bounds), "Messed up quadrants");
 
   mLoanedTransform = mLoanedDrawTarget->GetTransform();
-  mLoanedDrawTarget->SetTransform(Matrix(mLoanedTransform).
-                                    PreTranslate(-quadrantRect.x,
-                                                 -quadrantRect.y));
 
+  Matrix transform = Matrix(mLoanedTransform)
+                          .PreTranslate(-quadrantRect.x,
+                                        -quadrantRect.y);
+
+  if (aSetTransform) {
+    mLoanedDrawTarget->SetTransform(transform);
+  } else {
+    MOZ_ASSERT(aOutMatrix);
+    *aOutMatrix = transform;
+  }
   return mLoanedDrawTarget;
 }
 
@@ -733,14 +742,17 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
 
 DrawTarget*
 RotatedContentBuffer::BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                   DrawIterator* aIter /* = nullptr */)
+                                                   DrawIterator* aIter,
+                                                   gfx::Matrix* aOutMatrix)
 {
+  MOZ_ASSERT(aOutMatrix);
   if (aPaintState.mMode == SurfaceMode::SURFACE_NONE) {
     return nullptr;
   }
 
   DrawTarget* result = BorrowDrawTargetForQuadrantUpdate(aPaintState.mRegionToDraw.GetBounds(),
-                                                         BUFFER_BOTH, aIter);
+                                                         BUFFER_BOTH, aIter,
+                                                         false, aOutMatrix);
   if (!result) {
     return nullptr;
   }
@@ -757,7 +769,7 @@ RotatedContentBuffer::PrepareDrawTargetForPainting(CapturedPaintState* aState)
 
   if (aState->mSurfaceMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     if (!target || !target->IsValid() ||
-        !aState->mTargetOnWhite || !aState->mTargetOnWhite->IsValid()) {
+        !whiteTarget || !whiteTarget->IsValid()) {
       // This can happen in release builds if allocating one of the two buffers
       // failed. This in turn can happen if unreasonably large textures are
       // requested.

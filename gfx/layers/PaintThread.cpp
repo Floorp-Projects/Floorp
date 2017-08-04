@@ -124,6 +124,7 @@ PaintThread::PaintContentsAsync(CompositorBridgeChild* aBridge,
 
   Matrix oldTransform = target->GetTransform();
   target->SetTransform(aState->mTargetTransform);
+  target->SetPermitSubpixelAA(aCapture->GetPermitSubpixelAA());
 
   if (!aCallback(aState)) {
     return;
