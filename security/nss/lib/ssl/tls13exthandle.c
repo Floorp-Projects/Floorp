@@ -896,6 +896,10 @@ tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
     extensions_len = 2 + 2 + 1 +
                      2 * (ss->vrange.max - ss->vrange.min + 1);
 
+    if (ss->opt.enableAltHandshaketype && !IS_DTLS(ss)) {
+        extensions_len += 2;
+    }
+
     if (maxBytes < (PRUint32)extensions_len) {
         PORT_Assert(0);
         return 0;
@@ -913,6 +917,15 @@ tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
         rv = ssl3_ExtAppendHandshakeNumber(ss, extensions_len - 5, 1);
         if (rv != SECSuccess)
             return -1;
+
+        if (ss->opt.enableAltHandshaketype && !IS_DTLS(ss)) {
+            rv = ssl3_ExtAppendHandshakeNumber(
+                ss, tls13_EncodeAltDraftVersion(
+                        SSL_LIBRARY_VERSION_TLS_1_3),
+                2);
+            if (rv != SECSuccess)
+                return -1;
+        }
 
         for (version = ss->vrange.max; version >= ss->vrange.min; --version) {
             rv = ssl3_ExtAppendHandshakeNumber(

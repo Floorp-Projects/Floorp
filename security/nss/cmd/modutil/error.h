@@ -109,7 +109,7 @@ static char *errStrings[] = {
     "ERROR: Failed to change default.\n",
     "ERROR: Unable to read from standard input.\n",
     "ERROR: Unknown error occurred.\n",
-    "ERROR: -nocertdb option can only be used with the -jar command.\n"
+    "ERROR: -nocertdb option can only be used with the -jar command.\n",
     "ERROR: NSS_Initialize() failed.\n"
 };
 

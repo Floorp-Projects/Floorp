@@ -511,3 +511,12 @@ ER3(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA, (SSL_ERROR_BASE + 160),
 
 ER3(SSL_ERROR_TOO_MUCH_EARLY_DATA, (SSL_ERROR_BASE + 161),
     "SSL received more early data than permitted.")
+
+ER3(SSL_ERROR_RX_UNEXPECTED_END_OF_EARLY_DATA, (SSL_ERROR_BASE + 162),
+    "SSL received an unexpected End of Early Data message.")
+
+ER3(SSL_ERROR_RX_MALFORMED_END_OF_EARLY_DATA, (SSL_ERROR_BASE + 163),
+    "SSL received a malformed End of Early Data message.")
+
+ER3(SSL_ERROR_UNSUPPORTED_EXPERIMENTAL_API, (SSL_ERROR_BASE + 164),
+    "An experimental API was called, but not supported.")
