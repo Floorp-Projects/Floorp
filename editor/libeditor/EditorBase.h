@@ -781,6 +781,14 @@ public:
   }
 
   /**
+   * Returns true if selection is in an editable element and both the range
+   * start and the range end are editable.  E.g., even if the selection range
+   * includes non-editable elements, returns true when one of common ancestors
+   * of the range start and the range end is editable.  Otherwise, false.
+   */
+  bool IsSelectionEditable();
+
+  /**
    * Returns true if aNode is a MozEditorBogus node.
    */
   bool IsMozEditorBogusNode(nsINode* aNode)
