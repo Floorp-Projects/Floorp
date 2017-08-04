@@ -1039,6 +1039,44 @@ set_define('HAVE_VISIBILITY_ATTRIBUTE',
 set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
+@depends(c_compiler)
+@imports('multiprocessing')
+@imports(_from='__builtin__', _import='min')
+def pgo_flags(compiler):
+    if compiler.type in ('gcc', 'clang'):
+        return namespace(
+            gen_cflags=['-fprofile-generate'],
+            gen_ldflags=['-fprofile-generate'],
+            use_cflags=['-fprofile-use', '-fprofile-correction',
+                        '-Wcoverage-mismatch'],
+            use_ldflags=['-fprofile-use'],
+        )
+
+    if compiler.type == 'msvc':
+        num_cores = min(8, multiprocessing.cpu_count())
+        cgthreads = '-CGTHREADS:%s' % num_cores
+
+        return namespace(
+            gen_cflags=['-GL'],
+            gen_ldflags=['-LTCG:PGINSTRUMENT', '-PogoSafeMode', cgthreads],
+            # XXX: PGO builds can fail with warnings treated as errors,
+            # specifically "no profile data available" appears to be
+            # treated as an error sometimes. This might be a consequence
+            # of using WARNINGS_AS_ERRORS in some modules, combined
+            # with the linker doing most of the work in the whole-program
+            # optimization/PGO case. I think it's probably a compiler bug,
+            # but we work around it here.
+            use_cflags=['-GL', '-wd4624', '-wd4952'],
+            # XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
+            # Probably also a compiler bug, but what can you do?
+            use_ldflags=['-LTCG:PGUPDATE', cgthreads],
+        )
+
+set_config('PROFILE_GEN_CFLAGS', pgo_flags.gen_cflags)
+set_config('PROFILE_GEN_LDFLAGS', pgo_flags.gen_ldflags)
+set_config('PROFILE_USE_CFLAGS', pgo_flags.use_cflags)
+set_config('PROFILE_USE_LDFLAGS', pgo_flags.use_ldflags)
+
 # We only want to include windows.configure when we are compiling on
 # Windows, for Windows.
 @depends(target, host)
