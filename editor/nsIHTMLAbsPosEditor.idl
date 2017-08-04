@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-[scriptable, uuid(91375f52-20e6-4757-9835-eb04fabe5498)]
+[scriptable, builtinclass, uuid(91375f52-20e6-4757-9835-eb04fabe5498)]
 
 interface nsIHTMLAbsPosEditor : nsISupports
 {
