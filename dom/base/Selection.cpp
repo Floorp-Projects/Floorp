@@ -132,48 +132,6 @@ ToChar(SelectionType aSelectionType)
   }
 }
 
-static bool
-IsValidSelectionType(RawSelectionType aRawSelectionType)
-{
-  switch (static_cast<SelectionType>(aRawSelectionType)) {
-    case SelectionType::eNone:
-    case SelectionType::eNormal:
-    case SelectionType::eSpellCheck:
-    case SelectionType::eIMERawClause:
-    case SelectionType::eIMESelectedRawClause:
-    case SelectionType::eIMEConvertedClause:
-    case SelectionType::eIMESelectedClause:
-    case SelectionType::eAccessibility:
-    case SelectionType::eFind:
-    case SelectionType::eURLSecondary:
-    case SelectionType::eURLStrikeout:
-      return true;
-    default:
-      return false;
-  }
-}
-
-SelectionType
-ToSelectionType(RawSelectionType aRawSelectionType)
-{
-  if (!IsValidSelectionType(aRawSelectionType)) {
-    return SelectionType::eInvalid;
-  }
-  return static_cast<SelectionType>(aRawSelectionType);
-}
-
-RawSelectionType
-ToRawSelectionType(SelectionType aSelectionType)
-{
-  return static_cast<RawSelectionType>(aSelectionType);
-}
-
-bool operator &(SelectionType aSelectionType,
-                RawSelectionType aRawSelectionTypes)
-{
-  return (ToRawSelectionType(aSelectionType) & aRawSelectionTypes) != 0;
-}
-
 } // namespace mozilla
 
 //#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.

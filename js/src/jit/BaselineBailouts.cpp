@@ -1091,7 +1091,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 enterMonitorChain = true;
         }
 
-        uint32_t numUses = js::StackUses(script, pc);
+        uint32_t numUses = js::StackUses(pc);
 
         if (resumeAfter && !enterMonitorChain)
             pc = GetNextPc(pc);

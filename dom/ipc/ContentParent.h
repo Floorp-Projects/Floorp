@@ -346,6 +346,8 @@ public:
 
   bool RequestRunToCompletion();
 
+  void UpdateCookieStatus(nsIChannel *aChannel);
+
   bool IsAvailable() const
   {
     return mIsAvailable;

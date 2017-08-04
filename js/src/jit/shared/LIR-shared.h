@@ -4111,6 +4111,26 @@ class LFromCodePoint : public LInstructionHelper<1, 1, 2>
     }
 };
 
+// Calls the ToLowerCase or ToUpperCase case conversion function.
+class LStringConvertCase : public LCallInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(StringConvertCase)
+
+    explicit LStringConvertCase(const LAllocation& string)
+    {
+        setOperand(0, string);
+    }
+
+    const MStringConvertCase* mir() const {
+        return mir_->toStringConvertCase();
+    }
+
+    const LAllocation* string() {
+        return this->getOperand(0);
+    }
+};
+
 // Calculates sincos(x) and returns two values (sin/cos).
 class LSinCos : public LCallInstructionHelper<2, 1, 2>
 {

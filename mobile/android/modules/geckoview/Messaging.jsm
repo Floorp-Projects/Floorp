@@ -31,8 +31,9 @@ function sendMessageToJava(aMessage, aCallback) {
   }
 }
 
-function DispatcherDelegate(dispatcher) {
-  this._dispatcher = dispatcher;
+function DispatcherDelegate(aDispatcher, aMessageManager) {
+  this._dispatcher = aDispatcher;
+  this._messageManager = aMessageManager;
 }
 
 DispatcherDelegate.prototype = {
@@ -43,7 +44,7 @@ DispatcherDelegate.prototype = {
    * @param events   String or array of strings of events to listen to.
    */
   registerListener: function (listener, events) {
-    if (!IS_PARENT_PROCESS) {
+    if (!this._dispatcher) {
       throw new Error("Can only listen in parent process");
     }
     this._dispatcher.registerListener(listener, events);
@@ -56,7 +57,7 @@ DispatcherDelegate.prototype = {
    * @param events   String or array of strings of events to stop listening to.
    */
   unregisterListener: function (listener, events) {
-    if (!IS_PARENT_PROCESS) {
+    if (!this._dispatcher) {
       throw new Error("Can only listen in parent process");
     }
     this._dispatcher.unregisterListener(listener, events);
@@ -72,34 +73,35 @@ DispatcherDelegate.prototype = {
    * @param callback Optional callback implementing nsIAndroidEventCallback.
    */
   dispatch: function (event, data, callback) {
-    if (!IS_PARENT_PROCESS) {
-      let mm = this._dispatcher || Services.cpmm;
-      let data = {
-        global: !this._dispatcher,
-        event: event,
-        data: data,
-      };
-
-      if (callback) {
-        data.uuid = UUIDGen.generateUUID().toString();
-        mm.addMessageListener("GeckoView:MessagingReply", function listener(msg) {
-          if (msg.data.uuid === data.uuid) {
-            mm.removeMessageListener(msg.name, listener);
-            if (msg.data.type === "success") {
-              callback.onSuccess(msg.data.response);
-            } else if (msg.data.type === "error") {
-              callback.onError(msg.data.response);
-            } else {
-              throw new Error("invalid reply type");
-            }
-          }
-        });
-      }
-
-      mm.sendAsyncMessage("GeckoView:Messaging", data);
+    if (this._dispatcher) {
+      this._dispatcher.dispatch(event, data, callback);
       return;
     }
-    this._dispatcher.dispatch(event, data, callback);
+
+    let mm = this._messageManager || Services.cpmm;
+    let forwardData = {
+      global: !this._messageManager,
+      event: event,
+      data: data,
+    };
+
+    if (callback) {
+      forwardData.uuid = UUIDGen.generateUUID().toString();
+      mm.addMessageListener("GeckoView:MessagingReply", function listener(msg) {
+        if (msg.data.uuid === forwardData.uuid) {
+          mm.removeMessageListener(msg.name, listener);
+          if (msg.data.type === "success") {
+            callback.onSuccess(msg.data.response);
+          } else if (msg.data.type === "error") {
+            callback.onError(msg.data.response);
+          } else {
+            throw new Error("invalid reply type");
+          }
+        }
+      });
+    }
+
+    mm.sendAsyncMessage("GeckoView:Messaging", forwardData);
   },
 
   /**
@@ -214,19 +216,24 @@ DispatcherDelegate.prototype = {
 var EventDispatcher = {
   instance: new DispatcherDelegate(IS_PARENT_PROCESS ? Services.androidBridge : undefined),
 
-  for: function (window) {
-    if (!IS_PARENT_PROCESS) {
-      if (!window.messageManager) {
-        throw new Error("window does not have message manager");
-      }
-      return new DispatcherDelegate(window.messageManager);
-    }
-    let view = window && window.arguments && window.arguments[0] &&
-        window.arguments[0].QueryInterface(Ci.nsIAndroidView);
+  for: function (aWindow) {
+    let view = aWindow && aWindow.arguments && aWindow.arguments[0] &&
+               aWindow.arguments[0].QueryInterface(Ci.nsIAndroidView);
+
     if (!view) {
-      throw new Error("window is not a GeckoView-connected window");
+      let mm = aWindow && aWindow.messageManager;
+      if (!mm) {
+        throw new Error("window is not a GeckoView-connected window and does" +
+                        " not have a message manager");
+      }
+      return this.forMessageManager(mm);
     }
+
     return new DispatcherDelegate(view);
+  },
+
+  forMessageManager: function (aMessageManager) {
+    return new DispatcherDelegate(null, aMessageManager);
   },
 
   receiveMessage: function (aMsg) {
@@ -252,7 +259,7 @@ var EventDispatcher = {
       return;
     }
 
-    let win = aMsg.target.contentWindow || aMsg.target.ownerGlobal;
+    let win = aMsg.target.ownerGlobal;
     let dispatcher = win.WindowEventDispatcher || this.for(win);
     dispatcher.dispatch(aMsg.data.event, aMsg.data.data, callback);
   },

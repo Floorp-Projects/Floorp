@@ -69,7 +69,7 @@
 #endif
 
   <html:link rel="shortcut icon"
-              href="chrome://browser/skin/preferences/in-content/favicon.ico"/>
+              href="chrome://browser/skin/settings.svg"/>
 
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>

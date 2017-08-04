@@ -7,6 +7,7 @@
 
 include protocol PNecko;
 include URIParams;
+include NeckoChannelParams;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
@@ -100,7 +101,27 @@ parent:
                                             OriginAttributes attrs,
                                             bool aFromHttp);
 
+  async PrepareCookieList(URIParams host,
+                          bool isForeign,
+                          OriginAttributes attrs);
+
   async __delete__();
+
+child:
+  async TrackCookiesLoad(CookieStruct[] cookiesList,
+                         OriginAttributes attrs);
+
+  async RemoveCookie(CookieStruct cookie,
+                     OriginAttributes attrs);
+
+  async RemoveBatchDeletedCookies(CookieStruct[] cookiesList,
+                                  OriginAttributes[] attrsList);
+
+  async RemoveAll();
+
+  async AddCookie(CookieStruct cookie,
+                  OriginAttributes attrs);
+
 };
 
 }

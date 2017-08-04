@@ -109,6 +109,7 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "ReferrerPolicy.h"
 #include "mozilla/dom/HTMLLabelElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2419,6 +2420,40 @@ void nsGenericHTMLFormElement::UpdateDisabledState(bool aNotify)
 
   EventStates oldDisabledStates = State() & DISABLED_STATES;
   EventStates changedStates = disabledStates ^ oldDisabledStates;
+
+  if (!changedStates.IsEmpty()) {
+    ToggleStates(changedStates, aNotify);
+  }
+}
+
+void
+nsGenericHTMLFormElement::UpdateRequiredState(bool aIsRequired, bool aNotify)
+{
+#ifdef DEBUG
+  int32_t type = ControlType();
+#endif
+  MOZ_ASSERT((type & NS_FORM_INPUT_ELEMENT) ||
+              type == NS_FORM_SELECT ||
+              type == NS_FORM_TEXTAREA,
+             "This should be called only on types that @required applies");
+
+#ifdef DEBUG
+  HTMLInputElement* input = HTMLInputElement::FromContent(this);
+  if (input) {
+    MOZ_ASSERT(input->DoesRequiredApply(),
+               "This should be called only on input types that @required applies");
+  }
+#endif
+
+  EventStates requiredStates;
+  if (aIsRequired) {
+    requiredStates |= NS_EVENT_STATE_REQUIRED;
+  } else {
+    requiredStates |= NS_EVENT_STATE_OPTIONAL;
+  }
+
+  EventStates oldRequiredStates = State() & REQUIRED_STATES;
+  EventStates changedStates = requiredStates ^ oldRequiredStates;
 
   if (!changedStates.IsEmpty()) {
     ToggleStates(changedStates, aNotify);

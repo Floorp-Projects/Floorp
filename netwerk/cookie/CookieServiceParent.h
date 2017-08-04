@@ -8,6 +8,8 @@
 
 #include "mozilla/net/PCookieServiceParent.h"
 
+class nsCookie;
+class nsICookie;
 class nsCookieService;
 namespace mozilla { class OriginAttributes; }
 
@@ -19,6 +21,16 @@ class CookieServiceParent : public PCookieServiceParent
 public:
   CookieServiceParent();
   virtual ~CookieServiceParent();
+
+  void TrackCookieLoad(nsIChannel *aChannel);
+
+  void RemoveBatchDeletedCookies(nsIArray *aCookieList);
+
+  void RemoveAll();
+
+  void RemoveCookie(nsICookie *aCookie);
+
+  void AddCookie(nsICookie *aCookie);
 
 protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -34,6 +46,15 @@ protected:
                                                       const nsCString& aServerTime,
                                                       const OriginAttributes& aAttrs,
                                                       const bool& aFromHttp) override;
+  virtual
+  mozilla::ipc::IPCResult RecvPrepareCookieList(const URIParams &aHost,
+                                                const bool &aIsForeign,
+                                                const OriginAttributes &aAttrs) override;
+
+  void
+  SerialializeCookieList(const nsTArray<nsCookie*> &aFoundCookieList,
+                         nsTArray<CookieStruct> &aCookiesList,
+                         nsIURI *aHostURI);
 
   RefPtr<nsCookieService> mCookieService;
 };

@@ -800,13 +800,13 @@ MDefinition::emptyResultTypeSet() const
 MConstant*
 MConstant::New(TempAllocator& alloc, const Value& v, CompilerConstraintList* constraints)
 {
-    return new(alloc) MConstant(v, constraints);
+    return new(alloc) MConstant(alloc, v, constraints);
 }
 
 MConstant*
 MConstant::New(TempAllocator::Fallible alloc, const Value& v, CompilerConstraintList* constraints)
 {
-    return new(alloc) MConstant(v, constraints);
+    return new(alloc) MConstant(alloc.alloc, v, constraints);
 }
 
 MConstant*
@@ -839,7 +839,8 @@ MConstant::NewConstraintlessObject(TempAllocator& alloc, JSObject* v)
 }
 
 static TemporaryTypeSet*
-MakeSingletonTypeSetFromKey(CompilerConstraintList* constraints, TypeSet::ObjectKey* key)
+MakeSingletonTypeSetFromKey(TempAllocator& tempAlloc, CompilerConstraintList* constraints,
+                            TypeSet::ObjectKey* key)
 {
     // Invalidate when this object's ObjectGroup gets unknown properties. This
     // happens for instance when we mutate an object's __proto__, in this case
@@ -848,26 +849,26 @@ MakeSingletonTypeSetFromKey(CompilerConstraintList* constraints, TypeSet::Object
     MOZ_ASSERT(constraints);
     (void)key->hasStableClassAndProto(constraints);
 
-    LifoAlloc* alloc = GetJitContext()->temp->lifoAlloc();
+    LifoAlloc* alloc = tempAlloc.lifoAlloc();
     return alloc->new_<TemporaryTypeSet>(alloc, TypeSet::ObjectType(key));
 }
 
 TemporaryTypeSet*
-jit::MakeSingletonTypeSet(CompilerConstraintList* constraints, JSObject* obj)
+jit::MakeSingletonTypeSet(TempAllocator& alloc, CompilerConstraintList* constraints, JSObject* obj)
 {
-    return MakeSingletonTypeSetFromKey(constraints, TypeSet::ObjectKey::get(obj));
+    return MakeSingletonTypeSetFromKey(alloc, constraints, TypeSet::ObjectKey::get(obj));
 }
 
 TemporaryTypeSet*
-jit::MakeSingletonTypeSet(CompilerConstraintList* constraints, ObjectGroup* obj)
+jit::MakeSingletonTypeSet(TempAllocator& alloc, CompilerConstraintList* constraints, ObjectGroup* obj)
 {
-    return MakeSingletonTypeSetFromKey(constraints, TypeSet::ObjectKey::get(obj));
+    return MakeSingletonTypeSetFromKey(alloc, constraints, TypeSet::ObjectKey::get(obj));
 }
 
 static TemporaryTypeSet*
-MakeUnknownTypeSet()
+MakeUnknownTypeSet(TempAllocator& tempAlloc)
 {
-    LifoAlloc* alloc = GetJitContext()->temp->lifoAlloc();
+    LifoAlloc* alloc = tempAlloc.lifoAlloc();
     return alloc->new_<TemporaryTypeSet>(alloc, TypeSet::UnknownType());
 }
 
@@ -891,7 +892,7 @@ jit::IonCompilationCanUseNurseryPointers()
 
 #endif // DEBUG
 
-MConstant::MConstant(const js::Value& vp, CompilerConstraintList* constraints)
+MConstant::MConstant(TempAllocator& alloc, const js::Value& vp, CompilerConstraintList* constraints)
 {
     setResultType(MIRTypeFromValue(vp));
 
@@ -922,7 +923,7 @@ MConstant::MConstant(const js::Value& vp, CompilerConstraintList* constraints)
         // Create a singleton type set for the object. This isn't necessary for
         // other types as the result type encodes all needed information.
         MOZ_ASSERT_IF(IsInsideNursery(&vp.toObject()), IonCompilationCanUseNurseryPointers());
-        setResultTypeSet(MakeSingletonTypeSet(constraints, &vp.toObject()));
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, &vp.toObject()));
         break;
       case MIRType::MagicOptimizedArguments:
       case MIRType::MagicOptimizedOut:
@@ -937,7 +938,7 @@ MConstant::MConstant(const js::Value& vp, CompilerConstraintList* constraints)
         //
         // TODO We could track uninitialized lexicals more precisely by tracking
         // them in type sets.
-        setResultTypeSet(MakeUnknownTypeSet());
+        setResultTypeSet(MakeUnknownTypeSet(alloc));
         break;
       default:
         MOZ_CRASH("Unexpected type");
@@ -5119,8 +5120,9 @@ MArgumentState::Copy(TempAllocator& alloc, MArgumentState* state)
     return res;
 }
 
-MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t length, MConstant* templateConst,
-                     gc::InitialHeap initialHeap, jsbytecode* pc, bool vmCall)
+MNewArray::MNewArray(TempAllocator& alloc, CompilerConstraintList* constraints, uint32_t length,
+                     MConstant* templateConst, gc::InitialHeap initialHeap, jsbytecode* pc,
+                     bool vmCall)
   : MUnaryInstruction(templateConst),
     length_(length),
     initialHeap_(initialHeap),
@@ -5130,7 +5132,7 @@ MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t length, MCons
 {
     setResultType(MIRType::Object);
     if (templateObject()) {
-        if (TemporaryTypeSet* types = MakeSingletonTypeSet(constraints, templateObject())) {
+        if (TemporaryTypeSet* types = MakeSingletonTypeSet(alloc, constraints, templateObject())) {
             setResultTypeSet(types);
             if (types->convertDoubleElements(constraints) == TemporaryTypeSet::AlwaysConvertToDoubles)
                 convertDoubleElements_ = true;
@@ -5536,9 +5538,9 @@ InlinePropertyTable::hasObjectGroup(ObjectGroup* group) const
 }
 
 TemporaryTypeSet*
-InlinePropertyTable::buildTypeSetForFunction(JSFunction* func) const
+InlinePropertyTable::buildTypeSetForFunction(TempAllocator& tempAlloc, JSFunction* func) const
 {
-    LifoAlloc* alloc = GetJitContext()->temp->lifoAlloc();
+    LifoAlloc* alloc = tempAlloc.lifoAlloc();
     TemporaryTypeSet* types = alloc->new_<TemporaryTypeSet>();
     if (!types)
         return nullptr;
@@ -6170,6 +6172,7 @@ PropertyReadNeedsTypeBarrier(CompilerConstraintList* constraints,
 
 BarrierKind
 jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
+                                  TempAllocator& alloc,
                                   CompilerConstraintList* constraints,
                                   TypeSet::ObjectKey* key, PropertyName* name,
                                   TemporaryTypeSet* observed, bool updateObserved)
@@ -6198,7 +6201,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                     break;
                 if (types.length() == 1) {
                     // Note: the return value here is ignored.
-                    observed->addType(types[0], GetJitContext()->temp->lifoAlloc());
+                    observed->addType(types[0], alloc.lifoAlloc());
                 }
                 break;
             }
@@ -6214,6 +6217,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
 
 BarrierKind
 jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
+                                  TempAllocator& alloc,
                                   CompilerConstraintList* constraints,
                                   MDefinition* obj, PropertyName* name,
                                   TemporaryTypeSet* observed)
@@ -6230,8 +6234,8 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
     bool updateObserved = types->getObjectCount() == 1;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         if (TypeSet::ObjectKey* key = types->getObject(i)) {
-            BarrierKind kind = PropertyReadNeedsTypeBarrier(propertycx, constraints, key, name,
-                                                            observed, updateObserved);
+            BarrierKind kind = PropertyReadNeedsTypeBarrier(propertycx, alloc, constraints, key,
+                                                            name, observed, updateObserved);
             if (kind == BarrierKind::TypeSet)
                 return BarrierKind::TypeSet;
 
@@ -6317,13 +6321,13 @@ jit::PropertyReadIsIdempotent(CompilerConstraintList* constraints,
 }
 
 void
-jit::AddObjectsForPropertyRead(MDefinition* obj, PropertyName* name,
+jit::AddObjectsForPropertyRead(TempAllocator& tempAlloc, MDefinition* obj, PropertyName* name,
                                TemporaryTypeSet* observed)
 {
     // Add objects to observed which *could* be observed by reading name from obj,
     // to hopefully avoid unnecessary type barriers and code invalidations.
 
-    LifoAlloc* alloc = GetJitContext()->temp->lifoAlloc();
+    LifoAlloc* alloc = tempAlloc.lifoAlloc();
 
     TemporaryTypeSet* types = obj->resultTypeSet();
     if (!types || types->unknownObject()) {

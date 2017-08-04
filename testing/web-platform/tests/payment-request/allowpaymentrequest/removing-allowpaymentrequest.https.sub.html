@@ -13,7 +13,7 @@ async_test((t) => {
   const path = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
   iframe.src = "https://{{domains[www1]}}:{{ports[https][0]}}" + path + "echo-PaymentRequest.html";
   iframe.onload = t.step_func(() => {
-    if (i === 0) {
+    if (i === 1) {
       iframe.allowPaymentRequest = false;
     }
     iframe.contentWindow.postMessage('What is the result of new PaymentRequest(...)?', '*');

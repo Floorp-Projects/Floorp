@@ -251,10 +251,11 @@ function doSignalingHandshake(localPc, remotePc) {
 // It does the heavy lifting of performing signaling handshake,
 // ICE candidate exchange, and waiting for data channel at two
 // end points to open.
-function createDataChannelPair() {
-  const pc1 = new RTCPeerConnection();
-  const pc2 = new RTCPeerConnection();
-  const channel1 = pc1.createDataChannel('test');
+function createDataChannelPair(
+  pc1=new RTCPeerConnection(),
+  pc2=new RTCPeerConnection())
+{
+  const channel1 = pc1.createDataChannel('');
 
   exchangeIceCandidates(pc1, pc2);
 
@@ -278,7 +279,7 @@ function createDataChannelPair() {
     }
 
     function onDataChannel(event) {
-      channel2 = event.channel
+      channel2 = event.channel;
       channel2.addEventListener('error', reject);
       const { readyState } = channel2;
 
@@ -371,4 +372,19 @@ function generateMediaStreamTrack(kind) {
     'Expect receiver track to be instance of MediaStreamTrack');
 
   return track;
+}
+
+// Obtain a MediaStreamTrack of kind using getUserMedia.
+// Return Promise of pair of track and associated mediaStream.
+// Assumes that there is at least one available device
+// to generate the track.
+function getTrackFromUserMedia(kind) {
+  return navigator.mediaDevices.getUserMedia({ [kind]: true })
+  .then(mediaStream => {
+    const tracks = mediaStream.getTracks();
+    assert_greater_than(tracks.length, 0,
+      `Expect getUserMedia to return at least one track of kind ${kind}`);
+    const [ track ] = tracks;
+    return [track, mediaStream];
+  });
 }

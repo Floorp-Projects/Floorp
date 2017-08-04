@@ -28,6 +28,12 @@ your `test-topic` is probably too broad!)
 In csswg-test, the file names should be unique within the repository,
 regardless of where they are in the directory structure.
 
+### HTTPS
+
+By default tests are served over plain http. If a test requires https
+it must be given a filename containing `.https` before the extension,
+e.g. `test-secure.https.html`. For more details see the documentation
+on [file names](file-name-flags).
 
 #### Support Files
 
@@ -178,3 +184,4 @@ for CSS have some additional requirements for:
 [lint-tool]: {{ site.baseurl }}{% link _writing-tests/lint-tool.md %}
 [css-metadata]: {{ site.baseurl }}{% link _writing-tests/css-metadata.md %}
 [css-user-styles]: {{ site.baseurl }}{% link _writing-tests/css-user-styles.md %}
+[file-name-flags]: {{ site.baseurl }}{% link _writing-tests/file-names.md %}

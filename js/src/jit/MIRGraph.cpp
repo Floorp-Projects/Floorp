@@ -21,6 +21,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
                            TempAllocator* alloc, MIRGraph* graph, const CompileInfo* info,
                            const OptimizationInfo* optimizationInfo)
   : compartment(compartment),
+    runtime(compartment ? compartment->runtime() : nullptr),
     info_(info),
     optimizationInfo_(optimizationInfo),
     alloc_(alloc),
@@ -662,21 +663,6 @@ MBasicBlock::initEntrySlots(TempAllocator& alloc)
     return true;
 }
 
-MDefinition*
-MBasicBlock::getSlot(uint32_t index)
-{
-    MOZ_ASSERT(index < stackPosition_);
-    return slots_[index];
-}
-
-void
-MBasicBlock::initSlot(uint32_t slot, MDefinition* ins)
-{
-    slots_[slot] = ins;
-    if (entryResumePoint())
-        entryResumePoint()->initOperand(slot, ins);
-}
-
 void
 MBasicBlock::shimmySlots(int discardDepth)
 {
@@ -740,94 +726,11 @@ MBasicBlock::linkOsrValues(MStart* start)
 }
 
 void
-MBasicBlock::setSlot(uint32_t slot, MDefinition* ins)
-{
-    slots_[slot] = ins;
-}
-
-void
-MBasicBlock::setVariable(uint32_t index)
-{
-    MOZ_ASSERT(stackPosition_ > info_.firstStackSlot());
-    setSlot(index, slots_[stackPosition_ - 1]);
-}
-
-void
-MBasicBlock::setArg(uint32_t arg)
-{
-    setVariable(info_.argSlot(arg));
-}
-
-void
-MBasicBlock::setLocal(uint32_t local)
-{
-    setVariable(info_.localSlot(local));
-}
-
-void
-MBasicBlock::setSlot(uint32_t slot)
-{
-    setVariable(slot);
-}
-
-void
-MBasicBlock::rewriteSlot(uint32_t slot, MDefinition* ins)
-{
-    setSlot(slot, ins);
-}
-
-void
 MBasicBlock::rewriteAtDepth(int32_t depth, MDefinition* ins)
 {
     MOZ_ASSERT(depth < 0);
     MOZ_ASSERT(stackPosition_ + depth >= info_.firstStackSlot());
     rewriteSlot(stackPosition_ + depth, ins);
-}
-
-void
-MBasicBlock::push(MDefinition* ins)
-{
-    MOZ_ASSERT(stackPosition_ < nslots());
-    slots_[stackPosition_++] = ins;
-}
-
-void
-MBasicBlock::pushVariable(uint32_t slot)
-{
-    push(slots_[slot]);
-}
-
-void
-MBasicBlock::pushArg(uint32_t arg)
-{
-    pushVariable(info_.argSlot(arg));
-}
-
-void
-MBasicBlock::pushLocal(uint32_t local)
-{
-    pushVariable(info_.localSlot(local));
-}
-
-void
-MBasicBlock::pushSlot(uint32_t slot)
-{
-    pushVariable(slot);
-}
-
-MDefinition*
-MBasicBlock::pop()
-{
-    MOZ_ASSERT(stackPosition_ > info_.firstStackSlot());
-    return slots_[--stackPosition_];
-}
-
-void
-MBasicBlock::popn(uint32_t n)
-{
-    MOZ_ASSERT(stackPosition_ - n >= info_.firstStackSlot());
-    MOZ_ASSERT(stackPosition_ >= stackPosition_ - n);
-    stackPosition_ -= n;
 }
 
 MDefinition*
@@ -888,14 +791,6 @@ MBasicBlock::swapAt(int32_t depth)
     MDefinition* temp = slots_[lhsDepth];
     slots_[lhsDepth] = slots_[rhsDepth];
     slots_[rhsDepth] = temp;
-}
-
-MDefinition*
-MBasicBlock::peek(int32_t depth)
-{
-    MOZ_ASSERT(depth < 0);
-    MOZ_ASSERT(stackPosition_ + depth >= info_.firstStackSlot());
-    return getSlot(stackPosition_ + depth);
 }
 
 void
@@ -1135,24 +1030,6 @@ MBasicBlock::insertAtEnd(MInstruction* ins)
         insertBefore(lastIns(), ins);
     else
         add(ins);
-}
-
-void
-MBasicBlock::add(MInstruction* ins)
-{
-    MOZ_ASSERT(!hasLastIns());
-    ins->setBlock(this);
-    graph().allocDefinitionId(ins);
-    instructions_.pushBack(ins);
-    ins->setTrackedSite(trackedSite_);
-}
-
-void
-MBasicBlock::end(MControlInstruction* ins)
-{
-    MOZ_ASSERT(!hasLastIns()); // Existing control instructions should be removed first.
-    MOZ_ASSERT(ins);
-    add(ins);
 }
 
 void
@@ -1458,20 +1335,6 @@ MBasicBlock::setLoopHeader(MBasicBlock* newBackedge)
 
     MOZ_ASSERT(newBackedge->loopHeaderOfBackedge() == this);
     MOZ_ASSERT(backedge() == newBackedge);
-}
-
-size_t
-MBasicBlock::numSuccessors() const
-{
-    MOZ_ASSERT(lastIns());
-    return lastIns()->numSuccessors();
-}
-
-MBasicBlock*
-MBasicBlock::getSuccessor(size_t index) const
-{
-    MOZ_ASSERT(lastIns());
-    return lastIns()->getSuccessor(index);
 }
 
 size_t

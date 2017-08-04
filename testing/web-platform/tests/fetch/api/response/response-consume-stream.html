@@ -65,7 +65,7 @@ test(function() {
 }, "Getting an error Response stream");
 
 promise_test(function(test) {
-    assert_equals(Response.redirect(301).body, null);
+    assert_equals(Response.redirect("/").body, null);
 }, "Getting a redirect Response stream");
 
     </script>

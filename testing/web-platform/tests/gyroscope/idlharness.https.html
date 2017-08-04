@@ -39,7 +39,7 @@ interface Sensor : EventTarget {
   readonly attribute DOMHighResTimeStamp? timestamp;
   void start();
   void stop();
-  attribute EventHandler onchange;
+  attribute EventHandler onreading;
   attribute EventHandler onactivate;
   attribute EventHandler onerror;
 };
