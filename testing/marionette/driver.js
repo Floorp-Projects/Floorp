@@ -659,7 +659,114 @@ GeckoDriver.prototype.listeningPromise = function() {
   });
 };
 
-/** Create a new session. */
+/**
+ * Create a new WebDriver session.
+ *
+ * It is expected that the caller performs the necessary checks on
+ * the requested capabilities to be WebDriver conforming.  The WebDriver
+ * service offered by Marionette does not match or negotiate capabilities
+ * beyond type- and bounds checks.
+ *
+ * <h3>Capabilities</h3>
+ *
+ * <dl>
+ *  <dt><code>pageLoadStrategy</code> (string)
+ *  <dd>The page load strategy to use for the current session.  Must be
+ *   one of "<tt>none</tt>", "<tt>eager</tt>", and "<tt>normal</tt>".
+ *
+ *  <dt><code>acceptInsecureCerts</code> (boolean)
+ *  <dd>Indicates whether untrusted and self-signed TLS certificates
+ *   are implicitly trusted on navigation for the duration of the session.
+ *
+ *  <dt><code>timeouts</code> (Timeouts object)
+ *  <dd>Describes the timeouts imposed on certian session operations.
+ *
+ *  <dt><code>proxy</code> (Proxy object)
+ *  <dd>Defines the proxy configuration.
+ *
+ *  <dt><code>specificationLevel</code> (number)
+ *  <dd>If set to 1, a WebDriver conforming <i>WebDriver::ElementClick</i>
+ *   implementation will be used.
+ *
+ *  <dt><code>moz:accessibilityChecks</code> (boolean)
+ *  <dd>Run a11y checks when clicking elements.
+ * </dl>
+ *
+ * <h4>Timeouts object</h4>
+ *
+ * <dl>
+ *  <dt><code>script</code> (number)
+ *  <dd>Determines when to interrupt a script that is being evaluates.
+ *
+ *  <dt><code>pageLoad</code> (number)
+ *  <dd>Provides the timeout limit used to interrupt navigation of the
+ *   browsing context.
+ *
+ *  <dt><code>implicit</code> (number)
+ *  <dd>Gives the timeout of when to abort when locating an element.
+ * </dl>
+ *
+ * <h4>Proxy object</h4>
+ *
+ * <dl>
+ *  <dt><code>proxyType</code> (string)
+ *  <dd>Indicates the type of proxy configuration.  Must be one
+ *   of "<tt>pac</tt>", "<tt>direct</tt>", "<tt>autodetect</tt>",
+ *   "<tt>system</tt>", or "<tt>manual</tt>".
+ *
+ *  <dt><code>proxyAutoconfigUrl</code> (string)
+ *  <dd>Defines the URL for a proxy auto-config file if
+ *   <code>proxyType</code> is equal to "<tt>pac</tt>".
+ *
+ *  <dt><code>ftpProxy</code> (string)
+ *  <dd>Defines the proxy host for FTP traffic when the
+ *   <code>proxyType</code> is "<tt>manual</tt>".
+ *
+ *  <dt><code>httpProxy</code> (string)
+ *  <dd>Defines the proxy host for HTTP traffic when the
+ *   <code>proxyType</code> is "<tt>manual</tt>".
+ *
+ *  <dt><code>noProxy</code> (string)
+ *  <dd>Lists the adress for which the proxy should be bypassed when
+ *   the <code>proxyType</code> is "<tt>manual</tt>".  Must be a JSON
+ *   List containing any number of any of domains, IPv4 addresses, or IPv6
+ *   addresses.
+ *
+ *  <dt><code>sslProxy</code> (string)
+ *  <dd>Defines the proxy host for encrypted TLS traffic when the
+ *   <code>proxyType</code> is "<tt>manual</tt>".
+ *
+ *  <dt><code>socksProxy</code> (string)
+ *  <dd>Defines the proxy host for a SOCKS proxy traffic when the
+ *   <code>proxyType</code> is "<tt>manual</tt>".
+ *
+ *  <dt><code>socksVersion</code> (string)
+ *  <dd>Defines the SOCKS proxy version when the <code>proxyType</code> is
+ *   "<tt>manual</tt>".  It must be any integer between 0 and 255
+ *   inclusive.
+ * </dl>
+ *
+ * <h3>Example</h3>
+ *
+ * Input:
+ *
+ * <pre><code>
+ *     {"capabilities": {"acceptInsecureCerts": true}}
+ * </code></pre>
+ *
+ * @param {string=} sessionId
+ *     Normally a unique ID is given to a new session, however this can
+ *     be overriden by providing this field.
+ * @param {Object.<string, *>=} capabilities
+ *     JSON Object containing any of the recognised capabilities listed
+ *     above.
+ *
+ * @return {Object}
+ *     Session ID and capabilities offered by the WebDriver service.
+ *
+ * @throws {SessionNotCreatedError}
+ *     If, for whatever reason, a session could not be created.
+ */
 GeckoDriver.prototype.newSession = function* (cmd, resp) {
   if (this.sessionID) {
     throw new SessionNotCreatedError("Maximum number of active sessions");
@@ -670,9 +777,7 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
 
   try {
     this.capabilities = session.Capabilities.fromJSON(
-        cmd.parameters.capabilities, {merge: true});
-    logger.config("Matched capabilities: " +
-        JSON.stringify(this.capabilities));
+        cmd.parameters.capabilities);
   } catch (e) {
     throw new SessionNotCreatedError(e);
   }
