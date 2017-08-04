@@ -12,7 +12,6 @@
 
 class nsIAtom;
 class nsICommandParams;
-class nsIEditor;
 class nsISupports;
 class nsString;
 
@@ -211,7 +210,9 @@ public:
 
 protected:
 
-  NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, bool *_retval);
+  NS_IMETHOD IsCommandEnabled(const char* aCommandName,
+                              nsISupports* aCommandRefCon,
+                              bool* _retval) override final;
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
   virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
@@ -265,7 +266,9 @@ public:
 
 protected:
 
-  NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, bool *_retval);
+  NS_IMETHOD IsCommandEnabled(const char* aCommandName,
+                              nsISupports* aCommandRefCon,
+                              bool* _retval) override final;
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
   virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
