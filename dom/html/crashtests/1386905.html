@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+document.documentElement.getBoundingClientRect()
+document.documentElement.innerHTML = "<input placeholder=e type=number readonly>"
+document.designMode = "on"
+document.execCommand("inserttext", false, "")
+document.designMode = "off"
+document.documentElement.style.display = 'none'
+</script>
+</head>
+</html>
