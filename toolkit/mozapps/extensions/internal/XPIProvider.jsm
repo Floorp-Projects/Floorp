@@ -4390,10 +4390,17 @@ this.XPIProvider = {
       } else {
         logger.debug("Calling bootstrap method " + aMethod + " on " + aAddon.id + " version " +
                      aAddon.version);
+
+        let result;
         try {
-          method.call(scope, params, aReason);
+          result = method.call(scope, params, aReason);
         } catch (e) {
           logger.warn("Exception running bootstrap method " + aMethod + " on " + aAddon.id, e);
+        }
+
+        if (aMethod == "startup") {
+          activeAddon.startupPromise = Promise.resolve(result);
+          activeAddon.startupPromise.catch(Cu.reportError);
         }
       }
     } finally {
@@ -5481,6 +5488,17 @@ AddonWrapper.prototype = {
     if (!Services.appinfo.inSafeMode)
       return true;
     return addon.bootstrap && canRunInSafeMode(addon);
+  },
+
+  get startupPromise() {
+    let addon = addonFor(this);
+    if (!addon.bootstrap || !this.isActive)
+      return null;
+
+    let activeAddon = XPIProvider.activeAddons.get(addon.id);
+    if (activeAddon)
+      return activeAddon.startupPromise || null;
+    return null;
   },
 
   updateBlocklistState(applySoftBlock = true) {

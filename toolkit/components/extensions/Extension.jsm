@@ -758,7 +758,7 @@ class BootstrapScope {
 
   startup(data, reason) {
     this.extension = new Extension(data, this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
-    this.extension.startup();
+    return this.extension.startup();
   }
 
   shutdown(data, reason) {
