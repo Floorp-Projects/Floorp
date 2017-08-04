@@ -789,7 +789,7 @@ SumPhase(PhaseKind phaseKind, const Statistics::PhaseTimeTable& times)
     return sum;
 }
 
-static void
+static bool
 CheckSelfTime(Phase parent,
               Phase child,
               const Statistics::PhaseTimeTable& times,
@@ -805,8 +805,10 @@ CheckSelfTime(Phase parent,
                 phases[child].name,
                 childTime.ToMilliseconds());
         fflush(stderr);
-        MOZ_CRASH();
+        return false;
     }
+
+    return true;
 }
 
 static PhaseKind
@@ -821,7 +823,14 @@ LongestPhaseSelfTimeInMajorGC(const Statistics::PhaseTimeTable& times)
     for (auto i : AllPhases()) {
         Phase parent = phases[i].parent;
         if (parent != Phase::NONE) {
-            CheckSelfTime(parent, i, times, selfTimes, times[i]);
+            bool ok = CheckSelfTime(parent, i, times, selfTimes, times[i]);
+
+            // This happens very occasionally in release builds. Skip collecting
+            // longest phase telemetry if it does.
+            MOZ_ASSERT(ok, "Inconsistent time data");
+            if (!ok)
+                return PhaseKind::NONE;
+
             selfTimes[parent] -= times[i];
         }
     }
@@ -1160,15 +1169,12 @@ Statistics::recordPhaseBegin(Phase phase)
     TimeStamp now = TimeStamp::Now();
 
     if (current != Phase::NONE) {
-#ifdef ANDROID
         // Sadly this happens sometimes.
+        MOZ_ASSERT(now >= phaseStartTimes[currentPhase()]);
         if (now < phaseStartTimes[currentPhase()]) {
             now = phaseStartTimes[currentPhase()];
             aborted = true;
         }
-#endif
-
-        MOZ_RELEASE_ASSERT(now >= phaseStartTimes[currentPhase()]);
     }
 
     phaseStack.infallibleAppend(phase);
@@ -1184,15 +1190,12 @@ Statistics::recordPhaseEnd(Phase phase)
 
     TimeStamp now = TimeStamp::Now();
 
-#ifdef ANDROID
     // Sadly this happens sometimes.
+    MOZ_ASSERT(now >= phaseStartTimes[phase]);
     if (now < phaseStartTimes[phase]) {
         now = phaseStartTimes[phase];
         aborted = true;
     }
-#endif
-
-    MOZ_RELEASE_ASSERT(now >= phaseStartTimes[phase]);
 
     if (phase == Phase::MUTATOR)
         timedGCStart = now;
