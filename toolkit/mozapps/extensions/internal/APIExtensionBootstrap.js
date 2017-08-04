@@ -18,7 +18,7 @@ function install(data, reason) {
 
 function startup(data, reason) {
   namespace = data.id.replace(/@.*/, "");
-  resource = `extension-${namespace}-api`;
+  resource = `extension-${namespace.toLowerCase()}-api`;
 
   resProto = Services.io.getProtocolHandler("resource")
                      .QueryInterface(Components.interfaces.nsIResProtocolHandler);
