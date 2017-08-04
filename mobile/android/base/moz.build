@@ -951,6 +951,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'util/TouchTargetUtil.java',
     'util/URIUtils.java',
     'util/ViewUtil.java',
+    'util/WindowUtil.java',
     'webapps/WebAppActivity.java',
     'webapps/WebAppIndexer.java',
     'webapps/WebApps.java',
