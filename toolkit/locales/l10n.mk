@@ -111,22 +111,8 @@ endif
 # may be overridden if necessary.
 MOZDEPTH ?= $(DEPTH)
 
-ifdef MOZ_MAKE_COMPLETE_MAR
-MAKE_COMPLETE_MAR = 1
-ifeq ($(OS_ARCH), WINNT)
-ifneq ($(MOZ_PKG_FORMAT), SFX7Z)
-MAKE_COMPLETE_MAR =
-endif
-endif
-endif
 repackage-zip: UNPACKAGE='$(ZIP_IN)'
-repackage-zip:  libs-$(AB_CD)
-# call a hook for apps to put their uninstall helper.exe into the package
-	$(UNINSTALLER_PACKAGE_HOOK)
-# call a hook for apps to build the stub installer
-ifdef MOZ_STUB_INSTALLER
-	$(STUB_HOOK)
-endif
+repackage-zip:
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/l10n-repack.py $(STAGEDIST) $(DIST)/xpi-stage/locale-$(AB_CD) \
 		$(MOZ_PKG_EXTRAL10N) \
 		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
@@ -146,9 +132,9 @@ endif
 endif
 
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
-	cd $(DIST)/l10n-stage; \
-	  $(MAKE_PACKAGE)
-ifdef MAKE_COMPLETE_MAR
+	(cd $(DIST)/l10n-stage; \
+	  $(MAKE_PACKAGE))
+ifdef MOZ_MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  PACKAGE_BASE_DIR='$(ABS_DIST)/l10n-stage'
 endif
@@ -207,13 +193,18 @@ endif
 	$(RM) -rf $(REAL_LOCALE_MERGEDIR)
 	$(MOZILLA_DIR)/mach compare-locales --l10n-base $(L10NBASEDIR) --merge-dir $(REAL_LOCALE_MERGEDIR) $*
 
-langpack-%: LANGPACK_FILE=$(ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
-langpack-%: AB_CD=$*
-langpack-%: XPI_NAME=locale-$*
 langpack-%: IS_LANGUAGE_REPACK=1
 langpack-%: IS_LANGPACK=1
-langpack-%: libs-%
+langpack-%: AB_CD=$*
+langpack-%:
 	@echo 'Making langpack $(LANGPACK_FILE)'
+	@$(MAKE) libs-$(AB_CD)
+	@$(MAKE) package-langpack-$(AB_CD)
+
+package-langpack-%: LANGPACK_FILE=$(ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
+package-langpack-%: XPI_NAME=locale-$*
+package-langpack-%: AB_CD=$*
+package-langpack-%:
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) \
 	  -DTK_DEFINES=$(TK_DEFINES) -DAPP_DEFINES=$(APP_DEFINES) $(MOZILLA_DIR)/toolkit/locales/generic/install.rdf -o $(DIST)/xpi-stage/$(XPI_NAME)/install.rdf)
