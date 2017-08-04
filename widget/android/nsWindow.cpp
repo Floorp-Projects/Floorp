@@ -365,7 +365,9 @@ public:
         : mWindow(aPtr, aWindow)
         , mNPZC(aNPZC)
         , mPreviousButtons(0)
-    {}
+    {
+        MOZ_ASSERT(mWindow);
+    }
 
     ~NPZCSupport()
     {}
@@ -827,7 +829,9 @@ public:
         : mWindow(aPtr, aWindow)
         , mCompositor(aInstance)
         , mCompositorPaused(true)
-    {}
+    {
+        MOZ_ASSERT(mWindow);
+    }
 
     ~LayerViewSupport()
     {}
@@ -859,6 +863,9 @@ private:
     void OnResumedCompositor()
     {
         MOZ_ASSERT(NS_IsMainThread());
+        if (!mWindow) {
+            return; // Already shut down.
+        }
 
         // When we receive this, the compositor has already been told to
         // resume. (It turns out that waiting till we reach here to tell
@@ -919,7 +926,9 @@ public:
                           jni::Object::Param aSurface)
     {
         MOZ_ASSERT(NS_IsMainThread());
-        MOZ_ASSERT(mWindow);
+        if (!mWindow) {
+            return; // Already shut down.
+        }
 
         mSurface = aSurface;
         mWindow->CreateLayerManager(aWidth, aHeight);
