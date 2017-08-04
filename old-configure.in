@@ -4138,18 +4138,6 @@ MOZ_ARG_WITH_STRING(jitreport-granularity,
 AC_DEFINE_UNQUOTED(JS_DEFAULT_JITREPORT_GRANULARITY, $JITREPORT_GRANULARITY)
 
 dnl ========================================================
-dnl = Disable Mozilla's versions of RIL and Geolocation
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(mozril-geoloc,
-[  --disable-mozril-geoloc         Disable Mozilla's RIL and geolocation],
-    DISABLE_MOZ_RIL_GEOLOC=1,
-    DISABLE_MOZ_RIL_GEOLOC= )
-if test -n "$DISABLE_MOZ_RIL_GEOLOC"; then
-   AC_DEFINE(DISABLE_MOZ_RIL_GEOLOC)
-fi
-AC_SUBST(DISABLE_MOZ_RIL_GEOLOC)
-
-dnl ========================================================
 dnl =
 dnl = Misc. Options
 dnl =
