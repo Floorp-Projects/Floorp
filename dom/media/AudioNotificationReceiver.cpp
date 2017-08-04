@@ -68,6 +68,12 @@ AudioNotificationReceiver::NotifyDefaultDeviceChanged()
   MOZ_ASSERT(XRE_IsContentProcess());
 
   StaticMutexAutoLock lock(sMutex);
+
+  // Do nothing when there is no AudioStream.
+  if (!sSubscribers) {
+    return;
+  }
+
   for (AudioStream* stream : *sSubscribers) {
     ANR_LOG("Notify the AudioStream: %p that the default device has been changed.", stream);
     stream->ResetDefaultDevice();
