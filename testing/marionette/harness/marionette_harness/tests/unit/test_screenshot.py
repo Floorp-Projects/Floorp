@@ -9,7 +9,7 @@ import struct
 import urllib
 
 from marionette_driver import By
-from marionette_driver.errors import JavascriptException, NoSuchWindowException
+from marionette_driver.errors import NoSuchElementException, NoSuchWindowException
 from marionette_harness import (
     MarionetteTestCase,
     skip,
@@ -275,12 +275,12 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
             self.marionette.navigate(box)
             content_element = self.marionette.find_element(By.ID, "green")
 
-        self.assertRaisesRegexp(JavascriptException, "Element reference not seen before",
+        self.assertRaisesRegexp(NoSuchElementException, "Element reference not seen before",
                                 self.marionette.screenshot, highlights=[content_element])
 
         chrome_document_element = self.document_element
         with self.marionette.using_context('content'):
-            self.assertRaisesRegexp(JavascriptException, "Element reference not seen before",
+            self.assertRaisesRegexp(NoSuchElementException, "Element reference not seen before",
                                     self.marionette.screenshot,
                                     highlights=[chrome_document_element])
 
