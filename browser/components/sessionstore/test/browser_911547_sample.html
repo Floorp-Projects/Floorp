@@ -8,12 +8,12 @@
 
   <!--
    this element gets modified by an injected script;
-   that script should be blocked by CSP.
+   that script should be blocked by CSP if security.data_uri.unique_opaque_origin == false;
    Inline scripts can modify it, but not data uris.
   -->
-  <input type="text" id="test_id" value="ok">
+  <input type="text" id="test_id1" value="id1_initial">
 
-  <a id="test_data_link" href="data:text/html;charset=utf-8,<input type='text' id='test_id2' value='ok'/> <script>document.getElementById('test_id2').value = 'fail';</script>">Test Link</a>
+  <a id="test_data_link" href="data:text/html;charset=utf-8,<input type='text' id='test_id2' value='id2_initial'/> <script>document.getElementById('test_id2').value = 'id2_modified';</script>">Test Link</a>
 
 </body>
 </html>

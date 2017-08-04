@@ -282,16 +282,10 @@ jit::BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumenta
 
     script->ensureNonLazyCanonicalFunction();
 
-    LifoAlloc alloc(TempAllocator::PreferredLifoChunkSize);
-    TempAllocator* temp = alloc.new_<TempAllocator>(&alloc);
-    if (!temp) {
-        ReportOutOfMemory(cx);
-        return Method_Error;
-    }
+    TempAllocator temp(&cx->tempLifoAlloc());
+    JitContext jctx(cx, nullptr);
 
-    JitContext jctx(cx, temp);
-
-    BaselineCompiler compiler(cx, *temp, script);
+    BaselineCompiler compiler(cx, temp, script);
     if (!compiler.init()) {
         ReportOutOfMemory(cx);
         return Method_Error;

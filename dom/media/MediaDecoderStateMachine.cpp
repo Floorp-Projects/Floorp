@@ -3110,6 +3110,7 @@ void MediaDecoderStateMachine::PlayStateChanged()
 
 void MediaDecoderStateMachine::SetVideoDecodeMode(VideoDecodeMode aMode)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod<VideoDecodeMode>(
     "MediaDecoderStateMachine::SetVideoDecodeModeInternal",
     this,
