@@ -28,7 +28,7 @@ var Services = require("Services");
 XPCOMUtils.defineLazyGetter(imports, 'prefBranch', function() {
   var prefService = Cc['@mozilla.org/preferences-service;1']
           .getService(Ci.nsIPrefService);
-  return prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
+  return prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch);
 });
 
 XPCOMUtils.defineLazyGetter(imports, 'supportsString', function() {
