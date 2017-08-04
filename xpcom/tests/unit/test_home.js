@@ -3,7 +3,7 @@ var Cc = Components.classes;
 
 const CWD = do_get_cwd();
 function checkOS(os) {
-  const nsILocalFile_ = "nsIFile" + os;
+  const nsILocalFile_ = "nsILocalFile" + os;
   return nsILocalFile_ in Components.interfaces &&
          CWD instanceof Components.interfaces[nsILocalFile_];
 }
