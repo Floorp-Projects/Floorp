@@ -309,6 +309,15 @@ class TabBase {
   }
 
   /**
+   * @property {integer} openerTabId
+   *        Returns the ID of the tab which opened this one.
+   *        @readonly
+   */
+  get openerTabId() {
+    return null;
+  }
+
+  /**
    * @property {integer} height
    *        Returns the pixel height of the visible area of the tab.
    *        @readonly
@@ -444,9 +453,9 @@ class TabBase {
    *        True if the tab matches the query.
    */
   matches(queryInfo) {
-    const PROPS = ["active", "audible", "cookieStoreId", "highlighted", "index", "pinned", "status", "title"];
+    const PROPS = ["active", "audible", "cookieStoreId", "highlighted", "index", "openerTabId", "pinned", "status", "title"];
 
-    if (PROPS.some(prop => queryInfo[prop] !== null && queryInfo[prop] !== this[prop])) {
+    if (PROPS.some(prop => queryInfo[prop] != null && queryInfo[prop] !== this[prop])) {
       return false;
     }
 
@@ -495,6 +504,11 @@ class TabBase {
     if (fallbackTab && (!result.width || !result.height)) {
       result.width = fallbackTab.width;
       result.height = fallbackTab.height;
+    }
+
+    let opener = this.openerTabId;
+    if (opener) {
+      result.openerTabId = opener;
     }
 
     if (this.extension.hasPermission("cookies")) {

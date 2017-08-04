@@ -363,6 +363,15 @@ this.tabs = class extends ExtensionAPI {
 
             tabListener.initTabReady();
             let currentTab = window.gBrowser.selectedTab;
+
+            if (createProperties.openerTabId !== null) {
+              options.ownerTab = tabTracker.getTab(createProperties.openerTabId);
+              options.openerBrowser = options.ownerTab.linkedBrowser;
+              if (options.ownerTab.ownerGlobal !== window) {
+                return Promise.reject({message: "Opener tab must be in the same window as the tab being created"});
+              }
+            }
+
             let nativeTab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL, options);
 
             let active = true;
@@ -446,7 +455,13 @@ this.tabs = class extends ExtensionAPI {
               tabbrowser.unpinTab(nativeTab);
             }
           }
-          // FIXME: highlighted/selected, openerTabId
+          if (updateProperties.openerTabId !== null) {
+            let opener = tabTracker.getTab(updateProperties.openerTabId);
+            if (opener.ownerDocument !== nativeTab.ownerDocument) {
+              return Promise.reject({message: "Opener tab must be in the same window as the tab being updated"});
+            }
+            tabTracker.setOpener(nativeTab, opener);
+          }
 
           return tabManager.convert(nativeTab);
         },
