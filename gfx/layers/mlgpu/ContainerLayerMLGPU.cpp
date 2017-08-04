@@ -190,7 +190,7 @@ ContainerLayerMLGPU::UpdateRenderTarget(MLGDevice* aDevice, MLGRenderTargetFlags
 }
 
 void
-ContainerLayerMLGPU::SetInvalidCompositeRect(const gfx::IntRect& aRect)
+ContainerLayerMLGPU::SetInvalidCompositeRect(const gfx::IntRect* aRect)
 {
   // For simplicity we only track the bounds of the invalid area, since regions
   // are expensive.
@@ -199,8 +199,12 @@ ContainerLayerMLGPU::SetInvalidCompositeRect(const gfx::IntRect& aRect)
   // only clear the area that we actually paint. If this overflows we use the
   // last render target size, since if that changes we'll invalidate everything
   // anyway.
-  if (Maybe<gfx::IntRect> result = mInvalidRect.SafeUnion(aRect)) {
-    mInvalidRect = result.value();
+  if (aRect) {
+    if (Maybe<gfx::IntRect> result = mInvalidRect.SafeUnion(*aRect)) {
+      mInvalidRect = result.value();
+    } else {
+      mInvalidateEntireSurface = true;
+    }
   } else {
     mInvalidateEntireSurface = true;
   }

@@ -344,6 +344,7 @@ public:
 
     bool childrenChanged = false;
     bool invalidateWholeLayer = false;
+    bool areaOverflowed = false;
     if (mPreXScale != container->GetPreXScale() ||
         mPreYScale != container->GetPreYScale()) {
       invalidOfLayer = OldTransformedBounds();
@@ -391,7 +392,9 @@ public:
             }
             // Invalidate any regions of the child that have changed:
             nsIntRegion region;
-            mChildren[childsOldIndex]->ComputeChange(LTI_DEEPER(aPrefix), region, aCallback);
+            if (!mChildren[childsOldIndex]->ComputeChange(LTI_DEEPER(aPrefix), region, aCallback)) {
+              areaOverflowed = true;
+            }
             i = childsOldIndex + 1;
             if (!region.IsEmpty()) {
               LTI_LOG("%s%p: child %p produced %s\n", aPrefix, mLayer.get(),
@@ -444,8 +447,7 @@ public:
 
     if (container->UseIntermediateSurface()) {
       Maybe<IntRect> bounds;
-
-      if (!invalidateWholeLayer) {
+      if (!invalidateWholeLayer && !areaOverflowed) {
         bounds = Some(result.GetBounds());
 
         // Process changes in the visible region.
@@ -455,10 +457,7 @@ public:
           bounds = bounds->SafeUnion(newVisible.GetBounds());
         }
       }
-      if (!bounds) {
-        bounds = Some(mLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
-      }
-      container->SetInvalidCompositeRect(bounds.value());
+      container->SetInvalidCompositeRect(bounds ? bounds.ptr() : nullptr);
     }
 
     if (!mLayer->Extend3DContext()) {
