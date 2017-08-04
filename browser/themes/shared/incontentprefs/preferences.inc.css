@@ -95,20 +95,16 @@ caption > label {
 /**
  * The first subcategory title for each category should not have margin-top.
  */
-#generalCategory,
-#searchCategory,
-#browserPrivacyCategory,
-#firefoxAccountCategory {
-  margin-top: 0;
+
+.subcategory:not([hidden]) ~ .subcategory {
+  margin-top: 32px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(12, 12, 13, 0.15);
 }
 
 .header-name {
   font-size: 2rem;
   font-weight: 300;
-}
-
-.subcategory {
-  margin-top: 48px;
 }
 
 /* Category List */
