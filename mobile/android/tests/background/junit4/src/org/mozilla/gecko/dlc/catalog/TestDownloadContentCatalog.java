@@ -55,7 +55,7 @@ public class TestDownloadContentCatalog {
      * Scenario: Create a new, fresh catalog.
      *
      * Verify that:
-     *  * Catalog is bootstrapped with items.
+     *  * Catalog is created empty
      */
     @Test
     public void testCatalogIsBootstrappedIfFileDoesNotExist() throws Exception {
@@ -69,7 +69,7 @@ public class TestDownloadContentCatalog {
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(file));
         catalog.loadFromDisk();
 
-        Assert.assertTrue("Catalog is not empty", catalog.getContentToStudy().size() > 0);
+        Assert.assertEquals("Catalog is empty", 0, catalog.getContentToStudy().size());
     }
 
     /**

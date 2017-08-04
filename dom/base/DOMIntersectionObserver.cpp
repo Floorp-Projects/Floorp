@@ -138,7 +138,7 @@ DOMIntersectionObserver::SetRootMargin(const nsAString& aString)
 void
 DOMIntersectionObserver::GetRootMargin(mozilla::dom::DOMString& aRetVal)
 {
-  mRootMargin.AppendToString(eCSSProperty_DOM, aRetVal, nsCSSValue::eNormalized);
+  mRootMargin.AppendToString(eCSSProperty_DOM, aRetVal);
 }
 
 void

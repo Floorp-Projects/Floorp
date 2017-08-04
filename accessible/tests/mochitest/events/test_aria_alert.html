@@ -19,12 +19,10 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function showAlert(aID)
-    {
+    function showAlert(aID) {
       this.DOMNode = document.createElement("div");
 
-      this.invoke = function showAlert_invoke()
-      {
+      this.invoke = function showAlert_invoke() {
         this.DOMNode.setAttribute("role", "alert");
         this.DOMNode.setAttribute("id", aID);
         var text = document.createTextNode("alert");
@@ -32,36 +30,31 @@
         document.body.appendChild(this.DOMNode);
       };
 
-      this.getID = function showAlert_getID()
-      {
+      this.getID = function showAlert_getID() {
         return "Show ARIA alert " + aID;
       };
     }
 
-    function changeAlert(aID)
-    {
+    function changeAlert(aID) {
       this.__defineGetter__("DOMNode", function() { return getNode(aID) });
 
-      this.invoke = function changeAlert_invoke()
-      {
+      this.invoke = function changeAlert_invoke() {
         this.DOMNode.textContent = "new alert";
       }
 
-      this.getID = function showAlert_getID()
-      {
+      this.getID = function showAlert_getID() {
         return "Change ARIA alert " + aID;
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
 
-    //gA11yEventDumpToConsole = true; // debuging
-    //enableLogging("tree,events,verbose");
+    // gA11yEventDumpToConsole = true; // debuging
+    // enableLogging("tree,events,verbose");
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_ALERT);
 
       gQueue.push(new showAlert("alert"));

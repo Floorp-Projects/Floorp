@@ -1073,6 +1073,10 @@ scrollbox {
   overflow: hidden;
 }
 
+scrollbox[smoothscroll=true] {
+  scroll-behavior: smooth;
+}
+
 arrowscrollbox {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#arrowscrollbox");
 }

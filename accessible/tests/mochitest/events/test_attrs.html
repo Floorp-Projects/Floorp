@@ -23,15 +23,13 @@
     /**
      * Test "event-from-input" object attribute.
      */
-    function eventFromInputChecker(aEventType, aID, aValue, aNoTargetID)
-    {
+    function eventFromInputChecker(aEventType, aID, aValue, aNoTargetID) {
       this.type = aEventType;
       this.target = getAccessible(aID);
 
       this.noTarget = getNode(aNoTargetID);
 
-      this.check = function checker_check(aEvent)
-      {
+      this.check = function checker_check(aEvent) {
         testAttrs(aEvent.accessible, { "event-from-input": aValue }, true);
 
         var accessible = getAccessible(this.noTarget);
@@ -45,10 +43,9 @@
     var gQueue = null;
 
     // gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       var id = "textbox", noTargetId = "textarea";

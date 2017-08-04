@@ -104,6 +104,15 @@
   <color name="url_bar_text_highlight_private">#FFD06BFF</color>
   <color name="tab_row_pressed">#4D000000</color>
 
+  <!-- Tab Tray -->
+  <color name="tab_item_normal_bg">#F9F9FA</color>
+  <color name="tab_item_private_bg">#38383D</color>
+  <color name="tab_item_normal_highlight_bg">#0a84ff</color>
+  <color name="tab_item_normal_highlight_bg_80">#CC0a84ff</color>
+  <color name="tab_item_private_highlight_bg">#AC39FF</color>
+  <color name="tab_item_private_highlight_bg_80">#CCAC39FF</color>
+  <color name="tab_item_thumbnail_default_bg">#E4E4E4</color>
+
   <color name="url_bar_urltext">#AFB1B3</color>
   <color name="url_bar_urltext_private">#777777</color>
   <color name="url_bar_domaintext">#363B40</color>

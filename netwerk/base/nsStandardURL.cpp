@@ -209,9 +209,8 @@ nsPrefObserver::Observe(nsISupports *subject,
 // nsStandardURL::nsSegmentEncoder
 //----------------------------------------------------------------------------
 
-nsStandardURL::nsSegmentEncoder::nsSegmentEncoder(const char* charset)
-  : mEncoding(charset ? Encoding::ForLabelNoReplacement(MakeStringSpan(charset))
-                      : nullptr)
+nsStandardURL::nsSegmentEncoder::nsSegmentEncoder(const Encoding* encoding)
+  : mEncoding(encoding)
 {
   if (mEncoding == UTF_8_ENCODING) {
     mEncoding = nullptr;
@@ -284,15 +283,6 @@ nsSegmentEncoder::EncodeSegment(const nsACString& str,
         return result;
     return str;
 }
-
-#define GET_SEGMENT_ENCODER_INTERNAL(name, useUTF8) \
-    nsSegmentEncoder name(useUTF8 ? nullptr : mOriginCharset.get())
-
-#define GET_SEGMENT_ENCODER(name) \
-    GET_SEGMENT_ENCODER_INTERNAL(name, true)
-
-#define GET_QUERY_ENCODER(name) \
-    GET_SEGMENT_ENCODER_INTERNAL(name, false)
 
 //----------------------------------------------------------------------------
 // nsStandardURL <public>
@@ -794,7 +784,8 @@ nsStandardURL::AppendToBuf(char *buf, uint32_t i, const char *str, uint32_t len)
 //  3- write url segments
 //  4- update url segment positions and lengths
 nsresult
-nsStandardURL::BuildNormalizedSpec(const char *spec)
+nsStandardURL::BuildNormalizedSpec(const char *spec,
+                                   const Encoding* encoding)
 {
     // Assumptions: all member URLSegments must be relative the |spec| argument
     // passed to this function.
@@ -823,8 +814,8 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // results written to encXXX variables only if |spec| is not already in the
     // appropriate encoding.
     {
-        GET_SEGMENT_ENCODER(encoder);
-        GET_QUERY_ENCODER(queryEncoder);
+        nsSegmentEncoder encoder;
+        nsSegmentEncoder queryEncoder(encoding);
         // Items using an extraLen of 1 don't add anything unless mLen > 0
         // Username@
         approxLen += encoder.EncodeSegmentCount(spec, mUsername,  esc_Username,      encUsername,  useEncUsername, 1);
@@ -1654,17 +1645,6 @@ nsStandardURL::GetAsciiHost(nsACString &result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsStandardURL::GetOriginCharset(nsACString &result)
-{
-    if (mOriginCharset.IsEmpty())
-        result.AssignLiteral("UTF-8");
-    else
-        result = mOriginCharset;
-    CALL_RUST_GETTER_STR(result, GetOriginCharset, result);
-    return NS_OK;
-}
-
 static bool
 IsSpecialProtocol(const nsACString &input)
 {
@@ -1690,6 +1670,13 @@ IsSpecialProtocol(const nsACString &input)
 
 NS_IMETHODIMP
 nsStandardURL::SetSpec(const nsACString &input)
+{
+    return SetSpecWithEncoding(input, nullptr);
+}
+
+nsresult
+nsStandardURL::SetSpecWithEncoding(const nsACString &input,
+                                   const Encoding* encoding)
 {
     ENSURE_MUTABLE();
 
@@ -1739,7 +1726,7 @@ nsStandardURL::SetSpec(const nsACString &input)
     if (NS_SUCCEEDED(rv)) {
         // finally, use the URLSegment member variables to build a normalized
         // copy of |spec|
-        rv = BuildNormalizedSpec(spec);
+        rv = BuildNormalizedSpec(spec, encoding);
     }
 
     // Make sure that a URLTYPE_AUTHORITY has a non-empty hostname.
@@ -1878,7 +1865,7 @@ nsStandardURL::SetUserPass(const nsACString &input)
     // build new user:pass in |buf|
     nsAutoCString buf;
     if (usernameLen > 0) {
-        GET_SEGMENT_ENCODER(encoder);
+        nsSegmentEncoder encoder;
         bool ignoredOut;
         usernameLen = encoder.EncodeSegmentCount(userpass.get(),
                                                  URLSegment(usernamePos,
@@ -1960,7 +1947,7 @@ nsStandardURL::SetUsername(const nsACString &input)
 
     // escape username if necessary
     nsAutoCString buf;
-    GET_SEGMENT_ENCODER(encoder);
+    nsSegmentEncoder encoder;
     const nsACString &escUsername =
         encoder.EncodeSegment(username, esc_Username, buf);
 
@@ -2024,7 +2011,7 @@ nsStandardURL::SetPassword(const nsACString &input)
 
     // escape password if necessary
     nsAutoCString buf;
-    GET_SEGMENT_ENCODER(encoder);
+    nsSegmentEncoder encoder;
     const nsACString &escPassword =
         encoder.EncodeSegment(password, esc_Password, buf);
 
@@ -2540,7 +2527,6 @@ nsresult nsStandardURL::CopyMembers(nsStandardURL * source,
     mExtension = source->mExtension;
     mQuery = source->mQuery;
     mRef = source->mRef;
-    mOriginCharset = source->mOriginCharset;
     mURLType = source->mURLType;
     mParser = source->mParser;
     mMutable = true;
@@ -2994,7 +2980,7 @@ nsStandardURL::SetFilePath(const nsACString &input)
         if (filepath[dirPos] != '/')
             spec.Append('/');
 
-        GET_SEGMENT_ENCODER(encoder);
+        nsSegmentEncoder encoder;
 
         // append encoded filepath components
         if (dirLen > 0)
@@ -3038,8 +3024,23 @@ nsStandardURL::SetFilePath(const nsACString &input)
     return NS_OK;
 }
 
+inline bool
+IsUTFEncoding(const Encoding* aEncoding)
+{
+    return aEncoding == UTF_8_ENCODING ||
+           aEncoding == UTF_16BE_ENCODING ||
+           aEncoding == UTF_16LE_ENCODING;
+}
+
 NS_IMETHODIMP
 nsStandardURL::SetQuery(const nsACString &input)
+{
+    return SetQueryWithEncoding(input, nullptr);
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetQueryWithEncoding(const nsACString &input,
+                                    const Encoding* encoding)
 {
     ENSURE_MUTABLE();
 
@@ -3047,6 +3048,10 @@ nsStandardURL::SetQuery(const nsACString &input)
     const char *query = flat.get();
 
     LOG(("nsStandardURL::SetQuery [query=%s]\n", query));
+
+    if (IsUTFEncoding(encoding)) {
+        encoding = nullptr;
+    }
 
     if (mPath.mLen < 0)
         return SetPathQueryRef(flat);
@@ -3093,7 +3098,7 @@ nsStandardURL::SetQuery(const nsACString &input)
     // encode query if necessary
     nsAutoCString buf;
     bool encoded;
-    GET_QUERY_ENCODER(encoder);
+    nsSegmentEncoder encoder(encoding);
     encoder.EncodeSegmentCount(query, URLSegment(0, queryLen), esc_Query,
                                buf, encoded);
     if (encoded) {
@@ -3162,7 +3167,7 @@ nsStandardURL::SetRef(const nsACString &input)
     nsAutoCString buf;
     // encode ref if necessary
     bool encoded;
-    GET_SEGMENT_ENCODER(encoder);
+    nsSegmentEncoder encoder;
     encoder.EncodeSegmentCount(ref, URLSegment(0, refLen), esc_Ref,
                                buf, encoded);
     if (encoded) {
@@ -3239,7 +3244,7 @@ nsStandardURL::SetFileName(const nsACString &input)
         else {
             nsAutoCString newFilename;
             bool ignoredOut;
-            GET_SEGMENT_ENCODER(encoder);
+            nsSegmentEncoder encoder;
             basename.mLen = encoder.EncodeSegmentCount(filename, basename,
                                                        esc_FileBaseName |
                                                        esc_AlwaysCopy,
@@ -3407,14 +3412,6 @@ nsStandardURL::SetFile(nsIFile *file)
 // nsStandardURL::nsIStandardURL
 //----------------------------------------------------------------------------
 
-inline bool
-IsUTFCharset(const char *aCharset)
-{
-    return ((aCharset[0] == 'U' || aCharset[0] == 'u') &&
-            (aCharset[1] == 'T' || aCharset[1] == 't') &&
-            (aCharset[2] == 'F' || aCharset[2] == 'f'));
-}
-
 NS_IMETHODIMP
 nsStandardURL::Init(uint32_t urlType,
                     int32_t defaultPort,
@@ -3448,25 +3445,14 @@ nsStandardURL::Init(uint32_t urlType,
     mDefaultPort = defaultPort;
     mURLType = urlType;
 
-    mOriginCharset.Truncate();
-
-    if (charset == nullptr || *charset == '\0') {
-        // check if baseURI provides an origin charset and use that.
-        if (baseURI)
-            baseURI->GetOriginCharset(mOriginCharset);
-
-        // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32,
-        // UTF-32-LE, UTF-32LE, UTF-32BE (yet?). Truncate mOriginCharset if
-        // it starts with "utf" (since an empty mOriginCharset implies
-        // UTF-8, this is safe even if mOriginCharset is UTF-8).
-
-        if (mOriginCharset.Length() > 3 &&
-            IsUTFCharset(mOriginCharset.get())) {
-            mOriginCharset.Truncate();
-        }
-    }
-    else if (!IsUTFCharset(charset)) {
-        mOriginCharset = charset;
+    auto encoding =
+        charset ? Encoding::ForLabelNoReplacement(MakeStringSpan(charset))
+                : nullptr;
+    // URI can't be encoded in UTF-16BE or UTF-16LE. Truncate encoding
+    // if it is one of utf encodings (since a null encoding implies
+    // UTF-8, this is safe even if encoding is UTF-8).
+    if (IsUTFEncoding(encoding)) {
+        encoding = nullptr;
     }
 
     if (baseURI && net_IsAbsoluteURL(spec)) {
@@ -3476,13 +3462,13 @@ nsStandardURL::Init(uint32_t urlType,
     CALL_RUST_INIT;
 
     if (!baseURI)
-        return SetSpec(spec);
+        return SetSpecWithEncoding(spec, encoding);
 
     nsAutoCString buf;
     nsresult rv = baseURI->Resolve(spec, buf);
     if (NS_FAILED(rv)) return rv;
 
-    return SetSpec(buf);
+    return SetSpecWithEncoding(buf, encoding);
 }
 
 NS_IMETHODIMP
@@ -3608,7 +3594,8 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     rv = ReadSegment(stream, mRef);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_ReadOptionalCString(stream, mOriginCharset);
+    nsAutoCString oldOriginCharset;
+    rv = NS_ReadOptionalCString(stream, oldOriginCharset);
     if (NS_FAILED(rv)) return rv;
 
     bool isMutable;
@@ -3700,7 +3687,8 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
     rv = WriteSegment(stream, mRef);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_WriteOptionalStringZ(stream, mOriginCharset.get());
+    // former origin charset
+    rv = NS_WriteOptionalStringZ(stream, EmptyCString().get());
     if (NS_FAILED(rv)) return rv;
 
     rv = stream->WriteBoolean(mMutable);
@@ -3755,7 +3743,6 @@ nsStandardURL::Serialize(URIParams& aParams)
     params.extension() = ToIPCSegment(mExtension);
     params.query() = ToIPCSegment(mQuery);
     params.ref() = ToIPCSegment(mRef);
-    params.originCharset() = mOriginCharset;
     params.isMutable() = !!mMutable;
     params.supportsFileURL() = !!mSupportsFileURL;
     // mSpecEncoding and mDisplayHost are just caches that can be recovered as needed.
@@ -3809,7 +3796,6 @@ nsStandardURL::Deserialize(const URIParams& aParams)
     mExtension = FromIPCSegment(params.extension());
     mQuery = FromIPCSegment(params.query());
     mRef = FromIPCSegment(params.ref());
-    mOriginCharset = params.originCharset();
     mMutable = params.isMutable();
     mSupportsFileURL = params.supportsFileURL();
 
@@ -3883,7 +3869,6 @@ size_t
 nsStandardURL::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return mSpec.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-         mOriginCharset.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
          mDisplayHost.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it is

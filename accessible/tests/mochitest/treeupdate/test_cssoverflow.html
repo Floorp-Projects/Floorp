@@ -18,9 +18,9 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
 
     /**
      * Change scroll range to not empty size and inserts a child into container
@@ -29,8 +29,7 @@
      * update picked up that accessible unattaching scroll area accessible
      * subtree.
      */
-    function changeScrollRange(aContainerID, aScrollAreaID)
-    {
+    function changeScrollRange(aContainerID, aScrollAreaID) {
       this.containerNode = getNode(aContainerID);
       this.container = getAccessible(this.containerNode);
       this.scrollAreaNode = getNode(aScrollAreaID);
@@ -39,14 +38,12 @@
         new invokerChecker(EVENT_REORDER, this.container)
       ];
 
-      this.invoke = function changeScrollRange_invoke()
-      {
+      this.invoke = function changeScrollRange_invoke() {
         this.scrollAreaNode.style.width = "20px";
         this.containerNode.appendChild(document.createElement("input"));
       }
 
-      this.finalCheck = function changeScrollRange_finalCheck()
-      {
+      this.finalCheck = function changeScrollRange_finalCheck() {
         var accTree =
           { SECTION: [ // container
             { SECTION: [ // scroll area
@@ -57,8 +54,7 @@
         testAccessibleTree(this.container, accTree);
       }
 
-      this.getID = function changeScrollRange_getID()
-      {
+      this.getID = function changeScrollRange_getID() {
         return "change scroll range for " + prettyName(aScrollAreaID);
       }
     }
@@ -67,8 +63,7 @@
      * Change scrollbar styles from hidden to auto. That makes us to create an
      * accessible for scroll area.
      */
-    function changeScrollbarStyles(aContainerID, aScrollAreaID)
-    {
+    function changeScrollbarStyles(aContainerID, aScrollAreaID) {
       this.container = getAccessible(aContainerID);
       this.scrollAreaNode = getNode(aScrollAreaID);
 
@@ -77,8 +72,7 @@
         new invokerChecker(EVENT_REORDER, this.container)
       ];
 
-      this.invoke = function changeScrollbarStyles_invoke()
-      {
+      this.invoke = function changeScrollbarStyles_invoke() {
         var accTree =
           { SECTION: [] };
         testAccessibleTree(this.container, accTree);
@@ -86,8 +80,7 @@
         this.scrollAreaNode.style.overflow = "auto";
       }
 
-      this.finalCheck = function changeScrollbarStyles_finalCheck()
-      {
+      this.finalCheck = function changeScrollbarStyles_finalCheck() {
         var accTree =
           { SECTION: [ // container
             { SECTION: [] } // scroll area
@@ -95,22 +88,20 @@
         testAccessibleTree(this.container, accTree);
       }
 
-      this.getID = function changeScrollbarStyles_getID()
-      {
+      this.getID = function changeScrollbarStyles_getID() {
         return "change scrollbar styles " + prettyName(aScrollAreaID);
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
 
     var gQueue = null;
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new changeScrollRange("container", "scrollarea"));

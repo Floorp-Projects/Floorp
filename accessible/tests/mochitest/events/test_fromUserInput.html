@@ -21,24 +21,21 @@
     /**
      * Remove text data from HTML input.
      */
-    function removeTextFromInput(aID, aStart, aEnd, aText, aFromUser)
-    {
+    function removeTextFromInput(aID, aStart, aEnd, aText, aFromUser) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
         new textChangeChecker(aID, aStart, aEnd, aText, false, aFromUser)
       ];
 
-      this.invoke = function removeTextFromInput_invoke()
-      {
+      this.invoke = function removeTextFromInput_invoke() {
         this.DOMNode.focus();
         this.DOMNode.setSelectionRange(aStart, aEnd);
 
         synthesizeKey("VK_DELETE", {});
       }
 
-      this.getID = function removeTextFromInput_getID()
-      {
+      this.getID = function removeTextFromInput_getID() {
         return "Remove text from " + aStart + " to " + aEnd + " for " +
           prettyName(aID);
       }
@@ -47,16 +44,14 @@
     /**
      * Remove text data from text node.
      */
-    function removeTextFromContentEditable(aID, aStart, aEnd, aText, aFromUser)
-    {
+    function removeTextFromContentEditable(aID, aStart, aEnd, aText, aFromUser) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
         new textChangeChecker(aID, aStart, aEnd, aText, false, aFromUser)
       ];
 
-      this.invoke = function removeTextFromContentEditable_invoke()
-      {
+      this.invoke = function removeTextFromContentEditable_invoke() {
         this.DOMNode.focus();
         this.textNode = getNode(aID).firstChild;
         var selection = window.getSelection();
@@ -68,21 +63,19 @@
         synthesizeKey("VK_DELETE", {});
       }
 
-      this.getID = function removeTextFromContentEditable_getID()
-      {
+      this.getID = function removeTextFromContentEditable_getID() {
         return "Remove text from " + aStart + " to " + aEnd + " for " +
           prettyName(aID);
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
     // gA11yEventDumpID = "eventdump"; // debug stuff
 
     var gQueue = null;
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       // Focused editable text node

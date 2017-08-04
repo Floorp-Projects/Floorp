@@ -49,8 +49,7 @@
   padding-inline-end: 4px;
 }
 
-#sidebar-switcher-arrow,
-#sidebar-close > .toolbarbutton-icon {
+#sidebar-switcher-arrow {
   -moz-context-properties: fill;
   fill: currentColor;
   opacity: 0.8;
@@ -62,14 +61,6 @@
   height: 12px;
 }
 
-#sidebar-close {
-  -moz-appearance: none;
-  list-style-image: url(chrome://browser/skin/sidebar/close.svg);
-  margin: 0;
-  padding: 4px;
-  border-radius: 4px;
-}
-
 #sidebar-switcher-target {
   -moz-appearance: none;
   color: inherit;
@@ -79,8 +70,7 @@
   padding: 2px 4px;
 }
 
-#sidebar-switcher-target:hover,
-#sidebar-close:hover {
+#sidebar-switcher-target:hover {
   background: hsla(240, 5%, 5%, 0.05);
 }
 
@@ -88,7 +78,6 @@
   border-color: rgba(0, 0, 0, 0.2);
 }
 
-#sidebar-close:hover:active,
 #sidebar-switcher-target:hover:active,
 #sidebar-switcher-target.active {
   background: hsla(240, 5%, 5%, 0.1);

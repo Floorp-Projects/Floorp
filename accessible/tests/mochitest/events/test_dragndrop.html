@@ -25,8 +25,7 @@
     var gQueue = null;
 
     // aria grabbed invoker
-    function changeGrabbed(aNodeOrID, aGrabValue)
-    {
+    function changeGrabbed(aNodeOrID, aGrabValue) {
       this.DOMNode = getNode(aNodeOrID);
 
       this.invoke = function changeGrabbed_invoke() {
@@ -45,8 +44,7 @@
     }
 
     // aria dropeffect invoker
-    function changeDropeffect(aNodeOrID, aDropeffectValue)
-    {
+    function changeDropeffect(aNodeOrID, aDropeffectValue) {
       this.DOMNode = getNode(aNodeOrID);
 
       this.invoke = function changeDropeffect_invoke() {
@@ -64,18 +62,17 @@
       }
     }
 
-    function doTests()
-    {
+    function doTests() {
       // Test aria attribute mutation events
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_OBJECT_ATTRIBUTE_CHANGED);
 
-      var id="grabbable";
+      var id = "grabbable";
       gQueue.push(new changeGrabbed(id, "true"));
       gQueue.push(new changeGrabbed(id, "false"));
       todo(false, "uncomment this test when 472142 is fixed.");
-      //gQueue.push(new changeGrabbed(id, "undefined"));
+      // gQueue.push(new changeGrabbed(id, "undefined"));
 
-      var id="dropregion";
+      var id = "dropregion";
       gQueue.push(new changeDropeffect(id, "copy"));
       gQueue.push(new changeDropeffect(id, "execute"));
 

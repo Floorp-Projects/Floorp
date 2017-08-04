@@ -21,8 +21,7 @@
       SimpleTest.expectAssertions(0, 2);
     }
 
-    function doTest()
-    {
+    function doTest() {
       frameDoc = document.getElementById("frame_doc").contentDocument;
       frameDocArticle = document.getElementById("frame_doc_article").contentDocument;
       frameDocCheckbox = document.getElementById("frame_doc_checkbox").contentDocument;
@@ -37,7 +36,7 @@
       testStates(frameDocTextbox, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
                  "test1: frameDocTextbox");
       frameDoc.designMode = "on";
-      testStates(frameDoc,  0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
+      testStates(frameDoc, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
                  "test2: frameDoc");
       testStates(frameDocArticle, STATE_READONLY, 0, 0, 0,
                  "test2: frameDocArticle");

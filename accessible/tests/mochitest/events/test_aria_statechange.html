@@ -26,69 +26,59 @@
      */
     var gQueue = null;
 
-    //gA11yEventDumpID = "eventdump"; // debugging
-    //gA11yEventDumpToConsole = true; // debugging
+    // gA11yEventDumpID = "eventdump"; // debugging
+    // gA11yEventDumpToConsole = true; // debugging
 
-    function expandNode(aID, aIsExpanded)
-    {
+    function expandNode(aID, aIsExpanded) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
         new expandedStateChecker(aIsExpanded, this.DOMNode)
       ];
 
-      this.invoke = function expandNode_invoke()
-      {
+      this.invoke = function expandNode_invoke() {
         this.DOMNode.setAttribute("aria-expanded",
                                   (aIsExpanded ? "true" : "false"));
       };
 
-      this.getID = function expandNode_getID()
-      {
+      this.getID = function expandNode_getID() {
         return prettyName(aID) + " aria-expanded changed to '" + aIsExpanded + "'";
       };
     }
 
-    function busyify(aID, aIsBusy)
-    {
+    function busyify(aID, aIsBusy) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
         new stateChangeChecker(STATE_BUSY, kOrdinalState, aIsBusy, this.DOMNode)
       ];
 
-      this.invoke = function busyify_invoke()
-      {
+      this.invoke = function busyify_invoke() {
         this.DOMNode.setAttribute("aria-busy", (aIsBusy ? "true" : "false"));
       };
 
-      this.getID = function busyify_getID()
-      {
+      this.getID = function busyify_getID() {
         return prettyName(aID) + " aria-busy changed to '" + aIsBusy + "'";
       };
     }
 
-    function makeCurrent(aID, aIsCurrent, aValue)
-    {
+    function makeCurrent(aID, aIsCurrent, aValue) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
         new stateChangeChecker(EXT_STATE_CURRENT, true, aIsCurrent, this.DOMNode)
       ];
 
-      this.invoke = function makeCurrent_invoke()
-      {
+      this.invoke = function makeCurrent_invoke() {
         this.DOMNode.setAttribute("aria-current", aValue);
       };
 
-      this.getID = function makeCurrent_getID()
-      {
+      this.getID = function makeCurrent_getID() {
         return prettyName(aID) + " aria-current changed to " + aValue;
       };
     }
 
-    function setAttrOfMixedType(aID, aAttr, aState, aValue)
-    {
+    function setAttrOfMixedType(aID, aAttr, aState, aValue) {
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
@@ -103,31 +93,26 @@
         );
       }
 
-      this.invoke = function setAttrOfMixedType_invoke()
-      {
+      this.invoke = function setAttrOfMixedType_invoke() {
         this.DOMNode.setAttribute(aAttr, aValue);
       };
 
-      this.getID = function setAttrOfMixedType_getID()
-      {
+      this.getID = function setAttrOfMixedType_getID() {
         return prettyName(aID) + " " + aAttr + " changed to '" + aValue + "'";
       };
     }
 
-    function setPressed(aID, aValue)
-    {
+    function setPressed(aID, aValue) {
       this.__proto__ =
         new setAttrOfMixedType(aID, "aria-pressed", STATE_PRESSED, aValue);
     }
 
-    function setChecked(aID, aValue)
-    {
+    function setChecked(aID, aValue) {
       this.__proto__ =
         new setAttrOfMixedType(aID, "aria-checked", STATE_CHECKED, aValue);
     }
 
-    function buildQueueForAttr(aList, aQueue, aID, aInvokerFunc)
-    {
+    function buildQueueForAttr(aList, aQueue, aID, aInvokerFunc) {
       for (var i = 0; i < aList.length; i++) {
         for (var j = i + 1; j < aList.length; j++) {
           // XXX: changes from/to "undefined"/"" shouldn't fire state change
@@ -138,20 +123,17 @@
       }
     }
 
-    function buildQueueForAttrOfMixedType(aQueue, aID, aInvokerFunc)
-    {
+    function buildQueueForAttrOfMixedType(aQueue, aID, aInvokerFunc) {
       var list = [ "", "undefined", "false", "true", "mixed" ];
       buildQueueForAttr(list, aQueue, aID, aInvokerFunc);
     }
 
-    function buildQueueForAttrOfBoolType(aQueue, aID, aInvokerFunc)
-    {
+    function buildQueueForAttrOfBoolType(aQueue, aID, aInvokerFunc) {
       var list = [ "", "undefined", "false", "true" ];
       buildQueueForAttr(list, aQueue, aID, aInvokerFunc);
     }
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new expandNode("section", true));

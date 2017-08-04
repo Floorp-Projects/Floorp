@@ -17,8 +17,7 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function changeMultipleElements()
-    {
+    function changeMultipleElements() {
       this.node1 = getNode("div1");
       this.node2 = getNode("div2");
 
@@ -30,25 +29,22 @@
         new textChangeChecker("div2", 0, 1, "b", true, undefined, true)
       ];
 
-      this.invoke = function changeMultipleElements_invoke()
-      {
+      this.invoke = function changeMultipleElements_invoke() {
         this.node1.textContent = "a";
         this.node2.textContent = "b";
       }
 
-      this.getID = function changeMultipleElements_invoke_getID()
-      {
+      this.getID = function changeMultipleElements_invoke_getID() {
         return "Change the text content of multiple sibling divs";
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
 //    gA11yEventDumpToConsole = true; // debugging
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new changeMultipleElements());

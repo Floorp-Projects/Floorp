@@ -24,40 +24,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
   <script type="application/javascript">
 
     // gA11yEventDumpID = "eventDump";
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
 
-    function focusChecker(aAcc)
-    {
+    function focusChecker(aAcc) {
       this.type = EVENT_FOCUS;
       this.target = aAcc;
-      this.getID = function focusChecker_getID()
-      {
+      this.getID = function focusChecker_getID() {
         return "focus handling";
       }
-      this.check = function focusChecker_check(aEvent)
-      {
+      this.check = function focusChecker_check(aEvent) {
         testStates(this.target, STATE_FOCUSED);
       }
     }
 
-    function nameChecker(aAcc, aName)
-    {
+    function nameChecker(aAcc, aName) {
       this.type = EVENT_NAME_CHANGE;
       this.target = aAcc;
-      this.getID = function nameChecker_getID()
-      {
+      this.getID = function nameChecker_getID() {
         return "name change handling";
       },
-      this.check = function nameChecker_check(aEvent)
-      {
+      this.check = function nameChecker_check(aEvent) {
         is(aEvent.accessible.name, aName,
            "Wrong name of " + prettyName(aEvent.accessible) + " on focus");
       }
     }
 
-    function doTest()
-    {
-      //////////////////////////////////////////////////////////////////////////
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
       // test actions of audio controls
 
       todo(false, "Focus test are disabled until bug 494175 is fixed.");

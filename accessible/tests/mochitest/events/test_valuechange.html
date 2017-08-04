@@ -26,8 +26,7 @@
     var gQueue = null;
 
     // Value change invoker
-    function changeARIAValue(aNodeOrID, aValuenow, aValuetext)
-    {
+    function changeARIAValue(aNodeOrID, aValuenow, aValuetext) {
       this.DOMNode = getNode(aNodeOrID);
       this.eventSeq = [ new invokerChecker(aValuetext ?
                                            EVENT_TEXT_VALUE_CHANGE :
@@ -53,7 +52,7 @@
 
         // Note: always test against valuetext first because the existence of
         // aria-valuetext takes precedence over aria-valuenow in gecko.
-        is(acc.value, (aValuetext != undefined)? aValuetext : aValuenow,
+        is(acc.value, (aValuetext != undefined) ? aValuetext : aValuenow,
             "Wrong value of " + prettyName(aNodeOrID));
       }
 
@@ -62,100 +61,83 @@
       }
     }
 
-    function changeValue(aID, aValue)
-    {
+    function changeValue(aID, aValue) {
       this.DOMNode = getNode(aID);
       this.eventSeq = [new invokerChecker(EVENT_TEXT_VALUE_CHANGE,
                                           this.DOMNode)
         ];
 
-      this.invoke = function changeValue_invoke()
-      {
+      this.invoke = function changeValue_invoke() {
         this.DOMNode.value = aValue;
       }
 
-      this.check = function changeValue_check()
-      {
+      this.check = function changeValue_check() {
         var acc = getAccessible(this.DOMNode);
         is(acc.value, aValue, "Wrong value for " + prettyName(aID));
       }
 
-      this.getID = function changeValue_getID()
-      {
+      this.getID = function changeValue_getID() {
         return prettyName(aID) + " value changed";
       }
     }
 
-    function changeProgressValue(aID, aValue)
-    {
+    function changeProgressValue(aID, aValue) {
       this.DOMNode = getNode(aID);
       this.eventSeq = [new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode)];
 
-      this.invoke = function changeProgressValue_invoke()
-      {
+      this.invoke = function changeProgressValue_invoke() {
          this.DOMNode.value = aValue;
       }
 
-      this.check = function changeProgressValue_check()
-      {
+      this.check = function changeProgressValue_check() {
         var acc = getAccessible(this.DOMNode);
-        is(acc.value, aValue+"%", "Wrong value for " + prettyName(aID));
+        is(acc.value, aValue + "%", "Wrong value for " + prettyName(aID));
       }
 
-      this.getID = function changeProgressValue_getID()
-      {
+      this.getID = function changeProgressValue_getID() {
         return prettyName(aID) + " value changed";
       }
     }
 
-    function changeRangeValue(aID)
-    {
+    function changeRangeValue(aID) {
       this.DOMNode = getNode(aID);
       this.eventSeq = [new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode)];
 
-      this.invoke = function changeRangeValue_invoke()
-      {
+      this.invoke = function changeRangeValue_invoke() {
         synthesizeMouse(getNode(aID), 5, 5, { });
       }
 
-      this.finalCheck = function changeRangeValue_finalCheck()
-      {
+      this.finalCheck = function changeRangeValue_finalCheck() {
         var acc = getAccessible(this.DOMNode);
         is(acc.value, "0", "Wrong value for " + prettyName(aID));
       }
 
-      this.getID = function changeRangeValue_getID()
-      {
+      this.getID = function changeRangeValue_getID() {
         return prettyName(aID) + " range value changed";
       }
     }
 
-    function changeSelectValue(aID, aKey, aValue)
-    {
+    function changeSelectValue(aID, aKey, aValue) {
       this.eventSeq =
         [ new invokerChecker(EVENT_TEXT_VALUE_CHANGE, getAccessible(aID)) ];
 
-      this.invoke = function changeSelectValue_invoke()
-      {
+      this.invoke = function changeSelectValue_invoke() {
         getNode(aID).focus();
         synthesizeKey(aKey, {}, window);
       }
 
-      this.finalCheck = function changeSelectValue_finalCheck()
-      {
+      this.finalCheck = function changeSelectValue_finalCheck() {
         is(getAccessible(aID).value, aValue, "Wrong value for " + prettyName(aID));
       }
 
-      this.getID = function changeSelectValue_getID()
-      {
+      this.getID = function changeSelectValue_getID() {
         return `${prettyName(aID)} closed select value change on '${aKey}'' key press`;
       }
     }
 
-    //enableLogging("DOMEvents");
-    //gA11yEventDumpToConsole = true;
-    function doTests()
-    {
+    // enableLogging("DOMEvents");
+    // gA11yEventDumpToConsole = true;
+    function doTests() {
       // Test initial values
       testValue("slider_vn", "5", 5, 0, 1000, 0);
       testValue("slider_vnvt", "plain", 0, 0, 5, 0);

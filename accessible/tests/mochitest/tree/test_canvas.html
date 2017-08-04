@@ -16,8 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495912
           src="../role.js"></script>
 
   <script type="application/javascript">
-    function doTest()
-    {
+    function doTest() {
       var accTree =
         { CANVAS: [
           { CHECKBUTTON: [] },
@@ -45,9 +44,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495912
   <canvas id="canvas" tabindex="0"><input type="checkbox"><input></canvas>
 
   <script type="text/javascript">
-    var c=document.getElementById("canvas");
-    var cxt=c.getContext("2d");
-    cxt.fillStyle="#005500";
+    var c = document.getElementById("canvas");
+    var cxt = c.getContext("2d");
+    cxt.fillStyle = "#005500";
     cxt.fillRect(0,0,150,75);
   </script>  
 
