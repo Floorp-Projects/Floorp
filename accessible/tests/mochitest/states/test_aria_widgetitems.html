@@ -20,64 +20,55 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function focusARIAItem(aID, aIsSelected)
-    {
+    function focusARIAItem(aID, aIsSelected) {
       this.DOMNode = getNode(aID);
 
-      this.invoke = function focusARIAItem_invoke()
-      {
+      this.invoke = function focusARIAItem_invoke() {
         this.DOMNode.focus();
       }
 
-      this.check = function focusARIAItem_check(aEvent)
-      {
+      this.check = function focusARIAItem_check(aEvent) {
         testStates(this.DOMNode, aIsSelected ? STATE_SELECTED : 0, 0,
                    aIsSelected ? 0 : STATE_SELECTED);
       }
 
-      this.getID = function focusARIAItem_getID()
-      {
+      this.getID = function focusARIAItem_getID() {
         return "Focused ARIA widget item with aria-selected='" +
                 (aIsSelected ? "true', should" : "false', shouldn't") +
                 " have selected state on " + prettyName(aID);
       }
     }
 
-    function focusActiveDescendantItem(aItemID, aWidgetID, aIsSelected)
-    {
+    function focusActiveDescendantItem(aItemID, aWidgetID, aIsSelected) {
       this.DOMNode = getNode(aItemID);
       this.widgetDOMNode = getNode(aWidgetID);
 
-      this.invoke = function focusActiveDescendantItem_invoke()
-      {
+      this.invoke = function focusActiveDescendantItem_invoke() {
         this.widgetDOMNode.setAttribute("aria-activedescendant", aItemID);
         this.widgetDOMNode.focus();
       }
 
-      this.check = function focusActiveDescendantItem_check(aEvent)
-      {
+      this.check = function focusActiveDescendantItem_check(aEvent) {
         testStates(this.DOMNode, aIsSelected ? STATE_SELECTED : 0, 0,
                    aIsSelected ? 0 : STATE_SELECTED);
       }
 
-      this.getID = function tabActiveDescendant_getID()
-      {
+      this.getID = function tabActiveDescendant_getID() {
         return "ARIA widget item managed by activedescendant " +
                 (aIsSelected ? "should" : "shouldn't") +
                 " have the selected state on " + prettyName(aItemID);
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       // aria-selected
       testStates("aria_tab1", 0, 0, STATE_SELECTED);
       testStates("aria_tab2", STATE_SELECTED);

@@ -18,14 +18,14 @@
         ok(AccessFu._enabled, "AccessFu was enabled again."));
       AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
       // Start AccessFu via pref.
-      SpecialPowers.pushPrefEnv({"set": [['accessibility.accessfu.activate', 1]]});
+      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 1]]});
     }
 
     // Listen for 'EventManager.stop' and enable AccessFu again.
     function settingsStart() {
       isnot(AccessFu._enabled, true, "AccessFu was disabled.");
       // XXX: Bug 978076 - test start with SettingsManager.
-      //navigator.mozSettings.createLock().set(
+      // navigator.mozSettings.createLock().set(
       //  {'accessibility.screenreader': false});
       AccessFuTest.once_log("EventManager.start", () => {
         ok(AccessFu._enabled, "AccessFu was enabled again.");
@@ -38,7 +38,7 @@
     function settingsStop() {
       ok(AccessFu._enabled, "AccessFu was enabled again.");
       // XXX: Bug 978076 - test stop with SettingsManager.
-      //navigator.mozSettings.createLock().set(
+      // navigator.mozSettings.createLock().set(
       //  {'accessibility.screenreader': false});
       AccessFuTest.once_log("EventManager.stop", () => {
         isnot(AccessFu._enabled, "AccessFu was disabled.");
@@ -54,7 +54,7 @@
         isnot(AccessFu._enabled, true, "AccessFu was disabled."));
       AccessFuTest.once_log("EventManager.stop", AccessFuTest.nextTest);
 
-      SpecialPowers.pushPrefEnv({"set": [['accessibility.accessfu.activate', 0]]});
+      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 0]]});
     }
 
     function doTest() {

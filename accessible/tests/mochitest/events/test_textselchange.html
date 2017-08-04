@@ -22,18 +22,16 @@
     var gQueue = null;
 
     // gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
-    function getOnclickSeq(aID)
-    {
+    function getOnclickSeq(aID) {
       return [
         new caretMoveChecker(0, aID),
         new unexpectedInvokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
       ];
     }
 
-    function doTests()
-    {
+    function doTests() {
       // test caret move events and caret offsets
       gQueue = new eventQueue();
 

@@ -14,8 +14,7 @@
           src="../role.js"></script>
 
   <script type="application/javascript">
-    function doTest()
-    {
+    function doTest() {
       testElm("component", {
         role: ROLE_GROUPING,
         children: [
@@ -49,10 +48,10 @@
 
   <div role="group" id="component"></div>
   <script>
-    var component = document.getElementById('component');
+    var component = document.getElementById("component");
     var shadow = component.createShadowRoot();
 
-    shadow.innerHTML = '<button>Hello</button>' +
+    shadow.innerHTML = "<button>Hello</button>" +
       '<a href="#"> World</a>';
   </script>
 

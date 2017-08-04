@@ -18,14 +18,12 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true;
-    function doPreTest()
-    {
+    // gA11yEventDumpToConsole = true;
+    function doPreTest() {
       waitForImageMap("imgmap", doTest);
     }
 
-    function doTest()
-    {
+    function doTest() {
       // image map
       var accTree = {
         role: ROLE_IMAGE_MAP,

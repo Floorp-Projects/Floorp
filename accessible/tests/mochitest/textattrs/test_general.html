@@ -23,9 +23,8 @@
   <script type="application/javascript">
     var gComputedStyle = null;
 
-    function doTest()
-    {
-      //////////////////////////////////////////////////////////////////////////
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
       // area1
       var ID = "area1";
       var defAttrs = buildDefaultTextAttrs(ID, "10pt");
@@ -40,7 +39,7 @@
       attrs = {};
       testTextAttrs(ID, 12, attrs, defAttrs, 11, 18);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area2
       ID = "area2";
       defAttrs = buildDefaultTextAttrs(ID, "14pt");
@@ -64,7 +63,7 @@
       attrs = {};
       testTextAttrs(ID, 24, attrs, defAttrs, 23, 30);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area3
       ID = "area3";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -91,7 +90,7 @@
                "background-color": gComputedStyle.backgroundColor};
       testTextAttrs(ID, 27, attrs, defAttrs, 27, 50);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area4
       ID = "area4";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -112,7 +111,7 @@
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 34, attrs, defAttrs, 33, 46);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area5: "Green!*!RedNormal"
       ID = "area5";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -146,7 +145,7 @@
       attrs = {};
       testTextAttrs(ID, 11, attrs, defAttrs, 11, 18);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area6 (CSS vertical-align property, refer to bug 445938 for details
       // and sup and sub elements, refer to bug 735645 for details)
       ID = "area6";
@@ -201,7 +200,7 @@
       attrs = { "text-position": "sub" };
       testTextAttrs(ID, 128, attrs, defAttrs, 128, 142);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area7
       ID = "area7";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -247,7 +246,7 @@
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 55, attrs, defAttrs, 55, 62);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area9, different single style spans in styled paragraph
       ID = "area9";
       defAttrs = buildDefaultTextAttrs(ID, "10pt");
@@ -325,7 +324,7 @@
       attrs = {};
       testTextAttrs(ID, 165, attrs, defAttrs, 164, 172);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area10, different single style spans in non-styled paragraph
       ID = "area10";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -385,7 +384,7 @@
       attrs = {};
       testTextAttrs(ID, 124, attrs, defAttrs, 123, 131);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area11, "font-weight" tests
       ID = "area11";
       defAttrs = buildDefaultTextAttrs(ID, "12pt", kBoldFontWeight);
@@ -412,12 +411,12 @@
       attrs = { };
       testTextAttrs(ID, 57, attrs, defAttrs, 57, 97);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // test out of range offset
       testTextAttrsWrongOffset("area12", -1);
       testTextAttrsWrongOffset("area12", 500);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // test zero offset on empty hypertext accessibles
       ID = "area13";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -431,7 +430,7 @@
       attrs = { };
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area15, embed char tests, "*plain*plain**bold*bold*"
       ID = "area15";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -457,7 +456,7 @@
       // p
       testTextAttrs(ID, 23, { }, { }, 23, 24);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area16, "font-family" tests
       ID = "area16";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -490,7 +489,7 @@
         testTextAttrs(ID, 31, attrs, defAttrs, 31, 45);
       }
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area17, "text-decoration" tests
       ID = "area17";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -532,7 +531,7 @@
       };
       testTextAttrs(ID, 39, attrs, defAttrs, 39, 44);
 
-      //////////////////////////////////////////////////////////////////////////
+      // ////////////////////////////////////////////////////////////////////////
       // area18, "auto-generation text" tests
       ID = "area18";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -545,7 +544,7 @@
       testTextAttrs(ID, 3, { }, defAttrs, 3, 7);
       testTextAttrs(ID, 7, attrs, defAttrs, 7, 8);
 
-       //////////////////////////////////////////////////////////////////////////
+       // ////////////////////////////////////////////////////////////////////////
       // area19, "HTML5 mark tag" test
       // text enclosed in mark tag will have a different background color
       ID = "area19";
@@ -562,7 +561,7 @@
       attrs = {};
       testTextAttrs(ID, 18, attrs, defAttrs, 17, 28);
 
-       //////////////////////////////////////////////////////////////////////////
+       // ////////////////////////////////////////////////////////////////////////
       // area20, "aOffset as -1 (Mozilla Bug 789621)" test
 
       ID = "area20";

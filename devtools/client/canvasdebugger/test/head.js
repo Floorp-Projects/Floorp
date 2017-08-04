@@ -14,7 +14,6 @@ var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");
 var { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
 var { CanvasFront } = require("devtools/shared/fronts/canvas");
-var { setTimeout } = require("sdk/timers");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var flags = require("devtools/shared/flags");
 var { TargetFactory } = require("devtools/client/framework/target");

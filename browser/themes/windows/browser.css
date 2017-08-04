@@ -1389,21 +1389,6 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
 
 %include ../shared/tabs.inc.css
 
-/* Invert the unhovered close tab icons on bright-text tabs */
-@media not all and (min-resolution: 1.1dppx) {
-  .tab-close-button:-moz-lwtheme-brighttext,
-  #TabsToolbar[brighttext] .tab-close-button:not([selected="true"]) {
-    list-style-image: url("chrome://global/skin/icons/close-inverted.png");
-  }
-}
-
-@media (min-resolution: 1.1dppx) {
-  .tab-close-button:-moz-lwtheme-brighttext,
-  #TabsToolbar[brighttext] .tab-close-button:not([selected="true"]) {
-    list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
-  }
-}
-
 /* tabbrowser-tab focus ring */
 .tabbrowser-tab:focus > .tab-stack > .tab-content {
   outline: 1px dotted;
@@ -1690,17 +1675,6 @@ notification[value="translation"] {
 %include ../shared/fullscreen/warning.inc.css
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
-
-notification.pluginVulnerable > .notification-inner > .messageCloseButton {
-  list-style-image: url("chrome://global/skin/icons/close-inverted.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  notification.pluginVulnerable > .notification-inner > .messageCloseButton {
-    list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
-  }
-}
-
 
 %include downloads/indicator.css
 

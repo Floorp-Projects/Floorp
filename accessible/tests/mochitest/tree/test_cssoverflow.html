@@ -23,11 +23,10 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function focusAnchor(aID)
-    {
+    function focusAnchor(aID) {
       this.linkNode = getNode(aID);
       this.link = getAccessible(this.linkNode);
 
@@ -35,25 +34,21 @@
         new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode)
       ];
 
-      this.invoke = function focusAnchor_invoke()
-      {
+      this.invoke = function focusAnchor_invoke() {
         this.linkNode.focus();
       }
 
-      this.check = function focusAnchor_check(aEvent)
-      {
+      this.check = function focusAnchor_check(aEvent) {
         todo_is(this.link, aEvent.accessible,
                 "Focus should be fired against new link accessible!");
       }
 
-      this.getID = function focusAnchor_getID()
-      {
+      this.getID = function focusAnchor_getID() {
         return "focus a:focus{overflow:scroll} #1";
       }
     }
 
-    function tabAnchor(aID)
-    {
+    function tabAnchor(aID) {
       this.linkNode = getNode(aID);
       this.link = getAccessible(this.linkNode);
 
@@ -61,32 +56,28 @@
         new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode)
       ];
 
-      this.invoke = function tabAnchor_invoke()
-      {
+      this.invoke = function tabAnchor_invoke() {
         synthesizeKey("VK_TAB", { shiftKey: false });
       }
 
-      this.check = function tabAnchor_check(aEvent)
-      {
+      this.check = function tabAnchor_check(aEvent) {
         todo_is(this.link, aEvent.accessible,
                    "Focus should be fired against new link accessible!");
       }
 
-      this.getID = function tabAnchor_getID()
-      {
+      this.getID = function tabAnchor_getID() {
         return "focus a:focus{overflow:scroll} #2";
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
 
     var gQueue = null;
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
-    function doTests()
-    {
+    function doTests() {
       // Shift+Tab not working, and a test timeout, bug 746977
       if (MAC) {
         todo(false, "Shift+tab isn't working on OS X, needs to be disabled until bug 746977 is fixed!");

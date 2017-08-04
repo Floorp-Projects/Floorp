@@ -18,8 +18,7 @@
     /**
      * Invokers
      */
-    function addSelection(aID, aStartOffset, aEndOffset)
-    {
+    function addSelection(aID, aStartOffset, aEndOffset) {
       this.hyperTextNode = getNode(aID);
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
@@ -27,13 +26,11 @@
         new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
       ];
 
-      this.invoke = function addSelection_invoke()
-      {
+      this.invoke = function addSelection_invoke() {
         this.hyperText.addSelection(aStartOffset, aEndOffset);
       }
 
-      this.finalCheck = function addSelection_finalCheck()
-      {
+      this.finalCheck = function addSelection_finalCheck() {
         is(this.hyperText.selectionCount, 1,
            "addSelection: Wrong selection count for " + aID);
         var startOffset = {}, endOffset = {};
@@ -45,14 +42,12 @@
            "addSelection: Wrong end offset for " + aID);
       }
 
-      this.getID = function addSelection_getID()
-      {
+      this.getID = function addSelection_getID() {
         return "nsIAccessibleText::addSelection test for " + aID;
       }
     }
 
-    function changeSelection(aID, aStartOffset, aEndOffset)
-    {
+    function changeSelection(aID, aStartOffset, aEndOffset) {
       this.hyperTextNode = getNode(aID);
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
@@ -60,13 +55,11 @@
         new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
       ];
 
-      this.invoke = function changeSelection_invoke()
-      {
+      this.invoke = function changeSelection_invoke() {
         this.hyperText.setSelectionBounds(0, aStartOffset, aEndOffset);
       }
 
-      this.finalCheck = function changeSelection_finalCheck()
-      {
+      this.finalCheck = function changeSelection_finalCheck() {
         is(this.hyperText.selectionCount, 1,
            "setSelectionBounds: Wrong selection count for " + aID);
         var startOffset = {}, endOffset = {};
@@ -78,49 +71,42 @@
            "setSelectionBounds: Wrong end offset for " + aID);
       }
 
-      this.getID = function changeSelection_getID()
-      {
+      this.getID = function changeSelection_getID() {
         return "nsIAccessibleText::setSelectionBounds test for " + aID;
       }
     }
 
-    function removeSelection(aID)
-    {
+    function removeSelection(aID) {
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
       this.eventSeq = [
         new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, document)
       ];
 
-      this.invoke = function removeSelection_invoke()
-      {
+      this.invoke = function removeSelection_invoke() {
         this.hyperText.removeSelection(0);
       }
 
-      this.finalCheck = function removeSelection_finalCheck()
-      {
+      this.finalCheck = function removeSelection_finalCheck() {
         is(this.hyperText.selectionCount, 0,
            "removeSelection: Wrong selection count for " + aID);
       }
 
-      this.getID = function removeSelection_getID()
-      {
+      this.getID = function removeSelection_getID() {
         return "nsIAccessibleText::removeSelection test for " + aID;
       }
     }
 
     function changeDOMSelection(aID, aNodeID1, aNodeOffset1,
                                 aNodeID2, aNodeOffset2,
-                                aTests)
-    {
+                                aTests) {
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
       this.eventSeq = [
         new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
       ];
 
-      this.invoke = function changeDOMSelection_invoke()
-      {
+      this.invoke = function changeDOMSelection_invoke() {
         var sel = window.getSelection();
         var range = document.createRange();
         range.setStart(getNode(aNodeID1), aNodeOffset1);
@@ -128,8 +114,7 @@
         sel.addRange(range);
       }
 
-      this.finalCheck = function changeDOMSelection_finalCheck()
-      {
+      this.finalCheck = function changeDOMSelection_finalCheck() {
         for (var i = 0; i < aTests.length; i++) {
           var text = getAccessible(aTests[i][0], nsIAccessibleText);
           is(text.selectionCount, 1,
@@ -144,14 +129,12 @@
         }
       }
 
-      this.getID = function changeDOMSelection_getID()
-      {
+      this.getID = function changeDOMSelection_getID() {
         return "DOM selection change for " + aID;
       }
     }
 
-    function onfocusEventSeq(aID)
-    {
+    function onfocusEventSeq(aID) {
       var caretMovedChecker =
         new invokerChecker(EVENT_TEXT_CARET_MOVED, aID);
       var selChangedChecker =
@@ -165,11 +148,10 @@
      * Do tests
      */
 
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new addSelection("paragraph", 1, 3));

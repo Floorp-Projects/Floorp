@@ -1332,10 +1332,6 @@ var gBrowserInit = {
     mm.loadFrameScript("chrome://browser/content/content-UITour.js", true);
     mm.loadFrameScript("chrome://global/content/manifestMessages.js", true);
 
-    // initialize observers and listeners
-    // and give C++ access to gBrowser
-    XULBrowserWindow.init();
-
     window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
 
     if (!gMultiProcessBrowser) {
@@ -4455,12 +4451,6 @@ var XULBrowserWindow = {
     return this.canViewSource = document.getElementById("canViewSource");
   },
 
-  init() {
-    // Initialize the security button's state and tooltip text.
-    var securityUI = gBrowser.securityUI;
-    this.onSecurityChange(null, null, securityUI.state, true);
-  },
-
   setJSStatus() {
     // unsupported
   },
@@ -4875,6 +4865,9 @@ var XULBrowserWindow = {
   onUpdateCurrentBrowser: function XWB_onUpdateCurrentBrowser(aStateFlags, aStatus, aMessage, aTotalProgress) {
     if (FullZoom.updateBackgroundTabs)
       FullZoom.onLocationChange(gBrowser.currentURI, true);
+
+    CombinedStopReload.onTabSwitch();
+
     var nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     var loadingDone = aStateFlags & nsIWebProgressListener.STATE_STOP;
     // use a pseudo-object instead of a (potentially nonexistent) channel for getting
@@ -4979,6 +4972,7 @@ var CombinedStopReload = {
     this.reload = reload;
     this.stop = stop;
     this.stopReloadContainer = this.reload.parentNode;
+    this.timeWhenSwitchedToStop = 0;
 
     // Disable animations until the browser has fully loaded.
     this.animate = false;
@@ -5046,15 +5040,30 @@ var CombinedStopReload = {
     });
   },
 
+  onTabSwitch() {
+    // Reset the time in the event of a tabswitch since the stored time
+    // would have been associated with the previous tab.
+    this.timeWhenSwitchedToStop = 0;
+  },
+
   switchToStop(aRequest, aWebProgress) {
     if (!this._initialized || !this._shouldSwitch(aRequest, aWebProgress)) {
       return;
     }
 
+    // Store the time that we switched to the stop button only if a request
+    // is active. Requests are null if the switch is related to a tabswitch.
+    // This is used to determine if we should show the stop->reload animation.
+    if (aRequest) {
+      this.timeWhenSwitchedToStop = window.performance.now();
+    }
+
     let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
-                        aRequest instanceof Ci.nsIRequest &&
+                        aRequest &&
                         aWebProgress.isTopLevel &&
                         aWebProgress.isLoadingDocument &&
+                        !gBrowser.tabAnimationsInProgress &&
+                        this.stopReloadContainer.closest("#nav-bar-customization-target") &&
                         this.animate;
 
     this._cancelTransition();
@@ -5074,9 +5083,12 @@ var CombinedStopReload = {
     }
 
     let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
-                        aRequest instanceof Ci.nsIRequest &&
+                        aRequest &&
                         aWebProgress.isTopLevel &&
                         !aWebProgress.isLoadingDocument &&
+                        !gBrowser.tabAnimationsInProgress &&
+                        this._loadTimeExceedsMinimumForAnimation() &&
+                        this.stopReloadContainer.closest("#nav-bar-customization-target") &&
                         this.animate;
 
     if (shouldAnimate) {
@@ -5107,6 +5119,16 @@ var CombinedStopReload = {
       self.reload.disabled = XULBrowserWindow.reloadCommand
                                              .getAttribute("disabled") == "true";
     }, 650, this);
+  },
+
+  _loadTimeExceedsMinimumForAnimation() {
+    // If the time between switching to the stop button then switching to
+    // the reload button exceeds 150ms, then we will show the animation.
+    // If we don't know when we switched to stop (a tabswitch occured while
+    // the page was loading), then we will not prevent the animation from
+    // occuring.
+    return !this.timeWhenSwitchedToStop ||
+           window.performance.now() - this.timeWhenSwitchedToStop > 150;
   },
 
   _shouldSwitch(aRequest, aWebProgress) {
@@ -5769,19 +5791,6 @@ function UpdateDynamicShortcutTooltipText(aTooltip) {
     gDynamicTooltipCache.set(nodeId, gNavigatorBundle.getFormattedString(strId, args));
   }
   aTooltip.setAttribute("label", gDynamicTooltipCache.get(nodeId));
-}
-
-function getBrowserSelection(aCharLen) {
-  Deprecated.warning("getBrowserSelection",
-                     "https://bugzilla.mozilla.org/show_bug.cgi?id=1134769");
-
-  let focusedElement = document.activeElement;
-  if (focusedElement && focusedElement.localName == "browser" &&
-      focusedElement.isRemoteBrowser) {
-    throw "getBrowserSelection doesn't support child process windows";
-  }
-
-  return BrowserUtils.getSelectionDetails(window, aCharLen).text;
 }
 
 var gWebPanelURI;
@@ -7358,7 +7367,6 @@ var gIdentityHandler = {
     // Check this._uri because we don't want to refresh the user interface if
     // this is called before the first page load in the window for any reason.
     if (!this._uri) {
-      Cu.reportError("Unexpected early call to refreshForInsecureLoginForms.");
       return;
     }
     this.refreshIdentityBlock();
@@ -8025,9 +8033,6 @@ function getTabModalPromptBox(aWindow) {
 /* DEPRECATED */
 function getBrowser() {
   return gBrowser;
-}
-function getNavToolbox() {
-  return gNavToolbox;
 }
 
 var gPrivateBrowsingUI = {

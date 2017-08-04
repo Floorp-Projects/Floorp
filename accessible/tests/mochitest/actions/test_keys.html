@@ -13,8 +13,7 @@
           src="../common.js"></script>
 
   <script type="application/javascript">
-    function testAcessKey(aAccOrElmOrID, aKey)
-    {
+    function testAcessKey(aAccOrElmOrID, aKey) {
       var acc = getAccessible(aAccOrElmOrID);
       if (!acc)
         return;
@@ -23,8 +22,7 @@
          "Wrong keyboard shortcut on " + prettyName(aAccOrElmOrID));
     }
 
-    function doTest()
-    {
+    function doTest() {
       testAcessKey("input1", "");
       testAcessKey("input2", MAC ? "⌃⌥b" : "Alt+Shift+b");
       testAcessKey("link", MAC ? "⌃⌥l" : "Alt+Shift+l");

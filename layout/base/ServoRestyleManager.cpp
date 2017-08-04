@@ -219,7 +219,11 @@ void
 ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                                   nsRestyleHint aRestyleHint)
 {
-  StyleSet()->ClearDataAndMarkDeviceDirty();
+  // NOTE(emilio): The semantics of these methods are quite funny, in the sense
+  // that we're not supposed to need to rebuild the actual stylist data.
+  //
+  // That's handled as part of the MediumFeaturesChanged stuff, if needed.
+  StyleSet()->ClearCachedStyleData();
 
   DocumentStyleRootIterator iter(mPresContext->Document());
   while (Element* root = iter.GetNextStyleRoot()) {

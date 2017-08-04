@@ -19,14 +19,12 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-  //gA11yEventDumpToConsole = true;
-  function doPreTest()
-  {
+  // gA11yEventDumpToConsole = true;
+  function doPreTest() {
     waitForImageMap("imagemap", doTest);
   }
 
-  function doTest()
-  {
+  function doTest() {
     var accTree = {
       role: ROLE_IMAGE_MAP,
       children: [

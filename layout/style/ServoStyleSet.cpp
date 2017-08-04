@@ -114,9 +114,22 @@ ServoStyleSet::InvalidateStyleForCSSRuleChanges()
 }
 
 nsRestyleHint
-ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged) const
+ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged)
 {
-  return Servo_StyleSet_MediumFeaturesChanged(mRawSet.get(), aViewportChanged);
+  bool viewportUnitsUsed = false;
+  const bool rulesChanged =
+    Servo_StyleSet_MediumFeaturesChanged(mRawSet.get(), &viewportUnitsUsed);
+
+  if (rulesChanged) {
+    ForceAllStyleDirty();
+    return eRestyle_Subtree;
+  }
+
+  if (viewportUnitsUsed && aViewportChanged) {
+    return eRestyle_ForceDescendants;
+  }
+
+  return nsRestyleHint(0);
 }
 
 size_t
@@ -994,18 +1007,10 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
 }
 
 void
-ServoStyleSet::RebuildData()
+ServoStyleSet::ClearCachedStyleData()
 {
   ClearNonInheritingStyleContexts();
-  Servo_StyleSet_RebuildData(mRawSet.get());
-}
-
-void
-ServoStyleSet::ClearDataAndMarkDeviceDirty()
-{
-  ClearNonInheritingStyleContexts();
-  Servo_StyleSet_Clear(mRawSet.get());
-  mStylistState |= StylistState::FullyDirty;
+  Servo_StyleSet_RebuildCachedData(mRawSet.get());
 }
 
 void
@@ -1151,31 +1156,8 @@ void
 ServoStyleSet::UpdateStylist()
 {
   MOZ_ASSERT(StylistNeedsUpdate());
-  if (mStylistState & StylistState::FullyDirty) {
-    RebuildData();
-
-    if (mStylistState & StylistState::StyleSheetsDirty) {
-      // Normally, whoever was in charge of posting a RebuildAllStyleDataEvent,
-      // would also be in charge of posting a restyle/change hint according to
-      // it.
-      //
-      // However, other stylesheets may have been added to the document in the
-      // same period, so when both bits are set, we need to do a full subtree
-      // update, because we can no longer reason about the state of the style
-      // data.
-      //
-      // We could not clear the invalidations when rebuilding the data and
-      // process them here... But it's not clear if that complexity is worth
-      // to handle this edge case more efficiently.
-      if (Element* root = mPresContext->Document()->GetDocumentElement()) {
-        Servo_NoteExplicitHints(root, eRestyle_Subtree, nsChangeHint(0));
-      }
-    }
-  } else {
-    MOZ_ASSERT(mStylistState & StylistState::StyleSheetsDirty);
-    Element* root = mPresContext->Document()->GetDocumentElement();
-    Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root);
-  }
+  Element* root = mPresContext->Document()->GetDocumentElement();
+  Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root);
   mStylistState = StylistState::NotDirty;
 }
 

@@ -6,8 +6,8 @@
 
 /* import-globals-from ../../mochitest/states.js */
 /* import-globals-from ../../mochitest/role.js */
-loadScripts({ name: 'states.js', dir: MOCHITESTS_DIR },
-            { name: 'role.js', dir: MOCHITESTS_DIR });
+loadScripts({ name: "states.js", dir: MOCHITESTS_DIR },
+            { name: "role.js", dir: MOCHITESTS_DIR });
 
 async function runTests(browser, accDoc) {
   let onFocus = waitForEvent(EVENT_FOCUS, "button");

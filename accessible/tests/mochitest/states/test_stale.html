@@ -18,8 +18,7 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function addChild(aContainerID)
-    {
+    function addChild(aContainerID) {
       this.containerNode = getNode(aContainerID);
       this.childNode = null;
 
@@ -27,38 +26,32 @@
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
-      this.invoke = function addChild_invoke()
-      {
+      this.invoke = function addChild_invoke() {
         this.childNode = document.createElement("div");
         this.containerNode.appendChild(this.childNode);
       }
 
-      this.finalCheck = function addChild_finalCheck()
-      {
+      this.finalCheck = function addChild_finalCheck() {
         // no stale state should be set
         testStates(this.childNode, 0, 0, 0, EXT_STATE_STALE);
       }
 
-      this.getID = function addChild_getID()
-      {
+      this.getID = function addChild_getID() {
         return "add child for " + prettyName(aContainerID);
       }
     }
 
-    function removeChildChecker(aInvoker)
-    {
+    function removeChildChecker(aInvoker) {
       this.type = EVENT_HIDE;
       this.__defineGetter__("target", function() { return aInvoker.child; });
 
-      this.check = function removeChildChecker_check()
-      {
+      this.check = function removeChildChecker_check() {
         // stale state should be set
         testStates(aInvoker.child, 0, EXT_STATE_STALE);
       }
     }
 
-    function removeChild(aContainerID)
-    {
+    function removeChild(aContainerID) {
       this.containerNode = getNode(aContainerID);
       this.child = null;
 
@@ -66,25 +59,22 @@
         new removeChildChecker(this)
       ];
 
-      this.invoke = function removeChild_invoke()
-      {
+      this.invoke = function removeChild_invoke() {
         var childNode = this.containerNode.firstChild;
         this.child = getAccessible(childNode);
 
         this.containerNode.removeChild(childNode);
       }
 
-      this.getID = function removeChild_getID()
-      {
+      this.getID = function removeChild_getID() {
         return "remove child from " + prettyName(aContainerID);
       }
     }
 
-    //gA11yEventDumpToConsole = true; //debugging
+    // gA11yEventDumpToConsole = true; //debugging
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
 
       gQueue.push(new addChild("container"));

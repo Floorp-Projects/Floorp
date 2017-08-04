@@ -19,8 +19,7 @@
     /**
      * Change list style type to none.
      */
-    function hideBullet()
-    {
+    function hideBullet() {
       this.eventSeq = [];
       this.liAcc = getAccessible("list_element");
       this.bullet = this.liAcc.firstChild;
@@ -28,19 +27,16 @@
       this.eventSeq.push(new invokerChecker(EVENT_HIDE, this.bullet));
       this.eventSeq.push(new invokerChecker(EVENT_REORDER, this.liAcc));
 
-      this.invoke = function hideBullet_invoke()
-      {
+      this.invoke = function hideBullet_invoke() {
         getNode("list").setAttribute("style", "list-style-type: none;");
       }
 
-      this.finalCheck = function hideBullet_finalCheck()
-      {
+      this.finalCheck = function hideBullet_finalCheck() {
         is(this.liAcc.name, "list element",
           "Check that first child of LI is not a bullet.");
       }
 
-      this.getID = function hideBullet_getID()
-      {
+      this.getID = function hideBullet_getID() {
         return "Hide bullet by setting style to none";
       }
     }
@@ -48,8 +44,7 @@
     /**
      * Change list style type to circles.
      */
-    function showBullet()
-    {
+    function showBullet() {
       this.eventSeq = [];
       this.liAcc = getAccessible("list_element");
 
@@ -58,26 +53,22 @@
                                             this.liAcc));
       this.eventSeq.push(new invokerChecker(EVENT_REORDER, this.liAcc));
 
-      this.invoke = function showBullet_invoke()
-      {
+      this.invoke = function showBullet_invoke() {
         getNode("list").setAttribute("style", "list-style-type: circle;");
       }
 
-      this.finalCheck = function showBullet_finalCheck()
-      {
+      this.finalCheck = function showBullet_finalCheck() {
         is(this.liAcc.name, "◦ list element",
           "Check that first child of LI is a circle bullet.");
       }
 
-      this.getID = function showBullet_getID()
-      {
+      this.getID = function showBullet_getID() {
         return "Show bullet by setting style to circle";
       }
     }
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
 
       var list = getNode("list");
       list.setAttribute("style", "list-style-type: circle;");

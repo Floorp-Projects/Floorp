@@ -1,23 +1,19 @@
 /**
  * Perform all editable text tests.
  */
-function editableTextTestRun()
-{
-  this.add = function add(aTest)
-  {
+function editableTextTestRun() {
+  this.add = function add(aTest) {
     this.seq.push(aTest);
   }
 
-  this.run = function run()
-  {
+  this.run = function run() {
     this.iterate();
   }
 
   this.index = 0;
   this.seq = [];
 
-  this.iterate = function iterate()
-  {
+  this.iterate = function iterate() {
     if (this.index < this.seq.length) {
       this.seq[this.index++].startTest(this);
       return;
@@ -31,14 +27,12 @@ function editableTextTestRun()
 /**
  * Used to test nsIEditableTextAccessible methods.
  */
-function editableTextTest(aID)
-{
+function editableTextTest(aID) {
   /**
    * Schedule a test, the given function with its arguments will be executed
    * when preceding test is complete.
    */
-  this.scheduleTest = function scheduleTest(aFunc)
-  {
+  this.scheduleTest = function scheduleTest(aFunc) {
     // A data container acts like a dummy invoker, it's never invoked but
     // it's used to generate real invoker when previous invoker was handled.
     var dataContainer = {
@@ -56,12 +50,10 @@ function editableTextTest(aID)
   /**
    * setTextContents test.
    */
-  this.setTextContents = function setTextContents(aValue, aSkipStartOffset)
-  {
+  this.setTextContents = function setTextContents(aValue, aSkipStartOffset) {
     var testID = "setTextContents '" + aValue + "' for " + prettyName(aID);
 
-    function setTextContentsInvoke()
-    {
+    function setTextContentsInvoke() {
       dump(`\nsetTextContents '${aValue}'\n`);
       var acc = getAccessible(aID, nsIAccessibleEditableText);
       acc.setTextContents(aValue);
@@ -81,13 +73,11 @@ function editableTextTest(aID)
   /**
    * insertText test.
    */
-  this.insertText = function insertText(aStr, aPos, aResStr, aResPos)
-  {
+  this.insertText = function insertText(aStr, aPos, aResStr, aResPos) {
     var testID = "insertText '" + aStr + "' at " + aPos + " for " +
       prettyName(aID);
 
-    function insertTextInvoke()
-    {
+    function insertTextInvoke() {
       dump(`\ninsertText '${aStr}' at ${aPos} pos\n`);
       var acc = getAccessible(aID, nsIAccessibleEditableText);
       acc.insertText(aStr, aPos);
@@ -101,13 +91,11 @@ function editableTextTest(aID)
   /**
    * copyText test.
    */
-  this.copyText = function copyText(aStartPos, aEndPos, aClipboardStr)
-  {
+  this.copyText = function copyText(aStartPos, aEndPos, aClipboardStr) {
     var testID = "copyText from " + aStartPos + " to " + aEndPos + " for " +
       prettyName(aID);
 
-    function copyTextInvoke()
-    {
+    function copyTextInvoke() {
       var acc = getAccessible(aID, nsIAccessibleEditableText);
       acc.copyText(aStartPos, aEndPos);
     }
@@ -120,13 +108,11 @@ function editableTextTest(aID)
    * copyText and pasteText test.
    */
   this.copyNPasteText = function copyNPasteText(aStartPos, aEndPos,
-                                                aPos, aResStr)
-  {
+                                                aPos, aResStr) {
     var testID = "copyText from " + aStartPos + " to " + aEndPos +
       "and pasteText at " + aPos + " for " + prettyName(aID);
 
-    function copyNPasteTextInvoke()
-    {
+    function copyNPasteTextInvoke() {
       var acc = getAccessible(aID, nsIAccessibleEditableText);
       acc.copyText(aStartPos, aEndPos);
       acc.pasteText(aPos);
@@ -140,13 +126,11 @@ function editableTextTest(aID)
    * cutText test.
    */
   this.cutText = function cutText(aStartPos, aEndPos, aResStr,
-                                  aResStartPos, aResEndPos)
-  {
+                                  aResStartPos, aResEndPos) {
     var testID = "cutText from " + aStartPos + " to " + aEndPos + " for " +
       prettyName(aID);
 
-    function cutTextInvoke()
-    {
+    function cutTextInvoke() {
       var acc = getAccessible(aID, nsIAccessibleEditableText);
       acc.cutText(aStartPos, aEndPos);
     }
@@ -161,13 +145,11 @@ function editableTextTest(aID)
    * cutText and pasteText test.
    */
   this.cutNPasteText = function copyNPasteText(aStartPos, aEndPos,
-                                               aPos, aResStr)
-  {
+                                               aPos, aResStr) {
     var testID = "cutText from " + aStartPos + " to " + aEndPos +
       " and pasteText at " + aPos + " for " + prettyName(aID);
 
-    function cutNPasteTextInvoke()
-    {
+    function cutNPasteTextInvoke() {
       var acc = getAccessible(aID, nsIAccessibleEditableText);
       acc.cutText(aStartPos, aEndPos);
       acc.pasteText(aPos);
@@ -182,12 +164,10 @@ function editableTextTest(aID)
   /**
    * pasteText test.
    */
-  this.pasteText = function pasteText(aPos, aResStr)
-  {
+  this.pasteText = function pasteText(aPos, aResStr) {
     var testID = "pasteText at " + aPos + " for " + prettyName(aID);
 
-    function pasteTextInvoke()
-    {
+    function pasteTextInvoke() {
       var acc = getAccessible(aID, nsIAccessibleEditableText);
       acc.pasteText(aPos);
     }
@@ -199,16 +179,14 @@ function editableTextTest(aID)
   /**
    * deleteText test.
    */
-  this.deleteText = function deleteText(aStartPos, aEndPos, aResStr)
-  {
+  this.deleteText = function deleteText(aStartPos, aEndPos, aResStr) {
     var testID = "deleteText from " + aStartPos + " to " + aEndPos +
       " for " + prettyName(aID);
 
     var oldValue = getValue(aID).substring(aStartPos, aEndPos);
     var removeTripple = oldValue ? [aStartPos, aEndPos, oldValue] : null;
 
-    function deleteTextInvoke()
-    {
+    function deleteTextInvoke() {
       var acc = getAccessible(aID, [nsIAccessibleEditableText]);
       acc.deleteText(aStartPos, aEndPos);
     }
@@ -217,11 +195,10 @@ function editableTextTest(aID)
                       getValueChecker(aID, aResStr), testID);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
   // Implementation details.
 
-  function getValue(aID)
-  {
+  function getValue(aID) {
     var elm = getNode(aID);
     if (elm instanceof Components.interfaces.nsIDOMNSEditableElement)
       return elm.value;
@@ -235,22 +212,18 @@ function editableTextTest(aID)
   /**
    * Common checkers.
    */
-  function getValueChecker(aID, aValue)
-  {
+  function getValueChecker(aID, aValue) {
     var checker = {
-      check: function valueChecker_check()
-      {
+      check: function valueChecker_check() {
         is(getValue(aID), aValue, "Wrong value " + aValue);
       }
     };
     return checker;
   }
 
-  function getClipboardChecker(aID, aText)
-  {
+  function getClipboardChecker(aID, aText) {
     var checker = {
-      check: function clipboardChecker_check()
-      {
+      check: function clipboardChecker_check() {
         is(getTextFromClipboard(), aText, "Wrong text in clipboard.");
       }
     };
@@ -260,8 +233,7 @@ function editableTextTest(aID)
   /**
    * Process next scheduled test.
    */
-  this.unwrapNextTest = function unwrapNextTest()
-  {
+  this.unwrapNextTest = function unwrapNextTest() {
     var data = this.mEventQueue.mInvokers[this.mEventQueue.mIndex + 1];
     if (data)
       data.func.apply(this, data.funcArgs);
@@ -271,16 +243,14 @@ function editableTextTest(aID)
    * Used to generate an invoker object for the sheduled test.
    */
   this.generateTest = function generateTest(aID, aRemoveTriple, aInsertTriple,
-                                            aInvokeFunc, aChecker, aInvokerID)
-  {
+                                            aInvokeFunc, aChecker, aInvokerID) {
     var et = this;
     var invoker = {
       eventSeq: [],
 
       invoke: aInvokeFunc,
-      finalCheck: function finalCheck()
-      {
-        //dumpTree(aID, `'${aID}' tree:`);
+      finalCheck: function finalCheck() {
+        // dumpTree(aID, `'${aID}' tree:`);
 
         aChecker.check();
         et.unwrapNextTest(); // replace dummy invoker on real invoker object.
@@ -312,12 +282,10 @@ function editableTextTest(aID)
   /**
    * Run the tests.
    */
-  this.startTest = function startTest(aTestRun)
-  {
+  this.startTest = function startTest(aTestRun) {
     var testRunObj = aTestRun;
     var thisObj = this;
-    this.mEventQueue.onFinish = function finishCallback()
-    {
+    this.mEventQueue.onFinish = function finishCallback() {
       // Notify textRun object that all tests were finished.
       testRunObj.iterate();
 

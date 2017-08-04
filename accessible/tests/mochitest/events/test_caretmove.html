@@ -20,14 +20,12 @@
     /**
      * Click checker.
      */
-    function clickChecker(aCaretOffset, aID, aExtraNodeOrID, aExtraCaretOffset)
-    {
+    function clickChecker(aCaretOffset, aID, aExtraNodeOrID, aExtraCaretOffset) {
       this.__proto__ = new caretMoveChecker(aCaretOffset, aID);
 
       this.extraNode = getNode(aExtraNodeOrID);
 
-      this.check = function clickChecker_check(aEvent)
-      {
+      this.check = function clickChecker_check(aEvent) {
         this.__proto__.check(aEvent);
 
         if (this.extraNode) {
@@ -44,10 +42,9 @@
     var gQueue = null;
 
     // gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
-    function doTests()
-    {
+    function doTests() {
       // test caret move events and caret offsets
       gQueue = new eventQueue();
 

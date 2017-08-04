@@ -17,11 +17,14 @@ class CompactTabsGridLayout extends TabsGridLayout {
         super(context, attrs, 2);
 
         final Resources resources = context.getResources();
-        final int desiredHorizontalItemSpacing = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_ideal_item_hspacing);
-        final int verticalItemPadding = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_item_vpadding);
-        final int viewPaddingVertical = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_vpadding);
+        final int desiredHorizontalItemSpacing = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_hpadding_compact);
+        final int viewPaddingVertical = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_vpadding_compact);
 
         setPadding(desiredHorizontalItemSpacing, viewPaddingVertical, desiredHorizontalItemSpacing, viewPaddingVertical);
-        addItemDecoration(new GridSpacingDecoration(desiredHorizontalItemSpacing, verticalItemPadding));
+
+
+        final int horizontalItemPadding = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_item_hpadding_compact);
+        final int verticalItemPadding = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_item_vpadding_compact);
+        addItemDecoration(new GridSpacingDecoration(horizontalItemPadding, verticalItemPadding));
     }
 }
