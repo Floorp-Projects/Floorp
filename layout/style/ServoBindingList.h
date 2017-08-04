@@ -539,7 +539,8 @@ SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoStyleContextStrong,
                    mozilla::CSSPseudoElementType pseudo_type,
                    mozilla::StyleRuleInclusion rule_inclusion,
                    const mozilla::ServoElementSnapshotTable* snapshots,
-                   RawServoStyleSetBorrowed set)
+                   RawServoStyleSetBorrowed set,
+                   bool ignore_existing_styles)
 
 // Reparents style to the new parents.
 SERVO_BINDING_FUNC(Servo_ReparentStyle, ServoStyleContextStrong,
