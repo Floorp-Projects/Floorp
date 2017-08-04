@@ -8,7 +8,7 @@
 interface nsIArray;
 interface nsIDOMNode;
 
-[scriptable, uuid(fdf23301-4a94-11d3-9ce4-9960496c41bc)]
+[scriptable, builtinclass, uuid(fdf23301-4a94-11d3-9ce4-9960496c41bc)]
 
 interface nsIEditorMailSupport : nsISupports
 {
