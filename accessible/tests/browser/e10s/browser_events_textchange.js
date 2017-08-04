@@ -13,6 +13,8 @@ function checkTextChangeEvent(event, id, text, start, end, isInserted, isFromUse
   is(tcEvent.modifiedText, text, `Correct text for ${prettyName(id)}`);
   is(tcEvent.isFromUserInput, isFromUserInput,
     `Correct value of isFromUserInput for ${prettyName(id)}`);
+  ok(tcEvent.accessibleDocument instanceof nsIAccessibleDocument,
+    "Accessible document not present.");
 }
 
 async function changeText(browser, id, value, events) {
