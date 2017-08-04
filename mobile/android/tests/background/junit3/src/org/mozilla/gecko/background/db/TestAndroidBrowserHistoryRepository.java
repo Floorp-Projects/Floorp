@@ -11,7 +11,6 @@ import org.mozilla.gecko.background.sync.helpers.HistoryHelpers;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
-import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepository;
@@ -161,26 +160,10 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
   }
 
   /**
-   * Exists to provide access to record string logic.
-   */
-  protected class HelperHistorySession extends AndroidBrowserHistoryRepositorySession {
-    public HelperHistorySession(Repository repository, Context context) {
-      super(repository, context);
-    }
-
-    public boolean sameRecordString(HistoryRecord r1, HistoryRecord r2) {
-      return buildRecordString(r1).equals(buildRecordString(r2));
-    }
-  }
-
-  /**
    * Verifies that two history records with the same URI but different
    * titles will be reconciled locally.
    */
   public void testRecordStringCollisionAndEquality() {
-    final AndroidBrowserHistoryRepository repo = new AndroidBrowserHistoryRepository();
-    final HelperHistorySession testSession = new HelperHistorySession(repo, getApplicationContext());
-
     final long now = RepositorySession.now();
 
     final HistoryRecord record0 = new HistoryRecord(null, "history", now + 1, false);
@@ -193,11 +176,6 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
     record0.title = "Foo 0";
     record1.title = "Foo 1";
     record2.title = "Foo 2";
-
-    // Ensure that two records with the same URI produce the same record string,
-    // and two records with different URIs do not.
-    assertTrue(testSession.sameRecordString(record0, record1));
-    assertFalse(testSession.sameRecordString(record0, record2));
 
     // Two records are congruent if they have the same URI and their
     // identifiers match (which is why these all have null GUIDs).
@@ -294,7 +272,7 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
 
   public void testInvalidHistoryItemIsSkipped() throws NullCursorException {
     final AndroidBrowserHistoryRepositorySession session = (AndroidBrowserHistoryRepositorySession) createAndBeginSession();
-    final AndroidBrowserRepositoryDataAccessor dbHelper = session.getDBHelper();
+    final AndroidBrowserRepositoryDataAccessor dbHelper = new AndroidBrowserHistoryDataAccessor(getApplicationContext());
 
     final long now = System.currentTimeMillis();
     final HistoryRecord emptyURL = new HistoryRecord(Utils.generateGuid(), "history", now, false);
@@ -330,9 +308,6 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
 
     // But aren't returned by fetching.
     performWait(fetchAllRunnable(session, new Record[] {}));
-
-    // And we'd ignore about:home if we downloaded it.
-    assertTrue(session.shouldIgnore(aboutURL));
 
     session.abort();
   }
@@ -424,7 +399,7 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
 
   public void testDataAccessorBulkInsert() throws NullCursorException {
     final AndroidBrowserHistoryRepositorySession session = (AndroidBrowserHistoryRepositorySession) createAndBeginSession();
-    AndroidBrowserHistoryDataAccessor db = (AndroidBrowserHistoryDataAccessor) session.getDBHelper();
+    final AndroidBrowserHistoryDataAccessor db = new AndroidBrowserHistoryDataAccessor(getApplicationContext());
 
     ArrayList<HistoryRecord> records = new ArrayList<HistoryRecord>();
     records.add(HistoryHelpers.createHistory1());
