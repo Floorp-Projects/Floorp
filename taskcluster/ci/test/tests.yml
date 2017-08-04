@@ -1191,14 +1191,16 @@ reftest-no-accel:
         by-test-platform:
             macosx.*: 1
             windows8-64.*/debug: 2
+            windows8-64.*/opt: 1
             default: 8
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked:
             by-test-platform:
-                windows8-64.*/debug: true
-                default: false
+                windows8-64.*/opt: true
+                macosx.*: false
+                default: true
         config:
             by-test-platform:
                 windows.*:
