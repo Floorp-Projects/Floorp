@@ -160,8 +160,9 @@ public class SwitchContextTest {
         }
         TestHelper.notificationEraseOpenItem.click();
 
-        // Verify that it's on the main view, showing the previous browsing session
-        assertTrue(TestHelper.erasedMsg.waitForExists(waitingTime));
+        // Verify that it's on the main view, showing the initial view
+        TestHelper.erasedMsg.waitForExists(waitingTime);
+        assertTrue(TestHelper.erasedMsg.exists());
         assertTrue(TestHelper.inlineAutocompleteEditText.exists());
         assertTrue(TestHelper.initialView.exists());
         assertTrue(!rabbitImage.exists());
