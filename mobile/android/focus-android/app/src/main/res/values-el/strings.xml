@@ -9,6 +9,7 @@
   <string name="menu_share">Κοινή χρήση…</string>
   <string name="menu_open_with_default_browser">Άνοιγμα με %1$s</string>
   <string name="menu_open_with_a_browser">Άνοιγμα με…</string>
+  <string name="menu_add_to_home_screen">Προσθήκη στην Αρχική οθόνη</string>
   <string name="menu_settings">Ρυθμίσεις</string>
   <string name="menu_about">Πληροφορίες</string>
   <string name="menu_help">Βοήθεια</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Κοινοποίηση μέσω</string>
   <string name="notification_erase_text">Διαγραφή ιστορικού περιήγησης</string>
   <string name="notification_action_open">Άνοιγμα</string>
+  <string name="notification_action_erase_and_open">Διαγραφή και Άνοιγμα</string>
   <string name="shortcut_erase_short_label">Διαγραφή</string>
   <string name="shortcut_erase_long_label">Διαγραφή ιστορικού περιήγησης</string>
   <string name="text_selection_search_action">Ιδιωτική αναζήτηση</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Φραγή trackers άλλου περιεχομένου</string>
   <string name="preference_privacy_block_content_summary">Ίσως χαλάσει μερικά βίντεο και ιστοσελίδες</string>
   <string name="preference_privacy_secure_mode">Αορατότητα</string>
+  <string name="preference_privacy_stealth_summary">Απόκρυψη ιστοσελίδων κατά την εναλλαγή εφαρμογών</string>
   <string name="preference_category_performance">Απόδοση</string>
   <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
   <string name="preference_performance_block_webfonts_summary">Ενδέχεται να οδηγήσει σε απώλεια εικονιδίων ή εικόνων</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Παράκαμψη</string>
   <string name="firstrun_next_button">Επόμενο</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Προσθήκη στην Αρχική οθόνη</string>
+  <string name="dialog_addtohomescreen_action_add">Προσθήκη</string>
+  <string name="dialog_addtohomescreen_action_cancel">Ακύρωση</string>
 </resources>

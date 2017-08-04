@@ -9,6 +9,7 @@
   <string name="menu_share">ແບ່ງປັນ…</string>
   <string name="menu_open_with_default_browser">ເປີດດ້ວຍ %1$s</string>
   <string name="menu_open_with_a_browser">ເປີດ​ດ້ວຍ …</string>
+  <string name="menu_add_to_home_screen">ເພີ່ມເຂົ້າໄປຫນ້າຈໍຫລັກ</string>
   <string name="menu_settings">ການຕັ້ງຄ່າ</string>
   <string name="menu_about">ກ່ຽວກັບ</string>
   <string name="menu_help">ວິທີໃຊ້</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">ແບ່ງປັນຜ່ານທາງ</string>
   <string name="notification_erase_text">ລຶບປະຫວັດການທ່ອງເວັບ</string>
   <string name="notification_action_open">ເປີດ</string>
+  <string name="notification_action_erase_and_open">ລຶບ ແລະ ເປີດ</string>
   <string name="shortcut_erase_short_label">ລຶບ</string>
   <string name="shortcut_erase_long_label">ລຶບປະຫວັດການທ່ອງເວັບ</string>
   <string name="text_selection_search_action">ຄົ້ນຫາຢ່າງເປັນສ່ວນຕົວ</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">ບັອກຕົວຕິດຕາມຂອງເນື້ອຫາຕ່າງໆ</string>
   <string name="preference_privacy_block_content_summary">ອາດຈະເຮັດໃຫ້ບາງວິດີໂອ ແລະ ຫນ້າເວັບບໍ່ສົມບູນ</string>
   <string name="preference_privacy_secure_mode">ອຳພາງຕົວຕົນ</string>
+  <string name="preference_privacy_stealth_summary">ເຊື່ອງຫນ້າເວັບເມື່ອສະລັບແອັບ</string>
   <string name="preference_category_performance">ປະສິດທິພາບ</string>
   <string name="preference_performance_block_webfonts">ບັອກຕົວອັກສອນເວັບ</string>
   <string name="preference_performance_block_webfonts_summary">ອາດຈະສົ່ງຜົນເຮັດໃຫ້ໄອຄອນ ຫລື ຮູບພາບຂາດຫາຍໄປ</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">ຂ້າມໄປ</string>
   <string name="firstrun_next_button">ຕໍ່ໄປ</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">ເພີ່ມເຂົ້າໄປຫນ້າຈໍຫລັກ</string>
+  <string name="dialog_addtohomescreen_action_add">ເພີ່ມ</string>
+  <string name="dialog_addtohomescreen_action_cancel">ຍົກເລີກ</string>
 </resources>
