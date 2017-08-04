@@ -222,7 +222,8 @@ public:
       // We can't bail out early because we need to update mChildrenChanged.
     }
 
-    nsIntRegion internal = ComputeChangeInternal(aPrefix, aCallback);
+    nsIntRegion internal;
+    ComputeChangeInternal(aPrefix, internal, aCallback);
     LTI_DUMP(internal, "internal");
     AddRegion(result, internal);
     LTI_DUMP(mLayer->GetInvalidRegion().GetRegion(), "invalid");
@@ -273,10 +274,11 @@ public:
     return TransformRect(mVisibleRegion.ToUnknownRegion().GetBounds(), mTransform);
   }
 
-  virtual nsIntRegion ComputeChangeInternal(const char* aPrefix,
-                                            NotifySubDocInvalidationFunc aCallback)
+  virtual bool ComputeChangeInternal(const char* aPrefix,
+                                     nsIntRegion& aOutRegion,
+                                     NotifySubDocInvalidationFunc aCallback)
   {
-    return IntRect();
+    return true;
   }
 
   RefPtr<Layer> mLayer;
@@ -310,8 +312,9 @@ protected:
   ContainerLayerProperties& operator=(const ContainerLayerProperties& a) = delete;
 
 public:
-  nsIntRegion ComputeChangeInternal(const char *aPrefix,
-                                    NotifySubDocInvalidationFunc aCallback) override
+  bool ComputeChangeInternal(const char *aPrefix,
+                             nsIntRegion& aOutRegion,
+                             NotifySubDocInvalidationFunc aCallback) override
   {
     // Make sure we got our virtual call right
     mSubtypeCanary.Check();
@@ -447,7 +450,9 @@ public:
 
     LTI_DUMP(invalidOfLayer, "invalidOfLayer");
     result.OrWith(invalidOfLayer);
-    return result;
+
+    aOutRegion = Move(result);
+    return true;
   }
 
   IntRect NewTransformedBounds() override
@@ -495,24 +500,24 @@ protected:
   ColorLayerProperties& operator=(const ColorLayerProperties& a) = delete;
 
 public:
-  nsIntRegion ComputeChangeInternal(const char* aPrefix,
-                                    NotifySubDocInvalidationFunc aCallback) override
+  bool ComputeChangeInternal(const char* aPrefix,
+                             nsIntRegion& aOutRegion,
+                             NotifySubDocInvalidationFunc aCallback) override
   {
     ColorLayer* color = static_cast<ColorLayer*>(mLayer.get());
 
     if (mColor != color->GetColor()) {
       LTI_DUMP(NewTransformedBounds(), "color");
-      return NewTransformedBounds();
+      aOutRegion = NewTransformedBounds();
+      return true;
     }
 
     nsIntRegion boundsDiff;
     boundsDiff.Xor(mBounds, color->GetBounds());
     LTI_DUMP(boundsDiff, "colorbounds");
 
-    nsIntRegion result;
-    AddTransformedRegion(result, boundsDiff, mTransform);
-
-    return result;
+    AddTransformedRegion(aOutRegion, boundsDiff, mTransform);
+    return true;
   }
 
   Color mColor;
@@ -534,15 +539,17 @@ protected:
   BorderLayerProperties& operator=(const BorderLayerProperties& a) = delete;
 
 public:
-  nsIntRegion ComputeChangeInternal(const char* aPrefix,
-                                    NotifySubDocInvalidationFunc aCallback) override
+  bool ComputeChangeInternal(const char* aPrefix,
+                             nsIntRegion& aOutRegion,
+                             NotifySubDocInvalidationFunc aCallback) override
   {
     BorderLayer* border = static_cast<BorderLayer*>(mLayer.get());
 
     if (!border->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
       IntRect result = NewTransformedBounds();
       result = result.Union(OldTransformedBounds());
-      return result;
+      aOutRegion = result;
+      return true;
     }
 
     if (!PodEqual(&mColors[0], &border->GetColors()[0], 4) ||
@@ -550,10 +557,11 @@ public:
         !PodEqual(&mCorners[0], &border->GetCorners()[0], 4) ||
         !mRect.IsEqualEdges(border->GetRect())) {
       LTI_DUMP(NewTransformedBounds(), "bounds");
-      return NewTransformedBounds();
+      aOutRegion = NewTransformedBounds();
+      return true;
     }
 
-    return nsIntRegion();
+    return true;
   }
 
   BorderColors mColors;
@@ -576,25 +584,28 @@ protected:
   TextLayerProperties& operator=(const TextLayerProperties& a) = delete;
 
 public:
-  nsIntRegion ComputeChangeInternal(const char* aPrefix,
-                                    NotifySubDocInvalidationFunc aCallback) override
+  bool ComputeChangeInternal(const char* aPrefix,
+                             nsIntRegion& aOutRegion,
+                             NotifySubDocInvalidationFunc aCallback) override
   {
     TextLayer* text = static_cast<TextLayer*>(mLayer.get());
 
     if (!text->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
       IntRect result = NewTransformedBounds();
       result = result.Union(OldTransformedBounds());
-      return result;
+      aOutRegion = result;
+      return true;
     }
 
     if (!mBounds.IsEqualEdges(text->GetBounds()) ||
         mGlyphs != text->GetGlyphs() ||
         mFont != text->GetScaledFont()) {
       LTI_DUMP(NewTransformedBounds(), "bounds");
-      return NewTransformedBounds();
+      aOutRegion = NewTransformedBounds();
+      return true;
     }
 
-    return nsIntRegion();
+    return true;
   }
 
   gfx::IntRect mBounds;
@@ -630,15 +641,17 @@ struct ImageLayerProperties : public LayerPropertiesBase
     }
   }
 
-  nsIntRegion ComputeChangeInternal(const char* aPrefix,
-                                    NotifySubDocInvalidationFunc aCallback) override
+  bool ComputeChangeInternal(const char* aPrefix,
+                             nsIntRegion& aOutRegion,
+                             NotifySubDocInvalidationFunc aCallback) override
   {
     ImageLayer* imageLayer = static_cast<ImageLayer*>(mLayer.get());
 
     if (!imageLayer->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
       IntRect result = NewTransformedBounds();
       result = result.Union(OldTransformedBounds());
-      return result;
+      aOutRegion = result;
+      return true;
     }
 
     ImageContainer* container = imageLayer->GetContainer();
@@ -663,13 +676,15 @@ struct ImageLayerProperties : public LayerPropertiesBase
         }
         IntRect rect(0, 0, size.width, size.height);
         LTI_DUMP(rect, "mask");
-        return TransformRect(rect, GetTransformForInvalidation(mLayer));
+        aOutRegion = TransformRect(rect, GetTransformForInvalidation(mLayer));
+        return true;
       }
       LTI_DUMP(NewTransformedBounds(), "bounds");
-      return NewTransformedBounds();
+      aOutRegion = NewTransformedBounds();
+      return true;
     }
 
-    return IntRect();
+    return true;
   }
 
   RefPtr<ImageContainer> mContainer;
@@ -691,18 +706,20 @@ struct CanvasLayerProperties : public LayerPropertiesBase
     mFrameID = mImageHost ? mImageHost->GetFrameID() : -1;
   }
 
-  nsIntRegion ComputeChangeInternal(const char* aPrefix,
-                                    NotifySubDocInvalidationFunc aCallback) override
+  bool ComputeChangeInternal(const char* aPrefix,
+                             nsIntRegion& aOutRegion,
+                             NotifySubDocInvalidationFunc aCallback) override
   {
     CanvasLayer* canvasLayer = static_cast<CanvasLayer*>(mLayer.get());
 
     ImageHost* host = GetImageHost(canvasLayer);
     if (host && host->GetFrameID() != mFrameID) {
       LTI_DUMP(NewTransformedBounds(), "frameId");
-      return NewTransformedBounds();
+      aOutRegion = NewTransformedBounds();
+      return true;
     }
 
-    return IntRect();
+    return true;
   }
 
   RefPtr<ImageHost> mImageHost;
