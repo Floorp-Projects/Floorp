@@ -60,12 +60,15 @@ public:
    * tree and generates the changed rectangle.
    *
    * @param aRoot Root layer of the layer tree to compare against.
+   * @param aOutRegion Outparam that will contain the painted area changed by the layer tree changes.
    * @param aCallback If specified, callback to call when ContainerLayers
    * are invalidated.
-   * @return Painted area changed by the layer tree changes.
+   * @return True on success, false if a calculation overflowed and the entire
+   *         layer tree area should be considered invalidated.
    */
-  virtual nsIntRegion ComputeDifferences(Layer* aRoot,
-                                         NotifySubDocInvalidationFunc aCallback) = 0;
+  virtual bool ComputeDifferences(Layer* aRoot,
+                                  nsIntRegion& aOutRegion,
+                                  NotifySubDocInvalidationFunc aCallback) = 0;
 
   virtual void MoveBy(const gfx::IntPoint& aOffset) = 0;
 };

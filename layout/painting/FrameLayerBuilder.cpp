@@ -4770,7 +4770,11 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       props->MoveBy(-offset);
       // Effective transforms are needed by ComputeDifferences().
       tmpLayer->ComputeEffectiveTransforms(Matrix4x4());
-      nsIntRegion invalid = props->ComputeDifferences(tmpLayer, nullptr);
+      nsIntRegion invalid;
+      if (!props->ComputeDifferences(tmpLayer, invalid, nullptr)) {
+        nsRect visible = aItem->Frame()->GetVisualOverflowRect();
+        invalid = visible.ToOutsidePixels(paintedData->mAppUnitsPerDevPixel);
+      }
       if (aLayerState == LAYER_SVG_EFFECTS) {
         invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->Frame(),
                                                                         aItem->ToReferenceFrame(),
