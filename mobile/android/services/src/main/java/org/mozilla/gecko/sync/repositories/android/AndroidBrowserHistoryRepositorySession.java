@@ -4,36 +4,33 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import java.util.ArrayList;
-
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
-import org.mozilla.gecko.sync.repositories.NoGuidForIdException;
-import org.mozilla.gecko.sync.repositories.NullCursorException;
-import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
+import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
+import org.mozilla.gecko.sync.repositories.ProfileDatabaseException;
 import org.mozilla.gecko.sync.repositories.Repository;
+import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
-import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
-import android.content.ContentProviderClient;
 import android.content.Context;
-import android.database.Cursor;
-import android.os.RemoteException;
 
-public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserRepositorySession {
+public class AndroidBrowserHistoryRepositorySession extends StoreTrackingRepositorySession {
   public static final String LOG_TAG = "ABHistoryRepoSess";
 
-  /**
-   * The number of records to queue for insertion before writing to databases.
-   */
-  public static final int INSERT_RECORD_THRESHOLD = 5000;
-  public static final int RECENT_VISITS_LIMIT = 20;
+  private final AndroidBrowserHistoryDataAccessor dbHelper;
+  private final HistorySessionHelper sessionHelper;
+  private int storeCount = 0;
 
   public AndroidBrowserHistoryRepositorySession(Repository repository, Context context) {
     super(repository);
     dbHelper = new AndroidBrowserHistoryDataAccessor(context);
+    sessionHelper = new HistorySessionHelper(this, dbHelper);
   }
 
   @Override
@@ -45,145 +42,76 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     } catch (Exception e) {
       // Ignore.
     }
-    super.begin(delegate);
-  }
-
-  @Override
-  protected Record retrieveDuringStore(Cursor cur) {
-    return RepoUtils.historyFromMirrorCursor(cur);
-  }
-
-  @Override
-  protected Record retrieveDuringFetch(Cursor cur) {
-    return RepoUtils.historyFromMirrorCursor(cur);
-  }
-
-  @Override
-  protected String buildRecordString(Record record) {
-    HistoryRecord hist = (HistoryRecord) record;
-    return hist.histURI;
-  }
-
-  @Override
-  public boolean shouldIgnore(Record record) {
-    if (super.shouldIgnore(record)) {
-      return true;
-    }
-    if (!(record instanceof HistoryRecord)) {
-      return true;
-    }
-    HistoryRecord r = (HistoryRecord) record;
-    return !RepoUtils.isValidHistoryURI(r.histURI);
-  }
-
-  @Override
-  protected Record transformRecord(Record record) throws NullCursorException {
-    return addVisitsToRecord(record);
-  }
-
-  private Record addVisitsToRecord(Record record) throws NullCursorException {
-    Logger.debug(LOG_TAG, "Adding visits for GUID " + record.guid);
-
-    // Sync is an object store, so what we attach here will replace what's already present on the Sync servers.
-    // We upload just a recent subset of visits for each history record for space and bandwidth reasons.
-    // We chose 20 to be conservative.  See Bug 1164660 for details.
-    ContentProviderClient visitsClient = dbHelper.context.getContentResolver().acquireContentProviderClient(BrowserContractHelpers.VISITS_CONTENT_URI);
-    if (visitsClient == null) {
-      throw new IllegalStateException("Could not obtain a ContentProviderClient for Visits URI");
-    }
+    RepositorySessionBeginDelegate deferredDelegate = delegate.deferredBeginDelegate(delegateQueue);
+    super.sharedBegin();
 
     try {
-      ((HistoryRecord) record).visits = VisitsHelper.getRecentHistoryVisitsForGUID(
-              visitsClient, record.guid, RECENT_VISITS_LIMIT);
-    } catch (RemoteException e) {
-      throw new IllegalStateException("Error while obtaining visits for a record", e);
-    } finally {
-      visitsClient.release();
+      // We do this check here even though it results in one extra call to the DB
+      // because if we didn't, we have to do a check on every other call since there
+      // is no way of knowing which call would be hit first.
+      sessionHelper.checkDatabase();
+    } catch (ProfileDatabaseException e) {
+      Logger.error(LOG_TAG, "ProfileDatabaseException from begin. Fennec must be launched once until this error is fixed");
+      deferredDelegate.onBeginFailed(e);
+      return;
+    } catch (Exception e) {
+      deferredDelegate.onBeginFailed(e);
+      return;
     }
-
-    return record;
+    storeTracker = createStoreTracker();
+    deferredDelegate.onBeginSucceeded(this);
   }
 
   @Override
-  protected Record prepareRecord(Record record) {
-    return record;
+  public void fetchModified(RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(getLastSyncTimestamp(), delegate);
   }
 
-  protected final Object recordsBufferMonitor = new Object();
-  protected ArrayList<HistoryRecord> recordsBuffer = new ArrayList<HistoryRecord>();
-
-  /**
-   * Queue record for insertion, possibly flushing the queue.
-   * <p>
-   * Must be called on <code>storeWorkQueue</code> thread! But this is only
-   * called from <code>store</code>, which is called on the queue thread.
-   *
-   * @param record
-   *          A <code>Record</code> with a GUID that is not present locally.
-   */
   @Override
-  protected void insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
-    enqueueNewRecord((HistoryRecord) prepareRecord(record));
+  public void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException {
+    executeDelegateCommand(sessionHelper.getFetchRunnable(guids, now(), null, delegate));
   }
 
-  /**
-   * Batch incoming records until some reasonable threshold is hit or storeDone
-   * is received.
-   * <p>
-   * Must be called on <code>storeWorkQueue</code> thread!
-   *
-   * @param record A <code>Record</code> with a GUID that is not present locally.
-   * @throws NullCursorException
-   */
-  protected void enqueueNewRecord(HistoryRecord record) throws NullCursorException {
-    synchronized (recordsBufferMonitor) {
-      if (recordsBuffer.size() >= INSERT_RECORD_THRESHOLD) {
-        flushNewRecords();
-      }
-      Logger.debug(LOG_TAG, "Enqueuing new record with GUID " + record.guid);
-      recordsBuffer.add(record);
-    }
+  @Override
+  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(-1, delegate);
   }
 
-  /**
-   * Flush queue of incoming records to database.
-   * <p>
-   * Must be called on <code>storeWorkQueue</code> thread!
-   * <p>
-   * Must be locked by recordsBufferMonitor!
-   * @throws NullCursorException
-   */
-  protected void flushNewRecords() throws NullCursorException {
-    if (recordsBuffer.size() < 1) {
-      Logger.debug(LOG_TAG, "No records to flush, returning.");
-      return;
+  private void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate) {
+    if (this.storeTracker == null) {
+      throw new IllegalStateException("Store tracker not yet initialized!");
     }
 
-    final ArrayList<HistoryRecord> outgoing = recordsBuffer;
-    recordsBuffer = new ArrayList<HistoryRecord>();
-    Logger.debug(LOG_TAG, "Flushing " + outgoing.size() + " records to database.");
-    boolean transactionSuccess = ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing);
-    if (!transactionSuccess) {
-      for (HistoryRecord failed : outgoing) {
-        storeDelegate.onRecordStoreFailed(new RuntimeException("Failed to insert history item with guid " + failed.guid + "."), failed.guid);
-      }
-      return;
+    Logger.debug(LOG_TAG, "Running fetchSince(" + timestamp + ").");
+    delegateQueue.execute(
+            sessionHelper.getFetchSinceRunnable(
+                    timestamp, now(), this.storeTracker.getFilter(), delegate
+            )
+    );
+  }
+
+  @Override
+  public void store(Record record) throws NoStoreDelegateException {
+    if (storeDelegate == null) {
+      throw new NoStoreDelegateException();
+    }
+    if (record == null) {
+      Logger.error(LOG_TAG, "Record sent to store was null");
+      throw new IllegalArgumentException("Null record passed to AndroidBrowserRepositorySession.store().");
     }
 
-    // All good, everybody succeeded.
-    for (HistoryRecord succeeded : outgoing) {
-      try {
-        // Does not use androidID -- just GUID -> String map.
-        updateBookkeeping(succeeded);
-      } catch (NoGuidForIdException | ParentNotFoundException e) {
-        // Should not happen.
-        throw new NullCursorException(e);
-      } catch (NullCursorException e) {
-        throw e;
-      }
-      trackRecord(succeeded);
-      storeDelegate.onRecordStoreSucceeded(succeeded.guid); // At this point, we are really inserted.
-    }
+    storeCount += 1;
+    Logger.debug(LOG_TAG, "Storing record with GUID " + record.guid + " (stored " + storeCount + " records this session).");
+
+    // Store Runnables *must* complete synchronously. It's OK, they
+    // run on a background thread.
+    storeWorkQueue.execute(sessionHelper.getStoreRunnable(record, storeDelegate));
+  }
+
+  @Override
+  public void wipe(RepositorySessionWipeDelegate delegate) {
+    Runnable command = sessionHelper.getWipeRunnable(delegate);
+    storeWorkQueue.execute(command);
   }
 
   /**
@@ -194,34 +122,25 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
    */
   @Override
   public void storeIncomplete() {
+    storeWorkQueue.execute(sessionHelper.getStoreIncompleteRunnable(storeDelegate));
+  }
+
+  @Override
+  public void storeDone() {
+    storeWorkQueue.execute(sessionHelper.getStoreDoneRunnable(storeDelegate));
+    // Work queue is single-threaded, and so this should be well-ordered - onStoreComplete will run
+    // after the above runnable is finished.
     storeWorkQueue.execute(new Runnable() {
       @Override
       public void run() {
-        synchronized (recordsBufferMonitor) {
-          try {
-            flushNewRecords();
-          } catch (Exception e) {
-            Logger.warn(LOG_TAG, "Error flushing records to database.", e);
-          }
-        }
+        storeDelegate.onStoreCompleted(now());
       }
     });
   }
 
   @Override
-  public void storeDone() {
-    storeWorkQueue.execute(new Runnable() {
-      @Override
-      public void run() {
-        synchronized (recordsBufferMonitor) {
-          try {
-            flushNewRecords();
-          } catch (Exception e) {
-            Logger.warn(LOG_TAG, "Error flushing records to database.", e);
-          }
-        }
-        storeDelegate.deferredStoreDelegate(storeWorkQueue).onStoreCompleted(now());
-      }
-    });
+  public void finish(RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
+    sessionHelper.finish();
+    super.finish(delegate);
   }
 }

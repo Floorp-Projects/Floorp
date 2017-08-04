@@ -48,9 +48,6 @@ public abstract class RepositorySession {
 
   private static final String LOG_TAG = "RepositorySession";
 
-  protected static void trace(String message) {
-    Logger.trace(LOG_TAG, message);
-  }
 
   private SessionStatus status = SessionStatus.UNSTARTED;
   protected Repository repository;
@@ -340,7 +337,7 @@ public abstract class RepositorySession {
    * @return
    *        A Record instance to apply, or null to apply nothing.
    */
-  protected Record reconcileRecords(final Record remoteRecord,
+  public Record reconcileRecords(final Record remoteRecord,
                                     final Record localRecord,
                                     final long lastRemoteRetrieval,
                                     final long lastLocalRetrieval) {

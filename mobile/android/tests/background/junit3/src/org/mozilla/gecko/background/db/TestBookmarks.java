@@ -30,7 +30,7 @@ import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepository;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepositorySession;
+import org.mozilla.gecko.sync.repositories.android.BookmarksSessionHelper;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
@@ -48,41 +48,6 @@ import android.net.Uri;
 public class TestBookmarks extends AndroidSyncTestCase {
 
   protected static final String LOG_TAG = "BookmarksTest";
-
-  /**
-   * Trivial test that forbidden records such as pinned items
-   * will be ignored if processed.
-   */
-  public void testForbiddenItemsAreIgnored() {
-    final AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
-    final long now = System.currentTimeMillis();
-    final String bookmarksCollection = "bookmarks";
-
-    final BookmarkRecord pinned = new BookmarkRecord("pinpinpinpin", "bookmarks", now - 1, false);
-    final BookmarkRecord normal = new BookmarkRecord("baaaaaaaaaaa", "bookmarks", now - 2, false);
-
-    final BookmarkRecord pinnedItems  = new BookmarkRecord(Bookmarks.PINNED_FOLDER_GUID,
-                                                           bookmarksCollection, now - 4, false);
-
-    normal.type = "bookmark";
-    pinned.type = "bookmark";
-    pinnedItems.type = "folder";
-
-    pinned.parentID = Bookmarks.PINNED_FOLDER_GUID;
-    normal.parentID = Bookmarks.TOOLBAR_FOLDER_GUID;
-
-    pinnedItems.parentID = Bookmarks.PLACES_FOLDER_GUID;
-
-    inBegunSession(repo, new SimpleSuccessBeginDelegate() {
-      @Override
-      public void onBeginSucceeded(RepositorySession session) {
-        assertTrue(((AndroidBrowserBookmarksRepositorySession) session).shouldIgnore(pinned));
-        assertTrue(((AndroidBrowserBookmarksRepositorySession) session).shouldIgnore(pinnedItems));
-        assertFalse(((AndroidBrowserBookmarksRepositorySession) session).shouldIgnore(normal));
-        finishAndNotify(session);
-      }
-    });
-  }
 
   /**
    * Trivial test that pinned items will be skipped if present in the DB.
