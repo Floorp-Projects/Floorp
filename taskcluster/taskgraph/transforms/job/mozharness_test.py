@@ -468,6 +468,9 @@ def mozharness_test_buildbot_bridge(config, job, taskdesc):
     if mozharness.get('chunked', False):
         this_chunk = test.get('this-chunk')
         test_name = '{}-{}'.format(test_name, this_chunk)
+    elif test.get('this-chunk', 1) != 1:
+        raise Exception("Unexpected chunking when 'chunked' attribute is 'false'"
+                        " for {}".format(test_name))
 
     if test.get('suite', '') == 'talos':
         variant = get_variant(test['test-platform'])
