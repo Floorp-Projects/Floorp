@@ -1,8 +1,10 @@
 #include "HangStack.h"
+#include "shared-libraries.h"
 
 namespace mozilla {
 
 HangStack::HangStack(const HangStack& aOther)
+  : mModules(aOther.mModules)
 {
   if (NS_WARN_IF(!mBuffer.reserve(aOther.mBuffer.length()) ||
                  !mImpl.reserve(aOther.mImpl.length()))) {
@@ -76,6 +78,85 @@ HangStack::AppendViaBuffer(const char* aText, size_t aLength)
   return true;
 }
 
+namespace {
+
+// Sorting comparator used by ReadModuleInformation. Sorts PC Frames by their
+// PC.
+struct PCFrameComparator {
+  bool LessThan(HangStack::Frame* const& a, HangStack::Frame* const& b) const {
+    return a->AsPC() < b->AsPC();
+  }
+  bool Equals(HangStack::Frame* const& a, HangStack::Frame* const& b) const {
+    return a->AsPC() == b->AsPC();
+  }
+};
+
+} // anonymous namespace
+
+void
+HangStack::ReadModuleInformation()
+{
+  // mModules should be empty when we start filling it.
+  mModules.Clear();
+
+  // Create a sorted list of the PCs in the current stack.
+  AutoTArray<Frame*, 100> frames;
+  for (auto& frame : *this) {
+    if (frame.GetKind() == Frame::Kind::PC) {
+      frames.AppendElement(&frame);
+    }
+  }
+  PCFrameComparator comparator;
+  frames.Sort(comparator);
+
+  SharedLibraryInfo rawModules = SharedLibraryInfo::GetInfoForSelf();
+  rawModules.SortByAddress();
+
+  size_t frameIdx = 0;
+  for (size_t i = 0; i < rawModules.GetSize(); ++i) {
+    const SharedLibrary& info = rawModules.GetEntry(i);
+    uintptr_t moduleStart = info.GetStart();
+    uintptr_t moduleEnd = info.GetEnd() - 1;
+    // the interval is [moduleStart, moduleEnd)
+
+    bool moduleReferenced = false;
+    for (; frameIdx < frames.Length(); ++frameIdx) {
+      auto& frame = frames[frameIdx];
+      // We've moved past this frame, let's go to the next one.
+      if (frame->AsPC() >= moduleEnd) {
+        break;
+      }
+      if (frame->AsPC() >= moduleStart) {
+        uint64_t offset = frame->AsPC() - moduleStart;
+        if (NS_WARN_IF(offset > UINT32_MAX)) {
+          continue; // module/offset can only hold 32-bit offsets into shared libraries.
+        }
+
+        // If we found the module, rewrite the Frame entry to instead be a
+        // ModOffset one. mModules.Length() will be the index of the module when
+        // we append it below, and we set moduleReferenced to true to ensure
+        // that we do.
+        moduleReferenced = true;
+        uint32_t module = mModules.Length();
+        ModOffset modOffset = {
+          module,
+          static_cast<uint32_t>(offset)
+        };
+        *frame = Frame(modOffset);
+      }
+    }
+
+    if (moduleReferenced) {
+      nsDependentCString cstr(info.GetBreakpadId().c_str());
+      Module module = {
+        info.GetDebugName(),
+        cstr
+      };
+      mModules.AppendElement(module);
+    }
+  }
+}
+
 } // namespace mozilla
 
 namespace IPC {
@@ -96,6 +177,26 @@ ParamTraits<mozilla::HangStack::ModOffset>::Read(const Message* aMsg,
     return false;
   }
   if (!ReadParam(aMsg, aIter, &aResult->mOffset)) {
+    return false;
+  }
+  return true;
+}
+
+void
+ParamTraits<mozilla::HangStack::Module>::Write(Message* aMsg, const mozilla::HangStack::Module& aParam)
+{
+  WriteParam(aMsg, aParam.mName);
+  WriteParam(aMsg, aParam.mBreakpadId);
+}
+
+bool
+ParamTraits<mozilla::HangStack::Module>::Read(const Message* aMsg, PickleIterator* aIter,
+                                              mozilla::HangStack::Module* aResult)
+{
+  if (!ReadParam(aMsg, aIter, &aResult->mName)) {
+    return false;
+  }
+  if (!ReadParam(aMsg, aIter, &aResult->mBreakpadId)) {
     return false;
   }
   return true;
@@ -132,6 +233,8 @@ ParamTraits<mozilla::HangStack>::Write(Message* aMsg, const mozilla::HangStack& 
       }
     }
   }
+
+  WriteParam(aMsg, aParam.GetModules());
 }
 
 bool
@@ -184,6 +287,11 @@ ParamTraits<mozilla::HangStack>::Read(const Message* aMsg,
         return false;
     }
   }
+
+  if (!ReadParam(aMsg, aIter, &aResult->GetModules())) {
+    return false;
+  }
+
   return true;
 }
 

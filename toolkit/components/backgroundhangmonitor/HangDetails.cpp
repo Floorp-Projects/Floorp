@@ -210,7 +210,10 @@ NS_IMPL_ISUPPORTS(nsHangDetails, nsIHangDetails)
 NS_IMETHODIMP
 ProcessHangStackRunnable::Run()
 {
-  // XXX: Attempt to get the modules for any native frames in mStack.
+  // NOTE: Reading module information can take a long time, which is why we do
+  // it off-main-thread.
+  mHangDetails.mStack.ReadModuleInformation();
+
   RefPtr<nsHangDetails> hangDetails = new nsHangDetails(Move(mHangDetails));
   hangDetails->Submit();
 
