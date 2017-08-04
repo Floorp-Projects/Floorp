@@ -30,10 +30,6 @@
   }
 }
 
-#TabsToolbar::after {
-  display: none;
-}
-
 #toolbar-menubar {
   text-shadow: none !important;
 }
@@ -160,8 +156,3 @@
   }
 }
 
-.ac-type-icon {
-  /* Left-align the type icon in awesomebar popup results with the icon in the
-     urlbar. */
-  margin-inline-start: 13px;
-}
