@@ -202,7 +202,6 @@ def old_configure_options(*options):
     '--enable-optimize',
     '--enable-parental-controls',
     '--enable-pie',
-    '--enable-png-arm-neon-support',
     '--enable-posix-nspr-emulation',
     '--enable-pref-extensions',
     '--enable-pulseaudio',
