@@ -2299,9 +2299,6 @@ static MOZ_MUST_USE bool
 InternalAwait(JSContext* cx, HandleValue value, HandleObject resultPromise,
               HandleValue onFulfilled, HandleValue onRejected, T extraStep)
 {
-    MOZ_ASSERT(onFulfilled.isNumber() || onFulfilled.isObject());
-    MOZ_ASSERT(onRejected.isNumber() || onRejected.isObject());
-
     // Step 2.
     Rooted<PromiseObject*> promise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
     if (!promise)
@@ -2490,12 +2487,11 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     RootedValue onFulfilled(cx, Int32Value(done
                                            ? PromiseHandlerAsyncFromSyncIteratorValueUnwrapDone
                                            : PromiseHandlerAsyncFromSyncIteratorValueUnwrapNotDone));
-    RootedValue onRejected(cx, Int32Value(PromiseHandlerThrower));
 
     // Steps 11-12, 15.
     auto extra = [](Handle<PromiseReactionRecord*> reaction) {
     };
-    if (!InternalAwait(cx, value, resultPromise, onFulfilled, onRejected, extra))
+    if (!InternalAwait(cx, value, resultPromise, onFulfilled, UndefinedHandleValue, extra))
         return false;
 
     // Step 16.
