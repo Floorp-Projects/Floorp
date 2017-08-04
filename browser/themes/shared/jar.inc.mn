@@ -230,7 +230,6 @@
   skin/classic/browser/tabbrowser/tab-audio-small.svg          (../shared/tabbrowser/tab-audio-small.svg)
   skin/classic/browser/tabbrowser/tab-overflow-indicator.png   (../shared/tabbrowser/tab-overflow-indicator.png)
   skin/classic/browser/toolbarbutton-dropdown-arrow.png        (../shared/toolbarbutton-dropdown-arrow.png)
-  skin/classic/browser/toolbarbutton-dropdown-arrow-inverted.png (../shared/toolbarbutton-dropdown-arrow-inverted.png)
   skin/classic/browser/translating-16.png                      (../shared/translation/translating-16.png)
   skin/classic/browser/translating-16@2x.png                   (../shared/translation/translating-16@2x.png)
   skin/classic/browser/translation-16.png                      (../shared/translation/translation-16.png)
