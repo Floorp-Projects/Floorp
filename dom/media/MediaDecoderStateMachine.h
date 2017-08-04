@@ -301,10 +301,6 @@ private:
   // the decode monitor held.
   void UpdatePlaybackPosition(const media::TimeUnit& aTime);
 
-  bool CanPlayThrough();
-
-  MediaStatistics GetStatistics();
-
   bool HasAudio() const { return mInfo.ref().HasAudio(); }
   bool HasVideo() const { return mInfo.ref().HasVideo(); }
   const MediaInfo& Info() const { return mInfo.ref(); }
@@ -695,16 +691,6 @@ private:
   // An identifier for the principal of the media. Used to track when
   // main-thread induced principal changes get reflected on MSG thread.
   Mirror<PrincipalHandle> mMediaPrincipalHandle;
-
-  // Estimate of the current playback rate (bytes/second).
-  Mirror<double> mPlaybackBytesPerSecond;
-
-  // True if mPlaybackBytesPerSecond is a reliable estimate.
-  Mirror<bool> mPlaybackRateReliable;
-
-  // Current decoding position in the stream.
-  Mirror<int64_t> mDecoderPosition;
-
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
