@@ -85,7 +85,8 @@ nsBaseStateUpdatingCommand::IsCommandEnabled(const char *aCommandName,
   }
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 
@@ -420,10 +421,7 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
 
-  bool isEditable = false;
-  nsresult rv = editorBase->GetIsSelectionEditable(&isEditable);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!isEditable) {
+  if (!editorBase->IsSelectionEditable()) {
     return NS_OK;
   }
 
@@ -435,7 +433,7 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
 
   bool bMixed;
   nsAutoString localName;
-  rv = GetListState(htmlEditor, &bMixed, localName);
+  nsresult rv = GetListState(htmlEditor, &bMixed, localName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *outCmdEnabled = bMixed || !localName.IsEmpty();
@@ -487,7 +485,8 @@ nsIndentCommand::IsCommandEnabled(const char * aCommandName,
   }
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -537,7 +536,8 @@ nsOutdentCommand::IsCommandEnabled(const char * aCommandName,
   }
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -596,7 +596,8 @@ nsMultiStateCommand::IsCommandEnabled(const char * aCommandName,
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
   // should be disabled sometimes, like if the current selection is an image
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -906,9 +907,9 @@ nsHighlightColorStateCommand::IsCommandEnabled(const char * aCommandName,
   }
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
-
 
 nsBackgroundColorStateCommand::nsBackgroundColorStateCommand()
 : nsMultiStateCommand()
@@ -1020,15 +1021,11 @@ nsAbsolutePositioningCommand::IsCommandEnabled(const char * aCommandName,
   if (!htmlEditor) {
     return NS_OK;
   }
-  bool isEditable = false;
-  nsresult rv = htmlEditor->GetIsSelectionEditable(&isEditable);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (!isEditable) {
+  if (!htmlEditor->IsSelectionEditable()) {
     return NS_OK;
   }
-  return htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
+  *outCmdEnabled = htmlEditor->AbsolutePositioningEnabled();
+  return NS_OK;
 }
 
 nsresult
@@ -1039,22 +1036,23 @@ nsAbsolutePositioningCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
     return NS_ERROR_INVALID_ARG;
   }
 
-  bool isEnabled;
-  aHTMLEditor->GetAbsolutePositioningEnabled(&isEnabled);
+  bool isEnabled = aHTMLEditor->AbsolutePositioningEnabled();
   if (!isEnabled) {
     aParams->SetBooleanValue(STATE_MIXED,false);
     aParams->SetCStringValue(STATE_ATTRIBUTE, "");
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMElement>  elt;
+  nsCOMPtr<nsINode> container;
   nsresult rv =
-    aHTMLEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
+    aHTMLEditor->GetAbsolutelyPositionedSelectionContainer(
+                   getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString outStateString;
-  if (elt)
+  if (container) {
     outStateString.AssignLiteral("absolute");
+  }
 
   aParams->SetBooleanValue(STATE_MIXED,false);
   aParams->SetCStringValue(STATE_ATTRIBUTE, NS_ConvertUTF16toUTF8(outStateString).get());
@@ -1068,12 +1066,13 @@ nsAbsolutePositioningCommand::ToggleState(mozilla::HTMLEditor* aHTMLEditor)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIDOMElement> elt;
+  nsCOMPtr<nsINode> container;
   nsresult rv =
-    aHTMLEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
+    aHTMLEditor->GetAbsolutelyPositionedSelectionContainer(
+                   getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aHTMLEditor->AbsolutePositionSelection(!elt);
+  return aHTMLEditor->AbsolutePositionSelection(!container);
 }
 
 
@@ -1091,12 +1090,11 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
+  *outCmdEnabled = htmlEditor->AbsolutePositioningEnabled();
   if (!(*outCmdEnabled))
     return NS_OK;
 
-  nsCOMPtr<nsIDOMElement> positionedElement;
-  htmlEditor->GetPositionedElement(getter_AddRefs(positionedElement));
+  RefPtr<Element> positionedElement = htmlEditor->GetPositionedElement();
   *outCmdEnabled = false;
   if (!positionedElement) {
     return NS_OK;
@@ -1162,12 +1160,11 @@ nsIncreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
+  *outCmdEnabled = htmlEditor->AbsolutePositioningEnabled();
   if (!(*outCmdEnabled))
     return NS_OK;
 
-  nsCOMPtr<nsIDOMElement> positionedElement;
-  htmlEditor->GetPositionedElement(getter_AddRefs(positionedElement));
+  Element* positionedElement = htmlEditor->GetPositionedElement();
   *outCmdEnabled = (nullptr != positionedElement);
   return NS_OK;
 }
@@ -1222,7 +1219,8 @@ nsRemoveStylesCommand::IsCommandEnabled(const char * aCommandName,
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
   // test if we have any styles?
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1271,7 +1269,8 @@ nsIncreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName,
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
   // test if we are at max size?
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 
@@ -1321,7 +1320,8 @@ nsDecreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName,
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
   // test if we are at min size?
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1370,7 +1370,8 @@ nsInsertHTMLCommand::IsCommandEnabled(const char * aCommandName,
   }
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1456,7 +1457,8 @@ nsInsertTagCommand::IsCommandEnabled(const char * aCommandName,
   }
   mozilla::EditorBase* editorBase = editor->AsEditorBase();
   MOZ_ASSERT(editorBase);
-  return editorBase->GetIsSelectionEditable(outCmdEnabled);
+  *outCmdEnabled = editorBase->IsSelectionEditable();
+  return NS_OK;
 }
 
 // corresponding STATE_ATTRIBUTE is: src (img) and href (a)

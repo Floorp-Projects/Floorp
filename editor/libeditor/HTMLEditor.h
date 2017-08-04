@@ -217,6 +217,18 @@ public:
   static bool NodeIsBlockStatic(const nsINode* aElement);
   static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, bool *aIsBlock);
 
+  // non-virtual methods of interface methods
+  bool AbsolutePositioningEnabled() const
+  {
+    return mIsAbsolutelyPositioningEnabled;
+  }
+  nsresult GetAbsolutelyPositionedSelectionContainer(nsINode** aContainer);
+  Element* GetPositionedElement() const
+  {
+    return mAbsolutelyPositionedObject;
+  }
+  nsresult GetElementZIndex(Element* aElement, int32_t* aZindex);
+
 protected:
   virtual ~HTMLEditor();
 
@@ -287,8 +299,6 @@ public:
                                   nsIDocument* aDoc) override;
   NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode* aNode) override;
   virtual bool IsModifiableNode(nsINode* aNode) override;
-
-  NS_IMETHOD GetIsSelectionEditable(bool* aIsSelectionEditable) override;
 
   NS_IMETHOD SelectAll() override;
 
