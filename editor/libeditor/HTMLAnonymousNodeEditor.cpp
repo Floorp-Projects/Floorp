@@ -176,6 +176,14 @@ HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
     return nullptr;
   }
 
+  // Don't put anonymous editor element into non-HTML element.
+  // It is mainly for avoiding other anonymous element being inserted
+  // into <svg:use>, but in general we probably don't want to insert
+  // some random HTML anonymous element into a non-HTML element.
+  if (!parentContent->IsHTMLElement()) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIDocument> doc = GetDocument();
   if (NS_WARN_IF(!doc)) {
     return nullptr;

@@ -362,8 +362,7 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser) {
     pageInfoData = message.data;
     let docInfo = pageInfoData.docInfo;
     let windowInfo = pageInfoData.windowInfo;
-    let uri = makeURI(docInfo.documentURIObject.spec,
-                      docInfo.documentURIObject.originCharset);
+    let uri = makeURI(docInfo.documentURIObject.spec);
     let principal = docInfo.principal;
     gDocInfo = docInfo;
 

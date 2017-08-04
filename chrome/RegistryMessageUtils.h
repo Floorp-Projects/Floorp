@@ -12,12 +12,10 @@
 struct SerializedURI
 {
   nsCString spec;
-  nsCString charset;
 
   bool operator ==(const SerializedURI& rhs) const
   {
-      return spec.Equals(rhs.spec) &&
-             charset.Equals(rhs.charset);
+      return spec.Equals(rhs.spec);
   }
 };
 
@@ -75,16 +73,13 @@ struct ParamTraits<SerializedURI>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.spec);
-    WriteParam(aMsg, aParam.charset);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    nsCString spec, charset;
-    if (ReadParam(aMsg, aIter, &spec) &&
-        ReadParam(aMsg, aIter, &charset)) {
+    nsCString spec;
+    if (ReadParam(aMsg, aIter, &spec)) {
       aResult->spec = spec;
-      aResult->charset = charset;
       return true;
     }
     return false;

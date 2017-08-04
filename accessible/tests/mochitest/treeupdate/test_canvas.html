@@ -19,19 +19,17 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function addSubtree(aID)
-    {
+    function addSubtree(aID) {
       this.node = getNode(aID);
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.node)
       ];
 
-      this.invoke = function addSubtree_invoke()
-      {
+      this.invoke = function addSubtree_invoke() {
         // ensure we start with no subtree
         testAccessibleTree("canvas", { CANVAS: [] });
         getNode("dialog").style.display = "block";
@@ -41,22 +39,20 @@
         testAccessibleTree("dialog", { DIALOG: [] });
       }
 
-      this.getID = function addSubtree_getID()
-      {
+      this.getID = function addSubtree_getID() {
         return "show canvas subdom";
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
 
       // make the subdom come alive!

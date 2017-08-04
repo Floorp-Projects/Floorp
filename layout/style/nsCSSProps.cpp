@@ -25,6 +25,7 @@
 #include "nsStaticNameTable.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StylePrefs.h"
 
 using namespace mozilla;
 
@@ -612,8 +613,7 @@ nsCSSProps::LookupFontDesc(const nsACString& aFontDesc)
   MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
   nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 
-  if (which == eCSSFontDesc_Display &&
-      !Preferences::GetBool("layout.css.font-display.enabled")) {
+  if (which == eCSSFontDesc_Display && !StylePrefs::sFontDisplayEnabled) {
     which = eCSSFontDesc_UNKNOWN;
   } else if (which == eCSSFontDesc_UNKNOWN) {
     // check for unprefixed font-feature-settings/font-language-override
@@ -631,8 +631,7 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
   MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
   nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 
-  if (which == eCSSFontDesc_Display &&
-      !Preferences::GetBool("layout.css.font-display.enabled")) {
+  if (which == eCSSFontDesc_Display && !StylePrefs::sFontDisplayEnabled) {
     which = eCSSFontDesc_UNKNOWN;
   } else if (which == eCSSFontDesc_UNKNOWN) {
     // check for unprefixed font-feature-settings/font-language-override

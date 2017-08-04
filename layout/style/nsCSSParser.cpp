@@ -3973,8 +3973,7 @@ CSSParserImpl::ParseFontDescriptor(nsCSSFontFaceRule* aRule)
   nsCSSValue value;
 
   if (descID == eCSSFontDesc_UNKNOWN ||
-      (descID == eCSSFontDesc_Display &&
-       !Preferences::GetBool("layout.css.font-display.enabled"))) {
+      (descID == eCSSFontDesc_Display && !StylePrefs::sFontDisplayEnabled)) {
     if (NonMozillaVendorIdentifier(descName)) {
       // silently skip other vendors' extensions
       Unused << SkipDeclaration(true);

@@ -18,11 +18,10 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function addLi(aID)
-    {
+    function addLi(aID) {
       this.listNode = getNode(aID);
       this.liNode = document.createElement("li");
       this.liNode.textContent = "item";
@@ -32,13 +31,11 @@
         new invokerChecker(EVENT_REORDER, this.listNode)
       ];
 
-      this.invoke = function addLi_invoke()
-      {
+      this.invoke = function addLi_invoke() {
         this.listNode.appendChild(this.liNode);
       }
 
-      this.finalCheck = function addLi_finalCheck()
-      {
+      this.finalCheck = function addLi_finalCheck() {
         var tree = {
           role: ROLE_LIST,
           children: [
@@ -61,21 +58,19 @@
         testAccessibleTree(aID, tree);
       }
 
-      this.getID = function addLi_getID()
-      {
+      this.getID = function addLi_getID() {
         return "add li";
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpID = "eventdump"; // debug stuff
 
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
 
       gQueue.push(new addLi("list"));

@@ -21,11 +21,10 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function selectItem(aSelectID, aItemID)
-    {
+    function selectItem(aSelectID, aItemID) {
       this.selectNode = getNode(aSelectID);
       this.itemNode = getNode(aItemID);
 
@@ -41,21 +40,19 @@
         this.itemNode.setAttribute("aria-selected", "true");
       }
 
-      this.getID = function selectItem_getID()
-      {
+      this.getID = function selectItem_getID() {
         return "select item " + prettyName(aItemID);
       }
     }
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests
 
     var gQueue = null;
 
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new selectItem("tablist", "tab1"));

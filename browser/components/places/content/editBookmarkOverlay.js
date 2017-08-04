@@ -1009,17 +1009,17 @@ var gEditItemOverlay = {
 
     // default to the bookmarks menu folder
     if (!ip || ip.itemId == PlacesUIUtils.allBookmarksFolderId) {
-      ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId,
-                              PlacesUtils.bookmarks.DEFAULT_INDEX,
-                              Ci.nsITreeView.DROP_ON, null, null,
-                              PlacesUtils.bookmarks.menuGuid);
+      ip = new InsertionPoint({
+        parentId: PlacesUtils.bookmarksMenuFolderId,
+        parentGuid: PlacesUtils.bookmarks.menuGuid
+      });
     }
 
     // XXXmano: add a separate "New Folder" string at some point...
     let title = this._element("newFolderButton").label;
     if (PlacesUIUtils.useAsyncTransactions) {
-      let parentGuid = await ip.promiseGuid();
-      await PlacesTransactions.NewFolder({ parentGuid, title, index: await ip.getIndex() })
+      await PlacesTransactions.NewFolder({ parentGuid: ip.guid, title,
+                                           index: await ip.getIndex() })
                               .transact().catch(Components.utils.reportError);
     } else {
       let txn = new PlacesCreateFolderTransaction(title, ip.itemId, await ip.getIndex());

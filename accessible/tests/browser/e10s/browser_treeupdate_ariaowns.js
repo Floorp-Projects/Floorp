@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 /* import-globals-from ../../mochitest/role.js */
-loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
+loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 async function testContainer1(browser, accDoc) {
-  const id = 't1_container';
+  const id = "t1_container";
   const docID = getAccessibleDOMNodeID(accDoc);
   const acc = findAccessibleChildByID(accDoc, id);
 
@@ -26,7 +26,7 @@ async function testContainer1(browser, accDoc) {
 
   /* ================ Change ARIA owns ====================================== */
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  await invokeSetAttribute(browser, id, 'aria-owns', 't1_button t1_subdiv');
+  await invokeSetAttribute(browser, id, "aria-owns", "t1_button t1_subdiv");
   await onReorder;
 
   // children are swapped again, button and subdiv are appended to
@@ -42,7 +42,7 @@ async function testContainer1(browser, accDoc) {
 
   /* ================ Remove ARIA owns ====================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await invokeSetAttribute(browser, id, 'aria-owns');
+  await invokeSetAttribute(browser, id, "aria-owns");
   await onReorder;
 
   // children follow the DOM order
@@ -58,7 +58,7 @@ async function testContainer1(browser, accDoc) {
 
   /* ================ Set ARIA owns ========================================= */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await invokeSetAttribute(browser, id, 'aria-owns', 't1_button t1_subdiv');
+  await invokeSetAttribute(browser, id, "aria-owns", "t1_button t1_subdiv");
   await onReorder;
 
   // children are swapped again, button and subdiv are appended to
@@ -74,8 +74,8 @@ async function testContainer1(browser, accDoc) {
 
   /* ================ Add ID to ARIA owns =================================== */
   onReorder = waitForEvent(EVENT_REORDER, docID);
-  await invokeSetAttribute(browser, id, 'aria-owns',
-    't1_button t1_subdiv t1_group');
+  await invokeSetAttribute(browser, id, "aria-owns",
+    "t1_button t1_subdiv t1_group");
   await onReorder;
 
   // children are swapped again, button and subdiv are appended to
@@ -93,9 +93,9 @@ async function testContainer1(browser, accDoc) {
   /* ================ Append element ======================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, id, contentId => {
-    let div = content.document.createElement('div');
-    div.setAttribute('id', 't1_child3');
-    div.setAttribute('role', 'radio');
+    let div = content.document.createElement("div");
+    div.setAttribute("id", "t1_child3");
+    div.setAttribute("role", "radio");
     content.document.getElementById(contentId).appendChild(div);
   });
   await onReorder;
@@ -116,7 +116,7 @@ async function testContainer1(browser, accDoc) {
   /* ================ Remove element ======================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, {}, () =>
-    content.document.getElementById('t1_span').remove());
+    content.document.getElementById("t1_span").remove());
   await onReorder;
 
   // subdiv should go away
@@ -132,7 +132,7 @@ async function testContainer1(browser, accDoc) {
 
   /* ================ Remove ID ============================================= */
   onReorder = waitForEvent(EVENT_REORDER, docID);
-  await invokeSetAttribute(browser, 't1_group', 'id');
+  await invokeSetAttribute(browser, "t1_group", "id");
   await onReorder;
 
   tree = {
@@ -146,7 +146,7 @@ async function testContainer1(browser, accDoc) {
 
   /* ================ Set ID ================================================ */
   onReorder = waitForEvent(EVENT_REORDER, docID);
-  await invokeSetAttribute(browser, 't1_grouptmp', 'id', 't1_group');
+  await invokeSetAttribute(browser, "t1_grouptmp", "id", "t1_group");
   await onReorder;
 
   tree = {
@@ -161,7 +161,7 @@ async function testContainer1(browser, accDoc) {
 }
 
 async function removeContainer(browser, accDoc) {
-  const id = 't2_container1';
+  const id = "t2_container1";
   const acc = findAccessibleChildByID(accDoc, id);
 
   let tree = {
@@ -173,8 +173,8 @@ async function removeContainer(browser, accDoc) {
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, {}, () =>
-    content.document.getElementById('t2_container2').removeChild(
-      content.document.getElementById('t2_container3')));
+    content.document.getElementById("t2_container2").removeChild(
+      content.document.getElementById("t2_container3")));
   await onReorder;
 
   tree = {
@@ -184,14 +184,14 @@ async function removeContainer(browser, accDoc) {
 }
 
 async function stealAndRecacheChildren(browser, accDoc) {
-  const id1 = 't3_container1';
-  const id2 = 't3_container2';
+  const id1 = "t3_container1";
+  const id2 = "t3_container2";
   const acc1 = findAccessibleChildByID(accDoc, id1);
   const acc2 = findAccessibleChildByID(accDoc, id2);
 
   /* ================ Steal from other ARIA owns ============================ */
   let onReorder = waitForEvent(EVENT_REORDER, id2);
-  await invokeSetAttribute(browser, id2, 'aria-owns', 't3_child');
+  await invokeSetAttribute(browser, id2, "aria-owns", "t3_child");
   await onReorder;
 
   let tree = {
@@ -209,8 +209,8 @@ async function stealAndRecacheChildren(browser, accDoc) {
   /* ================ Append element to recache children ==================== */
   onReorder = waitForEvent(EVENT_REORDER, id2);
   await ContentTask.spawn(browser, id2, id => {
-    let div = content.document.createElement('div');
-    div.setAttribute('role', 'radio');
+    let div = content.document.createElement("div");
+    div.setAttribute("role", "radio");
     content.document.getElementById(id).appendChild(div);
   });
   await onReorder;
@@ -230,7 +230,7 @@ async function stealAndRecacheChildren(browser, accDoc) {
 }
 
 async function showHiddenElement(browser, accDoc) {
-  const id = 't4_container1';
+  const id = "t4_container1";
   const acc = findAccessibleChildByID(accDoc, id);
 
   let tree = {
@@ -241,7 +241,7 @@ async function showHiddenElement(browser, accDoc) {
   testAccessibleTree(acc, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  await invokeSetStyle(browser, 't4_child1', 'display', 'block');
+  await invokeSetStyle(browser, "t4_child1", "display", "block");
   await onReorder;
 
   tree = {
@@ -254,19 +254,19 @@ async function showHiddenElement(browser, accDoc) {
 }
 
 async function rearrangeARIAOwns(browser, accDoc) {
-  const id = 't5_container';
+  const id = "t5_container";
   const acc = findAccessibleChildByID(accDoc, id);
   const tests = [{
-    val: 't5_checkbox t5_radio t5_button',
-    roleList: [ 'CHECKBUTTON', 'RADIOBUTTON', 'PUSHBUTTON' ]
+    val: "t5_checkbox t5_radio t5_button",
+    roleList: [ "CHECKBUTTON", "RADIOBUTTON", "PUSHBUTTON" ]
   }, {
-    val: 't5_radio t5_button t5_checkbox',
-    roleList: [ 'RADIOBUTTON', 'PUSHBUTTON', 'CHECKBUTTON' ]
+    val: "t5_radio t5_button t5_checkbox",
+    roleList: [ "RADIOBUTTON", "PUSHBUTTON", "CHECKBUTTON" ]
   }];
 
   for (let { val, roleList } of tests) {
     let onReorder = waitForEvent(EVENT_REORDER, id);
-    await invokeSetAttribute(browser, id, 'aria-owns', val);
+    await invokeSetAttribute(browser, id, "aria-owns", val);
     await onReorder;
 
     let tree = { SECTION: [ ] };
@@ -280,7 +280,7 @@ async function rearrangeARIAOwns(browser, accDoc) {
 }
 
 async function removeNotARIAOwnedEl(browser, accDoc) {
-  const id = 't6_container';
+  const id = "t6_container";
   const acc = findAccessibleChildByID(accDoc, id);
 
   let tree = {
@@ -294,7 +294,7 @@ async function removeNotARIAOwnedEl(browser, accDoc) {
   let onReorder = waitForEvent(EVENT_REORDER, id);
   await ContentTask.spawn(browser, id, contentId => {
     content.document.getElementById(contentId).removeChild(
-      content.document.getElementById('t6_span'));
+      content.document.getElementById("t6_span"));
   });
   await onReorder;
 
@@ -306,7 +306,7 @@ async function removeNotARIAOwnedEl(browser, accDoc) {
   testAccessibleTree(acc, tree);
 }
 
-addAccessibleTask('doc_treeupdate_ariaowns.html', async function(browser, accDoc) {
+addAccessibleTask("doc_treeupdate_ariaowns.html", async function(browser, accDoc) {
   await testContainer1(browser, accDoc);
   await removeContainer(browser, accDoc);
   await stealAndRecacheChildren(browser, accDoc);

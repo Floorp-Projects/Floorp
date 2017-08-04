@@ -54,7 +54,8 @@ public:
 
   bool operator==(const CompositorOptions& aOther) const {
     return mUseAPZ == aOther.mUseAPZ &&
-           mUseWebRender == aOther.mUseWebRender;
+           mUseWebRender == aOther.mUseWebRender &&
+           mUseAdvancedLayers == aOther.mUseAdvancedLayers;
   }
 
   friend struct IPC::ParamTraits<CompositorOptions>;

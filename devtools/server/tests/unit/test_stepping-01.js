@@ -79,6 +79,6 @@ function test_simple_stepping() {
   gDebuggee.eval("var line0 = Error().lineNumber;\n" +
                  "debugger;\n" +   // line0 + 1
                  "var a = 1;\n" +  // line0 + 2
-                 "var b = 2;\n");  // line0 + 3
+                 "var b = 2;");    // line0 + 3
   /* eslint-enable */
 }

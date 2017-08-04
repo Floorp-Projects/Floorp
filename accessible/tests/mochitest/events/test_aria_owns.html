@@ -21,11 +21,11 @@
 
   <script type="application/javascript">
 
-    ////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////
     // Do tests.
 
-    //gA11yEventDumpToConsole = true; // debug stuff
-    //enableLogging("tree,eventTree,verbose");
+    // gA11yEventDumpToConsole = true; // debug stuff
+    // enableLogging("tree,eventTree,verbose");
 
     /**
      * Aria-owns target shouldn't have a show event.
@@ -33,8 +33,7 @@
      * <div id="t1_fc" aria-owns="t1_owns"></div>
      * <span id="t1_owns"></div>
      */
-    function testAriaOwns()
-    {
+    function testAriaOwns() {
       this.parent = getNode("t1");
       this.fc = document.createElement("div");
       this.fc.setAttribute("id", "t1_fc");
@@ -46,8 +45,7 @@
         new unexpectedInvokerChecker(EVENT_SHOW, this.owns)
       ];
 
-      this.invoke = function testAriaOwns_invoke()
-      {
+      this.invoke = function testAriaOwns_invoke() {
         getNode("t1").appendChild(this.fc);
         getNode("t1").appendChild(this.owns);
         getNode("t1_fc").setAttribute("aria-owns", "t1_owns");
@@ -66,8 +64,7 @@
      * <div id="t2_sc" aria-labelledby="t2_owns"></div>
      * <span id="t2_owns"></div>
      */
-    function testAriaOwnsAndLabelledBy()
-    {
+    function testAriaOwnsAndLabelledBy() {
       this.parent = getNode("t2");
       this.fc = document.createElement("div");
       this.fc.setAttribute("id", "t2_fc");
@@ -82,8 +79,7 @@
         new unexpectedInvokerChecker(EVENT_SHOW, this.owns)
       ];
 
-      this.invoke = function testAriaOwns_invoke()
-      {
+      this.invoke = function testAriaOwns_invoke() {
         getNode("t2").appendChild(this.fc);
         getNode("t2").appendChild(this.sc);
         getNode("t2").appendChild(this.owns);
@@ -97,8 +93,7 @@
     }
 
     var gQueue = null;
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
       gQueue.push(new testAriaOwns());
       gQueue.push(new testAriaOwnsAndLabelledBy());

@@ -21,13 +21,12 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
-    function doTests()
-    {
+    function doTests() {
       // Bug 746534 - File causes crash or hang on OS X
       if (MAC) {
         todo(false, "Bug 746534 - test file causes crash or hang on OS X");

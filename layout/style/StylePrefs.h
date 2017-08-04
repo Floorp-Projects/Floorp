@@ -13,6 +13,7 @@ namespace mozilla {
 
 struct StylePrefs
 {
+  static bool sFontDisplayEnabled;
   static bool sOpentypeSVGEnabled;
   static bool sWebkitPrefixedAliasesEnabled;
   static bool sWebkitDevicePixelRatioEnabled;

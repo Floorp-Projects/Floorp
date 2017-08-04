@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 /* exported initPromise, shutdownPromise, waitForEvent, setE10sPrefs,
             unsetE10sPrefs, forceGC */
@@ -15,9 +15,9 @@ function setE10sPrefs() {
   return new Promise(resolve =>
     SpecialPowers.pushPrefEnv({
       set: [
-        ['browser.tabs.remote.autostart', true],
-        ['browser.tabs.remote.force-enable', true],
-        ['extensions.e10sBlocksEnabling', false]
+        ["browser.tabs.remote.autostart", true],
+        ["browser.tabs.remote.force-enable", true],
+        ["extensions.e10sBlocksEnabling", false]
       ]
     }, resolve));
 }
@@ -35,7 +35,7 @@ function unsetE10sPrefs() {
 // Load the shared-head file first.
 /* import-globals-from shared-head.js */
 Services.scriptloader.loadSubScript(
-  'chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js',
+  "chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js",
   this);
 
 /**
@@ -45,10 +45,10 @@ Services.scriptloader.loadSubScript(
 function a11yInitOrShutdownPromise() {
   return new Promise(resolve => {
     let observe = (subject, topic, data) => {
-      Services.obs.removeObserver(observe, 'a11y-init-or-shutdown');
+      Services.obs.removeObserver(observe, "a11y-init-or-shutdown");
       resolve(data);
     };
-    Services.obs.addObserver(observe, 'a11y-init-or-shutdown');
+    Services.obs.addObserver(observe, "a11y-init-or-shutdown");
   });
 }
 
@@ -85,9 +85,9 @@ function initPromise(contentBrowser) {
   let a11yInitPromise = contentBrowser ?
     contentA11yInitOrShutdownPromise(contentBrowser) :
     a11yInitOrShutdownPromise();
-  return promiseOK(a11yInitPromise, '1').then(
-    () => ok(true, 'Service initialized correctly'),
-    () => ok(false, 'Service shutdown incorrectly'));
+  return promiseOK(a11yInitPromise, "1").then(
+    () => ok(true, "Service initialized correctly"),
+    () => ok(false, "Service shutdown incorrectly"));
 }
 
 /**
@@ -103,9 +103,9 @@ function shutdownPromise(contentBrowser) {
   let a11yShutdownPromise = contentBrowser ?
     contentA11yInitOrShutdownPromise(contentBrowser) :
     a11yInitOrShutdownPromise();
-  return promiseOK(a11yShutdownPromise, '0').then(
-    () => ok(true, 'Service shutdown correctly'),
-    () => ok(false, 'Service initialized incorrectly'));
+  return promiseOK(a11yShutdownPromise, "0").then(
+    () => ok(true, "Service shutdown correctly"),
+    () => ok(false, "Service initialized incorrectly"));
 }
 
 /**
@@ -119,12 +119,12 @@ function waitForEvent(eventType, expectedId) {
         let event = subject.QueryInterface(Ci.nsIAccessibleEvent);
         if (event.eventType === eventType &&
             event.accessible.id === expectedId) {
-          Services.obs.removeObserver(this, 'accessible-event');
+          Services.obs.removeObserver(this, "accessible-event");
           resolve(event);
         }
       }
     };
-    Services.obs.addObserver(eventObserver, 'accessible-event');
+    Services.obs.addObserver(eventObserver, "accessible-event");
   });
 }
 

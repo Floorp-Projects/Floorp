@@ -850,8 +850,8 @@ pub extern "C" fn Servo_StyleSet_AppendStyleSheet(
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_MediumFeaturesChanged(
     raw_data: RawServoStyleSetBorrowed,
-    viewport_changed: bool,
-) -> nsRestyleHint {
+    viewport_units_used: *mut bool,
+) -> bool {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
 
@@ -867,19 +867,16 @@ pub extern "C" fn Servo_StyleSet_MediumFeaturesChanged(
     // less often.
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
 
-    let viewport_units_used = data.stylist.device().used_viewport_size();
+    unsafe {
+        *viewport_units_used = data.stylist.device().used_viewport_size();
+    }
     data.stylist.device_mut().reset_computed_values();
     let rules_changed = data.stylist.media_features_change_changed_style(
         data.stylesheets.iter(),
         &guard,
     );
-    if rules_changed {
-        structs::nsRestyleHint_eRestyle_Subtree
-    } else if viewport_changed && viewport_units_used {
-        structs::nsRestyleHint_eRestyle_ForceDescendants
-    } else {
-        nsRestyleHint(0)
-    }
+
+    rules_changed
 }
 
 #[no_mangle]
@@ -1783,6 +1780,7 @@ pub extern "C" fn Servo_ComputedValues_Inherit(
 #[no_mangle]
 pub extern "C" fn Servo_ComputedValues_GetStyleBits(values: ServoStyleContextBorrowed) -> u64 {
     use style::properties::computed_value_flags::*;
+    // FIXME(emilio): We could do this more efficiently I'm quite sure.
     let flags = values.flags;
     let mut result = 0;
     if flags.contains(IS_RELEVANT_LINK_VISITED) {
@@ -1796,6 +1794,12 @@ pub extern "C" fn Servo_ComputedValues_GetStyleBits(values: ServoStyleContextBor
     }
     if flags.contains(IS_TEXT_COMBINED) {
         result |= structs::NS_STYLE_IS_TEXT_COMBINED as u64;
+    }
+    if flags.contains(IS_IN_PSEUDO_ELEMENT_SUBTREE) {
+        result |= structs::NS_STYLE_HAS_PSEUDO_ELEMENT_DATA as u64;
+    }
+    if flags.contains(IS_IN_DISPLAY_NONE_SUBTREE) {
+        result |= structs::NS_STYLE_IN_DISPLAY_NONE_SUBTREE as u64;
     }
     result
 }
@@ -1845,14 +1849,9 @@ pub extern "C" fn Servo_StyleSet_Init(pres_context: RawGeckoPresContextOwned)
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSet_RebuildData(raw_data: RawServoStyleSetBorrowed) {
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    let guard = global_style_data.shared_lock.read();
-
+pub extern "C" fn Servo_StyleSet_RebuildCachedData(raw_data: RawServoStyleSetBorrowed) {
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    data.stylist.device_mut().reset();
-    data.stylesheets.force_dirty();
-    data.flush_stylesheets::<GeckoElement>(&guard, None);
+    data.stylist.device_mut().rebuild_cached_data();
 }
 
 #[no_mangle]

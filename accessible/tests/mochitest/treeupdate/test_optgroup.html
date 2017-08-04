@@ -17,14 +17,12 @@
 
   <script type="application/javascript">
 
-    function addOptGroup(aID)
-    {
+    function addOptGroup(aID) {
       this.selectNode = getNode(aID);
       this.select = getAccessible(this.selectNode);
       this.selectList = this.select.firstChild;
 
-      this.invoke = function addOptGroup_invoke()
-      {
+      this.invoke = function addOptGroup_invoke() {
         var optGroup = document.createElement("optgroup");
         for (i = 0; i < 2; i++) {
           var opt = document.createElement("option");
@@ -43,8 +41,7 @@
         new invokerChecker(EVENT_REORDER, this.selectList)
       ];
 
-      this.finalCheck = function addOptGroup_finalCheck()
-      {
+      this.finalCheck = function addOptGroup_finalCheck() {
         var tree =
           { COMBOBOX: [
             { COMBOBOX_LIST: [
@@ -62,20 +59,17 @@
         testAccessibleTree(this.select, tree);
       }
 
-      this.getID = function addOptGroup_getID()
-      {
+      this.getID = function addOptGroup_getID() {
         return "test optgroup's insertion into a select";
       }
     }
 
-    function removeOptGroup(aID)
-    {
+    function removeOptGroup(aID) {
       this.selectNode = getNode(aID);
       this.select = getAccessible(this.selectNode);
       this.selectList = this.select.firstChild;
 
-      this.invoke = function removeOptGroup_invoke()
-      {
+      this.invoke = function removeOptGroup_invoke() {
         this.option1Node = this.selectNode.firstChild.firstChild;
         this.selectNode.firstChild.remove();
       }
@@ -84,8 +78,7 @@
         new invokerChecker(EVENT_REORDER, this.selectList)
       ];
 
-      this.finalCheck = function removeOptGroup_finalCheck()
-      {
+      this.finalCheck = function removeOptGroup_finalCheck() {
         var tree =
           { COMBOBOX: [
             { COMBOBOX_LIST: [
@@ -96,16 +89,14 @@
         is(isAccessible(this.option1Node), false, "removed option shouldn't be accessible anymore!");
       }
 
-      this.getID = function removeOptGroup_getID()
-      {
+      this.getID = function removeOptGroup_getID() {
         return "test optgroup's removal from a select";
       }
     }
 
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
 
       gQueue.push(new addOptGroup("select"));

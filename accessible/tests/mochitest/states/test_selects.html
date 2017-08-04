@@ -20,8 +20,7 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function openComboboxNCheckStates(aID)
-    {
+    function openComboboxNCheckStates(aID) {
       this.combobox = getAccessible(aID);
       this.comboboxList = this.combobox.firstChild;
       this.comboboxOption = this.comboboxList.firstChild;
@@ -30,14 +29,12 @@
         new invokerChecker(EVENT_FOCUS, this.comboboxOption)
       ];
 
-      this.invoke = function openComboboxNCheckStates_invoke()
-      {
+      this.invoke = function openComboboxNCheckStates_invoke() {
         getNode(aID).focus();
         synthesizeKey("VK_DOWN", { altKey: true });
       }
 
-      this.finalCheck = function openComboboxNCheckStates_invoke()
-      {
+      this.finalCheck = function openComboboxNCheckStates_invoke() {
         // Expanded state on combobox.
         testStates(this.combobox, STATE_EXPANDED);
 
@@ -45,17 +42,15 @@
         testStates(this.comboboxList, STATE_FLOATING);
       }
 
-      this.getID = function openComboboxNCheckStates_getID()
-      {
+      this.getID = function openComboboxNCheckStates_getID() {
         return "open combobox and test states";
       }
     }
 
-    //gA11yEventDumpToConsole = true;
+    // gA11yEventDumpToConsole = true;
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       // combobox
       var combobox = getAccessible("combobox");
       testStates(combobox,

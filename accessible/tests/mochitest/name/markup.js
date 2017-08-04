@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Name tests described by "markuprules.xml" file.
 
 var gNameRulesFileURL = "markuprules.xml";
@@ -12,9 +12,8 @@ var gDumpToConsole = false;
  * Start name tests. Run through markup elements and test names for test
  * element (see namerules.xml for details).
  */
-function testNames()
-{
-  //enableLogging("tree,stack"); // debugging
+function testNames() {
+  // enableLogging("tree,stack"); // debugging
 
   var request = new XMLHttpRequest();
   request.open("get", gNameRulesFileURL, false);
@@ -26,7 +25,7 @@ function testNames()
   gTestIterator.iterateMarkups(markupElms);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Private section.
 
 /**
@@ -34,8 +33,7 @@ function testNames()
  */
 var gTestIterator =
 {
-  iterateMarkups: function gTestIterator_iterateMarkups(aMarkupElms)
-  {
+  iterateMarkups: function gTestIterator_iterateMarkups(aMarkupElms) {
     this.markupElms = aMarkupElms;
 
     this.iterateNext();
@@ -43,8 +41,7 @@ var gTestIterator =
 
   iterateRules: function gTestIterator_iterateRules(aElm, aContainer,
                                                     aRuleSetElm, aRuleElms,
-                                                    aTestID)
-  {
+                                                    aTestID) {
     this.ruleSetElm = aRuleSetElm;
     this.ruleElms = aRuleElms;
     this.elm = aElm;
@@ -54,8 +51,7 @@ var gTestIterator =
     this.iterateNext();
   },
 
-  iterateNext: function gTestIterator_iterateNext()
-  {
+  iterateNext: function gTestIterator_iterateNext() {
     if (this.markupIdx == -1) {
       this.markupIdx++;
       testNamesForMarkup(this.markupElms[this.markupIdx]);
@@ -73,7 +69,7 @@ var gTestIterator =
 
       this.markupIdx++;
       if (this.markupIdx == this.markupElms.length) {
-        //disableLogging("tree"); // debugging
+        // disableLogging("tree"); // debugging
         SimpleTest.finish();
         return;
       }
@@ -108,8 +104,7 @@ var gTestIterator =
  * Process every 'markup' element and test names for it. Used by testNames
  * function.
  */
-function testNamesForMarkup(aMarkupElm)
-{
+function testNamesForMarkup(aMarkupElm) {
   if (gDumpToConsole)
     dump("\nProcessing markup '" + aMarkupElm.getAttribute("id") + "'\n");
 
@@ -133,8 +128,7 @@ function testNamesForMarkup(aMarkupElm)
   document.body.appendChild(div);
 }
 
-function testNamesForMarkupRules(aMarkupElm, aContainer)
-{
+function testNamesForMarkupRules(aMarkupElm, aContainer) {
   var testID = aMarkupElm.getAttribute("id");
   if (gDumpToConsole)
     dump("\nProcessing markup rules '" + testID + "'\n");
@@ -164,11 +158,10 @@ function testNamesForMarkupRules(aMarkupElm, aContainer)
  * Test name for current rule and current 'markup' element. Used by
  * testNamesForMarkup function.
  */
-function testNameForRule(aElm, aRuleElm)
-{
+function testNameForRule(aElm, aRuleElm) {
   if (aRuleElm.hasAttribute("attr")) {
     if (gDumpToConsole) {
-      dump("\nProcessing rule { attr: " + aRuleElm.getAttribute("attr") +" }\n");
+      dump("\nProcessing rule { attr: " + aRuleElm.getAttribute("attr") + " }\n");
     }
 
     testNameForAttrRule(aElm, aRuleElm);
@@ -176,7 +169,7 @@ function testNameForRule(aElm, aRuleElm)
   } else if (aRuleElm.hasAttribute("elm")) {
     if (gDumpToConsole) {
       dump("\nProcessing rule { elm: " + aRuleElm.getAttribute("elm") +
-           ", elmattr: " + aRuleElm.getAttribute("elmattr") +" }\n");
+           ", elmattr: " + aRuleElm.getAttribute("elmattr") + " }\n");
     }
 
     testNameForElmRule(aElm, aRuleElm);
@@ -184,15 +177,14 @@ function testNameForRule(aElm, aRuleElm)
   } else if (aRuleElm.getAttribute("fromsubtree") == "true") {
     if (gDumpToConsole) {
       dump("\nProcessing rule { fromsubtree: " +
-           aRuleElm.getAttribute("fromsubtree") +" }\n");
+           aRuleElm.getAttribute("fromsubtree") + " }\n");
     }
 
     testNameForSubtreeRule(aElm, aRuleElm);
   }
 }
 
-function testNameForAttrRule(aElm, aRule)
-{
+function testNameForAttrRule(aElm, aRule) {
   var name = "";
 
   var attr = aRule.getAttribute("attr");
@@ -245,16 +237,14 @@ function testNameForAttrRule(aElm, aRule)
   }
 }
 
-function testNameForElmRule(aElm, aRule)
-{
+function testNameForElmRule(aElm, aRule) {
   var labelElm;
 
   var tagname = aRule.getAttribute("elm");
   var attrname = aRule.getAttribute("elmattr");
   if (attrname) {
     var filter = {
-      acceptNode: function filter_acceptNode(aNode)
-      {
+      acceptNode: function filter_acceptNode(aNode) {
         if (aNode.localName == this.mLocalName &&
             aNode.getAttribute(this.mAttrName) == this.mAttrValue)
           return NodeFilter.FILTER_ACCEPT;
@@ -301,8 +291,7 @@ function testNameForElmRule(aElm, aRule)
   parentNode.removeChild(labelElm);
 }
 
-function testNameForSubtreeRule(aElm, aRule)
-{
+function testNameForSubtreeRule(aElm, aRule) {
   var msg = "From subtree test (" + gTestIterator.testID + ").";
   testName(aElm, aElm.getAttribute("textequiv"), msg);
   testAbsentAttrs(aElm, {"explicit-name": "true"});
@@ -321,15 +310,13 @@ function testNameForSubtreeRule(aElm, aRule)
  * Return array of 'rule' elements. Used in conjunction with
  * getRuleElmsFromRulesetElm() function.
  */
-function getRuleElmsByRulesetId(aRulesetId)
-{
+function getRuleElmsByRulesetId(aRulesetId) {
   var expr = "//rules/ruledfn/ruleset[@id='" + aRulesetId + "']";
   var rulesetElm = evaluateXPath(gRuleDoc, expr);
   return getRuleElmsFromRulesetElm(rulesetElm[0]);
 }
 
-function getRuleElmsFromRulesetElm(aRulesetElm)
-{
+function getRuleElmsFromRulesetElm(aRulesetElm) {
   var rulesetId = aRulesetElm.getAttribute("ref");
   if (rulesetId)
     return getRuleElmsByRulesetId(rulesetId);
@@ -352,8 +339,7 @@ function getRuleElmsFromRulesetElm(aRulesetElm)
 /**
  * Helper method to evaluate xpath expression.
  */
-function evaluateXPath(aNode, aExpr, aResolver)
-{
+function evaluateXPath(aNode, aExpr, aResolver) {
   var xpe = new XPathEvaluator();
 
   var resolver = aResolver;
@@ -374,7 +360,7 @@ function evaluateXPath(aNode, aExpr, aResolver)
 
 function htmlDocResolver(aPrefix) {
   var ns = {
-    'html': 'http://www.w3.org/1999/xhtml'
+    "html": "http://www.w3.org/1999/xhtml"
   };
   return ns[aPrefix] || null;
 }
