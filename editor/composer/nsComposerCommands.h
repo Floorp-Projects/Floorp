@@ -159,7 +159,8 @@ protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) = 0;
-  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState) = 0;
+  virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
+                            nsString& newState) = 0;
 
 };
 
@@ -173,7 +174,8 @@ protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
-  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
+  virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
+                            nsString& newState) override final;
 };
 
 class nsFontFaceStateCommand final : public nsMultiStateCommand
@@ -185,7 +187,8 @@ protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
-  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
+  virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
+                            nsString& newState) override final;
 };
 
 class nsFontSizeStateCommand final : public nsMultiStateCommand
@@ -197,7 +200,8 @@ protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
-  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
+  virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
+                            nsString& newState) override final;
 };
 
 class nsHighlightColorStateCommand final : public nsMultiStateCommand
@@ -210,7 +214,8 @@ protected:
   NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, bool *_retval);
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
-  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
+  virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
+                            nsString& newState) override final;
 
 };
 
@@ -223,7 +228,8 @@ protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
-  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
+  virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
+                            nsString& newState) override final;
 };
 
 class nsAlignCommand final : public nsMultiStateCommand
@@ -235,7 +241,8 @@ protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
-  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
+  virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
+                            nsString& newState) override final;
 };
 
 class nsBackgroundColorStateCommand final : public nsMultiStateCommand
@@ -247,7 +254,8 @@ protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
-  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
+  virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
+                            nsString& newState) override final;
 };
 
 class nsAbsolutePositioningCommand final : public nsBaseStateUpdatingCommand
