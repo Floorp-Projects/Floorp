@@ -623,10 +623,10 @@ HandlerService.prototype = {
    *
    * @param aPath  {string}  a path to a file
    *
-   * @returns {nsILocalFile} the file, or null if the file does not exist
+   * @returns {nsIFile} the file, or null if the file does not exist
    */
   _getFileWithPath: function HS__getFileWithPath(aPath) {
-    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 
     try {
       file.initWithPath(aPath);
@@ -637,7 +637,7 @@ HandlerService.prototype = {
     catch(ex) {
       // Note: for historical reasons, we don't actually check to see
       // if the exception is NS_ERROR_FILE_UNRECOGNIZED_PATH, which is what
-      // nsILocalFile::initWithPath throws when a path is relative.
+      // nsIFile::initWithPath throws when a path is relative.
 
       file = this._dirSvc.get("XCurProcD", Ci.nsIFile);
 

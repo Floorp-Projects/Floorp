@@ -188,7 +188,7 @@ var CSPp = CustomSimulatorProcess.prototype = Object.create(SimulatorProcess.pro
 // Compute B2G binary file handle.
 Object.defineProperty(CSPp, "b2gBinary", {
   get: function () {
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(this.options.b2gBinary);
     return file;
   }
@@ -197,7 +197,7 @@ Object.defineProperty(CSPp, "b2gBinary", {
 // Compute Gaia profile file handle.
 Object.defineProperty(CSPp, "gaiaProfile", {
   get: function () {
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(this.options.gaiaProfile);
     return file;
   }
@@ -257,7 +257,7 @@ Object.defineProperty(ASPp, "gaiaProfile", {
 
     // Custom profile from simulator configuration.
     if (this.options.gaiaProfile) {
-      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(this.options.gaiaProfile);
       return file;
     }

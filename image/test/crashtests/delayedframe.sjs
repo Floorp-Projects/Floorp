@@ -3,7 +3,7 @@ function getFileStream(filename)
   // Get the location of this sjs file, and then use that to figure out where
   // to find where our other files are.
   var self = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
+                       .createInstance(Components.interfaces.nsIFile);
   self.initWithPath(getState("__LOCATION__"));
   var file = self.parent;
   file.append(filename);

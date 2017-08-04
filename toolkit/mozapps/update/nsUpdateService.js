@@ -216,8 +216,8 @@ XPCOMUtils.defineLazyGetter(this, "gCertUtils", function aus_gCertUtils() {
  * @throws if we don't have right access to the directory.
  */
 function testWriteAccess(updateTestFile, createDirectory) {
-  const NORMAL_FILE_TYPE = Ci.nsILocalFile.NORMAL_FILE_TYPE;
-  const DIRECTORY_TYPE = Ci.nsILocalFile.DIRECTORY_TYPE;
+  const NORMAL_FILE_TYPE = Ci.nsIFile.NORMAL_FILE_TYPE;
+  const DIRECTORY_TYPE = Ci.nsIFile.DIRECTORY_TYPE;
   if (updateTestFile.exists())
     updateTestFile.remove(false);
   updateTestFile.create(createDirectory ? DIRECTORY_TYPE : NORMAL_FILE_TYPE,
@@ -296,7 +296,7 @@ function getPerInstallationMutexName(aGlobal = true) {
                createInstance(Ci.nsICryptoHash);
   hasher.init(hasher.SHA1);
 
-  let exeFile = Services.dirsvc.get(KEY_EXECUTABLE, Ci.nsILocalFile);
+  let exeFile = Services.dirsvc.get(KEY_EXECUTABLE, Ci.nsIFile);
 
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                   createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -424,7 +424,7 @@ function getCanApplyUpdates() {
         if (appDirTestFile.exists()) {
           appDirTestFile.remove(false);
         }
-        appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+        appDirTestFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
         appDirTestFile.remove(false);
       }
     }
@@ -470,7 +470,7 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdatesSession", function aus_gCSUS(
       updateTestFile.append(FILE_UPDATE_TEST);
       LOG("gCanStageUpdatesSession - testing write access " +
           updateTestFile.path);
-      updateTestFile.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE,
+      updateTestFile.createUnique(Ci.nsIFile.DIRECTORY_TYPE,
                                   FileUtils.PERMS_DIRECTORY);
       updateTestFile.remove(false);
     }
@@ -2642,7 +2642,7 @@ UpdateManager.prototype = {
     var modeFlags = FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                     FileUtils.MODE_TRUNCATE;
     if (!file.exists()) {
-      file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+      file.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
     }
     fos.init(file, modeFlags, FileUtils.PERMS_FILE, 0);
 

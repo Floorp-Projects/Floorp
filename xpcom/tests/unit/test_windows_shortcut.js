@@ -11,7 +11,7 @@ var Cc = Components.classes;
 var Cu = Components.utils;
 var CC = Components.Constructor;
 
-const LocalFile = CC("@mozilla.org/file/local;1", "nsILocalFile", "initWithPath");
+const LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -21,7 +21,7 @@ function run_test()
   if ("nsILocalFileWin" in Ci
    && do_get_cwd() instanceof Ci.nsILocalFileWin) {
 
-    let tempDir = Services.dirsvc.get("TmpD", Ci.nsILocalFile);
+    let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
     tempDir.append("shortcutTesting");
     tempDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o666);
 

@@ -29,7 +29,7 @@ const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 function removeLogFiles() {
   let entries = logsdir.directoryEntries;
   while (entries.hasMoreElements()) {
-    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+    let logfile = entries.getNext().QueryInterface(Ci.nsIFile);
     logfile.remove(false);
   }
 }
@@ -38,7 +38,7 @@ function getLogFiles() {
   let result = [];
   let entries = logsdir.directoryEntries;
   while (entries.hasMoreElements()) {
-    result.push(entries.getNext().QueryInterface(Ci.nsILocalFile));
+    result.push(entries.getNext().QueryInterface(Ci.nsIFile));
   }
   return result;
 }

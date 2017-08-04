@@ -478,7 +478,7 @@ var PlacesOrganizer = {
   onRestoreBookmarksFromFile: function PO_onRestoreBookmarksFromFile() {
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                  getService(Ci.nsIProperties);
-    let backupsDir = dirSvc.get("Desk", Ci.nsILocalFile);
+    let backupsDir = dirSvc.get("Desk", Ci.nsIFile);
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let fpCallback = aResult => {
       if (aResult != Ci.nsIFilePicker.returnCancel) {
@@ -540,7 +540,7 @@ var PlacesOrganizer = {
   backupBookmarks: function PO_backupBookmarks() {
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                  getService(Ci.nsIProperties);
-    let backupsDir = dirSvc.get("Desk", Ci.nsILocalFile);
+    let backupsDir = dirSvc.get("Desk", Ci.nsIFile);
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let fpCallback = function fpCallback_done(aResult) {
       if (aResult != Ci.nsIFilePicker.returnCancel) {

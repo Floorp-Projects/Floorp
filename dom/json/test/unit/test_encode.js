@@ -7,7 +7,7 @@ var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProper
 var workingDir = dirSvc.get("TmpD", Ci.nsIFile);
 
 var outputName = "json-test-output";
-var outputDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+var outputDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 outputDir.initWithFile(workingDir);
 outputDir.append(outputName);
 
@@ -80,7 +80,7 @@ function testThrowingToJSON() {
 
 function testOutputStreams() {
   function writeToFile(obj, charset, writeBOM) {
-    var jsonFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    var jsonFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     jsonFile.initWithFile(outputDir);
     jsonFile.append("test.json");
     jsonFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);

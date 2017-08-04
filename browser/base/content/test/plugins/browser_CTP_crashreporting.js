@@ -150,7 +150,7 @@ add_task(async function() {
 
     // Remove the submitted report file after ensuring it exists.
     let file = Cc["@mozilla.org/file/local;1"]
-                 .createInstance(Ci.nsILocalFile);
+                 .createInstance(Ci.nsIFile);
     file.initWithPath(Services.crashmanager._submittedDumpsDir);
     file.append(crashData.serverCrashID + ".txt");
     ok(file.exists(), "Submitted report file should exist");
@@ -222,7 +222,7 @@ add_task(async function() {
 
     // Remove the submitted report file after ensuring it exists.
     let file = Cc["@mozilla.org/file/local;1"]
-                 .createInstance(Ci.nsILocalFile);
+                 .createInstance(Ci.nsIFile);
     file.initWithPath(Services.crashmanager._submittedDumpsDir);
     file.append(crashData.serverCrashID + ".txt");
     ok(file.exists(), "Submitted report file should exist");

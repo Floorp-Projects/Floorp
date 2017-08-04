@@ -1929,7 +1929,7 @@ function defaultIndexHandler(metadata, response)
 <h1>' + path + '</h1>\
 <ol style="list-style-type: none">';
 
-  var directory = metadata.getProperty("directory").QueryInterface(Ci.nsILocalFile);
+  var directory = metadata.getProperty("directory").QueryInterface(Ci.nsIFile);
   NS_ASSERT(directory && directory.isDirectory());
 
   var fileList = [];
@@ -2131,7 +2131,7 @@ function ServerHandler(server)
   this._server = server;
 
   /**
-* A FileMap object containing the set of path->nsILocalFile mappings for
+* A FileMap object containing the set of path->nsIFile mappings for
 * all directory mappings set in the server (e.g., "/" for /var/www/html/,
 * "/foo/bar/" for /local/path/, and "/foo/bar/baz/" for /local/path2).
 *
@@ -2555,7 +2555,7 @@ ServerHandler.prototype =
 *
 * @param metadata : Request
 * the Request for which a response is being generated
-* @param file : nsILocalFile
+* @param file : nsIFile
 * the file which is to be sent in the response
 * @param response : Response
 * the response to which the file should be written
@@ -2893,7 +2893,7 @@ ServerHandler.prototype =
   },
 
   /**
-* Returns the nsILocalFile which corresponds to the path, as determined using
+* Returns the nsIFile which corresponds to the path, as determined using
 * all registered path->directory mappings and any paths which are explicitly
 * overridden.
 *
@@ -2903,7 +2903,7 @@ ServerHandler.prototype =
 * when the correct action is the corresponding HTTP error (i.e., because no
 * mapping was found for a directory in path, the referenced file doesn't
 * exist, etc.)
-* @returns nsILocalFile
+* @returns nsIFile
 * the file to be sent as the response to a request for the path
 */
   _getFileForPath: function(path)
@@ -3279,12 +3279,12 @@ FileMap.prototype =
   // PUBLIC API
 
   /**
-* Maps key to a clone of the nsILocalFile value if value is non-null;
+* Maps key to a clone of the nsIFile value if value is non-null;
 * otherwise, removes any extant mapping for key.
 *
 * @param key : string
 * string to which a clone of value is mapped
-* @param value : nsILocalFile
+* @param value : nsIFile
 * the file to map to key, or null to remove a mapping
 */
   put: function(key, value)
@@ -3296,12 +3296,12 @@ FileMap.prototype =
   },
 
   /**
-* Returns a clone of the nsILocalFile mapped to key, or null if no such
+* Returns a clone of the nsIFile mapped to key, or null if no such
 * mapping exists.
 *
 * @param key : string
 * key to which the returned file maps
-* @returns nsILocalFile
+* @returns nsIFile
 * a clone of the mapped file, or null if no mapping exists
 */
   get: function(key)
@@ -5162,7 +5162,7 @@ function server(port, basePath)
   if (basePath)
   {
     var lp = Cc["@mozilla.org/file/local;1"]
-               .createInstance(Ci.nsILocalFile);
+               .createInstance(Ci.nsIFile);
     lp.initWithPath(basePath);
   }
 
@@ -5187,7 +5187,7 @@ function startServerAsync(port, basePath)
   if (basePath)
   {
     var lp = Cc["@mozilla.org/file/local;1"]
-               .createInstance(Ci.nsILocalFile);
+               .createInstance(Ci.nsIFile);
     lp.initWithPath(basePath);
   }
 

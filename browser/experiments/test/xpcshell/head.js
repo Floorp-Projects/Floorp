@@ -36,7 +36,7 @@ function getExperimentPath(base) {
 
 function sha1File(path) {
   let f = Cc["@mozilla.org/file/local;1"]
-            .createInstance(Ci.nsILocalFile);
+            .createInstance(Ci.nsIFile);
   f.initWithPath(path);
   let hasher = Cc["@mozilla.org/security/hash;1"]
                  .createInstance(Ci.nsICryptoHash);

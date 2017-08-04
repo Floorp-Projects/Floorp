@@ -39,7 +39,7 @@ function promiseCrashReport(expectedExtra = {}) {
     }
 
     let file = Cc["@mozilla.org/file/local;1"]
-                 .createInstance(Ci.nsILocalFile);
+                 .createInstance(Ci.nsIFile);
     file.initWithPath(Services.crashmanager._submittedDumpsDir);
     file.append(remoteID + ".txt");
     if (!file.exists()) {

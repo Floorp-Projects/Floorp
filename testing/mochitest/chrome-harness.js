@@ -42,7 +42,7 @@ function getResolvedURI(url) {
 
 /**
  *  getChromeDir is intended to be called after getResolvedURI and convert
- *  the input URI into a nsILocalFile (actually the directory containing the
+ *  the input URI into a nsIFile (actually the directory containing the
  *  file).  This can be used for copying or referencing the file or extra files
  *  required by the test.  Usually we need to load a secondary html file or library
  *  and this will give us file system access to that.
@@ -54,7 +54,7 @@ function getChromeDir(resolvedURI) {
   var fileHandler = Components.classes["@mozilla.org/network/protocol;1?name=file"].
                     getService(Components.interfaces.nsIFileProtocolHandler);
   var chromeDir = fileHandler.getFileFromURLSpec(resolvedURI.spec);
-  return chromeDir.parent.QueryInterface(Components.interfaces.nsILocalFile);
+  return chromeDir.parent.QueryInterface(Components.interfaces.nsIFile);
 }
 
 //used by tests to determine their directory based off window.location.path
@@ -109,7 +109,7 @@ function getJar(uri) {
 function extractJarToTmp(jar) {
   var tmpdir = Components.classes["@mozilla.org/file/directory_service;1"]
                       .getService(Components.interfaces.nsIProperties)
-                      .get("ProfD", Components.interfaces.nsILocalFile);
+                      .get("ProfD", Components.interfaces.nsIFile);
   tmpdir.append("mochikit.tmp");
   // parseInt is used because octal escape sequences cause deprecation warnings
   // in strict mode (which is turned on in debug builds)
@@ -195,7 +195,7 @@ function getTestFilePath(path) {
 
 /*
  * Simple utility function to take the directory structure in jarentryname and
- * translate that to a path of a nsILocalFile.
+ * translate that to a path of a nsIFile.
  */
 function buildRelativePath(jarentryname, destdir, basepath)
 {
@@ -207,7 +207,7 @@ function buildRelativePath(jarentryname, destdir, basepath)
   var parts = jarentryname.split('/');
 
   var targetFile = Components.classes["@mozilla.org/file/local;1"]
-                   .createInstance(Components.interfaces.nsILocalFile);
+                   .createInstance(Components.interfaces.nsIFile);
   targetFile.initWithFile(destdir);
 
   for (var i = baseParts.length; i < parts.length; i++) {

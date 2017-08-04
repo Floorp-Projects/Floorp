@@ -362,7 +362,7 @@ this.WinTaskbarJumpList =
   _getHandlerAppItem: function WTBJL__getHandlerAppItem(name, description,
                                                         args, iconIndex,
                                                         faviconPageUri) {
-    var file = Services.dirsvc.get("XREExeF", Ci.nsILocalFile);
+    var file = Services.dirsvc.get("XREExeF", Ci.nsIFile);
 
     var handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
                      createInstance(Ci.nsILocalHandlerApp);

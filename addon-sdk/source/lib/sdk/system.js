@@ -31,7 +31,7 @@ const PR_TRUNCATE = parseInt("0x20");
 
 function openFile(path, mode) {
   let file = Cc["@mozilla.org/file/local;1"].
-             createInstance(Ci.nsILocalFile);
+             createInstance(Ci.nsIFile);
   file.initWithPath(path);
   let stream = Cc["@mozilla.org/network/file-output-stream;1"].
                createInstance(Ci.nsIFileOutputStream);

@@ -477,12 +477,12 @@ function delayedDefaultCallback() {
  * Gets the continue file used to signal the mock http server to continue
  * downloading for slow download mar file tests without creating it.
  *
- * @return nsILocalFile for the continue file.
+ * @return nsIFile for the continue file.
  */
 function getContinueFile() {
   let continueFile = Cc["@mozilla.org/file/directory_service;1"].
                      getService(Ci.nsIProperties).
-                     get("CurWorkD", Ci.nsILocalFile);
+                     get("CurWorkD", Ci.nsIFile);
   let continuePath = REL_PATH_DATA + "continue";
   let continuePathParts = continuePath.split("/");
   for (let i = 0; i < continuePathParts.length; ++i) {
@@ -729,7 +729,7 @@ function copyTestUpdater() {
   try {
     // Copy the test updater
     let baseAppDir = getAppBaseDir();
-    let testUpdaterDir = Services.dirsvc.get("CurWorkD", Ci.nsILocalFile);
+    let testUpdaterDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
     let relPath = REL_PATH_DATA;
     let pathParts = relPath.split("/");
     for (let i = 0; i < pathParts.length; ++i) {

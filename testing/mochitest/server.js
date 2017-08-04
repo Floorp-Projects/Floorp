@@ -163,7 +163,7 @@ function runServer()
   var foStream = Cc["@mozilla.org/network/file-output-stream;1"]
                    .createInstance(Ci.nsIFileOutputStream);
   var serverAlive = Cc["@mozilla.org/file/local;1"]
-                      .createInstance(Ci.nsILocalFile);
+                      .createInstance(Ci.nsIFile);
 
   if (typeof(_PROFILE_PATH) == "undefined") {
     serverAlive.initWithFile(serverBasePath);
@@ -228,7 +228,7 @@ function createMochitestServer(serverBasePath)
     {
       getFile: function getFile(path)
       {
-        var file = serverBasePath.clone().QueryInterface(Ci.nsILocalFile);
+        var file = serverBasePath.clone().QueryInterface(Ci.nsIFile);
         path.split("/").forEach(function(p) {
           file.appendRelativePath(p);
         });
@@ -376,7 +376,7 @@ function* dirIter(dir)
   var en = dir.directoryEntries;
   while (en.hasMoreElements()) {
     var file = en.getNext();
-    yield file.QueryInterface(Ci.nsILocalFile);
+    yield file.QueryInterface(Ci.nsIFile);
   }
 }
 

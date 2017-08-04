@@ -186,7 +186,7 @@ function* getSystemInfo() {
 function getProfileLocation() {
   // In child processes, we cannot access the profile location.
   try {
-    let profd = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    let profd = Services.dirsvc.get("ProfD", Ci.nsIFile);
     let profservice = Cc["@mozilla.org/toolkit/profile-service;1"]
                         .getService(Ci.nsIToolkitProfileService);
     let profiles = profservice.profiles;

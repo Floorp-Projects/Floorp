@@ -15,7 +15,7 @@ function getTempDir()
 {
     var dirService = Cc["@mozilla.org/file/directory_service;1"]
 	.getService(Ci.nsIProperties);
-    return dirService.get("TmpD", Ci.nsILocalFile);
+    return dirService.get("TmpD", Ci.nsIFile);
 }
 
 function create_file(fileName)

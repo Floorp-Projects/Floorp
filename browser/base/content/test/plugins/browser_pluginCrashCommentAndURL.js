@@ -165,7 +165,7 @@ function onSubmitStatus(aSubject, aData) {
     ok(!!remoteID, "serverCrashID should be set");
 
     // Remove the submitted report file.
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(Services.crashmanager._submittedDumpsDir);
     file.append(remoteID + ".txt");
     ok(file.exists(), "Submitted report file should exist");

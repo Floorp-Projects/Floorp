@@ -28,7 +28,7 @@ this.CrashTestUtils = {
 // Grab APIs from the testcrasher shared library
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
-var dir = Services.dirsvc.get("CurWorkD", Components.interfaces.nsILocalFile);
+var dir = Services.dirsvc.get("CurWorkD", Components.interfaces.nsIFile);
 var file = dir.clone();
 file = file.parent;
 file.append(ctypes.libraryName("testcrasher"));

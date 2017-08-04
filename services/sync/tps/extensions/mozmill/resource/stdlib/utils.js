@@ -372,7 +372,7 @@ function saveDataURL(aDataURL, aFilename) {
 
   var file;
   file = Cc['@mozilla.org/file/local;1']
-         .createInstance(Ci.nsILocalFile);
+         .createInstance(Ci.nsIFile);
   file.initWithPath(frame.persisted['screenshots']['path']);
   file.append(aFilename + ".jpg");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FILE_PERMISSIONS);

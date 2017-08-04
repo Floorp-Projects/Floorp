@@ -14,8 +14,8 @@ this.EXPORTED_SYMBOLS = [
  *
  * List of methods:
  *
- * nsILocalFile
- * createNiceUniqueFile(nsILocalFile aLocalFile)
+ * nsIFile
+ * createNiceUniqueFile(nsIFile aLocalFile)
  *
  * [string base, string ext]
  * splitBaseNameAndExtension(string aLeafName)
@@ -37,15 +37,15 @@ this.DownloadPaths = {
    * can also be expected.
    *
    * @param aTemplateFile
-   *        nsILocalFile whose leaf name is going to be used as a template. The
+   *        nsIFile whose leaf name is going to be used as a template. The
    *        provided object is not modified.
-   * @returns A new instance of an nsILocalFile object pointing to the newly
+   * @returns A new instance of an nsIFile object pointing to the newly
    *          created empty file. On platforms that support permission bits, the
    *          file is created with permissions 644.
    */
   createNiceUniqueFile: function DP_createNiceUniqueFile(aTemplateFile) {
     // Work on a clone of the provided template file object.
-    var curFile = aTemplateFile.clone().QueryInterface(Ci.nsILocalFile);
+    var curFile = aTemplateFile.clone().QueryInterface(Ci.nsIFile);
     var [base, ext] = DownloadPaths.splitBaseNameAndExtension(curFile.leafName);
     // Try other file names, for example "base(1).txt" or "base(1).tar.gz",
     // only if the file name initially set already exists.

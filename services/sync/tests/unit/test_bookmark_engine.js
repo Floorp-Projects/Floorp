@@ -226,7 +226,7 @@ add_task(async function test_restorePromptsReupload() {
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
       .getService(Ci.nsIProperties);
 
-    let backupFile = dirSvc.get("TmpD", Ci.nsILocalFile);
+    let backupFile = dirSvc.get("TmpD", Ci.nsIFile);
 
     _("Make a backup.");
     backupFile.append("t_b_e_" + Date.now() + ".json");

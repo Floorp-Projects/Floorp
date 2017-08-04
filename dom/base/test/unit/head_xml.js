@@ -7,7 +7,7 @@
 const I                    = Components.interfaces;
 const C                    = Components.classes;
 
-const nsILocalFile         = I.nsILocalFile;
+const nsIFile         = I.nsIFile;
 const nsIProperties        = I.nsIProperties;
 const nsIFileInputStream   = I.nsIFileInputStream;
 const nsIInputStream       = I.nsIInputStream;
@@ -41,7 +41,7 @@ function ParseFile(file) {
     file = fileObj;
   }
 
-  do_check_eq(file instanceof nsILocalFile, true);
+  do_check_eq(file instanceof nsIFile, true);
 
   var fileStr = C["@mozilla.org/network/file-input-stream;1"]
                  .createInstance(nsIFileInputStream);

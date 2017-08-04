@@ -166,7 +166,7 @@ exports.items = [
             let mainWindow = context.environment.chromeWindow;
             mainWindow.openUILinkIn(imageSummary.href, "tab");
           } else if (imageSummary.filename) {
-            const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+            const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
             file.initWithPath(imageSummary.filename);
             file.reveal();
           }

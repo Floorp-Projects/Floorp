@@ -9,7 +9,7 @@ function loadHTMLFromFile(path) {
   const testHTMLFile =
     Components.classes["@mozilla.org/file/directory_service;1"].
     getService(Components.interfaces.nsIProperties).
-    get("CurWorkD", Components.interfaces.nsILocalFile);
+    get("CurWorkD", Components.interfaces.nsIFile);
 
   const testHTMLFileStream =
     Components.classes["@mozilla.org/network/file-input-stream;1"].

@@ -1099,7 +1099,7 @@ class GTestCommands(MachCommandBase):
 
         # Note: we must normalize the path here so that gtest on Windows sees
         # a MOZ_GMP_PATH which has only Windows dir seperators, because
-        # nsILocalFile cannot open the paths with non-Windows dir seperators.
+        # nsIFile cannot open the paths with non-Windows dir seperators.
         xre_path = os.path.join(os.path.normpath(self.topobjdir), "dist", "bin")
         gtest_env["MOZ_XRE_DIR"] = xre_path
         gtest_env["MOZ_GMP_PATH"] = os.pathsep.join(

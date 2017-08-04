@@ -703,7 +703,7 @@ nsDefaultCommandLineHandler.prototype = {
       if (!this._haveProfile) {
         try {
           // This will throw when a profile has not been selected.
-          Services.dirsvc.get("ProfD", Components.interfaces.nsILocalFile);
+          Services.dirsvc.get("ProfD", Components.interfaces.nsIFile);
           this._haveProfile = true;
         } catch (e) {
           while ((ar = cmdLine.handleFlagWithParam("url", false)));
