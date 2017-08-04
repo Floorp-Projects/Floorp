@@ -180,14 +180,6 @@ public:
   // just can't be safely cloned). If this returns true, CloneData could
   // still fail. If this returns false, CloneData should not be called.
   virtual bool CanClone() { return false; }
-  // Create a new stream of the same type that refers to the same URI
-  // with a new channel. Any cached data associated with the original
-  // stream should be accessible in the new stream too.
-  virtual already_AddRefed<MediaResource> CloneData(
-    MediaResourceCallback* aCallback)
-  {
-    return nullptr;
-  }
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -295,14 +287,6 @@ public:
   virtual bool IsTransportSeekable() = 0;
 
   /**
-   * Create a resource, reading data from the channel. Call on main thread only.
-   * The caller must follow up by calling resource->Open().
-   */
-  static already_AddRefed<MediaResource>
-  Create(MediaResourceCallback* aCallback,
-         nsIChannel* aChannel, bool aIsPrivateBrowsing);
-
-  /**
    * Open the stream. This creates a stream listener and returns it in
    * aStreamListener; this listener needs to be notified of incoming data.
    */
@@ -338,6 +322,24 @@ private:
 
 class BaseMediaResource : public MediaResource {
 public:
+  /**
+   * Create a resource, reading data from the channel. Call on main thread only.
+   * The caller must follow up by calling resource->Open().
+   */
+  static already_AddRefed<BaseMediaResource> Create(
+    MediaResourceCallback* aCallback,
+    nsIChannel* aChannel,
+    bool aIsPrivateBrowsing);
+
+  // Create a new stream of the same type that refers to the same URI
+  // with a new channel. Any cached data associated with the original
+  // stream should be accessible in the new stream too.
+  virtual already_AddRefed<BaseMediaResource> CloneData(
+    MediaResourceCallback* aCallback)
+  {
+    return nullptr;
+  }
+
   void SetLoadInBackground(bool aLoadInBackground) override;
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
@@ -497,7 +499,8 @@ public:
   // Return true if the stream has been closed.
   bool     IsClosed() const { return mCacheStream.IsClosed(); }
   bool     CanClone() override;
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aDecoder) override;
+  already_AddRefed<BaseMediaResource> CloneData(
+    MediaResourceCallback* aDecoder) override;
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
   void     EnsureCacheUpToDate() override;
 

@@ -218,7 +218,7 @@ ChannelMediaDecoder::Load(nsIChannel* aChannel,
   MOZ_ASSERT(!mResource);
 
   mResource =
-    MediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
+    BaseMediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
   if (!mResource) {
     return NS_ERROR_FAILURE;
   }
@@ -238,7 +238,7 @@ ChannelMediaDecoder::Load(nsIChannel* aChannel,
 }
 
 nsresult
-ChannelMediaDecoder::Load(MediaResource* aOriginal)
+ChannelMediaDecoder::Load(BaseMediaResource* aOriginal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResource);
