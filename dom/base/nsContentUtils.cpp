@@ -792,6 +792,8 @@ nsContentUtils::Init()
   }
   uuidGenerator.forget(&sUUIDGenerator);
 
+  AsyncPrecreateStringBundles();
+
   RefPtr<UserInteractionObserver> uio = new UserInteractionObserver();
   uio->Init();
   uio.forget(&sUserInteractionObserver);
@@ -3952,6 +3954,23 @@ nsContentUtils::EnsureStringBundle(PropertiesFile aFile)
     sStringBundles[aFile] = bundle; // transfer ownership
   }
   return NS_OK;
+}
+
+/* static */
+void
+nsContentUtils::AsyncPrecreateStringBundles()
+{
+  for (uint32_t bundleIndex = 0; bundleIndex < PropertiesFile_COUNT; ++bundleIndex) {
+    nsresult rv = NS_IdleDispatchToCurrentThread(
+      NS_NewRunnableFunction("AsyncPrecreateStringBundles",
+                             [bundleIndex]() {
+                               PropertiesFile file = static_cast<PropertiesFile>(bundleIndex);
+                               EnsureStringBundle(file);
+                               nsIStringBundle *bundle = sStringBundles[file];
+                               bundle->AsyncPreload();
+                             }));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
 }
 
 /* static */
