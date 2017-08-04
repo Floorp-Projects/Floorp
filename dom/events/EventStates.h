@@ -330,6 +330,8 @@ private:
 
 #define DISABLED_STATES (NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED)
 
+#define REQUIRED_STATES (NS_EVENT_STATE_REQUIRED | NS_EVENT_STATE_OPTIONAL)
+
 // Event states that can be added and removed through
 // Element::{Add,Remove}ManuallyManagedStates.
 //
@@ -350,6 +352,7 @@ private:
   MANUALLY_MANAGED_STATES |                   \
   DIR_ATTR_STATES |                           \
   DISABLED_STATES |                           \
+  REQUIRED_STATES |                           \
   NS_EVENT_STATE_ACTIVE |                     \
   NS_EVENT_STATE_DRAGOVER |                   \
   NS_EVENT_STATE_FOCUS |                      \

@@ -4272,8 +4272,7 @@ HTMLEditor::IsVisTextNode(nsIContent* aNode,
 
   uint32_t length = aNode->TextLength();
   if (aSafeToAskFrames) {
-    nsCOMPtr<nsISelectionController> selectionController =
-      GetSelectionController();
+    nsISelectionController* selectionController = GetSelectionController();
     if (NS_WARN_IF(!selectionController)) {
       return NS_ERROR_FAILURE;
     }

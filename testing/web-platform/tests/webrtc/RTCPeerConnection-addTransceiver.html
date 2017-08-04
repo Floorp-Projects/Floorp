@@ -8,27 +8,63 @@
   'use strict';
 
   // Test is based on the following editor draft:
-  // https://w3c.github.io/webrtc-pc/archives/20170605/webrtc.html
+  // https://rawgit.com/w3c/webrtc-pc/cc8d80f455b86c8041d63bceb8b457f45c72aa89/webrtc.html
 
-  // The following helper function is called from RTCPeerConnection-helper.js:
-  // generateMediaStreamTrack
+  // The following helper functions are called from RTCPeerConnection-helper.js:
+  //   generateMediaStreamTrack()
 
   /*
-   *  5.1. RTCPeerConnection Interface Extensions
-   *  partial interface RTCPeerConnection {
-   *      sequence<RTCRtpSender>      getSenders();
-   *      sequence<RTCRtpReceiver>    getReceivers();
-   *      sequence<RTCRtpTransceiver> getTransceivers();
-   *      RTCRtpTransceiver           addTransceiver((MediaStreamTrack or DOMString) trackOrKind,
-   *                                                 optional RTCRtpTransceiverInit init);
-   *      ...
-   *  };
-   *
-   *  dictionary RTCRtpTransceiverInit {
-   *      RTCRtpTransceiverDirection         direction = "sendrecv";
-   *      sequence<MediaStream>              streams;
-   *      sequence<RTCRtpEncodingParameters> sendEncodings;
-   *  };
+    5.1.  RTCPeerConnection Interface Extensions
+
+      partial interface RTCPeerConnection {
+          sequence<RTCRtpSender>      getSenders();
+          sequence<RTCRtpReceiver>    getReceivers();
+          sequence<RTCRtpTransceiver> getTransceivers();
+          RTCRtpTransceiver           addTransceiver((MediaStreamTrack or DOMString) trackOrKind,
+                                                     optional RTCRtpTransceiverInit init);
+          ...
+      };
+
+      dictionary RTCRtpTransceiverInit {
+          RTCRtpTransceiverDirection         direction = "sendrecv";
+          sequence<MediaStream>              streams;
+          sequence<RTCRtpEncodingParameters> sendEncodings;
+      };
+
+      enum RTCRtpTransceiverDirection {
+        "sendrecv",
+        "sendonly",
+        "recvonly",
+        "inactive"
+      };
+
+    5.2.  RTCRtpSender Interface
+
+      interface RTCRtpSender {
+        readonly attribute MediaStreamTrack? track;
+        ...
+      };
+
+    5.3.  RTCRtpReceiver Interface
+
+      interface RTCRtpReceiver {
+        readonly attribute MediaStreamTrack  track;
+        ...
+      };
+
+    5.4.  RTCRtpTransceiver Interface
+
+      interface RTCRtpTransceiver {
+        readonly attribute DOMString?                  mid;
+        [SameObject]
+        readonly attribute RTCRtpSender                sender;
+        [SameObject]
+        readonly attribute RTCRtpReceiver              receiver;
+        readonly attribute boolean                     stopped;
+        readonly attribute RTCRtpTransceiverDirection  direction;
+        readonly attribute RTCRtpTransceiverDirection? currentDirection;
+        ...
+      };
 
       Note
         While addTrack checks if the MediaStreamTrack given as an argument is
@@ -38,34 +74,54 @@
    */
 
   /*
-   *  5.1.  addTransceiver
-   *        The initial value of mid is null.
-   *
-   *        3.  If the first argument is a string, let it be kind and run the following steps:
-   *            2.  Let track be null.
-   *        7.  Create an RTCRtpSender with track, streams and sendEncodings and let sender
-   *            be the result.
-   *        8.  Create an RTCRtpReceiver with kind and let receiver be the result.
-   *        9.  Create an RTCRtpTransceiver with sender and receiver and let transceiver
-   *            be the result.
-   *        10. Add transceiver to connection's set of transceivers.
-   *
-   *  5.3.  RTCRtpReceiver Interface
-   *        Create an RTCRtpReceiver
-   *        2.  Let track be a new MediaStreamTrack object [GETUSERMEDIA]. The source of
-   *            track is a remote source provided by receiver.
-   *        3.  Initialize track.kind to kind.
-   *        5.  Initialize track.label to the result of concatenating the string "remote "
-   *            with kind.
-   *        6.  Initialize track.readyState to live.
-   *        7.  Initialize track.muted to true.
-   *        8.  Set receiver.track to track.
-   *
-   *  5.4.  RTCRtpTransceiver Interface
-   *        Create an RTCRtpTransceiver
-   *        2.  Set transceiver.sender to sender.
-   *        3.  Set transceiver.receiver to receiver.
-   *        4.  Set transceiver.stopped to false.
+    5.1.  addTransceiver
+      3.  If the first argument is a string, let it be kind and run the following steps:
+        1.  If kind is not a legal MediaStreamTrack kind, throw a TypeError.
+   */
+  test(t => {
+    const pc = new RTCPeerConnection();
+    assert_own_property(pc, 'addTransceiver');
+    assert_throws(new TypeError(), () => pc.addTransceiver('invalid'));
+  }, 'addTransceiver() with string argument as invalid kind should throw TypeError');
+
+  /*
+    5.1.  addTransceiver
+      The initial value of mid is null.
+
+      3.  If the dictionary argument is present, let direction be the value of the
+          direction member. Otherwise let direction be sendrecv.
+      4.  If the first argument is a string, let it be kind and run the following steps:
+        2.  Let track be null.
+      8.  Create an RTCRtpSender with track, streams and sendEncodings and let
+          sender be the result.
+      9.  Create an RTCRtpReceiver with kind and let receiver be the result.
+      10. Create an RTCRtpTransceiver with sender, receiver and direction, and let
+          transceiver be the result.
+      11. Add transceiver to connection's set of transceivers.
+
+    5.2.  RTCRtpSender Interface
+      Create an RTCRtpSender
+        2.  Set sender.track to track.
+
+    5.3.  RTCRtpReceiver Interface
+      Create an RTCRtpReceiver
+        2.  Let track be a new MediaStreamTrack object [GETUSERMEDIA]. The source of
+            track is a remote source provided by receiver.
+        3.  Initialize track.kind to kind.
+        5.  Initialize track.label to the result of concatenating the string "remote "
+            with kind.
+        6.  Initialize track.readyState to live.
+        7.  Initialize track.muted to true.
+        8.  Set receiver.track to track.
+
+    5.4.  RTCRtpTransceiver Interface
+      Create an RTCRtpTransceiver
+        2.  Set transceiver.sender to sender.
+        3.  Set transceiver.receiver to receiver.
+        4.  Let transceiver have a [[Direction]] internal slot, initialized to direction.
+        5.  Let transceiver have a [[CurrentDirection]] internal slot, initialized
+            to null.
+        6.  Set transceiver.stopped to false.
    */
   test(t => {
     const pc = new RTCPeerConnection();
@@ -79,6 +135,7 @@
     assert_equals(transceiver.mid, null);
     assert_equals(transceiver.stopped, false);
     assert_equals(transceiver.direction, 'sendrecv');
+    assert_equals(transceiver.currentDirection, null);
 
     assert_array_equals([transceiver], pc.getTransceivers(),
       `Expect added transceiver to be the only element in connection's list of transceivers`);
@@ -155,23 +212,29 @@
 
   }, `addTransceiver('video') should return a video transceiver`);
 
-  /*
-   *  5.1.  addTransceiver
-   *        3.1.  If kind is not a legal MediaStreamTrack kind, throw a TypeError.
-   */
+  test(t => {
+    const pc = new RTCPeerConnection();
+    const transceiver = pc.addTransceiver('audio', { direction: 'sendonly' });
+    assert_equals(transceiver.direction, 'sendonly');
+  }, `addTransceiver() with direction sendonly should have result transceiver.direction be the same`);
+
+  test(t => {
+    const pc = new RTCPeerConnection();
+    const transceiver = pc.addTransceiver('audio', { direction: 'inactive' });
+    assert_equals(transceiver.direction, 'inactive');
+  }, `addTransceiver() with direction inactive should have result transceiver.direction be the same`);
+
   test(t => {
     const pc = new RTCPeerConnection();
     assert_own_property(pc, 'addTransceiver');
-    assert_throws(new TypeError(), () => pc.addTransceiver('invalid'));
-  }, 'addTransceiver() with string argument as invalid kind should throw TypeError');
+    assert_throws(new TypeError(), () =>
+      pc.addTransceiver('audio', { direction: 'invalid' }));
+  }, `addTransceiver() with invalid direction should throw TypeError`);
 
   /*
     5.1.  addTransceiver
-      3.  If the first argument is a MediaStreamTrack , let it be track and let
+      5.  If the first argument is a MediaStreamTrack , let it be track and let
           kind be track.kind.
-      7.  Create an RTCRtpSender with track, streams and sendEncodings and let sender
-          be the result.
-      8.  Create an RTCRtpReceiver with kind and let receiver be the result.
    */
   test(t => {
     const pc = new RTCPeerConnection();
@@ -242,63 +305,84 @@
   /*
     TODO
       5.1.  addTransceiver
-        Adding a transceiver will cause future calls to createOffer to add a media
-        description for the corresponding transceiver, as defined in [JSEP]
-        (section 5.2.2.).
+        - Adding a transceiver will cause future calls to createOffer to add a media
+          description for the corresponding transceiver, as defined in [JSEP]
+          (section 5.2.2.).
 
-        The sendEncodings argument can be used to specify the number of offered
-        simulcast encodings, and optionally their RIDs and encoding parameters.
-        Aside from rid , all read-only parameters in the RTCRtpEncodingParameters
-        dictionaries, such as ssrc , must be left unset, or an error will be thrown.
+        - Setting a new RTCSessionDescription may change mid to a non-null value,
+          as defined in [JSEP] (section 5.5. and section 5.6.).
+
+        - The sendEncodings argument can be used to specify the number of offered
+          simulcast encodings, and optionally their RIDs and encoding parameters.
+          Aside from rid , all read-only parameters in the RTCRtpEncodingParameters
+          dictionaries, such as ssrc, must be left unset, or an error will be thrown.
 
         1.  If the dictionary argument is present, and it has a streams member, let
             streams be that list of MediaStream objects.
+
         2.  If the dictionary argument is present, and it has a sendEncodings member,
             let sendEncodings be that list of RTCRtpEncodingParameters objects.
-        5.  Verify that each rid value in sendEncodings is composed only of
-            case-sensitive alphanumeric characters (a-z, A-Z, 0-9) up to a
-            maximum of 16 characters. If one of the RIDs does not meet these
-            requirements, throw a TypeError.
-        6.  If any RTCRtpEncodingParameters dictionary in sendEncodings contains
-            a read-only parameter other than rid, throw an InvalidAccessError.
-        7.  If sendEncodings is set, then subsequent calls to createOffer will be
+
+        6.  Verify that each rid value in sendEncodings is composed only of
+            case-sensitive alphanumeric characters (a-z, A-Z, 0-9) up to a maximum
+            of 16 characters. If one of the RIDs does not meet these requirements,
+            throw a TypeError.
+
+        7.  If any RTCRtpEncodingParameters dictionary in sendEncodings contains
+            a read-only parameter other than rid , throw an InvalidAccessError.
+
+      5.2.  RTCRtpSender Interface
+        Create an RTCRtpSender
+          3.  Let sender have an [[associated MediaStreams]] internal slot, representing
+              a list of MediaStream objects that the MediaStreamTrack object of this
+              sender is associated with.
+
+          4.  Set sender's [[associated MediaStreams]] slot to streams.
+
+          5.  Let sender have a [[send encodings]] internal slot, representing a list
+              of RTCRtpEncodingParameters dictionaries.
+
+          6.  If sendEncodings is given as input to this algorithm, and is non-empty,
+              set the [[send encodings]] slot to sendEncodings. Otherwise, set it to a
+              list containing a single RTCRtpEncodingParameters with active set to true.
+
+      5.3.  RTCRtpReceiver Interface
+        Create an RTCRtpReceiver
+          4.  If an id string, id, was given as input to this algorithm, initialize
+              track.id to id. (Otherwise the value generated when track was created
+              will be used.)
+
+    Tested in RTCPeerConnection-onnegotiationneeded.html
+      5.1.  addTransceiver
+        12. Update the negotiation-needed flag for connection.
+
+    Out of Scope
+      5.1.  addTransceiver
+        8.  If sendEncodings is set, then subsequent calls to createOffer will be
             configured to send multiple RTP encodings as defined in [JSEP]
-            (section 5.2.2. and section 5.2.1.). When setRemoteDescription is called
-            with a corresponding remote description that is able to receive multiple
-            RTP encodings as defined in [JSEP] (section 3.7.), the RTCRtpSender may
-            send multiple RTP encodings and the parameters retrieved via the
-            transceiver's sender.getParameters() will reflect the encodings
-            negotiated.
-        8.  This specification does not define how to configure createOffer to
+            (section 5.2.2. and section 5.2.1.).
+
+            When setRemoteDescription is called with a corresponding remote
+            description that is able to receive multiple RTP encodings as defined
+            in [JSEP] (section 3.7.), the RTCRtpSender may send multiple RTP
+            encodings and the parameters retrieved via the transceiver's
+            sender.getParameters() will reflect the encodings negotiated.
+
+        9.  This specification does not define how to configure createOffer to
             receive multiple RTP encodings. However when setRemoteDescription is
             called with a corresponding remote description that is able to send
             multiple RTP encodings as defined in [JSEP], the RTCRtpReceiver may
             receive multiple RTP encodings and the parameters retrieved via the
             transceiver's receiver.getParameters() will reflect the encodings
             negotiated.
-      5.3.  RTCRtpReceiver Interface
-        Create an RTCRtpReceiver
-        4.  If an id string, id, was given as input to this algorithm, initialize
-            track.id to id. (Otherwise the value generated when track was created
-            will be used.)
 
-    Non-testable
-      5.2.  RTCRtpSender Interface
-        create an RTCRtpSender
-          3.  Let sender have an [[associated MediaStreams]] internal slot,
-              representing a list of MediaStream objects that the MediaStreamTrack
-              object of this sender is associated with.
-          4.  Set sender's [[associated MediaStreams]] slot to streams.
-          5.  Let sender have a [[send encodings]] internal slot, representing a
-              list of RTCRtpEncodingParameters dictionaries.
-          6.  If sendEncodings is given as input to this algorithm, and is non-empty,
-              set the [[send encodings]] slot to sendEncodings. Otherwise, set it
-              to a list containing a single RTCRtpEncodingParameters with active
-              set to true.
+    Coverage Report
+                            Tested    Not-Tested  Non-Testable  Total
+      addTransceiver          11          4           3           18
+      Create Sender            3          4           0            7
+      Create Receiver          8          1           0            9
+      Create Transceiver       7          0           0            7
 
-    Tested in RTCPeerConnection-onnegotiationneeded.html
-      5.1.  addTransceiver
-        11. Update the negotiation-needed flag for connection.
+      Total                   29          9           3           41
    */
-
 </script>

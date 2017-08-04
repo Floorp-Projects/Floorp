@@ -9,9 +9,11 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
+#include "mozilla/PresShell.h"          // for PresShell
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"         // for StyleSheet
 #include "mozilla/WeakPtr.h"            // for WeakPtr
+#include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
@@ -119,7 +121,6 @@ class InsertTextTransaction;
 class JoinNodeTransaction;
 class PlaceholderTransaction;
 class RemoveStyleSheetTransaction;
-class SetTextTransaction;
 class SplitNodeTransaction;
 class TextComposition;
 class TextEditor;
@@ -129,7 +130,6 @@ namespace dom {
 class DataTransfer;
 class Element;
 class EventTarget;
-class Selection;
 class Text;
 } // namespace dom
 
@@ -252,7 +252,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditorBase, nsIEditor)
 
-  bool IsInitialized() const { return !!mDocumentWeak; }
+  bool IsInitialized() const { return !!mDocument; }
   already_AddRefed<nsIDOMDocument> GetDOMDocument();
   already_AddRefed<nsIDocument> GetDocument();
   already_AddRefed<nsIPresShell> GetPresShell();
@@ -567,7 +567,21 @@ protected:
    */
   bool EnsureComposition(WidgetCompositionEvent* aCompositionEvent);
 
-  already_AddRefed<nsISelectionController> GetSelectionController();
+  nsISelectionController* GetSelectionController() const
+  {
+    if (mSelectionController) {
+      return mSelectionController;
+    }
+    if (!mDocument) {
+      return nullptr;
+    }
+    nsIPresShell* presShell = mDocument->GetShell();
+    if (!presShell) {
+      return nullptr;
+    }
+    nsISelectionController* sc = static_cast<PresShell*>(presShell);
+    return sc;
+  }
   nsresult GetSelection(SelectionType aSelectionType,
                         nsISelection** aSelection);
 
@@ -820,7 +834,15 @@ public:
   static void DumpNode(nsIDOMNode* aNode, int32_t indent = 0);
 #endif
   Selection* GetSelection(SelectionType aSelectionType =
-                                          SelectionType::eNormal);
+                                          SelectionType::eNormal)
+  {
+    nsISelectionController* sc = GetSelectionController();
+    if (!sc) {
+      return nullptr;
+    }
+    Selection* selection = sc->GetDOMSelection(ToRawSelectionType(aSelectionType));
+    return selection;
+  }
 
   /**
    * Helpers to add a node to the selection.
@@ -980,7 +1002,7 @@ public:
 
   bool HasIndependentSelection() const
   {
-    return !!mSelectionControllerWeak;
+    return !!mSelectionController;
   }
 
   bool IsModifiable() const
@@ -1105,12 +1127,8 @@ public:
   void HideCaret(bool aHide);
 
 private:
-  // Weak reference to the nsISelectionController.
-  // Use GetSelectionController() to retrieve actual pointer.
-  CachedWeakPtr<nsISelectionController> mSelectionControllerWeak;
-  // Weak reference to the nsIDocument.
-  // Use GetDocument() to retrieve actual pointer.
-  CachedWeakPtr<nsIDocument> mDocumentWeak;
+  nsCOMPtr<nsISelectionController> mSelectionController;
+  nsCOMPtr<nsIDocument> mDocument;
 
 protected:
   enum Tristate

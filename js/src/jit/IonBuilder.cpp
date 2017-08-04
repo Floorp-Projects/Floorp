@@ -1530,7 +1530,7 @@ IonBuilder::visitBlock(const CFGBlock* cfgblock, MBasicBlock* mblock)
         // adding any SSA uses and doesn't call setImplicitlyUsedUnchecked on it.
         Vector<MDefinition*, 4, JitAllocPolicy> popped(alloc());
         Vector<size_t, 4, JitAllocPolicy> poppedUses(alloc());
-        unsigned nuses = GetUseCount(script_, script_->pcToOffset(pc));
+        unsigned nuses = GetUseCount(pc);
 
         for (unsigned i = 0; i < nuses; i++) {
             MDefinition* def = current->peek(-int32_t(i + 1));
@@ -2673,7 +2673,7 @@ IonBuilder::improveTypesAtTypeOfCompare(MCompare* ins, bool trueBranch, MTest* t
     // since there are multiple ways to get an object. That is the reason
     // for the 'trueBranch' test.
     TemporaryTypeSet filter;
-    const JSAtomState& names = GetJitContext()->runtime->names();
+    const JSAtomState& names = runtime->names();
     if (constant->toString() == TypeName(JSTYPE_UNDEFINED, names)) {
         filter.addType(TypeSet::UndefinedType(), alloc_->lifoAlloc());
         if (typeOf->inputMaybeCallableOrEmulatesUndefined() && trueBranch)
@@ -3767,7 +3767,7 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
         info().inlineScriptTree()->addCallee(alloc_, pc, calleeScript);
     if (!inlineScriptTree)
         return abort(AbortReason::Alloc);
-    CompileInfo* info = lifoAlloc->new_<CompileInfo>(calleeScript, target,
+    CompileInfo* info = lifoAlloc->new_<CompileInfo>(runtime, calleeScript, target,
                                                      (jsbytecode*)nullptr,
                                                      this->info().analysisMode(),
                                                      /* needsArgsObj = */ false,
@@ -4615,7 +4615,8 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const InliningTargets& targets, Bool
             // Assign the 'this' value a TypeSet specialized to the groups that
             // can generate this inlining target.
             MOZ_ASSERT(callInfo.thisArg() == maybeCache->value());
-            TemporaryTypeSet* thisTypes = maybeCache->propTable()->buildTypeSetForFunction(target);
+            TemporaryTypeSet* thisTypes =
+                maybeCache->propTable()->buildTypeSetForFunction(alloc(), target);
             if (!thisTypes)
                 return abort(AbortReason::Alloc);
 
@@ -6056,7 +6057,7 @@ IonBuilder::jsop_newarray(uint32_t length)
     // Improve resulting typeset.
     ObjectGroup* templateGroup = inspector->getTemplateObjectGroup(pc);
     if (templateGroup) {
-        TemporaryTypeSet* types = MakeSingletonTypeSet(constraints(), templateGroup);
+        TemporaryTypeSet* types = MakeSingletonTypeSet(alloc(), constraints(), templateGroup);
         current->peek(-1)->setResultTypeSet(types);
     }
 
@@ -6383,7 +6384,7 @@ IonBuilder::initializeArrayElement(MDefinition* obj, size_t index, MDefinition* 
             MOZ_TRY(resumeAfter(increment));
         }
     } else {
-        if (NeedsPostBarrier(value))
+        if (needsPostBarrier(value))
             current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
         if ((obj->isNewArray() && obj->toNewArray()->convertDoubleElements()) ||
@@ -7346,8 +7347,9 @@ IonBuilder::getStaticName(bool* emitted, JSObject* staticObject, PropertyName* n
     *emitted = true;
 
     TemporaryTypeSet* types = bytecodeTypes(pc);
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), staticKey,
-                                                       name, types, /* updateObserved = */ true);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, alloc(), constraints(),
+                                                       staticKey, name, types,
+                                                       /* updateObserved = */ true);
 
     if (barrier == BarrierKind::NoBarrier) {
         // Try to inline properties holding a known constant object.
@@ -7400,9 +7402,9 @@ IonBuilder::loadStaticSlot(JSObject* staticObject, BarrierKind barrier, Temporar
 
 // Whether a write of the given value may need a post-write barrier for GC purposes.
 bool
-jit::NeedsPostBarrier(MDefinition* value)
+IonBuilder::needsPostBarrier(MDefinition* value)
 {
-    if (!GetJitContext()->compartment->zone()->nurseryExists())
+    if (!compartment->zone()->nurseryExists())
         return false;
     return value->mightBeType(MIRType::Object);
 }
@@ -7449,7 +7451,7 @@ IonBuilder::setStaticName(JSObject* staticObject, PropertyName* name)
     MDefinition* obj = current->pop();
     MOZ_ASSERT(&obj->toConstant()->toObject() == staticObject);
 
-    if (NeedsPostBarrier(value))
+    if (needsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
     // If the property has a known type, we may be able to optimize typed stores by not
@@ -7618,8 +7620,9 @@ IonBuilder::jsop_getimport(PropertyName* name)
         // This can happen if we don't have type information.
         TypeSet::ObjectKey* staticKey = TypeSet::ObjectKey::get(targetEnv);
         TemporaryTypeSet* types = bytecodeTypes(pc);
-        BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), staticKey,
-                                                           name, types, /* updateObserved = */ true);
+        BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, alloc(), constraints(),
+                                                           staticKey, name, types,
+                                                           /* updateObserved = */ true);
 
         MOZ_TRY(loadStaticSlot(targetEnv, barrier, types, shape->slot()));
     }
@@ -7978,7 +7981,7 @@ IonBuilder::pushReferenceLoadFromTypedObject(MDefinition* typedObj,
     TemporaryTypeSet* observedTypes = bytecodeTypes(pc);
 
     MInstruction* load = nullptr;  // initialize to silence GCC warning
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, alloc(), constraints(),
                                                        typedObj, name, observedTypes);
 
     switch (type) {
@@ -8487,7 +8490,7 @@ IonBuilder::getElemAddCache(MDefinition* obj, MDefinition* index)
         // Always add a barrier if the index is not an int32 value, so we can
         // attach stubs for particular properties.
         if (index->type() == MIRType::Int32) {
-            barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj,
+            barrier = PropertyReadNeedsTypeBarrier(analysisContext, alloc(), constraints(), obj,
                                                    nullptr, types);
         } else {
             barrier = BarrierKind::TypeSet;
@@ -8591,11 +8594,11 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType
         // Indexed call on an element of an array. Populate the observed types
         // with any objects that could be in the array, to avoid extraneous
         // type barriers.
-        AddObjectsForPropertyRead(obj, nullptr, types);
+        AddObjectsForPropertyRead(alloc(), obj, nullptr, types);
     }
 
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj,
-                                                       nullptr, types);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, alloc(), constraints(),
+                                                       obj, nullptr, types);
     bool needsHoleCheck = !ElementAccessIsPacked(constraints(), obj);
 
     // Reads which are on holes in the object do not have to bail out if
@@ -9267,7 +9270,7 @@ IonBuilder::initOrSetElemTryCache(bool* emitted, MDefinition* object,
     // Emit SetPropertyCache.
     bool strict = JSOp(*pc) == JSOP_STRICTSETELEM;
     MSetPropertyCache* ins =
-        MSetPropertyCache::New(alloc(), object, index, value, strict, NeedsPostBarrier(value),
+        MSetPropertyCache::New(alloc(), object, index, value, strict, needsPostBarrier(value),
                                barrier, guardHoles);
     current->add(ins);
 
@@ -9315,7 +9318,7 @@ IonBuilder::initOrSetElemDense(TemporaryTypeSet::DoubleConversion conversion,
     current->add(idInt32);
     id = idInt32;
 
-    if (NeedsPostBarrier(value))
+    if (needsPostBarrier(value))
         current->add(MPostWriteElementBarrier::New(alloc(), obj, value, id));
 
     // Copy the elements vector if necessary.
@@ -9655,7 +9658,7 @@ IonBuilder::jsop_rest()
                                                   /* needsHoleCheck = */ false);
         current->add(store);
 
-        if (NeedsPostBarrier(arg))
+        if (needsPostBarrier(arg))
             current->add(MPostWriteBarrier::New(alloc(), array, arg));
     }
 
@@ -10317,7 +10320,7 @@ IonBuilder::jsop_getprop(PropertyName* name)
     if (obj->type() == MIRType::Object)
         obj = convertUnboxedObjects(obj);
 
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, alloc(), constraints(),
                                                        obj, name, types);
 
     // Try to optimize to a specific constant.
@@ -11480,7 +11483,7 @@ IonBuilder::getPropTryInnerize(bool* emitted, MDefinition* obj, PropertyName* na
 
     // Passing the inner object to GetProperty IC is safe, see the
     // needsOuterizedThisObject check in IsCacheableGetPropCallNative.
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, alloc(), constraints(),
                                                        inner, name, types);
     trackOptimizationAttempt(TrackedStrategy::GetProp_InlineCache);
     MOZ_TRY(getPropAddCache(inner, name, barrier, types));
@@ -11830,7 +11833,7 @@ IonBuilder::setPropTryDefiniteSlot(bool* emitted, MDefinition* obj,
         writeBarrier |= property.needsBarrier(constraints());
     }
 
-    if (NeedsPostBarrier(value))
+    if (needsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
     MInstruction* store;
@@ -11982,7 +11985,7 @@ IonBuilder::setPropTryInlineAccess(bool* emitted, MDefinition* obj,
             Shape* shape = receivers[0].shape->searchLinear(NameToId(name));
             MOZ_ASSERT(shape);
 
-            if (NeedsPostBarrier(value))
+            if (needsPostBarrier(value))
                 current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
             bool needsPreBarrier = objTypes->propertyNeedsBarrier(constraints(), NameToId(name));
@@ -12008,7 +12011,7 @@ IonBuilder::setPropTryInlineAccess(bool* emitted, MDefinition* obj,
             Shape* shape = receivers[0].shape->searchLinear(NameToId(name));
             MOZ_ASSERT(shape);
 
-            if (NeedsPostBarrier(value))
+            if (needsPostBarrier(value))
                 current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
             bool needsPreBarrier = objTypes->propertyNeedsBarrier(constraints(), NameToId(name));
@@ -12028,7 +12031,7 @@ IonBuilder::setPropTryInlineAccess(bool* emitted, MDefinition* obj,
 
         obj = addGroupGuard(obj, group, Bailout_ShapeGuard);
 
-        if (NeedsPostBarrier(value))
+        if (needsPostBarrier(value))
             current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
         const UnboxedLayout::Property* property = group->unboxedLayout().lookup(name);
@@ -12049,7 +12052,7 @@ IonBuilder::setPropTryInlineAccess(bool* emitted, MDefinition* obj,
         if (!obj)
             return abort(AbortReason::Alloc);
 
-        if (NeedsPostBarrier(value))
+        if (needsPostBarrier(value))
             current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
         bool needsPreBarrier = objTypes->propertyNeedsBarrier(constraints(), NameToId(name));
@@ -12060,7 +12063,7 @@ IonBuilder::setPropTryInlineAccess(bool* emitted, MDefinition* obj,
         return Ok();
     }
 
-    if (NeedsPostBarrier(value))
+    if (needsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
     MSetPropertyPolymorphic* ins = MSetPropertyPolymorphic::New(alloc(), obj, value, name);
@@ -12098,7 +12101,7 @@ IonBuilder::setPropTryCache(bool* emitted, MDefinition* obj,
 
     MConstant* id = constant(StringValue(name));
     MSetPropertyCache* ins = MSetPropertyCache::New(alloc(), obj, id, value, strict,
-                                                    NeedsPostBarrier(value), barrier,
+                                                    needsPostBarrier(value), barrier,
                                                     /* guardHoles = */ false);
     current->add(ins);
     current->push(value);
@@ -12272,7 +12275,7 @@ IonBuilder::jsop_setarg(uint32_t arg)
     // If an arguments object is in use, and it aliases formals, then all SETARGs
     // must go through the arguments object.
     if (info().argsObjAliasesFormals()) {
-        if (NeedsPostBarrier(val))
+        if (needsPostBarrier(val))
             current->add(MPostWriteBarrier::New(alloc(), current->argumentsObject(), val));
         current->add(MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
                                                  GET_ARGNO(pc), val));
@@ -12766,7 +12769,7 @@ IonBuilder::jsop_setaliasedvar(EnvironmentCoordinate ec)
 
     Shape* shape = EnvironmentCoordinateToEnvironmentShape(script(), pc);
 
-    if (NeedsPostBarrier(rval))
+    if (needsPostBarrier(rval))
         current->add(MPostWriteBarrier::New(alloc(), obj, rval));
 
     MInstruction* store;
@@ -13525,7 +13528,7 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
     MInstruction* store = nullptr;  // initialize to silence GCC warning
     switch (type) {
       case ReferenceTypeDescr::TYPE_ANY:
-        if (NeedsPostBarrier(value))
+        if (needsPostBarrier(value))
             current->add(MPostWriteBarrier::New(alloc(), typedObj, value));
         store = MStoreElement::New(alloc(), elements, scaledOffset, value, false, adjustment);
         store->toStoreElement()->setNeedsBarrier();

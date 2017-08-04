@@ -20,35 +20,47 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=662519
 
   /** Test for Bug 662519 **/
 
+  let w = null;
+
+  let steps = [
+    function() {
+      w = window.open("file_popup_blocker_chrome.html", "", "width=200,height=200");
+      ok(w, "The window object shouldn't be null");    
+      // next() is called within file_popup_blocker_chrome.html
+    },
+    function() {
+      w.close();
+      ok(true, "The popup appeared");
+      next();
+    },
+    function() {
+      w = window.open("file_popup_blocker_chrome.html", "_blank", "width=200,height=200");
+      ok(w, "The window object shouldn't be null");
+      // next() is called within file_popup_blocker_chrome.html
+    },
+    function() {
+      w.close();
+      ok(true, "The popup appeared");
+      next();
+    },
+  ];
+
+  function next() {
+    if (!steps.length) {
+      SimpleTest.finish();
+      return;
+    }
+    let step = steps.shift();
+    step();
+  }
+
   SimpleTest.waitForExplicitFinish();
 
   // We have to enable dom.disable_open_during_load which is disabled
   // by the test harness.
-  let prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch);
-  var gLastDomLoadValue = prefs.getBoolPref("dom.disable_open_during_load");
-  prefs.setBoolPref("dom.disable_open_during_load", true);
-
-  let w = window.open("data:text/html,foobar", "", "width=200,height=200");
-  ok(w, "The window object shouldn't be null");
-
-  SimpleTest.waitForFocus(function() {
-    w.close();
-    ok(true, "The popup appeared");
-
-    SimpleTest.waitForFocus(function() {
-      let w = window.open("data:text/html,foobar", "", "width=200,height=200");
-      ok(w, "The window object shouldn't be null");
-
-      SimpleTest.waitForFocus(function() {
-        w.close();
-
-        ok(true, "The popup appeared");
-        prefs.setBoolPref("dom.disable_open_during_load", gLastDomLoadValue);
-        SimpleTest.finish();
-      }, w, false);
-    });
-  }, w, false);
+  SpecialPowers.pushPrefEnv({'set': [["dom.disable_open_during_load", true]] }, function() {
+    next();
+  });
   ]]>
   </script>
 </window>

@@ -292,6 +292,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitCharCodeAt(LCharCodeAt* lir);
     void visitFromCharCode(LFromCharCode* lir);
     void visitFromCodePoint(LFromCodePoint* lir);
+    void visitStringConvertCase(LStringConvertCase* lir);
     void visitSinCos(LSinCos *lir);
     void visitStringSplit(LStringSplit* lir);
     void visitFunctionEnvironment(LFunctionEnvironment* lir);

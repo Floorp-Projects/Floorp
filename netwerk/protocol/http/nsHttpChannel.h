@@ -31,6 +31,7 @@
 #include "AlternateServices.h"
 #include "nsIHstsPrimingCallback.h"
 #include "nsIRaceCacheWithNetwork.h"
+#include "mozilla/Mutex.h"
 
 class nsDNSPrefetch;
 class nsICancelable;
@@ -687,11 +688,12 @@ private:
     uint32_t mCacheOpenDelay = 0;
 
     // We need to remember which is the source of the response we are using.
-    enum {
-        RESPONSE_PENDING,           // response is pending
-        RESPONSE_FROM_CACHE,        // response coming from cache. no network.
-        RESPONSE_FROM_NETWORK,      // response coming from the network
-    } mFirstResponseSource = RESPONSE_PENDING;
+    enum ResponseSource {
+        RESPONSE_PENDING      = 0,  // response is pending
+        RESPONSE_FROM_CACHE   = 1,  // response coming from cache. no network.
+        RESPONSE_FROM_NETWORK = 2   // response coming from the network
+    };
+    Atomic<ResponseSource, Relaxed> mFirstResponseSource;
 
     // Determines if it's possible and advisable to race the network request
     // with the cache fetch, and proceeds to do so.
@@ -706,12 +708,19 @@ private:
     bool mNetworkTriggered = false;
     bool mWaitingForProxy = false;
     // Is true if the onCacheEntryAvailable callback has been called.
-    Atomic<bool> mOnCacheAvailableCalled;
+    bool mOnCacheAvailableCalled;
     // Will be true if the onCacheEntryAvailable callback is not called by the
     // time we send the network request
     Atomic<bool> mRaceCacheWithNetwork;
     uint32_t mRaceDelay;
     bool mCacheAsyncOpenCalled;
+    // If true then OnCacheEntryAvailable should ignore the entry, because
+    // SetupTransaction removed conditional headers and decisions made in
+    // OnCacheEntryCheck are no longer valid.
+    bool mIgnoreCacheEntry;
+    // Lock preventing OnCacheEntryCheck and SetupTransaction being called at
+    // the same time.
+    mozilla::Mutex mRCWNLock;
 
 protected:
     virtual void DoNotifyListenerCleanup() override;

@@ -71,15 +71,21 @@
             "IAccessible2" : [
                [
                   "property",
-                  "objectAttribute",
-                  "checkable",
-                  "true"
+                  "role",
+                  "is",
+                  "ROLE_SYSTEM_COMBOBOX"
+               ],
+               [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "haspopup:listbox"
                ],
                [
                   "property",
                   "states",
                   "contains",
-                  "IA2_STATE_SYSTEM_EDITABLE"
+                  "IA2_STATE_EDITABLE"
                ]
             ],
             "MSAA" : [
@@ -94,6 +100,12 @@
                   "states",
                   "contains",
                   "STATE_SYSTEM_HASPOPUP"
+               ],
+               [
+                  "property",
+                  "states",
+                  "contains",
+                  "STATE_SYSTEM_EXPANDED"
                ]
             ],
             "UIA" : [

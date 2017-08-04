@@ -88,7 +88,6 @@ W3C-TEST.ORG:tools/*
 PRINT STATEMENT:tools/*
 W3C-TEST.ORG:*/tools/*
 PRINT STATEMENT:*/tools/*
-PRINT STATEMENT:wptrun.py
 
 ### Test exclusions ##
 
@@ -161,7 +160,6 @@ SET TIMEOUT: eventsource/eventsource-close.htm
 SET TIMEOUT: eventsource/eventsource-request-cancellation.htm
 SET TIMEOUT: html/*
 SET TIMEOUT: IndexedDB/*
-SET TIMEOUT: longtask-timing/longtask-in-parentiframe.html
 SET TIMEOUT: infrastructure/*
 SET TIMEOUT: media-source/mediasource-util.js
 SET TIMEOUT: media-source/URL-createObjectURL-revoke.html

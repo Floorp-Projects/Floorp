@@ -27,20 +27,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936056
     var qualifiedFunc = frames[0].eval("(function (count) { var doc; for (var i = 0; i < count; ++i) doc = window.document; return doc.documentElement; })");
     document.querySelector("iframe").onload = function () {
       // interp
-      is(barewordFunc(1).textContent, "OLD", "Bareword should see own inner 1");
-      is(qualifiedFunc(1).textContent, "NEW",
+      is(barewordFunc(1).innerText, "OLD", "Bareword should see own inner 1");
+      is(qualifiedFunc(1).innerText, "NEW",
          "Qualified should see current inner 1");
       // baseline
-      is(barewordFunc(100).textContent, "OLD", "Bareword should see own inner 2");
-      is(qualifiedFunc(100).textContent, "NEW",
+      is(barewordFunc(100).innerText, "OLD", "Bareword should see own inner 2");
+      is(qualifiedFunc(100).innerText, "NEW",
          "Qualified should see current inner 2");
       // ion
-      is(barewordFunc(10000).textContent, "OLD", "Bareword should see own inner 3");
-      is(qualifiedFunc(10000).textContent, "NEW",
+      is(barewordFunc(10000).innerText, "OLD", "Bareword should see own inner 3");
+      is(qualifiedFunc(10000).innerText, "NEW",
          "Qualified should see current inner 2");
       SimpleTest.finish();
     }
-    frames[0].location = "data:text/plain,NEW";
+    frames[0].location = "file_barewordGetsWindow_frame2.html";
   }
 
 
@@ -52,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936056
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936056">Mozilla Bug 936056</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<iframe src="data:text/plain,OLD"></iframe>
+<iframe src="file_barewordGetsWindow_frame1.html"></iframe>
 </div>
 <pre id="test">
 </pre>
