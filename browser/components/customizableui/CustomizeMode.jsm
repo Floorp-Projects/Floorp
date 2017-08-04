@@ -188,7 +188,7 @@ CustomizeMode.prototype = {
 
     win.gBrowser.setTabTitle(gTab);
     win.gBrowser.setIcon(gTab,
-                         "chrome://browser/skin/customizableui/customizeFavicon.ico");
+                         "chrome://browser/skin/customize.svg");
 
     gTab.addEventListener("TabClose", unregisterGlobalTab);
 
