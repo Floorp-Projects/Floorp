@@ -7352,7 +7352,7 @@
                      class="tab-icon-image"
                      validate="never"
                      role="presentation"/>
-          <xul:image xbl:inherits="sharing,selected=visuallyselected"
+          <xul:image xbl:inherits="sharing,selected=visuallyselected,pinned"
                      anonid="sharing-icon"
                      class="tab-sharing-icon-overlay"
                      role="presentation"/>

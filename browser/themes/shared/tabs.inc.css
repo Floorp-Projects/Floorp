@@ -49,12 +49,11 @@
 }
 
 .tab-content {
-  padding-inline-end: 9px;
-  padding-inline-start: 9px;
+  padding: 0 9px;
 }
 
 .tab-content[pinned] {
-  padding-inline-end: 3px;
+  padding: 0 12px;
 }
 
 .tab-throbber,
@@ -70,6 +69,11 @@
 .tab-icon-image {
   height: 16px;
   width: 16px;
+}
+
+.tab-throbber:not([pinned]),
+.tab-sharing-icon-overlay:not([pinned]),
+.tab-icon-image:not([pinned]) {
   margin-inline-end: 6px;
 }
 
@@ -107,6 +111,10 @@
   position: relative;
   -moz-context-properties: fill;
   fill: rgb(224, 41, 29);
+}
+
+.tab-sharing-icon-overlay[pinned] {
+  margin-inline-start: -16px;
 }
 
 .tab-sharing-icon-overlay[sharing="camera"] {
