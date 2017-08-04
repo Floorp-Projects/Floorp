@@ -113,6 +113,17 @@ public:
     };
   };
 
+  struct Module {
+    // The file name, /foo/bar/libxul.so for example.
+    // It can contain unicode characters.
+    nsString mName;
+    nsCString mBreakpadId;
+
+    bool operator==(const Module& aOther) const {
+      return mName == aOther.mName && mBreakpadId == aOther.mBreakpadId;
+    }
+  };
+
 private:
   typedef mozilla::Vector<Frame, sMaxInlineStorage> Impl;
   Impl mImpl;
@@ -120,6 +131,7 @@ private:
   // Stack entries can either be a static const char*
   // or a pointer to within this buffer.
   mozilla::Vector<char, 0> mBuffer;
+  nsTArray<Module> mModules;
 
 public:
   HangStack() {}
@@ -128,12 +140,14 @@ public:
   HangStack(HangStack&& aOther)
     : mImpl(mozilla::Move(aOther.mImpl))
     , mBuffer(mozilla::Move(aOther.mBuffer))
+    , mModules(mozilla::Move(aOther.mModules))
   {
   }
 
   HangStack& operator=(HangStack&& aOther) {
     mImpl = mozilla::Move(aOther.mImpl);
     mBuffer = mozilla::Move(aOther.mBuffer);
+    mModules = mozilla::Move(aOther.mModules);
     return *this;
   }
 
@@ -179,6 +193,7 @@ public:
   void clear() {
     mImpl.clear();
     mBuffer.clear();
+    mModules.Clear();
   }
 
   bool IsInBuffer(const char* aEntry) const {
@@ -225,6 +240,22 @@ public:
 
   void InfallibleAppendViaBuffer(const char* aText, size_t aLength);
   bool AppendViaBuffer(const char* aText, size_t aLength);
+
+  const nsTArray<Module>& GetModules() const {
+    return mModules;
+  }
+  nsTArray<Module>& GetModules() {
+    return mModules;
+  }
+
+  /**
+   * Get the current list of loaded modules, and use it to transform Kind::PC
+   * stack frames from within these modules into Kind::MODOFFSET stack entries.
+   *
+   * This method also populates the mModules list, which should be empty when
+   * this method is called.
+   */
+  void ReadModuleInformation();
 };
 
 } // namespace mozilla
@@ -249,6 +280,17 @@ struct ParamTraits<mozilla::HangStack::Frame::Kind>
             mozilla::HangStack::Frame::Kind::STRING,
             mozilla::HangStack::Frame::Kind::END>
 {};
+
+template<>
+struct ParamTraits<mozilla::HangStack::Module>
+{
+public:
+  typedef mozilla::HangStack::Module paramType;
+  static void Write(Message* aMsg, const paramType& aParam);
+  static bool Read(const Message* aMsg,
+                   PickleIterator* aIter,
+                   paramType* aResult);
+};
 
 template<>
 struct ParamTraits<mozilla::HangStack>
