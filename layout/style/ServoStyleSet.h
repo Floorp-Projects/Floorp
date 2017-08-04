@@ -174,24 +174,15 @@ public:
                             dom::Element* aPseudoElement);
 
   // Resolves style for a (possibly-pseudo) Element without assuming that the
-  // style has been resolved, and without worrying about setting the style
-  // context up to live in the style context tree (a null parent is used).
-  // |aPeudoTag| and |aPseudoType| must match.
+  // style has been resolved. If the element was unstyled and a new style
+  // context was resolved, it is not stored in the DOM. (That is, the element
+  // remains unstyled.) |aPeudoTag| and |aPseudoType| must match.
   already_AddRefed<ServoStyleContext>
-  ResolveTransientStyle(dom::Element* aElement,
-                        CSSPseudoElementType aPseudoType,
-                        nsIAtom* aPseudoTag,
-                        StyleRuleInclusion aRules =
-                          StyleRuleInclusion::All);
-
-  // Similar to ResolveTransientStyle() but doesn't update the context state
-  // Unlike ResolveServoStyle() this function calls PreTraverseSync().
-  already_AddRefed<ServoStyleContext>
-  ResolveTransientServoStyle(dom::Element* aElement,
-                             CSSPseudoElementType aPseudoType,
-                             nsIAtom* aPseudoTag,
-                             StyleRuleInclusion aRules =
-                               StyleRuleInclusion::All);
+  ResolveStyleLazily(dom::Element* aElement,
+                     CSSPseudoElementType aPseudoType,
+                     nsIAtom* aPseudoTag,
+                     StyleRuleInclusion aRules =
+                       StyleRuleInclusion::All);
 
   // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
   // use and must be non-null.  It must be an anon box, and must be one that
@@ -554,12 +545,12 @@ private:
   void UpdateStylist();
 
   already_AddRefed<ServoStyleContext>
-    ResolveStyleLazily(dom::Element* aElement,
-                       CSSPseudoElementType aPseudoType,
-                       nsIAtom* aPseudoTag,
-                       const ServoStyleContext* aParentContext,
-                       StyleRuleInclusion aRules =
-                         StyleRuleInclusion::All);
+    ResolveStyleLazilyInternal(dom::Element* aElement,
+                               CSSPseudoElementType aPseudoType,
+                               nsIAtom* aPseudoTag,
+                               const ServoStyleContext* aParentContext,
+                               StyleRuleInclusion aRules =
+                                 StyleRuleInclusion::All);
 
   void RunPostTraversalTasks();
 

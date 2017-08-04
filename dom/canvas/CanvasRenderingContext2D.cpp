@@ -2879,13 +2879,13 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
   if (aElement && aElement->IsInUncomposedDoc()) {
     // Inherit from the canvas element.
     aPresShell->FlushPendingNotifications(FlushType::Style);
-    // We need to use ResolveTransientServoStyle, which involves traversal,
-    // instead of ResolveServoStyle() because we need up-to-date style even if
+    // We need to use ResolveStyleLazily, which involves traversal,
+    // instead of ResolvestyleFor() because we need up-to-date style even if
     // the canvas element is display:none.
     parentStyle =
-      styleSet->ResolveTransientServoStyle(aElement,
-                                           CSSPseudoElementType::NotPseudo,
-                                           nullptr);
+      styleSet->ResolveStyleLazily(aElement,
+                                   CSSPseudoElementType::NotPseudo,
+                                   nullptr);
   } else {
     RefPtr<RawServoDeclarationBlock> declarations =
       CreateFontDeclarationForServo(NS_LITERAL_STRING("10px sans-serif"),
