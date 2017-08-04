@@ -353,9 +353,7 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
 #undef EncodeBasicCardProperty
 #undef EncodeAddressProperty
 #undef DecodeBasicCardProperty
-#undef DecodeBasicCardCardNumber
 #undef DecodeAddressProperty
-#undef DecodeAddressLine
 #undef AMEX
 #undef CARTEBANCAIRE
 #undef DINERS
