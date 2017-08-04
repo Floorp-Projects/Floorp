@@ -73,7 +73,7 @@ protected:
                                    nsICommandParams* aParams) = 0;
 
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor* aEditor) = 0;
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) = 0;
 
 protected:
   nsIAtom* mTagName;
@@ -94,7 +94,7 @@ protected:
                                    nsICommandParams* aParams) override final;
 
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor* aEditor);
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
 };
 
 
@@ -126,7 +126,7 @@ protected:
                                    nsICommandParams* aParams) override final;
 
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor* aEditor);
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
 };
 
 class nsListItemCommand final : public nsBaseStateUpdatingCommand
@@ -141,7 +141,7 @@ protected:
                                    nsICommandParams* aParams) override final;
 
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor* aEditor);
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
 };
 
 // Base class for commands whose state consists of a string (e.g. para format)
@@ -260,7 +260,7 @@ protected:
   NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, bool *_retval);
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
                                    nsICommandParams* aParams) override final;
-  virtual nsresult  ToggleState(nsIEditor* aEditor);
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
 };
 
 // composer commands
