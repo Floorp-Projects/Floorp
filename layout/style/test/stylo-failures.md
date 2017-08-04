@@ -38,7 +38,6 @@ to mochitest command.
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
 * Unit should be preserved after parsing servo/servo#15346
-  * test_units_time.html [1]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child bug 1382102 [1]
