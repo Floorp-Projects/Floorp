@@ -13,6 +13,7 @@
 // mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <mmsystem.h>
 
+#include "HeadlessSound.h"
 #include "nsSound.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -90,12 +91,16 @@ mozilla::StaticRefPtr<nsISound> nsSound::sInstance;
 nsSound::GetInstance()
 {
   if (!sInstance) {
-    RefPtr<nsSound> sound = new nsSound();
-    nsresult rv = sound->CreatePlayerThread();
-    if(NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
+    if (gfxPlatform::IsHeadless()) {
+      sInstance = new widget::HeadlessSound();
+    } else {
+      RefPtr<nsSound> sound = new nsSound();
+      nsresult rv = sound->CreatePlayerThread();
+      if(NS_WARN_IF(NS_FAILED(rv))) {
+        return nullptr;
+      }
+      sInstance = sound.forget();
     }
-    sInstance = sound.forget();
     ClearOnShutdown(&sInstance);
   }
 

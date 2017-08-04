@@ -293,7 +293,6 @@ using mozilla::dom::cache::CacheStorage;
 static LazyLogModule gDOMLeakPRLog("DOMLeak");
 
 nsGlobalWindow::WindowByIdTable *nsGlobalWindow::sWindowsById = nullptr;
-bool nsGlobalWindow::sWarnedAboutWindowInternal = false;
 bool nsGlobalWindow::sIdleObserversAPIFuzzTimeDisabled = false;
 
 static int32_t              gRefCnt                    = 0;
@@ -2222,16 +2221,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
-  if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
-    foundInterface = static_cast<nsIDOMWindowInternal*>(this);
-    if (!sWarnedAboutWindowInternal) {
-      sWarnedAboutWindowInternal = true;
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("Extensions"), mDoc,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "nsIDOMWindowInternalWarning");
-    }
-  } else
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)

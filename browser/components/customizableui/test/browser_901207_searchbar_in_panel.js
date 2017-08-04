@@ -16,7 +16,6 @@ async function waitForSearchBarFocus() {
 
 // Ctrl+K should open the menu panel and focus the search bar if the search bar is in the panel.
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", true]]});
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");

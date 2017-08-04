@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyGetter(this, "Timer", function() {
   return timer;
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure", "browser.photon.structure.enabled");
-
 const MS_SECOND = 1000;
 const MS_MINUTE = MS_SECOND * 60;
 const MS_HOUR = MS_MINUTE * 60;
@@ -76,26 +74,9 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
     "PersonalToolbar": [
       "personal-bookmarks",
     ],
+    "widget-overflow-fixed-list": [
+    ],
   };
-
-  if (gPhotonStructure) {
-    result["widget-overflow-fixed-list"] = [];
-  } else {
-    result["PanelUI-contents"] = LEGACY_PANEL_PLACEMENTS;
-    let showCharacterEncoding = Services.prefs.getComplexValue(
-      "browser.menu.showCharacterEncoding",
-      Ci.nsIPrefLocalizedString
-    ).data;
-    if (showCharacterEncoding == "true") {
-      result["PanelUI-contents"].push("characterencoding-button");
-    }
-
-    if (AppConstants.MOZ_DEV_EDITION || AppConstants.NIGHTLY_BUILD) {
-      if (Services.prefs.getBoolPref("extensions.webcompat-reporter.enabled")) {
-        result["PanelUI-contents"].push("webcompat-reporter-button");
-      }
-    }
-  }
 
   return result;
 });
@@ -111,15 +92,9 @@ XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
     "feed-button",
     "email-link-button",
     "containers-panelmenu",
+    ...LEGACY_PANEL_PLACEMENTS,
+    "characterencoding-button",
   ];
-
-  let panelPlacements = DEFAULT_AREA_PLACEMENTS["PanelUI-contents"];
-  if (!panelPlacements) {
-    result.push(...LEGACY_PANEL_PLACEMENTS);
-  }
-  if (!panelPlacements || !panelPlacements.includes("characterencoding-button")) {
-    result.push("characterencoding-button");
-  }
 
   if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
     result.push("panic-button");

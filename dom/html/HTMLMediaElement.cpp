@@ -5509,7 +5509,7 @@ void HTMLMediaElement::PlaybackEnded()
     }
   }
 
-  if (mSrcStream || (mDecoder && mDecoder->IsInfinite())) {
+  if (mSrcStream) {
     LOG(LogLevel::Debug, ("%p, got duration by reaching the end of the resource", this));
     DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }

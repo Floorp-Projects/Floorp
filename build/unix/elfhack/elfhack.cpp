@@ -89,8 +89,10 @@ private:
 
 class ElfRelHackCode_Section: public ElfSection {
 public:
-    ElfRelHackCode_Section(Elf_Shdr &s, Elf &e, unsigned int init, unsigned int mprotect_cb)
-    : ElfSection(s, nullptr, nullptr), parent(e), init(init), mprotect_cb(mprotect_cb) {
+    ElfRelHackCode_Section(Elf_Shdr &s, Elf &e, ElfRelHack_Section &relhack_section,
+                           unsigned int init, unsigned int mprotect_cb)
+    : ElfSection(s, nullptr, nullptr), parent(e), relhack_section(relhack_section),
+      init(init), mprotect_cb(mprotect_cb) {
         std::string file(rundir);
         file += "/inject/";
         switch (parent.getMachine()) {
@@ -354,7 +356,7 @@ private:
             unsigned int addr;
             if (symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection() == nullptr) {
                 if (strcmp(name, "relhack") == 0) {
-                    addr = getNext()->getAddr();
+                    addr = relhack_section.getAddr();
                 } else if (strcmp(name, "elf_header") == 0) {
                     // TODO: change this ungly hack to something better
                     ElfSection *ehdr = parent.getSection(1)->getPrevious()->getPrevious();
@@ -417,6 +419,7 @@ private:
     }
 
     Elf *elf, &parent;
+    ElfRelHack_Section &relhack_section;
     std::vector<ElfSection *> code;
     unsigned int init;
     unsigned int mprotect_cb;
@@ -638,8 +641,6 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     relhack->push_back(relhack_entry);
 
-    unsigned int old_end = section->getOffset() + section->getSize();
-
     if (init_array && !init_array_reloc) {
         // Some linkers create a DT_INIT_ARRAY section that, for all purposes,
         // is empty: it only contains 0x0 or 0xffffffff pointers with no relocations.
@@ -750,10 +751,28 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
 
-    ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf, original_init, mprotect_cb);
-    relhackcode->insertBefore(section);
-    relhack->insertAfter(relhackcode);
-    if (section->getOffset() + section->getSize() >= old_end) {
+    ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf, *relhack, original_init, mprotect_cb);
+    // Find the first executable section, and insert the relhack code before
+    // that. The relhack data is inserted between .rel.dyn and .rel.plt.
+    ElfSection *first_executable = nullptr;
+    for (ElfSection *s = elf->getSection(1); s != nullptr;
+         s = s->getNext()) {
+        if (s->getFlags() & SHF_EXECINSTR) {
+            first_executable = s;
+            break;
+        }
+    }
+
+    unsigned int old_exec = first_executable->getOffset();
+
+    relhack->insertBefore(section);
+    relhackcode->insertBefore(first_executable);
+
+    // Trying to get first_executable->getOffset() now may throw if the new
+    // layout would require it to move, so we look at the end of the relhack
+    // code section instead, comparing it to where the first executable
+    // section used to start.
+    if (relhackcode->getOffset() + relhackcode->getSize() >= old_exec) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
     }

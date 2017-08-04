@@ -131,11 +131,11 @@ ResizerMouseMotionListener::HandleEvent(nsIDOMEvent* aMouseEvent)
  * mozilla::HTMLEditor
  ******************************************************************************/
 
-already_AddRefed<Element>
+ManualNACPtr
 HTMLEditor::CreateResizer(int16_t aLocation,
                           nsIDOMNode* aParentNode)
 {
-  RefPtr<Element> ret =
+  ManualNACPtr ret =
     CreateAnonymousElement(nsGkAtoms::span,
                            aParentNode,
                            NS_LITERAL_STRING("mozResizer"),
@@ -182,10 +182,10 @@ HTMLEditor::CreateResizer(int16_t aLocation,
   nsresult rv =
     ret->SetAttr(kNameSpaceID_None, nsGkAtoms::anonlocation, locationStr, true);
   NS_ENSURE_SUCCESS(rv, nullptr);
-  return ret.forget();
+  return Move(ret);
 }
 
-already_AddRefed<Element>
+ManualNACPtr
 HTMLEditor::CreateShadow(nsIDOMNode* aParentNode,
                          nsIDOMElement* aOriginalObject)
 {
@@ -196,20 +196,17 @@ HTMLEditor::CreateShadow(nsIDOMNode* aParentNode,
   } else {
     name = nsGkAtoms::span;
   }
-  RefPtr<Element> ret =
-    CreateAnonymousElement(name, aParentNode,
-                           NS_LITERAL_STRING("mozResizingShadow"), true);
-  return ret.forget();
+
+  return CreateAnonymousElement(name, aParentNode,
+                                NS_LITERAL_STRING("mozResizingShadow"), true);
 }
 
-already_AddRefed<Element>
+ManualNACPtr
 HTMLEditor::CreateResizingInfo(nsIDOMNode* aParentNode)
 {
   // let's create an info box through the element factory
-  RefPtr<Element> ret =
-    CreateAnonymousElement(nsGkAtoms::span, aParentNode,
-                           NS_LITERAL_STRING("mozResizingInfo"), true);
-  return ret.forget();
+  return CreateAnonymousElement(nsGkAtoms::span, aParentNode,
+                                NS_LITERAL_STRING("mozResizingInfo"), true);
 }
 
 nsresult
@@ -386,44 +383,34 @@ HTMLEditor::HideResizers()
   NS_NAMED_LITERAL_STRING(mousedown, "mousedown");
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mTopLeftHandle, ps);
-  mTopLeftHandle = nullptr;
+                             Move(mTopLeftHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mTopHandle, ps);
-  mTopHandle = nullptr;
+                             Move(mTopHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mTopRightHandle, ps);
-  mTopRightHandle = nullptr;
+                             Move(mTopRightHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mLeftHandle, ps);
-  mLeftHandle = nullptr;
+                             Move(mLeftHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mRightHandle, ps);
-  mRightHandle = nullptr;
+                             Move(mRightHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mBottomLeftHandle, ps);
-  mBottomLeftHandle = nullptr;
+                             Move(mBottomLeftHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mBottomHandle, ps);
-  mBottomHandle = nullptr;
+                             Move(mBottomHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mBottomRightHandle, ps);
-  mBottomRightHandle = nullptr;
+                             Move(mBottomRightHandle), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mResizingShadow, ps);
-  mResizingShadow = nullptr;
+                             Move(mResizingShadow), ps);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mResizingInfo, ps);
-  mResizingInfo = nullptr;
+                             Move(mResizingInfo), ps);
 
   if (mActivatedHandle) {
     mActivatedHandle->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_moz_activated,

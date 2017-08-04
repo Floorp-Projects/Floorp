@@ -31,7 +31,13 @@ MediaSourceDecoder::MediaSourceDecoder(MediaDecoderInit& aInit)
   , mMediaSource(nullptr)
   , mEnded(false)
 {
-  mExplicitDuration.Set(Some(UnspecifiedNaN<double>()));
+  mExplicitDuration.emplace(UnspecifiedNaN<double>());
+}
+
+MediaResource*
+MediaSourceDecoder::GetResource() const
+{
+  return mResource;
 }
 
 MediaDecoderStateMachine*
@@ -198,7 +204,6 @@ MediaSourceDecoder::Ended(bool aEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  static_cast<MediaSourceResource*>(mResource.get())->SetEnded(aEnded);
   if (aEnded) {
     // We want the MediaSourceReader to refresh its buffered range as it may
     // have been modified (end lined up).

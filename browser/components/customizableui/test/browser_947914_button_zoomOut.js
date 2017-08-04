@@ -7,12 +7,14 @@
 var initialPageZoom = ZoomManager.zoom;
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check zoom out button existence and functionality");
 
   is(initialPageZoom, 1, "Initial zoom factor should be 1");
 
-  await PanelUI.show();
+  CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  registerCleanupFunction(() => CustomizableUI.reset());
+
+  await document.getElementById("nav-bar").overflowable.show();
   info("Menu panel was opened");
 
   let zoomOutButton = document.getElementById("zoom-out-button");
@@ -26,8 +28,8 @@ add_task(async function() {
   ok(pageZoomLevel < 100 && pageZoomLevel == expectedZoomLevel, "Page zoomed out correctly");
 
   // close the panel
-  let panelHiddenPromise = promisePanelHidden(window);
-  PanelUI.hide();
+  let panelHiddenPromise = promiseOverflowHidden(window);
+  document.getElementById("widget-overflow").hidePopup();
   await panelHiddenPromise;
   info("Menu panel was closed");
 });

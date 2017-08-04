@@ -23,9 +23,6 @@ XPIDL_SOURCES += [
     'mozILocaleService.idl',
     'mozIOSPreferences.idl',
     'nsICollation.idl',
-    'nsILocale.idl',
-    'nsILocaleService.idl',
-    'nsIScriptableDateFormat.idl',
 ]
 
 XPIDL_MODULE = 'locale'
@@ -35,9 +32,7 @@ EXPORTS += [
     'nsCollationCID.h',
     'nsIPlatformCharset.h',
     'nsLanguageAtomService.h',
-    'nsPosixLocale.h',
     'nsUConvPropertySearch.h',
-    'nsWin32Locale.h',
 ]
 
 EXPORTS.mozilla.intl += [
@@ -49,20 +44,10 @@ UNIFIED_SOURCES += [
     'LocaleService.cpp',
     'nsCollationFactory.cpp',
     'nsLanguageAtomService.cpp',
-    'nsLocale.cpp',
-    'nsScriptableDateFormat.cpp',
     'nsUConvPropertySearch.cpp',
     'OSPreferences.cpp',
 ]
 
-# This file includes Carbon.h, which pulls
-# in CoreServices on OSX. This requires
-# a TextRange struct, which clashes with mozilla::TextRange,
-# because of a `using namespace mozilla;` somewhere
-# in the unified build
-SOURCES += [
-    'nsLocaleService.cpp',
-]
 
 if CONFIG['ENABLE_INTL_API']:
     UNIFIED_SOURCES += [

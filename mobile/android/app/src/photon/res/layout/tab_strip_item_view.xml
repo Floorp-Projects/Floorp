@@ -46,6 +46,7 @@
         android:contentDescription="@string/close_tab"
         android:duplicateParentState="true"
         android:scaleType="center"
-        android:src="@drawable/tab_close"/>
+        android:src="@drawable/tab_close"
+        android:tint="@color/tab_strip_item_title"/>
 
 </merge>

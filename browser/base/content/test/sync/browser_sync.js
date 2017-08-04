@@ -52,8 +52,7 @@ add_task(async function test_ui_state_syncing() {
 
   gSync.updateAllUI(state);
 
-  let prefix = gPhotonStructure ? "appMenu" : "PanelUI";
-  checkSyncNowButton(`${prefix}-fxa-icon`, true);
+  checkSyncNowButton("appMenu-fxa-icon", true);
   checkSyncNowButton("PanelUI-remotetabs-syncnow", true);
 
   // Be good citizens and remove the "syncing" state.
@@ -146,11 +145,10 @@ add_task(async function test_FormatLastSyncDateMonthAgo() {
 });
 
 function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, syncNowTooltip}) {
-  let prefix = gPhotonStructure ? "appMenu" : "PanelUI"
-  let labelNode = document.getElementById(`${prefix}-fxa-label`);
-  let tooltipNode = document.getElementById(`${prefix}-fxa-status`);
-  let statusNode = document.getElementById(`${prefix}-fxa-container`);
-  let avatar = document.getElementById(`${prefix}-fxa-avatar`);
+  let labelNode = document.getElementById("appMenu-fxa-label");
+  let tooltipNode = document.getElementById("appMenu-fxa-status");
+  let statusNode = document.getElementById("appMenu-fxa-container");
+  let avatar = document.getElementById("appMenu-fxa-avatar");
 
   is(labelNode.getAttribute("label"), label, "fxa label has the right value");
   is(tooltipNode.getAttribute("tooltiptext"), tooltip, "fxa tooltip has the right value");
@@ -166,7 +164,7 @@ function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, s
   }
 
   if (syncing != undefined && syncNowTooltip != undefined) {
-    checkSyncNowButton(`${prefix}-fxa-icon`, syncing, syncNowTooltip);
+    checkSyncNowButton("appMenu-fxa-icon", syncing, syncNowTooltip);
   }
 }
 

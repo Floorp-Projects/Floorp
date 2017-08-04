@@ -9,6 +9,7 @@
 
 #include "mozilla/widget/InProcessCompositorWidget.h"
 #include "nsBaseWidget.h"
+#include "CompositorWidget.h"
 
 namespace mozilla {
 namespace widget {
@@ -16,7 +17,7 @@ namespace widget {
 class HeadlessWidget : public nsBaseWidget
 {
 public:
-  HeadlessWidget() {}
+  HeadlessWidget();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -34,6 +35,10 @@ public:
   virtual already_AddRefed<nsIWidget> CreateChild(const LayoutDeviceIntRect& aRect,
                                                   nsWidgetInitData* aInitData = nullptr,
                                                   bool aForceUseIWidgetParent = false) override;
+
+  virtual nsIWidget* GetTopLevelWidget() override;
+
+  virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
   virtual void Show(bool aState) override;
   virtual bool IsVisible() const override;
@@ -81,20 +86,30 @@ public:
                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
 
+  void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
+
   virtual nsresult DispatchEvent(WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) override;
 
 private:
-  ~HeadlessWidget() {}
+  ~HeadlessWidget();
   bool mEnabled;
   bool mVisible;
+  nsIWidget* mTopLevel;
+  HeadlessCompositorWidget* mCompositorWidget;
   // The size mode before entering fullscreen mode.
   nsSizeMode mLastSizeMode;
+  // The last size mode set while the window was visible.
+  nsSizeMode mEffectiveSizeMode;
   InputContext mInputContext;
   // In headless there is no window manager to track window bounds
   // across size mode changes, so we must track it to emulate.
   LayoutDeviceIntRect mRestoreBounds;
-  void SendSetZLevelEvent();
+  void ApplySizeModeSideEffects();
+  // Similarly, we must track the active window ourselves in order
+  // to dispatch (de)activation events properly.
+  void RaiseWindow();
+  static HeadlessWidget* sActiveWindow;
 };
 
 } // namespace widget

@@ -6,7 +6,6 @@
 
 const promise = require("promise");
 const Services = require("Services");
-const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
@@ -453,15 +452,17 @@ MarkupView.prototype = {
   _brieflyShowBoxModel: function (nodeFront) {
     this._clearBriefBoxModelTimer();
     let onShown = this._showBoxModel(nodeFront);
-    this._briefBoxModelPromise = defer();
 
-    this._briefBoxModelTimer = setTimeout(() => {
-      this._hideBoxModel()
-          .then(this._briefBoxModelPromise.resolve,
-                this._briefBoxModelPromise.resolve);
-    }, NEW_SELECTION_HIGHLIGHTER_TIMER);
+    let _resolve;
+    this._briefBoxModelPromise = new Promise(resolve => {
+      _resolve = resolve;
+      this._briefBoxModelTimer = setTimeout(() => {
+        this._hideBoxModel().then(resolve, resolve);
+      }, NEW_SELECTION_HIGHLIGHTER_TIMER);
+    });
+    this._briefBoxModelPromise.resolve = _resolve;
 
-    return promise.all([onShown, this._briefBoxModelPromise.promise]);
+    return promise.all([onShown, this._briefBoxModelPromise]);
   },
 
   /**
@@ -1354,15 +1355,13 @@ MarkupView.prototype = {
       return promise.reject();
     }
 
-    let def = defer();
-
-    container.undo.do(() => {
-      this.walker.setInnerHTML(node, newValue).then(def.resolve, def.reject);
-    }, () => {
-      this.walker.setInnerHTML(node, oldValue);
+    return new Promise((resolve, reject) => {
+      container.undo.do(() => {
+        this.walker.setInnerHTML(node, newValue).then(resolve, reject);
+      }, () => {
+        this.walker.setInnerHTML(node, oldValue);
+      });
     });
-
-    return def.promise;
   },
 
   /**
@@ -1384,20 +1383,22 @@ MarkupView.prototype = {
       return promise.reject();
     }
 
-    let def = defer();
-
     let injectedNodes = [];
-    container.undo.do(() => {
-      // eslint-disable-next-line no-unsanitized/method
-      this.walker.insertAdjacentHTML(node, position, value).then(nodeArray => {
-        injectedNodes = nodeArray.nodes;
-        return nodeArray;
-      }).then(def.resolve, def.reject);
-    }, () => {
-      this.walker.removeNodes(injectedNodes);
-    });
 
-    return def.promise;
+    return new Promise((resolve, reject) => {
+      container.undo.do(() => {
+        // eslint-disable-next-line no-unsanitized/method
+        this.walker
+            .insertAdjacentHTML(node, position, value)
+            .then(nodeArray => {
+              injectedNodes = nodeArray.nodes;
+              return nodeArray;
+            })
+            .then(resolve, reject);
+      }, () => {
+        this.walker.removeNodes(injectedNodes);
+      });
+    });
   },
 
   /**

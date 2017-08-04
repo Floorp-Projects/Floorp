@@ -7,16 +7,15 @@
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check Character Encoding panel functionality");
 
   // add the Character Encoding button to the panel
   CustomizableUI.addWidgetToArea("characterencoding-button",
-                                  CustomizableUI.AREA_PANEL);
+                                  CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
 
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   let charEncodingButton = document.getElementById("characterencoding-button");
   let characterEncodingView = document.getElementById("PanelUI-characterEncodingView");
   let subviewShownPromise = subviewShown(characterEncodingView);
@@ -35,19 +34,19 @@ add_task(async function() {
   await tabLoadPromise;
 
   // check that the new encodng is applied
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   charEncodingButton.click();
   checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
   let selectedEncodingName = checkedButtons[0].getAttribute("label");
   ok(selectedEncodingName != "Unicode", "The encoding was changed to " + selectedEncodingName);
 
   // reset the initial encoding
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   charEncodingButton.click();
   tabLoadPromise = promiseTabLoadEvent(gBrowser.selectedTab, TEST_PAGE);
   initialEncoding.click();
   await tabLoadPromise;
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
   charEncodingButton.click();
   checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
   is(checkedButtons[0].getAttribute("label"), "Unicode", "The encoding was reset to Unicode");

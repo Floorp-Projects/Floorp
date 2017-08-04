@@ -80,9 +80,9 @@ add_task(function* () {
     let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     deleteNode.click();
 
-    let deferred = defer();
-    executeSoon(deferred.resolve);
-    yield deferred.promise;
+    yield new Promise(resolve => {
+      executeSoon(resolve);
+    });
 
     ok((yield testActor.eval("!!content.document.documentElement")),
        "Document element still alive.");

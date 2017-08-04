@@ -7,14 +7,15 @@
 const isOSX = (Services.appinfo.OS === "Darwin");
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  CustomizableUI.addWidgetToArea("print-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  registerCleanupFunction(() => CustomizableUI.reset());
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com/",
   }, async function() {
     info("Check print button existence and functionality");
 
-    await PanelUI.show();
+    await document.getElementById("nav-bar").overflowable.show();
     info("Menu panel was opened");
 
     await waitForCondition(() => document.getElementById("print-button") != null);
@@ -23,8 +24,8 @@ add_task(async function() {
     ok(printButton, "Print button exists in Panel Menu");
 
     if (isOSX) {
-      let panelHiddenPromise = promisePanelHidden(window);
-      PanelUI.hide();
+      let panelHiddenPromise = promiseOverflowHidden(window);
+      document.getElementById("widget-overflow").hidePopup();
       await panelHiddenPromise;
       info("Menu panel was closed");
     } else {

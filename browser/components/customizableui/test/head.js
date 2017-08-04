@@ -305,7 +305,7 @@ function promisePanelHidden(win) {
 }
 
 function promiseOverflowHidden(win) {
-  let panelEl = document.getElementById("widget-overflow");
+  let panelEl = win.PanelUI.overflowPanel;
   return promisePanelElementHidden(win, panelEl);
 }
 
@@ -325,6 +325,11 @@ function promisePanelElementHidden(win, aPanel) {
 
 function isPanelUIOpen() {
   return PanelUI.panel.state == "open" || PanelUI.panel.state == "showing";
+}
+
+function isOverflowOpen() {
+  let panel = document.getElementById("widget-overflow");
+  return panel.state == "open" || panel.state == "showing";
 }
 
 function subviewShown(aSubview) {

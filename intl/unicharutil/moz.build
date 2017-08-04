@@ -9,7 +9,6 @@ TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
     'nsIEntityConverter.idl',
-    'nsISaveAsCharset.idl',
     'nsIUnicodeNormalizer.idl',
 ]
 
@@ -22,7 +21,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'nsEntityConverter.cpp',
-    'nsSaveAsCharset.cpp',
 ]
 
 if CONFIG['ENABLE_INTL_API']:

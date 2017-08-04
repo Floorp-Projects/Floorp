@@ -19,13 +19,18 @@
 
 namespace mozilla {
 
+MediaResource*
+HLSDecoder::GetResource() const
+{
+  return mResource;
+}
+
 void
 HLSDecoder::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  auto resource = static_cast<HLSResource*>(mResource.get());
-  if (resource) {
-    resource->Detach();
+  if (mResource) {
+    mResource->Detach();
   }
   MediaDecoder::Shutdown();
 }
@@ -35,9 +40,8 @@ HLSDecoder::CreateStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  MediaResource* resource = GetResource();
-  MOZ_ASSERT(resource);
-  auto resourceWrapper = static_cast<HLSResource*>(resource)->GetResourceWrapper();
+  MOZ_ASSERT(mResource);
+  auto resourceWrapper = mResource->GetResourceWrapper();
   MOZ_ASSERT(resourceWrapper);
   MediaFormatReaderInit init;
   init.mVideoFrameContainer = GetVideoFrameContainer();
@@ -93,8 +97,7 @@ HLSDecoder::Play()
 {
   MOZ_ASSERT(NS_IsMainThread());
   HLS_DEBUG("HLSDecoder", "MediaElement called Play");
-  auto resourceWrapper =
-        static_cast<HLSResource*>(GetResource())->GetResourceWrapper();
+  auto resourceWrapper = mResource->GetResourceWrapper();
   resourceWrapper->Play();
   return MediaDecoder::Play();
 }
@@ -104,8 +107,7 @@ HLSDecoder::Pause()
 {
   MOZ_ASSERT(NS_IsMainThread());
   HLS_DEBUG("HLSDecoder", "MediaElement called Pause");
-  auto resourceWrapper =
-      static_cast<HLSResource*>(GetResource())->GetResourceWrapper();
+  auto resourceWrapper = mResource->GetResourceWrapper();
   resourceWrapper->Pause();
   return MediaDecoder::Pause();
 }

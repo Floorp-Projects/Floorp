@@ -94,9 +94,6 @@ with Files('LightweightThemeConsumer.jsm'):
 with Files('LoadContextInfo.jsm'):
     BUG_COMPONENT = ('Core', 'Networking: Cache')
 
-with Files('Locale.jsm'):
-    BUG_COMPONENT = ('Core', 'Internationalization')
-
 with Files('Memory.jsm'):
     BUG_COMPONENT = ('Core', 'DOM: Content Processes')
 
@@ -207,7 +204,6 @@ EXTRA_JS_MODULES += [
     'Integration.jsm',
     'JSONFile.jsm',
     'LoadContextInfo.jsm',
-    'Locale.jsm',
     'Log.jsm',
     'Memory.jsm',
     'NewTabUtils.jsm',

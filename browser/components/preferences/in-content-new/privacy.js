@@ -268,8 +268,8 @@ var gPrivacyPane = {
       bundlePrefs.getString("popuppermissionstext"),
     ]);
     appendSearchKeywords("notificationsPolicyButton", [
-      bundlePrefs.getString("notificationspermissionstitle"),
-      bundlePrefs.getString("notificationspermissionstext4"),
+      bundlePrefs.getString("notificationspermissionstitle2"),
+      bundlePrefs.getString("notificationspermissionstext5"),
     ]);
     appendSearchKeywords("addonExceptions", [
       bundlePrefs.getString("addons_permissions_title2"),
@@ -806,11 +806,11 @@ var gPrivacyPane = {
    */
   showNotificationExceptions() {
     let bundlePreferences = document.getElementById("bundlePreferences");
-    let params = { permissionType: "desktop-notification" };
-    params.windowTitle = bundlePreferences.getString("notificationspermissionstitle");
-    params.introText = bundlePreferences.getString("notificationspermissionstext4");
+    let params = { permissionType: "desktop-notification"};
+    params.windowTitle = bundlePreferences.getString("notificationspermissionstitle2");
+    params.introText = bundlePreferences.getString("notificationspermissionstext5");
 
-    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
+    gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
                     "resizable=yes", params);
 
     try {

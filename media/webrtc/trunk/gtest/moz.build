@@ -64,9 +64,12 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
             '../third_party/gflags/gen/posix/include/private',
         ]
 
-        USE_LIBS += [
-            'libevent',
-        ]
+        if CONFIG['MOZ_SYSTEM_LIBEVENT']:
+            OS_LIBS += CONFIG['MOZ_LIBEVENT_LIBS']
+        else:
+            USE_LIBS += [
+                'libevent',
+            ]
 
         OS_LIBS += [
             'rt',

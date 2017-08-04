@@ -11,22 +11,21 @@ var newTab = null;
 var initialLocation = gBrowser.currentURI.spec;
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check Subscribe button functionality");
 
   // add the Subscribe button to the panel
   CustomizableUI.addWidgetToArea("feed-button",
-                                  CustomizableUI.AREA_PANEL);
+                                  CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   // check the button's functionality
-  await PanelUI.show();
+  await document.getElementById("nav-bar").overflowable.show();
 
   let feedButton = document.getElementById("feed-button");
   ok(feedButton, "The Subscribe button was added to the Panel Menu");
   is(feedButton.getAttribute("disabled"), "true", "The Subscribe button is initially disabled");
 
-  let panelHidePromise = promisePanelHidden(window);
-  PanelUI.hide();
+  let panelHidePromise = promiseOverflowHidden(window);
+  await document.getElementById("nav-bar").overflowable._panel.hidePopup();
   await panelHidePromise;
 
   newTab = gBrowser.selectedTab;
@@ -41,11 +40,11 @@ add_task(async function() {
   await promiseTabLoadEvent(newTab, TEST_FEED);
 
   is(gBrowser.currentURI.spec, TEST_FEED, "Subscribe page opened");
-  ok(!isPanelUIOpen(), "Panel is closed");
+  ok(!isOverflowOpen(), "Panel is closed");
 
-  if (isPanelUIOpen()) {
-    panelHidePromise = promisePanelHidden(window);
-    PanelUI.hide();
+  if (isOverflowOpen()) {
+    panelHidePromise = promiseOverflowHidden(window);
+    await document.getElementById("nav-bar").overflowable._panel.hidePopup();
     await panelHidePromise;
   }
 });

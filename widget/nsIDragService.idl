@@ -8,7 +8,7 @@
 #include "nsISupports.idl"
 #include "nsIDragSession.idl"
 #include "nsIScriptableRegion.idl"
-#include "nsIContentPolicyBase.idl"
+#include "nsIContentPolicy.idl"
 
 interface nsIDOMNode;
 interface nsIDOMDragEvent;

@@ -178,6 +178,7 @@ toolbar[brighttext] #pocket-button {
 
 #library-button[animate="pocket"] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
+  min-height: 54px; /* Minimum height must be equal to the height of the SVG sprite */
 }
 
 #library-button[animate="pocket"] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {

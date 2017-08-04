@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<style>
+div { color: green; }
+.red > span { color: red; }
+</style>
+<div id="first"><span></span></div>
+<div id="second"><span>This text should be green.</span></div>
+<script>
+getComputedStyle(second.firstChild).color;
+getComputedStyle(first.firstChild).color;
+second.className = "red";
+getComputedStyle(second.firstChild).color;
+first.className = "red";
+second.className = "";
+getComputedStyle(second.firstChild).color;
+</script>

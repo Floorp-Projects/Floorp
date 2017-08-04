@@ -10,6 +10,7 @@
 #include "GeneratedJNINatives.h"
 #include "GeneratedJNIWrappers.h"
 #include "HLSUtils.h"
+#include "MediaResource.h"
 #include "nsContentUtils.h"
 
 #define UNIMPLEMENTED() HLS_DEBUG("HLSResource", "UNIMPLEMENTED FUNCTION")

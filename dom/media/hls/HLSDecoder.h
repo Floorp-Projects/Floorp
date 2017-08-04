@@ -7,6 +7,7 @@
 #ifndef HLSDecoder_h_
 #define HLSDecoder_h_
 
+#include "HLSResource.h"
 #include "MediaDecoder.h"
 
 namespace mozilla {
@@ -19,6 +20,8 @@ public:
     : MediaDecoder(aInit)
   {
   }
+
+  MediaResource* GetResource() const override final;
 
   void Shutdown() override;
 
@@ -37,6 +40,9 @@ public:
   nsresult Play() override;
 
   void Pause() override;
+
+private:
+  RefPtr<HLSResource> mResource;
 };
 
 } // namespace mozilla

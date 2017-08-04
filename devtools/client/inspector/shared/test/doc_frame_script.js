@@ -16,10 +16,6 @@
 //
 // Some listeners do not send a response message back.
 
-var {utils: Cu} = Components;
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var defer = require("devtools/shared/defer");
-
 /**
  * Get a value for a given property name in a css rule in a stylesheet, given
  * their indexes
@@ -100,16 +96,14 @@ var dumpn = msg => dump(msg + "\n");
  * if the timeout is reached
  */
 function waitForSuccess(validatorFn, name = "untitled") {
-  let def = defer();
-
-  function wait(fn) {
-    if (fn()) {
-      def.resolve();
-    } else {
-      setTimeout(() => wait(fn), 200);
+  return new Promise(resolve => {
+    function wait(fn) {
+      if (fn()) {
+        resolve();
+      } else {
+        setTimeout(() => wait(fn), 200);
+      }
     }
-  }
-  wait(validatorFn);
-
-  return def.promise;
+    wait(validatorFn);
+  });
 }

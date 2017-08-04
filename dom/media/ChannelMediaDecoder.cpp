@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChannelMediaDecoder.h"
+#include "DecoderTraits.h"
+#include "MediaDecoderStateMachine.h"
+#include "MediaFormatReader.h"
 #include "MediaResource.h"
 #include "MediaShutdownManager.h"
 
@@ -42,15 +45,6 @@ ChannelMediaDecoder::ResourceCallback::GetMediaOwner() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   return mDecoder ? mDecoder->GetOwner() : nullptr;
-}
-
-void
-ChannelMediaDecoder::ResourceCallback::SetInfinite(bool aInfinite)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    mDecoder->SetInfinite(aInfinite);
-  }
 }
 
 void
@@ -159,6 +153,25 @@ ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   , mResourceCallback(new ResourceCallback(aInit.mOwner->AbstractMainThread()))
 {
   mResourceCallback->Connect(this);
+}
+
+MediaResource*
+ChannelMediaDecoder::GetResource() const
+{
+  return mResource;
+}
+
+MediaDecoderStateMachine* ChannelMediaDecoder::CreateStateMachine()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaFormatReaderInit init;
+  init.mVideoFrameContainer = GetVideoFrameContainer();
+  init.mKnowsCompositor = GetCompositor();
+  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
+  init.mFrameStats = mFrameStats;
+  init.mResource = mResource;
+  mReader = DecoderTraits::CreateReader(ContainerType(), init);
+  return new MediaDecoderStateMachine(this, mReader);
 }
 
 void

@@ -11,7 +11,12 @@
   <label class="header-name" flex="1">&paneSearchResults.title;</label>
 </hbox>
 
-<groupbox class="no-results-message" align="start" data-category="paneSearchResults" hidden="true">
-  <label id="sorry-message"></label>
-  <label id="need-help"></label>
+<groupbox class="no-results-message" data-category="paneSearchResults" hidden="true">
+  <vbox>
+    <label id="sorry-message"></label>
+    <label id="need-help"></label>
+  </vbox>
+  <vbox class="no-results-container" align="center">
+    <image></image>
+  </vbox>
 </groupbox>

@@ -189,6 +189,7 @@
   background-size: auto;
   list-style-image: none;
   height: var(--toolbarbutton-height);
+  min-height: 33px; /* Minimum height must be equal to the height of the SVG sprite */
   animation-name: bookmark-animation;
   animation-fill-mode: forwards;
   animation-iteration-count: 1;

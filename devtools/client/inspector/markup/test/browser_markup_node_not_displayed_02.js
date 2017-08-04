@@ -126,12 +126,13 @@ function* runTestData(inspector, testActor,
     "The container is marked as " + (before ? "shown" : "hidden"));
 
   info("Listening for the display-change event");
-  let onDisplayChanged = defer();
-  inspector.markup.walker.once("display-change", onDisplayChanged.resolve);
+  let onDisplayChanged = new Promise(resolve => {
+    inspector.markup.walker.once("display-change", resolve);
+  });
 
   info("Making style changes");
   yield changeStyle(testActor);
-  let nodes = yield onDisplayChanged.promise;
+  let nodes = yield onDisplayChanged;
 
   info("Verifying that the list of changed nodes include our container");
 

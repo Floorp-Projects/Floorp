@@ -1103,6 +1103,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                        Bookmarks._ID + ", " +
                        Combined.BOOKMARK_ID + ", " +
                        Combined.HISTORY_ID + ", " +
+                       Combined.HISTORY_GUID + ", " +
                        Bookmarks.URL + ", " +
                        Bookmarks.TITLE + ", " +
                        Combined.HISTORY_ID + ", " +
@@ -1123,6 +1124,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                            Bookmarks._ID + ", " +
                            " NULL " + " AS " + Combined.BOOKMARK_ID + ", " +
                            " -1 AS " + Combined.HISTORY_ID + ", " +
+                           " NULL AS " + Combined.HISTORY_GUID + ", " +
                            Bookmarks.URL + ", " +
                            Bookmarks.TITLE + ", " +
                            "NULL AS " + Combined.HISTORY_ID + ", " +
@@ -1146,6 +1148,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                            Bookmarks._ID + ", " +
                            Bookmarks._ID + " AS " + Combined.BOOKMARK_ID + ", " +
                            " -1 AS " + Combined.HISTORY_ID + ", " +
+                           " NULL AS " + Combined.HISTORY_GUID + ", " +
                            Bookmarks.URL + ", " +
                            Bookmarks.TITLE + ", " +
                            "NULL AS " + Combined.HISTORY_ID + ", " +
@@ -1162,42 +1165,64 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             // I.e. if we have 6 pinned sites then positions 0..5 are filled, the JOIN results in
             // the first N rows having positions 6..(N+6), so row N+1 should receive a position that is at
             // least N+1+6, which is equal to rowid + 6.
+            final String selectTopSites =
+                    "SELECT " +
+                    Bookmarks._ID + ", " +
+                    TopSites.BOOKMARK_ID + ", " +
+                    TopSites.HISTORY_ID + ", " +
+                    Combined.HISTORY_GUID + ", " +
+                    Bookmarks.URL + ", " +
+                    Bookmarks.TITLE + ", " +
+                    "COALESCE(" + Bookmarks.POSITION + ", " +
+                    DBUtils.qualifyColumn(TABLE_TOPSITES, "rowid") + " + " + suggestedGridLimit +
+                    ")" + " AS " + Bookmarks.POSITION + ", " +
+                    Combined.HISTORY_ID + ", " +
+                    TopSites.TYPE +
+                    " FROM " + TABLE_TOPSITES +
+                    " LEFT OUTER JOIN " + // TABLE_IDS +
+                    "(" + freeIDSubquery + ") AS id_results" +
+                    " ON " + DBUtils.qualifyColumn(TABLE_TOPSITES, "rowid") +
+                    " = " + DBUtils.qualifyColumn("id_results", "rowid") +
+
+                    " UNION ALL " +
+
+                    "SELECT " +
+                    Bookmarks._ID + ", " +
+                    Bookmarks._ID + " AS " + TopSites.BOOKMARK_ID + ", " +
+                    " -1 AS " + TopSites.HISTORY_ID + ", " +
+                    " NULL AS " + Combined.HISTORY_GUID + ", " +
+                    Bookmarks.URL + ", " +
+                    Bookmarks.TITLE + ", " +
+                    Bookmarks.POSITION + ", " +
+                    "NULL AS " + Combined.HISTORY_ID + ", " +
+                    TopSites.TYPE_PINNED + " as " + TopSites.TYPE +
+                    " " + pinnedSitesFromClause;
+
+            // In order to join the PageMetadata with our `SELECT ... UNION ALL SELECT ...` for top sites, the top sites
+            // SELECT must be a subquery (see https://stackoverflow.com/a/19110809/2219998).
             final SQLiteCursor c = (SQLiteCursor) db.rawQuery(
-                        "SELECT " +
-                        Bookmarks._ID + ", " +
-                        TopSites.BOOKMARK_ID + ", " +
-                        TopSites.HISTORY_ID + ", " +
-                        Bookmarks.URL + ", " +
-                        Bookmarks.TITLE + ", " +
-                        "COALESCE(" + Bookmarks.POSITION + ", " +
-                            DBUtils.qualifyColumn(TABLE_TOPSITES, "rowid") + " + " + suggestedGridLimit +
-                        ")" + " AS " + Bookmarks.POSITION + ", " +
-                        Combined.HISTORY_ID + ", " +
-                        TopSites.TYPE +
-                        " FROM " + TABLE_TOPSITES +
-                        " LEFT OUTER JOIN " + // TABLE_IDS +
-                        "(" + freeIDSubquery + ") AS id_results" +
-                        " ON " + DBUtils.qualifyColumn(TABLE_TOPSITES, "rowid") +
-                        " = " + DBUtils.qualifyColumn("id_results", "rowid") +
+                    // Specify a projection so we don't take the whole PageMetadata table, or the joining columns, with us.
+                    "SELECT " +
+                    DBUtils.qualifyColumn(TABLE_TOPSITES, Bookmarks._ID) + ", " +
+                    DBUtils.qualifyColumn(TABLE_TOPSITES, TopSites.BOOKMARK_ID) + ", " +
+                    DBUtils.qualifyColumn(TABLE_TOPSITES, TopSites.HISTORY_ID) + ", " +
+                    DBUtils.qualifyColumn(TABLE_TOPSITES, Bookmarks.URL) + ", " +
+                    DBUtils.qualifyColumn(TABLE_TOPSITES, Bookmarks.TITLE) + ", " +
+                    DBUtils.qualifyColumn(TABLE_TOPSITES, Bookmarks.POSITION) + ", " +
+                    DBUtils.qualifyColumn(TABLE_TOPSITES, TopSites.TYPE) + ", " +
+                    PageMetadata.JSON + " AS " + TopSites.PAGE_METADATA_JSON +
 
-                        " UNION ALL " +
+                    " FROM (" + selectTopSites + ") AS " + TABLE_TOPSITES +
 
-                        "SELECT " +
-                        Bookmarks._ID + ", " +
-                        Bookmarks._ID + " AS " + TopSites.BOOKMARK_ID + ", " +
-                        " -1 AS " + TopSites.HISTORY_ID + ", " +
-                        Bookmarks.URL + ", " +
-                        Bookmarks.TITLE + ", " +
-                        Bookmarks.POSITION + ", " +
-                        "NULL AS " + Combined.HISTORY_ID + ", " +
-                        TopSites.TYPE_PINNED + " as " + TopSites.TYPE +
-                        " " + pinnedSitesFromClause +
+                    " LEFT OUTER JOIN " + TABLE_PAGE_METADATA + " ON " +
+                            DBUtils.qualifyColumn(TABLE_TOPSITES, Combined.HISTORY_GUID) + " = " +
+                            DBUtils.qualifyColumn(TABLE_PAGE_METADATA, PageMetadata.HISTORY_GUID) +
 
-                        // In case position is non-unique (as in Activity Stream pins, whose position
-                        // is always zero), we need to ensure we get stable ordering.
-                        " ORDER BY " + Bookmarks.POSITION + ", " + Bookmarks.URL,
+                    // In case position is non-unique (as in Activity Stream pins, whose position
+                    // is always zero), we need to ensure we get stable ordering.
+                    " ORDER BY " + Bookmarks.POSITION + ", " + Bookmarks.URL,
 
-                        null);
+                    null);
 
             c.setNotificationUri(getContext().getContentResolver(),
                                  BrowserContract.AUTHORITY_URI);

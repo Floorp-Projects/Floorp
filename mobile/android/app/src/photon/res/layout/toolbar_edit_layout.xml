@@ -5,35 +5,23 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:background="@android:color/holo_green_light"
-    tools:layout_height="wrap_content"
-    tools:layout_width="match_parent"
-    tools:orientation="horizontal"
-    tools:parentTag="LinearLayout">
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
+       xmlns:tools="http://schemas.android.com/tools"
+       tools:background="@android:color/holo_green_light"
+       tools:layout_height="@dimen/browser_toolbar_height"
+       tools:layout_width="match_parent"
+       tools:orientation="horizontal"
+       tools:parentTag="LinearLayout">
 
     <!-- Search icon must have exact position and size as site security in
          display layout -->
     <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/search_icon"
-        style="@style/UrlBar.ImageButtonBase"
-        android:layout_width="@dimen/browser_toolbar_height"
-        android:layout_height="@dimen/browser_toolbar_site_security_height"
-        android:layout_marginBottom="@dimen/browser_toolbar_site_security_margin_bottom"
-        android:layout_marginEnd="@dimen/browser_toolbar_site_security_margin_end"
-        android:layout_marginRight="@dimen/browser_toolbar_site_security_margin_end"
-        android:background="@drawable/action_bar_button"
-        android:paddingBottom="@dimen/browser_toolbar_site_security_padding_vertical"
-        android:paddingEnd="@dimen/browser_toolbar_site_security_padding_horizontal"
-        android:paddingLeft="@dimen/browser_toolbar_site_security_padding_horizontal"
-        android:paddingRight="@dimen/browser_toolbar_site_security_padding_horizontal"
-        android:paddingStart="@dimen/browser_toolbar_site_security_padding_horizontal"
-        android:paddingTop="@dimen/browser_toolbar_site_security_padding_vertical"
-        android:scaleType="fitCenter"
+        style="@style/UrlBar.SiteIdentity"
+        android:scaleType="center"
         android:src="@drawable/ic_search_icon"
         android:visibility="gone"
-        tools:visibility="visible" />
+        tools:visibility="visible"/>
 
     <org.mozilla.gecko.toolbar.ToolbarEditText
         android:id="@+id/url_edit_text"
@@ -47,18 +35,18 @@
         android:paddingEnd="8dp"
         android:paddingRight="8dp"
         android:selectAllOnFocus="true"
-        gecko:autoUpdateTheme="false" />
+        gecko:autoUpdateTheme="false"/>
 
-    <org.mozilla.gecko.widget.themed.ThemedImageButton
+    <org.mozilla.gecko.toolbar.ToolbarRoundButton
         android:id="@+id/qrcode"
-        style="@style/UrlBar.ImageButton"
-        android:background="@drawable/action_bar_button"
-        android:src="@drawable/ic_qrcode" />
+        style="@style/UrlBar.QRCode"
+        android:background="@drawable/url_bar_action_button"
+        android:src="@drawable/ic_qrcode"/>
 
-    <org.mozilla.gecko.widget.themed.ThemedImageButton
+    <org.mozilla.gecko.toolbar.ToolbarRoundButton
         android:id="@+id/mic"
         style="@style/UrlBar.ImageButton"
-        android:background="@drawable/action_bar_button"
-        android:src="@drawable/ic_mic" />
+        android:background="@drawable/url_bar_action_button"
+        android:src="@drawable/ic_mic"/>
 
 </merge>

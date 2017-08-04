@@ -268,9 +268,9 @@ double Gecko_GetPositionInSegment(
 // Get servo's AnimationValue for |aProperty| from the cached base style
 // |aBaseStyles|.
 // |aBaseStyles| is nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>.
-// We use void* to avoid exposing nsRefPtrHashtable in FFI.
+// We use RawServoAnimationValueTableBorrowed to avoid exposing nsRefPtrHashtable in FFI.
 RawServoAnimationValueBorrowedOrNull Gecko_AnimationGetBaseStyle(
-  void* aBaseStyles,
+  RawServoAnimationValueTableBorrowed aBaseStyles,
   nsCSSPropertyID aProperty);
 void Gecko_StyleTransition_SetUnsupportedProperty(
   mozilla::StyleTransition* aTransition,

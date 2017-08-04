@@ -31,9 +31,6 @@ public:
   // Returns a weak reference to the media decoder owner.
   virtual MediaDecoderOwner* GetMediaOwner() const { return nullptr; }
 
-  // Notify is duration is known to this MediaResource.
-  virtual void SetInfinite(bool aInfinite) {}
-
   // Notify that a network error is encountered.
   virtual void NotifyNetworkError() {}
 

@@ -17,6 +17,7 @@
 #include "nsRefPtrHashtable.h"
 
 #include "nsBaseWidget.h"
+#include "CompositorWidget.h"
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
@@ -73,6 +74,7 @@ class nsWindow final : public nsBaseWidget
 public:
     typedef mozilla::gfx::DrawTarget DrawTarget;
     typedef mozilla::WidgetEventTime WidgetEventTime;
+    typedef mozilla::widget::PlatformCompositorWidgetDelegate PlatformCompositorWidgetDelegate;
 
     nsWindow();
 
@@ -436,6 +438,8 @@ private:
     GtkWidget          *mShell;
     MozContainer       *mContainer;
     GdkWindow          *mGdkWindow;
+    PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
+
 
     uint32_t            mHasMappedToplevel : 1,
                         mIsFullyObscured : 1,
@@ -540,6 +544,8 @@ private:
     virtual LayerManager* GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
+
+    void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
 
     void CleanLayerManagerRecursive();
 

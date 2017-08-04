@@ -122,7 +122,8 @@ def env_options():
 
 
 def run_info_extras(**kwargs):
-    return {"e10s": kwargs["gecko_e10s"]}
+    return {"e10s": kwargs["gecko_e10s"],
+            "headless": "MOZ_HEADLESS" in os.environ}
 
 
 def update_properties():
