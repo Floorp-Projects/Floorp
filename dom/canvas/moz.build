@@ -188,7 +188,7 @@ SOURCES += [
 ]
 
 # Suppress warnings from third-party code.
-if CONFIG['CLANG_CXX']:
+if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
     SOURCES['MurmurHash3.cpp'].flags += ['-Wno-implicit-fallthrough']
 
 LOCAL_INCLUDES += [
