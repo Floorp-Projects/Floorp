@@ -155,6 +155,13 @@ ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   mResourceCallback->Connect(this);
 }
 
+bool
+ChannelMediaDecoder::CanClone()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mResource && mResource->CanClone();
+}
+
 already_AddRefed<ChannelMediaDecoder>
 ChannelMediaDecoder::Clone(MediaDecoderInit& aInit)
 {
