@@ -13,6 +13,11 @@
 
 namespace mozilla {
 
+extern LazyLogModule gMediaDecoderLog;
+#define LOG(x, ...)                                                            \
+  MOZ_LOG(                                                                     \
+    gMediaDecoderLog, LogLevel::Debug, ("Decoder=%p " x, this, ##__VA_ARGS__))
+
 ChannelMediaDecoder::ResourceCallback::ResourceCallback(
   AbstractThread* aMainThread)
   : mAbstractMainThread(aMainThread)
@@ -151,8 +156,12 @@ ChannelMediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
 ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   : MediaDecoder(aInit)
   , mResourceCallback(new ResourceCallback(aInit.mOwner->AbstractMainThread()))
+  , mWatchManager(this, aInit.mOwner->AbstractMainThread())
 {
   mResourceCallback->Connect(this);
+
+  // mIgnoreProgressData
+  mWatchManager.Watch(mLogicallySeeking, &ChannelMediaDecoder::SeekingChanged);
 }
 
 bool
@@ -202,6 +211,7 @@ MediaDecoderStateMachine* ChannelMediaDecoder::CreateStateMachine()
 void
 ChannelMediaDecoder::Shutdown()
 {
+  mWatchManager.Shutdown();
   mResourceCallback->Disconnect();
   MediaDecoder::Shutdown();
 }
@@ -269,4 +279,61 @@ ChannelMediaDecoder::Load(BaseMediaResource* aOriginal)
   return InitializeStateMachine();
 }
 
+void
+ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+
+  LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
+
+  if (aStatus == NS_BINDING_ABORTED) {
+    // Download has been cancelled by user.
+    GetOwner()->LoadAborted();
+    return;
+  }
+
+  UpdatePlaybackRate();
+
+  if (NS_SUCCEEDED(aStatus)) {
+    // A final progress event will be fired by the MediaResource calling
+    // DownloadSuspended on the element.
+    // Also NotifySuspendedStatusChanged() will be called to update readyState
+    // if download ended with success.
+  } else if (aStatus != NS_BASE_STREAM_CLOSED) {
+    NetworkError();
+  }
+}
+
+void
+ChannelMediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+
+  if (mIgnoreProgressData) {
+    return;
+  }
+
+  MOZ_ASSERT(GetStateMachine());
+  if (aOffset >= mDecoderPosition) {
+    mPlaybackStatistics.AddBytes(aBytes);
+  }
+  mDecoderPosition = aOffset + aBytes;
+}
+
+void
+ChannelMediaDecoder::SeekingChanged()
+{
+  // Stop updating the bytes downloaded for progress notifications when
+  // seeking to prevent wild changes to the progress notification.
+  MOZ_ASSERT(NS_IsMainThread());
+  mIgnoreProgressData = mLogicallySeeking;
+}
+
 } // namespace mozilla
+
+// avoid redefined macro in unified build
+#undef LOG

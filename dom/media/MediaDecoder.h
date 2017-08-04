@@ -353,14 +353,6 @@ private:
   void OnSeekRejected();
   void OnSeekResolved();
 
-  void SeekingChanged()
-  {
-    // Stop updating the bytes downloaded for progress notifications when
-    // seeking to prevent wild changes to the progress notification.
-    MOZ_ASSERT(NS_IsMainThread());
-    mIgnoreProgressData = mLogicallySeeking;
-  }
-
   // Seeking has started. Inform the element on the main thread.
   void SeekingStarted();
 
@@ -571,23 +563,7 @@ protected:
   // changed. Called on main thread only.
   void NotifyPrincipalChanged();
 
-  // Called by the MediaResource to keep track of the number of bytes read
-  // from the resource. Called on the main by an event runner dispatched
-  // by the MediaResource read functions.
-  void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset);
-
-  // Called by nsChannelToPipeListener or MediaResource when the
-  // download has ended. Called on the main thread only. aStatus is
-  // the result from OnStopRequest.
-  void NotifyDownloadEnded(nsresult aStatus);
-
   MozPromiseRequestHolder<SeekPromise> mSeekRequest;
-
-  // True when seeking or otherwise moving the play position around in
-  // such a manner that progress event data is inaccurate. This is set
-  // during seek and duration operations to prevent the progress indicator
-  // from jumping around. Read/Write on the main thread only.
-  bool mIgnoreProgressData;
 
   // Ensures our media stream has been pinned.
   void PinForSeek();

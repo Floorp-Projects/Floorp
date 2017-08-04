@@ -79,6 +79,25 @@ private:
   virtual ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) = 0;
   nsresult OpenResource(nsIStreamListener** aStreamListener);
   nsresult Load(BaseMediaResource* aOriginal);
+
+  // Called by MediaResource when the download has ended.
+  // Called on the main thread only. aStatus is the result from OnStopRequest.
+  void NotifyDownloadEnded(nsresult aStatus);
+
+  // Called by the MediaResource to keep track of the number of bytes read
+  // from the resource. Called on the main by an event runner dispatched
+  // by the MediaResource read functions.
+  void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset);
+
+  void SeekingChanged();
+
+  WatchManager<ChannelMediaDecoder> mWatchManager;
+
+  // True when seeking or otherwise moving the play position around in
+  // such a manner that progress event data is inaccurate. This is set
+  // during seek and duration operations to prevent the progress indicator
+  // from jumping around. Read/Write on the main thread only.
+  bool mIgnoreProgressData = false;
 };
 
 } // namespace mozilla
