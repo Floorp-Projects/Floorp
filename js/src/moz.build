@@ -734,7 +734,10 @@ if CONFIG['JS_HAS_CTYPES']:
 if CONFIG['GNU_CXX']:
     # Also disable strict-aliasing for GCC compiler, that is enabled by default
     # starting with version 7.1, see Bug 1363009
-    CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing']
+    # Disable the gcc warning noexcept-type introduced in version 7.1.
+    # see bug 1320656
+    CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing',
+                 '-Wno-error=noexcept-type']
 
 # Suppress warnings in third-party code.
 if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
