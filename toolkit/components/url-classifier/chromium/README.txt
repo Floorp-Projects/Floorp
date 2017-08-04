@@ -1,8 +1,26 @@
 # Overview
 
-'safebrowsing.proto' is modified from [1] with the following line added:
+'safebrowsing.proto' is modified from [1] with the following changes:
 
-"package mozilla.safebrowsing;"
+- Added "package mozilla.safebrowsing;"
+- Added more threatHit information
+
+##################################
+  // Client-reported identification.
+  optional ClientInfo client_info = 5;
+
+  // Details about the user that encountered the threat.
+  message UserInfo {
+    // The UN M.49 region code associated with the user's location.
+    optional string region_code = 1;
+
+    // Unique ID stable over a week or two
+    optional bytes user_id = 2;
+  }
+
+  // Details about the user that encountered the threat.
+  optional UserInfo user_info = 6;
+####################################
 
 to avoid naming pollution. We use this source file along with protobuf compiler (protoc) to generate safebrowsing.pb.h/cc for safebrowsing v4 update and hash completion. The current generated files are compiled by protoc 2.6.1 since the protobuf library in gecko is not upgraded to 3.0 yet.
 
