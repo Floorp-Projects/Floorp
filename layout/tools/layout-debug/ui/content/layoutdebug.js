@@ -303,7 +303,6 @@ RTestIndexList.prototype = {
 const nsIFileInputStream = Components.interfaces.nsIFileInputStream;
 const nsILineInputStream = Components.interfaces.nsILineInputStream;
 const nsIFile = Components.interfaces.nsIFile;
-const nsIFile = Components.interfaces.nsIFile;
 const nsIFileURL = Components.interfaces.nsIFileURL;
 const nsIIOService = Components.interfaces.nsIIOService;
 const nsILayoutRegressionTester = Components.interfaces.nsILayoutRegressionTester;
