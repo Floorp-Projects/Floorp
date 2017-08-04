@@ -109,10 +109,17 @@ add_task(async function test_history_guids() {
       }]
     }
   ];
+  PlacesUtils.asyncHistory.updatePlaces(places, {
+    handleError: function handleError() {
+      do_throw("Unexpected error in adding visit.");
+    },
+    handleResult: function handleResult() {},
+    handleCompletion: onVisitAdded
+  });
 
-  async function onVisitAdded() {
-    let fxguid = await store.GUIDForUri(fxuri, true);
-    let tbguid = await store.GUIDForUri(tburi, true);
+  function onVisitAdded() {
+    let fxguid = store.GUIDForUri(fxuri, true);
+    let tbguid = store.GUIDForUri(tburi, true);
     dump("fxguid: " + fxguid + "\n");
     dump("tbguid: " + tbguid + "\n");
 
@@ -144,17 +151,9 @@ add_task(async function test_history_guids() {
     result = Async.querySpinningly(stmt, ["guid"]);
     do_check_eq(result.length, 0);
     stmt.finalize();
-  }
 
-  await new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(places, {
-      handleError: function handleError() {
-        do_throw("Unexpected error in adding visit.");
-      },
-      handleResult: function handleResult() {},
-      handleCompletion: () => {onVisitAdded().then(resolve, reject)},
-    });
-  });
+    run_next_test();
+  }
 });
 
 add_task(async function test_bookmark_guids() {
