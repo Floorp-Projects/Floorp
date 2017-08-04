@@ -5,6 +5,8 @@
 #include "nsISupports.idl"
 
 interface nsIFile;
+interface nsIJSRAIIHelper;
+interface nsIURI;
 
 [scriptable, builtinclass, uuid(01dfa47b-87e4-4135-877b-586d033e1b5d)]
 interface amIAddonManagerStartup : nsISupports
@@ -25,6 +27,23 @@ interface amIAddonManagerStartup : nsISupports
    */
   [implicit_jscontext]
   void initializeExtensions(in jsval locations);
+
+  /**
+   * Registers a set of dynamic chrome registry entries, and returns an object
+   * with a `destruct()` method which must be called in order to unregister
+   * the entries.
+   *
+   * @param manifestURI The base manifest URI for the entries. URL values are
+   *        resolved relative to this URI.
+   * @param entries An array of arrays, each containing a registry entry as it
+   *        would appar in a chrome.manifest file. Only the following entry
+   *        types are currently accepted:
+   *
+   *         - "locale" A locale package entry. Must be a 4-element array.
+   *         - "override" A URL override entry. Must be a 3-element array.
+   */
+  [implicit_jscontext]
+  nsIJSRAIIHelper registerChrome(in nsIURI manifestURI, in jsval entries);
 
   [implicit_jscontext]
   jsval encodeBlob(in jsval value);

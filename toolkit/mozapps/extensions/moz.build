@@ -58,6 +58,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
+    '/chrome',
     '/dom/base',
 ]
 

@@ -14,6 +14,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Compression.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
@@ -24,11 +25,16 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
+#include "nsChromeRegistry.h"
 #include "nsIAddonInterposition.h"
+#include "nsIDOMWindowUtils.h" // for nsIJSRAIIHelper
+#include "nsIFileURL.h"
 #include "nsIIOService.h"
 #include "nsIJARProtocolHandler.h"
+#include "nsIJARURI.h"
 #include "nsIStringEnumerator.h"
 #include "nsIZipReader.h"
+#include "nsJSUtils.h"
 #include "nsReadableUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -108,7 +114,7 @@ AddonManagerStartup::ProfileDir()
   return mProfileDir;
 }
 
-NS_IMPL_ISUPPORTS(AddonManagerStartup, amIAddonManagerStartup)
+NS_IMPL_ISUPPORTS(AddonManagerStartup, amIAddonManagerStartup, nsIObserver)
 
 
 /*****************************************************************************
@@ -268,6 +274,37 @@ GetJarCache()
   NS_TRY(jar->GetJARCache(getter_AddRefs(zipCache)));
 
   return Move(zipCache);
+}
+
+static Result<FileLocation, nsresult>
+GetFileLocation(nsIURI* uri)
+{
+  FileLocation location;
+
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(uri);
+  nsCOMPtr<nsIFile> file;
+  if (fileURL) {
+    NS_TRY(fileURL->GetFile(getter_AddRefs(file)));
+    location.Init(file);
+  } else {
+    nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri);
+    NS_ENSURE_TRUE(jarURI, Err(NS_ERROR_INVALID_ARG));
+
+    nsCOMPtr<nsIURI> fileURI;
+    NS_TRY(jarURI->GetJARFile(getter_AddRefs(fileURI)));
+
+    fileURL = do_QueryInterface(fileURI);
+    NS_ENSURE_TRUE(fileURL, Err(NS_ERROR_INVALID_ARG));
+
+    NS_TRY(fileURL->GetFile(getter_AddRefs(file)));
+
+    nsCString entry;
+    NS_TRY(jarURI->GetJAREntry(entry));
+
+    location.Init(file, entry.get());
+  }
+
+  return Move(location);
 }
 
 
@@ -767,6 +804,179 @@ AddonManagerStartup::Reset()
 
   mExtensionPaths.Clear();
   mThemePaths.Clear();
+
+  return NS_OK;
+}
+
+
+/******************************************************************************
+ * RegisterChrome
+ ******************************************************************************/
+
+namespace {
+static bool sObserverRegistered;
+
+class RegistryEntries final : public nsIJSRAIIHelper
+                            , public LinkedListElement<RegistryEntries>
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIJSRAIIHELPER
+
+  using Override = AutoTArray<nsCString, 2>;
+  using Locale = AutoTArray<nsCString, 3>;
+
+  RegistryEntries(FileLocation& location, nsTArray<Override>&& overrides, nsTArray<Locale>&& locales)
+    : mLocation(location)
+    , mOverrides(Move(overrides))
+    , mLocales(Move(locales))
+  {}
+
+  void Register();
+
+protected:
+  virtual ~RegistryEntries()
+  {
+    Unused << Destruct();
+  }
+
+private:
+  FileLocation mLocation;
+  const nsTArray<Override> mOverrides;
+  const nsTArray<Locale> mLocales;
+};
+
+NS_IMPL_ISUPPORTS(RegistryEntries, nsIJSRAIIHelper)
+
+void
+RegistryEntries::Register()
+{
+  RefPtr<nsChromeRegistry> cr = nsChromeRegistry::GetSingleton();
+
+  nsChromeRegistry::ManifestProcessingContext context(NS_EXTENSION_LOCATION, mLocation);
+
+  for (auto& override : mOverrides) {
+    const char* args[] = {override[0].get(), override[1].get()};
+    cr->ManifestOverride(context, 0, const_cast<char**>(args), 0);
+  }
+
+  for (auto& locale : mLocales) {
+    const char* args[] = {locale[0].get(), locale[1].get(), locale[2].get()};
+    cr->ManifestLocale(context, 0, const_cast<char**>(args), 0);
+  }
+}
+
+NS_IMETHODIMP
+RegistryEntries::Destruct()
+{
+  if (isInList()) {
+    remove();
+
+    // When we remove dynamic entries from the registry, we need to rebuild it
+    // in order to ensure a consistent state. See comments in Observe().
+    RefPtr<nsChromeRegistry> cr = nsChromeRegistry::GetSingleton();
+    return cr->CheckForNewChrome();
+  }
+  return NS_OK;
+}
+
+static LinkedList<RegistryEntries>&
+GetRegistryEntries()
+{
+  static LinkedList<RegistryEntries> sEntries;
+  return sEntries;
+}
+}; // anonymous namespace
+
+NS_IMETHODIMP
+AddonManagerStartup::RegisterChrome(nsIURI* manifestURI, JS::HandleValue locations,
+                                    JSContext* cx, nsIJSRAIIHelper** result)
+{
+  auto IsArray = [cx] (JS::HandleValue val) -> bool {
+    bool isArray;
+    return JS_IsArrayObject(cx, val, &isArray) && isArray;
+  };
+
+  NS_ENSURE_ARG_POINTER(manifestURI);
+  NS_ENSURE_TRUE(IsArray(locations), NS_ERROR_INVALID_ARG);
+
+  FileLocation location;
+  MOZ_TRY_VAR(location, GetFileLocation(manifestURI));
+
+
+  nsTArray<RegistryEntries::Locale> locales;
+  nsTArray<RegistryEntries::Override> overrides;
+
+  JS::RootedObject locs(cx, &locations.toObject());
+  JS::RootedValue arrayVal(cx);
+  JS::RootedObject array(cx);
+
+  for (auto elem : ArrayIter(cx, locs)) {
+    arrayVal = elem.Value();
+    NS_ENSURE_TRUE(IsArray(arrayVal), NS_ERROR_INVALID_ARG);
+
+    array = &arrayVal.toObject();
+
+    AutoTArray<nsCString, 4> vals;
+    for (auto val : ArrayIter(cx, array)) {
+      nsAutoJSString str;
+      NS_ENSURE_TRUE(str.init(cx, val.Value()), NS_ERROR_OUT_OF_MEMORY);
+
+      vals.AppendElement(NS_ConvertUTF16toUTF8(str));
+    }
+    NS_ENSURE_TRUE(vals.Length() > 0, NS_ERROR_INVALID_ARG);
+
+    nsCString type = vals[0];
+    vals.RemoveElementAt(0);
+
+    if (type.EqualsLiteral("override")) {
+      NS_ENSURE_TRUE(vals.Length() == 2, NS_ERROR_INVALID_ARG);
+      overrides.AppendElement(vals);
+    } else if (type.EqualsLiteral("locale")) {
+      NS_ENSURE_TRUE(vals.Length() == 3, NS_ERROR_INVALID_ARG);
+      locales.AppendElement(vals);
+    } else {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  if (!sObserverRegistered) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    NS_ENSURE_TRUE(obs, NS_ERROR_UNEXPECTED);
+    obs->AddObserver(this, "chrome-manifests-loaded", false);
+
+    sObserverRegistered = true;
+  }
+
+  auto entry = MakeRefPtr<RegistryEntries>(location,
+                                           Move(overrides),
+                                           Move(locales));
+
+  entry->Register();
+  GetRegistryEntries().insertBack(entry);
+
+  entry.forget(result);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AddonManagerStartup::Observe(nsISupports* subject, const char* topic, const char16_t* data)
+{
+  // The chrome registry is maintained as a set of global resource mappings
+  // generated mainly from manifest files, on-the-fly, as they're parsed.
+  // Entries added later override entries added earlier, and no record is kept
+  // of the former state.
+  //
+  // As a result, if we remove a dynamically-added manifest file, or a set of
+  // dynamic entries, the registry needs to be rebuilt from scratch, from the
+  // manifests and dynamic entries that remain. The chrome registry itself
+  // takes care of re-parsing manifes files. This observer notification lets
+  // us know when we need to re-register our dynamic entries.
+  if (!strcmp(topic, "chrome-manifests-loaded")) {
+    for (auto entry : GetRegistryEntries()) {
+      entry->Register();
+    }
+  }
 
   return NS_OK;
 }
