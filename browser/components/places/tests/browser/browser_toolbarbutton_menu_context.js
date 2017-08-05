@@ -18,6 +18,9 @@ add_task(async function testPopup() {
 
 async function checkPopupContextMenu() {
   let clickTarget = bookmarksMenuButton;
+  if (!AppConstants.MOZ_PHOTON_THEME) {
+    clickTarget = document.getAnonymousElementByAttribute(bookmarksMenuButton, "anonid", "dropmarker");
+  }
   BMB_menuPopup.setAttribute("style", "transition: none;");
   let popupShownPromise = onPopupEvent(BMB_menuPopup, "shown");
   EventUtils.synthesizeMouseAtCenter(clickTarget, {});

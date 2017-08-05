@@ -1,5 +1,183 @@
 /* Menu panel and palette styles */
 
+%ifndef MOZ_PHOTON_THEME
+toolbaritem[sdkstylewidget="true"] > toolbarbutton,
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > :-moz-any(@primaryToolbarButtons@) {
+  list-style-image: url(chrome://browser/skin/menuPanel.svg);
+}
+
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"][panel-multiview-anchor=true] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  filter: url(chrome://global/skin/filters.svg#fill);
+  fill: currentColor;
+}
+
+#home-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #home-button {
+  -moz-image-region: rect(0px, 128px, 32px, 96px);
+}
+
+#bookmarks-menu-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
+  -moz-image-region: rect(0px, 192px, 32px, 160px);
+}
+
+#history-panelmenu[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #history-panelmenu {
+  -moz-image-region: rect(0px, 224px, 32px, 192px);
+}
+
+#downloads-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #downloads-button {
+  -moz-image-region: rect(0px, 256px, 32px, 224px);
+}
+
+#add-ons-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #add-ons-button {
+  -moz-image-region: rect(0px, 288px, 32px, 256px);
+}
+
+#open-file-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #open-file-button {
+  -moz-image-region: rect(0px, 320px, 32px, 288px);
+}
+
+#save-page-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #save-page-button {
+  -moz-image-region: rect(0px, 352px, 32px, 320px);
+}
+
+#sync-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #sync-button {
+  -moz-image-region: rect(0px, 1024px, 32px, 992px);
+}
+
+#containers-panelmenu[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #containers-panelmenu {
+  -moz-image-region: rect(0px, 1056px, 32px, 1024px);
+}
+
+#feed-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #feed-button {
+  -moz-image-region: rect(0px, 416px, 32px, 384px);
+}
+
+#social-share-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #social-share-button {
+  -moz-image-region: rect(0px, 448px, 32px, 416px);
+}
+
+#characterencoding-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #characterencoding-button {
+  -moz-image-region: rect(0px, 480px, 32px, 448px);
+}
+
+#new-window-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #new-window-button {
+  -moz-image-region: rect(0px, 512px, 32px, 480px);
+}
+
+#e10s-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #e10s-button {
+  -moz-image-region: rect(0px, 512px, 32px, 480px);
+}
+
+#new-tab-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #new-tab-button {
+  -moz-image-region: rect(0px, 544px, 32px, 512px);
+}
+
+#privatebrowsing-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #privatebrowsing-button {
+  -moz-image-region: rect(0px, 576px, 32px, 544px);
+}
+
+#find-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #find-button {
+  -moz-image-region: rect(0px, 640px, 32px, 608px);
+}
+
+#print-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #print-button {
+  -moz-image-region: rect(0px, 672px, 32px, 640px);
+}
+
+#fullscreen-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #fullscreen-button {
+  -moz-image-region: rect(0px, 704px, 32px, 672px);
+}
+
+#developer-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #developer-button {
+  -moz-image-region: rect(0px, 736px, 32px, 704px);
+}
+
+#preferences-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #preferences-button {
+  -moz-image-region: rect(0px, 768px, 32px, 736px);
+}
+
+#email-link-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #email-link-button {
+  -moz-image-region: rect(0, 800px, 32px, 768px);
+}
+
+#sidebar-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #sidebar-button {
+  -moz-image-region: rect(0, 864px, 32px, 832px);
+}
+
+#panic-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #panic-button {
+  -moz-image-region: rect(0, 896px, 32px, 864px);
+}
+
+#webide-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #webide-button {
+  -moz-image-region: rect(0px, 960px, 32px, 928px);
+}
+
+toolbaritem[sdkstylewidget="true"] > toolbarbutton {
+  -moz-image-region: rect(0, 832px, 32px, 800px);
+}
+
+/* Wide panel control icons */
+
+#edit-controls@inAnyPanel@ > toolbarbutton,
+#zoom-controls@inAnyPanel@ > toolbarbutton,
+toolbarpaletteitem[place="palette"] > #edit-controls > toolbarbutton,
+toolbarpaletteitem[place="palette"] > #zoom-controls > toolbarbutton {
+  list-style-image: url(chrome://browser/skin/menuPanel-small.svg);
+}
+
+#edit-controls@inAnyPanel@ > #cut-button,
+toolbarpaletteitem[place="palette"] > #edit-controls > #cut-button {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#edit-controls@inAnyPanel@ > #copy-button,
+toolbarpaletteitem[place="palette"] > #edit-controls > #copy-button {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+#edit-controls@inAnyPanel@ > #paste-button,
+toolbarpaletteitem[place="palette"] > #edit-controls > #paste-button {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+#zoom-controls@inAnyPanel@ > #zoom-out-button,
+toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
+  -moz-image-region: rect(0px, 80px, 16px, 64px);
+}
+
+#zoom-controls@inAnyPanel@ > #zoom-in-button,
+toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
+  -moz-image-region: rect(0px, 96px, 16px, 80px);
+}
+%endif
+
 #add-share-provider {
   list-style-image: url(chrome://browser/skin/menuPanel-small.svg);
   -moz-image-region: rect(0px, 96px, 16px, 80px);
@@ -107,6 +285,7 @@
   list-style-image: url("chrome://browser/skin/bookmark.svg");
 }
 
+%ifdef MOZ_PHOTON_THEME
 #bookmarks-menu-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
   list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
@@ -119,3 +298,4 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
 #appMenuRestoreLastSession {
   list-style-image: url("chrome://browser/skin/reload.svg");
 }
+%endif

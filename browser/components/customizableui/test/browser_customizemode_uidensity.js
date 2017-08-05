@@ -116,10 +116,20 @@ async function testModeMenuitem(mode, modePref) {
 }
 
 add_task(async function test_compact_mode_menuitem() {
+  if (!AppConstants.MOZ_PHOTON_THEME) {
+    ok(true, "Skipping test because Photon is not enabled.");
+    return;
+  }
+
   await testModeMenuitem("compact", window.gUIDensity.MODE_COMPACT);
 });
 
 add_task(async function test_touch_mode_menuitem() {
+  if (!AppConstants.MOZ_PHOTON_THEME) {
+    ok(true, "Skipping test because Photon is not enabled.");
+    return;
+  }
+
   // OSX doesn't get touch mode for now.
   if (AppConstants.platform == "macosx") {
     is(document.getElementById("customization-uidensity-menuitem-touch"), null,
