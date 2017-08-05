@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/layers/TextureClient.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -41,6 +42,8 @@ public:
   {}
 
   nsIntRegion mRegionToDraw;
+  RefPtr<TextureClient> mTextureClient;
+  RefPtr<TextureClient> mTextureClientOnWhite;
   RefPtr<gfx::DrawTargetCapture> mCapture;
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTarget> mTargetOnWhite;

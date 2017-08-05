@@ -186,7 +186,14 @@ RefPtr<CapturedPaintState>
 ContentClientRemoteBuffer::BorrowDrawTargetForRecording(PaintState& aPaintState,
                                                         RotatedContentBuffer::DrawIterator* aIter)
 {
-  return RotatedContentBuffer::BorrowDrawTargetForRecording(aPaintState, aIter);
+  RefPtr<CapturedPaintState> cps = RotatedContentBuffer::BorrowDrawTargetForRecording(aPaintState, aIter);
+  if (!cps) {
+    return nullptr;
+  }
+
+  cps->mTextureClient = mTextureClient;
+  cps->mTextureClientOnWhite = mTextureClientOnWhite;
+  return cps.forget();
 }
 
 class RemoteBufferReadbackProcessor : public TextureReadbackSink

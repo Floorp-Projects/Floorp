@@ -15,6 +15,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/PaintThread.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
@@ -380,6 +381,9 @@ DeallocateTextureClient(TextureDeallocParams params)
 
 void TextureClient::Destroy()
 {
+  // Async paints should have been flushed by now.
+  MOZ_RELEASE_ASSERT(mPaintThreadRefs == 0);
+
   if (mActor && !mIsLocked) {
     mActor->Lock();
   }
@@ -605,6 +609,9 @@ TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
 
 TextureClient::~TextureClient()
 {
+  // TextureClients should be kept alive while there are references on the
+  // paint thread.
+  MOZ_ASSERT(mPaintThreadRefs == 0);
   mReadLock = nullptr;
   Destroy();
 }
@@ -1699,6 +1706,21 @@ TextureClient::EnableBlockingReadLock()
   if (!mReadLock) {
     mReadLock = new CrossProcessSemaphoreReadLock();
   }
+}
+
+void
+TextureClient::AddPaintThreadRef()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mPaintThreadRefs += 1;
+}
+
+void
+TextureClient::DropPaintThreadRef()
+{
+  MOZ_RELEASE_ASSERT(PaintThread::IsOnPaintThread());
+  MOZ_RELEASE_ASSERT(mPaintThreadRefs >= 1);
+  mPaintThreadRefs -= 1;
 }
 
 bool
