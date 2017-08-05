@@ -6,10 +6,12 @@
 
 #include <functional>
 #include <memory>
+#include <vector>
 #include "secerr.h"
 #include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
+#include "ssl3prot.h"
 
 extern "C" {
 // This is not something that should make you happy.
@@ -321,6 +323,42 @@ TEST_F(TlsConnectStreamTls13, NegotiateShortHeaders) {
   client_->ExpectShortHeaders();
   server_->ExpectShortHeaders();
   Connect();
+}
+
+TEST_F(TlsConnectStreamTls13, ClientAltHandshakeType) {
+  client_->SetAltHandshakeTypeEnabled();
+  auto filter = std::make_shared<TlsHeaderRecorder>();
+  server_->SetPacketFilter(filter);
+  Connect();
+  ASSERT_EQ(kTlsHandshakeType, filter->header(0)->content_type());
+}
+
+TEST_F(TlsConnectStreamTls13, ServerAltHandshakeType) {
+  server_->SetAltHandshakeTypeEnabled();
+  auto filter = std::make_shared<TlsHeaderRecorder>();
+  server_->SetPacketFilter(filter);
+  Connect();
+  ASSERT_EQ(kTlsHandshakeType, filter->header(0)->content_type());
+}
+
+TEST_F(TlsConnectStreamTls13, BothAltHandshakeType) {
+  client_->SetAltHandshakeTypeEnabled();
+  server_->SetAltHandshakeTypeEnabled();
+  auto header_filter = std::make_shared<TlsHeaderRecorder>();
+  auto sh_filter = std::make_shared<TlsInspectorRecordHandshakeMessage>(
+      kTlsHandshakeServerHello);
+  std::vector<std::shared_ptr<PacketFilter>> filters = {header_filter,
+                                                        sh_filter};
+  auto chained = std::make_shared<ChainedPacketFilter>(filters);
+  server_->SetPacketFilter(chained);
+  header_filter->SetAgent(server_.get());
+  header_filter->EnableDecryption();
+  Connect();
+  ASSERT_EQ(kTlsAltHandshakeType, header_filter->header(0)->content_type());
+  ASSERT_EQ(kTlsHandshakeType, header_filter->header(1)->content_type());
+  uint32_t ver;
+  ASSERT_TRUE(sh_filter->buffer().Read(0, 2, &ver));
+  ASSERT_EQ((uint32_t)(0x7a00 | TLS_1_3_DRAFT_VERSION), ver);
 }
 
 INSTANTIATE_TEST_CASE_P(

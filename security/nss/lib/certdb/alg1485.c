@@ -703,14 +703,19 @@ CERT_GetOidString(const SECItem* oid)
         return NULL;
     }
 
+    /* If the OID has length 1, we bail. */
+    if (oid->len < 2) {
+        return NULL;
+    }
+
     /* first will point to the next sequence of bytes to decode */
     first = (PRUint8*)oid->data;
     /* stop points to one past the legitimate data */
     stop = &first[oid->len];
 
     /*
-   * Check for our pseudo-encoded single-digit OIDs
-   */
+     * Check for our pseudo-encoded single-digit OIDs
+     */
     if ((*first == 0x80) && (2 == oid->len)) {
         /* Funky encoding.  The second byte is the number */
         rvString = PR_smprintf("%lu", (PRUint32)first[1]);
@@ -727,6 +732,10 @@ CERT_GetOidString(const SECItem* oid)
             if (0 == (*last & 0x80)) {
                 break;
             }
+        }
+        /* There's no first bit set, so this isn't valid. Bail.*/
+        if (last == stop) {
+            goto unsupported;
         }
         bytesBeforeLast = (unsigned int)(last - first);
         if (bytesBeforeLast <= 3U) { /* 0-28 bit number */
@@ -748,12 +757,12 @@ CERT_GetOidString(const SECItem* oid)
                 CASE(2, 0x7f);
                 CASE(1, 0x7f);
                 case 0:
-                    n |=
-                        last[0] & 0x7f;
+                    n |= last[0] & 0x7f;
                     break;
             }
-            if (last[0] & 0x80)
+            if (last[0] & 0x80) {
                 goto unsupported;
+            }
 
             if (!rvString) {
                 /* This is the first number.. decompose it */

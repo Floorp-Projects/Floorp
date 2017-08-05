@@ -784,7 +784,6 @@ var PlacesSearchBox = {
     }
 
     let currentView = ContentArea.currentView;
-    let currentOptions = PO.getCurrentOptions();
 
     // Search according to the current scope, which was set by
     // PQB_setScope()
@@ -793,6 +792,7 @@ var PlacesSearchBox = {
         currentView.applyFilter(filterString, this.folders);
         break;
       case "history": {
+        let currentOptions = PO.getCurrentOptions();
         if (currentOptions.queryType != Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
           let query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
@@ -810,20 +810,8 @@ var PlacesSearchBox = {
         break;
       }
       case "downloads": {
-        if (currentView == ContentTree.view) {
-          let query = PlacesUtils.history.getNewQuery();
-          query.searchTerms = filterString;
-          query.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD], 1);
-          let options = currentOptions.clone();
-          // Make sure we're getting uri results.
-          options.resultType = currentOptions.RESULTS_AS_URI;
-          options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
-          options.includeHidden = true;
-          currentView.load([query], options);
-        } else {
-          // The new downloads view doesn't use places for searching downloads.
-          currentView.searchTerm = filterString;
-        }
+        // The new downloads view doesn't use places for searching downloads.
+        currentView.searchTerm = filterString;
         break;
       }
       default:

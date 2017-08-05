@@ -31,6 +31,7 @@
 #include "ocsp.h"
 #include "ssl.h"
 #include "sslproto.h"
+#include "sslexp.h"
 #include "pk11func.h"
 #include "secmod.h"
 #include "plgetopt.h"
@@ -251,6 +252,7 @@ PrintParameterUsage(void)
                     "%-20s The following values are valid:\n"
                     "%-20s P256, P384, P521, x25519, FF2048, FF3072, FF4096, FF6144, FF8192\n",
             "-I", "", "");
+    fprintf(stderr, "%-20s Enable alternate content type for TLS 1.3 ServerHello\n", "-X alt-server-hello");
 }
 
 static void
@@ -914,6 +916,7 @@ char *requestString = NULL;
 PRInt32 requestStringLen = 0;
 PRBool requestSent = PR_FALSE;
 PRBool enableZeroRtt = PR_FALSE;
+PRBool enableAltServerHello = PR_FALSE;
 
 static int
 writeBytesToServer(PRFileDesc *s, const char *buf, int nb)
@@ -1173,6 +1176,16 @@ run_client(void)
         rv = SSL_OptionSet(s, SSL_ENABLE_0RTT_DATA, PR_TRUE);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "error enabling 0-RTT");
+            error = 1;
+            goto done;
+        }
+    }
+
+    /* Alternate ServerHello content type (TLS 1.3 only) */
+    if (enableAltServerHello) {
+        rv = SSL_UseAltServerHelloType(s, PR_TRUE);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "error enabling alternate ServerHello type");
             error = 1;
             goto done;
         }
@@ -1512,7 +1525,7 @@ main(int argc, char **argv)
     /* XXX: 'B' was used in the past but removed in 3.28,
      *      please leave some time before resuing it. */
     optstate = PL_CreateOptState(argc, argv,
-                                 "46A:CDFGHI:KL:M:OR:STUV:W:YZa:bc:d:fgh:m:n:op:qr:st:uvw:z");
+                                 "46A:CDFGHI:KL:M:OR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:z");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -1618,6 +1631,13 @@ main(int argc, char **argv)
                 }
                 break;
 
+            case 'X':
+                if (!strcmp(optstate->value, "alt-server-hello")) {
+                    enableAltServerHello = PR_TRUE;
+                } else {
+                    Usage(progName);
+                }
+                break;
             case 'Y':
                 PrintCipherUsage(progName);
                 exit(0);

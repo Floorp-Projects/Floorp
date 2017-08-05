@@ -2093,7 +2093,8 @@ var HistogramSection = {
 
     if (hgramsProcess === "parent") {
       histograms = aPayload.histograms;
-    } else if ("processes" in aPayload && hgramsProcess in aPayload.processes) {
+    } else if ("processes" in aPayload && hgramsProcess in aPayload.processes &&
+               "histograms" in aPayload.processes[hgramsProcess]) {
       histograms = aPayload.processes[hgramsProcess].histograms;
     }
 
@@ -2126,7 +2127,8 @@ var KeyedHistogramSection = {
     let keyedHgramsProcess = keyedHgramsOption.getAttribute("value");
     if (keyedHgramsProcess === "parent") {
       keyedHistograms = aPayload.keyedHistograms;
-    } else if ("processes" in aPayload && keyedHgramsProcess in aPayload.processes) {
+    } else if ("processes" in aPayload && keyedHgramsProcess in aPayload.processes &&
+               "keyedHistograms" in aPayload.processes[keyedHgramsProcess]) {
       keyedHistograms = aPayload.processes[keyedHgramsProcess].keyedHistograms;
     }
 

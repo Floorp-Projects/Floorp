@@ -66,7 +66,7 @@ The YAML definition file
 ========================
 
 Any event recorded into Firefox Telemetry must be registered before it can be recorded.
-This happens in `Events.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Events.yaml>`_.
+For any code that ships as part of Firefox that happens in `Events.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Events.yaml>`_.
 
 The probes in the definition file are represented in a fixed-depth, three-level structure. The first level contains *category* names (grouping multiple events together), the second level contains *event* names, under which the events properties are listed. E.g.:
 
@@ -155,6 +155,9 @@ Example:
   // event: [982134, "ui", "completion", "search-bar", "yahoo",
   //           {"qerylen": "7", "results": "23"}]
 
+``setEventRecordingEnabled()``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. code-block:: js
 
   Services.telemetry.setEventRecordingEnabled(category, enabled);
@@ -170,12 +173,49 @@ Example:
   Services.telemetry.setEventRecordingEnabled("ui", false);
   // ... now "ui" events will not be recorded anymore.
 
-Internal API
-~~~~~~~~~~~~
+``registerEvents()``
+~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: js
 
-  Services.telemetry.snapshotBuiltinEvents(dataset, clear);
+  Services.telemetry.registerEvents(category, eventData);
+
+Register new events from add-ons.
+
+* ``category`` - *(required, string)* The category the events are in.
+* ``eventData`` - *(required, object)* An object of the form ``{eventName1: event1Data, ...}``, where each events data is an object with the entries:
+
+  * ``methods`` - *(required, list of strings)* The valid event methods.
+  * ``objects`` - *(required, list of strings)* The valid event objects.
+  * ``extra_keys`` - *(optional, list of strings)* The valid extra keys for the event.
+  * ``record_on_release`` - *(optional, bool)*
+
+For events recorded from add-ons, registration happens at runtime. Any new events must first be registered through this function before they can be recorded.
+The registered categories will automatically be enabled for recording.
+
+After registration, the events can be recorded through the ``recordEvent()`` function. They will be submitted in the main pings payload under ``processes.dynamic.events``.
+
+New events registered here are subject to the same limitations as the ones registered through ``Events.yaml``, although the naming was in parts updated to recent policy changes.
+
+Example:
+
+.. code-block:: js
+
+  Services.telemetry.registerEvents("myAddon.interaction", {
+    "click": {
+      methods: ["click"],
+      objects: ["red_button", "blue_button"],
+    }
+  });
+  // Now events can be recorded.
+  Services.telemetry.recordEvent("myAddon.interaction", "click", "red_button");
+
+Internal API
+------------
+
+.. code-block:: js
+
+  Services.telemetry.snapshotEvents(dataset, clear);
   Services.telemetry.clearEvents();
 
 These functions are only supposed to be used by Telemetry internally or in tests.
@@ -186,3 +226,4 @@ Version History
 - Firefox 52: Initial event support (`bug 1302663 <https://bugzilla.mozilla.org/show_bug.cgi?id=1302663>`_).
 - Firefox 53: Event recording disabled by default (`bug 1329139 <https://bugzilla.mozilla.org/show_bug.cgi?id=1329139>`_).
 - Firefox 54: Added child process events (`bug 1313326 <https://bugzilla.mozilla.org/show_bug.cgi?id=1313326>`_).
+- Firefox 56: Added support for recording new probes from add-ons (`bug 1302681 <bug https://bugzilla.mozilla.org/show_bug.cgi?id=1302681>`_).

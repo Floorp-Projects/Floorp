@@ -306,30 +306,38 @@
     }
 
     /**
-     * Steal an element from other ARIA owns element. This use case guarantees
-     * that result of setAttribute/removeAttribute doesn't depend on their order.
+     * Attempt to steal an element from other ARIA owns element. This should
+     * not be possible. The only child that will get owned into this
+     * container is a previously not aria-owned one.
      */
     function stealFromOtherARIAOwns() {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, getNode("t3_container2"))
+        new invokerChecker(EVENT_REORDER, getNode("t3_container3"))
       ];
 
       this.invoke = function stealFromOtherARIAOwns_invoke() {
-        getNode("t3_container2").setAttribute("aria-owns", "t3_child");
+        getNode("t3_container3").setAttribute("aria-owns", "t3_child t3_child2");
       }
 
       this.finalCheck = function stealFromOtherARIAOwns_finalCheck() {
         var tree =
           { SECTION: [
+            { CHECKBUTTON: [
+            ] }
           ] };
         testAccessibleTree("t3_container1", tree);
+
+        tree =
+          { SECTION: [
+          ] };
+        testAccessibleTree("t3_container2", tree);
 
         tree =
           { SECTION: [
             { CHECKBUTTON: [
             ] }
           ] };
-        testAccessibleTree("t3_container2", tree);
+        testAccessibleTree("t3_container3", tree);
       }
 
       this.getID = function stealFromOtherARIAOwns_getID() {
@@ -339,27 +347,27 @@
 
     function appendElToRecacheChildren() {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, getNode("t3_container2"))
+        new invokerChecker(EVENT_REORDER, getNode("t3_container3"))
       ];
 
       this.invoke = function appendElToRecacheChildren_invoke() {
         var div = document.createElement("div");
         div.setAttribute("role", "radio")
-        getNode("t3_container2").appendChild(div);
+        getNode("t3_container3").appendChild(div);
       }
 
       this.finalCheck = function appendElToRecacheChildren_finalCheck() {
         var tree =
           { SECTION: [
           ] };
-        testAccessibleTree("t3_container1", tree);
+        testAccessibleTree("t3_container2", tree);
 
         tree =
           { SECTION: [
             { RADIOBUTTON: [ ] },
             { CHECKBUTTON: [ ] } // ARIA owned
           ] };
-        testAccessibleTree("t3_container2", tree);
+        testAccessibleTree("t3_container3", tree);
       }
 
       this.getID = function appendElToRecacheChildren_getID() {
@@ -749,7 +757,10 @@
 
   <div id="t3_container1" aria-owns="t3_child"></div>
   <div id="t3_child" role="checkbox"></div>
-  <div id="t3_container2"></div>
+  <div id="t3_container2">
+    <div id="t3_child2" role="checkbox"></div>
+  </div>
+  <div id="t3_container3"></div>
 
   <div id="t4_container1" aria-owns="t4_child1 t4_child2"></div>
   <div id="t4_container2">
