@@ -8,7 +8,7 @@
 #include "nsXULAppAPI.h"
 
 #include "nsPrefBranch.h"
-#include "nsILocalFile.h" // nsILocalFile used for backwards compatibility
+#include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -350,8 +350,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     return rv;
   }
 
-  // also check nsILocalFile, for backwards compatibility
-  if (aType.Equals(NS_GET_IID(nsIFile)) || aType.Equals(NS_GET_IID(nsILocalFile))) {
+  if (aType.Equals(NS_GET_IID(nsIFile))) {
     if (GetContentChild()) {
       NS_ERROR("cannot get nsIFile pref from content process");
       return NS_ERROR_NOT_AVAILABLE;
@@ -500,8 +499,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
   nsresult   rv = NS_NOINTERFACE;
 
-  // also check nsILocalFile, for backwards compatibility
-  if (aType.Equals(NS_GET_IID(nsIFile)) || aType.Equals(NS_GET_IID(nsILocalFile))) {
+  if (aType.Equals(NS_GET_IID(nsIFile))) {
     nsCOMPtr<nsIFile> file = do_QueryInterface(aValue);
     if (!file)
       return NS_NOINTERFACE;

@@ -6,7 +6,6 @@
 #ifndef nsCheckSummedOutputStream_h__
 #define nsCheckSummedOutputStream_h__
 
-#include "nsILocalFile.h"
 #include "nsIFile.h"
 #include "nsIOutputStream.h"
 #include "nsICryptoHash.h"
