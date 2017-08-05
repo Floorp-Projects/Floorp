@@ -23,25 +23,7 @@
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
   --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
 
-%ifdef MOZ_PHOTON_THEME
   --toolbarbutton-border-radius: 4px;
-%else
-  --toolbarbutton-border-radius: 1px;
-
-  --backbutton-background: rgba(255,255,255,.15);
-  --backbutton-border-color: var(--urlbar-border-color-hover);
-
-  --toolbarbutton-hover-background: rgba(255,255,255,.5) linear-gradient(rgba(255,255,255,.5), transparent);
-  --toolbarbutton-hover-bordercolor: rgba(0,0,0,.25);
-  --toolbarbutton-hover-boxshadow: none;
-
-  --toolbarbutton-active-background: rgba(154,154,154,.5) linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.4));
-  --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
-  --toolbarbutton-active-boxshadow: 0 1px 1px rgba(0,0,0,.1) inset, 0 0 1px rgba(0,0,0,.3) inset;
-
-  --toolbarbutton-checkedhover-backgroundcolor: rgba(200,200,200,.5);
-%endif
-
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
 
   --panel-separator-color: ThreeDShadow;
@@ -279,8 +261,6 @@ menuitem.bookmark-item {
 
 %include ../shared/urlbar-searchbar.inc.css
 
-%ifdef MOZ_PHOTON_THEME
-
 #urlbar:not(:-moz-lwtheme):not([focused="true"]),
 .searchbar-textbox:not(:-moz-lwtheme):not([focused="true"]) {
   border-color: ThreeDShadow;
@@ -290,44 +270,6 @@ menuitem.bookmark-item {
 .searchbar-textbox[focused="true"] {
   border-color: Highlight;
 }
-
-%else
-
-#main-window {
-  --urlbar-border-color: ThreeDShadow;
-  --urlbar-border-color-hover: var(--urlbar-border-color);
-}
-
-#navigator-toolbox:-moz-lwtheme {
-  --urlbar-border-color: rgba(0,0,0,.3);
-}
-
-#urlbar,
-.searchbar-textbox {
-  -moz-appearance: none;
-  padding: 0;
-  border: 1px solid var(--urlbar-border-color);
-  border-radius: 2px;
-  background-clip: padding-box;
-  margin: 0 3px;
-}
-
-#urlbar[focused],
-.searchbar-textbox[focused] {
-  border-color: Highlight;
-}
-
-#urlbar:-moz-lwtheme,
-.searchbar-textbox:-moz-lwtheme {
-  background-color: rgba(255,255,255,.8);
-  color: black;
-}
-
-#urlbar:-moz-lwtheme[focused=true],
-.searchbar-textbox:-moz-lwtheme[focused=true] {
-  background-color: white;
-}
-%endif
 
 .urlbar-textbox-container {
   -moz-appearance: none;
@@ -347,38 +289,6 @@ menuitem.bookmark-item {
 #navigator-toolbox:not(:hover) #nav-bar:not([customizing="true"]) #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
   opacity: 0;
 }
-
-%ifndef MOZ_PHOTON_THEME
-@conditionalForwardWithUrlbar@ > #urlbar {
-  border-inline-start: none;
-  margin-left: 0;
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar:-moz-locale-dir(ltr) {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar:-moz-locale-dir(rtl) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-@conditionalForwardWithUrlbar@ {
-  clip-path: url("chrome://browser/content/browser.xul#urlbar-back-button-clip-path");
-  margin-inline-start: calc(-1 * var(--backbutton-urlbar-overlap));
-}
-
-@conditionalForwardWithUrlbar@:-moz-locale-dir(rtl),
-@conditionalForwardWithUrlbar@ > #urlbar:-moz-locale-dir(rtl) {
-  /* let urlbar-back-button-clip-path clip the urlbar's right side for RTL */
-  transform: scaleX(-1);
-}
-
-@conditionalForwardWithUrlbar@:-moz-locale-dir(rtl) {
-  -moz-box-direction: reverse;
-}
-%endif
 
 #urlbar-icons {
   -moz-box-align: center;
@@ -734,119 +644,6 @@ html|span.ac-emphasize-text-url {
   border-top: 1px solid GrayText;
 }
 
-%ifndef MOZ_PHOTON_THEME
-/* Combined go/reload/stop button in location bar */
-
-#urlbar-go-button,
-#reload-button,
-#stop-button {
-  -moz-appearance: none;
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  padding: 0 9px;
-  margin-inline-start: 5px;
-  border-inline-start: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%,
-                                var(--urlbar-separator-color) 15%,
-                                var(--urlbar-separator-color) 85%,
-                                transparent 85%);
-  border-image-slice: 1;
-}
-
-#reload-button {
-  -moz-image-region: rect(0, 14px, 14px, 0);
-}
-
-#reload-button:not([disabled]):hover {
-  -moz-image-region: rect(14px, 14px, 28px, 0);
-}
-
-#reload-button:not([disabled]):hover:active {
-  -moz-image-region: rect(28px, 14px, 42px, 0);
-}
-
-#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
-#urlbar-go-button {
-  -moz-image-region: rect(0, 42px, 14px, 28px);
-}
-
-#urlbar-go-button:hover {
-  -moz-image-region: rect(14px, 42px, 28px, 28px);
-}
-
-#urlbar-go-button:hover:active {
-  -moz-image-region: rect(28px, 42px, 42px, 28px);
-}
-
-#urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
-#stop-button {
-  -moz-image-region: rect(0, 28px, 14px, 14px);
-}
-
-#stop-button:not([disabled]):hover {
-  -moz-image-region: rect(14px, 28px, 28px, 14px);
-}
-
-#stop-button:hover:active {
-  -moz-image-region: rect(28px, 28px, 42px, 14px);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #urlbar-go-button,
-  #reload-button,
-  #stop-button {
-    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
-  }
-
-  #urlbar-go-button > .toolbarbutton-icon,
-  #reload-button > .toolbarbutton-icon,
-  #stop-button > .toolbarbutton-icon {
-    width: 14px;
-  }
-
-  #urlbar-go-button {
-    -moz-image-region: rect(0, 84px, 28px, 56px);
-  }
-
-  #urlbar-go-button:hover {
-    -moz-image-region: rect(28px, 84px, 56px, 56px);
-  }
-
-  #urlbar-go-button:hover:active {
-    -moz-image-region: rect(56px, 84px, 84px, 56px);
-  }
-
-  #reload-button {
-    -moz-image-region: rect(0, 28px, 28px, 0);
-  }
-
-  #reload-button:not([disabled]):hover {
-    -moz-image-region: rect(28px, 28px, 56px, 0);
-  }
-
-  #reload-button:not([disabled]):hover:active {
-    -moz-image-region: rect(56px, 28px, 84px, 0);
-  }
-
-  #stop-button {
-    -moz-image-region: rect(0, 56px, 28px, 28px);
-  }
-
-  #stop-button:not([disabled]):hover {
-    -moz-image-region: rect(28px, 56px, 56px, 28px);
-  }
-
-  #stop-button:hover:active {
-    -moz-image-region: rect(56px, 56px, 84px, 28px);
-  }
-}
-%endif
-
 /* Popup blocker button */
 #page-report-button {
   list-style-image: url("chrome://browser/skin/Info.png");
@@ -1112,48 +909,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 /* Customization mode */
 
 %include ../shared/customizableui/customizeMode.inc.css
-
-%ifndef MOZ_PHOTON_THEME
-#main-window[customize-entered] > #tab-view-deck {
-  background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
-                    linear-gradient(to bottom, #bcbcbc, #b5b5b5);
-  background-attachment: fixed;
-}
-
-#main-window[customization-lwtheme]:-moz-lwtheme {
-  background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
-                    url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),
-                    linear-gradient(to bottom, #bcbcbc, #b5b5b5);
-  background-color: #b5b5b5;
-  background-repeat: repeat;
-  background-attachment: fixed;
-  background-position: left top;
-}
-
-#main-window[customize-entered] #browser-bottombox,
-#main-window[customize-entered] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar),
-#main-window[customize-entered] #customization-container {
-  border: 3px solid hsla(0,0%,0%,.1);
-  border-top-width: 0;
-  background-clip: padding-box;
-  background-origin: padding-box;
-  -moz-border-right-colors: hsla(0,0%,0%,.05) hsla(0,0%,0%,.1) hsla(0,0%,0%,.2);
-  -moz-border-bottom-colors: hsla(0,0%,0%,.05) hsla(0,0%,0%,.1) hsla(0,0%,0%,.2);
-  -moz-border-left-colors: hsla(0,0%,0%,.05) hsla(0,0%,0%,.1) hsla(0,0%,0%,.2);
-}
-
-#main-window[customize-entered] #customization-container,
-#main-window[customize-entered] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
-  border-bottom-width: 0;
-}
-
-#main-window[customize-entered] #TabsToolbar {
-  -moz-appearance: none;
-  background-clip: padding-box;
-  border-right: 3px solid transparent;
-  border-left: 3px solid transparent;
-}
-%endif
 
 /* End customization mode */
 

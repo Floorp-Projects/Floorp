@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%ifdef MOZ_PHOTON_THEME
-
 #urlbar,
 .searchbar-textbox {
   -moz-appearance: none;
@@ -35,8 +33,6 @@
   background-color: white;
 }
 
-%endif
-
 :root[uidensity=compact] #urlbar,
 :root[uidensity=compact] .searchbar-textbox {
   min-height: 26px;
@@ -64,7 +60,6 @@
   -moz-appearance: none;
 }
 
-%ifdef MOZ_PHOTON_THEME
 /* Page action panel */
 .pageAction-panel-button > .toolbarbutton-icon {
   width: 16px;
@@ -202,7 +197,6 @@
   animation-name: bookmark-animation-rtl;
 }
 %endif /* MOZ_PHOTON_ANIMATIONS */
-%endif /* MOZ_PHOTON_THEME */
 
 /* Zoom button */
 #urlbar-zoom-button {

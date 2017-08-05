@@ -162,8 +162,7 @@ var PocketPageAction = {
 
   get shouldUse() {
     return !Services.prefs.getBranch(PREF_BRANCH)
-                    .getBoolPref("disablePageAction", false) &&
-           AppConstants.MOZ_PHOTON_THEME;
+                    .getBoolPref("disablePageAction", false);
   },
 
   get enabled() {

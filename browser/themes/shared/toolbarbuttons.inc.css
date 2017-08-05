@@ -2,15 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%ifndef MOZ_PHOTON_THEME
-%filter substitution
-%define toolbarShadowColor hsla(209,67%,12%,0.35)
-%define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
-%endif
-
 :root {
-%ifdef MOZ_PHOTON_THEME
   --toolbarbutton-hover-background: hsla(240,5%,5%,.1);
   --toolbarbutton-active-background: hsla(240,5%,5%,.15);
 
@@ -21,14 +13,6 @@
   --backbutton-active-background: var(--toolbarbutton-active-background);
 
   --backbutton-border-color: hsla(240,5%,5%,.3);
-%else
-  --backbutton-urlbar-overlap: 6px;
-
-  /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
-  --forwardbutton-width: 25px;
-
-  --toolbarbutton-inner-padding: 3px;
-%endif
 %ifdef MOZ_PHOTON_ANIMATIONS
   /* This default value of --toolbarbutton-height is defined to prevent
      CSS errors for an invalid variable. The value should not get used,
@@ -42,19 +26,6 @@
   --toolbarbutton-inner-padding: 9px;
 }
 
-%ifndef MOZ_PHOTON_THEME
-toolbar:-moz-lwtheme {
-  --toolbarbutton-hover-background: rgba(255,255,255,.25);
-  --toolbarbutton-active-background: rgba(70%,70%,70%,.25);
-
-  --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
-
-  --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
-  --toolbarbutton-active-boxshadow: 0 0 2px rgba(0,0,0,.6) inset;
-
-  --toolbarbutton-checkedhover-backgroundcolor: rgba(85%,85%,85%,.25);
-}
-%else
 toolbar[brighttext] {
   --toolbarbutton-hover-background: hsla(0,0%,100%,.2);
   --toolbarbutton-active-background: hsla(0,0%,100%,.3);
@@ -63,7 +34,6 @@ toolbar[brighttext] {
   --backbutton-hover-background: var(--toolbarbutton-active-background);
   --backbutton-active-background: hsla(0,0%,100%,.4);
 }
-%endif
 
 /* ::::: primary toolbar buttons ::::: */
 
@@ -141,35 +111,20 @@ toolbar[brighttext] {
   margin-top: -8px;
 }
 
-%ifndef MOZ_PHOTON_THEME
-@conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon,
-%endif
 .findbar-button > .toolbarbutton-text,
 toolbarbutton.bookmark-item:not(.subviewbutton),
 #nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-badge-stack {
-%ifdef MOZ_PHOTON_THEME
   padding: var(--toolbarbutton-inner-padding);
-%else
-  padding: var(--toolbarbutton-inner-padding) 7px;
-  background-origin: padding-box !important;
-  background-clip: padding-box !important;
-  border: 1px solid transparent;
-%endif
   border-radius: var(--toolbarbutton-border-radius);
   transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-icon {
-%ifdef MOZ_PHOTON_THEME
   /* horizontal padding + actual icon width */
   max-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
-%else
-  /* Before Photon horizontal padding is 7px, but --toolbarbutton-inner-padding is set to 3px */
-  max-width: 32px;
-%endif
 }
 
 .bookmark-item > .toolbarbutton-menu-dropmarker,
@@ -181,19 +136,11 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
 #nav-bar .toolbarbutton-1 > .toolbarbutton-text {
   padding-top: var(--toolbarbutton-vertical-text-padding);
   padding-bottom: 0;
-%ifdef MOZ_PHOTON_THEME
   /* To make the hover feedback line up with sibling buttons, it needs the same
    * height as the button icons and the same vertical padding, but as a minimum,
    * because otherwise an increase in text sizes would break things.
    */
   min-height: calc(16px + 2 * var(--toolbarbutton-inner-padding));
-%else
-  /* To make the hover feedback line up with sibling buttons, it needs the same
-   * height (16px) + padding (2 * 3px) + border (2 * 1px), but as a minimum
-   * because otherwise an increase in text sizes would break things.
-   */
-  min-height: calc(18px + 2 * var(--toolbarbutton-inner-padding));
-%endif
 }
 
 #nav-bar .toolbaritem-combined-buttons {
@@ -232,13 +179,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-stack {
-%ifdef MOZ_PHOTON_THEME
   background-color: var(--toolbarbutton-hover-background);
-%else
-  background: var(--toolbarbutton-hover-background);
-  border-color: var(--toolbarbutton-hover-bordercolor);
-  box-shadow: var(--toolbarbutton-hover-boxshadow);
-%endif
   color: inherit;
 }
 
@@ -248,69 +189,15 @@ toolbarbutton.bookmark-item[open="true"],
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
-%ifdef MOZ_PHOTON_THEME
   background-color: var(--toolbarbutton-active-background);
-%else
-  background: var(--toolbarbutton-active-background);
-  border-color: var(--toolbarbutton-active-bordercolor);
-  box-shadow: var(--toolbarbutton-active-boxshadow);
-%endif
   transition-duration: 10ms;
   color: inherit;
 }
 
 #nav-bar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
-%ifdef MOZ_PHOTON_THEME
   background-color: var(--toolbarbutton-hover-background);
-%else
-  background-color: var(--toolbarbutton-checkedhover-backgroundcolor);
-%endif
   transition: background-color .4s;
 }
-
-%ifndef MOZ_PHOTON_THEME
-/* unified back/forward button */
-
-:-moz-any(#back-button, #forward-button) > .toolbarbutton-icon {
-  border-color: var(--backbutton-border-color) !important;
-  background: var(--backbutton-background);
-}
-
-#forward-button {
-  -moz-box-align: stretch; /* let the button shape grow vertically with the location bar */
-  padding: 0 !important;
-}
-
-#forward-button > menupopup {
-  margin-top: 1px !important;
-}
-
-#forward-button > .toolbarbutton-icon {
-  border-left-style: none !important;
-  border-radius: 0 !important;
-  padding-left: calc(var(--backbutton-urlbar-overlap) + 4px) !important;
-  padding-right: 4px !important;
-  max-width: calc(var(--forwardbutton-width) + var(--backbutton-urlbar-overlap)) !important;
-}
-
-@conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
-  transition: margin-left @forwardTransitionLength@ ease-out;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] {
-  margin-left: calc(0px - var(--forwardbutton-width) - var(--backbutton-urlbar-overlap));
-}
-
-@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] {
-  /* delay the hiding of the forward button when hovered to avoid accidental clicks on the url bar */
-  transition-delay: 100s;
-}
-
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] {
-  /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
-  margin-left: calc(-0.01px - var(--forwardbutton-width) - var(--backbutton-urlbar-overlap));
-}
-%endif
 
 :root:not([uidensity=compact]) #back-button {
   padding-top: 3px;
@@ -331,12 +218,10 @@ toolbarbutton.bookmark-item[open="true"],
 }
 
 :root:not([uidensity=compact]) #back-button > .toolbarbutton-icon {
-%ifdef MOZ_PHOTON_THEME
   background-color: var(--backbutton-background);
   background-origin: padding-box;
   background-clip: padding-box;
   border: 1px solid var(--backbutton-border-color);
-%endif
   border-radius: 10000px;
   max-width: 32px;
   padding: 7px;
@@ -352,7 +237,6 @@ toolbarbutton.bookmark-item[open="true"],
   padding: 10px;
 }
 
-%ifdef MOZ_PHOTON_THEME
 :root:not([uidensity=compact]) #back-button:not([disabled]):not([open]):hover > .toolbarbutton-icon {
   background-color: var(--backbutton-hover-background) !important;
   box-shadow: 0 1px 6px hsla(0,0%,0%,.1);
@@ -364,7 +248,6 @@ toolbarbutton.bookmark-item[open="true"],
   background-color: var(--backbutton-active-background) !important;
   border-color: hsla(240,5%,5%,.40);
 }
-%endif
 
 /* bookmarks menu button */
 

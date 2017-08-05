@@ -213,11 +213,7 @@
 }
 /* SECURITY */
 .identity-popup-connection-secure {
-%ifdef MOZ_PHOTON_THEME
   color: #058B00;
-%else
-  color: #418220;
-%endif
 }
 .identity-popup-connection-not-secure {
   color: #d74345;
@@ -239,11 +235,7 @@
 #identity-popup[connection^=secure] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/connection.svg#connection-secure);
   -moz-context-properties: fill;
-%ifdef MOZ_PHOTON_THEME
   fill: #12BC00;
-%else
-  fill: #4d9a26;
-%endif
 }
 /* Use [isbroken] to make sure we don't show a lock on an http page. See Bug 1192162. */
 #identity-popup[ciphers=weak] #identity-popup-securityView,

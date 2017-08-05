@@ -6107,9 +6107,7 @@
 
       <property name="_isCustomizing" readonly="true">
         <getter><![CDATA[
-          let root = document.documentElement;
-          return root.getAttribute("customizing") == "true" ||
-                 (!AppConstants.MOZ_PHOTON_THEME && root.getAttribute("customize-exiting") == "true");
+          return document.documentElement.getAttribute("customizing") == "true";
         ]]></getter>
       </property>
 

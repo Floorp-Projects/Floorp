@@ -440,7 +440,6 @@
       </hbox>
     </panel>
 
-#ifdef MOZ_PHOTON_THEME
     <panel id="pageActionPanel"
            class="cui-widget-panel"
            role="group"
@@ -474,7 +473,6 @@
                 label="&pageAction.addToUrlbar.label;"
                 oncommand="BrowserPageActions.toggleShownInUrlbarForContextAction();"/>
     </menupopup>
-#endif
 
     <!-- Bookmarks and history tooltip -->
     <tooltip id="bhTooltip"/>
@@ -895,7 +893,6 @@
                        onclick="FullZoom.reset();"
                        tooltip="dynamic-shortcut-tooltip"
                        hidden="true"/>
-#ifdef MOZ_PHOTON_THEME
                 <image id="pageActionButton"
                        class="urlbar-icon"
                        tooltiptext="&pageActionButton.tooltip;"
@@ -913,27 +910,11 @@
                     <image id="star-button-animatable-image"/>
                   </hbox>
                 </hbox>
-#endif
               </hbox>
               <hbox id="userContext-icons" hidden="true">
                 <label id="userContext-label"/>
                 <image id="userContext-indicator"/>
               </hbox>
-#ifndef MOZ_PHOTON_THEME
-              <toolbarbutton id="urlbar-go-button"
-                             class="chromeclass-toolbar-additional"
-                             onclick="gURLBar.handleCommand(event);"
-                             tooltiptext="&goEndCap.tooltip;"/>
-              <toolbarbutton id="reload-button"
-                             class="chromeclass-toolbar-additional"
-                             command="Browser:ReloadOrDuplicate"
-                             onclick="checkForMiddleClick(this, event);"
-                             tooltip="dynamic-shortcut-tooltip"/>
-              <toolbarbutton id="stop-button"
-                             class="chromeclass-toolbar-additional"
-                             command="Browser:Stop"
-                             tooltip="dynamic-shortcut-tooltip"/>
-#endif
             </textbox>
           </hbox>
         </toolbaritem>
@@ -948,11 +929,7 @@
         <toolbarbutton id="bookmarks-menu-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        removable="true"
-#ifdef MOZ_PHOTON_THEME
                        type="menu"
-#else
-                       type="menu-button"
-#endif
                        label="&bookmarksMenuButton.label;"
                        tooltip="dynamic-shortcut-tooltip"
                        anchor="dropmarker"
@@ -1166,9 +1143,6 @@
 
     <toolbarpalette id="BrowserToolbarPalette">
 
-# Update primaryToolbarButtons in browser/themes/shared/browser.inc when adding
-# or removing default items with the toolbarbutton-1 class.
-
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
 #ifdef XP_MACOSX
                      command="cmd_print"
@@ -1194,7 +1168,7 @@
                      type="checkbox"
                      label="&fullScreenCmd.label;"
                      tooltip="dynamic-shortcut-tooltip"/>
-#ifdef MOZ_PHOTON_THEME
+
       <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      oncommand="PanelUI.showSubView('appMenu-libraryView', this, null, event);"
                      closemenu="none"
@@ -1203,7 +1177,6 @@
           <image class="toolbarbutton-animatable-image"/>
         </box>
       </toolbarbutton>
-#endif
     </toolbarpalette>
   </toolbox>
 
@@ -1280,23 +1253,6 @@
   <vbox id="browser-bottombox" layer="true">
     <notificationbox id="global-notificationbox" notificationside="bottom"/>
   </vbox>
-
-#ifndef MOZ_PHOTON_THEME
-  <svg:svg height="0">
-    <svg:clipPath id="urlbar-back-button-clip-path">
-#ifndef XP_MACOSX
-      <svg:path d="M -9,-4 l 0,1 a 15 15 0 0,1 0,30 l 0,1 l 10000,0 l 0,-32 l -10000,0 z" />
-#else
-      <svg:path d="M -11,-5 a 16 16 0 0 1 0,34 l 10000,0 l 0,-34 l -10000,0 z"/>
-#endif
-    </svg:clipPath>
-#ifdef XP_WIN
-    <svg:clipPath id="urlbar-back-button-clip-path-win10">
-      <svg:path d="M -6,-2 l 0,1 a 15 15 0 0,1 0,30 l 0,1 l 10000,0 l 0,-32 l -10000,0 z" />
-    </svg:clipPath>
-#endif
-  </svg:svg>
-#endif
 
 </vbox>
 # <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
