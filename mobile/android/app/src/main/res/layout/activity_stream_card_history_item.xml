@@ -17,18 +17,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
-        <org.mozilla.gecko.widget.FaviconView
-            android:id="@+id/icon"
-            android:layout_width="@dimen/favicon_bg"
-            android:layout_height="@dimen/favicon_bg"
-            android:layout_marginBottom="@dimen/activity_stream_base_margin"
-            android:layout_marginLeft="@dimen/activity_stream_base_margin"
-            android:layout_marginStart="@dimen/activity_stream_base_margin"
-            android:layout_marginTop="@dimen/activity_stream_base_margin"
-            gecko:enableRoundCorners="false"
-            gecko:overrideScaleType="false"
-            android:scaleType="fitCenter"
-            tools:background="@drawable/favicon_globe" />
+        <org.mozilla.gecko.activitystream.homepanel.stream.StreamPageIconLayout
+                android:id="@+id/icon"
+                android:layout_width="@dimen/favicon_bg"
+                android:layout_height="@dimen/favicon_bg"
+                android:layout_marginStart="@dimen/activity_stream_base_margin"
+                android:layout_marginLeft="@dimen/activity_stream_base_margin"
+                android:layout_marginTop="@dimen/activity_stream_base_margin"
+                android:layout_marginBottom="@dimen/activity_stream_base_margin"
+                android:layout_gravity="center"
+                tools:background="@drawable/favicon_globe" />
+        <!-- todo: overrideScaleType, scaleType=fitCnetetr -->
 
     </FrameLayout>
 
