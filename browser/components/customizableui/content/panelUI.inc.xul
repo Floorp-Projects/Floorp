@@ -84,39 +84,19 @@
         <toolbarbutton id="appMenuViewHistorySidebar"
                        label="&appMenuHistory.viewSidebar.label;"
                        type="checkbox"
-#ifndef MOZ_PHOTON_THEME
-                       class="subviewbutton"
-#else
                        class="subviewbutton subviewbutton-iconic"
-#endif
                        key="key_gotoHistory"
                        oncommand="SidebarUI.toggle('viewHistorySidebar'); PanelUI.hide();">
           <observes element="viewHistorySidebar" attribute="checked"/>
         </toolbarbutton>
         <toolbarbutton id="appMenuClearRecentHistory"
                        label="&appMenuHistory.clearRecent.label;"
-#ifndef MOZ_PHOTON_THEME
-                       class="subviewbutton"
-#else
                        class="subviewbutton subviewbutton-iconic"
-#endif
                        command="Tools:Sanitize"/>
         <toolbarbutton id="appMenuRestoreLastSession"
                        label="&appMenuHistory.restoreSession.label;"
-#ifndef MOZ_PHOTON_THEME
-                       class="subviewbutton"
-#else
                        class="subviewbutton subviewbutton-iconic"
-#endif
                        command="Browser:RestoreLastSession"/>
-#ifndef MOZ_PHOTON_THEME
-        <menuseparator id="PanelUI-recentlyClosedTabs-separator"/>
-        <vbox id="PanelUI-recentlyClosedTabs" tooltip="bhTooltip"/>
-        <menuseparator id="PanelUI-recentlyClosedWindows-separator"/>
-        <vbox id="PanelUI-recentlyClosedWindows" tooltip="bhTooltip"/>
-        <menuseparator id="PanelUI-historyItems-separator"/>
-        <vbox id="PanelUI-historyItems" tooltip="bhTooltip"/>
-#else
         <toolbarseparator/>
         <toolbarbutton id="appMenuRecentlyClosedTabs"
                        label="&historyUndoMenu.label;"
@@ -138,7 +118,6 @@
                      tooltip="bhTooltip">
           <!-- history menu items will go here -->
         </toolbaritem>
-#endif
       </vbox>
       <toolbarbutton id="PanelUI-historyMore"
                      class="panel-subview-footer subviewbutton"
@@ -146,10 +125,8 @@
                      oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
     </panelview>
 
-#ifdef MOZ_PHOTON_THEME
     <panelview id="appMenu-library-recentlyClosedTabs"/>
     <panelview id="appMenu-library-recentlyClosedWindows"/>
-#endif
 
     <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView"
                descriptionheightworkaround="true">
@@ -253,46 +230,17 @@
       <label value="&bookmarksMenu.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
         <toolbarbutton id="panelMenuBookmarkThisPage"
-#ifndef MOZ_PHOTON_THEME
-                       class="subviewbutton"
-#else
                        class="subviewbutton subviewbutton-iconic"
-#endif
                        observes="bookmarkThisPageBroadcaster"
                        command="Browser:AddBookmarkAs"
                        onclick="PanelUI.hide();"/>
-#ifndef MOZ_PHOTON_THEME
-        <toolbarseparator/>
-#endif
         <toolbarbutton id="panelMenu_viewBookmarksSidebar"
                        label="&viewBookmarksSidebar2.label;"
-#ifndef MOZ_PHOTON_THEME
-                       class="subviewbutton"
-#else
                        class="subviewbutton subviewbutton-iconic"
-#endif
                        key="viewBookmarksSidebarKb"
                        oncommand="SidebarUI.toggle('viewBookmarksSidebar'); PanelUI.hide();">
           <observes element="viewBookmarksSidebar" attribute="checked"/>
         </toolbarbutton>
-#ifndef MOZ_PHOTON_THEME
-        <toolbarbutton id="panelMenu_viewBookmarksToolbar"
-                       label="&viewBookmarksToolbar.label;"
-                       type="checkbox"
-                       toolbarId="PersonalToolbar"
-                       class="subviewbutton"
-                       oncommand="onViewToolbarCommand(event); PanelUI.hide();"/>
-        <toolbarseparator/>
-        <toolbarbutton id="panelMenu_bookmarksToolbar"
-                       label="&personalbarCmd.label;"
-                       class="subviewbutton cui-withicon"
-                       oncommand="PlacesCommandHook.showPlacesOrganizer('BookmarksToolbar'); PanelUI.hide();"/>
-        <toolbarbutton id="panelMenu_unsortedBookmarks"
-                       label="&otherBookmarksCmd.label;"
-                       class="subviewbutton cui-withicon"
-                       oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
-        <toolbarseparator class="small-separator"/>
-#else
         <toolbarbutton id="panelMenu_searchBookmarks"
                        label="&searchBookmarks.label;"
                        class="subviewbutton subviewbutton-iconic"
@@ -301,14 +249,9 @@
         <label id="panelMenu_recentBookmarks"
                value="&recentBookmarks.label;"
                class="subview-subheader"/>
-#endif
         <toolbaritem id="panelMenu_bookmarksMenu"
                      orient="vertical"
                      smoothscroll="false"
-#ifndef MOZ_PHOTON_THEME
-                     onclick="if (event.button == 1) BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
-                     oncommand="BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
-#endif
                      flatList="true"
                      tooltip="bhTooltip">
           <!-- bookmarks menu items will go here -->
@@ -408,15 +351,10 @@
        type="arrow"
        noautofocus="true"
        position="bottomcenter topright"
-#ifndef MOZ_PHOTON_THEME
-       context="toolbar-context-menu"
-#endif
        hidden="true">
-#ifdef MOZ_PHOTON_THEME
   <photonpanelmultiview mainViewId="widget-overflow-mainView">
     <panelview id="widget-overflow-mainView"
                context="toolbar-context-menu">
-#endif
       <vbox class="panel-subview-body">
         <vbox id="widget-overflow-scroller">
           <vbox id="widget-overflow-list" class="widget-overflow-list"
@@ -426,7 +364,6 @@
                 emptylabel="&customizeMode.emptyOverflowList.description;"/>
         </vbox>
       </vbox>
-#ifdef MOZ_PHOTON_THEME
       <toolbarbutton command="cmd_CustomizeToolbars"
                       id="overflowMenu-customize-button"
                       class="subviewbutton panel-subview-footer"
@@ -434,7 +371,6 @@
                       label="&overflowCustomizeToolbar.label;"/>
     </panelview>
   </photonpanelmultiview>
-#endif
   <!-- This menu is here because not having it in the menu in which it's used flickers
        when hover styles overlap. See https://bugzilla.mozilla.org/show_bug.cgi?id=1378427 .
        -->

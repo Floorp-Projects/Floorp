@@ -7,12 +7,6 @@
    there are overrides for each platform in their compacttheme.css files. */
 
 :root:-moz-lwtheme {
-%ifndef MOZ_PHOTON_THEME
-  --space-above-tabbar: 0px;
-  --backbutton-urlbar-overlap: 0px;
-  /* 18px icon + 2 * 5px padding + 1 * 1px border */
-  --forwardbutton-width: 29px;
-%endif
   --toolbar-bgcolor: var(--chrome-secondary-background-color);
   --toolbar-gbimage: none;
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
@@ -21,26 +15,6 @@
 }
 
 :root:-moz-lwtheme-brighttext {
-
-%ifndef MOZ_PHOTON_THEME
-
-  /* Chrome */
-  --chrome-background-color: #272b35;
-  --chrome-color: #F5F7FA;
-  --chrome-secondary-background-color: #393F4C;
-  --chrome-navigator-toolbox-separator-color: rgba(0,0,0,.2);
-  --chrome-nav-bar-separator-color: rgba(0,0,0,.2);
-  --chrome-nav-buttons-background: #252C33;
-  --chrome-nav-buttons-hover-background: #1B2127;
-  --chrome-nav-bar-controls-border-color: #1D2328;
-  --chrome-selection-color: #fff;
-  --chrome-selection-background-color: #5675B9;
-
-  --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, transparent 70%);
-
-
-%else
-
   /* Chrome */
   --chrome-background-color: hsl(240, 5%, 5%);
   --chrome-color: rgb(249, 249, 250);
@@ -55,14 +29,8 @@
 
   --toolbarbutton-icon-fill-inverted: rgba(249, 249, 250, .7);
 
-%endif
-
   /* Url and search bars */
-%ifndef MOZ_PHOTON_THEME
-  --url-and-searchbar-background-color: #171B1F;
-%else
   --url-and-searchbar-background-color: hsla(0, 0%, 100%, .1);
-%endif
   --urlbar-separator-color: #5F6670;
   --urlbar-dropmarker-url: url("chrome://browser/skin/compacttheme/urlbar-history-dropmarker.svg");
   --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
@@ -74,19 +42,6 @@
   --urlbar-dropmarker-active-2x-region: rect(0px, 33px, 14px, 22px);
 }
 
-%ifndef MOZ_PHOTON_THEME
-/* Override the lwtheme-specific styling for toolbar buttons */
-:root:-moz-lwtheme-brighttext,
-toolbar:-moz-lwtheme-brighttext  {
-  --toolbarbutton-hover-background: rgba(25,33, 38,.6) linear-gradient(rgba(25,33,38,.6), rgba(25,33,38,.6)) padding-box;
-  --toolbarbutton-hover-boxshadow: none;
-  --toolbarbutton-hover-bordercolor: rgba(25,33,38,.6);
-  --toolbarbutton-active-background: rgba(25,33,38,1) linear-gradient(rgba(25,33,38,1), rgba(25,33,38,1)) border-box;
-  --toolbarbutton-active-boxshadow: none;
-  --toolbarbutton-active-bordercolor: rgba(25,33,38,.8);
-  --toolbarbutton-checkedhover-backgroundcolor: #3C5283;
-}
-%endif
 :root:-moz-lwtheme-darktext {
   --url-and-searchbar-background-color: #fff;
 
@@ -100,31 +55,7 @@ toolbar:-moz-lwtheme-brighttext  {
   --chrome-nav-bar-controls-border-color: #ccc;
   --chrome-selection-color: #f5f7fa;
   --chrome-selection-background-color: #4c9ed9;
-
-%ifndef MOZ_PHOTON_THEME
-  --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, transparent 16%);
-%endif
 }
-
-%ifndef MOZ_PHOTON_THEME
-/* Override the lwtheme-specific styling for toolbar buttons */
-:root:-moz-lwtheme-darktext,
-toolbar:-moz-lwtheme-darktext {
-  --toolbarbutton-hover-background: #eaeaea;
-  --toolbarbutton-hover-boxshadow: none;
-  --toolbarbutton-hover-bordercolor: rgba(0,0,0,0.1);
-  --toolbarbutton-active-background: #d7d7d8 border-box;
-  --toolbarbutton-active-boxshadow: none;
-  --toolbarbutton-active-bordercolor: rgba(0,0,0,0.15);
-  --toolbarbutton-checkedhover-backgroundcolor: #d7d7d8;
-}
-
-/* Give some space to drag the window around while customizing
-   (normal space to left and right of tabs doesn't work in this case) */
-#main-window[tabsintitlebar][customizing] {
-  --space-above-tabbar: 9px;
-}
-%endif
 
 #urlbar ::-moz-selection,
 #navigator-toolbox .searchbar-textbox ::-moz-selection,
@@ -169,53 +100,6 @@ toolbar:-moz-lwtheme-darktext {
 #TabsToolbar {
   text-shadow: none !important;
 }
-%ifndef MOZ_PHOTON_THEME
-
-/* Back and forward button */
-
-#back-button > .toolbarbutton-icon,
-#forward-button > .toolbarbutton-icon {
-  background: var(--chrome-nav-buttons-background) !important;
-  border-radius: 0 !important;
-  padding: var(--toolbarbutton-inner-padding) 5px !important;
-  margin: 0 !important;
-  border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
-  box-shadow: none !important;
-  height: auto !important;
-}
-
-/* the normal theme adds box-shadow: <stuff> !important when the back-button is [open]. Fix: */
-#back-button[open="true"] > .toolbarbutton-icon {
-  box-shadow: none !important;
-}
-
-#forward-button > .toolbarbutton-icon {
-  border-inline-start: none !important;
-}
-
-/* Override a box shadow for disabled back button */
-#main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
-  box-shadow: none !important;
-}
-
-/* Override !important properties for hovered back button */
-#main-window #back-button:hover:not([disabled="true"]) > .toolbarbutton-icon,
-#main-window #forward-button:hover:not([disabled="true"]) > .toolbarbutton-icon {
-  background: var(--chrome-nav-buttons-hover-background) !important;
-  box-shadow: none !important;
-}
-
-#back-button > .toolbarbutton-icon {
-  border-radius: 2px 0 0 2px !important;
-}
-
-#nav-bar .toolbarbutton-1:not([type=menu-button]),
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  padding-top: 2px;
-  padding-bottom: 2px;
-}
-%endif
 
 /* URL bar and search bar*/
 #urlbar,
@@ -236,27 +120,6 @@ toolbar:-moz-lwtheme-darktext {
   fill: rgba(255,255,255,.7);
 }
 
-%ifndef MOZ_PHOTON_THEME
-#urlbar {
-  border-inline-start: none !important;
-  opacity: 1 !important;
-}
-
-window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
-  overflow: -moz-hidden-unscrollable;
-  clip-path: none;
-  margin-inline-start: 0;
-}
-
-window:not([chromehidden~="toolbar"]) #urlbar-wrapper:-moz-locale-dir(rtl),
-window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(rtl) {
-  /* Resolves text blurring issue when hovering, see bug 1340206 */
-  transform: none;
-  /* For some reason, this property must be specified here, even though the same
-     value is set in the previous rule set. o_O */
-  margin-inline-start: 0;
-}
-%endif
 #urlbar-zoom-button:-moz-lwtheme-brighttext:hover {
   background-color: rgba(255,255,255,.2);
 }
@@ -272,13 +135,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(
 
 .tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
-%ifdef MOZ_PHOTON_THEME
   background-position: center bottom -4px;
-%else
-  background-image: var(--pinned-tab-glow);
-  background-position: center;
-  background-size: 100%;
-%endif
 }
 
 .tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([selected="true"]) {

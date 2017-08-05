@@ -338,9 +338,6 @@ CustomizeMode.prototype = {
       this._updateEmptyPaletteNotice();
 
       this._updateLWThemeButtonIcon();
-      if (!AppConstants.MOZ_PHOTON_THEME) {
-        this.maybeShowTip(panelHolder);
-      }
 
       this._handler.isEnteringCustomizeMode = false;
 
@@ -499,60 +496,15 @@ CustomizeMode.prototype = {
    * excluding certain styles while in any phase of customize mode.
    */
   _doTransition(aEntering) {
-    if (AppConstants.MOZ_PHOTON_THEME) {
-      let docEl = this.document.documentElement;
-      if (aEntering) {
-        docEl.setAttribute("customizing", true);
-        docEl.setAttribute("customize-entered", true);
-      } else {
-        docEl.removeAttribute("customizing");
-        docEl.removeAttribute("customize-entered");
-      }
-      return Promise.resolve();
-    }
-    let deck = this.document.getElementById("content-deck");
-    let customizeTransitionEndPromise = new Promise(resolve => {
-      let customizeTransitionEnd = (aEvent) => {
-        if (aEvent != "timedout" &&
-            (aEvent.originalTarget != deck || aEvent.propertyName != "margin-left")) {
-          return;
-        }
-        this.window.clearTimeout(catchAllTimeout);
-        // We request an animation frame to do the final stage of the transition
-        // to improve perceived performance. (bug 962677)
-        this.window.requestAnimationFrame(() => {
-          deck.removeEventListener("transitionend", customizeTransitionEnd);
-
-          if (!aEntering) {
-            this.document.documentElement.removeAttribute("customize-exiting");
-            this.document.documentElement.removeAttribute("customizing");
-          } else {
-            this.document.documentElement.setAttribute("customize-entered", true);
-            this.document.documentElement.removeAttribute("customize-entering");
-          }
-          CustomizableUI.dispatchToolboxEvent("customization-transitionend", aEntering, this.window);
-
-          resolve();
-        });
-      };
-      deck.addEventListener("transitionend", customizeTransitionEnd);
-      let catchAll = () => customizeTransitionEnd("timedout");
-      let catchAllTimeout = this.window.setTimeout(catchAll, kMaxTransitionDurationMs);
-    });
-
-    if (gDisableAnimation) {
-      this.document.getElementById("tab-view-deck").setAttribute("fastcustomizeanimation", true);
-    }
-
+    let docEl = this.document.documentElement;
     if (aEntering) {
-      this.document.documentElement.setAttribute("customizing", true);
-      this.document.documentElement.setAttribute("customize-entering", true);
+      docEl.setAttribute("customizing", true);
+      docEl.setAttribute("customize-entered", true);
     } else {
-      this.document.documentElement.setAttribute("customize-exiting", true);
-      this.document.documentElement.removeAttribute("customize-entered");
+      docEl.removeAttribute("customizing");
+      docEl.removeAttribute("customize-entered");
     }
-
-    return customizeTransitionEndPromise;
+    return Promise.resolve();
   },
 
   updateLWTStyling(aData) {

@@ -248,11 +248,7 @@ pref("browser.stopReloadAnimation.enabled", true);
 pref("browser.uidensity", 0);
 // Whether Firefox will automatically override the uidensity to "touch"
 // while the user is in a touch environment (such as Windows tablet mode).
-#ifdef MOZ_PHOTON_THEME
 pref("browser.touchmode.auto", true);
-#else
-pref("browser.touchmode.auto", false);
-#endif
 
 // At startup, check if we're the default browser and prompt user if not.
 pref("browser.shell.checkDefaultBrowser", true);

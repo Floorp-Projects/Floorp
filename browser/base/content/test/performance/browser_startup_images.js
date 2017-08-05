@@ -28,24 +28,14 @@ const whitelist = [
   {
     file: "chrome://browser/skin/stop.svg",
     platforms: ["linux", "win", "macosx"],
-    photon: true,
   },
   {
     file: "chrome://browser/skin/bookmark-hollow.svg",
     platforms: ["linux", "win", "macosx"],
-    photon: true,
   },
   {
     file: "chrome://browser/skin/page-action.svg",
     platforms: ["linux", "win", "macosx"],
-    photon: true,
-  },
-
-  // Non-Photon-only entries
-  {
-    file: "chrome://browser/skin/toolbarbutton-dropdown-arrow.png",
-    platforms: ["linux", "win", "macosx"],
-    photon: false,
   },
 
   // Shared entries
@@ -119,8 +109,7 @@ add_task(async function() {
 
   let data = startupRecorder.data.images;
   let filteredWhitelist = whitelist.filter(el => {
-    return el.platforms.includes(AppConstants.platform) &&
-           (el.photon === undefined || el.photon == AppConstants.MOZ_PHOTON_THEME);
+    return el.platforms.includes(AppConstants.platform);
   });
 
   let loadedImages = data["image-loading"];
