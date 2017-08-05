@@ -420,7 +420,7 @@
           scrollDir = 1;
         }
         if (scrollDir != 0) {
-          this._scrollBox.scrollByIndex(scrollDir, false);
+          this._scrollBox.scrollByIndex(scrollDir, true);
         }
 
         // Check if we should hide the drop indicator for this target.
