@@ -50,6 +50,12 @@ browser.jar:
   skin/classic/browser/webRTC-sharingScreen-menubar@2x.png
   skin/classic/browser/webRTC-indicator.css
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
+#ifndef MOZ_PHOTON_THEME
+  skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
+  skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
+  skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
+  skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
+#endif
 * skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/download-glow-menuPanel.png (downloads/download-glow-menuPanel.png)
@@ -113,6 +119,9 @@ browser.jar:
   skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
   skin/classic/browser/syncProgress-horizontalbar.png
   skin/classic/browser/syncProgress-horizontalbar@2x.png
+#ifndef MOZ_PHOTON_THEME
+  skin/classic/browser/Toolbar-background-noise.png         (Toolbar-background-noise.png)
+#endif
   skin/classic/browser/yosemite/menuPanel-customize.png                (menuPanel-customize-yosemite.png)
   skin/classic/browser/yosemite/menuPanel-customize@2x.png             (menuPanel-customize-yosemite@2x.png)
   skin/classic/browser/yosemite/menuPanel-exit.png                     (menuPanel-exit-yosemite.png)
