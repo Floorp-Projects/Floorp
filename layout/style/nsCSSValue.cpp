@@ -873,7 +873,7 @@ nsCSSValue::GetCalcValue() const
   nsStyleCoord::CalcValue result;
 
   if (rootValue.GetUnit() == eCSSUnit_Pixel) {
-    result.mLength = rootValue.GetFloatValue();
+    result.mLength = rootValue.GetPixelLength();
     result.mPercent = 0.0f;
     result.mHasPercent = false;
   } else {
@@ -890,7 +890,7 @@ nsCSSValue::GetCalcValue() const
                "The first value should be eCSSUnit_Pixel");
     MOZ_ASSERT(percent.GetUnit() == eCSSUnit_Percent,
                "The first value should be eCSSUnit_Percent");
-    result.mLength = length.GetFloatValue();
+    result.mLength = length.GetPixelLength();
     result.mPercent = percent.GetPercentValue();
     result.mHasPercent = true;
   }
