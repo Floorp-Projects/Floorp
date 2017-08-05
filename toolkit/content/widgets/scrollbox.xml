@@ -564,14 +564,7 @@
         }
 
         this.setAttribute("notoverflowing", "true");
-
-        try {
-          // See bug 341047 and comments in overflow handler as to why
-          // try..catch is needed here
-          this._updateScrollButtonsDisabledState();
-        } catch (e) {
-          this.removeAttribute("notoverflowing");
-        }
+        this._updateScrollButtonsDisabledState();
       ]]></handler>
 
       <handler event="overflow" phase="capturing"><![CDATA[
@@ -593,17 +586,7 @@
         }
 
         this.removeAttribute("notoverflowing");
-
-        try {
-          // See bug 341047, the overflow event is dispatched when the
-          // scrollbox already is mostly destroyed. This causes some code in
-          // _updateScrollButtonsDisabledState() to throw an error. It also
-          // means that the notoverflowing attribute was removed erroneously,
-          // as the whole overflow event should not be happening in that case.
-          this._updateScrollButtonsDisabledState();
-        } catch (e) {
-          this.setAttribute("notoverflowing", "true");
-        }
+        this._updateScrollButtonsDisabledState();
       ]]></handler>
 
       <handler event="scroll"><![CDATA[
