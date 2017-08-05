@@ -1665,16 +1665,26 @@ nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
   bool fullStart = false, fullEnd = false;
   Float halfDash;
   if (style == NS_STYLE_BORDER_STYLE_DASHED) {
-    if (IsZeroSize(mBorderRadii[GetCCWCorner(aSide)]) &&
-        (mBorderStyles[PREV_SIDE(aSide)] == NS_STYLE_BORDER_STYLE_DOTTED ||
-         mBorderWidths[PREV_SIDE(aSide)] == 0.0f ||
+    // If either end of the side is not connecting onto a corner then we want a
+    // full dash at that end.
+    //
+    // Note that in the case that a corner is empty, either the adjacent side
+    // has zero width, or else DrawBorders() set the corner to be empty
+    // (it does that if the adjacent side has zero length and the border widths
+    // of this and the adjacent sides are thin enough that the corner will be
+    // insignificantly small).
+
+    if (mBorderRadii[GetCCWCorner(aSide)].IsEmpty() &&
+        (mBorderCornerDimensions[GetCCWCorner(aSide)].IsEmpty() ||
+         mBorderStyles[PREV_SIDE(aSide)] == NS_STYLE_BORDER_STYLE_DOTTED ||
+         // XXX why this <=1 check?
          borderWidth <= 1.0f)) {
       fullStart = true;
     }
 
-    if (IsZeroSize(mBorderRadii[GetCWCorner(aSide)]) &&
-        (mBorderStyles[NEXT_SIDE(aSide)] == NS_STYLE_BORDER_STYLE_DOTTED ||
-         mBorderWidths[NEXT_SIDE(aSide)] == 0.0f)) {
+    if (mBorderRadii[GetCWCorner(aSide)].IsEmpty() &&
+        (mBorderCornerDimensions[GetCWCorner(aSide)].IsEmpty() ||
+         mBorderStyles[NEXT_SIDE(aSide)] == NS_STYLE_BORDER_STYLE_DOTTED)) {
       fullEnd = true;
     }
 
