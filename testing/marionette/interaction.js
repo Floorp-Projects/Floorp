@@ -142,19 +142,19 @@ this.interaction = {};
  * @throws {InvalidElementStateError}
  *     If <var>el</var> is not enabled.
  */
-interaction.clickElement = async function
-    (el, strict = false, specCompat = false) {
+interaction.clickElement = function* (
+    el, strict = false, specCompat = false) {
   const a11y = accessibility.get(strict);
   if (element.isXULElement(el)) {
-    await chromeClick(el, a11y);
+    yield chromeClick(el, a11y);
   } else if (specCompat) {
-    await webdriverClickElement(el, a11y);
+    yield webdriverClickElement(el, a11y);
   } else {
-    await seleniumClickElement(el, a11y);
+    yield seleniumClickElement(el, a11y);
   }
 };
 
-async function webdriverClickElement(el, a11y) {
+function* webdriverClickElement(el, a11y) {
   const win = getWindow(el);
 
   // step 3
@@ -189,10 +189,11 @@ async function webdriverClickElement(el, a11y) {
     throw new ElementClickInterceptedError(containerEl, clickPoint);
   }
 
-  let acc = await a11y.getAccessible(el, true);
-  a11y.assertVisible(acc, el, true);
-  a11y.assertEnabled(acc, el, true);
-  a11y.assertActionable(acc, el);
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, true);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
+  });
 
   // step 8
   if (el.localName == "option") {
@@ -202,22 +203,23 @@ async function webdriverClickElement(el, a11y) {
   }
 
   // step 9
-  await interaction.flushEventLoop(win);
+  yield interaction.flushEventLoop(win);
 
   // step 10
   // if the click causes navigation, the post-navigation checks are
   // handled by the load listener in listener.js
 }
 
-async function chromeClick(el, a11y) {
+function* chromeClick(el, a11y) {
   if (!atom.isElementEnabled(el)) {
     throw new InvalidElementStateError("Element is not enabled");
   }
 
-  let acc = await a11y.getAccessible(el, true);
-  a11y.assertVisible(acc, el, true);
-  a11y.assertEnabled(acc, el, true);
-  a11y.assertActionable(acc, el);
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, true);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
+  });
 
   if (el.localName == "option") {
     interaction.selectOption(el);
@@ -226,7 +228,7 @@ async function chromeClick(el, a11y) {
   }
 }
 
-async function seleniumClickElement(el, a11y) {
+function* seleniumClickElement(el, a11y) {
   let win = getWindow(el);
 
   let visibilityCheckEl  = el;
@@ -242,10 +244,11 @@ async function seleniumClickElement(el, a11y) {
     throw new InvalidElementStateError("Element is not enabled");
   }
 
-  let acc = await a11y.getAccessible(el, true);
-  a11y.assertVisible(acc, el, true);
-  a11y.assertEnabled(acc, el, true);
-  a11y.assertActionable(acc, el);
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, true);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
+  });
 
   if (el.localName == "option") {
     interaction.selectOption(el);
@@ -324,7 +327,7 @@ interaction.selectOption = function(el) {
  *     <var>win</var> has closed or been unloaded before the queue can
  *     be flushed.
  */
-interaction.flushEventLoop = async function (win) {
+interaction.flushEventLoop = function* (win) {
   return new Promise(resolve => {
     let handleEvent = event => {
       win.removeEventListener("beforeunload", this);
