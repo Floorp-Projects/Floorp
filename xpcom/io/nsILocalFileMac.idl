@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsILocalFile.idl"
+#include "nsIFile.idl"
 
 %{C++
 #include <Carbon/Carbon.h>
@@ -17,7 +17,7 @@
       native CFURLRef(CFURLRef);
 
 [scriptable, builtinclass, uuid(623eca5b-c25d-4e27-be5a-789a66c4b2f7)]
-interface nsILocalFileMac : nsILocalFile
+interface nsILocalFileMac : nsIFile
 {
    /**
     * initWithCFURL

@@ -239,12 +239,10 @@ nsLocalFile::nsLocalFile(const nsLocalFile& aOther)
 #ifdef MOZ_WIDGET_COCOA
 NS_IMPL_ISUPPORTS(nsLocalFile,
                   nsILocalFileMac,
-                  nsILocalFile,
                   nsIFile,
                   nsIHashable)
 #else
 NS_IMPL_ISUPPORTS(nsLocalFile,
-                  nsILocalFile,
                   nsIFile,
                   nsIHashable)
 #endif

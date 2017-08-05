@@ -36,7 +36,7 @@
 // on this.
 
 #include <errno.h>
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 #ifdef XP_WIN
 #include "nsLocalFileWin.h"
