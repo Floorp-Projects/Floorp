@@ -1,10 +1,12 @@
-// |jit-test| allow-oom; allow-unhandlable-oom; allow-overrecursed
+if (!('oomTest' in this))
+    quit();
 
-gcparam("maxBytes", gcparam("gcBytes") + 1024);
-test();
-function test() {
-  var upvar = "";
-  function f() { upvar += ""; }
-  test();
-  eval('');
+function test(x) {
+    var upvar = "";
+    function f() { upvar += ""; }
+    if (x > 0)
+        test(x - 1);
+    eval('');
 }
+
+oomTest(() => test(10));

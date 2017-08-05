@@ -1020,22 +1020,6 @@ case "$target" in
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
         fi
-        dnl For profile-guided optimization
-        PROFILE_GEN_CFLAGS="-GL"
-        num_cores=$($PYTHON -c 'import multiprocessing; print(min(8,multiprocessing.cpu_count()))')
-        cgthreads="-CGTHREADS:${num_cores}"
-        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT -PogoSafeMode $cgthreads"
-        dnl XXX: PGO builds can fail with warnings treated as errors,
-        dnl specifically "no profile data available" appears to be
-        dnl treated as an error sometimes. This might be a consequence
-        dnl of using WARNINGS_AS_ERRORS in some modules, combined
-        dnl with the linker doing most of the work in the whole-program
-        dnl optimization/PGO case. I think it's probably a compiler bug,
-        dnl but we work around it here.
-        PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
-        dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
-        dnl Probably also a compiler bug, but what can you do?
-        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE $cgthreads"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
         dnl Minimum reqiurement of Gecko is VS2015 or later which supports
@@ -1919,7 +1903,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.32, [MOZ_SYSTEM_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.33, [MOZ_SYSTEM_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_SYSTEM_NSS"; then
@@ -2103,7 +2087,6 @@ MOZ_SPELLCHECK=1
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
-MOZ_URL_CLASSIFIER=
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
@@ -3728,18 +3711,6 @@ fi
 AC_SUBST(MOZ_SYSTEM_SQLITE)
 
 dnl ========================================================
-dnl = Enable url-classifier
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(url-classifier,
-[  --enable-url-classifier Enable url classifier module],
-    MOZ_URL_CLASSIFIER=1,
-    MOZ_URL_CLASSIFIER= )
-if test -n "$MOZ_URL_CLASSIFIER"; then
-    AC_DEFINE(MOZ_URL_CLASSIFIER)
-fi
-AC_SUBST(MOZ_URL_CLASSIFIER)
-
-dnl ========================================================
 dnl = Disable zipwriter
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(zipwriter,
@@ -4138,18 +4109,6 @@ MOZ_ARG_WITH_STRING(jitreport-granularity,
 AC_DEFINE_UNQUOTED(JS_DEFAULT_JITREPORT_GRANULARITY, $JITREPORT_GRANULARITY)
 
 dnl ========================================================
-dnl = Disable Mozilla's versions of RIL and Geolocation
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(mozril-geoloc,
-[  --disable-mozril-geoloc         Disable Mozilla's RIL and geolocation],
-    DISABLE_MOZ_RIL_GEOLOC=1,
-    DISABLE_MOZ_RIL_GEOLOC= )
-if test -n "$DISABLE_MOZ_RIL_GEOLOC"; then
-   AC_DEFINE(DISABLE_MOZ_RIL_GEOLOC)
-fi
-AC_SUBST(DISABLE_MOZ_RIL_GEOLOC)
-
-dnl ========================================================
 dnl =
 dnl = Misc. Options
 dnl =
@@ -4225,34 +4184,6 @@ if test -n "$GNU_CC" -a -n "$GNU_CXX"; then
 else
     AC_MSG_RESULT([no])
 fi
-
-dnl ========================================================
-dnl Profile guided optimization (gcc checks)
-dnl ========================================================
-dnl Test for profiling options
-dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
-
-_SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
-
-AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
-AC_TRY_COMPILE([], [return 0;],
-               [ PROFILE_GEN_CFLAGS="-fprofile-generate"
-                 result="yes" ], result="no")
-AC_MSG_RESULT([$result])
-
-if test $result = "yes"; then
-  PROFILE_GEN_LDFLAGS="-fprofile-generate"
-  PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch"
-  PROFILE_USE_LDFLAGS="-fprofile-use"
-fi
-
-CFLAGS="$_SAVE_CFLAGS"
-
-AC_SUBST(PROFILE_GEN_CFLAGS)
-AC_SUBST(PROFILE_GEN_LDFLAGS)
-AC_SUBST(PROFILE_USE_CFLAGS)
-AC_SUBST(PROFILE_USE_LDFLAGS)
 
 fi # ! SKIP_COMPILER_CHECKS
 

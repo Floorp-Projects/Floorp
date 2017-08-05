@@ -714,6 +714,7 @@ pref("apz.keyboard.enabled", true);
 #else
 pref("apz.keyboard.enabled", false);
 #endif
+pref("apz.keyboard.passive-listeners", false);
 pref("apz.max_velocity_inches_per_ms", "-1.0");
 pref("apz.max_velocity_queue_size", 5);
 pref("apz.min_skate_speed", "1.0");
