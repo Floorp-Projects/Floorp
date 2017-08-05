@@ -3378,15 +3378,61 @@ nsCSSBorderRenderer::DrawBorders()
 
     /* We have more than one pass to go.  Draw the corners separately from the sides. */
 
-    /*
-     * If we have a 1px-wide border, the corners are going to be
-     * negligible, so don't bother doing anything fancy.  Just extend
-     * the top and bottom borders to the right 1px and the left border
-     * to the bottom 1px.  We do this by twiddling the corner dimensions,
-     * which causes the right to happen later on.  Only do this if we have
-     * a 1.0 unit border all around and no border radius.
-     */
-
+    // The corner is going to have negligible size if its two adjacent border
+    // sides are only 1px wide and there is no border radius.  In that case we
+    // skip the overhead of painting the corner by setting the width or height
+    // of the corner to zero, which effectively extends one of the corner's
+    // adjacent border sides.  We extend the longer adjacent side so that
+    // opposite sides will be the same length, which is necessary for opposite
+    // dashed/dotted sides to be symmetrical.
+    //
+    //   if width > height
+    //     +--+--------------+--+    +--------------------+
+    //     |  |              |  |    |                    |
+    //     +--+--------------+--+    +--+--------------+--+
+    //     |  |              |  |    |  |              |  |
+    //     |  |              |  | => |  |              |  |
+    //     |  |              |  |    |  |              |  |
+    //     +--+--------------+--+    +--+--------------+--+
+    //     |  |              |  |    |                    |
+    //     +--+--------------+--+    +--------------------+
+    //
+    //   if width <= height
+    //     +--+--------+--+    +--+--------+--+
+    //     |  |        |  |    |  |        |  |
+    //     +--+--------+--+    |  +--------+  |
+    //     |  |        |  |    |  |        |  |
+    //     |  |        |  |    |  |        |  |
+    //     |  |        |  |    |  |        |  |
+    //     |  |        |  | => |  |        |  |
+    //     |  |        |  |    |  |        |  |
+    //     |  |        |  |    |  |        |  |
+    //     |  |        |  |    |  |        |  |
+    //     +--+--------+--+    |  +--------+  |
+    //     |  |        |  |    |  |        |  |
+    //     +--+--------+--+    +--+--------+--+
+    //
+    // Note that if we have different border widths we could end up with
+    // opposite sides of different length.  For example, if the left and
+    // bottom borders are 2px wide instead of 1px, we will end up doing
+    // something like:
+    //
+    //     +----+------------+--+    +----+---------------+
+    //     |    |            |  |    |    |               |
+    //     +----+------------+--+    +----+------------+--+
+    //     |    |            |  |    |    |            |  |
+    //     |    |            |  | => |    |            |  |
+    //     |    |            |  |    |    |            |  |
+    //     +----+------------+--+    +----+------------+--+
+    //     |    |            |  |    |    |            |  |
+    //     |    |            |  |    |    |            |  |
+    //     +----+------------+--+    +----+------------+--+
+    //
+    // XXX Should we only do this optimization if |allBordersSameWidth| is true?
+    //
+    // XXX In fact is this optimization even worth the complexity it adds to
+    // the code?  1px wide dashed borders are not overly common, and drawing
+    // corners for them is not that expensive.
     NS_FOR_CSS_FULL_CORNERS(corner) {
       const mozilla::Side sides[2] = { mozilla::Side(corner), PREV_SIDE(corner) };
 
@@ -3394,10 +3440,11 @@ nsCSSBorderRenderer::DrawBorders()
         continue;
 
       if (mBorderWidths[sides[0]] == 1.0 && mBorderWidths[sides[1]] == 1.0) {
-        if (corner == eCornerTopLeft || corner == eCornerTopRight)
+        if (mOuterRect.Width() > mOuterRect.Height()) {
           mBorderCornerDimensions[corner].width = 0.0;
-        else
+        } else {
           mBorderCornerDimensions[corner].height = 0.0;
+        }
       }
     }
 
