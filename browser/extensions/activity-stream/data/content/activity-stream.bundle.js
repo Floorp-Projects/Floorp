@@ -2082,12 +2082,7 @@ class Search extends React.Component {
   }
   onInputMount(input) {
     if (input) {
-      // The first "newtab" parameter here is called the "healthReportKey" and needs
-      // to be "newtab" so that BrowserUsageTelemetry.jsm knows to handle events with
-      // this name, and can add the appropriate telemetry probes for search. Without the
-      // correct name, certain tests like browser_UsageTelemetry_content.js will fail (See
-      // github ticket #2348 for more details)
-      this.controller = new ContentSearchUIController(input, input.parentNode, "newtab", "newtab");
+      this.controller = new ContentSearchUIController(input, input.parentNode, "activitystream", "newtab");
       addEventListener("ContentSearchClient", this);
     } else {
       this.controller = null;
