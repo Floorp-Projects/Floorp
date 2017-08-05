@@ -1,0 +1,8 @@
+<!doctype html>
+<iframe src="http://example.com/doesnt-matter-because-it-gets-blocked-due-to-mixed-content"></iframe>
+<script>
+window.addEventListener('load', function(){
+  window[0].document.body.innerText;
+  window.parent.postMessage({ result: "ok" }, "*");
+}, false);
+</script>
