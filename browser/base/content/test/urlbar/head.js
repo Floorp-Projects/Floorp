@@ -8,8 +8,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
   "resource://gre/modules/Preferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
-  "resource://testing-common/httpd.js");
 
 /**
  * Waits for the next top-level document load in the current browser.  The URI
@@ -129,19 +127,6 @@ function is_element_visible(element, msg) {
 function is_element_hidden(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");
   ok(is_hidden(element), msg || "Element should be hidden");
-}
-
-function runHttpServer(scheme, host, port = -1) {
-  let httpserver = new HttpServer();
-  try {
-    httpserver.start(port);
-    port = httpserver.identity.primaryPort;
-    httpserver.identity.setPrimary(scheme, host, port);
-  } catch (ex) {
-    info("We can't launch our http server successfully.")
-  }
-  is(httpserver.identity.has(scheme, host, port), true, `${scheme}://${host}:${port} is listening.`);
-  return httpserver;
 }
 
 function promisePopupEvent(popup, eventSuffix) {
@@ -270,6 +255,8 @@ function promisePageActionViewShown() {
 function promiseSpeculativeConnection(httpserver) {
   return BrowserTestUtils.waitForCondition(() => {
     if (httpserver) {
+      is(httpserver.connectionNumber, 1,
+         `${httpserver.connectionNumber} speculative connection has been setup.`)
       return httpserver.connectionNumber == 1;
     }
     return false;
