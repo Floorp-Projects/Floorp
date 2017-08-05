@@ -85,7 +85,6 @@ dictionary ConsoleStackEntry {
   unsigned long lineNumber = 0;
   unsigned long columnNumber = 0;
   DOMString functionName = "";
-  unsigned long language = 0;
   DOMString? asyncCause;
 };
 

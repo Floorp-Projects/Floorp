@@ -46,8 +46,6 @@ to mochitest command.
 
 ## Need Gecko change
 
-* test_specified_value_serialization.html `-webkit-radial-gradient`: bug 1380259 [1]
-
 ## Unknown / Unsure
 
 ## Ignore

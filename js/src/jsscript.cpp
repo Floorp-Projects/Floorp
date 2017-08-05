@@ -790,6 +790,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                     return false;
                 break;
               case ScopeKind::Module:
+              case ScopeKind::WasmInstance:
                 MOZ_CRASH("NYI");
                 break;
               case ScopeKind::WasmFunction:

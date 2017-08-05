@@ -31,7 +31,6 @@
 * skin/classic/browser/controlcenter/tracking-protection.svg   (../shared/controlcenter/tracking-protection.svg)
   skin/classic/browser/controlcenter/warning-gray.svg          (../shared/controlcenter/warning-gray.svg)
   skin/classic/browser/controlcenter/warning-yellow.svg        (../shared/controlcenter/warning-yellow.svg)
-  skin/classic/browser/customizableui/customizeFavicon.ico     (../shared/customizableui/customizeFavicon.ico)
   skin/classic/browser/customizableui/menuPanel-customizeFinish.png  (../shared/customizableui/menuPanel-customizeFinish.png)
   skin/classic/browser/customizableui/menuPanel-customizeFinish@2x.png  (../shared/customizableui/menuPanel-customizeFinish@2x.png)
 #ifdef MOZ_PHOTON_THEME

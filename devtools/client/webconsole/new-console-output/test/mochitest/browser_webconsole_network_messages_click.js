@@ -27,7 +27,7 @@ add_task(async function task() {
   let toolbox = gDevTools.getToolbox(target);
 
   const documentUrl = TEST_PATH + TEST_FILE;
-  await loadDocument(currentTab.linkedBrowser, documentUrl);
+  await loadDocument(documentUrl);
   info("Document loaded.");
 
   await testNetmonitorLink(toolbox, hud, documentUrl);

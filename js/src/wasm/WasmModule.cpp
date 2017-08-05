@@ -852,7 +852,7 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
             jsval.set(ObjectValue(*obj));
             return true;
         }
-        jsval.set(DoubleValue(double(f)));
+        jsval.set(DoubleValue(JS::CanonicalizeNaN(double(f))));
         return true;
       }
       case ValType::F64: {
@@ -864,7 +864,7 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
             jsval.set(ObjectValue(*obj));
             return true;
         }
-        jsval.set(DoubleValue(d));
+        jsval.set(DoubleValue(JS::CanonicalizeNaN(d)));
         return true;
       }
       default: {

@@ -758,6 +758,7 @@ BytecodeEmitter::EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope
           case ScopeKind::NonSyntactic:
             return NameLocation::Dynamic();
 
+          case ScopeKind::WasmInstance:
           case ScopeKind::WasmFunction:
             MOZ_CRASH("No direct eval inside wasm functions");
         }
@@ -1458,6 +1459,7 @@ BytecodeEmitter::EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal)
       case ScopeKind::Module:
         break;
 
+      case ScopeKind::WasmInstance:
       case ScopeKind::WasmFunction:
         MOZ_CRASH("No wasm function scopes in JS");
     }

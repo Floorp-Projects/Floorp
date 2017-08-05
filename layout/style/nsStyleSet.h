@@ -126,6 +126,14 @@ class nsStyleSet final
   }
 
   already_AddRefed<mozilla::GeckoStyleContext>
+  ResolveCleanStyleFor(mozilla::dom::Element* aElement,
+                       mozilla::GeckoStyleContext* aParentContext,
+                       mozilla::LazyComputeBehavior)
+  {
+    return ResolveStyleFor(aElement, aParentContext);
+  }
+
+  already_AddRefed<mozilla::GeckoStyleContext>
   ResolveStyleFor(mozilla::dom::Element* aElement,
                   mozilla::GeckoStyleContext* aParentContext,
                   TreeMatchContext& aTreeMatchContext);

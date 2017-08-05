@@ -143,6 +143,7 @@ class DebugState
 
     bool debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t* argsLength);
     ExprType debugGetResultType(uint32_t funcIndex);
+    bool getGlobal(Instance& instance, uint32_t globalIndex, MutableHandleValue vp);
 
     // Debug URL helpers.
 

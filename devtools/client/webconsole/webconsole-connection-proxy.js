@@ -267,9 +267,9 @@ WebConsoleConnectionProxy.prototype = {
       this.dispatchMessagesAdd(messages);
     } else {
       this.webConsoleFrame.displayCachedMessages(messages);
-      if (!this._hasNativeConsoleAPI) {
-        this.webConsoleFrame.logWarningAboutReplacedAPI();
-      }
+    }
+    if (!this._hasNativeConsoleAPI) {
+      this.webConsoleFrame.logWarningAboutReplacedAPI();
     }
 
     this.connected = true;

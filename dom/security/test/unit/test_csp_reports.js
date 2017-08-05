@@ -107,6 +107,9 @@ function run_test() {
                                ":" + REPORT_SERVER_PORT +
                                "/foo/self");
 
+  let content = Cc["@mozilla.org/supports-string;1"].
+                   createInstance(Ci.nsISupportsString);
+  content.data = "";
   // test that inline script violations cause a report.
   makeTest(0, {"blocked-uri": "self"}, false,
       function(csp) {
@@ -114,7 +117,7 @@ function run_test() {
         inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
                                        "", // aNonce
                                        false, // aParserCreated
-                                       "", // aContent
+                                       content, // aContent
                                        0); // aLineNumber
 
         // this is not a report only policy, so it better block inline scripts
@@ -158,10 +161,13 @@ function run_test() {
   makeTest(3, {"blocked-uri": "self"}, true,
       function(csp) {
         let inlineOK = true;
+        let content = Cc["@mozilla.org/supports-string;1"].
+                         createInstance(Ci.nsISupportsString);
+        content.data = "";
         inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
                                        "", // aNonce
                                        false, // aParserCreated
-                                       "", // aContent
+                                       content, // aContent
                                        0); // aLineNumber
 
         // this is a report only policy, so it better allow inline scripts
