@@ -7,6 +7,7 @@
 // This test ensures that we setup a speculative network
 // connection for autoFilled values.
 
+let {HttpServer} = Cu.import("resource://testing-common/httpd.js", {});
 let gHttpServer = null;
 let gScheme = "http";
 let gHost = "localhost"; // 'localhost' by default.
@@ -15,13 +16,21 @@ let gPrivateWin = null;
 let gIsSpeculativeConnected = false;
 
 add_task(async function setup() {
-  gHttpServer = runHttpServer(gScheme, gHost);
-  // The server will be run on a random port if the port number wasn't given.
-  gPort = gHttpServer.identity.primaryPort;
+  if (!gHttpServer) {
+    gHttpServer = new HttpServer();
+    try {
+      gHttpServer.start(gPort);
+      gPort = gHttpServer.identity.primaryPort;
+      gHttpServer.identity.setPrimary(gScheme, gHost, gPort);
+    } catch (ex) {
+      info("We can't launch our http server successfully.")
+    }
+  }
+  is(gHttpServer.identity.has(gScheme, gHost, gPort), true, "make sure we have this domain listed");
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.autoFill", true],
-          // Turn off search suggestion so we won't speculative connect to the search engine.
+          // Turn off speculative connect to the search engine.
           ["browser.search.suggest.enabled", false],
           ["browser.urlbar.speculativeConnect.enabled", true],
           // In mochitest this number is 0 by default but we have to turn it on.
@@ -41,7 +50,7 @@ add_task(async function setup() {
   is(PrivateBrowsingUtils.isWindowPrivate(gPrivateWin), true, "A private window created.");
 
   // Bug 764062 - we can't get port number from autocomplete result, so we have to mock
-  // this function and add it manually.
+  // this function to add it manually.
   let oldSpeculativeConnect = gURLBar.popup.maybeSetupSpeculativeConnect.bind(gURLBar.popup);
   let newSpeculativeConnect = (uriString) => {
     gIsSpeculativeConnected = true;
@@ -79,7 +88,6 @@ add_task(async function autofill_tests() {
      `Autofilled value is as expected for search '${test.search}'`);
   is(gIsSpeculativeConnected, true, "Speculative connection should be called");
   await promiseSpeculativeConnection(gHttpServer);
-  is(gHttpServer.connectionNumber, 1, `${gHttpServer.connectionNumber} speculative connection has been setup.`);
 });
 
 add_task(async function privateContext_test() {
