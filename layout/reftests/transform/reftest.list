@@ -33,6 +33,7 @@ fuzzy-if(webrender,1,27) == compound-1a.html compound-1-ref.html
 == translate-1d.html translate-1-ref.html
 == translate-1e.html translate-1-ref.html
 == translate-2a.html translate-2-ref.html
+== translate-3.html translate-3-ref.html
 # rotate: Several rotations of the same object should be idempotent.  These
 # tests are currently disabled because of subpixel (< 0.00001 gfx units)
 # rounding errors.
