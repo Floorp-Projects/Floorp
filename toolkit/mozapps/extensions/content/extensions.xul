@@ -21,7 +21,7 @@
       disablefastfind="true">
 
   <xhtml:link rel="shortcut icon"
-              href="chrome://mozapps/skin/extensions/extensionGeneric-16.png"/>
+              href="chrome://mozapps/skin/extensions/extensionGeneric-16.svg"/>
 
   <script type="application/javascript"
           src="chrome://mozapps/content/extensions/extensions.js"/>
