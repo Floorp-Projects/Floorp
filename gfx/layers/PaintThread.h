@@ -27,14 +27,12 @@ class CapturedPaintState {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedPaintState)
 public:
   CapturedPaintState(nsIntRegion& aRegionToDraw,
-                     gfx::DrawTargetCapture* aCapture,
                      gfx::DrawTarget* aTarget,
                      gfx::DrawTarget* aTargetOnWhite,
-                     gfx::Matrix aTargetTransform,
+                     const gfx::Matrix& aTargetTransform,
                      SurfaceMode aSurfaceMode,
                      gfxContentType aContentType)
   : mRegionToDraw(aRegionToDraw)
-  , mCapture(aCapture)
   , mTarget(aTarget)
   , mTargetOnWhite(aTargetOnWhite)
   , mTargetTransform(aTargetTransform)
