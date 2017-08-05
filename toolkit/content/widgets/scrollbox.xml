@@ -165,33 +165,6 @@
         ]]></getter>
       </property>
 
-      <property name="scrollPaddingRect" readonly="true">
-        <getter><![CDATA[
-          // This assumes that this._scrollbox doesn't have any border.
-          var outerRect = this.scrollClientRect;
-          var innerRect = {};
-          innerRect.left = outerRect.left - this._scrollbox.scrollLeft;
-          innerRect.top = outerRect.top - this._scrollbox.scrollTop;
-          innerRect.right = innerRect.left + this._scrollbox.scrollWidth;
-          innerRect.bottom = innerRect.top + this._scrollbox.scrollHeight;
-          return innerRect;
-        ]]></getter>
-      </property>
-      <property name="scrollPosition">
-        <getter><![CDATA[
-          return this.orient == "vertical" ?
-                 this._scrollbox.scrollTop :
-                 this._scrollbox.scrollLeft;
-        ]]></getter>
-        <setter><![CDATA[
-          if (this.orient == "vertical")
-            this._scrollbox.scrollTop = val;
-          else
-            this._scrollbox.scrollLeft = val;
-          return val;
-        ]]></setter>
-      </property>
-
       <field name="_startEndProps"><![CDATA[
         this.orient == "vertical" ? ["top", "bottom"] : ["left", "right"];
       ]]></field>
@@ -241,18 +214,18 @@
 
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
-        <parameter name="aSmoothScroll"/>
+        <parameter name="aInstant"/>
         <body><![CDATA[
           if (!this._canScrollToElement(element))
             return;
 
-          element.scrollIntoView({ behavior: aSmoothScroll == false ? "instant" : "auto" });
+          element.scrollIntoView({ behavior: aInstant ? "instant" : "auto" });
         ]]></body>
       </method>
 
       <method name="scrollByIndex">
         <parameter name="index"/>
-        <parameter name="aSmoothScroll"/>
+        <parameter name="aInstant"/>
         <body><![CDATA[
           if (index == 0)
             return;
@@ -264,7 +237,7 @@
             let elements = this._getScrollableElements();
             if (this._scrollTarget != elements[0] &&
                 this._scrollTarget != elements[elements.length - 1])
-              this.ensureElementIsVisible(this._scrollTarget, false);
+              this.ensureElementIsVisible(this._scrollTarget, true);
           }
 
           var rect = this.scrollClientRect;
@@ -292,13 +265,13 @@
           if (!targetElement)
             return;
 
-          this.ensureElementIsVisible(targetElement, aSmoothScroll);
+          this.ensureElementIsVisible(targetElement, aInstant);
         ]]></body>
       </method>
 
       <method name="scrollByPage">
         <parameter name="pageDelta"/>
-        <parameter name="aSmoothScroll"/>
+        <parameter name="aInstant"/>
         <body><![CDATA[
           if (pageDelta == 0)
             return;
@@ -309,7 +282,7 @@
             let elements = this._getScrollableElements();
             if (this._scrollTarget != elements[0] &&
                 this._scrollTarget != elements[elements.length - 1])
-              this.ensureElementIsVisible(this._scrollTarget, false);
+              this.ensureElementIsVisible(this._scrollTarget, true);
           }
 
           var [start, end] = this._startEndProps;
@@ -346,7 +319,7 @@
           if (!targetElement)
             return;
 
-          this.ensureElementIsVisible(targetElement, aSmoothScroll);
+          this.ensureElementIsVisible(targetElement, aInstant);
         ]]></body>
       </method>
 
@@ -424,9 +397,12 @@
       </method>
 
       <method name="scrollByPixels">
-        <parameter name="px"/>
+        <parameter name="aPixels"/>
+        <parameter name="aInstant"/>
         <body><![CDATA[
-          this.scrollPosition += px;
+          let scrollOptions = { behavior: aInstant ? "instant" : "auto" };
+          scrollOptions[this._startEndProps[0]] = aPixels;
+          this._scrollbox.scrollBy(scrollOptions);
         ]]></body>
       </method>
 
@@ -502,6 +478,7 @@
     <handlers>
       <handler event="wheel"><![CDATA[
         let doScroll = false;
+        let instant;
         let scrollAmount = 0;
         if (this.orient == "vertical") {
           doScroll = true;
@@ -526,12 +503,14 @@
 
           if (this._prevMouseScrolls.every(prev => prev == isVertical)) {
             doScroll = true;
-            if (event.deltaMode == event.DOM_DELTA_PIXEL)
+            if (event.deltaMode == event.DOM_DELTA_PIXEL) {
               scrollAmount = scrollByDelta;
-            else if (event.deltaMode == event.DOM_DELTA_PAGE)
+              instant = true;
+            } else if (event.deltaMode == event.DOM_DELTA_PAGE) {
               scrollAmount = scrollByDelta * this.scrollClientSize;
-            else
+            } else {
               scrollAmount = scrollByDelta * this.lineScrollAmount;
+            }
           }
 
           if (this._prevMouseScrolls.length > 1)
@@ -540,7 +519,7 @@
         }
 
         if (doScroll) {
-          this.scrollByPixels(scrollAmount);
+          this.scrollByPixels(scrollAmount, instant);
         }
 
         event.stopPropagation();
@@ -570,7 +549,7 @@
                 : event.touches[0].screenX);
           var delta = this._touchStart - touchPoint;
           if (Math.abs(delta) > 0) {
-            this.scrollByPixels(delta);
+            this.scrollByPixels(delta, true);
             this._touchStart = touchPoint;
           }
           event.preventDefault();
