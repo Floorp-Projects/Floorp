@@ -2088,7 +2088,7 @@ GeckoDriver.prototype.getActiveElement = function* (cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.clickElement = async function (cmd, resp) {
+GeckoDriver.prototype.clickElement = function* (cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
@@ -2097,7 +2097,7 @@ GeckoDriver.prototype.clickElement = async function (cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let el = this.curBrowser.seenEls.get(id, {frame: win});
-      await interaction.clickElement(el, this.a11yChecks);
+      yield interaction.clickElement(el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -2126,7 +2126,7 @@ GeckoDriver.prototype.clickElement = async function (cmd, resp) {
             parameters);
       });
 
-      await click;
+      yield click;
       break;
   }
 };
