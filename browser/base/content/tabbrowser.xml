@@ -3558,7 +3558,7 @@
               this.showTab(tab);
           }
 
-          this.tabContainer._handleTabSelect(false);
+          this.tabContainer._handleTabSelect(true);
         ]]>
         </body>
       </method>
@@ -3768,7 +3768,7 @@
           if (wasFocused)
             this.mCurrentTab.focus();
 
-          this.tabContainer._handleTabSelect(false);
+          this.tabContainer._handleTabSelect(true);
 
           if (aTab.pinned)
             this.tabContainer._positionPinnedTabs();
@@ -5896,7 +5896,7 @@
         var tabs = document.getBindingParent(this);
         tabs.setAttribute("overflow", "true");
         tabs._positionPinnedTabs();
-        tabs._handleTabSelect(false);
+        tabs._handleTabSelect(true);
       ]]></handler>
     </handlers>
   </binding>
@@ -6253,10 +6253,10 @@
       </method>
 
       <method name="_handleTabSelect">
-        <parameter name="aSmoothScroll"/>
+        <parameter name="aInstant"/>
         <body><![CDATA[
           if (this.getAttribute("overflow") == "true")
-            this.mTabstrip.ensureElementIsVisible(this.selectedItem, aSmoothScroll);
+            this.mTabstrip.ensureElementIsVisible(this.selectedItem, aInstant);
         ]]></body>
       </method>
 
