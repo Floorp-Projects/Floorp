@@ -7610,6 +7610,46 @@
 !macroend
 
 /**
+ * Gets the number of dialog units from the top of a dialog to the bottom of a
+ * control
+ *
+ * _DIALOG the handle of the dialog
+ * _CONTROL the handle of the control
+ * _RES_DU return value - dialog units from the top of the dialog to the bottom
+ *         of the control
+ */
+!macro GetDlgItemBottomDUCall _DIALOG _CONTROL _RES_DU
+  Push "${_DIALOG}"
+  Push "${_CONTROL}"
+  ${CallArtificialFunction} GetDlgItemBottomDU_
+  Pop ${_RES_DU}
+!macroend
+
+!define GetDlgItemBottomDU "!insertmacro GetDlgItemBottomDUCall"
+!define un.GetDlgItemBottomDU "!insertmacro GetDlgItemBottomDUCall"
+
+!macro GetDlgItemBottomDU_
+  Exch $0 ; handle of the control
+  Exch $1 ; handle of the dialog
+  Push $2
+  Push $3
+
+  ; #32770 is the dialog class
+  FindWindow $2 "#32770" "" $HWNDPARENT
+  System::Call '*(i, i, i, i) i .r3'
+  System::Call 'user32::GetWindowRect(i r0, i r3)'
+  System::Call 'user32::MapWindowPoints(i 0, i r2, i r3, i 2)'
+  System::Call 'user32::MapDialogRect(i r1, i r3)'
+  System::Call '*$3(i, i, i, i .r0)'
+  System::Free $3
+
+  Pop $3
+  Pop $2
+  Pop $1
+  Exch $0 ; pixels from the top of the dialog to the bottom of the control
+!macroend
+
+/**
  * Gets the width and height for sizing a control that has the specified text.
  * If the text has embedded newlines then the width and height will be
  * determined without trying to optimize the control's width and height. If the

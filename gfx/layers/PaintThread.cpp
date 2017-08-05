@@ -22,6 +22,48 @@ StaticAutoPtr<PaintThread> PaintThread::sSingleton;
 StaticRefPtr<nsIThread> PaintThread::sThread;
 PlatformThreadId PaintThread::sThreadId;
 
+// RAII make sure we clean up and restore our draw targets
+// when we paint async.
+struct AutoCapturedPaintSetup {
+  AutoCapturedPaintSetup(DrawTarget* aTarget,
+                         DrawTargetCapture* aCapture,
+                         CompositorBridgeChild* aBridge)
+  : mTarget(aTarget)
+  , mRestorePermitsSubpixelAA(aTarget->GetPermitSubpixelAA())
+  , mOldTransform(aTarget->GetTransform())
+  , mBridge(aBridge)
+  {
+    MOZ_ASSERT(mTarget);
+    MOZ_ASSERT(aCapture);
+
+    mTarget->SetTransform(aCapture->GetTransform());
+    mTarget->SetPermitSubpixelAA(aCapture->GetPermitSubpixelAA());
+  }
+
+  ~AutoCapturedPaintSetup()
+  {
+    mTarget->SetTransform(mOldTransform);
+    mTarget->SetPermitSubpixelAA(mRestorePermitsSubpixelAA);
+
+    // Textureclient forces a flush once we "end paint", so
+    // users of this texture expect all the drawing to be complete.
+    // Force a flush now.
+    // TODO: This might be a performance bottleneck because
+    // main thread painting only does one flush at the end of all paints
+    // whereas we force a flush after each draw target paint.
+    mTarget->Flush();
+
+    if (mBridge) {
+      mBridge->NotifyFinishedAsyncPaint();
+    }
+  }
+
+  DrawTarget* mTarget;
+  bool mRestorePermitsSubpixelAA;
+  Matrix mOldTransform;
+  RefPtr<CompositorBridgeChild> mBridge;
+};
+
 void
 PaintThread::Release()
 {
@@ -112,48 +154,30 @@ PaintThread::IsOnPaintThread()
 
 void
 PaintThread::PaintContentsAsync(CompositorBridgeChild* aBridge,
-                                gfx::DrawTargetCapture* aCapture,
                                 CapturedPaintState* aState,
                                 PrepDrawTargetForPaintingCallback aCallback)
 {
   MOZ_ASSERT(IsOnPaintThread());
-  MOZ_ASSERT(aCapture);
   MOZ_ASSERT(aState);
 
   DrawTarget* target = aState->mTarget;
+  DrawTargetCapture* capture = aState->mCapture;
 
-  Matrix oldTransform = target->GetTransform();
-  target->SetTransform(aState->mTargetTransform);
-  target->SetPermitSubpixelAA(aCapture->GetPermitSubpixelAA());
+  AutoCapturedPaintSetup setup(target, capture, aBridge);
 
   if (!aCallback(aState)) {
     return;
   }
 
   // Draw all the things into the actual dest target.
-  target->DrawCapturedDT(aCapture, Matrix());
-  target->SetTransform(oldTransform);
-
-  // Textureclient forces a flush once we "end paint", so
-  // users of this texture expect all the drawing to be complete.
-  // Force a flush now.
-  // TODO: This might be a performance bottleneck because
-  // main thread painting only does one flush at the end of all paints
-  // whereas we force a flush after each draw target paint.
-  target->Flush();
-
-  if (aBridge) {
-    aBridge->NotifyFinishedAsyncPaint();
-  }
+  target->DrawCapturedDT(capture, Matrix());
 }
 
 void
-PaintThread::PaintContents(DrawTargetCapture* aCapture,
-                           CapturedPaintState* aState,
+PaintThread::PaintContents(CapturedPaintState* aState,
                            PrepDrawTargetForPaintingCallback aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCapture);
   MOZ_ASSERT(aState);
 
   // If painting asynchronously, we need to acquire the compositor bridge which
@@ -164,14 +188,14 @@ PaintThread::PaintContents(DrawTargetCapture* aCapture,
     cbc = CompositorBridgeChild::Get();
     cbc->NotifyBeginAsyncPaint();
   }
-  RefPtr<DrawTargetCapture> capture(aCapture);
   RefPtr<CapturedPaintState> state(aState);
+  RefPtr<DrawTargetCapture> capture(aState->mCapture);
 
   RefPtr<PaintThread> self = this;
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
     [self, cbc, capture, state, aCallback]() -> void
   {
-    self->PaintContentsAsync(cbc, capture,
+    self->PaintContentsAsync(cbc,
                              state,
                              aCallback);
   });

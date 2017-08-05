@@ -306,7 +306,10 @@ InputQueue::ReceiveKeyboardInput(const RefPtr<AsyncPanZoomController>& aTarget,
 
   ProcessQueue();
 
-  return nsEventStatus_eConsumeNoDefault;
+  // If APZ is allowing passive listeners then we must dispatch the event to
+  // content, otherwise we can consume the event.
+  return gfxPrefs::APZKeyboardPassiveListeners() ? nsEventStatus_eConsumeDoDefault
+                                                 : nsEventStatus_eConsumeNoDefault;
 }
 
 static bool

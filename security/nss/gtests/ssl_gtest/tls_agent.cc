@@ -10,6 +10,7 @@
 #include "pk11func.h"
 #include "ssl.h"
 #include "sslerr.h"
+#include "sslexp.h"
 #include "sslproto.h"
 #include "tls_parser.h"
 
@@ -411,6 +412,13 @@ void TlsAgent::SetShortHeadersEnabled() {
   EXPECT_TRUE(EnsureTlsSetup());
 
   SECStatus rv = SSLInt_EnableShortHeaders(ssl_fd());
+  EXPECT_EQ(SECSuccess, rv);
+}
+
+void TlsAgent::SetAltHandshakeTypeEnabled() {
+  EXPECT_TRUE(EnsureTlsSetup());
+
+  SECStatus rv = SSL_UseAltServerHelloType(ssl_fd(), true);
   EXPECT_EQ(SECSuccess, rv);
 }
 

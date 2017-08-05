@@ -166,6 +166,7 @@
           'OTHER_CFLAGS': [
             '-mpclmul',
             '-maes',
+            '-std=gnu99',
           ],
         },
       }],
@@ -231,6 +232,9 @@
         'defines': [
           'FREEBL_LOWHASH',
           'FREEBL_NO_DEPEND',
+        ],
+        'cflags': [
+          '-std=gnu99',
         ],
       }],
       [ 'OS=="linux" or OS=="android"', {

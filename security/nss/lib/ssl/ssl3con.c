@@ -1090,7 +1090,8 @@ ssl_ClientReadVersion(sslSocket *ss, PRUint8 **b, unsigned int *len,
         PORT_SetError(SSL_ERROR_UNSUPPORTED_VERSION);
         return SECFailure;
     }
-    if (temp == tls13_EncodeDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3)) {
+    if (temp == tls13_EncodeDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3) || (ss->opt.enableAltHandshaketype &&
+                                                                          (temp == tls13_EncodeAltDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3)))) {
         v = SSL_LIBRARY_VERSION_TLS_1_3;
     } else {
         v = (SSL3ProtocolVersion)temp;
@@ -2977,6 +2978,7 @@ ssl3_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags)
                                         ssl_SEND_FLAG_CAP_RECORD_VERSION;
     PRInt32 count = -1;
     SECStatus rv;
+    SSL3ContentType ct = content_handshake;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
@@ -2990,7 +2992,12 @@ ssl3_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags)
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
-    count = ssl3_SendRecord(ss, NULL, content_handshake,
+    /* Maybe send the first message with alt handshake type. */
+    if (ss->ssl3.hs.altHandshakeType) {
+        ct = content_alt_handshake;
+        ss->ssl3.hs.altHandshakeType = PR_FALSE;
+    }
+    count = ssl3_SendRecord(ss, NULL, ct,
                             ss->sec.ci.sendBuf.buf,
                             ss->sec.ci.sendBuf.len, flags);
     if (count < 0) {
@@ -9321,7 +9328,7 @@ ssl3_SendServerHello(sslSocket *ss)
     if (IS_DTLS(ss) && ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
         version = dtls_TLSVersionToDTLSVersion(ss->version);
     } else {
-        version = tls13_EncodeDraftVersion(ss->version);
+        version = ss->ssl3.hs.altHandshakeType ? tls13_EncodeAltDraftVersion(ss->version) : tls13_EncodeDraftVersion(ss->version);
     }
 
     rv = ssl3_AppendHandshakeNumber(ss, version, 2);
@@ -9752,13 +9759,12 @@ ssl3_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length,
 
         hashAlg = ssl_SignatureSchemeToHashType(sigScheme);
 
-        if (hashes->u.pointer_to_hash_input.data) {
-            rv = ssl3_ComputeHandshakeHash(hashes->u.pointer_to_hash_input.data,
-                                           hashes->u.pointer_to_hash_input.len,
-                                           hashAlg, &localHashes);
-        } else {
-            rv = SECFailure;
-        }
+        /* Read from the message buffer, but we need to use only up to the end
+         * of the previous handshake message. The length of the transcript up to
+         * that point is saved in |hashes->u.transcriptLen|. */
+        rv = ssl3_ComputeHandshakeHash(ss->ssl3.hs.messages.buf,
+                                       hashes->u.transcriptLen,
+                                       hashAlg, &localHashes);
 
         if (rv == SECSuccess) {
             hashesForVerify = &localHashes;
@@ -11658,15 +11664,15 @@ ssl3_HandleHandshakeMessage(sslSocket *ss, PRUint8 *b, PRUint32 length,
                  * additional handshake messages will have been added to the
                  * buffer, e.g. the certificate_verify message itself.)
                  *
-                 * Therefore, we use SSL3Hashes.u.pointer_to_hash_input
-                 * to signal the current state of the buffer.
+                 * Therefore, we use SSL3Hashes.u.transcriptLen to save how much
+                 * data there is and read directly from ss->ssl3.hs.messages
+                 * when calculating the hashes.
                  *
                  * ssl3_HandleCertificateVerify will detect
                  *     hashType == handshake_hash_record
                  * and use that information to calculate the hash.
                  */
-                hashes.u.pointer_to_hash_input.data = ss->ssl3.hs.messages.buf;
-                hashes.u.pointer_to_hash_input.len = ss->ssl3.hs.messages.len;
+                hashes.u.transcriptLen = ss->ssl3.hs.messages.len;
                 hashesPtr = &hashes;
             } else {
                 computeHashes = PR_TRUE;
@@ -12729,6 +12735,14 @@ process_it:
      */
     ssl_GetSSL3HandshakeLock(ss);
 
+    /* Special case: allow alt content type for TLS 1.3 ServerHello. */
+    if ((rType == content_alt_handshake) &&
+        (ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3) &&
+        (ss->ssl3.hs.ws == wait_server_hello) &&
+        (ss->opt.enableAltHandshaketype) &&
+        (!IS_DTLS(ss))) {
+        rType = content_handshake;
+    }
     /* All the functions called in this switch MUST set error code if
     ** they return SECFailure or SECWouldBlock.
     */
