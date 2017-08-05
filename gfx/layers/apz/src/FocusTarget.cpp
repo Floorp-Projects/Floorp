@@ -64,7 +64,27 @@ HasListenersForKeyEvents(nsIContent* aContent)
       nullptr, nullptr, &targets);
   NS_ENSURE_SUCCESS(rv, false);
   for (size_t i = 0; i < targets.Length(); i++) {
-    if (targets[i]->HasUntrustedOrNonSystemGroupKeyEventListeners()) {
+    if (targets[i]->HasNonSystemGroupListenersForUntrustedKeyEvents()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool
+HasListenersForNonPassiveKeyEvents(nsIContent* aContent)
+{
+  if (!aContent) {
+    return false;
+  }
+
+  WidgetEvent event(true, eVoidEvent);
+  nsTArray<EventTarget*> targets;
+  nsresult rv = EventDispatcher::Dispatch(aContent, nullptr, &event, nullptr,
+      nullptr, nullptr, &targets);
+  NS_ENSURE_SUCCESS(rv, false);
+  for (size_t i = 0; i < targets.Length(); i++) {
+    if (targets[i]->HasNonPassiveNonSystemGroupListenersForUntrustedKeyEvents()) {
       return true;
     }
   }
@@ -116,16 +136,25 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
   // listeners or whether key events will be targeted at a different process
   // through a remote browser.
   nsCOMPtr<nsIContent> focusedContent = presShell->GetFocusedContentInOurWindow();
+  nsCOMPtr<nsIContent> keyEventTarget = focusedContent;
+
+  // If there is no focused element then event dispatch goes to the body of
+  // the page if it exists or the root element.
+  if (!keyEventTarget) {
+    keyEventTarget = document->GetUnfocusedKeyEventTarget();
+  }
 
   // Check if there are key event listeners that could prevent default or change
   // the focus or selection of the page.
-  mFocusHasKeyEventListeners =
-    HasListenersForKeyEvents(focusedContent ? focusedContent.get()
-                                            : document->GetUnfocusedKeyEventTarget());
+  if (gfxPrefs::APZKeyboardPassiveListeners()) {
+    mFocusHasKeyEventListeners = HasListenersForNonPassiveKeyEvents(keyEventTarget.get());
+  } else {
+    mFocusHasKeyEventListeners = HasListenersForKeyEvents(keyEventTarget.get());
+  }
 
-  // Check if the focused element is content editable or if the document
+  // Check if the key event target is content editable or if the document
   // is in design mode.
-  if (IsEditableNode(focusedContent) ||
+  if (IsEditableNode(keyEventTarget) ||
       IsEditableNode(document)) {
     FT_LOG("Creating nil target with seq=%" PRIu64 ", kl=%d (disabling for editable node)\n",
            aFocusSequenceNumber,
@@ -135,8 +164,8 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
     return;
   }
 
-  // Check if the focused element is a remote browser
-  if (TabParent* browserParent = TabParent::GetFrom(focusedContent)) {
+  // Check if the key event target is a remote browser
+  if (TabParent* browserParent = TabParent::GetFrom(keyEventTarget)) {
     RenderFrameParent* rfp = browserParent->GetRenderFrame();
 
     // The globally focused element for scrolling is in a remote layer tree

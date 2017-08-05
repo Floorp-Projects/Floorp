@@ -189,25 +189,9 @@ async function stealAndRecacheChildren(browser, accDoc) {
   const acc1 = findAccessibleChildByID(accDoc, id1);
   const acc2 = findAccessibleChildByID(accDoc, id2);
 
-  /* ================ Steal from other ARIA owns ============================ */
+  /* ================ Attempt to steal from other ARIA owns ================= */
   let onReorder = waitForEvent(EVENT_REORDER, id2);
   await invokeSetAttribute(browser, id2, "aria-owns", "t3_child");
-  await onReorder;
-
-  let tree = {
-    SECTION: [ ]
-  };
-  testAccessibleTree(acc1, tree);
-
-  tree = {
-    SECTION: [
-      { CHECKBUTTON: [ ] }
-    ]
-  };
-  testAccessibleTree(acc2, tree);
-
-  /* ================ Append element to recache children ==================== */
-  onReorder = waitForEvent(EVENT_REORDER, id2);
   await ContentTask.spawn(browser, id2, id => {
     let div = content.document.createElement("div");
     div.setAttribute("role", "radio");
@@ -215,15 +199,16 @@ async function stealAndRecacheChildren(browser, accDoc) {
   });
   await onReorder;
 
-  tree = {
-    SECTION: [ ]
+  let tree = {
+    SECTION: [
+      { CHECKBUTTON: [ ] } // ARIA owned
+    ]
   };
   testAccessibleTree(acc1, tree);
 
   tree = {
     SECTION: [
-      { RADIOBUTTON: [ ] },
-      { CHECKBUTTON: [ ] } // ARIA owned
+      { RADIOBUTTON: [ ] }
     ]
   };
   testAccessibleTree(acc2, tree);

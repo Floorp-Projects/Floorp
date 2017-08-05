@@ -58,10 +58,17 @@ EventTarget::SetEventHandler(nsIAtom* aType, const nsAString& aTypeString,
 }
 
 bool
-EventTarget::HasUntrustedOrNonSystemGroupKeyEventListeners() const
+EventTarget::HasNonSystemGroupListenersForUntrustedKeyEvents() const
 {
   EventListenerManager* elm = GetExistingListenerManager();
-  return elm && elm->HasUntrustedOrNonSystemGroupKeyEventListeners();
+  return elm && elm->HasNonSystemGroupListenersForUntrustedKeyEvents();
+}
+
+bool
+EventTarget::HasNonPassiveNonSystemGroupListenersForUntrustedKeyEvents() const
+{
+  EventListenerManager* elm = GetExistingListenerManager();
+  return elm && elm->HasNonPassiveNonSystemGroupListenersForUntrustedKeyEvents();
 }
 
 bool

@@ -8614,6 +8614,13 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
     if (ParseNode* pn2 = pn->pn_kid) {
         if (!emitTree(pn2))
             return false;
+
+        bool isAsyncGenerator = sc->asFunctionBox()->isAsync() &&
+                                sc->asFunctionBox()->isStarGenerator();
+        if (isAsyncGenerator) {
+            if (!emitAwait())
+                return false;
+        }
     } else {
         /* No explicit return value provided */
         if (!emit1(JSOP_UNDEFINED))
@@ -8726,6 +8733,14 @@ BytecodeEmitter::emitYield(ParseNode* pn)
         if (!emit1(JSOP_UNDEFINED))
             return false;
     }
+
+    // 11.4.3.7 AsyncGeneratorYield step 5.
+    bool isAsyncGenerator = sc->asFunctionBox()->isAsync();
+    if (isAsyncGenerator) {
+        if (!emitAwait())                                 // RESULT
+            return false;
+    }
+
     if (needsIteratorResult) {
         if (!emitFinishIteratorResult(false))
             return false;
@@ -8797,6 +8812,12 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
 
     MOZ_ASSERT(this->stackDepth == startDepth);
+
+    // 11.4.3.7 AsyncGeneratorYield step 5.
+    if (isAsyncGenerator) {
+        if (!emitAwait())                                 // ITER RESULT
+            return false;
+    }
 
     // Load the generator object.
     if (!emitGetDotGenerator())                           // ITER RESULT GENOBJ
@@ -8947,11 +8968,6 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
     if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ITER OLDRESULT FTYPE FVALUE VALUE
         return false;
 
-    if (isAsyncGenerator) {
-        if (!emitAwait())                                 // ITER OLDRESULT FTYPE FVALUE VALUE
-            return false;
-    }
-
     if (!emitPrepareIteratorResult())                     // ITER OLDRESULT FTYPE FVALUE VALUE RESULT
         return false;
     if (!emit1(JSOP_SWAP))                                // ITER OLDRESULT FTYPE FVALUE RESULT VALUE
@@ -9041,11 +9057,6 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     if (!emitAtomOp(cx->names().value, JSOP_GETPROP))            // VALUE
         return false;
-
-    if (isAsyncGenerator) {
-        if (!emitAwait())                                        // VALUE
-            return false;
-    }
 
     MOZ_ASSERT(this->stackDepth == startDepth - 1);
 

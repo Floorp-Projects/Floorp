@@ -722,6 +722,7 @@ with only_when(building_stylo_bindgen):
     @depends(llvm_config, '--with-libclang-path', '--with-clang-path',
              host_library_name_info, host)
     @imports('os.path')
+    @imports('glob')
     @imports(_from='textwrap', _import='dedent')
     def bindgen_config_paths(llvm_config, libclang_path, clang_path,
                              library_name_info, host):
@@ -736,6 +737,9 @@ with only_when(building_stylo_bindgen):
                                                    library_name_info.dll.suffix))
             if host.kernel == 'Linux':
                 libclang_choices.append('libclang.so.1')
+
+            if host.os == 'OpenBSD':
+                libclang_choices = glob.glob(path + '/libclang.so.*.*')
 
             # At least one of the choices must be found.
             for choice in libclang_choices:

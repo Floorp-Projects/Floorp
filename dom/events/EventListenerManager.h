@@ -470,7 +470,8 @@ public:
 
   dom::EventTarget* GetTarget() { return mTarget; }
 
-  bool HasUntrustedOrNonSystemGroupKeyEventListeners();
+  bool HasNonSystemGroupListenersForUntrustedKeyEvents();
+  bool HasNonPassiveNonSystemGroupListenersForUntrustedKeyEvents();
 
   bool HasApzAwareListeners();
   bool IsApzAwareListener(Listener* aListener);
