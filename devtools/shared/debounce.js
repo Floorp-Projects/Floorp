@@ -10,7 +10,7 @@
  * (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Underscore may be freely distributed under the MIT license.
  *
- * [and in turn extracted from "sdk/lang/functional/concurrent.js"]
+ * [and in turn extracted from the SDK's "lang/functional/concurrent.js"]
  */
 exports.debounce = function (fn, wait) {
   let timeout, args, context, timestamp, result;
