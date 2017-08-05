@@ -93,6 +93,8 @@ RemotePages.prototype = {
   portCreated(port) {
     this.messagePorts.add(port);
 
+    port.loaded = false;
+    port.addMessageListener("RemotePage:Load", this.portMessageReceived);
     port.addMessageListener("RemotePage:Unload", this.portMessageReceived);
 
     for (let name of this.listener.keys()) {
@@ -104,8 +106,15 @@ RemotePages.prototype = {
 
   // A message has been received from one of the pages
   portMessageReceived(message) {
-    if (message.name == "RemotePage:Unload")
-      this.removeMessagePort(message.target);
+    switch (message.name) {
+      case "RemotePage:Load":
+        message.target.loaded = true;
+        break;
+      case "RemotePage:Unload":
+        message.target.loaded = false;
+        this.removeMessagePort(message.target);
+        break;
+    }
 
     this.listener.callListeners(message);
   },
@@ -116,6 +125,7 @@ RemotePages.prototype = {
       port.removeMessageListener(name, this.portMessageReceived);
     }
 
+    port.removeMessageListener("RemotePage:Load", this.portMessageReceived);
     port.removeMessageListener("RemotePage:Unload", this.portMessageReceived);
     this.messagePorts.delete(port);
   },
@@ -177,6 +187,7 @@ function publicMessagePort(port) {
   }
 
   Object.defineProperty(clean, "portID", {
+    enumerable: true,
     get() {
       return port.portID;
     }
@@ -184,6 +195,7 @@ function publicMessagePort(port) {
 
   if (port instanceof ChromeMessagePort) {
     Object.defineProperty(clean, "browser", {
+      enumerable: true,
       get() {
         return port.browser;
       }

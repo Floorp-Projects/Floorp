@@ -267,7 +267,6 @@ stubPreparedMessages.set("console.assert(false, {message: 'foobar'})", new Conso
       "columnNumber": 27,
       "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
       "functionName": "triggerPacket",
-      "language": 2,
       "lineNumber": 1
     }
   ],
@@ -666,21 +665,18 @@ stubPreparedMessages.set("console.trace()", new ConsoleMessage({
       "columnNumber": 3,
       "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
       "functionName": "testStacktraceFiltering",
-      "language": 2,
       "lineNumber": 3
     },
     {
       "columnNumber": 3,
       "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
       "functionName": "foo",
-      "language": 2,
       "lineNumber": 6
     },
     {
       "columnNumber": 1,
       "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
       "functionName": "triggerPacket",
-      "language": 2,
       "lineNumber": 9
     }
   ],
@@ -1462,7 +1458,6 @@ stubPackets.set("console.assert(false, {message: 'foobar'})", {
         "columnNumber": 27,
         "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
         "functionName": "triggerPacket",
-        "language": 2,
         "lineNumber": 1
       }
     ],
@@ -1841,21 +1836,18 @@ stubPackets.set("console.trace()", {
         "columnNumber": 3,
         "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
         "functionName": "testStacktraceFiltering",
-        "language": 2,
         "lineNumber": 3
       },
       {
         "columnNumber": 3,
         "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
         "functionName": "foo",
-        "language": 2,
         "lineNumber": 6
       },
       {
         "columnNumber": 1,
         "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
         "functionName": "triggerPacket",
-        "language": 2,
         "lineNumber": 9
       }
     ],

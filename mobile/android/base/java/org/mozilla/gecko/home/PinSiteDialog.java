@@ -37,7 +37,7 @@ import android.widget.ListView;
 /**
  * Dialog fragment that displays frecency search results, for pinning a site, in a GridView.
  */
-class PinSiteDialog extends DialogFragment {
+public class PinSiteDialog extends DialogFragment {
     // Listener for url selection
     public static interface OnSiteSelectedListener {
         public void onSiteSelected(String url, String title);

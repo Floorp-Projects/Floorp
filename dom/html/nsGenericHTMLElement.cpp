@@ -3033,7 +3033,15 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
   RefPtr<nsStyleContext> sc;
   for (auto* element : Reversed(elementsToCheck)) {
     if (sc) {
-      sc = styleSet->ResolveStyleFor(element, sc, LazyComputeBehavior::Assert);
+      if (styleSet->IsGecko()) {
+        sc = styleSet->ResolveStyleFor(element, sc,
+                                       LazyComputeBehavior::Assert);
+      } else {
+        // Call ResolveStyleLazily to protect against stale element data in
+        // the tree when styled by Servo.
+        sc = styleSet->AsServo()->ResolveStyleLazily(
+            element, CSSPseudoElementType::NotPseudo, nullptr);
+      }
     } else {
       sc = nsComputedDOMStyle::GetStyleContextNoFlush(element,
                                                       nullptr, aPresShell);

@@ -23,8 +23,6 @@
 #include "nsHashKeys.h"
 #include "GeckoProfiler.h"
 #include "nsComponentManagerUtils.h"
-#include "nsINamed.h"
-#include "nsITimer.h"
 #include "ScreenHelperWin.h"
 #include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -45,21 +43,10 @@ static mozilla::LazyLogModule gWinWakeLockLog("WinWakeLock");
 // Gecko. For example when we're playing video in a foreground tab we
 // don't want the screen saver to turn on.
 class WinWakeLockListener final : public nsIDOMMozWakeLockListener
-                                , public nsITimerCallback
-                                , public nsINamed {
+{
 public:
   NS_DECL_ISUPPORTS;
 
-  NS_IMETHOD Notify(nsITimer *timer) override {
-    WAKE_LOCK_LOG("WinWakeLock: periodic timer fired");
-    ResetScreenSaverTimeout();
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetName(nsACString& aName) override {
-    aName.AssignLiteral("WinWakeLockListener");
-    return NS_OK;
-  }
 private:
   ~WinWakeLockListener() {}
 
@@ -68,81 +55,21 @@ private:
       return NS_OK;
     }
     // Note the wake lock code ensures that we're not sent duplicate
-    // "locked-foreground" notifications when multipe wake locks are held.
+    // "locked-foreground" notifications when multiple wake locks are held.
     if (aState.EqualsASCII("locked-foreground")) {
       WAKE_LOCK_LOG("WinWakeLock: Blocking screen saver");
-      // We block the screen saver by periodically resetting the screen
-      // saver timeout.
-      StartTimer();
-      // Prevent the display turning off. On Win7 and later this also
-      // blocks the screen saver, but we need the timer started above
-      // to block on Win XP and Vista.
+      // Prevent the display turning off and block the screen saver.
       SetThreadExecutionState(ES_DISPLAY_REQUIRED|ES_CONTINUOUS);
     } else {
       WAKE_LOCK_LOG("WinWakeLock: Unblocking screen saver");
-      // Re-enable screen saver.
-      StopTimer();
-      // Unblock display turning off.
+      // Unblock display/screen saver turning off.
       SetThreadExecutionState(ES_CONTINUOUS);
     }
     return NS_OK;
   }
-
-  void StartTimer() {
-    ResetScreenSaverTimeout();
-    MOZ_ASSERT(!mTimer);
-    if (mTimer) {
-      return;
-    }
-
-    nsresult rv;
-    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to create screen saver timeout reset timer");
-      return;
-    }
-    // The minimum screensaver timeout that can be specified with Windows' UI
-    // is 60 seconds. We set a timer to re-jig the screen saver 10 seconds
-    // before we expect the timer to run out, but always at least in 1 second
-    // intervals. We reset the timer at a max of 50 seconds, so that if the
-    // user changes the timeout using the UI, we won't be caught out.
-    int32_t timeout = std::max(std::min(50, (int32_t)mScreenSaverTimeout - 10), 1);
-    uint32_t timeoutMs = (uint32_t)timeout * 1000;
-    WAKE_LOCK_LOG("WinWakeLock: Setting periodic timer for %d ms", timeoutMs);
-    rv = timer->InitWithCallback(this,
-                                 timeoutMs,
-                                 nsITimer::TYPE_REPEATING_SLACK);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to initialize screen saver timeout reset timer");
-      return;
-    }
-
-    mTimer = timer.forget();
-  }
-
-  void StopTimer() {
-    WAKE_LOCK_LOG("WinWakeLock: StopTimer()");
-    if (!mTimer) {
-      return;
-    }
-    mTimer->Cancel();
-    mTimer = nullptr;
-  }
-
-  // Resets the operating system's timeout for when to disable the screen.
-  // Called periodically to keep the screensaver off.
-  void ResetScreenSaverTimeout() {
-    if (SystemParametersInfo(SPI_GETSCREENSAVETIMEOUT, 0, &mScreenSaverTimeout, 0)) {
-      SystemParametersInfo(SPI_SETSCREENSAVETIMEOUT, mScreenSaverTimeout, NULL, 0);
-    }
-    WAKE_LOCK_LOG("WinWakeLock: ResetScreenSaverTimeout() mScreenSaverTimeout=%d", mScreenSaverTimeout);
-  }
-
-  UINT mScreenSaverTimeout = 60;
-  nsCOMPtr<nsITimer> mTimer;
 };
 
-NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener, nsITimerCallback, nsINamed)
+NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener)
 StaticRefPtr<WinWakeLockListener> sWakeLockListener;
 
 static void

@@ -4,7 +4,7 @@
 
 this.EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
-const {utils: Cu} = Components;
+const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -66,7 +66,16 @@ LightweightThemeConsumer.prototype = {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 
-    this._update(JSON.parse(aData));
+    const { outerWindowID } = this._win
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+
+    const parsedData = JSON.parse(aData);
+    if (parsedData.window && parsedData.window !== outerWindowID) {
+      return;
+    }
+
+    this._update(parsedData);
   },
 
   handleEvent(aEvent) {

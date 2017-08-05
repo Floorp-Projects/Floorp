@@ -52,6 +52,11 @@ var Policy = {
   now: () => new Date(),
 };
 
+// This is used to buffer calls to setExperimentActive and friends, so that we
+// don't prematurely initialize our environment if it is called early during
+// startup.
+var gActiveExperimentStartupBuffer = new Map();
+
 var gGlobalEnvironment;
 function getGlobal() {
   if (!gGlobalEnvironment) {
@@ -92,7 +97,11 @@ this.TelemetryEnvironment = {
    * @param {String} [options.type=false] The specific experiment type.
    */
   setExperimentActive(id, branch, options = {}) {
-    return getGlobal().setExperimentActive(id, branch, options);
+    if (gGlobalEnvironment) {
+      gGlobalEnvironment.setExperimentActive(id, branch, options);
+    } else {
+      gActiveExperimentStartupBuffer.set(id, {branch, options});
+    }
   },
 
   /**
@@ -102,7 +111,11 @@ this.TelemetryEnvironment = {
    * @param {String} id The id of the active experiment.
    */
   setExperimentInactive(id) {
-    return getGlobal().setExperimentInactive(id);
+    if (gGlobalEnvironment) {
+      gGlobalEnvironment.setExperimentInactive(id);
+    } else {
+      gActiveExperimentStartupBuffer.delete(id);
+    }
   },
 
   /**
@@ -116,7 +129,15 @@ this.TelemetryEnvironment = {
    * }
    */
   getActiveExperiments() {
-    return getGlobal().getActiveExperiments();
+    if (gGlobalEnvironment) {
+      return gGlobalEnvironment.getActiveExperiments();
+    }
+
+    const result = {};
+    for (const [id, {branch}] of gActiveExperimentStartupBuffer.entries()) {
+      result[id] = branch;
+    }
+    return result;
   },
 
   shutdown() {
@@ -151,6 +172,7 @@ this.TelemetryEnvironment = {
   testCleanRestart() {
     getGlobal().shutdown();
     gGlobalEnvironment = null;
+    gActiveExperimentStartupBuffer = new Map();
     return getGlobal();
   },
 };
@@ -846,6 +868,11 @@ function EnvironmentCache() {
   if (AppConstants.MOZ_BUILD_APP == "browser") {
     p.push(this._updateAttribution());
   }
+
+  for (const [id, {branch, options}] of gActiveExperimentStartupBuffer.entries()) {
+    this.setExperimentActive(id, branch, options);
+  }
+  gActiveExperimentStartupBuffer = null;
 
   let setup = () => {
     this._initTask = null;

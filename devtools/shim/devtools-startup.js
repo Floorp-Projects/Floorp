@@ -160,6 +160,11 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function () {
 function DevToolsStartup() {}
 
 DevToolsStartup.prototype = {
+  /**
+   * Flag that indicates if the developer toggle was already added to customizableUI.
+   */
+  developerToggleCreated: false,
+
   handle: function (cmdLine) {
     let consoleFlag = cmdLine.handleFlag("jsconsole", false);
     let debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
@@ -206,15 +211,19 @@ DevToolsStartup.prototype = {
    * We do that to prevent loading any DevTools module until the user intent to use them.
    */
   hookWindow(window) {
+    // Key Shortcuts need to be added on all the created windows.
     this.hookKeyShortcuts(window);
 
-    // All the other hooks are only necessary if the tools aren't loaded yet.
-    if (this.initialized) {
-      return;
+    if (!this.developerToggleCreated) {
+      this.hookDeveloperToggle();
+      this.developerToggleCreated = true;
     }
 
-    this.hookWebDeveloperMenu(window);
-    this.hookDeveloperToggle(window);
+    // The developer menu hook only needs to be added if devtools have not been
+    // initialized yet.
+    if (!this.initialized) {
+      this.hookWebDeveloperMenu(window);
+    }
   },
 
   /**
@@ -233,7 +242,7 @@ DevToolsStartup.prototype = {
    * devtools/client/framework/browser-menu to create the items for real,
    * initDevTools, from onViewShowing is also calling browser-menu.
    */
-  hookDeveloperToggle(window) {
+  hookDeveloperToggle() {
     let id = "developer-button";
     let widget = CustomizableUI.getWidget(id);
     if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
