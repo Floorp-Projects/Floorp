@@ -3175,6 +3175,11 @@ this.AddonManagerPrivate = {
 
   AddonType,
 
+  get BOOTSTRAP_REASONS() {
+    return AddonManagerInternal._getProviderByName("XPIProvider")
+            .BOOTSTRAP_REASONS;
+  },
+
   recordTimestamp(name, value) {
     AddonManagerInternal.recordTimestamp(name, value);
   },
