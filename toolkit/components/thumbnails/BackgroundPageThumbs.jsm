@@ -91,6 +91,8 @@ const BackgroundPageThumbs = {
    * @param url      The URL to capture.
    * @param options  An optional object that configures the capture.  See
    *                 capture() for description.
+   *   unloadingPromise This option is resolved when the calling context is
+   *                    unloading, so things can be cleaned up to avoid leak.
    * @return {Promise} A Promise that resolves when this task completes
    */
   async captureIfMissing(url, options = {}) {
@@ -105,28 +107,34 @@ const BackgroundPageThumbs = {
       return url;
     }
     let thumbPromise = new Promise((resolve, reject) => {
-      let observer = {
-        observe(subject, topic, data) { // jshint ignore:line
-          if (data === url) {
-            switch (topic) {
-              case "page-thumbnail:create":
-                resolve();
-                break;
-              case "page-thumbnail:error":
-                reject(new Error("page-thumbnail:error"));
-                break;
-            }
-            Services.obs.removeObserver(observer, "page-thumbnail:create");
-            Services.obs.removeObserver(observer, "page-thumbnail:error");
+      let observe = (subject, topic, data) => {
+        if (data === url) {
+          switch (topic) {
+            case "page-thumbnail:create":
+              resolve();
+              break;
+            case "page-thumbnail:error":
+              reject(new Error("page-thumbnail:error"));
+              break;
           }
-        },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                               Ci.nsISupportsWeakReference])
+          cleanup();
+        }
       };
-      // Use weak references to avoid leaking in tests where the promise we
-      // return is GC'ed before it has resolved.
-      Services.obs.addObserver(observer, "page-thumbnail:create", true);
-      Services.obs.addObserver(observer, "page-thumbnail:error", true);
+      Services.obs.addObserver(observe, "page-thumbnail:create");
+      Services.obs.addObserver(observe, "page-thumbnail:error");
+
+      // Make sure to clean up to avoid leaks by removing observers when
+      // observed or when our caller is unloading
+      function cleanup() {
+        if (observe) {
+          Services.obs.removeObserver(observe, "page-thumbnail:create");
+          Services.obs.removeObserver(observe, "page-thumbnail:error");
+          observe = null;
+        }
+      }
+      if (options.unloadingPromise) {
+        options.unloadingPromise.then(cleanup);
+      }
     });
     try {
       this.capture(url, options);

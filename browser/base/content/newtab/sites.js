@@ -168,7 +168,8 @@ Site.prototype = {
    */
   captureIfMissing: function Site_captureIfMissing() {
     if (!document.hidden && !this.link.imageURI) {
-      BackgroundPageThumbs.captureIfMissing(this.url);
+      const {unloadingPromise} = gPage;
+      BackgroundPageThumbs.captureIfMissing(this.url, {unloadingPromise});
     }
   },
 
