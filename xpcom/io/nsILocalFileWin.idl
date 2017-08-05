@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "nsILocalFile.idl"
+#include "nsIFile.idl"
 
 %{C++
 struct PRFileDesc;
@@ -13,7 +13,7 @@ struct PRFileDesc;
 [ptr] native PRFileDescStar(PRFileDesc);
 
 [scriptable, builtinclass, uuid(e7a3a954-384b-4aeb-a5f7-55626b0de9be)]
-interface nsILocalFileWin : nsILocalFile
+interface nsILocalFileWin : nsIFile
 {
     /**
      *  initWithCommandLine

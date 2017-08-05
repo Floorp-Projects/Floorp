@@ -7,7 +7,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/UniquePtr.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "Layers.h"
 #include "ImageContainer.h"
 #include "ImageTypes.h"

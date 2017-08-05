@@ -27,7 +27,6 @@ DECL_CLASS(nsIComponentManager);
 DECL_CLASS(nsIComponentRegistrar);
 DECL_CLASS(nsIServiceManager);
 DECL_CLASS(nsIFile);
-DECL_CLASS(nsILocalFile);
 DECL_CLASS(nsIDirectoryServiceProvider);
 DECL_CLASS(nsIMemory);
 DECL_CLASS(nsIDebug2);
