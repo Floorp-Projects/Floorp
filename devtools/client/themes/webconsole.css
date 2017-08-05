@@ -148,7 +148,7 @@ a {
   display: flex;
 }
 
-.message-body > * {
+.message-body {
   white-space: pre-wrap;
   word-wrap: break-word;
 }

@@ -181,7 +181,6 @@ static const char contentSandboxRules[] = R"(
       (ipc-posix-name-regex "^AudioIO"))
 
   (allow signal (target self))
-  (allow iokit-set-properties (iokit-property "IOAudioControlValue"))
 
   (allow mach-lookup
       (global-name "com.apple.coreservices.launchservicesd")
@@ -193,8 +192,7 @@ static const char contentSandboxRules[] = R"(
       (global-name "com.apple.SystemConfiguration.configd")
       (global-name "com.apple.iconservices")
       (global-name "com.apple.cache_delete")
-      (global-name "com.apple.pluginkit.pkd")
-      (global-name "com.apple.bird"))
+      (global-name "com.apple.pluginkit.pkd"))
 
 ; bug 1376163
   (if (>= macosMinorVersion 13)
@@ -206,7 +204,6 @@ static const char contentSandboxRules[] = R"(
 
   (allow iokit-open
       (iokit-user-client-class "IOHIDParamUserClient")
-      (iokit-user-client-class "IOAudioControlUserClient")
       (iokit-user-client-class "IOAudioEngineUserClient")
       (iokit-user-client-class "IGAccelDevice")
       (iokit-user-client-class "nvDevice")
@@ -216,8 +213,7 @@ static const char contentSandboxRules[] = R"(
       (iokit-user-client-class "IGAccelSharedUserClient")
       (iokit-user-client-class "IGAccelVideoContextMain")
       (iokit-user-client-class "IGAccelVideoContextMedia")
-      (iokit-user-client-class "IGAccelVideoContextVEBox")
-      (iokit-user-client-class "RootDomainUserClient"))
+      (iokit-user-client-class "IGAccelVideoContextVEBox"))
 
 ; depending on systems, the 1st, 2nd or both rules are necessary
   (allow-shared-preferences-read "com.apple.HIToolbox")

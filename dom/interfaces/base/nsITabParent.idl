@@ -81,7 +81,7 @@ interface nsITabParent : nsISupports
   /**
    * Notify APZ to start autoscrolling.
    * (aAnchorX, aAnchorY) are the coordinates of the autoscroll anchor,
-   * in LayoutDevice coordinates relative to the screen. aScrollId and 
+   * in CSS coordinates relative to the screen. aScrollId and 
    * aPresShellId identify the scroll frame that content chose to scroll.
    */
   void startApzAutoscroll(in float aAnchorX, in float aAnchorY,

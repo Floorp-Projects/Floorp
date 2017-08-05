@@ -8170,11 +8170,10 @@ DebuggerFrame::getArguments(JSContext *cx, HandleDebuggerFrame frame,
  */
 static bool
 EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
-              jsbytecode* pc, mozilla::Range<const char16_t> chars, const char* filename,
+              mozilla::Range<const char16_t> chars, const char* filename,
               unsigned lineno, MutableHandleValue rval)
 {
     assertSameCompartment(cx, env, frame);
-    MOZ_ASSERT_IF(frame, pc);
 
     CompileOptions options(cx);
     options.setIsRunOnce(true)
@@ -8182,8 +8181,8 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
            .setFileAndLine(filename, lineno)
            .setCanLazilyParse(false)
            .setIntroductionType("debugger eval")
-           .maybeMakeStrictMode(frame ? frame.script()->strict() : false);
-    RootedScript callerScript(cx, frame ? frame.script() : nullptr);
+           .maybeMakeStrictMode(frame && frame.hasScript() ? frame.script()->strict() : false);
+    RootedScript callerScript(cx, frame && frame.hasScript() ? frame.script() : nullptr);
     SourceBufferHolder srcBuf(chars.begin().get(), chars.length(), SourceBufferHolder::NoOwnership);
     RootedScript script(cx);
 
@@ -8298,9 +8297,8 @@ DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
     LeaveDebuggeeNoExecute nnx(cx);
     RootedValue rval(cx);
     AbstractFramePtr frame = iter ? iter->abstractFramePtr() : NullFramePtr();
-    jsbytecode* pc = iter ? iter->pc() : nullptr;
 
-    bool ok = EvaluateInEnv(cx, env, frame, pc, chars,
+    bool ok = EvaluateInEnv(cx, env, frame, chars,
                             options.filename() ? options.filename() : "debugger eval code",
                             options.lineno(), &rval);
     Debugger::resultToCompletion(cx, ok, rval, &status, value);
@@ -8314,8 +8312,6 @@ DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame, mozilla::Range<con
                     MutableHandleValue value)
 {
     MOZ_ASSERT(frame->isLive());
-    if (!requireScriptReferent(cx, frame))
-        return false;
 
     Debugger* dbg = frame->owner();
 

@@ -116,6 +116,7 @@ class Instance
     bool isAsmJS() const { return metadata().isAsmJS(); }
     const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
+    WasmMemoryObject* memory() const;
     size_t memoryLength() const;
     size_t memoryMappedSize() const;
     bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;

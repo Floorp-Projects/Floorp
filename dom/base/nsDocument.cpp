@@ -277,6 +277,8 @@
 #endif // MOZ_WEBRTC
 
 #include "nsIURIClassifier.h"
+#include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/ServoRestyleManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1350,6 +1352,7 @@ nsIDocument::nsIDocument()
     mFrameRequestCallbacksScheduled(false),
     mIsTopLevelContentDocument(false),
     mIsContentDocument(false),
+    mMightHaveStaleServoData(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -3907,6 +3910,9 @@ nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
 
   FillStyleSet(aStyleSet);
 
+  // Ensure we start with no stale data in the tree.
+  ClearStaleServoDataFromDocument();
+
   RefPtr<PresShell> shell = new PresShell;
   shell->Init(this, aContext, aViewManager, aStyleSet);
 
@@ -4026,6 +4032,18 @@ nsDocument::DeleteShell()
   mPresShell = nullptr;
   UpdateFrameRequestCallbackSchedulingState(oldShell);
   mStyleSetFilled = false;
+
+  // Record that the tree might have stale Servo element data in it
+  // that would need to be cleared if we ever get a new pres shell
+  // or if we call ServoStyleSet style resolving functions on
+  // elements in the document. Most of the time this lazy clearing
+  // of Servo element data saves us work, since it's not often that a
+  // document gets a new pres shell after its old one is destroyed.
+  // In those cases we rely on the data being cleared in UnbindFromTree
+  // and save this additional traversal.
+  if (IsStyledByServo()) {
+    mMightHaveStaleServoData = true;
+  }
 }
 
 static void
@@ -12686,7 +12704,7 @@ nsIDocument::InlineScriptAllowedByCSP()
     nsresult rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
                                        EmptyString(), // aNonce
                                        true,          // aParserCreated
-                                       EmptyString(), // FIXME get script sample (bug 1314567)
+                                       nullptr, // FIXME get script sample (bug 1314567)
                                        0,             // aLineNumber
                                        &allowsInlineScript);
     NS_ENSURE_SUCCESS(rv, true);
@@ -13548,4 +13566,18 @@ nsIDocument::IsScopedStyleEnabled()
                               : eScopedStyle_Disabled;
   }
   return mIsScopedStyleEnabled == eScopedStyle_Enabled;
+}
+
+void
+nsIDocument::ClearStaleServoDataFromDocument()
+{
+  if (!mMightHaveStaleServoData) {
+    return;
+  }
+
+  DocumentStyleRootIterator iter(this);
+  while (Element* root = iter.GetNextStyleRoot()) {
+    ServoRestyleManager::ClearServoDataFromSubtree(root);
+  }
+  mMightHaveStaleServoData = false;
 }

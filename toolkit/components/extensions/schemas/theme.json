@@ -457,6 +457,12 @@
         "description": "Make complete or partial updates to the theme. Resolves when the update has completed.",
         "parameters": [
           {
+            "type": "integer",
+            "name": "windowId",
+            "optional": true,
+            "description": "The id of the window to update. No id updates all windows."
+          },
+          {
             "name": "details",
             "$ref": "manifest.ThemeType",
             "description": "The properties of the theme to update."

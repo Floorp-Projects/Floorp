@@ -588,6 +588,15 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
       return nullptr;
   }
 
+  // We do this check to avoid having to add too much special casing of
+  // Servo functions we call to explicitly ignore any element data in
+  // the tree. (See comment in ServoStyleSet::ResolveStyleLazily.)
+  MOZ_RELEASE_ASSERT((aStyleType == eAll && aAnimationFlag == eWithAnimation) ||
+                     !aElement->OwnerDoc()->GetBFCacheEntry(),
+                     "nsComputedDOMStyle doesn't support getting styles without "
+                     "document rules or without animation for documents in the "
+                     "bfcache");
+
   auto pseudoType = CSSPseudoElementType::NotPseudo;
   if (aPseudo) {
     pseudoType = nsCSSPseudoElements::
@@ -657,7 +666,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                                ? StyleRuleInclusion::DefaultOnly
                                : StyleRuleInclusion::All;
     RefPtr<ServoStyleContext> result =
-       servoSet->ResolveTransientStyle(aElement, pseudoType, aPseudo, rules);
+       servoSet->ResolveStyleLazily(aElement, pseudoType, aPseudo, rules);
     if (aAnimationFlag == eWithAnimation) {
       return result.forget();
     }

@@ -496,6 +496,9 @@
 
         if (this.getAttribute("animate") != "false") {
           this.setAttribute("animate", "open");
+          // the animating attribute prevents user interaction during transition
+          // it is removed when popupshown fires
+          this.setAttribute("animating", "true");
         }
 
         // set fading
@@ -525,6 +528,7 @@
         }
       </handler>
       <handler event="popupshown" phase="target">
+        this.removeAttribute("animating");
         this.setAttribute("panelopen", "true");
       </handler>
       <handler event="popuphidden" phase="target">
