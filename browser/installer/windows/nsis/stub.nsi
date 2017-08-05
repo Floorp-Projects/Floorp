@@ -36,10 +36,12 @@ Var LabelBlurb
 Var BgBitmapImage
 Var HwndBgBitmapControl
 Var CurrentBlurbIdx
+Var CheckboxCleanupProfile
 
 Var FontInstalling
 Var FontBlurb
 Var FontFooter
+Var FontCheckbox
 
 Var CanWriteToInstallDir
 Var HasRequiredSpaceAvailable
@@ -89,12 +91,15 @@ Var DownloadServerIP
 Var PostSigningData
 Var PreviousInstallDir
 Var PreviousInstallArch
+Var ProfileCleanupPromptType
+Var ProfileCleanupHeaderString
+Var ProfileCleanupButtonString
 
 ; Uncomment the following to prevent pinging the metrics server when testing
 ; the stub installer
 ;!define STUB_DEBUG
 
-!define StubURLVersion "v7"
+!define StubURLVersion "v8"
 
 ; Successful install exit code
 !define ERR_SUCCESS 0
@@ -284,6 +289,7 @@ ChangeUI all "nsisui.exe"
 
 Caption "$(INSTALLER_WIN_CAPTION)"
 
+Page custom createProfileCleanup
 Page custom createInstall ; Download / Installation page
 
 Function .onInit
@@ -428,6 +434,7 @@ Function .onInit
   StrCpy $FirefoxLaunchCode "0"
   StrCpy $CheckboxShortcuts "1"
   StrCpy $CheckboxSendPing "1"
+  StrCpy $CheckboxCleanupProfile "0"
 !ifdef MOZ_MAINTENANCE_SERVICE
   ; We can only install the maintenance service if the user is an admin.
   Call IsUserAdmin
@@ -462,293 +469,11 @@ Function .onInit
   CreateFont $FontInstalling "$0" "28" "400"
   CreateFont $FontBlurb      "$0" "15" "400"
   CreateFont $FontFooter     "$0" "13" "400"
+  CreateFont $FontCheckbox   "$0" "10" "400"
 
   InitPluginsDir
   File /oname=$PLUGINSDIR\bgstub.bmp "bgstub.bmp"
-FunctionEnd
 
-; .onGUIInit isn't needed except for RTL locales
-!ifdef ${AB_CD}_rtl
-Function .onGUIInit
-  ; Since NSIS RTL support doesn't mirror progress bars use Windows mirroring.
-  ${NSD_AddExStyle} $HWNDPARENT ${WS_EX_LAYOUTRTL}
-  ${RemoveExStyle} $HWNDPARENT ${WS_EX_RTLREADING}
-  ${RemoveExStyle} $HWNDPARENT ${WS_EX_RIGHT}
-  ${NSD_AddExStyle} $HWNDPARENT ${WS_EX_LEFT}|${WS_EX_LTRREADING}
-FunctionEnd
-!endif
-
-Function .onGUIEnd
-  Delete "$PLUGINSDIR\_temp"
-  Delete "$PLUGINSDIR\download.exe"
-  Delete "$PLUGINSDIR\${CONFIG_INI}"
-
-  ${UnloadUAC}
-FunctionEnd
-
-Function .onUserAbort
-  ${NSD_KillTimer} StartDownload
-  ${NSD_KillTimer} OnDownload
-  ${NSD_KillTimer} CheckInstall
-  ${NSD_KillTimer} FinishInstall
-  ${NSD_KillTimer} FinishProgressBar
-  ${NSD_KillTimer} DisplayDownloadError
-  ${NSD_KillTimer} NextBlurb
-  ${NSD_KillTimer} ClearBlurb
-
-  ${If} "$IsDownloadFinished" != ""
-    Call DisplayDownloadError
-    ; Aborting the abort will allow SendPing which is called by
-    ; DisplayDownloadError to hide the installer window and close the installer
-    ; after it sends the metrics ping.
-    Abort
-  ${EndIf}
-FunctionEnd
-
-Function SendPing
-  HideWindow
-  ; Try to send a ping if a download was attempted
-  ${If} $CheckboxSendPing == 1
-  ${AndIf} $IsDownloadFinished != ""
-    ; Get the tick count for the completion of all phases.
-    System::Call "kernel32::GetTickCount()l .s"
-    Pop $EndFinishPhaseTickCount
-
-    ; When the value of $IsDownloadFinished is false the download was started
-    ; but didn't finish. In this case the tick count stored in
-    ; $EndFinishPhaseTickCount is used to determine how long the download was
-    ; in progress.
-    ${If} "$IsDownloadFinished" == "false"
-    ${OrIf} "$EndDownloadPhaseTickCount" == ""
-      StrCpy $EndDownloadPhaseTickCount "$EndFinishPhaseTickCount"
-      ; Cancel the download in progress
-      InetBgDL::Get /RESET /END
-    ${EndIf}
-
-
-    ; When $DownloadFirstTransferSeconds equals an empty string the download
-    ; never successfully started so set the value to 0. It will be possible to
-    ; determine that the download didn't successfully start from the seconds for
-    ; the last download.
-    ${If} "$DownloadFirstTransferSeconds" == ""
-      StrCpy $DownloadFirstTransferSeconds "0"
-    ${EndIf}
-
-    ; When $StartLastDownloadTickCount equals an empty string the download never
-    ; successfully started so set the value to $EndDownloadPhaseTickCount to
-    ; compute the correct value.
-    ${If} $StartLastDownloadTickCount == ""
-      ; This could happen if the download never successfully starts
-      StrCpy $StartLastDownloadTickCount "$EndDownloadPhaseTickCount"
-    ${EndIf}
-
-    ; When $EndPreInstallPhaseTickCount equals 0 the installation phase was
-    ; never completed so set its value to $EndFinishPhaseTickCount to compute
-    ; the correct value.
-    ${If} "$EndPreInstallPhaseTickCount" == "0"
-      StrCpy $EndPreInstallPhaseTickCount "$EndFinishPhaseTickCount"
-    ${EndIf}
-
-    ; When $EndInstallPhaseTickCount equals 0 the installation phase was never
-    ; completed so set its value to $EndFinishPhaseTickCount to compute the
-    ; correct value.
-    ${If} "$EndInstallPhaseTickCount" == "0"
-      StrCpy $EndInstallPhaseTickCount "$EndFinishPhaseTickCount"
-    ${EndIf}
-
-    ; Get the seconds elapsed from the start of the download phase to the end of
-    ; the download phase.
-    ${GetSecondsElapsed} "$StartDownloadPhaseTickCount" "$EndDownloadPhaseTickCount" $0
-
-    ; Get the seconds elapsed from the start of the last download to the end of
-    ; the last download.
-    ${GetSecondsElapsed} "$StartLastDownloadTickCount" "$EndDownloadPhaseTickCount" $1
-
-    ; Get the seconds elapsed from the end of the download phase to the
-    ; completion of the pre-installation check phase.
-    ${GetSecondsElapsed} "$EndDownloadPhaseTickCount" "$EndPreInstallPhaseTickCount" $2
-
-    ; Get the seconds elapsed from the end of the pre-installation check phase
-    ; to the completion of the installation phase.
-    ${GetSecondsElapsed} "$EndPreInstallPhaseTickCount" "$EndInstallPhaseTickCount" $3
-
-    ; Get the seconds elapsed from the end of the installation phase to the
-    ; completion of all phases.
-    ${GetSecondsElapsed} "$EndInstallPhaseTickCount" "$EndFinishPhaseTickCount" $4
-
-    ${If} $DroplistArch == "$(VERSION_64BIT)"
-      StrCpy $R0 "1"
-    ${Else}
-      StrCpy $R0 "0"
-    ${EndIf}
-
-    ${If} ${RunningX64}
-      StrCpy $R1 "1"
-    ${Else}
-      StrCpy $R1 "0"
-    ${EndIf}
-
-    ; Though these values are sometimes incorrect due to bug 444664 it happens
-    ; so rarely it isn't worth working around it by reading the registry values.
-    ${WinVerGetMajor} $5
-    ${WinVerGetMinor} $6
-    ${WinVerGetBuild} $7
-    ${WinVerGetServicePackLevel} $8
-    ${If} ${IsServerOS}
-      StrCpy $9 "1"
-    ${Else}
-      StrCpy $9 "0"
-    ${EndIf}
-
-    ${If} "$ExitCode" == "${ERR_SUCCESS}"
-      ReadINIStr $R5 "$INSTDIR\application.ini" "App" "Version"
-      ReadINIStr $R6 "$INSTDIR\application.ini" "App" "BuildID"
-    ${Else}
-      StrCpy $R5 "0"
-      StrCpy $R6 "0"
-    ${EndIf}
-
-    ; Whether installed into the default installation directory
-    ${GetLongPath} "$INSTDIR" $R7
-    ${GetLongPath} "$InitialInstallDir" $R8
-    ${If} "$R7" == "$R8"
-      StrCpy $R7 "1"
-    ${Else}
-      StrCpy $R7 "0"
-    ${EndIf}
-
-    ClearErrors
-    WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
-                     "Write Test"
-    ${If} ${Errors}
-      StrCpy $R8 "0"
-    ${Else}
-      DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
-      StrCpy $R8 "1"
-    ${EndIf}
-
-    ${If} "$DownloadServerIP" == ""
-      StrCpy $DownloadServerIP "Unknown"
-    ${EndIf}
-
-    StrCpy $R2 ""
-    SetShellVarContext current ; Set SHCTX to the current user
-    ReadRegStr $R2 HKCU "Software\Classes\http\shell\open\command" ""
-    ${If} $R2 != ""
-      ${GetPathFromString} "$R2" $R2
-      ${GetParent} "$R2" $R3
-      ${GetLongPath} "$R3" $R3
-      ${If} $R3 == $INSTDIR
-        StrCpy $R2 "1" ; This Firefox install is set as default.
-      ${Else}
-        StrCpy $R2 "$R2" "" -11 # length of firefox.exe
-        ${If} "$R2" == "${FileMainEXE}"
-          StrCpy $R2 "2" ; Another Firefox install is set as default.
-        ${Else}
-          StrCpy $R2 "0"
-        ${EndIf}
-      ${EndIf}
-    ${Else}
-      StrCpy $R2 "0" ; Firefox is not set as default.
-    ${EndIf}
-
-    ${If} "$R2" == "0"
-      StrCpy $R3 ""
-      ReadRegStr $R2 HKLM "Software\Classes\http\shell\open\command" ""
-      ${If} $R2 != ""
-        ${GetPathFromString} "$R2" $R2
-        ${GetParent} "$R2" $R3
-        ${GetLongPath} "$R3" $R3
-        ${If} $R3 == $INSTDIR
-          StrCpy $R2 "1" ; This Firefox install is set as default.
-        ${Else}
-          StrCpy $R2 "$R2" "" -11 # length of firefox.exe
-          ${If} "$R2" == "${FileMainEXE}"
-            StrCpy $R2 "2" ; Another Firefox install is set as default.
-          ${Else}
-            StrCpy $R2 "0"
-          ${EndIf}
-        ${EndIf}
-      ${Else}
-        StrCpy $R2 "0" ; Firefox is not set as default.
-      ${EndIf}
-    ${EndIf}
-
-    ${If} $CanSetAsDefault == "true"
-      ${If} $CheckboxSetAsDefault == "1"
-        StrCpy $R3 "2"
-      ${Else}
-        StrCpy $R3 "3"
-      ${EndIf}
-    ${Else}
-      ${If} ${AtLeastWin8}
-        StrCpy $R3 "1"
-      ${Else}
-        StrCpy $R3 "0"
-      ${EndIf}
-    ${EndIf}
-
-!ifdef STUB_DEBUG
-    MessageBox MB_OK "${BaseURLStubPing} \
-                      $\nStub URL Version = ${StubURLVersion}${StubURLVersionAppend} \
-                      $\nBuild Channel = ${Channel} \
-                      $\nUpdate Channel = ${UpdateChannel} \
-                      $\nLocale = ${AB_CD} \
-                      $\nFirefox x64 = $R0 \
-                      $\nRunning x64 Windows = $R1 \
-                      $\nMajor = $5 \
-                      $\nMinor = $6 \
-                      $\nBuild = $7 \
-                      $\nServicePack = $8 \
-                      $\nIsServer = $9 \
-                      $\nExit Code = $ExitCode \
-                      $\nFirefox Launch Code = $FirefoxLaunchCode \
-                      $\nDownload Retry Count = $DownloadRetryCount \
-                      $\nDownloaded Bytes = $DownloadedBytes \
-                      $\nDownload Size Bytes = $DownloadSizeBytes \
-                      $\nIntroduction Phase Seconds = $IntroPhaseSeconds \
-                      $\nOptions Phase Seconds = $OptionsPhaseSeconds \
-                      $\nDownload Phase Seconds = $0 \
-                      $\nLast Download Seconds = $1 \
-                      $\nDownload First Transfer Seconds = $DownloadFirstTransferSeconds \
-                      $\nPreinstall Phase Seconds = $2 \
-                      $\nInstall Phase Seconds = $3 \
-                      $\nFinish Phase Seconds = $4 \
-                      $\nInitial Install Requirements Code = $InitialInstallRequirementsCode \
-                      $\nOpened Download Page = $OpenedDownloadPage \
-                      $\nExisting Profile = $ExistingProfile \
-                      $\nExisting Version = $ExistingVersion \
-                      $\nExisting Build ID = $ExistingBuildID \
-                      $\nNew Version = $R5 \
-                      $\nNew Build ID = $R6 \
-                      $\nDefault Install Dir = $R7 \
-                      $\nHas Admin = $R8 \
-                      $\nDefault Status = $R2 \
-                      $\nSet As Sefault Status = $R3 \
-                      $\nDownload Server IP = $DownloadServerIP \
-                      $\nPost-Signing Data = $PostSigningData"
-    ; The following will exit the installer
-    SetAutoClose true
-    StrCpy $R9 "2"
-    Call RelativeGotoPage
-!else
-    ${NSD_CreateTimer} OnPing ${DownloadIntervalMS}
-    InetBgDL::Get "${BaseURLStubPing}/${StubURLVersion}${StubURLVersionAppend}/${Channel}/${UpdateChannel}/${AB_CD}/$R0/$R1/$5/$6/$7/$8/$9/$ExitCode/$FirefoxLaunchCode/$DownloadRetryCount/$DownloadedBytes/$DownloadSizeBytes/$IntroPhaseSeconds/$OptionsPhaseSeconds/$0/$1/$DownloadFirstTransferSeconds/$2/$3/$4/$InitialInstallRequirementsCode/$OpenedDownloadPage/$ExistingProfile/$ExistingVersion/$ExistingBuildID/$R5/$R6/$R7/$R8/$R2/$R3/$DownloadServerIP/$PostSigningData" \
-                  "$PLUGINSDIR\_temp" /END
-!endif
-  ${Else}
-    ${If} "$IsDownloadFinished" == "false"
-      ; Cancel the download in progress
-      InetBgDL::Get /RESET /END
-    ${EndIf}
-    ; The following will exit the installer
-    SetAutoClose true
-    StrCpy $R9 "2"
-    Call RelativeGotoPage
-  ${EndIf}
-FunctionEnd
-
-Function createInstall
   SetShellVarContext all ; Set SHCTX to All Users
   ; If the user doesn't have write access to the installation directory set
   ; the installation directory to a subdirectory of the All Users application
@@ -801,7 +526,216 @@ Function createInstall
     MessageBox MB_OK|MB_ICONEXCLAMATION "$(WARN_DISK_SPACE_QUIT)"
     Quit
   ${EndIf}
+FunctionEnd
 
+; .onGUIInit isn't needed except for RTL locales
+!ifdef ${AB_CD}_rtl
+Function .onGUIInit
+  ; Since NSIS RTL support doesn't mirror progress bars use Windows mirroring.
+  ${NSD_AddExStyle} $HWNDPARENT ${WS_EX_LAYOUTRTL}
+  ${RemoveExStyle} $HWNDPARENT ${WS_EX_RTLREADING}
+  ${RemoveExStyle} $HWNDPARENT ${WS_EX_RIGHT}
+  ${NSD_AddExStyle} $HWNDPARENT ${WS_EX_LEFT}|${WS_EX_LTRREADING}
+FunctionEnd
+!endif
+
+Function .onGUIEnd
+  Delete "$PLUGINSDIR\_temp"
+  Delete "$PLUGINSDIR\download.exe"
+  Delete "$PLUGINSDIR\${CONFIG_INI}"
+
+  ${UnloadUAC}
+FunctionEnd
+
+Function .onUserAbort
+  ${NSD_KillTimer} StartDownload
+  ${NSD_KillTimer} OnDownload
+  ${NSD_KillTimer} CheckInstall
+  ${NSD_KillTimer} FinishInstall
+  ${NSD_KillTimer} FinishProgressBar
+  ${NSD_KillTimer} DisplayDownloadError
+  ${NSD_KillTimer} NextBlurb
+  ${NSD_KillTimer} ClearBlurb
+
+  ${If} "$IsDownloadFinished" != ""
+    Call DisplayDownloadError
+  ${Else}
+    Call SendPing
+  ${EndIf}
+
+  ; Aborting the abort will allow SendPing which is called by
+  ; DisplayDownloadError to hide the installer window and close the installer
+  ; after it sends the metrics ping.
+  Abort
+FunctionEnd
+
+Function createProfileCleanup
+  Call ShouldPromptForProfileCleanup
+  ${Select} $ProfileCleanupPromptType
+  ${Case} 0
+    StrCpy $CheckboxCleanupProfile 0
+    Abort ; Skip this page
+  ${Case} 1
+    StrCpy $ProfileCleanupHeaderString $(STUB_CLEANUP_REINSTALL_HEADER)
+    StrCpy $ProfileCleanupButtonString $(STUB_CLEANUP_REINSTALL_BUTTON)
+  ${Case} 2
+    StrCpy $ProfileCleanupHeaderString $(STUB_CLEANUP_PAVEOVER_HEADER)
+    StrCpy $ProfileCleanupButtonString $(STUB_CLEANUP_PAVEOVER_BUTTON)
+  ${EndSelect}
+
+  nsDialogs::Create /NOUNLOAD 1018
+  Pop $Dialog
+
+  SetCtlColors $HWNDPARENT ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
+
+  ; Since the text color for controls is set in this Dialog the foreground and
+  ; background colors of the Dialog must also be hardcoded.
+  SetCtlColors $Dialog ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
+
+  FindWindow $7 "#32770" "" $HWNDPARENT
+  ${GetDlgItemWidthHeight} $HWNDPARENT $8 $9
+
+  ; Resize the Dialog to fill the entire window
+  System::Call 'user32::MoveWindow(i$Dialog,i0,i0,i $8,i $9,i0)'
+
+  GetDlgItem $0 $HWNDPARENT 1 ; Install button
+  ShowWindow $0 ${SW_HIDE}
+  EnableWindow $0 0
+
+  GetDlgItem $0 $HWNDPARENT 3 ; Back button
+  ShowWindow $0 ${SW_HIDE}
+  EnableWindow $0 0
+
+  GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
+  ; Hide the Cancel button, but don't disable it (or else it won't be possible
+  ; to close the window)
+  ShowWindow $0 ${SW_HIDE}
+
+  GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
+  ; Hiding and then disabling allows Esc to still exit the installer
+  ShowWindow $0 ${SW_HIDE}
+  EnableWindow $0 0
+
+  GetDlgItem $0 $HWNDPARENT 11 ; Footer text
+  ShowWindow $0 ${SW_HIDE}
+  EnableWindow $0 0
+
+  ${GetDlgItemWidthHeight} $HWNDPARENT $R1 $R2
+  ${GetTextWidthHeight} $ProfileCleanupHeaderString $FontInstalling $R1 $R1 $R2
+  ${NSD_CreateLabelCenter} 0 ${PROFILE_CLEANUP_LABEL_TOP_DU} 100% $R2 \
+    $ProfileCleanupHeaderString
+  Pop $0
+  SendMessage $0 ${WM_SETFONT} $FontInstalling 0
+  SetCtlColors $0 ${INSTALL_BLURB_TEXT_COLOR} transparent
+
+  ${GetDlgItemBottomDU} $Dialog $0 $1
+  IntOp $1 $1 + 10 ; add a bit of padding between the header and the button
+  ${GetTextExtent} $ProfileCleanupButtonString $FontFooter $R1 $R2
+  ; Add some padding to both dimensions of the button.
+  IntOp $R1 $R1 + 100
+  IntOp $R2 $R2 + 10
+  ; Now that we know the size and the Y coordinate for the button, we can find
+  ; the correct X coordinate to get it properly centered.
+  ${GetDlgItemWidthHeight} $HWNDPARENT $R3 $R4
+  IntOp $R5 $R1 / 2
+  IntOp $R3 $R3 / 2
+  IntOp $R3 $R3 - $R5
+  ; We need a custom button because the default ones get drawn underneath the
+  ; background image we're about to insert.
+  ${NSD_CreateButton} $R3 $1 $R1 $R2 $ProfileCleanupButtonString
+  Pop $0
+  SendMessage $0 ${WM_SETFONT} $FontFooter 0
+  ${NSD_OnClick} $0 gotoInstallPage
+  ${NSD_SetFocus} $0
+
+  ; For the checkbox, first we need to know the width of the checkbox itself,
+  ; since it can vary with the display scaling and the theme.
+  System::Call 'User32::GetSystemMetrics(i 71) i .r1' ; 71 == SM_CXMENUCHECK
+  ; Now get the width of the label test, if it were all on one line.
+  ${GetTextExtent} $(STUB_CLEANUP_CHECKBOX_LABEL) $FontCheckbox $R1 $R2
+  ${GetDlgItemWidthHeight} $HWNDPARENT $R3 $R4
+  ; Add the checkbox width to the text width, then figure out how many lines
+  ; we're going to need in order to display that text in our dialog.
+  IntOp $R1 $R1 + $1
+  IntOp $R1 $R1 + 5
+  StrCpy $R5 $R1
+  StrCpy $R6 $R2
+  IntOp $R3 $R3 - 150 ; leave some padding on the sides of the dialog
+  ${While} $R1 > $R3
+    StrCpy $R5 $R3
+    IntOp $R2 $R2 + $R6
+    IntOp $R1 $R1 - $R3
+  ${EndWhile}
+  ${GetDlgItemBottomDU} $Dialog $0 $1
+  ; Now that we know the size for the checkbox, center it in the dialog.
+  ${GetDlgItemWidthHeight} $HWNDPARENT $R3 $R4
+  IntOp $R6 $R5 / 2
+  IntOp $R3 $R3 / 2
+  IntOp $R3 $R3 - $R6
+  IntOp $1 $1 + 20 ; add a bit of padding between the button and the checkbox
+  ${NSD_CreateCheckbox} $R3 $1 $R5 $R2 $(STUB_CLEANUP_CHECKBOX_LABEL)
+  Pop $CheckboxCleanupProfile
+  SendMessage $CheckboxCleanupProfile ${WM_SETFONT} $FontCheckbox 0
+  ; The uxtheme must be disabled on checkboxes in order to override the system
+  ; colors and have a transparent background.
+  System::Call 'uxtheme::SetWindowTheme(i $CheckboxCleanupProfile, w " ", w " ")'
+  SetCtlColors $CheckboxCleanupProfile ${INSTALL_BLURB_TEXT_COLOR} transparent
+  ; Setting the background color to transparent isn't enough to actually make a
+  ; checkbox background transparent, you also have to set the right style.
+  ${NSD_AddExStyle} $CheckboxCleanupProfile ${WS_EX_TRANSPARENT}
+  ; For some reason, clicking on the checkbox causes its text to be redrawn
+  ; one pixel to the side of where it was, but without clearing away the
+  ; existing text first, so it looks like the weight increases when you click.
+  ; Hack around this by manually hiding and then re-showing the textbox when
+  ; it gets clicked on.
+  ${NSD_OnClick} $CheckboxCleanupProfile RedrawWindow
+  ${NSD_Check} $CheckboxCleanupProfile
+
+  ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
+    ${INSTALL_FOOTER_WIDTH_DU} $R1 $R2
+  !ifdef ${AB_CD}_rtl
+    nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY} \
+      ${WS_EX_TRANSPARENT} 30u ${INSTALL_FOOTER_TOP_DU} ${INSTALL_FOOTER_WIDTH_DU} \
+       "$R2u" "$(STUB_BLURB_FOOTER2)"
+  !else
+    nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY}|${SS_RIGHT} \
+      ${WS_EX_TRANSPARENT} 175u ${INSTALL_FOOTER_TOP_DU} ${INSTALL_FOOTER_WIDTH_DU} \
+      "$R2u" "$(STUB_BLURB_FOOTER2)"
+  !endif
+  Pop $0
+  SendMessage $0 ${WM_SETFONT} $FontFooter 0
+  SetCtlColors $0 ${INSTALL_BLURB_TEXT_COLOR} transparent
+
+  ${NSD_CreateBitmap} 0 0 100% 100% ""
+  Pop $HwndBgBitmapControl
+  ${NSD_SetStretchedImage} $HwndBgBitmapControl $PLUGINSDIR\bgstub.bmp $BgBitmapImage
+  ; transparent bg on control prevents flicker on redraw
+  SetCtlColors $HwndBgBitmapControl ${INSTALL_BLURB_TEXT_COLOR} transparent
+
+  LockWindow off
+  nsDialogs::Show
+
+  ${NSD_FreeImage} $BgBitmapImage
+FunctionEnd
+
+Function RedrawWindow
+  Pop $0
+  ShowWindow $0 ${SW_HIDE}
+  ShowWindow $0 ${SW_SHOW}
+FunctionEnd
+
+Function gotoInstallPage
+  ; Eat the parameter that NSD_OnClick always passes but that we don't need.
+  Pop $0
+
+  ; Save the state of the checkbox before it's destroyed.
+  ${NSD_GetState} $CheckboxCleanupProfile $CheckboxCleanupProfile
+
+  StrCpy $R9 1
+  Call RelativeGotoPage
+FunctionEnd
+
+Function createInstall
   ; Begin setting up the download/install window
 
   nsDialogs::Create /NOUNLOAD 1018
@@ -833,8 +767,6 @@ Function createInstall
 
   StrCpy $CurrentBlurbIdx "0"
 
-  ; In some locales, the footer message may be too long to fit on one line.
-  ; Figure out how much height it needs and give it that much.
   ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
     ${INSTALL_FOOTER_WIDTH_DU} $R1 $R2
   !ifdef ${AB_CD}_rtl
@@ -866,7 +798,7 @@ Function createInstall
   EnableWindow $0 0
   ShowWindow $0 ${SW_HIDE}
 
-  GetDlgItem $0 $HWNDPARENT 3 ; Back button used for Options
+  GetDlgItem $0 $HWNDPARENT 3 ; Back button
   EnableWindow $0 0
   ShowWindow $0 ${SW_HIDE}
 
@@ -1257,6 +1189,249 @@ Function OnDownload
   ${EndIf}
 FunctionEnd
 
+Function SendPing
+  HideWindow
+  ${If} $CheckboxSendPing == 1
+    ; Get the tick count for the completion of all phases.
+    System::Call "kernel32::GetTickCount()l .s"
+    Pop $EndFinishPhaseTickCount
+
+    ; When the value of $IsDownloadFinished is false the download was started
+    ; but didn't finish. In this case the tick count stored in
+    ; $EndFinishPhaseTickCount is used to determine how long the download was
+    ; in progress.
+    ${If} "$IsDownloadFinished" == "false"
+    ${OrIf} "$EndDownloadPhaseTickCount" == ""
+      StrCpy $EndDownloadPhaseTickCount "$EndFinishPhaseTickCount"
+      ; Cancel the download in progress
+      InetBgDL::Get /RESET /END
+    ${EndIf}
+
+
+    ; When $DownloadFirstTransferSeconds equals an empty string the download
+    ; never successfully started so set the value to 0. It will be possible to
+    ; determine that the download didn't successfully start from the seconds for
+    ; the last download.
+    ${If} "$DownloadFirstTransferSeconds" == ""
+      StrCpy $DownloadFirstTransferSeconds "0"
+    ${EndIf}
+
+    ; When $StartLastDownloadTickCount equals an empty string the download never
+    ; successfully started so set the value to $EndDownloadPhaseTickCount to
+    ; compute the correct value.
+    ${If} $StartLastDownloadTickCount == ""
+      ; This could happen if the download never successfully starts
+      StrCpy $StartLastDownloadTickCount "$EndDownloadPhaseTickCount"
+    ${EndIf}
+
+    ; When $EndPreInstallPhaseTickCount equals 0 the installation phase was
+    ; never completed so set its value to $EndFinishPhaseTickCount to compute
+    ; the correct value.
+    ${If} "$EndPreInstallPhaseTickCount" == "0"
+      StrCpy $EndPreInstallPhaseTickCount "$EndFinishPhaseTickCount"
+    ${EndIf}
+
+    ; When $EndInstallPhaseTickCount equals 0 the installation phase was never
+    ; completed so set its value to $EndFinishPhaseTickCount to compute the
+    ; correct value.
+    ${If} "$EndInstallPhaseTickCount" == "0"
+      StrCpy $EndInstallPhaseTickCount "$EndFinishPhaseTickCount"
+    ${EndIf}
+
+    ; Get the seconds elapsed from the start of the download phase to the end of
+    ; the download phase.
+    ${GetSecondsElapsed} "$StartDownloadPhaseTickCount" "$EndDownloadPhaseTickCount" $0
+
+    ; Get the seconds elapsed from the start of the last download to the end of
+    ; the last download.
+    ${GetSecondsElapsed} "$StartLastDownloadTickCount" "$EndDownloadPhaseTickCount" $1
+
+    ; Get the seconds elapsed from the end of the download phase to the
+    ; completion of the pre-installation check phase.
+    ${GetSecondsElapsed} "$EndDownloadPhaseTickCount" "$EndPreInstallPhaseTickCount" $2
+
+    ; Get the seconds elapsed from the end of the pre-installation check phase
+    ; to the completion of the installation phase.
+    ${GetSecondsElapsed} "$EndPreInstallPhaseTickCount" "$EndInstallPhaseTickCount" $3
+
+    ; Get the seconds elapsed from the end of the installation phase to the
+    ; completion of all phases.
+    ${GetSecondsElapsed} "$EndInstallPhaseTickCount" "$EndFinishPhaseTickCount" $4
+
+    ${If} $DroplistArch == "$(VERSION_64BIT)"
+      StrCpy $R0 "1"
+    ${Else}
+      StrCpy $R0 "0"
+    ${EndIf}
+
+    ${If} ${RunningX64}
+      StrCpy $R1 "1"
+    ${Else}
+      StrCpy $R1 "0"
+    ${EndIf}
+
+    ; Though these values are sometimes incorrect due to bug 444664 it happens
+    ; so rarely it isn't worth working around it by reading the registry values.
+    ${WinVerGetMajor} $5
+    ${WinVerGetMinor} $6
+    ${WinVerGetBuild} $7
+    ${WinVerGetServicePackLevel} $8
+    ${If} ${IsServerOS}
+      StrCpy $9 "1"
+    ${Else}
+      StrCpy $9 "0"
+    ${EndIf}
+
+    ${If} "$ExitCode" == "${ERR_SUCCESS}"
+      ReadINIStr $R5 "$INSTDIR\application.ini" "App" "Version"
+      ReadINIStr $R6 "$INSTDIR\application.ini" "App" "BuildID"
+    ${Else}
+      StrCpy $R5 "0"
+      StrCpy $R6 "0"
+    ${EndIf}
+
+    ; Whether installed into the default installation directory
+    ${GetLongPath} "$INSTDIR" $R7
+    ${GetLongPath} "$InitialInstallDir" $R8
+    ${If} "$R7" == "$R8"
+      StrCpy $R7 "1"
+    ${Else}
+      StrCpy $R7 "0"
+    ${EndIf}
+
+    ClearErrors
+    WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+                     "Write Test"
+    ${If} ${Errors}
+      StrCpy $R8 "0"
+    ${Else}
+      DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+      StrCpy $R8 "1"
+    ${EndIf}
+
+    ${If} "$DownloadServerIP" == ""
+      StrCpy $DownloadServerIP "Unknown"
+    ${EndIf}
+
+    StrCpy $R2 ""
+    SetShellVarContext current ; Set SHCTX to the current user
+    ReadRegStr $R2 HKCU "Software\Classes\http\shell\open\command" ""
+    ${If} $R2 != ""
+      ${GetPathFromString} "$R2" $R2
+      ${GetParent} "$R2" $R3
+      ${GetLongPath} "$R3" $R3
+      ${If} $R3 == $INSTDIR
+        StrCpy $R2 "1" ; This Firefox install is set as default.
+      ${Else}
+        StrCpy $R2 "$R2" "" -11 # length of firefox.exe
+        ${If} "$R2" == "${FileMainEXE}"
+          StrCpy $R2 "2" ; Another Firefox install is set as default.
+        ${Else}
+          StrCpy $R2 "0"
+        ${EndIf}
+      ${EndIf}
+    ${Else}
+      StrCpy $R2 "0" ; Firefox is not set as default.
+    ${EndIf}
+
+    ${If} "$R2" == "0"
+      StrCpy $R3 ""
+      ReadRegStr $R2 HKLM "Software\Classes\http\shell\open\command" ""
+      ${If} $R2 != ""
+        ${GetPathFromString} "$R2" $R2
+        ${GetParent} "$R2" $R3
+        ${GetLongPath} "$R3" $R3
+        ${If} $R3 == $INSTDIR
+          StrCpy $R2 "1" ; This Firefox install is set as default.
+        ${Else}
+          StrCpy $R2 "$R2" "" -11 # length of firefox.exe
+          ${If} "$R2" == "${FileMainEXE}"
+            StrCpy $R2 "2" ; Another Firefox install is set as default.
+          ${Else}
+            StrCpy $R2 "0"
+          ${EndIf}
+        ${EndIf}
+      ${Else}
+        StrCpy $R2 "0" ; Firefox is not set as default.
+      ${EndIf}
+    ${EndIf}
+
+    ${If} $CanSetAsDefault == "true"
+      ${If} $CheckboxSetAsDefault == "1"
+        StrCpy $R3 "2"
+      ${Else}
+        StrCpy $R3 "3"
+      ${EndIf}
+    ${Else}
+      ${If} ${AtLeastWin8}
+        StrCpy $R3 "1"
+      ${Else}
+        StrCpy $R3 "0"
+      ${EndIf}
+    ${EndIf}
+
+!ifdef STUB_DEBUG
+    MessageBox MB_OK "${BaseURLStubPing} \
+                      $\nStub URL Version = ${StubURLVersion}${StubURLVersionAppend} \
+                      $\nBuild Channel = ${Channel} \
+                      $\nUpdate Channel = ${UpdateChannel} \
+                      $\nLocale = ${AB_CD} \
+                      $\nFirefox x64 = $R0 \
+                      $\nRunning x64 Windows = $R1 \
+                      $\nMajor = $5 \
+                      $\nMinor = $6 \
+                      $\nBuild = $7 \
+                      $\nServicePack = $8 \
+                      $\nIsServer = $9 \
+                      $\nExit Code = $ExitCode \
+                      $\nFirefox Launch Code = $FirefoxLaunchCode \
+                      $\nDownload Retry Count = $DownloadRetryCount \
+                      $\nDownloaded Bytes = $DownloadedBytes \
+                      $\nDownload Size Bytes = $DownloadSizeBytes \
+                      $\nIntroduction Phase Seconds = $IntroPhaseSeconds \
+                      $\nOptions Phase Seconds = $OptionsPhaseSeconds \
+                      $\nDownload Phase Seconds = $0 \
+                      $\nLast Download Seconds = $1 \
+                      $\nDownload First Transfer Seconds = $DownloadFirstTransferSeconds \
+                      $\nPreinstall Phase Seconds = $2 \
+                      $\nInstall Phase Seconds = $3 \
+                      $\nFinish Phase Seconds = $4 \
+                      $\nInitial Install Requirements Code = $InitialInstallRequirementsCode \
+                      $\nOpened Download Page = $OpenedDownloadPage \
+                      $\nExisting Profile = $ExistingProfile \
+                      $\nExisting Version = $ExistingVersion \
+                      $\nExisting Build ID = $ExistingBuildID \
+                      $\nNew Version = $R5 \
+                      $\nNew Build ID = $R6 \
+                      $\nDefault Install Dir = $R7 \
+                      $\nHas Admin = $R8 \
+                      $\nDefault Status = $R2 \
+                      $\nSet As Sefault Status = $R3 \
+                      $\nDownload Server IP = $DownloadServerIP \
+                      $\nPost-Signing Data = $PostSigningData \
+                      $\nProfile cleanup prompt shown = $ProfileCleanupPromptType \
+                      $\nDid profile cleanup = $CheckboxCleanupProfile"
+    ; The following will exit the installer
+    SetAutoClose true
+    StrCpy $R9 "2"
+    Call RelativeGotoPage
+!else
+    ${NSD_CreateTimer} OnPing ${DownloadIntervalMS}
+    InetBgDL::Get "${BaseURLStubPing}/${StubURLVersion}${StubURLVersionAppend}/${Channel}/${UpdateChannel}/${AB_CD}/$R0/$R1/$5/$6/$7/$8/$9/$ExitCode/$FirefoxLaunchCode/$DownloadRetryCount/$DownloadedBytes/$DownloadSizeBytes/$IntroPhaseSeconds/$OptionsPhaseSeconds/$0/$1/$DownloadFirstTransferSeconds/$2/$3/$4/$InitialInstallRequirementsCode/$OpenedDownloadPage/$ExistingProfile/$ExistingVersion/$ExistingBuildID/$R5/$R6/$R7/$R8/$R2/$R3/$DownloadServerIP/$PostSigningData/$ProfileCleanupPromptType/$CheckboxCleanupProfile" \
+                  "$PLUGINSDIR\_temp" /END
+!endif
+  ${Else}
+    ${If} "$IsDownloadFinished" == "false"
+      ; Cancel the download in progress
+      InetBgDL::Get /RESET /END
+    ${EndIf}
+    ; The following will exit the installer
+    SetAutoClose true
+    StrCpy $R9 "2"
+    Call RelativeGotoPage
+  ${EndIf}
+FunctionEnd
+
 Function OnPing
   InetBgDL::GetStats
   # $0 = HTTP status code, 0=Completed
@@ -1475,8 +1650,13 @@ Function LaunchApp
   ${GetParameters} $0
   ${GetOptions} "$0" "/UAC:" $1
   ${If} ${Errors}
-    Exec "$\"$INSTDIR\${FileMainEXE}$\""
+    ${If} $CheckboxCleanupProfile == 1
+      Exec "$\"$INSTDIR\${FileMainEXE}$\" -reset-profile -migration"
+    ${Else}
+      Exec "$\"$INSTDIR\${FileMainEXE}$\""
+    ${EndIf}
   ${Else}
+    StrCpy $R1 $CheckboxCleanupProfile
     GetFunctionAddress $0 LaunchAppFromElevatedProcess
     UAC::ExecCodeSegment $0
   ${EndIf}
@@ -1485,7 +1665,11 @@ FunctionEnd
 Function LaunchAppFromElevatedProcess
   ; Set the current working directory to the installation directory
   SetOutPath "$INSTDIR"
-  Exec "$\"$INSTDIR\${FileMainEXE}$\""
+  ${If} $R1 == 1
+    Exec "$\"$INSTDIR\${FileMainEXE}$\" -reset-profile -migration"
+  ${Else}
+    Exec "$\"$INSTDIR\${FileMainEXE}$\""
+  ${EndIf}
 FunctionEnd
 
 Function CopyPostSigningData
@@ -1527,6 +1711,164 @@ FunctionEnd
 
 Function OpenManualDownloadURL
   ExecShell "open" "${URLManualDownload}${URLManualDownloadAppend}"
+FunctionEnd
+
+Function ShouldPromptForProfileCleanup
+  Call GetLatestReleasedVersion
+
+  ; This will be our return value.
+  StrCpy $ProfileCleanupPromptType 0
+
+  ; Only consider installations of the same architecture we're installing.
+  ${If} $DroplistArch == "$(VERSION_64BIT)"
+    SetRegView 64
+  ${Else}
+    SetRegView 32
+  ${EndIf}
+
+  ; Make sure $APPDATA is the user's AppData and not ProgramData.
+  ; We'll set this back to all at the end of the function.
+  SetShellVarContext current
+
+  ; Check each Profile section in profiles.ini until we find the default profile.
+  StrCpy $R0 ""
+  ${If} ${FileExists} "$APPDATA\Mozilla\Firefox\profiles.ini"
+    StrCpy $0 0
+    ${Do}
+      ClearErrors
+      ; Check if the section exists by reading a value that must be present.
+      ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
+      ${If} ${Errors}
+        ; We've run out of profile sections.
+        ${Break}
+      ${EndIf}
+
+      ClearErrors
+      ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Default"
+      ${IfNot} ${Errors}
+      ${AndIf} $1 == "1"
+        ; We've found the default profile
+        ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
+        ReadINIStr $2 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "IsRelative"
+        ${If} $2 == "1"
+          StrCpy $R0 "$APPDATA\Mozilla\Firefox\$1"
+        ${Else}
+          StrCpy $R0 "$1"
+        ${EndIf}
+        GetFullPathName $R0 $R0
+        ${Break}
+      ${EndIf}
+
+      IntOp $0 $0 + 1
+    ${Loop}
+  ${EndIf}
+
+  ${If} $R0 == ""
+    ; No profile to clean up, so don't show the cleanup prompt.
+    GoTo end
+  ${EndIf}
+
+  ; We have at least one profile present. If we don't have any installations,
+  ; then we need to show the re-install prompt. We'll say there's an
+  ; installation present if HKCR\FirefoxURL* exists and points to a real path.
+  StrCpy $0 0
+  StrCpy $R9 ""
+  ${Do}
+    ClearErrors
+    EnumRegKey $1 HKCR "" $0
+    ${If} ${Errors}
+    ${OrIf} $1 == ""
+      ${Break}
+    ${EndIf}
+    ${WordFind} "$1" "-" "+1{" $2
+    ${If} $2 == "FirefoxURL"
+      ClearErrors
+      ReadRegStr $2 HKCR "$1\DefaultIcon" ""
+      ${IfNot} ${Errors}
+        ${GetPathFromString} $2 $1
+        ${If} ${FileExists} $1
+          StrCpy $R9 $1
+          ${Break}
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+    IntOp $0 $0 + 1
+  ${Loop}
+  ${If} $R9 == ""
+    StrCpy $ProfileCleanupPromptType 1
+    GoTo end
+  ${EndIf}
+
+  ; Okay, there's at least one install, let's see if it's for this channel.
+  SetShellVarContext all
+  ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $0
+  ${If} $0 == "false"
+    SetShellVarContext current
+    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $0
+    ${If} $0 == "false"
+      ; Existing installs are not for this channel. Don't show any prompt.
+      GoTo end
+    ${EndIf}
+  ${EndIf}
+
+  ; Find out what version the default profile was last used on.
+  ${If} ${FileExists} "$R0\compatibility.ini"
+    ClearErrors
+    ReadINIStr $0 "$R0\compatibility.ini" "Compatibility" "LastVersion"
+    ${If} ${Errors}
+      GoTo end
+    ${EndIf}
+    ${WordFind} $0 "." "+1{" $0
+
+    ; We don't know what version we're about to install because we haven't
+    ; downloaded it yet. Find out what the latest version released on this
+    ; channel is and assume we'll be installing that one.
+    Call GetLatestReleasedVersion
+    ${If} ${Errors}
+      ; Use this stub installer's version as a fallback when we can't get the
+      ; real current version; this may be behind, but it's better than nothing.
+      StrCpy $1 ${AppVersion}
+    ${EndIf}
+
+    ${WordFind} $1 "." "+1{" $1
+    IntOp $1 $1 - 2
+
+    ${If} $1 > $0
+      ; Default profile was last used more than two versions ago, so we need
+      ; to show the paveover version of the profile cleanup prompt.
+      StrCpy $ProfileCleanupPromptType 2
+    ${EndIf}
+  ${EndIf}
+
+  end:
+  SetRegView lastused
+  SetShellVarContext all
+FunctionEnd
+
+Function GetLatestReleasedVersion
+  ClearErrors
+  nsJSON::Set /tree requestConfig /value \
+    `{"Url": "https://product-details.mozilla.org/1.0/firefox_versions.json", "Async": false}`
+  IfErrors end
+  nsJSON::Set /http requestConfig
+  IfErrors end
+  ${Select} ${Channel}
+  ${Case} "unofficial"
+    StrCpy $1 "FIREFOX_NIGHTLY"
+  ${Case} "nightly"
+    StrCpy $1 "FIREFOX_NIGHTLY"
+  ${Case} "aurora"
+    StrCpy $1 "FIREFOX_AURORA"
+  ${Case} "beta"
+    StrCpy $1 "LATEST_FIREFOX_RELEASED_DEVEL_VERSION"
+  ${Case} "release"
+    StrCpy $1 "LATEST_FIREFOX_VERSION"
+  ${EndSelect}
+  nsJSON::Get "Output" $1 /end
+  IfErrors end
+  Pop $1
+
+  end:
 FunctionEnd
 
 Section

@@ -11,6 +11,7 @@
 #include "cert.h"
 #include "keyhi.h"
 #include "ssl.h"
+#include "sslexp.h"
 #include "sslimpl.h"
 #include "sslproto.h"
 #include "nspr.h"
@@ -80,10 +81,11 @@ static sslOptions ssl_defaults = {
     PR_FALSE,              /* requireDHENamedGroups */
     PR_FALSE,              /* enable0RttData */
 #ifdef NSS_ENABLE_TLS13_SHORT_HEADERS
-    PR_TRUE /* enableShortHeaders */
+    PR_TRUE, /* enableShortHeaders */
 #else
-    PR_FALSE /* enableShortHeaders */
+    PR_FALSE, /* enableShortHeaders */
 #endif
+    PR_FALSE /* enableAltHandshaketype */
 };
 
 /*
@@ -2214,7 +2216,7 @@ ssl3_GetEffectiveVersionPolicy(SSLProtocolVariant variant,
     return SECSuccess;
 }
 
-/* 
+/*
  * Assumes that rangeParam values are within the supported boundaries,
  * but should contain all potentially allowed versions, even if they contain
  * conflicting versions.
@@ -3839,4 +3841,49 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     }
     *pcanbypass = PR_FALSE;
     return SECSuccess;
+}
+
+/* Functions that are truly experimental use EXP, functions that are no longer
+ * experimental use PUB.
+ *
+ * When initially defining a new API, add that API here using the EXP() macro
+ * and name the function with a SSLExp_ prefix.  Define the experimental API as
+ * a macro in sslexp.h using the SSL_EXPERIMENTAL_API() macro defined there.
+ *
+ * Once an API is stable and proven, move the macro definition in sslexp.h to a
+ * proper function declaration in ssl.h.  Keeping the function in this list
+ * ensures that code built against the release that contained the experimental
+ * API will continue to work; use PUB() to reference the public function.
+ */
+#define EXP(n)                \
+    {                         \
+        "SSL_" #n, SSLExp_##n \
+    }
+#define PUB(n)             \
+    {                      \
+        "SSL_" #n, SSL_##n \
+    }
+struct {
+    const char *const name;
+    void *function;
+} ssl_experimental_functions[] = {
+#ifndef SSL_DISABLE_EXPERIMENTAL_API
+    EXP(UseAltServerHelloType),
+#endif
+    { "", NULL }
+};
+#undef EXP
+#undef PUB
+
+void *
+SSL_GetExperimentalAPI(const char *name)
+{
+    unsigned int i;
+    for (i = 0; i < PR_ARRAY_SIZE(ssl_experimental_functions); ++i) {
+        if (strcmp(name, ssl_experimental_functions[i].name) == 0) {
+            return ssl_experimental_functions[i].function;
+        }
+    }
+    PORT_SetError(SSL_ERROR_UNSUPPORTED_EXPERIMENTAL_API);
+    return NULL;
 }

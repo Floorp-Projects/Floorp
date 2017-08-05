@@ -1359,7 +1359,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
       // Any keyboard event that is dispatched to the input queue at this point
       // should have been consumed
-      MOZ_ASSERT(result == nsEventStatus_eConsumeNoDefault);
+      MOZ_ASSERT(result == nsEventStatus_eConsumeDoDefault ||
+                 result == nsEventStatus_eConsumeNoDefault);
 
       keyInput.mHandledByAPZ = true;
       focusSetter.MarkAsNonFocusChanging();

@@ -38,11 +38,18 @@ GetUnwrappedAsyncGenerator(JSFunction* wrapped);
 
 MOZ_MUST_USE bool
 AsyncGeneratorAwaitedFulfilled(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-                              HandleValue value);
-
+                               HandleValue value);
 MOZ_MUST_USE bool
 AsyncGeneratorAwaitedRejected(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-                             HandleValue reason);
+                              HandleValue reason);
+MOZ_MUST_USE bool
+AsyncGeneratorYieldReturnAwaitedFulfilled(JSContext* cx,
+                                          Handle<AsyncGeneratorObject*> asyncGenObj,
+                                          HandleValue value);
+MOZ_MUST_USE bool
+AsyncGeneratorYieldReturnAwaitedRejected(JSContext* cx,
+                                         Handle<AsyncGeneratorObject*> asyncGenObj,
+                                         HandleValue reason);
 
 class AsyncGeneratorRequest : public NativeObject
 {
@@ -97,6 +104,12 @@ class AsyncGeneratorObject : public NativeObject
         State_SuspendedStart,
         State_SuspendedYield,
         State_Executing,
+        // State_AwaitingYieldReturn corresponds to the case that
+        // AsyncGenerator#return is called while State_Executing,
+        // just like the case that AsyncGenerator#return is called
+        // while State_Completed.
+        State_AwaitingYieldReturn,
+        State_AwaitingReturn,
         State_Completed
     };
 
@@ -155,6 +168,12 @@ class AsyncGeneratorObject : public NativeObject
     bool isExecuting() const {
         return state() == State_Executing;
     }
+    bool isAwaitingYieldReturn() const {
+        return state() == State_AwaitingYieldReturn;
+    }
+    bool isAwaitingReturn() const {
+        return state() == State_AwaitingReturn;
+    }
     bool isCompleted() const {
         return state() == State_Completed;
     }
@@ -167,6 +186,12 @@ class AsyncGeneratorObject : public NativeObject
     }
     void setExecuting() {
         setState(State_Executing);
+    }
+    void setAwaitingYieldReturn() {
+        setState(State_AwaitingYieldReturn);
+    }
+    void setAwaitingReturn() {
+        setState(State_AwaitingReturn);
     }
     void setCompleted() {
         setState(State_Completed);
@@ -223,7 +248,8 @@ class AsyncFromSyncIteratorObject : public NativeObject
 };
 
 MOZ_MUST_USE bool
-AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj);
+AsyncGeneratorResume(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+                     CompletionKind completionKind, HandleValue argument);
 
 } // namespace js
 
