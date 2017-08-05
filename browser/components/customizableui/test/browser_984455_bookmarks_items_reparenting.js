@@ -73,7 +73,10 @@ function checkSpecialContextMenus() {
     // Open the bookmarks menu button context menus and ensure that
     // they have the proper views attached.
     let shownPromise = bookmarksMenuPanelShown();
-
+    if (!AppConstants.MOZ_PHOTON_THEME) {
+      bookmarksMenuButton = document.getAnonymousElementByAttribute(bookmarksMenuButton,
+                                                                    "anonid", "dropmarker");
+    }
     EventUtils.synthesizeMouseAtCenter(bookmarksMenuButton, {});
     info("Waiting for bookmarks menu popup to show after clicking dropmarker.")
     await shownPromise;

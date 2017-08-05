@@ -35,6 +35,10 @@ this.PageActions = {
    * Inits.  Call to init.
    */
   init() {
+    if (!AppConstants.MOZ_PHOTON_THEME) {
+      return;
+    }
+
     let callbacks = this._deferredAddActionCalls;
     delete this._deferredAddActionCalls;
 

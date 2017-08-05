@@ -44,6 +44,7 @@
           background-color: hsl(0, 0%, 78%);
         }
 
+%ifdef MOZ_PHOTON_THEME
         @media (-moz-windows-accent-color-in-titlebar: 0) {
           :root[tabsintitlebar]:not(:-moz-lwtheme) {
             background-color: hsl(235,33%,19%);
@@ -57,6 +58,7 @@
             --titlebar-text-color: -moz-win-accentcolortext;
           }
         }
+%endif
 
         :root[tabsintitlebar] .tab-label:-moz-window-inactive {
           /* Calculated to match the opacity change of Windows Explorer
@@ -81,7 +83,11 @@
         margin: 0 !important;
         padding: 10px 17px;
         -moz-context-properties: stroke;
+%ifdef MOZ_PHOTON_THEME
         stroke: var(--titlebar-text-color);
+%else
+        stroke: black;
+%endif
       }
 
       :root[sizemode=maximized] .titlebar-button {
@@ -173,6 +179,7 @@
       }
 
       @media (-moz-windows-default-theme) {
+%ifdef MOZ_PHOTON_THEME
         #main-menubar > menu {
           -moz-appearance: none;
         }
@@ -191,6 +198,20 @@
         .titlebar-button:-moz-lwtheme-darktext:hover:active {
           background-color: hsla(0,0%,0%,.22);
         }
+%else
+        .titlebar-button:hover {
+          background-color: hsla(0,0%,0%,.12);
+        }
+        .titlebar-button:hover:active {
+          background-color: hsla(0,0%,0%,.22);
+        }
+        .titlebar-button:-moz-lwtheme-brighttext:hover {
+          background-color: hsla(0,0%,100%,.12);
+        }
+        .titlebar-button:-moz-lwtheme-brighttext:hover:active {
+          background-color: hsla(0,0%,100%,.22);
+        }
+%endif
 
         .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
           opacity: 0.5;
@@ -324,6 +345,12 @@
     }
   }
 
+%ifndef MOZ_PHOTON_THEME
+  #main-window[sizemode=normal] #TabsToolbar {
+    padding-left: 1px;
+    padding-right: 1px;
+  }
+%endif
   #appcontent:not(:-moz-lwtheme) {
     background-color: -moz-dialog;
   }

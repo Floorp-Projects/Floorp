@@ -5,7 +5,11 @@
 /*** Status and progress indicator ***/
 
 #downloads-button {
+%ifdef MOZ_PHOTON_THEME
   --downloads-indicator-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
+%else
+  --downloads-indicator-image: url("chrome://browser/skin/download.svg");
+%endif
 }
 
 #downloads-indicator-anchor {

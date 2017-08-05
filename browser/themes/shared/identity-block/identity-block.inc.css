@@ -5,7 +5,15 @@
 %endif
 
 #identity-box {
+%ifdef MOZ_PHOTON_THEME
   padding: 0 5px;
+%else
+  font-size: .9em;
+  padding: 3px 5px;
+  /* The padding-left and padding-right transitions handle the delayed hiding of
+     the forward button when hovered. */
+  transition: padding-left, padding-right;
+%endif
   /* Set default fill for icons in the identity block.
      Individual icons can override this. */
   fill: currentColor;
@@ -14,6 +22,7 @@
   overflow: hidden;
 }
 
+%ifdef MOZ_PHOTON_THEME
 #identity-box:hover:not(.no-hover):not([open=true]) {
   background-color: hsla(240,5%,5%,.05);
   fill-opacity: .8;
@@ -24,9 +33,14 @@
   background-color: hsla(240,5%,5%,.1);
   fill-opacity: .8;
 }
+%endif
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels {
+%ifdef MOZ_PHOTON_THEME
   color: #058B00;
+%else
+  color: hsl(92,100%,30%);
+%endif
 }
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon-labels {
 %ifdef MOZ_OFFICIAL_BRANDING
@@ -42,12 +56,14 @@
 #identity-icon-labels:-moz-locale-dir(rtl) {
   padding-right: 2px;
 }
+%ifdef MOZ_PHOTON_THEME
 #identity-box:not(.chromeUI):not(.extensionPage) {
   --urlbar-separator-color: transparent;
 }
 #urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity {
   --urlbar-separator-color: rgba(18, 188, 0, .5);
 }
+%endif
 
 #identity-box {
   padding-inline-end: 2px;
@@ -77,6 +93,23 @@
   border-image-slice: 1;
 }
 
+%ifndef MOZ_PHOTON_THEME
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #identity-box {
+  padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5px);
+}
+@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #identity-box {
+  /* Forward button hiding is delayed when hovered, so we should use the same
+     delay for the identity box. We handle both horizontal paddings (for LTR and
+     RTL), the latter two delays here are for padding-left and padding-right. */
+  transition-delay: 100s, 100s;
+}
+
+@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #identity-box {
+  /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
+  padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5.01px);
+}
+%endif
+
 #identity-icon,
 #tracking-protection-icon,
 #connection-icon,
@@ -94,6 +127,16 @@
   margin-inline-start: 0;
   list-style-image: url(chrome://browser/skin/identity-icon.svg);
 }
+%ifndef MOZ_PHOTON_THEME
+#identity-box:not(.no-hover):hover > #identity-icon,
+#identity-box[open=true] > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon-hover.svg);
+}
+#identity-box.grantedPermissions:not(.no-hover):hover > #identity-icon,
+#identity-box.grantedPermissions[open=true] > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon-notice-hover.svg);
+}
+%endif
 
 #identity-box.grantedPermissions > #identity-icon {
   list-style-image: url(chrome://browser/skin/identity-icon-notice.svg);
@@ -197,7 +240,11 @@
   list-style-image: url(chrome://browser/skin/connection-secure.svg);
   visibility: visible;
   -moz-context-properties: fill;
+%ifdef MOZ_PHOTON_THEME
   fill: #12BC00;
+%else
+  fill: #4d9a26;
+%endif
 }
 #urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
