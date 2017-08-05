@@ -16,7 +16,6 @@ EXTRA_JS_MODULES.addons += [
     'LightweightThemeImageOptimizer.jsm',
     'ProductAddonChecker.jsm',
     'SpellCheckDictionaryBootstrap.js',
-    'WebExtensionBootstrap.js',
     'XPIInstall.jsm',
     'XPIProvider.jsm',
     'XPIProviderUtils.js',
