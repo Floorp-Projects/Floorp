@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <script id='x'>
+      try { o1 = document.getElementById('x') } catch(e) { }
+      try { o2 = document.createElement('table') } catch(e) { }
+      try { o3 = document.createElement('td') } catch(e) { }
+      try { o5 = document.createElement('input') } catch(e) { }
+      try { o6 = document.createTextNode('{\r\u2044/=+=\u06F0\u2029\u06F9a  \uDC1D0\n-\v')  } catch(e) { }
+      try { o7 = new Image(0.167398293512524, 0.2503646329685738) } catch(e) { }
+      try { o1.appendChild(o2) } catch(e) { }
+      try { o2.appendChild(o3) } catch(e) { }
+      try { o3.appendChild(o6) } catch(e) { }
+      try { o8 = document.createRange() } catch(e) { }
+      try { document.documentElement.appendChild(o7) } catch(e) { }
+      try { o7.outerHTML = '<select contenteditable="true"></select>' } catch(e) { }
+      try { document.documentElement.appendChild(o5) } catch(e) { }
+      try { o9 = window.getSelection() } catch(e) { }
+      try { o5.select() } catch(e) { }
+      try { document.replaceChild(document.documentElement, document.documentElement) } catch(e) { }
+      try { document.designMode = 'on' } catch(e) { }
+      try { o8.selectNode(o6) } catch(e) { }
+      try { o9.addRange(o8) } catch(e) { }
+      try { document.execCommand('unlink', false, null) } catch(e) { }
+    </script>
+  </head>
+</html>
