@@ -146,22 +146,7 @@
           // However, the elements may have different width or height.  So,
           // for consistent speed, let's use avalage with of the elements.
           var elements = this._getScrollableElements();
-          if (!elements.length) {
-            // Returning 0 shouldn't be problem because if there is no
-            // scrollable elements, it's impossible to scroll anyway.
-            return 0;
-          }
-
-          if (this._isRTLScrollbox)
-            elements.reverse();
-
-          var [start, end] = this._startEndProps;
-          var low = 0;
-          var high = elements.length - 1;
-          // XXX If the total width is 0, do we need something more?
-          var totalWidth =
-            elements[high].getBoundingClientRect()[end] - elements[low].getBoundingClientRect()[start];
-          return totalWidth / elements.length;
+          return elements.length && (this.scrollSize / elements.length);
         ]]></getter>
       </property>
 
