@@ -45,6 +45,7 @@ const KNOWN_SEARCH_SOURCES = [
   "newtab",
   "searchbar",
   "urlbar",
+  "activitystream"
 ];
 
 const KNOWN_ONEOFF_SOURCES = [
@@ -450,6 +451,9 @@ let BrowserUsageTelemetry = {
         break;
       case "newtab":
         this._recordSearch(engine, "about_newtab", "enter");
+        break;
+      case "activitystream":
+        this._recordSearch(engine, "activitystream", "enter");
         break;
       case "contextmenu":
         this._recordSearch(engine, "contextmenu");
