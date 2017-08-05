@@ -771,20 +771,6 @@ case "$target" in
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
         fi
-        dnl For profile-guided optimization
-        PROFILE_GEN_CFLAGS="-GL"
-        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
-        dnl XXX: PGO builds can fail with warnings treated as errors,
-        dnl specifically "no profile data available" appears to be
-        dnl treated as an error sometimes. This might be a consequence
-        dnl of using WARNINGS_AS_ERRORS in some modules, combined
-        dnl with the linker doing most of the work in the whole-program
-        dnl optimization/PGO case. I think it's probably a compiler bug,
-        dnl but we work around it here.
-        PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
-        dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
-        dnl Probably also a compiler bug, but what can you do?
-        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
     fi
@@ -1816,34 +1802,6 @@ if test -n "$GNU_CC" -a -n "$GNU_CXX"; then
 else
     AC_MSG_RESULT([no])
 fi
-
-dnl ========================================================
-dnl Profile guided optimization (gcc checks)
-dnl ========================================================
-dnl Test for profiling options
-dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
-
-_SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
-
-AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
-AC_TRY_COMPILE([], [return 0;],
-               [ PROFILE_GEN_CFLAGS="-fprofile-generate"
-                 result="yes" ], result="no")
-AC_MSG_RESULT([$result])
-
-if test $result = "yes"; then
-  PROFILE_GEN_LDFLAGS="-fprofile-generate"
-  PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch"
-  PROFILE_USE_LDFLAGS="-fprofile-use"
-fi
-
-CFLAGS="$_SAVE_CFLAGS"
-
-AC_SUBST(PROFILE_GEN_CFLAGS)
-AC_SUBST(PROFILE_GEN_LDFLAGS)
-AC_SUBST(PROFILE_USE_CFLAGS)
-AC_SUBST(PROFILE_USE_LDFLAGS)
 
 AC_LANG_CPLUSPLUS
 

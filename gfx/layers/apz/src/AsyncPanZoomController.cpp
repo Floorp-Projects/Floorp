@@ -285,6 +285,16 @@ typedef GenericFlingAnimation FlingAnimation;
  * reflect the value of the async scroll offset and async zoom at the last time
  * SampleCompositedAsyncTransform() was called.
  *
+ * \li\b apz.keyboard.enabled
+ * Determines whether scrolling with the keyboard will be allowed to be handled
+ * by APZ.
+ *
+ * \li\b apz.keyboard.passive-listeners
+ * When enabled, APZ will interpret the passive event listener flag to mean
+ * that the event listener won't change the focused element or selection of
+ * the page. With this, web content can use passive key listeners and not have
+ * keyboard APZ disabled.
+ *
  * \li\b apz.max_velocity_inches_per_ms
  * Maximum velocity.  Velocity will be capped at this value if a faster fling
  * occurs.  Negative values indicate unlimited velocity.\n
@@ -1750,7 +1760,7 @@ AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
     // existing smooth scroll animation if there is one.
     APZC_LOG("%p keyboard scrolling to snap point %s\n", this, Stringify(*snapPoint).c_str());
     SmoothScrollTo(*snapPoint);
-    return nsEventStatus_eConsumeNoDefault;
+    return nsEventStatus_eConsumeDoDefault;
   }
 
   // Use a keyboard scroll animation to scroll, reusing an existing one if it exists
@@ -1775,7 +1785,7 @@ AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
                                CSSPixel::ToAppUnits(destination),
                                nsSize(velocity.x, velocity.y));
 
-  return nsEventStatus_eConsumeNoDefault;
+  return nsEventStatus_eConsumeDoDefault;
 }
 
 CSSPoint

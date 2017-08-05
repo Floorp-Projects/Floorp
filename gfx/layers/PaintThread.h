@@ -27,12 +27,14 @@ class CapturedPaintState {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedPaintState)
 public:
   CapturedPaintState(nsIntRegion& aRegionToDraw,
+                     gfx::DrawTargetCapture* aCapture,
                      gfx::DrawTarget* aTarget,
                      gfx::DrawTarget* aTargetOnWhite,
                      gfx::Matrix aTargetTransform,
                      SurfaceMode aSurfaceMode,
                      gfxContentType aContentType)
   : mRegionToDraw(aRegionToDraw)
+  , mCapture(aCapture)
   , mTarget(aTarget)
   , mTargetOnWhite(aTargetOnWhite)
   , mTargetTransform(aTargetTransform)
@@ -41,6 +43,7 @@ public:
   {}
 
   nsIntRegion mRegionToDraw;
+  RefPtr<gfx::DrawTargetCapture> mCapture;
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTarget> mTargetOnWhite;
   gfx::Matrix mTargetTransform;
@@ -63,8 +66,7 @@ public:
   static void Start();
   static void Shutdown();
   static PaintThread* Get();
-  void PaintContents(gfx::DrawTargetCapture* aCapture,
-                     CapturedPaintState* aState,
+  void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
 
   // Sync Runnables need threads to be ref counted,
@@ -82,7 +84,6 @@ private:
   void ShutdownOnPaintThread();
   void InitOnPaintThread();
   void PaintContentsAsync(CompositorBridgeChild* aBridge,
-                          gfx::DrawTargetCapture* aCapture,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
 

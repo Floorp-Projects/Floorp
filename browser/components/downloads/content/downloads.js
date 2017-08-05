@@ -1095,7 +1095,6 @@ DownloadsViewItem.prototype = {
         return partFile.exists();
       }
       case "cmd_delete":
-      case "downloadsCmd_cancel":
       case "downloadsCmd_copyLocation":
       case "downloadsCmd_doDefault":
         return true;
@@ -1113,11 +1112,6 @@ DownloadsViewItem.prototype = {
   },
 
   // Item commands
-
-  cmd_delete() {
-    DownloadsCommon.removeAndFinalizeDownload(this.download);
-    PlacesUtils.history.remove(this.download.source.url).catch(Cu.reportError);
-  },
 
   downloadsCmd_unblock() {
     DownloadsPanel.hidePanel();
