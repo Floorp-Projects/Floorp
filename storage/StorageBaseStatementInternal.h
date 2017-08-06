@@ -201,7 +201,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
 
 /**
  * We have type-specific convenience methods for C++ implementations in
- * 3 different forms; 2 by index, 1 by name.  The following macro allows
+ * two different forms; by index and by name.  The following macro allows
  * us to avoid having to define repetitive things by hand.
  *
  * Because of limitations of macros and our desire to avoid requiring special
@@ -216,7 +216,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
  * @param _declName
  *        The argument list (with parens) for the ByName variants.
  * @param _declIndex
- *        The argument list (with parens) for the index variants.
+ *        The argument list (with parens) for the ByIndex variants.
  * @param _invArgs
  *        The invocation argumment list.
  */
@@ -230,14 +230,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
   }                                                                           \
   NS_IMETHODIMP _class::BIND_NAME_CONCAT(_name, ByIndex) _declIndex           \
   {                                                                           \
-    _guard                                                                    \
-    mozIStorageBindingParams *params = getParams();                           \
-    NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);                           \
-    return params->BIND_NAME_CONCAT(_name, ByIndex) _invArgs;                 \
-  }                                                                           \
-  NS_IMETHODIMP _class::BIND_NAME_CONCAT(_name, Parameter) _declIndex         \
-  {                                                                           \
-    WARN_DEPRECATED();                                                        \
     _guard                                                                    \
     mozIStorageBindingParams *params = getParams();                           \
     NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);                           \
@@ -269,8 +261,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
   }
 
 /**
- * Define the various Bind*Parameter, Bind*ByIndex, Bind*ByName stubs that just
- * end up proxying to the params object.
+ * Define the various Bind*ByIndex, Bind*ByName stubs that just end up proxying
+ * to the params object.
  */
 #define BOILERPLATE_BIND_PROXIES(_class, _optionalGuard) \
   BIND_BASE_IMPLS(_class, _optionalGuard)                \

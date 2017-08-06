@@ -41,45 +41,6 @@ interface mozIStorageBaseStatement : mozIStorageBindingParams {
   void finalize();
 
   /**
-   * Bind the given value at the given numeric index.
-   *
-   * @param aParamIndex
-   *        0-based index, 0 corresponding to the first numbered argument or
-   *        "?1".
-   * @param aValue
-   *        Argument value.
-   * @param aValueSize
-   *        Length of aValue in bytes.
-   * @{
-   */
-  [deprecated] void bindUTF8StringParameter(in unsigned long aParamIndex,
-                                            in AUTF8String aValue);
-  [deprecated] void bindStringParameter(in unsigned long aParamIndex,
-                                        in AString aValue);
-  [deprecated] void bindDoubleParameter(in unsigned long aParamIndex,
-                                        in double aValue);
-  [deprecated] void bindInt32Parameter(in unsigned long aParamIndex,
-                                       in long aValue);
-  [deprecated] void bindInt64Parameter(in unsigned long aParamIndex,
-                                       in long long aValue);
-  [deprecated] void bindNullParameter(in unsigned long aParamIndex);
-  [deprecated] void bindBlobParameter(
-    in unsigned long aParamIndex,
-    [array,const,size_is(aValueSize)] in octet aValue,
-    in unsigned long aValueSize);
-  [deprecated] void bindStringAsBlobParameter(
-    in unsigned long aParamIndex,
-    in AString aValue);
-  [deprecated] void bindUTF8StringAsBlobParameter(
-    in unsigned long aParamIndex,
-    in AUTF8String aValue);
-  [deprecated] void bindAdoptedBlobParameter(
-    in unsigned long aParamIndex,
-    [array,size_is(aValueSize)] in octet aValue,
-    in unsigned long aValueSize);
-  /**@}*/
-
-  /**
    * Binds the array of parameters to the statement.  When executeAsync is
    * called, all the parameters in aParameters are bound and then executed.
    *
