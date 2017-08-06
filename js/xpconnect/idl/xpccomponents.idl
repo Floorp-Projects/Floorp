@@ -730,7 +730,4 @@ interface nsIXPCComponents : nsIXPCComponentsBase
     // A javascript component can set |returnCode| to specify an nsresult to
     // be returned without throwing an exception.
     attribute jsval                                     returnCode;
-
-    /* @deprecated Use Components.utils.reportError instead. */
-    [deprecated, implicit_jscontext] void reportError(in jsval error);
 };
