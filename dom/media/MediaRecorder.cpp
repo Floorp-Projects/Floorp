@@ -17,7 +17,7 @@
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/BlobEvent.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/RecordErrorEvent.h"
+#include "mozilla/dom/MediaRecorderErrorEvent.h"
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
@@ -1394,25 +1394,19 @@ MediaRecorder::NotifyError(nsresult aRv)
   if (NS_FAILED(rv)) {
     return;
   }
-  nsString errorMsg;
-  switch (aRv) {
-  case NS_ERROR_DOM_SECURITY_ERR:
-    errorMsg = NS_LITERAL_STRING("SecurityError");
-    break;
-  case NS_ERROR_OUT_OF_MEMORY:
-    errorMsg = NS_LITERAL_STRING("OutOfMemoryError");
-    break;
-  default:
-    errorMsg = NS_LITERAL_STRING("GenericError");
-  }
-
-  RecordErrorEventInit init;
+  MediaRecorderErrorEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mName = errorMsg;
+  switch (aRv) {
+    case NS_ERROR_DOM_SECURITY_ERR:
+      init.mError = DOMException::Create(aRv);
+      break;
+    default:
+      init.mError = DOMException::Create(NS_ERROR_DOM_UNKNOWN_ERR);
+  }
 
-  RefPtr<RecordErrorEvent> event =
-    RecordErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
+  RefPtr<MediaRecorderErrorEvent> event = MediaRecorderErrorEvent::Constructor(
+    this, NS_LITERAL_STRING("error"), init);
   event->SetTrusted(true);
 
   rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
