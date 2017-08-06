@@ -6410,7 +6410,7 @@
 
           if (this._lastNumPinned != numPinned) {
             this._lastNumPinned = numPinned;
-            this._handleTabSelect(false);
+            this._handleTabSelect(true);
           }
         ]]></body>
       </method>
@@ -6452,7 +6452,7 @@
           let tabScreenX = draggedTab.boxObject.screenX;
           let translateX = screenX - draggedTab._dragData.screenX;
           if (!pinned)
-            translateX += this.mTabstrip.scrollPosition - draggedTab._dragData.scrollX;
+            translateX += this.mTabstrip._scrollbox.scrollLeft - draggedTab._dragData.scrollX;
           let leftBound = leftTab.boxObject.screenX - tabScreenX;
           let rightBound = (rightTab.boxObject.screenX + rightTab.boxObject.width) -
                            (tabScreenX + tabWidth);
@@ -6547,7 +6547,7 @@
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();
-                this._handleTabSelect(false);
+                this._handleTabSelect(true);
                 this.mTabstripWidth = width;
                 this.updateSessionRestoreVisibility();
               }
@@ -6996,7 +6996,7 @@
         tab._dragData = {
           offsetX: event.screenX - window.screenX - tabOffsetX,
           offsetY: event.screenY - window.screenY,
-          scrollX: this.mTabstrip.scrollPosition,
+          scrollX: this.mTabstrip._scrollbox.scrollLeft,
           screenX: event.screenX
         };
 
