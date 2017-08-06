@@ -18,9 +18,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=694612
 <script type="application/javascript">
 /** Test for Bug 694612 **/
 SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  ok(event.data.result, "should have performance API in an <object>");
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
 </script>
 <object type="text/html"
-        data="data:text/html,<script>parent.isnot(performance, null, 'should have performance API in an <object>'); parent.SimpleTest.finish();</script>">
+        data="data:text/html,<script>parent.postMessage({result:performance!=null},'*');</script>">
 </object>
 </pre>
 </body>
