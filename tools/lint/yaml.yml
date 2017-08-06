@@ -1,6 +1,7 @@
 yamllint:
     description: YAML linter
     include:
+        - .cron.yml
         - taskcluster
     extensions: ['yml', 'yaml']
     type: external
