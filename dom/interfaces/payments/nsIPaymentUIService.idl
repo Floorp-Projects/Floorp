@@ -6,18 +6,12 @@
 #include "nsISupports.idl"
 #include "nsIPaymentActionResponse.idl"
 
-[scriptable, uuid(01f8bd55-9017-438b-85ec-7c15d2b35cdc)]
+[scriptable, uuid(ea008d0c-9e9f-411f-a6c5-a62106ba7ab9)]
 interface nsIPaymentUIService : nsISupports
 {
-  void showPayment(in AString requestId);
-  void abortPayment(in AString requestId);
-  void completePayment(in AString requestId);
-  void updatePayment(in AString requestId);
+  nsIPaymentActionResponse canMakePayment(in AString requestId);
+  nsIPaymentActionResponse showPayment(in AString requestId);
+  nsIPaymentActionResponse abortPayment(in AString requestId);
+  nsIPaymentActionResponse completePayment(in AString requestId);
+  nsIPaymentActionResponse updatePayment(in AString requestId);
 };
-
-%{C++
-#define NS_PAYMENT_UI_SERVICE_CID \
-  { 0x01f8bd55, 0x9017, 0x438b, { 0x85, 0xec, 0x7c, 0x15, 0xd2, 0xb3, 0x5c, 0xdc } }
-#define NS_PAYMENT_UI_SERVICE_CONTRACT_ID \
-  "@mozilla.org/dom/payments/payment-ui-service;1"
-%}
