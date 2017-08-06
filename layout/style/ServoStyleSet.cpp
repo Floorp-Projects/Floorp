@@ -414,7 +414,7 @@ ResolveStyleForTextOrFirstLetterContinuation(
                                          &aParent,
                                          inheritTarget).Consume();
     MOZ_ASSERT(style);
-    aParent.SetCachedInheritedAnonBoxStyle(aAnonBox, *style);
+    aParent.SetCachedInheritedAnonBoxStyle(aAnonBox, style);
   }
 
   return style.forget();
@@ -482,12 +482,21 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
                          mRawSet.get(),
                          ServoTraversalFlags::Empty).Consume();
   } else {
+    bool cacheable =
+      !nsCSSPseudoElements::IsEagerlyCascadedInServo(aType) && aParentContext;
     computedValues =
-      Servo_ResolvePseudoStyle(aOriginatingElement,
-                               aType,
-                               /* is_probe = */ false,
-                               aParentContext,
-                               mRawSet.get()).Consume();
+      cacheable ? aParentContext->GetCachedLazyPseudoStyle(aType) : nullptr;
+
+    if (!computedValues) {
+      computedValues = Servo_ResolvePseudoStyle(aOriginatingElement,
+                                                aType,
+                                                /* is_probe = */ false,
+                                                aParentContext,
+                                                mRawSet.get()).Consume();
+      if (cacheable) {
+        aParentContext->SetCachedLazyPseudoStyle(computedValues);
+      }
+    }
   }
 
   MOZ_ASSERT(computedValues);
@@ -547,7 +556,7 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
                                               mRawSet.get()).Consume();
     MOZ_ASSERT(style);
     if (aParentContext) {
-      aParentContext->SetCachedInheritedAnonBoxStyle(aPseudoTag, *style);
+      aParentContext->SetCachedInheritedAnonBoxStyle(aPseudoTag, style);
     }
   }
 
@@ -809,13 +818,25 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
   // aOriginatingElement's styles anyway.
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
 
+  bool cacheable =
+    !nsCSSPseudoElements::IsEagerlyCascadedInServo(aType) && aParentContext;
+
   RefPtr<ServoStyleContext> computedValues =
-    Servo_ResolvePseudoStyle(aOriginatingElement, aType,
-                             /* is_probe = */ true,
-                             nullptr,
-                             mRawSet.get()).Consume();
+    cacheable ? aParentContext->GetCachedLazyPseudoStyle(aType) : nullptr;
   if (!computedValues) {
-    return nullptr;
+    computedValues = Servo_ResolvePseudoStyle(aOriginatingElement, aType,
+                                              /* is_probe = */ true,
+                                              nullptr,
+                                              mRawSet.get()).Consume();
+    if (!computedValues) {
+      return nullptr;
+    }
+
+    if (cacheable) {
+      // NB: We don't need to worry about the before/after handling below
+      // because those are eager and thus not |cacheable| anyway.
+      aParentContext->SetCachedLazyPseudoStyle(computedValues);
+    }
   }
 
   // For :before and :after pseudo-elements, having display: none or no
