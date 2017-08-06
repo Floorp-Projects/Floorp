@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FetchStream.h"
-#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMException.h"
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
 #include "nsProxyRelease.h"
@@ -403,10 +403,8 @@ FetchStream::ErrorPropagation(JSContext* aCx, JS::HandleObject aStream,
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-
   // Let's use a generic error.
-  RefPtr<DOMError> error = new DOMError(window, NS_ERROR_DOM_TYPE_ERR);
+  RefPtr<DOMException> error = DOMException::Create(NS_ERROR_DOM_TYPE_ERR);
 
   JS::Rooted<JS::Value> errorValue(aCx);
   if (ToJSValue(aCx, error, &errorValue)) {

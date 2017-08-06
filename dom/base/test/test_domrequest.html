@@ -74,7 +74,7 @@ function testError() {
     ok(false, "promise should not be resolved");
     runTest();
   }, function(e) {
-    ok(e instanceof DOMError, "got error rejection");
+    ok(e instanceof DOMException, "got error rejection");
     ok(e === req.error, "got correct error when rejecting the promise");
     error = e;
     runTest();
@@ -85,7 +85,8 @@ function testError() {
   is(ev.type, "error", "correct type during error");
   is(ev.target, req, "correct target during error");
   is(req.readyState, "done", "correct readyState after error");
-  is(req.error.name, "OhMyError", "correct error after error");
+  is(req.error.name, "UnknownError", "correct error type after error");
+  is(req.error.message, "OhMyError", "correct error message after error");
   is(req.result, undefined, "correct result after error");
   is(error, null, "Promise should not be rejected synchronously");
 }
@@ -102,18 +103,19 @@ function testDetailedError() {
     ok(false, "promise should not be resolved");
     runTest();
   }, function(e) {
-    ok(e instanceof DOMError, "got error rejection");
+    ok(e instanceof DOMException, "got error rejection");
     ok(e === req.error, "got correct error when rejecting the promise");
     error = e;
     runTest();
   });
   ok(promise instanceof Promise, "then() should return a Promise");
-  reqserv.fireDetailedError(req, new DOMError("detailedError"));
+  reqserv.fireDetailedError(req, new DOMException("detailedError"));
   ok(ev, "got error event");
   is(ev.type, "error", "correct type during error");
   is(ev.target, req, "correct target during error");
   is(req.readyState, "done", "correct readyState after error");
-  is(req.error.name, "detailedError", "correct error after error");
+  is(req.error.name, "UnknownError", "correct error type after error");
+  is(req.error.message, "detailedError", "correct error message after error");
   is(req.result, undefined, "correct result after error");
   is(error, null, "Promise should not be rejected synchronously");
 }
@@ -157,14 +159,15 @@ function testThenAfterError() {
   is(ev.type, "error", "correct type during error");
   is(ev.target, req, "correct target during error");
   is(req.readyState, "done", "correct readyState after error");
-  is(req.error.name, "OhMyError", "correct error after error");
+  is(req.error.name, "UnknownError", "correct error type after error");
+  is(req.error.message, "OhMyError", "correct error message after error");
   is(req.result, undefined, "correct result after error");
   var error = null;
   var promise = req.then(function(r) {
     ok(false, "promise should not be resolved");
     runTest();
   }, function(e) {
-    ok(e instanceof DOMError, "got error rejection");
+    ok(e instanceof DOMException, "got error rejection");
     ok(e === req.error, "got correct error when rejecting the promise");
     error = e;
     runTest();
@@ -185,18 +188,19 @@ function testDetailedError() {
     ok(false, "promise should not be resolved");
     runTest();
   }, function(e) {
-    ok(e instanceof DOMError, "got error rejection");
+    ok(e instanceof DOMException, "got error rejection");
     ok(e === req.error, "got correct error when rejecting the promise");
     error = e;
     runTest();
   });
   ok(promise instanceof Promise, "then() should return a Promise");
-  reqserv.fireDetailedError(req, new DOMError("detailedError"));
+  reqserv.fireDetailedError(req, new DOMException("detailedError"));
   ok(ev, "got error event");
   is(ev.type, "error", "correct type during error");
   is(ev.target, req, "correct target during error");
   is(req.readyState, "done", "correct readyState after error");
-  is(req.error.name, "detailedError", "correct error after error");
+  is(req.error.name, "Error", "correct error type after error");
+  is(req.error.message, "detailedError", "correct error message after error");
   is(req.result, undefined, "correct result after error");
   is(error, null, "Promise should not be rejected synchronously");
 }
