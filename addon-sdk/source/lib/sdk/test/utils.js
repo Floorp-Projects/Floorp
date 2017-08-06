@@ -183,13 +183,6 @@ exports.waitUntil = waitUntil;
 var cleanUI = function cleanUI() {
   let { promise, resolve } = defer();
 
-  let windows = getWindows(null, { includePrivate: true });
-  if (windows.length > 1) {
-    return closeWindow(windows[1]).then(cleanUI);
-  }
-
-  getTabs(windows[0]).slice(1).forEach(closeTab);
-
   resolve();
 
   return promise;
