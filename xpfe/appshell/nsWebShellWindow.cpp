@@ -68,6 +68,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
 
 #include "nsPIWindowRoot.h"
@@ -333,7 +334,8 @@ nsWebShellWindow::RequestWindowClose(nsIWidget* aWidget)
     nsEventStatus status = nsEventStatus_eIgnore;
     WidgetMouseEvent event(true, eClose, nullptr,
                            WidgetMouseEvent::eReal);
-    if (NS_SUCCEEDED(eventTarget->DispatchDOMEvent(&event, nullptr, presContext, &status)) &&
+    if (NS_SUCCEEDED(EventDispatcher::Dispatch(eventTarget, presContext,
+                                               &event, nullptr, &status)) &&
         status == nsEventStatus_eConsumeNoDefault)
       return false;
   }
@@ -716,8 +718,8 @@ bool nsWebShellWindow::ExecuteCloseHandler()
       WidgetMouseEvent event(true, eClose, nullptr,
                              WidgetMouseEvent::eReal);
 
-      nsresult rv =
-        eventTarget->DispatchDOMEvent(&event, nullptr, presContext, &status);
+      nsresult rv = EventDispatcher::Dispatch(eventTarget, presContext,
+                                              &event, nullptr, &status);
       if (NS_SUCCEEDED(rv) && status == nsEventStatus_eConsumeNoDefault)
         return true;
       // else fall through and return false
