@@ -27,6 +27,18 @@ if CONFIG['OS_TARGET'] != 'Android':
     if CONFIG['OS_TARGET'] == 'Darwin':
         DIST_SUBDIR = 'crashreporter.app/Contents/MacOS'
 
+if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'x86_64':
+    UNIFIED_SOURCES += [
+        'MozStackFrameSymbolizer.cpp',
+        'Win64ModuleUnwindMetadata.cpp',
+    ]
+
+    OS_LIBS += [
+        'Dbghelp',
+        'Imagehlp'
+    ]
+
+
 # Don't use the STL wrappers in the crashreporter clients; they don't
 # link with -lmozalloc, and it really doesn't matter here anyway.
 DISABLE_STL_WRAPPING = True
