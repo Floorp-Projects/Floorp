@@ -7,13 +7,12 @@
 
 #include "nsIAccessibilityService.h"
 
-class xpcAccessibilityService : public nsIAccessibleRetrieval
+class xpcAccessibilityService : public nsIAccessibilityService
 {
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBILITYSERVICE
-  NS_DECL_NSIACCESSIBLERETRIEVAL
 
   /**
    * Return true if xpc accessibility service is in use.
