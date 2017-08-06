@@ -13,8 +13,10 @@
   var frame = document.getElementById("dataFrame");
   var principal = SpecialPowers.wrap(frame.contentDocument).nodePrincipal;
   var cspJSON = principal.cspJSON;
-  var result = principal.cspJSON ? "dataInheritsCSP" : "dataDoesNotInheritCSP";
-  window.parent.postMessage({result}, "*");
+  var cspOBJ = JSON.parse(principal.cspJSON);
+  // make sure we got >>one<< policy
+  var policies = cspOBJ["csp-policies"];
+  window.parent.postMessage({result: policies.length}, "*");
 </script>
 
 </body>
