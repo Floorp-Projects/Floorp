@@ -1699,6 +1699,11 @@ nsHTMLDocument::Open(JSContext* cx,
     }
 #endif
 
+    // Set our ready state to uninitialized before setting the new document so
+    // that window creation listeners don't use the document in its intermediate
+    // state prior to reset.
+    SetReadyStateInternal(READYSTATE_UNINITIALIZED);
+
     // Per spec, we pass false here so that a new Window is created.
     rv = window->SetNewDocument(this, nullptr,
                                 /* aForceReuseInnerWindow */ false);

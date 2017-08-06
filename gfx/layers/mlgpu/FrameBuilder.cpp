@@ -148,6 +148,13 @@ FrameBuilder::ProcessContainerLayer(ContainerLayer* aContainer,
 {
   LayerMLGPU* layer = aContainer->AsHostLayer()->AsLayerMLGPU();
 
+  // Diagnostic information for bug 1387467.
+  if (!layer) {
+    gfxDevCrash(LogReason::InvalidLayerType) <<
+      "Layer type is invalid: " << aContainer->Name();
+    return false;
+  }
+
   // We don't want to traverse containers twice, so we only traverse them if
   // they haven't been prepared yet.
   bool isFirstVisit = !layer->IsPrepared();
@@ -171,6 +178,12 @@ FrameBuilder::ProcessContainerLayer(ContainerLayer* aContainer,
   // RefLayers do not have intermediate surfaces so this is guaranteed
   // to be a full-fledged ContainerLayerMLGPU.
   ContainerLayerMLGPU* viewContainer = layer->AsContainerLayerMLGPU();
+  if (!viewContainer) {
+    gfxDevCrash(LogReason::InvalidLayerType) <<
+      "Container layer type is invalid: " << aContainer->Name();
+    return false;
+  }
+
   if (isFirstVisit && !viewContainer->GetInvalidRect().IsEmpty()) {
     // The RenderView constructor automatically attaches itself to the parent.
     RefPtr<RenderViewMLGPU> view = new RenderViewMLGPU(this, viewContainer, aView);

@@ -19,7 +19,7 @@
       onunload="unload()" role="application" align="stretch" pack="stretch">
 
   <xhtml:link rel="shortcut icon" style="display: none"
-              href="chrome://mozapps/skin/extensions/extensionGeneric-16.png"/>
+              href="chrome://mozapps/skin/extensions/extensionGeneric-16.svg"/>
 
   <script type="application/javascript"
           src="chrome://mozapps/content/extensions/newaddon.js"/>
