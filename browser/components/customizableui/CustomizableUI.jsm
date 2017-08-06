@@ -1446,6 +1446,9 @@ var CustomizableUIInternal = {
       name = aWidget.id + "." + aProp;
       def = aDef || "";
     }
+    if (aWidget.localized === false) {
+      return def;
+    }
     try {
       if (Array.isArray(aFormatArgs) && aFormatArgs.length) {
         return gWidgetsBundle.formatStringFromName(name, aFormatArgs,
@@ -2318,6 +2321,7 @@ var CustomizableUIInternal = {
       source: aSource || CustomizableUI.SOURCE_EXTERNAL,
       instances: new Map(),
       currentArea: null,
+      localized: true,
       removable: true,
       overflows: true,
       defaultArea: null,
@@ -2353,7 +2357,8 @@ var CustomizableUIInternal = {
       }
     }
 
-    const kOptBoolProps = ["removable", "showInPrivateBrowsing", "overflows", "tabSpecific"];
+    const kOptBoolProps = ["removable", "showInPrivateBrowsing", "overflows", "tabSpecific",
+                           "localized"];
     for (let prop of kOptBoolProps) {
       if (typeof aData[prop] == "boolean") {
         widget[prop] = aData[prop];
@@ -3296,6 +3301,9 @@ this.CustomizableUI = {
    *                  invoked when a user hides your view.
    * - tooltiptext:   string to use for the tooltip of the widget
    * - label:         string to use for the label of the widget
+   * - localized:     If true, or undefined, attempt to retrieve the
+   *                  widget's string properties from the customizable
+   *                  widgets string bundle.
    * - removable:     whether the widget is removable (optional, default: true)
    *                  NB: if you specify false here, you must provide a
    *                  defaultArea, too.
