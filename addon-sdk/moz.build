@@ -59,8 +59,6 @@ modules = [
     'sdk/lang/type.js',
     'sdk/lang/weak-set.js',
     'sdk/net/url.js',
-    'sdk/passwords.js',
-    'sdk/passwords/utils.js',
     'sdk/platform/xpcom.js',
     'sdk/preferences/service.js',
     'sdk/preferences/utils.js',
