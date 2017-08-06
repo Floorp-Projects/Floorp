@@ -252,6 +252,17 @@ add_test(function test_escapeBrackets()
   run_next_test();
 });
 
+add_test(function test_escapeQuote()
+{
+  var url = stringToURL("http://example.com/#'");
+  do_check_eq(url.spec, "http://example.com/#'");
+  do_check_eq(url.ref, "'");
+  url.ref = "test'test";
+  do_check_eq(url.spec, "http://example.com/#test'test");
+  do_check_eq(url.ref, "test'test");
+  run_next_test();
+});
+
 add_test(function test_apostropheEncoding()
 {
   // For now, single quote is escaped everywhere _except_ the path.
