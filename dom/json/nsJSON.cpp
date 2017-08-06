@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsJSON.h"
+
 #include "jsapi.h"
 #include "js/CharacterEncoding.h"
-#include "nsJSON.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 #include "nsStreamUtils.h"
@@ -43,109 +44,6 @@ nsJSON::~nsJSON()
 {
 }
 
-enum DeprecationWarning { EncodeWarning, DecodeWarning };
-
-static nsresult
-WarnDeprecatedMethod(DeprecationWarning warning)
-{
-  return nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                         NS_LITERAL_CSTRING("DOM Core"), nullptr,
-                                         nsContentUtils::eDOM_PROPERTIES,
-                                         warning == EncodeWarning
-                                         ? "nsIJSONEncodeDeprecatedWarning"
-                                         : "nsIJSONDecodeDeprecatedWarning");
-}
-
-NS_IMETHODIMP
-nsJSON::Encode(JS::Handle<JS::Value> aValue, JSContext* cx, uint8_t aArgc,
-               nsAString &aJSON)
-{
-  // This function should only be called from JS.
-  nsresult rv = WarnDeprecatedMethod(EncodeWarning);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (aArgc == 0) {
-    aJSON.SetIsVoid(true);
-    return NS_OK;
-  }
-
-  nsJSONWriter writer;
-  rv = EncodeInternal(cx, aValue, &writer);
-
-  // FIXME: bug 408838. Get exception types sorted out
-  if (NS_SUCCEEDED(rv) || rv == NS_ERROR_INVALID_ARG) {
-    rv = NS_OK;
-    // if we didn't consume anything, it's not JSON, so return null
-    if (!writer.DidWrite()) {
-      aJSON.SetIsVoid(true);
-    } else {
-      writer.FlushBuffer();
-      aJSON.Append(writer.mOutputString);
-    }
-  }
-
-  return rv;
-}
-
-static const char UTF8BOM[] = "\xEF\xBB\xBF";
-
-static nsresult CheckCharset(const char* aCharset)
-{
-  // Check that the charset is permissible
-  if (!(strcmp(aCharset, "UTF-8") == 0)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSON::EncodeToStream(nsIOutputStream *aStream,
-                       const char* aCharset,
-                       const bool aWriteBOM,
-                       JS::Handle<JS::Value> val,
-                       JSContext* cx,
-                       uint8_t aArgc)
-{
-  // This function should only be called from JS.
-  NS_ENSURE_ARG(aStream);
-  nsresult rv;
-
-  rv = CheckCharset(aCharset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check to see if we have a buffered stream
-  nsCOMPtr<nsIOutputStream> bufferedStream;
-  // FIXME: bug 408514.
-  // NS_OutputStreamIsBuffered(aStream) asserts on file streams...
-  //if (!NS_OutputStreamIsBuffered(aStream)) {
-    rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedStream),
-                                    aStream, 4096);
-    NS_ENSURE_SUCCESS(rv, rv);
-  //  aStream = bufferedStream;
-  //}
-
-  uint32_t ignored;
-  if (aWriteBOM) {
-    rv = aStream->Write(UTF8BOM, 3, &ignored);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsJSONWriter writer(bufferedStream);
-
-  if (aArgc == 0) {
-    return NS_OK;
-  }
-
-  rv = EncodeInternal(cx, val, &writer);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = bufferedStream->Flush();
-
-  return rv;
-}
-
 static bool
 WriteCallback(const char16_t *buf, uint32_t len, void *data)
 {
@@ -178,60 +76,6 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
   NS_ENSURE_TRUE(writer.DidWrite(), NS_ERROR_UNEXPECTED);
   writer.FlushBuffer();
   result.Assign(writer.mOutputString);
-  return NS_OK;
-}
-
-nsresult
-nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue,
-                       nsJSONWriter* writer)
-{
-  // Backward compatibility:
-  // nsIJSON does not allow to serialize anything other than objects
-  if (!aValue.isObject()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  JS::Rooted<JSObject*> obj(cx, &aValue.toObject());
-
-  /* Backward compatibility:
-   * Manually call toJSON if implemented by the object and check that
-   * the result is still an object
-   * Note: It is perfectly fine to not implement toJSON, so it is
-   * perfectly fine for GetMethod to fail
-   */
-  JS::Rooted<JS::Value> val(cx, aValue);
-  JS::Rooted<JS::Value> toJSON(cx);
-  if (JS_GetProperty(cx, obj, "toJSON", &toJSON) &&
-      toJSON.isObject() && JS::IsCallable(&toJSON.toObject())) {
-    // If toJSON is implemented, it must not throw
-    if (!JS_CallFunctionValue(cx, obj, toJSON, JS::HandleValueArray::empty(), &val)) {
-      if (JS_IsExceptionPending(cx))
-        // passing NS_OK will throw the pending exception
-        return NS_OK;
-
-      // No exception, but still failed
-      return NS_ERROR_FAILURE;
-    }
-
-    // Backward compatibility:
-    // nsIJSON does not allow to serialize anything other than objects
-    if (val.isPrimitive())
-      return NS_ERROR_INVALID_ARG;
-  }
-  // GetMethod may have thrown
-  else if (JS_IsExceptionPending(cx))
-    // passing NS_OK will throw the pending exception
-    return NS_OK;
-
-  // Backward compatibility:
-  // function shall not pass, just "plain" objects and arrays
-  JSType type = JS_TypeOfValue(cx, val);
-  if (type == JSTYPE_FUNCTION)
-    return NS_ERROR_INVALID_ARG;
-
-  // We're good now; try to stringify
-  if (!JS_Stringify(cx, &val, nullptr, JS::NullHandleValue, WriteCallback, writer))
-    return NS_ERROR_FAILURE;
-
   return NS_OK;
 }
 
@@ -327,25 +171,6 @@ nsJSONWriter::WriteToStream(nsIOutputStream* aStream,
       return NS_OK;
     }
   }
-}
-
-NS_IMETHODIMP
-nsJSON::Decode(const nsAString& json, JSContext* cx,
-               JS::MutableHandle<JS::Value> aRetval)
-{
-  nsresult rv = WarnDeprecatedMethod(DecodeWarning);
-  if (NS_FAILED(rv))
-    return rv;
-
-  const char16_t *data = json.BeginReading();
-  uint32_t len = json.Length();
-  nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                             reinterpret_cast<const char*>(data),
-                             len * sizeof(char16_t),
-                             NS_ASSIGNMENT_DEPEND);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return DecodeInternal(cx, stream, len, false, aRetval);
 }
 
 NS_IMETHODIMP
