@@ -66,7 +66,6 @@ modules = [
     'sdk/messaging.js',
     'sdk/model/core.js',
     'sdk/net/url.js',
-    'sdk/notifications.js',
     'sdk/output/system.js',
     'sdk/passwords.js',
     'sdk/passwords/utils.js',
