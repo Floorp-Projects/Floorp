@@ -19,7 +19,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Move.h"
-#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -219,7 +219,7 @@ IDBRequest::SetError(nsresult aRv)
   MOZ_ASSERT(!mError);
 
   mHaveResultOrErrorCode = true;
-  mError = new DOMError(GetOwner(), aRv);
+  mError = DOMException::Create(aRv);
   mErrorCode = aRv;
 
   mResultVal.setUndefined();
@@ -236,7 +236,7 @@ IDBRequest::GetErrorCode() const
   return mErrorCode;
 }
 
-DOMError*
+DOMException*
 IDBRequest::GetErrorAfterResult() const
 {
   AssertIsOnOwningThread();
@@ -358,7 +358,7 @@ IDBRequest::SetResultCallback(ResultCallback* aCallback)
   mHaveResultOrErrorCode = true;
 }
 
-DOMError*
+DOMException*
 IDBRequest::GetError(ErrorResult& aRv)
 {
   AssertIsOnOwningThread();
