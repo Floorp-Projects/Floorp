@@ -1224,7 +1224,7 @@ function openURL(aURL) {
 
   if (!protocolSvc.isExposedProtocol(uri.scheme)) {
     // If we're not a browser, use the external protocol service to load the URI.
-    protocolSvc.loadUrl(uri);
+    protocolSvc.loadURI(uri);
   } else {
     var recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
     if (recentWindow) {
