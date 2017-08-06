@@ -2,6 +2,8 @@
 # `taskcluster/taskgraph/cron/schema.py`.  For documentation, see
 # `taskcluster/docs/cron.rst`.
 
+---
+
 jobs:
     - name: nightly-desktop
       job:
@@ -13,10 +15,10 @@ jobs:
           - date
       when:
           by-project:
-            # Match buildbot starts for now
-            date: [{hour: 15, minute: 0}]
-            mozilla-central: [{hour: 10, minute: 0}]
-            # No default
+              # Match buildbot starts for now
+              date: [{hour: 15, minute: 0}]
+              mozilla-central: [{hour: 10, minute: 0}]
+              # No default
 
     - name: nightly-desktop-linux
       job:
@@ -26,7 +28,7 @@ jobs:
       run-on-projects:
           - mozilla-central
           - date
-      when: [] # never (hook only)
+      when: []  # never (hook only)
 
     - name: nightly-desktop-osx
       job:
@@ -36,7 +38,7 @@ jobs:
       run-on-projects:
           - mozilla-central
           - date
-      when: [] # never (hook only)
+      when: []  # never (hook only)
 
     - name: nightly-desktop-win32
       job:
@@ -46,7 +48,7 @@ jobs:
       run-on-projects:
           - mozilla-central
           - date
-      when: [] # never (hook only)
+      when: []  # never (hook only)
 
     - name: nightly-desktop-win64
       job:
@@ -56,7 +58,7 @@ jobs:
       run-on-projects:
           - mozilla-central
           - date
-      when: [] # never (hook only)
+      when: []  # never (hook only)
 
     - name: nightly-android
       job:
@@ -67,11 +69,11 @@ jobs:
           - mozilla-central
           - date
       when:
-        by-project:
-            # Match buildbot starts for now
-            date: [{hour: 15, minute: 0}]
-            mozilla-central: [{hour: 10, minute: 0}]
-            # No default
+          by-project:
+              # Match buildbot starts for now
+              date: [{hour: 15, minute: 0}]
+              mozilla-central: [{hour: 10, minute: 0}]
+              # No default
 
     - name: nightly-mochitest-valgrind
       job:
@@ -93,5 +95,5 @@ jobs:
           - mozilla-central
       when:
           by-project:
-            mozilla-central: [{hour: 10, minute: 0}]
-            # No default
+              mozilla-central: [{hour: 10, minute: 0}]
+              # No default
