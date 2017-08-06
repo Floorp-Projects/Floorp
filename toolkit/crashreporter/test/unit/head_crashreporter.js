@@ -1,8 +1,9 @@
-var {utils: Cu} = Components;
+var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://testing-common/AppData.jsm", this);
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 function getEventDir() {
   return OS.Path.join(do_get_tempdir().path, "crash-events");
@@ -24,15 +25,17 @@ function getEventDir() {
  *
  * @param callback
  *        A JavaScript function to be called after the subprocess
- *        crashes. It will be passed (minidump, extra), where
- *         minidump is an nsIFile of the minidump file produced,
- *         and extra is an object containing the key,value pairs from
- *         the .extra file.
+ *        crashes. It will be passed (minidump, extra, extrafile), where
+ *         - minidump is an nsILocalFile of the minidump file produced,
+ *         - extra is an object containing the key,value pairs from
+ *           the .extra file.
+ *         - extrafile is an nsILocalFile of the extra file
  *
  * @param canReturnZero
  *       If true, the subprocess may return with a zero exit code.
  *       Certain types of crashes may not cause the process to
  *       exit with an error.
+ *
  */
 function do_crash(setup, callback, canReturnZero) {
   // get current process filename (xpcshell)
@@ -100,6 +103,31 @@ function getMinidump() {
   return null;
 }
 
+function runMinidumpAnalyzer(dumpFile, additionalArgs) {
+  if (AppConstants.platform !== "win") {
+    return;
+  }
+
+  // find minidump-analyzer executable.
+  let ds = Cc["@mozilla.org/file/directory_service;1"]
+             .getService(Ci.nsIProperties);
+  let bin = ds.get("XREExeF", Ci.nsILocalFile);
+  ok(bin && bin.exists());
+  bin = bin.parent;
+  ok(bin && bin.exists());
+  bin.append("minidump-analyzer.exe");
+  ok(bin.exists());
+
+  let process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
+  process.init(bin);
+  let args = [dumpFile.path];
+  if (additionalArgs) {
+    args = args.concat(additionalArgs);
+  }
+  process.run(true /* blocking */, args, args.length);
+}
+
 function handleMinidump(callback) {
   // find minidump
   let minidump = getMinidump();
@@ -131,7 +159,7 @@ function handleMinidump(callback) {
   let extra = parseKeyValuePairsFromFile(extrafile);
 
   if (callback) {
-    callback(minidump, extra);
+    callback(minidump, extra, extrafile);
   }
 
   if (minidump.exists()) {
