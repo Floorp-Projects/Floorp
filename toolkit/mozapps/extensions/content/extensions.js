@@ -107,7 +107,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "legacyWarningExceptions",
                                       raw => raw.split(","));
 XPCOMUtils.defineLazyPreferenceGetter(this, "legacyExtensionsEnabled",
                                       PREF_LEGACY_ENABLED, true,
-                                      () => gLegacyView.refreshVisibility());
+                                      () => gLegacyView.refresh());
 
 document.addEventListener("load", initialize, true);
 window.addEventListener("unload", shutdown);
@@ -483,7 +483,7 @@ if (window.QueryInterface(Ci.nsIInterfaceRequestor)
 
 var gEventManager = {
   _listeners: {},
-  _installListeners: new Set(),
+  _installListeners: [],
 
   initialize() {
     const ADDON_EVENTS = ["onEnabling", "onEnabled", "onDisabling",
@@ -569,22 +569,32 @@ var gEventManager = {
 
   registerAddonListener(aListener, aAddonId) {
     if (!(aAddonId in this._listeners))
-      this._listeners[aAddonId] = new Set();
-    this._listeners[aAddonId].add(aListener);
+      this._listeners[aAddonId] = [];
+    else if (this._listeners[aAddonId].indexOf(aListener) != -1)
+      return;
+    this._listeners[aAddonId].push(aListener);
   },
 
   unregisterAddonListener(aListener, aAddonId) {
     if (!(aAddonId in this._listeners))
       return;
-    this._listeners[aAddonId].delete(aListener);
+    var index = this._listeners[aAddonId].indexOf(aListener);
+    if (index == -1)
+      return;
+    this._listeners[aAddonId].splice(index, 1);
   },
 
   registerInstallListener(aListener) {
-    this._installListeners.add(aListener);
+    if (this._installListeners.indexOf(aListener) != -1)
+      return;
+    this._installListeners.push(aListener);
   },
 
   unregisterInstallListener(aListener) {
-    this._installListeners.delete(aListener);
+    var i = this._installListeners.indexOf(aListener);
+    if (i == -1)
+      return;
+    this._installListeners.splice(i, 1);
   },
 
   delegateAddonEvent(aEvent, aParams) {
@@ -592,22 +602,16 @@ var gEventManager = {
     if (!(addon.id in this._listeners))
       return;
 
-    function tryListener(listener) {
+    var listeners = this._listeners[addon.id];
+    for (let listener of listeners) {
       if (!(aEvent in listener))
-        return;
+        continue;
       try {
         listener[aEvent].apply(listener, aParams);
       } catch (e) {
         // this shouldn't be fatal
         Cu.reportError(e);
       }
-    }
-
-    for (let listener of this._listeners[addon.id]) {
-      tryListener(listener);
-    }
-    for (let listener of this._listeners["ANY"]) {
-      tryListener(listener);
     }
   },
 
@@ -2784,17 +2788,7 @@ var gLegacyView = {
 
     document.getElementById("legacy-learnmore").href = SUPPORT_URL + "webextensions";
 
-    gEventManager.registerAddonListener(this, "ANY");
-
-    this.refreshVisibility();
-  },
-
-  shutdown() {
-    gEventManager.unregisterAddonListener(this, "ANY");
-  },
-
-  onUninstalled() {
-    this.refreshVisibility();
+    this.refresh();
   },
 
   async show(type, request) {
@@ -2830,7 +2824,7 @@ var gLegacyView = {
     return null;
   },
 
-  async refreshVisibility() {
+  async refresh() {
     if (legacyExtensionsEnabled) {
       this._categoryItem.disabled = true;
       return;
@@ -2858,16 +2852,6 @@ var gLegacyView = {
       this._categoryItem.disabled = true;
     }
   },
-
-  getListItemForID(aId) {
-    var listitem = this._listBox.firstChild;
-    while (listitem) {
-      if (listitem.getAttribute("status") == "installed" && listitem.mAddon.id == aId)
-        return listitem;
-      listitem = listitem.nextSibling;
-    }
-    return null;
-  }
 };
 
 var gListView = {
