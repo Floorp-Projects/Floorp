@@ -16,7 +16,7 @@
 interface StackFrame;
 
 [NoInterfaceObject,
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker,System)]
 interface ExceptionMembers
 {
   // The nsresult associated with this exception.
@@ -66,7 +66,7 @@ Exception implements ExceptionMembers;
 // XXXkhuey this is an 'exception', not an interface, but we don't have any
 // parser or codegen mechanisms for dealing with exceptions.
 [ExceptionClass,
- Exposed=(Window, Worker),
+ Exposed=(Window, Worker,System),
  Constructor(optional DOMString message = "", optional DOMString name)]
 interface DOMException {
   // The name of the error code (ie, a string repr of |result|).

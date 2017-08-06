@@ -36,7 +36,7 @@ interface FileReader : EventTarget {
   [Throws]
   readonly attribute any result;
 
-  readonly attribute DOMError? error;
+  readonly attribute DOMException? error;
 
   // event handler attributes
   attribute EventHandler onloadstart;
