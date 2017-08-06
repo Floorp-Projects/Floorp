@@ -531,8 +531,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aOptions           Set following flags.
    */
   const unsigned long WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE = 0x0001;
-  // @deprecated Use WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE.
-  const unsigned long WHEEL_EVENT_CAUSED_BY_PIXEL_ONLY_DEVICE            = 0x0001;
   const unsigned long WHEEL_EVENT_CAUSED_BY_MOMENTUM                     = 0x0002;
   const unsigned long WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS               = 0x0004;
   // If any of the following flags is specified this method will throw an
