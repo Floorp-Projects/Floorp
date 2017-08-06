@@ -19,7 +19,7 @@
  *  - Computed values (e.g. 50 * 1024) don't work.
  */
 
-pref("preferences.allow.omt-write", true);
+pref("preferences.allow.omt-write", false);
 
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
