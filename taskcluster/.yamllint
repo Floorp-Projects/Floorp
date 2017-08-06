@@ -1,0 +1,16 @@
+---
+
+extends: default
+
+rules:
+  document-end:
+     present: false
+  # Checks currently failing
+  brackets: disable
+  commas: disable
+  comments: disable
+  comments-indentation: disable
+  document-start: disable
+  hyphens: disable
+  indentation: disable
+  line-length: disable
