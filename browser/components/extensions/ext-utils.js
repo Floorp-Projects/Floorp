@@ -7,10 +7,10 @@
           makeWidgetId:false, tabTracker:true, windowTracker:true */
 /* import-globals-from ../../../toolkit/components/extensions/ext-toolkit.js */
 
+/* globals TabBase, WindowBase, TabTrackerBase, WindowTrackerBase, TabManagerBase, WindowManagerBase */
+
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-
-Cu.import("resource://gre/modules/ExtensionTabs.jsm");
 
 var {
   ExtensionError,

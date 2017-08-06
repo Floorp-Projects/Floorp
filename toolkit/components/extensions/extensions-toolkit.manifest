@@ -1,4 +1,5 @@
 # scripts
+category webextension-scripts tabs-base chrome://extensions/content/ext-tabs-base.js
 category webextension-scripts toolkit chrome://extensions/content/ext-toolkit.js
 category webextension-scripts-content toolkit chrome://extensions/content/ext-c-toolkit.js
 category webextension-scripts-devtools toolkit chrome://extensions/content/ext-c-toolkit.js
