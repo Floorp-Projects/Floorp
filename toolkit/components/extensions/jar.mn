@@ -24,6 +24,7 @@ toolkit.jar:
     content/extensions/ext-proxy.js
     content/extensions/ext-runtime.js
     content/extensions/ext-storage.js
+    content/extensions/ext-tabs-base.js
     content/extensions/ext-theme.js
     content/extensions/ext-toolkit.js
     content/extensions/ext-topSites.js
