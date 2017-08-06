@@ -556,7 +556,9 @@ NativeRegExpMacroAssembler::Backtrack()
     Label noInterrupt;
     void* contextAddr = cx->zone()->group()->addressOfOwnerContext();
     masm.loadPtr(AbsoluteAddress(contextAddr), temp0);
-    masm.branch32(Assembler::Equal, Address(temp0, offsetof(JSContext, interrupt_)), Imm32(0),
+    masm.branch32(Assembler::Equal,
+                  Address(temp0, offsetof(JSContext, interruptRegExpJit_)),
+                  Imm32(0),
                   &noInterrupt);
     masm.movePtr(ImmWord(RegExpRunStatus_Error), temp0);
     masm.jump(&exit_label_);

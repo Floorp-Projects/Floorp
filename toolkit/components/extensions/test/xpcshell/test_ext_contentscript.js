@@ -114,3 +114,63 @@ add_task(async function test_contentscript_runAt() {
 
   await extension.unload();
 });
+
+add_task(async function test_contentscript_window_open() {
+  if (AppConstants.DEBUG && ExtensionTestUtils.remoteContentScripts) {
+    return;
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {gecko: {id: "contentscript@tests.mozilla.org"}},
+      content_scripts: [
+        {
+          "matches": ["<all_urls>"],
+          "js": ["content_script.js"],
+          "run_at": "document_start",
+          "match_about_blank": true,
+          "all_frames": true,
+        },
+      ],
+    },
+
+    files: {
+      "content_script.js": `
+        var x = (x || 0) + 1;
+        (${async () => {
+          /* globals x */
+          browser.test.assertEq(1, x, "Should only run once");
+
+          if (top !== window) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+
+          browser.test.sendMessage("content-script", [location.href, top === window]);
+        }})();
+      `,
+    },
+  });
+
+  await extension.startup();
+
+  let url = `${BASE_URL}/file_document_open.html`;
+  let contentPage = await ExtensionTestUtils.loadContentPage(url);
+
+  Assert.deepEqual(await extension.awaitMessage("content-script"),
+                   [url, true]);
+
+  let [frameURL, isTop] = await extension.awaitMessage("content-script");
+  // Sometimes we get a content script load for the initial about:blank
+  // iframe here, sometimes we don't. Either way is fine, as long as we
+  // don't get two loads into the same document.open() document.
+  if (frameURL === "about:blank") {
+    equal(isTop, false);
+
+    [frameURL, isTop] = await extension.awaitMessage("content-script");
+  }
+
+  Assert.deepEqual([frameURL, isTop], [url, false]);
+
+  await contentPage.close();
+  await extension.unload();
+});

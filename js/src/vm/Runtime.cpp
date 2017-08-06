@@ -579,11 +579,11 @@ JSContext::requestInterrupt(InterruptMode mode)
     jitStackLimit = UINTPTR_MAX;
 
     if (mode == JSContext::RequestInterruptUrgent) {
-        // If this interrupt is urgent (slow script dialog and garbage
-        // collection among others), take additional steps to
-        // interrupt corner cases where the above fields are not
-        // regularly polled.  Wake both ilooping JIT code and
-        // Atomics.wait().
+        // If this interrupt is urgent (slow script dialog for instance), take
+        // additional steps to interrupt corner cases where the above fields are
+        // not regularly polled. Wake ilooping Ion code, irregexp JIT code and
+        // Atomics.wait()
+        interruptRegExpJit_ = true;
         fx.lock();
         if (fx.isWaiting())
             fx.wake(FutexThread::WakeForJSInterrupt);
@@ -598,6 +598,7 @@ JSContext::handleInterrupt()
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
     if (interrupt_ || jitStackLimit == UINTPTR_MAX) {
         interrupt_ = false;
+        interruptRegExpJit_ = false;
         resetJitStackLimit();
         return InvokeInterruptCallback(this);
     }
