@@ -8,7 +8,7 @@ var coolTabs = require("cool-tabs");
 
 exports.foo = foo.fs;
 exports.bar = foo.bar;
-exports.fs = require("sdk/io/fs");
+exports.fs = require("sdk/io/file");
 exports.extra = require("fs-extra").extra;
 exports.overload = require("overload");
 exports.overloadLib = require("overload/lib/foo.js");
