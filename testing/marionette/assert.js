@@ -40,15 +40,15 @@ this.assert = {};
  *     Custom error message.
  *
  * @return {string}
- *     Session ID.
+ *     Current session's ID.
  *
  * @throws {InvalidSessionIDError}
- *     If |driver| does not have a session ID.
+ *     If <var>driver</var> does not have a session ID.
  */
 assert.session = function(driver, msg = "") {
   assert.that(sessionID => sessionID,
-      msg, InvalidSessionIDError)(driver.sessionId);
-  return driver.sessionId;
+      msg, InvalidSessionIDError)(driver.sessionID);
+  return driver.sessionID;
 };
 
 /**
