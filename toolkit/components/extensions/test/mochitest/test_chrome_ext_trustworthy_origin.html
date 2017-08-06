@@ -44,7 +44,7 @@ add_task(async function() {
   let url = await extension.awaitMessage("ready");
 
   let uri = NetUtil.newURI(url);
-  let principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
   is(gContentSecurityManager.isOriginPotentiallyTrustworthy(principal), true);
 
   await extension.unload();
