@@ -1364,7 +1364,7 @@ let IconDetails = {
 let StartupCache = {
   DB_NAME: "ExtensionStartupCache",
 
-  STORE_NAMES: Object.freeze(["locales", "manifests", "permissions", "schemas"]),
+  STORE_NAMES: Object.freeze(["general", "locales", "manifests", "permissions", "schemas"]),
 
   get file() {
     return FileUtils.getFile("ProfLD", ["startupCache", "webext.sc.lz4"]);
@@ -1413,6 +1413,7 @@ let StartupCache = {
 
   clearAddonData(id) {
     return Promise.all([
+      this.general.delete(id),
       this.locales.delete(id),
       this.manifests.delete(id),
       this.permissions.delete(id),
@@ -1427,6 +1428,15 @@ let StartupCache = {
       this._data = new Map();
       this._dataPromise = Promise.resolve(this._data);
     }
+  },
+
+  get(extension, path, createFunc) {
+    return this.general.get([extension.id, extension.version, ...path],
+                            createFunc);
+  },
+
+  delete(extension, path) {
+    return this.general.delete([extension.id, extension.version, ...path]);
   },
 };
 
