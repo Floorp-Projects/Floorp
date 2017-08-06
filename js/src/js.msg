@@ -251,6 +251,7 @@ MSG_DEF(JSMSG_DECLARATION_AFTER_IMPORT,0, JSEXN_SYNTAXERR, "missing declaration 
 MSG_DEF(JSMSG_DEPRECATED_DELETE_OPERAND, 0, JSEXN_SYNTAXERR, "applying the 'delete' operator to an unqualified name is deprecated")
 MSG_DEF(JSMSG_DEPRECATED_EXPR_CLOSURE, 0, JSEXN_WARN, "expression closures are deprecated")
 MSG_DEF(JSMSG_DEPRECATED_FOR_EACH,     0, JSEXN_WARN, "JavaScript 1.6's for-each-in loops are deprecated; consider using ES6 for-of instead")
+MSG_DEF(JSMSG_DEPRECATED_LEGACY_GENERATOR, 0, JSEXN_WARN, "JavaScript 1.7's legacy generators are deprecated; consider using ES6 generators instead. See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function* for details.")
 MSG_DEF(JSMSG_DEPRECATED_OCTAL,        0, JSEXN_SYNTAXERR, "\"0\"-prefixed octal literals and octal escape sequences are deprecated; for octal literals use the \"0o\" prefix instead")
 MSG_DEF(JSMSG_DEPRECATED_PRAGMA,       1, JSEXN_WARN, "Using //@ to indicate {0} pragmas is deprecated. Use //# instead")
 MSG_DEF(JSMSG_DEPRECATED_BLOCK_SCOPE_FUN_REDECL, 1, JSEXN_WARN, "redeclaration of block-scoped function `{0}' is deprecated")

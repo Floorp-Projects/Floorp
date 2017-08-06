@@ -6800,6 +6800,8 @@ Parser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
 
         pc->functionBox()->setGeneratorKind(LegacyGenerator);
         addTelemetry(DeprecatedLanguageExtension::LegacyGenerator);
+        if (!warnOnceAboutLegacyGenerator())
+            return null();
 
         MOZ_FALLTHROUGH;
 
@@ -10437,6 +10439,20 @@ ParserBase::warnOnceAboutForEach()
         if (!warning(JSMSG_DEPRECATED_FOR_EACH))
             return false;
         context->compartment()->warnedAboutForEach = true;
+    }
+    return true;
+}
+
+bool
+ParserBase::warnOnceAboutLegacyGenerator()
+{
+    if (context->helperThread())
+        return true;
+
+    if (!context->compartment()->warnedAboutLegacyGenerator) {
+        if (!warning(JSMSG_DEPRECATED_LEGACY_GENERATOR))
+            return false;
+        context->compartment()->warnedAboutLegacyGenerator = true;
     }
     return true;
 }
