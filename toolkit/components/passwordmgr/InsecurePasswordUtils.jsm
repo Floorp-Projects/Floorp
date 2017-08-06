@@ -83,7 +83,7 @@ this.InsecurePasswordUtils = {
     let isFormSubmitHTTP = false, isFormSubmitSecure = false;
     if (aForm.rootElement instanceof Ci.nsIDOMHTMLFormElement) {
       let uri = Services.io.newURI(aForm.rootElement.action || aForm.rootElement.baseURI);
-      let principal = gScriptSecurityManager.getCodebasePrincipal(uri);
+      let principal = gScriptSecurityManager.createCodebasePrincipal(uri, {});
 
       if (uri.schemeIs("http")) {
         isFormSubmitHTTP = true;
