@@ -1,3 +1,4 @@
+---
 wpt_manifest:
     description: web-platform-tests manifest lint
     include:
