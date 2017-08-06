@@ -8,6 +8,7 @@
 # to the location of the actual manifest.
 
   skin/classic/mozapps/extensions/extensionGeneric.svg       (../../shared/extensions/extensionGeneric.svg)
+  skin/classic/mozapps/extensions/extensionGeneric-16.svg    (../../shared/extensions/extensionGeneric-16.svg)
   skin/classic/mozapps/extensions/utilities.svg              (../../shared/extensions/utilities.svg)
   skin/classic/mozapps/extensions/navigation.png             (../../shared/extensions/navigation.png)
   skin/classic/mozapps/extensions/alerticon-warning.svg      (../../shared/extensions/alerticon-warning.svg)
