@@ -8,7 +8,7 @@
   },
   "jetpack": {
     "overrides": {
-      "fs": "sdk/io/fs",
+      "fs": "sdk/io/file",
       "overload": "foo",
       "internal": "./lib/internal",
       "sdk/tabs": "./lib/tabs",
