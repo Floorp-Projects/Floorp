@@ -2,6 +2,7 @@ yamllint:
     description: YAML linter
     include:
         - .cron.yml
+        - python/mozlint/
         - taskcluster
     extensions: ['yml', 'yaml']
     type: external
