@@ -31,6 +31,7 @@ Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,
+  StartupCache,
 } = ExtensionParent;
 
 const POPUP_PRELOAD_TIMEOUT_MS = 200;
@@ -65,7 +66,7 @@ this.browserAction = class extends ExtensionAPI {
     return browserActionMap.get(extension);
   }
 
-  onManifestEntry(entryName) {
+  async onManifestEntry(entryName) {
     let {extension} = this;
 
     let options = extension.manifest.browser_action;
@@ -88,10 +89,6 @@ this.browserAction = class extends ExtensionAPI {
       title: options.default_title || extension.name,
       badgeText: "",
       badgeBackgroundColor: null,
-      icon: IconDetails.normalize({
-        path: options.default_icon,
-        themeIcons: options.theme_icons,
-      }, extension),
       popup: options.default_popup || "",
       area: browserAreas[options.default_area || "navbar"],
     };
@@ -102,11 +99,25 @@ this.browserAction = class extends ExtensionAPI {
                                  "or not in your browser_action options.");
     }
 
+    browserActionMap.set(extension, this);
+
+    this.defaults.icon = await StartupCache.get(
+      extension, ["browserAction", "default_icon"],
+      () => IconDetails.normalize({
+        path: options.default_icon,
+        themeIcons: options.theme_icons,
+      }, extension));
+
+    this.iconData.set(
+      this.defaults.icon,
+      await StartupCache.get(
+        extension, ["browserAction", "default_icon_data"],
+        () => this.getIconData(this.defaults.icon)));
+
     this.tabContext = new TabContext(tab => Object.create(this.defaults),
                                      extension);
 
     this.build();
-    browserActionMap.set(extension, this);
   }
 
   onShutdown(reason) {
