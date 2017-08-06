@@ -1,3 +1,4 @@
+---
 RaisesLinter:
     description: Raises an exception
     type: external

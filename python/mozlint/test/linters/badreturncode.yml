@@ -1,3 +1,4 @@
+---
 BadReturnCodeLinter:
     description: Returns an error code no matter what
     include:
