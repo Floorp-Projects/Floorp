@@ -137,7 +137,11 @@ this.browserAction = class extends ExtensionAPI {
         view.setAttribute("extension", true);
 
         document.getElementById("PanelUI-multiView").appendChild(view);
-        document.addEventListener("popupshowing", this);
+
+        if (this.extension.hasPermission("menus") ||
+            this.extension.hasPermission("contextMenus")) {
+          document.addEventListener("popupshowing", this);
+        }
       },
 
       onDestroyed: document => {
@@ -328,10 +332,6 @@ this.browserAction = class extends ExtensionAPI {
 
 
       case "popupshowing":
-        if (!global.actionContextMenu) {
-          break;
-        }
-
         const menu = event.target;
         const trigger = menu.triggerNode;
         const node = window.document.getElementById(this.id);
