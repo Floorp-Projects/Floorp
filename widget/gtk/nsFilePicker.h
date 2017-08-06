@@ -37,7 +37,6 @@ public:
   NS_IMETHOD GetFile(nsIFile **aFile) override;
   NS_IMETHOD GetFileURL(nsIURI **aFileURL) override;
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles) override;
-  NS_IMETHOD Show(int16_t *aReturn) override;
 
   // nsBaseFilePicker
   virtual void InitNative(nsIWidget *aParent,
@@ -48,6 +47,7 @@ public:
 protected:
   virtual ~nsFilePicker();
 
+  nsresult Show(int16_t *aReturn) override;
   void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 
   static void OnResponse(GtkWidget* dialog, gint response_id,
