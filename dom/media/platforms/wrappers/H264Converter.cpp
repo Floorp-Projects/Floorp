@@ -74,6 +74,13 @@ H264Converter::Decode(MediaRawData* aSample)
       __func__);
   }
 
+  if (!mp4_demuxer::AnnexB::IsAVCC(aSample)) {
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  RESULT_DETAIL("Invalid H264 content")),
+      __func__);
+  }
+
   nsresult rv;
   if (!mDecoder) {
     // It is not possible to create an AVCC H264 decoder without SPS.
