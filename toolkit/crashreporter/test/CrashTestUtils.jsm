@@ -8,6 +8,7 @@ this.CrashTestUtils = {
   crash: null,
   dumpHasStream: null,
   dumpHasInstructionPointerMemory: null,
+  dumpWin64CFITestSymbols: null,
 
   // Constants for crash()
   // Keep these in sync with nsTestCrasher.cpp!
@@ -18,6 +19,18 @@ this.CrashTestUtils = {
   CRASH_MOZ_CRASH:             4,
   CRASH_ABORT:                 5,
   CRASH_UNCAUGHT_EXCEPTION:    6,
+  CRASH_X64CFI_NO_MANS_LAND:   7,
+  CRASH_X64CFI_LAUNCHER:       8,
+  CRASH_X64CFI_UNKNOWN_OPCODE: 9,
+  CRASH_X64CFI_PUSH_NONVOL:    10,
+  CRASH_X64CFI_ALLOC_SMALL:    11,
+  CRASH_X64CFI_ALLOC_LARGE:    12,
+  CRASH_X64CFI_SAVE_NONVOL:    15,
+  CRASH_X64CFI_SAVE_NONVOL_FAR: 16,
+  CRASH_X64CFI_SAVE_XMM128:    17,
+  CRASH_X64CFI_SAVE_XMM128_FAR: 18,
+  CRASH_X64CFI_EPILOG:         19,
+  CRASH_X64CFI_EOF:            20,
 
   // Constants for dumpHasStream()
   // From google_breakpad/common/minidump_format.h
@@ -63,3 +76,9 @@ CrashTestUtils.dumpCheckMemory = lib.declare("DumpCheckMemory",
                                              ctypes.default_abi,
                                              ctypes.bool,
                                              ctypes.char.ptr);
+
+CrashTestUtils.getWin64CFITestFnAddrOffset =
+  lib.declare("GetWin64CFITestFnAddrOffset",
+    ctypes.default_abi,
+    ctypes.int32_t,
+    ctypes.int16_t);
