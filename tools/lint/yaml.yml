@@ -1,5 +1,7 @@
 yamllint:
     description: YAML linter
+    include:
+        - taskcluster
     extensions: ['yml', 'yaml']
     type: external
     payload: yamllint_:lint
