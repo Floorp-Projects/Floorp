@@ -400,8 +400,9 @@
 @RESPATH@/components/nsSearchService.js
 @RESPATH@/components/nsSearchSuggestions.js
 @RESPATH@/components/nsSidebar.js
+#if defined(NIGHTLY_BUILD) && defined(MOZ_BUILD_APP_IS_BROWSER)
 @RESPATH@/components/payments.manifest
-@RESPATH@/components/paymentUIService.js
+#endif
 @RESPATH@/components/passwordmgr.manifest
 @RESPATH@/components/nsLoginInfo.js
 @RESPATH@/components/nsLoginManager.js
