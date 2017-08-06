@@ -34,7 +34,6 @@ const findAndRunTests = function findAndRunTests(options) {
 exports.findAndRunTests = findAndRunTests;
 
 var runnerWindows = new WeakMap();
-var runnerTabs = new WeakMap();
 
 const TestRunner = function TestRunner(options) {
   options = options || {};
@@ -42,7 +41,6 @@ const TestRunner = function TestRunner(options) {
   // remember the id's for the open window and tab
   let window = getMostRecentBrowserWindow();
   runnerWindows.set(this, getInnerId(window));
-  runnerTabs.set(this, getTabId(getSelectedTab(window)));
 
   this.fs = options.fs;
   this.console = options.console || console;
@@ -330,31 +328,18 @@ TestRunner.prototype = {
 
     return all(winPromises).then(() => {
       let browserWins = wins.filter(isBrowser);
-      let tabs = browserWins.reduce((tabs, window) => tabs.concat(getTabs(window)), []);
-      let newTabID = getTabId(getSelectedTab(wins[0]));
-      let oldTabID = runnerTabs.get(this);
-      let hasMoreTabsOpen = browserWins.length && tabs.length != 1;
       let failure = false;
 
       if (wins.length != 1 || getInnerId(wins[0]) !== runnerWindows.get(this)) {
         failure = true;
         this.fail("Should not be any unexpected windows open");
       }
-      else if (hasMoreTabsOpen) {
-        failure = true;
-        this.fail("Should not be any unexpected tabs open");
-      }
-      else if (oldTabID != newTabID) {
-        failure = true;
-        runnerTabs.set(this, newTabID);
-        this.fail("Should not be any new tabs left open, old id: " + oldTabID + " new id: " + newTabID);
-      }
 
       if (failure) {
         console.log("Windows open:");
         for (let win of wins) {
           if (isBrowser(win)) {
-            tabs = getTabs(win);
+            tabs = [];
             console.log(win.location + " - " + tabs.map(getURI).join(", "));
           }
           else {
