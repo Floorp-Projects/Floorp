@@ -33,8 +33,6 @@ modules = [
     'sdk/clipboard.js',
     'sdk/console/plain-text.js',
     'sdk/console/traceback.js',
-    'sdk/content/loader.js',
-    'sdk/content/thumbnail.js',
     'sdk/core/disposable.js',
     'sdk/core/heritage.js',
     'sdk/core/namespace.js',
