@@ -20,14 +20,6 @@ class MP4Decoder : public ChannelMediaDecoder
 public:
   explicit MP4Decoder(MediaDecoderInit& aInit);
 
-  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override
-  {
-    if (!IsEnabled()) {
-      return nullptr;
-    }
-    return new MP4Decoder(aInit);
-  }
-
   // Returns true if aContainerType is an MP4 type that we think we can render
   // with the a platform decoder backend.
   // If provided, codecs are checked for support.
@@ -51,6 +43,15 @@ public:
   IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlobalObject* aParent);
 
   void GetMozDebugReaderData(nsACString& aString) override;
+
+private:
+  ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) override
+  {
+    if (!IsEnabled()) {
+      return nullptr;
+    }
+    return new MP4Decoder(aInit);
+  }
 };
 
 } // namespace mozilla

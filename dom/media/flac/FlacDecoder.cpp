@@ -12,7 +12,7 @@
 namespace mozilla {
 
 ChannelMediaDecoder*
-FlacDecoder::Clone(MediaDecoderInit& aInit)
+FlacDecoder::CloneImpl(MediaDecoderInit& aInit)
 {
   if (!IsEnabled()) {
     return nullptr;
