@@ -27,24 +27,6 @@ public class FirstrunPagerConfig {
    public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
 
-        if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_B)) {
-            panels.add(SimplePanelConfigs.urlbarPanelConfig);
-            panels.add(SimplePanelConfigs.bookmarksPanelConfig);
-            panels.add(SimplePanelConfigs.dataPanelConfig);
-            panels.add(SimplePanelConfigs.syncPanelConfig);
-            panels.add(SimplePanelConfigs.signInPanelConfig);
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_B);
-            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_B).apply();
-        } else if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_C)) {
-            panels.add(SimplePanelConfigs.tabqueuePanelConfig);
-            panels.add(SimplePanelConfigs.readerviewPanelConfig);
-            panels.add(SimplePanelConfigs.accountPanelConfig);
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_C);
-            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_C).apply();
-        } else {
-            Log.e(LOGTAG, "Not in an experiment!");
-            panels.add(SimplePanelConfigs.signInPanelConfig);
-        }
         return panels;
     }
 
