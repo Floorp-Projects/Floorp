@@ -47,6 +47,7 @@
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsIRequestObserverProxy.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsISensitiveInfoHiddenURI.h"
 #include "nsISimpleStreamListener.h"
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
@@ -1576,6 +1577,26 @@ NS_NewURI(nsIURI **result,
           nsIIOService *ioService /* = nullptr */)     // pass in nsIIOService to optimize callers
 {
     return NS_NewURI(result, nsDependentCString(spec), nullptr, baseURI, ioService);
+}
+
+nsresult
+NS_GetSanitizedURIStringFromURI(nsIURI *aUri, nsAString &aSanitizedSpec)
+{
+    aSanitizedSpec.Truncate();
+
+    nsCOMPtr<nsISensitiveInfoHiddenURI> safeUri = do_QueryInterface(aUri);
+    nsAutoCString cSpec;
+    nsresult rv;
+    if (safeUri) {
+        rv = safeUri->GetSensitiveInfoHiddenSpec(cSpec);
+    } else {
+        rv = aUri->GetSpec(cSpec);
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        aSanitizedSpec.Assign(NS_ConvertUTF8toUTF16(cSpec));
+    }
+    return rv;
 }
 
 nsresult
