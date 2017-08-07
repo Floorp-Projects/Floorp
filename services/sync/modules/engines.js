@@ -1009,6 +1009,9 @@ SyncEngine.prototype = {
       metaGlobal.changed = true;
     } else if (engineData.version > this.version) {
       // Don't sync this engine if the server has newer data
+
+      // Changes below need to be processed in bug 1295510 that's why eslint is ignored
+      // eslint-disable-next-line no-new-wrappers
       let error = new String("New data: " + [engineData.version, this.version]);
       error.failureCode = VERSION_OUT_OF_DATE;
       throw error;
