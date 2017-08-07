@@ -4105,20 +4105,26 @@ nsContentUtils::ReportToConsoleByWindowID(const nsAString& aErrorText,
       nsJSUtils::GetCallingLocation(cx, spec, &aLineNumber, &aColumnNumber);
     }
   }
-  if (spec.IsEmpty() && aURI) {
-    spec = aURI->GetSpecOrDefault();
-  }
 
   nsCOMPtr<nsIScriptError> errorObject =
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = errorObject->InitWithWindowID(aErrorText,
-                                     NS_ConvertUTF8toUTF16(spec), // file name
-                                     aSourceLine,
-                                     aLineNumber, aColumnNumber,
-                                     aErrorFlags, aCategory,
-                                     aInnerWindowID);
+  if (!spec.IsEmpty()) {
+    rv = errorObject->InitWithWindowID(aErrorText,
+                                       NS_ConvertUTF8toUTF16(spec), // file name
+                                       aSourceLine,
+                                       aLineNumber, aColumnNumber,
+                                       aErrorFlags, aCategory,
+                                       aInnerWindowID);
+  } else {
+    rv = errorObject->InitWithSourceURI(aErrorText,
+                                        aURI,
+                                        aSourceLine,
+                                        aLineNumber, aColumnNumber,
+                                        aErrorFlags, aCategory,
+                                        aInnerWindowID);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   return sConsoleService->LogMessage(errorObject);
