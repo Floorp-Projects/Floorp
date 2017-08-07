@@ -323,6 +323,8 @@ public:
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
+  virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
+
   virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
                               const std::function<wr::ImageKey()>& aImageKeyAllocator) override;
 
@@ -383,6 +385,8 @@ public:
   {
     return nullptr;
   }
+
+  virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
 
   virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
                               const std::function<wr::ImageKey()>& aImageKeyAllocator) override;
