@@ -84,6 +84,14 @@ function waitAboutAddonsLoaded() {
   return waitDOMContentLoaded(url => url === "about:addons");
 }
 
+function clickAddonDisable() {
+  content.document.querySelector("#disable-btn").click();
+}
+
+function clickAddonEnable() {
+  content.document.querySelector("#enable-btn").click();
+}
+
 add_task(async function test_options_ui_iframe_height() {
   let addonID = "test-options-ui@mozilla.org";
 
@@ -400,6 +408,86 @@ add_task(async function test_options_ui_open_in_tab() {
      "runtime.openOptionsPage has opened the expected extension page");
   ok(BrowserApp.selectedTab !== oldSelectedTab,
      "runtime.openOptionsPage has opened a new tab");
+
+  BrowserApp.closeTab(BrowserApp.selectedTab);
+
+  await extension.unload();
+});
+
+add_task(async function test_options_ui_on_disable_and_enable() {
+  let addonID = "test-options-ui-disable-enable@mozilla.org";
+
+  function optionsScript() {
+    browser.test.sendMessage("options-page-loaded", window.location.href);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      applications: {
+        gecko: {id: addonID},
+      },
+      name: "Options UI open addon details Extension",
+      description: "Longer addon description",
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      "options.js": optionsScript,
+      "options.html": `<!DOCTYPE html>
+       <html>
+         <head>
+           <meta charset="utf-8">
+         </head>
+         <body>
+           <h1>Options page</h1>
+           <script src="options.js"><\/script>
+         </body>
+       </html>
+     `,
+    },
+  });
+
+  await extension.startup();
+
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+
+  let onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+
+  BrowserApp.addTab("about:addons", {
+    selected: true,
+    parentId: BrowserApp.selectedTab.id,
+  });
+
+  await onceAboutAddonsLoaded;
+
+  const aboutAddonsTab = BrowserApp.selectedTab;
+
+  is(aboutAddonsTab.currentURI.spec, "about:addons",
+     "about:addons is the currently selected tab");
+
+  info("Wait the addon details to have been loaded");
+  await ContentTask.spawn(aboutAddonsTab.browser, addonID, waitAboutAddonsRendered);
+  await ContentTask.spawn(aboutAddonsTab.browser, addonID, navigateToAddonDetails);
+
+  info("Wait the addon options page to have been loaded");
+  await extension.awaitMessage("options-page-loaded");
+
+  info("Click the addon disable button");
+  await ContentTask.spawn(aboutAddonsTab.browser, null, clickAddonDisable);
+
+  // NOTE: Currently after disabling the addon the extension.awaitMessage seems
+  // to fail be able to receive events coming from the browser.test.sendMessage API
+  // (nevertheless `await extension.unload()` seems to be able to remove the extension),
+  // falling back to wait for the options page to be loaded here.
+  const onceAddonOptionsLoaded = waitDOMContentLoaded(url => url.endsWith("options.html"));
+
+  info("Click the addon enable button");
+  await ContentTask.spawn(aboutAddonsTab.browser, null, clickAddonEnable);
+
+  info("Wait the addon options page to have been loaded after clicking the addon enable button");
+  await onceAddonOptionsLoaded;
 
   BrowserApp.closeTab(BrowserApp.selectedTab);
 
