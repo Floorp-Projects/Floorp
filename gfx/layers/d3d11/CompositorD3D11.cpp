@@ -1163,8 +1163,9 @@ CompositorD3D11::Present()
   HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
 
   RefPtr<IDXGIKeyedMutex> mutex;
-  if (mUseMutexOnPresent && mAttachments->mSyncTexture) {
-    mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
+  if (mUseMutexOnPresent && mAttachments->mSyncObject) {
+    SyncObjectD3D11Host* d3dSyncObj = (SyncObjectD3D11Host*)mAttachments->mSyncObject.get();
+    mutex = d3dSyncObj->GetKeyedMutex();
     MOZ_ASSERT(mutex);
   }
 
