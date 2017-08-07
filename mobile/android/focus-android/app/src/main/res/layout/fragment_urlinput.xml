@@ -52,7 +52,7 @@
             android:layout_height="match_parent"
             android:background="@drawable/background_inactive" />
 
-        <org.mozilla.focus.widget.HintFrameLayout
+        <FrameLayout
             android:id="@+id/url_input_container"
             android:layout_width="match_parent"
             android:layout_height="40dp"
@@ -127,7 +127,7 @@
 
             </LinearLayout>
 
-        </org.mozilla.focus.widget.HintFrameLayout>
+        </FrameLayout>
 
     </FrameLayout>
 

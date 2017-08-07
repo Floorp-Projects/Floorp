@@ -34,7 +34,6 @@ import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
-import org.mozilla.focus.widget.HintFrameLayout;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
 
 /**
@@ -115,7 +114,7 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
 
     private UrlAutoCompleteFilter urlAutoCompleteFilter;
     private View dismissView;
-    private HintFrameLayout urlInputContainerView;
+    private View urlInputContainerView;
     private View urlInputBackgroundView;
     private View toolbarBackgroundView;
     private View menuView;
@@ -159,7 +158,7 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
 
         menuView = view.findViewById(R.id.menu);
 
-        urlInputContainerView = (HintFrameLayout) view.findViewById(R.id.url_input_container);
+        urlInputContainerView = view.findViewById(R.id.url_input_container);
         urlInputContainerView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
@@ -331,7 +330,6 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
                 urlInputBackgroundView.setScaleY(heightScale);
                 urlInputBackgroundView.setTranslationX(-xyOffset);
                 urlInputBackgroundView.setTranslationY(-xyOffset);
-                urlInputContainerView.setAnimationOffset(0f);
 
                 clearView.setAlpha(0);
             }
