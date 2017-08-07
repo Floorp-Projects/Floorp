@@ -1498,7 +1498,7 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   if (!inner.IsEmpty()) {
     nsIContent* content = GetContent();
     if (content) {
-      nsXPIDLString altText;
+      nsAutoString altText;
       nsCSSFrameConstructor::GetAlternateTextFor(content,
                                                  content->NodeInfo()->NameAtom(),
                                                  altText);

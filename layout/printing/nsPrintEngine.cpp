@@ -1508,7 +1508,7 @@ nsPrintEngine::GetDisplayTitleAndURL(const UniquePtr<nsPrintObject>& aPO,
       if (aDefType == eDocTitleDefURLDoc) {
         if (!aURLStr.IsEmpty()) {
           aTitle = aURLStr;
-        } else if (mPrt->mBrandName) {
+        } else if (!mPrt->mBrandName.IsEmpty()) {
           aTitle = mPrt->mBrandName;
         }
       }

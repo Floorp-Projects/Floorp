@@ -63,11 +63,11 @@ public:
 
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 nsIConstraintValidation::ValidityStateType aType);
-  virtual nsresult GetValueMissingMessage(nsXPIDLString& aMessage);
-  virtual nsresult GetTypeMismatchMessage(nsXPIDLString& aMessage);
-  virtual nsresult GetRangeOverflowMessage(nsXPIDLString& aMessage);
-  virtual nsresult GetRangeUnderflowMessage(nsXPIDLString& aMessage);
-  virtual nsresult GetBadInputMessage(nsXPIDLString& aMessage);
+  virtual nsresult GetValueMissingMessage(nsAString& aMessage);
+  virtual nsresult GetTypeMismatchMessage(nsAString& aMessage);
+  virtual nsresult GetRangeOverflowMessage(nsAString& aMessage);
+  virtual nsresult GetRangeUnderflowMessage(nsAString& aMessage);
+  virtual nsresult GetBadInputMessage(nsAString& aMessage);
 
   virtual nsresult MinMaxStepAttrChanged();
 

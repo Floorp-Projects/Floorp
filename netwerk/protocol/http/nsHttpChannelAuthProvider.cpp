@@ -1586,9 +1586,9 @@ nsHttpChannelAuthProvider::ConfirmAuth(const char* bundleKey,
 
     const char16_t *strs[2] = { ucsHost.get(), ucsUser.get() };
 
-    nsXPIDLString msg;
-    bundle->FormatStringFromName(bundleKey, strs, 2, getter_Copies(msg));
-    if (!msg)
+    nsAutoString msg;
+    rv = bundle->FormatStringFromName(bundleKey, strs, 2, msg);
+    if (NS_FAILED(rv))
         return true;
 
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
@@ -1614,7 +1614,7 @@ nsHttpChannelAuthProvider::ConfirmAuth(const char* bundleKey,
     if (doYesNoPrompt) {
         int32_t choice;
         bool checkState = false;
-        rv = prompt->ConfirmEx(nullptr, msg,
+        rv = prompt->ConfirmEx(nullptr, msg.get(),
                                nsIPrompt::BUTTON_POS_1_DEFAULT +
                                nsIPrompt::STD_YES_NO_BUTTONS,
                                nullptr, nullptr, nullptr, nullptr,
@@ -1625,7 +1625,7 @@ nsHttpChannelAuthProvider::ConfirmAuth(const char* bundleKey,
         confirmed = choice == 0;
     }
     else {
-        rv = prompt->Confirm(nullptr, msg, &confirmed);
+        rv = prompt->Confirm(nullptr, msg.get(), &confirmed);
         if (NS_FAILED(rv))
             return true;
     }

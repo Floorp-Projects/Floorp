@@ -88,7 +88,7 @@ MakeAnonButton(nsIDocument* aDoc, const char* labelKey,
                   NS_LITERAL_STRING("button"), false);
 
   // Set the file picking button text depending on the current locale.
-  nsXPIDLString buttonTxt;
+  nsAutoString buttonTxt;
   nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                      labelKey, buttonTxt);
 

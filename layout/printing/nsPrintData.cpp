@@ -41,7 +41,6 @@ nsPrintData::nsPrintData(ePrintDataType aType)
   , mShrinkRatio(1.0)
   , mOrigDCScale(1.0)
   , mPPEventListeners(nullptr)
-  , mBrandName(nullptr)
 {
   nsCOMPtr<nsIStringBundle> brandBundle;
   nsCOMPtr<nsIStringBundleService> svc =
@@ -49,14 +48,13 @@ nsPrintData::nsPrintData(ePrintDataType aType)
   if (svc) {
     svc->CreateBundle( "chrome://branding/locale/brand.properties", getter_AddRefs( brandBundle ) );
     if (brandBundle) {
-      brandBundle->GetStringFromName("brandShortName", &mBrandName );
+      brandBundle->GetStringFromName("brandShortName", mBrandName);
     }
   }
 
-  if (!mBrandName) {
-    mBrandName = ToNewUnicode(NS_LITERAL_STRING("Mozilla Document"));
+  if (mBrandName.IsEmpty()) {
+    mBrandName.AssignLiteral(u"Mozilla Document");
   }
-
 }
 
 nsPrintData::~nsPrintData()
@@ -90,10 +88,6 @@ nsPrintData::~nsPrintData()
         // XXX nsPrintData::ShowPrintErrorDialog(rv);
       }
     }
-  }
-
-  if (mBrandName) {
-    free(mBrandName);
   }
 }
 
