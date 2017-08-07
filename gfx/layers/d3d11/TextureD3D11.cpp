@@ -1525,17 +1525,6 @@ CompositingRenderTargetD3D11::GetSize() const
   return TextureSourceD3D11::GetSize();
 }
 
-SyncObjectD3D11::SyncObjectD3D11(SyncHandle aSyncHandle, ID3D11Device* aDevice)
- : mSyncHandle(aSyncHandle)
-{
-  if (!aDevice) {
-    mD3D11Device = DeviceManagerDx::Get()->GetContentDevice();
-    return;
-  }
-
-  mD3D11Device = aDevice;
-}
-
 static inline bool
 ShouldDevCrashOnSyncInitFailure()
 {
@@ -1551,18 +1540,107 @@ ShouldDevCrashOnSyncInitFailure()
          !DeviceManagerDx::Get()->HasDeviceReset();
 }
 
+SyncObjectD3D11Host::SyncObjectD3D11Host(ID3D11Device* aDevice)
+ : mSyncHandle(0)
+ , mDevice(aDevice)
+{
+  MOZ_ASSERT(aDevice);
+}
+
 bool
-SyncObjectD3D11::Init()
+SyncObjectD3D11Host::Init()
+{
+  CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1,
+                             D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+  RefPtr<ID3D11Texture2D> texture;
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
+  if (FAILED(hr) || !texture) {
+    gfxWarning() << "Could not create a sync texture: " << gfx::hexa(hr);
+    return false;
+  }
+
+  hr = texture->QueryInterface((IDXGIResource**)getter_AddRefs(mSyncTexture));
+  if (FAILED(hr) || !mSyncTexture) {
+    gfxWarning() << "Could not QI sync texture: " << gfx::hexa(hr);
+    return false;
+  }
+
+  hr = mSyncTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mKeyedMutex));
+  if (FAILED(hr) || !mKeyedMutex) {
+    gfxWarning() << "Could not QI keyed-mutex: " << gfx::hexa(hr);
+    return false;
+  }
+
+  hr = mSyncTexture->GetSharedHandle(&mSyncHandle);
+  if (FAILED(hr) || !mSyncHandle) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction("layers::SyncObjectD3D11Renderer::Init",
+                                                   [] () -> void {
+      Accumulate(Telemetry::D3D11_SYNC_HANDLE_FAILURE, 1);
+    }));
+    gfxWarning() << "Could not get sync texture shared handle: " << gfx::hexa(hr);
+    return false;
+  }
+
+  return true;
+}
+
+SyncHandle
+SyncObjectD3D11Host::GetSyncHandle()
+{
+  return mSyncHandle;
+}
+
+bool
+SyncObjectD3D11Host::Synchronize()
+{
+  HRESULT hr;
+  AutoTextureLock lock(mKeyedMutex, hr, 10000);
+
+  if (hr == WAIT_TIMEOUT) {
+    hr = mDevice->GetDeviceRemovedReason();
+    if (hr == S_OK) {
+      // There is no driver-removed event. Crash with this timeout.
+      MOZ_CRASH("GFX: D3D11 normal status timeout");
+    }
+
+    // Since the timeout is related to the driver-removed. Return false for
+    // error handling.
+    gfxCriticalNote << "GFX: D3D11 timeout with device-removed:" << gfx::hexa(hr);
+
+    return false;
+  }
+  if (hr == WAIT_ABANDONED) {
+    gfxCriticalNote << "GFX: AL_D3D11 abandoned sync";
+  }
+
+  return true;
+}
+
+SyncObjectD3D11Client::SyncObjectD3D11Client(SyncHandle aSyncHandle, ID3D11Device* aDevice)
+ : mSyncHandle(aSyncHandle)
+{
+  if (!aDevice) {
+    mDevice = DeviceManagerDx::Get()->GetContentDevice();
+    return;
+  }
+
+  mDevice = aDevice;
+}
+
+bool
+SyncObjectD3D11Client::Init()
 {
   if (mKeyedMutex) {
     return true;
   }
 
-  HRESULT hr = mD3D11Device->OpenSharedResource(
+  HRESULT hr = mDevice->OpenSharedResource(
     mSyncHandle,
     __uuidof(ID3D11Texture2D),
-    (void**)(ID3D11Texture2D**)getter_AddRefs(mD3D11Texture));
-  if (FAILED(hr) || !mD3D11Texture) {
+    (void**)(ID3D11Texture2D**)getter_AddRefs(mSyncTexture));
+  if (FAILED(hr) || !mSyncTexture) {
     gfxCriticalNote << "Failed to OpenSharedResource for SyncObjectD3D11: " << hexa(hr);
     if (ShouldDevCrashOnSyncInitFailure()) {
       gfxDevCrash(LogReason::D3D11FinalizeFrame) << "Without device reset: " << hexa(hr);
@@ -1570,10 +1648,10 @@ SyncObjectD3D11::Init()
     return false;
   }
 
-  hr = mD3D11Texture->QueryInterface(__uuidof(IDXGIKeyedMutex), getter_AddRefs(mKeyedMutex));
+  hr = mSyncTexture->QueryInterface(__uuidof(IDXGIKeyedMutex), getter_AddRefs(mKeyedMutex));
   if (FAILED(hr) || !mKeyedMutex) {
     // Leave both the critical error and MOZ_CRASH for now; the critical error lets
-    // us "save" the hr value.  We will probably eventuall replace this with gfxDevCrash.
+    // us "save" the hr value.  We will probably eventually replace this with gfxDevCrash.
     gfxCriticalError() << "Failed to get KeyedMutex (2): " << hexa(hr);
     MOZ_CRASH("GFX: Cannot get D3D11 KeyedMutex");
   }
@@ -1582,25 +1660,25 @@ SyncObjectD3D11::Init()
 }
 
 void
-SyncObjectD3D11::RegisterTexture(ID3D11Texture2D* aTexture)
+SyncObjectD3D11Client::RegisterTexture(ID3D11Texture2D* aTexture)
 {
-  mD3D11SyncedTextures.push_back(aTexture);
+  mSyncedTextures.push_back(aTexture);
 }
 
 bool
-SyncObjectD3D11::IsSyncObjectValid()
+SyncObjectD3D11Client::IsSyncObjectValid()
 {
   RefPtr<ID3D11Device> dev = DeviceManagerDx::Get()->GetContentDevice();
-  if (!dev || (NS_IsMainThread() && dev != mD3D11Device)) {
+  if (!dev || (NS_IsMainThread() && dev != mDevice)) {
     return false;
   }
   return true;
 }
 
 void
-SyncObjectD3D11::FinalizeFrame()
+SyncObjectD3D11Client::Synchronize()
 {
-  if (!mD3D11SyncedTextures.size()) {
+  if (!mSyncedTextures.size()) {
     return;
   }
   if (!Init()) {
@@ -1623,7 +1701,7 @@ SyncObjectD3D11::FinalizeFrame()
   box.back = box.bottom = box.right = 1;
 
   RefPtr<ID3D11Device> dev;
-  mD3D11Texture->GetDevice(getter_AddRefs(dev));
+  mSyncTexture->GetDevice(getter_AddRefs(dev));
 
   if (dev == DeviceManagerDx::Get()->GetContentDevice()) {
     if (DeviceManagerDx::Get()->HasDeviceReset()) {
@@ -1631,7 +1709,7 @@ SyncObjectD3D11::FinalizeFrame()
     }
   }
 
-  if (dev != mD3D11Device) {
+  if (dev != mDevice) {
     gfxWarning() << "Attempt to sync texture from invalid device.";
     return;
   }
@@ -1639,11 +1717,11 @@ SyncObjectD3D11::FinalizeFrame()
   RefPtr<ID3D11DeviceContext> ctx;
   dev->GetImmediateContext(getter_AddRefs(ctx));
 
-  for (auto iter = mD3D11SyncedTextures.begin(); iter != mD3D11SyncedTextures.end(); iter++) {
-    ctx->CopySubresourceRegion(mD3D11Texture, 0, 0, 0, 0, *iter, 0, &box);
+  for (auto iter = mSyncedTextures.begin(); iter != mSyncedTextures.end(); iter++) {
+    ctx->CopySubresourceRegion(mSyncTexture, 0, 0, 0, 0, *iter, 0, &box);
   }
 
-  mD3D11SyncedTextures.clear();
+  mSyncedTextures.clear();
 }
 
 uint32_t
