@@ -49,6 +49,9 @@ a:active {
 
 .warn-unsigned {
   border-top: 1px solid var(--color_about_item_border);
+  border-bottom: 1px solid var(--color_about_item_border);
+  margin-top: 1em;
+  margin-bottom: 1em;
   padding: 1em;
   padding-inline-start: calc(var(--icon-size) + var(--icon-margin) * 2);
   background-image: url("chrome://browser/skin/images/grey-caution.svg");

@@ -1,0 +1,196 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://testing-common/ContentTask.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+async function waitAboutAddonsRendered(addonId) {
+  await ContentTaskUtils.waitForCondition(() => {
+    return content.document.querySelector(`div.addon-item[addonID="${addonId}"]`);
+  }, `wait Addon Item for ${addonId} to be rendered`);
+}
+
+async function navigateToAddonDetails(addonId) {
+  const item = content.document.querySelector(`div.addon-item[addonID="${addonId}"]`);
+  let rect = item.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  let domWinUtils = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+
+  domWinUtils.sendMouseEventToWindow("mousedown", x, y, 0, 1, 0);
+  domWinUtils.sendMouseEventToWindow("mouseup", x, y, 0, 1, 0);
+}
+
+async function waitAddonOptionsPage([addonId, expectedText]) {
+  await ContentTaskUtils.waitForCondition(() => {
+    const optionsIframe = content.document.querySelector(`#addon-options`);
+    return optionsIframe && optionsIframe.contentDocument.readyState === "complete" &&
+           optionsIframe.contentDocument.body.innerText.includes(expectedText);
+  }, `wait Addon Options ${expectedText} for ${addonId} to be loaded`);
+
+  const optionsIframe = content.document.querySelector(`#addon-options`);
+
+  return {
+    iframeHeight: optionsIframe.style.height,
+    documentHeight: optionsIframe.contentDocument.documentElement.scrollHeight,
+    bodyHeight: optionsIframe.contentDocument.body.scrollHeight,
+  };
+}
+
+async function clickOnLinkInOptionsPage(selector) {
+  const optionsIframe = content.document.querySelector(`#addon-options`);
+  optionsIframe.contentDocument.querySelector(selector).click();
+}
+
+async function navigateBack() {
+  content.window.history.back();
+}
+
+add_task(async function test_options_ui_iframe_height() {
+  let addonID = "test-options-ui@mozilla.org";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      applications: {
+        gecko: {id: addonID},
+      },
+      name: "Options UI Extension",
+      description: "Longer addon description",
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      // An option page with the document element bigger than the body.
+      "options.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              html { height: 500px; border: 1px solid black; }
+              body { height: 200px; }
+            </style>
+          </head>
+          <body>
+            <h1>Options page 1</h1>
+            <a href="options2.html">go to page 2</a>
+          </body>
+        </html>
+      `,
+      // A second option page with the body element bigger than the document.
+      "options2.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              html { height: 200px; border: 1px solid black; }
+              body { height: 350px; }
+            </style>
+          </head>
+          <body>
+            <h1>Options page 2</h1>
+          </body>
+        </html>
+      `,
+    },
+  });
+
+  await extension.startup();
+
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let BrowserApp = chromeWin.BrowserApp;
+
+  let waitAboutAddonsLoaded = new Promise(resolve => {
+    let listener = (event) => {
+      if (event.target.defaultView.location.href === "about:addons") {
+        BrowserApp.deck.removeEventListener("DOMContentLoaded", listener);
+        resolve();
+      }
+    };
+
+    BrowserApp.deck.addEventListener("DOMContentLoaded", listener);
+  });
+
+  BrowserApp.selectOrAddTab("about:addons", {
+    selected: true,
+    parentId: BrowserApp.selectedTab.id,
+  });
+
+  await waitAboutAddonsLoaded;
+
+  is(BrowserApp.selectedTab.currentURI.spec, "about:addons",
+     "about:addons is the currently selected tab");
+
+  let aboutAddonsWindow = BrowserApp.selectedTab.browser.contentWindow;
+
+  is(aboutAddonsWindow.location.href, "about:addons");
+
+  await ContentTask.spawn(BrowserApp.selectedTab.browser, addonID, waitAboutAddonsRendered);
+
+  await ContentTask.spawn(BrowserApp.selectedTab.browser, addonID, navigateToAddonDetails);
+
+  const optionsSizes = await ContentTask.spawn(
+    BrowserApp.selectedTab.browser, [addonID, "Options page 1"], waitAddonOptionsPage
+  );
+
+  ok(parseInt(optionsSizes.iframeHeight, 10) >= 500,
+     "The addon options iframe is at least 500px");
+
+  is(optionsSizes.iframeHeight, optionsSizes.documentHeight + "px",
+     "The addon options iframe has the expected height");
+
+  await ContentTask.spawn(BrowserApp.selectedTab.browser, "a", clickOnLinkInOptionsPage);
+
+  const options2Sizes = await ContentTask.spawn(
+    BrowserApp.selectedTab.browser, [addonID, "Options page 2"], waitAddonOptionsPage
+  );
+
+  // The second option page has a body bigger than the document element
+  // and we expect the iframe to be bigger than that.
+  ok(parseInt(options2Sizes.iframeHeight, 10) > 200,
+     `The iframe is bigger then 200px (${options2Sizes.iframeHeight})`);
+
+  // The second option page has a body smaller than the document element of the first
+  // page and we expect the iframe to be smaller than for the previous options page.
+  ok(parseInt(options2Sizes.iframeHeight, 10) < 500,
+     `The iframe is smaller then 500px (${options2Sizes.iframeHeight})`);
+
+  is(options2Sizes.iframeHeight, options2Sizes.documentHeight + "px",
+     "The second addon options page has the expected height");
+
+  await ContentTask.spawn(BrowserApp.selectedTab.browser, null, navigateBack);
+
+  const backToOptionsSizes =  await ContentTask.spawn(
+    BrowserApp.selectedTab.browser, [addonID, "Options page 1"], waitAddonOptionsPage
+  );
+
+  // After going back to the first options page,
+  // we expect the iframe to have the same size of the previous load.
+  is(backToOptionsSizes.iframeHeight, optionsSizes.iframeHeight,
+     `When navigating back, the old iframe size is restored (${backToOptionsSizes.iframeHeight})`);
+
+  BrowserApp.closeTab(BrowserApp.selectedTab);
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>
