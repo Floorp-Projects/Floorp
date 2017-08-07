@@ -169,14 +169,14 @@ dnl Find an AAR and expose variables representing its exploded components.
 dnl AC_SUBSTs ANDROID_NAME_{AAR,AAR_RES,AAR_LIB,AAR_INTERNAL_LIB}.
 dnl Arg 1: name, like play-services-base
 dnl Arg 2: version, like 7.8.0
-dnl Arg 3: extras subdirectory, like extras, extras/android, or extras/google.
+dnl Arg 3: extras subdirectory, either android or google
 dnl Arg 4: package subdirectory, like com/google/android/gms
 dnl Arg 5: if non-empty, expect and require internal_impl JAR.
 dnl Arg 6: if non-empty, expect and require assets/ directory.
 AC_DEFUN([MOZ_ANDROID_AAR],[
   define([local_aar_var_base], translit($1, [-a-z], [_A-Z]))
   define([local_aar_var], concat(ANDROID_, local_aar_var_base, _AAR))
-  local_aar_var="$ANDROID_SDK_ROOT/$3/m2repository/$4/$1/$2/$1-$2.aar"
+  local_aar_var="$ANDROID_SDK_ROOT/extras/$3/m2repository/$4/$1/$2/$1-$2.aar"
   AC_MSG_CHECKING([for $1 AAR])
   if ! test -e "$local_aar_var" ; then
     AC_MSG_ERROR([You must download the $1 AAR.  Run the Android SDK tool and install the Android and Google Support Repositories under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (Looked for $local_aar_var)])
@@ -199,10 +199,10 @@ AC_DEFUN([MOZ_ANDROID_GOOGLE_PLAY_SERVICES],
 [
 
 if test -n "$MOZ_NATIVE_DEVICES" ; then
-    MOZ_ANDROID_AAR(play-services-base, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
-    MOZ_ANDROID_AAR(play-services-basement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
-    MOZ_ANDROID_AAR(play-services-cast, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
-    MOZ_ANDROID_AAR(mediarouter-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support, REQUIRED_INTERNAL_IMPL)
+    MOZ_ANDROID_AAR(play-services-base, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-basement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-cast, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(mediarouter-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support, REQUIRED_INTERNAL_IMPL)
 fi
 
 ])
@@ -211,10 +211,10 @@ AC_DEFUN([MOZ_ANDROID_GOOGLE_CLOUD_MESSAGING],
 [
 
 if test -n "$MOZ_ANDROID_GCM" ; then
-    MOZ_ANDROID_AAR(play-services-base, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
-    MOZ_ANDROID_AAR(play-services-basement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
-    MOZ_ANDROID_AAR(play-services-gcm, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
-    MOZ_ANDROID_AAR(play-services-measurement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-base, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-basement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-gcm, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-measurement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
 fi
 
 ])
@@ -223,8 +223,8 @@ AC_DEFUN([MOZ_ANDROID_INSTALL_TRACKING],
 [
 
 if test -n "$MOZ_INSTALL_TRACKING"; then
-    MOZ_ANDROID_AAR(play-services-ads, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
-    MOZ_ANDROID_AAR(play-services-basement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, extras/google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-ads, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-basement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
 fi
 
 ])
@@ -340,32 +340,25 @@ case "$target" in
     AC_SUBST(ANDROID_TOOLS)
     AC_SUBST(ANDROID_BUILD_TOOLS_VERSION)
 
-    MOZ_ANDROID_AAR(customtabs, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support)
-    MOZ_ANDROID_AAR(appcompat-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support)
-    MOZ_ANDROID_AAR(support-vector-drawable, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support)
-    MOZ_ANDROID_AAR(animated-vector-drawable, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support)
-    MOZ_ANDROID_AAR(cardview-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support)
-    MOZ_ANDROID_AAR(design, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support)
-    MOZ_ANDROID_AAR(recyclerview-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support)
-    MOZ_ANDROID_AAR(support-v4, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support, REQUIRED_INTERNAL_IMPL)
-    MOZ_ANDROID_AAR(palette-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, extras/android, com/android/support)
-    MOZ_ANDROID_AAR(constraint-layout, 1.0.2, extras, com/android/support/constraint)
+    MOZ_ANDROID_AAR(customtabs, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support)
+    MOZ_ANDROID_AAR(appcompat-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support)
+    MOZ_ANDROID_AAR(support-vector-drawable, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support)
+    MOZ_ANDROID_AAR(animated-vector-drawable, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support)
+    MOZ_ANDROID_AAR(cardview-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support)
+    MOZ_ANDROID_AAR(design, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support)
+    MOZ_ANDROID_AAR(recyclerview-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support)
+    MOZ_ANDROID_AAR(support-v4, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support, REQUIRED_INTERNAL_IMPL)
+    MOZ_ANDROID_AAR(palette-v7, $ANDROID_SUPPORT_LIBRARY_VERSION, android, com/android/support)
 
-    ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB="$ANDROID_SDK_ROOT/extras/android/m2repository/com/android/support/support-annotations/$ANDROID_SUPPORT_LIBRARY_VERSION/support-annotations-$ANDROID_SUPPORT_LIBRARY_VERSION.jar"
+    ANDROID_SUPPORT_ANNOTATIONS_JAR="$ANDROID_SDK_ROOT/extras/android/m2repository/com/android/support/support-annotations/$ANDROID_SUPPORT_LIBRARY_VERSION/support-annotations-$ANDROID_SUPPORT_LIBRARY_VERSION.jar"
     AC_MSG_CHECKING([for support-annotations JAR])
-    if ! test -e $ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB ; then
-        AC_MSG_ERROR([You must download the support-annotations lib.  Run the Android SDK tool and install the Android Support Repository under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB)])
+    if ! test -e $ANDROID_SUPPORT_ANNOTATIONS_JAR ; then
+        AC_MSG_ERROR([You must download the support-annotations lib.  Run the Android SDK tool and install the Android Support Repository under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_SUPPORT_ANNOTATIONS_JAR)])
     fi
-    AC_MSG_RESULT([$ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB])
+    AC_MSG_RESULT([$ANDROID_SUPPORT_ANNOTATIONS_JAR])
+    AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR)
+    ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB=$ANDROID_SUPPORT_ANNOTATIONS_JAR
     AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB)
-
-    ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB="$ANDROID_SDK_ROOT/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.2/constraint-layout-solver-1.0.2.jar"
-    AC_MSG_CHECKING([for constraint-layout-solver JAR])
-    if ! test -e $ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB ; then
-        AC_MSG_ERROR([You must download the constraint-layout-solver lib.  Run the Android SDK tool and install the Android Support Repository under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB)])
-    fi
-    AC_MSG_RESULT([$ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB])
-    AC_SUBST(ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB)
     ;;
 esac
 
