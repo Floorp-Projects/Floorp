@@ -6,7 +6,7 @@
 /* global browserActionFor:false, sidebarActionFor:false, pageActionFor:false */
 
 // The ext-* files are imported into the same scopes.
-/* import-globals-from ext-utils.js */
+/* import-globals-from ext-browser.js */
 
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
