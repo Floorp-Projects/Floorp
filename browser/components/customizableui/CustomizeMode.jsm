@@ -1887,10 +1887,11 @@ CustomizeMode.prototype = {
           let itemRect = this._dwu.getBoundsWithoutFlushing(dragOverItem);
           let dropTargetCenter = itemRect.left + (itemRect.width / 2);
           let existingDir = dragOverItem.getAttribute("dragover");
+          let dirFactor = this._dir == "ltr" ? 1 : -1;
           if (existingDir == "before") {
-            dropTargetCenter += (parseInt(dragOverItem.style.borderInlineStartWidth) || 0) / 2;
+            dropTargetCenter += (parseInt(dragOverItem.style.borderInlineStartWidth) || 0) / 2 * dirFactor;
           } else {
-            dropTargetCenter -= (parseInt(dragOverItem.style.borderInlineEndWidth) || 0) / 2;
+            dropTargetCenter -= (parseInt(dragOverItem.style.borderInlineEndWidth) || 0) / 2 * dirFactor;
           }
           let before = this._dir == "ltr" ? aEvent.clientX < dropTargetCenter : aEvent.clientX > dropTargetCenter;
           dragValue = before ? "before" : "after";
