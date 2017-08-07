@@ -2004,7 +2004,7 @@ PlacesPanelMenuView.prototype = {
   }
 };
 
-var PlacesPanelview = class extends PlacesViewBase {
+this.PlacesPanelview = class extends PlacesViewBase {
   constructor(container, panelview, place, options = {}) {
     options.rootElt = container;
     options.viewElt = panelview;
@@ -2012,7 +2012,7 @@ var PlacesPanelview = class extends PlacesViewBase {
     this._viewElt._placesView = this;
     // We're simulating a popup show, because a panelview may only be shown when
     // its containing popup is already shown.
-    this._onPopupShowing({ originalTarget: this._viewElt });
+    this._onPopupShowing({ originalTarget: this._rootElt });
     this._addEventListeners(window, ["unload"]);
     this._rootElt.setAttribute("context", "placesContext");
   }

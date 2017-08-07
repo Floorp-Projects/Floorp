@@ -1988,10 +1988,6 @@ var BookmarkingUI = {
       "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
       "&maxResults=42&excludeQueries=1";
 
-    // XPCOMUtils.defineLazyScriptGetter can't return class constructors, so
-    // trigger the getter once without using the result before calling
-    // PlacesPanelview as a constructor.
-    PlacesPanelview;
     this._panelMenuView = new PlacesPanelview(document.getElementById("panelMenu_bookmarksMenu"),
       panelview, query);
     panelview.removeEventListener("ViewShowing", this);
