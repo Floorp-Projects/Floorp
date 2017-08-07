@@ -46,6 +46,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HTMLEditor.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
@@ -266,8 +268,8 @@ DocAccessible::NativeState()
     state |= states::INVISIBLE | states::OFFSCREEN;
   }
 
-  nsCOMPtr<nsIEditor> editor = GetEditor();
-  state |= editor ? states::EDITABLE : states::READONLY;
+  RefPtr<TextEditor> textEditor = GetEditor();
+  state |= textEditor ? states::EDITABLE : states::READONLY;
 
   return state;
 }
@@ -337,7 +339,7 @@ DocAccessible::TakeFocus()
 }
 
 // HyperTextAccessible method
-already_AddRefed<nsIEditor>
+already_AddRefed<TextEditor>
 DocAccessible::GetEditor() const
 {
   // Check if document is editable (designMode="on" case). Otherwise check if
@@ -356,15 +358,17 @@ DocAccessible::GetEditor() const
   if (!editingSession)
     return nullptr; // No editing session interface
 
-  nsCOMPtr<nsIEditor> editor;
-  editingSession->GetEditorForWindow(mDocumentNode->GetWindow(), getter_AddRefs(editor));
-  if (!editor)
+  RefPtr<HTMLEditor> htmlEditor =
+    editingSession->GetHTMLEditorForWindow(mDocumentNode->GetWindow());
+  if (!htmlEditor) {
     return nullptr;
+  }
 
   bool isEditable = false;
-  editor->GetIsDocumentEditable(&isEditable);
-  if (isEditable)
-    return editor.forget();
+  htmlEditor->GetIsDocumentEditable(&isEditable);
+  if (isEditable) {
+    return htmlEditor.forget();
+  }
 
   return nullptr;
 }
