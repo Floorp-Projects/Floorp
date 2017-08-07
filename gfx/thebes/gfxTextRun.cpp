@@ -65,7 +65,7 @@ gfxTextRun::GlyphRunIterator::NextRun()
         }
         mGlyphRun = &mTextRun->mGlyphRunArray[mNextIndex];
     } else {
-        if (mNextIndex > 0) {
+        if (mNextIndex > 0 || !mTextRun->mSingleGlyphRun.mFont) {
             return false;
         }
         glyphRunCount = 1;
