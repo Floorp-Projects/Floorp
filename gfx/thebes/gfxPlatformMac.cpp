@@ -133,13 +133,6 @@ gfxPlatformMac::CreateOffscreenSurface(const IntSize& aSize,
     return newSurface.forget();
 }
 
-already_AddRefed<ScaledFont>
-gfxPlatformMac::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
-{
-    gfxMacFont *font = static_cast<gfxMacFont*>(aFont);
-    return font->GetScaledFont(aTarget);
-}
-
 gfxFontGroup *
 gfxPlatformMac::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                 const gfxFontStyle *aStyle,

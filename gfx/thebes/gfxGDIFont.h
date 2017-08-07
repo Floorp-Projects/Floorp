@@ -35,6 +35,9 @@ public:
 
     virtual bool SetupCairoFont(DrawTarget* aDrawTarget) override;
 
+    virtual already_AddRefed<mozilla::gfx::ScaledFont>
+    GetScaledFont(DrawTarget *aTarget) override;
+
     /* override Measure to add padding for antialiasing */
     virtual RunMetrics Measure(const gfxTextRun *aTextRun,
                                uint32_t aStart, uint32_t aEnd,
