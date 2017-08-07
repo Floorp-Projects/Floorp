@@ -18,7 +18,6 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 var flags = require("devtools/shared/flags");
 var EventEmitter = require("devtools/shared/event-emitter");
-var Promise = require("promise");
 var SyncPromise = require("devtools/shared/deprecated-sync-thenables");
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
@@ -965,42 +964,41 @@ var DebuggerServer = {
     if (this._childMessageManagers.size == 0) {
       return Promise.resolve();
     }
-    let deferred = Promise.defer();
-
-    // If waitForEval is set, pass a unique id and expect child.js to send
-    // a message back once the code in child is evaluated.
-    if (typeof (waitForEval) != "boolean") {
-      waitForEval = false;
-    }
-    let count = this._childMessageManagers.size;
-    let id = waitForEval ? generateUUID().toString() : null;
-
-    this._childMessageManagers.forEach(mm => {
-      if (waitForEval) {
-        // Listen for the end of each child execution
-        let evalListener = msg => {
-          if (msg.data.id !== id) {
-            return;
-          }
-          mm.removeMessageListener("debug:setup-in-child-response", evalListener);
-          if (--count === 0) {
-            deferred.resolve();
-          }
-        };
-        mm.addMessageListener("debug:setup-in-child-response", evalListener);
+    return new Promise(done => {
+      // If waitForEval is set, pass a unique id and expect child.js to send
+      // a message back once the code in child is evaluated.
+      if (typeof (waitForEval) != "boolean") {
+        waitForEval = false;
       }
-      mm.sendAsyncMessage("debug:setup-in-child", {
-        module: module,
-        setupChild: setupChild,
-        args: args,
-        id: id,
-      });
-    });
+      let count = this._childMessageManagers.size;
+      let id = waitForEval ? generateUUID().toString() : null;
 
-    if (waitForEval) {
-      return deferred.promise;
-    }
-    return Promise.resolve();
+      this._childMessageManagers.forEach(mm => {
+        if (waitForEval) {
+          // Listen for the end of each child execution
+          let evalListener = msg => {
+            if (msg.data.id !== id) {
+              return;
+            }
+            mm.removeMessageListener("debug:setup-in-child-response", evalListener);
+            if (--count === 0) {
+              done();
+            }
+          };
+          mm.addMessageListener("debug:setup-in-child-response", evalListener);
+        }
+        mm.sendAsyncMessage("debug:setup-in-child", {
+          module: module,
+          setupChild: setupChild,
+          args: args,
+          id: id,
+        });
+      });
+
+      if (!waitForEval) {
+        done();
+      }
+    });
   },
 
   /**
