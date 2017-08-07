@@ -1,0 +1,53 @@
+<!DOCTYPE type>
+<title>CSS variables order tests</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" type="text/css">
+
+<style id="test">
+</style>
+
+<div id="t4"></div>
+
+<script>
+
+/*
+ * Although the spec does not enforce any specific order, Gecko and Servo
+ * implement a consistent ordering for CSSDeclaration objects in the DOM.
+ * CSSDeclarations expose property names as indexed properties, which need
+ * to be stable. This order is the order that properties are cascaded in.
+ *
+ * We have this test just to prevent regressions, rather than testing specific
+ * mandated behavior.
+ */
+
+function prepareTest() {
+  var e = document.createElement("link");
+  e.addEventListener("load", runTest);
+  e.setAttribute("rel", "stylesheet");
+  e.setAttribute("href", "support/external-variable-url.css");
+  document.head.appendChild(e);
+}
+
+function runTest() {
+  var test = document.getElementById("test");
+  test.textContent = "div { --SomeVariableName: a; }";
+
+  var declaration = test.sheet.cssRules[0].style;
+  is(declaration.item(0), "--SomeVariableName", "custom property name returned by item() on style declaration");
+  is(declaration[0], "--SomeVariableName", "custom property name returned by indexed getter on style declaration");
+
+  var element = document.getElementById("t4");
+  var cs = window.getComputedStyle(element);
+
+  ["--SomeVariableName", "--a"].forEach((varName, index) => {
+    is(cs.item(cs.length - (index + 1)), varName, "custom property name returned by item() on computed style");
+    is(cs[cs.length - (index + 1)], varName, "custom property name returned by indexed getter on style declaration");
+  });
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+prepareTest();
+</script>
