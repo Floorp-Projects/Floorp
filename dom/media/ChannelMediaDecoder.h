@@ -15,6 +15,8 @@ class nsIStreamListener;
 
 namespace mozilla {
 
+class BaseMediaResource;
+
 class ChannelMediaDecoder : public MediaDecoder
 {
   // Used to register with MediaResource to receive notifications which will
@@ -53,7 +55,7 @@ class ChannelMediaDecoder : public MediaDecoder
 
 protected:
   RefPtr<ResourceCallback> mResourceCallback;
-  RefPtr<MediaResource> mResource;
+  RefPtr<BaseMediaResource> mResource;
 
 public:
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
@@ -64,17 +66,19 @@ public:
 
   void Shutdown() override;
 
-  // Create a new decoder of the same type as this one.
-  // Subclasses must implement this.
-  virtual ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) = 0;
+  bool CanClone();
 
-  virtual nsresult Load(nsIChannel* aChannel,
-                        bool aIsPrivateBrowsing,
-                        nsIStreamListener** aStreamListener);
-  virtual nsresult Load(MediaResource* aOriginal);
+  // Create a new decoder of the same type as this one.
+  already_AddRefed<ChannelMediaDecoder> Clone(MediaDecoderInit& aInit);
+
+  nsresult Load(nsIChannel* aChannel,
+                bool aIsPrivateBrowsing,
+                nsIStreamListener** aStreamListener);
 
 private:
+  virtual ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) = 0;
   nsresult OpenResource(nsIStreamListener** aStreamListener);
+  nsresult Load(BaseMediaResource* aOriginal);
 };
 
 } // namespace mozilla
