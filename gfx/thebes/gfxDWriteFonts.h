@@ -105,7 +105,6 @@ protected:
     bool mNeedsBold;
     bool mUseSubpixelPositions;
     bool mAllowManualShowGlyphs;
-    bool mAzureScaledFontIsCairo;
     static bool mUseClearType;
 };
 
