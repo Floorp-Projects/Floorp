@@ -196,7 +196,8 @@ public:
     void
     FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
                          nsTArray<gfxFontEntry*>& aFontEntryList,
-                         bool& aNeedsSyntheticBold) override;
+                         bool& aNeedsSyntheticBold,
+                         bool aIgnoreSizeTolerance) override;
 
 protected:
     virtual ~gfxFontconfigFontFamily();
