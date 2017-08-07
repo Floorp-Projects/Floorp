@@ -82,7 +82,6 @@ EXPORTS.mozilla += [
     'ArenaAllocator.h',
     'ArenaAllocatorExtensions.h',
     'ArrayIterator.h',
-    'Dafsa.h',
     'IncrementalTokenizer.h',
     'Observer.h',
     'StickyTimeDuration.h',
@@ -90,7 +89,6 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
-    'Dafsa.cpp',
     'IncrementalTokenizer.cpp',
     'nsArray.cpp',
     'nsArrayEnumerator.cpp',
