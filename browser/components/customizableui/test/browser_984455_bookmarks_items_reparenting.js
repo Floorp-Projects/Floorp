@@ -189,8 +189,10 @@ function checkNotOverflowing(aID) {
  * context menus for the Unsorted and Bookmarks Toolbar menu items.
  */
 add_task(async function testOverflowingBookmarksButtonContextMenu() {
-  ok(!gNavBar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
+  CustomizableUI.removeWidgetFromArea("library-button", CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea(kBookmarksButton, CustomizableUI.AREA_NAVBAR);
+  ok(!gNavBar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
 
   // Open the Unsorted and Bookmarks Toolbar context menus and ensure
   // that they have views attached.
