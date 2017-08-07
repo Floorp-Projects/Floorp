@@ -84,6 +84,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private static final String LOGTAG = "GeckoToolbar";
 
     private static final int LIGHTWEIGHT_THEME_INVERT_ALPHA = 34; // 255 - alpha = invert_alpha
+    private static final int LIGHTWEIGHT_THEME_ALPHA = 77;
 
     public interface OnActivateListener {
         public void onActivate();
@@ -947,7 +948,11 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         final LightweightThemeDrawable drawable = theme.getColorDrawable(view, color);
         if (drawable != null) {
-            drawable.setAlpha(LIGHTWEIGHT_THEME_INVERT_ALPHA, LIGHTWEIGHT_THEME_INVERT_ALPHA);
+            if (SkinConfig.isAustralis()) {
+                drawable.setAlpha(LIGHTWEIGHT_THEME_INVERT_ALPHA, LIGHTWEIGHT_THEME_INVERT_ALPHA);
+            } else {
+                drawable.setAlpha(LIGHTWEIGHT_THEME_ALPHA, LIGHTWEIGHT_THEME_ALPHA);
+            }
         }
 
         return drawable;
