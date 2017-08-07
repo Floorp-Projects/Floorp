@@ -349,15 +349,15 @@ interaction.flushEventLoop = async function(win) {
  *     An <tt>&lt;input type=file&gt;</tt> element.
  * @param {string} path
  *     Full path to file.
+ *
+ * @throws {InvalidArgumentError}
+ *     If <var>path</var> can not be found.
  */
-interaction.uploadFile = function* (el, path) {
-  let file = yield File.createFromFileName(path).then(file => {
-    return file;
-  }, () => {
-    return null;
-  });
-
-  if (!file) {
+interaction.uploadFile = async function(el, path) {
+  let file;
+  try {
+    file = await File.createFromFileName(path);
+  } catch (e) {
     throw new InvalidArgumentError("File not found: " + path);
   }
 
@@ -390,7 +390,7 @@ interaction.uploadFile = function* (el, path) {
  * @throws {TypeError}
  *     If <var>el</var> is not an supported form element.
  */
-interaction.setFormControlValue = function* (el, value) {
+interaction.setFormControlValue = function(el, value) {
   if (!COMMON_FORM_CONTROLS.has(el.localName)) {
     throw new TypeError("This function is for form elements only");
   }
@@ -417,14 +417,13 @@ interaction.setFormControlValue = function* (el, value) {
  * @param {boolean=} [strict=false] strict
  *     Enforce strict accessibility tests.
  */
-interaction.sendKeysToElement = function(
+interaction.sendKeysToElement = async function(
     el, value, ignoreVisibility, strict = false) {
   let win = getWindow(el);
   let a11y = accessibility.get(strict);
-  return a11y.getAccessible(el, true).then(acc => {
-    a11y.assertActionable(acc, el);
-    event.sendKeysToElement(value, el, {ignoreVisibility: false}, win);
-  });
+  let acc = await a11y.getAccessible(el, true);
+  a11y.assertActionable(acc, el);
+  event.sendKeysToElement(value, el, {ignoreVisibility: false}, win);
 };
 
 /**
