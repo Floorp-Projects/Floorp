@@ -1634,6 +1634,10 @@ nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
                                         mozilla::Side aSide,
                                         Float aBorderLength, bool isCorner)
 {
+  MOZ_ASSERT(mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DASHED ||
+             mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DOTTED,
+             "Style should be dashed or dotted.");
+
   uint8_t style = mBorderStyles[aSide];
   Float borderWidth = mBorderWidths[aSide];
 
