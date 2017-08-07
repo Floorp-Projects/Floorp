@@ -341,6 +341,133 @@ ChannelMediaDecoder::CanPlayThroughImpl()
   return GetStatistics().CanPlayThrough();
 }
 
+void
+ChannelMediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaDecoder::OnPlaybackEvent(aEvent);
+  switch (aEvent) {
+    case MediaEventType::PlaybackStarted:
+      mPlaybackStatistics.Start();
+      break;
+    case MediaEventType::PlaybackStopped:
+      mPlaybackStatistics.Stop();
+      ComputePlaybackRate();
+      break;
+    default:
+      break;
+  }
+}
+
+void
+ChannelMediaDecoder::DurationChanged()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+  MediaDecoder::DurationChanged();
+  // Duration has changed so we should recompute playback rate
+  UpdatePlaybackRate();
+}
+
+void
+ChannelMediaDecoder::DownloadProgressed()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+  MediaDecoder::DownloadProgressed();
+  UpdatePlaybackRate();
+  mResource->ThrottleReadahead(ShouldThrottleDownload());
+}
+
+void
+ChannelMediaDecoder::ComputePlaybackRate()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mResource);
+
+  int64_t length = mResource->GetLength();
+  if (mozilla::IsFinite<double>(mDuration) && mDuration > 0 && length >= 0) {
+    mPlaybackRateReliable = true;
+    mPlaybackBytesPerSecond = length / mDuration;
+    return;
+  }
+
+  bool reliable = false;
+  mPlaybackBytesPerSecond = mPlaybackStatistics.GetRateAtLastStop(&reliable);
+  mPlaybackRateReliable = reliable;
+}
+
+void
+ChannelMediaDecoder::UpdatePlaybackRate()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mResource);
+
+  ComputePlaybackRate();
+  uint32_t rate = mPlaybackBytesPerSecond;
+
+  if (mPlaybackRateReliable) {
+    // Avoid passing a zero rate
+    rate = std::max(rate, 1u);
+  } else {
+    // Set a minimum rate of 10,000 bytes per second ... sometimes we just
+    // don't have good data
+    rate = std::max(rate, 10000u);
+  }
+
+  mResource->SetPlaybackRate(rate);
+}
+
+MediaStatistics
+ChannelMediaDecoder::GetStatistics()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mResource);
+
+  MediaStatistics result;
+  result.mDownloadRate =
+    mResource->GetDownloadRate(&result.mDownloadRateReliable);
+  result.mDownloadPosition = mResource->GetCachedDataEnd(mDecoderPosition);
+  result.mTotalBytes = mResource->GetLength();
+  result.mPlaybackRate = mPlaybackBytesPerSecond;
+  result.mPlaybackRateReliable = mPlaybackRateReliable;
+  result.mDecoderPosition = mDecoderPosition;
+  result.mPlaybackPosition = mPlaybackPosition;
+  return result;
+}
+
+bool
+ChannelMediaDecoder::ShouldThrottleDownload()
+{
+  // We throttle the download if either the throttle override pref is set
+  // (so that we can always throttle in Firefox on mobile) or if the download
+  // is fast enough that there's no concern about playback being interrupted.
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_TRUE(GetStateMachine(), false);
+
+  int64_t length = mResource->GetLength();
+  if (length > 0 &&
+      length <= int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
+    // Don't throttle the download of small resources. This is to speed
+    // up seeking, as seeks into unbuffered ranges would require starting
+    // up a new HTTP transaction, which adds latency.
+    return false;
+  }
+
+  if (Preferences::GetBool("media.throttle-regardless-of-download-rate",
+                           false)) {
+    return true;
+  }
+
+  MediaStatistics stats = GetStatistics();
+  if (!stats.mDownloadRateReliable || !stats.mPlaybackRateReliable) {
+    return false;
+  }
+  uint32_t factor =
+    std::max(2u, Preferences::GetUint("media.throttle-factor", 2));
+  return stats.mDownloadRate > factor * stats.mPlaybackRate;
+}
+
 } // namespace mozilla
 
 // avoid redefined macro in unified build

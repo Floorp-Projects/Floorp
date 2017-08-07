@@ -54,6 +54,9 @@ class ChannelMediaDecoder : public MediaDecoder
   };
 
 protected:
+  void OnPlaybackEvent(MediaEventType aEvent) override;
+  void DurationChanged() override;
+  void DownloadProgressed() override;
   RefPtr<ResourceCallback> mResourceCallback;
   RefPtr<BaseMediaResource> mResource;
 
@@ -93,6 +96,21 @@ private:
 
   bool CanPlayThroughImpl() override final;
 
+  // The actual playback rate computation.
+  void ComputePlaybackRate();
+
+  // Something has changed that could affect the computed playback rate,
+  // so recompute it.
+  void UpdatePlaybackRate();
+
+  // Return statistics. This is used for progress events and other things.
+  // This can be called from any thread. It's only a snapshot of the
+  // current state, since other threads might be changing the state
+  // at any time.
+  MediaStatistics GetStatistics();
+
+  bool ShouldThrottleDownload();
+
   WatchManager<ChannelMediaDecoder> mWatchManager;
 
   // True when seeking or otherwise moving the play position around in
@@ -100,6 +118,17 @@ private:
   // during seek and duration operations to prevent the progress indicator
   // from jumping around. Read/Write on the main thread only.
   bool mIgnoreProgressData = false;
+
+  // Data needed to estimate playback data rate. The timeline used for
+  // this estimate is "decode time" (where the "current time" is the
+  // time of the last decoded video frame).
+  MediaChannelStatistics mPlaybackStatistics;
+
+  // Estimate of the current playback rate (bytes/second).
+  double mPlaybackBytesPerSecond = 0;
+
+  // True if mPlaybackBytesPerSecond is a reliable estimate.
+  bool mPlaybackRateReliable = true;
 };
 
 } // namespace mozilla
