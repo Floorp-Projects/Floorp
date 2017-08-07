@@ -40,7 +40,6 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     private static final String KEY_CURRENTURL = "currenturl";
     private static final String KEY_STATE_UUID = "state_uuid";
 
-    private IconHolder iconHolder;
     private Callback callback;
     private FocusWebViewClient client;
     private final LinkHandler linkHandler;
@@ -48,8 +47,7 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     public WebkitView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        iconHolder = new IconHolder();
-        client = new FocusWebViewClient(getContext().getApplicationContext(), iconHolder);
+        client = new FocusWebViewClient(getContext().getApplicationContext());
 
         setWebViewClient(client);
         setWebChromeClient(createWebChromeClient());
@@ -167,11 +165,6 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     }
 
     @Override
-    public Bitmap getIcon() {
-        return iconHolder.getIcon();
-    }
-
-    @Override
     public void destroy() {
         super.destroy();
 
@@ -243,11 +236,6 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
                 };
 
                 callback.onEnterFullScreen(fullscreenCallback, view);
-            }
-
-            @Override
-            public void onReceivedIcon(WebView view, Bitmap icon) {
-                iconHolder.updateIcon(icon);
             }
 
             @Override

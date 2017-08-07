@@ -111,12 +111,6 @@ public interface IWebView {
     void saveWebViewState(Bundle outState);
 
     /**
-     * Get an icon (usually favicon) for the currently displayed website.
-     */
-    @Nullable
-    Bitmap getIcon();
-
-    /**
      * Get the title of the currently displayed website.
      */
     String getTitle();
