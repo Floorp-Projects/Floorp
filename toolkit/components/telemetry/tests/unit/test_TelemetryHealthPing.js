@@ -240,6 +240,53 @@ add_task(async function test_sendOnlyTopTenDiscardedPings() {
   });
 });
 
+add_task(async function test_discardedForSizePending() {
+  TelemetryHealthPing.testReset();
+  PingServer.clearRequests();
+
+  const PING_TYPE = "discarded-for-size-pending";
+
+  const OVERSIZED_PING_ID = "9b21ec8f-f762-4d28-a2c1-44e1c4694f24";
+  // Create a pending oversized ping.
+  let overSizedPayload = generateRandomString(2 * 1024 * 1024);
+  const OVERSIZED_PING = {
+    id: OVERSIZED_PING_ID,
+    type: PING_TYPE,
+    creationDate: (new Date()).toISOString(),
+    // Generate a 2MB string to use as the ping payload.
+    payload: overSizedPayload,
+  };
+
+  // Test loadPendingPing.
+  await TelemetryStorage.savePendingPing(OVERSIZED_PING);
+  // Try to manually load the oversized ping.
+  await Assert.rejects(TelemetryStorage.loadPendingPing(OVERSIZED_PING_ID),
+    "The oversized ping should have been pruned.");
+
+  let ping = await PingServer.promiseNextPing();
+  checkHealthPingStructure(ping, {
+    [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
+      "<unknown>": 1
+    },
+    "os": TelemetryHealthPing.OsInfo,
+    "reason": TelemetryHealthPing.Reason.IMMEDIATE
+  });
+
+  // Test _scanPendingPings.
+  TelemetryHealthPing.testReset();
+  await TelemetryStorage.savePendingPing(OVERSIZED_PING);
+  await TelemetryStorage.loadPendingPingList();
+
+  ping = await PingServer.promiseNextPing();
+  checkHealthPingStructure(ping, {
+    [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
+      "<unknown>": 1
+    },
+    "os": TelemetryHealthPing.OsInfo,
+    "reason": TelemetryHealthPing.Reason.IMMEDIATE
+  });
+});
+
 add_task(async function test_usePingSenderOnShutdown() {
   if (gIsAndroid ||
       (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)) {
