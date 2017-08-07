@@ -578,7 +578,7 @@ class Preprocessor:
     # Logic
     def ensure_not_else(self):
         if len(self.ifStates) == 0 or self.ifStates[-1] == 2:
-            sys.stderr.write('WARNING: bad nesting of #else\n')
+            sys.stderr.write('WARNING: bad nesting of #else in %s\n' % self.context['FILE'])
     def do_if(self, args, replace=False):
         if self.disableLevel and not replace:
             self.disableLevel += 1
