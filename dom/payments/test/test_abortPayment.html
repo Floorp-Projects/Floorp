@@ -13,6 +13,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345367
   "use strict";
   SimpleTest.waitForExplicitFinish();
 
+  var gUrl = SimpleTest.getTestFileURL('GeneralChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
   const defaultMethods = [{
     supportedMethods: "basic-card",
   }];
@@ -54,10 +57,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345367
     });
   }
 
+  function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
   function runTests() {
     testBeforeShow()
     .then(testAfterShow)
-    .then(SimpleTest.finish)
+    .then(teardown)
     .catch( e => {
       ok(false, "Unexpected error: " + e.name);
       SimpleTest.finish();

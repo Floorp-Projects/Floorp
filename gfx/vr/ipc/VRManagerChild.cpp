@@ -19,6 +19,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/VRServiceTest.h"
+#include "mozilla/layers/SyncObject.h"
 
 using layers::TextureClient;
 
@@ -61,7 +62,8 @@ VRManagerChild::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
   if (sVRManagerChildSingleton) {
     sVRManagerChildSingleton->mBackend = aIdentifier.mParentBackend;
-    sVRManagerChildSingleton->mSyncObject = SyncObject::CreateSyncObject(aIdentifier.mSyncHandle);
+    sVRManagerChildSingleton->mSyncObject =
+        layers::SyncObjectClient::CreateSyncObjectClient(aIdentifier.mSyncHandle);
   }
 }
 

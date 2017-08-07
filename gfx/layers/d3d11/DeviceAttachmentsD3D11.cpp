@@ -18,8 +18,7 @@ using namespace gfx;
 static const size_t kInitialMaximumTriangles = 64;
 
 DeviceAttachmentsD3D11::DeviceAttachmentsD3D11(ID3D11Device* device)
- : mSyncHandle(0),
-   mMaximumTriangles(kInitialMaximumTriangles),
+ : mMaximumTriangles(kInitialMaximumTriangles),
    mDevice(device),
    mContinueInit(true),
    mInitialized(false),
@@ -225,36 +224,13 @@ DeviceAttachmentsD3D11::InitSyncObject()
     return true;
   }
 
-  // It's okay to do this on Windows 8. But for now we'll just bail
-  // whenever we're using WARP.
-  CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1,
-                             D3D11_BIND_SHADER_RESOURCE |
-                             D3D11_BIND_RENDER_TARGET);
-  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  MOZ_ASSERT(!mSyncObject);
+  MOZ_ASSERT(mDevice);
 
-  RefPtr<ID3D11Texture2D> texture;
-  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
-  if (Failed(hr, "create sync texture")) {
-    return false;
-  }
+  mSyncObject = SyncObjectHost::CreateSyncObjectHost(mDevice);
+  MOZ_ASSERT(mSyncObject);
 
-  hr = texture->QueryInterface((IDXGIResource**)getter_AddRefs(mSyncTexture));
-  if (Failed(hr, "QI sync texture")) {
-    return false;
-  }
-
-  hr = mSyncTexture->GetSharedHandle(&mSyncHandle);
-  if (FAILED(hr) || !mSyncHandle) {
-    gfxCriticalError() << "Failed to get SharedHandle for sync texture. Result: "
-                       << hexa(hr);
-    NS_DispatchToMainThread(NS_NewRunnableFunction("DeviceAttachmentsD3D11::InitSyncObject",
-                                                   [] () -> void {
-      Accumulate(Telemetry::D3D11_SYNC_HANDLE_FAILURE, 1);
-    }));
-    return false;
-  }
-
-  return true;
+  return mSyncObject->Init();
 }
 
 bool

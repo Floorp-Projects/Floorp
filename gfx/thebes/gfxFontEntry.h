@@ -643,12 +643,14 @@ public:
     // aNeedsSyntheticBold is set to true when synthetic bolding is
     // needed, false otherwise
     gfxFontEntry *FindFontForStyle(const gfxFontStyle& aFontStyle, 
-                                   bool& aNeedsSyntheticBold);
+                                   bool& aNeedsSyntheticBold,
+                                   bool aIgnoreSizeTolerance = false);
 
     virtual void
     FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
                          nsTArray<gfxFontEntry*>& aFontEntryList,
-                         bool& aNeedsSyntheticBold);
+                         bool& aNeedsSyntheticBold,
+                         bool aIgnoreSizeTolerance = false);
 
     // checks for a matching font within the family
     // used as part of the font fallback process

@@ -20,6 +20,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PersistentBufferProvider.h"
+#include "mozilla/layers/SyncObject.h"
 #include "ClientReadbackLayer.h"        // for ClientReadbackLayer
 #include "nsAString.h"
 #include "nsDisplayList.h"
@@ -728,7 +729,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
     if (mForwarder->GetSyncObject() &&
         mForwarder->GetSyncObject()->IsSyncObjectValid()) {
-      mForwarder->GetSyncObject()->FinalizeFrame();
+      mForwarder->GetSyncObject()->Synchronize();
     }
   }
 

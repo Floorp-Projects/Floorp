@@ -1228,7 +1228,7 @@ MediaDecoder::GetCompositor()
   RefPtr<LayerManager> layerManager =
     ownerDoc ? nsContentUtils::LayerManagerForDocument(ownerDoc) : nullptr;
   RefPtr<KnowsCompositor> knows =
-    layerManager ? layerManager->AsShadowForwarder() : nullptr;
+    layerManager ? layerManager->AsKnowsCompositor() : nullptr;
   return knows.forget();
 }
 

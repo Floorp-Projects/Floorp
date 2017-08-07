@@ -173,13 +173,13 @@ void nsHttpTransaction::ResumeReading()
     }
 }
 
-bool nsHttpTransaction::EligibleForThrottling()
+bool nsHttpTransaction::EligibleForThrottling() const
 {
-  return (mClassOfService & (nsIClassOfService::Throttleable |
-                             nsIClassOfService::DontThrottle |
-                             nsIClassOfService::Leader |
-                             nsIClassOfService::Unblocked)) ==
-    nsIClassOfService::Throttleable;
+    return (mClassOfService & (nsIClassOfService::Throttleable |
+                               nsIClassOfService::DontThrottle |
+                               nsIClassOfService::Leader |
+                               nsIClassOfService::Unblocked)) ==
+        nsIClassOfService::Throttleable;
 }
 
 void nsHttpTransaction::SetClassOfService(uint32_t cos)
@@ -190,9 +190,9 @@ void nsHttpTransaction::SetClassOfService(uint32_t cos)
 
     if (mConnection && wasThrottling != isThrottling) {
         // Do nothing until we are actually activated.  For now
-        // only remember the throttle flag.  Call to MoveActiveTransaction
+        // only remember the throttle flag.  Call to UpdateActiveTransaction
         // would add this transaction to the list too early.
-        gHttpHandler->ConnMgr()->MoveActiveTransaction(this, isThrottling);
+        gHttpHandler->ConnMgr()->UpdateActiveTransaction(this);
 
         if (mReadingStopped && !isThrottling) {
             ResumeReading();
@@ -526,8 +526,7 @@ nsHttpTransaction::OnActivated(bool h2)
     }
 
     mActivated = true;
-    gHttpHandler->ConnMgr()->AddActiveTransaction(
-        this, mClassOfService & nsIClassOfService::Throttleable);
+    gHttpHandler->ConnMgr()->AddActiveTransaction(this);
 }
 
 void
@@ -841,15 +840,25 @@ bool nsHttpTransaction::ShouldStopReading()
     if (mActivatedAsH2) {
         // Throttling feature is now disabled for http/2 transactions
         // because of bug 1367861.  The logic around mActivatedAsH2
-        // will be removed when that is fixed
+        // will be removed when that is fixed.
+        // 
+        // Calling ShouldStopReading on the manager just to make sure 
+        // the throttling time window is correctly updated by this transaction.
+        Unused << gHttpHandler->ConnMgr()->ShouldStopReading(this);
         return false;
     }
 
     if (mClassOfService & nsIClassOfService::DontThrottle) {
+        // We deliberately don't touch the throttling window here since
+        // DontThrottle requests are expected to be long-standing media
+        // streams and would just unnecessarily block running downloads.
+        // If we want to ballance bandwidth for media responses against
+        // running downloads, we need to find something smarter like 
+        // changing the suspend/resume throttling intervals at-runtime.
         return false;
     }
 
-    if (!gHttpHandler->ConnMgr()->ShouldStopReading(this, EligibleForThrottling())) {
+    if (!gHttpHandler->ConnMgr()->ShouldStopReading(this)) {
         // We are not obligated to throttle
         return false;
     }
@@ -943,8 +952,7 @@ nsHttpTransaction::Close(nsresult reason)
          this, static_cast<uint32_t>(reason)));
 
     if (!mClosed) {
-        gHttpHandler->ConnMgr()->RemoveActiveTransaction(
-            this, mClassOfService & nsIClassOfService::Throttleable);
+        gHttpHandler->ConnMgr()->RemoveActiveTransaction(this);
         mActivated = false;
     }
 
