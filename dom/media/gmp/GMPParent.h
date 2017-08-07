@@ -22,10 +22,6 @@
 #include "nsIFile.h"
 #include "mozilla/MozPromise.h"
 
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
-
 namespace mozilla {
 namespace ipc {
 class CrashReporterHost;

@@ -32,7 +32,6 @@
 #include "mozilla/layers/MemoryReportingMLGPU.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "nsDebugImpl.h"
-#include "nsExceptionHandler.h"
 #include "nsThreadManager.h"
 #include "prenv.h"
 #include "ProcessUtils.h"
