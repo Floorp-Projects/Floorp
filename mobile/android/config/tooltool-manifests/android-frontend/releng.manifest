@@ -1,8 +1,8 @@
 [
   {
-    "size": 735225120,
+    "size": 735632692,
     "visibility": "internal",
-    "digest": "ec936b87d151fcf0a5920e0954fbfff18fc04595d753f6b11a0582faee3ce60e3429c828a94c1533ae31ff27272a6d0c637d901153b946e51241ea89ce8179b3",
+    "digest": "dc4329803b4f941d52d61a32c054e209890c2dd793ac2cbbeadb15e4bd23104f7ba99c113472326c7751dbe99e00238208432a05183d9a01bed13f38297b3b3c",
     "algorithm": "sha512",
     "filename": "android-sdk-linux.tar.xz",
     "unpack": true
