@@ -840,11 +840,21 @@ bool nsHttpTransaction::ShouldStopReading()
     if (mActivatedAsH2) {
         // Throttling feature is now disabled for http/2 transactions
         // because of bug 1367861.  The logic around mActivatedAsH2
-        // will be removed when that is fixed
+        // will be removed when that is fixed.
+        // 
+        // Calling ShouldStopReading on the manager just to make sure 
+        // the throttling time window is correctly updated by this transaction.
+        Unused << gHttpHandler->ConnMgr()->ShouldStopReading(this);
         return false;
     }
 
     if (mClassOfService & nsIClassOfService::DontThrottle) {
+        // We deliberately don't touch the throttling window here since
+        // DontThrottle requests are expected to be long-standing media
+        // streams and would just unnecessarily block running downloads.
+        // If we want to ballance bandwidth for media responses against
+        // running downloads, we need to find something smarter like 
+        // changing the suspend/resume throttling intervals at-runtime.
         return false;
     }
 
