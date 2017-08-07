@@ -53,6 +53,7 @@
                   android:padding="30dp"
                   android:gravity="center"
                   android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"
+                  android:textAllCaps="true"
                   android:text="@string/firstrun_button_next"/>
     </LinearLayout>
 </ScrollView>
