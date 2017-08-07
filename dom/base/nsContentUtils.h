@@ -71,7 +71,6 @@ class nsIDOMHTMLInputElement;
 class nsIDOMKeyEvent;
 class nsIDOMNode;
 class nsIDragSession;
-class nsIEditor;
 class nsIEventTarget;
 class nsIFragmentContentSink;
 class nsIFrame;
@@ -127,6 +126,7 @@ namespace mozilla {
 class Dispatcher;
 class ErrorResult;
 class EventListenerManager;
+class HTMLEditor;
 
 namespace dom {
 struct CustomElementDefinition;
@@ -2623,7 +2623,13 @@ public:
   static int32_t GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
                                                 int32_t aOffset);
 
-  static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext);
+  /**
+   * Returns pointer to HTML editor instance for the aPresContext when there is.
+   * The HTML editor is shared by contenteditable elements or used in
+   * designMode.  When there are no contenteditable elements and the document
+   * is not in designMode, this returns nullptr.
+   */
+  static mozilla::HTMLEditor* GetHTMLEditor(nsPresContext* aPresContext);
 
   /**
    * Returns true if the browser.dom.window.dump.enabled pref is set.
