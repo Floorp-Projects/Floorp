@@ -239,10 +239,6 @@ if CONFIG['ANDROID_PALETTE_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.palette']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PALETTE_V7_AAR_RES']]
 # (no resources) resjar.generated_sources += ['generated/android/support/v7/palette/R.java']
-if CONFIG['ANDROID_CONSTRAINT_LAYOUT_AAR']:
-    ANDROID_EXTRA_PACKAGES += ['android.support.constraint']
-    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_CONSTRAINT_LAYOUT_AAR_RES']]
-    resjar.generated_sources += ['generated/android/support/constraint/R.java']
 
 resjar.javac_flags += ['-Xlint:all']
 
@@ -1180,8 +1176,6 @@ gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_CUSTOMTABS_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_PALETTE_V7_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_CONSTRAINT_LAYOUT_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
 
