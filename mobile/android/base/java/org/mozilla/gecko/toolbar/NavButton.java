@@ -78,11 +78,11 @@ abstract class NavButton extends ShapedButton {
         }
 
         final StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.placeholder_active_grey));
-        stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.toolbar_grey_pressed));
-        stateList.addState(PRIVATE_FOCUSED_STATE_SET, getColorDrawable(R.color.text_and_tabs_tray_grey));
-        stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.tablet_highlight_focused));
-        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.tabs_tray_grey_pressed));
+        stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private_pressed));
+        stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_pressed));
+        stateList.addState(PRIVATE_FOCUSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private_focused));
+        stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_focused));
+        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private));
         stateList.addState(EMPTY_STATE_SET, drawable);
 
         setBackgroundDrawable(stateList);
