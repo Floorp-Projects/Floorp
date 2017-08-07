@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyGetter(this, "DevToolsShim", function () {
 function setDefaultPrefs(prefsURI) {
   const prefs = Cc['@mozilla.org/preferences-service;1'].
                 getService(Ci.nsIPrefService).
-                QueryInterface(Ci.nsIPrefBranch2);
+                QueryInterface(Ci.nsIPrefBranch);
   const branch = prefs.getDefaultBranch('');
   const sandbox = Sandbox({
     name: prefsURI,

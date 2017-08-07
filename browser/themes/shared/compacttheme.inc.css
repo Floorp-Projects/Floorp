@@ -53,8 +53,6 @@
   --chrome-selection-color: #fff;
   --chrome-selection-background-color: #5675B9;
 
-  --toolbarbutton-icon-fill-inverted: rgba(249, 249, 250, .7);
-
 %endif
 
   /* Url and search bars */
@@ -125,6 +123,10 @@ toolbar:-moz-lwtheme-darktext {
   --space-above-tabbar: 9px;
 }
 %endif
+
+toolbar[brighttext] .toolbarbutton-1 {
+  fill: rgba(249, 249, 250, .7);
+}
 
 #urlbar ::-moz-selection,
 #navigator-toolbox .searchbar-textbox ::-moz-selection,

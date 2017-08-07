@@ -47,7 +47,9 @@
       <vbox id="fxaContentWrapper">
         <groupbox id="noFxaGroup">
           <vbox>
-            <label id="noFxaCaption">&signedOut.caption;</label>
+            <caption>
+              <label id="noFxaCaption">&signedOut.caption;</label>
+            </caption>
             <description id="noFxaDescription" flex="1">&signedOut.description;</description>
             <hbox class="fxaAccountBox">
               <vbox>

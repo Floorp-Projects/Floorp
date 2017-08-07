@@ -26,7 +26,7 @@ const PrefsTarget = Class({
     let branch = Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefService).
         getBranch(branchName).
-        QueryInterface(Ci.nsIPrefBranch2);
+        QueryInterface(Ci.nsIPrefBranch);
     prefTargetNS(this).branch = branch;
 
     // provides easy access to preference values

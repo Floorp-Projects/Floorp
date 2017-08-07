@@ -88,12 +88,6 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
 #endif
 
   // Read permissions
-  // No read blocking at level 2 and below
-  if (Preferences::GetInt("security.sandbox.content.level") <= 2) {
-    policy->AddDir(rdonly, "/");
-    mCommonContentPolicy.reset(policy);
-    return;
-  }
   policy->AddPath(rdonly, "/dev/urandom");
   policy->AddPath(rdonly, "/proc/cpuinfo");
   policy->AddPath(rdonly, "/proc/meminfo");
@@ -233,29 +227,37 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
   UniquePtr<SandboxBroker::Policy>
     policy(new SandboxBroker::Policy(*mCommonContentPolicy));
 
+  // Read any extra paths that will get write permissions,
+  // configured by the user or distro
+  AddDynamicPathList(policy.get(),
+                     "security.sandbox.content.write_path_whitelist",
+                     rdwr);
+
+  // No read blocking at level 2 and below.
+  // file:// processes also get global read permissions
+  // This requires accessing user preferences so we can only do it now.
+  // Our constructor is initialized before user preferences are read in.
+  if (GetEffectiveContentSandboxLevel() <= 2 || aFileProcess) {
+    policy->AddDir(rdonly, "/");
+    return policy;
+  }
+
+  // Read permissions only from here on!
+  // Whitelisted for reading by the user/distro
+  AddDynamicPathList(policy.get(),
+                    "security.sandbox.content.read_path_whitelist",
+                    rdonly);
+
   // Bug 1198550: the profiler's replacement for dl_iterate_phdr
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/maps", aPid).get());
 
   // Bug 1198552: memory reporting.
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/statm", aPid).get());
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/smaps", aPid).get());
-  // Now read any extra paths, this requires accessing user preferences
-  // so we can only do it now. Our constructor is initialized before
-  // user preferences are read in.
-  AddDynamicPathList(policy.get(),
-                     "security.sandbox.content.read_path_whitelist",
-                     rdonly);
-  AddDynamicPathList(policy.get(),
-                     "security.sandbox.content.write_path_whitelist",
-                     rdwr);
 
-  // file:// processes get global read permissions
-  if (aFileProcess) {
-    policy->AddDir(rdonly, "/");
-  }
-
-  // userContent.css sits in the profile, which is normally blocked
-  // and we can't get the profile dir earlier
+  // userContent.css and the extensions dir sit in the profile, which is
+  // normally blocked and we can't get the profile dir earlier in startup,
+  // so this must happen here.
   nsCOMPtr<nsIFile> profileDir;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(profileDir));
@@ -282,7 +284,7 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
           nsAutoCString tmpPath;
           rv = workDir->GetNativePath(tmpPath);
           if (NS_SUCCEEDED(rv)) {
-            policy->AddPath(rdonly, tmpPath.get());
+            policy->AddDir(rdonly, tmpPath.get());
           }
         }
       }

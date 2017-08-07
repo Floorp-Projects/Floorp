@@ -20,7 +20,7 @@ const { PluralForm } = require("devtools/shared/plural-form");
 
 loader.lazyGetter(this, "prefBranch", function () {
   return Services.prefs.getBranch(null)
-                    .QueryInterface(Ci.nsIPrefBranch2);
+                    .QueryInterface(Ci.nsIPrefBranch);
 });
 
 loader.lazyRequireGetter(this, "gcliInit", "devtools/shared/gcli/commands/index");
