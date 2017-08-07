@@ -17,8 +17,6 @@ XPCSHELL_TESTS_MANIFESTS += [
 
 XPIDL_SOURCES += [
     'nsIPrefBranch.idl',
-    'nsIPrefBranch2.idl',
-    'nsIPrefBranchInternal.idl',
     'nsIPrefLocalizedString.idl',
     'nsIPrefService.idl',
     'nsIRelativeFilePref.idl',

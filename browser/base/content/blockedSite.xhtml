@@ -89,6 +89,9 @@
           case "unwantedBlocked" :
             error = "unwanted";
             break;
+          case "harmfulBlocked" :
+            error = "harmful";
+            break;
           default:
             return;
         }
@@ -122,6 +125,15 @@
           el.remove();
         }
 
+        if (error !== "harmful") {
+          el = document.getElementById("errorTitleText_harmful");
+          el.remove();
+          el = document.getElementById("errorShortDescText_harmful");
+          el.remove();
+          el = document.getElementById("errorLongDescText_harmful");
+          el.remove();
+        }
+
         // Set sitename
         document.getElementById(error + "_sitename").textContent = getHostString();
         document.title = document.getElementById("errorTitleText_" + error)
@@ -149,6 +161,7 @@
         <h1 class="title-text" id="errorTitleText_phishing">&safeb.blocked.phishingPage.title2;</h1>
         <h1 class="title-text" id="errorTitleText_malware">&safeb.blocked.malwarePage.title;</h1>
         <h1 class="title-text" id="errorTitleText_unwanted">&safeb.blocked.unwantedPage.title;</h1>
+        <h1 class="title-text" id="errorTitleText_harmful">&safeb.blocked.harmfulPage.title;</h1>
       </div>
 
       <div id="errorLongContent">
@@ -158,6 +171,7 @@
           <p id="errorShortDescText_phishing">&safeb.blocked.phishingPage.shortDesc2;</p>
           <p id="errorShortDescText_malware">&safeb.blocked.malwarePage.shortDesc;</p>
           <p id="errorShortDescText_unwanted">&safeb.blocked.unwantedPage.shortDesc;</p>
+          <p id="errorShortDescText_harmful">&safeb.blocked.harmfulPage.shortDesc;</p>
         </div>
 
         <!-- Long Description -->
@@ -165,6 +179,7 @@
           <p id="errorLongDescText_phishing">&safeb.blocked.phishingPage.longDesc2;</p>
           <p id="errorLongDescText_malware">&safeb.blocked.malwarePage.longDesc;</p>
           <p id="errorLongDescText_unwanted">&safeb.blocked.unwantedPage.longDesc;</p>
+          <p id="errorLongDescText_harmful">&safeb.blocked.harmfulPage.longDesc;</p>
         </div>
 
         <!-- Advisory -->

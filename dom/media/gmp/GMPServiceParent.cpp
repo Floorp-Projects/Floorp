@@ -61,6 +61,8 @@ namespace mozilla {
 #endif
 #define __CLASS__ "GMPService"
 
+#define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
+
 namespace gmp {
 
 static const uint32_t NodeIdSaltLength = 32;
@@ -1887,8 +1889,10 @@ GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
   NS_DispatchToCurrentThread(
     NS_NewRunnableFunction("gmp::GMPServiceParent::ActorDestroy", [self]() {
       // The GMPServiceParent must be destroyed on the main thread.
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "gmp::GMPServiceParent::ActorDestroy", [self]() { delete self; }));
+      self->mService->mMainThread->Dispatch(
+        NS_NewRunnableFunction(
+          "gmp::GMPServiceParent::ActorDestroy", [self]() { delete self; }),
+        NS_DISPATCH_NORMAL);
     }));
 }
 
@@ -1953,3 +1957,5 @@ GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService)
 
 } // namespace gmp
 } // namespace mozilla
+
+#undef NS_DispatchToMainThread

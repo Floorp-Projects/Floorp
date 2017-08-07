@@ -56,12 +56,14 @@ function cleanUp() {
   delFile("safebrowsing/test-malware-simple.sbstore");
   delFile("safebrowsing/test-unwanted-simple.sbstore");
   delFile("safebrowsing/test-block-simple.sbstore");
+  delFile("safebrowsing/test-harmful-simple.sbstore");
   delFile("safebrowsing/test-track-simple.sbstore");
   delFile("safebrowsing/test-trackwhite-simple.sbstore");
   delFile("safebrowsing/test-phish-simple.pset");
   delFile("safebrowsing/test-malware-simple.pset");
   delFile("safebrowsing/test-unwanted-simple.pset");
   delFile("safebrowsing/test-block-simple.pset");
+  delFile("safebrowsing/test-harmful-simple.pset");
   delFile("safebrowsing/test-track-simple.pset");
   delFile("safebrowsing/test-trackwhite-simple.pset");
   delFile("safebrowsing/moz-phish-simple.sbstore");

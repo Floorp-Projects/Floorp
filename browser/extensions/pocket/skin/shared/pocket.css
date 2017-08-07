@@ -15,12 +15,6 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
 
 #pocket-button {
   list-style-image: url("chrome://pocket-shared/skin/pocket.svg");
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
-}
-
-toolbar[brighttext] #pocket-button {
-  fill: var(--toolbarbutton-icon-fill-inverted);
 }
 
 #pocket-button[open="true"][animationsenabled] > .toolbarbutton-icon {
