@@ -15,7 +15,6 @@
 #include "nsContentUtils.h"
 #include "nsIContentParent.h"
 #include "nsIDocument.h"
-#include "nsIEditor.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMElement.h"
@@ -54,6 +53,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
@@ -857,18 +857,12 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
     if (content->IsEditable()) {
       nsCOMPtr<nsIDocShell> docShell = aDocument->GetDocShell();
       if (docShell) {
-        nsCOMPtr<nsIEditor> editor;
-        docShell->GetEditor(getter_AddRefs(editor));
-        if (editor) {
-          nsCOMPtr<nsISelection> s;
-          editor->GetSelection(getter_AddRefs(s));
-          nsCOMPtr<nsISelectionPrivate> selection = do_QueryInterface(s);
-          if (selection) {
-            nsCOMPtr<nsIContent> limiter;
-            selection->GetAncestorLimiter(getter_AddRefs(limiter));
-            if (limiter == content) {
-              editor->FinalizeSelection();
-            }
+        RefPtr<HTMLEditor> htmlEditor = docShell->GetHTMLEditor();
+        if (htmlEditor) {
+          RefPtr<Selection> selection = htmlEditor->GetSelection();
+          if (selection && selection->GetFrameSelection() &&
+              content == selection->GetFrameSelection()->GetAncestorLimiter()) {
+            htmlEditor->FinalizeSelection();
           }
         }
       }
