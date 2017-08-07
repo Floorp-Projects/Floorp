@@ -15,7 +15,6 @@ import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
 import org.mozilla.gecko.toolbar.PageActionLayout;
-import org.mozilla.gecko.toolbar.TabCounter;
 
 import android.view.View;
 import android.widget.EditText;
@@ -117,12 +116,13 @@ public class ToolbarComponent extends BaseComponent {
         return (TextView) getToolbarView().findViewById(R.id.url_bar_title);
     }
 
-    private TabCounter getTabsCounter() {
-        return (TabCounter) getToolbarView().findViewById(R.id.tabs_counter);
+    private TextSwitcher getTabsCounter() {
+        return (TextSwitcher) getToolbarView().findViewById(R.id.tabs_counter);
     }
 
     private int getTabsCount() {
-        String tabsCountText = getTabsCounter().getText().toString();
+        TextView currentView = (TextView) getTabsCounter().getCurrentView();
+        String tabsCountText = currentView.getText().toString();
         return Integer.parseInt(tabsCountText);
     }
 
