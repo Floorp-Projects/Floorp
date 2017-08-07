@@ -44,7 +44,7 @@ add_task(async function testInvalidArguments() {
 
 add_task(async function testUnimplementedDataType() {
   function background() {
-    browser.browsingData.remove({}, {localStorage: true});
+    browser.browsingData.remove({}, {indexedDB: true});
     browser.test.sendMessage("finished");
   }
 
@@ -61,6 +61,6 @@ add_task(async function testUnimplementedDataType() {
     await extension.unload();
   });
 
-  let warningObserved = messages.find(line => /Firefox does not support dataTypes: localStorage/.test(line));
+  let warningObserved = messages.find(line => /Firefox does not support dataTypes: indexedDB/.test(line));
   ok(warningObserved, "Warning issued when calling remove with an unimplemented dataType.");
 });

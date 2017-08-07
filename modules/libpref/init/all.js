@@ -5711,11 +5711,7 @@ pref("dom.webkitBlink.dirPicker.enabled", true);
 pref("dom.webkitBlink.filesystem.enabled", true);
 #endif
 
-#ifdef RELEASE_OR_BETA
-pref("media.block-autoplay-until-in-foreground", false);
-#else
 pref("media.block-autoplay-until-in-foreground", true);
-#endif
 
 // Is Stylo CSS support built and enabled?
 // Only define this pref if Stylo support is actually built in.

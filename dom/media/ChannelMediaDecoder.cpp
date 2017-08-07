@@ -155,6 +155,31 @@ ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   mResourceCallback->Connect(this);
 }
 
+bool
+ChannelMediaDecoder::CanClone()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mResource && mResource->CanClone();
+}
+
+already_AddRefed<ChannelMediaDecoder>
+ChannelMediaDecoder::Clone(MediaDecoderInit& aInit)
+{
+  if (!mResource) {
+    return nullptr;
+  }
+  RefPtr<ChannelMediaDecoder> decoder = CloneImpl(aInit);
+  if (!decoder) {
+    return nullptr;
+  }
+  nsresult rv = decoder->Load(mResource);
+  if (NS_FAILED(rv)) {
+    decoder->Shutdown();
+    return nullptr;
+  }
+  return decoder.forget();
+}
+
 MediaResource*
 ChannelMediaDecoder::GetResource() const
 {
@@ -200,7 +225,7 @@ ChannelMediaDecoder::Load(nsIChannel* aChannel,
   MOZ_ASSERT(!mResource);
 
   mResource =
-    MediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
+    BaseMediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
   if (!mResource) {
     return NS_ERROR_FAILURE;
   }
@@ -220,7 +245,7 @@ ChannelMediaDecoder::Load(nsIChannel* aChannel,
 }
 
 nsresult
-ChannelMediaDecoder::Load(MediaResource* aOriginal)
+ChannelMediaDecoder::Load(BaseMediaResource* aOriginal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResource);
