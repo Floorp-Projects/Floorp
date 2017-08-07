@@ -71,9 +71,9 @@ public:
     virtual already_AddRefed<mozilla::gfx::ScaledFont>
     GetScaledFont(mozilla::gfx::DrawTarget *aTarget) override;
 
-    virtual cairo_scaled_font_t *GetCairoScaledFont() override;
-
 protected:
+    cairo_scaled_font_t *InitCairoScaledFont();
+
     virtual const Metrics& GetHorizontalMetrics() override;
 
     bool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
