@@ -364,7 +364,7 @@
                     seeing the command event pass by. The observes attribute is
                     here so that the menuitem is still disabled and re-enabled
                     correctly. -->
-      <menuitem oncommand="BrowserCustomizeToolbar()"
+      <menuitem oncommand="gCustomizeMode.enter()"
                 observes="cmd_CustomizeToolbars"
                 class="viewCustomizeToolbar"
                 label="&viewCustomizeToolbar.label;"

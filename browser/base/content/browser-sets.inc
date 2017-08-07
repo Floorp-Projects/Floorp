@@ -34,7 +34,7 @@
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserTryToCloseWindow()"/>
     <command id="cmd_toggleMute" oncommand="gBrowser.selectedTab.toggleMuteAudio()"/>
-    <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
+    <command id="cmd_CustomizeToolbars" oncommand="gCustomizeMode.enter()"/>
     <command id="cmd_quitApplication" oncommand="goQuitApplication()"/>
 
 
