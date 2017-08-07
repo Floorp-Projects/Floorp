@@ -10,10 +10,12 @@
 #include "jsprf.h"
 #include "nsArrayEnumerator.h"
 #include "nsContentUtils.h"
+#include "nsINamed.h"
 #include "nsIScriptError.h"
 #include "nsWrapperCache.h"
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
+#include "nsPrintfCString.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -449,6 +451,97 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WrappedJSIdentity,
 
 /***************************************************************************/
 
+namespace {
+
+class WrappedJSNamed final : public nsINamed
+{
+    nsCString mName;
+
+    ~WrappedJSNamed() {}
+
+public:
+    NS_DECL_ISUPPORTS
+
+    explicit WrappedJSNamed(const nsACString& aName) : mName(aName) {}
+
+    NS_IMETHOD GetName(nsACString& aName) override
+    {
+        aName = mName;
+        aName.AppendLiteral(":JS");
+        return NS_OK;
+    }
+};
+
+NS_IMPL_ISUPPORTS(WrappedJSNamed, nsINamed)
+
+nsCString
+GetFunctionName(JSContext* cx, HandleObject obj)
+{
+    RootedObject inner(cx, js::UncheckedUnwrap(obj));
+    JSAutoCompartment ac(cx, inner);
+
+    RootedFunction fun(cx, JS_GetObjectFunction(inner));
+    if (!fun) {
+        // If the object isn't a function, it's likely that it has a single
+        // function property (for things like nsITimerCallback). In this case,
+        // return the name of that function property.
+
+        Rooted<IdVector> idArray(cx, IdVector(cx));
+        if (!JS_Enumerate(cx, inner, &idArray)) {
+            JS_ClearPendingException(cx);
+            return nsCString("error");
+        }
+
+        if (idArray.length() != 1)
+            return nsCString("nonfunction");
+
+        RootedId id(cx, idArray[0]);
+        RootedValue v(cx);
+        if (!JS_GetPropertyById(cx, inner, id, &v)) {
+            JS_ClearPendingException(cx);
+            return nsCString("nonfunction");
+        }
+
+        if (!v.isObject())
+            return nsCString("nonfunction");
+
+        RootedObject vobj(cx, &v.toObject());
+        return GetFunctionName(cx, vobj);
+    }
+
+    RootedString funName(cx, JS_GetFunctionDisplayId(fun));
+    RootedScript script(cx, JS_GetFunctionScript(cx, fun));
+    const char* filename = script ? JS_GetScriptFilename(script) : "anonymous";
+    const char* filenameSuffix = strrchr(filename, '/');
+
+    if (filenameSuffix) {
+        filenameSuffix++;
+    } else {
+        filenameSuffix = filename;
+    }
+
+    nsCString displayName("anonymous");
+    if (funName) {
+        nsCString* displayNamePtr = &displayName;
+        RootedValue funNameVal(cx, StringValue(funName));
+        if (!XPCConvert::JSData2Native(&displayNamePtr, funNameVal, nsXPTType::T_UTF8STRING,
+                                       nullptr, nullptr))
+        {
+            JS_ClearPendingException(cx);
+            return nsCString("anonymous");
+        }
+    }
+
+    displayName.Append('[');
+    displayName.Append(filenameSuffix, strlen(filenameSuffix));
+    displayName.Append(']');
+    return displayName;
+}
+
+} // anonymous namespace
+
+/***************************************************************************/
+
 // static
 bool
 nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
@@ -588,6 +681,16 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
             rv = wrapper->QueryInterface(aIID, aInstancePtr);
             return rv;
         }
+    }
+
+    // If we're asked to QI to nsINamed, we pretend that this is possible. We'll
+    // try to return a name that makes sense for the wrapped JS value.
+    if (aIID.Equals(NS_GET_IID(nsINamed))) {
+        RootedObject obj(RootingCx(), self->GetJSObject());
+        nsCString name = GetFunctionName(ccx, obj);
+        RefPtr<WrappedJSNamed> named = new WrappedJSNamed(name);
+        *aInstancePtr = named.forget().take();
+        return NS_OK;
     }
 
     // else...

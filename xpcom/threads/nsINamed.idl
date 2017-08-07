@@ -20,5 +20,5 @@ interface nsINamed : nsISupports
      * WARNING: This attribute will be included in telemetry, so it should
      * never contain privacy sensitive information.
      */
-    readonly attribute ACString name;
+    readonly attribute AUTF8String name;
 };
