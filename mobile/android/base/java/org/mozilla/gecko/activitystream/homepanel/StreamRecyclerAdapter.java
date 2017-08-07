@@ -38,8 +38,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     private HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
     private int tiles;
-    private int tilesWidth;
-    private int tilesHeight;
+    private int tilesSize;
 
     private List<Highlight> highlights;
 
@@ -54,9 +53,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
-    public void setTileSize(int tiles, int tilesWidth, int tilesHeight) {
-        this.tilesWidth = tilesWidth;
-        this.tilesHeight = tilesHeight;
+    public void setTileSize(int tiles, int tilesSize) {
+        this.tilesSize = tilesSize;
         this.tiles = tiles;
 
         notifyDataSetChanged();
@@ -112,9 +110,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
             final Highlight highlight = highlights.get(actualPosition);
 
-            ((HighlightItem) holder).bind(highlight, actualPosition, tilesWidth,  tilesHeight);
+            ((HighlightItem) holder).bind(highlight, actualPosition, tilesSize);
         } else if (type == TopPanel.LAYOUT_ID) {
-            ((TopPanel) holder).bind(topSitesCursor, tiles, tilesWidth, tilesHeight);
+            ((TopPanel) holder).bind(topSitesCursor, tiles, tilesSize);
         }
     }
 
