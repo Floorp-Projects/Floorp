@@ -4218,11 +4218,6 @@ function OpenBrowserWindow(options) {
   return win;
 }
 
-// Only here for backwards compat, we should remove this soon
-function BrowserCustomizeToolbar() {
-  gCustomizeMode.enter();
-}
-
 /**
  * Update the global flag that tracks whether or not any edit UI (the Edit menu,
  * edit-related items in the context menu, and edit-related toolbar buttons
