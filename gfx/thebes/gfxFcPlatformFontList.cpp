@@ -1206,6 +1206,21 @@ gfxFontconfigFont::~gfxFontconfigFont()
 {
 }
 
+already_AddRefed<ScaledFont>
+gfxFontconfigFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
+{
+    if (!mAzureScaledFont) {
+        mAzureScaledFont =
+            Factory::CreateScaledFontForFontconfigFont(GetCairoScaledFont(),
+                                                       GetPattern(),
+                                                       GetUnscaledFont(),
+                                                       GetAdjustedSize());
+    }
+
+    RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+    return scaledFont.forget();
+}
+
 gfxFcPlatformFontList::gfxFcPlatformFontList()
     : mLocalNames(64)
     , mGenericMappings(32)

@@ -22,6 +22,7 @@
 #define ROUND(x) floor((x) + 0.5)
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 
 static inline cairo_antialias_t
@@ -133,6 +134,27 @@ gfxGDIFont::SetupCairoFont(DrawTarget* aDrawTarget)
     }
     cairo_set_scaled_font(gfxFont::RefCairo(aDrawTarget), mScaledFont);
     return true;
+}
+
+already_AddRefed<ScaledFont>
+gfxGDIFont::GetScaledFont(DrawTarget *aTarget)
+{
+    if (!mAzureScaledFont) {
+        NativeFont nativeFont;
+        nativeFont.mType = NativeFontType::GDI_FONT_FACE;
+        LOGFONT lf;
+        GetObject(GetHFONT(), sizeof(LOGFONT), &lf);
+        nativeFont.mFont = &lf;
+
+        mAzureScaledFont =
+          Factory::CreateScaledFontWithCairo(nativeFont,
+                                             GetUnscaledFont(),
+                                             GetAdjustedSize(),
+                                             GetCairoScaledFont());
+    }
+
+    RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+    return scaledFont.forget();
 }
 
 gfxFont::RunMetrics
