@@ -156,14 +156,13 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
 
 void
 nsSVGForeignObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                          const nsRect&           aDirtyRect,
                                           const nsDisplayListSet& aLists)
 {
   if (!static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
     return;
   }
   DisplayOutline(aBuilder, aLists);
-  BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
+  BuildDisplayListForNonBlockChildren(aBuilder, aLists);
 }
 
 bool

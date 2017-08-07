@@ -29,7 +29,6 @@ public:
   virtual nsresult GetXULBorderAndPadding(nsMargin& aBorderAndPadding) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
 #ifdef DEBUG_FRAME_DUMP
@@ -147,7 +146,6 @@ nsDisplayXULGroupBorder::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                  const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
   // Paint our background and border
@@ -161,7 +159,7 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayOutline(aBuilder, aLists);
   }
 
-  BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  BuildDisplayListForChildren(aBuilder, aLists);
 }
 
 nsRect
