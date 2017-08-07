@@ -85,7 +85,7 @@ function test_getUnanimatedComputedStyle() {
       }
 
       addStyle([cssAnimationStyle,
-                ".pseudo::before { animation: cssanimation 1s; }"]);
+                ".pseudo::before { animation: cssanimation 1s; content: ''}"]);
       const pseudoAnimation = target => {
         target.classList.add("pseudo");
         return target.getAnimations({ subtree: true })[0];
