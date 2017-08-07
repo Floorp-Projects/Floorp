@@ -2179,6 +2179,10 @@ pref("network.http.throttle.resume-for", 100);
 // response has finished.  Prevents resuming too soon during an active page load
 // at which sub-resource reqeusts quickly come and go.
 pref("network.http.throttle.resume-background-in", 1000);
+// After the last transaction activation or last data chunk response we only
+// throttle for this period of time.  This prevents comet and unresponsive
+// http requests to engage long-standing throttling.
+pref("network.http.throttle.time-window", 3000);
 
 // Give higher priority to requests resulting from a user interaction event
 // like click-to-play, image fancy-box zoom, navigation.

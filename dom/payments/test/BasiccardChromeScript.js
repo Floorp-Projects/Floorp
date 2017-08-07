@@ -41,20 +41,17 @@ function abortPaymentResponse(requestId) {
   let abortResponse = Cc["@mozilla.org/dom/payments/payment-abort-action-response;1"].
                          createInstance(Ci.nsIPaymentAbortActionResponse);
   abortResponse.init(requestId, Ci.nsIPaymentActionResponse.ABORT_SUCCEEDED);
-  return abortResponse.QueryInterface(Ci.nsIPaymentActionResponse);
+  paymentSrv.respondPayment(abortResponse.QueryInterface(Ci.nsIPaymentActionResponse));
 }
 
 function completePaymentResponse(requestId) {
   let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
                             createInstance(Ci.nsIPaymentCompleteActionResponse);
   completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
-  return completeResponse;
+  paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
 }
 
 const detailedResponseUI = {
-  canMakePayment: function(requestId) {
-    return null;
-  },
   showPayment: function(requestId) {
     try {
       basiccardResponseData.initData("Bill A. Pacheco",  // cardholderName
@@ -73,20 +70,16 @@ const detailedResponseUI = {
                       "Bill A. Pacheco",    // payer name
                       "",                   // payer email
                       "");                  // payer phone
-    return showResponse;
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
   abortPayment: abortPaymentResponse,
   completePayment: completePaymentResponse,
   updatePayment: function(requestId) {
-    return null;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 const simpleResponseUI = {
-  canMakePayment: function(requestId) {
-    return null;
-  },
   showPayment: function(requestId) {
     try {
       basiccardResponseData.initData("",                 // cardholderName
@@ -105,12 +98,11 @@ const simpleResponseUI = {
                       "Bill A. Pacheco",    // payer name
                       "",                   // payer email
                       "");                  // payer phone
-    return showResponse;
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
   abortPayment: abortPaymentResponse,
   completePayment: completePaymentResponse,
   updatePayment: function(requestId) {
-    return null;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
 };

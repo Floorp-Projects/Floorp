@@ -1436,7 +1436,11 @@ WebRenderBridgeParent::GetTextureFactoryIdentifier()
   return TextureFactoryIdentifier(LayersBackend::LAYERS_WR,
                                   XRE_GetProcessType(),
                                   mApi->GetMaxTextureSize(),
-                                  mApi->GetUseANGLE());
+                                  mApi->GetUseANGLE(),
+                                  false,
+                                  false,
+                                  false,
+                                  mApi->GetSyncHandle());
 }
 
 uint32_t
