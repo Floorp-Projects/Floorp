@@ -882,7 +882,8 @@ D3D11DXVA2Manager::CreateOutputSample(RefPtr<IMFSample>& aSample,
     __uuidof(ID3D11Texture2D), aTexture, 0, FALSE, getter_AddRefs(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  sample->AddBuffer(buffer);
+  hr = sample->AddBuffer(buffer);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   aSample = sample;
   return S_OK;
@@ -952,6 +953,7 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
       hr = mTransform->Output(&sample);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     }
   }
 
