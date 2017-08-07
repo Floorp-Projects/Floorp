@@ -1956,8 +1956,8 @@ public:
 
   void Enter()
   {
-    // TODO : use more approriate way to decide whether need to release
-    // resource in bug1367983.
+    // On Android, the life cycle of graphic buffer is equal to Android's codec,
+    // we couldn't release it if we still need to render the frame.
 #ifndef MOZ_WIDGET_ANDROID
     if (!mMaster->mLooping) {
       // We've decoded all samples.
