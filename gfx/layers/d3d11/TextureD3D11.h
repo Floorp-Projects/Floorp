@@ -8,6 +8,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/SyncObject.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureHost.h"
 #include "gfxWindowsPlatform.h"
@@ -89,7 +90,7 @@ public:
                 TextureFlags aFlags,
                 TextureAllocationFlags aAllocFlags) const override;
 
-  virtual void SyncWithObject(SyncObject* aSync) override;
+  virtual void SyncWithObject(SyncObjectClient* aSyncObject) override;
 
   ID3D11Texture2D* GetD3D11Texture() { return mTexture; }
 

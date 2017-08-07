@@ -66,6 +66,7 @@ class TextureClientPool;
 #endif
 class TextureForwarder;
 class KeepAlive;
+class SyncObjectClient;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -275,7 +276,7 @@ public:
 
   virtual bool ReadBack(TextureReadbackSink* aReadbackSink) { return false; }
 
-  virtual void SyncWithObject(SyncObject* aFence) {};
+  virtual void SyncWithObject(SyncObjectClient* aSyncObject) {};
 
   virtual TextureFlags GetTextureFlags() const { return TextureFlags::NO_FLAGS; }
 
@@ -584,7 +585,7 @@ public:
     mReadbackSink = aReadbackSink;
   }
 
-  void SyncWithObject(SyncObject* aFence) { mData->SyncWithObject(aFence); }
+  void SyncWithObject(SyncObjectClient* aSyncObject) { mData->SyncWithObject(aSyncObject); }
 
   LayersIPCChannel* GetAllocator() { return mAllocator; }
 
