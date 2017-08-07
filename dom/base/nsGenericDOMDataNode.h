@@ -47,10 +47,18 @@ enum {
   // bit is set, and if so it indicates whether we're only whitespace or
   // not.
   NS_TEXT_IS_ONLY_WHITESPACE =            DATA_NODE_FLAG_BIT(3),
+
+  // This bit is set if there is a NewlineProperty attached to the node
+  // (used by nsTextFrame).
+  NS_HAS_NEWLINE_PROPERTY =               DATA_NODE_FLAG_BIT(4),
+
+  // This bit is set if there is a FlowLengthProperty attached to the node
+  // (used by nsTextFrame).
+  NS_HAS_FLOWLENGTH_PROPERTY =            DATA_NODE_FLAG_BIT(5),
 };
 
 // Make sure we have enough space for those bits
-ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 4);
+ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 6);
 
 #undef DATA_NODE_FLAG_BIT
 
