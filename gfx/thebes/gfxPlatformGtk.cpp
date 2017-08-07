@@ -13,7 +13,6 @@
 #include "nsUnicodeProperties.h"
 #include "gfx2DGlue.h"
 #include "gfxFcPlatformFontList.h"
-#include "gfxFontconfigUtils.h"
 #include "gfxFontconfigFonts.h"
 #include "gfxConfig.h"
 #include "gfxContext.h"
