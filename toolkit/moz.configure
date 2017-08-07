@@ -574,11 +574,7 @@ def stylo_config(value, _, target):
 
     # If nothing is specified, default to building stylo where possible.
     if value.origin == 'default':
-        if target.os == 'GNU' and target.bitness == 32:
-            # The clang setup we use in automation is a little unusual, and
-            # doesn't play well with bindgen on 32-bit Linux.
-            pass
-        elif target.os == 'Android':
+        if target.os == 'Android':
             # Stylo on Android is happening Later(tm).
             pass
         else:
