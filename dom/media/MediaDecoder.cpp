@@ -475,12 +475,6 @@ MediaDecoder::Shutdown()
     mAbstractMainThread->Dispatch(r.forget());
   }
 
-  // Force any outstanding seek and byterange requests to complete
-  // to prevent shutdown from deadlocking.
-  if (MediaResource* r = GetResource()) {
-    r->Close();
-  }
-
   // Ask the owner to remove its audio/video tracks.
   GetOwner()->RemoveMediaTracks();
 
@@ -1240,33 +1234,6 @@ MediaDecoder::SetFragmentEndTime(double aTime)
   if (mDecoderStateMachine) {
     mDecoderStateMachine->DispatchSetFragmentEndTime(
       TimeUnit::FromSeconds(aTime));
-  }
-}
-
-void
-MediaDecoder::Suspend()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (MediaResource* r = GetResource()) {
-    r->Suspend(true);
-  }
-}
-
-void
-MediaDecoder::Resume()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (MediaResource* r = GetResource()) {
-    r->Resume();
-  }
-}
-
-void
-MediaDecoder::SetLoadInBackground(bool aLoadInBackground)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (MediaResource* r = GetResource()) {
-    r->SetLoadInBackground(aLoadInBackground);
   }
 }
 

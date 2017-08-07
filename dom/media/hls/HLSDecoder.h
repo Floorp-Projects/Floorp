@@ -41,6 +41,9 @@ public:
 
   void Pause() override;
 
+  void Suspend() override;
+  void Resume() override;
+
 private:
   bool CanPlayThroughImpl() override final
   {
