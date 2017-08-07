@@ -554,7 +554,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy *aWindow)
 
   RefPtr<HTMLEditor> htmlEditor = docShell->GetHTMLEditor();
   if (stopEditing) {
-    htmlDoc->TearingDownEditor(htmlEditor);
+    htmlDoc->TearingDownEditor();
   }
 
   if (mStateMaintainer && htmlEditor) {
