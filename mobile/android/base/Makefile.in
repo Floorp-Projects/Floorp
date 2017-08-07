@@ -48,8 +48,6 @@ JAVA_CLASSPATH += \
     $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
     $(ANDROID_CUSTOMTABS_AAR_LIB) \
     $(ANDROID_PALETTE_V7_AAR_LIB) \
-    $(ANDROID_CONSTRAINT_LAYOUT_AAR_LIB) \
-    $(ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB) \
     $(NULL)
 
 # If native devices are enabled, add Google Play Services and some of the v7
@@ -105,8 +103,6 @@ java_bundled_libs := \
     $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
     $(ANDROID_CUSTOMTABS_AAR_LIB) \
     $(ANDROID_PALETTE_V7_AAR_LIB) \
-    $(ANDROID_CONSTRAINT_LAYOUT_AAR_LIB) \
-    $(ANDROID_CONSTRAINT_LAYOUT_SOLVER_JAR_LIB) \
     $(NULL)
 
 ifdef MOZ_NATIVE_DEVICES
@@ -413,7 +409,6 @@ generated/android/support/v7/cardview/R.java: .aapt.deps ;
 generated/android/support/design/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
-generated/android/support/constraint/R.java: .aapt.deps ;
 # (no resources) generated/android/support/customtabs/R.java: .aapt.deps ;
 # (no resources) generated/android/support/v7/palette/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
