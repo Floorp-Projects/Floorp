@@ -93,36 +93,6 @@ enum TextureAllocationFlags {
   ALLOC_UPDATE_FROM_SURFACE = 1 << 7,
 };
 
-#ifdef XP_WIN
-typedef void* SyncHandle;
-#else
-typedef uintptr_t SyncHandle;
-#endif // XP_WIN
-
-class SyncObject : public RefCounted<SyncObject>
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SyncObject)
-  virtual ~SyncObject() { }
-
-  static already_AddRefed<SyncObject> CreateSyncObject(SyncHandle aHandle
-#ifdef XP_WIN
-                                                       , ID3D11Device* aDevice = nullptr
-#endif
-                                                       );
-
-  enum class SyncType {
-    D3D11,
-  };
-
-  virtual SyncType GetSyncType() = 0;
-  virtual void FinalizeFrame() = 0;
-  virtual bool IsSyncObjectValid() = 0;
-
-protected:
-  SyncObject() { }
-};
-
 /**
  * This class may be used to asynchronously receive an update when the content
  * drawn to this texture client is available for reading in CPU memory. This
