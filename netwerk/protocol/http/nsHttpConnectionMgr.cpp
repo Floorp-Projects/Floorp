@@ -119,6 +119,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mThrottleSuspendFor(0)
     , mThrottleResumeFor(0)
     , mThrottleResumeIn(0)
+    , mThrottleTimeWindow(0)
     , mIsShuttingDown(false)
     , mNumActiveConns(0)
     , mNumIdleConns(0)
@@ -175,7 +176,8 @@ nsHttpConnectionMgr::Init(uint16_t maxUrgentExcessiveConns,
                           bool throttleEnabled,
                           uint32_t throttleSuspendFor,
                           uint32_t throttleResumeFor,
-                          uint32_t throttleResumeIn)
+                          uint32_t throttleResumeIn,
+                          uint32_t throttleTimeWindow)
 {
     LOG(("nsHttpConnectionMgr::Init\n"));
 
@@ -192,6 +194,7 @@ nsHttpConnectionMgr::Init(uint16_t maxUrgentExcessiveConns,
         mThrottleSuspendFor = throttleSuspendFor;
         mThrottleResumeFor = throttleResumeFor;
         mThrottleResumeIn = throttleResumeIn;
+        mThrottleTimeWindow = TimeDuration::FromMilliseconds(throttleTimeWindow);
 
         mIsShuttingDown = false;
     }
@@ -2831,6 +2834,9 @@ nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase *)
     case THROTTLING_RESUME_IN:
         mThrottleResumeIn = value;
         break;
+    case THROTTLING_TIME_WINDOW:
+        mThrottleTimeWindow = TimeDuration::FromMilliseconds(value);
+        break;
     default:
         NS_NOTREACHED("unexpected parameter name");
     }
@@ -2929,6 +2935,30 @@ void nsHttpConnectionMgr::SetThrottlingEnabled(bool aEnable)
     }
 }
 
+bool nsHttpConnectionMgr::InThrottlingTimeWindow()
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    if (mThrottlingWindowEndsAt.IsNull()) {
+        return true;
+    }
+    return TimeStamp::NowLoRes() <= mThrottlingWindowEndsAt;
+}
+
+void nsHttpConnectionMgr::TouchThrottlingTimeWindow(bool aEnsureTicker)
+{
+    LOG(("nsHttpConnectionMgr::TouchThrottlingTimeWindow"));
+
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    mThrottlingWindowEndsAt = TimeStamp::NowLoRes() + mThrottleTimeWindow;
+
+    if (!mThrottleTicker && 
+        MOZ_LIKELY(aEnsureTicker) && MOZ_LIKELY(mThrottleEnabled)) {
+        EnsureThrottleTickerIfNeeded();
+    }
+}
+
 void nsHttpConnectionMgr::LogActiveTransactions(char operation)
 {
     if (!LOG_ENABLED()) {
@@ -2985,6 +3015,14 @@ nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction * aTrans)
             mActiveTabUnthrottledTransactionsExist = true;
         }
     }
+
+    // Shift the throttling window to the future (actually, makes sure
+    // that throttling will engage when there is anything to throttle.)
+    // The |false| argument means we don't need this call to ensure
+    // the ticker, since we do it just below.  Calling 
+    // EnsureThrottleTickerIfNeeded directly does a bit more than call 
+    // from inside of TouchThrottlingTimeWindow.
+    TouchThrottlingTimeWindow(false);
 
     if (!mThrottleEnabled) {
         return;
@@ -3123,42 +3161,60 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans)
     bool forActiveTab = tabId == mCurrentTopLevelOuterContentWindowId;
     bool throttled = aTrans->EligibleForThrottling();
 
-    if (mActiveTabTransactionsExist) {
-        if (!tabId) {
-            // Chrome initiated and unidentified transactions just respect
-            // their throttle flag, when something for the active tab is happening.
-            return throttled;
+    bool stop = [=]() {
+        if (mActiveTabTransactionsExist) {
+            if (!tabId) {
+                // Chrome initiated and unidentified transactions just respect
+                // their throttle flag, when something for the active tab is happening.
+                // This also includes downloads.
+                return throttled;
+            }
+            if (!forActiveTab) {
+                // This is a background tab request, we want them to always throttle
+                // when there are transactions running for the ative tab.
+                return true;
+            }
+
+            if (mActiveTabUnthrottledTransactionsExist) {
+                // Unthrottled transactions for the active tab take precedence
+                return throttled;
+            }
+
+            return false;
         }
-        if (!forActiveTab) {
-            // This is a background tab request, we want them to always throttle.
+
+        MOZ_ASSERT(!forActiveTab);
+
+        if (mDelayedResumeReadTimer) {
+            // If this timer exists, background transactions are scheduled to be woken
+            // after a delay, hence leave them asleep.
             return true;
         }
-        if (mActiveTabUnthrottledTransactionsExist) {
-            // Unthrottled transactions for the active tab take precedence
+
+        if (!mActiveTransactions[false].IsEmpty()) {
+            // This means there are unthrottled active transactions for background tabs.
+            // If we are here, there can't be any transactions for the active tab.
+            // (If there is no transaction for a tab id, there is no entry for it in
+            // the hashtable.)
             return throttled;
         }
-        // This is a throttled transaction for the active tab and there are no
-        // unthrottled for the active tab, just let go on full fuel.
+
+        // There are only unthrottled transactions for background tabs: don't throttle.
+        return false;
+    }();
+
+    if (forActiveTab && !stop) {
+        // This active-tab transaction is allowed to read even though 
+        // we are in the middle of "stop reading" interval.  Hence, 
+        // prolong the throttle time window to make sure all 'lower-decks' 
+        // transactions will actually throttle.
+        TouchThrottlingTimeWindow();
         return false;
     }
 
-    MOZ_ASSERT(!forActiveTab);
-
-    if (mDelayedResumeReadTimer) {
-        // If this timer exists, background transactions are scheduled to be woken
-        // after a delay.
-        return true;
-    }
-
-    if (!mActiveTransactions[false].IsEmpty()) {
-        // This means there are unthrottled active transactions for background tabs.
-        // If we are here, there can't be any transactions for the active tab.
-        // (If there is no transaction for a tab id, there is no entry for it in the hashtable.)
-        return throttled;
-    }
-
-    // There are only unthrottled transactions for background tabs: don't throttle.
-    return false;
+    // Only stop reading when in the 3 seconds throttle time window.
+    // This window is prolonged (restarted) by a call to TouchThrottlingTimeWindow.
+    return stop && InThrottlingTimeWindow();
 }
 
 bool nsHttpConnectionMgr::IsConnEntryUnderPressure(nsHttpConnectionInfo *connInfo)
@@ -3266,7 +3322,7 @@ nsHttpConnectionMgr::ThrottlerTick()
     // throttle them again until the background-resume delay passes.
     if (!mThrottlingInhibitsReading &&
         !mDelayedResumeReadTimer &&
-        !IsThrottleTickerNeeded()) {
+        (!IsThrottleTickerNeeded() || !InThrottlingTimeWindow())) {
         LOG(("  last tick"));
         mThrottleTicker = nullptr;
     }
