@@ -3947,8 +3947,7 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
   if (frame && nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     if (aProperty.EqualsLiteral("opacity")) {
       Layer* layer =
-        FrameLayerBuilder::GetDedicatedLayer(frame,
-                                             nsDisplayItem::TYPE_OPACITY);
+        FrameLayerBuilder::GetDedicatedLayer(frame, DisplayItemType::TYPE_OPACITY);
       if (layer) {
         float value = 0;
         bool hadAnimatedOpacity = false;
@@ -3972,8 +3971,7 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
       }
     } else if (aProperty.EqualsLiteral("transform")) {
       Layer* layer =
-        FrameLayerBuilder::GetDedicatedLayer(frame,
-                                             nsDisplayItem::TYPE_TRANSFORM);
+        FrameLayerBuilder::GetDedicatedLayer(frame, DisplayItemType::TYPE_TRANSFORM);
       if (layer) {
         MaybeTransform transform;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();

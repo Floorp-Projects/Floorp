@@ -278,7 +278,7 @@ RenderFrameParent::TriggerRepaint()
     return;
   }
 
-  docFrame->InvalidateLayer(nsDisplayItem::TYPE_REMOTE);
+  docFrame->InvalidateLayer(DisplayItemType::TYPE_REMOTE);
 }
 
 void
