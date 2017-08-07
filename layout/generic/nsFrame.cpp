@@ -2248,14 +2248,14 @@ DisplayDebugBorders(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   if (nsFrame::GetShowFrameBorders() && !aFrame->GetRect().IsEmpty()) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aBuilder, aFrame, PaintDebugBorder, "DebugBorder",
-                         nsDisplayItem::TYPE_DEBUG_BORDER));
+                         DisplayItemType::TYPE_DEBUG_BORDER));
   }
   // Draw a border around the current event target
   if (nsFrame::GetShowEventTargetFrameBorder() &&
       aFrame->PresContext()->PresShell()->GetDrawEventTargetFrame() == aFrame) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aBuilder, aFrame, PaintEventTargetBorder, "EventTargetBorder",
-                         nsDisplayItem::TYPE_EVENT_TARGET_BORDER));
+                         DisplayItemType::TYPE_EVENT_TARGET_BORDER));
   }
 }
 #endif
@@ -2336,9 +2336,9 @@ static bool
 ItemParticipatesIn3DContext(nsIFrame* aAncestor, nsDisplayItem* aItem)
 {
   nsIFrame* transformFrame;
-  if (aItem->GetType() == nsDisplayItem::TYPE_TRANSFORM) {
+  if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
     transformFrame = aItem->Frame();
-  } else if (aItem->GetType() == nsDisplayItem::TYPE_PERSPECTIVE) {
+  } else if (aItem->GetType() == DisplayItemType::TYPE_PERSPECTIVE) {
     transformFrame = static_cast<nsDisplayPerspective*>(aItem)->TransformFrame();
   } else {
     return false;
@@ -2603,11 +2603,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
 
   if (aBuilder->IsBackgroundOnly()) {
-    set.BlockBorderBackgrounds()->DeleteAll();
-    set.Floats()->DeleteAll();
-    set.Content()->DeleteAll();
-    set.PositionedDescendants()->DeleteAll();
-    set.Outlines()->DeleteAll();
+    set.BlockBorderBackgrounds()->DeleteAll(aBuilder);
+    set.Floats()->DeleteAll(aBuilder);
+    set.Content()->DeleteAll(aBuilder);
+    set.PositionedDescendants()->DeleteAll(aBuilder);
+    set.Outlines()->DeleteAll(aBuilder);
   }
 
   // Sort PositionedDescendants() in CSS 'z-order' order.  The list is already
@@ -2885,7 +2885,7 @@ WrapInWrapList(nsDisplayListBuilder* aBuilder,
   // makes the perspective frame create one (so we have an atomic entry for z-index
   // sorting).
   nsIFrame *itemFrame = item->Frame();
-  if (item->GetType() == nsDisplayItem::TYPE_PERSPECTIVE) {
+  if (item->GetType() == DisplayItemType::TYPE_PERSPECTIVE) {
     itemFrame = static_cast<nsDisplayPerspective*>(item)->TransformFrame();
   }
 
@@ -6606,7 +6606,7 @@ bool
 nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult)
 {
   Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
-    this, nsDisplayItem::TYPE_TRANSFORM);
+    this, DisplayItemType::TYPE_TRANSFORM);
   if (!layer || !layer->HasUserData(LayerIsPrerenderedDataKey())) {
     // If this layer isn't prerendered or we clip composites to our OS
     // window, then we can't correctly optimize to an empty
@@ -6677,12 +6677,12 @@ nsIFrame::SchedulePaint(PaintType aType)
 }
 
 Layer*
-nsIFrame::InvalidateLayer(uint32_t aDisplayItemKey,
+nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
                           const nsIntRect* aDamageRect,
                           const nsRect* aFrameDamageRect,
                           uint32_t aFlags /* = 0 */)
 {
-  NS_ASSERTION(aDisplayItemKey > 0, "Need a key");
+  NS_ASSERTION(aDisplayItemKey > DisplayItemType::TYPE_ZERO, "Need a key");
 
   Layer* layer = FrameLayerBuilder::GetDedicatedLayer(this, aDisplayItemKey);
 
@@ -6707,16 +6707,16 @@ nsIFrame::InvalidateLayer(uint32_t aDisplayItemKey,
     // screen because sometimes we don't have any retainned data
     // for remote type displayitem and thus Repaint event is not
     // triggered. So, always invalidate here as well.
-    uint32_t displayItemKey = aDisplayItemKey;
-    if (aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN ||
-        aDisplayItemKey == nsDisplayItem::TYPE_REMOTE) {
-      displayItemKey = 0;
+    DisplayItemType displayItemKey = aDisplayItemKey;
+    if (aDisplayItemKey == DisplayItemType::TYPE_PLUGIN ||
+        aDisplayItemKey == DisplayItemType::TYPE_REMOTE) {
+      displayItemKey = DisplayItemType::TYPE_ZERO;
     }
 
     if (aFrameDamageRect) {
-      InvalidateFrameWithRect(*aFrameDamageRect, displayItemKey);
+      InvalidateFrameWithRect(*aFrameDamageRect, static_cast<uint32_t>(displayItemKey));
     } else {
-      InvalidateFrame(displayItemKey);
+      InvalidateFrame(static_cast<uint32_t>(displayItemKey));
     }
 
     return nullptr;

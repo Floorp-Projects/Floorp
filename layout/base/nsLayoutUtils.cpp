@@ -3274,7 +3274,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
   nsDisplayItem::HitTestState hitTestState;
   builder.SetHitTestShouldStopAtFirstOpaque(aFlags & ONLY_VISIBLE);
   list.HitTest(&builder, aRect, &hitTestState, &aOutFrames);
-  list.DeleteAll();
+  list.DeleteAll(&builder);
   return NS_OK;
 }
 
@@ -3852,7 +3852,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
 
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
-  list.DeleteAll();
+  list.DeleteAll(&builder);
   return NS_OK;
 }
 

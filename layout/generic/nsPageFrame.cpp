@@ -421,7 +421,7 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
       if (!nsLayoutUtils::IsProperAncestorFrameCrossDoc(aPage, f)) {
         // We're throwing this away so call its destructor now. The memory
         // is owned by aBuilder which destroys all items at once.
-        i->~nsDisplayItem();
+        i->Destroy(aBuilder);
         continue;
       }
     }
@@ -496,7 +496,7 @@ public:
     static_cast<nsPageFrame*>(mFrame)->
       PaintHeaderFooter(*aCtx, ToReferenceFrame(), mDisableSubpixelAA);
   }
-  NS_DISPLAY_DECL_NAME("HeaderFooter", nsDisplayItem::TYPE_HEADER_FOOTER)
+  NS_DISPLAY_DECL_NAME("HeaderFooter", TYPE_HEADER_FOOTER)
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override {
     bool snap;
