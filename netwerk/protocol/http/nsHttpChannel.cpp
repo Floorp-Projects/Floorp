@@ -2354,7 +2354,7 @@ nsHttpChannel::ProcessResponse()
         nsCOMPtr<nsILoadContextInfo> lci = GetLoadContextInfo(this);
         mozilla::net::Predictor::UpdateCacheability(referrer, mURI, httpStatus,
                                                     mRequestHead, mResponseHead,
-                                                    lci);
+                                                    lci, mIsTrackingResource);
     }
 
     if (mTransaction && mTransaction->ProxyConnectFailed()) {
