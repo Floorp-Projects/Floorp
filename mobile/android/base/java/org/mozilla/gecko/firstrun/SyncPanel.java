@@ -30,7 +30,7 @@ public class SyncPanel extends FirstrunPanel {
 
             ((ImageView) root.findViewById(R.id.firstrun_image)).setImageResource(imageRes);
             ((TextView) root.findViewById(R.id.firstrun_text)).setText(textRes);
-            ((TextView) root.findViewById(R.id.welcome_browse)).setText(subtextRes);
+            ((TextView) root.findViewById(R.id.firstrun_subtext)).setText(subtextRes);
         }
 
         root.findViewById(R.id.welcome_account).setOnClickListener(new View.OnClickListener() {
