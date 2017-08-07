@@ -17,10 +17,12 @@
 #include "nsIDocument.h"
 #include "nsIFactory.h"
 #include "nsIScriptError.h"
+#include "nsISensitiveInfoHiddenURI.h"
 #include "nsIStringBundle.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleUtil.h"
 #include "nsThreadUtils.h"
+#include "nsNetUtil.h"
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 
@@ -37,12 +39,9 @@ public:
     if (mURI != aURI) {
       mURI = aURI;
 
-      nsAutoCString cSpec;
-      nsresult rv = mURI->GetSpec(cSpec);
-      if (NS_FAILED(rv)) {
-        cSpec.AssignLiteral("[nsIURI::GetSpec failed]");
+      if (NS_FAILED(NS_GetSanitizedURIStringFromURI(mURI, mSpec))) {
+        mSpec.AssignLiteral("[nsIURI::GetSpec failed]");
       }
-      CopyUTF8toUTF16(cSpec, mSpec);
     }
     return mSpec;
   }
@@ -219,14 +218,16 @@ ErrorReporter::OutputError()
     do_CreateInstance(sScriptErrorFactory, &rv);
 
   if (NS_SUCCEEDED(rv)) {
-    rv = errorObject->InitWithWindowID(mError,
-                                       mFileName,
-                                       mErrorLine,
-                                       mErrorLineNumber,
-                                       mErrorColNumber,
-                                       nsIScriptError::warningFlag,
-                                       "CSS Parser",
-                                       mInnerWindowID);
+    // It is safe to used InitWithSanitizedSource because mFileName is
+    // an already anonymized uri spec.
+    rv = errorObject->InitWithSanitizedSource(mError,
+                                              mFileName,
+                                              mErrorLine,
+                                              mErrorLineNumber,
+                                              mErrorColNumber,
+                                              nsIScriptError::warningFlag,
+                                              "CSS Parser",
+                                              mInnerWindowID);
     if (NS_SUCCEEDED(rv)) {
       sConsoleService->LogMessage(errorObject);
     }

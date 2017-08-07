@@ -53,6 +53,12 @@ protected:
   void
   InitializeOnMainThread();
 
+  void InitializationHelper(const nsAString& message,
+                            const nsAString& sourceLine, uint32_t lineNumber,
+                            uint32_t columnNumber, uint32_t flags,
+                            const nsACString& category,
+                            uint64_t aInnerWindowID);
+
   nsCOMArray<nsIScriptErrorNote> mNotes;
   nsString mMessage;
   nsString mMessageName;

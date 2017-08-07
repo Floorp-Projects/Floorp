@@ -66,6 +66,7 @@ class TextureClientPool;
 #endif
 class TextureForwarder;
 class KeepAlive;
+class SyncObjectClient;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -91,36 +92,6 @@ enum TextureAllocationFlags {
   // The texture is going to be updated using UpdateFromSurface and needs to support
   // that call.
   ALLOC_UPDATE_FROM_SURFACE = 1 << 7,
-};
-
-#ifdef XP_WIN
-typedef void* SyncHandle;
-#else
-typedef uintptr_t SyncHandle;
-#endif // XP_WIN
-
-class SyncObject : public RefCounted<SyncObject>
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SyncObject)
-  virtual ~SyncObject() { }
-
-  static already_AddRefed<SyncObject> CreateSyncObject(SyncHandle aHandle
-#ifdef XP_WIN
-                                                       , ID3D11Device* aDevice = nullptr
-#endif
-                                                       );
-
-  enum class SyncType {
-    D3D11,
-  };
-
-  virtual SyncType GetSyncType() = 0;
-  virtual void FinalizeFrame() = 0;
-  virtual bool IsSyncObjectValid() = 0;
-
-protected:
-  SyncObject() { }
 };
 
 /**
@@ -305,7 +276,7 @@ public:
 
   virtual bool ReadBack(TextureReadbackSink* aReadbackSink) { return false; }
 
-  virtual void SyncWithObject(SyncObject* aFence) {};
+  virtual void SyncWithObject(SyncObjectClient* aSyncObject) {};
 
   virtual TextureFlags GetTextureFlags() const { return TextureFlags::NO_FLAGS; }
 
@@ -614,7 +585,7 @@ public:
     mReadbackSink = aReadbackSink;
   }
 
-  void SyncWithObject(SyncObject* aFence) { mData->SyncWithObject(aFence); }
+  void SyncWithObject(SyncObjectClient* aSyncObject) { mData->SyncWithObject(aSyncObject); }
 
   LayersIPCChannel* GetAllocator() { return mAllocator; }
 

@@ -298,7 +298,9 @@ CompositorD3D11::GetTextureFactoryIdentifier()
   ident.mMaxTextureSize = GetMaxTextureSize();
   ident.mParentProcessType = XRE_GetProcessType();
   ident.mParentBackend = LayersBackend::LAYERS_D3D11;
-  ident.mSyncHandle = mAttachments->mSyncHandle;
+  if (mAttachments->mSyncObject) {
+    ident.mSyncHandle = mAttachments->mSyncObject->GetSyncHandle();
+  }
   return ident;
 }
 
@@ -1057,29 +1059,12 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
 
-  if (mAttachments->mSyncTexture) {
-    RefPtr<IDXGIKeyedMutex> mutex;
-    mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
-
-    MOZ_ASSERT(mutex);
-    {
-      HRESULT hr;
-      AutoTextureLock lock(mutex, hr, 10000);
-      if (hr == WAIT_TIMEOUT) {
-        hr = mDevice->GetDeviceRemovedReason();
-        if (hr == S_OK) {
-          // There is no driver-removed event. Crash with this timeout.
-          MOZ_CRASH("GFX: D3D11 normal status timeout");
-        }
-
-        // Since the timeout is related to the driver-removed, clear the
-        // render-bounding size to skip this frame.
-        gfxCriticalNote << "GFX: D3D11 timeout with device-removed:" << gfx::hexa(hr);
-        *aRenderBoundsOut = IntRect();
-        return;
-      } else if (hr == WAIT_ABANDONED) {
-        gfxCriticalNote << "GFX: D3D11 abandoned sync";
-      }
+  if (mAttachments->mSyncObject) {
+    if (!mAttachments->mSyncObject->Synchronize()) {
+      // It's timeout here. Since the timeout is related to the driver-removed,
+      // clear the render-bounding size to skip this frame.
+      *aRenderBoundsOut = IntRect();
+      return;
     }
   }
 
@@ -1178,8 +1163,9 @@ CompositorD3D11::Present()
   HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
 
   RefPtr<IDXGIKeyedMutex> mutex;
-  if (mUseMutexOnPresent && mAttachments->mSyncTexture) {
-    mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
+  if (mUseMutexOnPresent && mAttachments->mSyncObject) {
+    SyncObjectD3D11Host* d3dSyncObj = (SyncObjectD3D11Host*)mAttachments->mSyncObject.get();
+    mutex = d3dSyncObj->GetKeyedMutex();
     MOZ_ASSERT(mutex);
   }
 
