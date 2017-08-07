@@ -720,46 +720,52 @@ AddPseudoEntry(uint32_t aFeatures, NotNull<RacyThreadInfo*> aRacyInfo,
   MOZ_ASSERT(entry.kind() == js::ProfileEntry::Kind::CPP_NORMAL ||
              entry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
 
+  const char* label = entry.label();
   const char* dynamicString = entry.dynamicString();
+  bool isChromeJSEntry = false;
   int lineno = -1;
 
-  // XXX: it's unclear why the computation of lineno should depend on
-  // |dynamicString|. Perhaps it shouldn't?
+  if (entry.isJs()) {
+    // There are two kinds of JS frames that get pushed onto the PseudoStack.
+    //
+    // - label = "", dynamic string = <something>
+    // - label = "js::RunScript", dynamic string = nullptr
+    //
+    // The line number is only interesting for the first case.
+    if (label[0] == '\0') {
+      MOZ_ASSERT(dynamicString);
 
-  if (dynamicString) {
-    bool isChromeJSEntry = false;
-    if (entry.isJs()) {
       // We call entry.script() repeatedly -- rather than storing the result in
       // a local variable in order -- to avoid rooting hazards.
       if (entry.script()) {
         isChromeJSEntry = IsChromeJSScript(entry.script());
-        if (!entry.pc()) {
+        if (entry.pc()) {
+          lineno = JS_PCToLineNumber(entry.script(), entry.pc());
+        } else {
           // The JIT only allows the top-most entry to have a nullptr pc.
           MOZ_ASSERT(&entry == &aRacyInfo->entries[aRacyInfo->stackSize() - 1]);
-        } else {
-          lineno = JS_PCToLineNumber(entry.script(), entry.pc());
         }
       }
+
     } else {
-      lineno = entry.line();
+      MOZ_ASSERT(strcmp(label, "js::RunScript") == 0 && !dynamicString);
     }
 
+  } else {
+    MOZ_ASSERT(entry.isCpp());
+    lineno = entry.line();
+  }
+
+  if (dynamicString) {
     // Adjust the dynamic string as necessary.
     if (ProfilerFeature::HasPrivacy(aFeatures) && !isChromeJSEntry) {
       dynamicString = "(private)";
     } else if (strlen(dynamicString) >= ProfileBuffer::kMaxFrameKeyLength) {
       dynamicString = "(too long)";
     }
-
-  } else {
-    // XXX: Bug 1010578. Don't assume a CPP entry and try to get the line for
-    // js entries as well.
-    if (entry.isCpp()) {
-      lineno = entry.line();
-    }
   }
 
-  aCollector.CollectCodeLocation(entry.label(), dynamicString, lineno,
+  aCollector.CollectCodeLocation(label, dynamicString, lineno,
                                  Some(entry.category()));
 }
 

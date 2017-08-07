@@ -108,7 +108,6 @@ public:
         KHR_create_context,
         KHR_stream,
         KHR_stream_consumer_gltexture,
-        EXT_device_base,
         EXT_device_query,
         NV_stream_consumer_gltexture_yuv,
         ANGLE_stream_producer_d3d_texture_nv12,
@@ -292,8 +291,8 @@ public:
     EGLStreamKHR fCreateStreamKHR(EGLDisplay dpy, const EGLint* attrib_list) const
         WRAP(    fCreateStreamKHR(dpy, attrib_list) )
 
-    EGLStreamKHR fDestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream) const
-        WRAP(    fDestroyStreamKHR(dpy, stream) )
+    EGLBoolean  fDestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+        WRAP(   fDestroyStreamKHR(dpy, stream) )
 
     EGLBoolean  fQueryStreamKHR(EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLint* value) const
         WRAP(   fQueryStreamKHR(dpy, stream, attribute, value) )
@@ -305,11 +304,10 @@ public:
     EGLBoolean  fStreamConsumerReleaseKHR(EGLDisplay dpy, EGLStreamKHR stream) const
         WRAP(   fStreamConsumerReleaseKHR(dpy, stream) )
 
-    // EXT_device_base
+    // EXT_device_query
     EGLBoolean  fQueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute, EGLAttrib* value) const
         WRAP(   fQueryDisplayAttribEXT(dpy, attribute, value) )
 
-    // EXT_device_query
     EGLBoolean  fQueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribute, EGLAttrib* value) const
         WRAP(   fQueryDeviceAttribEXT(device, attribute, value) )
 
@@ -454,7 +452,7 @@ private:
         EGLint     (GLAPIENTRY * fDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
         //KHR_stream
         EGLStreamKHR (GLAPIENTRY * fCreateStreamKHR)(EGLDisplay dpy, const EGLint* attrib_list);
-        EGLStreamKHR (GLAPIENTRY * fDestroyStreamKHR)(EGLDisplay dpy, EGLStreamKHR stream);
+        EGLBoolean (GLAPIENTRY * fDestroyStreamKHR)(EGLDisplay dpy, EGLStreamKHR stream);
         EGLBoolean (GLAPIENTRY * fQueryStreamKHR)(EGLDisplay dpy,
                                                   EGLStreamKHR stream,
                                                   EGLenum attribute,
@@ -464,11 +462,10 @@ private:
                                                             EGLStreamKHR stream);
         EGLBoolean (GLAPIENTRY * fStreamConsumerReleaseKHR)(EGLDisplay dpy,
                                                             EGLStreamKHR stream);
-        // EXT_device_base
+        // EXT_device_query
         EGLBoolean (GLAPIENTRY * fQueryDisplayAttribEXT)(EGLDisplay dpy,
                                                          EGLint attribute,
                                                          EGLAttrib* value);
-        // EXT_device_query
         EGLBoolean (GLAPIENTRY * fQueryDeviceAttribEXT)(EGLDeviceEXT device,
                                                         EGLint attribute,
                                                         EGLAttrib* value);

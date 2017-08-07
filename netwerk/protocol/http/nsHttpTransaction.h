@@ -394,8 +394,8 @@ public:
     void ResumeReading();
 
     // This examins classification of this transaction whether the Throttleable class
-    // has been set while Leader or Unblocked are not.
-    bool EligibleForThrottling();
+    // has been set while Leader, Unblocked, DontThrottle has not.
+    bool EligibleForThrottling() const;
 
 private:
     bool mSubmittedRatePacing;
