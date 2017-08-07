@@ -599,9 +599,9 @@ ImageDocument::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
     mDocumentURI->GetSpec(src);
     NS_ConvertUTF8toUTF16 srcString(src);
     const char16_t* formatString[] = { srcString.get() };
-    nsXPIDLString errorMsg;
+    nsAutoString errorMsg;
     mStringBundle->FormatStringFromName("InvalidImage", formatString, 1,
-                                        getter_Copies(errorMsg));
+                                        errorMsg);
 
     mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, errorMsg, false);
   }
@@ -805,15 +805,13 @@ ImageDocument::UpdateTitleAndCharset()
     }
   }
 
-  nsXPIDLString status;
+  nsAutoString status;
   if (mImageIsResized) {
     nsAutoString ratioStr;
     ratioStr.AppendInt(NSToCoordFloor(GetRatio() * 100));
 
     const char16_t* formatString[1] = { ratioStr.get() };
-    mStringBundle->FormatStringFromName("ScaledImage",
-                                        formatString, 1,
-                                        getter_Copies(status));
+    mStringBundle->FormatStringFromName("ScaledImage", formatString, 1, status);
   }
 
   static const char* const formatNames[4] =

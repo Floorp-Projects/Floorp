@@ -108,9 +108,9 @@ GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal
   NS_ENSURE_ARG_POINTER(aKey);
 
   // Determine default label from string bundle
-  nsXPIDLString valUni;
-  nsresult rv = aStrBundle->GetStringFromName(aKey, getter_Copies(valUni));
-  if (NS_SUCCEEDED(rv) && valUni) {
+  nsAutoString valUni;
+  nsresult rv = aStrBundle->GetStringFromName(aKey, valUni);
+  if (NS_SUCCEEDED(rv)) {
     oVal.Assign(valUni);
   } else {
     oVal.Truncate();

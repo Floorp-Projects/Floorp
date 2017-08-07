@@ -72,7 +72,7 @@ LogBlockedRequest(nsIRequest* aRequest,
   }
 
   // Generate the error message
-  nsXPIDLString blockedMessage;
+  nsAutoString blockedMessage;
   NS_ConvertUTF8toUTF16 specUTF16(spec);
   const char16_t* params[] = { specUTF16.get(), aParam };
   rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,

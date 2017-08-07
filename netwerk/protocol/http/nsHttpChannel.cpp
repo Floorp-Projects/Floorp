@@ -2809,11 +2809,9 @@ nsHttpChannel::PromptTempRedirect()
     rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(stringBundle));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLString messageString;
-    rv = stringBundle->GetStringFromName("RepostFormData",
-                                         getter_Copies(messageString));
-    // GetStringFromName can return NS_OK and nullptr messageString.
-    if (NS_SUCCEEDED(rv) && messageString) {
+    nsAutoString messageString;
+    rv = stringBundle->GetStringFromName("RepostFormData", messageString);
+    if (NS_SUCCEEDED(rv)) {
         bool repost = false;
 
         nsCOMPtr<nsIPrompt> prompt;
@@ -2821,7 +2819,7 @@ nsHttpChannel::PromptTempRedirect()
         if (!prompt)
             return NS_ERROR_NO_INTERFACE;
 
-        prompt->Confirm(nullptr, messageString, &repost);
+        prompt->Confirm(nullptr, messageString.get(), &repost);
         if (!repost)
             return NS_ERROR_FAILURE;
     }
