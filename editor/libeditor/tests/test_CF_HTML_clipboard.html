@@ -138,7 +138,7 @@ function runTest() {
         win.focus();
       }, 0);
     }, {once: true});
-    iframe.src = "data:text/html,";
+    iframe.srcdoc = "foo";
   }, SimpleTest.finish);
 }
 
