@@ -127,6 +127,33 @@ GetProxyStubType(JSContext* cx, HandleObject obj, HandleId id)
     return ProxyStubType::DOMUnshadowed;
 }
 
+static bool
+ValueToNameOrSymbolId(JSContext* cx, HandleValue idval, MutableHandleId id,
+                      bool* nameOrSymbol)
+{
+    *nameOrSymbol = false;
+
+    if (!idval.isString() && !idval.isSymbol())
+        return true;
+
+    if (!ValueToId<CanGC>(cx, idval, id))
+        return false;
+
+    if (!JSID_IS_STRING(id) && !JSID_IS_SYMBOL(id)) {
+        id.set(JSID_VOID);
+        return true;
+    }
+
+    uint32_t dummy;
+    if (JSID_IS_STRING(id) && JSID_TO_ATOM(id)->isIndex(&dummy)) {
+        id.set(JSID_VOID);
+        return true;
+    }
+
+    *nameOrSymbol = true;
+    return true;
+}
+
 bool
 GetPropIRGenerator::tryAttachStub()
 {
@@ -273,6 +300,99 @@ GetPropIRGenerator::tryAttachIdempotentStub()
 }
 
 static bool
+IsCacheableProtoChain(JSObject* obj, JSObject* holder)
+{
+    while (obj != holder) {
+        /*
+         * We cannot assume that we find the holder object on the prototype
+         * chain and must check for null proto. The prototype chain can be
+         * altered during the lookupProperty call.
+         */
+        JSObject* proto = obj->staticPrototype();
+        if (!proto || !proto->isNative())
+            return false;
+        obj = proto;
+    }
+    return true;
+}
+
+static bool
+IsCacheableGetPropReadSlot(JSObject* obj, JSObject* holder, PropertyResult prop)
+{
+    if (!prop || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    Shape* shape = prop.shape();
+    if (!shape->hasSlot() || !shape->hasDefaultGetter())
+        return false;
+
+    return true;
+}
+
+static bool
+IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
+{
+    if (!shape || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    if (!shape->hasGetterValue() || !shape->getterValue().isObject())
+        return false;
+
+    if (!shape->getterValue().toObject().is<JSFunction>())
+        return false;
+
+    JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
+    if (!getter.isNative())
+        return false;
+
+    if (getter.isClassConstructor())
+        return false;
+
+    // Check for a getter that has jitinfo and whose jitinfo says it's
+    // OK with both inner and outer objects.
+    if (getter.jitInfo() && !getter.jitInfo()->needsOuterizedThisObject())
+        return true;
+
+    // For getters that need the WindowProxy (instead of the Window) as this
+    // object, don't cache if obj is the Window, since our cache will pass that
+    // instead of the WindowProxy.
+    return !IsWindow(obj);
+}
+
+static bool
+IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
+                               bool* isTemporarilyUnoptimizable = nullptr)
+{
+    if (!shape || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    if (!shape->hasGetterValue() || !shape->getterValue().isObject())
+        return false;
+
+    if (!shape->getterValue().toObject().is<JSFunction>())
+        return false;
+
+    // See IsCacheableGetPropCallNative.
+    if (IsWindow(obj))
+        return false;
+
+    JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
+    if (getter.isNative())
+        return false;
+
+    if (!getter.hasJITCode()) {
+        if (isTemporarilyUnoptimizable)
+            *isTemporarilyUnoptimizable = true;
+        return false;
+    }
+
+    if (getter.isClassConstructor())
+        return false;
+
+    return true;
+}
+
+static bool
 IsCacheableNoProperty(JSContext* cx, JSObject* obj, JSObject* holder, Shape* shape, jsid id,
                       jsbytecode* pc, GetPropertyResultFlags resultFlags)
 {
@@ -327,7 +447,7 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
     }
     shape.set(prop.maybeShape());
 
-    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, prop))
+    if (IsCacheableGetPropReadSlot(obj, holder, prop))
         return CanAttachReadSlot;
 
     if (IsCacheableNoProperty(cx, obj, holder, shape, id, pc, resultFlags))
@@ -1866,8 +1986,7 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
         // prototype. Ignore the global lexical scope as it doesn't figure
         // into the prototype chain. We guard on the global lexical
         // scope's shape independently.
-        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(&globalLexical->global(), holder,
-                                                       PropertyResult(shape)))
+        if (!IsCacheableGetPropReadSlot(&globalLexical->global(), holder, PropertyResult(shape)))
             return false;
 
         // Shape guard for global lexical.
@@ -1987,7 +2106,7 @@ GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
     }
 
     holder = &env->as<NativeObject>();
-    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(holder, holder, PropertyResult(shape)))
+    if (!IsCacheableGetPropReadSlot(holder, holder, PropertyResult(shape)))
         return false;
     if (holder->getSlot(shape->slot()).isMagic())
         return false;
@@ -2825,6 +2944,63 @@ SetPropIRGenerator::trackNotAttached()
         sp.endCache(guard);
     }
 #endif
+}
+
+static bool
+IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
+{
+    if (!shape || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    if (!shape->hasSetterValue())
+        return false;
+
+    if (!shape->setterObject() || !shape->setterObject()->is<JSFunction>())
+        return false;
+
+    JSFunction& setter = shape->setterObject()->as<JSFunction>();
+    if (!setter.isNative())
+        return false;
+
+    if (setter.isClassConstructor())
+        return false;
+
+    if (setter.jitInfo() && !setter.jitInfo()->needsOuterizedThisObject())
+        return true;
+
+    return !IsWindow(obj);
+}
+
+static bool
+IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
+                               bool* isTemporarilyUnoptimizable = nullptr)
+{
+    if (!shape || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    if (IsWindow(obj))
+        return false;
+
+    if (!shape->hasSetterValue())
+        return false;
+
+    if (!shape->setterObject() || !shape->setterObject()->is<JSFunction>())
+        return false;
+
+    JSFunction& setter = shape->setterObject()->as<JSFunction>();
+    if (setter.isNative())
+        return false;
+
+    if (!setter.hasJITCode()) {
+        if (isTemporarilyUnoptimizable)
+            *isTemporarilyUnoptimizable = true;
+        return false;
+    }
+
+    if (setter.isClassConstructor())
+        return false;
+
+    return true;
 }
 
 static bool
