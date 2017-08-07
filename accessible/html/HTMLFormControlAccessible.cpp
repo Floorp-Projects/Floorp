@@ -15,13 +15,13 @@
 
 #include "nsContentList.h"
 #include "mozilla/dom/HTMLInputElement.h"
-#include "nsIDOMNSEditableElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIEditor.h"
 #include "nsIFormControl.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
+#include "nsITextControlElement.h"
 #include "nsITextControlFrame.h"
 #include "nsNameSpaceManager.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -29,6 +29,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEditor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -459,17 +460,16 @@ HTMLTextFieldAccessible::DoAction(uint8_t aIndex)
   return true;
 }
 
-already_AddRefed<nsIEditor>
+already_AddRefed<TextEditor>
 HTMLTextFieldAccessible::GetEditor() const
 {
-  nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(mContent));
-  if (!editableElt)
+  nsCOMPtr<nsITextControlElement> textControlElement =
+    do_QueryInterface(mContent);
+  if (!textControlElement) {
     return nullptr;
-
-  nsCOMPtr<nsIEditor> editor;
-  editableElt->GetEditor(getter_AddRefs(editor));
-
-  return editor.forget();
+  }
+  RefPtr<TextEditor> textEditor = textControlElement->GetTextEditor();
+  return textEditor.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

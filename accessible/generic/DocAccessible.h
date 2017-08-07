@@ -16,7 +16,6 @@
 #include "nsDataHashtable.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
-#include "nsIEditor.h"
 #include "nsIObserver.h"
 #include "nsIScrollPositionListener.h"
 #include "nsITimer.h"
@@ -27,6 +26,9 @@ class nsAccessiblePivot;
 const uint32_t kDefaultCacheLength = 128;
 
 namespace mozilla {
+
+class TextEditor;
+
 namespace a11y {
 
 class DocManager;
@@ -86,7 +88,7 @@ public:
   virtual nsRect RelativeBounds(nsIFrame** aRelativeFrame) const override;
 
   // HyperTextAccessible
-  virtual already_AddRefed<nsIEditor> GetEditor() const override;
+  virtual already_AddRefed<TextEditor> GetEditor() const override;
 
   // DocAccessible
 
