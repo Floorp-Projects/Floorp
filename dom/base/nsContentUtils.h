@@ -1040,7 +1040,7 @@ public:
    */
   static nsresult GetLocalizedString(PropertiesFile aFile,
                                      const char* aKey,
-                                     nsXPIDLString& aResult);
+                                     nsAString& aResult);
 
   /**
    * A helper function that parses a sandbox attribute (of an <iframe> or a CSP
@@ -1086,14 +1086,14 @@ private:
                                         const char* aKey,
                                         const char16_t** aParams,
                                         uint32_t aParamsLength,
-                                        nsXPIDLString& aResult);
+                                        nsAString& aResult);
 
 public:
   template<uint32_t N>
   static nsresult FormatLocalizedString(PropertiesFile aFile,
                                         const char* aKey,
                                         const char16_t* (&aParams)[N],
-                                        nsXPIDLString& aResult)
+                                        nsAString& aResult)
   {
     return FormatLocalizedString(aFile, aKey, aParams, N, aResult);
   }
@@ -1107,7 +1107,7 @@ public:
   static nsresult FormatLocalizedString(PropertiesFile aFile,
                                         const char* aKey,
                                         const nsTArray<nsString>& aParamArray,
-                                        nsXPIDLString& aResult);
+                                        nsAString& aResult);
 
   /**
    * Returns true if aDocument is a chrome document

@@ -388,7 +388,7 @@ DataTransferItem::CreateFileFromInputStream(nsIInputStream* aStream)
     key = "GenericFileName";
   }
 
-  nsXPIDLString fileName;
+  nsAutoString fileName;
   nsresult rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                    key, fileName);
   if (NS_WARN_IF(NS_FAILED(rv))) {

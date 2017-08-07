@@ -130,7 +130,7 @@ WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID, const char* aKey)
     return;
   }
 
-  nsXPIDLString result;
+  nsAutoString result;
   rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                           aKey, result);
 

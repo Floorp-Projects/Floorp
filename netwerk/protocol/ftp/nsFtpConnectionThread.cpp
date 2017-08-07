@@ -943,10 +943,10 @@ nsFtpState::R_syst() {
             char16_t* ucs2Response = ToNewUnicode(mResponseMsg);
             const char16_t *formatStrings[1] = { ucs2Response };
 
-            nsXPIDLString formattedString;
+            nsAutoString formattedString;
             rv = bundle->FormatStringFromName("UnsupportedFTPServer",
                                               formatStrings, 1,
-                                              getter_Copies(formattedString));
+                                              formattedString);
             free(ucs2Response);
             if (NS_FAILED(rv))
                 return FTP_ERROR;

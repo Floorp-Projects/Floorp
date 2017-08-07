@@ -1864,24 +1864,24 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         nsCOMPtr<nsIStringBundle> bundle;
         if (NS_SUCCEEDED(stringService->CreateBundle("chrome://global/locale/nsWebBrowserPersist.properties",
                          getter_AddRefs(bundle)))) {
-            nsXPIDLString msgText;
+            nsAutoString msgText;
             const char16_t *strings[] = { path.get() };
             if (NS_SUCCEEDED(bundle->FormatStringFromName(msgId, strings, 1,
-                                                          getter_Copies(msgText)))) {
+                                                          msgText))) {
               if (mDialogProgressListener) {
                 // We have a listener, let it handle the error.
-                mDialogProgressListener->OnStatusChange(nullptr, (type == kReadError) ? aRequest : nullptr, rv, msgText);
+                mDialogProgressListener->OnStatusChange(nullptr, (type == kReadError) ? aRequest : nullptr, rv, msgText.get());
               } else if (mTransfer) {
-                mTransfer->OnStatusChange(nullptr, (type == kReadError) ? aRequest : nullptr, rv, msgText);
+                mTransfer->OnStatusChange(nullptr, (type == kReadError) ? aRequest : nullptr, rv, msgText.get());
               } else if (XRE_IsParentProcess()) {
                 // We don't have a listener.  Simply show the alert ourselves.
                 nsresult qiRv;
                 nsCOMPtr<nsIPrompt> prompter(do_GetInterface(GetDialogParent(), &qiRv));
-                nsXPIDLString title;
+                nsAutoString title;
                 bundle->FormatStringFromName("title",
                                              strings,
                                              1,
-                                             getter_Copies(title));
+                                             title);
 
                 MOZ_LOG(nsExternalHelperAppService::mLog, LogLevel::Debug,
                        ("mContentContext=0x%p, prompter=0x%p, qi rv=0x%08"
@@ -1921,7 +1921,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                 }
 
                 // We should always have a prompter at this point.
-                prompter->Alert(title, msgText);
+                prompter->Alert(title.get(), msgText.get());
               }
             }
         }
