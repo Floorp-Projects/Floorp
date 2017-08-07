@@ -42,6 +42,13 @@ public:
   void Pause() override;
 
 private:
+  bool CanPlayThroughImpl() override final
+  {
+    // TODO: We don't know how to estimate 'canplaythrough' for this decoder.
+    // For now we just return true for 'autoplay' can work.
+    return true;
+  }
+
   RefPtr<HLSResource> mResource;
 };
 

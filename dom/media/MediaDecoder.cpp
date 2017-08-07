@@ -1572,14 +1572,6 @@ MediaDecoder::UnpinForSeek()
 }
 
 bool
-MediaDecoder::CanPlayThroughImpl()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_TRUE(mDecoderStateMachine, false);
-  return GetStatistics().CanPlayThrough();
-}
-
-bool
 MediaDecoder::CanPlayThrough()
 {
   MOZ_ASSERT(NS_IsMainThread());
