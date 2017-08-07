@@ -94,6 +94,8 @@ Var PreviousInstallArch
 Var ProfileCleanupPromptType
 Var ProfileCleanupHeaderString
 Var ProfileCleanupButtonString
+Var AppLaunchWaitTickCount
+Var AppLaunchWaitStepSize
 
 ; Uncomment the following to prevent pinging the metrics server when testing
 ; the stub installer
@@ -181,6 +183,19 @@ Var ProfileCleanupButtonString
 ; with a 100 millisecond timer and a first step of 20 as defined by
 ; InstallProgressFirstStep .
 !define /math InstallPaveOverTotalSteps ${InstallProgressFirstStep} + 1800
+
+; 5 more seconds at the end of the progress bar to wait for the app to launch.
+!define AppLaunchWaitSteps 500
+
+; Number of steps per interval to advance the progress bar. Calibrate this based
+; on how long the progress bar should spend filling up while awaiting app launch.
+!define AppLaunchWaitStepSizeMultiplier 20
+
+; Interval between checks for the application window and progress bar updates.
+!define AppLaunchWaitIntervalMS 100
+
+; Total time to wait for the application to start before just exiting.
+!define AppLaunchWaitTimeoutMS 10000
 
 ; Blurb duty cycle
 !define BlurbDisplayMS 19500
@@ -1009,9 +1024,14 @@ Function OnDownload
     Pop $HalfOfDownload
     System::Int64Op $HalfOfDownload / $InstallTotalSteps
     Pop $InstallStepSize
+    StrCpy $AppLaunchWaitStepSize $InstallStepSize
     SendMessage $Progressbar ${PBM_SETMARQUEE} 0 0 ; start=1|stop=0 interval(ms)=+N
     ${RemoveStyle} $Progressbar ${PBS_MARQUEE}
     System::Int64Op $HalfOfDownload + $DownloadSizeBytes
+    Pop $ProgressTotal
+    System::Int64Op $AppLaunchWaitStepSize * ${AppLaunchWaitSteps}
+    Pop $R0
+    System::Int64Op $ProgressTotal + $R0
     Pop $ProgressTotal
     StrCpy $ProgressCompleted 0
     SendMessage $Progressbar ${PBM_SETRANGE32} $ProgressCompleted $ProgressTotal
@@ -1186,7 +1206,10 @@ Function OnDownload
 FunctionEnd
 
 Function SendPing
+  ${NSD_KillTimer} NextBlurb
+  ${NSD_KillTimer} ClearBlurb
   HideWindow
+
   ${If} $CheckboxSendPing == 1
     ; Get the tick count for the completion of all phases.
     System::Call "kernel32::GetTickCount()l .s"
@@ -1510,9 +1533,6 @@ Function FinishInstall
 
   ${NSD_KillTimer} FinishInstall
 
-  StrCpy $ProgressCompleted "$ProgressTotal"
-  Call SetProgressBars
-
   ${If} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-upgrade"
     Delete "$INSTDIR\${FileMainEXE}"
     Rename "$INSTDIR\${FileMainEXE}.moz-upgrade" "$INSTDIR\${FileMainEXE}"
@@ -1537,7 +1557,6 @@ Function FinishProgressBar
 
   Call CopyPostSigningData
   Call LaunchApp
-  Call SendPing
 FunctionEnd
 
 Function RelativeGotoPage
@@ -1656,6 +1675,9 @@ Function LaunchApp
     GetFunctionAddress $0 LaunchAppFromElevatedProcess
     UAC::ExecCodeSegment $0
   ${EndIf}
+
+  StrCpy $AppLaunchWaitTickCount 0
+  ${NSD_CreateTimer} WaitForAppLaunch ${AppLaunchWaitIntervalMS}
 FunctionEnd
 
 Function LaunchAppFromElevatedProcess
@@ -1666,6 +1688,35 @@ Function LaunchAppFromElevatedProcess
   ${Else}
     Exec "$\"$INSTDIR\${FileMainEXE}$\""
   ${EndIf}
+FunctionEnd
+
+Function WaitForAppLaunch
+  FindWindow $0 "${MainWindowClass}"
+  FindWindow $1 "${DialogWindowClass}"
+  ${If} $0 <> 0
+  ${OrIf} $1 <> 0
+    ${NSD_KillTimer} WaitForAppLaunch
+    StrCpy $ProgressCompleted "$ProgressTotal"
+    Call SetProgressBars
+    Call SendPing
+    Return
+  ${EndIf}
+
+  IntOp $AppLaunchWaitTickCount $AppLaunchWaitTickCount + 1
+  IntOp $0 $AppLaunchWaitTickCount * ${AppLaunchWaitIntervalMS}
+  ${If} $0 >= ${AppLaunchWaitTimeoutMS}
+    ; We've waited an unreasonably long time, so just exit.
+    ${NSD_KillTimer} WaitForAppLaunch
+    Call SendPing
+    Return
+  ${EndIf}
+
+  ${If} $AppLaunchWaitTickCount < ${AppLaunchWaitSteps}
+    IntOp $0 $AppLaunchWaitStepSize * ${AppLaunchWaitStepSizeMultiplier}
+    System::Int64Op $ProgressCompleted + $0
+    Pop $ProgressCompleted
+  ${EndIf}
+  Call SetProgressBars
 FunctionEnd
 
 Function CopyPostSigningData
