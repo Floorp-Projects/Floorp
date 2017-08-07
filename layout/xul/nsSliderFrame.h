@@ -63,11 +63,9 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
-                                           const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,

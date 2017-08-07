@@ -42,7 +42,6 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                        const nsRect&           aDirtyRect,
                         const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,

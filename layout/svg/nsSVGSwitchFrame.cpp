@@ -39,7 +39,6 @@ public:
 #endif
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   // nsSVGDisplayableFrame interface:
@@ -82,12 +81,11 @@ nsSVGSwitchFrame::Init(nsIContent*       aContent,
 
 void
 nsSVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                   const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists)
 {
   nsIFrame* kid = GetActiveChildFrame();
   if (kid) {
-    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    BuildDisplayListForChild(aBuilder, kid, aLists);
   }
 }
 

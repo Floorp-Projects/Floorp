@@ -18,11 +18,9 @@ public:
                                                   nsFrameState aFlags);
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   void BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists);
 
   virtual void Reflow(nsPresContext*           aCX,

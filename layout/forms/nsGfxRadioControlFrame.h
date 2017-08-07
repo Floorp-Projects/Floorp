@@ -26,7 +26,6 @@ public:
 
 #ifdef MOZ_WIDGET_ANDROID
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 #endif
 };

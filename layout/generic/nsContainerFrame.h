@@ -419,7 +419,6 @@ public:
    * Add overflow containers to the display list
    */
   void DisplayOverflowContainers(nsDisplayListBuilder*   aBuilder,
-                                 const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists);
 
   /**
@@ -432,7 +431,6 @@ public:
    * to emulate what nsContainerFrame::Paint did.
    */
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   static void PlaceFrameView(nsIFrame* aFrame)
@@ -575,7 +573,6 @@ protected:
    * display items) go into the Content() list.
    */
   void BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
-                                           const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists,
                                            uint32_t                aFlags = 0);
 
@@ -584,11 +581,9 @@ protected:
    * Intended as a convenience for derived classes.
    */
   void BuildDisplayListForInline(nsDisplayListBuilder*   aBuilder,
-                                 const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists) {
     DisplayBorderBackgroundOutline(aBuilder, aLists);
-    BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
-                                        DISPLAY_CHILD_INLINE);
+    BuildDisplayListForNonBlockChildren(aBuilder, aLists, DISPLAY_CHILD_INLINE);
   }
 
 

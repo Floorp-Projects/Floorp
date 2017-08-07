@@ -99,7 +99,6 @@ public:
                              nsIFrame::Cursor& aCursor) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
@@ -147,7 +146,6 @@ public:
 #endif
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
@@ -675,10 +673,9 @@ nsHTMLFramesetFrame::GetCursor(const nsPoint&    aPoint,
 
 void
 nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                      const nsRect&           aDirtyRect,
                                       const nsDisplayListSet& aLists)
 {
-  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  BuildDisplayListForInline(aBuilder, aLists);
 
   if (mDragger && aBuilder->IsForEventDelivery()) {
     aLists.Content()->AppendNewToTop(
@@ -1420,7 +1417,6 @@ void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsHTMLFramesetBorderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                            const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
   aLists.Content()->AppendNewToTop(
@@ -1632,7 +1628,6 @@ void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsHTMLFramesetBlankFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                           const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists)
 {
   aLists.Content()->AppendNewToTop(

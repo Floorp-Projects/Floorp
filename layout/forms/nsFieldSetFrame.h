@@ -44,7 +44,6 @@ public:
                                  nscoord* aBaseline) const override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   DrawResult PaintBorder(nsDisplayListBuilder* aBuilder,

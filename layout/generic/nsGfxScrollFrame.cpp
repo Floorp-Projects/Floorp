@@ -3050,7 +3050,6 @@ struct HoveredStateComparator
 
 void
 ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
-                                       const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists,
                                        bool                    aCreateLayer,
                                        bool                    aPositioned)
@@ -3112,11 +3111,8 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     // this for the root scrollframe of the root content document, which is
     // zoomable, and where the scrollbar sizes are bounded by the widget.
     nsRect dirty = mIsRoot && mOuter->PresContext()->IsRootContentDocument()
-                   ? scrollParts[i]->GetVisualOverflowRectRelativeToParent()
-                   : aDirtyRect;
-    nsDisplayListBuilder::AutoBuildingDisplayList
-      buildingForChild(aBuilder, scrollParts[i],
-                       dirty + mOuter->GetOffsetTo(scrollParts[i]), true);
+                     ? scrollParts[i]->GetVisualOverflowRectRelativeToParent()
+                     : aBuilder->GetDirtyRect();
 
     // Always create layers for overlay scrollbars so that we don't create a
     // giant layer covering the whole scrollport if both scrollbars are visible.
@@ -3124,12 +3120,18 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     bool createLayer = aCreateLayer || isOverlayScrollbar ||
                        gfxPrefs::AlwaysLayerizeScrollbarTrackTestOnly();
 
-    nsDisplayListBuilder::AutoCurrentScrollbarInfoSetter
-      infoSetter(aBuilder, scrollTargetId, flags, createLayer);
     nsDisplayListCollection partList;
-    mOuter->BuildDisplayListForChild(
-      aBuilder, scrollParts[i], dirty, partList,
-      nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
+    {
+      nsDisplayListBuilder::AutoBuildingDisplayList
+        buildingForChild(aBuilder, mOuter,
+                         dirty, true);
+
+      nsDisplayListBuilder::AutoCurrentScrollbarInfoSetter
+        infoSetter(aBuilder, scrollTargetId, flags, createLayer);
+      mOuter->BuildDisplayListForChild(
+        aBuilder, scrollParts[i], partList,
+        nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
+    }
 
     if (createLayer) {
       appendToTopFlags |= APPEND_OWN_LAYER;
@@ -3138,11 +3140,18 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
       appendToTopFlags |= APPEND_POSITIONED;
     }
 
-    // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into
-    // partList.PositionedDescendants().
-    ::AppendToTop(aBuilder, aLists,
-                  partList.PositionedDescendants(), scrollParts[i],
-                  appendToTopFlags);
+    {
+      nsDisplayListBuilder::AutoBuildingDisplayList
+        buildingForChild(aBuilder, scrollParts[i],
+                         dirty + mOuter->GetOffsetTo(scrollParts[i]), true);
+      nsDisplayListBuilder::AutoCurrentScrollbarInfoSetter
+        infoSetter(aBuilder, scrollTargetId, flags, createLayer);
+      // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into
+      // partList.PositionedDescendants().
+      ::AppendToTop(aBuilder, aLists,
+                    partList.PositionedDescendants(), scrollParts[i],
+                    appendToTopFlags);
+    }
   }
 }
 
@@ -3252,7 +3261,6 @@ ClipListsExceptCaret(nsDisplayListCollection* aLists,
 
 void
 ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                    const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists)
 {
   if (aBuilder->IsForFrameVisibility()) {
@@ -3289,7 +3297,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // had dirty rects saved for them by their parent frames calling
   // MarkOutOfFlowChildrenForDisplayList, so it's safe to restrict our
   // dirty rect here.
-  nsRect dirtyRect = aDirtyRect;
+  nsRect dirtyRect = aBuilder->GetDirtyRect();
   if (!ignoringThisScrollFrame) {
     dirtyRect = dirtyRect.Intersect(mScrollPort);
   }
@@ -3334,8 +3342,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (addScrollBars) {
       // Add classic scrollbars.
-      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists,
-                          createLayersForScrollbars, false);
+      AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, false);
     }
 
     {
@@ -3346,17 +3353,18 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         aBuilder->SetActiveScrolledRootForRootScrollframe(aBuilder->CurrentActiveScrolledRoot());
       }
 
+      nsDisplayListBuilder::AutoBuildingDisplayList
+        building(aBuilder, mOuter, dirtyRect, aBuilder->IsAtRootOfPseudoStackingContext());
+
       // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
       // The scrolled frame shouldn't have its own background/border, so we
       // can just pass aLists directly.
-      mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame,
-                                       dirtyRect, aLists);
+      mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, aLists);
     }
 
     if (addScrollBars) {
       // Add overlay scrollbars.
-      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists,
-                          createLayersForScrollbars, true);
+      AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, true);
     }
 
     return;
@@ -3394,8 +3402,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Note that this does not apply for overlay scrollbars; those are drawn
   // in the positioned-elements layer on top of everything else by the call
   // to AppendScrollPartsTo(..., true) further down.
-  AppendScrollPartsTo(aBuilder, aDirtyRect, aLists,
-                      createLayersForScrollbars, false);
+  AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, false);
 
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
   if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL)) {
@@ -3519,7 +3526,10 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       scrolledRectClipState.ClipContainingBlockDescendants(
         scrolledRectClip + aBuilder->ToReferenceFrame(mOuter));
 
-      mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, scrolledContent);
+      nsDisplayListBuilder::AutoBuildingDisplayList
+        building(aBuilder, mOuter, dirtyRect, aBuilder->IsAtRootOfPseudoStackingContext());
+
+      mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, scrolledContent);
     }
 
     if (extraContentBoxClipForNonCaretContent) {
@@ -3593,8 +3603,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
   // Now display overlay scrollbars and the resizer, if we have one.
-  AppendScrollPartsTo(aBuilder, aDirtyRect, scrolledContent,
-                      createLayersForScrollbars, true);
+  AppendScrollPartsTo(aBuilder, scrolledContent, createLayersForScrollbars, true);
+
   scrolledContent.MoveTo(aLists);
 }
 
