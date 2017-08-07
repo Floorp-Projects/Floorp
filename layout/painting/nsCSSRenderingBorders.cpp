@@ -3253,8 +3253,6 @@ nsCSSBorderRenderer::DrawBorders()
   ColorPattern color(ToDeviceColor(mBorderColors[eSideTop]));
   StrokeOptions strokeOptions(mBorderWidths[eSideTop]); // stroke width
 
-  bool allBordersSolid;
-
   // First there's a couple of 'special cases' that have specifically optimized
   // drawing paths, when none of these can be used we move on to the generalized
   // border drawing code.
@@ -3304,8 +3302,8 @@ nsCSSBorderRenderer::DrawBorders()
   }
 
   bool hasCompositeColors;
+  const bool allBordersSolid = AllBordersSolid(&hasCompositeColors);
 
-  allBordersSolid = AllBordersSolid(&hasCompositeColors);
   // This leaves the border corners non-interpolated for single width borders.
   // Doing this is slightly faster and shouldn't be a problem visually.
   if (allBordersSolid &&
