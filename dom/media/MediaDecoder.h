@@ -306,13 +306,6 @@ private:
   // outlined in the specification.
   void FireTimeUpdate();
 
-  // Something has changed that could affect the computed playback rate,
-  // so recompute it. The monitor must be held.
-  virtual void UpdatePlaybackRate();
-
-  // The actual playback rate computation. The monitor must be held.
-  void ComputePlaybackRate();
-
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   bool CanPlayThrough();
@@ -406,12 +399,6 @@ private:
   static bool IsWMFEnabled();
 #endif
 
-  // Return statistics. This is used for progress events and other things.
-  // This can be called from any thread. It's only a snapshot of the
-  // current state, since other threads might be changing the state
-  // at any time.
-  MediaStatistics GetStatistics();
-
   // Return the frame decode/paint related statistics.
   FrameStatistics& GetFrameStatistics() { return *mFrameStats; }
 
@@ -449,9 +436,8 @@ protected:
 
   bool IsShutdown() const;
 
-  // Called by the state machine to notify the decoder that the duration
-  // has changed.
-  void DurationChanged();
+  // Called to notify the decoder that the duration has changed.
+  virtual void DurationChanged();
 
   // State-watching manager.
   WatchManager<MediaDecoder> mWatchManager;
@@ -467,6 +453,8 @@ protected:
     // that it takes effect immediately, rather than at the end of the current task.
     DurationChanged();
   }
+
+  virtual void OnPlaybackEvent(MediaEventType aEvent);
 
   /******
    * The following members should be accessed with the decoder lock held.
@@ -517,7 +505,6 @@ private:
   // Called when the owner's activity changed.
   void NotifyCompositor();
 
-  void OnPlaybackEvent(MediaEventType aEvent);
   void OnPlaybackErrorEvent(const MediaResult& aError);
 
   void OnDecoderDoctorEvent(DecoderDoctorEvent aEvent);
@@ -551,9 +538,9 @@ protected:
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget);
 
-  // Called to recompute playback rate and notify 'progress' event.
-  // Call on the main thread only.
-  void DownloadProgressed();
+  // Called to notify fetching media data is in progress.
+  // Called on the main thread only.
+  virtual void DownloadProgressed();
 
   // Called by MediaResource when the "cache suspended" status changes.
   // If MediaResource::IsSuspendedByCache returns true, then the decoder
@@ -577,8 +564,6 @@ protected:
 
   void OnMetadataUpdate(TimedMetadata&& aMetadata);
 
-  bool ShouldThrottleDownload();
-
   // This should only ever be accessed from the main thread.
   // It is set in the constructor and cleared in Shutdown when the element goes
   // away. The decoder does not add a reference the element.
@@ -591,11 +576,6 @@ protected:
   const RefPtr<FrameStatistics> mFrameStats;
 
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
-
-  // Data needed to estimate playback data rate. The timeline used for
-  // this estimate is "decode time" (where the "current time" is the
-  // time of the last decoded video frame).
-  MediaChannelStatistics mPlaybackStatistics;
 
   // True when our media stream has been pinned. We pin the stream
   // while seeking.
@@ -758,12 +738,6 @@ private:
   bool mTelemetryReported;
   const MediaContainerType mContainerType;
   bool mCanPlayThrough = false;
-
-  // Estimate of the current playback rate (bytes/second).
-  double mPlaybackBytesPerSecond = 0;
-
-  // True if mPlaybackBytesPerSecond is a reliable estimate.
-  bool mPlaybackRateReliable = true;
 };
 
 } // namespace mozilla
