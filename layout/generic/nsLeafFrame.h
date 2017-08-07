@@ -24,7 +24,6 @@ public:
 
   // nsIFrame replacements
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override {
     DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame");
     DisplayBorderBackgroundOutline(aBuilder, aLists);

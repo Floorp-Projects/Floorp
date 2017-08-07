@@ -30,7 +30,6 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsHTMLButtonControlFrame)
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;

@@ -70,7 +70,6 @@ public:
   GetAdditionalStyleContext(int32_t aIndex) const override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   NS_IMETHOD

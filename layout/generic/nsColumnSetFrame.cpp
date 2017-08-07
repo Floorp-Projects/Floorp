@@ -1278,19 +1278,18 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
 
 void
 nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                   const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists)
 {
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (IsVisibleForPainting(aBuilder)) {
     aLists.BorderBackground()->
-      AppendNewToTop(new (aBuilder)nsDisplayColumnRule(aBuilder, this));
+      AppendNewToTop(new (aBuilder) nsDisplayColumnRule(aBuilder, this));
   }
 
   // Our children won't have backgrounds so it doesn't matter where we put them.
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    BuildDisplayListForChild(aBuilder, e.get(), aDirtyRect, aLists);
+    BuildDisplayListForChild(aBuilder, e.get(), aLists);
   }
 }
 
