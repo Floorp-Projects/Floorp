@@ -146,8 +146,10 @@ private:
   Float mBorderWidths[4];
   RectCornerRadii mBorderRadii;
 
-  // colors
+  // the colors for 'border-top-color' et. al.
   nscolor mBorderColors[4];
+
+  // the lists of colors for '-moz-border-top-colors' et. al.
   nsBorderColors* mCompositeColors[4];
 
   // the background color
