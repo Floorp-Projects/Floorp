@@ -71,10 +71,18 @@
   ${MigrateStartMenuShortcut}
 
   ; Update lastwritetime of the Start Menu shortcut to clear the tile cache.
+  ; Do this for both shell contexts in case the user has shortcuts in multiple
+  ; locations, then restore the previous context at the end.
   ${If} ${AtLeastWin8}
-  ${AndIf} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-    FileOpen $0 "$SMPROGRAMS\${BrandFullName}.lnk" a
-    FileClose $0
+    SetShellVarContext all
+    ${TouchStartMenuShortcut}
+    SetShellVarContext current
+    ${TouchStartMenuShortcut}
+    ${If} $TmpVal == "HKLM"
+      SetShellVarContext all
+    ${ElseIf} $TmpVal == "HKCU"
+      SetShellVarContext current
+    ${EndIf}
   ${EndIf}
 
   ; Adds a pinned Task Bar shortcut (see MigrateTaskBarShortcut for details).
@@ -151,6 +159,22 @@
 !endif
 !macroend
 !define PostUpdate "!insertmacro PostUpdate"
+
+; Update the last modified time on the Start Menu shortcut, so that its icon
+; gets refreshed. Should be called on Win8+ after MigrateStartMenuShortcut.
+!macro TouchStartMenuShortcut
+  ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+    FileOpen $0 "$SMPROGRAMS\${BrandFullName}.lnk" a
+    ${IfNot} ${Errors}
+      System::Call '*(i, i) p .r1'
+      System::Call 'kernel32::GetSystemTimeAsFileTime(p r1)'
+      System::Call 'kernel32::SetFileTime(p r0, i 0, i 0, p r1) i .r2'
+      System::Free $1
+      FileClose $0
+    ${EndIf}
+  ${EndIf}
+!macroend
+!define TouchStartMenuShortcut "!insertmacro TouchStartMenuShortcut"
 
 !macro SetAsDefaultAppGlobal
   ${RemoveDeprecatedKeys} ; Does not use SHCTX
