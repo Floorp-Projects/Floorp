@@ -1036,6 +1036,7 @@ MediaDecoder::DownloadProgressed()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  AbstractThread::AutoEnter context(AbstractMainThread());
   UpdatePlaybackRate();
   GetOwner()->DownloadProgressed();
   GetResource()->ThrottleReadahead(ShouldThrottleDownload());
