@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+Cu.import("resource://formautofill/FormAutofillHeuristics.jsm");
 
 const TESTCASES = [
   {
@@ -83,7 +83,7 @@ TESTCASES.forEach(testcase => {
       "http://localhost:8080/test/", testcase.document);
 
     let input = doc.getElementById(testcase.inputId);
-    let labels = FormAutofillUtils.findLabelElements(input);
+    let labels = LabelUtils.findLabelElements(input);
 
     Assert.deepEqual(labels.map(l => l.id), testcase.expectedLabelIds);
   });
