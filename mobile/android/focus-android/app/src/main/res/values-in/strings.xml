@@ -9,6 +9,7 @@
   <string name="menu_share">Bagikan…</string>
   <string name="menu_open_with_default_browser">Buka dengan %1$s</string>
   <string name="menu_open_with_a_browser">Buka dengan …</string>
+  <string name="menu_add_to_home_screen">Tambahkan ke Beranda</string>
   <string name="menu_settings">Setelan</string>
   <string name="menu_about">Tentang</string>
   <string name="menu_help">Bantuan</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Bagikan via</string>
   <string name="notification_erase_text">Hapus riwayat penjelajahan</string>
   <string name="notification_action_open">Buka</string>
+  <string name="notification_action_erase_and_open">Hapus dan Buka</string>
   <string name="shortcut_erase_short_label">Hapus</string>
   <string name="shortcut_erase_long_label">Hapus riwayat penjelajahan</string>
   <string name="text_selection_search_action">Mencari Secara Privat</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
   <string name="preference_privacy_block_content_summary">Mungkin menghentikan beberapa video dan laman Web</string>
   <string name="preference_privacy_secure_mode">Mode Siluman</string>
+  <string name="preference_privacy_stealth_summary">Sembunyikan laman web saat berpindah aplikasi</string>
   <string name="preference_category_performance">Kinerja</string>
   <string name="preference_performance_block_webfonts">Blokir fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Lewati</string>
   <string name="firstrun_next_button">Lanjutkan</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Tambahkan ke Beranda</string>
+  <string name="dialog_addtohomescreen_action_add">Tambah</string>
+  <string name="dialog_addtohomescreen_action_cancel">Batal</string>
 </resources>

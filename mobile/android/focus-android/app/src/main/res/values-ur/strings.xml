@@ -18,6 +18,7 @@
   <string name="share_dialog_title">کے زریعے شیئر کریں</string>
   <string name="notification_erase_text">برائوزنگ سابقات مٹائیں</string>
   <string name="notification_action_open">کھولیں</string>
+  <string name="notification_action_erase_and_open">مٹائیں اور کھولیں</string>
   <string name="shortcut_erase_short_label">مٹائيں</string>
   <string name="shortcut_erase_long_label">برائوزنگ سابقات مٹائیں</string>
   <string name="text_selection_search_action">نجی طور پر طلاش کرے</string>
@@ -34,6 +35,7 @@
   <string name="preference_privacy_block_content">دیگر مواد کے ٹڑیکرز بلاک کریں</string>
   <string name="preference_privacy_block_content_summary">شاید کچھ وڈیوز اور ویب صفحات کو توڑ دے</string>
   <string name="preference_privacy_secure_mode">سٹلتھ</string>
+  <string name="preference_privacy_stealth_summary">اہپس تبدیل کرنے وقت ویب صفحات کو چھپائیں</string>
   <string name="preference_category_performance">کارکردگی</string>
   <string name="preference_performance_block_webfonts">ویب فونٹس بلاک کریں</string>
   <string name="preference_performance_block_webfonts_summary">نتیجتن اسکی شاید آئیکن یا تصاویر گایب ہو سکتی ہے</string>

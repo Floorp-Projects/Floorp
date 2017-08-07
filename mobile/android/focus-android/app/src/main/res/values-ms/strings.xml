@@ -3,8 +3,8 @@
   <string name="action_cancel">Batal</string>
   <string name="action_ok">OK</string>
   <string name="urlbar_hint">Cari atau masukkan alamat</string>
-  <string name="teaser">Pelayaran peribadi automatik.\nLayar. Padam. Ulang.</string>
-  <string name="feedback_erase">Sejarah pelayaran anda telah dipadam.</string>
+  <string name="teaser">Pelayaran peribadi automatik.\nLayar. Buang. Ulang.</string>
+  <string name="feedback_erase">Sejarah pelayaran anda telah dibuang.</string>
   <string name="search_hint">Cari %1$s</string>
   <string name="menu_share">Kongsi…</string>
   <string name="menu_open_with_default_browser">Buka dengan %1$s</string>
@@ -16,11 +16,11 @@
   <string name="menu_rights">Hak Anda</string>
   <string name="menu_trackers_blocked_title">Penjejak disekat</string>
   <string name="share_dialog_title">Kongsi via</string>
-  <string name="notification_erase_text">Padam sejarah pelayaran</string>
+  <string name="notification_erase_text">Buang sejarah pelayaran</string>
   <string name="notification_action_open">Buka</string>
   <string name="notification_action_erase_and_open">Buang dan Buka</string>
-  <string name="shortcut_erase_short_label">Padam</string>
-  <string name="shortcut_erase_long_label">Padam sejarah pelayaran</string>
+  <string name="shortcut_erase_short_label">Buang</string>
+  <string name="shortcut_erase_long_label">Buang sejarah pelayaran</string>
   <string name="text_selection_search_action">Cari secara Rahsia</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s membolehkan anda mengawal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakannya sebagai pelayar peribadi:\n  "<ul>"\n    "<li>Cari dan melayar terus dalam app</li>"\n    "<li>Sekat penjejak (atau kemaskini tetapan untuk izinkan penjejak)</li>"\n    "<li>Padam untuk menghapuskan kuki serta sejarah carian dan pelayaran</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dihasilkan oleh Mozilla. Misi kami adalah untuk memupuk internet yang sihat dan terbuka.<br/>\n<a href="%2$s">Ketahui selanjutnya</a></p>]]></string>
   <string name="preference_category_search">Carian</string>
@@ -47,7 +47,7 @@
   <string name="preference_about">Perihal %1$s</string>
   <string name="content_description_clear_input">Hapuskan input</string>
   <string name="content_description_dismiss_input">Abai</string>
-  <string name="content_description_erase">Padam sejarah pelayaran</string>
+  <string name="content_description_erase">Buang sejarah pelayaran</string>
   <string name="content_description_lock">Sambungan selamat</string>
   <string name="accessibility_announcement_loading">Memuatkan</string>
   <string name="accessibility_announcement_loading_finished">Laman web dimuatkan</string>

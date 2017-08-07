@@ -3,17 +3,17 @@
   <string name="action_cancel">Չեղարկել</string>
   <string name="action_ok">Լավ</string>
   <string name="urlbar_hint">Որոնեք կամ մուտքագրեք հասցեն</string>
-  <string name="teaser">"Ինքնաշխատ գաղտնի դիտարկում: \nԴիտարկել: Ջնջել:  Կրկնել:"</string>
+  <string name="teaser">Ինքնաշխատ գաղտնի դիտարկում: \nԴիտարկել: Ջնջել: Կրկնել:</string>
   <string name="feedback_erase">Դիտարկումների պատմությունը ջնջվել է:</string>
   <string name="search_hint">Որոնել %1$s-ի համար</string>
   <string name="menu_share">Համօգտագործել</string>
   <string name="menu_open_with_default_browser">Բացել %1$s-ով</string>
-  <string name="menu_open_with_a_browser">Բացել հետևյալով՝</string>
+  <string name="menu_open_with_a_browser">Բացել այլ հավելվածով՝</string>
   <string name="menu_settings">Կարգավորումներ</string>
   <string name="menu_about">Մասին</string>
   <string name="menu_help">Օգնություն</string>
   <string name="menu_rights">Ձեր իրավունքները</string>
-  <string name="menu_trackers_blocked_title">Հետագծումներ են արգելափակված</string>
+  <string name="menu_trackers_blocked_title">Արգել. հետագծումներ</string>
   <string name="share_dialog_title">Համօգտագործել՝</string>
   <string name="notification_erase_text">Ջնջել դիտարկումների պատմությունը</string>
   <string name="shortcut_erase_short_label">Ջնջել</string>
@@ -84,12 +84,12 @@
   <string name="contextmenu_image_copy">Պատճենել պատկերի հասցեն</string>
   <string name="contextmenu_image_save">Պահպանել պատկերը</string>
   <string name="contextmenu_image_warning"><![CDATA["Պահպանված և համօգտագործված պատկերները "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1401;&#1381;&#1398; &#1403;&#1398;&#1403;&#1406;&#1387;</b>, երբ դուք ջնջեք %1$s-ը]]></string>
-  <string name="firstrun_tracking_title">Դիտարկեք այնպես, կարծես ոչ ոք չի նայում ձեզ</string>
-  <string name="firstrun_tracking_text">Ինքնաբար արգելափակել առցանց հետագծումները դիտարկումների ընթացքում: Ապա հեռացրեք այցելած էջերը և cookie-ները՝ հպելով հավելվածի ջնջելու պատկերակին կամ ծանուցումներին:</string>
+  <string name="firstrun_tracking_title">Դիտարկեք այնպես, կարծես ոչ ոք ձեզ չի նայում</string>
+  <string name="firstrun_tracking_text">Ինքնաբար արգելափակում է առցանց հետագծումները դիտարկումների ընթացքում: Ապա հեռացնում է այցելած էջերը և cookie-ները՝ հավելվածի ջնջելու պատկերակին կամ ծանուցումներին հպելիս:</string>
   <string name="firstrun_defaultbrowser_title">Հզորացրեք ձեր գաղտնիությունը</string>
-  <string name="firstrun_defaultbrowser_text">Կայեք %1$s-ը որպես հիմնական դիտարկիչ և ստացեք գաղտնի դիտարկիչի բոլոր առավելությունները, երբ սավառնում եք ցանցում ձեր Android-ի այլ հավելվածներից:</string>
+  <string name="firstrun_defaultbrowser_text">Կայեք %1$s-ը որպես հիմնական դիտարկիչ և ստացեք գաղտնի դիտարկիչի բոլոր առավելությունները, երբ սավառնում եք ցանցում Android-ի այլ հավելվածներով:</string>
   <string name="firstrun_breaking_title">Արագ ուղղումը արգելափակելիս = ընդհատում</string>
-  <string name="firstrun_breaking_text">Երբ առցանց հետագծիչների պատճառով կայքը վնասվում է՝ անջատեք արգելափակումը ցանկին հպվելով:</string>
+  <string name="firstrun_breaking_text">Երբ առցանց հետագծիչների պատճառով կայքը վնասվում է՝ անջատեք արգելափակումը՝ հպելով ցանկին:</string>
   <string name="firstrun_close_button">Լավ, հասկացա:</string>
   <string name="firstrun_skip_button">Բաց թողնել</string>
   <string name="firstrun_next_button">Հաջորդը</string>
