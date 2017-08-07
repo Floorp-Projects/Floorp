@@ -105,8 +105,6 @@ this.browserAction = class extends ExtensionAPI {
     this.tabContext = new TabContext(tab => Object.create(this.defaults),
                                      extension);
 
-    EventEmitter.decorate(this);
-
     this.build();
     browserActionMap.set(extension, this);
   }
