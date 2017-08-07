@@ -104,7 +104,6 @@ module.exports = {
     "no-new": "off",
     "no-new-func": "off",
     "no-new-object": "off",
-    "no-new-wrappers": "off",
     "no-obj-calls": "off",
     "no-octal-escape": "off",
     "no-undef-init": "error",

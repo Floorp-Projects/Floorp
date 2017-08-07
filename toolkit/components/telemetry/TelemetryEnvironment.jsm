@@ -292,7 +292,7 @@ function enforceBoolean(aValue) {
   if (typeof(aValue) !== "number" && typeof(aValue) !== "boolean") {
     return null;
   }
-  return (new Boolean(aValue)).valueOf();
+  return Boolean(aValue);
 }
 
 /**

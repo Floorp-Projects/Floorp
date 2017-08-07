@@ -301,8 +301,5 @@ module.exports = {
 
     // Disallow labels that share a name with a variable
     "no-label-var": "error",
-
-    // Disallow creating new instances of String, Number, and Boolean
-    "no-new-wrappers": "error",
   },
 };
