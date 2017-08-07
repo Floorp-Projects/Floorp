@@ -859,14 +859,14 @@ protected:
   void DeleteRefToAnonymousNode(ManualNACPtr aContent,
                                 nsIPresShell* aShell);
 
-  nsresult ShowResizersInner(nsIDOMElement *aResizedElement);
+  nsresult ShowResizersInner(Element& aResizedElement);
 
   /**
    * Returns the offset of an element's frame to its absolute containing block.
    */
-  nsresult GetElementOrigin(nsIDOMElement* aElement,
+  nsresult GetElementOrigin(Element& aElement,
                             int32_t& aX, int32_t& aY);
-  nsresult GetPositionAndDimensions(nsIDOMElement* aElement,
+  nsresult GetPositionAndDimensions(Element& aElement,
                                     int32_t& aX, int32_t& aY,
                                     int32_t& aW, int32_t& aH,
                                     int32_t& aBorderLeft,
@@ -940,17 +940,17 @@ protected:
 
   nsresult SetAllResizersPosition();
 
-  ManualNACPtr CreateResizer(int16_t aLocation, nsIDOMNode* aParentNode);
+  ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
   void SetAnonymousElementPosition(int32_t aX, int32_t aY,
                                    Element* aResizer);
 
-  ManualNACPtr CreateShadow(nsIDOMNode* aParentNode,
-                            nsIDOMElement* aOriginalObject);
+  ManualNACPtr CreateShadow(nsIContent& aParentContent,
+                            Element& aOriginalObject);
   nsresult SetShadowPosition(Element* aShadow, Element* aOriginalObject,
                              int32_t aOriginalObjectX,
                              int32_t aOriginalObjectY);
 
-  ManualNACPtr CreateResizingInfo(nsIDOMNode* aParentNode);
+  ManualNACPtr CreateResizingInfo(nsIContent& aParentContent);
   nsresult SetResizingInfoPosition(int32_t aX, int32_t aY,
                                    int32_t aW, int32_t aH);
 
@@ -962,7 +962,6 @@ protected:
   int32_t GetNewResizingHeight(int32_t aX, int32_t aY);
   void HideShadowAndInfo();
   void SetFinalSize(int32_t aX, int32_t aY);
-  void DeleteRefToAnonymousNode(nsIDOMNode* aNode);
   void SetResizeIncrements(int32_t aX, int32_t aY, int32_t aW, int32_t aH,
                            bool aPreserveRatio);
   void HideAnonymousEditingUIs();
@@ -984,7 +983,7 @@ protected:
 
   int32_t mGridSize;
 
-  ManualNACPtr CreateGrabber(nsINode* aParentNode);
+  ManualNACPtr CreateGrabber(nsIContent& aParentContent);
   nsresult StartMoving(nsIDOMElement* aHandle);
   nsresult SetFinalPosition(int32_t aX, int32_t aY);
   void AddPositioningOffset(int32_t& aX, int32_t& aY);
@@ -1037,12 +1036,12 @@ private:
                               const nsAString& aTagName);
   /**
    * Returns an anonymous Element of type aTag,
-   * child of aParentNode. If aIsCreatedHidden is true, the class
+   * child of aParentContent. If aIsCreatedHidden is true, the class
    * "hidden" is added to the created element. If aAnonClass is not
    * the empty string, it becomes the value of the attribute "_moz_anonclass"
    * @return a Element
    * @param aTag             [IN] desired type of the element to create
-   * @param aParentNode      [IN] the parent node of the created anonymous
+   * @param aParentContent   [IN] the parent node of the created anonymous
    *                              element
    * @param aAnonClass       [IN] contents of the _moz_anonclass attribute
    * @param aIsCreatedHidden [IN] a boolean specifying if the class "hidden"
@@ -1050,7 +1049,7 @@ private:
    *                              element
    */
   ManualNACPtr CreateAnonymousElement(nsIAtom* aTag,
-                                      nsIDOMNode* aParentNode,
+                                      nsIContent& aParentContent,
                                       const nsAString& aAnonClass,
                                       bool aIsCreatedHidden);
 };
