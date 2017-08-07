@@ -253,7 +253,6 @@ PaintDebugPlaceholder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
 
 void
 nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                     const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsPlaceholderFrame");
