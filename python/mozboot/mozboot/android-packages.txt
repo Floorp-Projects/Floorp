@@ -3,4 +3,3 @@ build-tools;23.0.3
 platforms;android-23
 extras;android;m2repository
 extras;google;m2repository
-extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2
