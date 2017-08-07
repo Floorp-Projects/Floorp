@@ -1,7 +1,7 @@
-use rustc_serialize::json::{self, Json, ToJson};
-
-use common::{Nullable, Date};
+use common::{Date, Nullable, WindowState};
 use cookie;
+use rustc_serialize::json::{self, Json, ToJson};
+use std::collections::BTreeMap;
 use time;
 
 #[derive(Debug)]
@@ -10,12 +10,12 @@ pub enum WebDriverResponse {
     Cookie(CookieResponse),
     Cookies(CookiesResponse),
     DeleteSession,
-    ElementRect(RectResponse),
+    ElementRect(ElementRectResponse),
     Generic(ValueResponse),
     NewSession(NewSessionResponse),
     Timeouts(TimeoutsResponse),
     Void,
-    WindowRect(RectResponse),
+    WindowRect(WindowRectResponse),
 }
 
 impl WebDriverResponse {
@@ -32,7 +32,7 @@ impl WebDriverResponse {
             NewSession(ref x) => json::encode(x),
             Timeouts(ref x) => json::encode(x),
             Void => Ok("{}".to_string()),
-            WindowRect(ref x) => json::encode(x),
+            WindowRect(ref x) => json::encode(&x.to_json()),
         }.unwrap();
 
         match self {
@@ -114,21 +114,65 @@ impl ValueResponse {
 }
 
 #[derive(RustcEncodable, Debug)]
-pub struct RectResponse {
+pub struct ElementRectResponse {
+    /// X axis position of the top-left corner of the element relative
+    // to the current browsing context’s document element in CSS reference
+    // pixels.
     pub x: f64,
+
+    /// Y axis position of the top-left corner of the element relative
+    // to the current browsing context’s document element in CSS reference
+    // pixels.
     pub y: f64,
+
+    /// Height of the element’s [bounding rectangle] in CSS reference
+    /// pixels.
+    ///
+    /// [bounding rectangle]: https://drafts.fxtf.org/geometry/#rectangle
     pub width: f64,
-    pub height: f64
+
+    /// Width of the element’s [bounding rectangle] in CSS reference
+    /// pixels.
+    ///
+    /// [bounding rectangle]: https://drafts.fxtf.org/geometry/#rectangle
+    pub height: f64,
 }
 
-impl RectResponse {
-    pub fn new(x: f64, y: f64, width: f64, height: f64) -> RectResponse {
-        RectResponse {
-            x: x,
-            y: y,
-            width: width,
-            height: height
-        }
+#[derive(Debug)]
+pub struct WindowRectResponse {
+    /// `WindowProxy`’s [screenX] attribute.
+    ///
+    /// [screenX]: https://drafts.csswg.org/cssom-view/#dom-window-screenx
+    pub x: f64,
+
+    /// `WindowProxy`’s [screenY] attribute.
+    ///
+    /// [screenY]: https://drafts.csswg.org/cssom-view/#dom-window-screeny
+    pub y: f64,
+
+    /// Width of the top-level browsing context’s outer dimensions, including
+    /// any browser chrome and externally drawn window decorations in CSS
+    /// reference pixels.
+    pub width: f64,
+
+    /// Height of the top-level browsing context’s outer dimensions, including
+    /// any browser chrome and externally drawn window decorations in CSS
+    /// reference pixels.
+    pub height: f64,
+
+    /// The top-level browsing context’s window state.
+    pub state: WindowState,
+}
+
+impl ToJson for WindowRectResponse {
+    fn to_json(&self) -> Json {
+        let mut body = BTreeMap::new();
+        body.insert("x".to_owned(), self.x.to_json());
+        body.insert("y".to_owned(), self.y.to_json());
+        body.insert("width".to_owned(), self.width.to_json());
+        body.insert("height".to_owned(), self.height.to_json());
+        body.insert("state".to_owned(), self.state.to_json());
+        Json::Object(body)
     }
 }
 
@@ -178,8 +222,10 @@ pub struct CookiesResponse {
 
 #[cfg(test)]
 mod tests {
-    use super::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse, NewSessionResponse,
-                Nullable, RectResponse, TimeoutsResponse, ValueResponse, WebDriverResponse};
+    use super::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse, ElementRectResponse,
+                NewSessionResponse, Nullable, TimeoutsResponse, ValueResponse, WebDriverResponse,
+                WindowRectResponse};
+    use common::WindowState;
     use rustc_serialize::json::Json;
     use std::collections::BTreeMap;
 
@@ -236,21 +282,28 @@ mod tests {
 
     #[test]
     fn test_element_rect() {
-        let resp = WebDriverResponse::ElementRect(RectResponse::new(
-            0f64, 1f64, 2f64, 3f64));
+        let rect = ElementRectResponse {
+            x: 0f64,
+            y: 1f64,
+            width: 2f64,
+            height: 3f64,
+        };
+        let resp = WebDriverResponse::ElementRect(rect);
         let expected = r#"{"value": {"x": 0.0, "y": 1.0, "width": 2.0, "height": 3.0}}"#;
         test(resp, expected);
     }
 
     #[test]
     fn test_window_rect() {
-        let resp = WebDriverResponse::WindowRect(RectResponse {
+        let rect = WindowRectResponse {
             x: 0f64,
             y: 1f64,
             width: 2f64,
             height: 3f64,
-        });
-        let expected = r#"{"value": {"x": 0.0, "y": 1.0, "width": 2.0, "height": 3.0}}"#;
+            state: WindowState::Normal,
+        };
+        let resp = WebDriverResponse::WindowRect(rect);
+        let expected = r#"{"value": {"x": 0.0, "y": 1.0, "width": 2.0, "height": 3.0, "state": "normal"}}"#;
         test(resp, expected);
     }
 
