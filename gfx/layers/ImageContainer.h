@@ -543,6 +543,9 @@ public:
   void SetScaleHint(const gfx::IntSize& aScaleHint)
   { mScaleHint = aScaleHint; }
 
+  const gfx::IntSize& GetScaleHint() const
+  { return mScaleHint; }
+
   void SetImageFactory(ImageFactory *aFactory)
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);

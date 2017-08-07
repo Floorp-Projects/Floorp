@@ -5312,9 +5312,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     for (uint32_t i = 0; i < formatStrCount; i++) {
       strs[i] = formatStrs[i].get();
     }
-    nsXPIDLString str;
-    rv = stringBundle->FormatStringFromName(error, strs, formatStrCount,
-                                            getter_Copies(str));
+    nsAutoString str;
+    rv = stringBundle->FormatStringFromName(error, strs, formatStrCount, str);
     NS_ENSURE_SUCCESS(rv, rv);
     messageStr.Assign(str.get());
   }
@@ -13380,14 +13379,12 @@ nsDocShell::ConfirmRepost(bool* aRepost)
   NS_ASSERTION(prompter && brandBundle && appBundle,
                "Unable to set up repost prompter.");
 
-  nsXPIDLString brandName;
-  rv = brandBundle->GetStringFromName("brandShortName",
-                                      getter_Copies(brandName));
+  nsAutoString brandName;
+  rv = brandBundle->GetStringFromName("brandShortName", brandName);
 
-  nsXPIDLString msgString, button0Title;
+  nsAutoString msgString, button0Title;
   if (NS_FAILED(rv)) { // No brand, use the generic version.
-    rv = appBundle->GetStringFromName("confirmRepostPrompt",
-                                      getter_Copies(msgString));
+    rv = appBundle->GetStringFromName("confirmRepostPrompt", msgString);
   } else {
     // Brand available - if the app has an override file with formatting, the
     // app name will be included. Without an override, the prompt will look
@@ -13396,14 +13393,13 @@ nsDocShell::ConfirmRepost(bool* aRepost)
     rv = appBundle->FormatStringFromName("confirmRepostPrompt",
                                          formatStrings,
                                          ArrayLength(formatStrings),
-                                         getter_Copies(msgString));
+                                         msgString);
   }
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = appBundle->GetStringFromName("resendButton.label",
-                                    getter_Copies(button0Title));
+  rv = appBundle->GetStringFromName("resendButton.label", button0Title);
   if (NS_FAILED(rv)) {
     return rv;
   }

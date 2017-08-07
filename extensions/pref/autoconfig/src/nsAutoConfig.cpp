@@ -518,12 +518,12 @@ nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress)
                                 getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLString title;
-    rv = bundle->GetStringFromName("emailPromptTitle", getter_Copies(title));
+    nsAutoString title;
+    rv = bundle->GetStringFromName("emailPromptTitle", title);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLString err;
-    rv = bundle->GetStringFromName("emailPromptMsg", getter_Copies(err));
+    nsAutoString err;
+    rv = bundle->GetStringFromName("emailPromptMsg", err);
     NS_ENSURE_SUCCESS(rv, rv);
     bool check = false;
     nsXPIDLString emailResult;

@@ -30,8 +30,6 @@ public:
 protected:
     virtual ~nsStringBundle();
 
-    nsresult GetStringFromNameHelper(const char* aName, nsAString& aResult);
-
     nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
                                     nsISimpleEnumerator** aResult);
 private:
@@ -44,7 +42,7 @@ private:
 public:
     static nsresult FormatString(const char16_t *formatStr,
                                  const char16_t **aParams, uint32_t aLength,
-                                 char16_t **aResult);
+                                 nsAString& aResult);
 };
 
 class nsExtensibleStringBundle;

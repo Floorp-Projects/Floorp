@@ -65,7 +65,7 @@ NumericInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const
 }
 
 nsresult
-NumericInputTypeBase::GetRangeOverflowMessage(nsXPIDLString& aMessage)
+NumericInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage)
 {
   // We want to show the value as parsed when it's a number
   mozilla::Decimal maximum = mInputElement->GetMaximum();
@@ -84,7 +84,7 @@ NumericInputTypeBase::GetRangeOverflowMessage(nsXPIDLString& aMessage)
 }
 
 nsresult
-NumericInputTypeBase::GetRangeUnderflowMessage(nsXPIDLString& aMessage)
+NumericInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage)
 {
   mozilla::Decimal minimum = mInputElement->GetMinimum();
   MOZ_ASSERT(!minimum.isNaN());
@@ -167,14 +167,14 @@ NumberInputType::HasBadInput() const
 }
 
 nsresult
-NumberInputType::GetValueMissingMessage(nsXPIDLString& aMessage)
+NumberInputType::GetValueMissingMessage(nsAString& aMessage)
 {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
     "FormValidationBadInputNumber", aMessage);
 }
 
 nsresult
-NumberInputType::GetBadInputMessage(nsXPIDLString& aMessage)
+NumberInputType::GetBadInputMessage(nsAString& aMessage)
 {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
     "FormValidationBadInputNumber", aMessage);
