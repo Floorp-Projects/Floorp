@@ -323,6 +323,32 @@ GeckoChildProcessHost::PrepareLaunch()
     mSandboxLevel = GetEffectiveContentSandboxLevel();
     mEnableSandboxLogging =
       Preferences::GetBool("security.sandbox.logging.enabled");
+
+    // We currently have to whitelist certain paths for tests to work in some
+    // development configurations.
+    nsAutoString readPaths;
+    nsresult rv =
+      Preferences::GetString("security.sandbox.content.read_path_whitelist",
+                             readPaths);
+    if (NS_SUCCEEDED(rv)) {
+      for (const nsAString& readPath : readPaths.Split(',')) {
+        nsString trimmedPath(readPath);
+        trimmedPath.Trim(" ", true, true);
+        std::wstring resolvedPath(trimmedPath.Data());
+        // Before resolving check if path ends with '\' as this indicates we
+        // want to give read access to a directory and so it needs a wildcard.
+        bool addWildcard = (resolvedPath.back() == L'\\');
+        if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(resolvedPath)) {
+          NS_ERROR("Failed to resolve test read policy rule.");
+          continue;
+        }
+
+        if (addWildcard) {
+          resolvedPath.append(L"\\*");
+        }
+        mAllowedFilesRead.push_back(resolvedPath);
+      }
+    }
   }
 #endif
 
