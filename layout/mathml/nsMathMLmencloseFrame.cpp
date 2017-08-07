@@ -201,12 +201,11 @@ nsMathMLmencloseFrame::TransmitAutomaticData()
 
 void
 nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                        const nsRect&           aDirtyRect,
                                         const nsDisplayListSet& aLists)
 {
   /////////////
   // paint the menclosed content
-  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aLists);
 
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags))
     return;
