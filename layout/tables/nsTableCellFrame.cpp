@@ -513,7 +513,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aBuilder, this, ::PaintTableCellSelection,
                          "TableCellSelection",
-                         nsDisplayItem::TYPE_TABLE_CELL_SELECTION));
+                         DisplayItemType::TYPE_TABLE_CELL_SELECTION));
     }
   }
 
