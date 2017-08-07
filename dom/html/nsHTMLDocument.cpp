@@ -2661,7 +2661,7 @@ NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument)
 }
 
 void
-nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
+nsHTMLDocument::TearingDownEditor()
 {
   if (IsEditingOn()) {
     EditingState oldState = mEditingState;
