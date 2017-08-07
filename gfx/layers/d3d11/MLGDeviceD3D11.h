@@ -6,10 +6,12 @@
 #ifndef mozilla_gfx_layers_d3d11_MLGDeviceD3D11_h 
 #define mozilla_gfx_layers_d3d11_MLGDeviceD3D11_h 
 
+#include <d3d11_1.h>
+
 #include "mozilla/layers/MLGDevice.h"
+#include "mozilla/layers/SyncObject.h"
 #include "mozilla/EnumeratedArray.h"
 #include "nsTHashtable.h"
-#include <d3d11_1.h>
 #include "nsPrintfCString.h"
 
 namespace mozilla {
@@ -305,8 +307,7 @@ private:
   RefPtr<ID3D11RasterizerState> mRasterizerStateNoScissor;
   RefPtr<ID3D11RasterizerState> mRasterizerStateScissor;
 
-  RefPtr<IDXGIResource> mSyncTexture;
-  HANDLE mSyncHandle;
+  RefPtr<SyncObjectHost> mSyncObject;
 
   RefPtr<MLGBuffer> mUnitQuadVB;
   RefPtr<MLGBuffer> mUnitTriangleVB;
