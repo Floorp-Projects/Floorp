@@ -7,6 +7,10 @@
 #define MOZILLA_GFX_RENDERD3D11TEXTUREHOSTOGL_H
 
 #include "RenderTextureHostOGL.h"
+#include "GLTypes.h"
+
+struct ID3D11Texture2D;
+struct IDXGIKeyedMutex;
 
 namespace mozilla {
 
@@ -29,6 +33,19 @@ public:
 
 private:
   virtual ~RenderDXGITextureHostOGL();
+
+  bool EnsureLockable();
+
+  void DeleteTextureHandle();
+
+  RefPtr<gl::GLContext> mGL;
+
+  WindowsHandle mHandle;
+  RefPtr<ID3D11Texture2D> mTexture;
+  RefPtr<IDXGIKeyedMutex> mKeyedMutex;
+
+  EGLSurface mSurface;
+  EGLStreamKHR mStream;
 
   // We could use NV12 format for this texture. So, we might have 2 gl texture
   // handles for Y and CbCr data.
