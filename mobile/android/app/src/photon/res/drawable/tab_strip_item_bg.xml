@@ -19,6 +19,34 @@
           android:state_pressed="true"
           gecko:state_private="true"/>
 
+    <!-- dark theme -->
+    <item android:drawable="@color/photon_tab_strip_item_lwt_dark_checked_pressed"
+          android:state_checked="true"
+          android:state_pressed="true"
+          gecko:state_dark="true"/>
+
+    <item android:drawable="@color/photon_tab_strip_item_lwt_dark_checked"
+          android:state_checked="true"
+          gecko:state_dark="true"/>
+
+    <item android:drawable="@color/photon_tab_strip_item_lwt_dark_pressed"
+          android:state_pressed="true"
+          gecko:state_dark="true"/>
+
+    <!-- light theme -->
+    <item android:drawable="@color/photon_tab_strip_item_lwt_checked_pressed"
+          android:state_checked="true"
+          android:state_pressed="true"
+          gecko:state_light="true"/>
+
+    <item android:drawable="@color/photon_tab_strip_item_lwt_checked"
+          android:state_checked="true"
+          gecko:state_light="true"/>
+
+    <item android:drawable="@color/photon_tab_strip_item_lwt_dark_pressed"
+          android:state_pressed="true"
+          gecko:state_light="true"/>
+
     <item android:drawable="@color/photon_tab_strip_item_checked_pressed"
           android:state_checked="true"
           android:state_pressed="true"/>
@@ -29,6 +57,6 @@
     <item android:drawable="@color/photon_tab_strip_item_pressed"
           android:state_pressed="true"/>
 
-    <item android:drawable="@color/photon_tab_strip_item"/>
+    <item android:drawable="@android:color/transparent"/>
 
 </selector>
