@@ -46,9 +46,11 @@ var openingObserver = {
       }
 
       sendAsyncMessage('opening-request-completed', message);
-      Services.obs.removeObserver(openingObserver, 'http-on-opening-request');
     }
   }
 };
 
 Services.obs.addObserver(openingObserver, 'http-on-opening-request');
+addMessageListener("finish", function() {
+  Services.obs.removeObserver(openingObserver, 'http-on-opening-request');
+});
