@@ -10,6 +10,8 @@
   min-height: 18em;
 }
 
+#siteCol,
+#statusCol,
 #permissionsBox > richlistitem {
   min-height: 35px;
 }
