@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HTMLEditor.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -73,8 +74,6 @@
 #include "mozilla/layers/ScrollInputMethods.h"
 #include "nsViewManager.h"
 
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
 
@@ -3360,8 +3359,8 @@ Selection::GetWindow() const
   return document ? document->GetWindow() : nullptr;
 }
 
-nsIEditor*
-Selection::GetEditor() const
+HTMLEditor*
+Selection::GetHTMLEditor() const
 {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
@@ -3747,7 +3746,7 @@ Selection::NotifySelectionListeners()
     // If the document is in design mode or doesn't have contenteditable
     // element, we don't need to move focus.
     if (window && document && !document->HasFlag(NODE_IS_EDITABLE) &&
-        GetEditor()) {
+        GetHTMLEditor()) {
       RefPtr<Element> newEditingHost = GetCommonEditingHostForAllRanges();
       nsFocusManager* fm = nsFocusManager::GetFocusManager();
       nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
