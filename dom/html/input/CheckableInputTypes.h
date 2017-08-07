@@ -32,7 +32,7 @@ public:
 
   bool IsValueMissing() const override;
 
-  nsresult GetValueMissingMessage(nsXPIDLString& aMessage) override;
+  nsresult GetValueMissingMessage(nsAString& aMessage) override;
 
 private:
   explicit CheckboxInputType(mozilla::dom::HTMLInputElement* aInputElement)
@@ -50,7 +50,7 @@ public:
     return new (aMemory) RadioInputType(aInputElement);
   }
 
-  nsresult GetValueMissingMessage(nsXPIDLString& aMessage) override;
+  nsresult GetValueMissingMessage(nsAString& aMessage) override;
 
 private:
   explicit RadioInputType(mozilla::dom::HTMLInputElement* aInputElement)

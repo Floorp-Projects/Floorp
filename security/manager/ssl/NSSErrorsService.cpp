@@ -193,7 +193,7 @@ NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMes
   }
 
   nsAutoString msg;
-  nsresult rv = theBundle->GetStringFromName(id_str, getter_Copies(msg));
+  nsresult rv = theBundle->GetStringFromName(id_str, msg);
   if (NS_SUCCEEDED(rv)) {
     aErrorMessage = msg;
   }

@@ -1884,7 +1884,7 @@ ServiceWorkerManager::LocalizeAndReportToAllClients(
   }
 
   nsresult rv;
-  nsXPIDLString message;
+  nsAutoString message;
   rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                              aStringKey, aParamArray, message);
   if (NS_SUCCEEDED(rv)) {

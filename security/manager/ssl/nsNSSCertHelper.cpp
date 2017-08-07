@@ -106,8 +106,7 @@ GetPIPNSSBundleString(const char* stringName, nsAString& result)
     return rv;
   }
   result.Truncate();
-  return pipnssBundle->GetStringFromName(stringName,
-                                         getter_Copies(result));
+  return pipnssBundle->GetStringFromName(stringName, result);
 }
 
 static nsresult
@@ -126,7 +125,7 @@ PIPBundleFormatStringFromName(const char* stringName, const char16_t** params,
   }
   result.Truncate();
   return pipnssBundle->FormatStringFromName(
-    stringName, params, numParams, getter_Copies(result));
+    stringName, params, numParams, result);
 }
 
 static nsresult

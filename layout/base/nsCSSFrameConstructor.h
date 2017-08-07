@@ -65,9 +65,9 @@ public:
   }
 
   // get the alternate text for a content node
-  static void GetAlternateTextFor(nsIContent*    aContent,
-                                  nsIAtom*       aTag,  // content object's tag
-                                  nsXPIDLString& aAltText);
+  static void GetAlternateTextFor(nsIContent* aContent,
+                                  nsIAtom* aTag,  // content object's tag
+                                  nsAString& aAltText);
 
 private:
   nsCSSFrameConstructor(const nsCSSFrameConstructor& aCopy) = delete;

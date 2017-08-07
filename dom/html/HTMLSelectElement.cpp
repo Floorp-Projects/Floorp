@@ -1825,7 +1825,7 @@ HTMLSelectElement::GetValidationMessage(nsAString& aValidationMessage,
 {
   switch (aType) {
     case VALIDITY_STATE_VALUE_MISSING: {
-      nsXPIDLString message;
+      nsAutoString message;
       nsresult rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                        "FormValidationSelectMissing",
                                                        message);

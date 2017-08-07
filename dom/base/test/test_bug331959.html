@@ -28,8 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=331959
 /** Test for Bug 331959 **/
 SimpleTest.waitForExplicitFinish();
 
-const FAILURL = "data:text/plain,FAIL";
-const PASSURL = "data:text/plain,PASS";
+const FAILURL = "FAIL.html";
+const PASSURL = "PASS.html";
 
 var currentTest = 0;
 var tests = [ testLinkInLinkMouse, testLinkInLinkKeyboard,
@@ -55,7 +55,7 @@ function generateLinkInLink(id, desc) {
   outerA.appendChild(innerA);
   doc.body.appendChild(outerA);
   $(id).onload = function() {
-    is(this.contentDocument.documentElement.textContent, "PASS", desc);
+    is(this.contentDocument.documentElement.innerText, "PASS", desc);
     // Have to remove the iframe we used from the DOM, because the harness is
     // stupid and doesn't have enough space for more than one iframe.
     $(id).remove();
@@ -85,7 +85,7 @@ function generateInputInLink(id, desc) {
     "<form action='" + PASSURL + "'><a href='" + FAILURL +
     "'><input type='submit' id='submit'>";
   $(id).onload = function() {
-    is(this.contentDocument.documentElement.textContent, "PASS?", desc);
+    is(this.contentDocument.documentElement.innerText, "PASS", desc);
     // Have to remove the iframe we used from the DOM, because the harness is
     // stupid and doesn't have enough space for more than one iframe.
     $(id).remove();
@@ -117,7 +117,7 @@ function generateButtonInLink(id, desc) {
     "<form action='" + PASSURL + "'><a href='" + FAILURL +
     "'><button type='submit' id='submit'>Submit</button>";
   $(id).onload = function() {
-    is(this.contentDocument.documentElement.textContent, "PASS?", desc);
+    is(this.contentDocument.documentElement.innerText, "PASS", desc);
     // Have to remove the iframe we used from the DOM, because the harness is
     // stupid and doesn't have enough space for more than one iframe.
     $(id).remove();

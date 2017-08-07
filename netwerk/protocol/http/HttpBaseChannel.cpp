@@ -2487,7 +2487,7 @@ HttpBaseChannel::AddSecurityMessage(const nsAString &aMessageTag,
 
   auto innerWindowID = loadInfo->GetInnerWindowID();
 
-  nsXPIDLString errorText;
+  nsAutoString errorText;
   rv = nsContentUtils::GetLocalizedString(
           nsContentUtils::eSECURITY_PROPERTIES,
           NS_ConvertUTF16toUTF8(aMessageTag).get(),

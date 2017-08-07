@@ -212,7 +212,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
   {
     case nsIConstraintValidation::VALIDITY_STATE_TOO_LONG:
     {
-      nsXPIDLString message;
+      nsAutoString message;
       int32_t maxLength = mInputElement->MaxLength();
       int32_t textLength =
         mInputElement->InputTextLength(mozilla::dom::CallerType::System);
@@ -231,7 +231,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
     }
     case nsIConstraintValidation::VALIDITY_STATE_TOO_SHORT:
     {
-      nsXPIDLString message;
+      nsAutoString message;
       int32_t minLength = mInputElement->MinLength();
       int32_t textLength =
         mInputElement->InputTextLength(mozilla::dom::CallerType::System);
@@ -251,7 +251,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
     }
     case nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING:
     {
-      nsXPIDLString message;
+      nsAutoString message;
       rv = GetValueMissingMessage(message);
       if (NS_FAILED(rv)) {
         return rv;
@@ -262,7 +262,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
     }
     case nsIConstraintValidation::VALIDITY_STATE_TYPE_MISMATCH:
     {
-      nsXPIDLString message;
+      nsAutoString message;
       rv = GetTypeMismatchMessage(message);
       if (NS_FAILED(rv)) {
         return rv;
@@ -273,7 +273,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
     }
     case nsIConstraintValidation::VALIDITY_STATE_PATTERN_MISMATCH:
     {
-      nsXPIDLString message;
+      nsAutoString message;
       nsAutoString title;
       mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
       if (title.IsEmpty()) {
@@ -295,7 +295,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
     }
     case nsIConstraintValidation::VALIDITY_STATE_RANGE_OVERFLOW:
     {
-      nsXPIDLString message;
+      nsAutoString message;
       rv = GetRangeOverflowMessage(message);
       if (NS_FAILED(rv)) {
         return rv;
@@ -306,7 +306,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
     }
     case nsIConstraintValidation::VALIDITY_STATE_RANGE_UNDERFLOW:
     {
-      nsXPIDLString message;
+      nsAutoString message;
       rv = GetRangeUnderflowMessage(message);
       if (NS_FAILED(rv)) {
         return rv;
@@ -317,7 +317,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
     }
     case nsIConstraintValidation::VALIDITY_STATE_STEP_MISMATCH:
     {
-      nsXPIDLString message;
+      nsAutoString message;
 
       mozilla::Decimal value = mInputElement->GetValueAsDecimal();
       MOZ_ASSERT(!value.isNaN());
@@ -365,7 +365,7 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
     }
     case nsIConstraintValidation::VALIDITY_STATE_BAD_INPUT:
     {
-      nsXPIDLString message;
+      nsAutoString message;
       rv = GetBadInputMessage(message);
       if (NS_FAILED(rv)) {
         return rv;
@@ -382,32 +382,32 @@ InputType::GetValidationMessage(nsAString& aValidationMessage,
 }
 
 nsresult
-InputType::GetValueMissingMessage(nsXPIDLString& aMessage)
+InputType::GetValueMissingMessage(nsAString& aMessage)
 {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
     "FormValidationValueMissing", aMessage);
 }
 
 nsresult
-InputType::GetTypeMismatchMessage(nsXPIDLString& aMessage)
+InputType::GetTypeMismatchMessage(nsAString& aMessage)
 {
   return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
-InputType::GetRangeOverflowMessage(nsXPIDLString& aMessage)
+InputType::GetRangeOverflowMessage(nsAString& aMessage)
 {
   return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
-InputType::GetRangeUnderflowMessage(nsXPIDLString& aMessage)
+InputType::GetRangeUnderflowMessage(nsAString& aMessage)
 {
   return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
-InputType::GetBadInputMessage(nsXPIDLString& aMessage)
+InputType::GetBadInputMessage(nsAString& aMessage)
 {
   return NS_ERROR_UNEXPECTED;
 }

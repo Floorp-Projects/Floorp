@@ -238,14 +238,14 @@ HandleMailtoSubject(nsCString& aPath)
     }
 
     // Get the default subject
-    nsXPIDLString brandName;
+    nsAutoString brandName;
     nsresult rv =
       nsContentUtils::GetLocalizedString(nsContentUtils::eBRAND_PROPERTIES,
                                          "brandShortName", brandName);
     if (NS_FAILED(rv))
       return;
     const char16_t *formatStrings[] = { brandName.get() };
-    nsXPIDLString subjectStr;
+    nsAutoString subjectStr;
     rv = nsContentUtils::FormatLocalizedString(
                                            nsContentUtils::eFORMS_PROPERTIES,
                                            "DefaultFormSubject",
