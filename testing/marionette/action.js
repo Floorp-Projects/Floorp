@@ -8,8 +8,6 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Task.jsm");
-
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/element.js");
 const {
@@ -971,15 +969,15 @@ action.Mouse = class {
  *     Promise for dispatching all actions in |chain|.
  */
 action.dispatch = function(chain, seenEls, container) {
-  let chainEvents = Task.spawn(function*() {
+  let chainEvents = (async () => {
     for (let tickActions of chain) {
-      yield action.dispatchTickActions(
+      await action.dispatchTickActions(
           tickActions,
           action.computeTickDuration(tickActions),
           seenEls,
           container);
     }
-  });
+  })();
   return chainEvents;
 };
 
@@ -1326,11 +1324,10 @@ function dispatchPointerMove(
     const distanceX = targetX - startX;
     const distanceY = targetY - startY;
     const ONE_SHOT = Ci.nsITimer.TYPE_ONE_SHOT;
-    let intermediatePointerEvents = Task.spawn(function* () {
+    let intermediatePointerEvents = (async () => {
       // wait |fps60| ms before performing first incremental pointer move
-      yield new Promise(resolveTimer =>
-          timer.initWithCallback(resolveTimer, fps60, ONE_SHOT)
-      );
+      await new Promise(resolveTimer =>
+          timer.initWithCallback(resolveTimer, fps60, ONE_SHOT));
       let durationRatio = Math.floor(Date.now() - start) / duration;
       const epsilon = fps60 / duration / 10;
       while ((1 - durationRatio) > epsilon) {
@@ -1338,11 +1335,11 @@ function dispatchPointerMove(
         let y = Math.floor(durationRatio * distanceY + startY);
         performOnePointerMove(inputState, x, y, container.frame);
         // wait |fps60| ms before performing next pointer move
-        yield new Promise(resolveTimer =>
+        await new Promise(resolveTimer =>
             timer.initWithCallback(resolveTimer, fps60, ONE_SHOT));
         durationRatio = Math.floor(Date.now() - start) / duration;
       }
-    });
+    })();
     // perform last pointer move after all incremental moves are resolved and
     // durationRatio is close enough to 1
     intermediatePointerEvents.then(() => {
