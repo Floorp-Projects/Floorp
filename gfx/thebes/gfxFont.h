@@ -1446,7 +1446,7 @@ public:
     const nsString& GetName() const { return mFontEntry->Name(); }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
-    virtual cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
+    cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
 
     virtual mozilla::UniquePtr<gfxFont>
     CopyWithAntialiasOption(AntialiasOption anAAOption) {

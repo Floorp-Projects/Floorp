@@ -460,7 +460,7 @@ gfxDWriteFont::GetSpaceGlyph()
 bool
 gfxDWriteFont::SetupCairoFont(DrawTarget* aDrawTarget)
 {
-    cairo_scaled_font_t *scaledFont = GetCairoScaledFont();
+    cairo_scaled_font_t *scaledFont = InitCairoScaledFont();
     if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
         // the cairo_t, precluding any further drawing.
@@ -497,7 +497,7 @@ gfxDWriteFont::CairoFontFace()
 
 
 cairo_scaled_font_t *
-gfxDWriteFont::GetCairoScaledFont()
+gfxDWriteFont::InitCairoScaledFont()
 {
     if (!mScaledFont) {
         cairo_matrix_t sizeMatrix;
@@ -711,7 +711,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 
     if (aTarget->GetBackendType() == BackendType::CAIRO) {
         if (!mAzureScaledFont->GetCairoScaledFont()) {
-            cairo_scaled_font_t* cairoScaledFont = GetCairoScaledFont();
+            cairo_scaled_font_t* cairoScaledFont = InitCairoScaledFont();
             if (!cairoScaledFont) {
                 return nullptr;
             }
