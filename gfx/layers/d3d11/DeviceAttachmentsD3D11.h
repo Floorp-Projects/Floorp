@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/SyncObject.h"
 #include <d3d11.h>
 #include <dxgi1_2.h>
 
@@ -70,8 +71,8 @@ public:
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
   RefPtr<ID3D11BlendState> mComponentBlendState;
   RefPtr<ID3D11BlendState> mDisabledBlendState;
-  RefPtr<IDXGIResource> mSyncTexture;
-  HANDLE mSyncHandle;
+
+  RefPtr<SyncObjectHost> mSyncObject;
 
   void SetDeviceReset() {
     mDeviceReset = true;
