@@ -22,20 +22,19 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
+#include "nsIDOMDocument.h"
+#include "nsISelectionController.h"
 #include "nsIPresShell.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/Move.h"
-#include "nsISelectionController.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/layers/KeyboardMap.h"
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
-#include "nsIDOMDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -580,16 +579,12 @@ nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
     return false;
   }
 
-  nsCOMPtr<nsIEditor> editor;
-  docShell->GetEditor(getter_AddRefs(editor));
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  RefPtr<HTMLEditor> htmlEditor = docShell->GetHTMLEditor();
   if (!htmlEditor) {
     return false;
   }
 
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  editor->GetDocument(getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDocument);
+  nsCOMPtr<nsIDocument> doc = htmlEditor->GetDocument();
   if (doc->HasFlag(NODE_IS_EDITABLE)) {
     // Don't need to perform any checks in designMode documents.
     return true;
