@@ -7946,8 +7946,13 @@
       ]]></handler>
 
       <handler event="command"><![CDATA[
-        if (event.target.tab)
-          gBrowser.selectedTab = event.target.tab;
+        if (event.target.tab) {
+          if (gBrowser.selectedTab != event.target.tab) {
+            gBrowser.selectedTab = event.target.tab;
+          } else {
+            gBrowser.tabContainer._handleTabSelect();
+          }
+        }
       ]]></handler>
 
     </handlers>
