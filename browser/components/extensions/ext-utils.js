@@ -32,31 +32,31 @@ global.makeWidgetId = id => {
 
 // Manages tab-specific context data, and dispatching tab select events
 // across all windows.
-global.TabContext = function TabContext(getDefaults, extension) {
-  this.extension = extension;
-  this.getDefaults = getDefaults;
+global.TabContext = class extends EventEmitter {
+  constructor(getDefaults, extension) {
+    super();
 
-  this.tabData = new WeakMap();
-  this.lastLocation = new WeakMap();
+    this.extension = extension;
+    this.getDefaults = getDefaults;
 
-  windowTracker.addListener("progress", this);
-  windowTracker.addListener("TabSelect", this);
+    this.tabData = new WeakMap();
+    this.lastLocation = new WeakMap();
 
-  EventEmitter.decorate(this);
-};
+    windowTracker.addListener("progress", this);
+    windowTracker.addListener("TabSelect", this);
+  }
 
-TabContext.prototype = {
   get(nativeTab) {
     if (!this.tabData.has(nativeTab)) {
       this.tabData.set(nativeTab, this.getDefaults(nativeTab));
     }
 
     return this.tabData.get(nativeTab);
-  },
+  }
 
   clear(nativeTab) {
     this.tabData.delete(nativeTab);
-  },
+  }
 
   handleEvent(event) {
     if (event.type == "TabSelect") {
@@ -64,7 +64,7 @@ TabContext.prototype = {
       this.emit("tab-select", nativeTab);
       this.emit("location-change", nativeTab);
     }
-  },
+  }
 
   onStateChange(browser, webProgress, request, stateFlags, statusCode) {
     let flags = Ci.nsIWebProgressListener;
@@ -73,7 +73,7 @@ TabContext.prototype = {
           this.lastLocation.has(browser))) {
       this.lastLocation.set(browser, request.URI);
     }
-  },
+  }
 
   onLocationChange(browser, webProgress, request, locationURI, flags) {
     let gBrowser = browser.ownerGlobal.gBrowser;
@@ -84,12 +84,12 @@ TabContext.prototype = {
       this.emit("location-change", nativeTab, true);
     }
     this.lastLocation.set(browser, browser.currentURI);
-  },
+  }
 
   shutdown() {
     windowTracker.removeListener("progress", this);
     windowTracker.removeListener("TabSelect", this);
-  },
+  }
 };
 
 

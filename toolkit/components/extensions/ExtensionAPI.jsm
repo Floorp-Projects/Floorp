@@ -18,10 +18,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
 const global = this;
 
-class ExtensionAPI {
+class ExtensionAPI extends ExtensionUtils.EventEmitter {
   constructor(extension) {
+    super();
+
     this.extension = extension;
 
     extension.once("shutdown", () => {

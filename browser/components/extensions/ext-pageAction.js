@@ -63,8 +63,6 @@ this.pageAction = class extends ExtensionAPI {
     // WeakMap[ChromeWindow -> <xul:image>]
     this.buttons = new WeakMap();
 
-    EventEmitter.decorate(this);
-
     pageActionMap.set(extension, this);
   }
 

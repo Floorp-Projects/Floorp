@@ -25,7 +25,6 @@ this.commands = class extends ExtensionAPI {
     this.keysetsMap = new WeakMap();
 
     this.register();
-    EventEmitter.decorate(this);
   }
 
   onShutdown(reason) {
