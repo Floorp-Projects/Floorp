@@ -944,7 +944,7 @@ GeckoDriver.prototype.getContext = function(cmd, resp) {
  * @throws {JavaScriptError}
  *     If an {@link Error} was thrown whilst evaluating the script.
  */
-GeckoDriver.prototype.executeScript = function*(cmd, resp) {
+GeckoDriver.prototype.executeScript = async function(cmd, resp) {
   assert.window(this.getCurrentWindow());
 
   let {script, args, scriptTimeout} = cmd.parameters;
@@ -959,7 +959,7 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
     debug: cmd.parameters.debug_script,
   };
 
-  resp.body.value = yield this.execute_(script, args, scriptTimeout, opts);
+  resp.body.value = await this.execute_(script, args, scriptTimeout, opts);
 };
 
 /**
@@ -1021,7 +1021,7 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
  * @throws {JavaScriptError}
  *     If an Error was thrown whilst evaluating the script.
  */
-GeckoDriver.prototype.executeAsyncScript = function* (cmd, resp) {
+GeckoDriver.prototype.executeAsyncScript = async function(cmd, resp) {
   assert.window(this.getCurrentWindow());
 
   let {script, args, scriptTimeout} = cmd.parameters;
@@ -1037,32 +1037,40 @@ GeckoDriver.prototype.executeAsyncScript = function* (cmd, resp) {
     async: true,
   };
 
-  resp.body.value = yield this.execute_(script, args, scriptTimeout, opts);
+  resp.body.value = await this.execute_(script, args, scriptTimeout, opts);
 };
 
-GeckoDriver.prototype.execute_ = function(script, args, timeout, opts = {}) {
+GeckoDriver.prototype.execute_ = async function(
+    script, args, timeout, opts = {}) {
+  let res, els;
+
   switch (this.context) {
     case Context.CONTENT:
       // evaluate in content with lasting side-effects
       if (!opts.sandboxName) {
-        return this.listener.execute(script, args, timeout, opts)
-            .then(evaluate.toJSON);
-      }
+        res = await this.listener.execute(script, args, timeout, opts);
 
       // evaluate in content with sandbox
-      return this.listener.executeInSandbox(script, args, timeout, opts)
-          .then(evaluate.toJSON);
+      } else {
+        res = await this.listener.executeInSandbox(
+            script, args, timeout, opts);
+      }
+
+      break;
 
     case Context.CHROME:
       let sb = this.sandboxes.get(opts.sandboxName, opts.newSandbox);
       opts.timeout = timeout;
       let wargs = evaluate.fromJSON(args, this.curBrowser.seenEls, sb.window);
-      return evaluate.sandbox(sb, script, wargs, opts)
-          .then(res => evaluate.toJSON(res, this.curBrowser.seenEls));
+      res = await evaluate.sandbox(sb, script, wargs, opts);
+      els = this.curBrowser.seenEls;
+      break;
 
     default:
       throw new TypeError(`Unknown context: ${this.context}`);
   }
+
+  return evaluate.toJSON(res, els);
 };
 
 /**
