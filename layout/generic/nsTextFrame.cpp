@@ -5030,7 +5030,7 @@ public:
   }
 
   bool TryMerge(nsDisplayItem* aItem) override {
-    if (aItem->GetType() != TYPE_TEXT)
+    if (aItem->GetType() != DisplayItemType::TYPE_TEXT)
       return false;
     if (aItem->GetClipChain() != GetClipChain())
       return false;

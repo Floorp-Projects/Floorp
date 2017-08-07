@@ -51,7 +51,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
 
-  NS_DISPLAY_DECL_NAME("ColumnRule", nsDisplayItem::TYPE_COLUMN_RULE);
+  NS_DISPLAY_DECL_NAME("ColumnRule", TYPE_COLUMN_RULE);
 
 private:
   nsTArray<nsCSSBorderRenderer> mBorderRenderers;

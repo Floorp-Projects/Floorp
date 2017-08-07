@@ -37,6 +37,7 @@
 #include "mozilla/gfx/UserData.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "nsCSSRenderingBorders.h"
+#include "nsDisplayItemTypes.h"
 
 #include <stdint.h>
 #include "nsTHashtable.h"
@@ -120,8 +121,12 @@ typedef mozilla::EnumSet<mozilla::gfx::CompositionOp> BlendModeSet;
 
 // All types are defined in nsDisplayItemTypes.h
 #define NS_DISPLAY_DECL_NAME(n, e) \
-  virtual const char* Name() override { return n; } \
-  virtual Type GetType() override { return e; }
+  virtual const char* Name() const override { return n; } \
+  virtual DisplayItemType GetType() const override { return DisplayItemType::e; } \
+  void* operator new(size_t aSize, \
+                     nsDisplayListBuilder* aBuilder) { \
+    return aBuilder->Allocate(aSize, DisplayItemType::e); \
+  }
 
 
 /**
@@ -743,7 +748,9 @@ public:
    * builder is destroyed. This memory holds nsDisplayItems. nsDisplayItem
    * destructors are called as soon as the item is no longer used.
    */
-  void* Allocate(size_t aSize);
+  void* Allocate(size_t aSize, DisplayItemType aType);
+
+  void Destroy(DisplayItemType aType, void* aPtr);
 
   /**
    * Allocate a new ActiveScrolledRoot in the arena. Will be cleaned up
@@ -1627,6 +1634,7 @@ public:
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 const ActiveScrolledRoot* aActiveScrolledRoot);
+
   /**
    * This constructor is only used in rare cases when we need to construct
    * temporary items.
@@ -1644,15 +1652,17 @@ public:
 #endif
   {
   }
-  virtual ~nsDisplayItem() {}
-
-  void* operator new(size_t aSize,
-                     nsDisplayListBuilder* aBuilder) {
-    return aBuilder->Allocate(aSize);
+protected:
+  virtual ~nsDisplayItem() {
   }
+public:
 
-// Contains all the type integers for each display list item type
-#include "nsDisplayItemTypes.h"
+  virtual void Destroy(nsDisplayListBuilder* aBuilder)
+  {
+    DisplayItemType type = GetType();
+    this->~nsDisplayItem();
+    aBuilder->Destroy(type, this);
+  }
 
   struct HitTestState {
     explicit HitTestState() : mInPreserves3D(false) {}
@@ -1672,13 +1682,14 @@ public:
    * outlines for the same element. For this, we need a way for items to
    * identify their type. We use the type for other purposes too.
    */
-  virtual Type GetType() = 0;
+  virtual DisplayItemType GetType() const = 0;
   /**
    * Pairing this with the GetUnderlyingFrame() pointer gives a key that
    * uniquely identifies this display item in the display item tree.
    * XXX check nsOptionEventGrabberWrapper/nsXULEventRedirectorWrapper
    */
   virtual uint32_t GetPerFrameKey() { return uint32_t(GetType()); }
+
   /**
    * This is called after we've constructed a display list for event handling.
    * When this is called, we've already ensured that aRect intersects the
@@ -2118,7 +2129,7 @@ public:
   /**
    * For debugging and stuff
    */
-  virtual const char* Name() = 0;
+  virtual const char* Name() const = 0;
 
   virtual void WriteDebugInfo(std::stringstream& aStream) {}
 
@@ -2274,7 +2285,6 @@ public:
     if (mSentinel.mAbove) {
       NS_WARNING("Nonempty list left over?");
     }
-    DeleteAll();
   }
 
   /**
@@ -2358,7 +2368,7 @@ public:
   /**
    * Remove all items from the list and call their destructors.
    */
-  void DeleteAll();
+  void DeleteAll(nsDisplayListBuilder* aBuilder);
 
   /**
    * @return the item at the top of the list, or null if the list is empty
@@ -2606,6 +2616,15 @@ public:
    */
   nsDisplayList* Content() const { return mContent; }
 
+  void DeleteAll(nsDisplayListBuilder* aBuilder) {
+    BorderBackground()->DeleteAll(aBuilder);
+    BlockBorderBackgrounds()->DeleteAll(aBuilder);
+    Floats()->DeleteAll(aBuilder);
+    PositionedDescendants()->DeleteAll(aBuilder);
+    Outlines()->DeleteAll(aBuilder);
+    Content()->DeleteAll(aBuilder);
+  }
+
   nsDisplayListSet(nsDisplayList* aBorderBackground,
                    nsDisplayList* aBlockBorderBackgrounds,
                    nsDisplayList* aFloats,
@@ -2735,7 +2754,7 @@ public:
                                     const nsRect& aDirtyRect, nsPoint aFramePt);
 
   nsDisplayGeneric(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                   PaintCallback aPaint, const char* aName, Type aType)
+                   PaintCallback aPaint, const char* aName, DisplayItemType aType)
     : nsDisplayItem(aBuilder, aFrame)
     , mPaint(aPaint)
     , mOldPaint(nullptr)
@@ -2747,7 +2766,7 @@ public:
 
   // XXX: should be removed eventually
   nsDisplayGeneric(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                   OldPaintCallback aOldPaint, const char* aName, Type aType)
+                   OldPaintCallback aOldPaint, const char* aName, DisplayItemType aType)
     : nsDisplayItem(aBuilder, aFrame)
     , mPaint(nullptr)
     , mOldPaint(aOldPaint)
@@ -2771,13 +2790,26 @@ public:
       mOldPaint(mFrame, aCtx, mVisibleRect, ToReferenceFrame());
     }
   }
-  NS_DISPLAY_DECL_NAME(mName, mType)
+  virtual const char* Name() const override { return mName; }
+  virtual DisplayItemType GetType() const override { return mType; }
+  void* operator new(size_t aSize,
+                     nsDisplayListBuilder* aBuilder) {
+    return aBuilder->Allocate(aSize, DisplayItemType::TYPE_GENERIC);
+  }
+
+  // This override is needed because GetType() for nsDisplayGeneric subclasses
+  // does not match TYPE_GENERIC that was used to allocate the object.
+  virtual void Destroy(nsDisplayListBuilder* aBuilder) override
+  {
+    this->~nsDisplayGeneric();
+    aBuilder->Destroy(DisplayItemType::TYPE_GENERIC, this);
+  }
 
 protected:
   PaintCallback mPaint;
   OldPaintCallback mOldPaint;   // XXX: should be removed eventually
   const char* mName;
-  Type mType;
+  DisplayItemType mType;
 };
 
 #if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
@@ -3086,13 +3118,13 @@ public:
     }
   }
 
+  NS_DISPLAY_DECL_NAME("SolidColorRegion", TYPE_SOLID_COLOR_REGION)
+
 protected:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
-
-  NS_DISPLAY_DECL_NAME("SolidColorRegion", TYPE_SOLID_COLOR_REGION)
 
 private:
   nsRegion mRegion;
@@ -3297,7 +3329,7 @@ public:
   nsDisplayTableBackgroundImage(const InitData& aInitData, nsIFrame* aCellFrame);
 
   virtual uint32_t GetPerFrameKey() override {
-    return (static_cast<uint8_t>(mTableType) << nsDisplayItem::TYPE_BITS) |
+    return (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
            nsDisplayItem::GetPerFrameKey();
   }
 
@@ -3452,7 +3484,7 @@ public:
   { }
 
   virtual uint32_t GetPerFrameKey() override {
-    return (static_cast<uint8_t>(mTableType) << nsDisplayItem::TYPE_BITS) |
+    return (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
            nsDisplayItem::GetPerFrameKey();
   }
 protected:
@@ -3823,6 +3855,11 @@ public:
     mBaseVisibleRect = mVisibleRect;
   }
   virtual ~nsDisplayWrapList();
+
+  virtual void Destroy(nsDisplayListBuilder* aBuilder) override {
+    mList.DeleteAll(aBuilder);
+    nsDisplayItem::Destroy(aBuilder);
+  }
   /**
    * Call this if the wrapped list is changed.
    */
@@ -4055,8 +4092,7 @@ public:
     // We don't need to compute an invalidation region since we have LayerTreeInvalidation
   }
   virtual uint32_t GetPerFrameKey() override {
-    return (mIndex << nsDisplayItem::TYPE_BITS) |
-      nsDisplayItem::GetPerFrameKey();
+    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
   }
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
@@ -4111,8 +4147,7 @@ public:
       return false;
     }
     virtual uint32_t GetPerFrameKey() override {
-      return (mIsForBackground ? 1 << nsDisplayItem::TYPE_BITS : 0) |
-        nsDisplayItem::GetPerFrameKey();
+      return (mIsForBackground ? 1 << TYPE_BITS : 0) | nsDisplayItem::GetPerFrameKey();
     }
     NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
 
@@ -4320,7 +4355,7 @@ public:
 
   virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) override { return mIsFixedBackground; }
 
-  virtual uint32_t GetPerFrameKey() override { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
+  virtual uint32_t GetPerFrameKey() override { return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
 
   AnimatedGeometryRoot* AnimatedGeometryRootForScrollMetadata() const override {
     return mAnimatedGeometryRootForScrollMetadata;
@@ -4350,8 +4385,8 @@ public:
                                                                nsIFrame* aAncestorFrame);
 
   virtual uint32_t GetPerFrameKey() override {
-    return (mIndex << (nsDisplayItem::TYPE_BITS + static_cast<uint8_t>(TableTypeBits::COUNT))) |
-           (static_cast<uint8_t>(mTableType) << nsDisplayItem::TYPE_BITS) |
+    return (mIndex << (TYPE_BITS + static_cast<uint8_t>(TableTypeBits::COUNT))) |
+           (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
            nsDisplayItem::GetPerFrameKey();
   }
 protected:
@@ -4646,6 +4681,12 @@ class nsDisplayTransform: public nsDisplayItem
       nsDisplayWrapList(aBuilder, aFrame, aItem) {}
     virtual ~StoreList() {}
 
+    // This override is needed since StoreList is only allocated from the stack.
+    virtual void Destroy(nsDisplayListBuilder* aBuilder) override
+    {
+      mList.DeleteAll(aBuilder);
+    }
+
     virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override {
       // For extending 3d rendering context, the bounds would be
       // updated by DoUpdateBoundsPreserves3D(), not here.
@@ -4700,6 +4741,12 @@ public:
   }
 #endif
 
+  virtual void Destroy(nsDisplayListBuilder* aBuilder) override
+  {
+    mStoredList.Destroy(aBuilder);
+    nsDisplayItem::Destroy(aBuilder);
+  }
+
   NS_DISPLAY_DECL_NAME("nsDisplayTransform", TYPE_TRANSFORM)
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
@@ -4734,7 +4781,7 @@ public:
                                  nsRegion *aVisibleRegion) override;
   virtual bool TryMerge(nsDisplayItem *aItem) override;
 
-  virtual uint32_t GetPerFrameKey() override { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
+  virtual uint32_t GetPerFrameKey() override { return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
 
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
@@ -4763,7 +4810,7 @@ public:
   }
 
   enum {
-    INDEX_MAX = UINT32_MAX >> nsDisplayItem::TYPE_BITS
+    INDEX_MAX = UINT32_MAX >> TYPE_BITS
   };
 
   /**
@@ -5015,7 +5062,7 @@ public:
                        nsIFrame* aPerspectiveFrame,
                        nsDisplayList* aList);
 
-  virtual uint32_t GetPerFrameKey() override { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
+  virtual uint32_t GetPerFrameKey() override { return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override
@@ -5084,6 +5131,12 @@ public:
     }
   }
 
+  virtual void Destroy(nsDisplayListBuilder* aBuilder) override
+  {
+    mList.GetChildren()->DeleteAll(aBuilder);
+    nsDisplayItem::Destroy(aBuilder);
+  }
+
 private:
   nsDisplayWrapList mList;
   nsIFrame* mTransformFrame;
@@ -5147,8 +5200,8 @@ public:
   }
 
   static nsCharClipDisplayItem* CheckCast(nsDisplayItem* aItem) {
-    nsDisplayItem::Type t = aItem->GetType();
-    return (t == nsDisplayItem::TYPE_TEXT)
+    DisplayItemType t = aItem->GetType();
+    return (t == DisplayItemType::TYPE_TEXT)
       ? static_cast<nsCharClipDisplayItem*>(aItem) : nullptr;
   }
 
