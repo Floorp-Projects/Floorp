@@ -6,7 +6,7 @@
 /* global getTargetTabIdForToolbox, getDevToolsTargetForContext */
 
 // The ext-* files are imported into the same scopes.
-/* import-globals-from ext-utils.js */
+/* import-globals-from ext-browser.js */
 
 /**
  * This module provides helpers used by the other specialized `ext-devtools-*.js` modules

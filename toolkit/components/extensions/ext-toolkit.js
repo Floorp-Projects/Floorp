@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 
+global.EventEmitter = ExtensionUtils.EventEmitter;
 global.EventManager = ExtensionCommon.EventManager;
 global.InputEventManager = class extends EventManager {
   constructor(...args) {
