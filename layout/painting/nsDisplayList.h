@@ -525,6 +525,10 @@ public:
    * BuildDisplayList on right now).
    */
   const nsRect& GetDirtyRect() { return mDirtyRect; }
+
+  void SetDirtyRect(const nsRect& aDirtyRect) { mDirtyRect = aDirtyRect; }
+  void IntersectDirtyRect(const nsRect& aDirtyRect) { mDirtyRect.IntersectRect(mDirtyRect, aDirtyRect); }
+
   const nsIFrame* GetCurrentFrame() { return mCurrentFrame; }
   const nsIFrame* GetCurrentReferenceFrame() { return mCurrentReferenceFrame; }
   const nsPoint& GetCurrentFrameOffsetToReferenceFrame() { return mCurrentOffsetToReferenceFrame; }
@@ -574,11 +578,10 @@ public:
   /**
    * Display the caret if needed.
    */
-  void DisplayCaret(nsIFrame* aFrame, const nsRect& aDirtyRect,
-                    nsDisplayList* aList) {
+  void DisplayCaret(nsIFrame* aFrame, nsDisplayList* aList) {
     nsIFrame* frame = GetCaretFrame();
     if (aFrame == frame) {
-      frame->DisplayCaret(this, aDirtyRect, aList);
+      frame->DisplayCaret(this, aList);
     }
   }
   /**
@@ -683,8 +686,7 @@ public:
    * destroyed.
    */
   void MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
-                                const nsFrameList& aFrames,
-                                const nsRect& aDirtyRect);
+                                const nsFrameList& aFrames);
   /**
    * Mark all child frames that Preserve3D() as needing display.
    * Because these frames include transforms set on their parent, dirty rects
@@ -1382,11 +1384,11 @@ public:
     Preserves3DContext mSavedCtx;
   };
 
-  const nsRect GetPreserves3DDirtyRect(const nsIFrame *aFrame) const {
+  const nsRect GetPreserves3DRects() const {
     return mPreserves3DCtx.mDirtyRect;
   }
-  void SetPreserves3DDirtyRect(const nsRect &aDirtyRect) {
-    mPreserves3DCtx.mDirtyRect = aDirtyRect;
+  void SavePreserves3DRects() {
+    mPreserves3DCtx.mDirtyRect = mDirtyRect;
   }
 
   bool IsBuildingInvisibleItems() const { return mBuildingInvisibleItems; }
@@ -1408,8 +1410,7 @@ public:
   }
 
 private:
-  void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
-                                    const nsRect& aDirtyRect);
+  void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame);
 
   /**
    * Returns whether a frame acts as an animated geometry root, optionally

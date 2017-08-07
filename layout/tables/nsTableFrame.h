@@ -229,9 +229,9 @@ public:
 
   typedef void (* DisplayGenericTablePartTraversal)
       (nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-       const nsRect& aDirtyRect, const nsDisplayListSet& aLists);
+       const nsDisplayListSet& aLists);
   static void GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-                               const nsRect& aDirtyRect, const nsDisplayListSet& aLists);
+                               const nsDisplayListSet& aLists);
 
   /**
    * Helper method to handle display common to table frames, rowgroup frames
@@ -246,7 +246,6 @@ public:
    */
   static void DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
                                       nsFrame* aFrame,
-                                      const nsRect& aDirtyRect,
                                       const nsDisplayListSet& aLists,
                                       DisplayGenericTablePartTraversal aTraversal = GenericTraversal);
 
@@ -266,7 +265,6 @@ public:
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   /** Get the outer half (i.e., the part outside the height and width of

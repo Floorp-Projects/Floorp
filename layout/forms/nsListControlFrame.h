@@ -83,7 +83,6 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   virtual nsContainerFrame* GetContentInsertionFrame() override;

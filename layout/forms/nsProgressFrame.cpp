@@ -92,10 +92,9 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
 nsProgressFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                  const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  BuildDisplayListForInline(aBuilder, aLists);
 }
 
 void

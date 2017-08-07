@@ -1312,7 +1312,6 @@ public:
                           nsReflowStatus&          aStatus) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
 protected:
@@ -1347,11 +1346,10 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
 
 void
 nsComboboxDisplayFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                         const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
   nsDisplayListCollection set;
-  nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
+  nsBlockFrame::BuildDisplayList(aBuilder, set);
 
   // remove background items if parent frame is themed
   if (mComboBox->IsThemed()) {
@@ -1555,14 +1553,8 @@ void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                         const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
-#ifdef NOISY
-  printf("%p paint at (%d, %d, %d, %d)\n", this,
-    aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-#endif
-
   if (aBuilder->IsForEventDelivery()) {
     // Don't allow children to receive events.
     // REVIEW: following old GetFrameForPoint
@@ -1570,7 +1562,7 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   } else {
     // REVIEW: Our in-flow child frames are inline-level so they will paint in our
     // content list, so we don't need to mess with layers.
-    nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+    nsBlockFrame::BuildDisplayList(aBuilder, aLists);
   }
 
   // draw a focus indicator only when focus rings should be drawn
