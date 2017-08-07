@@ -66,7 +66,7 @@ public:
                                  uint32_t httpStatus,
                                  nsHttpRequestHead &requestHead,
                                  nsHttpResponseHead *reqponseHead,
-                                 nsILoadContextInfo *lci);
+                                 nsILoadContextInfo *lci, bool isTracking);
 
 private:
   virtual ~Predictor();
@@ -139,10 +139,12 @@ private:
     NS_DECL_NSICACHEENTRYMETADATAVISITOR
 
     CacheabilityAction(nsIURI *targetURI, uint32_t httpStatus,
-                       const nsCString &method, Predictor *predictor)
+                       const nsCString &method, bool isTracking,
+                       Predictor *predictor)
       :mTargetURI(targetURI)
       ,mHttpStatus(httpStatus)
       ,mMethod(method)
+      ,mIsTracking(isTracking)
       ,mPredictor(predictor)
     { }
 
@@ -152,6 +154,7 @@ private:
     nsCOMPtr<nsIURI> mTargetURI;
     uint32_t mHttpStatus;
     nsCString mMethod;
+    bool mIsTracking;
     RefPtr<Predictor> mPredictor;
     nsTArray<nsCString> mKeysToCheck;
     nsTArray<nsCString> mValuesToCheck;
@@ -422,7 +425,8 @@ private:
   // and httpStatus is the status code we got while loading targetURI.
   void UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                                   uint32_t httpStatus, const nsCString &method,
-                                  const OriginAttributes& originAttributes);
+                                  const OriginAttributes& originAttributes,
+                                  bool isTracking);
 
   // Make sure our prefs are in their expected range of values
   void SanitizePrefs();
