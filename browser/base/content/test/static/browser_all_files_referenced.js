@@ -174,14 +174,6 @@ var whitelist = [
 
 ];
 
-// Temporary whitelisted while WebPayments in construction
-// See Bug 1381141
-if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_BUILD_APP == "browser") {
-  whitelist.push(
-    {file: "chrome://payments/content/paymentRequest.xhtml"}
-  );
-}
-
 if (!AppConstants.MOZ_PHOTON_THEME) {
   whitelist.push(
     // Bug 1343824
