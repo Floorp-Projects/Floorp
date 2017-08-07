@@ -71,7 +71,7 @@ LightweightThemeConsumer.prototype = {
       .getInterface(Ci.nsIDOMWindowUtils);
 
     const parsedData = JSON.parse(aData);
-    if (parsedData.window && parsedData.window !== outerWindowID) {
+    if (parsedData && parsedData.window && parsedData.window !== outerWindowID) {
       return;
     }
 
