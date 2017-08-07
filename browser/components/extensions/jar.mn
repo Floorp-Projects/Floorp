@@ -14,6 +14,7 @@ browser.jar:
     content/browser/extension.svg
     content/browser/ext-bookmarks.js
     content/browser/ext-browser.js
+    content/browser/ext-browser.json
     content/browser/ext-browserAction.js
     content/browser/ext-browsingData.js
     content/browser/ext-chrome-settings-overrides.js

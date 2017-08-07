@@ -15,6 +15,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 this.EXPORTED_SYMBOLS = ["ExtensionCommon"];
 
+Cu.importGlobalProperties(["fetch"]);
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -618,6 +620,26 @@ function deepCopy(dest, source) {
   }
 }
 
+function getChild(map, key) {
+  let child = map.children.get(key);
+  if (!child) {
+    child = {
+      modules: new Set(),
+      children: new Map(),
+    };
+
+    map.children.set(key, child);
+  }
+  return child;
+}
+
+function getPath(map, path) {
+  for (let key of path) {
+    map = getChild(map, key);
+  }
+  return map;
+}
+
 /**
  * Manages loading and accessing a set of APIs for a specific extension
  * context.
@@ -712,7 +734,7 @@ class CanOfAPIs {
       if (!obj) {
         return;
       }
-      modules = modules.get(key);
+      modules = getChild(modules, key);
 
       for (let name of modules.modules) {
         if (!this.apis.has(name)) {
@@ -748,7 +770,7 @@ class CanOfAPIs {
       if (!obj) {
         return;
       }
-      modules = modules.get(key);
+      modules = getChild(modules, key);
 
       for (let name of modules.modules) {
         if (!this.apis.has(name)) {
@@ -765,18 +787,6 @@ class CanOfAPIs {
 
     this.apiPaths.set(path, obj);
     return obj;
-  }
-}
-
-class DeepMap extends DefaultMap {
-  constructor() {
-    super(() => new DeepMap());
-
-    this.modules = new Set();
-  }
-
-  getPath(path) {
-    return path.reduce((map, key) => map.get(key), this);
   }
 }
 
@@ -832,15 +842,52 @@ class SchemaAPIManager extends EventEmitter {
     this.global = this._createExtGlobal();
 
     this.modules = new Map();
-    this.modulePaths = new DeepMap();
+    this.modulePaths = {children: new Map(), modules: new Set()};
     this.manifestKeys = new Map();
     this.eventModules = new DefaultMap(() => new Set());
+
+    this._modulesJSONLoaded = false;
 
     this.schemaURLs = new Set();
 
     this.apis = new DefaultWeakMap(() => new Map());
 
     this._scriptScopes = [];
+  }
+
+  async loadModuleJSON(urls) {
+    function fetchJSON(url) {
+      return fetch(url).then(resp => resp.json());
+    }
+
+    for (let json of await Promise.all(urls.map(fetchJSON))) {
+      this.registerModules(json);
+    }
+
+    this._modulesJSONLoaded = true;
+
+    return new StructuredCloneHolder({
+      modules: this.modules,
+      modulePaths: this.modulePaths,
+      manifestKeys: this.manifestKeys,
+      eventModules: this.eventModules,
+      schemaURLs: this.schemaURLs,
+    });
+  }
+
+  initModuleData(moduleData) {
+    if (!this._modulesJSONLoaded) {
+      let data = moduleData.deserialize({});
+
+      this.modules = data.modules;
+      this.modulePaths = data.modulePaths;
+      this.manifestKeys = data.manifestKeys;
+      this.eventModules = new DefaultMap(() => new Set(),
+                                         data.eventModules);
+      this.schemaURLs = data.schemaURLs;
+    }
+
+    this._modulesJSONLoaded = true;
   }
 
   /**
@@ -878,7 +925,7 @@ class SchemaAPIManager extends EventEmitter {
       }
 
       for (let path of details.paths || []) {
-        this.modulePaths.getPath(path).modules.add(name);
+        getPath(this.modulePaths, path).modules.add(name);
       }
     }
   }

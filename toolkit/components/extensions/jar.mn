@@ -27,6 +27,7 @@ toolkit.jar:
     content/extensions/ext-tabs-base.js
     content/extensions/ext-theme.js
     content/extensions/ext-toolkit.js
+    content/extensions/ext-toolkit.json
     content/extensions/ext-topSites.js
     content/extensions/ext-webRequest.js
     content/extensions/ext-webNavigation.js
