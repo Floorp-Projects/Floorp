@@ -357,15 +357,15 @@ DXGITextureData::FillInfo(TextureData::Info& aInfo) const
 }
 
 void
-D3D11TextureData::SyncWithObject(SyncObject* aSyncObject)
+D3D11TextureData::SyncWithObject(SyncObjectClient* aSyncObject)
 {
   if (!aSyncObject || mHasSynchronization) {
     // When we have per texture synchronization we sync using the keyed mutex.
     return;
   }
 
-  MOZ_ASSERT(aSyncObject->GetSyncType() == SyncObject::SyncType::D3D11);
-  SyncObjectD3D11* sync = static_cast<SyncObjectD3D11*>(aSyncObject);
+  MOZ_ASSERT(aSyncObject->GetSyncType() == SyncObjectClient::SyncType::D3D11);
+  SyncObjectD3D11Client* sync = static_cast<SyncObjectD3D11Client*>(aSyncObject);
   sync->RegisterTexture(mTexture);
 }
 
