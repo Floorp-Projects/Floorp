@@ -16,6 +16,8 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/webrender/RenderD3D11TextureHostOGL.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
@@ -968,10 +970,41 @@ DXGITextureHostD3D11::AcquireTextureSource(CompositableTextureSourceRef& aTextur
 }
 
 void
+DXGITextureHostD3D11::CreateRenderTexture(const wr::ExternalImageId& aExternalImageId)
+{
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderDXGITextureHostOGL(mHandle, mFormat, mSize);
+
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId), texture.forget());
+}
+
+void
 DXGITextureHostD3D11::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
                                      const std::function<wr::ImageKey()>& aImageKeyAllocator)
 {
-  MOZ_ASSERT_UNREACHABLE("No GetWRImageKeys() implementation for this DXGITextureHostD3D11 type.");
+  MOZ_ASSERT(aImageKeys.IsEmpty());
+
+  switch (GetFormat()) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8: {
+      // 1 image key
+      aImageKeys.AppendElement(aImageKeyAllocator());
+      MOZ_ASSERT(aImageKeys.Length() == 1);
+      break;
+    }
+    case gfx::SurfaceFormat::NV12: {
+      // 2 image key
+      aImageKeys.AppendElement(aImageKeyAllocator());
+      aImageKeys.AppendElement(aImageKeyAllocator());
+      MOZ_ASSERT(aImageKeys.Length() == 2);
+      break;
+    }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
+  }
 }
 
 void
@@ -979,7 +1012,44 @@ DXGITextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
                                  Range<const wr::ImageKey>& aImageKeys,
                                  const wr::ExternalImageId& aExtID)
 {
-  MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this DXGITextureHostD3D11 type.");
+  MOZ_ASSERT(mHandle);
+
+  switch (mFormat) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8: {
+      MOZ_ASSERT(aImageKeys.length() == 1);
+
+      wr::ImageDescriptor descriptor(GetSize(), GetFormat());
+      aAPI->AddExternalImage(aImageKeys[0],
+                             descriptor,
+                             aExtID,
+                             wr::WrExternalImageBufferType::Texture2DHandle,
+                             0);
+      break;
+    }
+    case gfx::SurfaceFormat::NV12: {
+      MOZ_ASSERT(aImageKeys.length() == 2);
+
+      wr::ImageDescriptor descriptor0(GetSize(), gfx::SurfaceFormat::A8);
+      wr::ImageDescriptor descriptor1(GetSize() / 2, gfx::SurfaceFormat::R8G8);
+      aAPI->AddExternalImage(aImageKeys[0],
+                             descriptor0,
+                             aExtID,
+                             wr::WrExternalImageBufferType::TextureExternalHandle,
+                             0);
+      aAPI->AddExternalImage(aImageKeys[1],
+                             descriptor1,
+                             aExtID,
+                             wr::WrExternalImageBufferType::TextureExternalHandle,
+                             1);
+      break;
+    }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
+  }
 }
 
 void
@@ -989,7 +1059,29 @@ DXGITextureHostD3D11::PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                         wr::ImageRendering aFilter,
                                         Range<const wr::ImageKey>& aImageKeys)
 {
-  MOZ_ASSERT_UNREACHABLE("No PushExternalImage() implementation for this DXGITextureHostD3D11 type.");
+  switch (GetFormat()) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8: {
+      MOZ_ASSERT(aImageKeys.length() == 1);
+      aBuilder.PushImage(aBounds, aClip, aFilter, aImageKeys[0]);
+      break;
+    }
+    case gfx::SurfaceFormat::NV12: {
+      MOZ_ASSERT(aImageKeys.length() == 2);
+      aBuilder.PushNV12Image(aBounds,
+                             aClip,
+                             aImageKeys[0],
+                             aImageKeys[1],
+                             wr::WrYuvColorSpace::Rec601,
+                             aFilter);
+      break;
+    }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
+  }
 }
 
 DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
@@ -1135,10 +1227,20 @@ DXGIYCbCrTextureHostD3D11::BindTextureSource(CompositableTextureSourceRef& aText
 }
 
 void
+DXGIYCbCrTextureHostD3D11::CreateRenderTexture(const wr::ExternalImageId& aExternalImageId)
+{
+  // We use AddImage() directly. It's no corresponding RenderTextureHost.
+}
+
+void
 DXGIYCbCrTextureHostD3D11::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
                                           const std::function<wr::ImageKey()>& aImageKeyAllocator)
 {
-  MOZ_ASSERT_UNREACHABLE("No GetWRImageKeys() implementation for this DXGIYCbCrTextureHostD3D11 type.");
+  MOZ_ASSERT(aImageKeys.IsEmpty());
+
+  // 1 image key
+  aImageKeys.AppendElement(aImageKeyAllocator());
+  MOZ_ASSERT(aImageKeys.Length() == 1);
 }
 
 void
@@ -1146,7 +1248,30 @@ DXGIYCbCrTextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
                                       Range<const wr::ImageKey>& aImageKeys,
                                       const wr::ExternalImageId& aExtID)
 {
-  MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this DXGIYCbCrTextureHostD3D11 type.");
+  MOZ_ASSERT(mTextures[0] && mTextures[1] && mTextures[2]);
+  MOZ_ASSERT(aImageKeys.length() == 1);
+
+  // There are 3 A8 channel data in DXGIYCbCrTextureHostD3D11, but ANGLE doesn't
+  // support for converting the D3D A8 texture to OpenGL texture handle. So, we
+  // use the DataSourceSurface to get the raw buffer and push that raw buffer
+  // into WR using AddImage().
+  NS_WARNING("WR doesn't support DXGIYCbCrTextureHostD3D11 directly. It's a slower path.");
+
+  RefPtr<DataSourceSurface> dataSourceSurface = GetAsSurface();
+  if (!dataSourceSurface) {
+    return;
+  }
+  DataSourceSurface::MappedSurface map;
+  if (!dataSourceSurface->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
+    return;
+  }
+
+  IntSize size = dataSourceSurface->GetSize();
+  wr::ImageDescriptor descriptor(size, map.mStride, dataSourceSurface->GetFormat());
+  auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
+  aAPI->AddImage(aImageKeys[0], descriptor, slice);
+
+  dataSourceSurface->Unmap();
 }
 
 void
@@ -1156,7 +1281,9 @@ DXGIYCbCrTextureHostD3D11::PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                              wr::ImageRendering aFilter,
                                              Range<const wr::ImageKey>& aImageKeys)
 {
-  MOZ_ASSERT_UNREACHABLE("No PushExternalImage() implementation for this DXGIYCbCrTextureHostD3D11 type.");
+  // 1 image key
+  MOZ_ASSERT(aImageKeys.length() == 1);
+  aBuilder.PushImage(aBounds, aClip, aFilter, aImageKeys[0]);
 }
 
 bool
