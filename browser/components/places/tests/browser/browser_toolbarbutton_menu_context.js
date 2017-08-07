@@ -1,3 +1,4 @@
+CustomizableUI.addWidgetToArea("bookmarks-menu-button", CustomizableUI.AREA_NAVBAR, 4);
 var bookmarksMenuButton = document.getElementById("bookmarks-menu-button");
 var BMB_menuPopup = document.getElementById("BMB_bookmarksPopup");
 var BMB_showAllBookmarks = document.getElementById("BMB_bookmarksShowAll");
@@ -14,6 +15,7 @@ add_task(async function testPopup() {
   CustomizableUI.addWidgetToArea("bookmarks-menu-button", CustomizableUI.AREA_NAVBAR, pos);
   info("Checking popup context menu after moving the bookmarks button");
   await checkPopupContextMenu();
+  CustomizableUI.reset();
 });
 
 async function checkPopupContextMenu() {
