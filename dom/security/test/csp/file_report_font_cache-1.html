@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<style>
+@font-face {
+  font-family: "CSP Report Test Font 1";
+  src: url(Ahem.ttf?report_font_cache-1);
+}
+@font-face {
+  font-family: "CSP Report Test Font 2";
+  src: url(Ahem.ttf?report_font_cache-2);
+}
+@font-face {
+  font-family: "CSP Report Test Font 3";
+  src: url(Ahem.ttf?report_font_cache-3);
+}
+.x { font: 24px "CSP Report Test Font 1"; }
+.y { font: 24px "CSP Report Test Font 2"; }
+.z { font: 24px "CSP Report Test Font 3"; }
+</style>
+<p class=x>A</p>
+<p class=y>A</p>
+<p class=z>A</p>
+<script>
+// Wait until the fonts would have been added to the user font cache.
+document.body.offsetWidth;
+document.fonts.ready.then(() => window.parent.postMessage("first-doc-ready", "*"));
+</script>

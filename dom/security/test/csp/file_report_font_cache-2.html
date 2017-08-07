@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<style>
+@font-face {
+  font-family: "CSP Report Test Font 1";
+  src: url(Ahem.ttf?report_font_cache-1);
+}
+@font-face {
+  font-family: "CSP Report Test Font 3";
+  src: url(Ahem.ttf?report_font_cache-3);
+}
+p { margin-right: 1ex; } /* cause cached CSP check to happen OMT (due to
+                            font metrics lookup) */
+.x { font: 24px "CSP Report Test Font 1"; }
+.y { font: 24px "CSP Report Test Font 3"; }
+</style>
+<p class="x">A</p>
+<script>
+// First flush should dispatch the "Test Font 1" report that is stored
+// in the user font cache.
+document.body.offsetWidth;
+
+// Second flush should dispatch "Test Font 3" report.
+document.querySelector("p").className = "y";
+document.body.offsetWidth;
+</script>
