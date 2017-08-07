@@ -43,6 +43,11 @@ async function waitForConditionWithPromise(promiseFn, timeoutMsg, tryCount = 30)
   throw new Error(timeoutMsg);
 }
 
+function fakeSendSubmissionTimeout(timeOut) {
+  let telemetryHealthPing = Cu.import("resource://gre/modules/TelemetrySend.jsm", {});
+  telemetryHealthPing.Policy.pingSubmissionTimeout = () => timeOut;
+}
+
 add_task(async function setup() {
   // Trigger a proper telemetry init.
   do_get_profile(true);
@@ -155,7 +160,7 @@ add_task(async function test_sendOnTimeout() {
   fakePingSendTimer(() => {}, () => {});
 
   // Set up small ping submission timeout to always have timeout error.
-  TelemetrySend.testSetTimeoutForPingSubmit(2);
+  fakeSendSubmissionTimeout(2);
 
   await TelemetryController.submitExternalPing(PING_TYPE, {});
 
@@ -178,7 +183,8 @@ add_task(async function test_sendOnTimeout() {
     response.finish();
   }
 
-  TelemetrySend.testResetTimeOutToDefault();
+  let telemetryHealthPing = Cu.import("resource://gre/modules/TelemetrySend.jsm", {});
+  fakeSendSubmissionTimeout(telemetryHealthPing.PING_SUBMIT_TIMEOUT_MS);
   PingServer.resetPingHandler();
   TelemetrySend.notifyCanUpload();
 
