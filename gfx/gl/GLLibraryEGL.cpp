@@ -57,7 +57,6 @@ static const char* sEGLExtensionNames[] = {
     "EGL_KHR_create_context",
     "EGL_KHR_stream",
     "EGL_KHR_stream_consumer_gltexture",
-    "EGL_EXT_device_base",
     "EGL_EXT_device_query",
     "EGL_NV_stream_consumer_gltexture_yuv",
     "EGL_ANGLE_stream_producer_d3d_texture_nv12",
@@ -627,19 +626,9 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
         }
     }
 
-    if (IsExtensionSupported(EXT_device_base)) {
-        const GLLibraryLoader::SymLoadStruct deviceBaseSymbols[] = {
-            SYMBOL(QueryDisplayAttribEXT),
-            END_OF_SYMBOLS
-        };
-        if (!fnLoadSymbols(deviceBaseSymbols)) {
-            NS_ERROR("EGL supports EXT_device_base without exposing its functions!");
-            MarkExtensionUnsupported(EXT_device_base);
-        }
-    }
-
     if (IsExtensionSupported(EXT_device_query)) {
         const GLLibraryLoader::SymLoadStruct queryDisplaySymbols[] = {
+            SYMBOL(QueryDisplayAttribEXT),
             SYMBOL(QueryDeviceAttribEXT),
             END_OF_SYMBOLS
         };

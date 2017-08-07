@@ -11,6 +11,7 @@
 #include "nsISupports.idl"
 #include "nsIArray.idl"
 #include "nsIConsoleMessage.idl"
+interface nsIURI;
 
 %{C++
 #include "nsStringGlue.h" // for nsDependentCString
@@ -97,8 +98,17 @@ interface nsIScriptError : nsIConsoleMessage
               in string category);
 
     /* This should be called instead of nsIScriptError.init to
-       initialize with a window id.  The window id should be for the
-       inner window associated with this error. */
+     * initialize with a window id.  The window id should be for the
+     * inner window associated with this error.
+     *
+     * This function will check whether sourceName is a uri and sanitize it if
+     * needed. If you know the source name is sanitized already, use
+     * initWithSanitizedSource.
+     * A "sanitized" source name means that passwords are not shown. It will
+     * use the sensitiveInfoHiddenSpec function of nsIURI interface, that is
+     * replacing paswords with ***
+     * (e.g. https://USERNAME:****@example.com/some/path).
+     */
     void initWithWindowID(in AString message,
                           in AString sourceName,
                           in AString sourceLine,
@@ -107,8 +117,33 @@ interface nsIScriptError : nsIConsoleMessage
                           in uint32_t flags,
                           in ACString category,
                           in unsigned long long innerWindowID);
+
+    /* This is the same function as initWithWindowID, but it expects an already
+     * sanitized sourceName.
+     * Please use it only if sourceName string is already sanitized.
+     */
+    void initWithSanitizedSource(in AString message,
+                                 in AString sourceName,
+                                 in AString sourceLine,
+                                 in uint32_t lineNumber,
+                                 in uint32_t columnNumber,
+                                 in uint32_t flags,
+                                 in ACString category,
+                                 in unsigned long long innerWindowID);
+
+    /* This is the same function as initWithWindowID with an uri as a source parameter.
+     */
+    void initWithSourceURI(in AString message,
+                           in nsIURI sourceURI,
+                           in AString sourceLine,
+                           in uint32_t lineNumber,
+                           in uint32_t columnNumber,
+                           in uint32_t flags,
+                           in ACString category,
+                           in unsigned long long innerWindowID);
+
 %{C++
-    // This overload allows passing a literal string for category.
+    // These overloads allow passing a literal string for category.
     template<uint32_t N>
     nsresult InitWithWindowID(const nsAString& message,
                               const nsAString& sourceName,
@@ -122,6 +157,38 @@ interface nsIScriptError : nsIConsoleMessage
         nsDependentCString category(c, N - 1);
         return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
                                 columnNumber, flags, category, aInnerWindowID);
+    }
+
+    template<uint32_t N>
+    nsresult InitWithSanitizedSource(const nsAString& message,
+                                     const nsAString& sourceName,
+                                     const nsAString& sourceLine,
+                                     uint32_t lineNumber,
+                                     uint32_t columnNumber,
+                                     uint32_t flags,
+                                     const char (&c)[N],
+                                     uint64_t aInnerWindowID)
+    {
+        nsDependentCString category(c, N - 1);
+        return InitWithSanitizedSource(message, sourceName, sourceLine,
+                                       lineNumber, columnNumber, flags,
+                                       category, aInnerWindowID);
+    }
+
+    template<uint32_t N>
+    nsresult InitWithSourceURI(const nsAString& message,
+                               nsIURI* sourceURI,
+                               const nsAString& sourceLine,
+                               uint32_t lineNumber,
+                               uint32_t columnNumber,
+                               uint32_t flags,
+                               const char (&c)[N],
+                               uint64_t aInnerWindowID)
+    {
+        nsDependentCString category(c, N - 1);
+        return InitWithSourceURI(message, sourceURI, sourceLine,
+                                 lineNumber, columnNumber, flags,
+                                 category, aInnerWindowID);
     }
 %}
 

@@ -1264,7 +1264,11 @@ MLGDeviceD3D11::GetTextureFactoryIdentifier() const
     GetLayersBackend(),
     XRE_GetProcessType(),
     GetMaxTextureSize());
-  ident.mSyncHandle = mSyncHandle;
+
+  if (mSyncObject) {
+    ident.mSyncHandle = mSyncObject->GetSyncHandle();
+  }
+
   return ident;
 }
 
@@ -1777,34 +1781,13 @@ MLGDeviceD3D11::SetPSTexturesNV12(uint32_t aSlot, TextureSource* aTexture)
 bool
 MLGDeviceD3D11::InitSyncObject()
 {
-  CD3D11_TEXTURE2D_DESC desc(
-    DXGI_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1,
-    D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
-  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  MOZ_ASSERT(!mSyncObject);
+  MOZ_ASSERT(mDevice);
 
-  RefPtr<ID3D11Texture2D> texture;
-  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
-  if (FAILED(hr) || !texture) {
-    return Fail("FEATURE_FAILURE_SYNC_OBJECT",
-                "Could not create a sync texture: %x", hr);
-  }
+  mSyncObject = SyncObjectHost::CreateSyncObjectHost(mDevice);
+  MOZ_ASSERT(mSyncObject);
 
-  hr = texture->QueryInterface((IDXGIResource**)getter_AddRefs(mSyncTexture));
-  if (FAILED(hr) || !texture) {
-    return Fail("FEATURE_FAILURE_QI_SYNC_OBJECT",
-                "Could not QI sync texture: %x", hr);
-  }
-
-  hr = mSyncTexture->GetSharedHandle(&mSyncHandle);
-  if (FAILED(hr) || !mSyncHandle) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction("layers::MLGDeviceD3D11::InitSyncObject",
-                                                   [] () -> void {
-      Accumulate(Telemetry::D3D11_SYNC_HANDLE_FAILURE, 1);
-    }));
-    return Fail("FEATURE_FAILURE_GET_SHARED_HANDLE",
-                "Could not get sync texture shared handle: %x", hr);
-  }
-  return true;
+  return mSyncObject->Init();
 }
 
 void
@@ -1828,26 +1811,13 @@ MLGDeviceD3D11::GetDiagnostics(GPUStats* aStats)
 bool
 MLGDeviceD3D11::Synchronize()
 {
-  RefPtr<IDXGIKeyedMutex> mutex;
-  mSyncTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
+  MOZ_ASSERT(mSyncObject);
 
-  {
-    HRESULT hr;
-    AutoTextureLock lock(mutex, hr, 10000);
-    if (hr == WAIT_TIMEOUT) {
-      hr = mDevice->GetDeviceRemovedReason();
-      if (hr == S_OK) {
-        // There is no driver-removed event. Crash with this timeout.
-        MOZ_CRASH("GFX: D3D11 normal status timeout");
-      }
-
-      // Since the timeout is related to the driver-removed, clear the
-      // render-bounding size to skip this frame.
+  if (mSyncObject) {
+    if (!mSyncObject->Synchronize()) {
+      // It's timeout or other error. Handle the device-reset here.
       HandleDeviceReset("SyncObject");
       return false;
-    }
-    if (hr == WAIT_ABANDONED) {
-      gfxCriticalNote << "GFX: AL_D3D11 abandoned sync";
     }
   }
 

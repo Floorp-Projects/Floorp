@@ -1101,10 +1101,12 @@ gfxFontFamily::HasOtherFamilyNames()
 
 gfxFontEntry*
 gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, 
-                                bool& aNeedsSyntheticBold)
+                                bool& aNeedsSyntheticBold,
+                                bool aIgnoreSizeTolerance)
 {
     AutoTArray<gfxFontEntry*,4> matched;
-    FindAllFontsForStyle(aFontStyle, matched, aNeedsSyntheticBold);
+    FindAllFontsForStyle(aFontStyle, matched, aNeedsSyntheticBold,
+                         aIgnoreSizeTolerance);
     if (!matched.IsEmpty()) {
         return matched[0];
     }
@@ -1234,7 +1236,8 @@ WeightStyleStretchDistance(gfxFontEntry* aFontEntry,
 void
 gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
                                     nsTArray<gfxFontEntry*>& aFontEntryList,
-                                    bool& aNeedsSyntheticBold)
+                                    bool& aNeedsSyntheticBold,
+                                    bool aIgnoreSizeTolerance)
 {
     if (!mHasStyles) {
         FindStyleVariations(); // collect faces for the family, if not already done
@@ -1469,7 +1472,7 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
     gfxFontEntry *fe =
         FindFontForStyle(aMatchData->mStyle ? *aMatchData->mStyle
                                             : gfxFontStyle(),
-                         needsBold);
+                         needsBold, true);
 
     if (fe && !fe->SkipDuringSystemFallback()) {
         int32_t rank = 0;
