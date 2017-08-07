@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<title>Table Row Testcase, bug 1379306</title>
+<style>
+
+table { background: yellow }
+td { height: 50px; width: 200px; background: aqua; }
+div { background: fuchsia; height: 10px; width: 20px }
+
+tr { position: relative; border: 30px solid blue; }
+div { position: absolute; top: 0; left: 0 }
+
+</style>
+<h1>Table Row Testcase, bug 1379306</h1>
+
+<table>
+  <tr>
+    <td>
+      <div></div>
+    </td>
+  </tr>
+</table>
