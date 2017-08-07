@@ -291,8 +291,8 @@ public:
     EGLStreamKHR fCreateStreamKHR(EGLDisplay dpy, const EGLint* attrib_list) const
         WRAP(    fCreateStreamKHR(dpy, attrib_list) )
 
-    EGLStreamKHR fDestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream) const
-        WRAP(    fDestroyStreamKHR(dpy, stream) )
+    EGLBoolean  fDestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+        WRAP(   fDestroyStreamKHR(dpy, stream) )
 
     EGLBoolean  fQueryStreamKHR(EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLint* value) const
         WRAP(   fQueryStreamKHR(dpy, stream, attribute, value) )
@@ -452,7 +452,7 @@ private:
         EGLint     (GLAPIENTRY * fDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
         //KHR_stream
         EGLStreamKHR (GLAPIENTRY * fCreateStreamKHR)(EGLDisplay dpy, const EGLint* attrib_list);
-        EGLStreamKHR (GLAPIENTRY * fDestroyStreamKHR)(EGLDisplay dpy, EGLStreamKHR stream);
+        EGLBoolean (GLAPIENTRY * fDestroyStreamKHR)(EGLDisplay dpy, EGLStreamKHR stream);
         EGLBoolean (GLAPIENTRY * fQueryStreamKHR)(EGLDisplay dpy,
                                                   EGLStreamKHR stream,
                                                   EGLenum attribute,
