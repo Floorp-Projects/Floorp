@@ -64,6 +64,7 @@ var {
 } = ExtensionUtils;
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
+const CATEGORY_EXTENSION_MODULES = "webextension-modules";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
 
@@ -74,6 +75,7 @@ schemaURLs.add("chrome://extensions/content/schemas/experiments.json");
 let GlobalManager;
 let ParentAPIManager;
 let ProxyMessenger;
+let StartupCache;
 
 // This object loads the ext-*.js scripts that define the extension API.
 let apiManager = new class extends SchemaAPIManager {
@@ -93,18 +95,31 @@ let apiManager = new class extends SchemaAPIManager {
     });
   }
 
+  getModuleJSONURLs() {
+    return Array.from(XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_MODULES),
+                      ([name, url]) => url);
+  }
+
   // Loads all the ext-*.js scripts currently registered.
   lazyInit() {
     if (this.initialized) {
       return this.initialized;
     }
 
-    let scripts = [];
+    let modulesPromise = StartupCache.other.get(
+      ["parentModules"],
+      () => this.loadModuleJSON(this.getModuleJSONURLs()));
+
+    let scriptURLs = [];
     for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
-      scripts.push(value);
+      scriptURLs.push(value);
     }
 
-    let promise = Promise.all(scripts.map(url => ChromeUtils.compileScript(url))).then(scripts => {
+    let promise = (async () => {
+      let scripts = await Promise.all(scriptURLs.map(url => ChromeUtils.compileScript(url)));
+
+      this.initModuleData(await modulesPromise);
+
       for (let script of scripts) {
         script.executeInGlobal(this.global);
       }
@@ -124,7 +139,7 @@ let apiManager = new class extends SchemaAPIManager {
         }
         return Promise.all(promises);
       });
-    });
+    })();
 
     /* eslint-disable mozilla/balanced-listeners */
     Services.mm.addMessageListener("Extension:GetTabAndWindowId", this);
@@ -1361,10 +1376,10 @@ let IconDetails = {
   },
 };
 
-let StartupCache = {
+StartupCache = {
   DB_NAME: "ExtensionStartupCache",
 
-  STORE_NAMES: Object.freeze(["general", "locales", "manifests", "permissions", "schemas"]),
+  STORE_NAMES: Object.freeze(["general", "locales", "manifests", "other", "permissions", "schemas"]),
 
   get file() {
     return FileUtils.getFile("ProfLD", ["startupCache", "webext.sc.lz4"]);
