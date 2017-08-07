@@ -38,7 +38,7 @@ void CSP_LogLocalizedStr(const char* aName,
 void CSP_GetLocalizedStr(const char* aName,
                          const char16_t** aParams,
                          uint32_t aLength,
-                         char16_t** outResult);
+                         nsAString& outResult);
 
 void CSP_LogStrMessage(const nsAString& aMsg);
 

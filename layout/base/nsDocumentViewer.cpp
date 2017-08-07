@@ -1268,7 +1268,7 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
                                      isTabModalPromptAllowed);
       }
 
-      nsXPIDLString title, message, stayLabel, leaveLabel;
+      nsAutoString title, message, stayLabel, leaveLabel;
       rv  = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                "OnBeforeUnloadTitle",
                                                title);
@@ -1291,7 +1291,7 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
         rv = tmp;
       }
 
-      if (NS_FAILED(rv) || !title || !message || !stayLabel || !leaveLabel) {
+      if (NS_FAILED(rv)) {
         NS_ERROR("Failed to get strings from dom.properties!");
         return NS_OK;
       }
@@ -1307,9 +1307,9 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
       nsAutoSyncOperation sync(mDocument);
       mInPermitUnloadPrompt = true;
       mozilla::Telemetry::Accumulate(mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_COUNT, 1);
-      rv = prompt->ConfirmEx(title, message, buttonFlags,
-                             leaveLabel, stayLabel, nullptr, nullptr,
-                             &dummy, &buttonPressed);
+      rv = prompt->ConfirmEx(title.get(), message.get(), buttonFlags,
+                             leaveLabel.get(), stayLabel.get(),
+                             nullptr, nullptr, &dummy, &buttonPressed);
       mInPermitUnloadPrompt = false;
 
       // If the prompt aborted, we tell our consumer that it is not allowed

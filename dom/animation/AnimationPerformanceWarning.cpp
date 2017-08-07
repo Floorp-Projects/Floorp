@@ -12,7 +12,7 @@ namespace mozilla {
 
 template<uint32_t N> nsresult
 AnimationPerformanceWarning::ToLocalizedStringWithIntParams(
-  const char* aKey, nsXPIDLString& aLocalizedString) const
+  const char* aKey, nsAString& aLocalizedString) const
 {
   nsAutoString strings[N];
   const char16_t* charParams[N];
@@ -28,7 +28,7 @@ AnimationPerformanceWarning::ToLocalizedStringWithIntParams(
 
 bool
 AnimationPerformanceWarning::ToLocalizedString(
-  nsXPIDLString& aLocalizedString) const
+  nsAString& aLocalizedString) const
 {
   const char* key = nullptr;
 

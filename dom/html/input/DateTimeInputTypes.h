@@ -20,8 +20,8 @@ public:
   bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
   bool HasBadInput() const override;
 
-  nsresult GetRangeOverflowMessage(nsXPIDLString& aMessage) override;
-  nsresult GetRangeUnderflowMessage(nsXPIDLString& aMessage) override;
+  nsresult GetRangeOverflowMessage(nsAString& aMessage) override;
+  nsresult GetRangeUnderflowMessage(nsAString& aMessage) override;
 
   nsresult MinMaxStepAttrChanged() override;
 
@@ -71,7 +71,7 @@ public:
   // we forbid or autocorrect values that are not in the valid range for time.
   // For example, in 12hr format, if user enters '2' in the hour field, it will
   // be treated as '02' and automatically advance to the next field.
-  nsresult GetBadInputMessage(nsXPIDLString& aMessage) override;
+  nsresult GetBadInputMessage(nsAString& aMessage) override;
 
   bool ConvertStringToNumber(nsAString& aValue,
                              mozilla::Decimal& aResultValue) const override;

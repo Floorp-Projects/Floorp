@@ -198,6 +198,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
     {
       // Start with the default error message for a missing directive, since no
       // visitors will be called if the directive isn't present.
+      mError.SetIsVoid(true);
       if (aDirectiveRequired) {
         FormatError("csp.error.missing-directive");
       }
@@ -368,8 +369,8 @@ class CSPValidator final : public nsCSPSrcVisitor {
       nsCOMPtr<nsIStringBundle> stringBundle = GetStringBundle();
 
       if (stringBundle) {
-        rv = stringBundle->FormatStringFromName(aName, aParams, aLength,
-                                                getter_Copies(mError));
+        rv =
+          stringBundle->FormatStringFromName(aName, aParams, aLength, mError);
       }
 
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -382,7 +383,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
 
     nsAutoString mURL;
     NS_ConvertASCIItoUTF16 mDirective;
-    nsXPIDLString mError;
+    nsString mError;
 
     bool mFoundSelf;
 };
