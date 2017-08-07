@@ -666,8 +666,7 @@ CustomizeMode.prototype = {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
 
-    if (AppConstants.MOZ_PHOTON_ANIMATIONS &&
-        Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+    if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
       let overflowButton = this.document.getElementById("nav-bar-overflow-button");
       BrowserUtils.setToolbarButtonHeightProperty(overflowButton).then(() => {
         overflowButton.setAttribute("animate", "true");

@@ -61,9 +61,7 @@
 #ifdef MOZ_PHOTON_THEME
   skin/classic/browser/downloads/download-icons.svg            (../shared/downloads/download-icons.svg)
 #endif
-#ifdef MOZ_PHOTON_ANIMATIONS
   skin/classic/browser/downloads/notification-start-animation.svg  (../shared/downloads/notification-start-animation.svg)
-#endif
   skin/classic/browser/drm-icon.svg                            (../shared/drm-icon.svg)
   skin/classic/browser/fullscreen/insecure.svg                 (../shared/fullscreen/insecure.svg)
   skin/classic/browser/fullscreen/secure.svg                   (../shared/fullscreen/secure.svg)
@@ -124,9 +122,7 @@
 #endif
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)
   skin/classic/browser/bookmark.svg                   (../shared/icons/bookmark.svg)
-#ifdef MOZ_PHOTON_ANIMATIONS
   skin/classic/browser/bookmark-animation.svg         (../shared/icons/bookmark-animation.svg)
-#endif
   skin/classic/browser/bookmark-hollow.svg            (../shared/icons/bookmark-hollow.svg)
 #ifndef MOZ_PHOTON_THEME
   skin/classic/browser/bookmarksMenu.svg              (../shared/icons/bookmarksMenu.svg)
@@ -135,9 +131,7 @@
 #endif
   skin/classic/browser/characterEncoding.svg          (../shared/icons/characterEncoding.svg)
   skin/classic/browser/chevron.svg                    (../shared/icons/chevron.svg)
-#ifdef MOZ_PHOTON_ANIMATIONS
   skin/classic/browser/chevron-animation.svg          (../shared/icons/chevron-animation.svg)
-#endif
   skin/classic/browser/check.svg                      (../shared/icons/check.svg)
   skin/classic/browser/containers.svg                 (../shared/icons/containers.svg)
   skin/classic/browser/customize.svg                  (../shared/icons/customize.svg)
@@ -166,9 +160,7 @@
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)
   skin/classic/browser/library.svg                    (../shared/icons/library.svg)
-#ifdef MOZ_PHOTON_ANIMATIONS
   skin/classic/browser/library-bookmark-animation.svg (../shared/icons/library-bookmark-animation.svg)
-#endif
 #ifdef MOZ_PHOTON_THEME
   skin/classic/browser/link.svg                       (../shared/icons/link.svg)
 #endif
@@ -184,18 +176,14 @@
   skin/classic/browser/privateBrowsing.svg            (../shared/icons/privateBrowsing.svg)
   skin/classic/browser/quit.svg                       (../shared/icons/quit.svg)
   skin/classic/browser/reload.svg                     (../shared/icons/reload.svg)
-#ifdef MOZ_PHOTON_ANIMATIONS
   skin/classic/browser/reload-to-stop.svg             (../shared/icons/reload-to-stop.svg)
-#endif
   skin/classic/browser/save.svg                       (../shared/icons/save.svg)
   skin/classic/browser/settings.svg                   (../shared/icons/settings.svg)
   skin/classic/browser/share.svg                      (../shared/icons/share.svg)
   skin/classic/browser/sidebars.svg                   (../shared/icons/sidebars.svg)
   skin/classic/browser/sidebars-right.svg             (../shared/icons/sidebars-right.svg)
   skin/classic/browser/stop.svg                       (../shared/icons/stop.svg)
-#ifdef MOZ_PHOTON_ANIMATIONS
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
-#endif
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
   skin/classic/browser/synced-tabs.svg                (../shared/icons/synced-tabs.svg)
   skin/classic/browser/webIDE.svg                     (../shared/icons/webIDE.svg)
