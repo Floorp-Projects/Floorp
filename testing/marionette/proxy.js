@@ -64,8 +64,9 @@ proxy.toListener = function(mmFn, sendAsyncFn, browserFn) {
  *
  * The AsyncMessageChannel is an abstraction of the message manager
  * IPC architecture allowing calls to be made to any registered message
- * listener in Marionette.  The {@code #send(...)} method returns a promise
- * that gets resolved when the message handler calls {@code .reply(...)}.
+ * listener in Marionette.  The <code>#send(...)</code> method
+ * returns a promise that gets resolved when the message handler calls
+ * <code>.reply(...)</code>.
  */
 proxy.AsyncMessageChannel = class {
   constructor(mmFn, sendAsyncFn, browserFn) {
@@ -95,13 +96,15 @@ proxy.AsyncMessageChannel = class {
    *
    * Usage:
    *
+   * <pre><code>
    *     let channel = new AsyncMessageChannel(
    *         messageManager, sendAsyncMessage.bind(this));
-   *     let rv = yield channel.send("remoteFunction", ["argument"]);
+   *     let rv = await channel.send("remoteFunction", ["argument"]);
+   * </code></pre>
    *
    * @param {string} name
    *     Function to call in the listener, e.g. for the message listener
-   *     "Marionette:foo8", use "foo".
+   *     <tt>Marionette:foo8</tt>, use <tt>foo</tt>.
    * @param {Array.<?>=} args
    *     Argument list to pass the function. If args has a single entry
    *     that is an object, we assume it's an old style dispatch, and
@@ -218,8 +221,8 @@ proxy.AsyncMessageChannel = class {
   /**
    * Reply to an asynchronous request.
    *
-   * Passing an WebDriverError prototype will cause the receiving channel
-   * to throw this error.
+   * Passing an {@link WebDriverError} prototype will cause the receiving
+   * channel to throw this error.
    *
    * Usage:
    *
@@ -343,7 +346,7 @@ proxy.toChromeAsync = function(frameMessageManager) {
  *
  *     let sender = new AsyncChromeSender(messageManager);
  *     let promise = sender.send("runEmulatorCmd", "my command");
- *     let rv = yield promise;
+ *     let rv = await promise;
  */
 class AsyncChromeSender {
   constructor(frameMessageManager) {
@@ -354,8 +357,8 @@ class AsyncChromeSender {
    * Call registered function in chrome context.
    *
    * @param {string} name
-   *     Function to call in the chrome, e.g. for "Marionette:foo", use
-   *     "foo".
+   *     Function to call in the chrome, e.g. for <tt>Marionette:foo</tt>,
+   *     use <tt>foo</tt>.
    * @param {*} args
    *     Argument list to pass the function.  Must be JSON serialisable.
    *
@@ -398,13 +401,15 @@ class AsyncChromeSender {
  * Creates a transparent interface from the content- to the chrome context.
  *
  * Calls to this object will be proxied via the frame's sendSyncMessage
- * (nsISyncMessageSender) function.  Since the message is synchronous,
- * the return value is presented as a return value.
+ * ({@link nsISyncMessageSender}) function.  Since the message is
+ * synchronous, the return value is presented as a return value.
  *
  * Example on how to use from a frame content script:
  *
+ * <pre><code>
  *     let chrome = proxy.toChrome(sendSyncMessage.bind(this));
  *     let cookie = chrome.getCookie("foo");
+ * </code></pre>
  *
  * @param {nsISyncMessageSender} sendSyncMessageFn
  *     The frame message manager's sendSyncMessage function.
@@ -416,13 +421,15 @@ proxy.toChrome = function(sendSyncMessageFn) {
 
 /**
  * The SyncChromeSender sends synchronous RPC messages to the chrome
- * context, using a frame's sendSyncMessage (nsISyncMessageSender)
+ * context, using a frame's sendSyncMessage ({@link nsISyncMessageSender})
  * function.
  *
  * Example on how to use from a frame content script:
  *
+ * <pre><code>
  *     let sender = new SyncChromeSender(sendSyncMessage.bind(this));
  *     let res = sender.send("addCookie", cookie);
+ * </code></pre>
  */
 proxy.SyncChromeSender = class {
   constructor(sendSyncMessage) {
