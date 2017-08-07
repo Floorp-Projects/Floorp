@@ -46,17 +46,14 @@ class HLSResource final : public MediaResource
 public:
   HLSResource(HLSDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
   ~HLSResource();
-  nsresult Close() override { return NS_OK; }
-  void Suspend(bool aCloseImmediately) override;
-  void Resume() override;
+  void Suspend();
+  void Resume();
   void SetReadMode(MediaCacheStream::ReadMode aMode) override { UNIMPLEMENTED(); }
-  void SetPlaybackRate(uint32_t aBytesPerSecond) override  { UNIMPLEMENTED(); }
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
   bool ShouldCacheReads() override { UNIMPLEMENTED(); return false; }
   int64_t Tell() override { UNIMPLEMENTED(); return -1; }
   void Pin() override { UNIMPLEMENTED(); }
   void Unpin() override { UNIMPLEMENTED(); }
-  double GetDownloadRate(bool* aIsReliable) override { UNIMPLEMENTED(); *aIsReliable = false; return 0; }
   int64_t GetLength() override { UNIMPLEMENTED(); return -1; }
   int64_t GetNextCachedData(int64_t aOffset) override { UNIMPLEMENTED(); return -1; }
   int64_t GetCachedDataEnd(int64_t aOffset) override { UNIMPLEMENTED(); return -1; }
@@ -64,7 +61,6 @@ public:
   bool IsSuspendedByCache() override { UNIMPLEMENTED(); return false; }
   bool IsSuspended() override { UNIMPLEMENTED(); return false; }
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
-  nsresult Open(nsIStreamListener** aStreamListener) override { UNIMPLEMENTED(); return NS_OK; }
 
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
   {

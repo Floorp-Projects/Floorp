@@ -234,21 +234,21 @@ public:
   // media element when it is sent to the bfcache, or when we need
   // to throttle the download. Call on the main thread only. This can
   // be called multiple times, there's an internal "suspend count".
-  virtual void Suspend();
+  virtual void Suspend() {}
 
   // Resume any media downloads that have been suspended. Called by the
   // media element when it is restored from the bfcache, or when we need
   // to stop throttling the download. Call on the main thread only.
   // The download will only actually resume once as many Resume calls
   // have been made as Suspend calls.
-  virtual void Resume();
+  virtual void Resume() {}
 
   // Moves any existing channel loads into or out of background. Background
   // loads don't block the load event. This is called when we stop or restart
   // delaying the load event. This also determines whether any new loads
   // initiated (for example to seek) will be in the background.  This calls
   // SetLoadInBackground() on mResource.
-  void SetLoadInBackground(bool aLoadInBackground);
+  virtual void SetLoadInBackground(bool aLoadInBackground) {}
 
   MediaDecoderStateMachine* GetStateMachine() const;
   void SetStateMachine(MediaDecoderStateMachine* aStateMachine);

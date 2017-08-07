@@ -78,6 +78,10 @@ public:
                 bool aIsPrivateBrowsing,
                 nsIStreamListener** aStreamListener);
 
+  void SetLoadInBackground(bool aLoadInBackground) override;
+  void Suspend() override;
+  void Resume() override;
+
 private:
   virtual ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) = 0;
   nsresult OpenResource(nsIStreamListener** aStreamListener);

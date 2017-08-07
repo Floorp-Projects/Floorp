@@ -214,6 +214,12 @@ ChannelMediaDecoder::Shutdown()
   mWatchManager.Shutdown();
   mResourceCallback->Disconnect();
   MediaDecoder::Shutdown();
+
+  // Force any outstanding seek and byterange requests to complete
+  // to prevent shutdown from deadlocking.
+  if (mResource) {
+    mResource->Close();
+  }
 }
 
 nsresult
@@ -466,6 +472,33 @@ ChannelMediaDecoder::ShouldThrottleDownload()
   uint32_t factor =
     std::max(2u, Preferences::GetUint("media.throttle-factor", 2));
   return stats.mDownloadRate > factor * stats.mPlaybackRate;
+}
+
+void
+ChannelMediaDecoder::SetLoadInBackground(bool aLoadInBackground)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    mResource->SetLoadInBackground(aLoadInBackground);
+  }
+}
+
+void
+ChannelMediaDecoder::Suspend()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    mResource->Suspend(true);
+  }
+}
+
+void
+ChannelMediaDecoder::Resume()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    mResource->Resume();
+  }
 }
 
 } // namespace mozilla
