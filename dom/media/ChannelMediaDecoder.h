@@ -91,6 +91,8 @@ private:
 
   void SeekingChanged();
 
+  bool CanPlayThroughImpl() override final;
+
   WatchManager<ChannelMediaDecoder> mWatchManager;
 
   // True when seeking or otherwise moving the play position around in

@@ -333,6 +333,14 @@ ChannelMediaDecoder::SeekingChanged()
   mIgnoreProgressData = mLogicallySeeking;
 }
 
+bool
+ChannelMediaDecoder::CanPlayThroughImpl()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_TRUE(GetStateMachine(), false);
+  return GetStatistics().CanPlayThrough();
+}
+
 } // namespace mozilla
 
 // avoid redefined macro in unified build

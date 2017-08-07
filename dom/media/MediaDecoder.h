@@ -532,7 +532,7 @@ private:
   void ConnectMirrors(MediaDecoderStateMachine* aObject);
   void DisconnectMirrors();
 
-  virtual bool CanPlayThroughImpl();
+  virtual bool CanPlayThroughImpl() = 0;
 
   // The state machine object for handling the decoding. It is safe to
   // call methods of this object from other threads. Its internal data
