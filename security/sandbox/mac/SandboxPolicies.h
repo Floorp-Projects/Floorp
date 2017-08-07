@@ -187,7 +187,6 @@ static const char contentSandboxRules[] = R"(
       (global-name "com.apple.pasteboard.1")
       (global-name "com.apple.audio.coreaudiod")
       (global-name "com.apple.audio.audiohald")
-      (global-name "com.apple.SystemConfiguration.configd")
       (global-name "com.apple.iconservices"))
 
 ; bug 1376163
