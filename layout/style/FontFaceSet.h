@@ -71,7 +71,12 @@ public:
                                    bool* aBypassCache) override;
 
     virtual bool IsFontLoadAllowed(nsIURI* aFontLocation,
-                                   nsIPrincipal* aPrincipal) override;
+                                   nsIPrincipal* aPrincipal,
+                                   nsTArray<nsCOMPtr<nsIRunnable>>* aViolations)
+                                     override;
+
+    void DispatchFontLoadViolations(
+		  nsTArray<nsCOMPtr<nsIRunnable>>& aViolations) override;
 
     virtual nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
                                const gfxFontFaceSrc* aFontFaceSrc) override;
@@ -277,7 +282,10 @@ private:
   nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
                          gfxFontSrcPrincipal** aPrincipal,
                          bool* aBypassCache);
-  bool IsFontLoadAllowed(nsIURI* aFontLocation, nsIPrincipal* aPrincipal);
+  bool IsFontLoadAllowed(nsIURI* aFontLocation,
+                         nsIPrincipal* aPrincipal,
+                         nsTArray<nsCOMPtr<nsIRunnable>>* aViolations);
+  void DispatchFontLoadViolations(nsTArray<nsCOMPtr<nsIRunnable>>& aViolations);
   nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
                             const gfxFontFaceSrc* aFontFaceSrc,
                             uint8_t*& aBuffer,
