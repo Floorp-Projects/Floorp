@@ -100,6 +100,9 @@ nsresult NS_NewFileURI(nsIURI **result,
                        nsIFile *spec,
                        nsIIOService *ioService = nullptr);     // pass in nsIIOService to optimize callers
 
+nsresult NS_GetSanitizedURIStringFromURI(nsIURI *aUri,
+                                         nsAString &aSanitizedSpec);
+
 /*
 * How to create a new Channel, using NS_NewChannel,
 * NS_NewChannelWithTriggeringPrincipal,
