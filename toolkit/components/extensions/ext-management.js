@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 XPCOMUtils.defineLazyServiceGetter(this, "promptService",
                                    "@mozilla.org/embedcomp/prompt-service;1",
                                    "nsIPromptService");
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource://gre/modules/EventEmitter.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "GlobalManager", () => {
   const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
@@ -91,10 +89,10 @@ const listenerMap = new WeakMap();
 // Some management APIs are intentionally limited.
 const allowedTypes = ["theme", "extension"];
 
-class AddonListener {
+class AddonListener extends ExtensionUtils.EventEmitter {
   constructor() {
+    super();
     AddonManager.addAddonListener(this);
-    EventEmitter.decorate(this);
   }
 
   release() {

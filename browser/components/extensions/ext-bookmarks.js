@@ -80,12 +80,16 @@ const convertBookmarks = result => {
   return node;
 };
 
-let observer = {
-  skipTags: true,
-  skipDescendantsOnItemRemoval: true,
+let observer = new class extends EventEmitter {
+  constructor() {
+    super();
 
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
+    this.skipTags = true;
+    this.skipDescendantsOnItemRemoval = true;
+  }
+
+  onBeginUpdateBatch() {}
+  onEndUpdateBatch() {}
 
   onItemAdded(id, parentId, index, itemType, uri, title, dateAdded, guid, parentGuid, source) {
     if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
@@ -107,9 +111,9 @@ let observer = {
     }
 
     this.emit("created", bookmark);
-  },
+  }
 
-  onItemVisited() {},
+  onItemVisited() {}
 
   onItemMoved(id, oldParentId, oldIndex, newParentId, newIndex, itemType, guid, oldParentGuid, newParentGuid, source) {
     if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
@@ -123,7 +127,7 @@ let observer = {
       oldIndex,
     };
     this.emit("moved", {guid, info});
-  },
+  }
 
   onItemRemoved(id, parentId, index, itemType, uri, guid, parentGuid, source) {
     if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
@@ -141,7 +145,7 @@ let observer = {
     }
 
     this.emit("removed", {guid, info: {parentId: parentGuid, index, node}});
-  },
+  }
 
   onItemChanged(id, prop, isAnno, val, lastMod, itemType, parentId, guid, parentGuid, oldVal, source) {
     if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
@@ -159,9 +163,8 @@ let observer = {
     }
 
     this.emit("changed", {guid, info});
-  },
-};
-EventEmitter.decorate(observer);
+  }
+}();
 
 const decrementListeners = () => {
   listenerCount -= 1;

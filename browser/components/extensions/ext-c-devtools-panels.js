@@ -5,8 +5,6 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ../../../toolkit/components/extensions/ext-c-toolkit.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource://gre/modules/EventEmitter.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChildDevToolsUtils",
                                   "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
 
@@ -23,7 +21,7 @@ var {
  * @param {string} panelOptions.id
  *   The id of the addon devtools panel registered in the main process.
  */
-class ChildDevToolsPanel extends EventEmitter {
+class ChildDevToolsPanel extends ExtensionUtils.EventEmitter {
   constructor(context, {id}) {
     super();
 
