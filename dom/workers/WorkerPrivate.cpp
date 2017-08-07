@@ -6221,6 +6221,26 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
       return true;
     }
 
+    // Make sure the hybrid event target stops dispatching runnables
+    // once we reaching the killing state.
+    if (aStatus == Killing) {
+      // To avoid deadlock we always acquire the event target mutex before the
+      // worker private mutex.  (We do it in this order because this is what
+      // workers best for event dispatching.)  To enforce that order here we
+      // need to unlock the worker private mutex before we lock the event target
+      // mutex in ForgetWorkerPrivate.
+      {
+        MutexAutoUnlock unlock(mMutex);
+        mWorkerHybridEventTarget->ForgetWorkerPrivate(this);
+      }
+
+      // Check the status code again in case another NotifyInternal came in
+      // while we were unlocked above.
+      if (mStatus >= aStatus) {
+        return true;
+      }
+    }
+
     previousStatus = mStatus;
     mStatus = aStatus;
 
@@ -6228,12 +6248,6 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     // dispatched after we clear the queue below.
     if (aStatus == Closing) {
       Close();
-    }
-
-    // Make sure the hybrid event target stops dispatching runnables
-    // once we reaching the killing state.
-    if (aStatus == Killing) {
-      mWorkerHybridEventTarget->ForgetWorkerPrivate(this);
     }
   }
 
