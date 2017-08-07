@@ -310,11 +310,11 @@ class RefTest(object):
                 sandbox_whitelist_paths.append(options.workPath)
         except AttributeError:
             pass
-        if platform.system() == "Linux":
-            # Trailing slashes are needed to indicate directories on Linux
-            for idx, path in enumerate(sandbox_whitelist_paths):
-                if not path.endswith("/"):
-                    sandbox_whitelist_paths[idx] = path + "/"
+        if (platform.system() == "Linux" or
+            platform.system() in ("Windows", "Microsoft")):
+            # Trailing slashes are needed to indicate directories on Linux and Windows
+            sandbox_whitelist_paths = map(lambda p: os.path.join(p, ""),
+                                          sandbox_whitelist_paths)
 
         # Bug 1300355: Disable canvas cache for win7 as it uses
         # too much memory and causes OOMs.
