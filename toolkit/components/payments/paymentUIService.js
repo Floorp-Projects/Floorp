@@ -10,32 +10,35 @@ const DIALOG_URL = "chrome://payments/content/paymentRequest.xhtml";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "paymentSrv",
+                                   "@mozilla.org/dom/payments/payment-request-service;1",
+                                   "nsIPaymentRequestService");
+
 function PaymentUIService() {}
 
 PaymentUIService.prototype = {
   classID: Components.ID("{01f8bd55-9017-438b-85ec-7c15d2b35cdc}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
 
-  canMakePayment(requestId) {
-    let canMakeResponse = Cc["@mozilla.org/dom/payments/payment-canmake-action-response;1"]
-                            .createInstance(Ci.nsIPaymentCanMakeActionResponse);
-    canMakeResponse.init(requestId, false);
-    return canMakeResponse.QueryInterface(Ci.nsIPaymentActionResponse);
-  },
-
   showPayment(requestId) {
-    return null;
   },
 
   abortPayment(requestId) {
     let abortResponse = Cc["@mozilla.org/dom/payments/payment-abort-action-response;1"]
                           .createInstance(Ci.nsIPaymentAbortActionResponse);
     abortResponse.init(requestId, Ci.nsIPaymentActionResponse.ABORT_SUCCEEDED);
-    return abortResponse.QueryInterface(Ci.nsIPaymentActionResponse);
+    paymentSrv.respondPayment(abortResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
 
   completePayment(requestId) {
-    return null;
+    let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"]
+                             .createInstance(Ci.nsIPaymentCompleteActionResponse);
+    completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLTETE_SUCCEEDED);
+    paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  },
+
+  updatePayment(requestId) {
   },
 };
 
