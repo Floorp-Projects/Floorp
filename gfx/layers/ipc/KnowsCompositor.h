@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace layers {
 
-class SyncObject;
+class SyncObjectClient;
 class TextureForwarder;
 class LayersIPCActor;
 
@@ -30,7 +30,7 @@ public:
 
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
-  SyncObject* GetSyncObject() { return mSyncObject; }
+  SyncObjectClient* GetSyncObject() { return mSyncObject; }
 
   int32_t GetMaxTextureSize() const
   {
@@ -86,7 +86,7 @@ public:
 
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
-  RefPtr<SyncObject> mSyncObject;
+  RefPtr<SyncObjectClient> mSyncObject;
 
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
