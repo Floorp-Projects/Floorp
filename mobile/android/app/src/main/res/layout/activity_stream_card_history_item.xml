@@ -26,6 +26,8 @@
             android:layout_marginStart="@dimen/activity_stream_base_margin"
             android:layout_marginTop="@dimen/activity_stream_base_margin"
             gecko:enableRoundCorners="false"
+            gecko:overrideScaleType="false"
+            android:scaleType="fitCenter"
             tools:background="@drawable/favicon_globe" />
 
     </FrameLayout>

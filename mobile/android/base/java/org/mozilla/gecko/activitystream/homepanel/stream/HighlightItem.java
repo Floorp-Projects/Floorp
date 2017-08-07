@@ -38,6 +38,7 @@ public class HighlightItem extends StreamItem implements IconCallback {
     private static final String LOGTAG = "GeckoHighlightItem";
 
     public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
+    private static final double SIZE_RATIO = 0.75;
 
     private Highlight highlight;
     private int position;
@@ -98,7 +99,7 @@ public class HighlightItem extends StreamItem implements IconCallback {
         ViewUtil.enableTouchRipple(menuButton);
     }
 
-    public void bind(Highlight highlight, int position, int tilesWidth, int tilesHeight) {
+    public void bind(Highlight highlight, int position, int tilesWidth) {
         this.highlight = highlight;
         this.position = position;
 
@@ -107,8 +108,8 @@ public class HighlightItem extends StreamItem implements IconCallback {
         pageTitleView.setText(uiHighlightTitle);
 
         ViewGroup.LayoutParams layoutParams = pageIconView.getLayoutParams();
-        layoutParams.width = tilesWidth - tilesMargin;
-        layoutParams.height = tilesHeight;
+        layoutParams.width = tilesWidth;
+        layoutParams.height = (int) Math.floor(tilesWidth * SIZE_RATIO);
         pageIconView.setLayoutParams(layoutParams);
 
         updateUiForSource(highlight.getSource());

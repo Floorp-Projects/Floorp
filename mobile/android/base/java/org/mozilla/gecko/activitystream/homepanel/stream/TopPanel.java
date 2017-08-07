@@ -53,17 +53,16 @@ public class TopPanel extends StreamItem {
         topSitesPager.addOnPageChangeListener(swipeListener);
     }
 
-    public void bind(Cursor cursor, int tiles, int tilesWidth, int tilesHeight) {
+    public void bind(Cursor cursor, int tiles, int tilesSize) {
         final TopSitesPagerAdapter adapter = (TopSitesPagerAdapter) topSitesPager.getAdapter();
-        adapter.setTilesSize(tiles, tilesWidth, tilesHeight);
+        adapter.setTilesSize(tiles, tilesSize);
         adapter.swapCursor(cursor);
 
         final Resources resources = itemView.getResources();
         final int tilesMargin = resources.getDimensionPixelSize(R.dimen.activity_stream_base_margin);
-        final int textHeight = resources.getDimensionPixelSize(R.dimen.activity_stream_top_sites_text_height);
 
         ViewGroup.LayoutParams layoutParams = topSitesPager.getLayoutParams();
-        layoutParams.height = tilesHeight + tilesMargin + textHeight;
+        layoutParams.height = tilesSize + tilesMargin * 2;
         topSitesPager.setLayoutParams(layoutParams);
 
         // Reset the page position: binding a new Cursor means that topsites reverts to the first page,
