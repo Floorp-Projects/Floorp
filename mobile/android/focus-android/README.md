@@ -31,13 +31,13 @@ Build instructions
   git clone https://github.com/mozilla-mobile/focus-android
   ```
 
-1. Import the project into Android Studio or build on the command line:
+2. Import the project into Android Studio or build on the command line:
 
   ```shell
   ./gradlew clean app:assembleFocusWebkitDebug
   ```
 
-1. Make sure to select the right build variant in Android Studio: **focusWebkitDebug**
+3. Make sure to select the right build variant in Android Studio: **focusWebkitDebug**
 
 License
 -------
