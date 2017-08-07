@@ -31,7 +31,6 @@ public:
     virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
                                   uint16_t aGID) override;
 
-    cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; };
     virtual bool SetupCairoFont(DrawTarget* aDrawTarget) override;
 
     virtual FontType GetType() const override { return FONT_TYPE_FT2; }
