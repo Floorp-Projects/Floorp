@@ -1084,6 +1084,11 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     event->MarkUninitialized();
     return event.forget();
   }
+  if (aEventType.LowerCaseEqualsLiteral("focusevent")) {
+    RefPtr<Event> event = NS_NewDOMFocusEvent(aOwner, aPresContext, nullptr);
+    event->MarkUninitialized();
+    return event.forget();
+  }
 
   // Only allow these events for chrome
   if (aCallerType == CallerType::System) {
