@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/layers/SyncObject.h"
 #include "mozilla/Range.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -122,13 +123,15 @@ public:
   wr::WrIdNamespace GetNamespace();
   GLint GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
+  layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
 
 protected:
-  WebRenderAPI(wr::RenderApi* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE)
+  WebRenderAPI(wr::RenderApi* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
     : mRenderApi(aRawApi)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
+    , mSyncHandle(aSyncHandle)
   {}
 
   ~WebRenderAPI();
@@ -139,6 +142,7 @@ protected:
   wr::WindowId mId;
   GLint mMaxTextureSize;
   bool mUseANGLE;
+  layers::SyncHandle mSyncHandle;
 
   friend class DisplayListBuilder;
   friend class layers::WebRenderBridgeParent;
