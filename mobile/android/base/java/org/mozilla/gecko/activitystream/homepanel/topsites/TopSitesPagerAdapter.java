@@ -28,8 +28,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
     public static final int SUGGESTED_SITES_MAX_PAGES = 2;
 
     private int tiles;
-    private int tilesWidth;
-    private int tilesHeight;
+    private int tilesSize;
 
     private final List<TopSitesPage> pages;
 
@@ -49,9 +48,8 @@ public class TopSitesPagerAdapter extends PagerAdapter {
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
-    public void setTilesSize(int tiles, int tilesWidth, int tilesHeight) {
-        this.tilesWidth = tilesWidth;
-        this.tilesHeight = tilesHeight;
+    public void setTilesSize(int tiles, int tilesSize) {
+        this.tilesSize = tilesSize;
         this.tiles = tiles;
     }
 
@@ -114,8 +112,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
 
                 page.setTiles(tiles);
                 final TopSitesPageAdapter adapter = new TopSitesPageAdapter(
-                        context, i, tiles, tilesWidth, tilesHeight,
-                        onUrlOpenListener, onUrlOpenInBackgroundListener);
+                        context, i, tiles, tilesSize, onUrlOpenListener, onUrlOpenInBackgroundListener);
                 page.setAdapter(adapter);
                 RecyclerViewClickSupport.addTo(page).setOnItemClickListener(adapter);
                 pages.add(page);

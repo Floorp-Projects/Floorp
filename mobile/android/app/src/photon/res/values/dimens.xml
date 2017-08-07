@@ -65,7 +65,7 @@
     <dimen name="tablet_tab_strip_button_inset">5dp</dimen>
 
     <!-- Dimensions used by Favicons and FaviconView -->
-    <dimen name="favicon_bg">32dp</dimen>
+    <dimen name="favicon_bg">112dp</dimen>
     <dimen name="favicon_corner_radius">2dp</dimen>
     <!-- Set the upper limit on the size of favicon that will be processed. Favicons larger than
          this will be downscaled to this value. If you need to use larger Favicons (Due to a UI
@@ -73,7 +73,7 @@
          commonly-used size of favicon and, performance permitting, fetch the remainder from the
          database. The largest available size is always stored in the database, regardless of this
          value.-->
-    <dimen name="favicon_largest_interesting_size">32dp</dimen>
+    <dimen name="favicon_largest_interesting_size">112dp</dimen>
     <!-- Small favicon used in about:home(TopsitesPanel, BookmarksPanel, CombinedHistoryPanel and BrowserSearch) -->
     <dimen name="favicon_small_size">24dp</dimen>
 
@@ -252,7 +252,6 @@
     <item name="activity_stream_base_margin" type="dimen">10dp</item>
     <item name="activity_stream_desired_tile_width" type="dimen">90dp</item>
     <item name="activity_stream_desired_tile_height" type="dimen">70dp</item>
-    <item name="activity_stream_top_sites_text_height" type="dimen">30dp</item>
 
     <!-- Default touch target size for buttons/imageviews that might be of small size -->
     <item name="touch_target_size" type="dimen">48dp</item>

@@ -30,23 +30,19 @@ import java.util.List;
     private List<TopSite> topSites;
     private final int pageNumber;
     private int tiles;
-    private int tilesWidth;
-    private int tilesHeight;
-    private int textHeight;
+    private int tilesSize;
 
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
     private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
-    /* package-local */ TopSitesPageAdapter(Context context, int pageNumber, int tiles, int tilesWidth, int tilesHeight,
+    /* package-local */ TopSitesPageAdapter(Context context, int pageNumber, int tiles, int tilesSize,
                                HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         setHasStableIds(true);
 
         this.topSites = new ArrayList<>();
         this.pageNumber = pageNumber;
         this.tiles = tiles;
-        this.tilesWidth = tilesWidth;
-        this.tilesHeight = tilesHeight;
-        this.textHeight = context.getResources().getDimensionPixelSize(R.dimen.activity_stream_top_sites_text_height);
+        this.tilesSize = tilesSize;
 
         this.onUrlOpenListener = onUrlOpenListener;
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
@@ -101,10 +97,11 @@ import java.util.List;
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         final FrameLayout card = (FrameLayout) inflater.inflate(R.layout.activity_stream_topsites_card, parent, false);
+        final int tilesMargin = parent.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
 
         ViewGroup.LayoutParams layoutParams = card.getLayoutParams();
-        layoutParams.width = tilesWidth;
-        layoutParams.height = tilesHeight + textHeight;
+        layoutParams.width = tilesSize;
+        layoutParams.height = tilesSize;
         card.setLayoutParams(layoutParams);
 
         return new TopSitesCard(card, onUrlOpenListener, onUrlOpenInBackgroundListener);

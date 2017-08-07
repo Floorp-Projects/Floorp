@@ -122,11 +122,9 @@ public class ActivityStreamPanel extends FrameLayout {
             setPadding(0, 0, 0, 0);
         }
 
-        final float ratio = (float) desiredTilesHeight / (float) desiredTileWidth;
-        final int tilesWidth = (w - (tiles * tileMargin) - tileMargin) / tiles;
-        final int tilesHeight = (int) (ratio * tilesWidth);
+        final int tilesSize = (w - (tiles * tileMargin) - tileMargin) / tiles;
 
-        adapter.setTileSize(tiles, tilesWidth, tilesHeight);
+        adapter.setTileSize(tiles, tilesSize);
     }
 
     private class HighlightsCallbacks implements LoaderManager.LoaderCallbacks<List<Highlight>> {

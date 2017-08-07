@@ -12,7 +12,8 @@
         android:layout_height="match_parent"
         gecko:enableRoundCorners="false"
         tools:background="@drawable/favicon_globe"
-        android:layout_marginTop="0dp" />
+        android:scaleType="centerInside"
+        gecko:overrideScaleType="false" />
 
     <TextView
         android:id="@+id/title"
