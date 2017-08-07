@@ -51,10 +51,6 @@ public class TabCounter extends ThemedRelativeLayout {
         animationSet = createAnimatorSet();
     }
 
-    public CharSequence getText() {
-        return text.getText();
-    }
-
     private AnimatorSet createAnimatorSet() {
         final AnimatorSet animatorSet = new AnimatorSet();
         createBoxAnimatorSet(animatorSet);
