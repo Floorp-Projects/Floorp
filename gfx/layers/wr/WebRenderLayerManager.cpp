@@ -320,13 +320,17 @@ WebRenderLayerManager::CreateImageKey(nsDisplayItem* aItem,
       LayoutDeviceRect::FromAppUnits(bounds, appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
     LayerRect scBounds(0, 0, rect.width, rect.height);
+    MaybeIntSize scaleToSize;
+    if (!aContainer->GetScaleHint().IsEmpty()) {
+      scaleToSize = Some(aContainer->GetScaleHint());
+    }
     imageData->CreateAsyncImageWebRenderCommands(aBuilder,
                                                  aContainer,
                                                  aSc,
                                                  rect,
                                                  scBounds,
                                                  gfx::Matrix4x4(),
-                                                 Nothing(),
+                                                 scaleToSize,
                                                  wr::ImageRendering::Auto,
                                                  wr::MixBlendMode::Normal);
     return Nothing();
@@ -351,6 +355,11 @@ WebRenderLayerManager::PushImage(nsDisplayItem* aItem,
 {
   gfx::IntSize size;
   Maybe<wr::ImageKey> key = CreateImageKey(aItem, aContainer, aBuilder, aSc, size);
+  if (aContainer->IsAsync()) {
+    // Async ImageContainer does not create ImageKey, instead it uses Pipeline.
+    MOZ_ASSERT(key.isNothing());
+    return true;
+  }
   if (!key) {
     return false;
   }
