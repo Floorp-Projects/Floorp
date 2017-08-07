@@ -3214,6 +3214,14 @@ nsCSSBorderRenderer::DrawBorders()
     return;
   }
 
+  bool allBordersSameWidth = AllBordersSameWidth();
+
+  if (allBordersSameWidth && mBorderWidths[0] == 0.0) {
+    // Some of the allBordersSameWidth codepaths depend on the border
+    // width being greater than zero.
+    return;
+  }
+
   AutoRestoreTransform autoRestoreTransform;
   Matrix mat = mDrawTarget->GetTransform();
 
@@ -3239,14 +3247,6 @@ nsCSSBorderRenderer::DrawBorders()
     // since this loses information that might be relevant when we're scaling.
     mOuterRect.Round();
     mInnerRect.Round();
-  }
-
-  bool allBordersSameWidth = AllBordersSameWidth();
-
-  if (allBordersSameWidth && mBorderWidths[0] == 0.0) {
-    // Some of the allBordersSameWidth codepaths depend on the border
-    // width being greater than zero.
-    return;
   }
 
   // Initial values only used when the border colors/widths are all the same:
