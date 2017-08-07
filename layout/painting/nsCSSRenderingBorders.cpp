@@ -3195,12 +3195,9 @@ nsCSSBorderRenderer::DrawBorders()
 {
   bool forceSeparateCorners = false;
 
-  // Examine the border style to figure out if we can draw it in one
-  // go or not.
-  bool tlBordersSame = AreBorderSideFinalStylesSame(eSideBitsTop | eSideBitsLeft);
-  bool brBordersSame = AreBorderSideFinalStylesSame(eSideBitsBottom | eSideBitsRight);
-  bool allBordersSame = AreBorderSideFinalStylesSame(eSideBitsAll);
-  if (allBordersSame &&
+  bool allBordersSameStyle = AreBorderSideFinalStylesSame(eSideBitsAll);
+
+  if (allBordersSameStyle &&
       ((mCompositeColors[0] == nullptr &&
        (mBorderStyles[0] == NS_STYLE_BORDER_STYLE_NONE ||
         mBorderStyles[0] == NS_STYLE_BORDER_STYLE_HIDDEN ||
@@ -3261,7 +3258,7 @@ nsCSSBorderRenderer::DrawBorders()
   // First there's a couple of 'special cases' that have specifically optimized
   // drawing paths, when none of these can be used we move on to the generalized
   // border drawing code.
-  if (allBordersSame &&
+  if (allBordersSameStyle &&
       mCompositeColors[0] == nullptr &&
       allBordersSameWidth &&
       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID &&
@@ -3275,7 +3272,7 @@ nsCSSBorderRenderer::DrawBorders()
     return;
   }
 
-  if (allBordersSame &&
+  if (allBordersSameStyle &&
       mCompositeColors[0] == nullptr &&
       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID &&
       !mAvoidStroke &&
@@ -3342,7 +3339,7 @@ nsCSSBorderRenderer::DrawBorders()
   // If we have composite colors -and- border radius,
   // then use separate corners so we get OP_ADD for the corners.
   // Otherwise, we'll get artifacts as we draw stacked 1px-wide curves.
-  if (allBordersSame && mCompositeColors[0] != nullptr && !mNoBorderRadius)
+  if (allBordersSameStyle && mCompositeColors[0] != nullptr && !mNoBorderRadius)
     forceSeparateCorners = true;
 
   PrintAsString(" mOuterRect: "); PrintAsString(mOuterRect); PrintAsStringNewline();
@@ -3372,14 +3369,14 @@ nsCSSBorderRenderer::DrawBorders()
     {
       // pretend that all borders aren't the same; we need to draw
       // things separately for dashed/dotting
-      allBordersSame = false;
+      allBordersSameStyle = false;
       dashedSides |= (1 << i);
     }
   }
 
-  PrintAsFormatString(" allBordersSame: %d dashedSides: 0x%02x\n", allBordersSame, dashedSides);
+  PrintAsFormatString(" allBordersSameStyle: %d dashedSides: 0x%02x\n", allBordersSameStyle, dashedSides);
 
-  if (allBordersSame && !forceSeparateCorners) {
+  if (allBordersSameStyle && !forceSeparateCorners) {
     /* Draw everything in one go */
     DrawBorderSides(eSideBitsAll);
     PrintAsStringNewline("---------------- (1)");
@@ -3537,12 +3534,18 @@ nsCSSBorderRenderer::DrawBorders()
         mNoBorderRadius &&
         (dashedSides & (eSideBitsTop | eSideBitsLeft)) == 0)
     {
-      if (tlBordersSame) {
+      bool tlBordersSameStyle = AreBorderSideFinalStylesSame(eSideBitsTop |
+                                                             eSideBitsLeft);
+      bool brBordersSameStyle = AreBorderSideFinalStylesSame(eSideBitsBottom |
+                                                             eSideBitsRight);
+
+      if (tlBordersSameStyle) {
         DrawBorderSides(eSideBitsTop | eSideBitsLeft);
         alreadyDrawnSides |= (eSideBitsTop | eSideBitsLeft);
       }
 
-      if (brBordersSame && (dashedSides & (eSideBitsBottom | eSideBitsRight)) == 0) {
+      if (brBordersSameStyle &&
+          (dashedSides & (eSideBitsBottom | eSideBitsRight)) == 0) {
         DrawBorderSides(eSideBitsBottom | eSideBitsRight);
         alreadyDrawnSides |= (eSideBitsBottom | eSideBitsRight);
       }
