@@ -1580,14 +1580,14 @@ nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
   // query innerWindowID and log to web console, otherwise log to
   // the error to the browser console.
   if (aInnerWindowID > 0) {
-    rv = scriptError->InitWithWindowID(aMessage,
-                                       EmptyString(), // sourceName
-                                       EmptyString(), // sourceLine
-                                       0,             // lineNumber
-                                       0,             // columnNumber
-                                       nsIScriptError::warningFlag,
-                                       "CORS",
-                                       aInnerWindowID);
+    rv = scriptError->InitWithSanitizedSource(aMessage,
+                                              EmptyString(), // sourceName
+                                              EmptyString(), // sourceLine
+                                              0,             // lineNumber
+                                              0,             // columnNumber
+                                              nsIScriptError::warningFlag,
+                                              "CORS",
+                                              aInnerWindowID);
   }
   else {
     rv = scriptError->Init(aMessage,

@@ -339,9 +339,6 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
 
     bool isChrome = false;
     if (NS_FAILED(uri->SchemeIs("chrome", &isChrome)) || !isChrome) {
-      nsAutoCString spec;
-      if (mDocumentURI)
-        mDocumentURI->GetSpec(spec);
 
       nsAutoString error;
       error.AssignLiteral("Cross site loading using document.load is no "
@@ -353,14 +350,15 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
         return false;
       }
 
-      rv = errorObject->InitWithWindowID(error,
-                                         NS_ConvertUTF8toUTF16(spec),
-                                         EmptyString(),
-                                         0, 0, nsIScriptError::warningFlag,
-                                         "DOM",
-                                         callingDoc ?
-                                           callingDoc->InnerWindowID() :
-                                           this->InnerWindowID());
+      rv = errorObject->InitWithSourceURI(error,
+                                          mDocumentURI,
+                                          EmptyString(),
+                                          0, 0,
+                                          nsIScriptError::warningFlag,
+                                          "DOM",
+                                          callingDoc ?
+                                          callingDoc->InnerWindowID() :
+                                          this->InnerWindowID());
 
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);

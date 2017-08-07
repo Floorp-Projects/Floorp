@@ -37,6 +37,15 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'RenderMacIOSurfaceTextureHostOGL.cpp',
     ]
 
+if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
+    DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True
+    EXPORTS.mozilla.webrender += [
+        'RenderD3D11TextureHostOGL.h',
+    ]
+    UNIFIED_SOURCES += [
+        'RenderD3D11TextureHostOGL.cpp',
+    ]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

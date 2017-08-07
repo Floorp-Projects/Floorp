@@ -2494,16 +2494,13 @@ HttpBaseChannel::AddSecurityMessage(const nsAString &aMessageTag,
           errorText);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoCString spec;
-  if (mURI) {
-    spec = mURI->GetSpecOrDefault();
-  }
-
   nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-  error->InitWithWindowID(errorText, NS_ConvertUTF8toUTF16(spec),
-                          EmptyString(), 0, 0, nsIScriptError::warningFlag,
-                          NS_ConvertUTF16toUTF8(aMessageCategory),
-                          innerWindowID);
+  error->InitWithSourceURI(errorText, mURI,
+                           EmptyString(), 0, 0,
+                           nsIScriptError::warningFlag,
+                           NS_ConvertUTF16toUTF8(aMessageCategory),
+                           innerWindowID);
+
   console->LogMessage(error);
 
   return NS_OK;
