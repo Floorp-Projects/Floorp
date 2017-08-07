@@ -218,6 +218,19 @@ static aom_codec_err_t decoder_peek_si_internal(
     data = clear_buffer;
   }
 
+  // skip a potential superframe index
+  {
+    uint32_t frame_sizes[8];
+    int frame_count;
+    int index_size = 0;
+    aom_codec_err_t res = av1_parse_superframe_index(
+        data, data_sz, frame_sizes, &frame_count, &index_size, NULL, NULL);
+    if (res != AOM_CODEC_OK) return res;
+
+    data += index_size;
+    data_sz -= index_size;
+  }
+
   {
     int show_frame;
     int error_resilient;
