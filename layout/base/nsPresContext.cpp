@@ -2271,10 +2271,14 @@ nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
 
   MOZ_ASSERT(elem->GetPseudoElementType() ==
              aFrame->StyleContext()->GetPseudoType());
-  MOZ_ASSERT(elem->HasServoData());
-  return Servo_HasAuthorSpecifiedRules(elem,
-                                       aRuleTypeMask,
-                                       UseDocumentColors());
+  if (elem->HasServoData()) {
+    return Servo_HasAuthorSpecifiedRules(elem,
+                                         aRuleTypeMask,
+                                         UseDocumentColors());
+  } else {
+    // Probably shouldn't happen, but does. See bug 1387953
+    return false;
+  }
 }
 
 gfxUserFontSet*
