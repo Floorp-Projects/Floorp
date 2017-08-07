@@ -193,8 +193,8 @@ var gSitePermissionsManager = {
     if (!this._list)
       return;
 
-    let hasSelection = this._list.selectedIndex;
-    let hasRows = this._list.itemCount > 1;
+    let hasSelection = this._list.selectedIndex >= 0;
+    let hasRows = this._list.itemCount > 0;
     this._removeButton.disabled = !hasSelection;
     this._removeAllButton.disabled = !hasRows;
   },
