@@ -255,6 +255,9 @@ module.exports = {
     // Use {} instead of new Object()
     "no-new-object": "error",
 
+    // Dissallow use of new wrappers
+    "no-new-wrappers": "error",
+
     // No Math() or JSON()
     "no-obj-calls": "error",
 

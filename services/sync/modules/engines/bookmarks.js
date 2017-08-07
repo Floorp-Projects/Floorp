@@ -357,6 +357,9 @@ BookmarksEngine.prototype = {
         guidMap[parentName] = {};
 
       // If the entry already exists, remember that there are explicit dupes.
+
+      // Changes below need to be processed in bug 1295510 that's why eslint is ignored
+      // eslint-disable-next-line no-new-wrappers
       let entry = new String(guid);
       entry.hasDupe = guidMap[parentName][key] != null;
 

@@ -416,9 +416,9 @@ add_task(async function log_message_with_params() {
   do_check_eq(formatMessage("Null ${n} undefined ${u}", {n: null, u: undefined}),
               "Null null undefined undefined");
 
-  // Format params with number, bool, and Object/String type.
+  // Format params with number, bool, and String type.
   do_check_eq(formatMessage("number ${n} boolean ${b} boxed Boolean ${bx} String ${s}",
-                            {n: 45, b: false, bx: new Boolean(true), s: new String("whatevs")}),
+                            {n: 45, b: false, bx: Boolean(true), s: String("whatevs")}),
               "number 45 boolean false boxed Boolean true String whatevs");
 
   /*
@@ -441,8 +441,8 @@ add_task(async function log_message_with_params() {
   // If the message text is null, the message contains only the formatted params object.
   str = formatMessage(null, err);
   do_check_true(str.startsWith('[Exception... "test exception"'));
-  // If the text is null and 'params' is a String object, the message is exactly that string.
-  str = formatMessage(null, new String("String in place of params"));
+  // If the text is null and 'params' is a string, the message is exactly that string.
+  str = formatMessage(null, "String in place of params");
   do_check_eq(str, "String in place of params");
 
   // We use object.valueOf() internally; make sure a broken valueOf() method
