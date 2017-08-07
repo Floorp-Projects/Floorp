@@ -5,7 +5,7 @@
 
 var prefBranch = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService).getBranch(null)
-                    .QueryInterface(Ci.nsIPrefBranch2);
+                    .QueryInterface(Ci.nsIPrefBranch);
 
 var supportsString = Cc["@mozilla.org/supports-string;1"]
                       .createInstance(Ci.nsISupportsString);

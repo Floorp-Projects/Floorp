@@ -7,6 +7,7 @@
 
 .main-content {
   padding-top: 0;
+  background-color: #fafafc;
 }
 
 .pane-container {
@@ -18,12 +19,23 @@
   width: 100%;
   padding: 0;
   font: message-box;
-  font-size: 1.25rem;
+  color: #0c0c0d;
+}
+
+#mainPrefPane groupbox,
+#mainPrefPane deck,
+#mainPrefPane description {
+  font-size: 1.36rem;
+}
+
+input,
+description.indent,
+.indent > description {
+  font-size: 1.18rem !important;
 }
 
 description.indent,
 .indent > description {
-  font-size: 1.18rem;
   color: #737373;
 }
 
@@ -36,6 +48,11 @@ treecol,
 html|option {
   /* override the * rule */
   -moz-user-select: none;
+}
+
+caption > label {
+  font-size: 1.55rem;
+  font-weight: 600;
 }
 
 #engineList treechildren::-moz-tree-image(engineShown, checked),
@@ -87,6 +104,7 @@ html|option {
 
 .header-name {
   font-size: 2rem;
+  font-weight: 300;
 }
 
 .subcategory {
@@ -97,10 +115,28 @@ html|option {
 
 #categories {
   max-height: 100vh;
+  background-color: #fafafc;
 }
 
 #categories > scrollbox {
   overflow-x: hidden !important;
+}
+
+.category-name {
+  font-size: 1.45rem;
+  color: #0c0c0d;
+}
+
+.category,
+.category:hover,
+.category[selected] {
+  background-color: transparent;
+  border-inline-start: initial;
+  padding-inline-start: 44px;
+}
+
+richlistitem[selected='true'] .category-name {
+  color: #0a84ff;
 }
 
 /**
@@ -197,8 +233,9 @@ html|option {
   font-size: 90%;
 }
 
-#isNotDefaultLabel {
-  font-weight: bold;
+#isNotDefaultLabel,
+#signedOutAccountBoxTitle {
+  font-weight: 600;
 }
 
 #downloadFolder {
@@ -474,7 +511,6 @@ groupbox {
 }
 
 #noFxaCaption {
-  font-weight: bold;
   margin-bottom: 11px;
 }
 
@@ -505,10 +541,6 @@ groupbox {
   border: 1px solid #D1D2D3;
   border-radius: 5px;
   padding: 14px 20px 14px 14px;
-}
-
-#signedOutAccountBoxTitle {
-  font-weight: bold;
 }
 
 .fxaAccountBoxButtons {
@@ -632,6 +664,8 @@ groupbox {
   background-position: 15px;
   padding-inline-start: 35px;
   white-space: nowrap;
+  fill: #0c0c0d;
+  stroke: #0c0c0d;
 }
 
 .help-button:-moz-locale-dir(rtl) {
@@ -642,8 +676,17 @@ groupbox {
 
 .help-button:link,
 .help-button:visited {
-  color: var(--in-content-category-text);
+  color: #0c0c0d !important;
+  opacity: 0.8;
   text-decoration: none;
+}
+
+.help-button:hover {
+  color: #0c0c0d !important;
+  fill: #0c0c0d !important;
+  stroke: #0c0c0d !important;
+  stroke-opacity: 0!important;
+  opacity: 0.9;
 }
 
 .search-container {

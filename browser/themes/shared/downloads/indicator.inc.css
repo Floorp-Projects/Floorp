@@ -255,8 +255,6 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
   min-width: 1344px;
   height: 98px; /* Height is equal to height of each frame in the SVG animation */
   -moz-context-properties: fill;
-  /* Intentionally not using --toolbarbutton-icon-fill to get better contrast/balance
-     across default, dark and light themes */
   fill: #737373;
 %else
   background-size: 16px;

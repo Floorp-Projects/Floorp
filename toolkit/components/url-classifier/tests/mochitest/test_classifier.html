@@ -33,7 +33,10 @@ var testData = [
   },
   { url: "blocked.example.com/",
     db: "test-block-simple"
-  }
+  },
+  { url: "harmful.example.com/",
+    db: "test-harmful-simple"
+  },
 ];
 
 const Cc = SpecialPowers.Cc;
@@ -80,6 +83,16 @@ var testURLs = [
     trackingProtection: true,
     table: "test-phish-simple",
     result: Cr.NS_ERROR_PHISHING_URI
+  },
+  { url: "http://harmful.example.com",
+    trackingProtection: false,
+    table: "test-harmful-simple",
+    result: Cr.NS_ERROR_HARMFUL_URI
+  },
+  { url: "http://harmful.example.com",
+    trackingProtection: true,
+    table: "test-harmful-simple",
+    result: Cr.NS_ERROR_HARMFUL_URI
   },
   { url: "http://tracking.example.com",
     trackingProtection: false,
@@ -135,7 +148,7 @@ function testService() {
         return;
       }
       let test = testURLs.shift();
-      let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-track-simple,test-block-simple";
+      let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-track-simple,test-block-simple,test-harmful-simple";
       let uri = ios.newURI(test.url);
       let prin = ssm.createCodebasePrincipal(uri, {});
       is(service.classifyLocal(uri, tables), test.table,
@@ -158,10 +171,11 @@ function testService() {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
+  {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
             ["urlclassifier.phishTable", "test-phish-simple"],
             ["urlclassifier.downloadBlockTable", "test-block-simple"],
             ["urlclassifier.trackingTable", "test-track-simple"],
+            ["browser.safebrowsing.debug", true],
             ["privacy.trackingprotection.annotate_channels", true]]},
   function() {
     classifierHelper.waitForInit()

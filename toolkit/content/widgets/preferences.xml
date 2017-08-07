@@ -94,7 +94,7 @@
       </field>
       <field name="rootBranchInternal">
         Components.classes["@mozilla.org/preferences-service;1"]
-                  .getService(Components.interfaces.nsIPrefBranchInternal);
+                  .getService(Components.interfaces.nsIPrefBranch);
       </field>
       <property name="type" readonly="true">
         <getter>

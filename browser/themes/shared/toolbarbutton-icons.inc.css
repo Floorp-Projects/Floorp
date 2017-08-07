@@ -1,16 +1,14 @@
 :root {
-  --toolbarbutton-icon-fill: #4c4c4c;
-  --toolbarbutton-icon-fill-inverted: #fff;
   --toolbarbutton-icon-fill-attention: #177ee5;
 }
 
 .toolbarbutton-1 {
   -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
+  fill: #4c4c4c;
 }
 
 toolbar[brighttext] .toolbarbutton-1 {
-  fill: var(--toolbarbutton-icon-fill-inverted);
+  fill: #fff;
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,

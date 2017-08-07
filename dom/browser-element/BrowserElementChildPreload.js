@@ -1460,6 +1460,9 @@ BrowserElementChild.prototype = {
           case Cr.NS_ERROR_MALWARE_URI :
             sendAsyncMsg('error', { type: 'malwareBlocked' });
             return;
+          case Cr.NS_ERROR_HARMFUL_URI :
+            sendAsyncMsg('error', { type: 'harmfulBlocked' });
+            return;
           case Cr.NS_ERROR_UNWANTED_URI :
             sendAsyncMsg('error', { type: 'unwantedBlocked' });
             return;
