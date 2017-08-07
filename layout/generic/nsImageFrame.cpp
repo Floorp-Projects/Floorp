@@ -646,7 +646,7 @@ nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
     nsIFrame::WebRenderUserDataTable* userDataTable =
       GetProperty(nsIFrame::WebRenderUserDataProperty());
     RefPtr<WebRenderUserData> data;
-    userDataTable->Get(nsDisplayItem::TYPE_IMAGE, getter_AddRefs(data));
+    userDataTable->Get(static_cast<uint32_t>(DisplayItemType::TYPE_IMAGE), getter_AddRefs(data));
     if (data && data->AsFallbackData()) {
       data->AsFallbackData()->SetInvalid(true);
     }
@@ -654,12 +654,12 @@ nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
     return;
   }
 
-  InvalidateLayer(nsDisplayItem::TYPE_IMAGE,
+  InvalidateLayer(DisplayItemType::TYPE_IMAGE,
                   aLayerInvalidRect,
                   aFrameInvalidRect);
 
   if (!mFirstFrameComplete) {
-    InvalidateLayer(nsDisplayItem::TYPE_ALT_FEEDBACK,
+    InvalidateLayer(DisplayItemType::TYPE_ALT_FEEDBACK,
                     aLayerInvalidRect,
                     aFrameInvalidRect);
   }
@@ -1862,7 +1862,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (GetShowFrameBorders() && GetImageMap()) {
         aLists.Outlines()->AppendNewToTop(new (aBuilder)
           nsDisplayGeneric(aBuilder, this, PaintDebugImageMap, "DebugImageMap",
-                           nsDisplayItem::TYPE_DEBUG_IMAGE_MAP));
+                           DisplayItemType::TYPE_DEBUG_IMAGE_MAP));
       }
 #endif
     }
