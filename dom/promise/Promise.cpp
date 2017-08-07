@@ -37,9 +37,6 @@
 #include "WorkerRunnable.h"
 #include "WrapperFactory.h"
 #include "xpcpublic.h"
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
 
 namespace mozilla {
 namespace dom {
