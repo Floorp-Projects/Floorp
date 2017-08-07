@@ -1353,6 +1353,7 @@ nsIDocument::nsIDocument()
     mIsTopLevelContentDocument(false),
     mIsContentDocument(false),
     mMightHaveStaleServoData(false),
+    mBufferingCSPViolations(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
