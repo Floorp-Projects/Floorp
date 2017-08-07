@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillHeuristics"];
+this.EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "LabelUtils"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -181,6 +181,84 @@ class FieldScanner {
     return index < this._elements.length;
   }
 }
+
+this.LabelUtils = {
+  // The tag name list is from Chromium except for "STYLE":
+  // eslint-disable-next-line max-len
+  // https://cs.chromium.org/chromium/src/components/autofill/content/renderer/form_autofill_util.cc?l=216&rcl=d33a171b7c308a64dc3372fac3da2179c63b419e
+  EXCLUDED_TAGS: ["SCRIPT", "NOSCRIPT", "OPTION", "STYLE"],
+  /**
+   * Extract all strings of an element's children to an array.
+   * "element.textContent" is a string which is merged of all children nodes,
+   * and this function provides an array of the strings contains in an element.
+   *
+   * @param  {Object} element
+   *         A DOM element to be extracted.
+   * @returns {Array}
+   *          All strings in an element.
+   */
+  extractLabelStrings(element) {
+    let strings = [];
+    let _extractLabelStrings = (el) => {
+      if (this.EXCLUDED_TAGS.includes(el.tagName)) {
+        return;
+      }
+
+      if (el.nodeType == Ci.nsIDOMNode.TEXT_NODE ||
+          el.childNodes.length == 0) {
+        let trimmedText = el.textContent.trim();
+        if (trimmedText) {
+          strings.push(trimmedText);
+        }
+        return;
+      }
+
+      for (let node of el.childNodes) {
+        if (node.nodeType != Ci.nsIDOMNode.ELEMENT_NODE &&
+            node.nodeType != Ci.nsIDOMNode.TEXT_NODE) {
+          continue;
+        }
+        _extractLabelStrings(node);
+      }
+    };
+    _extractLabelStrings(element);
+    return strings;
+  },
+
+  findLabelElements(element) {
+    let document = element.ownerDocument;
+    let labels = [];
+    // TODO: querySelectorAll is inefficient here. However, bug 1339726 is for
+    // a more efficient implementation from DOM API perspective. This function
+    // should be refined after input.labels API landed.
+    for (let label of document.querySelectorAll("label[for]")) {
+      if (element.id == label.htmlFor) {
+        labels.push(label);
+      }
+    }
+
+    if (labels.length > 0) {
+      log.debug("Label found by ID", element.id);
+      return labels;
+    }
+
+    let parent = element.parentNode;
+    if (!parent) {
+      return [];
+    }
+    do {
+      if (parent.tagName == "LABEL" &&
+          parent.control == element &&
+          !parent.hasAttribute("for")) {
+        log.debug("Label found in input's parent or ancestor.");
+        return [parent];
+      }
+      parent = parent.parentNode;
+    } while (parent);
+
+    return [];
+  },
+};
 
 /**
  * Returns the autocomplete information of fields according to heuristics.
@@ -370,9 +448,9 @@ this.FormAutofillHeuristics = {
       yield element.name;
       if (!labelStrings) {
         labelStrings = [];
-        let labels = FormAutofillUtils.findLabelElements(element);
+        let labels = LabelUtils.findLabelElements(element);
         for (let label of labels) {
-          labelStrings.push(...FormAutofillUtils.extractLabelStrings(label));
+          labelStrings.push(...LabelUtils.extractLabelStrings(label));
         }
       }
       yield *labelStrings;
