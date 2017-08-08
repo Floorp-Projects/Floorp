@@ -17,9 +17,11 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.PrefsHelper;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
@@ -82,7 +84,8 @@ public class MmaDelegate {
                         // we gather the information here then pass to mmaHelper.init()
                         // Note that generateUserAttribute always return a non null HashMap.
                         Map<String, Object> attributes = gatherUserAttributes(activity);
-
+                        mmaHelper.setGcmSenderId(getSenderIds());
+                        mmaHelper.setCustomIcon(R.drawable.ic_status_logo);
                         mmaHelper.init(activity, attributes);
 
                         if (!isDefaultBrowser(activity)) {
@@ -156,8 +159,11 @@ public class MmaDelegate {
         return (TextUtils.equals(packageName, context.getPackageName()));
     }
 
-    public static boolean handleGcmMessage(@NonNull Context context, @NonNull Bundle bundle) {
-        return mmaHelper.handleGcmMessage(context, bundle);
+    public static boolean handleGcmMessage(@NonNull Context context, String from, @NonNull Bundle bundle) {
+        return mmaHelper.handleGcmMessage(context, from, bundle);
     }
 
+    public static String getSenderIds() {
+        return AppConstants.MOZ_ANDROID_GCM_SENDERID + mmaHelper.getMmaSenderId();
+    }
 }
