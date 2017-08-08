@@ -691,7 +691,7 @@ interface HTMLInputElement : HTMLElement {
   [CEReactions] attribute DOMString dirName;
   [CEReactions] attribute boolean disabled;
   readonly attribute HTMLFormElement? form;
-  readonly attribute FileList? files;
+  attribute FileList? files;
   [CEReactions] attribute USVString formAction;
   [CEReactions] attribute DOMString formEnctype;
   [CEReactions] attribute DOMString formMethod;

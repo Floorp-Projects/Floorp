@@ -2948,6 +2948,26 @@ HTMLInputElement::GetFiles()
   return mFileData->mFileList;
 }
 
+void
+HTMLInputElement::SetFiles(FileList* aFiles)
+{
+  if (mType != NS_FORM_INPUT_FILE || !aFiles) {
+    return;
+  }
+
+  // Clear |mFileData->mFileList| to omit |UpdateFileList|
+  if (mFileData->mFileList) {
+    mFileData->mFileList->Clear();
+    mFileData->mFileList = nullptr;
+  }
+
+  // Update |mFileData->mFilesOrDirectories|
+  SetFiles(aFiles, true);
+
+  // Update |mFileData->mFileList| without copy
+  mFileData->mFileList = aFiles;
+}
+
 /* static */ void
 HTMLInputElement::HandleNumberControlSpin(void* aData)
 {

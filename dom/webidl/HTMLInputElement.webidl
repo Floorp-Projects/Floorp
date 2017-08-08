@@ -40,7 +40,7 @@ interface HTMLInputElement : HTMLElement {
            attribute boolean disabled;
   readonly attribute HTMLFormElement? form;
   [Pure]
-  readonly attribute FileList? files;
+           attribute FileList? files;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString formAction;
   [CEReactions, Pure, SetterThrows]
