@@ -45,7 +45,7 @@ gfxFT2FontBase::GetGlyph(uint32_t aCharCode)
     // lightweight cache, which is stored on the cairo_font_face_t.
 
     cairo_font_face_t *face =
-        cairo_scaled_font_get_font_face(CairoScaledFont());
+        cairo_scaled_font_get_font_face(GetCairoScaledFont());
 
     if (cairo_font_face_status(face) != CAIRO_STATUS_SUCCESS)
         return 0;
@@ -113,7 +113,7 @@ gfxFT2FontBase::GetGlyphExtents(uint32_t aGlyph, cairo_text_extents_t* aExtents)
     // so caching only the advance could allow many requests to be cached with
     // little memory use.  Ideally this cache would be merged with
     // gfxGlyphExtents.
-    cairo_scaled_font_glyph_extents(CairoScaledFont(), glyphs, 1, aExtents);
+    cairo_scaled_font_glyph_extents(GetCairoScaledFont(), glyphs, 1, aExtents);
 }
 
 // aScale is intended for a 16.16 x/y_scale of an FT_Size_Metrics
@@ -486,7 +486,7 @@ gfxFT2FontBase::SetupCairoFont(DrawTarget* aDrawTarget)
     // for the target can be different from the scaled_font passed to
     // cairo_set_scaled_font.  (Unfortunately we have measured only for an
     // identity ctm.)
-    cairo_scaled_font_t *cairoFont = CairoScaledFont();
+    cairo_scaled_font_t *cairoFont = GetCairoScaledFont();
 
     if (cairo_scaled_font_status(cairoFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to

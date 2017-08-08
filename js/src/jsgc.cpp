@@ -3444,6 +3444,8 @@ void
 JSCompartment::destroy(FreeOp* fop)
 {
     JSRuntime* rt = fop->runtime();
+    if (auto callback = rt->destroyRealmCallback)
+        callback(fop, JS::GetRealmForCompartment(this));
     if (auto callback = rt->destroyCompartmentCallback)
         callback(fop, this);
     if (principals())
@@ -3464,10 +3466,9 @@ Zone::destroy(FreeOp* fop)
  * It's simpler if we preserve the invariant that every zone has at least one
  * compartment. If we know we're deleting the entire zone, then
  * SweepCompartments is allowed to delete all compartments. In this case,
- * |keepAtleastOne| is false. If some objects remain in the zone so that it
- * cannot be deleted, then we set |keepAtleastOne| to true, which prohibits
- * SweepCompartments from deleting every compartment. Instead, it preserves an
- * arbitrary compartment in the zone.
+ * |keepAtleastOne| is false. If any cells remain alive in the zone, set
+ * |keepAtleastOne| true to prohibit sweepCompartments from deleting every
+ * compartment. Instead, it preserves an arbitrary compartment in the zone.
  */
 void
 Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime)

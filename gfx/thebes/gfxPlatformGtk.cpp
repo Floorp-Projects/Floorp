@@ -13,7 +13,6 @@
 #include "nsUnicodeProperties.h"
 #include "gfx2DGlue.h"
 #include "gfxFcPlatformFontList.h"
-#include "gfxFontconfigUtils.h"
 #include "gfxFontconfigFonts.h"
 #include "gfxConfig.h"
 #include "gfxContext.h"
@@ -567,20 +566,6 @@ gfxPlatformGtk::GetGdkDrawable(cairo_surface_t *target)
     return nullptr;
 }
 #endif
-
-already_AddRefed<ScaledFont>
-gfxPlatformGtk::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
-{
-  if (aFont->GetType() == gfxFont::FONT_TYPE_FONTCONFIG) {
-      gfxFontconfigFontBase* fcFont = static_cast<gfxFontconfigFontBase*>(aFont);
-      return Factory::CreateScaledFontForFontconfigFont(
-              fcFont->GetCairoScaledFont(),
-              fcFont->GetPattern(),
-              fcFont->GetUnscaledFont(),
-              fcFont->GetAdjustedSize());
-  }
-  return GetScaledFontForFontWithCairoSkia(aTarget, aFont);
-}
 
 #ifdef GL_PROVIDER_GLX
 
