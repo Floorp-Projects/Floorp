@@ -490,33 +490,6 @@ cubeb_channel_layout ConvertChannelMapToCubebLayout(uint32_t aChannelMap)
   }
 }
 
-#if defined(__ANDROID__) && defined(MOZ_B2G)
-cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
-{
-  switch(aChannel) {
-    case dom::AudioChannel::Normal:
-      /* FALLTHROUGH */
-    case dom::AudioChannel::Content:
-      return CUBEB_STREAM_TYPE_MUSIC;
-    case dom::AudioChannel::Notification:
-      return CUBEB_STREAM_TYPE_NOTIFICATION;
-    case dom::AudioChannel::Alarm:
-      return CUBEB_STREAM_TYPE_ALARM;
-    case dom::AudioChannel::Telephony:
-      return CUBEB_STREAM_TYPE_VOICE_CALL;
-    case dom::AudioChannel::Ringer:
-      return CUBEB_STREAM_TYPE_RING;
-    case dom::AudioChannel::System:
-      return CUBEB_STREAM_TYPE_SYSTEM;
-    case dom::AudioChannel::Publicnotification:
-      return CUBEB_STREAM_TYPE_SYSTEM_ENFORCED;
-    default:
-      NS_ERROR("The value of AudioChannel is invalid");
-      return CUBEB_STREAM_TYPE_MAX;
-  }
-}
-#endif
-
 void GetCurrentBackend(nsAString& aBackend)
 {
   cubeb* cubebContext = GetCubebContext();
