@@ -22,7 +22,7 @@ sync protocol PBackgroundStorage
   manager PBackground;
 
 parent:
-  async __delete__();
+  async DeleteMe();
 
   sync Preload(nsCString originSuffix,
                nsCString originNoSuffix,
@@ -52,6 +52,8 @@ parent:
   async ClearMatchingOriginAttributes(OriginAttributesPattern pattern);
 
 child:
+  async __delete__();
+
   async Observe(nsCString topic,
                 nsString originAttributesPattern,
                 nsCString originScope);
