@@ -16,6 +16,8 @@
 #include "js/TypeDecls.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/TypedArray.h"
+#include "nsPIDOMWindow.h"
+#include "nsIWeakReferenceUtils.h"
 
 namespace mozilla {
 

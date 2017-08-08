@@ -13,6 +13,7 @@
 #include "AudioParamTimeline.h"
 #include "AudioContext.h"
 #include "nsMathUtils.h"
+#include "AlignmentUtils.h"
 
 using namespace mozilla::dom;
 

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioEventTimeline.h"
+#include "MediaStreamGraph.h"
 
 #include "mozilla/ErrorResult.h"
 
@@ -51,6 +52,59 @@ static float ExtractValueFromCurve(double startTime, float* aCurve, uint32_t aCu
 
 namespace mozilla {
 namespace dom {
+
+AudioTimelineEvent::AudioTimelineEvent(Type aType,
+                                       double aTime,
+                                       float aValue,
+                                       double aTimeConstant,
+                                       double aDuration,
+                                       const float* aCurve,
+                                       uint32_t aCurveLength)
+  : mType(aType)
+  , mCurve(nullptr)
+  , mTimeConstant(aTimeConstant)
+  , mDuration(aDuration)
+#ifdef DEBUG
+  , mTimeIsInTicks(false)
+#endif
+{
+  mTime = aTime;
+  if (aType == AudioTimelineEvent::SetValueCurve) {
+    SetCurveParams(aCurve, aCurveLength);
+  } else {
+    mValue = aValue;
+  }
+}
+
+AudioTimelineEvent::AudioTimelineEvent(MediaStream* aStream)
+  : mType(Stream)
+  , mCurve(nullptr)
+  , mStream(aStream)
+  , mTimeConstant(0.0)
+  , mDuration(0.0)
+#ifdef DEBUG
+  , mTimeIsInTicks(false)
+#endif
+{
+}
+
+AudioTimelineEvent::AudioTimelineEvent(const AudioTimelineEvent& rhs)
+{
+  PodCopy(this, &rhs, 1);
+
+  if (rhs.mType == AudioTimelineEvent::SetValueCurve) {
+    SetCurveParams(rhs.mCurve, rhs.mCurveLength);
+  } else if (rhs.mType == AudioTimelineEvent::Stream) {
+    new (&mStream) decltype(mStream)(rhs.mStream);
+  }
+}
+
+AudioTimelineEvent::~AudioTimelineEvent()
+{
+  if (mType == AudioTimelineEvent::SetValueCurve) {
+    delete[] mCurve;
+  }
+}
 
 // This method computes the AudioParam value at a given time based on the event timeline
 template<class TimeType> void
