@@ -6,6 +6,7 @@
 
 CHECK(ArithmeticArgChecker, "arithmetic-argument")
 CHECK(AssertAssignmentChecker, "assignment-in-assert")
+CHECK(CanRunScriptChecker, "can-run-script")
 CHECK(DanglingOnTemporaryChecker, "dangling-on-temporary")
 CHECK(ExplicitImplicitChecker, "implicit-constructor")
 CHECK(ExplicitOperatorBoolChecker, "explicit-operator-bool")
