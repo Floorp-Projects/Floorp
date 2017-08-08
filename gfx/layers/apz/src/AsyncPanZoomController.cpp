@@ -1747,19 +1747,44 @@ AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
 
   // Calculate the destination for this keyboard scroll action
   CSSPoint destination = GetKeyboardDestination(aEvent.mAction);
-  nsIScrollableFrame::ScrollUnit scrollUnit = KeyboardScrollAction::GetScrollUnit(aEvent.mAction.mType);
+  bool scrollSnapped = MaybeAdjustDestinationForScrollSnapping(aEvent, destination);
+
+  // If smooth scrolling is disabled, then scroll immediately to the destination
+  if (!gfxPrefs::SmoothScrollEnabled()) {
+    CancelAnimation();
+
+    // CallDispatchScroll interprets the start and end points as the start and
+    // end of a touch scroll so they need to be reversed.
+    ParentLayerPoint startPoint = destination * mFrameMetrics.GetZoom();
+    ParentLayerPoint endPoint = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
+    ParentLayerPoint delta = endPoint - startPoint;
+
+    ScreenPoint distance = ToScreenCoordinates(
+        ParentLayerPoint(fabs(delta.x), fabs(delta.y)), startPoint);
+
+    OverscrollHandoffState handoffState(
+        *mInputQueue->GetCurrentKeyboardBlock()->GetOverscrollHandoffChain(),
+        distance,
+        ScrollSource::Keyboard);
+
+    CallDispatchScroll(startPoint, endPoint, handoffState);
+
+    SetState(NOTHING);
+
+    return nsEventStatus_eConsumeDoDefault;
+  }
 
   // The lock must be held across the entire update operation, so the
   // compositor doesn't end the animation before we get a chance to
   // update it.
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (Maybe<CSSPoint> snapPoint = FindSnapPointNear(destination, scrollUnit)) {
+  if (scrollSnapped) {
     // If we're scroll snapping, use a smooth scroll animation to get
     // the desired physics. Note that SmoothScrollTo() will re-use an
     // existing smooth scroll animation if there is one.
-    APZC_LOG("%p keyboard scrolling to snap point %s\n", this, Stringify(*snapPoint).c_str());
-    SmoothScrollTo(*snapPoint);
+    APZC_LOG("%p keyboard scrolling to snap point %s\n", this, Stringify(destination).c_str());
+    SmoothScrollTo(destination);
     return nsEventStatus_eConsumeDoDefault;
   }
 
@@ -4359,6 +4384,21 @@ bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnapping(
   if (Maybe<CSSPoint> snapPoint = FindSnapPointNear(destination, unit)) {
     aDelta = (*snapPoint - aStartPosition) * zoom;
     aStartPosition = *snapPoint;
+    return true;
+  }
+  return false;
+}
+
+bool AsyncPanZoomController::MaybeAdjustDestinationForScrollSnapping(
+    const KeyboardInput& aEvent,
+    CSSPoint& aDestination)
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  nsIScrollableFrame::ScrollUnit unit =
+      KeyboardScrollAction::GetScrollUnit(aEvent.mAction.mType);
+
+  if (Maybe<CSSPoint> snapPoint = FindSnapPointNear(aDestination, unit)) {
+    aDestination = *snapPoint;
     return true;
   }
   return false;
