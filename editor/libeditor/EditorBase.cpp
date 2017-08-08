@@ -2193,11 +2193,13 @@ EditorBase::EndIMEComposition()
 NS_IMETHODIMP
 EditorBase::ForceCompositionEnd()
 {
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  if (!ps) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  nsPresContext* pc = ps->GetPresContext();
+  return CommitComposition();
+}
+
+nsresult
+EditorBase::CommitComposition()
+{
+  nsPresContext* pc = GetPresContext();
   if (!pc) {
     return NS_ERROR_NOT_AVAILABLE;
   }

@@ -251,6 +251,11 @@ public:
   already_AddRefed<nsIDOMDocument> GetDOMDocument();
   already_AddRefed<nsIDocument> GetDocument();
   already_AddRefed<nsIPresShell> GetPresShell();
+  nsPresContext* GetPresContext()
+  {
+    RefPtr<nsIPresShell> presShell = GetPresShell();
+    return presShell ? presShell->GetPresContext() : nullptr;
+  }
   already_AddRefed<nsIWidget> GetWidget();
   nsISelectionController* GetSelectionController() const
   {
@@ -350,6 +355,15 @@ public:
   virtual nsresult UpdateIMEComposition(
                      WidgetCompositionEvent* aCompositionChangeEvet) = 0;
   void EndIMEComposition();
+
+  /**
+   * Commit composition if there is.
+   * Note that when there is a composition, this requests to commit composition
+   * to native IME.  Therefore, when there is composition, this can do anything.
+   * For example, the editor instance, the widget or the process itself may
+   * be destroyed.
+   */
+  nsresult CommitComposition();
 
   void SwitchTextDirectionTo(uint32_t aDirection);
 
@@ -946,6 +960,36 @@ public:
    * Accessor methods to flags.
    */
   uint32_t Flags() const { return mFlags; }
+
+  nsresult AddFlags(uint32_t aFlags)
+  {
+    const uint32_t kOldFlags = Flags();
+    const uint32_t kNewFlags = (kOldFlags | aFlags);
+    if (kNewFlags == kOldFlags) {
+      return NS_OK;
+    }
+    return SetFlags(kNewFlags); // virtual call and may be expensive.
+  }
+  nsresult RemoveFlags(uint32_t aFlags)
+  {
+    const uint32_t kOldFlags = Flags();
+    const uint32_t kNewFlags = (kOldFlags & ~aFlags);
+    if (kNewFlags == kOldFlags) {
+      return NS_OK;
+    }
+    return SetFlags(kNewFlags); // virtual call and may be expensive.
+  }
+  nsresult AddAndRemoveFlags(uint32_t aAddingFlags, uint32_t aRemovingFlags)
+  {
+    MOZ_ASSERT(!(aAddingFlags & aRemovingFlags),
+               "Same flags are specified both adding and removing");
+    const uint32_t kOldFlags = Flags();
+    const uint32_t kNewFlags = ((kOldFlags | aAddingFlags) & ~aRemovingFlags);
+    if (kNewFlags == kOldFlags) {
+      return NS_OK;
+    }
+    return SetFlags(kNewFlags); // virtual call and may be expensive.
+  }
 
   bool IsPlaintextEditor() const
   {
