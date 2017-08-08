@@ -86,5 +86,6 @@ TESTCASES.forEach(testcase => {
     let labels = LabelUtils.findLabelElements(input);
 
     Assert.deepEqual(labels.map(l => l.id), testcase.expectedLabelIds);
+    LabelUtils.clearLabelMap();
   });
 });
