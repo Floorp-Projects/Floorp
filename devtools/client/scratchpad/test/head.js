@@ -13,6 +13,7 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 
 var gScratchpadWindow; // Reference to the Scratchpad chrome window object

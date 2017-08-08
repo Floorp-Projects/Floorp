@@ -4,6 +4,7 @@
 "use strict";
 
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 /**
  * Map of pending requests. Used mainly by tests to wait

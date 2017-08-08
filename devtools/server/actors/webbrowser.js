@@ -9,6 +9,7 @@
 var { Ci } = require("chrome");
 var Services = require("Services");
 var promise = require("promise");
+const defer = require("devtools/shared/defer");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 

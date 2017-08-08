@@ -9,6 +9,7 @@ var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var Services = require("Services");
 var promise = require("promise");
+const defer = require("devtools/shared/defer");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");

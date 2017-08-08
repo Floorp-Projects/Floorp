@@ -8,6 +8,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const { NetworkThrottleManager } =
       require("devtools/shared/webconsole/throttle");
 const nsIScriptableInputStream = Ci.nsIScriptableInputStream;

@@ -10,6 +10,7 @@ const defer = require("devtools/shared/defer");
 const { ObjectClient } = require("devtools/shared/client/main");
 
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Task } = require("devtools/shared/task");
 
