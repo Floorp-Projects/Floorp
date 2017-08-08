@@ -23,7 +23,7 @@ enum DispatchMessage<U: WebDriverExtensionRoute> {
     Quit
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Session {
     id: String
 }
@@ -41,6 +41,7 @@ pub trait WebDriverHandler<U: WebDriverExtensionRoute=VoidWebDriverExtensionRout
     fn delete_session(&mut self, session: &Option<Session>);
 }
 
+#[derive(Debug)]
 struct Dispatcher<T: WebDriverHandler<U>,
                   U: WebDriverExtensionRoute> {
     handler: T,
@@ -148,6 +149,7 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
     }
 }
 
+#[derive(Debug)]
 struct HttpHandler<U: WebDriverExtensionRoute> {
     chan: Mutex<Sender<DispatchMessage<U>>>,
     api: Mutex<WebDriverHttpApi<U>>

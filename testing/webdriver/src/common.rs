@@ -6,7 +6,7 @@ use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
 pub static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 
-#[derive(RustcEncodable, PartialEq, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, RustcEncodable)]
 pub struct Date(pub u64);
 
 impl Date {
@@ -22,7 +22,7 @@ impl ToJson for Date {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Nullable<T: ToJson> {
     Value(T),
     Null
@@ -142,7 +142,7 @@ impl <T> From<T> for WebElement
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug, PartialEq)]
 pub enum FrameId {
     Short(u16),
     Element(WebElement),
@@ -184,7 +184,7 @@ impl ToJson for FrameId {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum LocatorStrategy {
     CSSSelector,
     LinkText,
