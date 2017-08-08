@@ -28,7 +28,6 @@
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
 #include "nsITableCellLayout.h" // For efficient access to table cell
-#include "nsITableEditor.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
 #include "nsRange.h"
@@ -49,18 +48,18 @@ using namespace dom;
 class MOZ_STACK_CLASS AutoSelectionSetterAfterTableEdit final
 {
 private:
-  nsCOMPtr<nsITableEditor> mTableEditor;
+  RefPtr<HTMLEditor> mHTMLEditor;
   nsCOMPtr<nsIDOMElement> mTable;
   int32_t mCol, mRow, mDirection, mSelected;
 
 public:
-  AutoSelectionSetterAfterTableEdit(nsITableEditor* aTableEditor,
+  AutoSelectionSetterAfterTableEdit(HTMLEditor& aHTMLEditor,
                                     nsIDOMElement* aTable,
                                     int32_t aRow,
                                     int32_t aCol,
                                     int32_t aDirection,
                                     bool aSelected)
-    : mTableEditor(aTableEditor)
+    : mHTMLEditor(&aHTMLEditor)
     , mTable(aTable)
     , mCol(aCol)
     , mRow(aRow)
@@ -71,9 +70,9 @@ public:
 
   ~AutoSelectionSetterAfterTableEdit()
   {
-    if (mTableEditor) {
-      mTableEditor->SetSelectionAfterTableEdit(mTable, mRow, mCol, mDirection,
-                                               mSelected);
+    if (mHTMLEditor) {
+      mHTMLEditor->SetSelectionAfterTableEdit(mTable, mRow, mCol, mDirection,
+                                              mSelected);
     }
   }
 
@@ -81,7 +80,7 @@ public:
   //  when one method yields control to another
   void CancelSetCaret()
   {
-    mTableEditor = nullptr;
+    mHTMLEditor = nullptr;
     mTable = nullptr;
   }
 };
@@ -193,7 +192,7 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
   NS_ENSURE_TRUE(curCell, NS_ERROR_FAILURE);
   int32_t newCellIndex = aAfter ? (startColIndex+colSpan) : startColIndex;
   //We control selection resetting after the insert...
-  AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              newCellIndex, ePreviousColumn,
                                              false);
   //...so suppress Rules System selection munging
@@ -437,7 +436,7 @@ HTMLEditor::InsertTableColumn(int32_t aNumber,
   NS_ENSURE_SUCCESS(rv, rv);
 
   //We reset caret in destructor...
-  AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              startColIndex, ePreviousRow,
                                              false);
   //.. so suppress Rules System selection munging
@@ -569,7 +568,7 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
   }
 
   //We control selection resetting after the insert...
-  AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              startColIndex, ePreviousColumn,
                                              false);
   //...so suppress Rules System selection munging
@@ -784,7 +783,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
 
     // The setCaret object will call AutoSelectionSetterAfterTableEdit in its
     // destructor
-    AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+    AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                                startColIndex, ePreviousColumn,
                                                false);
     AutoTransactionsConserveSelection dontChangeSelection(this);
@@ -914,7 +913,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
 
         // The setCaret object will call AutoSelectionSetterAfterTableEdit in its
         // destructor
-        AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+        AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                                    startColIndex, ePreviousColumn,
                                                    false);
         AutoTransactionsConserveSelection dontChangeSelection(this);
@@ -964,7 +963,7 @@ HTMLEditor::DeleteTableCellContents()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              startColIndex, ePreviousColumn,
                                              false);
 
@@ -1049,7 +1048,7 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
     NS_ENSURE_SUCCESS(rv, rv);
   }
   //We control selection resetting after the insert...
-  AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              startColIndex, ePreviousRow,
                                              false);
 
@@ -1215,7 +1214,7 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
   }
 
   //We control selection resetting after the insert...
-  AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              startColIndex, ePreviousRow,
                                              false);
   // Don't change selection during deletions
@@ -1740,7 +1739,7 @@ HTMLEditor::SplitTableCell()
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
   // We reset selection
-  AutoSelectionSetterAfterTableEdit setCaret(this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              startColIndex, ePreviousColumn,
                                              false);
   //...so suppress Rules System selection munging
@@ -3097,23 +3096,20 @@ HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 HTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable,
                                        int32_t aRow,
                                        int32_t aCol,
                                        int32_t aDirection,
                                        bool aSelected)
 {
-  NS_ENSURE_TRUE(aTable, NS_ERROR_NOT_INITIALIZED);
-
-  if (Destroyed()) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!aTable) || Destroyed()) {
+    return;
   }
 
   RefPtr<Selection> selection = GetSelection();
-
   if (!selection) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   nsCOMPtr<nsIDOMElement> cell;
@@ -3127,48 +3123,49 @@ HTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable,
     if (cell) {
       if (aSelected) {
         // Reselect the cell
-        return SelectElement(cell);
-      } else {
-        // Set the caret to deepest first child
-        //   but don't go into nested tables
-        // TODO: Should we really be placing the caret at the END
-        //  of the cell content?
-        nsCOMPtr<nsINode> cellNode = do_QueryInterface(cell);
-        if (cellNode) {
-          CollapseSelectionToDeepestNonTableFirstChild(selection, cellNode);
-        }
-        return NS_OK;
+        SelectElement(cell);
+        return;
       }
-    } else {
-      // Setup index to find another cell in the
-      //   direction requested, but move in
-      //   other direction if already at beginning of row or column
-      switch (aDirection) {
-        case ePreviousColumn:
-          if (!aCol) {
-            if (aRow > 0) {
-              aRow--;
-            } else {
-              done = true;
-            }
-          } else {
-            aCol--;
-          }
-          break;
-        case ePreviousRow:
-          if (!aRow) {
-            if (aCol > 0) {
-              aCol--;
-            } else {
-              done = true;
-            }
-          } else {
+
+      // Set the caret to deepest first child
+      //   but don't go into nested tables
+      // TODO: Should we really be placing the caret at the END
+      //  of the cell content?
+      nsCOMPtr<nsINode> cellNode = do_QueryInterface(cell);
+      if (cellNode) {
+        CollapseSelectionToDeepestNonTableFirstChild(selection, cellNode);
+      }
+      return;
+    }
+
+    // Setup index to find another cell in the
+    //   direction requested, but move in other direction if already at
+    //   beginning of row or column
+    switch (aDirection) {
+      case ePreviousColumn:
+        if (!aCol) {
+          if (aRow > 0) {
             aRow--;
+          } else {
+            done = true;
           }
-          break;
-        default:
-          done = true;
-      }
+        } else {
+          aCol--;
+        }
+        break;
+      case ePreviousRow:
+        if (!aRow) {
+          if (aCol > 0) {
+            aCol--;
+          } else {
+            done = true;
+          }
+        } else {
+          aRow--;
+        }
+        break;
+      default:
+        done = true;
     }
   } while (!done);
 
@@ -3178,11 +3175,12 @@ HTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable,
   nsresult rv = aTable->GetParentNode(getter_AddRefs(tableParent));
   if (NS_SUCCEEDED(rv) && tableParent) {
     int32_t tableOffset = GetChildOffset(aTable, tableParent);
-    return selection->Collapse(tableParent, tableOffset);
+    selection->Collapse(tableParent, tableOffset);
+    return;
   }
   // Last resort: Set selection to start of doc
   // (it's very bad to not have a valid selection!)
-  return SetSelectionAtDocumentStart(selection);
+  SetSelectionAtDocumentStart(selection);
 }
 
 NS_IMETHODIMP
