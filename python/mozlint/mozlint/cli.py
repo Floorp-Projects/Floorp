@@ -27,12 +27,6 @@ class MozlintParser(ArgumentParser):
           'help': "Linters to run, e.g 'eslint'. By default all linters "
                   "are run for all the appropriate files.",
           }],
-        [['--list'],
-          {'dest': 'list_linters',
-          'default': False,
-          'action': 'store_true',
-          'help': "List all available linters and exit.",
-          }],
         [['-f', '--format'],
          {'dest': 'fmt',
           'default': 'stylish',
@@ -113,15 +107,9 @@ def find_linters(linters=None):
     return lints
 
 
-def run(paths, linters, fmt, outgoing, workdir, list_linters=None, **lintargs):
+def run(paths, linters, fmt, outgoing, workdir, **lintargs):
     from mozlint import LintRoller, formatters
 
-    if list_linters:
-        lint_paths = find_linters(linters)
-        print("Available linters: {}".format(
-            [os.path.splitext(os.path.basename(l))[0] for l in lint_paths]
-        ))
-        return 0
     lint = LintRoller(**lintargs)
     lint.read(find_linters(linters))
 
