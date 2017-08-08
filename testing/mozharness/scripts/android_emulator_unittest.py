@@ -722,7 +722,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
         env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
         env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
-        env['RUST_BACKTRACE'] = '1'
+        env['RUST_BACKTRACE'] = 'full'
 
         self.info("Running on %s the command %s" % (self.emulator["name"], subprocess.list2cmdline(cmd)))
         self.info("##### %s log begins" % self.test_suite)
