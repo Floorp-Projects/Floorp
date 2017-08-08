@@ -197,7 +197,7 @@ StorageDBThread::Get()
 
 // static
 StorageDBThread*
-StorageDBThread::GetOrCreate()
+StorageDBThread::GetOrCreate(const nsString& aProfilePath)
 {
   AssertIsOnBackgroundThread();
 
@@ -210,7 +210,7 @@ StorageDBThread::GetOrCreate()
 
   nsAutoPtr<StorageDBThread> storageThread(new StorageDBThread());
 
-  nsresult rv = storageThread->Init();
+  nsresult rv = storageThread->Init(aProfilePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -220,17 +220,55 @@ StorageDBThread::GetOrCreate()
   return sStorageThread;
 }
 
+// static
 nsresult
-StorageDBThread::Init()
+StorageDBThread::GetProfilePath(nsString& aProfilePath)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Need to determine location on the main thread, since
+  // NS_GetSpecialDirectory accesses the atom table that can
+  // only be accessed on the main thread.
+  nsCOMPtr<nsIFile> profileDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileDir));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = profileDir->GetPath(aProfilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // This service has to be started on the main thread currently.
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+StorageDBThread::Init(const nsString& aProfilePath)
 {
   AssertIsOnBackgroundThread();
 
-  RefPtr<InitHelper> helper = new InitHelper();
+  nsresult rv;
 
   nsString profilePath;
-  nsresult rv = helper->SyncDispatchAndReturnProfilePath(profilePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (aProfilePath.IsEmpty()) {
+    RefPtr<InitHelper> helper = new InitHelper();
+
+    rv = helper->SyncDispatchAndReturnProfilePath(profilePath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    profilePath = aProfilePath;
   }
 
   mDatabaseFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
@@ -1622,44 +1660,13 @@ InitHelper::SyncDispatchAndReturnProfilePath(nsAString& aProfilePath)
   return NS_OK;
 }
 
-nsresult
-StorageDBThread::
-InitHelper::RunOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Need to determine location on the main thread, since
-  // NS_GetSpecialDirectory accesses the atom table that can
-  // only be accessed on the main thread.
-  nsCOMPtr<nsIFile> profileDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(profileDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = profileDir->GetPath(mProfilePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // This service has to be started on the main thread currently.
-  nsCOMPtr<mozIStorageService> ss =
-    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 StorageDBThread::
 InitHelper::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsresult rv = RunOnMainThread();
+  nsresult rv = GetProfilePath(mProfilePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mMainThreadResultCode = rv;
   }
