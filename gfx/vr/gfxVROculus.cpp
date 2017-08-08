@@ -244,9 +244,8 @@ VROculusSession::StopPresentation()
     mLastPresentationEnd = TimeStamp::Now();
     mPresenting = false;
     Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, 1);
-    Telemetry::Accumulate(Telemetry::WEBVR_TIME_SPEND_FOR_VIEWING_IN_OCULUS,
-                          static_cast<uint32_t>((TimeStamp::Now() - mPresentationStart)
-                          .ToMilliseconds()));
+    Telemetry::AccumulateTimeDelta(Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_OCULUS,
+                                   mPresentationStart);
     Refresh();
   }
 }

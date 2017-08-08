@@ -50,9 +50,8 @@ VREventObserver::DisconnectFromOwner()
     // The WebVR content is closed, and we will collect the telemetry info
     // for the users who view it in 2D view only.
     Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, 0);
-    Telemetry::Accumulate(Telemetry::WEBVR_TIME_SPEND_FOR_VIEWING_IN_2D,
-                          static_cast<uint32_t>((TimeStamp::Now() - mSpendTimeIn2DView)
-                          .ToMilliseconds()));
+    Telemetry::AccumulateTimeDelta(Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_2D,
+                                   mSpendTimeIn2DView);
   }
   mWindow = nullptr;
 
