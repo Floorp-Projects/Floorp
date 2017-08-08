@@ -137,12 +137,16 @@ private:
 // Also responsible for forwardning all chrome operation notifications
 // such as cookie cleaning etc to the child process.
 class StorageDBParent final : public PBackgroundStorageParent
-                            , public StorageObserverSink
 {
+  class ObserverSink;
+
   virtual ~StorageDBParent();
 
 public:
   StorageDBParent();
+
+  void
+  Init();
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
@@ -250,14 +254,22 @@ private:
                                          const nsCString& aOriginNoSuffix) override;
   mozilla::ipc::IPCResult RecvAsyncFlush() override;
 
-  // StorageObserverSink
-  virtual nsresult Observe(const char* aTopic,
-                           const nsAString& aOriginAttrPattern,
-                           const nsACString& aOriginScope) override;
+  mozilla::ipc::IPCResult RecvStartup() override;
+  mozilla::ipc::IPCResult RecvClearAll() override;
+  mozilla::ipc::IPCResult RecvClearMatchingOrigin(
+                                     const nsCString& aOriginNoSuffix) override;
+  mozilla::ipc::IPCResult RecvClearMatchingOriginAttributes(
+                              const OriginAttributesPattern& aPattern) override;
+
+  void Observe(const nsCString& aTopic,
+               const nsString& aOriginAttrPattern,
+               const nsCString& aOriginScope);
 
 private:
   CacheParentBridge* NewCache(const nsACString& aOriginSuffix,
                               const nsACString& aOriginNoSuffix);
+
+  RefPtr<ObserverSink> mObserverSink;
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
