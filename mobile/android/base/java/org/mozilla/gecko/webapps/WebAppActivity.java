@@ -40,6 +40,7 @@ import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.FileUtils;
 
@@ -53,6 +54,8 @@ public class WebAppActivity extends AppCompatActivity
     private GeckoView mGeckoView;
     private PromptService mPromptService;
 
+    private boolean mIsFullScreenMode;
+    private boolean mIsFullScreenContent;
     private Uri mScope;
 
     @Override
@@ -74,6 +77,15 @@ public class WebAppActivity extends AppCompatActivity
 
         mGeckoView = new GeckoView(this);
         mGeckoView.setNavigationListener(this);
+        mGeckoView.setContentListener(new GeckoView.ContentListener() {
+            public void onTitleChange(GeckoView view, String title) {}
+            public void onContextMenu(GeckoView view, int screenX, int screenY,
+                               String uri, String elementSrc) {}
+            public void onFullScreen(GeckoView view, boolean fullScreen) {
+                updateFullScreenContent(fullScreen);
+            }
+        });
+
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
 
         final GeckoViewSettings settings = mGeckoView.getSettings();
@@ -109,6 +121,22 @@ public class WebAppActivity extends AppCompatActivity
         outState.putParcelable(SAVED_INTENT, getIntent());
     }
 
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        if (hasFocus) {
+            updateFullScreen();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mIsFullScreenContent) {
+            mGeckoView.exitFullScreen();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     private void loadManifest(String manifestPath) {
         if (TextUtils.isEmpty(manifestPath)) {
             Log.e(LOGTAG, "Missing manifest");
@@ -125,6 +153,7 @@ public class WebAppActivity extends AppCompatActivity
             }
 
             updateScreenOrientation(manifestField);
+            updateDisplayMode(manifestField);
         } catch (IOException | JSONException e) {
             Log.e(LOGTAG, "Failed to read manifest", e);
         }
@@ -169,6 +198,8 @@ public class WebAppActivity extends AppCompatActivity
 
     private void updateDisplayMode(JSONObject manifest) {
         String displayMode = manifest.optString("display");
+
+        updateFullScreenMode(displayMode.equals("fullscreen"));
 
         GeckoViewSettings.DisplayMode mode;
         switch (displayMode) {
@@ -291,5 +322,24 @@ public class WebAppActivity extends AppCompatActivity
             intent.setData(Uri.parse(uri));
             startActivity(intent);
         }
+    }
+
+    private void updateFullScreen() {
+        boolean fullScreen = mIsFullScreenContent || mIsFullScreenMode;
+        if (ActivityUtils.isFullScreen(this) == fullScreen) {
+            return;
+        }
+
+        ActivityUtils.setFullScreen(this, fullScreen);
+    }
+
+    private void updateFullScreenContent(boolean fullScreen) {
+        mIsFullScreenContent = fullScreen;
+        updateFullScreen();
+    }
+
+    private void updateFullScreenMode(boolean fullScreen) {
+        mIsFullScreenMode = fullScreen;
+        updateFullScreen();
     }
 }
