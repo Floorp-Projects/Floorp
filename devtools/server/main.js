@@ -732,7 +732,7 @@ var DebuggerServer = {
   },
 
   connectToContent(connection, mm, onDestroy) {
-    let deferred = Syncdefer();
+    let deferred = SyncPromise.defer();
 
     let prefix = connection.allocID("content-process");
     let actor, childTransport;
@@ -1022,7 +1022,7 @@ var DebuggerServer = {
    *         established.
    */
   connectToChild(connection, frame, onDestroy, {addonId} = {}) {
-    let deferred = Syncdefer();
+    let deferred = SyncPromise.defer();
 
     // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
     // or else fallback to asking the frameLoader itself.
