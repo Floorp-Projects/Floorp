@@ -18,12 +18,6 @@
 #include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
-#include "Latency.h"
-
-#define LOG_FIRST_CAPTURE(x) LogTime(AsyncLatencyLogger::AudioCaptureBase, \
-                                     reinterpret_cast<uint64_t>(x), 0)
-#define LOG_CAPTURE_FRAMES(x, frames) LogLatency(AsyncLatencyLogger::AudioCapture, \
-                                                 reinterpret_cast<uint64_t>(x), frames)
 extern "C"
 {
     static void playOnmove(void *arg, int delta)
