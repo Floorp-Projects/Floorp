@@ -1335,10 +1335,9 @@ EditorBase::RemoveAttribute(Element* aElement,
 bool
 EditorBase::OutputsMozDirty()
 {
-  // Return true for Composer (!eEditorAllowInteraction) or mail
-  // (eEditorMailMask), but false for webpages.
-  return !(mFlags & nsIPlaintextEditor::eEditorAllowInteraction) ||
-          (mFlags & nsIPlaintextEditor::eEditorMailMask);
+  // Return true for Composer (!IsInteractionAllowed()) or mail
+  // (IsMailEditor()), but false for webpages.
+  return !IsInteractionAllowed() || IsMailEditor();
 }
 
 NS_IMETHODIMP
@@ -5004,8 +5003,7 @@ EditorBase::DetermineCurrentDirection()
 
   // If we don't have an explicit direction, determine our direction
   // from the content's direction
-  if (!(mFlags & (nsIPlaintextEditor::eEditorLeftToRight |
-                  nsIPlaintextEditor::eEditorRightToLeft))) {
+  if (!IsRightToLeft() && !IsLeftToRight()) {
     nsIFrame* frame = rootElement->GetPrimaryFrame();
     NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -5031,14 +5029,14 @@ EditorBase::SwitchTextDirection()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Apply the opposite direction
-  if (mFlags & nsIPlaintextEditor::eEditorRightToLeft) {
-    NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorLeftToRight),
+  if (IsRightToLeft()) {
+    NS_ASSERTION(!IsLeftToRight(),
                  "Unexpected mutually exclusive flag");
     mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
     mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
     rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), true);
-  } else if (mFlags & nsIPlaintextEditor::eEditorLeftToRight) {
-    NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorRightToLeft),
+  } else if (IsLeftToRight()) {
+    NS_ASSERTION(!IsRightToLeft(),
                  "Unexpected mutually exclusive flag");
     mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
     mFlags &= ~nsIPlaintextEditor::eEditorLeftToRight;
@@ -5063,14 +5061,14 @@ EditorBase::SwitchTextDirectionTo(uint32_t aDirection)
 
   // Apply the requested direction
   if (aDirection == nsIPlaintextEditor::eEditorLeftToRight &&
-      (mFlags & nsIPlaintextEditor::eEditorRightToLeft)) {
+      IsRightToLeft()) {
     NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorLeftToRight),
                  "Unexpected mutually exclusive flag");
     mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
     mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
     rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), true);
   } else if (aDirection == nsIPlaintextEditor::eEditorRightToLeft &&
-             (mFlags & nsIPlaintextEditor::eEditorLeftToRight)) {
+             IsLeftToRight()) {
     NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorRightToLeft),
                  "Unexpected mutually exclusive flag");
     mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
