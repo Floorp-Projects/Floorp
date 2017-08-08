@@ -167,6 +167,7 @@ var loadListener = {
     if (waitForUnloaded) {
       addEventListener("hashchange", this, false);
       addEventListener("pagehide", this, false);
+      addEventListener("popstate", this, false);
 
       // The events can only be received when the event listeners are
       // added to the currently selected frame.
@@ -213,6 +214,7 @@ var loadListener = {
 
     removeEventListener("hashchange", this);
     removeEventListener("pagehide", this);
+    removeEventListener("popstate", this);
     removeEventListener("DOMContentLoaded", this);
     removeEventListener("pageshow", this);
 
@@ -262,6 +264,7 @@ var loadListener = {
 
         removeEventListener("hashchange", this);
         removeEventListener("pagehide", this);
+        removeEventListener("popstate", this);
 
         // Now wait until the target page has been loaded
         addEventListener("DOMContentLoaded", this, false);
@@ -269,6 +272,7 @@ var loadListener = {
         break;
 
       case "hashchange":
+      case "popstate":
         this.stop();
         sendOk(this.command_id);
         break;
