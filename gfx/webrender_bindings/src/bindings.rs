@@ -1053,12 +1053,12 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
-                                  rect: LayoutRect,
-                                  complex: *const WrComplexClipRegion,
-                                  complex_count: usize,
-                                  mask: *const WrImageMask)
-                                  -> u64 {
+pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
+                                    rect: LayoutRect,
+                                    complex: *const WrComplexClipRegion,
+                                    complex_count: usize,
+                                    mask: *const WrImageMask)
+                                    -> u64 {
     assert!(unsafe { is_in_main_thread() });
     let clip_rect: LayoutRect = rect.into();
     let complex_slice = make_slice(complex, complex_count);
@@ -1066,7 +1066,6 @@ pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
     let mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
 
     let clip_id = state.frame_builder.dl_builder.define_clip(None, clip_rect, complex_iter, mask);
-    state.frame_builder.dl_builder.push_clip_id(clip_id);
     // return the u64 id value from inside the ClipId::Clip(..)
     match clip_id {
         ClipId::Clip(id, nesting_index, pipeline_id) => {
@@ -1076,6 +1075,13 @@ pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
         },
         _ => panic!("Got unexpected clip id type"),
     }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
+                                  clip_id: u64) {
+    assert!(unsafe { is_in_main_thread() });
+    state.frame_builder.dl_builder.push_clip_id(ClipId::Clip(clip_id, 0, state.pipeline_id));
 }
 
 #[no_mangle]
