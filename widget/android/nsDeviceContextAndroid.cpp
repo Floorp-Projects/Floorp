@@ -60,7 +60,7 @@ nsDeviceContextSpecAndroid::BeginDocument(const nsAString& aTitle,
 NS_IMETHODIMP
 nsDeviceContextSpecAndroid::EndDocument()
 {
-  nsXPIDLString targetPath;
+  nsString targetPath;
   nsCOMPtr<nsIFile> destFile;
   mPrintSettings->GetToFileName(getter_Copies(targetPath));
 

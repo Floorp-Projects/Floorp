@@ -566,8 +566,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsIPrefLocalizedString> theString = do_QueryInterface(aValue);
 
     if (theString) {
-      nsXPIDLString wideString;
-
+      nsString wideString;
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
         // Check sanity of string length before any lengthy conversion
