@@ -1788,7 +1788,7 @@ irregexp::CompilePattern(JSContext* cx, HandleRegExpShared shared, RegExpCompile
     }
 
     if (compiler.isRegExpTooBig()) {
-        MOZ_ASSERT(compiler.cx()->isExceptionPending()); // over recursed
+        // This might erase the over-recurse error, if any.
         JS_ReportErrorASCII(cx, "regexp too big");
         return RegExpCode();
     }
@@ -1912,7 +1912,7 @@ RegExpDisjunction::ToNode(RegExpCompiler* compiler, RegExpNode* on_success)
     const RegExpTreeVector& alternatives = this->alternatives();
     size_t length = alternatives.length();
     ChoiceNode* result = compiler->alloc()->newInfallible<ChoiceNode>(compiler->alloc(), length);
-    for (size_t i = 0; i < length; i++) {
+    for (size_t i = 0; i < length && !compiler->isRegExpTooBig(); i++) {
         GuardedAlternative alternative(alternatives[i]->ToNode(compiler, on_success));
         result->AddAlternative(alternative);
     }
@@ -2263,7 +2263,7 @@ RegExpAlternative::ToNode(RegExpCompiler* compiler, RegExpNode* on_success)
 
     const RegExpTreeVector& children = nodes();
     RegExpNode* current = on_success;
-    for (int i = children.length() - 1; i >= 0; i--)
+    for (int i = children.length() - 1; i >= 0 && !compiler->isRegExpTooBig(); i--)
         current = children[i]->ToNode(compiler, current);
     return current;
 }
