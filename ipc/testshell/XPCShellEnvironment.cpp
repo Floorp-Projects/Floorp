@@ -181,8 +181,7 @@ Version(JSContext *cx,
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     args.rval().setInt32(JS_GetVersion(cx));
     if (args.get(0).isInt32())
-        JS_SetVersionForCompartment(js::GetContextCompartment(cx),
-                                    JSVersion(args[0].toInt32()));
+        JS::SetVersionForCurrentRealm(cx, JSVersion(args[0].toInt32()));
     return true;
 }
 

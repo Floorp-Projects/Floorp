@@ -27,9 +27,6 @@ from mozboot.util import (
 )
 
 APPLICATION_CHOICE = '''
-Please choose the version of Firefox you want to build:
-%s
-
 Note on Artifact Mode:
 
 Firefox for Desktop and Android supports a fast build mode called
@@ -56,6 +53,8 @@ But don't worry! You can always switch configurations later.
 You can learn more about Artifact mode builds at
 https://developer.mozilla.org/en-US/docs/Artifact_builds.
 
+Please choose the version of Firefox you want to build:
+%s
 Your choice: '''
 
 APPLICATIONS_LIST=[

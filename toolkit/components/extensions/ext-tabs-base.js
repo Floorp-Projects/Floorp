@@ -5,11 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
-/* exported TabTrackerBase, TabManagerBase, TabBase, WindowTrackerBase, WindowManagerBase, WindowBase */
-
-var EXPORTED_SYMBOLS = ["TabTrackerBase", "TabManagerBase", "TabBase", "WindowTrackerBase", "WindowManagerBase", "WindowBase"];
+/* globals EventEmitter */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -18,12 +14,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-
-const {
+var {
   DefaultMap,
   DefaultWeakMap,
-  EventEmitter,
   ExtensionError,
   defineLazyGetter,
   getWinUtils,
@@ -1847,3 +1840,5 @@ class WindowManagerBase {
   }
   /* eslint-enable valid-jsdoc */
 }
+
+Object.assign(global, {TabTrackerBase, TabManagerBase, TabBase, WindowTrackerBase, WindowManagerBase, WindowBase});
