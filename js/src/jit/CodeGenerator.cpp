@@ -11148,6 +11148,8 @@ CodeGenerator::visitOutOfLineSwitch(OutOfLineSwitch<tableType>* jumpTable)
     if (tableType == SwitchTableType::OutOfLine) {
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
         MOZ_CRASH("NYI: SwitchTableType::OutOfLine");
+#elif defined(JS_CODEGEN_NONE)
+        MOZ_CRASH();
 #else
         masm.haltingAlign(sizeof(void*));
         masm.use(jumpTable->start()->target());

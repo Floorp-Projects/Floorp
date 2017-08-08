@@ -410,6 +410,7 @@ struct BaselineStackBuilder
                              BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
         return virtualPointerAtStackOffset(priorOffset + extraOffset);
 #elif defined(JS_CODEGEN_NONE)
+        (void) priorOffset;
         MOZ_CRASH();
 #else
 #  error "Bad architecture!"
