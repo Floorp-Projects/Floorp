@@ -1899,7 +1899,7 @@ function getPingDirectory() {
 function getArchivedPingPath(aPingId, aDate, aType) {
   // Get the ping creation date and generate the archive directory to hold it. Note
   // that getMonth returns a 0-based month, so we need to add an offset.
-  let month = new String(aDate.getMonth() + 1);
+  let month = String(aDate.getMonth() + 1);
   let archivedPingDir = OS.Path.join(gPingsArchivePath,
     aDate.getFullYear() + "-" + month.padStart(2, "0"));
   // Generate the archived ping file path as YYYY-MM/<TIMESTAMP>.UUID.type.json

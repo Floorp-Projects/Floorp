@@ -16,15 +16,11 @@ class MockMediaResource : public MediaResource
 {
 public:
   explicit MockMediaResource(const char* aFileName);
-  nsresult Close() override { return NS_OK; }
-  void Suspend(bool aCloseImmediately) override {}
-  void Resume() override {}
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
   {
     return nullptr;
   }
   void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
-  void SetPlaybackRate(uint32_t aBytesPerSecond) override {}
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                   uint32_t* aBytes) override;
   // Data stored in file, caching recommended.
@@ -32,7 +28,6 @@ public:
   int64_t Tell() override { return 0; }
   void Pin() override {}
   void Unpin() override {}
-  double GetDownloadRate(bool* aIsReliable) override { return 0; }
   int64_t GetLength() override;
   int64_t GetNextCachedData(int64_t aOffset) override;
   int64_t GetCachedDataEnd(int64_t aOffset) override;
@@ -52,7 +47,7 @@ public:
   }
 
   bool IsTransportSeekable() override { return true; }
-  nsresult Open(nsIStreamListener** aStreamListener) override;
+  nsresult Open();
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 
   void MockClearBufferedRanges();

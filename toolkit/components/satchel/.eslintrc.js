@@ -40,7 +40,6 @@ module.exports = {
     "no-multiple-empty-lines": ["error", {
       max: 2,
     }],
-    "no-new-wrappers": "error",
     "no-proto": "error",
     "no-throw-literal": "error",
     "no-unused-expressions": "error",

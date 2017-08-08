@@ -234,21 +234,21 @@ public:
   // media element when it is sent to the bfcache, or when we need
   // to throttle the download. Call on the main thread only. This can
   // be called multiple times, there's an internal "suspend count".
-  virtual void Suspend();
+  virtual void Suspend() {}
 
   // Resume any media downloads that have been suspended. Called by the
   // media element when it is restored from the bfcache, or when we need
   // to stop throttling the download. Call on the main thread only.
   // The download will only actually resume once as many Resume calls
   // have been made as Suspend calls.
-  virtual void Resume();
+  virtual void Resume() {}
 
   // Moves any existing channel loads into or out of background. Background
   // loads don't block the load event. This is called when we stop or restart
   // delaying the load event. This also determines whether any new loads
   // initiated (for example to seek) will be in the background.  This calls
   // SetLoadInBackground() on mResource.
-  void SetLoadInBackground(bool aLoadInBackground);
+  virtual void SetLoadInBackground(bool aLoadInBackground) {}
 
   MediaDecoderStateMachine* GetStateMachine() const;
   void SetStateMachine(MediaDecoderStateMachine* aStateMachine);
@@ -306,16 +306,9 @@ private:
   // outlined in the specification.
   void FireTimeUpdate();
 
-  // Something has changed that could affect the computed playback rate,
-  // so recompute it. The monitor must be held.
-  virtual void UpdatePlaybackRate();
-
-  // The actual playback rate computation. The monitor must be held.
-  void ComputePlaybackRate();
-
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
-  virtual bool CanPlayThrough();
+  bool CanPlayThrough();
 
   dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
@@ -352,14 +345,6 @@ private:
 
   void OnSeekRejected();
   void OnSeekResolved();
-
-  void SeekingChanged()
-  {
-    // Stop updating the bytes downloaded for progress notifications when
-    // seeking to prevent wild changes to the progress notification.
-    MOZ_ASSERT(NS_IsMainThread());
-    mIgnoreProgressData = mLogicallySeeking;
-  }
 
   // Seeking has started. Inform the element on the main thread.
   void SeekingStarted();
@@ -414,12 +399,6 @@ private:
   static bool IsWMFEnabled();
 #endif
 
-  // Return statistics. This is used for progress events and other things.
-  // This can be called from any thread. It's only a snapshot of the
-  // current state, since other threads might be changing the state
-  // at any time.
-  MediaStatistics GetStatistics();
-
   // Return the frame decode/paint related statistics.
   FrameStatistics& GetFrameStatistics() { return *mFrameStats; }
 
@@ -457,9 +436,8 @@ protected:
 
   bool IsShutdown() const;
 
-  // Called by the state machine to notify the decoder that the duration
-  // has changed.
-  void DurationChanged();
+  // Called to notify the decoder that the duration has changed.
+  virtual void DurationChanged();
 
   // State-watching manager.
   WatchManager<MediaDecoder> mWatchManager;
@@ -475,6 +453,8 @@ protected:
     // that it takes effect immediately, rather than at the end of the current task.
     DurationChanged();
   }
+
+  virtual void OnPlaybackEvent(MediaEventType aEvent);
 
   /******
    * The following members should be accessed with the decoder lock held.
@@ -525,7 +505,6 @@ private:
   // Called when the owner's activity changed.
   void NotifyCompositor();
 
-  void OnPlaybackEvent(MediaEventType aEvent);
   void OnPlaybackErrorEvent(const MediaResult& aError);
 
   void OnDecoderDoctorEvent(DecoderDoctorEvent aEvent);
@@ -539,6 +518,8 @@ private:
 
   void ConnectMirrors(MediaDecoderStateMachine* aObject);
   void DisconnectMirrors();
+
+  virtual bool CanPlayThroughImpl() = 0;
 
   // The state machine object for handling the decoding. It is safe to
   // call methods of this object from other threads. Its internal data
@@ -557,9 +538,9 @@ protected:
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget);
 
-  // Called to recompute playback rate and notify 'progress' event.
-  // Call on the main thread only.
-  void DownloadProgressed();
+  // Called to notify fetching media data is in progress.
+  // Called on the main thread only.
+  virtual void DownloadProgressed();
 
   // Called by MediaResource when the "cache suspended" status changes.
   // If MediaResource::IsSuspendedByCache returns true, then the decoder
@@ -571,23 +552,7 @@ protected:
   // changed. Called on main thread only.
   void NotifyPrincipalChanged();
 
-  // Called by the MediaResource to keep track of the number of bytes read
-  // from the resource. Called on the main by an event runner dispatched
-  // by the MediaResource read functions.
-  void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset);
-
-  // Called by nsChannelToPipeListener or MediaResource when the
-  // download has ended. Called on the main thread only. aStatus is
-  // the result from OnStopRequest.
-  void NotifyDownloadEnded(nsresult aStatus);
-
   MozPromiseRequestHolder<SeekPromise> mSeekRequest;
-
-  // True when seeking or otherwise moving the play position around in
-  // such a manner that progress event data is inaccurate. This is set
-  // during seek and duration operations to prevent the progress indicator
-  // from jumping around. Read/Write on the main thread only.
-  bool mIgnoreProgressData;
 
   // Ensures our media stream has been pinned.
   void PinForSeek();
@@ -598,8 +563,6 @@ protected:
   const char* PlayStateStr();
 
   void OnMetadataUpdate(TimedMetadata&& aMetadata);
-
-  bool ShouldThrottleDownload();
 
   // This should only ever be accessed from the main thread.
   // It is set in the constructor and cleared in Shutdown when the element goes
@@ -613,11 +576,6 @@ protected:
   const RefPtr<FrameStatistics> mFrameStats;
 
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
-
-  // Data needed to estimate playback data rate. The timeline used for
-  // this estimate is "decode time" (where the "current time" is the
-  // time of the last decoded video frame).
-  MediaChannelStatistics mPlaybackStatistics;
 
   // True when our media stream has been pinned. We pin the stream
   // while seeking.
@@ -733,18 +691,6 @@ protected:
   // main-thread induced principal changes get reflected on MSG thread.
   Canonical<PrincipalHandle> mMediaPrincipalHandle;
 
-  // Estimate of the current playback rate (bytes/second).
-  Canonical<double> mPlaybackBytesPerSecond;
-
-  // True if mPlaybackBytesPerSecond is a reliable estimate.
-  Canonical<bool> mPlaybackRateReliable;
-
-  // Current decoding position in the stream. This is where the decoder
-  // is up to consuming the stream. This is not adjusted during decoder
-  // seek operations, but it's updated at the end when we start playing
-  // back again.
-  Canonical<int64_t> mDecoderPosition;
-
   // We can allow video decoding in background when we match some special
   // conditions, eg. when the cursor is hovering over the tab. This observer is
   // used to listen the related events.
@@ -754,6 +700,12 @@ protected:
   // True if we want to resume video decoding even the media element is in the
   // background.
   bool mIsBackgroundVideoDecodingAllowed;
+
+  // Current decoding position in the stream. This is where the decoder
+  // is up to consuming the stream. This is not adjusted during decoder
+  // seek operations, but it's updated at the end when we start playing
+  // back again.
+  int64_t mDecoderPosition = 0;
 
 public:
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
@@ -778,18 +730,6 @@ public:
   {
     return &mMediaPrincipalHandle;
   }
-  AbstractCanonical<double>* CanonicalPlaybackBytesPerSecond()
-  {
-    return &mPlaybackBytesPerSecond;
-  }
-  AbstractCanonical<bool>* CanonicalPlaybackRateReliable()
-  {
-    return &mPlaybackRateReliable;
-  }
-  AbstractCanonical<int64_t>* CanonicalDecoderPosition()
-  {
-    return &mDecoderPosition;
-  }
 
 private:
   // Notify owner when the audible state changed
@@ -797,6 +737,7 @@ private:
 
   bool mTelemetryReported;
   const MediaContainerType mContainerType;
+  bool mCanPlayThrough = false;
 };
 
 } // namespace mozilla

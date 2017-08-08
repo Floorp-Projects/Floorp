@@ -6,7 +6,7 @@
 
 const DEFAULT_INDEX = PlacesUtils.bookmarks.DEFAULT_INDEX;
 
-function run_test() {
+add_task(async function test_removeItem() {
   // folder to hold this test
   var folderId =
     PlacesUtils.bookmarks.createFolder(PlacesUtils.toolbarFolderId,
@@ -14,14 +14,15 @@ function run_test() {
 
   // add a bookmark to the new folder
   var bookmarkURI = uri("http://iasdjkf");
-  do_check_false(PlacesUtils.bookmarks.isBookmarked(bookmarkURI));
+  do_check_false(await PlacesUtils.bookmarks.fetch({url: bookmarkURI}));
   var bookmarkId = PlacesUtils.bookmarks.insertBookmark(folderId, bookmarkURI,
                                                         DEFAULT_INDEX, "");
   do_check_eq(PlacesUtils.bookmarks.getItemTitle(bookmarkId), "");
+  do_check_true(await PlacesUtils.bookmarks.fetch({url: bookmarkURI}));
 
   // remove the folder using removeItem
   PlacesUtils.bookmarks.removeItem(folderId);
   do_check_eq(PlacesUtils.bookmarks.getBookmarkIdsForURI(bookmarkURI).length, 0);
-  do_check_false(PlacesUtils.bookmarks.isBookmarked(bookmarkURI));
+  do_check_false(await PlacesUtils.bookmarks.fetch({url: bookmarkURI}));
   do_check_eq(PlacesUtils.bookmarks.getItemIndex(bookmarkId), -1);
-}
+});

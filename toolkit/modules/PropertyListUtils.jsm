@@ -203,6 +203,9 @@ this.PropertyListUtils = Object.freeze({
     if (typeof(aPrimitive) != "string" && typeof(aPrimitive) != "number")
       throw new Error("aPrimitive should be a string primitive");
 
+    // The function converts string or number to object
+    // So eslint rule is disabled
+    // eslint-disable-next-line no-new-wrappers
     let wrapped = new String(aPrimitive);
     Object.defineProperty(wrapped, "__INT_64_WRAPPER__", { value: true });
     return wrapped;

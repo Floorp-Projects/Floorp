@@ -49,10 +49,6 @@ module.exports = {
     // No reassigning native JS objects or read only globals.
     "no-global-assign": "error",
 
-    // Disallow primitive wrapper instances like `new Boolean(false)`, which
-    // seem like they should act like primitives but don't.
-    "no-new-wrappers": "error",
-
     // Disallow use of assignment in return statement.
     "no-return-assign": ["error", "always"],
 

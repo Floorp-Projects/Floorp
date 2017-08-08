@@ -43,6 +43,7 @@ EXPORTS.mozilla += [
     'DeadlockDetector.h',
     'HangAnnotations.h',
     'HangMonitor.h',
+    'IdleTaskRunner.h',
     'LazyIdleThread.h',
     'MainThreadIdlePeriod.h',
     'Monitor.h',
@@ -61,6 +62,10 @@ EXPORTS.mozilla += [
     'TaskDispatcher.h',
     'TaskQueue.h',
     'ThrottledEventQueue.h',
+]
+
+SOURCES += [
+    'IdleTaskRunner.cpp',
 ]
 
 UNIFIED_SOURCES += [
