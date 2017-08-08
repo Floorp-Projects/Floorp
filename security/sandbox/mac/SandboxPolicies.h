@@ -184,7 +184,6 @@ static const char contentSandboxRules[] = R"(
 
   (allow mach-lookup
       (global-name "com.apple.coreservices.launchservicesd")
-      (global-name "com.apple.pasteboard.1")
       (global-name "com.apple.audio.coreaudiod")
       (global-name "com.apple.audio.audiohald"))
 
