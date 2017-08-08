@@ -7253,32 +7253,6 @@ IonBuilder::ensureDefiniteType(MDefinition* def, MIRType definiteType)
     return replace;
 }
 
-MDefinition*
-IonBuilder::ensureDefiniteTypeSet(MDefinition* def, TemporaryTypeSet* types)
-{
-    // We cannot arbitrarily add a typeset to a definition. It can be shared
-    // in another path. So we always need to create a new MIR.
-
-    // Use ensureDefiniteType to do unboxing. If that happened the type can
-    // be added on the newly created unbox operation.
-    MDefinition* replace = ensureDefiniteType(def, types->getKnownMIRType());
-    if (replace != def) {
-        replace->setResultTypeSet(types);
-        return replace;
-    }
-
-    // Don't replace if input type is more accurate than given typeset.
-    if (def->type() != types->getKnownMIRType()) {
-        MOZ_ASSERT(types->getKnownMIRType() == MIRType::Value);
-        return def;
-    }
-
-    // Create a NOP mir instruction to filter the typeset.
-    MFilterTypeSet* filter = MFilterTypeSet::New(alloc(), def, types);
-    current->add(filter);
-    return filter;
-}
-
 static size_t
 NumFixedSlots(JSObject* object)
 {

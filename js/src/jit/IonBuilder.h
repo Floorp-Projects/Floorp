@@ -181,9 +181,6 @@ class IonBuilder
     // added to |current| in this case.
     MDefinition* ensureDefiniteType(MDefinition* def, MIRType definiteType);
 
-    // Creates a MDefinition based on the given def improved with type as TypeSet.
-    MDefinition* ensureDefiniteTypeSet(MDefinition* def, TemporaryTypeSet* types);
-
     void maybeMarkEmpty(MDefinition* ins);
 
     JSObject* getSingletonPrototype(JSFunction* target);
