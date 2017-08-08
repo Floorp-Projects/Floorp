@@ -437,15 +437,13 @@ ContextToFP(CONTEXT* context)
 #endif
 }
 
+#ifndef JS_CODEGEN_NONE
 static uint8_t*
 ContextToSP(CONTEXT* context)
 {
-#ifdef JS_CODEGEN_NONE
-    MOZ_CRASH();
-#else
     return reinterpret_cast<uint8_t*>(SP_sig(context));
-#endif
 }
+#endif
 
 #if defined(__arm__) || defined(__aarch64__)
 static uint8_t*

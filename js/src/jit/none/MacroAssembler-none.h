@@ -210,6 +210,7 @@ class MacroAssemblerNone : public Assembler
     void bindLater(Label*, wasm::TrapDesc) { MOZ_CRASH(); }
     template <typename T> void j(Condition, T) { MOZ_CRASH(); }
     template <typename T> void jump(T) { MOZ_CRASH(); }
+    void writeCodePointer(CodeOffset* label) { MOZ_CRASH(); }
     void haltingAlign(size_t) { MOZ_CRASH(); }
     void nopAlign(size_t) { MOZ_CRASH(); }
     void checkStackAlignment() { MOZ_CRASH(); }

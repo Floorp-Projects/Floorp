@@ -6,6 +6,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jit/BaselineIC.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/IonCaches.h"
 #include "jit/IonIC.h"
