@@ -174,19 +174,6 @@ var whitelist = [
 
 ];
 
-if (!AppConstants.MOZ_PHOTON_THEME) {
-  whitelist.push(
-    // Bug 1343824
-    {file: "chrome://browser/skin/customizableui/customize-illustration-rtl@2x.png",
-     platforms: ["linux", "win"]},
-    {file: "chrome://browser/skin/customizableui/customize-illustration@2x.png",
-     platforms: ["linux", "win"]},
-    {file: "chrome://browser/skin/customizableui/info-icon-customizeTip@2x.png",
-     platforms: ["linux", "win"]},
-    {file: "chrome://browser/skin/customizableui/panelarrow-customizeTip@2x.png",
-     platforms: ["linux", "win"]});
-}
-
 whitelist = new Set(whitelist.filter(item =>
   ("isFromDevTools" in item) == isDevtools &&
   (!item.skipNightly || !AppConstants.NIGHTLY_BUILD) &&
