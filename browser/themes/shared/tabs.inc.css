@@ -312,6 +312,10 @@
   background-repeat: repeat-x;
 }
 
+:root:not([sizemode=normal]) .tabbrowser-tab[first-visible-tab] > .tab-stack > .tab-background[selected=true] {
+  border-inline-start-style: none;
+}
+
 .tab-line[selected=true] {
   background-color: Highlight;
 }
