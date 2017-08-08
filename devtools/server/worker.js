@@ -21,7 +21,7 @@ this.rpc = function (method, ...params) {
     id: id
   }));
 
-  let deferred = Promise.defer();
+  let deferred = defer();
   rpcDeferreds[id] = deferred;
   return deferred.promise;
 };

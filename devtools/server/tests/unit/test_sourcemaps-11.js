@@ -61,7 +61,7 @@ function define_code() {
 }
 
 function run_code() {
-  const d = promise.defer();
+  const d = defer();
   gClient.addOneTimeListener("paused", function () {
     gThreadClient.getFrames(0, 3, function (response) {
       d.resolve(response);

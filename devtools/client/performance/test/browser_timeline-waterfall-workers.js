@@ -73,7 +73,7 @@ function testWorkerMarkerUI(node) {
  */
 function evalInDebuggee(script) {
   let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  let deferred = Promise.defer();
+  let deferred = defer();
 
   if (!mm) {
     throw new Error("`loadFrameScripts()` must be called when using MessageManager.");

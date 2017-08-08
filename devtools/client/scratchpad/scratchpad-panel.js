@@ -20,7 +20,7 @@ function ScratchpadPanel(iframeWindow, toolbox) {
   Scratchpad.target = this.target;
   Scratchpad.hideMenu();
 
-  let deferred = promise.defer();
+  let deferred = defer();
   this._readyObserver = deferred.promise;
   Scratchpad.addObserver({
     onReady: function () {

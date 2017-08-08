@@ -78,7 +78,7 @@
    }
 
    function testHideAutoCompletePopupAfterEscape() {
-     let deferred = promise.defer();
+     let deferred = defer();
      let popup = jsterm.autocompletePopup;
 
      popup.once("popup-closed", () => {

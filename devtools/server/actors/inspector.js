@@ -2751,7 +2751,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return this._walkerPromise;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this._walkerPromise = deferred.promise;
 
     let window = this.window;

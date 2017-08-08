@@ -21,7 +21,7 @@ add_task(function* () {
 });
 
 function consoleOpened(HUD) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let jsterm = HUD.jsterm;
   let stringToCopy = "foobazbarBug642615";

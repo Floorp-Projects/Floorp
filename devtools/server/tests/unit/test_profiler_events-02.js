@@ -24,7 +24,7 @@ add_task(function* () {
   // happen if the MOZ_PROFILER_STARTUP environment variable is set).
   Profiler.StopProfiler();
   let eventsCalled = 0;
-  let handledThreeTimes = promise.defer();
+  let handledThreeTimes = defer();
 
   front.on("profiler-status", (response) => {
     dump("'profiler-status' fired\n");
@@ -67,7 +67,7 @@ add_task(function* () {
 });
 
 function getChromeActors() {
-  let deferred = promise.defer();
+  let deferred = defer();
   get_chrome_actors((client, form) => deferred.resolve([client, form]));
   return deferred.promise;
 }

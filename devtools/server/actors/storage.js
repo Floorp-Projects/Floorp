@@ -78,7 +78,7 @@ var storageTypePool = new Map();
  *        The wait time in milliseconds.
  */
 function sleep(time) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   setTimeout(() => {
     deferred.resolve(null);
@@ -1852,7 +1852,7 @@ StorageActors.createActor({
 
     let unresolvedPromises = new Map();
     function callParentProcessAsync(methodName, ...args) {
-      let deferred = promise.defer();
+      let deferred = defer();
 
       unresolvedPromises.set(methodName, deferred);
 
@@ -1925,7 +1925,7 @@ var indexedDBHelpers = {
    */
   getDBMetaData: Task.async(function* (host, principal, name, storage) {
     let request = this.openWithPrincipal(principal, name, storage);
-    let success = promise.defer();
+    let success = defer();
 
     request.onsuccess = event => {
       let db = event.target.result;
@@ -2287,7 +2287,7 @@ var indexedDBHelpers = {
   getObjectStoreData(host, principal, dbName, storage, requestOptions) {
     let {name} = this.splitNameAndStorage(dbName);
     let request = this.openWithPrincipal(principal, name, storage);
-    let success = promise.defer();
+    let success = defer();
     let {objectStore, id, index, offset, size} = requestOptions;
     let data = [];
     let db;

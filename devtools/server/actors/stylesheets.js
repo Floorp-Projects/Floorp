@@ -320,7 +320,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       return this._cssRules;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let onSheetLoaded = (event) => {
       this.ownerNode.removeEventListener("load", onSheetLoaded);
@@ -547,7 +547,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         A promise that resolves with a SourceMapConsumer, or null.
    */
   _fetchSourceMap: function () {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     this._getText().then(sheetContent => {
       let url = this._extractSourceMapUrl(sheetContent);
