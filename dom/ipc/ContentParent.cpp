@@ -4947,25 +4947,6 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aUR
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvBroadcastLocalStorageChange(const nsString& aDocumentURI,
-                                               const nsString& aKey,
-                                               const nsString& aOldValue,
-                                               const nsString& aNewValue,
-                                               const Principal& aPrincipal,
-                                               const bool& aIsPrivate)
-{
-  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-    if (cp != this) {
-      Unused << cp->SendDispatchLocalStorageChange(
-        nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
-        nsString(aNewValue), IPC::Principal(aPrincipal), aIsPrivate);
-    }
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 ContentParent::RecvGetA11yContentId(uint32_t* aContentId)
 {
 #if defined(XP_WIN32) && defined(ACCESSIBILITY)
