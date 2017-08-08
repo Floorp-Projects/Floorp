@@ -37,6 +37,7 @@ class DrawTarget;
 namespace layers {
 
 class PaintedLayer;
+class CapturedPaintState;
 
 /**
  * A compositable client for PaintedLayers. These are different to Image/Canvas
@@ -96,9 +97,10 @@ public:
   virtual gfx::DrawTarget* BorrowDrawTargetForPainting(RotatedContentBuffer::PaintState& aPaintState,
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) = 0;
   virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) = 0;
-  virtual gfx::DrawTarget* BorrowDrawTargetForRecording(RotatedContentBuffer::PaintState& aPaintState,
-                                                        RotatedContentBuffer::DrawIterator* aIter,
-                                                        gfx::Matrix* aOutTransform) = 0;
+  virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(
+    RotatedContentBuffer::PaintState& aPaintState,
+    RotatedContentBuffer::DrawIterator* aIter) = 0;
+
   // Called as part of the layers transation reply. Conveys data about our
   // buffer(s) from the compositor. If appropriate we should swap references
   // to our buffers.
@@ -153,12 +155,9 @@ public:
   {
     return RotatedContentBuffer::BorrowDrawTargetForPainting(aPaintState, aIter);
   }
-  virtual gfx::DrawTarget* BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                       RotatedContentBuffer::DrawIterator* aIter,
-                                                       gfx::Matrix* aOutTransform) override
-  {
-    return RotatedContentBuffer::BorrowDrawTargetForRecording(aPaintState, aIter, aOutTransform);
-  }
+  virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
+                                                                  RotatedContentBuffer::DrawIterator* aIter) override;
+
   virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) override
   {
     BorrowDrawTarget::ReturnDrawTarget(aReturned);
@@ -242,12 +241,9 @@ public:
   {
     return RotatedContentBuffer::BorrowDrawTargetForPainting(aPaintState, aIter);
   }
-  virtual gfx::DrawTarget* BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                        RotatedContentBuffer::DrawIterator* aIter,
-                                                        gfx::Matrix* aOutTransform) override
-  {
-    return RotatedContentBuffer::BorrowDrawTargetForRecording(aPaintState, aIter, aOutTransform);
-  }
+  virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
+                                                                  RotatedContentBuffer::DrawIterator* aIter) override;
+
   virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) override
   {
     BorrowDrawTarget::ReturnDrawTarget(aReturned);

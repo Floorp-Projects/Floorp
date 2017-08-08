@@ -571,13 +571,13 @@ public:
 
     struct EnableLocation_t {
         typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
+        typedef bool ReturnType;
+        typedef bool SetterType;
         typedef mozilla::jni::Args<
                 bool> Args;
         static constexpr char name[] = "enableLocation";
         static constexpr char signature[] =
-                "(Z)V";
+                "(Z)Z";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -587,7 +587,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto EnableLocation(bool) -> void;
+    static auto EnableLocation(bool) -> bool;
 
     struct EnableLocationHighAccuracy_t {
         typedef GeckoAppShell Owner;
@@ -1392,7 +1392,7 @@ public:
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
         static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::UI;
+                mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::GECKO;
     };

@@ -303,10 +303,10 @@ nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
     certn_2 = do_QueryElementAt(x509Certs, numCerts-2);
     certn_1 = do_QueryElementAt(x509Certs, numCerts-1);
 
-    nsXPIDLString cert0SubjectName;
-    nsXPIDLString cert1IssuerName;
-    nsXPIDLString certn_2IssuerName;
-    nsXPIDLString certn_1SubjectName;
+    nsAutoString cert0SubjectName;
+    nsAutoString cert1IssuerName;
+    nsAutoString certn_2IssuerName;
+    nsAutoString certn_1SubjectName;
 
     cert0->GetSubjectName(cert0SubjectName);
     cert1->GetIssuerName(cert1IssuerName);

@@ -11,6 +11,7 @@
 #include "GLTextureImage.h"             // for TextureImage
 #include "ImageTypes.h"                 // for StereoMode
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"             // for RefPtr, RefCounted
@@ -630,6 +631,15 @@ public:
 
   bool SerializeReadLock(ReadLockDescriptor& aDescriptor);
 
+  // Mark that the TextureClient will be used by the paint thread, and should not
+  // free its underlying texture data. This must only be called from the main
+  // thread.
+  void AddPaintThreadRef();
+
+  // Mark that the TextureClient is no longer in use by the PaintThread. This
+  // must only be called from the PaintThread.
+  void DropPaintThreadRef();
+
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
  
@@ -718,6 +728,9 @@ protected:
 
   // Serial id of TextureClient. It is unique in current process.
   const uint64_t mSerial;
+
+  // When non-zero, texture data must not be freed.
+  mozilla::Atomic<uintptr_t> mPaintThreadRefs;
 
   // External image id. It is unique if it is allocated.
   // The id is allocated in TextureClient::InitIPDLActor().
