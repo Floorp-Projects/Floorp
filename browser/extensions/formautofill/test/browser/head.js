@@ -155,6 +155,10 @@ function getAddresses() {
   return getRecords({collectionName: "addresses"});
 }
 
+function getCreditCards() {
+  return getRecords({collectionName: "creditCards"});
+}
+
 function saveAddress(address) {
   Services.cpmm.sendAsyncMessage("FormAutofill:SaveAddress", {address});
   return TestUtils.topicObserved("formautofill-storage-changed");
@@ -167,8 +171,14 @@ function saveCreditCard(creditcard) {
   });
   return TestUtils.topicObserved("formautofill-storage-changed");
 }
+
 function removeAddresses(guids) {
   Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses", {guids});
+  return TestUtils.topicObserved("formautofill-storage-changed");
+}
+
+function removeCreditCards(guids) {
+  Services.cpmm.sendAsyncMessage("FormAutofill:RemoveCreditCards", {guids});
   return TestUtils.topicObserved("formautofill-storage-changed");
 }
 
@@ -209,5 +219,10 @@ registerCleanupFunction(async function() {
   let addresses = await getAddresses();
   if (addresses.length) {
     await removeAddresses(addresses.map(address => address.guid));
+  }
+
+  let creditCards = await getCreditCards();
+  if (creditCards.length) {
+    await removeCreditCards(creditCards.map(cc => cc.guid));
   }
 });
