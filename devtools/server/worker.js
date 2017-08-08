@@ -28,8 +28,7 @@ this.rpc = function (method, ...params) {
 
 loadSubScript("resource://devtools/shared/worker/loader.js");
 
-var Promise = worker.require("promise");
-const defer = require("devtools/shared/defer");
+var defer = worker.require("devtools/shared/defer");
 var { ActorPool } = worker.require("devtools/server/actors/common");
 var { ThreadActor } = worker.require("devtools/server/actors/script");
 var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");

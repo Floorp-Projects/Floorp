@@ -12,7 +12,8 @@ const {DebuggerServer} = require("devtools/server/main");
 const { Task } = require("devtools/shared/task");
 
 const Services = require("Services");
-const promise = require("promise");
+// promise is still used in tests using this helper
+const promise = require("promise"); // eslint-disable-line no-unused-vars
 const defer = require("devtools/shared/defer");
 const {_documentWalker} = require("devtools/server/actors/inspector");
 
