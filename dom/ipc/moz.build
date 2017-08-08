@@ -126,7 +126,6 @@ LOCAL_INCLUDES += [
     '/dom/geolocation',
     '/dom/media/webspeech/synth/ipc',
     '/dom/security',
-    '/dom/storage',
     '/dom/workers',
     '/extensions/cookie',
     '/extensions/spellcheck/src',
