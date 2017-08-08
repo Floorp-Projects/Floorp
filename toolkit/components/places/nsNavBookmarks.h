@@ -314,8 +314,6 @@ private:
    */
   RefPtr<mozilla::places::Database> mDB;
 
-  int32_t mItemCount;
-
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
 
   int64_t TagsRootId() {
@@ -338,8 +336,6 @@ private:
            aFolderId == mTagsRoot || aFolderId == mUnfiledRoot ||
            aFolderId == mToolbarRoot || aFolderId == mMobileRoot;
   }
-
-  nsresult IsBookmarkedInDatabase(int64_t aBookmarkID, bool* aIsBookmarked);
 
   nsresult SetItemDateInternal(enum mozilla::places::BookmarkDate aDateType,
                                int64_t aSyncChangeDelta,
@@ -415,8 +411,6 @@ private:
   nsresult GetBookmarksForURI(nsIURI* aURI,
                               nsTArray<BookmarkData>& _bookmarks);
 
-  int64_t RecursiveFindRedirectedBookmark(int64_t aPlaceId);
-
   class RemoveFolderTransaction final : public nsITransaction {
   public:
     RemoveFolderTransaction(int64_t aID, uint16_t aSource)
@@ -481,14 +475,6 @@ private:
   // Tracks whether we are in batch mode.
   // Note: this is only tracking bookmarks batches, not history ones.
   bool mBatching;
-
-  /**
-   * This function must be called every time a bookmark is removed.
-   *
-   * @param aURI
-   *        Uri to test.
-   */
-  nsresult UpdateKeywordsForRemovedBookmark(const BookmarkData& aBookmark);
 };
 
 #endif // nsNavBookmarks_h_
