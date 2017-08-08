@@ -238,5 +238,6 @@ TESTCASES.forEach(testcase => {
     let value = FormAutofillHeuristics.getInfo(element);
 
     Assert.deepEqual(value, testcase.expectedReturnValue);
+    LabelUtils.clearLabelMap();
   });
 });
