@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1382869: data document should ignore meta csp</title>
+  <meta charset="utf-8">
+</head>
+<body>
+<script type="application/javascript">
+  // 1) create a data document
+  const doc = document.implementation.createHTMLDocument();
+  // 2) add meta csp to that document
+  const metaEl = doc.createElement('meta');
+  metaEl.setAttribute('http-equiv', 'Content-Security-Policy');
+  metaEl.setAttribute('content', "img-src 'none'");
+  doc.head.appendChild(metaEl);
+  // 3) let the parent know we are done here
+  var result = "dataDocCreated";
+  window.parent.postMessage({result}, "*");
+</script>
+
+</body>
+</html>
