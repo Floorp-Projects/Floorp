@@ -32,8 +32,8 @@
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
     <hbox align="start">
-      <textbox id="url" flex="1" placeholder="Search Website"
-               type="search"/>
+      <textbox id="searchBox" flex="1" placeholder="&searchbox.placeholder;"
+               type="search" oncommand="gSitePermissionsManager.filterPermissionsList();"/>
     </hbox>
     <separator class="thin"/>
     <richlistbox id="permissionsBox" selected="false"
