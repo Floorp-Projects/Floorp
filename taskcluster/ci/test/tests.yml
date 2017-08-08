@@ -27,10 +27,6 @@ awsy-stylo:
     description: "Are we slim yet for Stylo parallel"
     suite: awsy
     treeherder-symbol: tc-SY-stylo(sy)
-    run-on-projects:
-        by-test-platform:
-            macosx64-stylo/.*: ['mozilla-central', 'try']
-            default: built-projects
     max-run-time: 7200
     instance-size: xlarge
     allow-software-gl-layers: false
@@ -55,10 +51,6 @@ awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
     suite: awsy
     treeherder-symbol: tc-SY-stylo-seq(sy)
-    run-on-projects:
-        by-test-platform:
-            macosx64-stylo/.*: ['mozilla-central', 'try']
-            default: built-projects
     max-run-time: 7200
     instance-size: xlarge
     allow-software-gl-layers: false
