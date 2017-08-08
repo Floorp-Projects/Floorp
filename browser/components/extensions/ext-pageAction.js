@@ -4,7 +4,7 @@
 
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-browserAction.js */
-/* import-globals-from ext-utils.js */
+/* import-globals-from ext-browser.js */
 
 XPCOMUtils.defineLazyModuleGetter(this, "PanelPopup",
                                   "resource:///modules/ExtensionPopups.jsm");
@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,
+  StartupCache,
 } = ExtensionParent;
 
 const popupOpenTimingHistogram = "WEBEXT_PAGEACTION_POPUP_OPEN_MS";
@@ -32,7 +33,7 @@ this.pageAction = class extends ExtensionAPI {
     return pageActionMap.get(extension);
   }
 
-  onManifestEntry(entryName) {
+  async onManifestEntry(entryName) {
     let {extension} = this;
     let options = extension.manifest.page_action;
 
@@ -45,7 +46,6 @@ this.pageAction = class extends ExtensionAPI {
     this.defaults = {
       show: false,
       title: options.default_title || extension.name,
-      icon: IconDetails.normalize({path: options.default_icon}, extension),
       popup: options.default_popup || "",
     };
 
@@ -63,9 +63,17 @@ this.pageAction = class extends ExtensionAPI {
     // WeakMap[ChromeWindow -> <xul:image>]
     this.buttons = new WeakMap();
 
-    EventEmitter.decorate(this);
-
     pageActionMap.set(extension, this);
+
+    this.defaults.icon = await StartupCache.get(
+      extension, ["pageAction", "default_icon"],
+      () => IconDetails.normalize({path: options.default_icon}, extension));
+
+    this.iconData.set(
+      this.defaults.icon,
+      await StartupCache.get(
+        extension, ["pageAction", "default_icon_data"],
+        () => this.getIconData(this.defaults.icon)));
   }
 
   onShutdown(reason) {

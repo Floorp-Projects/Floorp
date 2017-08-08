@@ -3,7 +3,9 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-toolkit.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+const ToolkitModules = {};
+
+XPCOMUtils.defineLazyModuleGetter(ToolkitModules, "EventEmitter",
                                   "resource://gre/modules/EventEmitter.jsm");
 
 var {
@@ -98,7 +100,7 @@ this.notifications = class extends ExtensionAPI {
     let {extension} = context;
 
     let map = new Map();
-    EventEmitter.decorate(map);
+    ToolkitModules.EventEmitter.decorate(map);
     notificationsMap.set(extension, map);
 
     return {
