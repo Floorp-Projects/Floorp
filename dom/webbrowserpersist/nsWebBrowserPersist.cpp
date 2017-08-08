@@ -2626,7 +2626,7 @@ nsWebBrowserPersist::SaveSubframeContent(
     nsresult rv = aFrameContent->GetContentType(contentType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLString ext;
+    nsString ext;
     GetExtensionForContentType(NS_ConvertASCIItoUTF16(contentType).get(),
                                getter_Copies(ext));
 

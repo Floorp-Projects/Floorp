@@ -244,10 +244,10 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter *aPrinter,
   nsDeviceContextSpecGTK *spec = (nsDeviceContextSpecGTK*)aData;
 
   // Find the printer whose name matches the one inside the settings.
-  nsXPIDLString printerName;
+  nsString printerName;
   nsresult rv =
     spec->mPrintSettings->GetPrinterName(getter_Copies(printerName));
-  if (NS_SUCCEEDED(rv) && printerName) {
+  if (NS_SUCCEEDED(rv) && !printerName.IsVoid()) {
     NS_ConvertUTF16toUTF8 requestedName(printerName);
     const char* currentName = gtk_printer_get_name(aPrinter);
     if (requestedName.Equals(currentName)) {
@@ -326,7 +326,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
     }
   } else {
     // Handle print-to-file ourselves for the benefit of embedders
-    nsXPIDLString targetPath;
+    nsString targetPath;
     nsCOMPtr<nsIFile> destFile;
     mPrintSettings->GetToFileName(getter_Copies(targetPath));
 

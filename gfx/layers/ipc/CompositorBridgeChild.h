@@ -45,6 +45,7 @@ class CompositorManagerChild;
 class CompositorOptions;
 class TextureClient;
 class TextureClientPool;
+class CapturedPaintState;
 struct FrameMetrics;
 
 class CompositorBridgeChild final : public PCompositorBridgeChild,
@@ -223,11 +224,11 @@ public:
 
   // Must only be called from the main thread. Notifies the CompositorBridge
   // that the paint thread is going to begin painting asynchronously.
-  void NotifyBeginAsyncPaint();
+  void NotifyBeginAsyncPaint(CapturedPaintState* aState);
 
   // Must only be called from the paint thread. Notifies the CompositorBridge
   // that the paint thread has finished an asynchronous paint request.
-  void NotifyFinishedAsyncPaint();
+  void NotifyFinishedAsyncPaint(CapturedPaintState* aState);
 
   // Must only be called from the main thread. Notifies the CompoistorBridge
   // that a transaction is about to be sent, and if the paint thread is
@@ -352,6 +353,10 @@ private:
   uint64_t mProcessToken;
 
   FixedSizeSmallShmemSectionAllocator* mSectionAllocator;
+
+  // TextureClients that must be kept alive during async painting. This
+  // is only accessed on the main thread.
+  nsTArray<RefPtr<TextureClient>> mTextureClientsForAsyncPaint;
 
   // Off-Main-Thread Painting state. This covers access to the OMTP-related
   // state below.

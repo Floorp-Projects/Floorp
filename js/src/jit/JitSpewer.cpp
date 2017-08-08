@@ -558,7 +558,14 @@ jit::CheckLogging()
         EnableChannel(JitSpew_BaselineDebugModeOSR);
     }
 
-    JitSpewPrinter().init(stderr);
+    FILE* spewfh = stderr;
+    const char* filename = getenv("ION_SPEW_FILENAME");
+    if (filename && *filename) {
+        spewfh = fopen(filename, "w");
+        MOZ_RELEASE_ASSERT(spewfh);
+        setbuf(spewfh, nullptr); // Make unbuffered
+    }
+    JitSpewPrinter().init(spewfh);
 }
 
 JitSpewIndent::JitSpewIndent(JitSpewChannel channel)

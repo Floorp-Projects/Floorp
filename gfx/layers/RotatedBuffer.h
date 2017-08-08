@@ -302,9 +302,8 @@ public:
    * to the returned DrawTarget, BUT it is required to be painting in the right
    * location whenever drawing does happen.
    */
-  gfx::DrawTarget* BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                DrawIterator* aIter,
-                                                gfx::Matrix* aOutTransform);
+  RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
+                                                          DrawIterator* aIter);
 
   void ExpandDrawRegion(PaintState& aPaintState,
                         DrawIterator* aIter,

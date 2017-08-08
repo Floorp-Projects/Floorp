@@ -78,7 +78,7 @@ WriteConsoleLog()
   // From this point on, we have to release all the messages, and free
   // the memory allocated for the messages array. XPCOM arrays suck.
 
-  nsXPIDLString msg;
+  nsString msg;
   nsAutoCString nativemsg;
 
   for (uint32_t i = 0; i < mcount; ++i) {
