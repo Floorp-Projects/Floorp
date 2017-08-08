@@ -1724,7 +1724,7 @@ Messages.ConsoleTable.prototype = extend(Messages.Extended.prototype, {
    *         null if the arguments are invalid.
    */
   _populateTableData: function () {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     if (this._arguments.length <= 0) {
       return deferred.reject();
@@ -3176,7 +3176,7 @@ Widgets.ObjectRenderers.add({
 
     let isAttached = yield this.toolbox.walker.isInDOMTree(this._nodeFront);
     if (isAttached) {
-      let onReady = promise.defer();
+      let onReady = defer();
       this.toolbox.inspector.once("inspector-updated", onReady.resolve);
       yield this.toolbox.selection.setNodeFront(this._nodeFront, "console");
       yield onReady.promise;

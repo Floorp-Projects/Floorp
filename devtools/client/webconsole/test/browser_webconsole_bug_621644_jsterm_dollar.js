@@ -18,7 +18,7 @@ add_task(function* () {
 });
 
 function* test$(HUD) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   HUD.jsterm.clearOutput();
 
@@ -32,7 +32,7 @@ function* test$(HUD) {
 }
 
 function test$$(HUD) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   HUD.jsterm.clearOutput();
 

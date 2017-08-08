@@ -117,7 +117,7 @@ add_task(function* () {
   let clickable = consoleErrorMsg.clickableElements[0];
   ok(clickable, "clickable object found for console.error");
 
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let onFetch = (aEvent, aVar) => {
     // Skip the notification from console.dir variablesview-fetched.

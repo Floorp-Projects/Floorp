@@ -154,7 +154,7 @@ function createTempFile(aName, aContent, aCallback = function () {})
  */
 function runAsyncTests(aScratchpad, aTests)
 {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   (function runTest() {
     if (aTests.length) {

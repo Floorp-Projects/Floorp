@@ -90,7 +90,7 @@ function attachURL(url, callback) {
 }
 
 function promiseOnce(target, event) {
-  let deferred = promise.defer();
+  let deferred = defer();
   target.on(event, (...args) => {
     if (args.length === 1) {
       deferred.resolve(args[0]);
@@ -174,11 +174,11 @@ function assertOwnershipTrees(walker) {
 
 // Verify that an actorID is inaccessible both from the client library and the server.
 function checkMissing(client, actorID) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let front = client.getActor(actorID);
   ok(!front, "Front shouldn't be accessible from the client for actorID: " + actorID);
 
-  deferred = promise.defer();
+  deferred = defer();
   client.request({
     to: actorID,
     type: "request",
@@ -191,11 +191,11 @@ function checkMissing(client, actorID) {
 
 // Verify that an actorID is accessible both from the client library and the server.
 function checkAvailable(client, actorID) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let front = client.getActor(actorID);
   ok(front, "Front should be accessible from the client for actorID: " + actorID);
 
-  deferred = promise.defer();
+  deferred = defer();
   client.request({
     to: actorID,
     type: "garbageAvailableTest",
@@ -278,7 +278,7 @@ function assertChildList(mutations) {
 // Load mutations aren't predictable, so keep accumulating mutations until
 // the one we're looking for shows up.
 function waitForMutation(walker, test, mutations = []) {
-  let deferred = promise.defer();
+  let deferred = defer();
   for (let change of mutations) {
     if (test(change)) {
       deferred.resolve(mutations);

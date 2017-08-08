@@ -204,7 +204,7 @@ exports.CanvasActor = protocol.ActorClassWithSpec(canvasSpec, {
     this._webGLPrimitiveCounter.resetCounts();
     this._callWatcher.resumeRecording();
 
-    let deferred = this._currentAnimationFrameSnapshot = promise.defer();
+    let deferred = this._currentAnimationFrameSnapshot = defer();
     return deferred.promise;
   },
 

@@ -29,7 +29,7 @@ var DataProvider = {
       return p;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     let realMethodName = "get" + method.charAt(0).toUpperCase() +
       method.slice(1);
 

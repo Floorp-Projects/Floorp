@@ -24,7 +24,7 @@ add_task(function* () {
 function consoleOpened(hud) {
   HUD = hud;
 
-  let deferred = promise.defer();
+  let deferred = defer();
 
   // See bugs 574036, 586386 and 587617.
   outputNode = HUD.outputNode;
@@ -77,7 +77,7 @@ function consoleOpened(hud) {
 // Test that the context menu "Copy" (which has a different code path) works
 // properly as well.
 function testContextMenuCopy() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let contextMenuId = HUD.ui.outputWrapper.getAttribute("context");
   let contextMenu = HUD.ui.document.getElementById(contextMenuId);
