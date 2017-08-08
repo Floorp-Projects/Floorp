@@ -160,6 +160,8 @@ StorageObserver::Observe(nsISupports* aSubject,
 
   // Start the thread that opens the database.
   if (!strcmp(aTopic, kStartupTopic)) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     obs->RemoveObserver(this, kStartupTopic);
 
@@ -175,6 +177,8 @@ StorageObserver::Observe(nsISupports* aSubject,
 
   // Timer callback used to start the database a short timer after startup
   if (!strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC)) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
     nsCOMPtr<nsITimer> timer = do_QueryInterface(aSubject);
     if (!timer) {
       return NS_ERROR_UNEXPECTED;
@@ -183,11 +187,12 @@ StorageObserver::Observe(nsISupports* aSubject,
     if (timer == mDBThreadStartDelayTimer) {
       mDBThreadStartDelayTimer = nullptr;
 
-    // XXX Fix me!
-#if 0
-      StorageDBBridge* db = LocalStorageCache::StartDatabase();
-      NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
-#endif
+      StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+      if (NS_WARN_IF(!storageChild)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      storageChild->SendStartup();
     }
 
     return NS_OK;
@@ -199,13 +204,16 @@ StorageObserver::Observe(nsISupports* aSubject,
       return NS_OK;
     }
 
-    // XXX Fix me!
-#if 0
-    StorageDBBridge* db = LocalStorageCache::StartDatabase();
-    NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
+    StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+    if (NS_WARN_IF(!storageChild)) {
+      return NS_ERROR_FAILURE;
+    }
 
-    db->AsyncClearAll();
-#endif
+    storageChild->AsyncClearAll();
+
+    if (XRE_IsParentProcess()) {
+      storageChild->SendClearAll();
+    }
 
     Notify("cookie-cleared");
 
@@ -288,13 +296,14 @@ StorageObserver::Observe(nsISupports* aSubject,
     rv = CreateReversedDomain(aceDomain, originScope);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // XXX Fix me!
-#if 0
-    StorageDBBridge* db = LocalStorageCache::StartDatabase();
-    NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
+    if (XRE_IsParentProcess()) {
+      StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+      if (NS_WARN_IF(!storageChild)) {
+        return NS_ERROR_FAILURE;
+      }
 
-    db->AsyncClearMatchingOrigin(originScope);
-#endif
+      storageChild->SendClearMatchingOrigin(originScope);
+    }
 
     Notify("domain-data-cleared", EmptyString(), originScope);
 
@@ -310,19 +319,20 @@ StorageObserver::Observe(nsISupports* aSubject,
 
   // Clear data of the origins whose prefixes will match the suffix.
   if (!strcmp(aTopic, "clear-origin-attributes-data")) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
     OriginAttributesPattern pattern;
     if (!pattern.Init(nsDependentString(aData))) {
       NS_ERROR("Cannot parse origin attributes pattern");
       return NS_ERROR_FAILURE;
     }
 
-    // XXX Fix me!
-#if 0
-    StorageDBBridge* db = LocalStorageCache::StartDatabase();
-    NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
+    StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+    if (NS_WARN_IF(!storageChild)) {
+      return NS_ERROR_FAILURE;
+    }
 
-    db->AsyncClearMatchingOriginAttributes(pattern);
-#endif
+    storageChild->SendClearMatchingOriginAttributes(pattern);
 
     Notify("origin-attr-pattern-cleared", nsDependentString(aData));
 
@@ -366,13 +376,12 @@ StorageObserver::Observe(nsISupports* aSubject,
 
 #ifdef DOM_STORAGE_TESTS
   if (!strcmp(aTopic, "domstorage-test-flush-force")) {
-    // XXX Fix me!
-#if 0
-    StorageDBBridge* db = LocalStorageCache::GetDatabase();
-    if (db) {
-      db->AsyncFlush();
+    StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+    if (NS_WARN_IF(!storageChild)) {
+      return NS_ERROR_FAILURE;
     }
-#endif
+
+    storageChild->SendAsyncFlush();
 
     return NS_OK;
   }
