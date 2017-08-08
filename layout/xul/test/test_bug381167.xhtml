@@ -26,6 +26,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=381167
 
 SimpleTest.waitForExplicitFinish();
 
+if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
+  // Stylo currently asserts for any XUL bits.
+  SimpleTest.expectAssertions(5, 5);
+}
+
 function closeit() {
   var evt = document.createEvent('KeyboardEvent');
                                  evt.initKeyEvent('keypress', true, true,
