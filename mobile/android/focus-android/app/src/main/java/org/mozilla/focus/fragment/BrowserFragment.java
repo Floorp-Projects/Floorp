@@ -714,7 +714,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             case R.id.display_url:
                 final Fragment urlFragment = UrlInputFragment
-                        .createAsOverlay(UrlUtils.getSearchTermsOrUrl(getContext(), getUrl()), urlView);
+                        .createAsOverlay(getUrl(), urlView);
 
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
