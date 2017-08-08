@@ -17,14 +17,6 @@
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/system_wrappers/include/trace.h"
- 
-#include "Latency.h"
-
-#define LOG_FIRST_CAPTURE(x) LogTime(AsyncLatencyLogger::AudioCaptureBase, \
-                                     reinterpret_cast<uint64_t>(x), 0)
-#define LOG_CAPTURE_FRAMES(x, frames) LogLatency(AsyncLatencyLogger::AudioCapture, \
-                                                 reinterpret_cast<uint64_t>(x), frames)
-
 
 webrtc_adm_linux_alsa::AlsaSymbolTable AlsaSymbolTable;
 
@@ -2143,10 +2135,8 @@ bool AudioDeviceLinuxALSA::RecThreadProcess()
             _recordingFramesLeft = _recordingFramesIn10MS;
 
             if (_firstRecord) {
-              LOG_FIRST_CAPTURE(this);
               _firstRecord = false;
             }
-            LOG_CAPTURE_FRAMES(this, _recordingFramesIn10MS);
             // store the recorded buffer (no action will be taken if the
             // #recorded samples is not a full buffer)
             _ptrAudioBuffer->SetRecordedBuffer(_recordingBuffer,
