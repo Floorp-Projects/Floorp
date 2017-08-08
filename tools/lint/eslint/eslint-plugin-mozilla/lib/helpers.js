@@ -34,6 +34,11 @@ const callExpressionDefinitions = [
   /^this\.__defineGetter__\("(\w+)"/
 ];
 
+const callExpressionMultiDefinitions = [
+  "XPCOMUtils.defineLazyModuleGetters(this,",
+  "XPCOMUtils.defineLazyServiceGetters(this,"
+];
+
 const imports = [
   /^(?:Cu|Components\.utils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/
 ];
@@ -279,6 +284,14 @@ module.exports = {
       if (match) {
         return [{ name: match[1], writable: true }];
       }
+    }
+
+    if (callExpressionMultiDefinitions.some(expr => source.startsWith(expr)) &&
+        node.expression.arguments[1] &&
+        node.expression.arguments[1].type === "ObjectExpression") {
+      return node.expression.arguments[1].properties
+                 .map(p => ({ name: p.type === "Property" && p.key.name, writable: true }))
+                 .filter(g => g.name);
     }
 
     if (node.expression.callee.type == "MemberExpression" &&
