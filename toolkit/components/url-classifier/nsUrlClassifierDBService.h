@@ -61,6 +61,7 @@
 #define DOWNLOAD_BLOCK_TABLE_PREF       "urlclassifier.downloadBlockTable"
 #define DOWNLOAD_ALLOW_TABLE_PREF       "urlclassifier.downloadAllowTable"
 #define DISALLOW_COMPLETION_TABLE_PREF  "urlclassifier.disallow_completions"
+#define PASSWORD_ALLOW_TABLE_PREF       "urlclassifier.passwordAllowTable"
 
 using namespace mozilla::safebrowsing;
 
