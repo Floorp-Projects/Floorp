@@ -25,6 +25,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
     _formHistoryFieldName = "some-very-unique-marionette-only-firefox-reset-field"
     _formHistoryValue = "special-pumpkin-value"
 
+    _formAutofillAddressGuid = None
+
     _expectedURLs = ["about:robots", "about:mozilla"]
 
     def savePassword(self):
@@ -100,6 +102,26 @@ class TestFirefoxRefresh(MarionetteTestCase):
         """, script_args=(self._formHistoryFieldName, self._formHistoryValue))
         if error:
           print error
+
+    def createFormAutofill(self):
+        self._formAutofillAddressGuid = self.runAsyncCode("""
+          const TEST_ADDRESS_1 = {
+            "given-name": "John",
+            "additional-name": "R.",
+            "family-name": "Smith",
+            organization: "World Wide Web Consortium",
+            "street-address": "32 Vassar Street\\\nMIT Room 32-G524",
+            "address-level2": "Cambridge",
+            "address-level1": "MA",
+            "postal-code": "02139",
+            country: "US",
+            tel: "+15195555555",
+            email: "user@example.com",
+          };
+          return global.profileStorage.initialize().then(() => {
+            return global.profileStorage.addresses.add(TEST_ADDRESS_1);
+          }).then(marionetteScriptFinished);
+        """)
 
     def createCookie(self):
         self.runCode("""
@@ -225,6 +247,22 @@ class TestFirefoxRefresh(MarionetteTestCase):
         """)
         self.assertEqual(formHistoryCount, 1, "There should be only 1 entry in the form history")
 
+    def checkFormAutofill(self):
+        formAutofillResults = self.runAsyncCode("""
+          return global.profileStorage.initialize().then(() => {
+            return global.profileStorage.addresses.getAll()
+          }).then(marionetteScriptFinished);
+        """,)
+        if type(formAutofillResults) == str:
+            self.fail(formAutofillResults)
+            return
+
+        formAutofillAddressCount = len(formAutofillResults)
+        self.assertEqual(formAutofillAddressCount, 1, "Should have exactly 1 saved address, got %d" % formAutofillAddressCount)
+        if formAutofillAddressCount == 1:
+            self.assertEqual(formAutofillResults[0]['guid'], self._formAutofillAddressGuid)
+
+
     def checkCookie(self):
         cookieInfo = self.runCode("""
           try {
@@ -297,6 +335,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.checkBookmark()
         self.checkHistory()
         self.checkFormHistory()
+        self.checkFormAutofill()
         self.checkCookie()
         if hasMigrated:
             self.checkSession()
@@ -306,6 +345,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.createBookmark()
         self.createHistory()
         self.createFormHistory()
+        self.createFormAutofill()
         self.createCookie()
         self.createSession()
 
@@ -317,6 +357,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           global.profSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(Ci.nsIToolkitProfileService);
           global.Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
           global.FormHistory = Cu.import("resource://gre/modules/FormHistory.jsm", {}).FormHistory;
+          global.profileStorage = Cu.import("resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
         """)
 
     def runCode(self, script, *args, **kwargs):
