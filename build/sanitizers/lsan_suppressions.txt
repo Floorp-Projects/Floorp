@@ -26,6 +26,9 @@ leak:GI___strdup
 # Bug 1078015 - If the process terminates during a PR_Sleep, LSAN  detects a leak
 leak:PR_Sleep
 
+# Bug 1363976 - Stylo holds some global data alive forever.
+leak:style::gecko::global_style_data
+
 ###
 ### Many leaks only affect some test suites.  The suite annotations are not checked.
 ###
