@@ -18,6 +18,8 @@ function test() {
 var tests = [
   function test_untrusted_host(done) {
     loadUITourTestPage(function() {
+      CustomizableUI.addWidgetToArea("bookmarks-menu-button", CustomizableUI.AREA_NAVBAR, 0);
+      registerCleanupFunction(() => CustomizableUI.removeWidgetFromArea("bookmarks-menu-button"));
       let bookmarksMenu = document.getElementById("bookmarks-menu-button");
       is(bookmarksMenu.open, false, "Bookmark menu should initially be closed");
 

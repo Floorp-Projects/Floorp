@@ -15,7 +15,6 @@ function getExpectedTargets() {
     "addons",
     "appMenu",
     "backForward",
-    "bookmarks",
     "bookmark-star-button",
     "customize",
     "devtools",
@@ -50,12 +49,12 @@ add_UITour_task(async function test_availableTargets() {
 });
 
 add_UITour_task(async function test_availableTargets_changeWidgets() {
-  CustomizableUI.removeWidgetFromArea("bookmarks-menu-button");
+  CustomizableUI.addWidgetToArea("bookmarks-menu-button", CustomizableUI.AREA_NAVBAR, 0);
   ok(!UITour.availableTargetsCache.has(window),
      "Targets should be evicted from cache after widget change");
   let data = await getConfigurationPromise("availableTargets");
   let expecteds = getExpectedTargets();
-  expecteds = expecteds.filter(target => target != "bookmarks");
+  expecteds = ["bookmarks", ...expecteds];
   ok_targets(data, expecteds);
 
   ok(UITour.availableTargetsCache.has(window),
