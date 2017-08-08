@@ -539,6 +539,9 @@ InputQueue::AllowScrollHandoff() const
   if (GetCurrentPanGestureBlock()) {
     return GetCurrentPanGestureBlock()->AllowScrollHandoff();
   }
+  if (GetCurrentKeyboardBlock()) {
+    return GetCurrentKeyboardBlock()->AllowScrollHandoff();
+  }
   return true;
 }
 
