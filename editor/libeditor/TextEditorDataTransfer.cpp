@@ -163,7 +163,7 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
 nsresult
 TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 {
-  ForceCompositionEnd();
+  CommitComposition();
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aDropEvent));
   NS_ENSURE_TRUE(dragEvent, NS_ERROR_FAILURE);

@@ -1203,7 +1203,7 @@ HTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  ForceCompositionEnd();
+  CommitComposition();
 
   // Do not use AutoRules -- rules code won't let us insert in <head>.  Use
   // the head node as a parent and delete/insert directly.
@@ -1273,7 +1273,7 @@ HTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 NS_IMETHODIMP
 HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
 {
-  ForceCompositionEnd();
+  CommitComposition();
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
@@ -1537,7 +1537,7 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
 
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
 
-  ForceCompositionEnd();
+  CommitComposition();
   AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
                                nsIEditor::eNext);
@@ -3580,7 +3580,7 @@ HTMLEditor::SelectEntireDocument(Selection* aSelection)
 NS_IMETHODIMP
 HTMLEditor::SelectAll()
 {
-  ForceCompositionEnd();
+  CommitComposition();
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
@@ -4519,7 +4519,7 @@ nsresult
 HTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
 {
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
-  ForceCompositionEnd();
+  CommitComposition();
 
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> rules(mRules);
