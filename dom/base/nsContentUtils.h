@@ -1084,6 +1084,12 @@ public:
                      uint32_t *aColumnOut, nsString& aMessageOut);
 
   /**
+   * Helper function to tell if user ever enabled DevTools explicitely.
+   * Allows making DevTools related API no-op until user do so.
+   */
+  static bool DevToolsEnabled(JSContext* aCx);
+
+  /**
    * Fill (with the parameters given) the localized string named |aKey| in
    * properties file |aFile|.
    */
@@ -3269,6 +3275,7 @@ private:
   static bool sIsFormAutofillAutocompleteEnabled;
   static bool sIsWebComponentsEnabled;
   static bool sIsCustomElementsEnabled;
+  static bool sDevToolsEnabled;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;

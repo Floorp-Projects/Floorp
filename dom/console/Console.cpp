@@ -1052,6 +1052,11 @@ void
 Console::ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
                                const Sequence<JS::Value>& aData)
 {
+  // Make all Console API no-op if DevTools aren't enabled.
+  if (!nsContentUtils::DevToolsEnabled(aCx)) {
+    return;
+  }
+
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
     RefPtr<ConsoleProfileRunnable> runnable =
@@ -1200,6 +1205,10 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
                         const nsAString& aMethodString,
                         const Sequence<JS::Value>& aData)
 {
+  // Make all Console API no-op if DevTools aren't enabled.
+  if (!nsContentUtils::DevToolsEnabled(aCx)) {
+    return;
+  }
   AssertIsOnOwningThread();
 
   RefPtr<ConsoleCallData> callData(new ConsoleCallData());

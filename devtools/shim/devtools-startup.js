@@ -399,6 +399,9 @@ DevToolsStartup.prototype = {
       }
       this.recorded = true;
     }
+    if (!this.initialized) {
+      Services.prefs.setBoolPref("devtools.enabled", true);
+    }
     this.initialized = true;
     let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
