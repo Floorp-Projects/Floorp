@@ -361,7 +361,7 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
                                      int32_t aWidth, int32_t aHeight,
                                      const nsAString& aStatus)
 {
-  nsXPIDLString fileStr;
+  nsAutoString fileStr;
   GetFileName(fileStr, aChannel);
 
   NS_ConvertASCIItoUTF16 typeStr(aTypeStr);

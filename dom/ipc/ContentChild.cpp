@@ -449,7 +449,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
     return NS_OK;
   }
 
-  nsXPIDLString msg;
+  nsString msg;
   nsresult rv = aMessage->GetMessageMoz(getter_Copies(msg));
   NS_ENSURE_SUCCESS(rv, rv);
   mChild->SendConsoleMessage(msg);
