@@ -90,6 +90,13 @@ parent:
 
   async PBackgroundStorage(nsString profilePath);
 
+  async BroadcastLocalStorageChange(nsString documentURI,
+                                    nsString key,
+                                    nsString oldValue,
+                                    nsString newValue,
+                                    PrincipalInfo principalInfo,
+                                    bool isPrivate);
+
   async PVsync();
 
   async PCameras();
@@ -132,6 +139,13 @@ child:
   async PParentToChildStream();
 
   async PPendingIPCBlob(IPCBlob blob);
+
+  async DispatchLocalStorageChange(nsString documentURI,
+                                   nsString key,
+                                   nsString oldValue,
+                                   nsString newValue,
+                                   PrincipalInfo principalInfo,
+                                   bool isPrivate);
 
 both:
   // PIPCBlobInputStream is created on the parent side only if the child starts

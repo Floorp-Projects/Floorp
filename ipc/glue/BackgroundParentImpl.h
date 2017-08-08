@@ -73,6 +73,14 @@ protected:
   virtual bool
   DeallocPBackgroundStorageParent(PBackgroundStorageParent* aActor) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvBroadcastLocalStorageChange(const nsString& aDocumentURI,
+                                  const nsString& aKey,
+                                  const nsString& aOldValue,
+                                  const nsString& aNewValue,
+                                  const PrincipalInfo& aPrincipalInfo,
+                                  const bool& aIsPrivate) override;
+
   virtual PPendingIPCBlobParent*
   AllocPPendingIPCBlobParent(const IPCBlob& aBlob) override;
 
