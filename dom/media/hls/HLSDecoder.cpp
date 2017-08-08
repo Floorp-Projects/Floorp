@@ -112,4 +112,22 @@ HLSDecoder::Pause()
   return MediaDecoder::Pause();
 }
 
+void
+HLSDecoder::Suspend()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    mResource->Suspend();
+  }
+}
+
+void
+HLSDecoder::Resume()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    mResource->Resume();
+  }
+}
+
 } // namespace mozilla

@@ -168,15 +168,15 @@ add_task(async function test_create_item() {
   let id = bmsvc.getBookmarkIdsForURI(testURI)[0];
   do_check_eq(observer._itemAddedId, id);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_true(bmsvc.isBookmarked(testURI));
+  do_check_neq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
 
   txn.undoTransaction();
   do_check_eq(observer._itemRemovedId, id);
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
-  do_check_false(bmsvc.isBookmarked(testURI));
+  do_check_eq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
 
   txn.redoTransaction();
-  do_check_true(bmsvc.isBookmarked(testURI));
+  do_check_neq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
   let newId = bmsvc.getBookmarkIdsForURI(testURI)[0];
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
   do_check_eq(observer._itemAddedParent, root);
@@ -199,7 +199,7 @@ add_task(async function test_create_item_to_folder() {
   let bkmId = bmsvc.getBookmarkIdsForURI(testURI)[0];
   do_check_eq(observer._itemAddedId, bkmId);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_true(bmsvc.isBookmarked(testURI));
+  do_check_neq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
 
   txn.undoTransaction();
   do_check_eq(observer._itemRemovedId, bkmId);
@@ -889,7 +889,7 @@ add_task(async function test_create_item_with_childTxn() {
     do_check_eq(observer._itemRemovedId, itemId);
 
     itemWChildTxn.redoTransaction();
-    do_check_true(bmsvc.isBookmarked(testURI));
+    do_check_neq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
     let newId = bmsvc.getBookmarkIdsForURI(testURI)[0];
     do_check_eq(newDateAdded, bmsvc.getItemDateAdded(newId));
     do_check_eq(observer._itemAddedId, newId);
@@ -916,19 +916,19 @@ add_task(async function test_create_folder_with_child_itemTxn() {
     let childItemId = bmsvc.getBookmarkIdsForURI(childURI)[0];
     do_check_eq(observer._itemAddedId, childItemId);
     do_check_eq(observer._itemAddedIndex, 0);
-    do_check_true(bmsvc.isBookmarked(childURI));
+    do_check_neq(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
 
     txn.undoTransaction();
-    do_check_false(bmsvc.isBookmarked(childURI));
+    do_check_eq(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
 
     txn.redoTransaction();
     let newchildItemId = bmsvc.getBookmarkIdsForURI(childURI)[0];
     do_check_eq(observer._itemAddedIndex, 0);
     do_check_eq(observer._itemAddedId, newchildItemId);
-    do_check_true(bmsvc.isBookmarked(childURI));
+    do_check_neq(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
 
     txn.undoTransaction();
-    do_check_false(bmsvc.isBookmarked(childURI));
+    do_check_eq(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
   } catch (ex) {
     do_throw("Setting a child item transaction in a createFolder transaction did throw: " + ex);
   }

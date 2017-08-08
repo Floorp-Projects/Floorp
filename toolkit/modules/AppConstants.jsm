@@ -348,13 +348,6 @@ this.AppConstants = Object.freeze({
     false,
 #endif
 
-  MOZ_PHOTON_THEME:
-#ifdef MOZ_PHOTON_THEME
-    true,
-#else
-    false,
-#endif
-
   MOZ_STYLO:
 #ifdef MOZ_STYLO
     true,

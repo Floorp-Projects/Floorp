@@ -301,6 +301,8 @@ AsyncResource.prototype = {
       this._log.debug("Caught exception visiting headers in _onComplete", ex);
     }
 
+    // Changes below need to be processed in bug 1295510 that's why eslint is ignored
+    // eslint-disable-next-line no-new-wrappers
     let ret     = new String(data);
     ret.url     = channel.URI.spec;
     ret.status  = status;

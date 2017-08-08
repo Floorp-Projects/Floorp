@@ -170,7 +170,7 @@ function removeAllChildNodes(node) {
  * Pad a number to two digits with leading "0".
  */
 function padToTwoDigits(n) {
-  return new String(n).padStart(2, "0");
+  return String(n).padStart(2, "0");
 }
 
 /**

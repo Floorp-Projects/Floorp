@@ -86,6 +86,7 @@
 
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "GeckoProfiler.h"
+#include "mozilla/IdleTaskRunner.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -119,7 +120,7 @@ const size_t gStackSize = 8192;
 #define NS_CC_SKIPPABLE_DELAY       250 // ms
 
 // ForgetSkippable is usually fast, so we can use small budgets.
-// This isn't a real budget but a hint to CollectorRunner whether there
+// This isn't a real budget but a hint to IdleTaskRunner whether there
 // is enough time to call ForgetSkippable.
 static const int64_t kForgetSkippableSliceDuration = 2;
 
@@ -148,16 +149,14 @@ static const uint32_t kMaxICCDuration = 2000; // ms
 // Large value used to specify that a script should run essentially forever
 #define NS_UNLIMITED_SCRIPT_RUNTIME (0x40000000LL << 32)
 
-class CollectorRunner;
-
 // if you add statics here, add them to the list in StartupJSEnvironment
 
 static nsITimer *sGCTimer;
 static nsITimer *sShrinkingGCTimer;
-static StaticRefPtr<CollectorRunner> sCCRunner;
-static StaticRefPtr<CollectorRunner> sICCRunner;
+static StaticRefPtr<IdleTaskRunner> sCCRunner;
+static StaticRefPtr<IdleTaskRunner> sICCRunner;
 static nsITimer *sFullGCTimer;
-static StaticRefPtr<CollectorRunner> sInterSliceGCRunner;
+static StaticRefPtr<IdleTaskRunner> sInterSliceGCRunner;
 
 static TimeStamp sLastCCEndTime;
 
@@ -224,193 +223,6 @@ static int32_t sExpensiveCollectorPokes = 0;
 static const int32_t kPokesBetweenExpensiveCollectorTriggers = 5;
 
 static TimeDuration sGCUnnotifiedTotalTime;
-
-// Return true if some meaningful work was done.
-typedef bool (*CollectorRunnerCallback) (TimeStamp aDeadline, void* aData);
-
-// Repeating callback runner for CC and GC.
-class CollectorRunner final : public IdleRunnable
-{
-public:
-  static already_AddRefed<CollectorRunner>
-  Create(CollectorRunnerCallback aCallback, uint32_t aDelay,
-         int64_t aBudget, bool aRepeating, void* aData = nullptr)
-  {
-    if (sShuttingDown) {
-      return nullptr;
-    }
-
-    RefPtr<CollectorRunner> runner =
-      new CollectorRunner(aCallback, aDelay, aBudget, aRepeating, aData);
-    runner->Schedule(false); // Initial scheduling shouldn't use idle dispatch.
-    return runner.forget();
-  }
-
-  NS_IMETHOD Run() override
-  {
-    if (!mCallback) {
-      return NS_OK;
-    }
-
-    // Deadline is null when called from timer.
-    bool deadLineWasNull = mDeadline.IsNull();
-    bool didRun = false;
-    if (deadLineWasNull || ((TimeStamp::Now() + mBudget) < mDeadline)) {
-      CancelTimer();
-      didRun = mCallback(mDeadline, mData);
-    }
-
-    if (mCallback && (mRepeating || !didRun)) {
-      // If we didn't do meaningful work, don't schedule using immediate
-      // idle dispatch, since that could lead to a loop until the idle
-      // period ends.
-      Schedule(didRun);
-    }
-
-    return NS_OK;
-  }
-
-  static void
-  TimedOut(nsITimer* aTimer, void* aClosure)
-  {
-    RefPtr<CollectorRunner> runnable = static_cast<CollectorRunner*>(aClosure);
-    runnable->Run();
-  }
-
-  void SetDeadline(mozilla::TimeStamp aDeadline) override
-  {
-    mDeadline = aDeadline;
-  };
-
-  void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    // aTarget is always the main thread event target provided from
-    // NS_IdleDispatchToCurrentThread(). We ignore aTarget here to ensure that
-    // CollectorRunner a(ways run specifically on SystemGroup::EventTargetFor(
-    // TaskCategory::GarbageCollection) of the main thread.
-    SetTimerInternal(aDelay);
-  }
-
-  nsresult Cancel() override
-  {
-    CancelTimer();
-    mTimer = nullptr;
-    mScheduleTimer = nullptr;
-    mCallback = nullptr;
-    return NS_OK;
-  }
-
-  static void
-  ScheduleTimedOut(nsITimer* aTimer, void* aClosure)
-  {
-    RefPtr<CollectorRunner> runnable = static_cast<CollectorRunner*>(aClosure);
-    runnable->Schedule(true);
-  }
-
-  void Schedule(bool aAllowIdleDispatch)
-  {
-    if (!mCallback) {
-      return;
-    }
-
-    if (sShuttingDown) {
-      Cancel();
-      return;
-    }
-
-    mDeadline = TimeStamp();
-    TimeStamp now = TimeStamp::Now();
-    TimeStamp hint = nsRefreshDriver::GetIdleDeadlineHint(now);
-    if (hint != now) {
-      // RefreshDriver is ticking, let it schedule the idle dispatch.
-      nsRefreshDriver::DispatchIdleRunnableAfterTick(this, mDelay);
-      // Ensure we get called at some point, even if RefreshDriver is stopped.
-      SetTimerInternal(mDelay);
-    } else {
-      // RefreshDriver doesn't seem to be running.
-      if (aAllowIdleDispatch) {
-        nsCOMPtr<nsIRunnable> runnable = this;
-        SetTimerInternal(mDelay);
-        NS_IdleDispatchToCurrentThread(runnable.forget());
-      } else {
-        if (!mScheduleTimer) {
-          mScheduleTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-          if (!mScheduleTimer) {
-            return;
-          }
-          mScheduleTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
-        } else {
-          mScheduleTimer->Cancel();
-        }
-
-        // We weren't allowed to do idle dispatch immediately, do it after a
-        // short timeout.
-        mScheduleTimer->InitWithNamedFuncCallback(ScheduleTimedOut, this, 16,
-                                                  nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                                                  "CollectorRunner");
-      }
-    }
-  }
-
-private:
-  explicit CollectorRunner(CollectorRunnerCallback aCallback,
-                           uint32_t aDelay, int64_t aBudget,
-                           bool aRepeating, void* aData)
-    : mCallback(aCallback), mDelay(aDelay)
-    , mBudget(TimeDuration::FromMilliseconds(aBudget))
-    , mRepeating(aRepeating), mTimerActive(false), mData(aData)
-  {
-  }
-
-  ~CollectorRunner()
-  {
-    CancelTimer();
-  }
-
-  void CancelTimer()
-  {
-    nsRefreshDriver::CancelIdleRunnable(this);
-    if (mTimer) {
-      mTimer->Cancel();
-    }
-    if (mScheduleTimer) {
-      mScheduleTimer->Cancel();
-    }
-    mTimerActive = false;
-  }
-
-  void SetTimerInternal(uint32_t aDelay)
-  {
-    if (mTimerActive) {
-      return;
-    }
-
-    if (!mTimer) {
-      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    } else {
-      mTimer->Cancel();
-    }
-
-    if (mTimer) {
-      mTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
-      mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
-                                        nsITimer::TYPE_ONE_SHOT,
-                                        "CollectorRunner");
-      mTimerActive = true;
-    }
-  }
-
-  nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<nsITimer> mScheduleTimer;
-  CollectorRunnerCallback mCallback;
-  uint32_t mDelay;
-  TimeStamp mDeadline;
-  TimeDuration mBudget;
-  bool mRepeating;
-  bool mTimerActive;
-  void* mData;
-};
 
 static const char*
 ProcessNameForCollectorLog()
@@ -1763,7 +1575,7 @@ nsJSContext::GetMaxCCSliceTimeSinceClear()
 }
 
 static bool
-ICCRunnerFired(TimeStamp aDeadline, void* aData)
+ICCRunnerFired(TimeStamp aDeadline)
 {
   if (sDidShutdown) {
     return false;
@@ -1804,8 +1616,12 @@ nsJSContext::BeginCycleCollectionCallback()
 
   // Create an ICC timer even if ICC is globally disabled, because we could be manually triggering
   // an incremental collection, and we want to be sure to finish it.
-  sICCRunner = CollectorRunner::Create(ICCRunnerFired, kICCIntersliceDelay,
-                                       kIdleICCSliceBudget, true);
+  sICCRunner = IdleTaskRunner::Create(ICCRunnerFired,
+                                      kICCIntersliceDelay,
+                                      kIdleICCSliceBudget,
+                                      true,
+                                      []{ return sShuttingDown; },
+                                      TaskCategory::GarbageCollection);
 }
 
 static_assert(NS_GC_DELAY > kMaxICCDuration, "A max duration ICC shouldn't reduce GC delay to 0");
@@ -2017,11 +1833,13 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
 {
   nsJSContext::KillGCTimer();
   // Now start the actual GC after initial timer has fired.
-  sInterSliceGCRunner = CollectorRunner::Create(InterSliceGCRunnerFired,
-                                                NS_INTERSLICE_GC_DELAY,
-                                                sActiveIntersliceGCBudget,
-                                                false,
-                                                aClosure);
+  sInterSliceGCRunner = IdleTaskRunner::Create([aClosure](TimeStamp aDeadline) {
+    return InterSliceGCRunnerFired(aDeadline, aClosure);
+  }, NS_INTERSLICE_GC_DELAY,
+     sActiveIntersliceGCBudget,
+     false,
+     []{ return sShuttingDown; },
+     TaskCategory::GarbageCollection);
 }
 
 // static
@@ -2045,7 +1863,7 @@ ShouldTriggerCC(uint32_t aSuspected)
 }
 
 static bool
-CCRunnerFired(TimeStamp aDeadline, void* aData)
+CCRunnerFired(TimeStamp aDeadline)
 {
   if (sDidShutdown) {
     return false;
@@ -2207,13 +2025,13 @@ nsJSContext::RunNextCollectorTimer()
 
   if (sCCRunner) {
     if (ReadyToTriggerExpensiveCollectorTimer()) {
-      CCRunnerFired(TimeStamp(), nullptr);
+      CCRunnerFired(TimeStamp());
     }
     return;
   }
 
   if (sICCRunner) {
-    ICCRunnerFired(TimeStamp(), nullptr);
+    ICCRunnerFired(TimeStamp());
     return;
   }
 }
@@ -2320,8 +2138,10 @@ nsJSContext::MaybePokeCC()
     nsCycleCollector_dispatchDeferredDeletion();
 
     sCCRunner =
-      CollectorRunner::Create(CCRunnerFired, NS_CC_SKIPPABLE_DELAY,
-                              kForgetSkippableSliceDuration, true);
+      IdleTaskRunner::Create(CCRunnerFired, NS_CC_SKIPPABLE_DELAY,
+                             kForgetSkippableSliceDuration, true,
+                             []{ return sShuttingDown; },
+                             TaskCategory::GarbageCollection);
   }
 }
 
@@ -2505,8 +2325,13 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       nsJSContext::KillInterSliceGCRunner();
       if (!sShuttingDown && !aDesc.isComplete_) {
         sInterSliceGCRunner =
-          CollectorRunner::Create(InterSliceGCRunnerFired, NS_INTERSLICE_GC_DELAY,
-                                  sActiveIntersliceGCBudget, false);
+          IdleTaskRunner::Create([](TimeStamp aDeadline) {
+            return InterSliceGCRunnerFired(aDeadline, nullptr);
+          }, NS_INTERSLICE_GC_DELAY,
+             sActiveIntersliceGCBudget,
+             false,
+             []{ return sShuttingDown; },
+             TaskCategory::GarbageCollection);
       }
 
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {

@@ -36,9 +36,6 @@ protected:
   }
 
 private:
-  nsresult Close() override { return NS_OK; }
-  void Suspend(bool aCloseImmediately) override {}
-  void Resume() override {}
   // Get the current principal for the channel
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
   {
@@ -48,7 +45,6 @@ private:
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
   void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
-  void SetPlaybackRate(uint32_t aBytesPerSecond) override {}
   nsresult ReadAt(int64_t aOffset, char* aBuffer,
                   uint32_t aCount, uint32_t* aBytes) override
   {
@@ -67,7 +63,6 @@ private:
 
   void Pin() override {}
   void Unpin() override {}
-  double GetDownloadRate(bool* aIsReliable) override { *aIsReliable = false; return 0.; }
   int64_t GetLength() override { return mLength; }
   int64_t GetNextCachedData(int64_t aOffset) override { return aOffset; }
   int64_t GetCachedDataEnd(int64_t aOffset) override
@@ -88,11 +83,6 @@ private:
     uint32_t bytes = std::min(mLength - static_cast<uint32_t>(aOffset), aCount);
     memcpy(aBuffer, mBuffer + aOffset, bytes);
     return NS_OK;
-  }
-
-  nsresult Open(nsIStreamListener** aStreamListener) override
-  {
-    return NS_ERROR_FAILURE;
   }
 
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override

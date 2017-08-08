@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-disable no-new-wrappers */
+
 try {
   // We might be running without privileges, in which case it's up to the
   // harness to give us the 'ctypes' object.

@@ -302,7 +302,7 @@ MediaSourceDecoder::NextFrameBufferedStatus()
 }
 
 bool
-MediaSourceDecoder::CanPlayThrough()
+MediaSourceDecoder::CanPlayThroughImpl()
 {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
