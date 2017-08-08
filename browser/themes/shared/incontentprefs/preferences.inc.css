@@ -18,8 +18,10 @@
 }
 
 .pane-container {
+  /* A workaround to keep the container always float on the `top: 0` (Bug 1377009) */
   display: block;
-  max-width: 800px;
+  width: 664px;
+  min-width: 530px;
 }
 
 #mainPrefPane {

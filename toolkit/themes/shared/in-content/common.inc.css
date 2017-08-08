@@ -684,7 +684,7 @@ xul|*.radio-label-box {
   fill-opacity: 1;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 830px) {
   #categories {
     width: 118px;
   }
@@ -693,8 +693,24 @@ xul|*.radio-label-box {
     display: none;
   }
 
+  .category {
+    padding-inline-start: 47px; /* make category icons align center */
+  }
+
   .help-button {
     font-size: 0 !important;
+    margin-inline-start: 51px !important; /* make the question mark icon align center */
+    background-position: 0px !important;
+    padding-inline-start: 0px !important;
+  }
+
+  .main-content {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .pane-container {
+    margin-inline-end: 10px;
   }
 }
 
