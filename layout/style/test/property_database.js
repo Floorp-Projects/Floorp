@@ -2075,7 +2075,7 @@ var gCSSProperties = {
       "scale3d(4, 4, 4)", "scale3d(-2, 3, -7)", "scalez(4)",
       "scalez(-6)", "rotate3d(2, 3, 4, 45deg)",
       "rotate3d(-3, 7, 0, 12rad)", "rotatex(15deg)", "rotatey(-12grad)",
-      "rotatez(72rad)", "rotatex(0.125turn)",
+      "rotatez(72rad)", "rotatex(0.125turn)", "rotate3d(0, 0, 0, 0rad)",
       "perspective(0px)", "perspective(1000px)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)",
     ],
