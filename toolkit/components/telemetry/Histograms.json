@@ -13640,39 +13640,39 @@
     "kind": "enumerated",
     "n_values": 3,
     "releaseChannelCollection": "opt-out",
-    "description": "The amount of users who view VR content in: 2D=0, Oculus=1, OpenVR=2."
+    "description": "The amount of sessions who view VR content in: 2D=0, Oculus=1, OpenVR=2."
   },
-  "WEBVR_TIME_SPEND_FOR_VIEWING_IN_2D": {
+  "WEBVR_TIME_SPENT_VIEWING_IN_2D": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dmu@mozilla.com"],
     "bug_numbers": [1306156],
     "expires_in_version": "never",
     "kind": "exponential",
-    "high": 50000,
+    "high": 1200000,
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
-    "description": "The amount of time spend(ms) for users who view VR content in 2D."
+    "description": "The amount of time spent(ms) of a session for viewing VR content in 2D."
   },
-  "WEBVR_TIME_SPEND_FOR_VIEWING_IN_OCULUS": {
+  "WEBVR_TIME_SPENT_VIEWING_IN_OCULUS": {
     "record_in_processes": ["main", "gpu"],
     "alert_emails": ["dmu@mozilla.com"],
     "bug_numbers": [1306156],
     "expires_in_version": "never",
     "kind": "exponential",
-    "high": 50000,
+    "high": 1200000,
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
-    "description": "The amount of time spend(ms) for users who view VR content in Oculus."
+    "description": "The amount of time spent(ms) of a session for viewing content in Oculus."
   },
-  "WEBVR_TIME_SPEND_FOR_VIEWING_IN_OPENVR": {
+  "WEBVR_TIME_SPENT_VIEWING_IN_OPENVR": {
     "record_in_processes": ["main", "gpu"],
     "alert_emails": ["dmu@mozilla.com"],
     "bug_numbers": [1306156],
     "expires_in_version": "never",
     "kind": "exponential",
-    "high": 50000,
+    "high": 1200000,
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
-    "description": "The amount of time spend(ms) for users who view VR content in OpenVR."
+    "description": "The amount of time spent(ms) of a session for viewing content in OpenVR."
   }
 }
