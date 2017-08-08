@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.CollectionKeys;
+import org.mozilla.gecko.sync.CryptoKeysChangedException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.HTTPFailureException;
@@ -50,7 +51,7 @@ implements SyncStorageRequestDelegate {
       telemetryStageCollector.error = new TelemetryCollector
               .StageErrorBuilder(TELEMETRY_ERROR_NAME, TELEMETRY_ERROR_NO_COLLECTIONS)
               .build();
-      session.abort(null, "No info/collections set in EnsureCrypto5KeysStage.");
+      session.abort(new IllegalStateException(), "No info/collections set in EnsureCrypto5KeysStage.");
       return;
     }
 
@@ -185,7 +186,7 @@ implements SyncStorageRequestDelegate {
       telemetryStageCollector.error = new TelemetryCollector
               .StageErrorBuilder(TELEMETRY_ERROR_NAME, TELEMETRY_ERROR_KEYS_CHANGED)
               .build();
-      session.abort(null, "crypto/keys changed on server.");
+      session.abort(new CryptoKeysChangedException(), "crypto/keys changed on server.");
       return;
     }
 

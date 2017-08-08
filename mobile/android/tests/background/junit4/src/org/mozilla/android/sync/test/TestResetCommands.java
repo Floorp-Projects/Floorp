@@ -141,7 +141,7 @@ public class TestResetCommands {
       }
 
       @Override
-      public void handleError(GlobalSession globalSession, Exception ex) {
+      public void handleError(GlobalSession globalSession, Exception ex, String reason) {
         performNotify(ex);
       }
 

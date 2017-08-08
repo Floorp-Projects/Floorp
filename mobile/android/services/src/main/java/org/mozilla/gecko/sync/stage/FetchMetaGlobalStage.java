@@ -79,7 +79,7 @@ public class FetchMetaGlobalStage extends AbstractNonRepositorySyncStage {
       telemetryStageCollector.error = new TelemetryCollector
               .StageErrorBuilder(TELEMETRY_ERROR_NAME, TELEMETRY_ERROR_NO_INFO_COLLECTIONS)
               .build();
-      session.abort(null, "No info/collections set in FetchMetaGlobalStage.");
+      session.abort(new IllegalStateException(), "No info/collections set in FetchMetaGlobalStage.");
       return;
     }
 
