@@ -3350,10 +3350,8 @@ nsXPCComponents_Utils::SetAddonCallInterposition(HandleValue target,
     RootedObject targetObj(cx, &target.toObject());
     targetObj = js::CheckedUnwrap(targetObj);
     NS_ENSURE_TRUE(targetObj, NS_ERROR_INVALID_ARG);
-    XPCWrappedNativeScope* xpcScope = ObjectScope(targetObj);
-    NS_ENSURE_TRUE(xpcScope, NS_ERROR_INVALID_ARG);
 
-    xpcScope->SetAddonCallInterposition();
+    xpc::CompartmentPrivate::Get(targetObj)->SetAddonCallInterposition();
     return NS_OK;
 }
 

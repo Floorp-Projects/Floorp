@@ -45,15 +45,16 @@ function attachIFrameToRightWindow() {
   gIFrame = gLeftWindow.document.createElementNS(XUL_NS, "iframe");
   gIFrame.setAttribute("type", "content");
   gIFrame.setAttribute("clickthrough", "never");
-  gIFrame.setAttribute("src", "data:text/html,<!DOCTYPE html>Content page");
+  gIFrame.setAttribute("src", "file_bug596600.html");
   gIFrame.style.width = "100px";
   gIFrame.style.height = "100px";
   gIFrame.style.margin = "50px";
   gLeftWindow.document.documentElement.appendChild(gIFrame);
-  gIFrame.contentWindow.addEventListener("load", function (e) {
-    gIFrame.removeEventListener("load", arguments.callee, false);
+  gIFrame.addEventListener("load", function (e) {
+    gIFrame.removeEventListener("load", arguments.callee, true);
     test1();
-  }, false);
+  }, true);
+
 }
 
 function test1() {

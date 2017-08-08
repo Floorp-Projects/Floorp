@@ -28,6 +28,7 @@ class JSObject;
 class JSScript;
 class JSString;
 class JSAddonId;
+struct JSFreeOp;
 
 struct jsid;
 
@@ -37,6 +38,7 @@ typedef unsigned char Latin1Char;
 
 class Symbol;
 class Value;
+class Realm;
 template <typename T> class Handle;
 template <typename T> class MutableHandle;
 template <typename T> class Rooted;

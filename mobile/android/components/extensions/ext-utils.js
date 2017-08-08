@@ -6,7 +6,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 /* globals TabBase, WindowBase, TabTrackerBase, WindowTrackerBase, TabManagerBase, WindowManagerBase */
-Cu.import("resource://gre/modules/ExtensionTabs.jsm");
 /* globals EventDispatcher */
 Cu.import("resource://gre/modules/Messaging.jsm");
 
