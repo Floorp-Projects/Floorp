@@ -139,37 +139,37 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetPrintRange(&data->printRange());
 
   // I have no idea if I'm doing this string copying correctly...
-  nsXPIDLString title;
+  nsString title;
   aSettings->GetTitle(getter_Copies(title));
   data->title() = title;
 
-  nsXPIDLString docURL;
+  nsString docURL;
   aSettings->GetDocURL(getter_Copies(docURL));
   data->docURL() = docURL;
 
   // Header strings...
-  nsXPIDLString headerStrLeft;
+  nsString headerStrLeft;
   aSettings->GetHeaderStrLeft(getter_Copies(headerStrLeft));
   data->headerStrLeft() = headerStrLeft;
 
-  nsXPIDLString headerStrCenter;
+  nsString headerStrCenter;
   aSettings->GetHeaderStrCenter(getter_Copies(headerStrCenter));
   data->headerStrCenter() = headerStrCenter;
 
-  nsXPIDLString headerStrRight;
+  nsString headerStrRight;
   aSettings->GetHeaderStrRight(getter_Copies(headerStrRight));
   data->headerStrRight() = headerStrRight;
 
   // Footer strings...
-  nsXPIDLString footerStrLeft;
+  nsString footerStrLeft;
   aSettings->GetFooterStrLeft(getter_Copies(footerStrLeft));
   data->footerStrLeft() = footerStrLeft;
 
-  nsXPIDLString footerStrCenter;
+  nsString footerStrCenter;
   aSettings->GetFooterStrCenter(getter_Copies(footerStrCenter));
   data->footerStrCenter() = footerStrCenter;
 
-  nsXPIDLString footerStrRight;
+  nsString footerStrRight;
   aSettings->GetFooterStrRight(getter_Copies(footerStrRight));
   data->footerStrRight() = footerStrRight;
 
@@ -181,7 +181,7 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetShrinkToFit(&data->shrinkToFit());
   aSettings->GetShowPrintProgress(&data->showPrintProgress());
 
-  nsXPIDLString paperName;
+  nsString paperName;
   aSettings->GetPaperName(getter_Copies(paperName));
   data->paperName() = paperName;
 
@@ -196,13 +196,13 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
 
   aSettings->GetNumCopies(&data->numCopies());
 
-  nsXPIDLString printerName;
+  nsString printerName;
   aSettings->GetPrinterName(getter_Copies(printerName));
   data->printerName() = printerName;
 
   aSettings->GetPrintToFile(&data->printToFile());
 
-  nsXPIDLString toFileName;
+  nsString toFileName;
   aSettings->GetToFileName(getter_Copies(toFileName));
   data->toFileName() = toFileName;
 
@@ -984,7 +984,7 @@ nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
 
   NS_ADDREF(*_retval = printSettings); // ref count
 
-  nsXPIDLString printerName;
+  nsString printerName;
   nsresult rv = GetDefaultPrinterName(getter_Copies(printerName));
   NS_ENSURE_SUCCESS(rv, rv);
   (*_retval)->SetPrinterName(printerName.get());
@@ -1065,7 +1065,7 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const char16_t *aPrinterName,
   NS_ENSURE_ARG_POINTER(aPrinterName);
 
 #ifdef DEBUG
-  nsXPIDLString printerName;
+  nsString printerName;
   aPrintSettings->GetPrinterName(getter_Copies(printerName));
   if (!printerName.Equals(aPrinterName)) {
     NS_WARNING("Printer names should match!");

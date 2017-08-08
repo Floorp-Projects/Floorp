@@ -265,7 +265,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
     IntSize size = IntSize::Truncate(width, height);
 
     if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
-      nsXPIDLString filename;
+      nsString filename;
       mPrintSettings->GetToFileName(getter_Copies(filename));
 
       nsAutoCString printFile(NS_ConvertUTF16toUTF8(filename).get());
@@ -310,7 +310,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
 #endif
 
   if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
-    nsXPIDLString filename;
+    nsString filename;
     mPrintSettings->GetToFileName(getter_Copies(filename));
 
     double width, height;

@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/layers/TextureClient.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -27,14 +28,12 @@ class CapturedPaintState {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedPaintState)
 public:
   CapturedPaintState(nsIntRegion& aRegionToDraw,
-                     gfx::DrawTargetCapture* aCapture,
                      gfx::DrawTarget* aTarget,
                      gfx::DrawTarget* aTargetOnWhite,
-                     gfx::Matrix aTargetTransform,
+                     const gfx::Matrix& aTargetTransform,
                      SurfaceMode aSurfaceMode,
                      gfxContentType aContentType)
   : mRegionToDraw(aRegionToDraw)
-  , mCapture(aCapture)
   , mTarget(aTarget)
   , mTargetOnWhite(aTargetOnWhite)
   , mTargetTransform(aTargetTransform)
@@ -43,6 +42,8 @@ public:
   {}
 
   nsIntRegion mRegionToDraw;
+  RefPtr<TextureClient> mTextureClient;
+  RefPtr<TextureClient> mTextureClientOnWhite;
   RefPtr<gfx::DrawTargetCapture> mCapture;
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTarget> mTargetOnWhite;

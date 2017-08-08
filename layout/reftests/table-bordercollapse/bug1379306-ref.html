@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<title>Table Cell Testcase, bug 1379306</title>
+<style>
+  table.collapse {
+    border-collapse: collapse;
+  }
+  td {
+    border: 20px solid #aaa;
+    width: 120px;
+    height: 150px;
+  }
+  .first {
+    background-color: #000;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    height: 10px;
+    width: 20px
+  }
+</style>
+<h1>Table Cell Testcase, bug 1379306</h1>
+
+<div style="position: relative;">
+  <table class="collapse">
+    <tr>
+      <td>
+        <div class="first"></div>
+      </td>
+    </tr>
+  </table>
+</div>
+

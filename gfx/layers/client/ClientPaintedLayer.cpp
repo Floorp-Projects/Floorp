@@ -226,10 +226,12 @@ ClientPaintedLayer::PaintOffMainThread()
 
   bool didUpdate = false;
   RotatedContentBuffer::DrawIterator iter;
-  Matrix capturedTransform;
+
   // Debug Protip: Change to BorrowDrawTargetForPainting if using sync OMTP.
-  while (DrawTarget* target =
-          mContentClient->BorrowDrawTargetForRecording(state, &iter, &capturedTransform)) {
+  while (RefPtr<CapturedPaintState> captureState =
+          mContentClient->BorrowDrawTargetForRecording(state, &iter))
+  {
+    DrawTarget* target = captureState->mTarget;
     if (!target || !target->IsValid()) {
       if (target) {
         mContentClient->ReturnDrawTargetToBuffer(target);
@@ -242,7 +244,7 @@ ClientPaintedLayer::PaintOffMainThread()
                                        target->GetSize(),
                                        target->GetFormat());
 
-    captureDT->SetTransform(capturedTransform);
+    captureDT->SetTransform(captureState->mTargetTransform);
     SetAntialiasingFlags(this, captureDT);
 
     RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(captureDT);
@@ -258,17 +260,8 @@ ClientPaintedLayer::PaintOffMainThread()
 
     ctx = nullptr;
 
-    // TODO: Fixup component alpha
-    DrawTarget* targetOnWhite = nullptr;
-    RefPtr<CapturedPaintState> capturedState
-      = MakeAndAddRef<CapturedPaintState>(state.mRegionToDraw,
-                                          captureDT,
-                                          target, targetOnWhite,
-                                          capturedTransform,
-                                          state.mMode,
-                                          state.mContentType);
-
-    PaintThread::Get()->PaintContents(capturedState,
+    captureState->mCapture = captureDT.forget();
+    PaintThread::Get()->PaintContents(captureState,
                                       RotatedContentBuffer::PrepareDrawTargetForPainting);
 
     mContentClient->ReturnDrawTargetToBuffer(target);

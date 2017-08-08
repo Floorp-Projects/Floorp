@@ -29,11 +29,40 @@ AST_MATCHER(CXXRecordDecl, hasTrivialCtorDtor) {
   return hasCustomAnnotation(&Node, "moz_trivial_ctor_dtor");
 }
 
+/// This matcher will match lvalue-ref-qualified methods.
+AST_MATCHER(CXXMethodDecl, isLValueRefQualified) {
+  return Node.getRefQualifier() == RQ_LValue;
+}
+
+/// This matcher will match rvalue-ref-qualified methods.
+AST_MATCHER(CXXMethodDecl, isRValueRefQualified) {
+  return Node.getRefQualifier() == RQ_RValue;
+}
+
+AST_POLYMORPHIC_MATCHER(isFirstParty,                                          \
+                        AST_POLYMORPHIC_SUPPORTED_TYPES(Decl, Stmt)) {
+  return !inThirdPartyPath(&Node, &Finder->getASTContext()) &&
+         !ASTIsInSystemHeader(Finder->getASTContext(), Node);
+}
+
+/// This matcher will match temporary expressions.
+/// We need this matcher for compatibility with clang 3.* (clang 4 and above
+/// insert a MaterializeTemporaryExpr everywhere).
+AST_MATCHER(Expr, isTemporary) {
+  return Node.isRValue() || Node.isXValue() ||
+         isa<MaterializeTemporaryExpr>(&Node);
+}
+
+/// This matcher will match any method declaration that is marked as returning
+/// a pointer deleted by the destructor of the class.
+AST_MATCHER(CXXMethodDecl, noDanglingOnTemporaries) {
+  return hasCustomAnnotation(&Node, "moz_no_dangling_on_temporaries");
+}
+
 /// This matcher will match any function declaration that is marked to prohibit
 /// calling AddRef or Release on its return value.
 AST_MATCHER(FunctionDecl, hasNoAddRefReleaseOnReturnAttr) {
-  return hasCustomAnnotation(&Node,
-                                         "moz_no_addref_release_on_return");
+  return hasCustomAnnotation(&Node, "moz_no_addref_release_on_return");
 }
 
 /// This matcher will match all arithmetic binary operators.
@@ -82,11 +111,7 @@ AST_MATCHER(BinaryOperator, isInSystemHeader) {
 /// This matcher will match a list of files.  These files contain
 /// known NaN-testing expressions which we would like to whitelist.
 AST_MATCHER(BinaryOperator, isInWhitelistForNaNExpr) {
-  const char* whitelist[] = {
-    "SkScalar.h",
-    "json_writer.cpp",
-    "State.cpp"
-  };
+  const char *whitelist[] = {"SkScalar.h", "json_writer.cpp", "State.cpp"};
 
   SourceLocation Loc = Node.getOperatorLoc();
   auto &SourceManager = Finder->getASTContext().getSourceManager();
@@ -155,6 +180,10 @@ AST_MATCHER(CXXConstructorDecl, isInterestingImplicitCtor) {
       !Declaration->isDeleted();
 }
 
+AST_MATCHER_P(Expr, ignoreTrivials, internal::Matcher<Expr>, InnerMatcher) {
+  return InnerMatcher.matches(*IgnoreTrivials(&Node), Finder, Builder);
+}
+
 // We can't call this "isImplicit" since it clashes with an existing matcher in
 // clang.
 AST_MATCHER(CXXConstructorDecl, isMarkedImplicit) {
@@ -184,9 +213,8 @@ AST_MATCHER(CallExpr, isAssertAssignmentTestFunc) {
   static const std::string AssertName = "MOZ_AssertAssignmentTest";
   const FunctionDecl *Method = Node.getDirectCallee();
 
-  return Method
-      && Method->getDeclName().isIdentifier()
-      && Method->getName() == AssertName;
+  return Method && Method->getDeclName().isIdentifier() &&
+         Method->getName() == AssertName;
 }
 
 AST_MATCHER(CallExpr, isSnprintfLikeFunc) {
@@ -203,16 +231,13 @@ AST_MATCHER(CallExpr, isSnprintfLikeFunc) {
     return false;
   }
 
-  return !isIgnoredPathForSprintfLiteral(&Node, Finder->getASTContext().getSourceManager());
+  return !isIgnoredPathForSprintfLiteral(
+      &Node, Finder->getASTContext().getSourceManager());
 }
 
-AST_MATCHER(CXXRecordDecl, isLambdaDecl) {
-  return Node.isLambda();
-}
+AST_MATCHER(CXXRecordDecl, isLambdaDecl) { return Node.isLambda(); }
 
-AST_MATCHER(QualType, isRefPtr) {
-  return typeIsRefPtr(Node);
-}
+AST_MATCHER(QualType, isRefPtr) { return typeIsRefPtr(Node); }
 
 AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
   const CXXRecordDecl *Decl = Node.getCanonicalDecl();
@@ -223,8 +248,7 @@ AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
 
 AST_MATCHER(CXXMethodDecl, isRequiredBaseMethod) {
   const CXXMethodDecl *Decl = Node.getCanonicalDecl();
-  return Decl
-      && hasCustomAnnotation(Decl, "moz_required_base_method");
+  return Decl && hasCustomAnnotation(Decl, "moz_required_base_method");
 }
 
 AST_MATCHER(CXXMethodDecl, isNonVirtual) {

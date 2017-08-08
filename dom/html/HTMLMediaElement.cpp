@@ -1196,14 +1196,19 @@ public:
       return;
     }
 
-    nsCOMPtr<nsIClassOfService> cos;
-    if (aElement->mUseUrgentStartForChannel &&
-        (cos = do_QueryInterface(channel))) {
-      cos->AddClassFlags(nsIClassOfService::UrgentStart);
+    nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
+    if (cos) {
+      if (aElement->mUseUrgentStartForChannel) {
+        cos->AddClassFlags(nsIClassOfService::UrgentStart);
 
-      // Reset the flag to avoid loading again without initiated by user
-      // interaction.
-      aElement->mUseUrgentStartForChannel = false;
+        // Reset the flag to avoid loading again without initiated by user
+        // interaction.
+        aElement->mUseUrgentStartForChannel = false;
+      }
+
+      // Unconditionally disable throttling since we want the media to fluently
+      // play even when we switch the tab to background.
+      cos->AddClassFlags(nsIClassOfService::DontThrottle);
     }
 
     // The listener holds a strong reference to us.  This creates a

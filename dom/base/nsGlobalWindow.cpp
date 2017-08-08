@@ -13324,7 +13324,7 @@ nsGlobalWindow::SecurityCheckURL(const char *aURL)
   nsresult rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL),
                           encoding, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   if (NS_FAILED(nsContentUtils::GetSecurityManager()->

@@ -526,7 +526,7 @@ nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress)
     rv = bundle->GetStringFromName("emailPromptMsg", err);
     NS_ENSURE_SUCCESS(rv, rv);
     bool check = false;
-    nsXPIDLString emailResult;
+    nsString emailResult;
     bool success;
     rv = promptService->Prompt(nullptr, title.get(), err.get(), getter_Copies(emailResult), nullptr, &check, &success);
     if (!success)

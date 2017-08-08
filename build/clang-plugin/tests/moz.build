@@ -11,6 +11,7 @@ SOURCES += [
     'TestAssertWithAssignment.cpp',
     'TestBadImplicitConversionCtor.cpp',
     'TestCustomHeap.cpp',
+    'TestDanglingOnTemporary.cpp',
     'TestExplicitOperatorBool.cpp',
     'TestGlobalClass.cpp',
     'TestHeapClass.cpp',

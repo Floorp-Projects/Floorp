@@ -464,8 +464,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
 //   unicode
 //
 static nsReturnRef<nsHGLOBAL>
-CreateGlobalDevModeAndInit(const nsXPIDLString& aPrintName,
-                           nsIPrintSettings* aPS)
+CreateGlobalDevModeAndInit(const nsString& aPrintName, nsIPrintSettings* aPS)
 {
   nsHPRINTER hPrinter = nullptr;
   // const cast kludge for silly Win32 api's
@@ -532,7 +531,7 @@ CreateGlobalDevModeAndInit(const nsXPIDLString& aPrintName,
 
 //------------------------------------------------------------------
 // helper
-static void GetDefaultPrinterNameFromGlobalPrinters(nsXPIDLString &printerName)
+static void GetDefaultPrinterNameFromGlobalPrinters(nsAString &printerName)
 {
   nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService("@mozilla.org/gfx/printerenumerator;1");
   if (prtEnum) {
@@ -570,7 +569,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   gDialogWasExtended  = false;
 
   // Get the Print Name to be used
-  nsXPIDLString printerName;
+  nsString printerName;
   aPrintSettings->GetPrinterName(getter_Copies(printerName));
 
   // If there is no name then use the default printer
@@ -606,7 +605,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   pDevNames->wOutputOffset = sizeof(DEVNAMES)/sizeof(wchar_t)+len;
   pDevNames->wDefault      = 0;
 
-  memcpy(pDevNames+1, printerName, (len + 1) * sizeof(wchar_t));
+  memcpy(pDevNames+1, printerName.get(), (len + 1) * sizeof(wchar_t));
   ::GlobalUnlock(hDevNames);
 
   // Create a Moveable Memory Object that holds a new DevMode

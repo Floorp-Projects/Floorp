@@ -681,8 +681,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   // Get the border values
   WritingMode outerWM = aReflowInput.GetWritingMode();
-  const LogicalMargin border(outerWM,
-                             aReflowInput.mStyleBorder->GetComputedBorder());
+  const LogicalMargin border(outerWM, aDelegatingFrame->GetUsedBorder());
+
   LogicalMargin margin =
     kidReflowInput.ComputedLogicalMargin().ConvertTo(outerWM, wm);
 

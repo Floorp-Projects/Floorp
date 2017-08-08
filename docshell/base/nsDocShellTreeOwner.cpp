@@ -1382,18 +1382,15 @@ ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
     // if there is text associated with the node, show the tip and fire
     // off a timer to auto-hide it.
 
-    nsXPIDLString tooltipText;
-    nsXPIDLString directionText;
     if (self->mTooltipTextProvider) {
+      nsString tooltipText;
+      nsString directionText;
       bool textFound = false;
-
       self->mTooltipTextProvider->GetNodeText(
         self->mPossibleTooltipNode, getter_Copies(tooltipText),
         getter_Copies(directionText), &textFound);
 
       if (textFound) {
-        nsString tipText(tooltipText);
-        nsString dirText(directionText);
         LayoutDeviceIntPoint screenDot = widget->WidgetToScreenOffset();
         double scaleFactor = 1.0;
         if (shell->GetPresContext()) {
@@ -1404,7 +1401,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
         // ShowTooltip expects widget-relative position.
         self->ShowTooltip(self->mMouseScreenX - screenDot.x / scaleFactor,
                           self->mMouseScreenY - screenDot.y / scaleFactor,
-                          tipText, dirText);
+                          tooltipText, directionText);
       }
     }
 

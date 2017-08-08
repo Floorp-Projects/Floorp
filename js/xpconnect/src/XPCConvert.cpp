@@ -1006,11 +1006,11 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
 
     static const char format[] = "\'%s\' when calling method: [%s::%s]";
     const char * msg = message;
-    nsXPIDLString xmsg;
-    nsAutoCString sxmsg;
+    nsAutoCString sxmsg;    // must have the same lifetime as msg
 
     nsCOMPtr<nsIScriptError> errorObject = do_QueryInterface(data);
     if (errorObject) {
+        nsString xmsg;
         if (NS_SUCCEEDED(errorObject->GetMessageMoz(getter_Copies(xmsg)))) {
             CopyUTF16toUTF8(xmsg, sxmsg);
             msg = sxmsg.get();

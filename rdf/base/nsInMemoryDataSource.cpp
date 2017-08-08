@@ -827,15 +827,10 @@ InMemoryDataSource::LogOperation(const char* aOperation,
            ("  -->[(%p)%s]", aTarget, (const char*) uri));
     }
     else if ((literal = do_QueryInterface(aTarget)) != nullptr) {
-        nsXPIDLString value;
+        nsString value;
         literal->GetValue(getter_Copies(value));
-        nsAutoString valueStr(value);
-        char* valueCStr = ToNewCString(valueStr);
-
         MOZ_LOG(gLog, LogLevel::Debug,
-           ("  -->(\"%s\")\n", valueCStr));
-
-        free(valueCStr);
+           ("  -->(\"%s\")\n", NS_ConvertUTF16toUTF8(value).get()));
     }
     else {
         MOZ_LOG(gLog, LogLevel::Debug,

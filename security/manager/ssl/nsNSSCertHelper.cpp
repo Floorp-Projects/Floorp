@@ -969,7 +969,7 @@ ProcessGeneralName(const UniquePLArenaPool& arena, CERTGeneralName* current,
   NS_ENSURE_ARG_POINTER(current);
 
   nsAutoString key;
-  nsXPIDLString value;
+  nsAutoString value;
   nsresult rv = NS_OK;
 
   switch (current->type) {
@@ -1885,7 +1885,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
   algID->SetDisplayName(text);
   asn1Objects->AppendElement(algID, false);
 
-  nsXPIDLString value;
+  nsString value;
   ProcessName(&mCert->issuer, getter_Copies(value));
 
   printableItem = new nsNSSASN1PrintableItem();

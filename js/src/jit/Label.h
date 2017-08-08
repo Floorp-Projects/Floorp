@@ -14,21 +14,21 @@ namespace jit {
 
 struct LabelBase
 {
-  protected:
-    // offset_ >= 0 means that the label is either bound or has incoming
-    // uses and needs to be bound.
-    int32_t offset_ : 31;
-
+  private:
     // We use uint32_t instead of bool to ensure MSVC packs these fields
     // correctly.
     uint32_t bound_ : 1;
 
-    void operator =(const LabelBase& label) = delete;
+    // offset_ < INVALID_OFFSET means that the label is either bound or has
+    // incoming uses and needs to be bound.
+    uint32_t offset_ : 31;
+
+    void operator=(const LabelBase& label) = delete;
+
+    static const uint32_t INVALID_OFFSET = 0x7fffffff; // UINT31_MAX.
 
   public:
-    static const int32_t INVALID_OFFSET = -1;
-
-    LabelBase() : offset_(INVALID_OFFSET), bound_(false)
+    LabelBase() : bound_(false), offset_(INVALID_OFFSET)
     { }
 
     // If the label is bound, all incoming edges have been patched and any
@@ -40,20 +40,15 @@ struct LabelBase
         MOZ_ASSERT(bound() || used());
         return offset_;
     }
-    void offsetBy(int32_t delta) {
-        MOZ_ASSERT(bound() || used());
-        MOZ_ASSERT(offset() + delta >= offset(), "no overflow");
-        mozilla::DebugOnly<int32_t> oldOffset(offset());
-        offset_ += delta;
-        MOZ_ASSERT(offset_ == delta + oldOffset, "new offset fits in 31 bits");
-    }
     // Returns whether the label is not bound, but has incoming uses.
     bool used() const {
-        return !bound() && offset_ > INVALID_OFFSET;
+        return !bound() && offset_ < INVALID_OFFSET;
     }
     // Binds the label, fixing its final position in the code stream.
     void bind(int32_t offset) {
         MOZ_ASSERT(!bound());
+        MOZ_ASSERT(offset >= 0);
+        MOZ_ASSERT(uint32_t(offset) < INVALID_OFFSET);
         offset_ = offset;
         bound_ = true;
         MOZ_ASSERT(offset_ == offset, "offset fits in 31 bits");
@@ -63,16 +58,13 @@ struct LabelBase
         offset_ = INVALID_OFFSET;
         bound_ = false;
     }
-    // Sets the label's latest used position, returning the old use position in
-    // the process.
-    int32_t use(int32_t offset) {
+    // Sets the label's latest used position.
+    void use(int32_t offset) {
         MOZ_ASSERT(!bound());
-
-        int32_t old = offset_;
+        MOZ_ASSERT(offset >= 0);
+        MOZ_ASSERT(uint32_t(offset) < INVALID_OFFSET);
         offset_ = offset;
         MOZ_ASSERT(offset_ == offset, "offset fits in 31 bits");
-
-        return old;
     }
 };
 

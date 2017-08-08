@@ -124,6 +124,11 @@ public:
   void GetStringEventType(uint32_t aEventType, nsAString& aString);
 
   /**
+   * Get a string equivalent for an accessible event value.
+   */
+  void GetStringEventType(uint32_t aEventType, nsACString& aString);
+
+  /**
    * Get a string equivalent for an accessible relation type.
    */
   void GetStringRelationType(uint32_t aRelationType, nsAString& aString);
