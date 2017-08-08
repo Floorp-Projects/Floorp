@@ -21,6 +21,7 @@ mozilla.pth:third_party/python/py
 mozilla.pth:third_party/python/pytest
 mozilla.pth:third_party/python/pytoml
 mozilla.pth:third_party/python/redo
+mozilla.pth:third_party/python/six
 mozilla.pth:third_party/python/voluptuous
 mozilla.pth:third_party/python/json-e
 mozilla.pth:build
