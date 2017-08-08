@@ -103,6 +103,7 @@ if (typeof Mozilla == "undefined") {
    * <li>appMenu
    * <li>backForward
    * <li>bookmarks
+   * <li>bookmark-star-button
    * <li>controlCenter-trackingUnblock
    * <li>controlCenter-trackingBlock
    * <li>customize
@@ -111,6 +112,11 @@ if (typeof Mozilla == "undefined") {
    * <li>help
    * <li>home
    * <li>library
+   * <li>pageActionButton
+   * <li>pageAction-panel-bookmark
+   * <li>pageAction-panel-copyURL
+   * <li>pageAction-panel-emailLink
+   * <li>pageAction-panel-sendToDevice
    * <li>pocket
    * <li>privateWindow
    * <li>quit
