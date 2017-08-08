@@ -73,3 +73,6 @@ patch -p3 < disable-assert.patch
 
 echo "Applying prefer-pulse-rust.patch on top of $rev"
 patch -p3 < prefer-pulse-rust.patch
+
+echo "Applying bug1386957.patch on top of $rev"
+patch -p1 < bug1386957.patch
