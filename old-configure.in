@@ -2198,10 +2198,6 @@ xulrunner)
   ;;
 esac
 
-if test -n "$MOZ_B2G"; then
-    AC_DEFINE(MOZ_B2G)
-fi
-
 # Graphene is a desktop runtime for running applications with a HTML UI.
 if test -n "$MOZ_GRAPHENE"; then
     AC_DEFINE(MOZ_GRAPHENE)
@@ -2219,9 +2215,7 @@ fi
 
 AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
-AC_SUBST(MOZ_B2G)
 AC_SUBST(MOZ_MULET)
-AC_SUBST(MOZ_B2G_VERSION)
 
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on
@@ -4025,10 +4019,6 @@ MOZ_ARG_DISABLE_BOOL(startupcache,
     MOZ_DISABLE_STARTUPCACHE=1,
     MOZ_DISABLE_STARTUPCACHE=)
 
-dnl bug 988880: disable startup cache on b2g
-if test -n "$MOZ_B2G"; then
-  MOZ_DISABLE_STARTUPCACHE=1
-fi
 if test -n "$MOZ_DISABLE_STARTUPCACHE"; then
   AC_DEFINE(MOZ_DISABLE_STARTUPCACHE)
 fi
@@ -4741,10 +4731,6 @@ if test -z "$IS_ALPHA"; then
 else
   MOZ_APP_MAXVERSION=$MOZ_APP_VERSION
 fi
-
-MOZ_B2G_VERSION=${MOZ_B2G_VERSION:-"1.0.0"}
-AC_DEFINE_UNQUOTED(MOZ_B2G_VERSION,"$MOZ_B2G_VERSION")
-AC_DEFINE_UNQUOTED(MOZ_B2G_OS_NAME,"$MOZ_B2G_OS_NAME")
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_REMOTINGNAME)
