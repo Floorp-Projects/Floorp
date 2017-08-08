@@ -303,6 +303,8 @@ StorageDBChild::RecvObserve(const nsCString& aTopic,
                             const nsString& aOriginAttributesPattern,
                             const nsCString& aOriginScope)
 {
+  MOZ_ASSERT(!XRE_IsParentProcess());
+
   StorageObserver::Self()->Notify(
     aTopic.get(), aOriginAttributesPattern, aOriginScope);
   return IPC_OK();
@@ -406,6 +408,52 @@ ShutdownObserver::Observe(nsISupports* aSubject,
 // Parent
 // ----------------------------------------------------------------------------
 
+class StorageDBParent::ObserverSink
+  : public StorageObserverSink
+{
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+
+  // Only touched on the PBackground thread.
+  StorageDBParent* MOZ_NON_OWNING_REF mActor;
+
+public:
+  explicit ObserverSink(StorageDBParent* aActor)
+    : mOwningEventTarget(GetCurrentThreadEventTarget())
+    , mActor(aActor)
+  {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(aActor);
+  }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StorageDBParent::ObserverSink);
+
+  void
+  Start();
+
+  void
+  Stop();
+
+private:
+  ~ObserverSink() = default;
+
+  void
+  AddSink();
+
+  void
+  RemoveSink();
+
+  void
+  Notify(const nsCString& aTopic,
+         const nsString& aOriginAttributesPattern,
+         const nsCString& aOriginScope);
+
+  // StorageObserverSink
+  nsresult
+  Observe(const char* aTopic,
+          const nsAString& aOriginAttrPattern,
+          const nsACString& aOriginScope) override;
+};
+
 NS_IMPL_ADDREF(StorageDBParent)
 NS_IMPL_RELEASE(StorageDBParent)
 
@@ -441,6 +489,8 @@ private:
     if (!mParent->IPCOpen()) {
       return NS_OK;
     }
+
+    mParent->Init();
 
     StorageDBThread* storageThread = StorageDBThread::Get();
     if (storageThread) {
@@ -479,10 +529,7 @@ private:
 StorageDBParent::StorageDBParent()
 : mIPCOpen(false)
 {
-  StorageObserver* observer = StorageObserver::Self();
-  if (observer) {
-    observer->AddSink(this);
-  }
+  AssertIsOnBackgroundThread();
 
   // We are always open by IPC only
   AddIPDLReference();
@@ -496,9 +543,25 @@ StorageDBParent::StorageDBParent()
 
 StorageDBParent::~StorageDBParent()
 {
-  StorageObserver* observer = StorageObserver::Self();
-  if (observer) {
-    observer->RemoveSink(this);
+  AssertIsOnBackgroundThread();
+
+  if (mObserverSink) {
+    mObserverSink->Stop();
+    mObserverSink = nullptr;
+  }
+}
+
+void
+StorageDBParent::Init()
+{
+  AssertIsOnBackgroundThread();
+
+  PBackgroundParent* actor = Manager();
+  MOZ_ASSERT(actor);
+
+  if (BackgroundParent::IsOtherProcessActor(actor)) {
+    mObserverSink = new ObserverSink(this);
+    mObserverSink->Start();
   }
 }
 
@@ -744,20 +807,66 @@ StorageDBParent::RecvAsyncFlush()
   return IPC_OK();
 }
 
-// StorageObserverSink
-
-nsresult
-StorageDBParent::Observe(const char* aTopic,
-                         const nsAString& aOriginAttributesPattern,
-                         const nsACString& aOriginScope)
+mozilla::ipc::IPCResult
+StorageDBParent::RecvStartup()
 {
-  if (mIPCOpen) {
-      mozilla::Unused << SendObserve(nsDependentCString(aTopic),
-                                     nsString(aOriginAttributesPattern),
-                                     nsCString(aOriginScope));
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return NS_OK;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+StorageDBParent::RecvClearAll()
+{
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  storageThread->AsyncClearAll();
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+StorageDBParent::RecvClearMatchingOrigin(const nsCString& aOriginNoSuffix)
+{
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  storageThread->AsyncClearMatchingOrigin(aOriginNoSuffix);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+StorageDBParent::RecvClearMatchingOriginAttributes(
+                                        const OriginAttributesPattern& aPattern)
+{
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  storageThread->AsyncClearMatchingOriginAttributes(aPattern);
+
+  return IPC_OK();
+}
+
+void
+StorageDBParent::Observe(const nsCString& aTopic,
+                         const nsString& aOriginAttributesPattern,
+                         const nsCString& aOriginScope)
+{
+  if (mIPCOpen) {
+    mozilla::Unused <<
+      SendObserve(aTopic, aOriginAttributesPattern, aOriginScope);
+  }
 }
 
 namespace {
@@ -998,6 +1107,96 @@ StorageDBParent::UsageParentBridge::Destroy()
 
   MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(destroyRunnable,
                                                    NS_DISPATCH_NORMAL));
+}
+
+void
+StorageDBParent::
+ObserverSink::Start()
+{
+  AssertIsOnBackgroundThread();
+
+  RefPtr<Runnable> runnable =
+    NewRunnableMethod("StorageDBParent::ObserverSink::AddSink",
+                      this,
+                      &StorageDBParent::ObserverSink::AddSink);
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+}
+
+void
+StorageDBParent::
+ObserverSink::Stop()
+{
+  AssertIsOnBackgroundThread();
+
+  mActor = nullptr;
+
+  RefPtr<Runnable> runnable =
+    NewRunnableMethod("StorageDBParent::ObserverSink::RemoveSink",
+                      this,
+                      &StorageDBParent::ObserverSink::RemoveSink);
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+}
+
+void
+StorageDBParent::
+ObserverSink::AddSink()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  StorageObserver* observer = StorageObserver::Self();
+  if (observer) {
+    observer->AddSink(this);
+  }
+}
+
+void
+StorageDBParent::
+ObserverSink::RemoveSink()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  StorageObserver* observer = StorageObserver::Self();
+  if (observer) {
+    observer->RemoveSink(this);
+  }
+}
+
+void
+StorageDBParent::
+ObserverSink::Notify(const nsCString& aTopic,
+                     const nsString& aOriginAttributesPattern,
+                     const nsCString& aOriginScope)
+{
+  AssertIsOnBackgroundThread();
+
+  if (mActor) {
+    mActor->Observe(aTopic, aOriginAttributesPattern, aOriginScope);
+  }
+}
+
+nsresult
+StorageDBParent::
+ObserverSink::Observe(const char* aTopic,
+                      const nsAString& aOriginAttributesPattern,
+                      const nsACString& aOriginScope)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<Runnable> runnable =
+    NewRunnableMethod<nsCString, nsString, nsCString>(
+      "StorageDBParent::ObserverSink::Observe2",
+      this,
+      &StorageDBParent::ObserverSink::Notify,
+      aTopic,
+      aOriginAttributesPattern,
+      aOriginScope);
+
+  MOZ_ALWAYS_SUCCEEDS(
+    mOwningEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL));
+
+  return NS_OK;
 }
 
 /*******************************************************************************
