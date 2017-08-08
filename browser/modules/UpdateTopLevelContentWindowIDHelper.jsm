@@ -78,10 +78,9 @@ function _handleEvent(aEvent) {
 
 function _handleMessage(aMessage) {
   let browser = aMessage.target;
-  if (aMessage.name === "Browser:Init") {
-    if (browser === browser.ownerGlobal.gBrowser.selectedBrowser) {
-      _updateCurrentContentOuterWindowID(browser);
-    }
+  if (aMessage.name === "Browser:Init" &&
+      browser === browser.ownerGlobal.gBrowser.selectedBrowser) {
+    _updateCurrentContentOuterWindowID(browser);
   }
 }
 
