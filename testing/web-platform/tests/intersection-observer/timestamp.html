@@ -88,7 +88,12 @@ function step2() {
   // top window time and iframe window time.
   assert_greater_than(topWindowTimeBeforeNotification, iframeWindowTimeAfterNotification,
     "Time ranges for top and iframe windows are disjoint. Times: " +
-      [topWindowTimeOnTestStart, topWindowTimeBeforeCreatingIframe, topWindowTimeBeforeNotification, topWindowTimeAfterNotification, iframeWindowTimeBeforeNotification, iframeWindowTimeAfterNotification]);
+      [topWindowTimeOnTestStart, topWindowTimeBeforeCreatingIframe,
+       topWindowTimeBeforeNotification, topWindowTimeAfterNotification,
+       iframeWindowTimeBeforeNotification, iframeWindowTimeAfterNotification,
+       topWindowEntries[1].time - topWindowTimeBeforeNotification,
+       iframeWindowEntries[1].time - iframeWindowTimeBeforeNotification
+      ]);
 
   assert_equals(topWindowEntries.length, 2, "Top window observer has two notifications.");
   assert_between_inclusive(
