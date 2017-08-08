@@ -276,6 +276,31 @@ BackgroundParentImpl::DeallocPBackgroundStorageParent(
   return mozilla::dom::DeallocPBackgroundStorageParent(aActor);
 }
 
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvBroadcastLocalStorageChange(
+                                            const nsString& aDocumentURI,
+                                            const nsString& aKey,
+                                            const nsString& aOldValue,
+                                            const nsString& aNewValue,
+                                            const PrincipalInfo& aPrincipalInfo,
+                                            const bool& aIsPrivate)
+{
+  nsTArray<PBackgroundParent*> liveActorArray;
+  if (NS_WARN_IF(!BackgroundParent::GetLiveActorArray(this, liveActorArray))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  for (auto* liveActor : liveActorArray) {
+    if (liveActor != this) {
+      Unused << liveActor->SendDispatchLocalStorageChange(
+        nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
+        nsString(aNewValue), aPrincipalInfo, aIsPrivate);
+    }
+  }
+
+  return IPC_OK();
+}
+
 PPendingIPCBlobParent*
 BackgroundParentImpl::AllocPPendingIPCBlobParent(const IPCBlob& aBlob)
 {

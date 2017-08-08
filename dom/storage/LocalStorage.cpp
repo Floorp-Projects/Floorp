@@ -21,6 +21,8 @@
 #include "mozilla/dom/StorageBinding.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/EnumSet.h"
@@ -179,13 +181,20 @@ LocalStorage::BroadcastChangeNotification(const nsAString& aKey,
                                           const nsAString& aOldValue,
                                           const nsAString& aNewValue)
 {
-  if (!XRE_IsParentProcess() && Principal()) {
-    // If we are in a child process, we want to send a message to the parent in
-    // order to broadcast the StorageEvent correctly to any child process.
-    dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-    Unused << NS_WARN_IF(!cc->SendBroadcastLocalStorageChange(
-      mDocumentURI, nsString(aKey), nsString(aOldValue), nsString(aNewValue),
-      IPC::Principal(Principal()), mIsPrivate));
+  if (Principal()) {
+    // We want to send a message to the parent in order to broadcast the
+    // StorageEvent correctly to any child process.
+
+    PBackgroundChild* actor = BackgroundChild::GetForCurrentThread();
+    MOZ_ASSERT(actor);
+
+    PrincipalInfo principalInfo;
+    nsresult rv = PrincipalToPrincipalInfo(Principal(), &principalInfo);
+    if (!NS_WARN_IF(NS_FAILED(rv))) {
+      Unused << NS_WARN_IF(!actor->SendBroadcastLocalStorageChange(
+        mDocumentURI, nsString(aKey), nsString(aOldValue), nsString(aNewValue),
+        principalInfo, mIsPrivate));
+    }
   }
 
   DispatchStorageEvent(mDocumentURI, aKey, aOldValue, aNewValue,
@@ -204,16 +213,6 @@ LocalStorage::DispatchStorageEvent(const nsAString& aDocumentURI,
 {
   NotifyChange(aStorage, aPrincipal, aKey, aOldValue, aNewValue,
                u"localStorage", aDocumentURI, aIsPrivate, aImmediateDispatch);
-
-  // If we are in the parent process and we have the principal, we want to
-  // broadcast this event to every other process.
-  if (XRE_IsParentProcess() && aPrincipal) {
-    for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-      Unused << cp->SendDispatchLocalStorageChange(
-        nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
-        nsString(aNewValue), IPC::Principal(aPrincipal), aIsPrivate);
-    }
-  }
 }
 
 void
