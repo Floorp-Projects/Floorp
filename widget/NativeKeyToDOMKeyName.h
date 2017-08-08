@@ -80,15 +80,9 @@
 #undef KEY_MAP_ANDROID
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey) \
   NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
-#ifndef MOZ_B2G
 #undef KEY_MAP_ANDROID_EXCEPT_B2G
 #define KEY_MAP_ANDROID_EXCEPT_B2G(aCPPKeyName, aNativeKey) \
   NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
-#else // #ifndef MOZ_B2G
-#undef KEY_MAP_B2G
-#define KEY_MAP_B2G(aCPPKeyName, aNativeKey) \
-  NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
-#endif  // #ifndef MOZ_B2G #else
 #endif
 
 /******************************************************************************
