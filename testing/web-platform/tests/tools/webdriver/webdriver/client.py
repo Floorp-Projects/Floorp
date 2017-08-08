@@ -239,9 +239,14 @@ class Window(object):
 
     @property
     @command
+    def rect(self):
+        return self.session.send_session_command("GET", "window/rect")
+
+    @property
+    @command
     def size(self):
-        resp = self.session.send_session_command("GET", "window/rect")
-        return (resp["width"], resp["height"])
+        rect = self.rect
+        return (rect["width"], rect["height"])
 
     @size.setter
     @command
@@ -253,8 +258,8 @@ class Window(object):
     @property
     @command
     def position(self):
-        resp = self.session.send_session_command("GET", "window/rect")
-        return (resp["x"], resp["y"])
+        rect = self.rect
+        return (rect["x"], rect["y"])
 
     @position.setter
     @command
@@ -262,6 +267,11 @@ class Window(object):
         data = x, y
         body = {"x": x, "y": y}
         self.session.send_session_command("POST", "window/rect", body)
+
+    @property
+    @command
+    def state(self):
+        return self.rect["state"]
 
     @command
     def maximize(self):
