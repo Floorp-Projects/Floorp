@@ -595,8 +595,8 @@ class TryOptionSyntax(object):
             # Beware the subtle distinction between [] and None for self.jobs and self.platforms.
             # They will be [] if there was no try syntax, and None if try syntax was detected but
             # they remained unspecified.
-            if self.jobs and job_try_name not in self.jobs:
-                return False
+            if self.jobs:
+                return job_try_name in self.jobs
             elif not self.jobs and 'build' in task.dependencies:
                 # We exclude tasks with build dependencies from the default set of jobs because
                 # they will schedule their builds even if they end up optimized away. This means
