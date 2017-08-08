@@ -30,7 +30,7 @@ function run_test() {
 
 function test_nesting() {
   const thread = gThreadActor;
-  const { resolve, promise: p } = promise.defer();
+  const { resolve, promise: p } = defer();
 
   let currentStep = 0;
 

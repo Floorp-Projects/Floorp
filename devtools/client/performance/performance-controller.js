@@ -536,7 +536,7 @@ var PerformanceController = {
    * @return {Promise}
    */
   waitForStateChangeOnRecording: Task.async(function* (recording, expectedState) {
-    let deferred = promise.defer();
+    let deferred = defer();
     this.on(EVENTS.RECORDING_STATE_CHANGE, function handler(state, model) {
       if (state === expectedState && model === recording) {
         this.off(EVENTS.RECORDING_STATE_CHANGE, handler);

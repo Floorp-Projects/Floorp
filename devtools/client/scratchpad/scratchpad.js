@@ -507,7 +507,7 @@ var Scratchpad = {
     let evalOptions = { url: this.uniqueName };
 
     return connection.then(({ debuggerClient, webConsoleClient }) => {
-      let deferred = promise.defer();
+      let deferred = defer();
 
       webConsoleClient.evaluateJSAsync(aString, aResponse => {
         this.debuggerClient = debuggerClient;
@@ -550,7 +550,7 @@ var Scratchpad = {
    */
   run: function SP_run()
   {
-    let deferred = promise.defer();
+    let deferred = defer();
     let reject = aReason => deferred.reject(aReason);
 
     this.execute().then(([aString, aError, aResult]) => {
@@ -577,7 +577,7 @@ var Scratchpad = {
    */
   inspect: function SP_inspect()
   {
-    let deferred = promise.defer();
+    let deferred = defer();
     let reject = aReason => deferred.reject(aReason);
 
     this.execute().then(([aString, aError, aResult]) => {
@@ -605,7 +605,7 @@ var Scratchpad = {
    */
   reloadAndRun: function SP_reloadAndRun()
   {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     if (this.executionContext !== SCRATCHPAD_CONTEXT_CONTENT) {
       console.error(this.strings.
@@ -633,7 +633,7 @@ var Scratchpad = {
    */
   display: function SP_display()
   {
-    let deferred = promise.defer();
+    let deferred = defer();
     let reject = aReason => deferred.reject(aReason);
 
     this.execute().then(([aString, aError, aResult]) => {
@@ -876,7 +876,7 @@ var Scratchpad = {
    */
   _writePrimitiveAsComment: function SP__writePrimitiveAsComment(aValue)
   {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     if (aValue.type == "longString") {
       let client = this.webConsoleClient;
@@ -935,7 +935,7 @@ var Scratchpad = {
    */
   writeAsErrorComment: function SP_writeAsErrorComment(aError)
   {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     if (VariablesView.isPrimitive({ value: aError.exception })) {
       let error = aError.exception;
@@ -2112,7 +2112,7 @@ ScratchpadTab.prototype = {
       return this._connector;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this._connector = deferred.promise;
 
     let connectTimer = setTimeout(() => {
@@ -2263,7 +2263,7 @@ ScratchpadSidebar.prototype = {
   {
     this.show();
 
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let onTabReady = () => {
       if (this.variablesView) {

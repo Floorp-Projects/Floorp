@@ -32,7 +32,7 @@ PerformancePanel.prototype = {
     if (this._opening) {
       return this._opening;
     }
-    let deferred = promise.defer();
+    let deferred = defer();
     this._opening = deferred.promise;
 
     this.panelWin.gToolbox = this.toolbox;

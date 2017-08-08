@@ -32,7 +32,7 @@ add_task(function* () {
 });
 
 function pushPrefEnv() {
-  let deferred = promise.defer();
+  let deferred = defer();
   let options = {
     set: [["security.mixed_content.block_active_content", true]]
   };

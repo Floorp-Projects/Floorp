@@ -22,7 +22,7 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   },
 
   getWallpaper: function () {
-    let deferred = promise.defer();
+    let deferred = defer();
     getSetting("wallpaper.image").then((blob) => {
       let reader = new FileReader();
       let conn = this.conn;

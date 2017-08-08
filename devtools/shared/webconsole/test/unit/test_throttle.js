@@ -43,7 +43,7 @@ TestStreamListener.prototype = {
 
   onStateChanged: function () {
     if (!this._deferred) {
-      this._deferred = promise.defer();
+      this._deferred = defer();
     }
     return this._deferred.promise;
   }

@@ -19,7 +19,7 @@ add_task(function* () {
 });
 
 function checkResult(msg, desc) {
-  let def = promise.defer();
+  let def = defer();
   waitForMessages({
     webconsole: jsterm.hud.owner,
     messages: [{

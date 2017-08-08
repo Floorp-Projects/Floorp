@@ -43,7 +43,7 @@ DomPanel.prototype = {
       return this._opening;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this._opening = deferred.promise;
 
     // Local monitoring needs to make the target remote.
@@ -83,7 +83,7 @@ DomPanel.prototype = {
       return this._destroying;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this._destroying = deferred.promise;
 
     this.target.off("navigate", this.onTabNavigated);

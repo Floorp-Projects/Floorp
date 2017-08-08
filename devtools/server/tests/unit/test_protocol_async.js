@@ -57,7 +57,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   promiseReturn: function (toWait) {
     // Guarantee that this resolves after simpleReturn returns.
-    let deferred = promise.defer();
+    let deferred = defer();
     let sequence = this.sequence++;
 
     // Wait until the number of requests specified by toWait have
@@ -80,7 +80,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   promiseThrow: function () {
     // Guarantee that this resolves after simpleReturn returns.
-    let deferred = promise.defer();
+    let deferred = defer();
     let sequence = this.sequence++;
     // This should be enough to force a failure if the code is broken.
     do_timeout(150, () => {
@@ -148,7 +148,7 @@ function run_test() {
     // While packets are sent in the correct order, rejection handlers
     // registered in "Promise.jsm" may be invoked later than fulfillment
     // handlers, meaning that we can't check the actual order with certainty.
-    let deferAfterRejection = promise.defer();
+    let deferAfterRejection = defer();
 
     calls.push(rootClient.promiseThrow().then(() => {
       do_check_true(false, "promiseThrow shouldn't succeed!");

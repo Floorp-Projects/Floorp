@@ -79,7 +79,7 @@ function* ifTestingSupported() {
 }
 
 function waitForMozSetImageElement(panel) {
-  let deferred = promise.defer();
+  let deferred = defer();
   panel._onMozSetImageElement = deferred.resolve;
   return deferred.promise;
 }

@@ -220,7 +220,7 @@ GraphsController.prototype = {
       return;
     }
 
-    this._rendering = promise.defer();
+    this._rendering = defer();
     for (let graph of (yield this._getEnabled())) {
       yield graph.setPerformanceData(recordingData, resolution);
       this.emit("rendered", graph.graphName);
