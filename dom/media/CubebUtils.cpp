@@ -7,6 +7,7 @@
 #include "CubebUtils.h"
 
 #include "MediaInfo.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
