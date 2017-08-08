@@ -196,7 +196,7 @@
                 label="&passwordExceptions.label;"
                 accesskey="&passwordExceptions.accesskey;"
                 preference="pref.privacy.disable_button.view_passwords_exceptions"
-                searchkeywords="&address.label;"/>
+                searchkeywords="&address2.label;"/>
       </hbox>
     </hbox>
     <hbox id="showPasswordBox" pack="end">
@@ -252,11 +252,11 @@
                                                                                         &rememberSearchForm.label;
                                                                                         &acceptCookies2.label;
                                                                                         &cookieExceptions.label;
-                                                                                        &acceptThirdParty.pre.label;
+                                                                                        &acceptThirdParty2.pre.label;
                                                                                         &acceptThirdParty.always.label;
                                                                                         &acceptThirdParty.visited.label;
                                                                                         &acceptThirdParty.never.label;
-                                                                                        &keepUntil.label;
+                                                                                        &keepUntil2.label;
                                                                                         &expire.label;
                                                                                         &close.label;
                                                                                         &showCookies.label;
@@ -324,7 +324,7 @@
                 class="indent"
                 align="center">
             <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
-                   accesskey="&acceptThirdParty.pre.accesskey;">&acceptThirdParty.pre.label;</label>
+                   accesskey="&acceptThirdParty2.pre.accesskey;">&acceptThirdParty2.pre.label;</label>
             <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
             onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
             onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
@@ -340,7 +340,7 @@
                 align="center">
             <label id="keepUntil"
                    control="keepCookiesUntil"
-                   accesskey="&keepUntil.accesskey;">&keepUntil.label;</label>
+                   accesskey="&keepUntil2.accesskey;">&keepUntil2.label;</label>
             <menulist id="keepCookiesUntil"
                       preference="network.cookie.lifetimePolicy">
               <menupopup>
@@ -578,7 +578,7 @@
               class="accessory-button"
               label="&popupExceptions.label;"
               accesskey="&popupExceptions.accesskey;"
-              searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
+              searchkeywords="&address2.label; &button.cancel.label; &button.ok.label;"/>
     </hbox>
   </hbox>
 
@@ -595,7 +595,7 @@
               class="accessory-button"
               label="&addonExceptions.label;"
               accesskey="&addonExceptions.accesskey;"
-              searchkeywords="&address.label;
+              searchkeywords="&address2.label;
                               &allow.label;
                               &removepermission2.label;
                               &removeallpermissions2.label;
@@ -709,11 +709,11 @@
                                 &certmgr.tab.websites3;
                                 &certmgr.tab.ca;
                                 &certmgr.tab.orphan2;
-                                &certmgr.mine;
-                                &certmgr.others;
-                                &certmgr.websites2;
-                                &certmgr.cas;
-                                &certmgr.orphans;
+                                &certmgr.mine2;
+                                &certmgr.others2;
+                                &certmgr.websites3;
+                                &certmgr.cas2;
+                                &certmgr.orphans2;
                                 &certmgr.certname;
                                 &certmgr.tokenname;
                                 &certmgr.view2.label;
@@ -771,7 +771,7 @@
   </hbox>
   <hbox>
     <vbox flex="1">
-      <label id="offlineAppsListLabel">&offlineAppsList2.label;</label>
+      <label id="offlineAppsListLabel">&offlineAppsList3.label;</label>
       <listbox id="offlineAppsList"
               flex="1"
               aria-labelledby="offlineAppsListLabel">

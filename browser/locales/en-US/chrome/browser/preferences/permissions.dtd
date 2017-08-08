@@ -11,8 +11,8 @@
 <!ENTITY removepermission2.accesskey  "R">
 <!ENTITY removeallpermissions2.label  "Remove All Websites">
 <!ENTITY removeallpermissions2.accesskey "e">
-<!ENTITY address.label                "Address of website:">
-<!ENTITY address.accesskey            "d">
+<!ENTITY address2.label               "Address of website">
+<!ENTITY address2.accesskey           "d">
 <!ENTITY block.label                  "Block">
 <!ENTITY block.accesskey              "B">
 <!ENTITY session.label                "Allow for Session">

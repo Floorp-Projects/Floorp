@@ -129,9 +129,11 @@ class DOMEventMarkerPayload : public ProfilerMarkerPayload
 {
 public:
   DOMEventMarkerPayload(const nsAString& aEventType, uint16_t aPhase,
+                        const mozilla::TimeStamp& aTimeStamp,
                         const mozilla::TimeStamp& aStartTime,
                         const mozilla::TimeStamp& aEndTime)
     : ProfilerMarkerPayload(aStartTime, aEndTime)
+    , mTimeStamp(aTimeStamp)
     , mEventType(aEventType)
     , mPhase(aPhase)
   {}
@@ -139,6 +141,7 @@ public:
   DECL_STREAM_PAYLOAD
 
 private:
+  mozilla::TimeStamp mTimeStamp;
   nsString mEventType;
   uint16_t mPhase;
 };

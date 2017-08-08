@@ -44,14 +44,14 @@ add_task(async function addPermission() {
   let richlistbox = doc.getElementById("permissionsBox");
 
   // First item in the richlistbox contains column headers.
-  Assert.equal(richlistbox.itemCount - 1, 0,
+  Assert.equal(richlistbox.itemCount, 0,
                "Number of permission items is 0 initially");
 
   // Add notification permission for a website.
   SitePermissions.set(URI, "desktop-notification", SitePermissions.ALLOW);
 
   // Observe the added permission changes in the dialog UI.
-  Assert.equal(richlistbox.itemCount - 1, 1);
+  Assert.equal(richlistbox.itemCount, 1);
   checkPermissionItem(URL, "Allow");
 
   SitePermissions.remove(URL, "desktop-notification");
@@ -74,12 +74,12 @@ add_task(async function observePermissionDelete() {
 
   SitePermissions.set(URI, "desktop-notification", SitePermissions.ALLOW);
 
-  Assert.equal(richlistbox.itemCount - 1, 1,
+  Assert.equal(richlistbox.itemCount, 1,
                "The box contains one permission item initially");
 
   SitePermissions.remove(URI, "desktop-notification");
 
-  Assert.equal(richlistbox.itemCount - 1, 0);
+  Assert.equal(richlistbox.itemCount, 0);
 });
 
 add_task(async function onPermissionChange() {
@@ -109,10 +109,10 @@ add_task(async function onPermissionDelete() {
 
   SitePermissions.set(URI, "desktop-notification", SitePermissions.ALLOW);
 
-  richlistbox.selectItem(richlistbox.getItemAtIndex(1));
+  richlistbox.selectItem(richlistbox.getItemAtIndex(0));
   doc.getElementById("removePermission").click();
 
-  await waitForCondition(() => richlistbox.itemCount - 1 == 0);
+  await waitForCondition(() => richlistbox.itemCount == 0);
 
   Assert.equal(SitePermissions.get(URI, "desktop-notification").state,
                SitePermissions.ALLOW,
@@ -135,7 +135,7 @@ add_task(async function onAllPermissionsDelete() {
   SitePermissions.set(u, "desktop-notification", SitePermissions.ALLOW);
 
   doc.getElementById("removeAllPermissions").click();
-  await waitForCondition(() => richlistbox.itemCount - 1 == 0);
+  await waitForCondition(() => richlistbox.itemCount == 0);
 
   Assert.equal(SitePermissions.get(URI, "desktop-notification").state,
      SitePermissions.ALLOW);
@@ -161,10 +161,10 @@ add_task(async function onPermissionChangeAndDelete() {
   doc.getElementsByAttribute("value", SitePermissions.BLOCK)[0].click();
 
   // Remove that permission by clicking the "Remove" button.
-  richlistbox.selectItem(richlistbox.getItemAtIndex(1));
+  richlistbox.selectItem(richlistbox.getItemAtIndex(0));
   doc.getElementById("removePermission").click();
 
-  await waitForCondition(() => richlistbox.itemCount - 1 == 0);
+  await waitForCondition(() => richlistbox.itemCount == 0);
 
   doc.getElementById("btnApplyChanges").click();
 
@@ -198,10 +198,10 @@ add_task(async function onPermissionDeleteCancel() {
   SitePermissions.set(URI, "desktop-notification", SitePermissions.ALLOW);
 
   // Remove that permission by clicking the "Remove" button.
-  richlistbox.selectItem(richlistbox.getItemAtIndex(1));
+  richlistbox.selectItem(richlistbox.getItemAtIndex(0));
   doc.getElementById("removePermission").click();
 
-  await waitForCondition(() => richlistbox.itemCount - 1 == 0);
+  await waitForCondition(() => richlistbox.itemCount == 0);
 
   doc.getElementById("cancel").click();
 

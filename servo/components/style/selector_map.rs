@@ -9,18 +9,55 @@ use {Atom, LocalName};
 use applicable_declarations::ApplicableDeclarationBlock;
 use context::QuirksMode;
 use dom::TElement;
-use fnv::FnvHashMap;
 use pdqsort::sort_by;
+use precomputed_hash::PrecomputedHash;
 use rule_tree::CascadeLevel;
 use selector_parser::SelectorImpl;
 use selectors::matching::{matches_selector, MatchingContext, ElementSelectorFlags};
 use selectors::parser::{Component, Combinator, SelectorIter};
 use selectors::parser::LocalName as LocalNameSelector;
 use smallvec::{SmallVec, VecLike};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::collections::hash_map;
-use std::hash::Hash;
+use std::hash::{BuildHasherDefault, Hash, Hasher};
 use stylist::Rule;
+
+/// A hasher implementation that doesn't hash anything, because it expects its
+/// input to be a suitable u32 hash.
+pub struct PrecomputedHasher {
+    hash: Option<u32>,
+}
+
+impl Default for PrecomputedHasher {
+    fn default() -> Self {
+        Self { hash: None }
+    }
+}
+
+/// A simple alias for a hashmap using PrecomputedHasher.
+pub type PrecomputedHashMap<K, V> = HashMap<K, V, BuildHasherDefault<PrecomputedHasher>>;
+
+/// A simple alias for a hashset using PrecomputedHasher.
+pub type PrecomputedHashSet<K> = HashSet<K, BuildHasherDefault<PrecomputedHasher>>;
+
+impl Hasher for PrecomputedHasher {
+    #[inline]
+    fn write(&mut self, _: &[u8]) {
+        unreachable!("Called into PrecomputedHasher with something that isn't \
+                     a u32")
+    }
+
+    #[inline]
+    fn write_u32(&mut self, i: u32) {
+        debug_assert!(self.hash.is_none());
+        self.hash = Some(i);
+    }
+
+    #[inline]
+    fn finish(&self) -> u64 {
+        self.hash.expect("PrecomputedHasher wasn't fed?") as u64
+    }
+}
 
 /// A trait to abstract over a given selector map entry.
 pub trait SelectorMapEntry : Sized + Clone {
@@ -63,7 +100,7 @@ pub struct SelectorMap<T> {
     /// A hash from a class name to rules which contain that class selector.
     pub class_hash: MaybeCaseInsensitiveHashMap<Atom, SmallVec<[T; 1]>>,
     /// A hash from local name to rules which contain that local name selector.
-    pub local_name_hash: FnvHashMap<LocalName, SmallVec<[T; 1]>>,
+    pub local_name_hash: PrecomputedHashMap<LocalName, SmallVec<[T; 1]>>,
     /// Rules that don't have ID, class, or element selectors.
     pub other: Vec<T>,
     /// The number of entries in this map.
@@ -366,10 +403,12 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
 ///
 /// The first non-None value returned from |f| is returned.
 #[inline(always)]
-fn find_from_left<F, R>(mut iter: SelectorIter<SelectorImpl>,
-                         mut f: F)
-                         -> Option<R>
-    where F: FnMut(&Component<SelectorImpl>) -> Option<R>,
+fn find_from_left<F, R>(
+    mut iter: SelectorIter<SelectorImpl>,
+    mut f: F
+) -> Option<R>
+where
+    F: FnMut(&Component<SelectorImpl>) -> Option<R>,
 {
     for ss in &mut iter {
         if let Some(r) = f(ss) {
@@ -395,8 +434,6 @@ fn find_from_left<F, R>(mut iter: SelectorIter<SelectorImpl>,
 pub fn get_id_name(iter: SelectorIter<SelectorImpl>)
                    -> Option<Atom> {
     find_from_left(iter, |ss| {
-        // TODO(pradeep): Implement case-sensitivity based on the
-        // document type and quirks mode.
         if let Component::ID(ref id) = *ss {
             return Some(id.clone());
         }
@@ -409,8 +446,6 @@ pub fn get_id_name(iter: SelectorIter<SelectorImpl>)
 pub fn get_class_name(iter: SelectorIter<SelectorImpl>)
                       -> Option<Atom> {
     find_from_left(iter, |ss| {
-        // TODO(pradeep): Implement case-sensitivity based on the
-        // document type and quirks mode.
         if let Component::Class(ref class) = *ss {
             return Some(class.clone());
         }
@@ -434,7 +469,7 @@ pub fn get_local_name(iter: SelectorIter<SelectorImpl>)
 }
 
 #[inline]
-fn find_push<Str: Eq + Hash, V, VL>(map: &mut FnvHashMap<Str, VL>,
+fn find_push<Str: Eq + Hash, V, VL>(map: &mut PrecomputedHashMap<Str, VL>,
                                     key: Str,
                                     value: V)
     where VL: VecLike<V> + Default
@@ -442,15 +477,15 @@ fn find_push<Str: Eq + Hash, V, VL>(map: &mut FnvHashMap<Str, VL>,
     map.entry(key).or_insert_with(VL::default).push(value)
 }
 
-/// Wrapper for FnvHashMap that does ASCII-case-insensitive lookup in quirks mode.
+/// Wrapper for PrecomputedHashMap that does ASCII-case-insensitive lookup in quirks mode.
 #[derive(Debug)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
-pub struct MaybeCaseInsensitiveHashMap<K: Hash + Eq, V>(FnvHashMap<K, V>);
+pub struct MaybeCaseInsensitiveHashMap<K: PrecomputedHash + Hash + Eq, V>(PrecomputedHashMap<K, V>);
 
 impl<V> MaybeCaseInsensitiveHashMap<Atom, V> {
     /// Empty map
     pub fn new() -> Self {
-        MaybeCaseInsensitiveHashMap(FnvHashMap::default())
+        MaybeCaseInsensitiveHashMap(PrecomputedHashMap::default())
     }
 
     /// HashMap::entry

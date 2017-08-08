@@ -44,6 +44,14 @@
   <color name="menu_item_tint">@color/toolbar_icon_grey</color>
   <color name="menu_item_tint_private">@color/toolbar_icon_grey</color>
 
+  <!-- Navigation button background color -->
+  <color name="nav_button_bg_color_disabled">#0D272727</color>
+  <color name="nav_button_bg_color_focused">@color/tablet_highlight_focused</color>
+  <color name="nav_button_bg_color_pressed">@color/toolbar_grey_pressed</color>
+  <color name="nav_button_bg_color_private">@color/tabs_tray_grey_pressed</color>
+  <color name="nav_button_bg_color_private_focused">@color/text_and_tabs_tray_grey</color>
+  <color name="nav_button_bg_color_private_pressed">@color/placeholder_active_grey</color>
+
   <!-- Non-palette colors -->
 
   <!-- Synced w/ toolbar_grey -->

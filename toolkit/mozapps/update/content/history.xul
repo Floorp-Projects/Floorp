@@ -30,7 +30,7 @@
   <stringbundle id="updateBundle"
                 src="chrome://mozapps/locale/update/updates.properties"/>
 
-  <label>&history.intro;</label>
+  <label>&history2.intro;</label>
   <separator class="thin"/>
   <richlistbox id="historyItems" flex="1">
     <label>&noupdates.label;</label>

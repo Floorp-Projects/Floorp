@@ -942,11 +942,6 @@ NS_IMETHODIMP nsExternalHelperAppService::IsExposedProtocol(const char * aProtoc
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
-{
-  return LoadURI(aURL, nullptr);
-}
-
 static const char kExternalProtocolPrefPrefix[]  = "network.protocol-handler.external.";
 static const char kExternalProtocolDefaultPref[] = "network.protocol-handler.external-default";
 

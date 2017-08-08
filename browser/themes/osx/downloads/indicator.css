@@ -10,19 +10,3 @@
     list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel@2x.png");
   }
 }
-
-
-%ifndef MOZ_PHOTON_ANIMATIONS
-@media (min-resolution: 2dppx) {
-  #downloads-notification-anchor[notification="start"] > #downloads-indicator-notification {
-    background-image: url("chrome://browser/skin/downloads/download-notification-start@2x.png");
-  }
-}
-
-
-@media (min-resolution: 2dppx) {
-  #downloads-notification-anchor[notification="finish"] > #downloads-indicator-notification {
-    background-image: url("chrome://browser/skin/downloads/download-notification-finish@2x.png");
-  }
-}
-%endif

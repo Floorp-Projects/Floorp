@@ -251,6 +251,7 @@ class ParserBase : public StrictModeGetter
 
     bool warnOnceAboutExprClosure();
     bool warnOnceAboutForEach();
+    bool warnOnceAboutLegacyGenerator();
 
     bool allowsForEachIn() {
 #if !JS_HAS_FOR_EACH_IN

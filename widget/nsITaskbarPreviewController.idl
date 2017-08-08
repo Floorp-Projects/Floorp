@@ -37,28 +37,22 @@ interface nsITaskbarPreviewController : nsISupports
 {
   /**
    * The width of the preview image. This value is allowed to change at any
-   * time. See drawPreview for more information.
+   * time. See requestPreview for more information.
    */
   readonly attribute unsigned long width;
 
   /**
    * The height of the preview image. This value is allowed to change at any
-   * time.  See drawPreview for more information.
+   * time.  See requestPreview for more information.
    */
   readonly attribute unsigned long height;
 
   /**
    * The aspect ratio of the thumbnail - this does not need to match the ratio
    * of the preview. This value is allowed to change at any time. See
-   * drawThumbnail for more information.
+   * requestThumbnail for more information.
    */
   readonly attribute float thumbnailAspectRatio;
-
-  [deprecated]
-  boolean drawPreview(in nsISupports ctx);
-
-  [deprecated]
-  boolean drawThumbnail(in nsISupports ctx, in unsigned long width, in unsigned long height);
 
   /**
    * Invoked by nsITaskbarPreview when it needs to render the preview.
@@ -70,9 +64,6 @@ interface nsITaskbarPreviewController : nsISupports
   void requestPreview(in nsITaskbarPreviewCallback aCallback);
 
   /**
-   * An asynchronous version of drawPreview and drawThumbnail apis
-   * implemented in nsITaskbarPreviewController.
-   *
    * Note: it is guaranteed that width/height == thumbnailAspectRatio
    * (modulo rounding errors)
    *

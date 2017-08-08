@@ -20,8 +20,8 @@ interface nsITaskbarPreviewButton;
  *
  * By default, Windows takes care of drawing the thumbnail and preview for the
  * application however if enableCustomDrawing is set to true, then the
- * controller will start to receive drawPreview and drawThumbnail calls as well
- * as reads on the thumbnailAspectRatio, width and height properties.
+ * controller will start to receive requestPreview and requestThumbnail calls
+ * as well as reads on the thumbnailAspectRatio, width and height properties.
  *
  * By default, nsITaskbarWindowPreviews are visible. When made invisible, the
  * window disappears from the list of windows in the taskbar for the

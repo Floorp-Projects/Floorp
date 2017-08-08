@@ -58,27 +58,27 @@ HTMLEditor::ShowInlineTableEditingUI(nsIDOMElement* aCell)
   }
 
   // the resizers and the shadow will be anonymous children of the body
-  nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(GetRoot());
+  RefPtr<Element> bodyElement = GetRoot();
   NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   mAddColumnBeforeButton =
-    CreateAnonymousElement(nsGkAtoms::a, bodyElement,
+    CreateAnonymousElement(nsGkAtoms::a, *bodyElement,
                            NS_LITERAL_STRING("mozTableAddColumnBefore"), false);
   mRemoveColumnButton =
-    CreateAnonymousElement(nsGkAtoms::a, bodyElement,
+    CreateAnonymousElement(nsGkAtoms::a, *bodyElement,
                            NS_LITERAL_STRING("mozTableRemoveColumn"), false);
   mAddColumnAfterButton =
-    CreateAnonymousElement(nsGkAtoms::a, bodyElement,
+    CreateAnonymousElement(nsGkAtoms::a, *bodyElement,
                            NS_LITERAL_STRING("mozTableAddColumnAfter"), false);
 
   mAddRowBeforeButton =
-    CreateAnonymousElement(nsGkAtoms::a, bodyElement,
+    CreateAnonymousElement(nsGkAtoms::a, *bodyElement,
                            NS_LITERAL_STRING("mozTableAddRowBefore"), false);
   mRemoveRowButton =
-    CreateAnonymousElement(nsGkAtoms::a, bodyElement,
+    CreateAnonymousElement(nsGkAtoms::a, *bodyElement,
                            NS_LITERAL_STRING("mozTableRemoveRow"), false);
   mAddRowAfterButton =
-    CreateAnonymousElement(nsGkAtoms::a, bodyElement,
+    CreateAnonymousElement(nsGkAtoms::a, *bodyElement,
                            NS_LITERAL_STRING("mozTableAddRowAfter"), false);
 
   AddMouseClickListener(mAddColumnBeforeButton);
@@ -212,7 +212,11 @@ HTMLEditor::RefreshInlineTableEditingUI()
   }
 
   int32_t xCell, yCell, wCell, hCell;
-  GetElementOrigin(mInlineEditedCell, xCell, yCell);
+  nsCOMPtr<Element> element = do_QueryInterface(mInlineEditedCell);
+  if (NS_WARN_IF(!element)) {
+   return NS_ERROR_FAILURE;
+  }
+  GetElementOrigin(*element, xCell, yCell);
 
   nsresult rv = htmlElement->GetOffsetWidth(&wCell);
   NS_ENSURE_SUCCESS(rv, rv);
