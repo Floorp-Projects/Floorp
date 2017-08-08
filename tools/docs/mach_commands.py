@@ -112,36 +112,41 @@ class Documentation(MachCommandBase):
 
     @Command('doc-upload', category='devenv',
         description='Generate and upload documentation from the tree.')
-    @CommandArgument('--bucket', required=True,
-        help='Target S3 bucket.')
-    @CommandArgument('--region', required=True,
-        help='Region containing target S3 bucket.')
     @CommandArgument('what', nargs='*', metavar='DIRECTORY [, DIRECTORY]',
         help='Path(s) to documentation to build and upload.')
-    def upload_docs(self, bucket, region, what=None):
+    def upload_docs(self, what=None):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('boto3==1.4.4')
 
         outdir = os.path.join(self.topobjdir, 'docs')
         self.build_docs(what=what, outdir=outdir, format='html')
 
-        self.s3_upload(os.path.join(outdir, 'html', 'Mozilla_Source_Tree_Docs'), bucket, region)
+        self.s3_upload(os.path.join(outdir, 'html', 'Mozilla_Source_Tree_Docs'))
 
-    def s3_upload(self, root, bucket, region):
+    def s3_upload(self, root):
         """Upload the contents of outdir recursively to S3"""
         import boto3
         import mimetypes
         import requests
 
-        # Get the credentials from the TC secrets service.  Note that these are
-        # only available to level-3 pushes.
+        region = 'us-west-2'
+        level = os.environ.get('MOZ_SCM_LEVEL', '1')
+        bucket = {
+            '1': 'gecko-docs.mozilla.org-l1',
+            '2': 'gecko-docs.mozilla.org-l2',
+            '3': 'gecko-docs.mozilla.org',
+        }[level]
+        secrets_url = 'http://taskcluster/secrets/v1/secret/'
+        secrets_url += 'project/releng/gecko/build/level-{}/gecko-docs-upload'.format(level)
+
+        # Get the credentials from the TC secrets service.  Note that these
+        # differ per SCM level
         if 'TASK_ID' in os.environ:
             print("Using AWS credentials from the secrets service")
             session = requests.Session()
-            secrets_url = 'http://taskcluster/secrets/repo:hg.mozilla.org/mozilla-central/gecko-docs-upload'
             res = session.get(secrets_url)
             res.raise_for_status()
-            secret = res.json()
+            secret = res.json()['secret']
             session = boto3.session.Session(
                 aws_access_key_id=secret['AWS_ACCESS_KEY_ID'],
                 aws_secret_access_key=secret['AWS_SECRET_ACCESS_KEY'],
