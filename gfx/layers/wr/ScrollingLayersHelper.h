@@ -7,8 +7,11 @@
 #define GFX_SCROLLINGLAYERSHELPER_H
 
 #include "mozilla/Attributes.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 
 namespace mozilla {
+
+struct DisplayItemClipChain;
 
 namespace wr {
 class DisplayListBuilder;
@@ -26,9 +29,18 @@ public:
   ScrollingLayersHelper(WebRenderLayer* aLayer,
                         wr::DisplayListBuilder& aBuilder,
                         const StackingContextHelper& aSc);
+  ScrollingLayersHelper(nsDisplayItem* aItem,
+                        wr::DisplayListBuilder& aBuilder,
+                        const StackingContextHelper& aStackingContext,
+                        WebRenderLayerManager::ClipIdMap& aCache);
   ~ScrollingLayersHelper();
 
 private:
+  void DefineAndPushChain(const DisplayItemClipChain* aChain,
+                          wr::DisplayListBuilder& aBuilder,
+                          const StackingContextHelper& aStackingContext,
+                          int32_t aAppUnitsPerDevPixel,
+                          WebRenderLayerManager::ClipIdMap& aCache);
   void PushLayerLocalClip(const StackingContextHelper& aStackingContext);
   void PushLayerClip(const LayerClip& aClip,
                      const StackingContextHelper& aSc);
@@ -36,6 +48,7 @@ private:
   WebRenderLayer* mLayer;
   wr::DisplayListBuilder* mBuilder;
   bool mPushedLayerLocalClip;
+  int mClipsPushed;
 };
 
 } // namespace layers

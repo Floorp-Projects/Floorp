@@ -21,6 +21,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
   : mLayer(aLayer)
   , mBuilder(&aBuilder)
   , mPushedLayerLocalClip(false)
+  , mClipsPushed(0)
 {
   if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
     // If APZ is disabled then we don't need to push the scrolling clips. We
@@ -107,6 +108,60 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
   }
 }
 
+ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
+                                             wr::DisplayListBuilder& aBuilder,
+                                             const StackingContextHelper& aStackingContext,
+                                             WebRenderLayerManager::ClipIdMap& aCache)
+  : mLayer(nullptr)
+  , mBuilder(&aBuilder)
+  , mPushedLayerLocalClip(false)
+  , mClipsPushed(0)
+{
+  DefineAndPushChain(aItem->GetClipChain(), aBuilder, aStackingContext,
+      aItem->Frame()->PresContext()->AppUnitsPerDevPixel(), aCache);
+}
+
+void
+ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
+                                          wr::DisplayListBuilder& aBuilder,
+                                          const StackingContextHelper& aStackingContext,
+                                          int32_t aAppUnitsPerDevPixel,
+                                          WebRenderLayerManager::ClipIdMap& aCache)
+{
+  if (!aChain) {
+    return;
+  }
+  auto it = aCache.find(aChain);
+  Maybe<wr::WrClipId> clipId = (it != aCache.end() ? Some(it->second) : Nothing());
+  if (clipId && clipId == aBuilder.TopmostClipId()) {
+    // it was already in the cache and pushed on the WR clip stack, so we don't
+    // need to recurse any further.
+    return;
+  }
+  // Recurse up the clip chain to make sure all ancestor clips are defined and
+  // pushed onto the WR clip stack. Note that the recursion can invalidate the
+  // iterator `it`.
+  DefineAndPushChain(aChain->mParent, aBuilder, aStackingContext, aAppUnitsPerDevPixel, aCache);
+
+  if (!aChain->mClip.HasClip()) {
+    // This item in the chain is a no-op, skip over it
+    return;
+  }
+  if (!clipId) {
+    // If we don't have a clip id for this chain item yet, define the clip in WR
+    // and save the id
+    LayoutDeviceRect clip = LayoutDeviceRect::FromAppUnits(
+        aChain->mClip.GetClipRect(), aAppUnitsPerDevPixel);
+    // TODO: deal with rounded corners here
+    clipId = Some(aBuilder.DefineClip(aStackingContext.ToRelativeLayoutRect(clip)));
+    aCache[aChain] = clipId.value();
+  }
+  // Finally, push the clip onto the WR stack
+  MOZ_ASSERT(clipId);
+  aBuilder.PushClip(clipId.value());
+  mClipsPushed++;
+}
+
 void
 ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStackingContext)
 {
@@ -148,6 +203,15 @@ ScrollingLayersHelper::PushLayerClip(const LayerClip& aClip,
 
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
+  if (!mLayer) {
+    // For layers-free mode
+    while (mClipsPushed > 0) {
+      mBuilder->PopClip();
+      mClipsPushed--;
+    }
+    return;
+  }
+
   Layer* layer = mLayer->GetLayer();
   if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
     if (mPushedLayerLocalClip) {
