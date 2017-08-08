@@ -6,7 +6,6 @@
 
 EXTRA_JS_MODULES += [
     'L10nRegistry.jsm',
-    'Localization.jsm',
     'MessageContext.jsm',
 ]
 
