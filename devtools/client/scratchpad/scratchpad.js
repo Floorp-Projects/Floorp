@@ -52,6 +52,7 @@ const {DevToolsWorker} = require("devtools/shared/worker/worker");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {Heritage} = require("devtools/client/shared/widgets/view-helpers");

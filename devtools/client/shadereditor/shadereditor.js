@@ -9,6 +9,7 @@ const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {SideMenuWidget} = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Tooltip = require("devtools/client/shared/widgets/tooltip/Tooltip");

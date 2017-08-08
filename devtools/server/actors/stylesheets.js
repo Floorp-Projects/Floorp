@@ -8,6 +8,7 @@ const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const events = require("sdk/event/core");
 const protocol = require("devtools/shared/protocol");

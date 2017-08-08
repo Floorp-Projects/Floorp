@@ -8,6 +8,7 @@
 const {Cu} = require("chrome");
 const events = require("sdk/event/core");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const protocol = require("devtools/shared/protocol");
 const { ContentObserver } = require("devtools/shared/content-observer");
 const { on, off, emit } = events;

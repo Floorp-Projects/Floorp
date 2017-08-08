@@ -11,6 +11,7 @@ var {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 var {Tools} = require("devtools/client/definitions");
 const { Task } = require("devtools/shared/task");
 var promise = require("promise");
+const defer = require("devtools/shared/defer");
 var Services = require("Services");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/webconsole", true);
