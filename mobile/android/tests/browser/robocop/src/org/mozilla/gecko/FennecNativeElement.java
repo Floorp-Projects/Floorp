@@ -8,8 +8,9 @@ import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.TextSwitcher;
 import android.widget.TextView;
+
+import org.mozilla.gecko.toolbar.TabCounter;
 
 public class FennecNativeElement implements Element {
     private final Activity mActivity;
@@ -66,9 +67,9 @@ public class FennecNativeElement implements Element {
                     if (v instanceof EditText) {
                         EditText et = (EditText)v;
                         mText = et.getEditableText();
-                    } else if (v instanceof TextSwitcher) {
-                        TextSwitcher ts = (TextSwitcher)v;
-                        mText = ((TextView)ts.getCurrentView()).getText();
+                    } else if (v instanceof TabCounter) {
+                        TabCounter tc = (TabCounter)v;
+                        mText = tc.getText();
                     } else if (v instanceof ViewGroup) {
                         ViewGroup vg = (ViewGroup)v;
                         for (int i = 0; i < vg.getChildCount(); i++) {
