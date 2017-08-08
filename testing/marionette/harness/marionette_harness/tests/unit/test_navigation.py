@@ -35,6 +35,7 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
         self.test_page_frameset = self.marionette.absolute_url("frameset.html")
         self.test_page_insecure = self.fixtures.where_is("test.html", on="https")
         self.test_page_not_remote = "about:robots"
+        self.test_page_push_state = self.marionette.absolute_url("navigation_pushstate.html")
         self.test_page_remote = self.marionette.absolute_url("test.html")
         self.test_page_slow_resource = self.marionette.absolute_url("slow_resource.html")
 
@@ -212,6 +213,39 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.find_element(By.ID, "foo")
         self.marionette.navigate(test_page.lower())
         self.marionette.find_element(By.ID, "foo")
+
+    def test_navigate_history_pushstate(self):
+        target_page = self.marionette.absolute_url("navigation_pushstate_target.html")
+
+        self.marionette.navigate(self.test_page_push_state)
+        self.marionette.find_element(By.ID, "forward").click()
+
+        # By using pushState() the URL is updated but the target page is not loaded
+        # and as such the element is not displayed
+        self.assertEqual(self.marionette.get_url(), target_page)
+        with self.assertRaises(errors.NoSuchElementException):
+            self.marionette.find_element(By.ID, "target")
+
+        self.marionette.go_back()
+        self.assertEqual(self.marionette.get_url(), self.test_page_push_state)
+
+        # The target page still gets not loaded
+        self.marionette.go_forward()
+        self.assertEqual(self.marionette.get_url(), target_page)
+        with self.assertRaises(errors.NoSuchElementException):
+            self.marionette.find_element(By.ID, "target")
+
+        # Navigating to a different page, and returning to the injected
+        # page, it will be loaded.
+        self.marionette.navigate(self.test_page_remote)
+        self.assertEqual(self.marionette.get_url(), self.test_page_remote)
+
+        self.marionette.go_back()
+        self.assertEqual(self.marionette.get_url(), target_page)
+        self.marionette.find_element(By.ID, "target")
+
+        self.marionette.go_back()
+        self.assertEqual(self.marionette.get_url(), self.test_page_push_state)
 
     @skip_if_mobile("Test file is only located on host machine")
     def test_navigate_file_url(self):
@@ -578,6 +612,26 @@ class TestRefresh(BaseNavigationTestCase):
 
         self.marionette.refresh()
         self.assertEqual(image, self.marionette.get_url())
+
+    def test_history_pushstate(self):
+        target_page = self.marionette.absolute_url("navigation_pushstate_target.html")
+
+        self.marionette.navigate(self.test_page_push_state)
+        self.marionette.find_element(By.ID, "forward").click()
+
+        # By using pushState() the URL is updated but the target page is not loaded
+        # and as such the element is not displayed
+        self.assertEqual(self.marionette.get_url(), target_page)
+        with self.assertRaises(errors.NoSuchElementException):
+            self.marionette.find_element(By.ID, "target")
+
+        # Refreshing the target page will trigger a full page load.
+        self.marionette.refresh()
+        self.assertEqual(self.marionette.get_url(), target_page)
+        self.marionette.find_element(By.ID, "target")
+
+        self.marionette.go_back()
+        self.assertEqual(self.marionette.get_url(), self.test_page_push_state)
 
     def test_timeout_error(self):
         slow_page = self.marionette.absolute_url("slow?delay=3")
