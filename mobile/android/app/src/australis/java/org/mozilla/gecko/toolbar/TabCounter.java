@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.AnimationSet;
+import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
 public class TabCounter extends ThemedTextSwitcher
@@ -73,6 +74,10 @@ public class TabCounter extends ThemedTextSwitcher
                     public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {}
                 });
         }
+    }
+
+    public CharSequence getText() {
+        return ((TextView) getCurrentView()).getText();
     }
 
     void setCountWithAnimation(int count) {

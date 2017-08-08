@@ -7,18 +7,18 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<overlay id="OrphanOverlay" 
-         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
-         xmlns:cert="http://netscape.com/rdf-cert#" 
+<overlay id="OrphanOverlay"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:cert="http://netscape.com/rdf-cert#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="OrphanCerts">
-    <description>&certmgr.orphans;</description>
+    <description>&certmgr.orphans2;</description>
     <separator class="thin"/>
     <tree id="orphan-tree" flex="1" enableColumnDrag="true"
               onselect="orphan_enableButtons()">
       <treecols>
-        <treecol id="certcol" label="&certmgr.certname;" primary="true" 
+        <treecol id="certcol" label="&certmgr.certname;" primary="true"
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
         <treecol id="tokencol" label="&certmgr.tokenname;"
@@ -26,19 +26,19 @@
       </treecols>
       <treechildren ondblclick="viewCerts();"/>
     </tree>
-    
+
     <separator class="thin"/>
 
     <hbox>
-       <button id="orphan_viewButton" class="normal" 
+       <button id="orphan_viewButton" class="normal"
                label="&certmgr.view2.label;"
                accesskey="&certmgr.view2.accesskey;"
                disabled="true" oncommand="viewCerts();"/>
-       <button id="orphan_exportButton" class="normal" 
+       <button id="orphan_exportButton" class="normal"
                label="&certmgr.export.label;"
                accesskey="&certmgr.export.accesskey;"
                disabled="true" oncommand="exportCerts();"/>
-       <button id="orphan_deleteButton" class="normal" 
+       <button id="orphan_deleteButton" class="normal"
                label="&certmgr.delete2.label;"
                accesskey="&certmgr.delete2.accesskey;"
                disabled="true" oncommand="deleteCerts();"/>

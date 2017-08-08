@@ -225,6 +225,8 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_ClearAlternateValues", "aFont", null],
         ["Gecko_AppendAlternateValues", "aFont", null],
         ["Gecko_CopyAlternateValuesFrom", "aDest", null],
+        ["Gecko_CounterStyle_GetName", "aResult", null],
+        ["Gecko_CounterStyle_GetSingleString", "aResult", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);

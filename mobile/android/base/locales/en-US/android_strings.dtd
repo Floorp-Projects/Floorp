@@ -298,10 +298,6 @@
 <!ENTITY pref_pwa "Progressive Web Apps">
 <!ENTITY pref_pwa_summary "Allow web apps to be added to home screen">
 
-<!-- Localization note (pref_activity_stream): Experimental feature, see https://testpilot.firefox.com/experiments/activity-stream  -->
-<!ENTITY pref_activity_stream "Activity Stream">
-<!ENTITY pref_activity_stream_summary "A rich visual history feed and a reimagined home page make it easier than ever to find exactly what you\'re looking for in &brandShortName;.">
-
 <!ENTITY tracking_protection_prompt_title "Now with Tracking Protection">
 <!ENTITY tracking_protection_prompt_text "Actively block tracking elements so you don\'t have to worry.">
 <!ENTITY tracking_protection_prompt_tip_text "Visit Privacy settings to learn more">

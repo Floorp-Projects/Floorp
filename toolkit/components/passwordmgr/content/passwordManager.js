@@ -80,7 +80,7 @@ function Startup() {
 
   togglePasswordsButton.label = kSignonBundle.getString("showPasswords");
   togglePasswordsButton.accessKey = kSignonBundle.getString("showPasswordsAccessKey");
-  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll");
+  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll2");
   removeAllButton.setAttribute("label", kSignonBundle.getString("removeAll.label"));
   removeAllButton.setAttribute("accesskey", kSignonBundle.getString("removeAll.accesskey"));
   document.getElementsByTagName("treecols")[0].addEventListener("click", (event) => {
@@ -558,7 +558,7 @@ function SignonClearFilter() {
   }
   signonsTreeView._lastSelectedRanges = [];
 
-  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll");
+  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll2");
   removeAllButton.setAttribute("label", kSignonBundle.getString("removeAll.label"));
   removeAllButton.setAttribute("accesskey", kSignonBundle.getString("removeAll.accesskey"));
 }

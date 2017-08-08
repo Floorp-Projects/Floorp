@@ -175,7 +175,7 @@ const CustomizableWidgets = [
           throw new Error(`Unsupported event for '${this.id}'`);
       }
     },
-    onViewShowing(aEvent) {
+    onViewShowing(event) {
       if (this._panelMenuView)
         return;
 
@@ -187,6 +187,7 @@ const CustomizableWidgets = [
       let query = "place:queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
         "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING +
         "&maxResults=42&excludeQueries=1";
+
       this._panelMenuView = new window.PlacesPanelview(document.getElementById("appMenu_historyMenu"),
         panelview, query);
       // When either of these sub-subviews show, populate them with recently closed
@@ -197,7 +198,7 @@ const CustomizableWidgets = [
       // sure to stop listening to PlacesDatabase updates.
       panelview.panelMultiView.addEventListener("PanelMultiViewHidden", this);
     },
-    onViewHiding(aEvent) {
+    onViewHiding(event) {
       log.debug("History view is being hidden!");
     },
     onPanelMultiViewHidden(event) {

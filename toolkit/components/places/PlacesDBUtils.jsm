@@ -84,7 +84,7 @@ this.PlacesDBUtils = {
    *         - succeeded: boolean
    *         - logs: an array of strings containing the messages logged by the task.
    */
-  async checkAndFixDatabase() { // eslint-disable-line require-await
+  async checkAndFixDatabase() {
     let tasks = [
       this.checkIntegrity,
       this.checkCoherence,
@@ -104,7 +104,7 @@ this.PlacesDBUtils = {
    *
    * @returns {Array} An empty array.
    */
-  async _refreshUI() { // eslint-disable-line require-await
+  async _refreshUI() {
     // Send batch update notifications to update the UI.
     let observers = PlacesUtils.history.getObservers();
     for (let observer of observers) {
@@ -147,7 +147,7 @@ this.PlacesDBUtils = {
    * @resolves to an array of logs for this task.
    * @rejects if we're unable to fix corruption or unable to check status.
    */
-  async _checkIntegritySkipReindex() { // eslint-disable-line require-await
+  async _checkIntegritySkipReindex() {
     return this.checkIntegrity(true);
   },
 
@@ -774,7 +774,7 @@ this.PlacesDBUtils = {
    * @resolves to an array of logs for this task.
    * @rejects if we are unable to vacuum database.
    */
-  async vacuum() { // eslint-disable-line require-await
+  async vacuum() {
     let logs = [];
     let DBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
     DBFile.append("places.sqlite");
@@ -806,7 +806,7 @@ this.PlacesDBUtils = {
    * @return {Promise} resolves when the database in cleaned up.
    * @resolves to an array of logs for this task.
    */
-  async expire() { // eslint-disable-line require-await
+  async expire() {
     let logs = [];
 
     let expiration = Cc["@mozilla.org/places/expiration;1"]
@@ -903,7 +903,7 @@ this.PlacesDBUtils = {
    * allow us to maintain a simple, consistent API for the tasks within this object.
    *
    */
-  async telemetry() { // eslint-disable-line require-await
+  async telemetry() {
     // This will be populated with one integer property for each probe result,
     // using the histogram name as key.
     let probeValues = {};

@@ -45,6 +45,11 @@ add_task(async function() {
         });
 
         is(newFolder.title, "n", "folder name has been edited");
+
+        let bm = await PlacesUtils.bookmarks.fetch(newBookmark.guid);
+        Assert.equal(bm.index, insertionIndex + 1,
+          "Bookmark should have been shifted to the next index");
+
         await PlacesUtils.bookmarks.remove(newFolder);
         await PlacesUtils.bookmarks.remove(newBookmark);
       }

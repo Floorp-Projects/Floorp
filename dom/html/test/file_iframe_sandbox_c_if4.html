@@ -12,7 +12,7 @@
   }
 
   function doStuff() {
-    // try to open a new window via target="_blank", target="BC341604", window.open(), and showModalDialog()
+    // try to open a new window via target="_blank", target="BC341604", and window.open()
     // the window we try to open closes itself once it opens
     sendMouseEvent({type:'click'}, 'target_blank');
     sendMouseEvent({type:'click'}, 'target_BC341604');
@@ -25,15 +25,6 @@
     }
 
     ok(threw, "window.open threw a JS exception and was not allowed");
-
-    threw = false;
-    try {
-      window.showModalDialog("about:blank");
-    } catch(error) {
-      threw = true;
-    }
-
-    ok(threw, "window.showModalDialog threw a JS exception and was not allowed");
   }
 </script>
 <body onLoad="doStuff()">

@@ -34,6 +34,12 @@ using namespace mozilla::gfx;
 
 UserDataKey gfxContext::sDontUseAsSourceKey;
 
+#ifdef DEBUG
+  #define CURRENTSTATE_CHANGED() \
+    CurrentState().mContentChanged = true;
+#else
+  #define CURRENTSTATE_CHANGED()
+#endif
 
 PatternFromState::operator mozilla::gfx::Pattern&()
 {
@@ -124,11 +130,50 @@ gfxContext::Save()
   CurrentState().transform = mTransform;
   mStateStack.AppendElement(AzureState(CurrentState()));
   CurrentState().pushedClips.Clear();
+#ifdef DEBUG
+  CurrentState().mContentChanged = false;
+#endif
 }
 
 void
 gfxContext::Restore()
 {
+#ifdef DEBUG
+  // gfxContext::Restore is used to restore AzureState. We need to restore it
+  // only if it was altered. The following APIs do change the content of
+  // AzureState, a user should save the state before using them and restore it
+  // after finishing painting:
+  // 1. APIs to setup how to paint, such as SetColor()/SetAntialiasMode(). All
+  //    gfxContext SetXXXX public functions belong to this category, except
+  //    gfxContext::SetPath & gfxContext::SetMatrix.
+  // 2. Clip functions, such as Clip() or PopClip(). You may call PopClip()
+  //    directly instead of using gfxContext::Save if the clip region is the
+  //    only thing that you altered in the target context.
+  // 3. Function of setup transform matrix, such as Multiply() and
+  //    SetMatrix(). Using gfxContextMatrixAutoSaveRestore is more recommended
+  //    if transform data is the only thing that you are going to alter.
+  //
+  // You will hit the assertion message below if there is no above functions
+  // been used between a pair of gfxContext::Save and gfxContext::Restore.
+  // Considerate to remove that pair of Save/Restore if hitting that assertion.
+  //
+  // In the other hand, the following APIs do not alter the content of the
+  // current AzureState, therefore, there is no need to save & restore
+  // AzureState:
+  // 1. constant member functions of gfxContext.
+  // 2. Paint calls, such as Line()/Rectangle()/Fill(). Those APIs change the
+  //    content of drawing buffer, which is not part of AzureState.
+  // 3. Path building APIs, such as SetPath()/MoveTo()/LineTo()/NewPath().
+  //    Surprisingly, path information is not stored in AzureState either.
+  // Save current AzureState before using these type of APIs does nothing but
+  // make performance worse.
+  NS_ASSERTION(CurrentState().mContentChanged ||
+               CurrentState().pushedClips.Length() > 0,
+               "The context of the current AzureState is not altered after "
+               "Save() been called. you may consider to remove this pair of "
+               "gfxContext::Save/Restore.");
+#endif
+
   for (unsigned int c = 0; c < CurrentState().pushedClips.Length(); c++) {
     mDT->PopClip();
   }
@@ -258,12 +303,14 @@ gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels)
 void
 gfxContext::Multiply(const gfxMatrix& matrix)
 {
+  CURRENTSTATE_CHANGED()
   ChangeTransform(ToMatrix(matrix) * mTransform);
 }
 
 void
 gfxContext::SetMatrix(const gfxMatrix& matrix)
 {
+  CURRENTSTATE_CHANGED()
   ChangeTransform(ToMatrix(matrix));
 }
 
@@ -382,6 +429,7 @@ gfxContext::UserToDevicePixelSnapped(gfxPoint& pt, bool ignoreScale) const
 void
 gfxContext::SetAntialiasMode(AntialiasMode mode)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().aaMode = mode;
 }
 
@@ -394,6 +442,7 @@ gfxContext::CurrentAntialiasMode() const
 void
 gfxContext::SetDash(gfxFloat *dashes, int ndash, gfxFloat offset)
 {
+  CURRENTSTATE_CHANGED()
   AzureState &state = CurrentState();
 
   state.dashPattern.SetLength(ndash);
@@ -446,6 +495,7 @@ gfxContext::CurrentLineWidth() const
 void
 gfxContext::SetOp(CompositionOp aOp)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().op = aOp;
 }
 
@@ -458,6 +508,7 @@ gfxContext::CurrentOp() const
 void
 gfxContext::SetLineCap(CapStyle cap)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().strokeOptions.mLineCap = cap;
 }
 
@@ -470,6 +521,7 @@ gfxContext::CurrentLineCap() const
 void
 gfxContext::SetLineJoin(JoinStyle join)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().strokeOptions.mLineJoin = join;
 }
 
@@ -482,6 +534,7 @@ gfxContext::CurrentLineJoin() const
 void
 gfxContext::SetMiterLimit(gfxFloat limit)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().strokeOptions.mMiterLimit = Float(limit);
 }
 
@@ -628,6 +681,7 @@ gfxContext::ClipContainsRect(const gfxRect& aRect)
 void
 gfxContext::SetColor(const Color& aColor)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().pattern = nullptr;
   CurrentState().sourceSurfCairo = nullptr;
   CurrentState().sourceSurface = nullptr;
@@ -637,6 +691,7 @@ gfxContext::SetColor(const Color& aColor)
 void
 gfxContext::SetDeviceColor(const Color& aColor)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().pattern = nullptr;
   CurrentState().sourceSurfCairo = nullptr;
   CurrentState().sourceSurface = nullptr;
@@ -660,6 +715,7 @@ gfxContext::GetDeviceColor(Color& aColorOut)
 void
 gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().surfTransform = Matrix(1.0f, 0, 0, 1.0f, Float(offset.x), Float(offset.y));
   CurrentState().pattern = nullptr;
   CurrentState().patternTransformChanged = false;
@@ -674,6 +730,7 @@ gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
 void
 gfxContext::SetPattern(gfxPattern *pattern)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().sourceSurfCairo = nullptr;
   CurrentState().sourceSurface = nullptr;
   CurrentState().patternTransformChanged = false;
@@ -699,6 +756,7 @@ gfxContext::GetPattern()
 void
 gfxContext::SetFontSmoothingBackgroundColor(const Color& aColor)
 {
+  CURRENTSTATE_CHANGED()
   CurrentState().fontSmoothingBackgroundColor = aColor;
 }
 
@@ -769,7 +827,6 @@ gfxContext::Paint(gfxFloat alpha)
 void
 gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
 {
-  Save();
   mDT->PushLayer(content == gfxContentType::COLOR, aOpacity, aMask, aMaskTransform);
 }
 
@@ -795,8 +852,6 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, S
                                  mDT->GetOpaqueRect().Contains(clipExtents)) &&
                                 !mDT->GetUserData(&sDontUseAsSourceKey);
 
-  Save();
-
   if (pushOpaqueWithCopiedBG) {
     mDT->PushLayer(true, aOpacity, aMask, aMaskTransform, IntRect(), true);
   } else {
@@ -808,7 +863,6 @@ void
 gfxContext::PopGroupAndBlend()
 {
   mDT->PopLayer();
-  Restore();
 }
 
 #ifdef MOZ_DUMP_PAINTING

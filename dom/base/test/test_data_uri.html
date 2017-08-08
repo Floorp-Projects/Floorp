@@ -110,7 +110,38 @@ function runTests()
     }
   });
 
-  Promise.all([p1, p2, p3, p4, p5]).then(() => {
+  // Test if data:stylesheet is considered same origin.
+  let p6 = new Promise((resolve, reject) => {
+    // 1. Dynamically include a css by inserting a <link> tag.
+    let link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = "data:text/css,.green-text{color:rgb(0, 255, 0)}";
+    link.onload = function() {
+      let dataStyleSheet;
+      for (let i = 0; i < document.styleSheets.length; i++) {
+        let sheet = document.styleSheets[i];
+        if (sheet.href === link.href) {
+          dataStyleSheet = sheet;
+          break;
+        }
+      }
+      ok(dataStyleSheet, "Should have found data:stylesheet");
+
+      // 2. Try to access the rule. If data:stylesheet is not considered
+      // same origin, an exception will be thrown.
+      try {
+        let rule = dataStyleSheet.cssRules;
+        ok(true, "data:stylesheet is considered same origin.");
+      } catch (ex) {
+        ok(false, "data:stylesheet is NOT considered same origin: " + ex);
+      }
+
+      resolve();
+    };
+    document.head.appendChild(link);
+  });
+
+  Promise.all([p1, p2, p3, p4, p5, p6]).then(() => {
     SimpleTest.finish();
   }).catch((e) => {
     ok(false, "throwing " + e);
@@ -118,10 +149,6 @@ function runTests()
   });
 }
 </script>
-
-<link rel="stylesheet" href="data:text/css,.green-text{color:rgb(0, 255, 0)}"
-      onload="ok(true, 'data:text/css should be same origin.');"
-      onerror="ok(false, 'data:text/css should be same origin');">
 
 <body onload="runTests()">
 <img style="width: 100px; height: 100px;"

@@ -378,6 +378,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
                       const LayerPoint& aOffset,
                       nsDisplayListBuilder* aDisplayListBuilder)
 {
+  MOZ_ASSERT(aDT);
+
   aDT->ClearRect(aImageRect.ToUnknownRect());
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT, aOffset.ToUnknownPoint());
   MOZ_ASSERT(context);
@@ -483,6 +485,9 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
         UpdateImageHelper helper(imageContainer, imageClient, imageSize.ToUnknownSize(), format);
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
+          if (!dt) {
+            return nullptr;
+          }
           PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
         }
         if (!helper.UpdateImage()) {

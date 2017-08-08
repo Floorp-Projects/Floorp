@@ -1177,7 +1177,17 @@ impl FragmentDisplayListBuilding for Fragment {
         // https://github.com/w3c/css-houdini-drafts/issues/417
         let unbordered_box = self.border_box - style.logical_border_width();
         let device_pixel_ratio = state.layout_context.style_context.device_pixel_ratio();
-        let size_in_au = unbordered_box.size.to_physical(style.writing_mode);
+        let unbordered_box_size_in_au = unbordered_box.size.to_physical(style.writing_mode);
+        let background_size = get_cyclic(&style.get_background().background_size.0, index).clone();
+        let size_in_au = match background_size {
+            BackgroundSize::Explicit { width, height } => {
+                Size2D::new(MaybeAuto::from_style(width, unbordered_box_size_in_au.width)
+                                 .specified_or_default(unbordered_box_size_in_au.width),
+                       MaybeAuto::from_style(height, unbordered_box_size_in_au.height)
+                                 .specified_or_default(unbordered_box_size_in_au.height))
+            },
+            _ => unbordered_box_size_in_au,
+        };
         let size_in_px = TypedSize2D::new(size_in_au.width.to_f32_px(), size_in_au.height.to_f32_px());
 
         // TODO: less copying.
@@ -1393,7 +1403,7 @@ impl FragmentDisplayListBuilding for Fragment {
                     box_shadow.base.horizontal,
                     box_shadow.base.vertical,
                 )),
-                box_shadow.base.blur,
+                box_shadow.base.blur.0,
                 box_shadow.spread,
             );
 
@@ -1408,7 +1418,7 @@ impl FragmentDisplayListBuilding for Fragment {
                 box_bounds: *absolute_bounds,
                 color: style.resolve_color(box_shadow.base.color).to_gfx_color(),
                 offset: Vector2D::new(box_shadow.base.horizontal, box_shadow.base.vertical),
-                blur_radius: box_shadow.base.blur,
+                blur_radius: box_shadow.base.blur.0,
                 spread_radius: box_shadow.spread,
                 border_radius: model::specified_border_radius(style.get_border()
                                                                    .border_top_left_radius,
@@ -1577,7 +1587,7 @@ impl FragmentDisplayListBuilding for Fragment {
                                                     clip: &Rect<Au>) {
         use style::values::Either;
 
-        let width = style.get_outline().outline_width;
+        let width = style.get_outline().outline_width.0;
         if width == Au(0) {
             return
         }
@@ -2054,7 +2064,7 @@ impl FragmentDisplayListBuilding for Fragment {
         let effects = self.style().get_effects();
         let mut filters = effects.filter.0.clone();
         if effects.opacity != 1.0 {
-            filters.push(Filter::Opacity(effects.opacity))
+            filters.push(Filter::Opacity(effects.opacity.into()))
         }
 
         let context_type = match mode {
@@ -2129,7 +2139,7 @@ impl FragmentDisplayListBuilding for Fragment {
         for shadow in text_shadows.iter().rev() {
             state.add_display_item(DisplayItem::PushTextShadow(box PushTextShadowDisplayItem {
                 base: base.clone(),
-                blur_radius: shadow.blur,
+                blur_radius: shadow.blur.0,
                 offset: Vector2D::new(shadow.horizontal, shadow.vertical),
                 color: self.style().resolve_color(shadow.color).to_gfx_color(),
             }));

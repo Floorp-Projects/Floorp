@@ -173,7 +173,11 @@ this.pageAction = class extends ExtensionAPI {
     button.setAttribute("class", "urlbar-icon");
 
     button.addEventListener("click", this); // eslint-disable-line mozilla/balanced-listeners
-    document.addEventListener("popupshowing", this);
+
+    if (this.extension.hasPermission("menus") ||
+        this.extension.hasPermission("contextMenus")) {
+      document.addEventListener("popupshowing", this);
+    }
 
     document.getElementById("urlbar-icons").appendChild(button);
 
@@ -217,10 +221,6 @@ this.pageAction = class extends ExtensionAPI {
         break;
 
       case "popupshowing":
-        if (!global.actionContextMenu) {
-          break;
-        }
-
         const menu = event.target;
         const trigger = menu.triggerNode;
 

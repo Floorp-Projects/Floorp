@@ -778,22 +778,6 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     }
   }
 
-  // If we're not called through our JS version of the API, and we got
-  // our internal modal option, treat the window we're opening as a
-  // modal content window (and set the modal chrome flag).
-  if (!aCalledFromJS && aArgv &&
-      WinHasOption(features, "-moz-internal-modal", 0, nullptr)) {
-    windowIsModalContentDialog = true;
-
-    // CHROME_MODAL gets inherited by dependent windows, which affects various
-    // platform-specific window state (especially on OSX). So we need some way
-    // to determine that this window was actually opened by nsGlobalWindow::
-    // ShowModalDialog(), and that somebody is actually going to be watching
-    // for return values and all that.
-    chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL_CONTENT_WINDOW;
-    chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL;
-  }
-
   SizeSpec sizeSpec;
   CalcSizeSpec(features, sizeSpec);
 

@@ -142,7 +142,6 @@ var StarUI = {
                               .transact().catch(Cu.reportError);
           } else if (this._isNewBookmark &&
                      Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
-                     AppConstants.MOZ_PHOTON_ANIMATIONS &&
                      (libraryButton = document.getElementById("library-button")) &&
                      libraryButton.getAttribute("cui-areatype") != "menu-panel" &&
                      libraryButton.getAttribute("overflowedItem") != "true" &&
@@ -1705,8 +1704,7 @@ var BookmarkingUI = {
       this._updateCustomizationState();
     }
 
-    if (AppConstants.MOZ_PHOTON_ANIMATIONS &&
-        Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+    if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
       let starButtonBox = document.getElementById("star-button-box");
       starButtonBox.setAttribute("animationsenabled", "true");
       this.star.addEventListener("mouseover", this, {once: true});
@@ -1719,9 +1717,7 @@ var BookmarkingUI = {
     this.updateBookmarkPageMenuItem(true);
     CustomizableUI.removeListener(this);
 
-    if (AppConstants.MOZ_PHOTON_ANIMATIONS) {
-      this.star.removeEventListener("mouseover", this);
-    }
+    this.star.removeEventListener("mouseover", this);
 
     this._uninitView();
 
@@ -1800,9 +1796,7 @@ var BookmarkingUI = {
         this.button.setAttribute("label", this._starButtonOverflowedStarredLabel);
       }
     } else {
-      if (AppConstants.MOZ_PHOTON_ANIMATIONS) {
-        this.star.removeAttribute("animate");
-      }
+      this.star.removeAttribute("animate");
       this.broadcaster.removeAttribute("starred");
       this.broadcaster.setAttribute("buttontooltiptext", this._unstarredTooltip);
       this.broadcaster.setAttribute("tooltiptext", this._unstarredTooltip);
@@ -1938,7 +1932,7 @@ var BookmarkingUI = {
       if (!isBookmarked && !AppConstants.MOZ_PHOTON_THEME)
         this._showBookmarkedNotification();
       // Set up variables for new animation in Photon
-      if (!isBookmarked && AppConstants.MOZ_PHOTON_ANIMATIONS) {
+      if (!isBookmarked) {
         BrowserUtils.setToolbarButtonHeightProperty(this.star);
         this.star.setAttribute("animate", "true");
       }
@@ -1953,9 +1947,7 @@ var BookmarkingUI = {
   handleEvent: function BUI_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "mouseover":
-        if (AppConstants.MOZ_PHOTON_ANIMATIONS) {
-          this.star.setAttribute("preloadanimations", "true");
-        }
+        this.star.setAttribute("preloadanimations", "true");
         break;
       case "ViewShowing":
         this.onPanelMenuViewShowing(aEvent);
@@ -1988,10 +1980,6 @@ var BookmarkingUI = {
       "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
       "&maxResults=42&excludeQueries=1";
 
-    // XPCOMUtils.defineLazyScriptGetter can't return class constructors, so
-    // trigger the getter once without using the result before calling
-    // PlacesPanelview as a constructor.
-    PlacesPanelview;
     this._panelMenuView = new PlacesPanelview(document.getElementById("panelMenu_bookmarksMenu"),
       panelview, query);
     panelview.removeEventListener("ViewShowing", this);

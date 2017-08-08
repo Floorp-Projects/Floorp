@@ -6,8 +6,4 @@ module.exports = {
     "plugin:mozilla/chrome-test",
     "plugin:mozilla/xpcshell-test"
   ],
-
-  "rules": {
-    "require-await": "off"
-  }
 };

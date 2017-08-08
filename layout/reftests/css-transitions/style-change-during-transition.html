@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+.container {
+  visibility: visible;
+  transition: visibility .2s;
+}
+
+.hidden {
+  visibility: hidden;
+}
+</style>
+<div id="tooltip" class="container hidden">
+  <div>
+    <div>
+      <strong>Text</strong>
+    </div>
+  </div>
+</div>
+<script>
+window.addEventListener("load", () => {
+  requestIdleCallback(() => {
+    tooltip.classList.remove("hidden");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        tooltip.style.zIndex = 2;
+        document.documentElement.classList.remove("reftest-wait");
+      });
+    });
+  });
+});
+</script>

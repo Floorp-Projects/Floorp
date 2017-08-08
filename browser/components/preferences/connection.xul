@@ -72,7 +72,7 @@
         <radio value="0" label="&noProxyTypeRadio.label;" accesskey="&noProxyTypeRadio.accesskey;"/>
         <radio value="4" label="&WPADTypeRadio.label;" accesskey="&WPADTypeRadio.accesskey;"/>
         <radio value="5" label="&systemTypeRadio.label;" accesskey="&systemTypeRadio.accesskey;" id="systemPref" hidden="true"/>
-        <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;"/>
+        <radio value="1" label="&manualTypeRadio2.label;" accesskey="&manualTypeRadio2.accesskey;"/>
         <grid class="indent" flex="1">
           <columns>
             <column/>
@@ -81,12 +81,12 @@
           <rows>
             <row align="center">
               <hbox pack="end">
-                <label accesskey="&http.accesskey;" control="networkProxyHTTP">&http.label;</label>
+                <label accesskey="&http2.accesskey;" control="networkProxyHTTP">&http2.label;</label>
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxyHTTP" flex="1"
                          preference="network.proxy.http" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyServer();"/>
-                <label accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port">&port.label;</label>
+                <label accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port">&port2.label;</label>
                 <textbox id="networkProxyHTTP_Port" type="number" max="65535" size="5"
                          preference="network.proxy.http_port" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyPort();"/>
               </hbox>
@@ -101,36 +101,36 @@
             </row>
             <row align="center">
               <hbox pack="end">
-                <label accesskey="&ssl.accesskey;" control="networkProxySSL">&ssl.label;</label>
+                <label accesskey="&ssl2.accesskey;" control="networkProxySSL">&ssl2.label;</label>
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxySSL" flex="1" preference="network.proxy.ssl"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', false);"/>
-                <label accesskey="&SSLport.accesskey;" control="networkProxySSL_Port">&port.label;</label>
+                <label accesskey="&SSLport.accesskey;" control="networkProxySSL_Port">&port2.label;</label>
                 <textbox id="networkProxySSL_Port" type="number" max="65535" size="5" preference="network.proxy.ssl_port"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', true);"/>
               </hbox>
             </row>
             <row align="center">
               <hbox pack="end">
-                <label accesskey="&ftp.accesskey;" control="networkProxyFTP">&ftp.label;</label>
+                <label accesskey="&ftp2.accesskey;" control="networkProxyFTP">&ftp2.label;</label>
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxyFTP" flex="1" preference="network.proxy.ftp"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', false);"/>
-                <label accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port">&port.label;</label>
+                <label accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port">&port2.label;</label>
                 <textbox id="networkProxyFTP_Port" type="number" max="65535" size="5" preference="network.proxy.ftp_port"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', true);"/>
               </hbox>
             </row>
             <row align="center">
               <hbox pack="end">
-                <label accesskey="&socks.accesskey;" control="networkProxySOCKS">&socks.label;</label>
+                <label accesskey="&socks2.accesskey;" control="networkProxySOCKS">&socks2.label;</label>
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxySOCKS" flex="1" preference="network.proxy.socks"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', false);"/>
-                <label accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port">&port.label;</label>
+                <label accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port">&port2.label;</label>
                 <textbox id="networkProxySOCKS_Port" type="number" max="65535" size="5" preference="network.proxy.socks_port"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', true);"/>
               </hbox>
@@ -145,12 +145,12 @@
               </radiogroup>
               </box>
             </row>
-            <label accesskey="&noproxy.accesskey;" control="networkProxyNone">&noproxy.label;</label>
+            <label accesskey="&noproxy2.accesskey;" control="networkProxyNone">&noproxy2.label;</label>
             <textbox id="networkProxyNone" preference="network.proxy.no_proxies_on" multiline="true" rows="2"/>
             <label control="networkProxyNone">&noproxyExplain.label;</label>
           </rows>
         </grid>
-        <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"/>
+        <radio value="2" label="&autoTypeRadio2.label;" accesskey="&autoTypeRadio2.accesskey;"/>
         <hbox class="indent" flex="1" align="center">
           <textbox id="networkProxyAutoconfigURL" flex="1" preference="network.proxy.autoconfig_url"
                    oninput="gConnectionsDialog.updateReloadButton();"/>
