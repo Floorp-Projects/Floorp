@@ -23,3 +23,7 @@
 #ifdef MOZ_DATA_REPORTING
 <script type="application/javascript" src="chrome://browser/content/browser-data-submission-info-bar.js"/>
 #endif
+
+#ifndef MOZILLA_OFFICIAL
+<script type="application/javascript" src="chrome://browser/content/browser-development-helpers.js"/>
+#endif
