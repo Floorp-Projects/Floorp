@@ -142,38 +142,21 @@ public class TelemetryCollectorTest {
         assertFalse(data.containsKey("error"));
 
         // Test various ways to set an error.
-        // Just details.
-        collector.setError("testError", "unexpectedStuff");
-        data = collector.build();
-        assertTrue(data.containsKey("error"));
-        JSONObject errorJson = (JSONObject) data.getSerializable("error");
-        assertEquals("testError", errorJson.get("name"));
-        assertEquals("unexpectedStuff", errorJson.get("error"));
-        assertTrue(collector.hasError());
-
         // Just exception.
         collector.setError("exceptionTest", new IllegalArgumentException());
         data = collector.build();
         assertTrue(data.containsKey("error"));
-        errorJson = (JSONObject) data.getSerializable("error");
+        JSONObject errorJson = (JSONObject) data.getSerializable("error");
         assertEquals("exceptionTest", errorJson.get("name"));
         assertEquals("IllegalArgumentException", errorJson.get("error"));
 
         // Details and exception.
-        collector.setError("anotherTest", "Error details", new ConcurrentModificationException());
+        collector.setError("anotherTest", new ConcurrentModificationException(), "Error details");
         data = collector.build();
         assertTrue(data.containsKey("error"));
         errorJson = (JSONObject) data.getSerializable("error");
         assertEquals("anotherTest", errorJson.get("name"));
         assertEquals("ConcurrentModificationException:Error details", errorJson.get("error"));
-
-        // Details and explicit null exception.
-        collector.setError("noExceptionTest", "Error details", null);
-        data = collector.build();
-        assertTrue(data.containsKey("error"));
-        errorJson = (JSONObject) data.getSerializable("error");
-        assertEquals("noExceptionTest", errorJson.get("name"));
-        assertEquals("Error details", errorJson.get("error"));
     }
 
     @Test
