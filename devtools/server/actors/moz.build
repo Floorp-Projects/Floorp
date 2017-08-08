@@ -7,7 +7,6 @@
 DIRS += [
     'highlighters',
     'utils',
-    'webconsole',
 ]
 
 DevToolsModules(
