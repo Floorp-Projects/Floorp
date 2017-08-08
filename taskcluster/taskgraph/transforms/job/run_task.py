@@ -34,6 +34,8 @@ def common_setup(config, job, taskdesc):
     if run['checkout']:
         support_vcs_checkout(config, job, taskdesc)
 
+    taskdesc['worker'].setdefault('env', {})['MOZ_SCM_LEVEL'] = config.params['level']
+
 
 @run_job_using("docker-worker", "run-task", schema=run_task_schema)
 def docker_worker_run_task(config, job, taskdesc):
