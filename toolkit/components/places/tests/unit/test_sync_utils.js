@@ -2845,9 +2845,10 @@ add_task(async function test_migrateOldTrackerEntries() {
 add_task(async function test_ensureMobileQuery() {
   do_print("Ensure we correctly create the mobile query");
 
-  const PlacesUIUtils = {};
+  let PlacesUIUtils;
   try {
-    Cu.import("resource://gre/modules/PlacesUIUtils.jsm", PlacesUIUtils);
+    PlacesUIUtils = Cu.import("resource:///modules/PlacesUIUtils.jsm", {}).PlacesUIUtils;
+    PlacesUIUtils.maybeRebuildLeftPane();
   } catch (ex) {
     do_print("Can't build left pane roots; skipping test");
     return;
@@ -2866,17 +2867,7 @@ add_task(async function test_ensureMobileQuery() {
   await PlacesSyncUtils.bookmarks.ensureMobileQuery()
   let queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
     "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
-  equal(queryGuids.length, 0, "Should not create query without any mobile bookmarks");
-
-  do_print("Insert mobile bookmark, then create query");
-  let mozBmk = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.mobileGuid,
-    url: "https://mozilla.org",
-  });
-  await PlacesSyncUtils.bookmarks.ensureMobileQuery()
-  queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
-    "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
-  equal(queryGuids.length, 1, "Should create query once mobile bookmarks exist");
+  equal(queryGuids.length, 1, "Should create query without any mobile bookmarks");
 
   let queryGuid = queryGuids[0];
 
@@ -2913,8 +2904,7 @@ add_task(async function test_ensureMobileQuery() {
   do_print("We shouldn't track the query or the left pane root");
 
   let changes = await PlacesSyncUtils.bookmarks.pullChanges();
-  deepEqual(Object.keys(changes).sort(), [mozBmk.guid, "mobile"],
-    "Should not track mobile query");
+  ok(!(queryGuid in changes), "Should not track mobile query");
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
