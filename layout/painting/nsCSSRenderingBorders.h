@@ -156,6 +156,7 @@ private:
   nscolor mBackgroundColor;
 
   // calculated values
+  bool mAllBordersSameStyle;
   bool mOneUnitBorder;
   bool mNoBorderRadius;
   bool mAvoidStroke;

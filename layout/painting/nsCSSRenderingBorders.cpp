@@ -210,6 +210,7 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
 
   mOneUnitBorder = CheckFourFloatsEqual(mBorderWidths, 1.0);
   mNoBorderRadius = AllCornersZeroSize(mBorderRadii);
+  mAllBordersSameStyle = AreBorderSideFinalStylesSame(eSideBitsAll);
   mAvoidStroke = false;
 }
 
@@ -3199,9 +3200,7 @@ nsCSSBorderRenderer::DrawBorders()
 {
   bool forceSeparateCorners = false;
 
-  bool allBordersSameStyle = AreBorderSideFinalStylesSame(eSideBitsAll);
-
-  if (allBordersSameStyle &&
+  if (mAllBordersSameStyle &&
       ((mCompositeColors[0] == nullptr &&
        (mBorderStyles[0] == NS_STYLE_BORDER_STYLE_NONE ||
         mBorderStyles[0] == NS_STYLE_BORDER_STYLE_HIDDEN ||
@@ -3260,7 +3259,7 @@ nsCSSBorderRenderer::DrawBorders()
   // First there's a couple of 'special cases' that have specifically optimized
   // drawing paths, when none of these can be used we move on to the generalized
   // border drawing code.
-  if (allBordersSameStyle &&
+  if (mAllBordersSameStyle &&
       mCompositeColors[0] == nullptr &&
       allBordersSameWidth &&
       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID &&
@@ -3274,7 +3273,7 @@ nsCSSBorderRenderer::DrawBorders()
     return;
   }
 
-  if (allBordersSameStyle &&
+  if (mAllBordersSameStyle &&
       mCompositeColors[0] == nullptr &&
       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID &&
       !mAvoidStroke &&
@@ -3341,7 +3340,7 @@ nsCSSBorderRenderer::DrawBorders()
   // If we have composite colors -and- border radius,
   // then use separate corners so we get OP_ADD for the corners.
   // Otherwise, we'll get artifacts as we draw stacked 1px-wide curves.
-  if (allBordersSameStyle && mCompositeColors[0] != nullptr && !mNoBorderRadius)
+  if (mAllBordersSameStyle && mCompositeColors[0] != nullptr && !mNoBorderRadius)
     forceSeparateCorners = true;
 
   PrintAsString(" mOuterRect: "); PrintAsString(mOuterRect); PrintAsStringNewline();
@@ -3371,14 +3370,14 @@ nsCSSBorderRenderer::DrawBorders()
     {
       // pretend that all borders aren't the same; we need to draw
       // things separately for dashed/dotting
-      allBordersSameStyle = false;
+      mAllBordersSameStyle = false;
       dashedSides |= (1 << i);
     }
   }
 
-  PrintAsFormatString(" allBordersSameStyle: %d dashedSides: 0x%02x\n", allBordersSameStyle, dashedSides);
+  PrintAsFormatString(" mAllBordersSameStyle: %d dashedSides: 0x%02x\n", mAllBordersSameStyle, dashedSides);
 
-  if (allBordersSameStyle && !forceSeparateCorners) {
+  if (mAllBordersSameStyle && !forceSeparateCorners) {
     /* Draw everything in one go */
     DrawBorderSides(eSideBitsAll);
     PrintAsStringNewline("---------------- (1)");
