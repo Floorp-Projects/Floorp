@@ -6,6 +6,8 @@ package org.mozilla.gecko.sync;
 
 import android.content.Context;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import org.json.simple.JSONArray;
@@ -277,7 +279,7 @@ public class GlobalSession implements HttpResponseObserver {
     // If we have a backoff, request a backoff and don't advance to next stage.
     long existingBackoff = largestBackoffObserved.get();
     if (existingBackoff > 0) {
-      this.abort(null, "Aborting sync because of backoff of " + existingBackoff + " milliseconds.");
+      this.abort(new BackoffException(), "Aborting sync because of backoff of " + existingBackoff + " milliseconds.");
       return;
     }
 
@@ -511,7 +513,6 @@ public class GlobalSession implements HttpResponseObserver {
       }
     };
   }
-
 
   public void abort(Exception e, String reason) {
     Logger.warn(LOG_TAG, "Aborting sync: " + reason, e);
@@ -1137,7 +1138,7 @@ public class GlobalSession implements HttpResponseObserver {
   public void requiresUpgrade() {
     Logger.info(LOG_TAG, "Client outdated storage version; requires update.");
     // TODO: notify UI.
-    this.abort(null, "Requires upgrade from " + STORAGE_VERSION);
+    this.abort(new OutdatedStorageVersionException(), "Requires upgrade from " + STORAGE_VERSION);
   }
 
   /**

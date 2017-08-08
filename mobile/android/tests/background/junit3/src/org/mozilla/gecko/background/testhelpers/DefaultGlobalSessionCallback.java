@@ -44,10 +44,6 @@ public class DefaultGlobalSessionCallback implements GlobalSessionCallback {
   }
 
   @Override
-  public void handleError(GlobalSession globalSession, Exception ex) {
-  }
-
-  @Override
   public void handleError(GlobalSession globalSession, Exception ex, String reason) {
   }
 
