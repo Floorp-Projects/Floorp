@@ -123,17 +123,6 @@ TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [
     '/layout/reftests/svg/pseudo-classes-02.svg',
 ]
 
-if CONFIG['MOZ_STYLO']:
-    TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test += [
-        'stylo-failures.md',
-    ]
-    TEST_HARNESS_FILES.testing.mochitest.chrome.layout.style.test += [
-        'stylo-failures.md',
-    ]
-    # TEST_HARNESS_FILES.testing.mochitest.browser.layout.style.test += [
-    #     'stylo-failures.md',
-    # ]
-
 DEFINES['MOZILLA_INTERNAL_API'] = True
 if CONFIG['MOZ_ENABLE_MASK_AS_SHORTHAND']:
    HOST_DEFINES['MOZ_ENABLE_MASK_AS_SHORTHAND'] = True
