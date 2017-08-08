@@ -7,6 +7,7 @@
 
 // Check expanding/collapsing maps and sets in the console.
 const TEST_URI = "data:text/html;charset=utf8,<h1>Object Inspector on Maps & Sets</h1>";
+const {ELLIPSIS} = require("devtools/shared/l10n");
 
 add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -113,10 +114,10 @@ async function testLargeMap(oi) {
   oiNodes = oi.querySelectorAll(".node");
   // There are now 8 nodes, the 4 original ones, and the 4 buckets.
   is(oiNodes.length, 8, "There is the expected number of nodes in the tree");
-  is(oiNodes[3].textContent, "[0..99]");
-  is(oiNodes[4].textContent, "[100..199]");
-  is(oiNodes[5].textContent, "[200..299]");
-  is(oiNodes[6].textContent, "[300..331]");
+  is(oiNodes[3].textContent, `[0${ELLIPSIS}99]`);
+  is(oiNodes[4].textContent, `[100${ELLIPSIS}199]`);
+  is(oiNodes[5].textContent, `[200${ELLIPSIS}299]`);
+  is(oiNodes[6].textContent, `[300${ELLIPSIS}330]`);
 }
 
 async function testSet(oi) {
@@ -179,7 +180,7 @@ async function testLargeSet(oi) {
   oiNodes = oi.querySelectorAll(".node");
   // There are now 7 nodes, the 4 original ones, and the 3 buckets.
   is(oiNodes.length, 7, "There is the expected number of nodes in the tree");
-  is(oiNodes[3].textContent, "[0..99]");
-  is(oiNodes[4].textContent, "[100..199]");
-  is(oiNodes[5].textContent, "[200..222]");
+  is(oiNodes[3].textContent, `[0${ELLIPSIS}99]`);
+  is(oiNodes[4].textContent, `[100${ELLIPSIS}199]`);
+  is(oiNodes[5].textContent, `[200${ELLIPSIS}221]`);
 }
