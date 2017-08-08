@@ -262,12 +262,30 @@ var BookmarkPropertiesPanel = {
    * This method should be called by the onload of the Bookmark Properties
    * dialog to initialize the state of the panel.
    */
-  async onDialogLoad() {
+  onDialogLoad() {
     this._determineItemInfo();
 
     document.title = this._getDialogTitle();
-    var acceptButton = document.documentElement.getButton("accept");
+
+    // Disable the buttons until we have all the information required.
+    let acceptButton = document.documentElement.getButton("accept");
+    acceptButton.disabled = true;
+
+    // Allow initialization to complete in a truely async manner so that we're
+    // not blocking the main thread.
+    this._initDialog().catch(ex => {
+      Components.utils.reportError(`Failed to initialize dialog: ${ex}`);
+    });
+  },
+
+  /**
+   * Initializes the dialog, gathering the required bookmark data. This function
+   * will enable the accept button (if appropraite) when it is complete.
+   */
+  async _initDialog() {
+    let acceptButton = document.documentElement.getButton("accept");
     acceptButton.label = this._getAcceptLabel();
+    let acceptButtonDisabled = false;
 
     // Do not use sizeToContent, otherwise, due to bug 90276, the dialog will
     // grow at every opening.
@@ -313,7 +331,7 @@ var BookmarkPropertiesPanel = {
         gEditItemOverlay.initPanel({ node: this._node,
                                      hiddenRows: this._hiddenRows,
                                      focusedElement: "first" });
-        acceptButton.disabled = gEditItemOverlay.readOnly;
+        acceptButtonDisabled = gEditItemOverlay.readOnly;
         break;
       case ACTION_ADD:
         this._node = await this._promiseNewItem();
@@ -333,7 +351,7 @@ var BookmarkPropertiesPanel = {
         // if this is an uri related dialog disable accept button until
         // the user fills an uri value.
         if (this._itemType == BOOKMARK_ITEM)
-          acceptButton.disabled = !this._inputIsValid();
+          acceptButtonDisabled = !this._inputIsValid();
         break;
     }
 
@@ -348,6 +366,8 @@ var BookmarkPropertiesPanel = {
         }
       }
     }
+    // Only enable the accept button once we've finished everything.
+    acceptButton.disabled = acceptButtonDisabled;
   },
 
   // nsIDOMEventListener
