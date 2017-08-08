@@ -175,6 +175,7 @@ CompartmentPrivate::CompartmentPrivate(JSCompartment* c)
     , skipWriteToGlobalPrototype(false)
     , isWebExtensionContentScript(false)
     , waiveInterposition(false)
+    , addonCallInterposition(false)
     , allowCPOWs(false)
     , universalXPConnectEnabled(false)
     , forcePermissiveCOWs(false)
@@ -2663,6 +2664,13 @@ CompartmentNameCallback(JSContext* cx, JSCompartment* comp,
     memcpy(buf, name.get(), name.Length() + 1);
 }
 
+static void
+GetRealmName(JSContext* cx, JS::Handle<JS::Realm*> realm, char* buf, size_t bufsize)
+{
+    JSCompartment* comp = JS::GetCompartmentForRealm(realm);
+    CompartmentNameCallback(cx, comp, buf, bufsize);
+}
+
 static bool
 PreserveWrapper(JSContext* cx, JSObject* obj)
 {
@@ -2834,6 +2842,7 @@ XPCJSRuntime::Initialize(JSContext* cx)
     JS_SetDestroyCompartmentCallback(cx, CompartmentDestroyedCallback);
     JS_SetSizeOfIncludingThisCompartmentCallback(cx, CompartmentSizeOfIncludingThisCallback);
     JS_SetCompartmentNameCallback(cx, CompartmentNameCallback);
+    JS::SetRealmNameCallback(cx, GetRealmName);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(cx, GCSliceCallback);
     mPrevDoCycleCollectionCallback = JS::SetDoCycleCollectionCallback(cx,
             DoCycleCollectionCallback);

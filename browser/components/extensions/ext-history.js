@@ -92,11 +92,11 @@ var _observer;
 
 const getHistoryObserver = () => {
   if (!_observer) {
-    _observer = {
-      onDeleteURI: function(uri, guid, reason) {
+    _observer = new class extends EventEmitter {
+      onDeleteURI(uri, guid, reason) {
         this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
-      },
-      onVisit: function(uri, visitId, time, sessionId, referringId, transitionType, guid, hidden, visitCount, typed, lastKnownTitle) {
+      }
+      onVisit(uri, visitId, time, sessionId, referringId, transitionType, guid, hidden, visitCount, typed, lastKnownTitle) {
         let data = {
           id: guid,
           url: uri.spec,
@@ -106,23 +106,22 @@ const getHistoryObserver = () => {
           typedCount: typed,
         };
         this.emit("visited", data);
-      },
-      onBeginUpdateBatch: function() {},
-      onEndUpdateBatch: function() {},
-      onTitleChanged: function(uri, title) {
+      }
+      onBeginUpdateBatch() {}
+      onEndUpdateBatch() {}
+      onTitleChanged(uri, title) {
         this.emit("titleChanged", {url: uri.spec, title: title});
-      },
-      onClearHistory: function() {
+      }
+      onClearHistory() {
         this.emit("visitRemoved", {allHistory: true, urls: []});
-      },
-      onPageChanged: function() {},
-      onFrecencyChanged: function() {},
-      onManyFrecenciesChanged: function() {},
-      onDeleteVisits: function(uri, time, guid, reason) {
+      }
+      onPageChanged() {}
+      onFrecencyChanged() {}
+      onManyFrecenciesChanged() {}
+      onDeleteVisits(uri, time, guid, reason) {
         this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
-      },
-    };
-    EventEmitter.decorate(_observer);
+      }
+    }();
     PlacesUtils.history.addObserver(_observer);
   }
   return _observer;

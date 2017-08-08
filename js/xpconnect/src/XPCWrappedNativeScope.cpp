@@ -96,7 +96,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
         mComponents(nullptr),
         mNext(nullptr),
         mGlobalJSObject(aGlobal),
-        mHasCallInterpositions(false),
         mIsContentXBLScope(false),
         mIsAddonScope(false)
 {
