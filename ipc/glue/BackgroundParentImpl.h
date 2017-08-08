@@ -64,10 +64,11 @@ protected:
   RecvFlushPendingFileDeletions() override;
 
   virtual PBackgroundStorageParent*
-  AllocPBackgroundStorageParent() override;
+  AllocPBackgroundStorageParent(const nsString& aProfilePath) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor) override;
+  RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor,
+                                    const nsString& aProfilePath) override;
 
   virtual bool
   DeallocPBackgroundStorageParent(PBackgroundStorageParent* aActor) override;
