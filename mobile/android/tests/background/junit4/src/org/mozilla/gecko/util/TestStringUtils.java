@@ -140,4 +140,16 @@ public class TestStringUtils {
 
 
     }
+    @Test
+    public void testPathStartIndex(){
+        // Tests without protocol
+        assertTrue(StringUtils.pathStartIndex("mozilla.org") == -1);
+        assertTrue(StringUtils.pathStartIndex("mozilla.org/en-US") == 11);
+
+        // Tests with protocol
+        assertTrue(StringUtils.pathStartIndex("https://mozilla.org") == -1);
+        assertTrue(StringUtils.pathStartIndex("https://mozilla.org/") == 19);
+        assertTrue(StringUtils.pathStartIndex("https://mozilla.org/en-US") == 19);
+
+    }
 }

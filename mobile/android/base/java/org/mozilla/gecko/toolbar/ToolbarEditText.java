@@ -306,6 +306,7 @@ public class ToolbarEditText extends CustomEditText
         final int textLength = text.length();
         final int resultLength = result.length();
         final int autoCompleteStart = text.getSpanStart(AUTOCOMPLETE_SPAN);
+        final int pathStart = StringUtils.pathStartIndex(getNonAutocompleteText(text));
         mAutoCompleteResult = result;
 
         if (autoCompleteStart > -1) {
@@ -319,6 +320,11 @@ public class ToolbarEditText extends CustomEditText
             }
 
             beginSettingAutocomplete();
+
+            // Should we force capitalisation from result
+            if (pathStart != -1) {
+                text.replace(pathStart, autoCompleteStart, result, pathStart, autoCompleteStart);
+            }
 
             // Replace the existing autocomplete text with new one.
             // replace() preserves the autocomplete spans that we set before.
@@ -338,6 +344,13 @@ public class ToolbarEditText extends CustomEditText
             // the result is stale and we should wait for the another result to come in.
             if (resultLength <= textLength ||
                     !StringUtils.caseInsensitiveStartsWith(result, text.toString())) {
+                return;
+            }
+
+            // Now that we know the result and the usertext are the same case-insensitively,
+            // we should check whether their path parts match case-sensitively
+            if (pathStart != -1 &&
+                    !TextUtils.regionMatches(result, pathStart, text, pathStart, textLength - pathStart)) {
                 return;
             }
 
