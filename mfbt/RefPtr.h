@@ -44,7 +44,7 @@ struct RefPtrTraits
 } // namespace mozilla
 
 template <class T>
-class RefPtr
+class MOZ_IS_REFPTR RefPtr
 {
 private:
   void
