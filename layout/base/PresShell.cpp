@@ -560,6 +560,8 @@ mozilla::LazyLogModule PresShell::gLog("PresShell");
 mozilla::TimeStamp PresShell::sLastInputCreated;
 mozilla::TimeStamp PresShell::sLastInputProcessed;
 
+bool PresShell::sProcessInteractable = false;
+
 #ifdef DEBUG
 static void
 VerifyStyleTree(nsPresContext* aPresContext, nsFrameManager* aFrameManager)
@@ -1017,6 +1019,9 @@ PresShell::Init(nsIDocument* aDocument,
 #endif
       os->AddObserver(this, "memory-pressure", false);
       os->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, false);
+      if (XRE_IsParentProcess() && !sProcessInteractable) {
+        os->AddObserver(this, "sessionstore-one-or-no-tab-restored", false);
+      }
     }
   }
 
@@ -1245,6 +1250,9 @@ PresShell::Destroy()
 #endif
       os->RemoveObserver(this, "memory-pressure");
       os->RemoveObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC);
+      if (XRE_IsParentProcess()) {
+        os->RemoveObserver(this, "sessionstore-one-or-no-tab-restored");
+      }
     }
   }
 
@@ -8281,6 +8289,32 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
         double lastMillis = (sLastInputProcessed - sLastInputCreated).ToMilliseconds();
         Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_COALESCED_MS,
                               lastMillis);
+
+        if (MOZ_UNLIKELY(!sProcessInteractable)) {
+          // For content process, we use the ready state of
+          // top-level-content-document to know if the process has finished the
+          // start-up.
+          // For parent process, see the topic
+          // 'sessionstore-one-or-no-tab-restored' in PresShell::Observe.
+          if (XRE_IsContentProcess() &&
+              mDocument && mDocument->IsTopLevelContentDocument()) {
+            switch (mDocument->GetReadyStateEnum()) {
+              case nsIDocument::READYSTATE_INTERACTIVE:
+              case nsIDocument::READYSTATE_COMPLETE:
+                sProcessInteractable = true;
+                break;
+              default:
+                break;
+            }
+          }
+        }
+        if (MOZ_LIKELY(sProcessInteractable)) {
+          Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_POST_STARTUP_MS,
+                                lastMillis);
+        } else {
+          Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_STARTUP_MS,
+                                lastMillis);
+        }
       }
       sLastInputCreated = aEvent->mTimeStamp;
     } else if (aEvent->mTimeStamp < sLastInputCreated) {
@@ -9716,6 +9750,19 @@ PresShell::Observe(nsISupports* aSubject,
 
   if (!nsCRT::strcmp(aTopic, NS_WIDGET_WAKE_OBSERVER_TOPIC)) {
     mLastOSWake = TimeStamp::Now();
+    return NS_OK;
+  }
+
+  // For parent process, user may expect the UI is interactable after a
+  // tab (previously opened page or home page) has restored.
+  if (!nsCRT::strcmp(aTopic, "sessionstore-one-or-no-tab-restored")) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    sProcessInteractable = true;
+
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->RemoveObserver(this, "sessionstore-one-or-no-tab-restored");
+    }
     return NS_OK;
   }
 
