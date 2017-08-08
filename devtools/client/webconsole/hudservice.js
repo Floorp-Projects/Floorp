@@ -190,8 +190,9 @@ HUD_SERVICE.prototype =
       return client.connect()
         .then(() => client.getProcess())
         .then(aResponse => {
-          // Use a TabActor in order to ensure calling `attach` to the ChromeActor
-          return { form: aResponse.form, client, chrome: true, isTabActor: true };
+          // Set chrome:false in order to attach to the target
+          // (i.e. send an `attach` request to the chrome actor)
+          return { form: aResponse.form, client: client, chrome: false };
         });
     }
 
