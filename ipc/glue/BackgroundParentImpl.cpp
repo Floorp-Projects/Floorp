@@ -244,24 +244,25 @@ BackgroundParentImpl::RecvFlushPendingFileDeletions()
 }
 
 auto
-BackgroundParentImpl::AllocPBackgroundStorageParent()
+BackgroundParentImpl::AllocPBackgroundStorageParent(const nsString& aProfilePath)
   -> PBackgroundStorageParent*
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  return mozilla::dom::AllocPBackgroundStorageParent();
+  return mozilla::dom::AllocPBackgroundStorageParent(aProfilePath);
 }
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundStorageConstructor(
-                                               PBackgroundStorageParent* aActor)
+                                               PBackgroundStorageParent* aActor,
+                                               const nsString& aProfilePath)
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  return mozilla::dom::RecvPBackgroundStorageConstructor(aActor);
+  return mozilla::dom::RecvPBackgroundStorageConstructor(aActor, aProfilePath);
 }
 
 bool

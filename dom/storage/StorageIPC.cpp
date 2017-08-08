@@ -156,9 +156,17 @@ StorageDBChild::Init()
     return NS_ERROR_FAILURE;
   }
 
+  nsString profilePath;
+  if (XRE_IsParentProcess()) {
+    nsresult rv = StorageDBThread::GetProfilePath(profilePath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   AddIPDLReference();
 
-  actor->SendPBackgroundStorageConstructor(this);
+  actor->SendPBackgroundStorageConstructor(this, profilePath);
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   MOZ_ASSERT(observerService);
@@ -526,8 +534,9 @@ private:
 
 } // namespace
 
-StorageDBParent::StorageDBParent()
-: mIPCOpen(false)
+StorageDBParent::StorageDBParent(const nsString& aProfilePath)
+  : mProfilePath(aProfilePath)
+  , mIPCOpen(false)
 {
   AssertIsOnBackgroundThread();
 
@@ -583,7 +592,7 @@ StorageDBParent::RecvAsyncPreload(const nsCString& aOriginSuffix,
                                   const nsCString& aOriginNoSuffix,
                                   const bool& aPriority)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -597,7 +606,7 @@ StorageDBParent::RecvAsyncPreload(const nsCString& aOriginSuffix,
 mozilla::ipc::IPCResult
 StorageDBParent::RecvAsyncGetUsage(const nsCString& aOriginNoSuffix)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -698,7 +707,7 @@ StorageDBParent::RecvPreload(const nsCString& aOriginSuffix,
                              InfallibleTArray<nsString>* aValues,
                              nsresult* aRv)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -718,7 +727,7 @@ StorageDBParent::RecvAsyncAddItem(const nsCString& aOriginSuffix,
                                   const nsString& aKey,
                                   const nsString& aValue)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -740,7 +749,7 @@ StorageDBParent::RecvAsyncUpdateItem(const nsCString& aOriginSuffix,
                                      const nsString& aKey,
                                      const nsString& aValue)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -761,7 +770,7 @@ StorageDBParent::RecvAsyncRemoveItem(const nsCString& aOriginSuffix,
                                      const nsCString& aOriginNoSuffix,
                                      const nsString& aKey)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -780,7 +789,7 @@ mozilla::ipc::IPCResult
 StorageDBParent::RecvAsyncClear(const nsCString& aOriginSuffix,
                                 const nsCString& aOriginNoSuffix)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -810,7 +819,7 @@ StorageDBParent::RecvAsyncFlush()
 mozilla::ipc::IPCResult
 StorageDBParent::RecvStartup()
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -821,7 +830,7 @@ StorageDBParent::RecvStartup()
 mozilla::ipc::IPCResult
 StorageDBParent::RecvClearAll()
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -834,7 +843,7 @@ StorageDBParent::RecvClearAll()
 mozilla::ipc::IPCResult
 StorageDBParent::RecvClearMatchingOrigin(const nsCString& aOriginNoSuffix)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -848,7 +857,7 @@ mozilla::ipc::IPCResult
 StorageDBParent::RecvClearMatchingOriginAttributes(
                                         const OriginAttributesPattern& aPattern)
 {
-  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate(mProfilePath);
   if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -1204,15 +1213,16 @@ ObserverSink::Observe(const char* aTopic,
  ******************************************************************************/
 
 PBackgroundStorageParent*
-AllocPBackgroundStorageParent()
+AllocPBackgroundStorageParent(const nsString& aProfilePath)
 {
   AssertIsOnBackgroundThread();
 
-  return new StorageDBParent();
+  return new StorageDBParent(aProfilePath);
 }
 
 mozilla::ipc::IPCResult
-RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor)
+RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor,
+                                  const nsString& aProfilePath)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);

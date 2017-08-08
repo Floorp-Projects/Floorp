@@ -205,7 +205,7 @@ BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
 }
 
 BackgroundChildImpl::PBackgroundStorageChild*
-BackgroundChildImpl::AllocPBackgroundStorageChild()
+BackgroundChildImpl::AllocPBackgroundStorageChild(const nsString& aProfilePath)
 {
   MOZ_CRASH("PBackgroundStorageChild actors should be manually constructed!");
 }

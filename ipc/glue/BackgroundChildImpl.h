@@ -71,7 +71,7 @@ protected:
                                         override;
 
   virtual PBackgroundStorageChild*
-  AllocPBackgroundStorageChild() override;
+  AllocPBackgroundStorageChild(const nsString& aProfilePath) override;
 
   virtual bool
   DeallocPBackgroundStorageChild(PBackgroundStorageChild* aActor) override;
