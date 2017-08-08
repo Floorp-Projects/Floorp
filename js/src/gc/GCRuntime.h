@@ -155,9 +155,9 @@ class GCSchedulingTunables
     ActiveThreadData<size_t> gcMaxNurseryBytes_;
 
     /*
-     * The base value used to compute zone->trigger.gcBytes(). When
-     * usage.gcBytes() surpasses threshold.gcBytes() for a zone, the zone may
-     * be scheduled for a GC, depending on the exact circumstances.
+     * The base value used to compute zone->threshold.gcTriggerBytes(). When
+     * usage.gcBytes() surpasses threshold.gcTriggerBytes() for a zone, the
+     * zone may be scheduled for a GC, depending on the exact circumstances.
      */
     ActiveThreadOrGCTaskData<size_t> gcZoneAllocThresholdBase_;
 
