@@ -336,6 +336,16 @@ WebExtensionChildActor.prototype._shouldAddNewGlobalAsDebuggee = function (newGl
   const global = unwrapDebuggerObjectGlobal(newGlobal);
 
   if (global instanceof Ci.nsIDOMWindow) {
+    try {
+      global.document;
+    } catch (e) {
+      // The global might be a sandbox with a window object in its proto chain. If the
+      // window navigated away since the sandbox was created, it can throw a security
+      // exception during this property check as the sandbox no longer has access to
+      // its own proto.
+      return false;
+    }
+
     // Filter out any global which contains a XUL document.
     if (global.document instanceof Ci.nsIDOMXULDocument) {
       return false;
