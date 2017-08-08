@@ -29,6 +29,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
+#include "AudioNodeEngine.h"
 
 namespace mozilla {
 
