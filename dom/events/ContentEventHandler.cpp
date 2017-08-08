@@ -19,7 +19,6 @@
 #include "nsFontMetrics.h"
 #include "nsFrameSelection.h"
 #include "nsIContentIterator.h"
-#include "nsIParserService.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
 #include "nsIFrame.h"
@@ -2840,33 +2839,9 @@ ContentEventHandler::GetStartOffset(nsRange* aRange,
                                     LineBreakType aLineBreakType)
 {
   MOZ_ASSERT(aRange);
-  // To match the "no skip start" hack in nsContentIterator::Init, when range
-  // offset is 0 and the range node is not a container, we have to assume the
-  // range _includes_ the node, which means the start offset should _not_
-  // include the node.
-  //
-  // For example, for this content: <br>abc, and range (<br>, 0)-("abc", 1), the
-  // range includes the linebreak from <br>, so the start offset should _not_
-  // include <br>, and the start offset should be 0.
-  //
-  // However, for this content: <p/>abc, and range (<p>, 0)-("abc", 1), the
-  // range does _not_ include the linebreak from <p> because <p> is a container,
-  // so the start offset _should_ include <p>, and the start offset should be 1.
-
-  nsINode* startNode = aRange->GetStartContainer();
-  bool startIsContainer = true;
-  if (startNode->IsHTMLElement()) {
-    if (nsIParserService* ps = nsContentUtils::GetParserService()) {
-      nsIAtom* name = startNode->NodeInfo()->NameAtom();
-      ps->IsContainer(ps->HTMLAtomTagToId(name), startIsContainer);
-    }
-  }
-  const NodePosition& startPos =
-    startIsContainer
-    ? NodePosition(startNode, aRange->StartOffset())
-    : NodePositionBefore(startNode, aRange->StartOffset());
   return GetFlatTextLengthInRange(
-           NodePosition(mRootContent, 0), startPos,
+           NodePosition(mRootContent, 0),
+           NodePosition(aRange->GetStartContainer(), aRange->StartOffset()),
            mRootContent, aOffset, aLineBreakType);
 }
 
