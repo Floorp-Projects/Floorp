@@ -21,6 +21,7 @@
 #include "nsClassHashtable.h"
 #include "nsServiceManagerUtils.h"
 #include "DecryptThroughputLimit.h"
+#include "ChromiumCDMVideoDecoder.h"
 
 namespace mozilla {
 

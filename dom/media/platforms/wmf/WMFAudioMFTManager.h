@@ -12,8 +12,6 @@
 #include "WMFMediaDataDecoder.h"
 #include "mozilla/RefPtr.h"
 
-extern const GUID CLSID_WebmMfVpxDec;
-
 namespace mozilla {
 
 class WMFAudioMFTManager : public MFTManager
