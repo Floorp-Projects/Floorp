@@ -87,6 +87,9 @@ var whitelist = [
   {file: "resource://app/modules/NewTabSearchProvider.jsm"},
   {file: "resource://app/modules/NewTabWebChannel.jsm"},
 
+  // browser/modules/PingCentre.jsm will soon be used (bug 1393604)
+  {file: "resource://app/modules/PingCentre.jsm"},
+
   // layout/mathml/nsMathMLChar.cpp
   {file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties"},
   {file: "resource://gre/res/fonts/mathfontUnicode.properties"},
