@@ -277,6 +277,14 @@ class Window(object):
     def maximize(self):
         return self.session.send_session_command("POST", "window/maximize")
 
+    @command
+    def minimize(self):
+        return self.session.send_session_command("POST", "window/minimize")
+
+    @command
+    def fullscreen(self):
+        return self.session.send_session_command("POST", "window/fullscreen")
+
 
 class Find(object):
     def __init__(self, session):
