@@ -297,6 +297,7 @@ class FennecInstance(GeckoInstance):
 
         # Disable safebrowsing components
         "browser.safebrowsing.downloads.enabled": False,
+        "browser.safebrowsing.passwords.enabled": False,
 
         # Do not restore the last open set of tabs if the browser has crashed
         "browser.sessionstore.resume_from_crash": False,
@@ -433,6 +434,7 @@ class DesktopInstance(GeckoInstance):
         # Disable safebrowsing components
         "browser.safebrowsing.blockedURIs.enabled": False,
         "browser.safebrowsing.downloads.enabled": False,
+        "browser.safebrowsing.passwords.enabled": False,
         "browser.safebrowsing.malware.enabled": False,
         "browser.safebrowsing.phishing.enabled": False,
 
