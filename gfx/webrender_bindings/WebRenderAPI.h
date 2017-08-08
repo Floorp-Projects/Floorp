@@ -177,8 +177,10 @@ public:
                            const nsTArray<wr::WrFilterOp>& aFilters);
   void PopStackingContext();
 
-  void PushClip(const wr::LayoutRect& aClipRect,
-                const wr::WrImageMask* aMask);
+  wr::WrClipId DefineClip(const wr::LayoutRect& aClipRect,
+                          const nsTArray<wr::WrComplexClipRegion>* aComplex = nullptr,
+                          const wr::WrImageMask* aMask = nullptr);
+  void PushClip(const wr::WrClipId& aClipId);
   void PopClip();
 
   void PushBuiltDisplayList(wr::BuiltDisplayList &dl);
