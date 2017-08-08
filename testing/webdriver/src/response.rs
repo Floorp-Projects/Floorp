@@ -48,7 +48,7 @@ impl WebDriverResponse {
     }
 }
 
-#[derive(RustcEncodable, Debug)]
+#[derive(Debug, RustcEncodable)]
 pub struct CloseWindowResponse {
     pub window_handles: Vec<String>,
 }
@@ -68,7 +68,7 @@ impl ToJson for CloseWindowResponse {
     }
 }
 
-#[derive(RustcEncodable, Debug)]
+#[derive(Debug, RustcEncodable)]
 pub struct NewSessionResponse {
     pub sessionId: String,
     pub capabilities: json::Json
@@ -83,7 +83,7 @@ impl NewSessionResponse {
     }
 }
 
-#[derive(RustcEncodable, Debug)]
+#[derive(Debug, RustcEncodable)]
 pub struct TimeoutsResponse {
     pub script: u64,
     pub pageLoad: u64,
@@ -100,7 +100,7 @@ impl TimeoutsResponse {
     }
 }
 
-#[derive(RustcEncodable, Debug)]
+#[derive(Debug, RustcEncodable)]
 pub struct ValueResponse {
     pub value: json::Json
 }
@@ -113,7 +113,7 @@ impl ValueResponse {
     }
 }
 
-#[derive(RustcEncodable, Debug)]
+#[derive(Debug, RustcEncodable)]
 pub struct ElementRectResponse {
     /// X axis position of the top-left corner of the element relative
     // to the current browsing context’s document element in CSS reference
@@ -176,7 +176,7 @@ impl ToJson for WindowRectResponse {
     }
 }
 
-#[derive(RustcEncodable, PartialEq, Debug, Clone)]
+#[derive(Clone, Debug, PartialEq, RustcEncodable)]
 pub struct Cookie {
     pub name: String,
     pub value: String,
@@ -210,12 +210,12 @@ impl Into<cookie::Cookie<'static>> for Cookie {
     }
 }
 
-#[derive(RustcEncodable, Debug)]
+#[derive(Debug, RustcEncodable)]
 pub struct CookieResponse {
     pub value: Cookie,
 }
 
-#[derive(RustcEncodable, Debug)]
+#[derive(Debug, RustcEncodable)]
 pub struct CookiesResponse {
     pub value: Vec<Cookie>,
 }

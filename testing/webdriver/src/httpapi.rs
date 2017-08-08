@@ -71,7 +71,7 @@ fn standard_routes<U:WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Ro
                 (Get, "/status", Route::Status),]
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Route<U:WebDriverExtensionRoute> {
     NewSession,
     DeleteSession,
@@ -142,7 +142,7 @@ pub trait WebDriverExtensionRoute : Clone + Send + PartialEq {
     fn command(&self, &Captures, &Json) -> WebDriverResult<WebDriverCommand<Self::Command>>;
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct VoidWebDriverExtensionRoute;
 
 impl WebDriverExtensionRoute for VoidWebDriverExtensionRoute {
@@ -153,7 +153,7 @@ impl WebDriverExtensionRoute for VoidWebDriverExtensionRoute {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct RequestMatcher<U: WebDriverExtensionRoute> {
     method: Method,
     path_regexp: Regex,
@@ -197,6 +197,7 @@ impl <U: WebDriverExtensionRoute> RequestMatcher<U> {
     }
 }
 
+#[derive(Debug)]
 pub struct WebDriverHttpApi<U: WebDriverExtensionRoute> {
     routes: Vec<(Method, RequestMatcher<U>)>,
 }
