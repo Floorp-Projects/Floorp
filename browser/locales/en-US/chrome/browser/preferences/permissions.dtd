@@ -26,3 +26,4 @@
 <!ENTITY button.ok.label              "Save Changes">
 <!ENTITY button.ok.accesskey          "S">
 
+<!ENTITY searchbox.placeholder        "Search Website">
