@@ -35,9 +35,6 @@ namespace gl {
 
 StaticMutex GLLibraryEGL::sMutex;
 GLLibraryEGL sEGLLibrary;
-#ifdef MOZ_B2G
-MOZ_THREAD_LOCAL(EGLContext) GLLibraryEGL::sCurrentContext;
-#endif
 
 // should match the order of EGLExtensions, and be null-terminated.
 static const char* sEGLExtensionNames[] = {
@@ -319,11 +316,6 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
     }
 
     mozilla::ScopedGfxFeatureReporter reporter("EGL");
-
-#ifdef MOZ_B2G
-    if (!sCurrentContext.init())
-      MOZ_CRASH("GFX: Tls init failed");
-#endif
 
 #ifdef XP_WIN
     if (!mEGLLibrary) {

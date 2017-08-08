@@ -405,16 +405,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
 
   bool allowContentDispositionToForceExternalHandling = true;
 
-#ifdef MOZ_B2G
-
-  // On B2G, OMA content files should never be handled by an external handler
-  // (even if the server specifies Content-Disposition: attachment) because the
-  // data should never be stored on an unencrypted form.
-  allowContentDispositionToForceExternalHandling =
-    !mContentType.LowerCaseEqualsASCII("application/vnd.oma.drm.message");
-
-#endif
-
   if (NS_SUCCEEDED(rv) && (disposition == nsIChannel::DISPOSITION_ATTACHMENT) &&
       allowContentDispositionToForceExternalHandling) {
     forceExternalHandling = true;
