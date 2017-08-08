@@ -19,7 +19,7 @@
   width: 100%;
   padding: 0;
   font: message-box;
-  color: currentColor;
+  color: #0c0c0d;
 }
 
 #mainPrefPane groupbox,
@@ -124,6 +124,7 @@ caption > label {
 
 .category-name {
   font-size: 1.45rem;
+  color: #0c0c0d;
 }
 
 .category,
@@ -132,6 +133,10 @@ caption > label {
   background-color: transparent;
   border-inline-start: initial;
   padding-inline-start: 44px;
+}
+
+richlistitem[selected='true'] .category-name {
+  color: #0a84ff;
 }
 
 /**
@@ -145,19 +150,19 @@ caption > label {
 }
 
 #category-general > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/general.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#general");
 }
 
 #category-search > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/search.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#search");
 }
 
 #category-privacy > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/privacy-security.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#security");
 }
 
 #category-sync > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/sync.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#sync");
 }
 
 @media (max-width: 800px) {
@@ -447,7 +452,7 @@ groupbox {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/fxa-avatar.svg");
+  list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
   margin-inline-end: 15px;
   image-rendering: auto;
   border: 1px solid transparent;
@@ -576,7 +581,7 @@ groupbox {
 }
 
 .fxaFirefoxLogo {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/fxa-avatar.svg");
+  list-style-image: url(chrome://browser/skin/fxa/logo.png);
   width: 64px;
   height: 64px;
   margin-inline-end: 14px;
@@ -599,23 +604,35 @@ groupbox {
 }
 
 .androidLink {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/logo-android.svg");
+  list-style-image: url("chrome://browser/skin/fxa/android.png");
 }
 
 .iOSLink {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/logo-ios.svg");
+  list-style-image: url("chrome://browser/skin/fxa/ios.png");
 }
 
 .androidLink,
 .iOSLink {
-  width: 20px;
-  height: 20px;
-  vertical-align: text-bottom;
+  vertical-align: bottom;
+  padding: 0 5px;
+  height: 28px;
 }
 
 #tosPP-small {
   margin-top: 20px;
   margin-bottom: 20px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .androidLink {
+    list-style-image: url("chrome://browser/skin/fxa/android@2x.png");
+  }
+  .iOSLink {
+    list-style-image: url("chrome://browser/skin/fxa/ios@2x.png");
+  }
+  .fxaFirefoxLogo {
+    list-style-image: url(chrome://browser/skin/fxa/logo@2x.png);
+  }
 }
 
 #updateDeck > hbox > label {
@@ -641,15 +658,14 @@ groupbox {
   /* Needs to have enough gap from the bottom to not
      get behind the status panel (bug 1357841). */
   bottom: 2rem;
-  background-image: url("chrome://browser/skin/preferences/in-content-new/help.svg");
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.8;
   font-size: 13px;
-  line-height: 16px;
+  line-height: 13px;
+  height: 14px;
   background-position: 15px;
   padding-inline-start: 35px;
   white-space: nowrap;
+  fill: #0c0c0d;
+  stroke: #0c0c0d;
 }
 
 .help-button:-moz-locale-dir(rtl) {
@@ -658,29 +674,19 @@ groupbox {
   background-position: right 15px top 0;
 }
 
-.help-button:hover {
-  fill: currentColor;
-  fill-opacity: 0.9;
-}
-
 .help-button:link,
 .help-button:visited {
-  color: var(--in-content-category-text);
+  color: #0c0c0d !important;
+  opacity: 0.8;
   text-decoration: none;
 }
 
-.face-sad {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/face-sad.svg");
-  width: 20px;
-  height: 20px;
-  margin-inline-end: 8px;
-}
-
-.face-smile {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/face-smile.svg");
-  width: 20px;
-  height: 20px;
-  margin-inline-end: 8px;
+.help-button:hover {
+  color: #0c0c0d !important;
+  fill: #0c0c0d !important;
+  stroke: #0c0c0d !important;
+  stroke-opacity: 0!important;
+  opacity: 0.9;
 }
 
 .search-container {
