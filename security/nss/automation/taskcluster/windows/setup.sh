@@ -23,4 +23,4 @@ hg_clone() {
 }
 
 hg_clone https://hg.mozilla.org/build/tools tools default
-tools/scripts/tooltool/tooltool_wrapper.sh $(dirname $0)/releng.manifest https://api.pub.build.mozilla.org/tooltool/ non-existant-file.sh /c/mozilla-build/python/python.exe /c/builds/tooltool.py --authentication-file /c/builds/relengapi.tok -c /c/builds/tooltool_cache
+tools/scripts/tooltool/tooltool_wrapper.sh $(dirname $0)/releng.manifest https://tooltool.mozilla-releng.net/ non-existant-file.sh /c/mozilla-build/python/python.exe /c/builds/tooltool.py --authentication-file /c/builds/relengapi.tok -c /c/builds/tooltool_cache

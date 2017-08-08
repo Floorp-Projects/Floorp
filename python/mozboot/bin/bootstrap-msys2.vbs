@@ -53,7 +53,7 @@ End If
 
 On Error Resume Next
 ' Download and move MSYS2 into the right place
-Download "https://api.pub.build.mozilla.org/tooltool/sha512/f93a685c8a10abbd349cbef5306441ba235c4cbfba1cc000299e11b58f258e9953cbe23463515407925eeca94c3f5d8e5f637c95be387e620845efa43cdcb0c0", "msys2.zip"
+Download "https://tooltool.mozilla-releng.net/sha512/f93a685c8a10abbd349cbef5306441ba235c4cbfba1cc000299e11b58f258e9953cbe23463515407925eeca94c3f5d8e5f637c95be387e620845efa43cdcb0c0", "msys2.zip"
 Set FilesInZip = appShell.NameSpace(fso.GetAbsolutePathName("msys2.zip")).Items()
 appShell.NameSpace(msysPath).CopyHere(FilesInZip)
 ' MSYS2 archive doesn't have tmp directory...

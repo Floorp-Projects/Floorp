@@ -15,7 +15,7 @@ TOOLTOOL_PY_URL = \
     "https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py"
 
 TOOLTOOL_SERVERS = [
-    'https://api.pub.build.mozilla.org/tooltool/',
+    'https://tooltool.mozilla-releng.net/',
 ]
 
 

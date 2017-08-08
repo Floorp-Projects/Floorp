@@ -29,7 +29,7 @@ config = {
     "vcs_share_base": "c:/builds/hg-shared",
 
     # tooltool
-    'tooltool_url': 'https://api.pub.build.mozilla.org/tooltool/',
+    'tooltool_url': 'https://tooltool.mozilla-releng.net/',
     'tooltool_script': [sys.executable,
                         'C:/mozilla-build/tooltool.py'],
     'tooltool_manifest_src': 'browser/config/tooltool-manifests/win64/l10n.manifest',
