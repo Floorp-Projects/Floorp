@@ -110,7 +110,7 @@ HTMLEditor::SetInlineProperty(nsIAtom* aProperty,
   NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIEditRules> rules(mRules);
-  ForceCompositionEnd();
+  CommitComposition();
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
@@ -1202,7 +1202,7 @@ HTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
 {
   MOZ_ASSERT_IF(aProperty, aAttribute);
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
-  ForceCompositionEnd();
+  CommitComposition();
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
@@ -1351,7 +1351,7 @@ HTMLEditor::DecreaseFontSize()
 nsresult
 HTMLEditor::RelativeFontChange(FontSize aDir)
 {
-  ForceCompositionEnd();
+  CommitComposition();
 
   // Get the selection
   RefPtr<Selection> selection = GetSelection();
