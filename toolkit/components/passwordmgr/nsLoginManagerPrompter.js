@@ -1434,7 +1434,8 @@ LoginManagerPrompter.prototype = {
       }
 
       // gBrowser only exists on some apps, like Firefox.
-      let tabbrowser = chromeWin.gBrowser || chromeWin.getBrowser();
+      let tabbrowser = chromeWin.gBrowser ||
+        (typeof chromeWin.getBrowser == "function" ? chromeWin.getBrowser() : null);
       // At least serve the chrome window if getBrowser()
       // or getBrowserForContentWindow() are not supported.
       if (!tabbrowser || typeof tabbrowser.getBrowserForContentWindow != "function") {

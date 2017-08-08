@@ -662,8 +662,7 @@ Assembler::retarget(Label* label, Label* target)
         } else {
             // The target is unbound and unused. We can just take the head of
             // the list hanging off of label, and dump that into target.
-            DebugOnly<uint32_t> prev = target->use(label->offset());
-            MOZ_ASSERT((int32_t)prev == Label::INVALID_OFFSET);
+            target->use(label->offset());
         }
     }
     label->reset();

@@ -114,18 +114,8 @@ crashtest:
             default: default
     run-on-projects:
         by-test-platform:
-            # Deactivate try on Buildbot, by default. We don't have enough machines
-            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
-            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
-            windows10.*: []
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo.*: ['autoland', 'mozilla-central', 'try']
-            windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
-    worker-type:
-        by-test-platform:
-            windows8-64.*: buildbot-bridge/buildbot-bridge
-            default: null
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10
@@ -173,6 +163,7 @@ firefox-ui-functional-local:
                     - firefox_ui_tests/taskcluster_windows.py
                 macosx.*:
                     - firefox_ui_tests/taskcluster.py
+                    - firefox_ui_tests/taskcluster_mac.py
                 linux.*:
                     - firefox_ui_tests/taskcluster.py
                     - remove_executables.py
@@ -194,6 +185,7 @@ firefox-ui-functional-remote:
                     - firefox_ui_tests/taskcluster_windows.py
                 macosx.*:
                     - firefox_ui_tests/taskcluster.py
+                    - firefox_ui_tests/taskcluster_mac.py
                 linux.*:
                     - firefox_ui_tests/taskcluster.py
                     - remove_executables.py
@@ -379,6 +371,7 @@ marionette:
                             - marionette/windows_taskcluster_config.py
                         macosx.*:
                             - marionette/prod_config.py
+                            - marionette/mac_taskcluster_config.py
                         default:
                             - marionette/prod_config.py
                             - remove_executables.py
@@ -410,6 +403,7 @@ marionette-headless:
                             - marionette/windows_taskcluster_config.py
                         macosx.*:
                             - marionette/prod_config.py
+                            - marionette/mac_taskcluster_config.py
                         default:
                             - marionette/prod_config.py
                             - remove_executables.py

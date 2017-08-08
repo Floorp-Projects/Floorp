@@ -157,6 +157,14 @@ ContentClientBasic::CreateBuffer(ContentType aType,
     gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aType));
 }
 
+RefPtr<CapturedPaintState>
+ContentClientBasic::BorrowDrawTargetForRecording(PaintState& aPaintState,
+                                                 RotatedContentBuffer::DrawIterator* aIter)
+{
+  // BasicLayers does not yet support OMTP.
+  return nullptr;
+}
+
 void
 ContentClientRemoteBuffer::DestroyBuffers()
 {
@@ -172,6 +180,20 @@ ContentClientRemoteBuffer::DestroyBuffers()
   }
 
   DestroyFrontBuffer();
+}
+
+RefPtr<CapturedPaintState>
+ContentClientRemoteBuffer::BorrowDrawTargetForRecording(PaintState& aPaintState,
+                                                        RotatedContentBuffer::DrawIterator* aIter)
+{
+  RefPtr<CapturedPaintState> cps = RotatedContentBuffer::BorrowDrawTargetForRecording(aPaintState, aIter);
+  if (!cps) {
+    return nullptr;
+  }
+
+  cps->mTextureClient = mTextureClient;
+  cps->mTextureClientOnWhite = mTextureClientOnWhite;
+  return cps.forget();
 }
 
 class RemoteBufferReadbackProcessor : public TextureReadbackSink

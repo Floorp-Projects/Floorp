@@ -704,7 +704,7 @@ nsSHistory::PrintHistory()
 
     nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
     nsCOMPtr<nsIURI> uri;
-    nsXPIDLString title;
+    nsString title;
 
     entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
     entry->GetURI(getter_AddRefs(uri));

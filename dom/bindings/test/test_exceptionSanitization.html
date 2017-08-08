@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1295322
     ok(false, "Should have thrown!");
   } catch(e){
     try {
-      is(e.name, "NS_ERROR_UNEXPECTED", "Should have the right exception");
+      is(e.name, "SyntaxError", "Should have the right exception");
       is(e.filename, location.href,
          "Should not be seeing where the exception really came from");
     } catch (e2) {

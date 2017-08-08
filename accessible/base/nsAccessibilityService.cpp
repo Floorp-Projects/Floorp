@@ -930,6 +930,21 @@ nsAccessibilityService::GetStringEventType(uint32_t aEventType,
 }
 
 void
+nsAccessibilityService::GetStringEventType(uint32_t aEventType,
+                                           nsACString& aString)
+{
+  MOZ_ASSERT(nsIAccessibleEvent::EVENT_LAST_ENTRY == ArrayLength(kEventTypeNames),
+             "nsIAccessibleEvent constants are out of sync to kEventTypeNames");
+
+  if (aEventType >= ArrayLength(kEventTypeNames)) {
+    aString.AssignLiteral("unknown");
+    return;
+  }
+
+  aString = nsDependentCString(kEventTypeNames[aEventType]);
+}
+
+void
 nsAccessibilityService::GetStringRelationType(uint32_t aRelationType,
                                               nsAString& aString)
 {

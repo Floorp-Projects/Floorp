@@ -188,7 +188,7 @@ auto GeckoAppShell::EnableBatteryNotifications() -> void
 constexpr char GeckoAppShell::EnableLocation_t::name[];
 constexpr char GeckoAppShell::EnableLocation_t::signature[];
 
-auto GeckoAppShell::EnableLocation(bool a0) -> void
+auto GeckoAppShell::EnableLocation(bool a0) -> bool
 {
     return mozilla::jni::Method<EnableLocation_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }

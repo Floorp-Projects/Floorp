@@ -2890,6 +2890,10 @@ IonBuilder::inlineUnsafeSetReservedSlot(CallInfo& callInfo)
         return InliningStatus_NotInlined;
     uint32_t slot = uint32_t(arg->toConstant()->toInt32());
 
+    // Don't inline if it's not a fixed slot.
+    if (slot >= NativeObject::MAX_FIXED_SLOTS)
+        return InliningStatus_NotInlined;
+
     callInfo.setImplicitlyUsedUnchecked();
 
     MStoreFixedSlot* store =
@@ -2923,6 +2927,10 @@ IonBuilder::inlineUnsafeGetReservedSlot(CallInfo& callInfo, MIRType knownValueTy
     if (!arg->isConstant())
         return InliningStatus_NotInlined;
     uint32_t slot = uint32_t(arg->toConstant()->toInt32());
+
+    // Don't inline if it's not a fixed slot.
+    if (slot >= NativeObject::MAX_FIXED_SLOTS)
+        return InliningStatus_NotInlined;
 
     callInfo.setImplicitlyUsedUnchecked();
 

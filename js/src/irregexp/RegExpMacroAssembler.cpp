@@ -156,6 +156,8 @@ InterpretedRegExpMacroAssembler::Backtrack()
     Emit(BC_POP_BT, 0);
 }
 
+static const int32_t INVALID_OFFSET = -1;
+
 void
 InterpretedRegExpMacroAssembler::Bind(jit::Label* label)
 {
@@ -163,11 +165,12 @@ InterpretedRegExpMacroAssembler::Bind(jit::Label* label)
     MOZ_ASSERT(!label->bound());
     if (label->used()) {
         int pos = label->offset();
-        while (pos != jit::Label::INVALID_OFFSET) {
+        MOZ_ASSERT(pos >= 0);
+        do {
             int fixup = pos;
             pos = *reinterpret_cast<int32_t*>(buffer_ + fixup);
             *reinterpret_cast<uint32_t*>(buffer_ + fixup) = pc_;
-        }
+        } while (pos != INVALID_OFFSET);
     }
     label->bind(pc_);
 }
@@ -516,7 +519,8 @@ InterpretedRegExpMacroAssembler::EmitOrLink(jit::Label* label)
     if (label->bound()) {
         Emit32(label->offset());
     } else {
-        int pos = label->use(pc_);
+        int pos = label->used() ? label->offset() : INVALID_OFFSET;
+        label->use(pc_);
         Emit32(pos);
     }
 }

@@ -175,6 +175,11 @@ public:
       return mRefCount < 0;
     }
 
+    bool HasOneRef() const
+    {
+      return mRefCount == 1;
+    }
+
 private:
     RecycleCallback mRecycleCallback;
     void *mClosure;
