@@ -30,7 +30,7 @@ public class GcmMessageListenerService extends GcmListenerService {
     public void onMessageReceived(final String from, final Bundle bundle) {
         Log.d("GeckoPushGCM", "Message received.  Processing on background thread.");
 
-        if (MmaDelegate.handleGcmMessage(this, bundle)) {
+        if (MmaDelegate.handleGcmMessage(this, from, bundle)) {
             return;
         }
 
