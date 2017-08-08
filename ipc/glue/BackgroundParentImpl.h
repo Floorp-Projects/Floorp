@@ -63,6 +63,15 @@ protected:
   virtual mozilla::ipc::IPCResult
   RecvFlushPendingFileDeletions() override;
 
+  virtual PBackgroundStorageParent*
+  AllocPBackgroundStorageParent() override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor) override;
+
+  virtual bool
+  DeallocPBackgroundStorageParent(PBackgroundStorageParent* aActor) override;
+
   virtual PPendingIPCBlobParent*
   AllocPPendingIPCBlobParent(const IPCBlob& aBlob) override;
 

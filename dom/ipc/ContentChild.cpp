@@ -36,7 +36,6 @@
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/LocalStorage.h"
-#include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
@@ -2091,21 +2090,6 @@ bool
 ContentChild::DeallocPMediaChild(media::PMediaChild *aActor)
 {
   return media::DeallocPMediaChild(aActor);
-}
-
-PStorageChild*
-ContentChild::AllocPStorageChild()
-{
-  MOZ_CRASH("We should never be manually allocating PStorageChild actors");
-  return nullptr;
-}
-
-bool
-ContentChild::DeallocPStorageChild(PStorageChild* aActor)
-{
-  StorageDBChild* child = static_cast<StorageDBChild*>(aActor);
-  child->ReleaseIPDLReference();
-  return true;
 }
 
 PSpeechSynthesisChild*

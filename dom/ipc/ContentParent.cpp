@@ -47,8 +47,6 @@
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
-#include "mozilla/dom/Storage.h"
-#include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/PresentationParent.h"
@@ -3302,20 +3300,6 @@ bool
 ContentParent::DeallocPMediaParent(media::PMediaParent *aActor)
 {
   return media::DeallocPMediaParent(aActor);
-}
-
-PStorageParent*
-ContentParent::AllocPStorageParent()
-{
-  return new StorageDBParent();
-}
-
-bool
-ContentParent::DeallocPStorageParent(PStorageParent* aActor)
-{
-  StorageDBParent* child = static_cast<StorageDBParent*>(aActor);
-  child->ReleaseIPDLReference();
-  return true;
 }
 
 PPresentationParent*

@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_StorageIPC_h
 #define mozilla_dom_StorageIPC_h
 
-#include "mozilla/dom/PStorageChild.h"
-#include "mozilla/dom/PStorageParent.h"
+#include "mozilla/dom/PBackgroundStorageChild.h"
+#include "mozilla/dom/PBackgroundStorageParent.h"
 #include "StorageDBThread.h"
 #include "LocalStorageCache.h"
 #include "StorageObserver.h"
@@ -22,13 +22,14 @@ class OriginAttributesPattern;
 namespace dom {
 
 class LocalStorageManager;
+class PBackgroundStorageParent;
 
 // Child side of the IPC protocol, exposes as DB interface but
 // is responsible to send all requests to the parent process
 // and expects asynchronous answers. Those are then transparently
 // forwarded back to consumers on the child process.
 class StorageDBChild final : public StorageDBBridge
-                           , public PStorageChild
+                           , public PBackgroundStorageChild
 {
   virtual ~StorageDBChild();
 
@@ -123,7 +124,7 @@ private:
 // LocalStorageCache consumer.
 // Also responsible for forwardning all chrome operation notifications
 // such as cookie cleaning etc to the child process.
-class StorageDBParent final : public PStorageParent
+class StorageDBParent final : public PBackgroundStorageParent
                             , public StorageObserverSink
 {
   virtual ~StorageDBParent();
@@ -235,6 +236,15 @@ private:
   // True when IPC channel is open and Send*() methods are OK to use.
   bool mIPCOpen;
 };
+
+PBackgroundStorageParent*
+AllocPBackgroundStorageParent();
+
+mozilla::ipc::IPCResult
+RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor);
+
+bool
+DeallocPBackgroundStorageParent(PBackgroundStorageParent* aActor);
 
 } // namespace dom
 } // namespace mozilla

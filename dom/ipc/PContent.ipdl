@@ -31,7 +31,6 @@ include protocol PParentToChildStream;
 include protocol POfflineCacheUpdate;
 include protocol PRenderFrame;
 include protocol PSpeechSynthesis;
-include protocol PStorage;
 include protocol PTestShell;
 include protocol PJavaScript;
 include protocol PRemoteSpellcheckEngine;
@@ -291,7 +290,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PChildToParentStream;
     manages PParentToChildStream;
     manages PSpeechSynthesis;
-    manages PStorage;
     manages PTestShell;
     manages PJavaScript;
     manages PRemoteSpellcheckEngine;
@@ -710,8 +708,6 @@ parent:
     async PChildToParentStream();
 
     async PSpeechSynthesis();
-
-    nested(inside_cpow) async PStorage();
 
     async PMedia();
 

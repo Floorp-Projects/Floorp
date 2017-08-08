@@ -685,14 +685,8 @@ LocalStorageCache::StartDatabase()
   }
 
   if (XRE_IsParentProcess()) {
-    nsAutoPtr<StorageDBThread> db(new StorageDBThread());
-
-    nsresult rv = db->Init();
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-
-    sDatabase = db.forget();
+    // XXX Fix me!
+    return nullptr;
   } else {
     // Use LocalStorageManager::Ensure in case we're called from
     // DOMSessionStorageManager's initializer and we haven't yet initialized the

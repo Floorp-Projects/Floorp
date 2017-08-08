@@ -189,6 +189,7 @@ LOCAL_INCLUDES += [
     '/caps',
     '/dom/broadcastchannel',
     '/dom/indexedDB',
+    '/dom/storage',
     '/dom/workers',
     '/media/webrtc/trunk',
     '/xpcom/build',
