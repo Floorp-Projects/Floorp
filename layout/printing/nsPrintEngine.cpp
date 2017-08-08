@@ -1026,7 +1026,7 @@ nsPrintEngine::CheckForPrinters(nsIPrintSettings* aPrintSettings)
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
   // See if aPrintSettings already has a printer
-  nsXPIDLString printerName;
+  nsString printerName;
   nsresult rv = aPrintSettings->GetPrinterName(getter_Copies(printerName));
   if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
     return NS_OK;
