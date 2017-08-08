@@ -7,3 +7,4 @@
 == stacking-context-opacity-wins-over-important-style.html stacking-context-transition-ref.html
 == stacking-context-transform-wins-over-important-style.html stacking-context-transition-ref.html
 == transition-and-animation-with-different-durations.html transition-and-animation-with-different-durations-ref.html
+== style-change-during-transition.html style-change-during-transition-ref.html
