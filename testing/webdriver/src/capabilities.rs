@@ -203,7 +203,7 @@ impl SpecNewSessionParameters {
                             value: &Json) -> WebDriverResult<()> {
         match value.as_string() {
             Some(x) => {
-                if x.contains("::/") {
+                if x.contains("://") {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         format!("{} contains a scheme", name)));
@@ -552,6 +552,7 @@ mod tests {
         validate_host("ftpProxy", "ftp", "{}", "example.org").unwrap();
         validate_host("ftpProxy", "ftp", "{}", "::1").unwrap();
         assert!(validate_host("ftpProxy", "ftp", "{}", "ftp://example.org").is_err());
+        assert!(validate_host("ftpProxy", "ftp", "{}", "ftp:/example.org").is_err());
         assert!(validate_host("ftpProxy", "ftp", "{}", "example.org/foo").is_err());
         assert!(validate_host("ftpProxy", "ftp", "{}", "example.org#bar").is_err());
         assert!(validate_host("ftpProxy", "ftp", "{}", "example.org?bar=baz").is_err());
