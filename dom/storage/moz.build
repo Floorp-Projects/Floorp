@@ -34,7 +34,7 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    'PStorage.ipdl',
+    'PBackgroundStorage.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

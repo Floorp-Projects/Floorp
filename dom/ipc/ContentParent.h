@@ -97,7 +97,6 @@ namespace dom {
 
 class Element;
 class TabParent;
-class PStorageParent;
 class ClonedMessageData;
 class MemoryReport;
 class TabContext;
@@ -448,13 +447,6 @@ public:
 
   virtual PHeapSnapshotTempFileHelperParent*
   AllocPHeapSnapshotTempFileHelperParent() override;
-
-  virtual PStorageParent* AllocPStorageParent() override;
-
-  virtual mozilla::ipc::IPCResult RecvPStorageConstructor(PStorageParent* aActor) override
-  {
-    return PContentParent::RecvPStorageConstructor(aActor);
-  }
 
   virtual PJavaScriptParent*
   AllocPJavaScriptParent() override;
@@ -930,8 +922,6 @@ private:
   virtual PMediaParent* AllocPMediaParent() override;
 
   virtual bool DeallocPMediaParent(PMediaParent* aActor) override;
-
-  virtual bool DeallocPStorageParent(PStorageParent* aActor) override;
 
   virtual PPresentationParent* AllocPPresentationParent() override;
 
