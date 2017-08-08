@@ -22,8 +22,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   DeferredSave: "resource://gre/modules/DeferredSave.jsm",
   E10SUtils: "resource:///modules/E10SUtils.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
@@ -1373,13 +1373,16 @@ StartupCache = {
 
   STORE_NAMES: Object.freeze(["general", "locales", "manifests", "other", "permissions", "schemas"]),
 
-  get file() {
-    return FileUtils.getFile("ProfLD", ["startupCache", "webext.sc.lz4"]);
-  },
+  file: OS.Path.join(OS.Constants.Path.localProfileDir, "startupCache", "webext.sc.lz4"),
 
   get saver() {
     if (!this._saver) {
-      this._saver = new DeferredSave(this.file.path,
+      OS.File.makeDir(OS.Path.dirname(this.file), {
+        ignoreExisting: true,
+        from: OS.Constants.Path.localProfileDir,
+      });
+
+      this._saver = new DeferredSave(this.file,
                                      () => this.getBlob(),
                                      {delay: 5000});
     }
