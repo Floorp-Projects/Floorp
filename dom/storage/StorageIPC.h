@@ -143,7 +143,7 @@ class StorageDBParent final : public PBackgroundStorageParent
   virtual ~StorageDBParent();
 
 public:
-  StorageDBParent();
+  explicit StorageDBParent(const nsString& aProfilePath);
 
   void
   Init();
@@ -271,6 +271,13 @@ private:
 
   RefPtr<ObserverSink> mObserverSink;
 
+  // A hack to deal with deadlock between the parent process main thread and
+  // background thread when invoking StorageDBThread::GetOrCreate because it
+  // cannot safely perform a synchronous dispatch back to the main thread
+  // (because we are already synchronously doing things on the stack).
+  // Populated for the same process actors, empty for other process actors.
+  nsString mProfilePath;
+
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 
@@ -279,10 +286,11 @@ private:
 };
 
 PBackgroundStorageParent*
-AllocPBackgroundStorageParent();
+AllocPBackgroundStorageParent(const nsString& aProfilePath);
 
 mozilla::ipc::IPCResult
-RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor);
+RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor,
+                                  const nsString& aProfilePath);
 
 bool
 DeallocPBackgroundStorageParent(PBackgroundStorageParent* aActor);
