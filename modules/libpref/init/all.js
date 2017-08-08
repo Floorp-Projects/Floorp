@@ -3122,7 +3122,7 @@ pref("idle_queue.long_period", 50);
 
 // Control the event prioritization on content main thread
 #ifdef NIGHTLY_BUILD
-pref("prioritized_input_events.enabled", true);
+pref("prioritized_input_events.enabled", false);
 #else
 pref("prioritized_input_events.enabled", false);
 #endif
