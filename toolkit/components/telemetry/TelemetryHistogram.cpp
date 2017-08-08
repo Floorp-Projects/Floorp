@@ -240,7 +240,7 @@ namespace {
 
 // Factory function for histogram instances.
 Histogram*
-internal_CreateHistogramInstance(const HistogramInfo& info, int bucketsOffset);
+internal_CreateHistogramInstance(const HistogramInfo& info);
 
 bool
 internal_IsHistogramEnumId(HistogramID aID)
@@ -265,8 +265,7 @@ internal_GetHistogramById(HistogramID histogramId, ProcessID processId, SessionT
   }
 
   const HistogramInfo& info = gHistogramInfos[histogramId];
-  const int bucketsOffset = gExponentialBucketLowerBoundIndex[histogramId];
-  h = internal_CreateHistogramInstance(info, bucketsOffset);
+  h = internal_CreateHistogramInstance(info);
   MOZ_ASSERT(h);
   gHistogramStorage[histogramId][uint32_t(processId)][uint32_t(sessionType)] = h;
   return h;
@@ -457,7 +456,7 @@ internal_CheckHistogramArguments(const HistogramInfo& info)
 }
 
 Histogram*
-internal_CreateHistogramInstance(const HistogramInfo& passedInfo, int bucketsOffset)
+internal_CreateHistogramInstance(const HistogramInfo& passedInfo)
 {
   if (NS_FAILED(internal_CheckHistogramArguments(passedInfo))) {
     MOZ_ASSERT(false, "Failed histogram argument checks.");
@@ -484,8 +483,7 @@ internal_CreateHistogramInstance(const HistogramInfo& passedInfo, int bucketsOff
   Histogram* h = nullptr;
   switch (info.histogramType) {
   case nsITelemetry::HISTOGRAM_EXPONENTIAL:
-    h = Histogram::FactoryGet(info.min, info.max, info.bucketCount, flags,
-                              &gExponentialBucketLowerBounds[bucketsOffset]);
+    h = Histogram::FactoryGet(info.min, info.max, info.bucketCount, flags);
     break;
   case nsITelemetry::HISTOGRAM_LINEAR:
   case nsITelemetry::HISTOGRAM_CATEGORICAL:
@@ -681,8 +679,7 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
     return NS_OK;
   }
 
-  int bucketsOffset = gExponentialBucketLowerBoundIndex[mId];
-  Histogram* h = internal_CreateHistogramInstance(mHistogramInfo, bucketsOffset);
+  Histogram* h = internal_CreateHistogramInstance(mHistogramInfo);
   if (!h) {
     return NS_ERROR_FAILURE;
   }
