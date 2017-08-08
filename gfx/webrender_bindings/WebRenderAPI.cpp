@@ -664,15 +664,28 @@ DisplayListBuilder::PopStackingContext()
   wr_dp_pop_stacking_context(mWrState);
 }
 
-void
-DisplayListBuilder::PushClip(const wr::LayoutRect& aClipRect,
-                             const wr::WrImageMask* aMask)
+wr::WrClipId
+DisplayListBuilder::DefineClip(const wr::LayoutRect& aClipRect,
+                               const nsTArray<wr::WrComplexClipRegion>* aComplex,
+                               const wr::WrImageMask* aMask)
 {
-  uint64_t clip_id = wr_dp_push_clip(mWrState, aClipRect, nullptr, 0, aMask);
-  WRDL_LOG("PushClip id=%" PRIu64 " r=%s m=%p b=%s\n", clip_id,
+  uint64_t clip_id = wr_dp_define_clip(mWrState, aClipRect,
+      aComplex ? aComplex->Elements() : nullptr,
+      aComplex ? aComplex->Length() : 0,
+      aMask);
+  WRDL_LOG("DefineClip id=%" PRIu64 " r=%s m=%p b=%s complex=%d\n", clip_id,
       Stringify(aClipRect).c_str(), aMask,
-      aMask ? Stringify(aMask->rect).c_str() : "none");
-  mClipIdStack.push_back(wr::WrClipId { clip_id });
+      aMask ? Stringify(aMask->rect).c_str() : "none",
+      aComplex ? aComplex->Length() : 0);
+  return wr::WrClipId { clip_id };
+}
+
+void
+DisplayListBuilder::PushClip(const wr::WrClipId& aClipId)
+{
+  wr_dp_push_clip(mWrState, aClipId.id);
+  WRDL_LOG("PushClip id=%" PRIu64 "\n", aClipId.id);
+  mClipIdStack.push_back(aClipId);
 }
 
 void

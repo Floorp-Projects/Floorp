@@ -773,6 +773,14 @@ void wr_dp_begin(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+uint64_t wr_dp_define_clip(WrState *aState,
+                           LayoutRect aRect,
+                           const WrComplexClipRegion *aComplex,
+                           size_t aComplexCount,
+                           const WrImageMask *aMask)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_end(WrState *aState)
 WR_FUNC;
 
@@ -862,11 +870,8 @@ void wr_dp_push_built_display_list(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
-uint64_t wr_dp_push_clip(WrState *aState,
-                         LayoutRect aRect,
-                         const WrComplexClipRegion *aComplex,
-                         size_t aComplexCount,
-                         const WrImageMask *aMask)
+void wr_dp_push_clip(WrState *aState,
+                     uint64_t aClipId)
 WR_FUNC;
 
 WR_INLINE
