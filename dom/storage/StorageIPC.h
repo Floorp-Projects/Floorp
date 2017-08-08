@@ -44,8 +44,7 @@ public:
   static StorageDBChild*
   GetOrCreate();
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);
+  NS_INLINE_DECL_REFCOUNTING(StorageDBChild);
 
   void AddIPDLReference();
   void ReleaseIPDLReference();
@@ -110,9 +109,6 @@ private:
   mozilla::ipc::IPCResult RecvError(const nsresult& aRv);
 
   nsTHashtable<nsCStringHashKey>& OriginsHavingData();
-
-  ThreadSafeAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 
   // Held to get caches to forward answers to.
   RefPtr<LocalStorageManager> mManager;
@@ -229,6 +225,8 @@ public:
 private:
   // IPC
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  mozilla::ipc::IPCResult RecvDeleteMe() override;
+
   mozilla::ipc::IPCResult RecvAsyncPreload(const nsCString& aOriginSuffix,
                                            const nsCString& aOriginNoSuffix,
                                            const bool& aPriority) override;

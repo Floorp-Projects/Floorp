@@ -13,6 +13,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/Unused.h"
 #include "nsIDiskSpaceWatcher.h"
 #include "nsThreadUtils.h"
@@ -51,25 +52,6 @@ private:
     MOZ_ASSERT(NS_IsMainThread());
   }
 };
-
-NS_IMPL_ADDREF(StorageDBChild)
-
-NS_IMETHODIMP_(MozExternalRefCountType) StorageDBChild::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  nsrefcnt count = --mRefCnt;
-  NS_LOG_RELEASE(this, count, "StorageDBChild");
-  if (count == 1 && mIPCOpen) {
-    Send__delete__(this);
-    return 0;
-  }
-  if (count == 0) {
-    mRefCnt = 1;
-    delete this;
-    return 0;
-  }
-  return count;
-}
 
 void
 StorageDBChild::AddIPDLReference()
@@ -405,6 +387,8 @@ ShutdownObserver::Observe(nsISupports* aSubject,
   if (sStorageChild) {
     sStorageChildDown = true;
 
+    MOZ_ALWAYS_TRUE(sStorageChild->PBackgroundStorageChild::SendDeleteMe());
+
     NS_RELEASE(sStorageChild);
     sStorageChild = nullptr;
   }
@@ -599,6 +583,18 @@ void
 StorageDBParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   // Implement me! Bug 1005169
+}
+
+mozilla::ipc::IPCResult
+StorageDBParent::RecvDeleteMe()
+{
+  AssertIsOnBackgroundThread();
+
+  IProtocol* mgr = Manager();
+  if (!PBackgroundStorageParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(mgr);
+  }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
