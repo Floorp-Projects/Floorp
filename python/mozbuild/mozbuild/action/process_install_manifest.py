@@ -28,32 +28,31 @@ COMPLETE = 'Elapsed: {elapsed:.2f}s; From {dest}: Kept {existing} existing; ' \
     'Removed {rm_files} files and {rm_dirs} directories.'
 
 
-def process_manifest(destdir, paths, track=None,
-        remove_unaccounted=True,
-        remove_all_directory_symlinks=True,
-        remove_empty_directories=True,
+def process_manifest(destdir, paths, track,
         no_symlinks=False,
         defines={}):
 
-    if track:
-        if os.path.exists(track):
-            # We use the same format as install manifests for the tracking
-            # data.
-            manifest = InstallManifest(path=track)
-            remove_unaccounted = FileRegistry()
-            dummy_file = BaseFile()
+    if os.path.exists(track):
+        # We use the same format as install manifests for the tracking
+        # data.
+        manifest = InstallManifest(path=track)
+        remove_unaccounted = FileRegistry()
+        dummy_file = BaseFile()
 
-            finder = FileFinder(destdir, find_dotfiles=True)
-            for dest in manifest._dests:
-                for p, f in finder.find(dest):
-                    remove_unaccounted.add(p, dummy_file)
+        finder = FileFinder(destdir, find_dotfiles=True)
+        for dest in manifest._dests:
+            for p, f in finder.find(dest):
+                remove_unaccounted.add(p, dummy_file)
 
-        else:
-            # If tracking is enabled and there is no file, we don't want to
-            # be removing anything.
-            remove_unaccounted=False
-            remove_empty_directories=False
-            remove_all_directory_symlinks=False
+        remove_empty_directories=True
+        remove_all_directory_symlinks=True
+
+    else:
+        # If tracking is enabled and there is no file, we don't want to
+        # be removing anything.
+        remove_unaccounted = False
+        remove_empty_directories=False
+        remove_all_directory_symlinks=False
 
     manifest = InstallManifest()
     for path in paths:
@@ -81,15 +80,9 @@ def main(argv):
 
     parser.add_argument('destdir', help='Destination directory.')
     parser.add_argument('manifests', nargs='+', help='Path to manifest file(s).')
-    parser.add_argument('--no-remove', action='store_true',
-        help='Do not remove unaccounted files from destination.')
-    parser.add_argument('--no-remove-all-directory-symlinks', action='store_true',
-        help='Do not remove all directory symlinks from destination.')
-    parser.add_argument('--no-remove-empty-directories', action='store_true',
-        help='Do not remove empty directories from destination.')
     parser.add_argument('--no-symlinks', action='store_true',
         help='Do not install symbolic links. Always copy files')
-    parser.add_argument('--track', metavar="PATH",
+    parser.add_argument('--track', metavar="PATH", required=True,
         help='Use installed files tracking information from the given path.')
     parser.add_argument('-D', action=DefinesAction,
         dest='defines', metavar="VAR[=VAL]",
@@ -100,9 +93,7 @@ def main(argv):
     start = time.time()
 
     result = process_manifest(args.destdir, args.manifests,
-        track=args.track, remove_unaccounted=not args.no_remove,
-        remove_all_directory_symlinks=not args.no_remove_all_directory_symlinks,
-        remove_empty_directories=not args.no_remove_empty_directories,
+        track=args.track,
         no_symlinks=args.no_symlinks,
         defines=args.defines)
 
