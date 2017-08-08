@@ -46,14 +46,13 @@ public class URLCompletionTest {
     public void CompletionTest() throws InterruptedException, UiObjectNotFoundException {
         /* type a partial url, and check it autocompletes*/
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         assertTrue (TestHelper.inlineAutocompleteEditText.getText().equals("mozilla.org"));
 
         /* press x to delete the both autocomplete and suggestion */
         TestHelper.cleartextField.click();
-        assertTrue (TestHelper.inlineAutocompleteEditText.getText().equals(""));
+        assertTrue (TestHelper.inlineAutocompleteEditText.getText().equals("Search or enter address"));
         assertFalse (TestHelper.hint.exists());
 
         /* type a full url, and check it does not autocomplete */
