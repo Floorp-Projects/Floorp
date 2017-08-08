@@ -211,6 +211,7 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
   mOneUnitBorder = CheckFourFloatsEqual(mBorderWidths, 1.0);
   mNoBorderRadius = AllCornersZeroSize(mBorderRadii);
   mAllBordersSameStyle = AreBorderSideFinalStylesSame(eSideBitsAll);
+  mAllBordersSameWidth = AllBordersSameWidth();
   mAvoidStroke = false;
 }
 
@@ -3217,10 +3218,8 @@ nsCSSBorderRenderer::DrawBorders()
     return;
   }
 
-  bool allBordersSameWidth = AllBordersSameWidth();
-
-  if (allBordersSameWidth && mBorderWidths[0] == 0.0) {
-    // Some of the allBordersSameWidth codepaths depend on the border
+  if (mAllBordersSameWidth && mBorderWidths[0] == 0.0) {
+    // Some of the mAllBordersSameWidth codepaths depend on the border
     // width being greater than zero.
     return;
   }
@@ -3261,7 +3260,7 @@ nsCSSBorderRenderer::DrawBorders()
   // border drawing code.
   if (mAllBordersSameStyle &&
       mCompositeColors[0] == nullptr &&
-      allBordersSameWidth &&
+      mAllBordersSameWidth &&
       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID &&
       mNoBorderRadius &&
       !mAvoidStroke)
@@ -3310,7 +3309,7 @@ nsCSSBorderRenderer::DrawBorders()
   // This leaves the border corners non-interpolated for single width borders.
   // Doing this is slightly faster and shouldn't be a problem visually.
   if (allBordersSolid &&
-      allBordersSameWidth &&
+      mAllBordersSameWidth &&
       mCompositeColors[0] == nullptr &&
       mBorderWidths[0] == 1 &&
       mNoBorderRadius &&
@@ -3328,7 +3327,7 @@ nsCSSBorderRenderer::DrawBorders()
   }
 
   if (allBordersSolid &&
-      allBordersSameWidth &&
+      mAllBordersSameWidth &&
       mNoBorderRadius &&
       !mAvoidStroke)
   {
@@ -3436,7 +3435,7 @@ nsCSSBorderRenderer::DrawBorders()
     //     |    |            |  |    |    |            |  |
     //     +----+------------+--+    +----+------------+--+
     //
-    // XXX Should we only do this optimization if |allBordersSameWidth| is true?
+    // XXX Should we only do this optimization if |mAllBordersSameWidth| is true?
     //
     // XXX In fact is this optimization even worth the complexity it adds to
     // the code?  1px wide dashed borders are not overly common, and drawing
