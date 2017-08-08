@@ -24,7 +24,7 @@ function assertEditorBreakpoint(dbg, line) {
 }
 
 add_task(function*() {
-  requestLongerTimeout(2);
+  requestLongerTimeout(3);
 
   const dbg = yield initDebugger("doc-scripts.html");
   const { selectors: { getBreakpoints, getBreakpoint }, getState } = dbg;
