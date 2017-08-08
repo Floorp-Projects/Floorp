@@ -13,6 +13,7 @@
 #include "mozilla/SyncRunnable.h"
 #include "nsError.h"
 #include "prsystem.h"
+#include "ImageContainer.h"
 
 #include <algorithm>
 

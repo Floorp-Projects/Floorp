@@ -8,10 +8,11 @@
 #include "GMPDecoderModule.h"
 #include "GMPVideoHost.h"
 #include "MediaData.h"
-#include "VPXDecoder.h"
 #include "mozilla/EndianUtils.h"
-#include "prsystem.h"
 #include "mp4_demuxer/AnnexB.h"
+#include "MP4Decoder.h"
+#include "prsystem.h"
+#include "VPXDecoder.h"
 
 namespace mozilla {
 
