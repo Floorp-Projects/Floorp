@@ -130,14 +130,6 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-# MOZ_B2G covers both device and desktop b2g
-  MOZ_B2G:
-#ifdef MOZ_B2G
-  true,
-#else
-  false,
-#endif
-
   XP_UNIX:
 #ifdef XP_UNIX
   true,
@@ -204,13 +196,6 @@ this.AppConstants = Object.freeze({
 
   ASAN:
 #ifdef MOZ_ASAN
-  true,
-#else
-  false,
-#endif
-
-  MOZ_B2G_RIL:
-#ifdef MOZ_B2G_RIL
   true,
 #else
   false,
@@ -326,8 +311,6 @@ this.AppConstants = Object.freeze({
   INSTALL_LOCALE: "@AB_CD@",
   MOZ_WIDGET_TOOLKIT: "@MOZ_WIDGET_TOOLKIT@",
   ANDROID_PACKAGE_NAME: "@ANDROID_PACKAGE_NAME@",
-  MOZ_B2G_VERSION: @MOZ_B2G_VERSION@,
-  MOZ_B2G_OS_NAME: @MOZ_B2G_OS_NAME@,
 
   DEBUG_JS_MODULES: "@DEBUG_JS_MODULES@",
 
