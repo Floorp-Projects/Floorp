@@ -8,6 +8,7 @@
 const {Cu} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 
 function ScratchpadPanel(iframeWindow, toolbox) {

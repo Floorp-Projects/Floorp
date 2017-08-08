@@ -7,6 +7,7 @@
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
 const {getSystemInfo, getSetting} = require("devtools/shared/system");

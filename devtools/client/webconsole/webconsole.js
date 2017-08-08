@@ -15,6 +15,7 @@ const BrowserLoaderModule = {};
 Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
 
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {PrefObserver} = require("devtools/client/shared/prefs");

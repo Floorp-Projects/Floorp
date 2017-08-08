@@ -9,6 +9,7 @@
 const {Utils: WebConsoleUtils} =
   require("devtools/client/webconsole/utils");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Debugger = require("Debugger");
 const Services = require("Services");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
