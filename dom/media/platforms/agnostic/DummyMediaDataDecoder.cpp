@@ -7,6 +7,7 @@
 #include "DummyMediaDataDecoder.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
+#include "MP4Decoder.h"
 
 namespace mozilla {
 
