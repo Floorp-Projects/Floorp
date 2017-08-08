@@ -25,6 +25,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
+#include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
 #include "mozilla/dom/GamepadTestChannelChild.h"
 #include "mozilla/dom/MessagePortChild.h"
@@ -77,6 +78,7 @@ using mozilla::dom::asmjscache::PAsmJSCacheEntryChild;
 using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStorageChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
+using mozilla::dom::StorageDBChild;
 
 using mozilla::dom::WebAuthnTransactionChild;
 
@@ -199,6 +201,23 @@ BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
   MOZ_ASSERT(aActor);
 
   delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundStorageChild*
+BackgroundChildImpl::AllocPBackgroundStorageChild()
+{
+  MOZ_CRASH("PBackgroundStorageChild actors should be manually constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundStorageChild(
+                                                PBackgroundStorageChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  StorageDBChild* child = static_cast<StorageDBChild*>(aActor);
+  child->ReleaseIPDLReference();
   return true;
 }
 

@@ -70,6 +70,12 @@ protected:
   DeallocPBackgroundIndexedDBUtilsChild(PBackgroundIndexedDBUtilsChild* aActor)
                                         override;
 
+  virtual PBackgroundStorageChild*
+  AllocPBackgroundStorageChild() override;
+
+  virtual bool
+  DeallocPBackgroundStorageChild(PBackgroundStorageChild* aActor) override;
+
   virtual PPendingIPCBlobChild*
   AllocPPendingIPCBlobChild(const IPCBlob& aBlob) override;
 

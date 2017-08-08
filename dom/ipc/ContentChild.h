@@ -49,7 +49,6 @@ namespace dom {
 
 class AlertObserver;
 class ConsoleListener;
-class PStorageChild;
 class ClonedMessageData;
 class TabChild;
 class GetFilesHelperChild;
@@ -295,10 +294,6 @@ public:
   virtual PMediaChild* AllocPMediaChild() override;
 
   virtual bool DeallocPMediaChild(PMediaChild* aActor) override;
-
-  virtual PStorageChild* AllocPStorageChild() override;
-
-  virtual bool DeallocPStorageChild(PStorageChild* aActor) override;
 
   virtual PPresentationChild* AllocPPresentationChild() override;
 

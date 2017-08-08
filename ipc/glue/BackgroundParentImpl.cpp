@@ -29,6 +29,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
+#include "mozilla/dom/StorageIPC.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -240,6 +241,38 @@ BackgroundParentImpl::RecvFlushPendingFileDeletions()
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
+}
+
+auto
+BackgroundParentImpl::AllocPBackgroundStorageParent()
+  -> PBackgroundStorageParent*
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::AllocPBackgroundStorageParent();
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPBackgroundStorageConstructor(
+                                               PBackgroundStorageParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::RecvPBackgroundStorageConstructor(aActor);
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundStorageParent(
+                                               PBackgroundStorageParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::DeallocPBackgroundStorageParent(aActor);
 }
 
 PPendingIPCBlobParent*

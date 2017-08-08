@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PContent;
+include protocol PBackground;
 
 namespace mozilla {
 namespace dom {
@@ -12,16 +12,16 @@ namespace dom {
 /* This protocol bridges async access to the database thread running on the
  * parent process and caches running on the child process.
  */
-nested(upto inside_cpow) sync protocol PStorage
+sync protocol PBackgroundStorage
 {
-  manager PContent;
+  manager PBackground;
 
 parent:
   async __delete__();
 
-  nested(inside_cpow) sync Preload(nsCString originSuffix,
-                                   nsCString originNoSuffix,
-                                   uint32_t alreadyLoadedCount)
+  sync Preload(nsCString originSuffix,
+               nsCString originNoSuffix,
+               uint32_t alreadyLoadedCount)
     returns (nsString[] keys, nsString[] values, nsresult rv);
 
   async AsyncPreload(nsCString originSuffix, nsCString originNoSuffix,
