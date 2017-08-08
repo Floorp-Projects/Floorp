@@ -294,6 +294,7 @@ bool nsContentUtils::sIsUserTimingLoggingEnabled = false;
 bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
 bool nsContentUtils::sIsWebComponentsEnabled = false;
 bool nsContentUtils::sIsCustomElementsEnabled = false;
+bool nsContentUtils::sDevToolsEnabled = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
 bool nsContentUtils::sAnimationsAPICoreEnabled = false;
@@ -702,6 +703,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sIsCustomElementsEnabled,
                                "dom.webcomponents.customelements.enabled", false);
+
+  Preferences::AddBoolVarCache(&sDevToolsEnabled,
+                               "devtools.enabled");
 
   Preferences::AddIntVarCache(&sPrivacyMaxInnerWidth,
                               "privacy.window.maxInnerWidth",
@@ -10802,3 +10806,17 @@ nsContentUtils::ExtractErrorValues(JSContext* aCx,
   }
 }
 
+/* static */ bool
+nsContentUtils::DevToolsEnabled(JSContext* aCx)
+{
+  if (NS_IsMainThread()) {
+    return sDevToolsEnabled;
+  }
+
+  workers::WorkerPrivate* workerPrivate = workers::GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  return workerPrivate->DevToolsEnabled();
+}
