@@ -1481,6 +1481,22 @@ Gecko_CounterStyle_GetSystem(const CounterStylePtr* aPtr) {
   return anonymous->GetSystem();
 }
 
+bool
+Gecko_CounterStyle_IsSingleString(const CounterStylePtr* aPtr) {
+  MOZ_ASSERT(aPtr);
+  AnonymousCounterStyle* anonymous = (*aPtr)->AsAnonymous();
+  return anonymous ? anonymous->IsSingleString() : false;
+}
+
+void
+Gecko_CounterStyle_GetSingleString(const CounterStylePtr* aPtr,
+                                   nsAString* aResult) {
+  MOZ_ASSERT(Gecko_CounterStyle_IsSingleString(aPtr));
+  const nsTArray<nsString>& symbols = Gecko_CounterStyle_GetSymbols(aPtr);
+  MOZ_ASSERT(symbols.Length() == 1);
+  aResult->Assign(symbols[0]);
+}
+
 already_AddRefed<css::URLValue>
 ServoBundledURI::IntoCssUrl()
 {
