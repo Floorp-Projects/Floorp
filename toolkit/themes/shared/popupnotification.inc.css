@@ -123,7 +123,7 @@
 .popup-notification-dropmarker > .button-box > .button-menu-dropmarker > .dropmarker-icon {
   width: 16px;
   height: 16px;
-  list-style-image: url(chrome://global/skin/icons/menubutton-dropmarker.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }
