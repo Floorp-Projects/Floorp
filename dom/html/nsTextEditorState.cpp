@@ -1568,8 +1568,9 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
       editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
 
     // Disable the selection if necessary.
-    if (editorFlags & nsIPlaintextEditor::eEditorDisabledMask)
+    if (newTextEditor->IsDisabled()) {
       mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+    }
 
     newTextEditor->SetFlags(editorFlags);
   }
