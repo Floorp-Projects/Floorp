@@ -216,6 +216,11 @@ private:
 
   // Forwarded from BackgroundParent.
   static bool
+  GetLiveActorArray(PBackgroundParent* aBackgroundActor,
+                    nsTArray<PBackgroundParent*>& aLiveActorArray);
+
+  // Forwarded from BackgroundParent.
+  static bool
   Alloc(ContentParent* aContent,
         Endpoint<PBackgroundParent>&& aEndpoint);
 
@@ -705,6 +710,15 @@ BackgroundParent::GetChildID(PBackgroundParent* aBackgroundActor)
 
 // static
 bool
+BackgroundParent::GetLiveActorArray(
+                                  PBackgroundParent* aBackgroundActor,
+                                  nsTArray<PBackgroundParent*>& aLiveActorArray)
+{
+  return ParentImpl::GetLiveActorArray(aBackgroundActor, aLiveActorArray);
+}
+
+// static
+bool
 BackgroundParent::Alloc(ContentParent* aContent,
                         Endpoint<PBackgroundParent>&& aEndpoint)
 {
@@ -869,6 +883,33 @@ ParentImpl::GetChildID(PBackgroundParent* aBackgroundActor)
   }
 
   return 0;
+}
+
+// static
+bool
+ParentImpl::GetLiveActorArray(PBackgroundParent* aBackgroundActor,
+                              nsTArray<PBackgroundParent*>& aLiveActorArray)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aBackgroundActor);
+  MOZ_ASSERT(aLiveActorArray.IsEmpty());
+
+  auto actor = static_cast<ParentImpl*>(aBackgroundActor);
+  if (actor->mActorDestroyed) {
+    MOZ_ASSERT(false,
+               "GetLiveActorArray called after ActorDestroy was called!");
+    return false;
+  }
+
+  if (!actor->mLiveActorArray) {
+    return true;
+  }
+
+  for (ParentImpl* liveActor : *actor->mLiveActorArray) {
+    aLiveActorArray.AppendElement(liveActor);
+  }
+
+  return true;
 }
 
 // static
