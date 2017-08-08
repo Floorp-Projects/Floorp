@@ -3367,9 +3367,8 @@ nsCSSBorderRenderer::DrawBorders()
     if (style == NS_STYLE_BORDER_STYLE_DASHED ||
         style == NS_STYLE_BORDER_STYLE_DOTTED)
     {
-      // pretend that all borders aren't the same; we need to draw
-      // things separately for dashed/dotting
-      mAllBordersSameStyle = false;
+      // we need to draw things separately for dashed/dotting
+      forceSeparateCorners = true;
       dashedSides |= (1 << i);
     }
   }
