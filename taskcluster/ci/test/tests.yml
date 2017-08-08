@@ -136,6 +136,7 @@ firefox-ui-functional-local:
                     - firefox_ui_tests/taskcluster_windows.py
                 macosx.*:
                     - firefox_ui_tests/taskcluster.py
+                    - firefox_ui_tests/taskcluster_mac.py
                 linux.*:
                     - firefox_ui_tests/taskcluster.py
                     - remove_executables.py
@@ -158,6 +159,7 @@ firefox-ui-functional-remote:
                     - firefox_ui_tests/taskcluster_windows.py
                 macosx.*:
                     - firefox_ui_tests/taskcluster.py
+                    - firefox_ui_tests/taskcluster_mac.py
                 linux.*:
                     - firefox_ui_tests/taskcluster.py
                     - remove_executables.py
@@ -361,6 +363,7 @@ marionette:
                             - marionette/windows_taskcluster_config.py
                         macosx.*:
                             - marionette/prod_config.py
+                            - marionette/mac_taskcluster_config.py
                         default:
                             - marionette/prod_config.py
                             - remove_executables.py
@@ -396,6 +399,7 @@ marionette-headless:
                             - marionette/windows_taskcluster_config.py
                         macosx.*:
                             - marionette/prod_config.py
+                            - marionette/mac_taskcluster_config.py
                         default:
                             - marionette/prod_config.py
                             - remove_executables.py
