@@ -4,7 +4,7 @@
 
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-devtools.js */
-/* import-globals-from ext-utils.js */
+/* import-globals-from ext-browser.js */
 
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 

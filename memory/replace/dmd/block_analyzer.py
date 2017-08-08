@@ -88,7 +88,7 @@ parser.add_argument('-sfl', '--max-stack-frame-length', type=int,
 parser.add_argument('-a', '--ignore-alloc-fns', action='store_true',
                     help='ignore allocation functions at the start of traces')
 
-parser.add_argument('-f', '--max-frames', type=range_1_24,
+parser.add_argument('-f', '--max-frames', type=range_1_24, default=8,
                     help='maximum number of frames to consider in each trace')
 
 parser.add_argument('-c', '--chain-reports', action='store_true',

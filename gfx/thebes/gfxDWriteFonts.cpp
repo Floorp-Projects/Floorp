@@ -460,7 +460,7 @@ gfxDWriteFont::GetSpaceGlyph()
 bool
 gfxDWriteFont::SetupCairoFont(DrawTarget* aDrawTarget)
 {
-    cairo_scaled_font_t *scaledFont = GetCairoScaledFont();
+    cairo_scaled_font_t *scaledFont = InitCairoScaledFont();
     if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
         // the cairo_t, precluding any further drawing.
@@ -497,7 +497,7 @@ gfxDWriteFont::CairoFontFace()
 
 
 cairo_scaled_font_t *
-gfxDWriteFont::GetCairoScaledFont()
+gfxDWriteFont::InitCairoScaledFont()
 {
     if (!mScaledFont) {
         cairo_matrix_t sizeMatrix;
@@ -679,35 +679,23 @@ gfxDWriteFont::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 already_AddRefed<ScaledFont>
 gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 {
-  bool wantCairo = aTarget->GetBackendType() == BackendType::CAIRO;
-  if (mAzureScaledFont && mAzureScaledFontIsCairo == wantCairo) {
-    RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
-    return scaledFont.forget();
-  }
+    if (!mAzureScaledFont) {
+        gfxDWriteFontEntry *fe =
+            static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
+        bool useEmbeddedBitmap =
+            fe->IsCJKFont() &&
+            HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
+        bool forceGDI = GetForceGDIClassic();
 
-  NativeFont nativeFont;
-  nativeFont.mType = NativeFontType::DWRITE_FONT_FACE;
-  nativeFont.mFont = GetFontFace();
+        IDWriteRenderingParams* params = gfxWindowsPlatform::GetPlatform()->GetRenderingParams(
+            mUseClearType ?
+                (forceGDI ?
+                    gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC :
+                    gfxWindowsPlatform::TEXT_RENDERING_NORMAL) :
+                gfxWindowsPlatform::TEXT_RENDERING_NO_CLEARTYPE);
 
-  if (wantCairo) {
-    mAzureScaledFont = Factory::CreateScaledFontWithCairo(nativeFont,
-                                                        GetUnscaledFont(),
-                                                        GetAdjustedSize(),
-                                                        GetCairoScaledFont());
-  } else {
-    gfxDWriteFontEntry *fe =
-        static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-    bool useEmbeddedBitmap = (fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize)));
-    bool forceGDI = GetForceGDIClassic();
-
-    IDWriteRenderingParams* params = gfxWindowsPlatform::GetPlatform()->GetRenderingParams(
-      mUseClearType ?
-        (forceGDI ?
-          gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC : gfxWindowsPlatform::TEXT_RENDERING_NORMAL) :
-        gfxWindowsPlatform::TEXT_RENDERING_NO_CLEARTYPE);
-
-    const gfxFontStyle* fontStyle = GetStyle();
-    mAzureScaledFont =
+        const gfxFontStyle* fontStyle = GetStyle();
+        mAzureScaledFont =
             Factory::CreateScaledFontForDWriteFont(mFontFace, fontStyle,
                                                    GetUnscaledFont(),
                                                    GetAdjustedSize(),
@@ -716,10 +704,21 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
                                                    params,
                                                    params->GetGamma(),
                                                    params->GetEnhancedContrast());
-  }
+        if (!mAzureScaledFont) {
+            return nullptr;
+        }
+    }
 
-  mAzureScaledFontIsCairo = wantCairo;
+    if (aTarget->GetBackendType() == BackendType::CAIRO) {
+        if (!mAzureScaledFont->GetCairoScaledFont()) {
+            cairo_scaled_font_t* cairoScaledFont = InitCairoScaledFont();
+            if (!cairoScaledFont) {
+                return nullptr;
+            }
+            mAzureScaledFont->SetCairoScaledFont(cairoScaledFont);
+        }
+    }
 
-  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
-  return scaledFont.forget();
+    RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+    return scaledFont.forget();
 }
