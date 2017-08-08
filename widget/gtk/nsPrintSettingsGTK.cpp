@@ -475,7 +475,7 @@ nsPrintSettingsGTK::GetPrinterName(char16_t * *aPrinter)
       gtkPrintName = gtk_printer_get_name(mGTKPrinter);
     } else {
       // This mimics what nsPrintSettingsImpl does when we try to Get before we Set
-      nsXPIDLString nullPrintName;
+      nsString nullPrintName;
       *aPrinter = ToNewUnicode(nullPrintName);
       return NS_OK;
     }

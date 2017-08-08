@@ -48,6 +48,8 @@ XPCOMUtils.defineLazyGetter(this, "gDeletionPingFilePath", function() {
 });
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryHealthPing",
+                                  "resource://gre/modules/TelemetryHealthPing.jsm");
 // Maxmimum time, in milliseconds, archive pings should be retained.
 const MAX_ARCHIVED_PINGS_RETENTION_MS = 60 * 24 * 60 * 60 * 1000;  // 60 days
 
@@ -1365,6 +1367,10 @@ var TelemetryStorageImpl = {
                .add(Math.floor(fileSize / 1024 / 1024));
       Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").add();
       TelemetryStopwatch.cancel("TELEMETRY_PENDING_LOAD_MS");
+
+      // Currently we don't have the ping type available without loading the ping from disk.
+      // Bug 1384903 will fix that.
+      TelemetryHealthPing.recordDiscardedPing("<unknown>");
       throw new Error("loadPendingPing - exceeded the maximum ping size: " + fileSize);
     }
 
@@ -1598,6 +1604,10 @@ var TelemetryStorageImpl = {
             Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB")
                      .add(Math.floor(info.size / 1024 / 1024));
             Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").add();
+
+            // Currently we don't have the ping type available without loading the ping from disk.
+            // Bug 1384903 will fix that.
+            TelemetryHealthPing.recordDiscardedPing("<unknown>");
           }
           continue;
         }

@@ -133,8 +133,10 @@ PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
       os->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       os->RemoveObserver(this, "profile-change-teardown");
     }
+    // Let's prevent any new preallocated processes from starting. ContentParent will
+    // handle the shutdown of the existing process and the mPreallocatedProcess reference
+    // will be cleared by the ClearOnShutdown of the manager singleton.
     mShutdown = true;
-    CloseProcess();
   } else {
     MOZ_ASSERT(false);
   }

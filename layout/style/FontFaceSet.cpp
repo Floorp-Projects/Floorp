@@ -1437,7 +1437,7 @@ FontFaceSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
   aBufferLength = static_cast<uint32_t>(bufferLength64);
 
   // read all the decoded data
-  aBuffer = static_cast<uint8_t*> (moz_xmalloc(sizeof(uint8_t) * aBufferLength));
+  aBuffer = static_cast<uint8_t*>(malloc(sizeof(uint8_t) * aBufferLength));
   if (!aBuffer) {
     aBufferLength = 0;
     return NS_ERROR_OUT_OF_MEMORY;

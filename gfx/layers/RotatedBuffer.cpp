@@ -740,25 +740,32 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
   return result;
 }
 
-DrawTarget*
+RefPtr<CapturedPaintState>
 RotatedContentBuffer::BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                   DrawIterator* aIter,
-                                                   gfx::Matrix* aOutMatrix)
+                                                   DrawIterator* aIter)
 {
-  MOZ_ASSERT(aOutMatrix);
   if (aPaintState.mMode == SurfaceMode::SURFACE_NONE) {
     return nullptr;
   }
 
+  Matrix transform;
   DrawTarget* result = BorrowDrawTargetForQuadrantUpdate(aPaintState.mRegionToDraw.GetBounds(),
                                                          BUFFER_BOTH, aIter,
-                                                         false, aOutMatrix);
+                                                         false, &transform);
   if (!result) {
     return nullptr;
   }
 
   ExpandDrawRegion(aPaintState, aIter, result->GetBackendType());
-  return result;
+
+  RefPtr<CapturedPaintState> state =
+    new CapturedPaintState(aPaintState.mRegionToDraw,
+                           result,
+                           nullptr, /* aTargetOnWhite */
+                           transform,
+                           aPaintState.mMode,
+                           aPaintState.mContentType);
+  return state;
 }
 
 /*static */ bool
@@ -836,7 +843,6 @@ RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
   // Can't stack allocate refcounted objects.
   RefPtr<CapturedPaintState> capturedPaintState =
     MakeAndAddRef<CapturedPaintState>(regionToDraw,
-                                      nullptr,
                                       mDTBuffer,
                                       mDTBufferOnWhite,
                                       Matrix(),

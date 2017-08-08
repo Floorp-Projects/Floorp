@@ -361,11 +361,10 @@ nsTreeBodyFrame::EnsureView()
       nsCOMPtr<nsITreeView> treeView;
       mTreeBoxObject->GetView(getter_AddRefs(treeView));
       if (treeView && weakFrame.IsAlive()) {
-        nsXPIDLString rowStr;
+        nsString rowStr;
         box->GetProperty(u"topRow", getter_Copies(rowStr));
-        nsAutoString rowStr2(rowStr);
         nsresult error;
-        int32_t rowIndex = rowStr2.ToInteger(&error);
+        int32_t rowIndex = rowStr.ToInteger(&error);
 
         // Set our view.
         SetView(treeView);

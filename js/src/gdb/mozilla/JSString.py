@@ -38,6 +38,15 @@ class JSStringPtr(Common):
         d = self.value['d']
         length = d['u1']['length']
         flags = d['u1']['flags']
+        corrupt = {
+            0x2f2f2f2f: 'JS_FRESH_NURSERY_PATTERN',
+            0x2b2b2b2b: 'JS_SWEPT_NURSERY_PATTERN',
+            0xe5e5e5e5: 'jemalloc freed memory',
+        }.get(flags & 0xffffffff)
+        if corrupt:
+            for ch in "<CORRUPT:%s>" % corrupt:
+                yield ch
+            return
         is_rope = ((flags & self.stc.TYPE_FLAGS_MASK) == self.stc.ROPE_FLAGS)
         if is_rope:
             for c in JSStringPtr(d['s']['u2']['left'], self.cache).chars():
@@ -60,10 +69,24 @@ class JSStringPtr(Common):
             for i in range(int(length)):
                 yield chars[i]
 
-    def to_string(self):
+    def to_string(self, maxlen=200):
         s = u''
+        invalid_chars_allowed = 2
         for c in self.chars():
-            s += chr(c)
+            if len(s) >= maxlen:
+                s += "..."
+                break
+
+            try:
+                # Convert from gdb.Value to string.
+                s += chr(c)
+            except ValueError:
+                if invalid_chars_allowed == 0:
+                    s += "<TOO_MANY_INVALID_CHARS>"
+                    break
+                else:
+                    invalid_chars_allowed -= 1
+                    s += "\\x%04x" % (c & 0xffff)
         return s
 
 @ptr_pretty_printer("JSAtom")

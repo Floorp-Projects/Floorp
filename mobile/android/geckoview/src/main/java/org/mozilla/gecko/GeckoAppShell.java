@@ -317,37 +317,28 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     // Permissions are explicitly checked when requesting content permission.
     @SuppressLint("MissingPermission")
-    /* package */ static void enableLocation(final boolean enable) {
-        if (!ThreadUtils.isOnUiThread()) {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        enableLocation(enable);
-                    } catch (final SecurityException e) {
-                        Log.e(LOGTAG, "No location permission", e);
-                    }
-                }
-            });
-            return;
-        }
-
-        LocationManager lm = getLocationManager(getApplicationContext());
+    private static synchronized boolean enableLocation(final boolean enable) {
+        final LocationManager lm = getLocationManager(getApplicationContext());
         if (lm == null) {
-            return;
+            return false;
         }
 
         if (!enable) {
             lm.removeUpdates(getLocationListener());
-            return;
+            return true;
         }
 
-        Location lastKnownLocation = getLastKnownLocation(lm);
+        if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER) &&
+            !lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            return false;
+        }
+
+        final Location lastKnownLocation = getLastKnownLocation(lm);
         if (lastKnownLocation != null) {
             getLocationListener().onLocationChanged(lastKnownLocation);
         }
 
-        Criteria criteria = new Criteria();
+        final Criteria criteria = new Criteria();
         criteria.setSpeedRequired(false);
         criteria.setBearingRequired(false);
         criteria.setAltitudeRequired(false);
@@ -361,12 +352,14 @@ public class GeckoAppShell
             criteria.setPowerRequirement(Criteria.POWER_LOW);
         }
 
-        String provider = lm.getBestProvider(criteria, true);
-        if (provider == null)
-            return;
+        final String provider = lm.getBestProvider(criteria, true);
+        if (provider == null) {
+            return false;
+        }
 
-        Looper l = Looper.getMainLooper();
+        final Looper l = Looper.getMainLooper();
         lm.requestLocationUpdates(provider, 100, 0.5f, getLocationListener(), l);
+        return true;
     }
 
     private static LocationManager getLocationManager(Context context) {
@@ -391,7 +384,7 @@ public class GeckoAppShell
     /* package */ static native void onSensorChanged(int hal_type, float x, float y, float z,
                                                      float w, int accuracy, long time);
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
     /* package */ static native void onLocationChanged(double latitude, double longitude,
                                                        double altitude, float accuracy,
                                                        float bearing, float speed, long time);
@@ -488,12 +481,12 @@ public class GeckoAppShell
 
         // Geolocation.
         @Override
-        public void onLocationChanged(Location location) {
+        public void onLocationChanged(final Location location) {
             // No logging here: user-identifying information.
-            GeckoAppShell.onLocationChanged(location.getLatitude(), location.getLongitude(),
-                                            location.getAltitude(), location.getAccuracy(),
-                                            location.getBearing(), location.getSpeed(),
-                                            location.getTime());
+            GeckoAppShell.onLocationChanged(
+                location.getLatitude(), location.getLongitude(),
+                location.getAltitude(), location.getAccuracy(),
+                location.getBearing(), location.getSpeed(), location.getTime());
         }
 
         @Override

@@ -256,7 +256,6 @@ android-x86-tests:
     - xpcshell
 
 windows8-tests:
-    - crashtest
     - mochitest
     - mochitest-browser-chrome
     - mochitest-devtools-chrome

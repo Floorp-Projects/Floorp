@@ -24,20 +24,17 @@ PlatformThreadId PaintThread::sThreadId;
 
 // RAII make sure we clean up and restore our draw targets
 // when we paint async.
-struct AutoCapturedPaintSetup {
-  AutoCapturedPaintSetup(DrawTarget* aTarget,
-                         DrawTargetCapture* aCapture,
-                         CompositorBridgeChild* aBridge)
-  : mTarget(aTarget)
-  , mRestorePermitsSubpixelAA(aTarget->GetPermitSubpixelAA())
-  , mOldTransform(aTarget->GetTransform())
+struct MOZ_STACK_CLASS AutoCapturedPaintSetup
+{
+  AutoCapturedPaintSetup(CapturedPaintState* aState, CompositorBridgeChild* aBridge)
+  : mState(aState)
+  , mTarget(aState->mTarget)
+  , mRestorePermitsSubpixelAA(mTarget->GetPermitSubpixelAA())
+  , mOldTransform(mTarget->GetTransform())
   , mBridge(aBridge)
   {
-    MOZ_ASSERT(mTarget);
-    MOZ_ASSERT(aCapture);
-
-    mTarget->SetTransform(aCapture->GetTransform());
-    mTarget->SetPermitSubpixelAA(aCapture->GetPermitSubpixelAA());
+    mTarget->SetTransform(aState->mCapture->GetTransform());
+    mTarget->SetPermitSubpixelAA(aState->mCapture->GetPermitSubpixelAA());
   }
 
   ~AutoCapturedPaintSetup()
@@ -54,10 +51,11 @@ struct AutoCapturedPaintSetup {
     mTarget->Flush();
 
     if (mBridge) {
-      mBridge->NotifyFinishedAsyncPaint();
+      mBridge->NotifyFinishedAsyncPaint(mState);
     }
   }
 
+  RefPtr<CapturedPaintState> mState;
   DrawTarget* mTarget;
   bool mRestorePermitsSubpixelAA;
   Matrix mOldTransform;
@@ -163,7 +161,7 @@ PaintThread::PaintContentsAsync(CompositorBridgeChild* aBridge,
   DrawTarget* target = aState->mTarget;
   DrawTargetCapture* capture = aState->mCapture;
 
-  AutoCapturedPaintSetup setup(target, capture, aBridge);
+  AutoCapturedPaintSetup setup(aState, aBridge);
 
   if (!aCallback(aState)) {
     return;
@@ -186,7 +184,7 @@ PaintThread::PaintContents(CapturedPaintState* aState,
   RefPtr<CompositorBridgeChild> cbc;
   if (!gfxPrefs::LayersOMTPForceSync()) {
     cbc = CompositorBridgeChild::Get();
-    cbc->NotifyBeginAsyncPaint();
+    cbc->NotifyBeginAsyncPaint(aState);
   }
   RefPtr<CapturedPaintState> state(aState);
   RefPtr<DrawTargetCapture> capture(aState->mCapture);

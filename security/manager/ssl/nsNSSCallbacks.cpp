@@ -801,7 +801,7 @@ PK11PasswordPromptRunnable::RunOnTargetThread()
     return;
   }
 
-  nsXPIDLString password;
+  nsString password;
   // |checkState| is unused because |checkMsg| (the argument just before it) is
   // null, but XPConnect requires it to point to a valid bool nonetheless.
   bool checkState = false;

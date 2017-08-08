@@ -1512,7 +1512,9 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
     size_t compartmentCount = CountCompartments(cx);
 
+#ifdef JS_GC_ZEAL
     JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
+#endif
 
     for (unsigned thread = threadStart; thread < threadEnd; thread++) {
         if (verbose)
