@@ -979,6 +979,42 @@ struct ParamTraits<mozilla::Variant<Ts...>>
   }
 };
 
+template<typename T>
+struct ParamTraits<mozilla::dom::Optional<T>>
+{
+  typedef mozilla::dom::Optional<T> paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    if (aParam.WasPassed()) {
+      WriteParam(aMsg, true);
+      WriteParam(aMsg, aParam.Value());
+      return;
+    }
+
+    WriteParam(aMsg, false);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    bool wasPassed = false;
+
+    if (!ReadParam(aMsg, aIter, &wasPassed)) {
+      return false;
+    }
+
+    aResult->Reset();
+
+    if (wasPassed) {
+      if (!ReadParam(aMsg, aIter, &aResult->Construct())) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __IPC_GLUE_IPCMESSAGEUTILS_H__ */
