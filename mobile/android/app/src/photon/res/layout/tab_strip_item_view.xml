@@ -47,6 +47,6 @@
         android:duplicateParentState="true"
         android:scaleType="center"
         android:src="@drawable/tab_close"
-        android:tint="@color/tab_strip_item_title"/>
+        gecko:drawableTintList="@color/tab_strip_item_title"/>
 
 </merge>
