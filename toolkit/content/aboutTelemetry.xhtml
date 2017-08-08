@@ -97,10 +97,14 @@
       <div id="ping-picker" class="hidden">
         <div id="ping-source-picker">
           <h4 class="title">&aboutTelemetry.pingDataSource;</h4>
-          <input type="radio" id="ping-source-current" name="choose-ping-source" value="current" checked="checked" />
-          &aboutTelemetry.showCurrentPingData;
-          <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
-          &aboutTelemetry.showArchivedPingData;
+          <div>
+            <input type="radio" id="ping-source-current" name="choose-ping-source" value="current" checked="checked" />
+            &aboutTelemetry.showCurrentPingData;
+          </div>
+          <div id="ping-source-archive-container">
+            <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
+            &aboutTelemetry.showArchivedPingData;
+          </div>
         </div>
         <div id="current-ping-picker">
           <input id="show-subsession-data" type="checkbox" checked="checked" />&aboutTelemetry.showSubsessionData;
