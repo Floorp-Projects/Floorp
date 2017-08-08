@@ -7,6 +7,7 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMErrorBinding.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/UseCounter.h"
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {
@@ -66,6 +67,13 @@ DOMError::Constructor(const GlobalObject& aGlobal,
                       ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+
+  if (window) {
+    nsCOMPtr<nsIDocument> doc = window->GetDoc();
+    if (doc) {
+      doc->SetDocumentAndPageUseCounter(eUseCounter_custom_DOMErrorConstructor);
+    }
+  }
 
   // Window is null for chrome code.
 
