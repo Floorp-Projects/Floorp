@@ -171,6 +171,9 @@ CompositorBridgeChild::Destroy()
     wrBridge->Destroy(/* aIsSync */ false);
   }
 
+  // Flush async paints before we destroy texture data.
+  FlushAsyncPaints();
+
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
   for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
     RefPtr<TextureClient> texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
@@ -1131,7 +1134,7 @@ CompositorBridgeChild::GetNextPipelineId()
 }
 
 void
-CompositorBridgeChild::NotifyBeginAsyncPaint()
+CompositorBridgeChild::NotifyBeginAsyncPaint(CapturedPaintState* aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1143,16 +1146,46 @@ CompositorBridgeChild::NotifyBeginAsyncPaint()
   MOZ_ASSERT(!mIsWaitingForPaint);
 
   mOutstandingAsyncPaints++;
+
+  // Mark texture clients that they are being used for async painting, and
+  // make sure we hold them alive on the main thread.
+  aState->mTextureClient->AddPaintThreadRef();
+  mTextureClientsForAsyncPaint.AppendElement(aState->mTextureClient);
+  if (aState->mTextureClientOnWhite) {
+    aState->mTextureClientOnWhite->AddPaintThreadRef();
+    mTextureClientsForAsyncPaint.AppendElement(aState->mTextureClientOnWhite);
+  }
 }
 
 void
-CompositorBridgeChild::NotifyFinishedAsyncPaint()
+CompositorBridgeChild::NotifyFinishedAsyncPaint(CapturedPaintState* aState)
 {
   MOZ_ASSERT(PaintThread::IsOnPaintThread());
 
   MonitorAutoLock lock(mPaintLock);
 
   mOutstandingAsyncPaints--;
+
+  // These textures should be held alive on the main thread. The ref we
+  // captured should not be the final ref.
+  MOZ_RELEASE_ASSERT(!aState->mTextureClient->HasOneRef());
+
+  // It's now safe to drop the paint thread ref we're holding, since we've
+  // flushed writes to the underlying TextureData. Note that we keep the
+  // main thread ref around until FlushAsyncPaints is called, lazily ensuring
+  // the Release occurs on the main thread (versus a message in the event
+  // loop).
+  //
+  // Note that we zap our ref immediately after. Otherwise, the main thread
+  // could wake up when we drop the lock, and we could still be holding a ref
+  // on the paint thread. If this causes TextureClient to destroy then it will
+  // be destroyed on the wrong thread.
+  aState->mTextureClient->DropPaintThreadRef();
+  aState->mTextureClient = nullptr;
+  if (aState->mTextureClientOnWhite) {
+    aState->mTextureClientOnWhite->DropPaintThreadRef();
+    aState->mTextureClientOnWhite = nullptr;
+  }
 
   // It's possible that we painted so fast that the main thread never reached
   // the code that starts delaying messages. If so, mIsWaitingForPaint will be
@@ -1209,6 +1242,9 @@ CompositorBridgeChild::FlushAsyncPaints()
   while (mIsWaitingForPaint) {
     lock.Wait();
   }
+
+  // It's now safe to free any TextureClients that were used during painting.
+  mTextureClientsForAsyncPaint.Clear();
 }
 
 } // namespace layers

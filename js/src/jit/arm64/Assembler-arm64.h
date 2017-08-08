@@ -368,21 +368,8 @@ class Assembler : public vixl::Assembler
     static const size_t OffsetOfJumpTableEntryPointer = 8;
 
   public:
-    void writeCodePointer(AbsoluteLabel* absoluteLabel) {
-        MOZ_ASSERT(!absoluteLabel->bound());
-        uintptr_t x = LabelBase::INVALID_OFFSET;
-        BufferOffset off = EmitData(&x, sizeof(uintptr_t));
-
-        // The x86/x64 makes general use of AbsoluteLabel and weaves a linked list
-        // of uses of an AbsoluteLabel through the assembly. ARM only uses labels
-        // for the case statements of switch jump tables. Thus, for simplicity, we
-        // simply treat the AbsoluteLabel as a label and bind it to the offset of
-        // the jump table entry that needs to be patched.
-        LabelBase* label = absoluteLabel;
-        label->bind(off.getOffset());
-    }
     void writeCodePointer(CodeOffset* label) {
-        uintptr_t x = LabelBase::INVALID_OFFSET;
+        uintptr_t x = uintptr_t(-1);
         BufferOffset off = EmitData(&x, sizeof(uintptr_t));
         label->bind(off.getOffset());
     }
