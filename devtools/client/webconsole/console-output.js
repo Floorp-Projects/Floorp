@@ -11,7 +11,6 @@ const {Ci} = require("chrome");
 loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 loader.lazyImporter(this, "escapeHTML", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 
-loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "TableWidget", "devtools/client/shared/widgets/TableWidget", true);
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
@@ -25,6 +24,7 @@ const l10n = require("devtools/client/webconsole/webconsole-l10n");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {extend} = require("devtools/shared/extend");
+const defer = require("devtools/shared/defer");
 
 const MAX_STRING_GRIP_LENGTH = 36;
 const {ELLIPSIS} = require("devtools/shared/l10n");

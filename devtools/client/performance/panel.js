@@ -6,8 +6,8 @@
 "use strict";
 
 const { Task } = require("devtools/shared/task");
+const defer = require("devtools/shared/defer");
 
-loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 
