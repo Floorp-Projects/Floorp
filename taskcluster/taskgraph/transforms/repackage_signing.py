@@ -10,7 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
-from taskgraph.util.scriptworker import get_signing_cert_scope
+from taskgraph.util.scriptworker import get_signing_cert_scope_per_platform
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
@@ -67,8 +67,12 @@ def make_repackage_signing_description(config, jobs):
             attributes['locale'] = dep_job.attributes.get('locale')
             locale_str = "{}/".format(dep_job.attributes.get('locale'))
 
-        scopes = [get_signing_cert_scope(config),
-                  "project:releng:signing:format:mar"]
+        build_platform = dep_job.attributes.get('build_platform')
+        is_nightly = dep_job.attributes.get('nightly')
+        signing_cert_scope = get_signing_cert_scope_per_platform(
+            build_platform, is_nightly, config
+        )
+        scopes = [signing_cert_scope, 'project:releng:signing:format:mar']
 
         upstream_artifacts = [{
             "taskId": {"task-reference": "<repackage>"},
@@ -78,7 +82,7 @@ def make_repackage_signing_description(config, jobs):
             ],
             "formats": ["mar"]
         }]
-        if 'win' in dep_job.attributes.get('build_platform'):
+        if 'win' in build_platform:
             upstream_artifacts.append({
                 "taskId": {"task-reference": "<repackage>"},
                 "taskType": "repackage",
@@ -90,7 +94,7 @@ def make_repackage_signing_description(config, jobs):
             scopes.append("project:releng:signing:format:sha2signcode")
 
             # Stub installer is only generated on win32
-            if '32' in dep_job.attributes.get('build_platform'):
+            if '32' in build_platform:
                 upstream_artifacts.append({
                     "taskId": {"task-reference": "<repackage>"},
                     "taskType": "repackage",
@@ -121,8 +125,7 @@ def make_repackage_signing_description(config, jobs):
             'win32-nightly',
             'win64-nightly'
         ]
-        if dep_job.attributes.get('build_platform') in funsize_platforms and \
-                dep_job.attributes.get('nightly'):
+        if build_platform in funsize_platforms and is_nightly:
             route_template = "project.releng.funsize.level-{level}.{project}"
             task['routes'] = [
                 route_template.format(project=config.params['project'],
