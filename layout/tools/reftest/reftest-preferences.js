@@ -87,6 +87,7 @@ user_pref("toolkit.telemetry.unified", false);
 user_pref("browser.safebrowsing.phishing.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.blockedURIs.enabled", false);
+user_pref("browser.safebrowsing.passwords.enabled", false);
 user_pref("browser.safebrowsing.downloads.remote.url", "http://127.0.0.1/safebrowsing-dummy/gethash");
 user_pref("browser.safebrowsing.provider.google.gethashURL", "http://127.0.0.1/safebrowsing-dummy/gethash");
 user_pref("browser.safebrowsing.provider.google.updateURL", "http://127.0.0.1/safebrowsing-dummy/update");
