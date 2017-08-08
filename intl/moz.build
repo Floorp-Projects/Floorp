@@ -16,7 +16,6 @@ DIRS += [
     'lwbrk',
     'strres',
     'unicharutil',
-    'l10n',
 ]
 
 DIRS += [
