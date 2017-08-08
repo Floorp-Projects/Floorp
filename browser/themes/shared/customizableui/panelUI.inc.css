@@ -1200,10 +1200,8 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
   margin: 0;
 }
 
-%ifdef MOZ_PHOTON_THEME
 #widget-overflow-fixed-list .toolbarbutton-1 > .toolbarbutton-text,
 #widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text,
-%endif
 .subviewbutton:not(.panel-subview-footer) > .toolbarbutton-text,
 /* Bookmark items need a more specific selector. */
 .PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .menu-text,
@@ -1373,10 +1371,6 @@ photonpanelmultiview panelview:not([mainView]) .subviewbutton.panel-subview-foot
 
 /* END photon adjustments */
 
-%ifndef MOZ_PHOTON_THEME
-.widget-overflow-list > .toolbarbutton-1:not(:first-child),
-.widget-overflow-list > toolbaritem:not(:first-child),
-%endif
 panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
@@ -1601,63 +1595,20 @@ toolbarpaletteitem[place="palette"] > #search-container {
   min-height: 37px;
 }
 
-%ifndef MOZ_PHOTON_THEME
-.toolbaritem-combined-buttons@inAnyPanel@ {
-  background-color: transparent;
-  border-radius: 2px;
-  border: 1px solid;
-  border-color: transparent;
-  border-bottom-color: var(--panel-separator-color);
-  padding: 0;
-  transition-property: background-color, border-color;
-  transition-duration: 150ms;
-}
-
-/* Make direct siblings overlap borders: */
-.toolbaritem-combined-buttons + .toolbaritem-combined-buttons@inAnyPanel@ {
-  border-top-color: transparent !important;
-}
-
-.toolbaritem-combined-buttons + .toolbaritem-combined-buttons@inAnyPanel@,
-toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem][place="panel"] {
-  margin-top: -1px;
-}
-%endif
-
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   border: 0;
   margin: 0;
   -moz-box-flex: 1;
-%ifndef MOZ_PHOTON_THEME
-  min-width: calc(@menuPanelButtonWidth@);
-  max-width: calc(@menuPanelButtonWidth@);
-  padding: .5em;
-  /* We'd prefer to use height: auto here but it leads to layout bugs in the panel. Cope:
-     1.2em for line height + 2 * .5em padding + margin on the label (2 * 2px) */
-  height: calc(2.2em + 4px);
-  max-height: none;
-%else
   padding-top: 4px;
   padding-bottom: 4px;
-%endif
   -moz-box-orient: horizontal;
 }
 
-%ifdef MOZ_PHOTON_THEME
 /* In customize mode, extend the buttons *only* in the panel, just to make them not look stupid */
 toolbarpaletteitem[place=panel] > .toolbaritem-combined-buttons > toolbarbutton {
   min-width: calc(@menuPanelButtonWidth@ - 1px);
   max-width: calc(@menuPanelButtonWidth@ - 1px);
 }
-%else
-#edit-controls@inAnyPanel@ > #copy-button,
-#zoom-controls@inAnyPanel@ > #zoom-reset-button {
-  /* reduce the width with 2px for this button to compensate for two separators
-     of 1px. */
-  min-width: calc(@menuPanelButtonWidth@ - 2px);
-  max-width: calc(@menuPanelButtonWidth@ - 2px);
-}
-%endif
 
 #main-window:not([customizing]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
   opacity: .25;
@@ -1708,41 +1659,24 @@ toolbarpaletteitem[place=panel] > .toolbaritem-combined-buttons > toolbarbutton 
 }
 
 .cui-widget-panelview,
-%ifndef MOZ_PHOTON_THEME
-#widget-overflow-scroller {
-%else
 #widget-overflow-mainView .panel-subview-body {
-%endif
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 #widget-overflow-scroller {
-%ifdef MOZ_PHOTON_THEME
   margin-top: 4px;
   margin-bottom: 4px;
-%else
-  max-height: 30em;
-  margin-top: 10px;
-  margin-bottom: 10px;
-%endif
 }
 
 .widget-overflow-list {
   width: @menuPanelWidth@;
-%ifndef MOZ_PHOTON_THEME
-  padding-left: 10px;
-  padding-right: 10px;
-%endif
 }
 
 toolbaritem[overflowedItem=true],
 .widget-overflow-list .toolbarbutton-1 {
   width: 100%;
   max-width: @menuPanelWidth@;
-%ifndef MOZ_PHOTON_THEME
-  min-height: 36px;
-%endif
   background-repeat: no-repeat;
   background-position: 0 center;
 }
@@ -1758,26 +1692,6 @@ toolbaritem[overflowedItem=true],
   text-align: start;
   padding-inline-start: .5em;
 }
-
-%ifndef MOZ_PHOTON_THEME
-.widget-overflow-list > .toolbaritem-combined-buttons {
-  min-height: 28px;
-}
-
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button::after {
-  content: "";
-  display: -moz-box;
-  width: 1px;
-  height: 18px;
-  margin-inline-end: -1px;
-  background-image: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
-  background-clip: padding-box;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 1px 18px;
-  box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
-}
-%endif
 
 .subviewbutton[checked="true"] {
   background: url("chrome://global/skin/menu/shared-menu-check.png") center left 7px / 11px 11px no-repeat transparent;
