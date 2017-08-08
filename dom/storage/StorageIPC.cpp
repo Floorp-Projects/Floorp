@@ -483,53 +483,58 @@ StorageDBParent::ReleaseIPDLReference()
 
 namespace {
 
-class SendInitialChildDataRunnable : public Runnable
+class CheckLowDiskSpaceRunnable
+  : public Runnable
 {
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+  RefPtr<StorageDBParent> mParent;
+  bool mLowDiskSpace;
+
 public:
-  explicit SendInitialChildDataRunnable(StorageDBParent* aParent)
-    : Runnable("dom::SendInitialChildDataRunnable")
+  explicit CheckLowDiskSpaceRunnable(StorageDBParent* aParent)
+    : Runnable("dom::CheckLowDiskSpaceRunnable")
+    , mOwningEventTarget(GetCurrentThreadEventTarget())
     , mParent(aParent)
-  {}
+    , mLowDiskSpace(false)
+  {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(aParent);
+  }
 
 private:
   NS_IMETHOD Run() override
   {
-    if (!mParent->IPCOpen()) {
+    if (IsOnBackgroundThread()) {
+      MOZ_ASSERT(mParent);
+
+      if (!mParent->IPCOpen()) {
+        return NS_OK;
+      }
+
+      if (mLowDiskSpace) {
+        mozilla::Unused << mParent->SendObserve(
+          nsDependentCString("low-disk-space"), EmptyString(), EmptyCString());
+      }
+
+      mParent = nullptr;
+
       return NS_OK;
     }
 
-    mParent->Init();
+    MOZ_ASSERT(NS_IsMainThread());
 
-    StorageDBThread* storageThread = StorageDBThread::Get();
-    if (storageThread) {
-      InfallibleTArray<nsCString> scopes;
-      storageThread->GetOriginsHavingData(&scopes);
-      mozilla::Unused << mParent->SendOriginsHavingData(scopes);
-    }
-
-    // XXX Fix me!
-#if 0
-    // We need to check if the device is in a low disk space situation, so
-    // we can forbid in that case any write in localStorage.
     nsCOMPtr<nsIDiskSpaceWatcher> diskSpaceWatcher =
       do_GetService("@mozilla.org/toolkit/disk-space-watcher;1");
     if (!diskSpaceWatcher) {
       return NS_OK;
     }
 
-    bool lowDiskSpace = false;
-    diskSpaceWatcher->GetIsDiskFull(&lowDiskSpace);
+    diskSpaceWatcher->GetIsDiskFull(&mLowDiskSpace);
 
-    if (lowDiskSpace) {
-      mozilla::Unused << mParent->SendObserve(
-        nsDependentCString("low-disk-space"), EmptyString(), EmptyCString());
-    }
-#endif
+    MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
     return NS_OK;
   }
-
-  RefPtr<StorageDBParent> mParent;
 };
 
 } // namespace
@@ -542,12 +547,6 @@ StorageDBParent::StorageDBParent(const nsString& aProfilePath)
 
   // We are always open by IPC only
   AddIPDLReference();
-
-  // Cannot send directly from here since the channel
-  // is not completely built at this moment.
-  RefPtr<SendInitialChildDataRunnable> r =
-    new SendInitialChildDataRunnable(this);
-  NS_DispatchToCurrentThread(r);
 }
 
 StorageDBParent::~StorageDBParent()
@@ -572,6 +571,21 @@ StorageDBParent::Init()
     mObserverSink = new ObserverSink(this);
     mObserverSink->Start();
   }
+
+  StorageDBThread* storageThread = StorageDBThread::Get();
+  if (storageThread) {
+    InfallibleTArray<nsCString> scopes;
+    storageThread->GetOriginsHavingData(&scopes);
+    mozilla::Unused << SendOriginsHavingData(scopes);
+  }
+
+  // We need to check if the device is in a low disk space situation, so
+  // we can forbid in that case any write in localStorage.
+
+  RefPtr<CheckLowDiskSpaceRunnable> runnable =
+    new CheckLowDiskSpaceRunnable(this);
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 }
 
 StorageDBParent::CacheParentBridge*
@@ -1227,6 +1241,8 @@ RecvPBackgroundStorageConstructor(PBackgroundStorageParent* aActor,
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
+  auto* actor = static_cast<StorageDBParent*>(aActor);
+  actor->Init();
   return IPC_OK();
 }
 
