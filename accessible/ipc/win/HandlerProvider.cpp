@@ -151,6 +151,33 @@ HandlerProvider::GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize)
   return S_OK;
 }
 
+template <typename CondFnT, typename ExeFnT>
+class MOZ_RAII ExecuteWhen final
+{
+public:
+  ExecuteWhen(CondFnT& aCondFn, ExeFnT& aExeFn)
+    : mCondFn(aCondFn)
+    , mExeFn(aExeFn)
+  {
+  }
+
+  ~ExecuteWhen()
+  {
+    if (mCondFn()) {
+      mExeFn();
+    }
+  }
+
+  ExecuteWhen(const ExecuteWhen&) = delete;
+  ExecuteWhen(ExecuteWhen&&) = delete;
+  ExecuteWhen& operator=(const ExecuteWhen&) = delete;
+  ExecuteWhen& operator=(ExecuteWhen&&) = delete;
+
+private:
+  CondFnT&  mCondFn;
+  ExeFnT&   mExeFn;
+};
+
 void
 HandlerProvider::BuildIA2Data(IA2Data* aOutIA2Data)
 {
@@ -162,13 +189,100 @@ HandlerProvider::BuildIA2Data(IA2Data* aOutIA2Data)
   RefPtr<NEWEST_IA2_INTERFACE>
     target(static_cast<NEWEST_IA2_INTERFACE*>(mTargetUnk.get()));
 
+  HRESULT hr = E_UNEXPECTED;
+
+  auto hasFailed = [&hr]() -> bool {
+    return FAILED(hr);
+  };
+
+  auto cleanup = [this, aOutIA2Data]() -> void {
+    ClearIA2Data(*aOutIA2Data);
+  };
+
+  ExecuteWhen<decltype(hasFailed), decltype(cleanup)> onFail(hasFailed, cleanup);
+
+  const VARIANT kChildIdSelf = {VT_I4};
+  VARIANT varVal;
+
+  hr = target->accLocation(&aOutIA2Data->mLeft, &aOutIA2Data->mTop,
+                           &aOutIA2Data->mWidth, &aOutIA2Data->mHeight,
+                           kChildIdSelf);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = target->get_accRole(kChildIdSelf, &varVal);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  aOutIA2Data->mRole = varVal.lVal;
+
+  hr = target->get_accState(kChildIdSelf, &varVal);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  aOutIA2Data->mState = varVal.lVal;
+
+  hr = target->get_accKeyboardShortcut(kChildIdSelf,
+                                       &aOutIA2Data->mKeyboardShortcut);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = target->get_accName(kChildIdSelf, &aOutIA2Data->mName);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = target->get_accDescription(kChildIdSelf, &aOutIA2Data->mDescription);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = target->get_accChildCount(&aOutIA2Data->mChildCount);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = target->get_accValue(kChildIdSelf, &aOutIA2Data->mValue);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = target->get_states(&aOutIA2Data->mIA2States);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = target->get_attributes(&aOutIA2Data->mAttributes);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  HWND hwnd;
+  hr = target->get_windowHandle(&hwnd);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  aOutIA2Data->mHwnd = PtrToLong(hwnd);
+
+  hr = target->get_locale(&aOutIA2Data->mIA2Locale);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = target->role(&aOutIA2Data->mIA2Role);
+  if (FAILED(hr)) {
+    return;
+  }
+
   // NB: get_uniqueID should be the final property retrieved in this method,
   // as its presence is used to determine whether the rest of this data
   // retrieval was successful.
-  HRESULT hr = target->get_uniqueID(&aOutIA2Data->mUniqueId);
-  if (FAILED(hr)) {
-    ClearIA2Data(*aOutIA2Data);
-  }
+  hr = target->get_uniqueID(&aOutIA2Data->mUniqueId);
 }
 
 void
