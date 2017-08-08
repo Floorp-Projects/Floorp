@@ -182,7 +182,7 @@ public class TestResetting extends AndroidSyncTestCase {
       }
 
       @Override
-      public void handleError(GlobalSession globalSession, Exception ex) {
+      public void handleError(GlobalSession globalSession, Exception ex, String reason) {
         performNotify(ex);
       }
     };
