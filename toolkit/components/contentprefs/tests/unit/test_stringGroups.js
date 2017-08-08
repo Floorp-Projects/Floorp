@@ -15,6 +15,9 @@ function run_test() {
   var anObject = {"foo": "bar"};                               // a simple object
   var uri = ContentPrefTest.getURI("http://www.example.com/"); // nsIURI
   var stringURI = "www.example.com";                           // typeof = "string"
+
+  // Test wants to check for a String object
+  // eslint-disable-next-line no-new-wrappers
   var stringObjectURI = new String("www.example.com");         // typeof = "object"
 
   // First check that all the methods work or don't work.

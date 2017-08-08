@@ -308,7 +308,7 @@ protected:
     }
 
     for (auto& target: mTargets) {
-      ASSERT_EQ(NS_OK, target.mResource->Open(nullptr));
+      ASSERT_EQ(NS_OK, target.mResource->Open());
       ASSERT_TRUE(target.mDemuxer->Init());
     }
   }

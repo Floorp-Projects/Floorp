@@ -19,36 +19,31 @@ var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
  * @param aUnbookmarkedUri
  *        a URI that is not currently bookmarked at all
  */
-function checkUris(aBookmarkId, aBookmarkedUri, aUnbookmarkedUri) {
+async function checkUris(aBookmarkId, aBookmarkedUri, aUnbookmarkedUri) {
   // Ensure that aBookmarkedUri equals some URI that is bookmarked
-  var uri = bmsvc.getBookmarkedURIFor(aBookmarkedUri);
-  do_check_neq(uri, null);
-  do_check_true(uri.equals(aBookmarkedUri));
+  let bm = await PlacesUtils.bookmarks.fetch({url: aBookmarkedUri});
 
-  // Ensure that aBookmarkedUri is considered bookmarked
-  do_check_true(bmsvc.isBookmarked(aBookmarkedUri));
+  do_check_neq(bm, null);
+  do_check_true(uri(bm.url).equals(aBookmarkedUri));
 
   // Ensure that the URI corresponding to aBookmarkId equals aBookmarkedUri
   do_check_true(bmsvc.getBookmarkURI(aBookmarkId).equals(aBookmarkedUri));
 
   // Ensure that aUnbookmarkedUri does not equal any URI that is bookmarked
-  uri = bmsvc.getBookmarkedURIFor(aUnbookmarkedUri);
-  do_check_eq(uri, null);
-
-  // Ensure that aUnbookmarkedUri is not considered bookmarked
-  do_check_false(bmsvc.isBookmarked(aUnbookmarkedUri));
+  bm = await PlacesUtils.bookmarks.fetch({url: aUnbookmarkedUri});
+  do_check_eq(bm, null);
 }
 
 // main
-function run_test() {
+add_task(async function() {
   // Create a folder
   var folderId = bmsvc.createFolder(bmsvc.toolbarFolder,
                                     "test",
                                     bmsvc.DEFAULT_INDEX);
 
   // Create 2 URIs
-  var uri1 = uri("http://www.dogs.com");
-  var uri2 = uri("http://www.cats.com");
+  var uri1 = uri("http://www.dogs.com/");
+  var uri2 = uri("http://www.cats.com/");
 
   // Bookmark the first one
   var bookmarkId = bmsvc.insertBookmark(folderId,
@@ -57,11 +52,11 @@ function run_test() {
                                         "Dogs");
 
   // uri1 is bookmarked via bookmarkId, uri2 is not
-  checkUris(bookmarkId, uri1, uri2);
+  await checkUris(bookmarkId, uri1, uri2);
 
   // Change the URI of the bookmark to uri2
   bmsvc.changeBookmarkURI(bookmarkId, uri2);
 
   // uri2 is now bookmarked via bookmarkId, uri1 is not
-  checkUris(bookmarkId, uri2, uri1);
-}
+  await checkUris(bookmarkId, uri2, uri1);
+});

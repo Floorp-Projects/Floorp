@@ -82,7 +82,8 @@ HLSResource::onError(int aErrorCode)
   }
 }
 
-void HLSResource::Suspend(bool aCloseImmediately)
+void
+HLSResource::Suspend()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Don't call on non-main thread");
   HLS_DEBUG("HLSResource", "Should suspend the resource fetching.");

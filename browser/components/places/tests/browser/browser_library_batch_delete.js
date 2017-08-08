@@ -64,7 +64,7 @@ add_task(async function test_create_and_batch_remove_bookmarks() {
 
   await promiseItemRemovedNotification;
 
-  Assert.ok(!PlacesUtils.bookmarks.isBookmarked(testURI),
+  Assert.ok(!(await PlacesUtils.bookmarks.fetch({url: testURI})),
     "Bookmark has been correctly removed");
   // Test live update.
   Assert.equal(unsortedNode.childCount, 1, "Unsorted node has 1 child");

@@ -39,7 +39,7 @@ const LOG_LEVELS = new class extends Map {
   }
 
   get(level) {
-    let s = new String(level).toLowerCase();
+    let s = String(level).toLowerCase();
     if (!this.has(s)) {
       return DEFAULT_LOG_LEVEL;
     }

@@ -43,7 +43,7 @@ public:
     , mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)))
     , mIndex(0)
   {
-    EXPECT_EQ(NS_OK, resource->Open(nullptr));
+    EXPECT_EQ(NS_OK, resource->Open());
   }
 
   template<typename Function>
