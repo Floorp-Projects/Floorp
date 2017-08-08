@@ -1,9 +1,7 @@
 /* exported MANAGE_ADDRESSES_DIALOG_URL, EDIT_ADDRESS_DIALOG_URL, BASE_URL,
             TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3,
-            TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3,
-            sleep, expectPopupOpen, openPopupOn, expectPopupClose, closePopup, clickDoorhangerButton,
-            getAddresses, saveAddress, removeAddresses, saveCreditCard,
-            getDisplayedPopupItems */
+            sleep, expectPopupOpen, openPopupOn, clickDoorhangerButton,
+            getAddresses, saveAddress, removeAddresses */
 
 "use strict";
 
@@ -35,51 +33,22 @@ const TEST_ADDRESS_3 = {
   "postal-code": "12345",
 };
 
-const TEST_CREDIT_CARD_1 = {
-  "cc-name": "John Doe",
-  "cc-number": "1234567812345678",
-  // "cc-number-encrypted": "",
-  "cc-exp-month": 4,
-  "cc-exp-year": 2017,
-};
-
-const TEST_CREDIT_CARD_2 = {
-  "cc-name": "Timothy Berners-Lee",
-  "cc-number": "1111222233334444",
-  "cc-exp-month": 12,
-  "cc-exp-year": 2022,
-};
-
-const TEST_CREDIT_CARD_3 = {
-  "cc-number": "9999888877776666",
-  "cc-exp-month": 1,
-  "cc-exp-year": 2000,
-};
-
 const MAIN_BUTTON_INDEX = 0;
 const SECONDARY_BUTTON_INDEX = 1;
-
-function getDisplayedPopupItems(browser, selector = ".autocomplete-richlistitem") {
-  const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
-  const listItemElems = itemsBox.querySelectorAll(selector);
-
-  return [...listItemElems].filter(item => item.getAttribute("collapsed") != "true");
-}
 
 async function sleep(ms = 500) {
   await new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function expectPopupOpen(browser) {
-  const {autoCompletePopup} = browser;
-  const listItemElems = getDisplayedPopupItems(browser);
+  const {autoCompletePopup, autoCompletePopup: {richlistbox: itemsBox}} = browser;
+  const listItemElems = itemsBox.querySelectorAll(".autocomplete-richlistitem");
 
   await BrowserTestUtils.waitForCondition(() => autoCompletePopup.popupOpen,
                                          "popup should be open");
   await BrowserTestUtils.waitForCondition(() => {
     return [...listItemElems].every(item => {
       return (item.getAttribute("originaltype") == "autofill-profile" ||
-             item.getAttribute("originaltype") == "insecureWarning" ||
              item.getAttribute("originaltype") == "autofill-footer") &&
              item.hasAttribute("formautofillattached");
     });
@@ -89,37 +58,12 @@ async function expectPopupOpen(browser) {
 async function openPopupOn(browser, selector) {
   await SimpleTest.promiseFocus(browser);
   /* eslint no-shadow: ["error", { "allow": ["selector"] }] */
-  const identified = await ContentTask.spawn(browser, {selector}, async function({selector}) {
-    const input = content.document.querySelector(selector);
-    const forms = content.document.getElementsByTagName("form");
-    const rootElement = [...forms].find(form => form.contains(input)) || content.document.body;
-
-    input.focus();
-    if (rootElement.hasAttribute("test-formautofill-identified")) {
-      return true;
-    }
-    rootElement.setAttribute("test-formautofill-identified", "true");
-    return false;
+  await ContentTask.spawn(browser, {selector}, async function({selector}) {
+    content.document.querySelector(selector).focus();
   });
-  // Wait 2 seconds for identifyAutofillFields if the form hasn't been identified yet.
-  if (!identified) {
-    await sleep(2000);
-  }
+  await sleep(2000);
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
   await expectPopupOpen(browser);
-}
-
-async function expectPopupClose(browser) {
-  await BrowserTestUtils.waitForCondition(() => !browser.autoCompletePopup.popupOpen,
-    "popup should have closed");
-}
-
-async function closePopup(browser) {
-  await ContentTask.spawn(browser, {}, async function() {
-    content.document.activeElement.blur();
-  });
-
-  await expectPopupClose(browser);
 }
 
 function getRecords(data) {
@@ -141,10 +85,6 @@ function saveAddress(address) {
   return TestUtils.topicObserved("formautofill-storage-changed");
 }
 
-function saveCreditCard(creditcard) {
-  Services.cpmm.sendAsyncMessage("FormAutofill:SaveCreditCard", {creditcard});
-  return TestUtils.topicObserved("formautofill-storage-changed");
-}
 function removeAddresses(guids) {
   Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses", {guids});
   return TestUtils.topicObserved("formautofill-storage-changed");
