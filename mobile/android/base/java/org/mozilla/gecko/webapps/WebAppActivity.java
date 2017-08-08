@@ -12,6 +12,7 @@ import java.util.List;
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -34,6 +35,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
@@ -164,6 +166,7 @@ public class WebAppActivity extends AppCompatActivity
             updateStatusBarColorV21(color);
             setTaskDescription(taskDescription);
 
+            updateScreenOrientation(manifestField);
         } catch (IOException | JSONException e) {
             Log.e(LOGTAG, "Failed to read manifest", e);
         }
@@ -176,6 +179,19 @@ public class WebAppActivity extends AppCompatActivity
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(ColorUtil.darken(themeColor, 0.25));
         }
+    }
+
+    private void updateScreenOrientation(JSONObject manifest) {
+        String orientString = manifest.optString("orientation", null);
+        if (orientString == null) {
+            return;
+        }
+
+        GeckoScreenOrientation.ScreenOrientation orientation =
+            GeckoScreenOrientation.screenOrientationFromString(orientString);
+        int activityOrientation = GeckoScreenOrientation.screenOrientationToAndroidOrientation(orientation);
+
+        setRequestedOrientation(activityOrientation);
     }
 
     private Integer readColorFromManifest(JSONObject manifest) {
