@@ -10,22 +10,24 @@ const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AboutPocket",
+                                  "chrome://pocket/content/AboutPocket.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
                                   "resource:///modules/PageActions.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
-                                  "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
                                   "chrome://pocket/content/Pocket.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AboutPocket",
-                                  "chrome://pocket/content/AboutPocket.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
+                                  "resource://gre/modules/ReaderMode.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
   return Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
 });
@@ -158,6 +160,7 @@ function isPocketEnabled() {
 
 var PocketPageAction = {
   pageAction: null,
+  urlbarNode: null,
 
   get shouldUse() {
     return !Services.prefs.getBranch(PREF_BRANCH)
@@ -180,12 +183,72 @@ var PocketPageAction = {
         title: gPocketBundle.GetStringFromName("pocket-button.label"),
         shownInUrlbar: true,
         wantsIframe: true,
+        urlbarIDOverride: "pocket-button-box",
+        anchorIDOverride: "pocket-button",
         _insertBeforeActionID: PageActions.ACTION_ID_BOOKMARK_SEPARATOR,
+        _urlbarNodeInMarkup: true,
+        onBeforePlacedInWindow(window) {
+          let doc = window.document;
+
+          if (doc.getElementById("pocket-button-box")) {
+            return;
+          }
+
+          let wrapper = doc.createElement("hbox");
+          wrapper.id = "pocket-button-box";
+          wrapper.classList.add("urlbar-icon-wrapper");
+          wrapper.setAttribute("context", "pageActionPanelContextMenu");
+          wrapper.addEventListener("contextmenu", event => {
+            window.BrowserPageActions.onContextMenu(event);
+          });
+          let animatableBox = doc.createElement("hbox");
+          animatableBox.id = "pocket-animatable-box";
+          let animatableImage = doc.createElement("image");
+          animatableImage.id = "pocket-animatable-image";
+          let pocketButton = doc.createElement("image");
+          pocketButton.id = "pocket-button";
+          pocketButton.classList.add("urlbar-icon");
+
+          wrapper.appendChild(pocketButton);
+          wrapper.appendChild(animatableBox);
+          animatableBox.appendChild(animatableImage);
+          let iconBox = doc.getElementById("urlbar-icons");
+          iconBox.appendChild(wrapper);
+          wrapper.hidden = true;
+          wrapper.addEventListener("click", event => {
+            PocketPageAction.onUrlbarNodeClicked(event);
+          });
+        },
         onPlacedInPanel(panelNode, urlbarNode) {
           PocketOverlay.onWindowOpened(panelNode.ownerGlobal);
         },
         onIframeShown(iframe, panel) {
           Pocket.onShownInPhotonPageActionPanel(panel, iframe);
+
+          let doc = panel.ownerDocument;
+          let urlbarNode = doc.getElementById("pocket-button-box");
+          if (!urlbarNode || urlbarNode.hidden) {
+            return;
+          }
+
+          PocketPageAction.urlbarNode = urlbarNode;
+          PocketPageAction.urlbarNode.setAttribute("open", "true");
+          if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+            PocketPageAction.urlbarNode.setAttribute("animate", "true");
+          }
+        },
+        onIframeHiding(iframe, panel) {
+          if (iframe.getAttribute("itemAdded") == "true") {
+            PocketPageAction.startLibraryAnimation(iframe.ownerDocument);
+          }
+        },
+        onIframeHidden(iframe, panel) {
+          if (!PocketPageAction.urlbarNode) {
+            return;
+          }
+          PocketPageAction.urlbarNode.removeAttribute("animate");
+          PocketPageAction.urlbarNode.removeAttribute("open");
+          PocketPageAction.urlbarNode = null;
         },
       }));
     }
@@ -195,8 +258,55 @@ var PocketPageAction = {
     if (!this.pageAction) {
       return;
     }
+
+    for (let win of browserWindows()) {
+      let doc = win.document;
+      let pocketButtonBox = doc.getElementById("pocket-button-box");
+      if (pocketButtonBox) {
+        pocketButtonBox.remove();
+      }
+    }
+
     this.pageAction.remove();
     this.pageAction = null;
+  },
+
+  onUrlbarNodeClicked(event) {
+    if (event.type == "click" && event.button != 0) {
+      return;
+    }
+
+    BrowserUtils.setToolbarButtonHeightProperty(event.target);
+
+    let win = event.target.ownerGlobal;
+    let browserPageActions = win.BrowserPageActions;
+    browserPageActions.doCommandForAction(PocketPageAction.pageAction);
+  },
+
+  startLibraryAnimation(doc) {
+    var libraryButton = doc.getElementById("library-button");
+    if (!Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") ||
+        !libraryButton ||
+        libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
+        libraryButton.getAttribute("overflowedItem") == "true" ||
+        !libraryButton.closest("#nav-bar")) {
+      return;
+    }
+    libraryButton.removeAttribute("fade");
+    libraryButton.setAttribute("animate", "pocket");
+    libraryButton.addEventListener("animationend", PocketPageAction.onLibraryButtonAnimationEnd);
+  },
+
+  onLibraryButtonAnimationEnd(event) {
+    let doc = event.target.ownerDocument;
+    let libraryButton = doc.getElementById("library-button");
+    if (event.animationName.startsWith("library-pocket-animation")) {
+      libraryButton.setAttribute("fade", "true");
+    } else if (event.animationName == "library-pocket-fade") {
+      libraryButton.removeEventListener("animationend", PocketPageAction.onLibraryButtonAnimationEnd);
+      libraryButton.removeAttribute("animate");
+      libraryButton.removeAttribute("fade");
+    }
   },
 };
 
