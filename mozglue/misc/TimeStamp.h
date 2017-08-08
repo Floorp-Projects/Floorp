@@ -229,10 +229,7 @@ public:
   }
   double operator/(const BaseTimeDuration& aOther) const
   {
-#ifndef MOZ_B2G
-    // Bug 1066388 - This fails on B2G ICS Emulator
     MOZ_ASSERT(aOther.mValue != 0, "Division by zero");
-#endif
     return ValueCalculator::DivideDouble(mValue, aOther.mValue);
   }
   BaseTimeDuration operator%(const BaseTimeDuration& aOther) const
