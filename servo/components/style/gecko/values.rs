@@ -19,8 +19,9 @@ use values::{Auto, Either, ExtremumLength, None_, Normal};
 use values::computed::{Angle, LengthOrPercentage, LengthOrPercentageOrAuto};
 use values::computed::{LengthOrPercentageOrNone, Number, NumberOrPercentage};
 use values::computed::{MaxLength, MozLength, Percentage};
+use values::computed::{NonNegativeAu, NonNegativeLengthOrPercentage, NonNegativeNumber};
 use values::computed::basic_shape::ShapeRadius as ComputedShapeRadius;
-use values::generics::CounterStyleOrNone;
+use values::generics::{CounterStyleOrNone, NonNegative};
 use values::generics::basic_shape::ShapeRadius;
 use values::generics::gecko::ScrollSnapPoint;
 use values::generics::grid::{TrackBreadth, TrackKeyword};
@@ -121,6 +122,16 @@ impl GeckoStyleCoordConvertible for LengthOrPercentage {
     }
 }
 
+impl GeckoStyleCoordConvertible for NonNegativeLengthOrPercentage {
+    fn to_gecko_style_coord<T: CoordDataMut>(&self, coord: &mut T) {
+        self.0.to_gecko_style_coord(coord);
+    }
+
+    fn from_gecko_style_coord<T: CoordData>(coord: &T) -> Option<Self> {
+        LengthOrPercentage::from_gecko_style_coord(coord).map(NonNegative::<LengthOrPercentage>)
+    }
+}
+
 impl GeckoStyleCoordConvertible for Au {
     fn to_gecko_style_coord<T: CoordDataMut>(&self, coord: &mut T) {
         coord.set_value(CoordDataValue::Coord(self.0));
@@ -131,6 +142,26 @@ impl GeckoStyleCoordConvertible for Au {
             CoordDataValue::Coord(coord) => Some(Au(coord)),
             _ => None,
         }
+    }
+}
+
+impl GeckoStyleCoordConvertible for NonNegativeAu {
+    fn to_gecko_style_coord<T: CoordDataMut>(&self, coord: &mut T) {
+        self.0.to_gecko_style_coord(coord);
+    }
+
+    fn from_gecko_style_coord<T: CoordData>(coord: &T) -> Option<Self> {
+        Au::from_gecko_style_coord(coord).map(NonNegative::<Au>)
+    }
+}
+
+impl GeckoStyleCoordConvertible for NonNegativeNumber {
+    fn to_gecko_style_coord<T: CoordDataMut>(&self, coord: &mut T) {
+        self.0.to_gecko_style_coord(coord);
+    }
+
+    fn from_gecko_style_coord<T: CoordData>(coord: &T) -> Option<Self> {
+        Number::from_gecko_style_coord(coord).map(NonNegative::<Number>)
     }
 }
 
@@ -444,6 +475,36 @@ impl CounterStyleOrNone {
                 unsafe { set_symbols(gecko_value, symbols_type.to_gecko_keyword(),
                                      symbols.as_ptr(), symbols.len() as u32) };
             }
+        }
+    }
+
+    /// Convert Gecko CounterStylePtr to CounterStyleOrNone.
+    pub fn from_gecko_value(gecko_value: &CounterStylePtr) -> Self {
+        use counter_style::{Symbol, Symbols};
+        use gecko_bindings::bindings::Gecko_CounterStyle_GetName;
+        use gecko_bindings::bindings::Gecko_CounterStyle_GetSymbols;
+        use gecko_bindings::bindings::Gecko_CounterStyle_GetSystem;
+        use gecko_bindings::bindings::Gecko_CounterStyle_IsName;
+        use gecko_bindings::bindings::Gecko_CounterStyle_IsNone;
+        use values::CustomIdent;
+        use values::generics::SymbolsType;
+
+        if unsafe { Gecko_CounterStyle_IsNone(gecko_value) } {
+            CounterStyleOrNone::None
+        } else if unsafe { Gecko_CounterStyle_IsName(gecko_value) } {
+            ns_auto_string!(name);
+            unsafe { Gecko_CounterStyle_GetName(gecko_value, &mut *name) };
+            CounterStyleOrNone::Name(CustomIdent((&*name).into()))
+        } else {
+            let system = unsafe { Gecko_CounterStyle_GetSystem(gecko_value) };
+            let symbol_type = SymbolsType::from_gecko_keyword(system as u32);
+            let symbols = unsafe {
+                let ref gecko_symbols = *Gecko_CounterStyle_GetSymbols(gecko_value);
+                gecko_symbols.iter().map(|gecko_symbol| {
+                    Symbol::String(gecko_symbol.to_string())
+                }).collect()
+            };
+            CounterStyleOrNone::Symbols(symbol_type, Symbols(symbols))
         }
     }
 }

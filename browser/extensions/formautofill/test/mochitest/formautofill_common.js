@@ -61,7 +61,8 @@ async function addAddress(address) {
     formFillChromeScript.addMessageListener("FormAutofillTest:AddressAdded", function onAdded(data) {
       formFillChromeScript.removeMessageListener("FormAutofillTest:AddressAdded", onAdded);
 
-      resolve();
+      SimpleTest.requestFlakyTimeout("Ensure ProfileAutocomplete is registered");
+      setTimeout(resolve, 500);
     });
   });
 }
@@ -93,6 +94,17 @@ async function checkAddresses(expectedAddresses) {
     formFillChromeScript.sendAsyncMessage("FormAutofillTest:CheckAddresses", {expectedAddresses});
     formFillChromeScript.addMessageListener("FormAutofillTest:areAddressesMatching", function onChecked(data) {
       formFillChromeScript.removeMessageListener("FormAutofillTest:areAddressesMatching", onChecked);
+
+      resolve(data);
+    });
+  });
+}
+
+async function cleanUpAddress() {
+  return new Promise(resolve => {
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:CleanUpAddress", {});
+    formFillChromeScript.addMessageListener("FormAutofillTest:AddressCleanedUp", function onCleanedUp(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:AddressCleanedUp", onCleanedUp);
 
       resolve(data);
     });

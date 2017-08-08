@@ -3116,6 +3116,7 @@ private:
   static bool InitializeEventTable();
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
+  static void AsyncPrecreateStringBundles();
 
   static bool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);

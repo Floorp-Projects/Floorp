@@ -35,7 +35,6 @@ toolbar[brighttext] .toolbarbutton-1 {
 }
 
 %ifdef MOZ_PHOTON_THEME
-%ifdef MOZ_PHOTON_ANIMATIONS
 .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-fill-mode: forwards;
   animation-iteration-count: 1;
@@ -171,7 +170,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 #reload-button[displaystop] + #stop-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   transform: scaleX(-1) translateX(-450px);
 }
-%endif
+
 #reload-button {
   list-style-image: url("chrome://browser/skin/reload.svg");
 }
@@ -329,7 +328,6 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   list-style-image: url("chrome://browser/skin/chevron.svg");
 }
 
-%ifdef MOZ_PHOTON_ANIMATIONS
 #nav-bar-overflow-button[animate] > .toolbarbutton-icon {
   fill: transparent;
 }
@@ -415,7 +413,6 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
 #nav-bar-overflow-button[animate][fade]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   transform: scaleX(-1);
 }
-%endif
 
 #email-link-button@attributeSelectorForToolbar@ {
   list-style-image: url("chrome://browser/skin/mail.svg");
@@ -446,7 +443,6 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   list-style-image: url("chrome://browser/skin/library.svg");
 }
 
-%ifdef MOZ_PHOTON_ANIMATIONS
 @keyframes library-bookmark-animation {
   from {
     transform: translateX(0);
@@ -533,4 +529,3 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   animation-duration: 2s;
   animation-timing-function: ease-out;
 }
-%endif

@@ -5062,8 +5062,7 @@ var CombinedStopReload = {
       this.timeWhenSwitchedToStop = window.performance.now();
     }
 
-    let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
-                        aRequest &&
+    let shouldAnimate = aRequest &&
                         aWebProgress.isTopLevel &&
                         aWebProgress.isLoadingDocument &&
                         !gBrowser.tabAnimationsInProgress &&
@@ -5086,8 +5085,7 @@ var CombinedStopReload = {
       return;
     }
 
-    let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
-                        aRequest &&
+    let shouldAnimate = aRequest &&
                         aWebProgress.isTopLevel &&
                         !aWebProgress.isLoadingDocument &&
                         !gBrowser.tabAnimationsInProgress &&
@@ -6777,7 +6775,7 @@ var MailIntegration = {
        Cc["@mozilla.org/uriloader/external-protocol-service;1"]
          .getService(Ci.nsIExternalProtocolService);
     if (extProtocolSvc)
-      extProtocolSvc.loadUrl(aURL);
+      extProtocolSvc.loadURI(aURL);
   }
 };
 

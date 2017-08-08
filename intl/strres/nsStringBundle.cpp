@@ -52,6 +52,15 @@ nsStringBundle::~nsStringBundle()
 {
 }
 
+NS_IMETHODIMP
+nsStringBundle::AsyncPreload()
+{
+  return NS_IdleDispatchToCurrentThread(
+    NewIdleRunnableMethod("nsStringBundle::LoadProperties",
+                          this,
+                          &nsStringBundle::LoadProperties));
+}
+
 nsresult
 nsStringBundle::LoadProperties()
 {
@@ -343,6 +352,21 @@ nsExtensibleStringBundle::Init(const char * aCategory,
     mBundles.AppendObject(bundle);
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP
+nsExtensibleStringBundle::AsyncPreload()
+{
+  nsresult rv = NS_OK;
+  const uint32_t size = mBundles.Count();
+  for (uint32_t i = 0; i < size; ++i) {
+    nsIStringBundle* bundle = mBundles[i];
+    if (bundle) {
+      nsresult rv2 = bundle->AsyncPreload();
+      rv = NS_FAILED(rv) ? rv : rv2;
+    }
+  }
   return rv;
 }
 

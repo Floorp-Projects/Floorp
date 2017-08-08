@@ -107,20 +107,16 @@ import java.util.concurrent.Future;
         }
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(title, pinDrawable, null, null, null);
 
-        // Our AsyncTask calls setCenteredText(), which needs to have all drawable's in place to correctly
-        // layout the text, so we need to wait with requesting the title until we've set our pin icon.
-        //
-        // todo (bug 1382036): iOS' algorithm actually looks like:
-        // if let provider = site.metadata?.providerName {
-        //     titleLabel.text = provider.lowercased()
-        // } else {
-        //     titleLabel.text = site.tileURL.hostSLD
-        // }
-        //
-        // But it's non-trivial to get the provider name with the top site so it's a follow-up.
-        final UpdateCardTitleAsyncTask titleAsyncTask = new UpdateCardTitleAsyncTask(itemView.getContext(),
-                topSite.getUrl(), title);
-        titleAsyncTask.execute();
+        final String provider = topSite.getMetadata().getProvider();
+        if (!TextUtils.isEmpty(provider)) {
+            title.setText(provider.toLowerCase());
+        } else {
+            // Our AsyncTask calls setCenteredText(), which needs to have all drawable's in place to correctly
+            // layout the text, so we need to wait with requesting the title until we've set our pin icon.
+            final UpdateCardTitleAsyncTask titleAsyncTask = new UpdateCardTitleAsyncTask(itemView.getContext(),
+                    topSite.getUrl(), title);
+            titleAsyncTask.execute();
+        }
     }
 
     @Override

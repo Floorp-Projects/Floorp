@@ -346,7 +346,7 @@ const DownloadsIndicatorView = {
     // Note: no notifier animation for download finished in Photon
     let notifier = this.notifier;
 
-    if (aType == "start" || !AppConstants.MOZ_PHOTON_ANIMATIONS) {
+    if (aType == "start") {
       // Show the notifier before measuring for size/placement. Being hidden by default
       // avoids the interference with scrolling/APZ when the notifier element is
       // tall enough to overlap the tabbrowser element
@@ -369,11 +369,7 @@ const DownloadsIndicatorView = {
 
     let animationDuration;
     // This value is determined by the overall duration of animation in CSS.
-    if (AppConstants.MOZ_PHOTON_ANIMATIONS) {
-      animationDuration = aType == "start" ? 760 : 850;
-    } else {
-      animationDuration = 2000;
-    }
+    animationDuration = aType == "start" ? 760 : 850;
 
     this._notificationTimeout = setTimeout(() => {
       notifier.setAttribute("hidden", "true");

@@ -50,6 +50,19 @@ impl SymbolsType {
             SymbolsType::Fixed => structs::NS_STYLE_COUNTER_SYSTEM_FIXED as u8,
         }
     }
+
+    /// Convert Gecko value to symbol type.
+    pub fn from_gecko_keyword(gecko_value: u32) -> SymbolsType {
+        use gecko_bindings::structs;
+        match gecko_value {
+            structs::NS_STYLE_COUNTER_SYSTEM_CYCLIC => SymbolsType::Cyclic,
+            structs::NS_STYLE_COUNTER_SYSTEM_NUMERIC => SymbolsType::Numeric,
+            structs::NS_STYLE_COUNTER_SYSTEM_ALPHABETIC => SymbolsType::Alphabetic,
+            structs::NS_STYLE_COUNTER_SYSTEM_SYMBOLIC => SymbolsType::Symbolic,
+            structs::NS_STYLE_COUNTER_SYSTEM_FIXED => SymbolsType::Fixed,
+            x => panic!("Unexpected value for symbol type {}", x)
+        }
+    }
 }
 
 /// https://drafts.csswg.org/css-counter-styles/#typedef-counter-style
@@ -252,3 +265,13 @@ impl ToCss for FontSettingTagFloat {
         self.0.to_css(dest)
     }
 }
+
+/// A wrapper of Non-negative values.
+#[derive(Clone, Copy, Debug, HasViewportPercentage, PartialEq, PartialOrd, ToComputedValue, ToCss)]
+#[cfg_attr(feature = "servo", derive(HeapSizeOf, Deserialize, Serialize))]
+pub struct NonNegative<T>(pub T);
+
+/// A wrapper of greater-than-or-equal-to-one values.
+#[derive(Clone, Copy, Debug, HasViewportPercentage, PartialEq, PartialOrd, ToComputedValue, ToCss)]
+#[cfg_attr(feature = "servo", derive(HeapSizeOf, Deserialize, Serialize))]
+pub struct GreaterThanOrEqualToOne<T>(pub T);

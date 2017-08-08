@@ -1160,11 +1160,7 @@ class JS_PUBLIC_API(ContextOptions) {
         werror_(false),
         strictMode_(false),
         extraWarnings_(false),
-#ifdef NIGHTLY_BUILD
         forEachStatement_(false)
-#else
-        forEachStatement_(true)
-#endif
     {
     }
 

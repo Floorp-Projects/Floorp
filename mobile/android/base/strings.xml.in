@@ -250,9 +250,6 @@
   <string name="pref_pwa">&pref_pwa;</string>
   <string name="pref_pwa_summary">&pref_pwa_summary;</string>
 
-  <string name="pref_activity_stream">&pref_activity_stream;</string>
-  <string name="pref_activity_stream_summary">&pref_activity_stream_summary;</string>
-
   <string name="pref_char_encoding">&pref_char_encoding;</string>
   <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
   <string name="pref_char_encoding_off">&pref_char_encoding_off;</string>

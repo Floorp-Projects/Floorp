@@ -42,7 +42,7 @@
     <groupbox>
       <caption>
         <hbox align="center">
-          <label accesskey="&language.accesskey;" control="selectLangs">&language.label;</label>
+          <label accesskey="&fonts.accesskey;" control="selectLangs">&fonts.label;</label>
         </hbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
@@ -98,7 +98,7 @@
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&proportional.accesskey;" control="defaultFontType">&proportional.label;</label>
+              <label accesskey="&proportional2.accesskey;" control="defaultFontType">&proportional2.label;</label>
             </hbox>
             <!-- This <hbox> is needed to position search tooltips correctly. -->
             <hbox>
@@ -111,7 +111,7 @@
             </hbox>
             <hbox align="center" pack="end">
               <label accesskey="&sizeProportional.accesskey;"
-                     control="sizeVar">&size.label;</label>
+                     control="sizeVar">&size2.label;</label>
             </hbox>
             <!-- This <hbox> is needed to position search tooltips correctly. -->
             <hbox>
@@ -148,7 +148,7 @@
           </row>
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&serif.accesskey;" control="serif">&serif.label;</label>
+              <label accesskey="&serif2.accesskey;" control="serif">&serif2.label;</label>
             </hbox>
             <hbox>
               <menulist id="serif" flex="1" style="width: 0px;" delayprefsave="true"
@@ -158,7 +158,7 @@
           </row>
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&sans-serif.accesskey;" control="sans-serif">&sans-serif.label;</label>
+              <label accesskey="&sans-serif2.accesskey;" control="sans-serif">&sans-serif2.label;</label>
             </hbox>
             <hbox>
               <menulist id="sans-serif" flex="1" style="width: 0px;" delayprefsave="true"
@@ -168,7 +168,7 @@
           </row>
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&monospace.accesskey;" control="monospace">&monospace.label;</label>
+              <label accesskey="&monospace2.accesskey;" control="monospace">&monospace2.label;</label>
             </hbox>
             <hbox>
               <menulist id="monospace" flex="1" style="width: 0px;" crop="right" delayprefsave="true"
@@ -176,7 +176,7 @@
             </hbox>
             <hbox align="center" pack="end">
               <label accesskey="&sizeMonospace.accesskey;"
-                     control="sizeMono">&size.label;</label>
+                     control="sizeMono">&size2.label;</label>
             </hbox>
             <hbox>
               <menulist id="sizeMono" delayprefsave="true">
@@ -216,7 +216,7 @@
       <hbox flex="1">
         <spacer flex="1"/>
         <hbox align="center" pack="end">
-          <label accesskey="&minSize.accesskey;" control="minSize">&minSize.label;</label>
+          <label accesskey="&minSize2.accesskey;" control="minSize">&minSize2.label;</label>
           <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
           <hbox>
             <menulist id="minSize">
@@ -268,8 +268,8 @@
       <caption><label>&languages.customize.Fallback2.grouplabel;</label></caption>
       <description>&languages.customize.Fallback2.desc;</description>
       <hbox align="center">
-        <label accesskey="&languages.customize.Fallback2.accesskey;"
-               control="DefaultCharsetList">&languages.customize.Fallback2.label;</label>
+        <label accesskey="&languages.customize.Fallback3.accesskey;"
+               control="DefaultCharsetList">&languages.customize.Fallback3.label;</label>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
           <menulist id="DefaultCharsetList" preference="intl.charset.fallback.override">

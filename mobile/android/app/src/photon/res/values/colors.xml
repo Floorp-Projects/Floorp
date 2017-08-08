@@ -101,6 +101,13 @@
     <color name="photon_tab_strip_item_private_checked_pressed">#4C4B51</color> <!-- #38383D + #FFFFFF@10% Alpha -->
     <color name="photon_tab_strip_item_private_pressed">#3D3C3D</color> <!-- #272727 + #FFFFFF@10% Alpha -->
 
+    <color name="photon_tab_strip_item_lwt_dark_checked">#1A38383D</color>
+    <color name="photon_tab_strip_item_lwt_dark_checked_pressed">#1AFFFFFF</color>
+    <color name="photon_tab_strip_item_lwt_dark_pressed">#1AFFFFFF</color>
+    <color name="photon_tab_strip_item_lwt_checked">#1AF9F9FA</color>
+    <color name="photon_tab_strip_item_lwt_checked_pressed">#1A272727</color>
+    <color name="photon_tab_strip_item_lwt_pressed">#1A272727</color>
+
     <!-- Status bar background color -->
     <color name="status_bar_bg_color">@color/photon_toolbar_bg</color>
     <color name="status_bar_bg_color_private">@color/photon_toolbar_bg_private</color>
@@ -138,7 +145,7 @@
     <color name="placeholder_active_grey">#222222</color>
     <color name="placeholder_grey">#777777</color>
     <color name="private_toolbar_grey">#292C29</color>
-    <color name="text_and_tabs_tray_grey">#363B40</color>
+    <color name="text_and_tabs_tray_grey">@color/photon_text_main</color>
     <color name="tabs_tray_grey_pressed">#45494E</color>
     <color name="toolbar_icon_grey">#5F6368</color>
 
@@ -146,7 +153,7 @@
     <color name="disabled_grey">#BFBFBF</color>
     <color name="toolbar_grey_pressed">#D7D7DC</color>
     <color name="toolbar_menu_dark_grey">#E1E1E6</color>
-    <color name="toolbar_grey">#EBEBF0</color>
+    <color name="toolbar_grey">@color/photon_browser_toolbar_bg</color>
     <color name="about_page_header_grey">#F5F5F5</color>
 
     <color name="url_bar_shadow_private">#272727</color>

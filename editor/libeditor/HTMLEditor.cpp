@@ -4795,7 +4795,7 @@ HTMLEditor::CopyLastEditableChildStyles(nsIDOMNode* aPreviousBlock,
 }
 
 nsresult
-HTMLEditor::GetElementOrigin(nsIDOMElement* aElement,
+HTMLEditor::GetElementOrigin(Element& aElement,
                              int32_t& aX,
                              int32_t& aY)
 {
@@ -4808,8 +4808,7 @@ HTMLEditor::GetElementOrigin(nsIDOMElement* aElement,
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsIFrame *frame = content->GetPrimaryFrame();
+  nsIFrame* frame = aElement.GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_OK);
 
   nsIFrame *container = ps->GetAbsoluteContainingBlock(frame);

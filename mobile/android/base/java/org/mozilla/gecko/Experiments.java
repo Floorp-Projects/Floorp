@@ -56,15 +56,6 @@ public class Experiments {
     // Play HLS videos in a VideoView (Bug 1313391)
     public static final String HLS_VIDEO_PLAYBACK = "hls-video-playback";
 
-    // Make new activity stream panel available (to replace top sites) (Bug 1313316)
-    public static final String ACTIVITY_STREAM = "activity-stream";
-
-    // Show a setting in "experimental features" for enabling/disabling activity stream.
-    public static final String ACTIVITY_STREAM_SETTING = "activity-stream-setting";
-
-    // Enable Activity stream by default for users in the "opt out" group.
-    public static final String ACTIVITY_STREAM_OPT_OUT = "activity-stream-opt-out";
-
     // Show AddOns menu-item in top level menu
     public static final String TOP_ADDONS_MENU = "top-addons-menu";
 

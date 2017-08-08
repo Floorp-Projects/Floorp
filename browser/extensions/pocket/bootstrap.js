@@ -120,8 +120,7 @@ function CreatePocketWidget(reason) {
       doc.getElementById("PanelUI-multiView").appendChild(view);
     },
     onCreated(node) {
-      if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
-          AppConstants.MOZ_PHOTON_ANIMATIONS) {
+      if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
         let doc = node.ownerDocument;
         let box = doc.createElement("box");
         box.classList.add("toolbarbutton-animatable-box");

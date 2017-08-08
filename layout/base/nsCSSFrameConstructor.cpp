@@ -1983,8 +1983,12 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   if (servoStyle) {
     if (hasServoAnimations) {
       // If animations are involved, we avoid the SetExplicitStyle optimization
-      // above.
+      // above. We need to grab style with animations from the pseudo element
+      // and replace old one.
       mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
+      pseudoStyleContext =
+        styleSet->AsServo()->ResolveServoStyle(container,
+                                               ServoTraversalFlags::Empty);
     } else if (createdChildElement) {
       // If we created any children elements, Servo needs to traverse them, but
       // the root is already set up.

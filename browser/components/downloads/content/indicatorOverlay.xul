@@ -25,9 +25,7 @@
          its arrow unexpectedly. -->
     <stack id="downloads-indicator-anchor"
            consumeanchor="downloads-button">
-#ifdef MOZ_PHOTON_ANIMATIONS
       <box id="downloads-indicator-icon"/>
-#endif
       <stack id="downloads-indicator-progress-outer">
         <box id="downloads-indicator-progress-inner"/>
       </stack>

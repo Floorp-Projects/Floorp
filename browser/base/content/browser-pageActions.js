@@ -511,6 +511,21 @@ var BrowserPageActions = {
       return;
     }
 
+    if (this.panelNode.state == "open") {
+      this.panelNode.hidePopup();
+    } else if (this.panelNode.state == "closed") {
+      this.showPanel(event);
+    }
+  },
+
+  /**
+   * Show the page action panel
+   *
+   * @param  event (DOM event, optional)
+   *         The event that triggers showing the panel. (such as a mouse click,
+   *         if the user clicked something to open the panel)
+   */
+  showPanel(event = null) {
     for (let action of PageActions.actions) {
       let buttonNodeID = this._panelButtonNodeIDForActionID(action.id);
       let buttonNode = document.getElementById(buttonNodeID);

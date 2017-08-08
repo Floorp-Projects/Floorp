@@ -4,8 +4,13 @@
 
 "use strict";
 
+const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+
 add_task(async function() {
   info("Check history button existence and functionality");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PATH + "dummy_history_item.html");
+  await BrowserTestUtils.removeTab(tab);
+
   CustomizableUI.addWidgetToArea("history-panelmenu", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   registerCleanupFunction(() => CustomizableUI.reset());
 
@@ -20,6 +25,9 @@ add_task(async function() {
   historyButton.click();
   await promise;
   ok(historyPanel.getAttribute("current"), "History Panel is in view");
+  let historyItems = document.getElementById("appMenu_historyMenu");
+  ok(historyItems.querySelector("toolbarbutton.bookmark-item[label='Happy History Hero']"),
+     "Should have a history item for the history we just made.");
 
   let panelHiddenPromise = promiseOverflowHidden(window);
   document.getElementById("widget-overflow").hidePopup();
