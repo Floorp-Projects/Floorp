@@ -49,7 +49,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  ExtensionAPIs: "resource://gre/modules/ExtensionAPI.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
@@ -956,7 +955,7 @@ this.Extension = class extends ExtensionData {
 
       // Load Experiments APIs that this extension depends on.
       return Promise.all(
-        Array.from(this.apiNames, api => ExtensionAPIs.load(api))
+        Array.from(this.apiNames, api => ExtensionCommon.ExtensionAPIs.load(api))
       ).then(apis => {
         for (let API of apis) {
           this.apis.push(new API(this));
