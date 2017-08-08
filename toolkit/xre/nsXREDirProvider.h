@@ -126,11 +126,6 @@ protected:
   nsresult LoadContentProcessTempDir();
 #endif
 
-#ifdef MOZ_B2G
-  // Calculate and register app-bundled extension directories.
-  void LoadAppBundleDirs();
-#endif
-
   void Append(nsIFile* aDirectory);
 
   nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
