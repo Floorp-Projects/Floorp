@@ -1907,12 +1907,23 @@ function show(selected) {
 
   let current_button = document.querySelector(".category.selected");
   current_button.classList.remove("selected");
+  if (current_button.classList.contains("has-subsection")) {
+    for (let subsection of current_button.children) {
+      subsection.classList.remove("selected");
+    }
+  }
   selected.classList.add("selected");
   // Hack because subsection text appear selected. See Bug 1375114.
   document.getSelection().empty();
 
   let current_section = document.querySelector("section.active");
   let selected_section = document.getElementById(selectedValue);
+  let subsections = current_section.querySelectorAll(".sub-section");
+  if (subsections) {
+    for (let subsection of subsections) {
+      subsection.hidden = false;
+    }
+  }
   if (current_section == selected_section)
     return;
   current_section.classList.remove("active");
