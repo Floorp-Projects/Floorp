@@ -65,6 +65,9 @@ function isAvailable() {
 function startup(data) {
   if (!isAvailable()) {
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
+    // reset the sync related prefs incase the feature was previously available
+    // but isn't now.
+    Services.prefs.clearUserPref("services.sync.engine.addresses.available");
     return;
   }
 
@@ -86,6 +89,11 @@ function startup(data) {
   // When it's true, "element.autocomplete" will return tokens we currently
   // support -- otherwise it'll return an empty string.
   Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
+
+  // This pref determines whether the "addresses" sync engine is available
+  // (ie, whether it is shown in any UI etc) - it *does not* determine whether
+  // the engine is actually enabled or not.
+  Services.prefs.setBoolPref("services.sync.engine.addresses.available", true);
 
   // Listen for the autocomplete popup message to lazily append our stylesheet related to the popup.
   Services.mm.addMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
