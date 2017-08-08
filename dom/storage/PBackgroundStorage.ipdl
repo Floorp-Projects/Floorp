@@ -6,6 +6,11 @@
 
 include protocol PBackground;
 
+include "mozilla/dom/quota/SerializationHelpers.h";
+
+using mozilla::OriginAttributesPattern
+  from "mozilla/OriginAttributes.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -35,7 +40,17 @@ parent:
                         nsString key);
   async AsyncClear(nsCString originSuffix, nsCString originNoSuffix);
   async AsyncFlush();
-  
+
+  // These are privileged operations for use only by the observer API for
+  // delayed initialization and clearing origins and will never be used from
+  // content process children.  Ideally these would be guarded by checks or
+  // exist on a separate, privileged interface, but PBackgroundStorage is
+  // already insecure.
+  async Startup();
+  async ClearAll();
+  async ClearMatchingOrigin(nsCString originNoSuffix);
+  async ClearMatchingOriginAttributes(OriginAttributesPattern pattern);
+
 child:
   async Observe(nsCString topic,
                 nsString originAttributesPattern,
