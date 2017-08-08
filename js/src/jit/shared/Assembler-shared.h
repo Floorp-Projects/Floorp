@@ -399,32 +399,6 @@ class RepatchLabel
     }
 
 };
-// An absolute label is like a Label, except it represents an absolute
-// reference rather than a relative one. Thus, it cannot be patched until after
-// linking.
-struct AbsoluteLabel : public LabelBase
-{
-  public:
-    AbsoluteLabel()
-    { }
-    AbsoluteLabel(const AbsoluteLabel& label) : LabelBase(label)
-    { }
-    int32_t prev() const {
-        MOZ_ASSERT(!bound());
-        if (!used())
-            return INVALID_OFFSET;
-        return offset();
-    }
-    void setPrev(int32_t offset) {
-        use(offset);
-    }
-    void bind() {
-        bound_ = true;
-
-        // These labels cannot be used after being bound.
-        offset_ = -1;
-    }
-};
 
 class CodeOffset
 {
