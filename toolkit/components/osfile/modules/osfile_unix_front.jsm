@@ -12,6 +12,7 @@
 /* eslint-env mozilla/chrome-worker, node */
 /* global OS */
 
+// eslint-disable-next-line no-lone-blocks
 {
   if (typeof Components != "undefined") {
     // We do not wish osfile_unix_front.jsm to be used directly as a main thread
@@ -31,7 +32,7 @@
      let Path = require("resource://gre/modules/osfile/ospath.jsm");
      let SysAll = require("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
      exports.OS.Unix.File._init();
-     let LOG = SharedAll.LOG.bind(SharedAll, "Unix front-end");
+     SharedAll.LOG.bind(SharedAll, "Unix front-end");
      let Const = SharedAll.Constants.libc;
      let UnixFile = exports.OS.Unix.File;
      let Type = UnixFile.Type;
@@ -222,7 +223,7 @@
       */
      if (SharedAll.Constants.Sys.Name != "Android") {
        File.prototype.setDates = function(accessDate, modificationDate) {
-         let {value, ptr} = datesToTimevals(accessDate, modificationDate);
+         let { /* value, */ ptr} = datesToTimevals(accessDate, modificationDate);
          throw_on_negative("setDates",
            UnixFile.futimes(this.fd, ptr),
            this._path);
@@ -555,7 +556,6 @@
          // Perform actual copy
          let total_read = 0;
          while (true) {
-           let chunk_size = Math.min(nbytes, bufSize);
            let bytes_just_read = read(pump_buffer, bufSize);
            if (bytes_just_read == 0) {
              return total_read;
@@ -646,7 +646,6 @@
        // copy directories
        File.copy = function copy(sourcePath, destPath, options = {}) {
          let source, dest;
-         let result;
          try {
            source = File.open(sourcePath);
            // Need to open the output file with |append:false|, or else |splice|
@@ -657,9 +656,9 @@
              dest = File.open(destPath, {trunc: true, append: false});
            }
            if (options.unixUserland) {
-             result = pump_userland(source, dest, options);
+             pump_userland(source, dest, options);
            } else {
-             result = pump(source, dest, options);
+             pump(source, dest, options);
            }
          } catch (x) {
            if (dest) {
@@ -1002,7 +1001,7 @@
       * @throws {OS.File.Error} In case of I/O error.
       */
      File.setDates = function setDates(path, accessDate, modificationDate) {
-       let {value, ptr} = datesToTimevals(accessDate, modificationDate);
+       let {/* value, */ ptr} = datesToTimevals(accessDate, modificationDate);
        throw_on_negative("setDates",
                          UnixFile.utimes(path, ptr),
                          path);
@@ -1082,10 +1081,10 @@
       * Get/set the current directory.
       */
      Object.defineProperty(File, "curDir", {
-         set: function(path) {
+         set(path) {
            this.setCurrentDirectory(path);
          },
-         get: function() {
+         get() {
            return this.getCurrentDirectory();
          }
        }

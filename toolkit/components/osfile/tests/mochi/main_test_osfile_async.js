@@ -407,7 +407,7 @@ var test_debug_test = maketest("debug_test", function debug_test(test) {
   return (async function() {
     // Create a console listener.
     let consoleListener = {
-      observe: function(aMessage) {
+      observe(aMessage) {
         // Ignore unexpected messages.
         if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
           return;
@@ -420,7 +420,7 @@ var test_debug_test = maketest("debug_test", function debug_test(test) {
     };
     toggleDebugTest(true, consoleListener);
     // Execution of OS.File.exist method will trigger OS.File.LOG several times.
-    let fileExists = await OS.File.exists(EXISTING_FILE);
+    await OS.File.exists(EXISTING_FILE);
     toggleDebugTest(false, consoleListener);
   })();
 });
