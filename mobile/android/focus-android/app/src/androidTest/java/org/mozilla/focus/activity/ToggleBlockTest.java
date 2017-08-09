@@ -114,6 +114,12 @@ public class ToggleBlockTest {
         TestHelper.navigateUp.click();
         TestHelper.webView.waitForExists(waitingTime);
         TestHelper.menuButton.perform(click());
+
+        // In case of tablet, the refresh button is not on the menu bar,
+        // Must clear menu bar beforehand
+        if (TestHelper.mDevice.getDisplayWidth() > 1440) {
+            TestHelper.mDevice.pressBack();
+        }
         TestHelper.refreshBtn.click();
         TestHelper.webView.waitForExists(waitingTime);
         TestHelper.menuButton.perform(click());

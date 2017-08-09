@@ -118,6 +118,7 @@ public class RestartTest {
                 .descriptionContains("Dismiss Firefox Focus")
                 .enabled(true));
         dismissFocusBtn.click();
+        dismissFocusBtn.waitUntilGone(waitingTime);
         assertTrue(!dismissFocusBtn.exists());
         TestHelper.pressHomeKey();
 
