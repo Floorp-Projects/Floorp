@@ -41,10 +41,14 @@ def test_cli_run_with_fix(run, capfd):
 def test_cli_run_with_edit(run, parser, capfd):
     os.environ['EDITOR'] = 'echo'
 
-    ret = run(['-f', 'json', '--edit', '--linter', 'external'])
-    out = capfd.readouterr()[0].strip()
-    assert ret == 0
-    assert os.path.basename(out) == 'foobar.js'
+    ret = run(['-f', 'compact', '--edit', '--linter', 'external'])
+    out, err = capfd.readouterr()
+    out = out.splitlines()
+    assert ret == 1
+    assert len(out) == 5
+    assert out[0].endswith('foobar.js')  # from the `echo` editor
+    assert "files/foobar.js: line 1, col 1, Error" in out[1]
+    assert "files/foobar.js: line 2, col 1, Error" in out[2]
 
     del os.environ['EDITOR']
     with pytest.raises(SystemExit):
