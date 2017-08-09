@@ -9,6 +9,7 @@ use gleam::gl;
 use webrender_api::*;
 use webrender::renderer::{ReadPixelsFormat, Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
+use webrender::renderer::{DebugFlags, PROFILER_DBG};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
@@ -464,7 +465,9 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
 #[no_mangle]
 pub extern "C" fn wr_renderer_set_profiler_enabled(renderer: &mut Renderer,
                                                    enabled: bool) {
-    renderer.set_profiler_enabled(enabled);
+    let mut flags = renderer.get_debug_flags();
+    flags.set(PROFILER_DBG, enabled);
+    renderer.set_debug_flags(flags);
 }
 
 #[no_mangle]
@@ -574,10 +577,12 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         Arc::clone(&(*thread_pool).0)
     };
 
+    let mut debug_flags = DebugFlags::empty();
+    debug_flags.set(PROFILER_DBG, enable_profiler);
     let opts = RendererOptions {
         enable_aa: true,
         enable_subpixel_aa: true,
-        enable_profiler: enable_profiler,
+        debug_flags: debug_flags,
         recorder: recorder,
         blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new(workers.clone()))),
         workers: Some(workers.clone()),
