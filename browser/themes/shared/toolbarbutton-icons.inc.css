@@ -317,7 +317,7 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
     fill: #30A3FF;
   }
   to {
-    transform: translateX(-1242px);
+    transform: translateX(-1260px);
     fill: #30A3FF;
   }
 }
@@ -330,7 +330,7 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
     fill: #30A3FF;
   }
   to {
-    transform: scaleX(-1) translateX(-1242px);
+    transform: scaleX(-1) translateX(-1260px);
     fill: #30A3FF;
   }
 }
@@ -371,10 +371,10 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
 
 #nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-name: overflow-animation;
-  animation-timing-function: steps(69);
-  animation-duration: 1150ms;
+  animation-timing-function: steps(70);
+  animation-duration: 1167ms;
   background-image: url("chrome://browser/skin/chevron-animation.svg");
-  width: 1260px;
+  width: 1278px;
 }
 
 #nav-bar-overflow-button[animate]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
