@@ -1075,7 +1075,8 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
   TextureData* data = nullptr;
 
 #ifdef XP_WIN
-  if (aLayersBackend == LayersBackend::LAYERS_D3D11 &&
+  if ((aLayersBackend == LayersBackend::LAYERS_D3D11 ||
+       aLayersBackend == LayersBackend::LAYERS_WR) &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
