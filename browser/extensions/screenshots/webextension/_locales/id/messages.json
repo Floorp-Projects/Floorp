@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Seleksi Anda terlalu kecil"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots dinonaktifkan di Mode Penjelajahan Pribadi"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Maaf atas ketidaknyamanannya. Kami sedang mengerjakan fitur ini untuk peluncuran masa mendatang."
+  },
   "genericErrorTitle": {
     "message": "Wah! Firefox Screenshots mendadak kacau."
   },

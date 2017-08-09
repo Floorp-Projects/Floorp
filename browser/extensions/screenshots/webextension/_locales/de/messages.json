@@ -1,6 +1,6 @@
 {
   "addonDescription": {
-    "message": "Speichern Sie Ausschnitte und Bildschirmfotos von Webseiten, die Sie temporär oder dauerhaft speichern können."
+    "message": "Erstellen Sie Bildschirmfotos von vollständigen Webseiten oder Ausschnitten und speichern Sie diese temporär oder dauerhaft."
   },
   "addonAuthorsList": {
     "message": "Mozilla <screenshots-feedback@mozilla.com>"
@@ -12,7 +12,7 @@
     "message": "Meine Bildschirmfotos"
   },
   "screenshotInstructions": {
-    "message": "Ziehen oder Klicken Sie auf der Seite, um einen Bereich auszuwählen. Drücken Sie ESC zum Abbrechen."
+    "message": "Ziehen oder klicken Sie auf der Seite, um einen Bereich auszuwählen. Drücken Sie ESC zum Abbrechen."
   },
   "saveScreenshotSelectedArea": {
     "message": "Speichern"
@@ -59,13 +59,19 @@
     "message": "Ein Bildschirmfoto dieser Seite ist nicht möglich."
   },
   "unshootablePageErrorDetails": {
-    "message": "Dies ist keine Standard-Webseite, daher sind keine Bildschirmfotos von ihr möglich."
+    "message": "Dies ist keine Standard-Webseite, deshalb sind keine Bildschirmfotos von ihr möglich."
   },
   "selfScreenshotErrorTitle": {
     "message": "Sie können kein Bildschirmfoto einer Firefox-Screenshots-Seite machen!"
   },
   "emptySelectionErrorTitle": {
     "message": "Ihr Auswahlbereich ist zu klein"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots ist im Privaten Modus deaktiviert"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Wir bitten um Entschuldigung für diese Unannehmlichkeiten. Wir arbeiten daran, diese Funktion in zukünftigen Versionen zur Verfügung zu stellen."
   },
   "genericErrorTitle": {
     "message": "Firefox Screenshots funktioniert nicht richtig."

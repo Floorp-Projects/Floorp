@@ -1,6 +1,6 @@
 {
   "addonDescription": {
-    "message": "临时或永久保存网页截图。"
+    "message": "截取网页截图，可临时或永久存储。"
   },
   "addonAuthorsList": {
     "message": "Mozilla <screenshots-feedback@mozilla.com>"
@@ -12,16 +12,16 @@
     "message": "我的截图"
   },
   "screenshotInstructions": {
-    "message": "在页面上拖动或单击以选择范围。按 ESC 键取消。"
+    "message": "在页面上拖拽或单击即可选择要截图的区域。按 ESC 键可取消。"
   },
   "saveScreenshotSelectedArea": {
     "message": "保存"
   },
   "saveScreenshotVisibleArea": {
-    "message": "保存可见范围"
+    "message": "截取可见范围"
   },
   "saveScreenshotFullPage": {
-    "message": "保存整个页面"
+    "message": "截取整个页面"
   },
   "cancelScreenshot": {
     "message": "取消"
@@ -33,7 +33,7 @@
     "message": "链接已复制"
   },
   "notificationLinkCopiedDetails": {
-    "message": "您的截图的链接已复制到剪贴板。按 $META_KEY$-V 粘贴。",
+    "message": "您的截图的链接已复制到剪贴板。按 $META_KEY$-V 可粘贴。",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -50,7 +50,7 @@
     "message": "我们无法连接到您的截图。"
   },
   "connectionErrorDetails": {
-    "message": "请检查您的互联网连接。如果您正常连接到互联网，Firefox Screenshots 的服务器可能遇到了问题。"
+    "message": "请检查您的互联网连接。如果您正常连接到互联网，可能是 Firefox Screenshots 的服务器临时出了问题。"
   },
   "loginErrorDetails": {
     "message": "Firefox Screenshots 服务遇到问题，我们现在无法保存您的截图。请稍后再试。"
@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "您选择的范围太小"
   },
+  "privateWindowErrorTitle": {
+    "message": "隐私浏览模式下屏幕截图已被禁用"
+  },
+  "privateWindowErrorDetails": {
+    "message": "很抱歉因此带来的不便。我们将在后续版本中提供此功能。"
+  },
   "genericErrorTitle": {
     "message": "哎呀，Firefox Screenshots 遇到问题。"
   },
@@ -77,10 +83,10 @@
     "message": "截取、保存和分享屏幕截图，无需 Firefox 以外的工具。"
   },
   "tourHeaderTwo": {
-    "message": "只截取想要的部分"
+    "message": "截取你所需"
   },
   "tourBodyTwo": {
-    "message": "单击并拖动以截取页面某个区域。您也可以悬停以高亮您的选择范围。"
+    "message": "单击并拖动以截取页面某个区域。您也可以把光标移到你要的地方，高亮后单击即可截图。"
   },
   "tourHeaderThree": {
     "message": "截取窗口或整个页面"

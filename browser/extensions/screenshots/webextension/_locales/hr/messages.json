@@ -1,0 +1,115 @@
+{
+  "addonDescription": {
+    "message": "Snimite ili slikajte stvari s Weba te ih spremite privremeno ili trajno."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Snimi zaslon"
+  },
+  "myShotsLink": {
+    "message": "Moje snimke"
+  },
+  "screenshotInstructions": {
+    "message": "Povucite ili kliknite na stranicu kako biste izabrali područje. Pritisnite ESC za otkazivanje radnje."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Spremi"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Spremi vidljivo"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Spremi cijelu stranicu"
+  },
+  "cancelScreenshot": {
+    "message": "Otkaži"
+  },
+  "downloadScreenshot": {
+    "message": "Preuzmi"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Poveznica je kopirana"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Poveznica do vaše snimke je kopirana u međuspremnik. Pristinite $META_KEY$-V da ju zalijepite.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Ne radi."
+  },
+  "requestErrorDetails": {
+    "message": "Ups! Nismo uspjeli spremiti vašu snimku. Molimo pokušajte ponovo kasnije."
+  },
+  "connectionErrorTitle": {
+    "message": "Ne možemo se spojiti s vašim snimkama."
+  },
+  "connectionErrorDetails": {
+    "message": "Molimo provjerite vašu internet vezu. Ako ste uspješno povezani s internetom, možda postoji privremeni problem sa uslugama Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nismo uspjeli spremiti vaš snimak zbog toga što postoji problem sa uslugama Firefox Screenshots. Molimo pokušajte kasnije."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ovu stranicu ne možemo snimiti."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ovo nije standardna Web stranica stoga ju ne možete snimiti."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Ne možete snimiti Firefox Screenshots stranicu!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Vaš odabir je premalen"
+  },
+  "genericErrorTitle": {
+    "message": "Uf! Firefox Screenshots se zbrkao."
+  },
+  "genericErrorDetails": {
+    "message": "Nismo sigurno što se upravo dogodilo. Možete li pokušati ponovno ili snimiti drukčiju stranicu?"
+  },
+  "tourBodyOne": {
+    "message": "Snimite, spremite i dijelite snimke bez da napuštate Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Snimite ono što želite"
+  },
+  "tourBodyTwo": {
+    "message": "Kliknite i povucite ako želite snimiti samo dio stranice. Također možete označiti vaš odabir tako da preko njega stavite pokazivač miša."
+  },
+  "tourHeaderThree": {
+    "message": "Baš kako vam se sviđa"
+  },
+  "tourBodyThree": {
+    "message": "Spremite vaše odrezane snimke na Web kako biste ih jednostavnije dijelili, ili ih jednostavno skinite na vaše računalo. Također možete kliknuti gumb Moje snimke kako biste pronašli sve vaše dosadašnje snimke."
+  },
+  "tourHeaderFour": {
+    "message": "Snimajte prozore ili cijele stranice"
+  },
+  "tourBodyFour": {
+    "message": "Odaberite gumbove na gornjem desnom kutu kako biste snimili vidljivo područje u prozoru ili cijelu stranicu."
+  },
+  "tourSkip": {
+    "message": "PRESKOČI"
+  },
+  "tourNext": {
+    "message": "Sljedeći slajd"
+  },
+  "tourPrevious": {
+    "message": "Prijašnji slajd"
+  },
+  "tourDone": {
+    "message": "Gotovo"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Uvjeti"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Pravila o privatnosti"
+  }
+}

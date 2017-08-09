@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Seçiminiz çok küçük"
   },
+  "privateWindowErrorTitle": {
+    "message": "Gizli Gezinti modunda Screenshosts özelliği kullanılamaz"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Aksaklıktan dolayı özür dileriz. Gelecek sürümlerde bu özelliği devreye almak için çalışıyoruz."
+  },
   "genericErrorTitle": {
     "message": "Firefox Screenshosts kafayı yedi!"
   },
@@ -118,9 +124,9 @@
     }
   },
   "termsAndPrivacyNoticeTermsLink": {
-    "message": "Koşullarını"
+    "message": "Koşullarımızı"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
-    "message": "Gizlilik Bildirimini"
+    "message": "Gizlilik Bildirimimizi"
   }
 }

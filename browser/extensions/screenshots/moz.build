@@ -49,6 +49,14 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/bn_BD/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ca"] += [
+  'webextension/_locales/ca/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["cak"] += [
+  'webextension/_locales/cak/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["cs"] += [
   'webextension/_locales/cs/messages.json'
 ]
@@ -79,6 +87,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["en_US"] += [
   'webextension/_locales/en_US/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["eo"] += [
+  'webextension/_locales/eo/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["es_AR"] += [
@@ -117,6 +129,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/fy_NL/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ga_IE"] += [
+  'webextension/_locales/ga_IE/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["gu_IN"] += [
   'webextension/_locales/gu_IN/messages.json'
 ]
@@ -127,6 +143,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["hi_IN"] += [
   'webextension/_locales/hi_IN/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["hr"] += [
+  'webextension/_locales/hr/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["hsb"] += [
@@ -151,6 +171,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ja"] += [
   'webextension/_locales/ja/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ka"] += [
+  'webextension/_locales/ka/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["kab"] += [
@@ -179,6 +203,14 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["lt"] += [
   'webextension/_locales/lt/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["mk"] += [
+  'webextension/_locales/mk/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["mr"] += [
+  'webextension/_locales/mr/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ms"] += [
@@ -279,6 +311,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["uz"] += [
   'webextension/_locales/uz/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["vi"] += [
+  'webextension/_locales/vi/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["zh_CN"] += [

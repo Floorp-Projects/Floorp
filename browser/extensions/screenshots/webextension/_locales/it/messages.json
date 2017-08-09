@@ -30,7 +30,7 @@
     "message": "Scarica"
   },
   "notificationLinkCopiedTitle": {
-    "message": "Link aggiunto agli appunti"
+    "message": "Link copiato"
   },
   "notificationLinkCopiedDetails": {
     "message": "Il link all’immagine è stato copiato negli appunti. Utilizza $META_KEY$-V per incollarlo.",
@@ -66,6 +66,12 @@
   },
   "emptySelectionErrorTitle": {
     "message": "L’area selezionata è troppo piccola"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots è disattivato in navigazione anonima."
+  },
+  "privateWindowErrorDetails": {
+    "message": "Ci dispiace per l’inconveniente. Stiamo lavorando a questa funzione per le prossime versioni."
   },
   "genericErrorTitle": {
     "message": "Wow! Firefox Screenshots è andato in tilt"
