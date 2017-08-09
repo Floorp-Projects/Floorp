@@ -1514,11 +1514,11 @@
                                                           [ brandShortName ]);
               isContentTitle = true;
             } else {
-              if (browser.currentURI.spec) {
+              if (browser.currentURI.displaySpec) {
                 try {
-                  title = this.mURIFixup.createExposableURI(browser.currentURI).spec;
+                  title = this.mURIFixup.createExposableURI(browser.currentURI).displaySpec;
                 } catch (ex) {
-                  title = browser.currentURI.spec;
+                  title = browser.currentURI.displaySpec;
                 }
               }
 
@@ -7917,7 +7917,7 @@
       <![CDATA[
         var tab = event.target.tab;
         if (tab) {
-          let overLink = tab.linkedBrowser.currentURI.spec;
+          let overLink = tab.linkedBrowser.currentURI.displaySpec;
           if (overLink == "about:blank")
             overLink = "";
           XULBrowserWindow.setOverLink(overLink, null);
