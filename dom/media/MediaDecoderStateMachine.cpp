@@ -1864,17 +1864,23 @@ public:
 
   void HandleAudioDecoded(AudioData* aAudio) override
   {
+    mMaster->PushAudio(aAudio);
+    if (!mMaster->HaveEnoughDecodedAudio()) {
+      mMaster->RequestAudioData();
+    }
     // This might be the sample we need to exit buffering.
     // Schedule Step() to check it.
-    mMaster->PushAudio(aAudio);
     mMaster->ScheduleStateMachine();
   }
 
   void HandleVideoDecoded(VideoData* aVideo, TimeStamp aDecodeStart) override
   {
+    mMaster->PushVideo(aVideo);
+    if (!mMaster->HaveEnoughDecodedVideo()) {
+      mMaster->RequestVideoData(media::TimeUnit());
+    }
     // This might be the sample we need to exit buffering.
     // Schedule Step() to check it.
-    mMaster->PushVideo(aVideo);
     mMaster->ScheduleStateMachine();
   }
 
@@ -1921,8 +1927,6 @@ public:
   }
 
 private:
-  void DispatchDecodeTasksIfNeeded();
-
   TimeStamp mBufferingStart;
 
   // The maximum number of second we spend buffering when we are short on
@@ -2538,25 +2542,6 @@ SeekingState::SeekCompleted()
 
 void
 MediaDecoderStateMachine::
-BufferingState::DispatchDecodeTasksIfNeeded()
-{
-  if (mMaster->IsAudioDecoding()
-      && !mMaster->HaveEnoughDecodedAudio()
-      && !mMaster->IsRequestingAudioData()
-      && !mMaster->IsWaitingAudioData()) {
-    mMaster->RequestAudioData();
-  }
-
-  if (mMaster->IsVideoDecoding()
-      && !mMaster->HaveEnoughDecodedVideo()
-      && !mMaster->IsRequestingVideoData()
-      && !mMaster->IsWaitingVideoData()) {
-    mMaster->RequestVideoData(media::TimeUnit());
-  }
-}
-
-void
-MediaDecoderStateMachine::
 BufferingState::Step()
 {
   TimeStamp now = TimeStamp::Now();
@@ -2576,11 +2561,9 @@ BufferingState::Step()
       SLOG("Buffering: wait %ds, timeout in %.3lfs",
            mBufferingWait, mBufferingWait - elapsed.ToSeconds());
       mMaster->ScheduleStateMachineIn(TimeUnit::FromMicroseconds(USECS_PER_S));
-      DispatchDecodeTasksIfNeeded();
       return;
     }
   } else if (mMaster->OutOfDecodedAudio() || mMaster->OutOfDecodedVideo()) {
-    DispatchDecodeTasksIfNeeded();
     MOZ_ASSERT(!mMaster->OutOfDecodedAudio()
                || mMaster->IsRequestingAudioData()
                || mMaster->IsWaitingAudioData());
