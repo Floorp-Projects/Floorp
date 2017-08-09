@@ -56,7 +56,7 @@ add_task(function* () {
 });
 
 function pushPrefEnv() {
-  let deferred = promise.defer();
+  let deferred = defer();
   let options = {
     "set": [
       ["security.mixed_content.block_active_content", true],
@@ -70,7 +70,7 @@ function pushPrefEnv() {
 }
 
 function mixedContentOverrideTest2(hud, browser) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let {gIdentityHandler} = browser.ownerGlobal;
   ok(gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
     "Mixed Active Content state appeared on identity box");

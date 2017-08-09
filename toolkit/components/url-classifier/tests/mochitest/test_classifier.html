@@ -13,6 +13,7 @@
 <pre id="test">
 
 <script class="testbody" type="text/javascript">
+/* import-globals-from classifierHelper.js */
 
 var firstLoad = true;
 
@@ -125,7 +126,7 @@ SimpleTest.waitForExplicitFinish();
 
 function updateSuccess() {
   return SpecialPowers.pushPrefEnv(
-    {"set" : [["browser.safebrowsing.malware.enabled", true]]});
+    {"set": [["browser.safebrowsing.malware.enabled", true]]});
 }
 
 function updateError(errorCode) {
@@ -153,13 +154,13 @@ function testService() {
       let prin = ssm.createCodebasePrincipal(uri, {});
       is(service.classifyLocal(uri, tables), test.table,
          `Successful synchronous classification of ${test.url} with TP=${test.trackingProtection}`);
-      let result = SpecialPowers.doUrlClassify(prin, null, test.trackingProtection, function(errorCode) {
+      SpecialPowers.doUrlClassify(prin, null, test.trackingProtection, function(errorCode) {
         is(errorCode, test.result,
            `Successful asynchronous classification of ${test.url} with TP=${test.trackingProtection}`);
 
         // Same as classifyLocal except for the 'async' call.
-        SpecialPowers.doUrlClassifyLocal(uri, tables, function(errorCode, tables) {
-          is(tables, test.table,
+        SpecialPowers.doUrlClassifyLocal(uri, tables, function(errorCode1, tables1) {
+          is(tables1, test.table,
              `Successful asynchronous local classification of ${test.url} with TP=${test.trackingProtection}`);
           runNextTest();
         });
@@ -171,12 +172,12 @@ function testService() {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
-            ["urlclassifier.phishTable", "test-phish-simple"],
-            ["urlclassifier.downloadBlockTable", "test-block-simple"],
-            ["urlclassifier.trackingTable", "test-track-simple"],
-            ["browser.safebrowsing.debug", true],
-            ["privacy.trackingprotection.annotate_channels", true]]},
+  {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
+           ["urlclassifier.phishTable", "test-phish-simple"],
+           ["urlclassifier.downloadBlockTable", "test-block-simple"],
+           ["urlclassifier.trackingTable", "test-track-simple"],
+           ["browser.safebrowsing.debug", true],
+           ["privacy.trackingprotection.annotate_channels", true]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => classifierHelper.addUrlToDB(testData))

@@ -9,6 +9,7 @@
 var { Ci } = require("chrome");
 var Services = require("Services");
 var promise = require("promise");
+const defer = require("devtools/shared/defer");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
@@ -742,7 +743,7 @@ BrowserTabActor.prototype = {
     // so only request form update if some code is still listening on the other
     // side.
     if (!this.exited) {
-      this._deferredUpdate = promise.defer();
+      this._deferredUpdate = defer();
       let onFormUpdate = msg => {
         // There may be more than just one childtab.js up and running
         if (this._form.actor != msg.json.actor) {
@@ -829,7 +830,7 @@ function BrowserAddonList(connection) {
 }
 
 BrowserAddonList.prototype.getList = function () {
-  let deferred = promise.defer();
+  let deferred = defer();
   AddonManager.getAllAddons((addons) => {
     for (let addon of addons) {
       let actor = this._actorByAddonId.get(addon.id);

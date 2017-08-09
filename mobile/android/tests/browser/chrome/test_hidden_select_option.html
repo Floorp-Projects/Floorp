@@ -26,24 +26,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1178722
     let SelectHelper = sandbox.SelectHelper;
 
     // Returns whether an element should be visible according to its text content.
-    function shouldBeVisible(e){
+    function shouldBeVisible(e) {
       return e.label.indexOf("visible") > 0;
     }
 
     // Returns an object for the callback method that would normally be created by Prompt.java's
     // addListResult(..) method.
-    function createCallBackDummyData(select){
+    function createCallBackDummyData(select) {
       var dummyList = [];
       let listElements = SelectHelper.getListForElement(select);
       for (var i = 0; i < listElements.length; i++) {
         dummyList.push(i);
       }
-      return {list:dummyList};
+      return {list: dummyList};
     }
 
     // Wait until the page has loaded so that we can access the DOM.
     SimpleTest.waitForExplicitFinish();
-    window.onload = function () {
+    window.onload = function() {
       let select = document.getElementById("sample-select");
 
       // ##############################################
@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1178722
       // We will simulate "selecting" (ie choosing via the prompt) all the visible options...
       is(select.selectedOptions.length, 0, "No options selected yet.");
       let dummyData = createCallBackDummyData(select);
-      SelectHelper._promptCallBack(dummyData,select);
+      SelectHelper._promptCallBack(dummyData, select);
 
       // Check that only the visible options had the "selected" attribute set...
       let selectedOptions = select.selectedOptions;

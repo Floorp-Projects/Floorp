@@ -4,7 +4,7 @@
 
 "use strict";
 
-/*globals gChromeWin */
+/* globals gChromeWin */
 
 var Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
@@ -86,12 +86,12 @@ var ContextMenus = {
     this.target = null;
   },
 
-  disable: function (event) {
+  disable: function(event) {
     Addons.setEnabled(false, this.target.addon);
     this.target = null;
   },
 
-  uninstall: function (event) {
+  uninstall: function(event) {
     Addons.uninstall(this.target.addon);
     this.target = null;
   }
@@ -243,7 +243,7 @@ var Addons = {
     let optionsURL = aAddon.optionsURL || "";
 
     let blocked = "";
-    switch(aAddon.blocklistState) {
+    switch (aAddon.blocklistState) {
       case Ci.nsIBlocklistService.STATE_BLOCKED:
         blocked = "blocked";
         break;
@@ -281,10 +281,10 @@ var Addons = {
       let list = document.getElementById("addons-list");
       list.innerHTML = "";
 
-      aAddons.sort(function(a,b) {
+      aAddons.sort(function(a, b) {
         return a.name.localeCompare(b.name);
       });
-      for (let i=0; i<aAddons.length; i++) {
+      for (let i = 0; i < aAddons.length; i++) {
         // Don't create item for system add-ons.
         if (aAddons[i].isSystem)
           continue;

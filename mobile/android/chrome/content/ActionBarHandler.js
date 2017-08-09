@@ -39,14 +39,14 @@ var ActionBarHandler = {
 
     if (!this._selectionID && e.collapsed) {
       switch (e.reason) {
-        case 'longpressonemptycontent':
-        case 'taponcaret':
+        case "longpressonemptycontent":
+        case "taponcaret":
           // Show ActionBar when long pressing on an empty input or single
           // tapping on the caret.
           this._init(e.boundingClientRect);
           break;
 
-        case 'updateposition':
+        case "updateposition":
           // Do not show ActionBar when single tapping on an non-empty editable
           // input.
           break;
@@ -67,14 +67,14 @@ var ActionBarHandler = {
     if (this._selectionID) {
       if (!this._selectionHasChanged()) {
         // Still the same active selection.
-        if (e.reason == 'presscaret' || e.reason == 'scroll') {
+        if (e.reason == "presscaret" || e.reason == "scroll") {
           // boundingClientRect doesn't matter since we are hiding the floating
           // toolbar.
           this._updateVisibility();
         } else {
           // Selection changes update boundingClientRect.
           this._boundingClientRect = e.boundingClientRect;
-          let forceUpdate = e.reason == 'updateposition' || e.reason == 'releasecaret';
+          let forceUpdate = e.reason == "updateposition" || e.reason == "releasecaret";
           this._sendActionBarActions(forceUpdate);
         }
       } else {
@@ -260,7 +260,7 @@ var ActionBarHandler = {
     let actionCountUnchanged = this._actionBarActions &&
       actions.length === this._actionBarActions.length;
     let actionsMatch = actionCountUnchanged &&
-      this._actionBarActions.every((e,i) => {
+      this._actionBarActions.every((e, i) => {
         return e.id === actions[i].id;
       });
 
@@ -343,7 +343,7 @@ var ActionBarHandler = {
         // Some Mobile keyboards such as SwiftKeyboard, provide auto-suggest
         // style highlights via composition selections in editables.
         if (element) {
-          // If we have an active composition string, commit it, and 
+          // If we have an active composition string, commit it, and
           // ensure proper element focus.
           let editor = ActionBarHandler._getEditor(element, win)
           if (editor.composing) {
@@ -535,7 +535,7 @@ var ActionBarHandler = {
 
       selector: {
         matches: function(element, win) {
-          if(!(element instanceof HTMLInputElement)) {
+          if (!(element instanceof HTMLInputElement)) {
             return false;
           }
           let form = element.form;

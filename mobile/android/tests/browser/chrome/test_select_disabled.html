@@ -24,20 +24,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1263589
 
     // Wait until the page has loaded so that we can access the DOM.
     SimpleTest.waitForExplicitFinish();
-    window.onload = function () {
+    window.onload = function() {
       // test options are not incorrectly disabled...
       let isEnabled1 = document.getElementById("is_enabled_1");
       let isEnabled2 = document.getElementById("is_enabled_2");
-      ok(!SelectHelper._isDisabledElement(isEnabled1),"input with name=\"disabled\" should not disable options (bug 1263589)");
-      ok(!SelectHelper._isDisabledElement(isEnabled2),"<form disabled> is not valid and will have no effect.");
+      ok(!SelectHelper._isDisabledElement(isEnabled1), "input with name=\"disabled\" should not disable options (bug 1263589)");
+      ok(!SelectHelper._isDisabledElement(isEnabled2), "<form disabled> is not valid and will have no effect.");
 
       // test options are disabled when expected...
       let isNotEnabled1 = document.getElementById("is_not_enabled_1");
       let isNotEnabled2 = document.getElementById("is_not_enabled_2");
       let isNotEnabled3 = document.getElementById("is_not_enabled_2");
-      ok(SelectHelper._isDisabledElement(isNotEnabled1),"<option disabled> is disabled.");
-      ok(SelectHelper._isDisabledElement(isNotEnabled2),"<optelement disabled> will have disabled children.");
-      ok(SelectHelper._isDisabledElement(isNotEnabled3),"<fieldset disabled> will have disabled children.");
+      ok(SelectHelper._isDisabledElement(isNotEnabled1), "<option disabled> is disabled.");
+      ok(SelectHelper._isDisabledElement(isNotEnabled2), "<optelement disabled> will have disabled children.");
+      ok(SelectHelper._isDisabledElement(isNotEnabled3), "<fieldset disabled> will have disabled children.");
 
       SimpleTest.finish();
     }

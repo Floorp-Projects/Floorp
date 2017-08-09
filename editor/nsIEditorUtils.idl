@@ -10,7 +10,7 @@
 interface nsIDOMBlob;
 interface mozIDOMWindowProxy;
 
-[scriptable, uuid(eb8b8ad9-5d8f-43bd-8ce5-5b943c180d56)]
+[scriptable, builtinclass, uuid(eb8b8ad9-5d8f-43bd-8ce5-5b943c180d56)]
 interface nsIEditorBlobListener : nsISupports
 {
   void onResult(in ACString aResult);

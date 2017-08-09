@@ -7,7 +7,7 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 
-/*globals MAX_URI_LENGTH, MAX_TITLE_LENGTH */
+/* globals MAX_URI_LENGTH, MAX_TITLE_LENGTH */
 
 var Reader = {
   // These values should match those defined in BrowserContract.java.
@@ -203,7 +203,7 @@ var Reader = {
 
   _sendMmaEvent: function(event) {
       WindowEventDispatcher.sendRequest({
-          type: "Mma:"+event,
+          type: "Mma:" + event,
       });
   },
 

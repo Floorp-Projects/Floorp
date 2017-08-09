@@ -59,7 +59,7 @@ this.BindToObject = function BindToObject(fn, self, opt_args) {
 // back off for TIMEOUT_INCREMENT minutes.  If we get another error
 // immediately after we restart, we double the timeout and add
 // TIMEOUT_INCREMENT minutes, etc.
-// 
+//
 // This is similar to the logic used by the search suggestion service.
 
 // HTTP responses that count as an error.  We also include any 5xx response

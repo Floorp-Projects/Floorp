@@ -29,7 +29,7 @@ function FxAccountsPush() {
 }
 
 FxAccountsPush.prototype = {
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case "android-push-service":
         if (data === "android-fxa-subscribe") {
@@ -69,8 +69,8 @@ FxAccountsPush.prototype = {
         type: "FxAccountsPush:Subscribe:Response",
         subscription: {
           pushCallback: subscription.endpoint,
-          pushPublicKey: urlsafeBase64Encode(subscription.getKey('p256dh')),
-          pushAuthKey: urlsafeBase64Encode(subscription.getKey('auth'))
+          pushPublicKey: urlsafeBase64Encode(subscription.getKey("p256dh")),
+          pushAuthKey: urlsafeBase64Encode(subscription.getKey("auth"))
         }
       });
     })

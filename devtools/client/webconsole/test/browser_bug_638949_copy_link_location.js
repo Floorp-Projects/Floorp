@@ -77,7 +77,7 @@ add_task(function* () {
 
   info("expected clipboard value: " + message.url);
 
-  let deferred = promise.defer();
+  let deferred = defer();
 
   waitForClipboard((aData) => {
     return aData.trim() == message.url;

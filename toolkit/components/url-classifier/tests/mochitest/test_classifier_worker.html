@@ -13,6 +13,7 @@
 <pre id="test">
 
 <script class="testbody" type="text/javascript">
+/* import-globals-from classifierHelper.js */
 
 // Add some URLs to the malware database.
 var testData = [
@@ -29,9 +30,8 @@ function loadTestFrame() {
     "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/workerFrame.html";
 }
 
-function onmessage(event)
-{
-  var pieces = event.data.split(':');
+function onmessage(event) {
+  var pieces = event.data.split(":");
   if (pieces[0] == "finish") {
     SimpleTest.finish();
     return;
@@ -42,7 +42,7 @@ function onmessage(event)
 
 function updateSuccess() {
   SpecialPowers.pushPrefEnv(
-    {"set" : [["browser.safebrowsing.malware.enabled", true]]},
+    {"set": [["browser.safebrowsing.malware.enabled", true]]},
     loadTestFrame);
 }
 
@@ -50,11 +50,11 @@ function updateError(errorCode) {
   ok(false, "Couldn't update classifier. Error code: " + errorCode);
   // Abort test.
   SimpleTest.finish();
-};
+}
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
-            ["urlclassifier.phishTable", "test-phish-simple"]]},
+  {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
+           ["urlclassifier.phishTable", "test-phish-simple"]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => classifierHelper.addUrlToDB(testData))

@@ -309,6 +309,7 @@
               label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
     <deck id="setDefaultPane">
       <hbox align="center" class="indent">
+        <image class="face-sad"/>
         <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
         <button id="setDefaultButton"
                 class="accessory-button"
@@ -316,6 +317,7 @@
                 preference="pref.general.disable_button.default_browser"/>
       </hbox>
       <hbox align="center" class="indent">
+        <image class="face-smile"/>
         <label id="isDefaultLabel" flex="1">&isDefault.label;</label>
       </hbox>
     </deck>
@@ -828,6 +830,7 @@
                 disabled="true"/>
       </hbox>
       <hbox id="noUpdatesFound" align="center">
+        <image class="face-smile"/>
         <label>&update.noUpdatesFound;</label>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
@@ -842,6 +845,7 @@
                 disabled="true"/>
       </hbox>
       <hbox id="manualUpdate" align="center">
+        <image class="face-sad"/>
         <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"

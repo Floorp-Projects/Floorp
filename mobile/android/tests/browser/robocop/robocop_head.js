@@ -13,8 +13,8 @@
 // placebo for compat. An easy way to differentiate this from the real thing
 // is whether the property is read-only or not.
 {
-  let c = Object.getOwnPropertyDescriptor(this, 'Components');
-  if ((!c.value || c.writable) && typeof SpecialPowers === 'object')
+  let c = Object.getOwnPropertyDescriptor(this, "Components");
+  if ((!c.value || c.writable) && typeof SpecialPowers === "object")
     Components = SpecialPowers.wrap(SpecialPowers.Components);
 }
 
@@ -49,8 +49,7 @@ try {
   runningInParent = Components.classes["@mozilla.org/xre/runtime;1"].
                     getService(Components.interfaces.nsIXULRuntime).processType
                     == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-}
-catch (e) { }
+} catch (e) { }
 
 try {
   if (runningInParent) {
@@ -66,8 +65,7 @@ try {
       prefs.setCharPref("network.dns.ipv4OnlyDomains", "localhost");
     }
   }
-}
-catch (e) { }
+} catch (e) { }
 
 // Enable crash reporting, if possible
 // We rely on the Python harness to set MOZ_CRASHREPORTER_NO_REPORT
@@ -85,8 +83,7 @@ try { // nsIXULRuntime is not available in some configurations.
     crashReporter.enabled = true;
     crashReporter.minidumpPath = do_get_cwd();
   }
-}
-catch (e) { }
+} catch (e) { }
 
 /**
  * Date.now() is not necessarily monotonically increasing (insert sob story
@@ -170,7 +167,7 @@ function _dump_exception_stack(stack) {
   });
 }
 
-/************** Functions to be used from the tests **************/
+/** ************ Functions to be used from the tests **************/
 
 /**
  * Prints a message to the output log.
@@ -214,14 +211,12 @@ function do_execute_soon(callback) {
           if (e.stack) {
             dump(" - See following stack:\n");
             _dump_exception_stack(e.stack);
-          }
-          else {
+          } else {
             dump("\n");
           }
           _do_quit();
         }
-      }
-      finally {
+      } finally {
         do_test_finished();
       }
     }
@@ -291,16 +286,14 @@ function _do_check_neq(left, right, stack, todo) {
       do_throw(text, stack);
     } else {
       _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text +"\n");
+            " : " + stack.lineNumber + "] " + text + "\n");
     }
-  } else {
-    if (!todo) {
+  } else if (!todo) {
       _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
             stack.lineNumber + "] " + text + "\n");
     } else {
       do_throw_todo(text, stack);
     }
-  }
 }
 
 function do_check_neq(left, right, stack) {
@@ -325,14 +318,12 @@ function do_report_result(passed, text, stack, todo) {
       _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
             stack.lineNumber + "] " + text + "\n");
     }
-  } else {
-    if (todo) {
+  } else if (todo) {
       _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text +"\n");
+            " : " + stack.lineNumber + "] " + text + "\n");
     } else {
       do_throw(text, stack);
     }
-  }
 }
 
 /**
@@ -400,11 +391,11 @@ function todo_check_false(condition, stack) {
   todo_check_eq(condition, false, stack);
 }
 
-function do_check_null(condition, stack=Components.stack.caller) {
+function do_check_null(condition, stack = Components.stack.caller) {
   do_check_eq(condition, null, stack);
 }
 
-function todo_check_null(condition, stack=Components.stack.caller) {
+function todo_check_null(condition, stack = Components.stack.caller) {
   todo_check_eq(condition, null, stack);
 }
 
@@ -475,7 +466,7 @@ function todo_check_null(condition, stack=Components.stack.caller) {
  * is ideal. If you do want to be more careful, you can use function
  * patterns to implement more stringent checks.
  */
-function do_check_matches(pattern, value, stack=Components.stack.caller, todo=false) {
+function do_check_matches(pattern, value, stack = Components.stack.caller, todo = false) {
   var matcher = pattern_matcher(pattern);
   var text = "VALUE: " + uneval(value) + "\nPATTERN: " + uneval(pattern) + "\n";
   var diagnosis = []
@@ -490,7 +481,7 @@ function do_check_matches(pattern, value, stack=Components.stack.caller, todo=fa
   }
 }
 
-function todo_check_matches(pattern, value, stack=Components.stack.caller) {
+function todo_check_matches(pattern, value, stack = Components.stack.caller) {
   do_check_matches(pattern, value, stack, true);
 }
 
@@ -518,38 +509,38 @@ function pattern_matcher(pattern) {
     }
     // Kludge: include 'length', if not enumerable. (If it is enumerable,
     // we picked it up in the array comprehension, above.
-    ld = Object.getOwnPropertyDescriptor(pattern, 'length');
+    ld = Object.getOwnPropertyDescriptor(pattern, "length");
     if (ld && !ld.enumerable) {
-      matchers.push(['length', pattern_matcher(pattern.length)])
+      matchers.push(["length", pattern_matcher(pattern.length)])
     }
-    return function (value, diagnosis) {
+    return function(value, diagnosis) {
       if (!(value && typeof value == "object")) {
         return explain(diagnosis, "value not object");
       }
       for (let [p, m] of matchers) {
         var element_diagnosis = [];
         if (!(p in value && m(value[p], element_diagnosis))) {
-          return explain(diagnosis, { property:p,
-                                      diagnosis:element_diagnosis[0] });
+          return explain(diagnosis, { property: p,
+                                      diagnosis: element_diagnosis[0] });
         }
       }
       return true;
     };
   } else if (pattern === undefined) {
     return function(value) { return true; };
-  } else {
-    return function (value, diagnosis) {
+  }
+    return function(value, diagnosis) {
       if (value !== pattern) {
         return explain(diagnosis, "pattern " + uneval(pattern) + " not === to value " + uneval(value));
       }
       return true;
     };
-  }
+
 }
 
 // Format an explanation for a pattern match failure, as stored in the
 // second argument to a matching function.
-function format_pattern_match_failure(diagnosis, indent="") {
+function format_pattern_match_failure(diagnosis, indent = "") {
   var a;
   if (!diagnosis) {
     a = "Matcher did not explain reason for mismatch.";
@@ -604,8 +595,7 @@ function do_get_file(path, allowNonexistent) {
     }
 
     return lf;
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw(ex.toString(), Components.stack.caller);
   }
 
@@ -719,10 +709,8 @@ function add_task(func) {
  */
 var _gRunningTest = null;
 var _gTestIndex = 0; // The index of the currently running test.
-function run_next_test()
-{
-  function _run_next_test()
-  {
+function run_next_test() {
+  function _run_next_test() {
     if (_gTestIndex < _gTests.length) {
       do_test_pending();
       let _isTask;
@@ -775,7 +763,7 @@ function JavaBridge(obj) {
   this._EventDispatcher.registerListener(this, this._EVENT_TYPE);
 
   this._sendMessage("notify-loaded", []);
-};
+}
 
 JavaBridge.prototype = {
 
@@ -785,7 +773,7 @@ JavaBridge.prototype = {
   _EventDispatcher: Components.utils.import(
     "resource://gre/modules/Messaging.jsm", {}).EventDispatcher.instance,
 
-  _getArgs: function (args) {
+  _getArgs: function(args) {
     let out = {
       length: Math.max(0, args.length - 1),
     };
@@ -795,7 +783,7 @@ JavaBridge.prototype = {
     return out;
   },
 
-  _sendMessage: function (innerType, args) {
+  _sendMessage: function(innerType, args) {
     this._EventDispatcher.dispatch(this._JAVA_EVENT_TYPE, {
       innerType: innerType,
       method: args[0],
@@ -804,7 +792,7 @@ JavaBridge.prototype = {
   },
 
   onEvent: function(event, message, callback) {
-    if (typeof SpecialPowers === 'object') {
+    if (typeof SpecialPowers === "object") {
       message = SpecialPowers.wrap(message);
     }
     if (message.innerType === "sync-reply") {
@@ -828,7 +816,7 @@ JavaBridge.prototype = {
    * Synchronously call a method in Java,
    * given the method name followed by a list of arguments.
    */
-  syncCall: function (methodName /*, ... */) {
+  syncCall: function(methodName /* , ... */) {
     this._sendMessage("sync-call", arguments);
     let thread = this._Services.tm.currentThread;
     let initialReplies = this._repliesNeeded;
@@ -845,14 +833,14 @@ JavaBridge.prototype = {
    * Asynchronously call a method in Java,
    * given the method name followed by a list of arguments.
    */
-  asyncCall: function (methodName /*, ... */) {
+  asyncCall: function(methodName /* , ... */) {
     this._sendMessage("async-call", arguments);
   },
 
   /**
    * Disconnect with Java.
    */
-  disconnect: function () {
+  disconnect: function() {
     this._EventDispatcher.unregisterListener(this, this._EVENT_TYPE);
   },
 };

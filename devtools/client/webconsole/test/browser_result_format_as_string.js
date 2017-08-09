@@ -34,7 +34,7 @@ add_task(function* () {
 });
 
 function execute(hud, str) {
-  let deferred = promise.defer();
+  let deferred = defer();
   hud.jsterm.execute(str, deferred.resolve);
   return deferred.promise;
 }

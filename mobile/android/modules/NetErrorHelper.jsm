@@ -53,7 +53,7 @@ NetErrorHelper.prototype = {
   handleClick: function(event) {
     let node = event.target;
 
-    while(node) {
+    while (node) {
       if (node.id in handlers && handlers[node.id].handleClick) {
         handlers[node.id].handleClick(event);
         return;
@@ -127,7 +127,7 @@ handlers.wifi = {
 
   handleClick: function(event) {
     let node = event.target;
-    while(node && node.id !== "wifi") {
+    while (node && node.id !== "wifi") {
       node = node.parentNode;
     }
 

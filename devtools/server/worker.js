@@ -21,14 +21,14 @@ this.rpc = function (method, ...params) {
     id: id
   }));
 
-  let deferred = Promise.defer();
+  let deferred = defer();
   rpcDeferreds[id] = deferred;
   return deferred.promise;
 };
 
 loadSubScript("resource://devtools/shared/worker/loader.js");
 
-var Promise = worker.require("promise");
+var defer = worker.require("devtools/shared/defer");
 var { ActorPool } = worker.require("devtools/server/actors/common");
 var { ThreadActor } = worker.require("devtools/server/actors/script");
 var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");

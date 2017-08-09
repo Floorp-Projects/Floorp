@@ -31,7 +31,7 @@ function run_test() {
 
 function test_nesting() {
   const thread = gThreadActor;
-  const { resolve, promise: p } = promise.defer();
+  const { resolve, promise: p } = defer();
 
   // The following things should happen (in order):
   // 1. In the new event loop (created by unsafeSynchronize)

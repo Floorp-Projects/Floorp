@@ -896,6 +896,11 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
+  nsresult rv = BlockUntilLoadableRootsLoaded();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   if (!mCert)
     return NS_ERROR_FAILURE;
 

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*globals ContentAreaUtils */
+/* globals ContentAreaUtils */
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -52,7 +52,7 @@ HelperAppLauncherDialog.prototype = {
    *
    * Returns true otherwise.
    */
-  _canDownload: function (url, alreadyResolved=false) {
+  _canDownload: function(url, alreadyResolved = false) {
     // The common case.
     if (url.schemeIs("http") ||
         url.schemeIs("https") ||
@@ -89,7 +89,7 @@ HelperAppLauncherDialog.prototype = {
    * Returns true if `launcher` represents a download for which we wish
    * to prompt.
    */
-  _shouldPrompt: function (launcher) {
+  _shouldPrompt: function(launcher) {
     let mimeType = this._getMimeTypeFromLauncher(launcher);
 
     // Straight equality: nsIMIMEInfo normalizes.
@@ -112,7 +112,7 @@ HelperAppLauncherDialog.prototype = {
    * or a third-party app and instead be forwarded to Android's download manager.
    */
   _shouldForwardToAndroidDownloadManager: function(aLauncher) {
-    let forwardDownload = Services.prefs.getBoolPref('browser.download.forward_oma_android_download_manager');
+    let forwardDownload = Services.prefs.getBoolPref("browser.download.forward_oma_android_download_manager");
     if (!forwardDownload) {
       return false;
     }
@@ -279,10 +279,10 @@ HelperAppLauncherDialog.prototype = {
     }
 
     EventDispatcher.instance.sendRequest({
-      'type': 'Download:AndroidDownloadManager',
-      'uri': aLauncher.source.spec,
-      'mimeType': mimeType,
-      'filename': aLauncher.suggestedFileName
+      "type": "Download:AndroidDownloadManager",
+      "uri": aLauncher.source.spec,
+      "mimeType": mimeType,
+      "filename": aLauncher.suggestedFileName
     });
   },
 
@@ -290,7 +290,7 @@ HelperAppLauncherDialog.prototype = {
     return "browser.download.preferred." + mimetype.replace("\\", ".");
   },
 
-  _getMimeTypeFromLauncher: function (launcher) {
+  _getMimeTypeFromLauncher: function(launcher) {
     let mime = launcher.MIMEInfo.MIMEType;
     if (!mime)
       mime = ContentAreaUtils.getMIMETypeForURI(launcher.source) || "";
@@ -304,7 +304,7 @@ HelperAppLauncherDialog.prototype = {
 
     try {
       return Services.prefs.getCharPref(this._getPrefName(mime));
-    } catch(ex) {
+    } catch (ex) {
       Services.console.logStringMessage("Error getting pref for " + mime + ".");
     }
     return null;
@@ -321,7 +321,7 @@ HelperAppLauncherDialog.prototype = {
       Services.prefs.clearUserPref(this._getPrefName(mime));
   },
 
-  promptForSaveToFileAsync: function (aLauncher, aContext, aDefaultFile,
+  promptForSaveToFileAsync: function(aLauncher, aContext, aDefaultFile,
                                       aSuggestedFileExt, aForcePrompt) {
     Task.spawn(function* () {
       let file = null;
@@ -374,15 +374,13 @@ HelperAppLauncherDialog.prototype = {
             aLocalFile.leafName = aLocalFile.leafName.replace(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i, "(2)$&");
           else
             aLocalFile.leafName = aLocalFile.leafName.replace(/(\.[^\.]*)?$/, "(2)$&");
-        }
-        else {
+        } else {
           // replace the last (n) in the filename with (n+1)
-          aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount+1) + ")");
+          aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount + 1) + ")");
         }
       }
       aLocalFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
-    }
-    catch (e) {
+    } catch (e) {
       dump("*** exception in validateLeafName: " + e + "\n");
 
       if (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED)

@@ -40,6 +40,7 @@ var RecordingListItem = React.createFactory(require("devtools/client/performance
 
 var Services = require("Services");
 var promise = require("promise");
+const defer = require("devtools/shared/defer");
 var EventEmitter = require("devtools/shared/event-emitter");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var flags = require("devtools/shared/flags");
@@ -535,7 +536,7 @@ var PerformanceController = {
    * @return {Promise}
    */
   waitForStateChangeOnRecording: Task.async(function* (recording, expectedState) {
-    let deferred = promise.defer();
+    let deferred = defer();
     this.on(EVENTS.RECORDING_STATE_CHANGE, function handler(state, model) {
       if (state === expectedState && model === recording) {
         this.off(EVENTS.RECORDING_STATE_CHANGE, handler);

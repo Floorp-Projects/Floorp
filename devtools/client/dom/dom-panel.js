@@ -6,10 +6,9 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const defer = require("devtools/shared/defer");
 const { ObjectClient } = require("devtools/shared/client/main");
 
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Task } = require("devtools/shared/task");
 
@@ -42,7 +41,7 @@ DomPanel.prototype = {
       return this._opening;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this._opening = deferred.promise;
 
     // Local monitoring needs to make the target remote.
@@ -82,7 +81,7 @@ DomPanel.prototype = {
       return this._destroying;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this._destroying = deferred.promise;
 
     this.target.off("navigate", this.onTabNavigated);

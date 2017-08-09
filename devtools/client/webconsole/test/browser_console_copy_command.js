@@ -50,7 +50,7 @@ add_task(function* testCopy() {
     ]
   ];
   for (let [source, reference] of samples) {
-    let deferredResult = promise.defer();
+    let deferredResult = defer();
 
     SimpleTest.waitForClipboard(
       "" + reference,

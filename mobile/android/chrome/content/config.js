@@ -46,7 +46,7 @@ var NewPrefDialog = {
 
   set type(aType) {
     this._prefTypeSelectElt.value = aType;
-    switch(this._prefTypeSelectElt.value) {
+    switch (this._prefTypeSelectElt.value) {
       case "boolean":
         this._prefTypeSelectElt.selectedIndex = 0;
         break;
@@ -145,7 +145,7 @@ var NewPrefDialog = {
       return;
     }
 
-    switch(this.type) {
+    switch (this.type) {
       case "boolean":
         Services.prefs.setBoolPref(this._prefNameInputElt.value, !!(this._booleanValue.value == "true"));
         break;
@@ -274,7 +274,7 @@ var AboutConfig = {
   _clearPrefsContainer: function AC_clearPrefsContainer() {
     // Quick clear the prefsContainer list
     let empty = this._prefsContainer.cloneNode(false);
-    this._prefsContainer.parentNode.replaceChild(empty, this._prefsContainer); 
+    this._prefsContainer.parentNode.replaceChild(empty, this._prefsContainer);
     this._prefsContainer = empty;
 
     // Quick clear the prefs li.HTML list
@@ -501,7 +501,7 @@ var AboutConfig = {
   // Quick context menu helpers for about:config
   clipboardCopy: function AC_clipboardCopy(aField) {
     let pref = this._getPrefForNode(this.contextMenuLINode);
-    if (aField == 'name') {
+    if (aField == "name") {
       gClipboardHelper.copyString(pref.name);
     } else {
       gClipboardHelper.copyString(pref.value);
@@ -640,7 +640,7 @@ Pref.prototype = {
     let valDiv = this.li.querySelector(".pref-value");
     valDiv.value = this.value;
 
-    switch(this.type) {
+    switch (this.type) {
       case Services.prefs.PREF_BOOL:
         valDiv.setAttribute("type", "button");
         this.li.querySelector(".up").setAttribute("disabled", true);

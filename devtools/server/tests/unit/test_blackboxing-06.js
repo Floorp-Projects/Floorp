@@ -70,7 +70,7 @@ function setup_code() {
 }
 
 function black_box_code() {
-  const d = promise.defer();
+  const d = defer();
 
   gThreadClient.getSources(function ({ sources, error }) {
     do_check_true(!error, "Shouldn't get an error getting sources");
@@ -89,7 +89,7 @@ function black_box_code() {
 }
 
 function run_code() {
-  const d = promise.defer();
+  const d = defer();
 
   gClient.addOneTimeListener("paused", function (event, packet) {
     d.resolve(packet);

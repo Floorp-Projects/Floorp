@@ -278,7 +278,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
                                         error_list=BaseErrorList + HarnessErrorList)
 
         env = {'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']}
-        env['RUST_BACKTRACE'] = '1'
+        env['RUST_BACKTRACE'] = 'full'
 
         if self.config['allow_software_gl_layers']:
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'

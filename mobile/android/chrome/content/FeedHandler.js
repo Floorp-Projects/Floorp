@@ -18,7 +18,7 @@ var FeedHandler = {
 
     return this._contentTypes[contentType];
   },
-  
+
   loadContentHandlers: function fh_loadContentHandlers() {
     this._contentTypes = {};
 
@@ -52,8 +52,7 @@ var FeedHandler = {
         if (!(type in this._contentTypes))
           this._contentTypes[type] = [];
         this._contentTypes[type].push({ contentType: type, uri: uri, name: title });
-      }
-      catch(ex) {}
+      } catch (ex) {}
     }
   },
 

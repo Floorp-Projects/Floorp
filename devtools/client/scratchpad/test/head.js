@@ -13,6 +13,7 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 
 var gScratchpadWindow; // Reference to the Scratchpad chrome window object
@@ -153,7 +154,7 @@ function createTempFile(aName, aContent, aCallback = function () {})
  */
 function runAsyncTests(aScratchpad, aTests)
 {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   (function runTest() {
     if (aTests.length) {

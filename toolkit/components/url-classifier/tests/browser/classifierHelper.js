@@ -17,9 +17,9 @@ if (typeof(classifierHelper) == "undefined") {
 const HASHLEN = 32;
 
 const PREFS = {
-  PROVIDER_LISTS : "browser.safebrowsing.provider.mozilla.lists",
-  DISALLOW_COMPLETIONS : "urlclassifier.disallow_completions",
-  PROVIDER_GETHASHURL : "browser.safebrowsing.provider.mozilla.gethashURL"
+  PROVIDER_LISTS: "browser.safebrowsing.provider.mozilla.lists",
+  DISALLOW_COMPLETIONS: "urlclassifier.disallow_completions",
+  PROVIDER_GETHASHURL: "browser.safebrowsing.provider.mozilla.gethashURL"
 };
 
 classifierHelper._curAddChunkNum = 1;
@@ -53,16 +53,14 @@ classifierHelper.waitForInit = function() {
     }, "mozentries-update-finished");
 
     let listener = {
-      QueryInterface: function(iid)
-      {
+      QueryInterface(iid) {
         if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIUrlClassifierUpdateObserver))
           return this;
         throw Cr.NS_ERROR_NO_INTERFACE;
       },
 
-      handleEvent: function(value)
-      {
+      handleEvent(value) {
         if (value === table) {
           resolve();
         }
@@ -146,20 +144,19 @@ classifierHelper._update = function(update) {
       try {
         await new Promise((resolve, reject) => {
           let listener = {
-            QueryInterface: function(iid)
-            {
+            QueryInterface(iid) {
               if (iid.equals(Ci.nsISupports) ||
                   iid.equals(Ci.nsIUrlClassifierUpdateObserver))
                 return this;
 
               throw Cr.NS_ERROR_NO_INTERFACE;
             },
-            updateUrlRequested: function(url) { },
-            streamFinished: function(status) { },
-            updateError: function(errorCode) {
+            updateUrlRequested(url) { },
+            streamFinished(status) { },
+            updateError(errorCode) {
               reject(errorCode);
             },
-            updateSuccess: function(requestedTimeout) {
+            updateSuccess(requestedTimeout) {
               resolve();
             }
           };
@@ -170,7 +167,7 @@ classifierHelper._update = function(update) {
           dbService.finishUpdate();
         });
         success = true;
-      } catch(e) {
+      } catch (e) {
         // Wait 1 second before trying again.
         await new Promise(resolve => setTimeout(resolve, 1000));
       }

@@ -29,20 +29,13 @@ var contentPage = "http://www.itisatrap.org/tests/toolkit/components/url-classif
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
-
-function whenDelayedStartupFinished(aWindow, aCallback) {
-  Services.obs.addObserver(function observer(aSubject, aTopic) {
-    if (aWindow == aSubject) {
-      Services.obs.removeObserver(observer, aTopic);
-      setTimeout(aCallback, 0);
-    }
-  }, "browser-delayed-startup-finished");
-}
+Components.utils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(aPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aPrivate});
   win.addEventListener("load", function() {
-    whenDelayedStartupFinished(win, function() {
+    TestUtils.topicObserved("browser-delayed-startup-finished",
+                                  subject => subject == win).then(() => {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != contentPage) {
           win.gBrowser.loadURI(contentPage);
@@ -50,8 +43,8 @@ function testOnWindow(aPrivate, aCallback) {
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-        win.content.addEventListener('load', function innerLoad2() {
-          win.content.removeEventListener('load', innerLoad2);
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);
@@ -84,9 +77,9 @@ function checkLoads(aWindow, aBlocked) {
   // (that may not always be the case but do not expect any nodes to disappear
   // from the tree here)
   var allNodeMatch = true;
-  for (var i = 0; i < blockedTrackingNodes.length; i++) {
-    var nodeMatch = false;
-    for (var j = 0; j < badids.length && !nodeMatch; j++) {
+  for (let i = 0; i < blockedTrackingNodes.length; i++) {
+    let nodeMatch = false;
+    for (let j = 0; j < badids.length && !nodeMatch; j++) {
       nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == win.document.getElementById(badids[j]));
     }
@@ -99,9 +92,9 @@ function checkLoads(aWindow, aBlocked) {
   // blockedTrackingNodes. This tells us if we are neglecting to annotate
   // some nodes
   allNodeMatch = true;
-  for (var j = 0; j < badids.length; j++) {
-    var nodeMatch = false;
-    for (var i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
+  for (let j = 0; j < badids.length; j++) {
+    let nodeMatch = false;
+    for (let i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
       nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == win.document.getElementById(badids[j]));
     }
@@ -112,7 +105,7 @@ function checkLoads(aWindow, aBlocked) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
+  {"set": [["urlclassifier.trackingTable", "test-track-simple"],
             ["privacy.trackingprotection.enabled", false],
             ["privacy.trackingprotection.pbmode.enabled", true],
             ["channelclassifier.allowlist_example", true]]},
@@ -127,15 +120,15 @@ function test() {
       aWindow.close();
 
       // Private Browsing, with the pref (trackers should be blocked)
-      testOnWindow(true, function(aWindow) {
-        checkLoads(aWindow, true);
-        aWindow.close();
+      testOnWindow(true, function(aWindow1) {
+        checkLoads(aWindow1, true);
+        aWindow1.close();
 
         // Private Browsing, without the pref (trackers should be loaded)
         SpecialPowers.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
-        testOnWindow(true, function(aWindow) {
-          checkLoads(aWindow, false);
-          aWindow.close();
+        testOnWindow(true, function(aWindow2) {
+          checkLoads(aWindow2, false);
+          aWindow2.close();
           SimpleTest.finish();
         });
       });

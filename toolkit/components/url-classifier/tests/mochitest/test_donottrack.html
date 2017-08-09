@@ -28,64 +28,56 @@ const tests = [
   // DNT turned on and TP turned off, DNT signal sent in both private browsing
   // and normal mode.
   {
-    setting:  {dntPref:true, tpPref:false, tppbPref:false, pbMode:true},
+    setting:  {dntPref: true, tpPref: false, tppbPref: false, pbMode: true},
     expected: {dnt: "1"},
   },
   {
-    setting:  {dntPref:true,  tpPref:false, tppbPref:false, pbMode:false},
+    setting:  {dntPref: true,  tpPref: false, tppbPref: false, pbMode: false},
     expected: {dnt: "1"}
   },
   // DNT turned off and TP turned on globally, DNT signal sent in both private
   // browsing and normal mode.
   {
-    setting:  {dntPref:false, tpPref:true,  tppbPref:false, pbMode:true},
+    setting:  {dntPref: false, tpPref: true,  tppbPref: false, pbMode: true},
     expected: {dnt: "1"}
   },
   {
-    setting:  {dntPref:false, tpPref:true,  tppbPref:false, pbMode:false},
+    setting:  {dntPref: false, tpPref: true,  tppbPref: false, pbMode: false},
     expected: {dnt: "1"}
   },
   // DNT turned off and TP in Private Browsing only, DNT signal sent in private
   // browsing mode only.
   {
-    setting:  {dntPref:false, tpPref:false, tppbPref:true,  pbMode:true},
+    setting:  {dntPref: false, tpPref: false, tppbPref: true,  pbMode: true},
     expected: {dnt: "1"}
   },
   {
-    setting:  {dntPref:false, tpPref:false, tppbPref:true,  pbMode:false},
+    setting:  {dntPref: false, tpPref: false, tppbPref: true,  pbMode: false},
     expected: {dnt: "unspecified"}
   },
   // DNT turned off and TP turned off, DNT signal is never sent.
   {
-    setting:  {dntPref:false, tpPref:false, tppbPref:false, pbMode:true},
+    setting:  {dntPref: false, tpPref: false, tppbPref: false, pbMode: true},
     expected: {dnt: "unspecified"}
   },
   {
-    setting:  {dntPref:false, tpPref:false, tppbPref:false, pbMode:false},
+    setting:  {dntPref: false, tpPref: false, tppbPref: false, pbMode: false},
     expected: {dnt: "unspecified"}
   },
 ]
 
-const DNT_PREF = 'privacy.donottrackheader.enabled';
-const TP_PREF = 'privacy.trackingprotection.enabled';
-const TP_PB_PREF = 'privacy.trackingprotection.pbmode.enabled';
+const DNT_PREF = "privacy.donottrackheader.enabled";
+const TP_PREF = "privacy.trackingprotection.enabled";
+const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 
 const contentPage =
   "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/dnt.html";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-
-function whenDelayedStartupFinished(aWindow, aCallback) {
-  Services.obs.addObserver(function observer(aSubject, aTopic) {
-    if (aWindow == aSubject) {
-      Services.obs.removeObserver(observer, aTopic);
-      setTimeout(aCallback, 0);
-    }
-  }, "browser-delayed-startup-finished");
-}
+Components.utils.import("resource://testing-common/TestUtils.jsm");
 
 function executeTest(test) {
-  SpecialPowers.pushPrefEnv({"set" : [
+  SpecialPowers.pushPrefEnv({"set": [
    [DNT_PREF, test.setting.dntPref],
    [TP_PREF, test.setting.tpPref],
    [TP_PB_PREF, test.setting.tppbPref]
@@ -95,7 +87,8 @@ function executeTest(test) {
 
   return new Promise(function(resolve, reject) {
     win.addEventListener("load", function() {
-      whenDelayedStartupFinished(win, function() {
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win).then(() => {
         win.addEventListener("DOMContentLoaded", function onInnerLoad() {
           if (win.content.location.href != contentPage) {
             win.gBrowser.loadURI(contentPage);
@@ -104,7 +97,7 @@ function executeTest(test) {
 
           win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-          win.content.addEventListener('message', function (event) {
+          win.content.addEventListener("message", function(event) {
             let [key, value] = event.data.split("=");
             if (key == "finish") {
               win.close();

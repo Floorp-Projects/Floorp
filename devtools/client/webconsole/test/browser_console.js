@@ -200,7 +200,7 @@ function* testCPOWInspection(hud) {
 }
 
 function waitForConsole() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   Services.obs.addObserver(function observer(aSubject) {
     Services.obs.removeObserver(observer, "web-console-created");

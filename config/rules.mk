@@ -925,7 +925,7 @@ $(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleane
 	LIBCLANG_PATH="$(MOZ_LIBCLANG_PATH)" \
 	CLANG_PATH="$(MOZ_CLANG_PATH)" \
 	PKG_CONFIG_ALLOW_CROSS=1 \
-	RUST_BACKTRACE=1 \
+	RUST_BACKTRACE=full \
 	MOZ_TOPOBJDIR=$(topobjdir) \
 	$(2) \
 	$(CARGO) $(1) $(cargo_build_flags)

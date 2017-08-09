@@ -56,14 +56,14 @@ var IdentityHandler = {
   // Loaded active tracking content. Yellow triangle icon is shown.
   TRACKING_MODE_CONTENT_LOADED: "loaded",
 
-  _useTrackingProtection : false,
-  _usePrivateMode : false,
+  _useTrackingProtection: false,
+  _usePrivateMode: false,
 
-  setUseTrackingProtection : function(aUse) {
+  setUseTrackingProtection: function(aUse) {
     this._useTrackingProtection = aUse;
   },
 
-  setUsePrivateMode : function(aUse) {
+  setUsePrivateMode: function(aUse) {
     this._usePrivateMode = aUse;
   },
 

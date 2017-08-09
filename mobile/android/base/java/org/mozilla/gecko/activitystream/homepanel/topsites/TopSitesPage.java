@@ -10,23 +10,15 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 
+import org.mozilla.gecko.activitystream.homepanel.ActivityStreamPanel;
 import org.mozilla.gecko.home.HomePager;
 
-public class TopSitesPage
-        extends RecyclerView {
-    public TopSitesPage(Context context,
-                        @Nullable AttributeSet attrs) {
+public class TopSitesPage extends RecyclerView {
+    public TopSitesPage(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
 
-        setLayoutManager(new GridLayoutManager(context, 1));
+        setLayoutManager(new GridLayoutManager(getContext(), ActivityStreamPanel.TOP_SITES_COLUMNS));
     }
-
-    public void setTiles(int tiles) {
-        setLayoutManager(new GridLayoutManager(getContext(), tiles));
-    }
-
-    private HomePager.OnUrlOpenListener onUrlOpenListener;
-    private HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
     public TopSitesPageAdapter getAdapter() {
         return (TopSitesPageAdapter) super.getAdapter();

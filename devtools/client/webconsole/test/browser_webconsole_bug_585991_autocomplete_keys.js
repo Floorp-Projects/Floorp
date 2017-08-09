@@ -31,7 +31,7 @@ add_task(function* () {
 });
 
 var consoleOpened = Task.async(function* (hud) {
-  let deferred = promise.defer();
+  let deferred = defer();
   HUD = hud;
   info("web console opened");
 
@@ -146,7 +146,7 @@ var consoleOpened = Task.async(function* (hud) {
 });
 
 function popupHideAfterTab() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
@@ -198,7 +198,7 @@ function popupHideAfterTab() {
 }
 
 function testReturnKey() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   popup.once("popup-opened", function onShown() {
     ok(popup.isOpen, "popup is open");
@@ -250,7 +250,7 @@ function testReturnKey() {
 }
 
 function* dontShowArrayNumbers() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   info("dontShowArrayNumbers");
   yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
@@ -286,7 +286,7 @@ function* dontShowArrayNumbers() {
 }
 
 function testReturnWithNoSelection() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   info("test pressing return with open popup, but no selection, see bug 873250");
 
@@ -325,7 +325,7 @@ function popupHideAfterReturnWithNoSelection() {
 function testCompletionInText() {
   info("test that completion works inside text, see bug 812618");
 
-  let deferred = promise.defer();
+  let deferred = defer();
 
   popup.once("popup-opened", function onShown() {
     ok(popup.isOpen, "popup is open");

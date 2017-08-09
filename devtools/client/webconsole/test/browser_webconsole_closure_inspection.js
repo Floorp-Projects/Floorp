@@ -35,7 +35,7 @@ function test() {
   loadTab(TEST_URI).then(() => {
     openConsole().then((hud) => {
       openDebugger().then(({ toolbox, panelWin }) => {
-        let deferred = promise.defer();
+        let deferred = defer();
         fetchScopes(hud, toolbox, panelWin, deferred);
 
         ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {

@@ -8,7 +8,7 @@
 
 const {Utils: WebConsoleUtils} =
   require("devtools/client/webconsole/utils");
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Debugger = require("Debugger");
 const Services = require("Services");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
@@ -433,7 +433,7 @@ JSTerm.prototype = {
    *          Resolves with the message once the result is displayed.
    */
   execute: function (executeString, callback) {
-    let deferred = promise.defer();
+    let deferred = defer();
     let resultCallback;
     if (this.hud.NEW_CONSOLE_OUTPUT_ENABLED) {
       resultCallback = (msg) => deferred.resolve(msg);
@@ -522,7 +522,7 @@ JSTerm.prototype = {
    *         received.
    */
   requestEvaluation: function (str, options = {}) {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     function onResult(response) {
       if (!response.error) {
@@ -626,7 +626,7 @@ JSTerm.prototype = {
 
     let openPromise;
     if (options.targetElement) {
-      let deferred = promise.defer();
+      let deferred = defer();
       openPromise = deferred.promise;
       let document = options.targetElement.ownerDocument;
       let iframe = document.createElementNS(XHTML_NS, "iframe");
@@ -671,7 +671,7 @@ JSTerm.prototype = {
    *         A promise object for the adding of the new tab.
    */
   _addVariablesViewSidebarTab: function () {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let onTabReady = () => {
       let window = this.sidebar.getWindowForTab("variablesview");

@@ -185,12 +185,10 @@ static const char contentSandboxRules[] = R"(
   (allow mach-lookup
       (global-name "com.apple.coreservices.launchservicesd")
       (global-name "com.apple.pasteboard.1")
-      (global-name "com.apple.window_proxies")
       (global-name "com.apple.audio.coreaudiod")
       (global-name "com.apple.audio.audiohald")
       (global-name "com.apple.SystemConfiguration.configd")
-      (global-name "com.apple.iconservices")
-      (global-name "com.apple.cache_delete"))
+      (global-name "com.apple.iconservices"))
 
 ; bug 1376163
   (if (>= macosMinorVersion 13)

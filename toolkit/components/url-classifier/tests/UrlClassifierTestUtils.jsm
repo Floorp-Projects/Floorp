@@ -51,7 +51,7 @@ this.UrlClassifierTestUtils = {
     let tableIndex = 0
     let doOneUpdate = () => {
       if (tableIndex == tables.length) {
-        return;
+        return Promise.resolve();
       }
       return this.useTestDatabase(tables[tableIndex])
         .then(() => {
@@ -97,7 +97,7 @@ this.UrlClassifierTestUtils = {
         updateUrlRequested: url => { },
         streamFinished: status => { },
         updateError: errorCode => {
-          reject('Got updateError when updating ' + table.name);
+          reject("Got updateError when updating " + table.name);
         },
         updateSuccess: requestedTimeout => {
           resolve();
@@ -111,7 +111,7 @@ this.UrlClassifierTestUtils = {
         dbService.finishStream();
         dbService.finishUpdate();
       } catch (e) {
-        reject('Failed to update with dbService: ' + table.name);
+        reject("Failed to update with dbService: " + table.name);
       }
     });
   },

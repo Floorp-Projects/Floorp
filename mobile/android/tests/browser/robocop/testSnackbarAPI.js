@@ -14,7 +14,7 @@ add_task(function* test_snackbar_api() {
   Snackbars.show("This is a Snackbar", Snackbars.LENGTH_INDEFINITE, {
     action: {
       label: "Click me",
-      callback: function () {}
+      callback: function() {}
     }
   });
 

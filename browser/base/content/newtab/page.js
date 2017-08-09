@@ -19,8 +19,14 @@ var gPage = {
     // Add ourselves to the list of pages to receive notifications.
     gAllPages.register(this);
 
-    // Listen for 'unload' to unregister this page.
-    addEventListener("unload", this, false);
+    // Listen for 'unload' to unregister this page. Save a promise that can be
+    // passed to others to know when to clean up, e.g., background thumbnails.
+    this.unloadingPromise = new Promise(resolve => {
+      addEventListener("unload", () => {
+        resolve();
+        this._handleUnloadEvent();
+      });
+    });
 
     // XXX bug 991111 - Not all click events are correctly triggered when
     // listening from xhtml nodes -- in particular middle clicks on sites, so
@@ -188,9 +194,6 @@ var gPage = {
     switch (aEvent.type) {
       case "load":
         this.onPageVisibleAndLoaded();
-        break;
-      case "unload":
-        this._handleUnloadEvent();
         break;
       case "click":
         let {button, target} = aEvent;

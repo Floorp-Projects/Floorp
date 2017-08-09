@@ -77,7 +77,7 @@ var SelectHelper = {
     }
 
     p.show((data) => {
-      this._promptCallBack(data,element)
+      this._promptCallBack(data, element)
     });
   },
 
@@ -91,7 +91,7 @@ var SelectHelper = {
   getListForElement: function(element) {
     let index = 0;
     let items = [];
-    this.forVisibleOptions(element, function(node, options,parent) {
+    this.forVisibleOptions(element, function(node, options, parent) {
       let item = {
         label: node.text || node.label,
         header: options.isGroup,
@@ -160,7 +160,7 @@ var SelectHelper = {
     }, 0);
   },
 
-  _isDisabledElement : function(element) {
+  _isDisabledElement: function(element) {
     let currentElement = element;
     while (currentElement) {
       // Must test with === in case a form has a field named "disabled". See bug 1263589.

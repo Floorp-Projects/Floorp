@@ -30,20 +30,13 @@ var contentPage2 = "http://example.com/tests/toolkit/components/url-classifier/t
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
-
-function whenDelayedStartupFinished(aWindow, aCallback) {
-  Services.obs.addObserver(function observer(aSubject, aTopic) {
-    if (aWindow == aSubject) {
-      Services.obs.removeObserver(observer, aTopic);
-      setTimeout(aCallback, 0);
-    }
-  }, "browser-delayed-startup-finished");
-}
+Components.utils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(contentPage, aCallback) {
   var win = mainWindow.OpenBrowserWindow();
   win.addEventListener("load", function() {
-    whenDelayedStartupFinished(win, function() {
+    TestUtils.topicObserved("browser-delayed-startup-finished",
+                            subject => subject == win).then(() => {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != contentPage) {
           win.gBrowser.loadURI(contentPage);
@@ -51,8 +44,8 @@ function testOnWindow(contentPage, aCallback) {
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-        win.content.addEventListener('load', function innerLoad2() {
-          win.content.removeEventListener('load', innerLoad2);
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);
@@ -82,9 +75,9 @@ function checkLoads(aWindow, aWhitelisted) {
   // (that may not always be the case but do not expect any nodes to disappear
   // from the tree here)
   var allNodeMatch = true;
-  for (var i = 0; i < blockedTrackingNodes.length; i++) {
-    var nodeMatch = false;
-    for (var j = 0; j < badids.length && !nodeMatch; j++) {
+  for (let i = 0; i < blockedTrackingNodes.length; i++) {
+    let nodeMatch = false;
+    for (let j = 0; j < badids.length && !nodeMatch; j++) {
       nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == win.document.getElementById(badids[j]));
     }
@@ -97,9 +90,9 @@ function checkLoads(aWindow, aWhitelisted) {
   // blockedTrackingNodes. This tells us if we are neglecting to annotate
   // some nodes
   allNodeMatch = true;
-  for (var j = 0; j < badids.length; j++) {
-    var nodeMatch = false;
-    for (var i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
+  for (let j = 0; j < badids.length; j++) {
+    let nodeMatch = false;
+    for (let i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
       nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == win.document.getElementById(badids[j]));
     }
@@ -110,8 +103,8 @@ function checkLoads(aWindow, aWhitelisted) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["privacy.trackingprotection.enabled", true],
-            ["channelclassifier.allowlist_example", true]]},
+  {"set": [["privacy.trackingprotection.enabled", true],
+           ["channelclassifier.allowlist_example", true]]},
   test);
 
 function test() {
@@ -123,16 +116,16 @@ function test() {
       aWindow.close();
 
       // Load the test from a URL that's NOT on the whitelist
-      testOnWindow(contentPage2, function(aWindow) {
-        checkLoads(aWindow, false);
-        aWindow.close();
+      testOnWindow(contentPage2, function(aWindow1) {
+        checkLoads(aWindow1, false);
+        aWindow1.close();
 
         // Load the test from a URL on the whitelist but without the whitelist
-        SpecialPowers.pushPrefEnv({"set" : [["urlclassifier.trackingWhitelistTable", ""]]},
+        SpecialPowers.pushPrefEnv({"set": [["urlclassifier.trackingWhitelistTable", ""]]},
           function() {
-            testOnWindow(contentPage1, function(aWindow) {
-              checkLoads(aWindow, false);
-              aWindow.close();
+            testOnWindow(contentPage1, function(aWindow2) {
+              checkLoads(aWindow2, false);
+              aWindow2.close();
               SimpleTest.finish();
             });
           });

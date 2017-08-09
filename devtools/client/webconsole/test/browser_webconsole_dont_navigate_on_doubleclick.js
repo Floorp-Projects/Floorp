@@ -40,7 +40,7 @@ function test() {
     let networkEventMessage = messages[0].matched.values().next().value;
     let urlNode = networkEventMessage.querySelector(".url");
 
-    let deferred = promise.defer();
+    let deferred = defer();
     urlNode.addEventListener("click", function (event) {
       ok(event.defaultPrevented, "The default action was prevented.");
 

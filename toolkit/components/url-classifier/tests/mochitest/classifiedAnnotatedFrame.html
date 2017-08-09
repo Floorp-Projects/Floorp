@@ -63,9 +63,9 @@ function checkLoads() {
   // (that may not always be the case but do not expect any nodes to disappear
   // from the tree here)
   var allNodeMatch = true;
-  for (var i = 0; i < blockedTrackingNodes.length; i++) {
-    var nodeMatch = false;
-    for (var j = 0; j < badids.length && !nodeMatch; j++) {
+  for (let i = 0; i < blockedTrackingNodes.length; i++) {
+    let nodeMatch = false;
+    for (let j = 0; j < badids.length && !nodeMatch; j++) {
       nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == document.getElementById(badids[j]));
     }
@@ -79,9 +79,9 @@ function checkLoads() {
   // blockedTrackingNodes. This tells us if we are neglecting to annotate
   // some nodes
   allNodeMatch = true;
-  for (var j = 0; j < badids.length; j++) {
-    var nodeMatch = false;
-    for (var i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
+  for (let j = 0; j < badids.length; j++) {
+    let nodeMatch = false;
+    for (let i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
       nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == document.getElementById(badids[j]));
     }
@@ -154,21 +154,21 @@ v.addEventListener("error", function() {
 var newScript = document.createElement("script");
 newScript.id = "badscript2";
 newScript.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js";
-newScript.addEventListener("load", function() {scriptItem2 = scriptItem;});
+newScript.addEventListener("load", function() { scriptItem2 = scriptItem; });
 document.body.appendChild(newScript);
 
-/// Try loading from a tracking image URI (2)
+// Try loading from a tracking image URI (2)
 var newImage = document.createElement("img");
 newImage.id = "badimage2";
 newImage.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?reload=true";
-newImage.addEventListener("load", function() {imageItem2 = 'spoiled'});
+newImage.addEventListener("load", function() { imageItem2 = "spoiled" });
 document.body.appendChild(newImage);
 
 // Try loading from a tracking iframe URI (2)
 var newFrame = document.createElement("iframe");
 newFrame.id = "badframe2";
 newFrame.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html"
-newFrame.addEventListener("load", function() {frameItem2 = 'spoiled'});
+newFrame.addEventListener("load", function() { frameItem2 = "spoiled" });
 document.body.appendChild(newFrame);
 
 // Try doing an XHR against a tracking domain (bug 1216793)
@@ -193,7 +193,7 @@ oReq.send();
 
 // Fetch from a tracking domain
 fetch("http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js").then(function(response) {
-    if(response.ok) {
+    if (response.ok) {
         fetchItem = "loaded";
         loaded("fetch");
     } else {

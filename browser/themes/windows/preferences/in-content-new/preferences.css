@@ -4,24 +4,6 @@
 
 %include ../../../shared/incontentprefs/preferences.inc.css
 
-@media (-moz-windows-default-theme: 0) {
-  #category-general > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#general-native");
-  }
-
-  #category-privacy > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#security-native");
-  }
-
-  #category-sync > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#sync-native");
-  }
-
-  #category-search > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#search-native");
-  }
-}
-
 .actionsMenu > .menulist-label-box > .menulist-icon {
   margin-inline-end: 9px;
 }
@@ -29,20 +11,4 @@
 textbox + button,
 filefield + button {
   margin-inline-start: -4px;
-}
-
-#advancedPrefs {
-  padding-bottom: 0; /* override padding from normal preferences.css */
-}
-
-#fxaProfileImage {
-  -moz-user-focus: normal;
-}
-
-/**
- * Dialog
- */
-
-#dialogTitle {
-  font-size: 1em;
 }
