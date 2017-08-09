@@ -41,7 +41,7 @@ function onPageLoad() {
   var image = content.document.images[0];
 
   function checkWallpaper(position, expectedGConfPosition) {
-    shell.setDesktopBackground(image, position);
+    shell.setDesktopBackground(image, position, "");
     ok(wpFile.exists(), "Wallpaper was written to disk");
     is(gconf.getString(DG_IMAGE_KEY), wpFile.path,
        "Wallpaper file GConf key is correct");
