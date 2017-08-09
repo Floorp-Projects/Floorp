@@ -2022,32 +2022,6 @@ CollapseRangeAfterDelete(nsRange* aRange)
   return aRange->Collapse(false);
 }
 
-/**
- * Split a data node into two parts.
- *
- * @param aStartContainer     The original node we are trying to split.
- * @param aStartOffset        The offset at which to split.
- * @param aEndContainer       The second node.
- * @param aCloneAfterOriginal Set false if the original node should be the
- *                            latter one after split.
- */
-static nsresult SplitDataNode(nsIDOMCharacterData* aStartContainer,
-                              uint32_t aStartOffset,
-                              nsIDOMCharacterData** aEndContainer,
-                              bool aCloneAfterOriginal = true)
-{
-  nsresult rv;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aStartContainer);
-  NS_ENSURE_STATE(node && node->IsNodeOfType(nsINode::eDATA_NODE));
-  nsGenericDOMDataNode* dataNode = static_cast<nsGenericDOMDataNode*>(node.get());
-
-  nsCOMPtr<nsIContent> newData;
-  rv = dataNode->SplitData(aStartOffset, getter_AddRefs(newData),
-                           aCloneAfterOriginal);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return CallQueryInterface(newData, aEndContainer);
-}
-
 NS_IMETHODIMP
 PrependChild(nsINode* aContainer, nsINode* aChild)
 {
@@ -2231,13 +2205,22 @@ nsRange::CutContents(DocumentFragment** aFragment)
           NS_ENSURE_SUCCESS(rv, rv);
 
           if (dataLength >= startOffset) {
+            if (retval) {
+              nsAutoString cutValue;
+              rv = charData->SubstringData(startOffset, dataLength, cutValue);
+              NS_ENSURE_SUCCESS(rv, rv);
+              nsCOMPtr<nsIDOMNode> clone;
+              rv = charData->CloneNode(false, 1, getter_AddRefs(clone));
+              NS_ENSURE_SUCCESS(rv, rv);
+              clone->SetNodeValue(cutValue);
+              nodeToResult = do_QueryInterface(clone);
+            }
+
             nsMutationGuard guard;
-            nsCOMPtr<nsIDOMCharacterData> cutNode;
-            rv = SplitDataNode(charData, startOffset, getter_AddRefs(cutNode));
+            rv = charData->DeleteData(startOffset, dataLength);
             NS_ENSURE_SUCCESS(rv, rv);
-            NS_ENSURE_STATE(!guard.Mutated(1) ||
+            NS_ENSURE_STATE(!guard.Mutated(0) ||
                             ValidateCurrentNode(this, iter));
-            nodeToResult = do_QueryInterface(cutNode);
           }
 
           handled = true;
@@ -2246,17 +2229,22 @@ nsRange::CutContents(DocumentFragment** aFragment)
       else if (node == endContainer)
       {
         // Delete or extract everything before endOffset.
+        if (retval) {
+          nsAutoString cutValue;
+          rv = charData->SubstringData(0, endOffset, cutValue);
+          NS_ENSURE_SUCCESS(rv, rv);
+          nsCOMPtr<nsIDOMNode> clone;
+          rv = charData->CloneNode(false, 1, getter_AddRefs(clone));
+          NS_ENSURE_SUCCESS(rv, rv);
+          clone->SetNodeValue(cutValue);
+          nodeToResult = do_QueryInterface(clone);
+        }
+
         nsMutationGuard guard;
-        nsCOMPtr<nsIDOMCharacterData> cutNode;
-        /* The Range spec clearly states clones get cut and original nodes
-           remain behind, so use false as the last parameter.
-        */
-        rv = SplitDataNode(charData, endOffset, getter_AddRefs(cutNode),
-                           false);
+        rv = charData->DeleteData(0, endOffset);
         NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_STATE(!guard.Mutated(1) ||
+        NS_ENSURE_STATE(!guard.Mutated(0) ||
                         ValidateCurrentNode(this, iter));
-        nodeToResult = do_QueryInterface(cutNode);
         handled = true;
       }
     }
