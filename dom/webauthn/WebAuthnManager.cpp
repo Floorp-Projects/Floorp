@@ -310,11 +310,11 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   // reasonable range as defined by the platform and if not, correct it to the
   // closest value lying within that range.
 
-  double adjustedTimeout = 30.0;
+  uint32_t adjustedTimeout = 30000;
   if (aOptions.mTimeout.WasPassed()) {
     adjustedTimeout = aOptions.mTimeout.Value();
-    adjustedTimeout = std::max(15.0, adjustedTimeout);
-    adjustedTimeout = std::min(120.0, adjustedTimeout);
+    adjustedTimeout = std::max(15000u, adjustedTimeout);
+    adjustedTimeout = std::min(120000u, adjustedTimeout);
   }
 
   if (aOptions.mRp.mId.WasPassed()) {
