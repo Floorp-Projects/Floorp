@@ -76,9 +76,8 @@ nsDisplayColumnRule::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (!gfxPrefs::LayersAllowColumnRuleLayers()) {
     return LAYER_NONE;
   }
-
-  RefPtr<gfxContext> screenRefCtx =
-    gfxContext::CreateOrNull(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  RefPtr<gfxContext> screenRefCtx = gfxContext::CreateOrNull(
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
 
   static_cast<nsColumnSetFrame*>(mFrame)->
     CreateBorderRenderers(mBorderRenderers, screenRefCtx, mVisibleRect, ToReferenceFrame());
@@ -112,8 +111,8 @@ nsDisplayColumnRule::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
                                              nsDisplayListBuilder* aDisplayListBuilder)
 {
   if (aManager->IsLayersFreeTransaction()) {
-    RefPtr<gfxContext> screenRefCtx =
-      gfxContext::CreateOrNull(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+    RefPtr<gfxContext> screenRefCtx = gfxContext::CreateOrNull(
+      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
 
     static_cast<nsColumnSetFrame*>(mFrame)->
       CreateBorderRenderers(mBorderRenderers, screenRefCtx, mVisibleRect, ToReferenceFrame());
