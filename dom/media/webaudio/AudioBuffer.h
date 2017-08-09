@@ -106,10 +106,10 @@ public:
                      ErrorResult& aRv);
 
   /**
-   * Returns a ThreadSharedFloatArrayBufferList containing the sample data.
-   * Can return null if there is no data.
+   * Returns a reference to an AudioChunk containing the sample data.
+   * The AudioChunk can have a null buffer if there is no data.
    */
-  ThreadSharedFloatArrayBufferList* GetThreadSharedChannelsForRate(JSContext* aContext);
+  const AudioChunk& GetThreadSharedChannelsForRate(JSContext* aContext);
 
 protected:
   AudioBuffer(nsPIDOMWindowInner* aWindow, uint32_t aNumberOfChannels,
