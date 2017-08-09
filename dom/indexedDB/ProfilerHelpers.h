@@ -61,7 +61,7 @@ public:
   LoggingIdString(const nsID& aID)
   {
     static_assert(NSID_LENGTH > 1, "NSID_LENGTH is set incorrectly!");
-    static_assert(NSID_LENGTH <= kDefaultStorageSize,
+    static_assert(NSID_LENGTH <= kStorageSize,
                   "nID string won't fit in our storage!");
     MOZ_ASSERT(Capacity() > NSID_LENGTH);
 
