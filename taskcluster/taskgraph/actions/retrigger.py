@@ -12,7 +12,11 @@ from .registry import register_task_action
 @register_task_action(
     title='Retrigger',
     name='retrigger',
-    description='Create a clone of the task',
+    description=(
+        'Create a clone of the task.\n\n'
+        'This does not update any dependencies or '
+        'cause any downstream tasks to be retriggered.'
+    ),
     order=1,
     context=[{}],
 )
