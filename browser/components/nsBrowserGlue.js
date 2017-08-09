@@ -236,6 +236,8 @@ const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
 const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 3;
 // Seconds of idle time before reporting media telemetry.
 const MEDIA_TELEMETRY_IDLE_TIME_SEC = 20;
+// Seconds of idle time before the late idle tasks will be scheduled.
+const LATE_TASKS_IDLE_TIME_SEC = 20;
 
 // Factory object
 const BrowserGlueServiceFactory = {
@@ -575,6 +577,10 @@ BrowserGlue.prototype = {
     if (this._bookmarksBackupIdleTime) {
       this._idleService.removeIdleObserver(this, this._bookmarksBackupIdleTime);
       delete this._bookmarksBackupIdleTime;
+    }
+    if (this._lateTasksIdleObserver) {
+      this._idleService.removeIdleObserver(this._lateTasksIdleObserver, LATE_TASKS_IDLE_TIME_SEC);
+      delete this._lateTasksIdleObserver;
     }
     if (this._mediaTelemetryIdleObserver) {
       this._idleService.removeIdleObserver(this._mediaTelemetryIdleObserver, MEDIA_TELEMETRY_IDLE_TIME_SEC);
@@ -1191,6 +1197,58 @@ BrowserGlue.prototype = {
 
     this._sanitizer.onStartup();
     E10SAccessibilityCheck.onWindowsRestored();
+
+    this._scheduleStartupIdleTasks();
+
+    this._lateTasksIdleObserver = (idleService, topic, data) => {
+      if (topic == "idle") {
+        idleService.removeIdleObserver(this._lateTasksIdleObserver,
+                                       LATE_TASKS_IDLE_TIME_SEC);
+        delete this._lateTasksIdleObserver;
+        this._scheduleArbitrarilyLateIdleTasks();
+      }
+    };
+    this._idleService.addIdleObserver(
+      this._lateTasksIdleObserver, LATE_TASKS_IDLE_TIME_SEC);
+  },
+
+  /**
+   * Use this function as an entry point to schedule tasks that
+   * need to run only once after startup, and can be scheduled
+   * by using an idle callback.
+   *
+   * The functions scheduled here will fire from idle callbacks
+   * once every window has finished being restored by session
+   * restore, and it's guaranteed that they will run before
+   * the equivalent per-window idle tasks
+   * (from _schedulePerWindowIdleTasks in browser.js).
+   *
+   * If you have something that can wait even further than the
+   * per-window initialization, please schedule them using
+   * _scheduleArbitrarilyLateIdleTasks.
+   * Don't be fooled by thinking that the use of the timeout parameter
+   * will delay your function: it will just ensure that it potentially
+   * happens _earlier_ than expected (when the timeout limit has been reached),
+   * but it will not make it happen later (and out of order) compared
+   * to the other ones scheduled together.
+   */
+  _scheduleStartupIdleTasks() {
+    // TODO: Functions to be added here with Services.tm.idleDispatchToMainThread
+  },
+
+  /**
+   * Use this function as an entry point to schedule tasks that need
+   * to run once per session, at any arbitrary point in time.
+   * This function will be called from an idle observer. Check the value of
+   * LATE_TASKS_IDLE_TIME_SEC to see the current value for this idle
+   * observer.
+   *
+   * Note: this function may never be called if the user is never idle for the
+   * full length of the period of time specified. But given a reasonably low
+   * value, this is unlikely.
+   */
+  _scheduleArbitrarilyLateIdleTasks() {
+    // TODO: Functions to be added here with Services.tm.idleDispatchToMainThread
   },
 
   _createExtraDefaultProfile() {
