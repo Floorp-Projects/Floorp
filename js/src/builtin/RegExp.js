@@ -285,10 +285,14 @@ function RegExpReplace(string, replaceValue) {
             var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
 
             if (functionalReplace) {
-                var elemBase = GetElemBaseForLambda(replaceValue);
-                if (IsObject(elemBase)) {
-                    return RegExpGlobalReplaceOptElemBase(rx, S, lengthS, replaceValue,
-                                                          fullUnicode, elemBase);
+                // For large strings check if the replacer function is
+                // applicable for the elem-base optimization.
+                if (lengthS > 5000) {
+                    var elemBase = GetElemBaseForLambda(replaceValue);
+                    if (IsObject(elemBase)) {
+                        return RegExpGlobalReplaceOptElemBase(rx, S, lengthS, replaceValue,
+                                                              fullUnicode, elemBase);
+                    }
                 }
                 return RegExpGlobalReplaceOptFunc(rx, S, lengthS, replaceValue,
                                                   fullUnicode);
