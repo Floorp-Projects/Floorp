@@ -144,21 +144,38 @@ private:
                                                   nsACString& aResolvedSpec,
                                                   nsIChannel** aRetVal);
 
-#if !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+  /**
+   * Sets the aResult outparam to true if this unpacked extension load of
+   * a resource that is outside the extension dir should be allowed. This
+   * is only allowed for system extensions on Mac and Linux dev builds.
+   *
+   * @param aExtensionDir the extension directory. Argument must be an
+   *        nsIFile for which Normalize() has already been called.
+   * @param aRequestedFile the requested web-accessible resource file. Argument
+   *        must be an nsIFile for which Normalize() has already been called.
+   * @param aResult outparam set to true when the load of the requested file
+   *        should be allowed.
+   */
+  Result<Ok, nsresult> AllowExternalResource(nsIFile* aExtensionDir,
+                                             nsIFile* aRequestedFile,
+                                             bool* aResult);
+
+#if defined(XP_MACOSX)
   /**
    * Sets the aResult outparam to true if we are a developer build with the
    * repo dir environment variable set and the requested file resides in the
    * repo dir. Developer builds may load system extensions with web-accessible
    * resources that are symlinks to files in the repo dir. This method is for
    * checking if an unpacked resource requested by the child is from the repo.
-   * The requested file must be already Normalized().
+   * The requested file must be already Normalized(). Only compile this for
+   * Mac because the repo dir isn't always available on Linux.
    *
    * @param aRequestedFile the requested web-accessible resource file. Argument
    *        must be an nsIFile for which Normalize() has already been called.
    * @param aResult outparam set to true on development builds when the
-   *        requested file resides in the repo
+   *        requested file resides in the repo.
    */
-  Result<Ok, nsresult> DevRepoContains(nsIFile* aRequestedFile, bool *aResult);
+  Result<Ok, nsresult> DevRepoContains(nsIFile* aRequestedFile, bool* aResult);
 
   // On development builds, this points to development repo. Lazily set.
   nsCOMPtr<nsIFile> mDevRepo;
@@ -166,7 +183,34 @@ private:
   // Set to true once we've already tried to load the dev repo path,
   // allowing for lazy initialization of |mDevRepo|.
   bool mAlreadyCheckedDevRepo;
-#endif /* !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX) */
+#endif /* XP_MACOSX */
+
+#if !defined(XP_WIN)
+  /**
+   * Sets the aResult outparam to true if we are a developer build and the
+   * provided directory is within the NS_GRE_DIR directory. Developer builds
+   * may load system extensions with web-accessible resources that are symlinks
+   * to files outside of the extension dir to the repo dir. This method is for
+   * checking if an extension directory is within NS_GRE_DIR. In that case, we
+   * consider the extension a system extension and allow it to use symlinks to
+   * resources outside of the extension dir. This exception is only applied
+   * to loads for unpacked extensions in unpackaged developer builds.
+   * The requested dir must be already Normalized().
+   *
+   * @param aExtensionDir the extension directory. Argument must be an
+   *        nsIFile for which Normalize() has already been called.
+   * @param aResult outparam set to true on development builds when the
+   *        requested file resides in the repo.
+   */
+  Result<Ok, nsresult> AppDirContains(nsIFile* aExtensionDir, bool* aResult);
+
+  // On development builds, cache the NS_GRE_DIR repo. Lazily set.
+  nsCOMPtr<nsIFile> mAppDir;
+
+  // Set to true once we've already read the AppDir, allowing for lazy
+  // initialization of |mAppDir|.
+  bool mAlreadyCheckedAppDir;
+#endif /* !defined(XP_WIN) */
 
   // Used for opening JAR files off the main thread when we just need to
   // obtain a file descriptor to send back to the child.
