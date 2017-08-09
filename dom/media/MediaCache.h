@@ -232,11 +232,6 @@ public:
   // Get the principal for this stream. Anything accessing the contents of
   // this stream must have a principal that subsumes this principal.
   nsIPrincipal* GetCurrentPrincipal() { return mPrincipal; }
-  // Ensure a global media cache update has run with this stream present.
-  // This ensures the cache has had a chance to suspend or unsuspend this stream.
-  // Called only on main thread. This can change the state of streams, fire
-  // notifications, etc.
-  void EnsureCacheUpdate();
 
   // These callbacks are called on the main thread by the client
   // when data has been received via the channel.

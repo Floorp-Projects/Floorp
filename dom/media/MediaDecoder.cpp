@@ -814,9 +814,6 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
 
   Invalidate();
 
-  // This can run cache callbacks.
-  GetResource()->EnsureCacheUpToDate();
-
   // The element can run javascript via events
   // before reaching here, so only change the
   // state if we're still set to the original
