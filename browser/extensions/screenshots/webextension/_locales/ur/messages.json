@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "آپ Firefox اسکرین شاٹس صفحے! کی ایک شاٹ نہیں لے سکت"
   },
+  "emptySelectionErrorTitle": {
+    "message": "آپ کا انتخاب بہت چھوٹا ہے"
+  },
   "genericErrorTitle": {
     "message": "لاجواب! Firefox Screenshots بہت مشہور ہو گیا۔"
   },

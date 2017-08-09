@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Ditt val är för litet"
   },
+  "privateWindowErrorTitle": {
+    "message": "Skärmbilder är inaktiverad i privat surfläge"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Ledsen för besväret. Vi arbetar med den här funktionen för framtida versioner."
+  },
   "genericErrorTitle": {
     "message": "Oj! Firefox Screenshots verkar inte fungera korrekt."
   },

@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "선택영역이 너무 작음"
   },
+  "privateWindowErrorTitle": {
+    "message": "개인정보 보호 모드에서는 Screenshots이 비활성화 됨"
+  },
+  "privateWindowErrorDetails": {
+    "message": "불편을 끼쳐 드려서 죄송합니다. 다음 출시에 넣을 수 있도록 기능을 개선중입니다."
+  },
   "genericErrorTitle": {
     "message": "와우! Firefox Screenshots이 망가졌네요."
   },

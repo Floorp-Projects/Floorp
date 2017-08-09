@@ -33,7 +33,7 @@
     "message": "Enlace copiado"
   },
   "notificationLinkCopiedDetails": {
-    "message": "EL enlace a la captura ha sido copiado al portapapeles. Presioná $META_KEY$-V para pegar.",
+    "message": "El enlace a la captura ha sido copiado al portapapeles. Presioná $META_KEY$-V para pegar.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -50,10 +50,10 @@
     "message": "No podemos conectar a las capturas de pantalla."
   },
   "connectionErrorDetails": {
-    "message": "Verificá la conexión a Internet. Si te podés conectar a Internet, hay un problema temporal con el servicio de capturas de Firefox."
+    "message": "Verificá la conexión a Internet. Si te podés conectar a Internet, hay un problema temporal con el servicio de Firefox Screenshots."
   },
   "loginErrorDetails": {
-    "message": "No pudimos guardar la captura porque hay un problema con el servicio de capturas de Firefox. Intentá más tarde."
+    "message": "No pudimos guardar la captura porque hay un problema con el servicio de Firefox Screenshots. Intentá más tarde."
   },
   "unshootablePageErrorTitle": {
     "message": "No podemos capturar esta página."
@@ -62,13 +62,19 @@
     "message": "Esta no es una página web estándar, así que no podemos guardar una captura."
   },
   "selfScreenshotErrorTitle": {
-    "message": "¡No se puede hacer una captura de la página de capturas de Firefox!"
+    "message": "¡No se puede hacer una captura de la página de Firefox Screenshots!"
   },
   "emptySelectionErrorTitle": {
     "message": "La selección es demasiado chica"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots está deshabilitado en el modo de navegación privada"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Lamentamos el inconveniente. Estamos trabajando en esta característica para versiones futuras."
+  },
   "genericErrorTitle": {
-    "message": "¡Apa! La capturas de pantalla de Firefox se volvieron locas."
+    "message": "¡Apa! Firefox Screenshots se volvió loco."
   },
   "genericErrorDetails": {
     "message": "No estamos seguros de lo que pasó. ¿Querés intenar de nuevo o tomar una captura de una página diferente?"
@@ -95,7 +101,7 @@
     "message": "Guardá tus capturas recortadas a la web para compartir o descargarlas más fácilmente a tu computadora. También podés hacer clic en el botón Mis capturas para encontrar todas las capturas hechas."
   },
   "tourSkip": {
-    "message": "Saltear"
+    "message": "SALTEAR"
   },
   "tourNext": {
     "message": "Próxima diapositiva"
@@ -107,7 +113,7 @@
     "message": "Listo"
   },
   "termsAndPrivacyNoticeCloudServices": {
-    "message": "AL usar Firefox Screenshots, aceptás los $TERMSANDPRIVACYNOTICETERMSLINK$ y $TERMSANDPRIVACYNOTICEPRIVACYLINK$ de los servicios en la nube de Firefox.",
+    "message": "Al usar Firefox Screenshots, aceptás los $TERMSANDPRIVACYNOTICETERMSLINK$ y $TERMSANDPRIVACYNOTICEPRIVACYLINK$ de los servicios en la nube de Firefox.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

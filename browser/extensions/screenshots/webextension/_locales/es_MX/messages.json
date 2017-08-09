@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Tu selección es demasiado pequeña"
   },
+  "privateWindowErrorTitle": {
+    "message": "La captura de pantalla está deshabilitada en el modo navegación privada"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Disculpen las molestias. Estamos trabajando en esta característica para las versiones futuras."
+  },
   "genericErrorTitle": {
     "message": "¡Oye! Las capturas de pantalla de Firefox salieron mal."
   },

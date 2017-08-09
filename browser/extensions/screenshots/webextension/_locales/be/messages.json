@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Абраная вобласць занадта малая"
   },
+  "privateWindowErrorTitle": {
+    "message": "Здымкі экрана адключаны ў рэжыме прыватнага аглядання"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Прабачце за нязручнасць. Мы працуем над даданнем гэтай магчымасці у будучыя выпускі."
+  },
   "genericErrorTitle": {
     "message": "Вой! З Firefox Screenshots нешта не так."
   },

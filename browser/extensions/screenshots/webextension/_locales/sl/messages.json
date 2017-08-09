@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Vaš izbor je premajhen"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots je onemogočen v zasebnem načinu brskanja"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Oprostite za nevšečnost. To možnost izboljšujemo za prihodnje izdaje."
+  },
   "genericErrorTitle": {
     "message": "Uf! Firefox Screenshots se je pokvaril."
   },
@@ -92,7 +98,7 @@
     "message": "Kot vi želite"
   },
   "tourBodyFour": {
-    "message": "Shranite obrezane posnetke na splet za lažje deljenje ali jih prenesite na svoj računalnik. Vse zajete posnetke lahko najdete s klikom na gumb My Shots."
+    "message": "Shranite obrezane posnetke na splet za lažje deljenje ali jih prenesite na svoj računalnik. Vse zajete posnetke lahko najdete s klikom na gumb Moji posnetki."
   },
   "tourSkip": {
     "message": "Preskoči"

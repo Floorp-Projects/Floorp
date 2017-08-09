@@ -18,7 +18,7 @@
     "message": "Tallenna"
   },
   "saveScreenshotVisibleArea": {
-    "message": "Tallenna näkyvä osuus"
+    "message": "Tallenna näkyvä alue"
   },
   "saveScreenshotFullPage": {
     "message": "Tallenna koko sivu"
@@ -64,6 +64,15 @@
   "selfScreenshotErrorTitle": {
     "message": "Et voi ottaa kuvaa Firefox Screenshots -sivusta!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Valinta on liian pieni"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots ei ole käytettävisssä yksityisen selauksen tilassa"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Anteeksi häiriö. Tämä ominaisuus on vielä työn alla."
+  },
   "genericErrorTitle": {
     "message": "Oho! Firefox Screenshots meni päin prinkkalaa."
   },
@@ -80,10 +89,10 @@
     "message": "Kaappaa vain osa sivusta napsauttamalla ja vetämällä. Voit myös korostaa valinnan pitämällä hiirtä sen päällä."
   },
   "tourHeaderThree": {
-    "message": "Kaappaa ikkunoita tai kokonaisia sivuja"
+    "message": "Kaappaa näkyvä alue tai kokonainen sivu"
   },
   "tourBodyThree": {
-    "message": "Valitse oikean yläkulman painikkeista joko ikkunassa näkyvän alueen kaappaus tai koko sivun kaappaus."
+    "message": "Valitse oikean yläkulman painikkeista joko ikkunassa näkyvän alueen tai koko sivun kaappaus."
   },
   "tourHeaderFour": {
     "message": "Haluamallasi tavalla"

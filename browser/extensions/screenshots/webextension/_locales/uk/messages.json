@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Обрана область є замалою"
   },
+  "privateWindowErrorTitle": {
+    "message": "Знімки екрану вимкнено в приватному перегляді"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Вибачте за незручності. Ми працюємо над цією функцією для майбутніх випусків."
+  },
   "genericErrorTitle": {
     "message": "Оу! З Firefox Screenshots щось негаразд."
   },

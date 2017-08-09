@@ -62,13 +62,19 @@
     "message": "Ez egy nem szabványos weblap, így nem készíthet róla képernyőképet."
   },
   "selfScreenshotErrorTitle": {
-    "message": "Nem készíthet képet a Firefox képernyőképek oldalról!"
+    "message": "Nem készíthet képet a Firefox Screenshots oldalról!"
   },
   "emptySelectionErrorTitle": {
     "message": "A kijelölés túl kicsi"
   },
+  "privateWindowErrorTitle": {
+    "message": "A képernyőképek le vannak tiltva Privát böngészésben"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Sajnáljuk a kényelmetlenséget. Dolgozunk ezen a funkción a jövőbeli kiadásokhoz."
+  },
   "genericErrorTitle": {
-    "message": "Húha! A Firefox képernyőképek megkergült."
+    "message": "Húha! A Firefox Screenshots megkergült."
   },
   "genericErrorDetails": {
     "message": "Nem vagyunk benne biztosak, hogy mi történt. Próbálja újra, vagy készítsen képet egy másik oldalról."
@@ -118,9 +124,9 @@
     }
   },
   "termsAndPrivacyNoticeTermsLink": {
-    "message": "Feltételeibe"
+    "message": "Feltételekbe"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
-    "message": "Adatvédelmi nyilatkozatába"
+    "message": "Adatvédelmi nyilatkozatba"
   }
 }
