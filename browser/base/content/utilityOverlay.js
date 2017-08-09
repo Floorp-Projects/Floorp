@@ -971,11 +971,11 @@ function trimURL(aURL) {
   let fixedUpURL, expectedURLSpec;
   try {
     fixedUpURL = Services.uriFixup.createFixupURI(urlWithoutProtocol, flags);
-    expectedURLSpec = makeURI(aURL).spec;
+    expectedURLSpec = makeURI(aURL).displaySpec;
   } catch (ex) {
     return url;
   }
-  if (fixedUpURL.spec == expectedURLSpec) {
+  if (fixedUpURL.displaySpec == expectedURLSpec) {
     return urlWithoutProtocol;
   }
   return url;
