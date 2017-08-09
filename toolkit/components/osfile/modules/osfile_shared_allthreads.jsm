@@ -17,6 +17,8 @@
  * - a few additional utilities.
  */
 
+/* eslint-env worker */
+
 // Boilerplate used to be able to import this module both from the main
 // thread and from worker threads.
 
@@ -89,6 +91,7 @@ exports.Config = Config;
 if (typeof Components != "undefined") {
   // On the main thread, OS.Constants is defined by a xpcom
   // component. On other threads, it is available automatically
+  /* global OS */
   Cu.import("resource://gre/modules/ctypes.jsm");
   Cc["@mozilla.org/net/osfileconstantsservice;1"].
     getService(Ci.nsIOSFileConstantsService).init();

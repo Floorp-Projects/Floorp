@@ -15,6 +15,9 @@
  * - all path concatenations go through function |join|.
  */
 
+/* global OS */
+/* eslint-env node */
+
 "use strict";
 
 if (typeof Components == "undefined") {
