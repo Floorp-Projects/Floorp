@@ -64,6 +64,15 @@
   "selfScreenshotErrorTitle": {
     "message": "আপনি Firefox স্ক্রিনশটের পেজের শট নিতে পারেন না!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "আপনি অল্প স্থান নির্বাচন করেছেন"
+  },
+  "privateWindowErrorTitle": {
+    "message": "ব্যক্তিগত ব্রাউজিং মোডে স্ক্রিনশট নেওয়া নিস্ক্রিয় করা হয়েছে"
+  },
+  "privateWindowErrorDetails": {
+    "message": "অসুবিধার জন্য দুঃখিত। আমরা এই বৈশিষ্ট্যটি নিয়ে কাজ করছি, খুব শীঘ্রই রিলিজ করা হবে।"
+  },
   "genericErrorTitle": {
     "message": "আয় হায়! Firefox স্ক্রিনশট পাগল হয়ে গেছে।"
   },
