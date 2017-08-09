@@ -453,7 +453,7 @@ Instance::~Instance()
 {
     compartment_->wasm.unregisterInstance(*this);
 
-    const FuncImportVector& funcImports = metadata(code().anyTier()).funcImports;
+    const FuncImportVector& funcImports = metadata(code().stableTier()).funcImports;
 
     for (unsigned i = 0; i < funcImports.length(); i++) {
         FuncImportTls& import = funcImportTls(funcImports[i]);
@@ -503,7 +503,7 @@ Instance::tracePrivate(JSTracer* trc)
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
     TraceEdge(trc, &object_, "wasm instance object");
 
-    for (const FuncImport& fi : metadata(code().anyTier()).funcImports)
+    for (const FuncImport& fi : metadata(code().stableTier()).funcImports)
         TraceNullableEdge(trc, &funcImportTls(fi).obj, "wasm import");
 
     for (const SharedTable& table : tables_)
@@ -820,7 +820,7 @@ Instance::onMovingGrowTable()
 void
 Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
-    const FuncImport& fi = metadata(code().anyTier()).funcImports[funcImportIndex];
+    const FuncImport& fi = metadata(code().stableTier()).funcImports[funcImportIndex];
     FuncImportTls& import = funcImportTls(fi);
     import.code = codeBase(Tier::TBD) + fi.interpExitCodeOffset();
     import.baselineScript = nullptr;

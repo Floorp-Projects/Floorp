@@ -453,7 +453,7 @@ class Code : public ShareableBase<Code>
 
     Code(UniqueConstCodeSegment tier, const Metadata& metadata);
 
-    Tier anyTier() const;
+    Tier stableTier() const;
     Tiers tiers() const;
 
     const CodeSegment& segment(Tier tier) const;

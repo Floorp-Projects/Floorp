@@ -1183,7 +1183,7 @@ enum ModuleKind
 //
 // A tier value is used to request tier-variant aspects of code, metadata, or
 // linkdata.  The tiers are normally explicit (Baseline and Ion); implicit tiers
-// can be obtained through accessors on Code objects (eg, anyTier).
+// can be obtained through accessors on Code objects (eg, stableTier).
 
 enum class Tier
 {
