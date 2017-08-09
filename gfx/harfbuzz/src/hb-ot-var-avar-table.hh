@@ -57,8 +57,13 @@ struct SegmentMaps : ArrayOf<AxisValueMap>
      * that at least -1, 0, and +1 must be mapped. But we include these as
      * part of a better error recovery scheme. */
 
-    if (!len)
-      return value;
+    if (len < 2)
+    {
+      if (!len)
+	return value;
+      else /* len == 1*/
+	return value - array[0].fromCoord + array[0].toCoord;
+    }
 
     if (value <= array[0].fromCoord)
       return value - array[0].fromCoord + array[0].toCoord;
@@ -76,8 +81,8 @@ struct SegmentMaps : ArrayOf<AxisValueMap>
 
     int denom = array[i].fromCoord - array[i-1].fromCoord;
     return array[i-1].toCoord +
-	   (array[i].toCoord - array[i-1].toCoord) *
-	   (value - array[i-1].fromCoord + denom/2) / denom;
+	   ((array[i].toCoord - array[i-1].toCoord) *
+	    (value - array[i-1].fromCoord) + denom/2) / denom;
   }
 
   DEFINE_SIZE_ARRAY (2, array);
