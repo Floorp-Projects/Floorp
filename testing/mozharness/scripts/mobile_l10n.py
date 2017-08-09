@@ -202,7 +202,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
 
         # Android l10n builds use a non-standard location for l10n files.  Other
         # builds go to 'mozilla-central-l10n', while android builds add part of
-        # the platform name as well, like 'mozilla-central-android-api-15-l10n'.
+        # the platform name as well, like 'mozilla-central-android-api-16-l10n'.
         # So we override the branch with something that contains the platform
         # name.
         replace_dict['branch'] = c['upload_branch']
