@@ -477,11 +477,24 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     (sContent != aContent || sPresContext != aPresContext ||
      oldWidget != newWidget || sActiveTabParent != newTabParent);
 
-  if (oldWidget && focusActuallyChanging) {
-    // If we're deactivating, we shouldn't commit composition forcibly because
-    // the user may want to continue the composition.
-    if (aPresContext) {
-      NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, oldWidget, sFocusedIMETabParent);
+  // If old widget has composition, we may need to commit composition since
+  // a native IME context is shared on all editors on some widgets or all
+  // widgets (it depends on platforms).
+  if (oldWidget && focusActuallyChanging && sTextCompositions) {
+    RefPtr<TextComposition> composition =
+      sTextCompositions->GetCompositionFor(oldWidget);
+    if (composition) {
+      // However, don't commit the composition if we're being inactivated
+      // but the composition should be kept even during deactive.
+      if (aPresContext ||
+          !sFocusedIMEWidget->IMENotificationRequestsRef().
+           WantDuringDeactive()) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("  OnChangeFocusInternal(), requesting to commit composition to "
+           "the (previous) focused widget"));
+        NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, oldWidget,
+                  composition->GetTabParent());
+      }
     }
   }
 
