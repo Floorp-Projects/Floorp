@@ -6,19 +6,16 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import copy
 import json
 import logging
 
-import requests
 from slugid import nice as slugid
 
+from .util import (find_decision_task, create_task)
 from .registry import register_callback_action
-from taskgraph.create import create_task
-from taskgraph.util.time import (
-    current_json_time,
-    json_time_from_now
-)
+from taskgraph.util.taskcluster import get_artifact
+from taskgraph.util.parameterization import resolve_task_references
+from taskgraph.taskgraph import TaskGraph
 
 TASKCLUSTER_QUEUE_URL = "https://queue.taskcluster.net/v1/task"
 
@@ -26,10 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 @register_callback_action(
-    name='run-with-options',
-    title='Schedule test retrigger',
+    name='retrigger-mochitest-reftest-with-options',
+    title='Mochitest/Reftest Retrigger',
     symbol='tr',
-    description="Retriggers the specified test job with additional options",
+    description="Retriggers the specified mochitest/reftest job with additional options",
     context=[{'test-type': 'mochitest'},
              {'test-type': 'reftest'}],
     order=0,
@@ -69,30 +66,36 @@ logger = logging.getLogger(__name__)
                 'type': 'object',
                 'default': {'MOZ_LOG': ''},
                 'title': 'Extra environment variables',
-                'description': 'Extra environment variables to use for this run'
+                'description': 'Extra environment variables to use for this run',
+                'additionalProperties': {'type': 'string'}
             },
             'preferences': {
                 'type': 'object',
                 'default': {'mygeckopreferences.pref': 'myvalue2'},
                 'title': 'Extra gecko (about:config) preferences',
-                'description': 'Extra gecko (about:config) preferences to use for this run'
+                'description': 'Extra gecko (about:config) preferences to use for this run',
+                'additionalProperties': {'type': 'string'}
             }
         },
         'additionalProperties': False,
         'required': ['path']
     }
 )
-def test_retrigger_action(parameters, input, task_group_id, task_id, task):
-    new_task_definition = copy.copy(task)
+def mochitest_retrigger_action(parameters, input, task_group_id, task_id, task):
+    decision_task_id = find_decision_task(parameters)
 
-    # set new created, deadline, and expiry fields
-    new_task_definition['created'] = current_json_time()
-    new_task_definition['deadline'] = json_time_from_now('1d')
-    new_task_definition['expires'] = json_time_from_now('30d')
+    full_task_graph = get_artifact(decision_task_id, "public/full-task-graph.json")
+    _, full_task_graph = TaskGraph.from_json(full_task_graph)
+    label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
 
-    # reset artifact expiry
-    for artifact in new_task_definition['payload'].get('artifacts', {}).values():
-        artifact['expires'] = new_task_definition['expires']
+    pre_task = full_task_graph.tasks[task['metadata']['name']]
+
+    # fix up the task's dependencies, similar to how optimization would
+    # have done in the decision
+    dependencies = {name: label_to_taskid[label]
+                    for name, label in pre_task.dependencies.iteritems()}
+    new_task_definition = resolve_task_references(pre_task.label, pre_task.task, dependencies)
+    new_task_definition.setdefault('dependencies', []).extend(dependencies.itervalues())
 
     # don't want to run mozharness tests, want a custom mach command instead
     new_task_definition['payload']['command'] += ['--no-run-tests']
@@ -113,11 +116,11 @@ def test_retrigger_action(parameters, input, task_group_id, task_id, task):
         custom_mach_command += ['--disable-e10s']
 
     custom_mach_command += ['--log-tbpl=-',
-                            '--log-tbpl-level={}'.format(input['logLevel'])]
+                            '--log-tbpl-level={}'.format(input.get('logLevel', 'debug'))]
     if input.get('runUntilFail'):
         custom_mach_command += ['--run-until-failure']
     if input.get('repeat'):
-        custom_mach_command += ['--repeat', str(input['repeat'])]
+        custom_mach_command += ['--repeat', str(input.get('repeat', 30))]
 
     # add any custom gecko preferences
     for (key, val) in input.get('preferences', {}).iteritems():
@@ -137,6 +140,4 @@ def test_retrigger_action(parameters, input, task_group_id, task_id, task):
 
     # actually create the new task
     new_task_id = slugid()
-    logger.info("Creating new mochitest task with id %s", new_task_id)
-    session = requests.Session()
-    create_task(session, new_task_id, 'test-retrigger', new_task_definition)
+    create_task(new_task_id, new_task_definition, parameters['level'])
