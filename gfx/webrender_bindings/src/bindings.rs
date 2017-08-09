@@ -639,10 +639,12 @@ pub extern "C" fn wr_api_add_image(dh: &mut DocumentHandle,
                                    bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
-    dh.api.add_image(image_key,
-                     descriptor.into(),
-                     ImageData::new(copied_bytes),
-                     None);
+    let mut resources = ResourceUpdates::new();
+    resources.add_image(image_key,
+                        descriptor.into(),
+                        ImageData::new(copied_bytes),
+                        None);
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
@@ -652,10 +654,12 @@ pub extern "C" fn wr_api_add_blob_image(dh: &mut DocumentHandle,
                                         bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
-    dh.api.add_image(image_key,
-                     descriptor.into(),
-                     ImageData::new_blob_image(copied_bytes),
-                     None);
+    let mut resources = ResourceUpdates::new();
+    resources.add_image(image_key,
+                        descriptor.into(),
+                        ImageData::new_blob_image(copied_bytes),
+                        None);
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
@@ -666,14 +670,16 @@ pub extern "C" fn wr_api_add_external_image(dh: &mut DocumentHandle,
                                             buffer_type: WrExternalImageBufferType,
                                             channel_index: u8) {
     assert!(unsafe { is_in_compositor_thread() });
-    dh.api.add_image(image_key,
-                     descriptor.into(),
-                     ImageData::External(ExternalImageData {
+    let mut resources = ResourceUpdates::new();
+    resources.add_image(image_key,
+                        descriptor.into(),
+                        ImageData::External(ExternalImageData {
                                              id: external_image_id.into(),
                                              channel_index: channel_index,
                                              image_type: buffer_type,
                                          }),
-                     None);
+                        None);
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
@@ -684,7 +690,9 @@ pub extern "C" fn wr_api_update_image(dh: &mut DocumentHandle,
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
 
-    dh.api.update_image(key, descriptor.into(), ImageData::new(copied_bytes), None);
+    let mut resources = ResourceUpdates::new();
+    resources.update_image(key, descriptor.into(), ImageData::new(copied_bytes), None);
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
@@ -706,7 +714,9 @@ pub extern "C" fn wr_api_update_external_image(
         }
     );
 
-    dh.api.update_image(key, descriptor.into(), data, None);
+    let mut resources = ResourceUpdates::new();
+    resources.update_image(key, descriptor.into(), data, None);
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
@@ -716,19 +726,23 @@ pub extern "C" fn wr_api_update_blob_image(dh: &mut DocumentHandle,
                                            bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
-    dh.api.update_image(
-           image_key,
-           descriptor.into(),
-           ImageData::new_blob_image(copied_bytes),
-           None
+    let mut resources = ResourceUpdates::new();
+    resources.update_image(
+        image_key,
+        descriptor.into(),
+        ImageData::new_blob_image(copied_bytes),
+        None
     );
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_api_delete_image(dh: &mut DocumentHandle,
                                       key: WrImageKey) {
     assert!(unsafe { is_in_compositor_thread() });
-    dh.api.delete_image(key)
+    let mut resources = ResourceUpdates::new();
+    resources.delete_image(key);
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
@@ -779,7 +793,8 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(dh: &mut DocumentHandle,
                             color,
                             LayoutSize::new(viewport_width, viewport_height),
                             (pipeline_id, content_size.into(), dl),
-                            preserve_frame_state);
+                            preserve_frame_state,
+                            ResourceUpdates::new());
 }
 
 #[no_mangle]
@@ -794,7 +809,8 @@ pub unsafe extern "C" fn wr_api_clear_root_display_list(dh: &mut DocumentHandle,
                             None,
                             LayoutSize::new(0.0, 0.0),
                             frame_builder.dl_builder.finalize(),
-                            preserve_frame_state);
+                            preserve_frame_state,
+                            ResourceUpdates::new());
 }
 
 #[no_mangle]
@@ -862,14 +878,18 @@ pub extern "C" fn wr_api_add_raw_font(dh: &mut DocumentHandle,
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
-    dh.api.add_raw_font(key, font_vector, index);
+    let mut resources = ResourceUpdates::new();
+    resources.add_raw_font(key, font_vector, index);
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_api_delete_font(dh: &mut DocumentHandle,
                                      key: WrFontKey) {
     assert!(unsafe { is_in_compositor_thread() });
-    dh.api.delete_font(key);
+    let mut resources = ResourceUpdates::new();
+    resources.delete_font(key);
+    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
