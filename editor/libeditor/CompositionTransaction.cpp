@@ -198,8 +198,7 @@ CompositionTransaction::SetIMESelection(EditorBase& aEditorBase,
   RefPtr<Selection> selection = aEditorBase.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv = selection->StartBatchChanges();
-  NS_ENSURE_SUCCESS(rv, rv);
+  SelectionBatcher selectionBatcher(selection);
 
   // First, remove all selections of IME composition.
   static const RawSelectionType kIMESelections[] = {
@@ -213,6 +212,7 @@ CompositionTransaction::SetIMESelection(EditorBase& aEditorBase,
   aEditorBase.GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
+  nsresult rv = NS_OK;
   for (uint32_t i = 0; i < ArrayLength(kIMESelections); ++i) {
     nsCOMPtr<nsISelection> selectionOfIME;
     if (NS_FAILED(selCon->GetSelection(kIMESelections[i],
@@ -334,9 +334,6 @@ CompositionTransaction::SetIMESelection(EditorBase& aEditorBase,
       aEditorBase.HideCaret(true);
     }
   }
-
-  rv = selection->EndBatchChangesInternal();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to end batch changes");
 
   return rv;
 }
