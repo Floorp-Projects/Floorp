@@ -315,7 +315,7 @@ async function test_contextmenu(selector, menuItems, options = {}) {
   }
 
   if (menuItems) {
-    if (Services.prefs.getBoolPref("devtools.inspector.enabled")) {
+    if (Services.prefs.getBoolPref("devtools.inspector.enabled", true)) {
       let inspectItems = ["---", null,
                           "context-inspect", true];
       menuItems = menuItems.concat(inspectItems);

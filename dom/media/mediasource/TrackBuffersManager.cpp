@@ -41,16 +41,17 @@ using media::TimeUnit;
 using media::TimeInterval;
 using media::TimeIntervals;
 typedef SourceBufferTask::AppendBufferResult AppendBufferResult;
+typedef SourceBufferAttributes::AppendState AppendState;
 
 static const char*
-AppendStateToStr(SourceBufferAttributes::AppendState aState)
+AppendStateToStr(AppendState aState)
 {
   switch (aState) {
-    case SourceBufferAttributes::AppendState::WAITING_FOR_SEGMENT:
+    case AppendState::WAITING_FOR_SEGMENT:
       return "WAITING_FOR_SEGMENT";
-    case SourceBufferAttributes::AppendState::PARSING_INIT_SEGMENT:
+    case AppendState::PARSING_INIT_SEGMENT:
       return "PARSING_INIT_SEGMENT";
-    case SourceBufferAttributes::AppendState::PARSING_MEDIA_SEGMENT:
+    case AppendState::PARSING_MEDIA_SEGMENT:
       return "PARSING_MEDIA_SEGMENT";
     default:
       return "IMPOSSIBLE";
@@ -2024,7 +2025,7 @@ TrackBuffersManager::GetTracksList() const
 }
 
 void
-TrackBuffersManager::SetAppendState(SourceBufferAttributes::AppendState aAppendState)
+TrackBuffersManager::SetAppendState(AppendState aAppendState)
 {
   MSE_DEBUG("AppendState changed from %s to %s",
             AppendStateToStr(mSourceBufferAttributes->GetAppendState()), AppendStateToStr(aAppendState));

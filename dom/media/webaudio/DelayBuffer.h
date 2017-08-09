@@ -8,6 +8,7 @@
 #define DelayBuffer_h_
 
 #include "nsTArray.h"
+#include "AudioBlock.h"
 #include "AudioSegment.h"
 #include "mozilla/dom/AudioNodeBinding.h" // for ChannelInterpretation
 
