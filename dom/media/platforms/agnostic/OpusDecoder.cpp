@@ -12,6 +12,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
+#include "VideoUtils.h"
 
 #include <inttypes.h>  // For PRId64
 

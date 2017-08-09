@@ -9,6 +9,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/EMEUtils.h"
+#include "GMPUtils.h"
 
 namespace mozilla {
 namespace dom {

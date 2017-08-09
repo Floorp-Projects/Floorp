@@ -10,6 +10,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/PodOperations.h"
 #include "nsError.h"
+#include "ImageContainer.h"
 
 #include <algorithm>
 

@@ -121,6 +121,7 @@ if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     '/gfx/skia/skia/include/core',
     '/modules/pdfium/pdfium/public',
   ]
+  TEST_DIRS += ['gtest']
 
 LOCAL_INCLUDES += [
     '/layout/generic',

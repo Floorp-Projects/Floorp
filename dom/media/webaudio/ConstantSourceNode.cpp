@@ -8,6 +8,8 @@
 
 #include "AudioDestinationNode.h"
 #include "nsContentUtils.h"
+#include "AudioNodeEngine.h"
+#include "AudioNodeStream.h"
 
 namespace mozilla {
 namespace dom {

@@ -6,8 +6,10 @@
 
 #include "IIRFilterNode.h"
 #include "AudioNodeEngine.h"
-
+#include "AudioDestinationNode.h"
 #include "blink/IIRFilter.h"
+#include "PlayingRefChangeHandler.h"
+#include "AlignmentUtils.h"
 
 #include "nsGkAtoms.h"
 

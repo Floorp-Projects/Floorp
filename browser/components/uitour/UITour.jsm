@@ -1147,16 +1147,19 @@ this.UITour = {
       let targetRect = highlightAnchor.getBoundingClientRect();
       let highlightHeight = targetRect.height;
       let highlightWidth = targetRect.width;
-      let minDimension = Math.min(highlightHeight, highlightWidth);
-      let maxDimension = Math.max(highlightHeight, highlightWidth);
 
-      // If the dimensions are within 200% of each other (to include the bookmarks button),
-      // make the highlight a circle with the largest dimension as the diameter.
-      if (maxDimension / minDimension <= 3.0) {
-        highlightHeight = highlightWidth = maxDimension;
-        highlighter.style.borderRadius = "100%";
+      if (this.targetIsInAppMenu(aTarget)) {
+        highlighter.classList.remove("rounded-highlight");
       } else {
-        highlighter.style.borderRadius = "";
+        highlighter.classList.add("rounded-highlight");
+      }
+      if (highlightAnchor.classList.contains("toolbarbutton-1") &&
+          highlightAnchor.getAttribute("cui-areatype") === "toolbar" &&
+          highlightAnchor.getAttribute("overflowedItem") !== "true") {
+        // A toolbar button in navbar has its clickable area an
+        // inner-contained square while the button component itself is a tall
+        // rectangle. We adjust the highlight area to a square as well.
+        highlightHeight = highlightWidth;
       }
 
       highlighter.style.height = highlightHeight + "px";
@@ -1173,8 +1176,8 @@ this.UITour = {
       let highlightStyle = highlightWindow.getComputedStyle(highlighter);
       let highlightHeightWithMin = Math.max(highlightHeight, parseFloat(highlightStyle.minHeight));
       let highlightWidthWithMin = Math.max(highlightWidth, parseFloat(highlightStyle.minWidth));
-      let offsetX = -(Math.max(0, highlightWidthWithMin - targetRect.width) / 2);
-      let offsetY = -(Math.max(0, highlightHeightWithMin - targetRect.height) / 2);
+      let offsetX = (targetRect.width - highlightWidthWithMin) / 2;
+      let offsetY = (targetRect.height - highlightHeightWithMin) / 2;
       this._addAnnotationPanelMutationObserver(highlighter.parentElement);
       highlighter.parentElement.openPopup(highlightAnchor, "overlap", offsetX, offsetY);
     };

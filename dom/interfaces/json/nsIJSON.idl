@@ -6,7 +6,6 @@
 #include "domstubs.idl"
 
 interface nsIInputStream;
-interface nsIOutputStream;
 interface nsIScriptGlobalObject;
 
 [ptr] native JSValPtr(JS::Value);
@@ -22,34 +21,6 @@ interface nsIScriptGlobalObject;
 [scriptable, uuid(083aebb0-7790-43b2-ae81-9e404e626236)]
 interface nsIJSON : nsISupports
 {
-  /**
-   * New users should use JSON.stringify!
-   * The encode() method is only present for backward compatibility.
-   * encode() is not a conforming JSON stringify implementation!
-   */
-  [deprecated,implicit_jscontext,optional_argc]
-  AString encode([optional] in jsval value);
-
-  /**
-   * New users should use JSON.stringify.
-   * You may also want to have a look at nsIConverterOutputStream.
-   *
-   * The encodeToStream() method is only present for backward compatibility.
-   * encodeToStream() is not a conforming JSON stringify implementation!
-   */
-  [deprecated,implicit_jscontext,optional_argc]
-  void encodeToStream(in nsIOutputStream stream,
-                      in string charset,
-                      in boolean writeBOM,
-                      [optional] in jsval value);
-
-  /**
-   * New users should use JSON.parse!
-   * The decode() method is only present for backward compatibility.
-   */
-  [deprecated,implicit_jscontext]
-  jsval decode(in AString str);
-
   [implicit_jscontext]
   jsval decodeFromStream(in nsIInputStream stream,
                          in long contentLength);

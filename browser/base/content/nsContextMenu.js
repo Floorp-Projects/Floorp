@@ -312,9 +312,8 @@ nsContextMenu.prototype = {
                        this.onVideo || this.onAudio ||
                        this.onLink || this.onTextInput);
 
-    var showInspect = DevToolsShim.isInstalled() &&
-                      this.inTabBrowser &&
-                      gPrefService.getBoolPref("devtools.inspector.enabled", false);
+    var showInspect = this.inTabBrowser &&
+                      gPrefService.getBoolPref("devtools.inspector.enabled", true);
 
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);

@@ -9,6 +9,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
+#include "ImageContainer.h"
 #include "nsError.h"
 #include "prsystem.h"
 
