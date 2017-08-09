@@ -95,7 +95,7 @@
        if (this._closeResult) {
          throw this._closeResult;
        }
-       return;
+
      };
 
      /**
@@ -374,7 +374,7 @@
          access = options.winAccess;
          disposition = options.winDisposition;
        } else if (("winAccess" in options && !("winDisposition" in options))
-                 ||(!("winAccess" in options) && "winDisposition" in options)) {
+                 || (!("winAccess" in options) && "winDisposition" in options)) {
          throw new TypeError("OS.File.open requires either both options " +
            "winAccess and winDisposition or neither");
        } else {
@@ -538,7 +538,7 @@
        // Removing last component if it's empty
        // An empty last component is caused by trailing slashes in path
        // This is always the case with root directories
-       if( splitPath.components[splitPath.components.length - 1].length === 0 ) {
+       if ( splitPath.components[splitPath.components.length - 1].length === 0 ) {
          splitPath.components.pop();
        }
        // One component consisting of a drive letter implies a directory root.
@@ -635,16 +635,16 @@
        let sd = new ctypes.voidptr_t();
        WinFile.GetNamedSecurityInfo(destPath, Const.SE_FILE_OBJECT,
                                     Const.DACL_SECURITY_INFORMATION,
-                                    null /*sidOwner*/, null /*sidGroup*/,
-                                    dacl.address(), null /*sacl*/,
+                                    null /* sidOwner*/, null /* sidGroup*/,
+                                    dacl.address(), null /* sacl*/,
                                     sd.address());
        // dacl will be set only if the function succeeds.
        if (!dacl.isNull()) {
          WinFile.SetNamedSecurityInfo(destPath, Const.SE_FILE_OBJECT,
                                       Const.DACL_SECURITY_INFORMATION |
                                       Const.UNPROTECTED_DACL_SECURITY_INFORMATION,
-                                      null /*sidOwner*/, null /*sidGroup*/,
-                                      dacl, null /*sacl*/);
+                                      null /* sidOwner*/, null /* sidGroup*/,
+                                      dacl, null /* sacl*/);
        }
        // sd will be set only if the function succeeds.
        if (!sd.isNull()) {
@@ -655,7 +655,7 @@
      /**
       * Gets the number of bytes available on disk to the current user.
       *
-      * @param {string} sourcePath Platform-specific path to a directory on 
+      * @param {string} sourcePath Platform-specific path to a directory on
       * the disk to query for free available bytes.
       *
       * @return {number} The number of bytes available for the current user.
@@ -693,7 +693,7 @@
        // JS counts from local time, so we need to go through UTC.
        let utc = Date.UTC(gSystemTime.wYear,
                           gSystemTime.wMonth - 1
-                          /*Windows counts months from 1, JS from 0*/,
+                          /* Windows counts months from 1, JS from 0*/,
                           gSystemTime.wDay, gSystemTime.wHour,
                           gSystemTime.wMinute, gSystemTime.wSecond,
                           gSystemTime.wMilliSeconds);
@@ -810,15 +810,15 @@
 
        if (WinFile.FindNextFile(this._handle, this._findDataPtr)) {
          return this._findData;
-       } else {
+       }
          let error = ctypes.winLastError;
          this.close();
          if (error == Const.ERROR_NO_MORE_FILES) {
             return null;
-         } else {
-            throw new File.Error("iter (FindNextFile)", error, this._path);
          }
-       }
+            throw new File.Error("iter (FindNextFile)", error, this._path);
+
+
      },
 
      /**
