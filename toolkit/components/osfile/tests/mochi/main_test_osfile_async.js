@@ -38,10 +38,10 @@ var maketest = function(prefix, test) {
     okpromise: function okpromise(t, m) {
       return t.then(
         function onSuccess() {
-          util.ok(true, m);
+          utils.ok(true, m);
         },
         function onFailure() {
-          util.ok(false, m);
+          utils.ok(false, m);
         }
       );
     }

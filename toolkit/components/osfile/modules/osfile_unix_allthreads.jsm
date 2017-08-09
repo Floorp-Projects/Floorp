@@ -17,6 +17,8 @@
  * - opened from a chrome worker through require().
  */
 
+/* eslint-env node */
+
 "use strict";
 
 var SharedAll;
