@@ -3869,8 +3869,6 @@ void
 ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
                                          nsDisplayMask* aMaskItem)
 {
-  MOZ_ASSERT(mManager->IsCompositingCheap());
-
   RefPtr<ImageLayer> maskLayer =
     CreateOrRecycleMaskImageLayerFor(MaskLayerKey(aLayer, Nothing()),
                                      SetCSSMaskLayerUserData);
