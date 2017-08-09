@@ -18,7 +18,7 @@ bincode = "0.8"
 bit-set = "0.4"
 byteorder = "1.0"
 euclid = "0.15.1"
-fnv = "1.0"
+fxhash = "0.2.1"
 gleam = "0.4.7"
 lazy_static = "0.2"
 log = "0.3"
@@ -38,7 +38,7 @@ rand = "0.3"                # for the benchmarks
 servo-glutin = "0.11"     # for the example apps
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
-freetype = { version = "0.2", default-features = false }
+freetype = { version = "0.3", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4"
