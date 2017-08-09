@@ -406,10 +406,11 @@ AudioDestinationNode::DestroyMediaStream()
 void
 AudioDestinationNode::NotifyMainThreadStreamFinished()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mStream->IsFinished());
 
   if (mIsOffline) {
-    NS_DispatchToCurrentThread(
+    AbstractMainThread()->Dispatch(
       NewRunnableMethod("dom::AudioDestinationNode::FireOfflineCompletionEvent",
                         this,
                         &AudioDestinationNode::FireOfflineCompletionEvent));
