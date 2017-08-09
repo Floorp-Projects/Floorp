@@ -130,6 +130,7 @@ TextTrackManager::TextTrackManager(HTMLMediaElement *aMediaElement)
   if (!sParserWrapper) {
     nsCOMPtr<nsIWebVTTParserWrapper> parserWrapper =
       do_CreateInstance(NS_WEBVTTPARSERWRAPPER_CONTRACTID);
+    MOZ_ASSERT(parserWrapper, "Can't create nsIWebVTTParserWrapper");
     sParserWrapper = parserWrapper;
     ClearOnShutdown(&sParserWrapper);
   }
@@ -263,7 +264,7 @@ TextTrackManager::UpdateCueDisplay()
   WEBVTT_LOG("UpdateCueDisplay");
   mUpdateCueDisplayDispatched = false;
 
-  if (!mMediaElement || !mTextTracks) {
+  if (!mMediaElement || !mTextTracks || IsShutdown()) {
     return;
   }
 
@@ -624,7 +625,7 @@ private:
 void
 TextTrackManager::DispatchUpdateCueDisplay()
 {
-  if (!mUpdateCueDisplayDispatched && !mShutdown &&
+  if (!mUpdateCueDisplayDispatched && !IsShutdown() &&
       (mMediaElement->GetHasUserInteraction() || mMediaElement->IsCurrentlyPlaying())) {
     WEBVTT_LOG("DispatchUpdateCueDisplay");
     nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
@@ -646,7 +647,7 @@ TextTrackManager::DispatchTimeMarchesOn()
   // enqueue the current playback position and whether only that changed
   // through its usual monotonic increase during normal playback; current
   // executing call upon completion will check queue for further 'work'.
-  if (!mTimeMarchesOnDispatched && !mShutdown &&
+  if (!mTimeMarchesOnDispatched && !IsShutdown() &&
       (mMediaElement->GetHasUserInteraction() || mMediaElement->IsCurrentlyPlaying())) {
     WEBVTT_LOG("DispatchTimeMarchesOn");
     nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
@@ -670,7 +671,7 @@ TextTrackManager::TimeMarchesOn()
   mTimeMarchesOnDispatched = false;
 
   // Early return if we don't have any TextTracks or shutting down.
-  if (!mTextTracks || mTextTracks->Length() == 0 || mShutdown) {
+  if (!mTextTracks || mTextTracks->Length() == 0 || IsShutdown()) {
     return;
   }
 
@@ -919,6 +920,11 @@ TextTrackManager::IsLoaded()
   return mTextTracks ? mTextTracks->AreTextTracksLoaded() : true;
 }
 
+bool
+TextTrackManager::IsShutdown() const
+{
+  return (mShutdown || !sParserWrapper);
+}
 
 } // namespace dom
 } // namespace mozilla
