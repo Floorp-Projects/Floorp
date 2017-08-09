@@ -8,7 +8,6 @@ module.exports = {
     "no-redeclare": "off",
     "no-self-assign": "off",
     "no-shadow": "off",
-    "no-undef": "off",
     "no-unused-vars": "off",
     "object-shorthand": "off",
   }

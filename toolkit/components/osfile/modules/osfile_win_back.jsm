@@ -19,6 +19,9 @@
  *   (bug 729057)
  */
 
+/* eslint-env mozilla/chrome-worker, node */
+/* global OS */
+
 {
   if (typeof Components != "undefined") {
     // We do not wish osfile_win.jsm to be used directly as a main thread
