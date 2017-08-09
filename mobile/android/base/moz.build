@@ -1013,7 +1013,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
 gbjar.sources += ['../app/src/photon/java/org/mozilla/gecko/' + x for x in [
     'home/SearchEngineRow.java',
     'home/SuggestionItem.java',
-    'skin/SkinConfig.java',
     'toolbar/BrowserToolbarTablet.java',
     'toolbar/BrowserToolbarTabletBase.java',
     'toolbar/ForwardButton.java',
