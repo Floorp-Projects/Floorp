@@ -176,6 +176,17 @@ WebRenderAPI::Create(bool aEnableProfiler,
   return RefPtr<WebRenderAPI>(new WebRenderAPI(docHandle, id, maxTextureSize, useANGLE, syncHandle)).forget();
 }
 
+already_AddRefed<WebRenderAPI>
+WebRenderAPI::Clone()
+{
+  wr::DocumentHandle* docHandle = nullptr;
+  wr_api_clone(mDocHandle, &docHandle);
+
+  RefPtr<WebRenderAPI> renderApi = new WebRenderAPI(docHandle, mId, mMaxTextureSize, mUseANGLE, mSyncHandle);
+  renderApi->mRootApi = this; // Hold root api
+  return renderApi.forget();
+}
+
 wr::WrIdNamespace
 WebRenderAPI::GetNamespace() {
   return wr_api_get_namespace(mDocHandle);
@@ -183,10 +194,12 @@ WebRenderAPI::GetNamespace() {
 
 WebRenderAPI::~WebRenderAPI()
 {
-  layers::SynchronousTask task("Destroy WebRenderAPI");
-  auto event = MakeUnique<RemoveRenderer>(&task);
-  RunOnRenderThread(Move(event));
-  task.Wait();
+  if (!mRootApi) {
+    layers::SynchronousTask task("Destroy WebRenderAPI");
+    auto event = MakeUnique<RemoveRenderer>(&task);
+    RunOnRenderThread(Move(event));
+    task.Wait();
+  }
 
   wr_api_delete(mDocHandle);
 }
