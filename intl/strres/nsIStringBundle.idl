@@ -33,11 +33,11 @@ interface nsIStringBundle : nsISupports
   [noscript, binaryname(GetStringFromName)]
   AString GetStringFromNameCpp(in string aName);
 
-  // this is kind of like smprintf - except that you can
+  // this is kind of like ssprintf - except that you can
   // only pass it unicode strings, using the %S formatting character.
   // the id or name should refer to a string in the bundle that
   // uses %S.. do NOT try to use any other types.
-  // this uses nsTextFormatter::smprintf to do the dirty work.
+  // this uses nsTextFormatter::ssprintf to do the dirty work.
   AString formatStringFromID(in long aID,
                              [array, size_is(length)] in wstring params,
                              in unsigned long length);

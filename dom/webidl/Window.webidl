@@ -317,12 +317,6 @@ partial interface Window {
            attribute EventHandler onuserproximity;
            attribute EventHandler ondevicelight;
 
-#ifdef MOZ_B2G
-           attribute EventHandler onmoztimechange;
-           attribute EventHandler onmoznetworkupload;
-           attribute EventHandler onmoznetworkdownload;
-#endif
-
   void                      dump(DOMString str);
 
   /**

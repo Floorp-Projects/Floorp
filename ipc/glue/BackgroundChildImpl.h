@@ -70,6 +70,12 @@ protected:
   DeallocPBackgroundIndexedDBUtilsChild(PBackgroundIndexedDBUtilsChild* aActor)
                                         override;
 
+  virtual PBackgroundStorageChild*
+  AllocPBackgroundStorageChild(const nsString& aProfilePath) override;
+
+  virtual bool
+  DeallocPBackgroundStorageChild(PBackgroundStorageChild* aActor) override;
+
   virtual PPendingIPCBlobChild*
   AllocPPendingIPCBlobChild(const IPCBlob& aBlob) override;
 
@@ -208,6 +214,14 @@ protected:
 
   virtual bool
   DeallocPHttpBackgroundChannelChild(PHttpBackgroundChannelChild* aActor) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvDispatchLocalStorageChange(const nsString& aDocumentURI,
+                                 const nsString& aKey,
+                                 const nsString& aOldValue,
+                                 const nsString& aNewValue,
+                                 const PrincipalInfo& aPrincipalInfo,
+                                 const bool& aIsPrivate) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final

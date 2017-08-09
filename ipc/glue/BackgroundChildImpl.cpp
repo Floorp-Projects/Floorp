@@ -25,9 +25,11 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
+#include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
 #include "mozilla/dom/GamepadTestChannelChild.h"
 #include "mozilla/dom/MessagePortChild.h"
+#include "mozilla/dom/LocalStorage.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
@@ -77,6 +79,8 @@ using mozilla::dom::asmjscache::PAsmJSCacheEntryChild;
 using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStorageChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
+using mozilla::dom::LocalStorage;
+using mozilla::dom::StorageDBChild;
 
 using mozilla::dom::WebAuthnTransactionChild;
 
@@ -199,6 +203,23 @@ BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
   MOZ_ASSERT(aActor);
 
   delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundStorageChild*
+BackgroundChildImpl::AllocPBackgroundStorageChild(const nsString& aProfilePath)
+{
+  MOZ_CRASH("PBackgroundStorageChild actors should be manually constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundStorageChild(
+                                                PBackgroundStorageChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  StorageDBChild* child = static_cast<StorageDBChild*>(aActor);
+  child->ReleaseIPDLReference();
   return true;
 }
 
@@ -576,6 +597,32 @@ BackgroundChildImpl::DeallocPHttpBackgroundChannelChild(PHttpBackgroundChannelCh
   RefPtr<net::HttpBackgroundChannelChild> child =
     dont_AddRef(static_cast<net::HttpBackgroundChannelChild*>(aActor));
   return true;
+}
+
+mozilla::ipc::IPCResult
+BackgroundChildImpl::RecvDispatchLocalStorageChange(
+                                            const nsString& aDocumentURI,
+                                            const nsString& aKey,
+                                            const nsString& aOldValue,
+                                            const nsString& aNewValue,
+                                            const PrincipalInfo& aPrincipalInfo,
+                                            const bool& aIsPrivate)
+{
+  if (!NS_IsMainThread()) {
+    return IPC_OK();
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  LocalStorage::DispatchStorageEvent(aDocumentURI, aKey, aOldValue, aNewValue,
+                                     principal, aIsPrivate, nullptr, true);
+
+  return IPC_OK();
 }
 
 } // namespace ipc

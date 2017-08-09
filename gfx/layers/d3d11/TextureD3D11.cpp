@@ -327,6 +327,9 @@ DXGITextureData::PrepareDrawTargetInLock(OpenMode aMode)
     }
   }
 
+  // Reset transform
+  mDrawTarget->SetTransform(Matrix());
+
   if (mNeedsClear) {
     mDrawTarget->ClearRect(Rect(0, 0, mSize.width, mSize.height));
     mNeedsClear = false;
