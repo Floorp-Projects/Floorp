@@ -57,6 +57,7 @@
 #include <d3d10_1.h>
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 
 #include "nsMemory.h"
 
@@ -475,6 +476,10 @@ gfxWindowsPlatform::GetContentBackendFor(mozilla::layers::LayersBackend aLayers)
 {
   mozilla::gfx::BackendType defaultBackend = gfxPlatform::GetDefaultContentBackend();
   if (aLayers == LayersBackend::LAYERS_D3D11) {
+    return defaultBackend;
+  }
+
+  if (aLayers == LayersBackend::LAYERS_WR && gfx::gfxVars::UseWebRenderANGLE()) {
     return defaultBackend;
   }
 

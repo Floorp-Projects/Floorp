@@ -1131,14 +1131,6 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
         'External.webidl',
     ]
 
-if CONFIG['MOZ_B2G']:
-    WEBIDL_FILES += [
-        'MozApplicationEvent.webidl'
-    ]
-    GENERATED_EVENTS_WEBIDL_FILES += [
-        'MozApplicationEvent.webidl'
-    ]
-
 if CONFIG['ACCESSIBILITY']:
     WEBIDL_FILES += [
         'AccessibleNode.webidl',

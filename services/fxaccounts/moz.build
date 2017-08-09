@@ -32,7 +32,3 @@ EXTRA_JS_MODULES += [
   'FxAccountsStorage.jsm',
   'FxAccountsWebChannel.jsm',
 ]
-
-# For now, we will only be using the FxA manager in B2G.
-if CONFIG['MOZ_B2G']:
-  EXTRA_JS_MODULES += ['FxAccountsManager.jsm']

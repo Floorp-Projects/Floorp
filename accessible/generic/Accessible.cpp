@@ -18,6 +18,7 @@
 #include "nsTextEquivUtils.h"
 #include "DocAccessibleChild.h"
 #include "EventTree.h"
+#include "GeckoProfiler.h"
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
@@ -843,6 +844,13 @@ nsresult
 Accessible::HandleAccEvent(AccEvent* aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
+
+  if (profiler_is_active()) {
+    nsAutoCString strEventType;
+    GetAccService()->GetStringEventType(aEvent->GetEventType(), strEventType);
+
+    profiler_tracing("A11y Event", strEventType.get());
+  }
 
   if (IPCAccessibilityActive() && Document()) {
     DocAccessibleChild* ipcDoc = mDoc->IPCDoc();

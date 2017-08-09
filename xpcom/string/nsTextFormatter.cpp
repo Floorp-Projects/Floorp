@@ -1212,60 +1212,6 @@ StringStuff(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen)
   return 0;
 }
 
-/*
-** Stuff routine that automatically grows the malloc'd output buffer
-** before it overflows.
-*/
-static int
-GrowStuff(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen)
-{
-  ptrdiff_t off;
-  char16_t* newbase;
-  uint32_t newlen;
-
-  off = aState->cur - aState->base;
-  if (off + aLen >= aState->maxlen) {
-    /* Grow the buffer */
-    newlen = aState->maxlen + ((aLen > 32) ? aLen : 32);
-    if (aState->base) {
-      newbase = (char16_t*)moz_xrealloc(aState->base,
-                                        newlen * sizeof(char16_t));
-    } else {
-      newbase = (char16_t*)moz_xmalloc(newlen * sizeof(char16_t));
-    }
-    if (!newbase) {
-      /* Ran out of memory */
-      return -1;
-    }
-    aState->base = newbase;
-    aState->maxlen = newlen;
-    aState->cur = aState->base + off;
-  }
-
-  /* Copy data */
-  while (aLen) {
-    --aLen;
-    *aState->cur++ = *aStr++;
-  }
-  MOZ_ASSERT((uint32_t)(aState->cur - aState->base) <= aState->maxlen);
-  return 0;
-}
-
-/*
-** sprintf into a malloc'd buffer
-*/
-char16_t*
-nsTextFormatter::smprintf(const char16_t* aFmt, ...)
-{
-  va_list ap;
-  char16_t* rv;
-
-  va_start(ap, aFmt);
-  rv = nsTextFormatter::vsmprintf(aFmt, ap);
-  va_end(ap);
-  return rv;
-}
-
 uint32_t
 nsTextFormatter::ssprintf(nsAString& aOut, const char16_t* aFmt, ...)
 {
@@ -1291,26 +1237,6 @@ nsTextFormatter::vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp)
   aOut.Truncate();
   int n = dosprintf(&ss, aFmt, aAp);
   return n ? n - 1 : n;
-}
-
-char16_t*
-nsTextFormatter::vsmprintf(const char16_t* aFmt, va_list aAp)
-{
-  SprintfStateStr ss;
-  int rv;
-
-  ss.stuff = GrowStuff;
-  ss.base = 0;
-  ss.cur = 0;
-  ss.maxlen = 0;
-  rv = dosprintf(&ss, aFmt, aAp);
-  if (rv < 0) {
-    if (ss.base) {
-      free(ss.base);
-    }
-    return 0;
-  }
-  return ss.base;
 }
 
 /*
