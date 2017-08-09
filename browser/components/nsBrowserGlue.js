@@ -1038,10 +1038,6 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
 
-    if (AppConstants.MOZ_DEV_EDITION) {
-      this._createExtraDefaultProfile();
-    }
-
     this._initServiceDiscovery();
 
     // Show update notification, if needed.
@@ -1156,6 +1152,12 @@ BrowserGlue.prototype = {
           Cu.import("resource:///modules/WindowsJumpLists.jsm", temp);
           temp.WinTaskbarJumpList.startup();
         }
+      });
+    }
+
+    if (AppConstants.MOZ_DEV_EDITION) {
+      Services.tm.idleDispatchToMainThread(() => {
+        this._createExtraDefaultProfile();
       });
     }
 
