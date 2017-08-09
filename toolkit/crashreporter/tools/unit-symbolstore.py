@@ -214,32 +214,6 @@ class TestGetVCSFilename(HelperMixin, unittest.TestCase):
                          symbolstore.GetVCSFilename(filename, [self.test_dir])[0])
 
 
-class TestRepoManifest(HelperMixin, unittest.TestCase):
-    def testRepoManifest(self):
-        manifest = os.path.join(self.test_dir, "sources.xml")
-        open(manifest, "w").write("""<?xml version="1.0" encoding="UTF-8"?>
-<manifest>
-<remote fetch="http://example.com/foo/" name="foo"/>
-<remote fetch="git://example.com/bar/" name="bar"/>
-<default remote="bar"/>
-<project name="projects/one" revision="abcd1234"/>
-<project name="projects/two" path="projects/another" revision="ffffffff" remote="foo"/>
-<project name="something_else" revision="00000000" remote="bar"/>
-</manifest>
-""")
-        # Use a source file from each of the three projects
-        file1 = os.path.join(self.test_dir, "projects", "one", "src1.c")
-        file2 = os.path.join(self.test_dir, "projects", "another", "src2.c")
-        file3 = os.path.join(self.test_dir, "something_else", "src3.c")
-        d = symbolstore.Dumper("dump_syms", "symbol_path",
-                               repo_manifest=manifest)
-        self.assertEqual("git:example.com/bar/projects/one:src1.c:abcd1234",
-                         symbolstore.GetVCSFilename(file1, d.srcdirs)[0])
-        self.assertEqual("git:example.com/foo/projects/two:src2.c:ffffffff",
-                         symbolstore.GetVCSFilename(file2, d.srcdirs)[0])
-        self.assertEqual("git:example.com/bar/something_else:src3.c:00000000",
-                         symbolstore.GetVCSFilename(file3, d.srcdirs)[0])
-
 if target_platform() == 'WINNT':
     class TestFixFilenameCase(HelperMixin, unittest.TestCase):
         def test_fix_filename_case(self):
