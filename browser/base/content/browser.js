@@ -1749,6 +1749,10 @@ var gBrowserInit = {
     });
 
     scheduleIdleTask(() => {
+      CombinedStopReload.startAnimationPrefMonitoring();
+    });
+
+    scheduleIdleTask(() => {
       // setup simple gestures support
       gGestureSupport.init(true);
 
@@ -4974,14 +4978,6 @@ var CombinedStopReload = {
 
     // Disable animations until the browser has fully loaded.
     this.animate = false;
-    let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"]
-                        .getService(Ci.nsIAppStartup)
-                        .getStartupInfo();
-    if (startupInfo.sessionRestored) {
-      this.startAnimationPrefMonitoring();
-    } else {
-      Services.obs.addObserver(this, "sessionstore-windows-restored");
-    }
   },
 
   uninit() {
@@ -5018,24 +5014,19 @@ var CombinedStopReload = {
   },
 
   observe(subject, topic, data) {
-    if (topic == "sessionstore-windows-restored") {
-      Services.obs.removeObserver(this, "sessionstore-windows-restored");
-      this.startAnimationPrefMonitoring();
-    } else if (topic == "nsPref:changed") {
+    if (topic == "nsPref:changed") {
       this.animate = Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled");
     }
   },
 
   startAnimationPrefMonitoring() {
-    requestIdleCallback(() => {
-      // CombinedStopReload may have been uninitialized before the idleCallback is executed.
-      if (!this._initialized)
-        return;
-      this.animate = Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
-                     Services.prefs.getBoolPref("browser.stopReloadAnimation.enabled");
-      Services.prefs.addObserver("toolkit.cosmeticAnimations.enabled", this);
-      this.stopReloadContainer.addEventListener("animationend", this);
-    });
+    // CombinedStopReload may have been uninitialized before the idleCallback is executed.
+    if (!this._initialized)
+      return;
+    this.animate = Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
+                   Services.prefs.getBoolPref("browser.stopReloadAnimation.enabled");
+    Services.prefs.addObserver("toolkit.cosmeticAnimations.enabled", this);
+    this.stopReloadContainer.addEventListener("animationend", this);
   },
 
   onTabSwitch() {
