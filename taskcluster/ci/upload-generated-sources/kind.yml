@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+   - taskgraph.transforms.upload_generated_sources:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+  - build
+
+only-for-attributes:
+  - nightly
+
+job-template:
+  description: Upload generated source files from build
+  attributes:
+    nightly: true
+  worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+  treeherder:
+    symbol: Ugs
+    kind: build
+  worker:
+     docker-image: {in-tree: "lint"}
+     max-run-time: 600
+  run:
+    using: run-task
+    command: >
+            cd /home/worker/checkouts/gecko &&
+            ./mach python build/upload_generated_sources.py ${ARTIFACT_URL}
+  scopes:
+      - secrets:get:project/releng/gecko/build/level-{level}/gecko-generated-sources-upload
