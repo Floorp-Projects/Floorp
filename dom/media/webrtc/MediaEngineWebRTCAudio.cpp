@@ -487,9 +487,8 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   // Make sure logger starts before capture
   AsyncLatencyLogger::Get(true);
 
-  if (mAudioOutputObserver) {
-    mAudioOutputObserver->Clear();
-  }
+  MOZ_ASSERT(mAudioOutputObserver);
+  mAudioOutputObserver->Clear();
 
   if (mVoEBase->StartReceive(mChannel)) {
     return NS_ERROR_FAILURE;
