@@ -222,6 +222,7 @@ extern const char* CacheKindNames[];
     _(StoreDenseElement)                  \
     _(StoreDenseElementHole)              \
     _(ArrayPush)                          \
+    _(ArrayJoinResult)                    \
     _(StoreTypedElement)                  \
     _(StoreUnboxedArrayElement)           \
     _(StoreUnboxedArrayElementHole)       \
@@ -580,10 +581,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardSpecificSymbol, sym);
         addStubField(uintptr_t(expected), StubField::Type::Symbol);
     }
-    void guardSpecificInt32Immediate(Int32OperandId operand, int32_t expected) {
+    void guardSpecificInt32Immediate(Int32OperandId operand, int32_t expected,
+                                     Assembler::Condition cond = Assembler::Equal)
+    {
         writeOp(CacheOp::GuardSpecificInt32Immediate);
         writeOperandId(operand);
         writeInt32Immediate(expected);
+        buffer_.writeByte(uint32_t(cond));
     }
     void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
         writeOpWithOperandId(CacheOp::GuardMagicValue, val);
@@ -827,6 +831,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void arrayPush(ObjOperandId obj, ValOperandId rhs) {
         writeOpWithOperandId(CacheOp::ArrayPush, obj);
         writeOperandId(rhs);
+    }
+    void arrayJoinResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::ArrayJoinResult, obj);
     }
     void callScriptedSetter(ObjOperandId obj, JSFunction* setter, ValOperandId rhs) {
         writeOpWithOperandId(CacheOp::CallScriptedSetter, obj);
@@ -1086,6 +1093,9 @@ class MOZ_RAII CacheIRReader
         return ReferenceTypeDescr::Type(buffer_.readByte());
     }
 
+    uint8_t readByte() {
+        return buffer_.readByte();
+    }
     bool readBool() {
         uint8_t b = buffer_.readByte();
         MOZ_ASSERT(b <= 1);
@@ -1501,6 +1511,7 @@ class MOZ_RAII GetIteratorIRGenerator : public IRGenerator
 class MOZ_RAII CallIRGenerator : public IRGenerator
 {
   private:
+    JSOp op_;
     uint32_t argc_;
     HandleValue callee_;
     HandleValue thisval_;
@@ -1510,13 +1521,14 @@ class MOZ_RAII CallIRGenerator : public IRGenerator
 
     bool tryAttachStringSplit();
     bool tryAttachArrayPush();
+    bool tryAttachArrayJoin();
 
     void trackAttached(const char* name);
     void trackNotAttached();
 
   public:
     CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                    ICCall_Fallback* stub, ICState::Mode mode,
+                    JSOp op, ICCall_Fallback* stub, ICState::Mode mode,
                     uint32_t argc, HandleValue callee, HandleValue thisval,
                     HandleValueArray args);
 
