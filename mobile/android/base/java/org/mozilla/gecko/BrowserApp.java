@@ -1013,6 +1013,7 @@ public class BrowserApp extends GeckoApp
 
             if (prefs.getBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED_OLD, true) &&
                 prefs.getBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, true)) {
+                showSplashScreen = false;
                 if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
                     // Check to see if a distribution has turned off the first run pager.
                     final Distribution distribution = Distribution.getInstance(BrowserApp.this);

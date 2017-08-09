@@ -53,7 +53,7 @@
         <Button
             android:id="@+id/button"
             style="@style/Widget.Firstrun.Button"
-            android:background="@drawable/button_background_action_orange_round"
+            android:background="@drawable/button_background_action_photon_round"
             android:layout_gravity="center"
             android:layout_marginBottom="30dp"/>
 
