@@ -70,6 +70,11 @@ public:
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
 
+  // To be called on the main thread. Signifies that the current
+  // batch of CapturedPaintStates* for PaintContents have been recorded
+  // and the main thread is finished recording this layer.
+  void FinishedLayerBatch();
+
   // Sync Runnables need threads to be ref counted,
   // But this thread lives through the whole process.
   // We're only temporarily using sync runnables so
@@ -87,10 +92,15 @@ private:
   void PaintContentsAsync(CompositorBridgeChild* aBridge,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
+  void EndAsyncPainting(CompositorBridgeChild* aBridge);
 
   static StaticAutoPtr<PaintThread> sSingleton;
   static StaticRefPtr<nsIThread> sThread;
   static PlatformThreadId sThreadId;
+
+  // This shouldn't be very many elements, so a list should be fine.
+  // Should only be accessed on the paint thread.
+  nsTArray<RefPtr<gfx::DrawTarget>> mDrawTargetsToFlush;
 };
 
 } // namespace layers
