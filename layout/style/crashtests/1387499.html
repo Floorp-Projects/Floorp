@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <script>
+      try { o1 = document.createElement('code') } catch(e) { }
+      try { o2 = document.createElement('iframe') } catch(e) { }
+      try { document.documentElement.appendChild(o2) } catch(e) { }
+      try { o3 = o2.getSVGDocument() } catch(e) { }
+      try { o4 = document.caretPositionFromPoint(1, 1) } catch(e) { }
+      try { o3.head.appendChild(o1); } catch(e) { }
+      try { document.replaceChild(document.documentElement, document.documentElement); } catch(e) { }
+      try { document.replaceChild(o3.firstElementChild, document.documentElement); } catch(e) { }
+      window.close()
+    </script>
+  </head>
+</html>
