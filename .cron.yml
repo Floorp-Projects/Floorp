@@ -38,11 +38,21 @@ jobs:
           - date
       when: [] # never (hook only)
 
-    - name: nightly-desktop-win
+    - name: nightly-desktop-win32
       job:
           type: decision-task
-          treeherder-symbol: Nd-Win
-          target-tasks-method: nightly_win
+          treeherder-symbol: Nd-win32
+          target-tasks-method: nightly_win32
+      run-on-projects:
+          - mozilla-central
+          - date
+      when: [] # never (hook only)
+
+    - name: nightly-desktop-win64
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-win64
+          target-tasks-method: nightly_win64
       run-on-projects:
           - mozilla-central
           - date
