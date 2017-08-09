@@ -395,7 +395,7 @@ this.XPCOMUtils = {
     // cannot define a value in place of a getter after we read the
     // preference.
     let observer = {
-      QueryInterface: this.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+      QueryInterface: XPCU_lazyPreferenceObserverQI,
 
       value: undefined,
 
@@ -567,6 +567,8 @@ this.XPCOMUtils = {
     });
   },
 };
+
+var XPCU_lazyPreferenceObserverQI = XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
