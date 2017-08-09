@@ -41,12 +41,6 @@ class WindowManagerMixin(object):
             self.marionette.switch_to_window(handle)
             self.marionette.close()
 
-            # Bug 1311350 - close() doesn't wait for tab to be closed.
-            Wait(self.marionette).until(
-                lambda mn: handle not in mn.window_handles,
-                message="Failed to close tab with handle {}".format(handle)
-            )
-
         self.marionette.switch_to_window(self.start_tab)
 
     def close_all_windows(self):
@@ -61,12 +55,6 @@ class WindowManagerMixin(object):
             for handle in current_chrome_window_handles:
                 self.marionette.switch_to_window(handle)
                 self.marionette.close_chrome_window()
-
-                # Bug 1311350 - close_chrome_window() doesn't wait for window to be closed.
-                Wait(self.marionette).until(
-                    lambda mn: handle not in mn.chrome_window_handles,
-                    message="Failed to close window with handle {}".format(handle)
-                )
 
             self.marionette.switch_to_window(self.start_window)
 
