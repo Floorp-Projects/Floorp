@@ -341,9 +341,6 @@ public:
     MOZ_ASSERT(!mMetadataRequest.Exists());
     SLOG("Dispatching AsyncReadMetadata");
 
-    // Set mode to METADATA since we are about to read metadata.
-    Resource()->SetReadMode(MediaCacheStream::MODE_METADATA);
-
     // We disconnect mMetadataRequest in Exit() so it is fine to capture
     // a raw pointer here.
     Reader()->ReadMetadata()
@@ -2223,9 +2220,6 @@ MediaDecoderStateMachine::
 DecodeMetadataState::OnMetadataRead(MetadataHolder&& aMetadata)
 {
   mMetadataRequest.Complete();
-
-  // Set mode to PLAYBACK after reading metadata.
-  Resource()->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 
   mMaster->mInfo.emplace(*aMetadata.mInfo);
   mMaster->mMediaSeekable = Info().mMediaSeekable;
