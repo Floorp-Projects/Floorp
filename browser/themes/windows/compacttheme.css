@@ -34,6 +34,12 @@
   text-shadow: none !important;
 }
 
+@media (-moz-windows-glass) {
+  .tabbrowser-tab {
+    background-color: var(--chrome-background-color);
+  }
+}
+
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
   /* It'd be nice if there was an element in the scrollbox's inner content
