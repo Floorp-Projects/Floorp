@@ -50,6 +50,30 @@ def test_click_at_coordinates(session, test_actions_page, mouse_chain):
     assert expected == filtered_events[1:]
 
 
+def test_context_menu_at_coordinates(session, test_actions_page, mouse_chain):
+    div_point = {
+        "x": 82,
+        "y": 187,
+    }
+    mouse_chain \
+        .pointer_move(div_point["x"], div_point["y"]) \
+        .pointer_down(button=2) \
+        .pointer_up(button=2) \
+        .perform()
+    events = get_events(session)
+    expected = [
+        {"type": "mousedown", "button": 2},
+        {"type": "contextmenu",  "button": 2},
+    ]
+    assert len(events) == 4
+    filtered_events = [filter_dict(e, expected[0]) for e in events]
+    mousedown_contextmenu_events = [
+        x for x in filtered_events
+        if x["type"] in ["mousedown", "contextmenu"]
+    ]
+    assert expected == mousedown_contextmenu_events
+
+
 def test_click_element_center(session, test_actions_page, mouse_chain):
     outer = session.find.css("#outer", all=False)
     center = get_center(outer.rect)

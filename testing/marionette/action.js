@@ -1213,6 +1213,15 @@ function dispatchPointerDown(a, inputState, win) {
             inputState.y,
             mouseEvent,
             win);
+        if (event.MouseButton.isSecondary(a.button)) {
+          let contextMenuEvent = Object.assign({},
+              mouseEvent, {type: "contextmenu"});
+          event.synthesizeMouseAtPoint(
+              inputState.x,
+              inputState.y,
+              contextMenuEvent,
+              win);
+        }
         break;
 
       case action.PointerType.Pen:
