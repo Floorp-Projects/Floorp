@@ -472,7 +472,7 @@ Module::extractCode(JSContext* cx, MutableHandleValue vp) const
         return false;
 
     // The tier could be a parameter to extractCode. For now, any tier will do.
-    Tier tier = code().anyTier();
+    Tier tier = code().stableTier();
 
     const CodeSegment& codeSegment = code_->segment(tier);
     RootedObject code(cx, JS_NewUint8Array(cx, codeSegment.length()));
@@ -656,7 +656,7 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
     if (metadata().isAsmJS())
         return true;
 
-    Tier tier = code().anyTier();
+    Tier tier = code().stableTier();
 
     for (size_t i = 0; i < metadata(tier).funcImports.length(); i++) {
         HandleFunction f = funcImports[i];
