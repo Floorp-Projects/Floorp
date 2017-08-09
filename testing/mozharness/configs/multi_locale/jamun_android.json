@@ -19,9 +19,9 @@
         "dest": "tools"
     }],
     "vcs_share_base": "/builds/hg-shared",
-    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
+    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-beta",
     "hg_l10n_tag": "default",
-    "l10n_dir": "mozilla-aurora",
+    "l10n_dir": "mozilla-beta",
     "merge_locales": true,
     "mozilla_dir": "build"
 }

@@ -78,7 +78,7 @@ using :func:`taskgraph.transform.base.resolve_keyed_by`.
 
 Exact matches are used immediately.  If no exact matches are found, each
 alternative is treated as a regular expression, matched against the whole
-value.  Thus ``android.*`` would match ``android-api-15/debug``.  If nothing
+value.  Thus ``android.*`` would match ``android-api-16/debug``.  If nothing
 matches as a regular expression, but there is a ``default`` alternative, it is
 used.  Otherwise, an exception is raised and graph generation stops.
 
