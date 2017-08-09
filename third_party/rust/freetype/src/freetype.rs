@@ -99,7 +99,6 @@ pub const FT_LOAD_LINEAR_DESIGN: ::std::os::raw::c_uint = 8192;
 pub const FT_LOAD_NO_AUTOHINT: ::std::os::raw::c_uint = 32768;
 pub const FT_LOAD_COLOR: ::std::os::raw::c_uint = 1048576;
 pub const FT_LOAD_COMPUTE_METRICS: ::std::os::raw::c_uint = 2097152;
-pub const FT_LOAD_BITMAP_METRICS_ONLY: ::std::os::raw::c_uint = 4194304;
 pub const FT_LOAD_ADVANCE_ONLY: ::std::os::raw::c_uint = 256;
 pub const FT_LOAD_SBITS_ONLY: ::std::os::raw::c_uint = 16384;
 pub const FT_SUBGLYPH_FLAG_ARGS_ARE_WORDS: ::std::os::raw::c_uint = 1;
@@ -135,8 +134,30 @@ pub struct FT_MemoryRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_MemoryRec_() {
-    assert_eq!(::std::mem::size_of::<FT_MemoryRec_>() , 32usize);
-    assert_eq!(::std::mem::align_of::<FT_MemoryRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_MemoryRec_>() , 32usize , concat ! (
+               "Size of: " , stringify ! ( FT_MemoryRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_MemoryRec_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_MemoryRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_MemoryRec_ ) ) . user as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_MemoryRec_ ) , "::"
+                , stringify ! ( user ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_MemoryRec_ ) ) . alloc as * const _ as
+                usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_MemoryRec_ ) , "::"
+                , stringify ! ( alloc ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_MemoryRec_ ) ) . free as * const _ as
+                usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_MemoryRec_ ) , "::"
+                , stringify ! ( free ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_MemoryRec_ ) ) . realloc as * const _
+                as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_MemoryRec_ ) , "::"
+                , stringify ! ( realloc ) ));
 }
 impl Clone for FT_MemoryRec_ {
     fn clone(&self) -> Self { *self }
@@ -175,8 +196,60 @@ pub struct FT_StreamRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_StreamRec_() {
-    assert_eq!(::std::mem::size_of::<FT_StreamRec_>() , 80usize);
-    assert_eq!(::std::mem::align_of::<FT_StreamRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_StreamRec_>() , 80usize , concat ! (
+               "Size of: " , stringify ! ( FT_StreamRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_StreamRec_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_StreamRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . base as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( base ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . size as * const _ as
+                usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( size ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . pos as * const _ as
+                usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( pos ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . descriptor as * const
+                _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( descriptor ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . pathname as * const _
+                as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( pathname ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . read as * const _ as
+                usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( read ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . close as * const _ as
+                usize } , 48usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( close ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . memory as * const _
+                as usize } , 56usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( memory ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . cursor as * const _
+                as usize } , 64usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( cursor ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamRec_ ) ) . limit as * const _ as
+                usize } , 72usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamRec_ ) , "::"
+                , stringify ! ( limit ) ));
 }
 impl Clone for FT_StreamRec_ {
     fn clone(&self) -> Self { *self }
@@ -191,13 +264,25 @@ pub struct FT_StreamDesc_ {
 }
 #[test]
 fn bindgen_test_layout_FT_StreamDesc_() {
-    assert_eq!(::std::mem::size_of::<FT_StreamDesc_>() , 8usize);
-    assert_eq!(::std::mem::align_of::<FT_StreamDesc_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_StreamDesc_>() , 8usize , concat ! (
+               "Size of: " , stringify ! ( FT_StreamDesc_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_StreamDesc_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_StreamDesc_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamDesc_ ) ) . value as * const _
+                as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamDesc_ ) , "::"
+                , stringify ! ( value ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_StreamDesc_ ) ) . pointer as * const _
+                as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_StreamDesc_ ) , "::"
+                , stringify ! ( pointer ) ));
 }
 impl Clone for FT_StreamDesc_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_StreamDesc_ as FT_StreamDesc;
+pub type FT_StreamDesc = FT_StreamDesc_;
 pub type FT_Stream_IoFunc =
     ::std::option::Option<unsafe extern "C" fn(stream: FT_Stream,
                                                offset:
@@ -208,7 +293,7 @@ pub type FT_Stream_IoFunc =
                               -> ::std::os::raw::c_ulong>;
 pub type FT_Stream_CloseFunc =
     ::std::option::Option<unsafe extern "C" fn(stream: FT_Stream)>;
-pub use self::FT_StreamRec_ as FT_StreamRec;
+pub type FT_StreamRec = FT_StreamRec_;
 pub type FT_Pos = ::std::os::raw::c_long;
 #[repr(C)]
 #[derive(Debug, Copy)]
@@ -218,13 +303,25 @@ pub struct FT_Vector_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Vector_() {
-    assert_eq!(::std::mem::size_of::<FT_Vector_>() , 16usize);
-    assert_eq!(::std::mem::align_of::<FT_Vector_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Vector_>() , 16usize , concat ! (
+               "Size of: " , stringify ! ( FT_Vector_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Vector_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Vector_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Vector_ ) ) . x as * const _ as usize
+                } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Vector_ ) , "::" ,
+                stringify ! ( x ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Vector_ ) ) . y as * const _ as usize
+                } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Vector_ ) , "::" ,
+                stringify ! ( y ) ));
 }
 impl Clone for FT_Vector_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Vector_ as FT_Vector;
+pub type FT_Vector = FT_Vector_;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct FT_BBox_ {
@@ -235,13 +332,35 @@ pub struct FT_BBox_ {
 }
 #[test]
 fn bindgen_test_layout_FT_BBox_() {
-    assert_eq!(::std::mem::size_of::<FT_BBox_>() , 32usize);
-    assert_eq!(::std::mem::align_of::<FT_BBox_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_BBox_>() , 32usize , concat ! (
+               "Size of: " , stringify ! ( FT_BBox_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_BBox_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_BBox_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_BBox_ ) ) . xMin as * const _ as usize
+                } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_BBox_ ) , "::" ,
+                stringify ! ( xMin ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_BBox_ ) ) . yMin as * const _ as usize
+                } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_BBox_ ) , "::" ,
+                stringify ! ( yMin ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_BBox_ ) ) . xMax as * const _ as usize
+                } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_BBox_ ) , "::" ,
+                stringify ! ( xMax ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_BBox_ ) ) . yMax as * const _ as usize
+                } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_BBox_ ) , "::" ,
+                stringify ! ( yMax ) ));
 }
 impl Clone for FT_BBox_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_BBox_ as FT_BBox;
+pub type FT_BBox = FT_BBox_;
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum FT_Pixel_Mode_ {
@@ -270,13 +389,55 @@ pub struct FT_Bitmap_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Bitmap_() {
-    assert_eq!(::std::mem::size_of::<FT_Bitmap_>() , 40usize);
-    assert_eq!(::std::mem::align_of::<FT_Bitmap_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Bitmap_>() , 40usize , concat ! (
+               "Size of: " , stringify ! ( FT_Bitmap_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Bitmap_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Bitmap_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_ ) ) . rows as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_ ) , "::" ,
+                stringify ! ( rows ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_ ) ) . width as * const _ as
+                usize } , 4usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_ ) , "::" ,
+                stringify ! ( width ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_ ) ) . pitch as * const _ as
+                usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_ ) , "::" ,
+                stringify ! ( pitch ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_ ) ) . buffer as * const _ as
+                usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_ ) , "::" ,
+                stringify ! ( buffer ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_ ) ) . num_grays as * const _
+                as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_ ) , "::" ,
+                stringify ! ( num_grays ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_ ) ) . pixel_mode as * const _
+                as usize } , 26usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_ ) , "::" ,
+                stringify ! ( pixel_mode ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_ ) ) . palette_mode as * const
+                _ as usize } , 27usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_ ) , "::" ,
+                stringify ! ( palette_mode ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_ ) ) . palette as * const _ as
+                usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_ ) , "::" ,
+                stringify ! ( palette ) ));
 }
 impl Clone for FT_Bitmap_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Bitmap_ as FT_Bitmap;
+pub type FT_Bitmap = FT_Bitmap_;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct FT_Outline_ {
@@ -289,13 +450,45 @@ pub struct FT_Outline_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Outline_() {
-    assert_eq!(::std::mem::size_of::<FT_Outline_>() , 40usize);
-    assert_eq!(::std::mem::align_of::<FT_Outline_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Outline_>() , 40usize , concat ! (
+               "Size of: " , stringify ! ( FT_Outline_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Outline_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Outline_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_ ) ) . n_contours as * const _
+                as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_ ) , "::" ,
+                stringify ! ( n_contours ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_ ) ) . n_points as * const _
+                as usize } , 2usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_ ) , "::" ,
+                stringify ! ( n_points ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_ ) ) . points as * const _ as
+                usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_ ) , "::" ,
+                stringify ! ( points ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_ ) ) . tags as * const _ as
+                usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_ ) , "::" ,
+                stringify ! ( tags ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_ ) ) . contours as * const _
+                as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_ ) , "::" ,
+                stringify ! ( contours ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_ ) ) . flags as * const _ as
+                usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_ ) , "::" ,
+                stringify ! ( flags ) ));
 }
 impl Clone for FT_Outline_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Outline_ as FT_Outline;
+pub type FT_Outline = FT_Outline_;
 pub type FT_Outline_MoveToFunc =
     ::std::option::Option<unsafe extern "C" fn(to: *const FT_Vector,
                                                user:
@@ -331,13 +524,45 @@ pub struct FT_Outline_Funcs_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Outline_Funcs_() {
-    assert_eq!(::std::mem::size_of::<FT_Outline_Funcs_>() , 48usize);
-    assert_eq!(::std::mem::align_of::<FT_Outline_Funcs_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Outline_Funcs_>() , 48usize , concat !
+               ( "Size of: " , stringify ! ( FT_Outline_Funcs_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Outline_Funcs_>() , 8usize , concat
+                ! ( "Alignment of " , stringify ! ( FT_Outline_Funcs_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_Funcs_ ) ) . move_to as *
+                const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_Funcs_ ) ,
+                "::" , stringify ! ( move_to ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_Funcs_ ) ) . line_to as *
+                const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_Funcs_ ) ,
+                "::" , stringify ! ( line_to ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_Funcs_ ) ) . conic_to as *
+                const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_Funcs_ ) ,
+                "::" , stringify ! ( conic_to ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_Funcs_ ) ) . cubic_to as *
+                const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_Funcs_ ) ,
+                "::" , stringify ! ( cubic_to ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_Funcs_ ) ) . shift as * const
+                _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_Funcs_ ) ,
+                "::" , stringify ! ( shift ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Outline_Funcs_ ) ) . delta as * const
+                _ as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Outline_Funcs_ ) ,
+                "::" , stringify ! ( delta ) ));
 }
 impl Clone for FT_Outline_Funcs_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Outline_Funcs_ as FT_Outline_Funcs;
+pub type FT_Outline_Funcs = FT_Outline_Funcs_;
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum FT_Glyph_Format_ {
@@ -349,12 +574,9 @@ pub enum FT_Glyph_Format_ {
 }
 pub use self::FT_Glyph_Format_ as FT_Glyph_Format;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_RasterRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_RasterRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_Raster = *mut FT_RasterRec_;
 #[repr(C)]
@@ -366,13 +588,30 @@ pub struct FT_Span_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Span_() {
-    assert_eq!(::std::mem::size_of::<FT_Span_>() , 6usize);
-    assert_eq!(::std::mem::align_of::<FT_Span_>() , 2usize);
+    assert_eq!(::std::mem::size_of::<FT_Span_>() , 6usize , concat ! (
+               "Size of: " , stringify ! ( FT_Span_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Span_>() , 2usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Span_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Span_ ) ) . x as * const _ as usize }
+                , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Span_ ) , "::" ,
+                stringify ! ( x ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Span_ ) ) . len as * const _ as usize
+                } , 2usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Span_ ) , "::" ,
+                stringify ! ( len ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Span_ ) ) . coverage as * const _ as
+                usize } , 4usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Span_ ) , "::" ,
+                stringify ! ( coverage ) ));
 }
 impl Clone for FT_Span_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Span_ as FT_Span;
+pub type FT_Span = FT_Span_;
 pub type FT_SpanFunc =
     ::std::option::Option<unsafe extern "C" fn(y: ::std::os::raw::c_int,
                                                count: ::std::os::raw::c_int,
@@ -405,13 +644,60 @@ pub struct FT_Raster_Params_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Raster_Params_() {
-    assert_eq!(::std::mem::size_of::<FT_Raster_Params_>() , 96usize);
-    assert_eq!(::std::mem::align_of::<FT_Raster_Params_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Raster_Params_>() , 96usize , concat !
+               ( "Size of: " , stringify ! ( FT_Raster_Params_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Raster_Params_>() , 8usize , concat
+                ! ( "Alignment of " , stringify ! ( FT_Raster_Params_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . target as * const
+                _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( target ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . source as * const
+                _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( source ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . flags as * const
+                _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( flags ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . gray_spans as *
+                const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( gray_spans ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . black_spans as *
+                const _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( black_spans ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . bit_test as *
+                const _ as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( bit_test ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . bit_set as *
+                const _ as usize } , 48usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( bit_set ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . user as * const _
+                as usize } , 56usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( user ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Params_ ) ) . clip_box as *
+                const _ as usize } , 64usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Params_ ) ,
+                "::" , stringify ! ( clip_box ) ));
 }
 impl Clone for FT_Raster_Params_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Raster_Params_ as FT_Raster_Params;
+pub type FT_Raster_Params = FT_Raster_Params_;
 pub type FT_Raster_NewFunc =
     ::std::option::Option<unsafe extern "C" fn(memory:
                                                    *mut ::std::os::raw::c_void,
@@ -448,17 +734,49 @@ pub struct FT_Raster_Funcs_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Raster_Funcs_() {
-    assert_eq!(::std::mem::size_of::<FT_Raster_Funcs_>() , 48usize);
-    assert_eq!(::std::mem::align_of::<FT_Raster_Funcs_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Raster_Funcs_>() , 48usize , concat !
+               ( "Size of: " , stringify ! ( FT_Raster_Funcs_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Raster_Funcs_>() , 8usize , concat !
+                ( "Alignment of " , stringify ! ( FT_Raster_Funcs_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Funcs_ ) ) . glyph_format as *
+                const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Funcs_ ) ,
+                "::" , stringify ! ( glyph_format ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Funcs_ ) ) . raster_new as *
+                const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Funcs_ ) ,
+                "::" , stringify ! ( raster_new ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Funcs_ ) ) . raster_reset as *
+                const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Funcs_ ) ,
+                "::" , stringify ! ( raster_reset ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Funcs_ ) ) . raster_set_mode as
+                * const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Funcs_ ) ,
+                "::" , stringify ! ( raster_set_mode ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Funcs_ ) ) . raster_render as *
+                const _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Funcs_ ) ,
+                "::" , stringify ! ( raster_render ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Raster_Funcs_ ) ) . raster_done as *
+                const _ as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Raster_Funcs_ ) ,
+                "::" , stringify ! ( raster_done ) ));
 }
 impl Clone for FT_Raster_Funcs_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Raster_Funcs_ as FT_Raster_Funcs;
+pub type FT_Raster_Funcs = FT_Raster_Funcs_;
 pub type FT_Bool = ::std::os::raw::c_uchar;
 pub type FT_FWord = ::std::os::raw::c_short;
 pub type FT_UFWord = ::std::os::raw::c_ushort;
-pub type FT_Char = ::std::os::raw::c_char;
+pub type FT_Char = ::std::os::raw::c_schar;
 pub type FT_Byte = ::std::os::raw::c_uchar;
 pub type FT_Bytes = *const FT_Byte;
 pub type FT_Tag = FT_UInt32;
@@ -483,13 +801,25 @@ pub struct FT_UnitVector_ {
 }
 #[test]
 fn bindgen_test_layout_FT_UnitVector_() {
-    assert_eq!(::std::mem::size_of::<FT_UnitVector_>() , 4usize);
-    assert_eq!(::std::mem::align_of::<FT_UnitVector_>() , 2usize);
+    assert_eq!(::std::mem::size_of::<FT_UnitVector_>() , 4usize , concat ! (
+               "Size of: " , stringify ! ( FT_UnitVector_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_UnitVector_>() , 2usize , concat ! (
+                "Alignment of " , stringify ! ( FT_UnitVector_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_UnitVector_ ) ) . x as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_UnitVector_ ) , "::"
+                , stringify ! ( x ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_UnitVector_ ) ) . y as * const _ as
+                usize } , 2usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_UnitVector_ ) , "::"
+                , stringify ! ( y ) ));
 }
 impl Clone for FT_UnitVector_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_UnitVector_ as FT_UnitVector;
+pub type FT_UnitVector = FT_UnitVector_;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct FT_Matrix_ {
@@ -500,13 +830,35 @@ pub struct FT_Matrix_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Matrix_() {
-    assert_eq!(::std::mem::size_of::<FT_Matrix_>() , 32usize);
-    assert_eq!(::std::mem::align_of::<FT_Matrix_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Matrix_>() , 32usize , concat ! (
+               "Size of: " , stringify ! ( FT_Matrix_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Matrix_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Matrix_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Matrix_ ) ) . xx as * const _ as usize
+                } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Matrix_ ) , "::" ,
+                stringify ! ( xx ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Matrix_ ) ) . xy as * const _ as usize
+                } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Matrix_ ) , "::" ,
+                stringify ! ( xy ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Matrix_ ) ) . yx as * const _ as usize
+                } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Matrix_ ) , "::" ,
+                stringify ! ( yx ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Matrix_ ) ) . yy as * const _ as usize
+                } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Matrix_ ) , "::" ,
+                stringify ! ( yy ) ));
 }
 impl Clone for FT_Matrix_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Matrix_ as FT_Matrix;
+pub type FT_Matrix = FT_Matrix_;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct FT_Data_ {
@@ -515,13 +867,25 @@ pub struct FT_Data_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Data_() {
-    assert_eq!(::std::mem::size_of::<FT_Data_>() , 16usize);
-    assert_eq!(::std::mem::align_of::<FT_Data_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Data_>() , 16usize , concat ! (
+               "Size of: " , stringify ! ( FT_Data_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Data_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Data_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Data_ ) ) . pointer as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Data_ ) , "::" ,
+                stringify ! ( pointer ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Data_ ) ) . length as * const _ as
+                usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Data_ ) , "::" ,
+                stringify ! ( length ) ));
 }
 impl Clone for FT_Data_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Data_ as FT_Data;
+pub type FT_Data = FT_Data_;
 pub type FT_Generic_Finalizer =
     ::std::option::Option<unsafe extern "C" fn(object:
                                                    *mut ::std::os::raw::c_void)>;
@@ -533,13 +897,25 @@ pub struct FT_Generic_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Generic_() {
-    assert_eq!(::std::mem::size_of::<FT_Generic_>() , 16usize);
-    assert_eq!(::std::mem::align_of::<FT_Generic_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Generic_>() , 16usize , concat ! (
+               "Size of: " , stringify ! ( FT_Generic_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Generic_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Generic_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Generic_ ) ) . data as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Generic_ ) , "::" ,
+                stringify ! ( data ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Generic_ ) ) . finalizer as * const _
+                as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Generic_ ) , "::" ,
+                stringify ! ( finalizer ) ));
 }
 impl Clone for FT_Generic_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Generic_ as FT_Generic;
+pub type FT_Generic = FT_Generic_;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct FT_ListNodeRec_ {
@@ -549,8 +925,25 @@ pub struct FT_ListNodeRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_ListNodeRec_() {
-    assert_eq!(::std::mem::size_of::<FT_ListNodeRec_>() , 24usize);
-    assert_eq!(::std::mem::align_of::<FT_ListNodeRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_ListNodeRec_>() , 24usize , concat ! (
+               "Size of: " , stringify ! ( FT_ListNodeRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_ListNodeRec_>() , 8usize , concat !
+                ( "Alignment of " , stringify ! ( FT_ListNodeRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_ListNodeRec_ ) ) . prev as * const _
+                as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_ListNodeRec_ ) ,
+                "::" , stringify ! ( prev ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_ListNodeRec_ ) ) . next as * const _
+                as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_ListNodeRec_ ) ,
+                "::" , stringify ! ( next ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_ListNodeRec_ ) ) . data as * const _
+                as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_ListNodeRec_ ) ,
+                "::" , stringify ! ( data ) ));
 }
 impl Clone for FT_ListNodeRec_ {
     fn clone(&self) -> Self { *self }
@@ -564,233 +957,238 @@ pub struct FT_ListRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_ListRec_() {
-    assert_eq!(::std::mem::size_of::<FT_ListRec_>() , 16usize);
-    assert_eq!(::std::mem::align_of::<FT_ListRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_ListRec_>() , 16usize , concat ! (
+               "Size of: " , stringify ! ( FT_ListRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_ListRec_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_ListRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_ListRec_ ) ) . head as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_ListRec_ ) , "::" ,
+                stringify ! ( head ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_ListRec_ ) ) . tail as * const _ as
+                usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_ListRec_ ) , "::" ,
+                stringify ! ( tail ) ));
 }
 impl Clone for FT_ListRec_ {
     fn clone(&self) -> Self { *self }
 }
 pub type FT_List = *mut FT_ListRec_;
-pub use self::FT_ListNodeRec_ as FT_ListNodeRec;
-pub use self::FT_ListRec_ as FT_ListRec;
-pub const FT_Mod_Err_Base: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Autofit: _bindgen_ty_19 =
-    _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_BDF: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Bzip2: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Cache: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_CFF: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_CID: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Gzip: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_LZW: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_OTvalid: _bindgen_ty_19 =
-    _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_PCF: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_PFR: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_PSaux: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_PShinter: _bindgen_ty_19 =
-    _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_PSnames: _bindgen_ty_19 =
-    _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Raster: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_SFNT: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Smooth: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_TrueType: _bindgen_ty_19 =
-    _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Type1: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Type42: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Winfonts: _bindgen_ty_19 =
-    _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_GXvalid: _bindgen_ty_19 =
-    _bindgen_ty_19::FT_Mod_Err_Base;
-pub const FT_Mod_Err_Max: _bindgen_ty_19 = _bindgen_ty_19::FT_Mod_Err_Max;
+pub type FT_ListNodeRec = FT_ListNodeRec_;
+pub type FT_ListRec = FT_ListRec_;
+pub const FT_Mod_Err_Base: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Autofit: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_BDF: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Bzip2: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Cache: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_CFF: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_CID: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Gzip: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_LZW: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_OTvalid: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_PCF: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_PFR: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_PSaux: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_PShinter: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_PSnames: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Raster: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_SFNT: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Smooth: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_TrueType: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Type1: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Type42: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Winfonts: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_GXvalid: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Base;
+pub const FT_Mod_Err_Max: _bindgen_ty_1 = _bindgen_ty_1::FT_Mod_Err_Max;
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum _bindgen_ty_19 { FT_Mod_Err_Base = 0, FT_Mod_Err_Max = 1, }
-pub const FT_Err_Ok: _bindgen_ty_20 = _bindgen_ty_20::FT_Err_Ok;
-pub const FT_Err_Cannot_Open_Resource: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Cannot_Open_Resource;
-pub const FT_Err_Unknown_File_Format: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Unknown_File_Format;
-pub const FT_Err_Invalid_File_Format: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_File_Format;
-pub const FT_Err_Invalid_Version: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Version;
-pub const FT_Err_Lower_Module_Version: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Lower_Module_Version;
-pub const FT_Err_Invalid_Argument: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Argument;
-pub const FT_Err_Unimplemented_Feature: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Unimplemented_Feature;
-pub const FT_Err_Invalid_Table: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Table;
-pub const FT_Err_Invalid_Offset: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Offset;
-pub const FT_Err_Array_Too_Large: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Array_Too_Large;
-pub const FT_Err_Missing_Module: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Module;
-pub const FT_Err_Missing_Property: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Property;
-pub const FT_Err_Invalid_Glyph_Index: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Glyph_Index;
-pub const FT_Err_Invalid_Character_Code: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Character_Code;
-pub const FT_Err_Invalid_Glyph_Format: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Glyph_Format;
-pub const FT_Err_Cannot_Render_Glyph: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Cannot_Render_Glyph;
-pub const FT_Err_Invalid_Outline: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Outline;
-pub const FT_Err_Invalid_Composite: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Composite;
-pub const FT_Err_Too_Many_Hints: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Too_Many_Hints;
-pub const FT_Err_Invalid_Pixel_Size: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Pixel_Size;
-pub const FT_Err_Invalid_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Handle;
-pub const FT_Err_Invalid_Library_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Library_Handle;
-pub const FT_Err_Invalid_Driver_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Driver_Handle;
-pub const FT_Err_Invalid_Face_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Face_Handle;
-pub const FT_Err_Invalid_Size_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Size_Handle;
-pub const FT_Err_Invalid_Slot_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Slot_Handle;
-pub const FT_Err_Invalid_CharMap_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_CharMap_Handle;
-pub const FT_Err_Invalid_Cache_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Cache_Handle;
-pub const FT_Err_Invalid_Stream_Handle: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Stream_Handle;
-pub const FT_Err_Too_Many_Drivers: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Too_Many_Drivers;
-pub const FT_Err_Too_Many_Extensions: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Too_Many_Extensions;
-pub const FT_Err_Out_Of_Memory: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Out_Of_Memory;
-pub const FT_Err_Unlisted_Object: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Unlisted_Object;
-pub const FT_Err_Cannot_Open_Stream: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Cannot_Open_Stream;
-pub const FT_Err_Invalid_Stream_Seek: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Stream_Seek;
-pub const FT_Err_Invalid_Stream_Skip: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Stream_Skip;
-pub const FT_Err_Invalid_Stream_Read: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Stream_Read;
-pub const FT_Err_Invalid_Stream_Operation: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Stream_Operation;
-pub const FT_Err_Invalid_Frame_Operation: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Frame_Operation;
-pub const FT_Err_Nested_Frame_Access: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Nested_Frame_Access;
-pub const FT_Err_Invalid_Frame_Read: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Frame_Read;
-pub const FT_Err_Raster_Uninitialized: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Raster_Uninitialized;
-pub const FT_Err_Raster_Corrupted: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Raster_Corrupted;
-pub const FT_Err_Raster_Overflow: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Raster_Overflow;
-pub const FT_Err_Raster_Negative_Height: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Raster_Negative_Height;
-pub const FT_Err_Too_Many_Caches: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Too_Many_Caches;
-pub const FT_Err_Invalid_Opcode: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Opcode;
-pub const FT_Err_Too_Few_Arguments: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Too_Few_Arguments;
-pub const FT_Err_Stack_Overflow: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Stack_Overflow;
-pub const FT_Err_Code_Overflow: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Code_Overflow;
-pub const FT_Err_Bad_Argument: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Bad_Argument;
-pub const FT_Err_Divide_By_Zero: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Divide_By_Zero;
-pub const FT_Err_Invalid_Reference: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Reference;
-pub const FT_Err_Debug_OpCode: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Debug_OpCode;
-pub const FT_Err_ENDF_In_Exec_Stream: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_ENDF_In_Exec_Stream;
-pub const FT_Err_Nested_DEFS: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Nested_DEFS;
-pub const FT_Err_Invalid_CodeRange: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_CodeRange;
-pub const FT_Err_Execution_Too_Long: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Execution_Too_Long;
-pub const FT_Err_Too_Many_Function_Defs: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Too_Many_Function_Defs;
-pub const FT_Err_Too_Many_Instruction_Defs: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Too_Many_Instruction_Defs;
-pub const FT_Err_Table_Missing: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Table_Missing;
-pub const FT_Err_Horiz_Header_Missing: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Horiz_Header_Missing;
-pub const FT_Err_Locations_Missing: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Locations_Missing;
-pub const FT_Err_Name_Table_Missing: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Name_Table_Missing;
-pub const FT_Err_CMap_Table_Missing: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_CMap_Table_Missing;
-pub const FT_Err_Hmtx_Table_Missing: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Hmtx_Table_Missing;
-pub const FT_Err_Post_Table_Missing: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Post_Table_Missing;
-pub const FT_Err_Invalid_Horiz_Metrics: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Horiz_Metrics;
-pub const FT_Err_Invalid_CharMap_Format: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_CharMap_Format;
-pub const FT_Err_Invalid_PPem: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_PPem;
-pub const FT_Err_Invalid_Vert_Metrics: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Vert_Metrics;
-pub const FT_Err_Could_Not_Find_Context: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Could_Not_Find_Context;
-pub const FT_Err_Invalid_Post_Table_Format: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Post_Table_Format;
-pub const FT_Err_Invalid_Post_Table: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Invalid_Post_Table;
-pub const FT_Err_Syntax_Error: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Syntax_Error;
-pub const FT_Err_Stack_Underflow: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Stack_Underflow;
-pub const FT_Err_Ignore: _bindgen_ty_20 = _bindgen_ty_20::FT_Err_Ignore;
-pub const FT_Err_No_Unicode_Glyph_Name: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_No_Unicode_Glyph_Name;
-pub const FT_Err_Glyph_Too_Big: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Glyph_Too_Big;
-pub const FT_Err_Missing_Startfont_Field: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Startfont_Field;
-pub const FT_Err_Missing_Font_Field: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Font_Field;
-pub const FT_Err_Missing_Size_Field: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Size_Field;
-pub const FT_Err_Missing_Fontboundingbox_Field: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Fontboundingbox_Field;
-pub const FT_Err_Missing_Chars_Field: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Chars_Field;
-pub const FT_Err_Missing_Startchar_Field: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Startchar_Field;
-pub const FT_Err_Missing_Encoding_Field: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Encoding_Field;
-pub const FT_Err_Missing_Bbx_Field: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Missing_Bbx_Field;
-pub const FT_Err_Bbx_Too_Big: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Bbx_Too_Big;
-pub const FT_Err_Corrupted_Font_Header: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Corrupted_Font_Header;
-pub const FT_Err_Corrupted_Font_Glyphs: _bindgen_ty_20 =
-    _bindgen_ty_20::FT_Err_Corrupted_Font_Glyphs;
-pub const FT_Err_Max: _bindgen_ty_20 = _bindgen_ty_20::FT_Err_Max;
+pub enum _bindgen_ty_1 { FT_Mod_Err_Base = 0, FT_Mod_Err_Max = 1, }
+pub const FT_Err_Ok: _bindgen_ty_2 = _bindgen_ty_2::FT_Err_Ok;
+pub const FT_Err_Cannot_Open_Resource: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Cannot_Open_Resource;
+pub const FT_Err_Unknown_File_Format: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Unknown_File_Format;
+pub const FT_Err_Invalid_File_Format: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_File_Format;
+pub const FT_Err_Invalid_Version: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Version;
+pub const FT_Err_Lower_Module_Version: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Lower_Module_Version;
+pub const FT_Err_Invalid_Argument: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Argument;
+pub const FT_Err_Unimplemented_Feature: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Unimplemented_Feature;
+pub const FT_Err_Invalid_Table: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Table;
+pub const FT_Err_Invalid_Offset: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Offset;
+pub const FT_Err_Array_Too_Large: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Array_Too_Large;
+pub const FT_Err_Missing_Module: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Module;
+pub const FT_Err_Missing_Property: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Property;
+pub const FT_Err_Invalid_Glyph_Index: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Glyph_Index;
+pub const FT_Err_Invalid_Character_Code: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Character_Code;
+pub const FT_Err_Invalid_Glyph_Format: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Glyph_Format;
+pub const FT_Err_Cannot_Render_Glyph: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Cannot_Render_Glyph;
+pub const FT_Err_Invalid_Outline: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Outline;
+pub const FT_Err_Invalid_Composite: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Composite;
+pub const FT_Err_Too_Many_Hints: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Too_Many_Hints;
+pub const FT_Err_Invalid_Pixel_Size: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Pixel_Size;
+pub const FT_Err_Invalid_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Handle;
+pub const FT_Err_Invalid_Library_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Library_Handle;
+pub const FT_Err_Invalid_Driver_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Driver_Handle;
+pub const FT_Err_Invalid_Face_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Face_Handle;
+pub const FT_Err_Invalid_Size_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Size_Handle;
+pub const FT_Err_Invalid_Slot_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Slot_Handle;
+pub const FT_Err_Invalid_CharMap_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_CharMap_Handle;
+pub const FT_Err_Invalid_Cache_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Cache_Handle;
+pub const FT_Err_Invalid_Stream_Handle: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Stream_Handle;
+pub const FT_Err_Too_Many_Drivers: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Too_Many_Drivers;
+pub const FT_Err_Too_Many_Extensions: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Too_Many_Extensions;
+pub const FT_Err_Out_Of_Memory: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Out_Of_Memory;
+pub const FT_Err_Unlisted_Object: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Unlisted_Object;
+pub const FT_Err_Cannot_Open_Stream: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Cannot_Open_Stream;
+pub const FT_Err_Invalid_Stream_Seek: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Stream_Seek;
+pub const FT_Err_Invalid_Stream_Skip: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Stream_Skip;
+pub const FT_Err_Invalid_Stream_Read: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Stream_Read;
+pub const FT_Err_Invalid_Stream_Operation: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Stream_Operation;
+pub const FT_Err_Invalid_Frame_Operation: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Frame_Operation;
+pub const FT_Err_Nested_Frame_Access: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Nested_Frame_Access;
+pub const FT_Err_Invalid_Frame_Read: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Frame_Read;
+pub const FT_Err_Raster_Uninitialized: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Raster_Uninitialized;
+pub const FT_Err_Raster_Corrupted: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Raster_Corrupted;
+pub const FT_Err_Raster_Overflow: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Raster_Overflow;
+pub const FT_Err_Raster_Negative_Height: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Raster_Negative_Height;
+pub const FT_Err_Too_Many_Caches: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Too_Many_Caches;
+pub const FT_Err_Invalid_Opcode: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Opcode;
+pub const FT_Err_Too_Few_Arguments: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Too_Few_Arguments;
+pub const FT_Err_Stack_Overflow: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Stack_Overflow;
+pub const FT_Err_Code_Overflow: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Code_Overflow;
+pub const FT_Err_Bad_Argument: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Bad_Argument;
+pub const FT_Err_Divide_By_Zero: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Divide_By_Zero;
+pub const FT_Err_Invalid_Reference: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Reference;
+pub const FT_Err_Debug_OpCode: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Debug_OpCode;
+pub const FT_Err_ENDF_In_Exec_Stream: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_ENDF_In_Exec_Stream;
+pub const FT_Err_Nested_DEFS: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Nested_DEFS;
+pub const FT_Err_Invalid_CodeRange: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_CodeRange;
+pub const FT_Err_Execution_Too_Long: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Execution_Too_Long;
+pub const FT_Err_Too_Many_Function_Defs: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Too_Many_Function_Defs;
+pub const FT_Err_Too_Many_Instruction_Defs: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Too_Many_Instruction_Defs;
+pub const FT_Err_Table_Missing: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Table_Missing;
+pub const FT_Err_Horiz_Header_Missing: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Horiz_Header_Missing;
+pub const FT_Err_Locations_Missing: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Locations_Missing;
+pub const FT_Err_Name_Table_Missing: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Name_Table_Missing;
+pub const FT_Err_CMap_Table_Missing: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_CMap_Table_Missing;
+pub const FT_Err_Hmtx_Table_Missing: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Hmtx_Table_Missing;
+pub const FT_Err_Post_Table_Missing: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Post_Table_Missing;
+pub const FT_Err_Invalid_Horiz_Metrics: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Horiz_Metrics;
+pub const FT_Err_Invalid_CharMap_Format: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_CharMap_Format;
+pub const FT_Err_Invalid_PPem: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_PPem;
+pub const FT_Err_Invalid_Vert_Metrics: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Vert_Metrics;
+pub const FT_Err_Could_Not_Find_Context: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Could_Not_Find_Context;
+pub const FT_Err_Invalid_Post_Table_Format: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Post_Table_Format;
+pub const FT_Err_Invalid_Post_Table: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Invalid_Post_Table;
+pub const FT_Err_Syntax_Error: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Syntax_Error;
+pub const FT_Err_Stack_Underflow: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Stack_Underflow;
+pub const FT_Err_Ignore: _bindgen_ty_2 = _bindgen_ty_2::FT_Err_Ignore;
+pub const FT_Err_No_Unicode_Glyph_Name: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_No_Unicode_Glyph_Name;
+pub const FT_Err_Glyph_Too_Big: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Glyph_Too_Big;
+pub const FT_Err_Missing_Startfont_Field: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Startfont_Field;
+pub const FT_Err_Missing_Font_Field: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Font_Field;
+pub const FT_Err_Missing_Size_Field: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Size_Field;
+pub const FT_Err_Missing_Fontboundingbox_Field: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Fontboundingbox_Field;
+pub const FT_Err_Missing_Chars_Field: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Chars_Field;
+pub const FT_Err_Missing_Startchar_Field: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Startchar_Field;
+pub const FT_Err_Missing_Encoding_Field: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Encoding_Field;
+pub const FT_Err_Missing_Bbx_Field: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Missing_Bbx_Field;
+pub const FT_Err_Bbx_Too_Big: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Bbx_Too_Big;
+pub const FT_Err_Corrupted_Font_Header: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Corrupted_Font_Header;
+pub const FT_Err_Corrupted_Font_Glyphs: _bindgen_ty_2 =
+    _bindgen_ty_2::FT_Err_Corrupted_Font_Glyphs;
+pub const FT_Err_Max: _bindgen_ty_2 = _bindgen_ty_2::FT_Err_Max;
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum _bindgen_ty_20 {
+pub enum _bindgen_ty_2 {
     FT_Err_Ok = 0,
     FT_Err_Cannot_Open_Resource = 1,
     FT_Err_Unknown_File_Format = 2,
@@ -898,13 +1296,55 @@ pub struct FT_Glyph_Metrics_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Glyph_Metrics_() {
-    assert_eq!(::std::mem::size_of::<FT_Glyph_Metrics_>() , 64usize);
-    assert_eq!(::std::mem::align_of::<FT_Glyph_Metrics_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Glyph_Metrics_>() , 64usize , concat !
+               ( "Size of: " , stringify ! ( FT_Glyph_Metrics_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Glyph_Metrics_>() , 8usize , concat
+                ! ( "Alignment of " , stringify ! ( FT_Glyph_Metrics_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Glyph_Metrics_ ) ) . width as * const
+                _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Glyph_Metrics_ ) ,
+                "::" , stringify ! ( width ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Glyph_Metrics_ ) ) . height as * const
+                _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Glyph_Metrics_ ) ,
+                "::" , stringify ! ( height ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Glyph_Metrics_ ) ) . horiBearingX as *
+                const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Glyph_Metrics_ ) ,
+                "::" , stringify ! ( horiBearingX ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Glyph_Metrics_ ) ) . horiBearingY as *
+                const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Glyph_Metrics_ ) ,
+                "::" , stringify ! ( horiBearingY ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Glyph_Metrics_ ) ) . horiAdvance as *
+                const _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Glyph_Metrics_ ) ,
+                "::" , stringify ! ( horiAdvance ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Glyph_Metrics_ ) ) . vertBearingX as *
+                const _ as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Glyph_Metrics_ ) ,
+                "::" , stringify ! ( vertBearingX ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Glyph_Metrics_ ) ) . vertBearingY as *
+                const _ as usize } , 48usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Glyph_Metrics_ ) ,
+                "::" , stringify ! ( vertBearingY ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Glyph_Metrics_ ) ) . vertAdvance as *
+                const _ as usize } , 56usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Glyph_Metrics_ ) ,
+                "::" , stringify ! ( vertAdvance ) ));
 }
 impl Clone for FT_Glyph_Metrics_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Glyph_Metrics_ as FT_Glyph_Metrics;
+pub type FT_Glyph_Metrics = FT_Glyph_Metrics_;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct FT_Bitmap_Size_ {
@@ -916,47 +1356,62 @@ pub struct FT_Bitmap_Size_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Bitmap_Size_() {
-    assert_eq!(::std::mem::size_of::<FT_Bitmap_Size_>() , 32usize);
-    assert_eq!(::std::mem::align_of::<FT_Bitmap_Size_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Bitmap_Size_>() , 32usize , concat ! (
+               "Size of: " , stringify ! ( FT_Bitmap_Size_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Bitmap_Size_>() , 8usize , concat !
+                ( "Alignment of " , stringify ! ( FT_Bitmap_Size_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_Size_ ) ) . height as * const _
+                as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_Size_ ) ,
+                "::" , stringify ! ( height ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_Size_ ) ) . width as * const _
+                as usize } , 2usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_Size_ ) ,
+                "::" , stringify ! ( width ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_Size_ ) ) . size as * const _
+                as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_Size_ ) ,
+                "::" , stringify ! ( size ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_Size_ ) ) . x_ppem as * const _
+                as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_Size_ ) ,
+                "::" , stringify ! ( x_ppem ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Bitmap_Size_ ) ) . y_ppem as * const _
+                as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Bitmap_Size_ ) ,
+                "::" , stringify ! ( y_ppem ) ));
 }
 impl Clone for FT_Bitmap_Size_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Bitmap_Size_ as FT_Bitmap_Size;
+pub type FT_Bitmap_Size = FT_Bitmap_Size_;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_LibraryRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_LibraryRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_Library = *mut FT_LibraryRec_;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_ModuleRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_ModuleRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_Module = *mut FT_ModuleRec_;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_DriverRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_DriverRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_Driver = *mut FT_DriverRec_;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_RendererRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_RendererRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_Renderer = *mut FT_RendererRec_;
 #[repr(C)]
@@ -996,8 +1451,165 @@ pub struct FT_FaceRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_FaceRec_() {
-    assert_eq!(::std::mem::size_of::<FT_FaceRec_>() , 248usize);
-    assert_eq!(::std::mem::align_of::<FT_FaceRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_FaceRec_>() , 248usize , concat ! (
+               "Size of: " , stringify ! ( FT_FaceRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_FaceRec_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_FaceRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . num_faces as * const _
+                as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( num_faces ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . face_index as * const _
+                as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( face_index ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . face_flags as * const _
+                as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( face_flags ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . style_flags as * const
+                _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( style_flags ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . num_glyphs as * const _
+                as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( num_glyphs ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . family_name as * const
+                _ as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( family_name ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . style_name as * const _
+                as usize } , 48usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( style_name ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . num_fixed_sizes as *
+                const _ as usize } , 56usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( num_fixed_sizes ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . available_sizes as *
+                const _ as usize } , 64usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( available_sizes ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . num_charmaps as * const
+                _ as usize } , 72usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( num_charmaps ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . charmaps as * const _
+                as usize } , 80usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( charmaps ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . generic as * const _ as
+                usize } , 88usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( generic ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . bbox as * const _ as
+                usize } , 104usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( bbox ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . units_per_EM as * const
+                _ as usize } , 136usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( units_per_EM ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . ascender as * const _
+                as usize } , 138usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( ascender ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . descender as * const _
+                as usize } , 140usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( descender ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . height as * const _ as
+                usize } , 142usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( height ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . max_advance_width as *
+                const _ as usize } , 144usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( max_advance_width ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . max_advance_height as *
+                const _ as usize } , 146usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( max_advance_height ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . underline_position as *
+                const _ as usize } , 148usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( underline_position ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . underline_thickness as
+                * const _ as usize } , 150usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( underline_thickness ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . glyph as * const _ as
+                usize } , 152usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( glyph ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . size as * const _ as
+                usize } , 160usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( size ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . charmap as * const _ as
+                usize } , 168usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( charmap ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . driver as * const _ as
+                usize } , 176usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( driver ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . memory as * const _ as
+                usize } , 184usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( memory ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . stream as * const _ as
+                usize } , 192usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( stream ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . sizes_list as * const _
+                as usize } , 200usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( sizes_list ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . autohint as * const _
+                as usize } , 216usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( autohint ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . extensions as * const _
+                as usize } , 232usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( extensions ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_FaceRec_ ) ) . internal as * const _
+                as usize } , 240usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_FaceRec_ ) , "::" ,
+                stringify ! ( internal ) ));
 }
 impl Clone for FT_FaceRec_ {
     fn clone(&self) -> Self { *self }
@@ -1013,8 +1625,30 @@ pub struct FT_SizeRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_SizeRec_() {
-    assert_eq!(::std::mem::size_of::<FT_SizeRec_>() , 88usize);
-    assert_eq!(::std::mem::align_of::<FT_SizeRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_SizeRec_>() , 88usize , concat ! (
+               "Size of: " , stringify ! ( FT_SizeRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_SizeRec_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_SizeRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_SizeRec_ ) ) . face as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_SizeRec_ ) , "::" ,
+                stringify ! ( face ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_SizeRec_ ) ) . generic as * const _ as
+                usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_SizeRec_ ) , "::" ,
+                stringify ! ( generic ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_SizeRec_ ) ) . metrics as * const _ as
+                usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_SizeRec_ ) , "::" ,
+                stringify ! ( metrics ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_SizeRec_ ) ) . internal as * const _
+                as usize } , 80usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_SizeRec_ ) , "::" ,
+                stringify ! ( internal ) ));
 }
 impl Clone for FT_SizeRec_ {
     fn clone(&self) -> Self { *self }
@@ -1048,8 +1682,120 @@ pub struct FT_GlyphSlotRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_GlyphSlotRec_() {
-    assert_eq!(::std::mem::size_of::<FT_GlyphSlotRec_>() , 304usize);
-    assert_eq!(::std::mem::align_of::<FT_GlyphSlotRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_GlyphSlotRec_>() , 304usize , concat !
+               ( "Size of: " , stringify ! ( FT_GlyphSlotRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_GlyphSlotRec_>() , 8usize , concat !
+                ( "Alignment of " , stringify ! ( FT_GlyphSlotRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . library as * const
+                _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( library ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . face as * const _
+                as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( face ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . next as * const _
+                as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( next ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . reserved as *
+                const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( reserved ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . generic as * const
+                _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( generic ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . metrics as * const
+                _ as usize } , 48usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( metrics ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . linearHoriAdvance
+                as * const _ as usize } , 112usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( linearHoriAdvance ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . linearVertAdvance
+                as * const _ as usize } , 120usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( linearVertAdvance ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . advance as * const
+                _ as usize } , 128usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( advance ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . format as * const
+                _ as usize } , 144usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( format ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . bitmap as * const
+                _ as usize } , 152usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( bitmap ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . bitmap_left as *
+                const _ as usize } , 192usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( bitmap_left ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . bitmap_top as *
+                const _ as usize } , 196usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( bitmap_top ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . outline as * const
+                _ as usize } , 200usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( outline ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . num_subglyphs as *
+                const _ as usize } , 240usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( num_subglyphs ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . subglyphs as *
+                const _ as usize } , 248usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( subglyphs ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . control_data as *
+                const _ as usize } , 256usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( control_data ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . control_len as *
+                const _ as usize } , 264usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( control_len ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . lsb_delta as *
+                const _ as usize } , 272usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( lsb_delta ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . rsb_delta as *
+                const _ as usize } , 280usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( rsb_delta ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . other as * const _
+                as usize } , 288usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( other ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_GlyphSlotRec_ ) ) . internal as *
+                const _ as usize } , 296usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_GlyphSlotRec_ ) ,
+                "::" , stringify ! ( internal ) ));
 }
 impl Clone for FT_GlyphSlotRec_ {
     fn clone(&self) -> Self { *self }
@@ -1065,8 +1811,30 @@ pub struct FT_CharMapRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_CharMapRec_() {
-    assert_eq!(::std::mem::size_of::<FT_CharMapRec_>() , 16usize);
-    assert_eq!(::std::mem::align_of::<FT_CharMapRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_CharMapRec_>() , 16usize , concat ! (
+               "Size of: " , stringify ! ( FT_CharMapRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_CharMapRec_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_CharMapRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_CharMapRec_ ) ) . face as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_CharMapRec_ ) , "::"
+                , stringify ! ( face ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_CharMapRec_ ) ) . encoding as * const
+                _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_CharMapRec_ ) , "::"
+                , stringify ! ( encoding ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_CharMapRec_ ) ) . platform_id as *
+                const _ as usize } , 12usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_CharMapRec_ ) , "::"
+                , stringify ! ( platform_id ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_CharMapRec_ ) ) . encoding_id as *
+                const _ as usize } , 14usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_CharMapRec_ ) , "::"
+                , stringify ! ( encoding_id ) ));
 }
 impl Clone for FT_CharMapRec_ {
     fn clone(&self) -> Self { *self }
@@ -1101,24 +1869,18 @@ pub enum FT_Encoding_ {
     FT_ENCODING_APPLE_ROMAN = 1634889070,
 }
 pub use self::FT_Encoding_ as FT_Encoding;
-pub use self::FT_CharMapRec_ as FT_CharMapRec;
+pub type FT_CharMapRec = FT_CharMapRec_;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_Face_InternalRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_Face_InternalRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_Face_Internal = *mut FT_Face_InternalRec_;
-pub use self::FT_FaceRec_ as FT_FaceRec;
+pub type FT_FaceRec = FT_FaceRec_;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_Size_InternalRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_Size_InternalRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_Size_Internal = *mut FT_Size_InternalRec_;
 #[repr(C)]
@@ -1135,33 +1897,69 @@ pub struct FT_Size_Metrics_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Size_Metrics_() {
-    assert_eq!(::std::mem::size_of::<FT_Size_Metrics_>() , 56usize);
-    assert_eq!(::std::mem::align_of::<FT_Size_Metrics_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Size_Metrics_>() , 56usize , concat !
+               ( "Size of: " , stringify ! ( FT_Size_Metrics_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Size_Metrics_>() , 8usize , concat !
+                ( "Alignment of " , stringify ! ( FT_Size_Metrics_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_Metrics_ ) ) . x_ppem as * const
+                _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_Metrics_ ) ,
+                "::" , stringify ! ( x_ppem ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_Metrics_ ) ) . y_ppem as * const
+                _ as usize } , 2usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_Metrics_ ) ,
+                "::" , stringify ! ( y_ppem ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_Metrics_ ) ) . x_scale as * const
+                _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_Metrics_ ) ,
+                "::" , stringify ! ( x_scale ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_Metrics_ ) ) . y_scale as * const
+                _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_Metrics_ ) ,
+                "::" , stringify ! ( y_scale ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_Metrics_ ) ) . ascender as *
+                const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_Metrics_ ) ,
+                "::" , stringify ! ( ascender ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_Metrics_ ) ) . descender as *
+                const _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_Metrics_ ) ,
+                "::" , stringify ! ( descender ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_Metrics_ ) ) . height as * const
+                _ as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_Metrics_ ) ,
+                "::" , stringify ! ( height ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_Metrics_ ) ) . max_advance as *
+                const _ as usize } , 48usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_Metrics_ ) ,
+                "::" , stringify ! ( max_advance ) ));
 }
 impl Clone for FT_Size_Metrics_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Size_Metrics_ as FT_Size_Metrics;
-pub use self::FT_SizeRec_ as FT_SizeRec;
+pub type FT_Size_Metrics = FT_Size_Metrics_;
+pub type FT_SizeRec = FT_SizeRec_;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_SubGlyphRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_SubGlyphRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_SubGlyph = *mut FT_SubGlyphRec_;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct FT_Slot_InternalRec_ {
-    pub _address: u8,
-}
-impl Clone for FT_Slot_InternalRec_ {
-    fn clone(&self) -> Self { *self }
+    _unused: [u8; 0],
 }
 pub type FT_Slot_Internal = *mut FT_Slot_InternalRec_;
-pub use self::FT_GlyphSlotRec_ as FT_GlyphSlotRec;
+pub type FT_GlyphSlotRec = FT_GlyphSlotRec_;
 extern "C" {
     pub fn FT_Init_FreeType(alibrary: *mut FT_Library) -> FT_Error;
 }
@@ -1176,13 +1974,25 @@ pub struct FT_Parameter_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Parameter_() {
-    assert_eq!(::std::mem::size_of::<FT_Parameter_>() , 16usize);
-    assert_eq!(::std::mem::align_of::<FT_Parameter_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Parameter_>() , 16usize , concat ! (
+               "Size of: " , stringify ! ( FT_Parameter_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Parameter_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Parameter_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Parameter_ ) ) . tag as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Parameter_ ) , "::"
+                , stringify ! ( tag ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Parameter_ ) ) . data as * const _ as
+                usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Parameter_ ) , "::"
+                , stringify ! ( data ) ));
 }
 impl Clone for FT_Parameter_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Parameter_ as FT_Parameter;
+pub type FT_Parameter = FT_Parameter_;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct FT_Open_Args_ {
@@ -1197,13 +2007,55 @@ pub struct FT_Open_Args_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Open_Args_() {
-    assert_eq!(::std::mem::size_of::<FT_Open_Args_>() , 64usize);
-    assert_eq!(::std::mem::align_of::<FT_Open_Args_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Open_Args_>() , 64usize , concat ! (
+               "Size of: " , stringify ! ( FT_Open_Args_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Open_Args_>() , 8usize , concat ! (
+                "Alignment of " , stringify ! ( FT_Open_Args_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Open_Args_ ) ) . flags as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Open_Args_ ) , "::"
+                , stringify ! ( flags ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Open_Args_ ) ) . memory_base as *
+                const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Open_Args_ ) , "::"
+                , stringify ! ( memory_base ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Open_Args_ ) ) . memory_size as *
+                const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Open_Args_ ) , "::"
+                , stringify ! ( memory_size ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Open_Args_ ) ) . pathname as * const _
+                as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Open_Args_ ) , "::"
+                , stringify ! ( pathname ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Open_Args_ ) ) . stream as * const _
+                as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Open_Args_ ) , "::"
+                , stringify ! ( stream ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Open_Args_ ) ) . driver as * const _
+                as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Open_Args_ ) , "::"
+                , stringify ! ( driver ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Open_Args_ ) ) . num_params as * const
+                _ as usize } , 48usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Open_Args_ ) , "::"
+                , stringify ! ( num_params ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Open_Args_ ) ) . params as * const _
+                as usize } , 56usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Open_Args_ ) , "::"
+                , stringify ! ( params ) ));
 }
 impl Clone for FT_Open_Args_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Open_Args_ as FT_Open_Args;
+pub type FT_Open_Args = FT_Open_Args_;
 extern "C" {
     pub fn FT_New_Face(library: FT_Library,
                        filepathname: *const ::std::os::raw::c_char,
@@ -1258,13 +2110,41 @@ pub struct FT_Size_RequestRec_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Size_RequestRec_() {
-    assert_eq!(::std::mem::size_of::<FT_Size_RequestRec_>() , 32usize);
-    assert_eq!(::std::mem::align_of::<FT_Size_RequestRec_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Size_RequestRec_>() , 32usize , concat
+               ! ( "Size of: " , stringify ! ( FT_Size_RequestRec_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Size_RequestRec_>() , 8usize ,
+                concat ! (
+                "Alignment of " , stringify ! ( FT_Size_RequestRec_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_RequestRec_ ) ) . type_ as *
+                const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_RequestRec_ ) ,
+                "::" , stringify ! ( type_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_RequestRec_ ) ) . width as *
+                const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_RequestRec_ ) ,
+                "::" , stringify ! ( width ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_RequestRec_ ) ) . height as *
+                const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_RequestRec_ ) ,
+                "::" , stringify ! ( height ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_RequestRec_ ) ) . horiResolution
+                as * const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_RequestRec_ ) ,
+                "::" , stringify ! ( horiResolution ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Size_RequestRec_ ) ) . vertResolution
+                as * const _ as usize } , 28usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Size_RequestRec_ ) ,
+                "::" , stringify ! ( vertResolution ) ));
 }
 impl Clone for FT_Size_RequestRec_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Size_RequestRec_ as FT_Size_RequestRec;
+pub type FT_Size_RequestRec = FT_Size_RequestRec_;
 pub type FT_Size_Request = *mut FT_Size_RequestRec_;
 extern "C" {
     pub fn FT_Request_Size(face: FT_Face, req: FT_Size_Request) -> FT_Error;
@@ -1475,14 +2355,14 @@ extern "C" {
 pub type FT_Module_Interface = FT_Pointer;
 pub type FT_Module_Constructor =
     ::std::option::Option<unsafe extern "C" fn(module: FT_Module)
-                              -> ::std::os::raw::c_int>;
+                              -> FT_Error>;
 pub type FT_Module_Destructor =
     ::std::option::Option<unsafe extern "C" fn(module: FT_Module)>;
 pub type FT_Module_Requester =
     ::std::option::Option<unsafe extern "C" fn(module: FT_Module,
                                                name:
                                                    *const ::std::os::raw::c_char)
-                              -> *mut ::std::os::raw::c_void>;
+                              -> FT_Module_Interface>;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct FT_Module_Class_ {
@@ -1498,13 +2378,60 @@ pub struct FT_Module_Class_ {
 }
 #[test]
 fn bindgen_test_layout_FT_Module_Class_() {
-    assert_eq!(::std::mem::size_of::<FT_Module_Class_>() , 72usize);
-    assert_eq!(::std::mem::align_of::<FT_Module_Class_>() , 8usize);
+    assert_eq!(::std::mem::size_of::<FT_Module_Class_>() , 72usize , concat !
+               ( "Size of: " , stringify ! ( FT_Module_Class_ ) ));
+    assert_eq! (::std::mem::align_of::<FT_Module_Class_>() , 8usize , concat !
+                ( "Alignment of " , stringify ! ( FT_Module_Class_ ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . module_flags as *
+                const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( module_flags ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . module_size as *
+                const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( module_size ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . module_name as *
+                const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( module_name ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . module_version as
+                * const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( module_version ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . module_requires as
+                * const _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( module_requires ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . module_interface
+                as * const _ as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( module_interface ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . module_init as *
+                const _ as usize } , 48usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( module_init ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . module_done as *
+                const _ as usize } , 56usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( module_done ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const FT_Module_Class_ ) ) . get_interface as *
+                const _ as usize } , 64usize , concat ! (
+                "Alignment of field: " , stringify ! ( FT_Module_Class_ ) ,
+                "::" , stringify ! ( get_interface ) ));
 }
 impl Clone for FT_Module_Class_ {
     fn clone(&self) -> Self { *self }
 }
-pub use self::FT_Module_Class_ as FT_Module_Class;
+pub type FT_Module_Class = FT_Module_Class_;
 extern "C" {
     pub fn FT_Add_Module(library: FT_Library, clazz: *const FT_Module_Class)
      -> FT_Error;
@@ -1559,4 +2486,83 @@ pub use self::FT_TrueTypeEngineType_ as FT_TrueTypeEngineType;
 extern "C" {
     pub fn FT_Get_TrueType_Engine_Type(library: FT_Library)
      -> FT_TrueTypeEngineType;
+}
+extern "C" {
+    pub fn FT_Outline_Decompose(outline: *mut FT_Outline,
+                                func_interface: *const FT_Outline_Funcs,
+                                user: *mut ::std::os::raw::c_void)
+     -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_New(library: FT_Library, numPoints: FT_UInt,
+                          numContours: FT_Int, anoutline: *mut FT_Outline)
+     -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_New_Internal(memory: FT_Memory, numPoints: FT_UInt,
+                                   numContours: FT_Int,
+                                   anoutline: *mut FT_Outline) -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_Done(library: FT_Library, outline: *mut FT_Outline)
+     -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_Done_Internal(memory: FT_Memory,
+                                    outline: *mut FT_Outline) -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_Check(outline: *mut FT_Outline) -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_Get_CBox(outline: *const FT_Outline,
+                               acbox: *mut FT_BBox);
+}
+extern "C" {
+    pub fn FT_Outline_Translate(outline: *const FT_Outline, xOffset: FT_Pos,
+                                yOffset: FT_Pos);
+}
+extern "C" {
+    pub fn FT_Outline_Copy(source: *const FT_Outline, target: *mut FT_Outline)
+     -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_Transform(outline: *const FT_Outline,
+                                matrix: *const FT_Matrix);
+}
+extern "C" {
+    pub fn FT_Outline_Embolden(outline: *mut FT_Outline, strength: FT_Pos)
+     -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_EmboldenXY(outline: *mut FT_Outline, xstrength: FT_Pos,
+                                 ystrength: FT_Pos) -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_Reverse(outline: *mut FT_Outline);
+}
+extern "C" {
+    pub fn FT_Outline_Get_Bitmap(library: FT_Library,
+                                 outline: *mut FT_Outline,
+                                 abitmap: *const FT_Bitmap) -> FT_Error;
+}
+extern "C" {
+    pub fn FT_Outline_Render(library: FT_Library, outline: *mut FT_Outline,
+                             params: *mut FT_Raster_Params) -> FT_Error;
+}
+pub const FT_Orientation__FT_ORIENTATION_FILL_RIGHT: FT_Orientation_ =
+    FT_Orientation_::FT_ORIENTATION_TRUETYPE;
+pub const FT_Orientation__FT_ORIENTATION_FILL_LEFT: FT_Orientation_ =
+    FT_Orientation_::FT_ORIENTATION_POSTSCRIPT;
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum FT_Orientation_ {
+    FT_ORIENTATION_TRUETYPE = 0,
+    FT_ORIENTATION_POSTSCRIPT = 1,
+    FT_ORIENTATION_NONE = 2,
+}
+pub use self::FT_Orientation_ as FT_Orientation;
+extern "C" {
+    pub fn FT_Outline_Get_Orientation(outline: *mut FT_Outline)
+     -> FT_Orientation;
 }
