@@ -137,6 +137,19 @@ var tests = [
     copyVal: "<example.com/\xe9>\xe9",
     copyExpected: "http://example.com/\xe9"
   },
+  { // Note: it seems BrowserTestUtils.loadURI fails for unicode domains
+    loadURL: "http://sub2.xn--lt-uia.mochi.test:8888/foo",
+    expectedURL: toUnicode("sub2.ält.mochi.test:8888/foo"),
+    copyExpected: toUnicode("http://sub2.ält.mochi.test:8888/foo")
+  },
+  {
+    copyVal: toUnicode("s<ub2.ält.mochi.test:8888/f>oo"),
+    copyExpected: toUnicode("ub2.ält.mochi.test:8888/f")
+  },
+  {
+    copyVal: toUnicode("<sub2.ält.mochi.test:8888/f>oo"),
+    copyExpected: toUnicode("http://sub2.ält.mochi.test:8888/f")
+  },
 
   {
     loadURL: "http://example.com/?%C3%B7%C3%B7",
@@ -211,6 +224,7 @@ function runTest(testCase, cb) {
   }
 
   if (testCase.loadURL) {
+    info(`Loading : ${testCase.loadURL}\n`);
     loadURL(testCase.loadURL, doCheck);
   } else {
     if (testCase.setURL)

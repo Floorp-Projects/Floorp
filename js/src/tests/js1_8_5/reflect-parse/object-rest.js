@@ -13,18 +13,14 @@ function assertDestrBinding(src, pattern) {
 }
 
 function test() {
-    // Target expression must be a simple assignment target or a nested pattern
-    // in object assignment patterns.
+    // Target expression must be a simple assignment target in object assignment patterns.
     assertDestrAssign("{...x}", objPatt([spread(ident("x"))]));
     assertDestrAssign("{...(x)}", objPatt([spread(ident("x"))]));
     assertDestrAssign("{...obj.p}", objPatt([spread(dotExpr(ident("obj"), ident("p")))]));
-    assertDestrAssign("{...{}}", objPatt([spread(objPatt([]))]));
-    assertDestrAssign("{...[]}", objPatt([spread(arrPatt([]))]));
+    assertDestrAssign("{...(obj.p)}", objPatt([spread(dotExpr(ident("obj"), ident("p")))]));
 
-    // Object binding patterns only allow binding identifiers or nested patterns.
+    // Object binding patterns only allow binding identifiers.
     assertDestrBinding("{...x}", objPatt([spread(ident("x"))]));
-    assertDestrBinding("{...{}}", objPatt([spread(objPatt([]))]));
-    assertDestrBinding("{...[]}", objPatt([spread(arrPatt([]))]));
 
     // The rest-property can be preceded by other properties.
     for (var assertDestr of [assertDestrAssign, assertDestrBinding]) {

@@ -33,7 +33,7 @@ var tests = [
   },
   {
     name: "IDN subdomain",
-    location: "http://sub1." + idnDomain + "/",
+    location: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp/",
     effectiveHost: "sub1." + idnDomain
   },
   {

@@ -367,6 +367,12 @@ NullPrincipalURI::GetDisplayHost(nsACString &aUnicodeHost)
   return GetHost(aUnicodeHost);
 }
 
+NS_IMETHODIMP
+NullPrincipalURI::GetDisplayPrePath(nsACString &aPrePath)
+{
+    return GetPrePath(aPrePath);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIIPCSerializableURI
 

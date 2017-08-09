@@ -7,10 +7,17 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'General')
 
+EXPORTS.brotli += [
+    'include/brotli/decode.h',
+    'include/brotli/encode.h',
+    'include/brotli/port.h',
+    'include/brotli/types.h',
+]
+
 UNIFIED_SOURCES += [
+    'common/dictionary.c',
     'dec/bit_reader.c',
     'dec/decode.c',
-    'dec/dictionary.c',
     'dec/huffman.c',
     'dec/state.c',
 ]
@@ -27,18 +34,27 @@ HostProgram('bro')
 HOST_SOURCES += UNIFIED_SOURCES
 
 HOST_SOURCES += [
-    'enc/backward_references.cc',
-    'enc/block_splitter.cc',
-    'enc/brotli_bit_stream.cc',
-    'enc/compress_fragment.cc',
-    'enc/compress_fragment_two_pass.cc',
-    'enc/encode.cc',
-    'enc/entropy_encode.cc',
-    'enc/histogram.cc',
-    'enc/literal_cost.cc',
-    'enc/metablock.cc',
-    'enc/static_dict.cc',
-    'enc/streams.cc',
-    'enc/utf8_util.cc',
-    'tools/bro.cc',
+    'enc/backward_references.c',
+    'enc/backward_references_hq.c',
+    'enc/bit_cost.c',
+    'enc/block_splitter.c',
+    'enc/brotli_bit_stream.c',
+    'enc/cluster.c',
+    'enc/compress_fragment.c',
+    'enc/compress_fragment_two_pass.c',
+    'enc/dictionary_hash.c',
+    'enc/encode.c',
+    'enc/entropy_encode.c',
+    'enc/histogram.c',
+    'enc/literal_cost.c',
+    'enc/memory.c',
+    'enc/metablock.c',
+    'enc/static_dict.c',
+    'enc/utf8_util.c',
+    'tools/bro.c',
 ]
+
+if CONFIG['OS_TARGET'] != 'WINNT':
+    HOST_OS_LIBS += [
+        'm' # for log2() function used by Brotli encoder
+    ]

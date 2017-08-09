@@ -1676,8 +1676,8 @@ Search.prototype = {
     // pass the pretty, unescaped URL as the match comment, since it's likely
     // to be displayed to the user, and in any case the front-end should not
     // rely on it being canonical.
-    let escapedURL = uri.spec;
-    let displayURL = textURIService.unEscapeURIForUI("UTF-8", uri.spec);
+    let escapedURL = uri.displaySpec;
+    let displayURL = textURIService.unEscapeURIForUI("UTF-8", uri.displaySpec);
 
     let value = PlacesUtils.mozActionURI("visiturl", {
       url: escapedURL,
