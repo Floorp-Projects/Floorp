@@ -37,6 +37,14 @@ interface nsIAtom : nsISupports
   size_t SizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 
 %{C++
+  // The kind of atom we have, in order to be able to devirtualize hot stuff
+  // looking at mKind.
+  enum class AtomKind : uint8_t {
+    DynamicAtom = 0,
+    StaticAtom = 1,
+    HTML5Atom = 2,
+  };
+
   // note these are NOT virtual so they won't muck with the vtable!
   inline bool Equals(char16ptr_t aString, uint32_t aLength) const
   {
@@ -48,8 +56,25 @@ interface nsIAtom : nsISupports
     return Equals(aString.BeginReading(), aString.Length());
   }
 
+  inline void SetKind(AtomKind aKind) {
+    mKind = static_cast<uint32_t>(aKind);
+    MOZ_ASSERT(Kind() == aKind);
+  }
+
+  inline AtomKind Kind() const {
+    return static_cast<AtomKind>(mKind);
+  }
+
+  inline bool IsDynamicAtom() const {
+    return Kind() == AtomKind::DynamicAtom;
+  }
+
+  inline bool IsHTML5Atom() const {
+    return Kind() == AtomKind::HTML5Atom;
+  }
+
   inline bool IsStaticAtom() const {
-    return mIsStatic;
+    return Kind() == AtomKind::StaticAtom;
   }
 
   inline char16ptr_t GetUTF16String() const {
@@ -80,8 +105,8 @@ interface nsIAtom : nsISupports
   }
 
 protected:
-  uint32_t mLength:31;
-  uint32_t mIsStatic:1;
+  uint32_t mLength: 30;
+  uint32_t mKind: 2; // nsIAtom::AtomKind
   uint32_t mHash;
   /**
    * WARNING! There is an invisible constraint on |mString|: the chars it
