@@ -37,54 +37,16 @@ struct AudioTimelineEvent final
     Cancel
   };
 
-  AudioTimelineEvent(Type aType, double aTime, float aValue, double aTimeConstant = 0.0,
-                     double aDuration = 0.0, const float* aCurve = nullptr,
-                     uint32_t aCurveLength = 0)
-    : mType(aType)
-    , mCurve(nullptr)
-    , mTimeConstant(aTimeConstant)
-    , mDuration(aDuration)
-#ifdef DEBUG
-    , mTimeIsInTicks(false)
-#endif
-  {
-    mTime = aTime;
-    if (aType == AudioTimelineEvent::SetValueCurve) {
-      SetCurveParams(aCurve, aCurveLength);
-    } else {
-      mValue = aValue;
-    }
-  }
-
-  explicit AudioTimelineEvent(MediaStream* aStream)
-    : mType(Stream)
-    , mCurve(nullptr)
-    , mStream(aStream)
-    , mTimeConstant(0.0)
-    , mDuration(0.0)
-#ifdef DEBUG
-    , mTimeIsInTicks(false)
-#endif
-  {
-  }
-
-  AudioTimelineEvent(const AudioTimelineEvent& rhs)
-  {
-    PodCopy(this, &rhs, 1);
-
-    if (rhs.mType == AudioTimelineEvent::SetValueCurve) {
-      SetCurveParams(rhs.mCurve, rhs.mCurveLength);
-    } else if (rhs.mType == AudioTimelineEvent::Stream) {
-      new (&mStream) decltype(mStream)(rhs.mStream);
-    }
-  }
-
-  ~AudioTimelineEvent()
-  {
-    if (mType == AudioTimelineEvent::SetValueCurve) {
-      delete[] mCurve;
-    }
-  }
+  AudioTimelineEvent(Type aType,
+                     double aTime,
+                     float aValue,
+                     double aTimeConstant = 0.0,
+                     double aDuration = 0.0,
+                     const float* aCurve = nullptr,
+                     uint32_t aCurveLength = 0);
+  explicit AudioTimelineEvent(MediaStream* aStream);
+  AudioTimelineEvent(const AudioTimelineEvent& rhs);
+  ~AudioTimelineEvent();
 
   template <class TimeType>
   TimeType Time() const;

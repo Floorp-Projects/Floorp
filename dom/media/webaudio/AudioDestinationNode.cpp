@@ -5,11 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioDestinationNode.h"
+#include "AudioContext.h"
 #include "AlignmentUtils.h"
 #include "AudioContext.h"
 #include "mozilla/dom/AudioDestinationNodeBinding.h"
 #include "mozilla/dom/OfflineAudioCompletionEvent.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/Services.h"
 #include "AudioChannelAgent.h"
 #include "AudioChannelService.h"

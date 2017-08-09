@@ -6,6 +6,7 @@
 #include "nsString.h"
 #include "GeckoProfiler.h"
 #include "mozilla/CheckedInt.h"
+#include "VideoUtils.h"
 
 #include <opus/opus.h>
 

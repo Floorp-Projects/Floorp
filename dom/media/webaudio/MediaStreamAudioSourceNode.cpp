@@ -11,6 +11,8 @@
 #include "AudioStreamTrack.h"
 #include "nsIDocument.h"
 #include "mozilla/CORSMode.h"
+#include "nsContentUtils.h"
+#include "nsIScriptError.h"
 
 namespace mozilla {
 namespace dom {

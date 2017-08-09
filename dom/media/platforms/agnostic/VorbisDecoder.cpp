@@ -10,6 +10,7 @@
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
+#include "VideoUtils.h"
 
 #undef LOG
 #define LOG(type, msg) MOZ_LOG(sPDMLog, type, msg)
