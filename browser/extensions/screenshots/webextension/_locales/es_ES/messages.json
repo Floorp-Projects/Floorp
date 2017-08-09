@@ -53,7 +53,7 @@
     "message": "Comprueba tu conexión a Internet. Si puedes conectarte, puede que haya un problema temporal con el servicio de capturas de pantalla de Firefox."
   },
   "loginErrorDetails": {
-    "message": "No se pudo guardar la captura porque hay un problema con el servicio de capturas de pantalla de Firefox. Inténtalo más tarde."
+    "message": "No se pudo guardar la captura porque hay un problema con el servicio Firefox Screenshots. Inténtalo más tarde."
   },
   "unshootablePageErrorTitle": {
     "message": "No podemos hacer una captura de esta página."
@@ -62,13 +62,19 @@
     "message": "No es una página web común, por lo que no podemos hacer captura de pantalla."
   },
   "selfScreenshotErrorTitle": {
-    "message": "¡No puedes hacer una captura de la página de capturas de Firefox!"
+    "message": "¡No puedes hacer una captura de la página de Firefox Screenshots!"
   },
   "emptySelectionErrorTitle": {
     "message": "Tu selección es demasiado pequeña"
   },
+  "privateWindowErrorTitle": {
+    "message": "Firefox Screenshots está desactivado en el modo de navegación privada"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Sentimos las molestias. Estamos trabajando en esta característica para próximos lanzamientos."
+  },
   "genericErrorTitle": {
-    "message": "¡Vaya! La página de capturas de pantalla de Firefox se ha vuelto loca."
+    "message": "¡Vaya! Firefox Screenshots se ha vuelto loco."
   },
   "genericErrorDetails": {
     "message": "No estamos seguros de lo que acaba de pasar. ¿Te importa volver a intentarlo o hacer una captura de otra página?"

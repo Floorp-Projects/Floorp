@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Waš wuběr je přemały"
   },
+  "privateWindowErrorTitle": {
+    "message": "Firefox Screenshots je w priwatnym modusu znjemóžnjeny"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Wodajće prošu njepřijomnosće. Dźěłamy na tutej funkciji za přichodne wersije."
+  },
   "genericErrorTitle": {
     "message": "Hopla! Firefox Screenshots njefunguje."
   },

@@ -1,15 +1,15 @@
 {
   "addonDescription": {
-    "message": "Ambil klip dan skrinshot dari Web dan simpan untuk sementara waktu atau kekal."
+    "message": "Ambil klip dan skrinsyot dari Web dan simpan untuk sementara waktu atau kekal."
   },
   "addonAuthorsList": {
     "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
-    "message": "Ambil skrinshot"
+    "message": "Ambil skrinsyot"
   },
   "myShotsLink": {
-    "message": "Shot Saya"
+    "message": "Syot Saya"
   },
   "screenshotInstructions": {
     "message": "Seret atau klik pada halaman untuk memilih kawasan. Tekan ESC untuk batalkan."
@@ -33,7 +33,7 @@
     "message": "Pautan Disalin"
   },
   "notificationLinkCopiedDetails": {
-    "message": "Pautan ke shot anda telah disalin ke klipbod. Tekan $META_KEY$-V untuk tampal.",
+    "message": "Pautan ke syot anda telah disalin ke klipbod. Tekan $META_KEY$-V untuk tampal.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -44,37 +44,43 @@
     "message": "Tidak berfungsi."
   },
   "requestErrorDetails": {
-    "message": "Maaf! Kita tidak dapat menyimpan shot anda. Sila cuba lagi nanti."
+    "message": "Maaf! Kita tidak dapat menyimpan syot anda. Sila cuba lagi nanti."
   },
   "connectionErrorTitle": {
-    "message": "Kami tidak dapat menyambungkan ke skrinshot anda."
+    "message": "Kami tidak dapat menyambungkan ke skrinsyot anda."
   },
   "connectionErrorDetails": {
-    "message": "Sila semak sambungan Internet anda. Jika anda boleh dapat sambungan ke Internet, mungkin ada masalah sementara dengan perkhidmatan screenshot di Firefox."
+    "message": "Sila semak sambungan Internet anda. Jika anda boleh dapat sambungan ke Internet, mungkin ada masalah sementara dengan perkhidmatan Firefox Screenshots."
   },
   "loginErrorDetails": {
-    "message": "Kita tidak dapat menyimpan skrinshot anda kerana ada masalah dengan perkhidmatan skrinshot di Firefox. Sila cuba lagi nanti."
+    "message": "Kami tidak dapat menyimpan skrinsyot anda kerana ada masalah dengan perkhidmatan Firefox Screenshots. Sila cuba lagi nanti."
   },
   "unshootablePageErrorTitle": {
-    "message": "Halaman ini tidak boleh diskrinshot."
+    "message": "Kami tidak boleh skrinsyot halaman ini."
   },
   "unshootablePageErrorDetails": {
-    "message": "Ini bukan halaman Web piawai, jadi anda tidak boleh membuat skrinshot."
+    "message": "Ini bukan halaman Web piawai, jadi anda tidak boleh membuat skrinsyot."
   },
   "selfScreenshotErrorTitle": {
-    "message": "Anda tidak boleh mengambil gambar halaman Firefox Screenshots!"
+    "message": "Anda tidak boleh syot halaman Firefox Screenshots!"
   },
   "emptySelectionErrorTitle": {
     "message": "Pilihan anda terlalu kecil"
   },
+  "privateWindowErrorTitle": {
+    "message": "Skrinsyot dinyahdayakan dalam Mod Pelayaran Peribadi"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Maaf atas sebarang kesulitan. Kami sedang berusaha untuk menyediakan ciri ini dalam keluaran akan datang."
+  },
   "genericErrorTitle": {
-    "message": "Oh tidak! Firefox Screenshot tidak berfungsi dengan betul."
+    "message": "Oh tidak! Firefox Screenshots tidak berfungsi dengan betul."
   },
   "genericErrorDetails": {
     "message": "Kami tidak pasti apa yang baru berlaku. Anda mahu cuba lagi atau mengambil gambar halaman lain?"
   },
   "tourBodyOne": {
-    "message": "Ambil, simpan, dan kongsi screenshot tanpa meninggalkan pelayar Firefox."
+    "message": "Ambil, simpan, dan kongsi skrinsyot tanpa meninggalkan pelayar Firefox."
   },
   "tourHeaderTwo": {
     "message": "Ambil gambar hanya yang anda mahu"
@@ -92,10 +98,10 @@
     "message": "Seperti Yang Anda Suka"
   },
   "tourBodyFour": {
-    "message": "Simpan rakaman yang dipotong ke Web, cara yang lebih mudah untuk berkongsi, atau memuatturunnya ke komputer anda. Anda juga boleh klik pada butang Shot Saya untuk mencari semua rakaman yang telah diambil."
+    "message": "Simpan rakaman yang dipotong ke Web, cara yang lebih mudah untuk berkongsi, atau memuat turun ke komputer anda. Anda juga boleh klik pada butang Syot Saya untuk mencari semua rakaman yang telah dibuat."
   },
   "tourSkip": {
-    "message": "Langkau"
+    "message": "SKIP"
   },
   "tourNext": {
     "message": "Slaid Seterusnya"

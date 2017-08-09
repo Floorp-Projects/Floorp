@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Jūsų pasirinkimas yra per mažas"
   },
+  "privateWindowErrorTitle": {
+    "message": "Ekrano nuotraukos privačiajame naršyme neveikia"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Atsiprašome už nepatogumą. Mes dirbame prie šio funkcionalumo vėlesnėms versijoms."
+  },
   "genericErrorTitle": {
     "message": "Vau! „Firefox Screenshots“ sugedo."
   },

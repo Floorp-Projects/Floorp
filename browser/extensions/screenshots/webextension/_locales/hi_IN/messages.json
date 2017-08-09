@@ -64,6 +64,15 @@
   "selfScreenshotErrorTitle": {
     "message": "आप एक Firefox स्क्रीनशॉट पृष्ठ का शॉट नहीं ले सकते!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "आपका चयन बहुत छोटा है"
+  },
+  "privateWindowErrorTitle": {
+    "message": "निजी ब्राउज़िंग मोड में स्क्रीनशॉट निष्क्रिय कर दिया गया हैं"
+  },
+  "privateWindowErrorDetails": {
+    "message": "असुविधा के लिए खेद हैं. हमलोग भविष्य संस्करण के लिए इस सुविधा पर काम कर रहे हैं."
+  },
   "genericErrorTitle": {
     "message": "ओह! Firefox स्क्रीनशॉट बिगड़ गया."
   },

@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Tafrant inek wezzil-t aṭas"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots yensa deg uskar uslig"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Suref-aɣ ɣef aya. Aqlaɣ nxeddem ɣef tmahilt i yileqman d-iteddun."
+  },
   "genericErrorTitle": {
     "message": "Ihuh! Firefox Screenshots ur iteddu ara."
   },

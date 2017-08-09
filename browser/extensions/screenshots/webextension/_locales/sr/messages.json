@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Ваша селекција је премала"
   },
+  "privateWindowErrorTitle": {
+    "message": "Снимци екрана су онемогућени у приватном режиму"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Жао нам је због овог неспоразума. Радимо на овој могућности за следећа издања."
+  },
   "genericErrorTitle": {
     "message": "Ајој! Firefox Screenshots је пошашавио."
   },

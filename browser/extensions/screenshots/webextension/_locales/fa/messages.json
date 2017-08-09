@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "انتخاب شما خیلی کوچک است"
   },
+  "privateWindowErrorTitle": {
+    "message": "در حالت مرور خصوصی تصاویرصفحه غیرفعال است"
+  },
+  "privateWindowErrorDetails": {
+    "message": "به خاطر مزاحمت متاسفیم. ما در حال کار روی این ویژگی برای انتشار‌های آینده هستیم."
+  },
   "genericErrorTitle": {
     "message": "اوه! سرویس تصاویر صفحه فایرفاکس قاطی کرده."
   },
