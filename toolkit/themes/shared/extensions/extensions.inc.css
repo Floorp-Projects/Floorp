@@ -11,7 +11,6 @@
 
 #nav-header {
   min-height: 39px;
-  background-color: #424f5a;
 }
 
 .view-pane > .list > scrollbox {
@@ -39,7 +38,7 @@
 
 #detail-view .global-warning {
   padding: 4px 12px;
-  border-bottom: 1px solid #c1c1c1;
+  border-bottom: 1px solid var(--in-content-border-color);
 }
 
 @media (max-width: 600px) {
@@ -113,8 +112,8 @@
 .alert {
   -moz-box-align: center;
   padding: 10px;
-  color: #333;
-  border: 1px solid #c1c1c1;
+  color: var(--in-content-text-color);
+  border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   background-color: #ebebeb;
 }
@@ -154,7 +153,7 @@ button.warning {
 }
 
 .category[selected="true"]:hover {
-  background-color:#1A2533;
+  color: #0060df;
 }
 
 .category[disabled] {
@@ -249,14 +248,14 @@ button.warning {
 
 .view-header {
   margin: 0 48px;
-  border-bottom: 1px solid #c1c1c1;
+  border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
 #header-utils-btn {
   height: 30px;
   line-height: 20px;
-  border-color: #c1c1c1;
-  background-color: #fbfbfb;
+  border-color: var(--in-content-box-border-color);
+  background-color: var(--in-content-page-background);
   padding-right: 10px;
   padding-left: 10px;
 }
@@ -335,7 +334,7 @@ button.warning {
 .sorter[checkState="1"],
 .sorter[checkState="2"] {
   background-color: #ebebeb;
-  box-shadow: 0 -4px 0 0 #ff9500 inset;
+  box-shadow: 0 -4px 0 0 var(--in-content-border-highlight) inset;
 }
 
 .sorter .button-icon {
@@ -391,12 +390,12 @@ button.warning {
 }
 
 .list:-moz-focusring > scrollbox > .scrollbox-innerbox {
-  border-color: #0095dd;
+  border-color: var(--in-content-border-focus);
 }
 
 .addon {
   color: #444;
-  border-bottom: 1px solid #c1c1c1;
+  border-bottom: 1px solid var(--in-content-box-border-color);
   padding: 5px;
   background-origin: border-box;
 }
@@ -622,10 +621,10 @@ button.warning {
 }
 
 .addon[selected] {
-  background-color: #fafafa;
-  color: #333;
+  background-color: var(--in-content-page-background);
+  color: var(--in-content-page-color);
   padding-inline-start: 1px; /* compensate the 4px border */
-  border-inline-start: solid 4px #ff9500;
+  border-inline-start: solid 4px var(--in-content-border-focus);
 }
 
 #addon-list .addon[active="false"] > .content-container > .content-inner-container {
@@ -803,9 +802,9 @@ button.warning {
 #detail-contrib-btn {
   color: #FFF;
   text-shadow: none;
-  border: 1px solid #0095dd;
+  border: 1px solid transparent;
   list-style-image: url("chrome://mozapps/skin/extensions/heart.png");
-  background-color: #0095dd;
+  background-color: var(--in-content-primary-button-background);
 }
 
 #detail-contrib-btn .button-icon {
@@ -813,13 +812,11 @@ button.warning {
 }
 
 #detail-contrib-btn:not(:active):hover {
-  border-color: #008acb;
-  background-color: #008acb;
+  background-color: var(--in-content-primary-button-background-hover);
 }
 
 #detail-contrib-btn:active:hover {
-  background-color: #006b9d;
-  border-color: #006b9d;
+  background-color: var(--in-content-primary-button-background-active);
 }
 
 #detail-grid {
@@ -840,7 +837,7 @@ setting[first-row="true"] {
 .detail-row,
 .detail-row-complex,
 setting {
-  border-top: 1px solid #c1c1c1;
+  border-top: 1px solid var(--in-content-box-border-color);
   -moz-box-align: center;
   min-height: 35px;
   line-height: 20px;
@@ -906,7 +903,7 @@ setting[type="radio"] > radiogroup {
 /*** download progress ***/
 
 .download-progress {
-  border: 1px solid #c1c1c1;
+  border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   background-color: #fbfbfb;
   width: 200px;
@@ -915,7 +912,7 @@ setting[type="radio"] > radiogroup {
 }
 
 .download-progress[mode="undetermined"] {
-  border-color: #0095dd;
+  border-color: var(--in-content-border-highlight);
 }
 
 .download-progress .start-cap,
@@ -923,7 +920,7 @@ setting[type="radio"] > radiogroup {
 .download-progress[mode="undetermined"] .end-cap,
 .download-progress .progress .progress-bar {
   -moz-appearance: none;
-  background-color: #0095dd;
+  background-color: var(--in-content-border-highlight);
 }
 
 .download-progress .progress .progress-bar  {
