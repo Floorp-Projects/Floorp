@@ -192,9 +192,6 @@ public:
   // media.
   // A call to ReadAt will update this position.
   virtual int64_t Tell() = 0;
-  // Ensures that the value returned by IsSuspendedByCache below is up to date
-  // (i.e. the cache has examined this stream at least once).
-  virtual void EnsureCacheUpToDate() {}
 
   // These can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
@@ -508,7 +505,6 @@ public:
   already_AddRefed<BaseMediaResource> CloneData(
     MediaResourceCallback* aDecoder) override;
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
-  void     EnsureCacheUpToDate() override;
 
   // Other thread
   void     SetReadMode(MediaCacheStream::ReadMode aMode) override;

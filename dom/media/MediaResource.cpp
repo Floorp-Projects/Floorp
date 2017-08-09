@@ -975,12 +975,6 @@ ChannelMediaResource::IsDataCachedToEndOfResource(int64_t aOffset)
   return mCacheStream.IsDataCachedToEndOfStream(aOffset);
 }
 
-void
-ChannelMediaResource::EnsureCacheUpToDate()
-{
-  mCacheStream.EnsureCacheUpdate();
-}
-
 bool
 ChannelMediaResource::IsSuspendedByCache()
 {
