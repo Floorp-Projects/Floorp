@@ -7,7 +7,6 @@ cd "$(dirname $0)"
 # We blacklist FT_Error and import our own in order to have convenience methods
 # on it instead of being a plain integer.
 "${BINDGEN}" bindings.h -o ../src/freetype.rs \
-  --no-unstable-rust \
   --blacklist-type "FT_(Int16|UInt16|Int32|UInt32|Int16|Int64|UInt64)" \
   --raw-line "pub type FT_Int16 = i16;" \
   --raw-line "pub type FT_UInt16 = u16;" \
