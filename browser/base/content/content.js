@@ -1192,7 +1192,7 @@ var PageInfoListener = {
 
     let hostName = null;
     try {
-      hostName = window.location.host;
+      hostName = Services.io.newURI(window.location.href).displayHost;
     } catch (exception) { }
 
     windowInfo.hostName = hostName;
@@ -1203,7 +1203,15 @@ var PageInfoListener = {
     let docInfo = {};
     docInfo.title = document.title;
     docInfo.location = document.location.toString();
+    try {
+      docInfo.location = Services.io.newURI(document.location.toString()).displaySpec;
+    } catch (exception) { }
     docInfo.referrer = document.referrer;
+    try {
+      if (document.referrer) {
+        docInfo.referrer = Services.io.newURI(document.referrer).displaySpec;
+      }
+    } catch (exception) { }
     docInfo.compatMode = document.compatMode;
     docInfo.contentType = document.contentType;
     docInfo.characterSet = document.characterSet;
