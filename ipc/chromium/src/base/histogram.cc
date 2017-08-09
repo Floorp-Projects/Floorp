@@ -273,7 +273,8 @@ Histogram::~Histogram() {
 }
 
 void Histogram::InitializeBucketRangeFromData(const int* buckets) {
-  ranges_.assign(buckets, buckets + bucket_count());
+  DCHECK_EQ(bucket_count_ + 1, ranges_.size());
+  std::copy_n(buckets, bucket_count_, ranges_.data());
   ResetRangeChecksum();
   DCHECK(ValidateBucketRanges());
 }
