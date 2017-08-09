@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Сіздің таңдауыңыз тым кішкентай"
   },
+  "privateWindowErrorTitle": {
+    "message": "Скриншоттар жекелік шолу режимінде сөнідірілген"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Қолайсыздық үшін кешірім сұраймыз. Бұл мүмкіндікті болашақ шығарылымдарда іске асыруға жұмысты жасаймыз."
+  },
   "genericErrorTitle": {
     "message": "Қап! Firefox скриншоттары жасамай қалған сияқты."
   },

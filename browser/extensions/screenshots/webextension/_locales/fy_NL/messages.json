@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Jo seleksje is te lyts"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots is útskeakele yn Priveenavigaasjemodus"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Sorry foar it ûngemak. Foar takomstige útjeften wurdt oan dizze funksje wurke."
+  },
   "genericErrorTitle": {
     "message": "Oeps! Firefox Screenshots is yn 'e war."
   },
