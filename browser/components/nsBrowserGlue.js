@@ -236,6 +236,8 @@ const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
 const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 3;
 // Seconds of idle time before the late idle tasks will be scheduled.
 const LATE_TASKS_IDLE_TIME_SEC = 20;
+// Time after we stop tracking startup crashes.
+const STARTUP_CRASHES_END_DELAY_MS = 30 * 1000;
 
 // Factory object
 const BrowserGlueServiceFactory = {
@@ -1163,6 +1165,13 @@ BrowserGlue.prototype = {
 
     Services.tm.idleDispatchToMainThread(() => {
       this._checkForDefaultBrowser();
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      let {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+      setTimeout(function() {
+        Services.tm.idleDispatchToMainThread(Services.startup.trackStartupCrashEnd);
+      }, STARTUP_CRASHES_END_DELAY_MS);
     });
   },
 
