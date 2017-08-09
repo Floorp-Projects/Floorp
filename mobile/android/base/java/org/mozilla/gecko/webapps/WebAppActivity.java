@@ -262,4 +262,16 @@ public class WebAppActivity extends AppCompatActivity
     @Override
     public void onCanGoForward(GeckoView view, boolean canGoForward) {
     }
+
+    @Override
+    public void onLoadUri(final GeckoView view, final String uri,
+                             final TargetWindow where) {
+        if (isInScope(uri)) {
+            view.loadUri(uri);
+        } else {
+            final Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(uri));
+            startActivity(intent);
+        }
+    }
 }
