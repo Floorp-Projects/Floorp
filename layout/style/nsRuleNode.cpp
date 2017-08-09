@@ -8317,8 +8317,8 @@ AppendGridLineNames(const nsCSSValue& aValue,
 
 static void
 SetGridTrackList(const nsCSSValue& aValue,
-                 nsStyleGridTemplate& aResult,
-                 const nsStyleGridTemplate& aParentValue,
+                 UniquePtr<nsStyleGridTemplate>& aResult,
+                 const nsStyleGridTemplate* aParentValue,
                  GeckoStyleContext* aStyleContext,
                  nsPresContext* aPresContext,
                  RuleNodeCacheConditions& aConditions)
@@ -8330,51 +8330,42 @@ SetGridTrackList(const nsCSSValue& aValue,
 
   case eCSSUnit_Inherit:
     aConditions.SetUncacheable();
-    aResult = aParentValue;
+    if (aParentValue) {
+      aResult = MakeUnique<nsStyleGridTemplate>(*aParentValue);
+    } else {
+      aResult = nullptr;
+    }
     break;
 
   case eCSSUnit_Initial:
   case eCSSUnit_Unset:
   case eCSSUnit_None:
-    aResult.mIsSubgrid = false;
-    aResult.mLineNameLists.Clear();
-    aResult.mMinTrackSizingFunctions.Clear();
-    aResult.mMaxTrackSizingFunctions.Clear();
-    aResult.mRepeatAutoLineNameListBefore.Clear();
-    aResult.mRepeatAutoLineNameListAfter.Clear();
-    aResult.mRepeatAutoIndex = -1;
-    aResult.mIsAutoFill = false;
+    aResult = nullptr;
     break;
 
   default:
-    aResult.mLineNameLists.Clear();
-    aResult.mMinTrackSizingFunctions.Clear();
-    aResult.mMaxTrackSizingFunctions.Clear();
-    aResult.mRepeatAutoLineNameListBefore.Clear();
-    aResult.mRepeatAutoLineNameListAfter.Clear();
-    aResult.mRepeatAutoIndex = -1;
-    aResult.mIsAutoFill = false;
+    aResult = MakeUnique<nsStyleGridTemplate>();
     const nsCSSValueList* item = aValue.GetListValue();
     if (item->mValue.GetUnit() == eCSSUnit_Enumerated &&
         item->mValue.GetIntValue() == NS_STYLE_GRID_TEMPLATE_SUBGRID) {
       // subgrid <line-name-list>?
-      aResult.mIsSubgrid = true;
+      aResult->mIsSubgrid = true;
       item = item->mNext;
       for (int32_t i = 0; item && i < nsStyleGridLine::kMaxLine; ++i) {
         if (item->mValue.GetUnit() == eCSSUnit_Pair) {
           // This is a 'auto-fill' <name-repeat> expression.
           const nsCSSValuePair& pair = item->mValue.GetPairValue();
-          MOZ_ASSERT(aResult.mRepeatAutoIndex == -1,
+          MOZ_ASSERT(aResult->mRepeatAutoIndex == -1,
                      "can only have one <name-repeat> with auto-fill");
-          aResult.mRepeatAutoIndex = i;
-          aResult.mIsAutoFill = true;
+          aResult->mRepeatAutoIndex = i;
+          aResult->mIsAutoFill = true;
           MOZ_ASSERT(pair.mXValue.GetIntValue() == NS_STYLE_GRID_REPEAT_AUTO_FILL,
                      "unexpected repeat() enum value for subgrid");
           const nsCSSValueList* list = pair.mYValue.GetListValue();
-          AppendGridLineNames(list->mValue, aResult.mRepeatAutoLineNameListBefore);
+          AppendGridLineNames(list->mValue, aResult->mRepeatAutoLineNameListBefore);
         } else {
           AppendGridLineNames(item->mValue,
-                              *aResult.mLineNameLists.AppendElement());
+                              *aResult->mLineNameLists.AppendElement());
         }
         item = item->mNext;
       }
@@ -8383,10 +8374,10 @@ SetGridTrackList(const nsCSSValue& aValue,
       // The list is expected to have odd number of items, at least 3
       // starting with a <line-names> (sub list of identifiers),
       // and alternating between that and <track-size>.
-      aResult.mIsSubgrid = false;
+      aResult->mIsSubgrid = false;
       for (int32_t line = 1;  ; ++line) {
         AppendGridLineNames(item->mValue,
-                            *aResult.mLineNameLists.AppendElement());
+                            *aResult->mLineNameLists.AppendElement());
         item = item->mNext;
 
         if (!item || line == nsStyleGridLine::kMaxLine) {
@@ -8396,31 +8387,31 @@ SetGridTrackList(const nsCSSValue& aValue,
         if (item->mValue.GetUnit() == eCSSUnit_Pair) {
           // This is a 'auto-fill' / 'auto-fit' <auto-repeat> expression.
           const nsCSSValuePair& pair = item->mValue.GetPairValue();
-          MOZ_ASSERT(aResult.mRepeatAutoIndex == -1,
+          MOZ_ASSERT(aResult->mRepeatAutoIndex == -1,
                      "can only have one <auto-repeat>");
-          aResult.mRepeatAutoIndex = line - 1;
+          aResult->mRepeatAutoIndex = line - 1;
           switch (pair.mXValue.GetIntValue()) {
             case NS_STYLE_GRID_REPEAT_AUTO_FILL:
-              aResult.mIsAutoFill = true;
+              aResult->mIsAutoFill = true;
               break;
             case NS_STYLE_GRID_REPEAT_AUTO_FIT:
-              aResult.mIsAutoFill = false;
+              aResult->mIsAutoFill = false;
               break;
             default:
               MOZ_ASSERT_UNREACHABLE("unexpected repeat() enum value");
           }
           const nsCSSValueList* list = pair.mYValue.GetListValue();
-          AppendGridLineNames(list->mValue, aResult.mRepeatAutoLineNameListBefore);
+          AppendGridLineNames(list->mValue, aResult->mRepeatAutoLineNameListBefore);
           list = list->mNext;
-          nsStyleCoord& min = *aResult.mMinTrackSizingFunctions.AppendElement();
-          nsStyleCoord& max = *aResult.mMaxTrackSizingFunctions.AppendElement();
+          nsStyleCoord& min = *aResult->mMinTrackSizingFunctions.AppendElement();
+          nsStyleCoord& max = *aResult->mMaxTrackSizingFunctions.AppendElement();
           SetGridTrackSize(list->mValue, min, max,
                            aStyleContext, aPresContext, aConditions);
           list = list->mNext;
-          AppendGridLineNames(list->mValue, aResult.mRepeatAutoLineNameListAfter);
+          AppendGridLineNames(list->mValue, aResult->mRepeatAutoLineNameListAfter);
         } else {
-          nsStyleCoord& min = *aResult.mMinTrackSizingFunctions.AppendElement();
-          nsStyleCoord& max = *aResult.mMaxTrackSizingFunctions.AppendElement();
+          nsStyleCoord& min = *aResult->mMinTrackSizingFunctions.AppendElement();
+          nsStyleCoord& max = *aResult->mMaxTrackSizingFunctions.AppendElement();
           SetGridTrackSize(item->mValue, min, max,
                            aStyleContext, aPresContext, aConditions);
         }
@@ -8428,11 +8419,11 @@ SetGridTrackList(const nsCSSValue& aValue,
         item = item->mNext;
         MOZ_ASSERT(item, "Expected a eCSSUnit_List of odd length");
       }
-      MOZ_ASSERT(!aResult.mMinTrackSizingFunctions.IsEmpty() &&
-                 aResult.mMinTrackSizingFunctions.Length() ==
-                 aResult.mMaxTrackSizingFunctions.Length() &&
-                 aResult.mMinTrackSizingFunctions.Length() + 1 ==
-                 aResult.mLineNameLists.Length(),
+      MOZ_ASSERT(!aResult->mMinTrackSizingFunctions.IsEmpty() &&
+                 aResult->mMinTrackSizingFunctions.Length() ==
+                 aResult->mMaxTrackSizingFunctions.Length() &&
+                 aResult->mMinTrackSizingFunctions.Length() + 1 ==
+                 aResult->mLineNameLists.Length(),
                  "Inconstistent array lengths for nsStyleGridTemplate");
     }
   }
@@ -8783,12 +8774,14 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
 
   // grid-template-columns
   SetGridTrackList(*aRuleData->ValueForGridTemplateColumns(),
-                   pos->mGridTemplateColumns, parentPos->mGridTemplateColumns,
+                   pos->mGridTemplateColumns,
+                   parentPos->mGridTemplateColumns.get(),
                    aContext, mPresContext, conditions);
 
   // grid-template-rows
   SetGridTrackList(*aRuleData->ValueForGridTemplateRows(),
-                   pos->mGridTemplateRows, parentPos->mGridTemplateRows,
+                   pos->mGridTemplateRows,
+                   parentPos->mGridTemplateRows.get(),
                    aContext, mPresContext, conditions);
 
   // grid-tempate-areas

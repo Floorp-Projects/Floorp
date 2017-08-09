@@ -368,6 +368,7 @@ structs-types = [
     "mozilla::css::URLValueData",
     "mozilla::MallocSizeOf",
     "mozilla::Side",
+    "mozilla::UniquePtr",
     "nsIContent",
     "nsIDocument",
     "nsIDocument_DocumentTheme",
