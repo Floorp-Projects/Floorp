@@ -171,12 +171,6 @@ JSTerm.prototype = {
 
     return grip ? grip.actor : null;
   },
-
-  focus() {
-    if (this.inputNode) {
-      this.inputNode.focus();
-    }
-  },
 };
 
 module.exports.JSTerm = JSTerm;
