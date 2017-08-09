@@ -314,3 +314,7 @@ fuzzy(255,2808) css-multicol-1/multicol-rule-large-001.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-fill-auto-block-children-001.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-fill-auto-block-children-002.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-span-all-block-sibling-003.xht
+
+#### CSS Namespaces 3 ##############################################
+
+fails-if(stylo||styloVsGecko) css-namespaces-3/syntax-013.xml
