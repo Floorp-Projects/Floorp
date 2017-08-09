@@ -205,7 +205,7 @@ fails-if(!styloVsGecko) == css-multicol-1/multicol-zero-height-001.xht css-multi
 == css-namespaces-3/syntax-010.xml css-namespaces-3/reftest/ref-lime-3.xml
 == css-namespaces-3/syntax-011.xml css-namespaces-3/reftest/ref-lime-6.xml
 == css-namespaces-3/syntax-012.xml css-namespaces-3/reftest/ref-lime-3.xml
-== css-namespaces-3/syntax-013.xml css-namespaces-3/reftest/ref-lime-5.xml
+fails-if(stylo||styloVsGecko) == css-namespaces-3/syntax-013.xml css-namespaces-3/reftest/ref-lime-5.xml # bug 1388911
 == css-namespaces-3/syntax-014.xml css-namespaces-3/reftest/ref-lime-3.xml
 == css-namespaces-3/syntax-015.xml css-namespaces-3/reftest/ref-lime-1.xml
 fails-if(!styloVsGecko) == css-values-3/attr-color-invalid-cast.html css-values-3/reference/200-200-green.html

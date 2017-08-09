@@ -13293,8 +13293,7 @@ nsIDocument::UpdateStyleBackendType()
       mStyleBackendType = StyleBackendType::Servo;
     } else if (!mDocumentContainer) {
       NS_WARNING("stylo: No docshell yet, assuming Gecko style system");
-    } else if ((IsHTMLOrXHTML() || IsSVGDocument()) &&
-               IsContentDocument()) {
+    } else if (!IsXULDocument() && IsContentDocument()) {
       // Disable stylo for about: pages other than about:blank, since
       // they tend to use unsupported selectors like XUL tree pseudos.
       bool isAbout = false;
