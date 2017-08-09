@@ -5541,8 +5541,8 @@ public:
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 private:
   // According to mask property and the capability of aManager, determine
-  // whether paint mask onto a dedicate mask layer.
-  bool ShouldPaintOnMaskLayer(LayerManager* aManager);
+  // whether we can paint the mask onto a dedicate mask layer.
+  bool CanPaintOnMaskLayer(LayerManager* aManager);
 
   nsTArray<nsRect> mDestRects;
 };
