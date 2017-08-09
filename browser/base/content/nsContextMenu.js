@@ -1331,6 +1331,7 @@ nsContextMenu.prototype = {
 
       let image = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
       image.src = message.data.dataUrl;
+      let imageName = message.data.imageName;
 
       // Confirm since it's annoying if you hit this accidentally.
       const kDesktopBackgroundURL =
@@ -1343,18 +1344,18 @@ nsContextMenu.prototype = {
                    getService(Ci.nsIWindowMediator);
         let dbWin = wm.getMostRecentWindow("Shell:SetDesktopBackground");
         if (dbWin) {
-          dbWin.gSetBackground.init(image);
+          dbWin.gSetBackground.init(image, imageName);
           dbWin.focus();
         } else {
           openDialog(kDesktopBackgroundURL, "",
                      "centerscreen,chrome,dialog=no,dependent,resizable=no",
-                     image);
+                     image, imageName);
         }
       } else {
         // On non-Mac platforms, the Set Wallpaper dialog is modal.
         openDialog(kDesktopBackgroundURL, "",
                    "centerscreen,chrome,dialog,modal,dependent",
-                   image);
+                   image, imageName);
       }
     };
 
