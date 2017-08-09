@@ -20,7 +20,6 @@ job-defaults:
         symbol: S
         kind: build
         tier: 1
-    needs-sccache: true
 
 jobs:
     linux64-st-an/debug:
