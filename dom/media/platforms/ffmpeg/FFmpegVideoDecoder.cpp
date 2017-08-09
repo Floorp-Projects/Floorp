@@ -23,6 +23,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
+#include "prsystem.h"
 
 
 typedef mozilla::layers::Image Image;

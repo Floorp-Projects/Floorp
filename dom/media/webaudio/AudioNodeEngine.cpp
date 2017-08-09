@@ -16,6 +16,7 @@
 #include "AlignmentUtils.h"
 #include "AudioNodeEngineSSE2.h"
 #endif
+#include "AudioBlock.h"
 
 namespace mozilla {
 

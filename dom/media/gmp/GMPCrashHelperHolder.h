@@ -6,9 +6,10 @@
 #ifndef GMPCrashHelperHolder_h_
 #define GMPCrashHelperHolder_h_
 
-namespace mozilla {
+#include "mozilla/RefPtr.h"
+#include "GMPCrashHelper.h"
 
-class GMPCrashHelper;
+namespace mozilla {
 
 // Disconnecting the GMPCrashHelpers at the right time is hard. We need to
 // ensure that in the crashing case that we stay connected until the

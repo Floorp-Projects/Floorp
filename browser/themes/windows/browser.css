@@ -112,19 +112,6 @@
   background-clip: padding-box;
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
-  overflow: -moz-hidden-unscrollable;
-  max-height: 4em;
-  transition: min-height 170ms ease-out, max-height 170ms ease-out;
-  padding: 0 5px;
-}
-
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar)[collapsed=true] {
-  min-height: 0.1px;
-  max-height: 0;
-  transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
-}
-
 #toolbar-menubar,
 #TabsToolbar {
   color: var(--titlebar-text-color);
@@ -242,10 +229,6 @@
   #TabsToolbar[collapsed="true"] + #nav-bar {
     border-top-style: none !important;
   }
-}
-
-#personal-bookmarks {
-  min-height: 24px;
 }
 
 #print-preview-toolbar:not(:-moz-lwtheme) {
