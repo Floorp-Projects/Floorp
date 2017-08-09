@@ -21,7 +21,10 @@ try {
 
 EventEmitter.decorate(window);
 
-require("../../themes/new-webconsole.css");
+require("../../themes/widgets.css");
+require("../../themes/webconsole.css");
+require("../../themes/components-frame.css");
+require("../../themes/light-theme.css");
 require("../../shared/components/reps/reps.css");
 
 pref("devtools.debugger.remote-timeout", 10000);
