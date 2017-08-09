@@ -89,16 +89,6 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
       ],
       times: 4, // This number should only ever go down - never up.
     },
-
-    {
-      stack: [
-        "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-        "_update@chrome://browser/content/browser-tabsintitlebar.js",
-        "init@chrome://browser/content/browser-tabsintitlebar.js",
-        "handleEvent@chrome://browser/content/tabbrowser.xml",
-      ],
-      times: 2, // This number should only ever go down - never up.
-    }
   );
 }
 
