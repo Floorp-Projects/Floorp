@@ -31,16 +31,27 @@ function setOrCompareRenderedBuffer(aRenderedBuffer) {
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  var ctx = new OfflineAudioContext(2, 100, 22050);
-  ok(ctx instanceof EventTarget, "OfflineAudioContexts must be EventTargets");
-  is(ctx.length, 100, "OfflineAudioContext.length is equal to the value passed to the ctor.");
+  let ctxs = [
+    new OfflineAudioContext(2, 100, 22050),
+    new OfflineAudioContext({length: 100, sampleRate: 22050}),
+    new OfflineAudioContext({channels: 2, length: 100, sampleRate: 22050}),
+  ];
 
-  var buf = ctx.createBuffer(2, 100, ctx.sampleRate);
-  for (var i = 0; i < 2; ++i) {
-    for (var j = 0; j < 100; ++j) {
-      buf.getChannelData(i)[j] = Math.sin(2 * Math.PI * 200 * j / ctx.sampleRate);
+  for (let ctx of ctxs) {
+    ok(ctx instanceof EventTarget, "OfflineAudioContexts must be EventTargets");
+    is(ctx.length, 100, "OfflineAudioContext.length is equal to the value passed to the ctor.");
+
+    var buf = ctx.createBuffer(2, 100, ctx.sampleRate);
+    for (var i = 0; i < 2; ++i) {
+      for (var j = 0; j < 100; ++j) {
+        buf.getChannelData(i)[j] = Math.sin(2 * Math.PI * 200 * j / ctx.sampleRate);
+      }
     }
   }
+
+  is(ctxs[1].destination.channelCount, 1, "OfflineAudioContext defaults to to correct channelCount.");
+
+  let ctx = ctxs[0];
 
   expectException(function() {
     new OfflineAudioContext(2, 100, 0);
@@ -58,6 +69,15 @@ addLoadEvent(function() {
   expectException(function() {
     new OfflineAudioContext(2, 0, 44100);
   }, DOMException.NOT_SUPPORTED_ERR);
+  expectTypeError(function() {
+    new OfflineAudioContext({});
+  });
+  expectTypeError(function() {
+    new OfflineAudioContext({sampleRate: 44100});
+  });
+  expectTypeError(function() {
+    new OfflineAudioContext({length: 44100*40});
+  });
 
   var src = ctx.createBufferSource();
   src.buffer = buf;
