@@ -31,9 +31,8 @@ this.FxAccountsStorageManager = function(options = {}) {
     baseDir: options.baseDir || OS.Constants.Path.profileDir,
   }
   this.plainStorage = new JSONStorage(this.options);
-  // On b2g we have no loginManager for secure storage, and tests may want
-  // to pretend secure storage isn't available.
-  let useSecure = "useSecure" in options ? options.useSecure : haveLoginManager;
+  // Tests may want to pretend secure storage isn't available.
+  let useSecure = "useSecure" in options ? options.useSecure : true;
   if (useSecure) {
     this.secureStorage = new LoginManagerStorage();
   } else {
@@ -601,9 +600,3 @@ LoginManagerStorage.prototype = {
     return null;
   },
 }
-
-// A global variable to indicate if the login manager is available - it doesn't
-// exist on b2g. Defined here as the use of preprocessor directives skews line
-// numbers in the runtime, meaning stack-traces etc end up off by a few lines.
-// Doing it at the end of the file makes that less of a pita.
-var haveLoginManager = !AppConstants.MOZ_B2G;

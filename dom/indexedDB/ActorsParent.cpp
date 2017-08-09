@@ -3647,8 +3647,6 @@ UpgradeSchemaFrom18_0To19_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
-#if !defined(MOZ_B2G)
-
 class NormalJSContext;
 
 class UpgradeFileIdsFunction final
@@ -3684,8 +3682,6 @@ private:
                  nsIVariant** aResult) override;
 };
 
-#endif // MOZ_B2G
-
 nsresult
 UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
                             mozIStorageConnection* aConnection)
@@ -3694,20 +3690,6 @@ UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
   MOZ_ASSERT(aConnection);
 
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom19_0To20_0", STORAGE);
-
-#if defined(MOZ_B2G)
-
-  // We don't have to do the upgrade of file ids on B2G. The old format was
-  // only used by the previous single process implementation and B2G was
-  // always multi process. This is a nice optimization since the upgrade needs
-  // to deserialize all structured clones which reference a stored file or
-  // a mutable file.
-  nsresult rv = aConnection->SetSchemaVersion(MakeSchemaVersion(20, 0));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-#else // MOZ_B2G
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
@@ -3806,8 +3788,6 @@ UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-#endif // MOZ_B2G
 
   return NS_OK;
 }
@@ -19546,8 +19526,6 @@ NS_IMPL_ISUPPORTS(CompressDataBlobsFunction, mozIStorageFunction)
 NS_IMPL_ISUPPORTS(EncodeKeysFunction, mozIStorageFunction)
 NS_IMPL_ISUPPORTS(StripObsoleteOriginAttributesFunction, mozIStorageFunction);
 
-#if !defined(MOZ_B2G)
-
 nsresult
 UpgradeFileIdsFunction::Init(nsIFile* aFMDirectory,
                              mozIStorageConnection* aConnection)
@@ -19638,8 +19616,6 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
   result.forget(aResult);
   return NS_OK;
 }
-
-#endif // MOZ_B2G
 
 // static
 void

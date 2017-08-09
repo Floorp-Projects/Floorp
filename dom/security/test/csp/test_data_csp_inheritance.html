@@ -22,7 +22,9 @@ SimpleTest.waitForExplicitFinish();
 window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   window.removeEventListener("message", receiveMessage);
-  is(event.data.result, "dataInheritsCSP",
+  // toplevel CSP should apply to data: URI iframe hence resulting
+  // in 1 applied policy.
+  is(event.data.result, 1,
      "data: URI iframe inherits CSP from including context");
   SimpleTest.finish();
 }

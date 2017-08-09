@@ -649,9 +649,7 @@ Preferences::IsServiceAvailable()
 bool
 Preferences::InitStaticMembers()
 {
-#ifndef MOZ_B2G
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
-#endif
 
   if (!sShutdown && !sPreferences) {
     MOZ_ASSERT(NS_IsMainThread());
