@@ -13,8 +13,8 @@
   <iframe type="content" id="xhtml4" src="data:text/xml,&lt;html xmlns='http://www.w3.org/1999/xhtml'/>"/>
   <iframe type="content" id="xhtml5" src="data:text/xml,&lt;html xmlns='http://www.w3.org/1999/xhtml'&gt;&lt;head/>&lt;/html&gt;"/>
   <iframe type="content" id="xhtml6" src="data:text/xml,&lt;html xmlns='http://www.w3.org/1999/xhtml'&gt;&lt;head&gt;&lt;style/>&lt;/head&gt;&lt;/html&gt;"/>
-  <iframe id="xul1" src="data:application/vnd.mozilla.xul+xml,&lt;window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' title='Test'/>"/>
-  <iframe id="xul2" src="data:application/vnd.mozilla.xul+xml,&lt;window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' title='Test'/>"/>
+  <iframe id="xul1" src="file_title.xul"/>
+  <iframe id="xul2" src="file_title.xul"/>
   <iframe type="content" id="svg1" src="data:text/xml,&lt;svg xmlns='http://www.w3.org/2000/svg'&gt;&lt;title id='t'&gt;Test&lt;/title&gt;&lt;/svg&gt;"/>
   <iframe type="content" id="svg2" src="data:text/xml,&lt;svg xmlns='http://www.w3.org/2000/svg'&gt;&lt;title id='t'&gt;Test&lt;/title&gt;&lt;/svg&gt;"/>
 
