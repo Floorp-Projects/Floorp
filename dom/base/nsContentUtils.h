@@ -3126,6 +3126,13 @@ public:
    */
   static bool GetSourceMapURL(nsIHttpChannel* aChannel, nsACString& aResult);
 
+  /**
+   * Returns true if the passed-in mesasge is a pending InputEvent.
+   *
+   * @param aMsg  The message to check
+   */
+  static bool IsMessageInputEvent(const IPC::Message& aMsg);
+
 private:
   static bool InitializeEventTable();
 
