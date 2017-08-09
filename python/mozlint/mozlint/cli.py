@@ -5,7 +5,6 @@
 from __future__ import print_function, unicode_literals
 
 import os
-import subprocess
 import sys
 from argparse import REMAINDER, ArgumentParser
 
@@ -142,6 +141,7 @@ def find_linters(linters=None):
 
 def run(paths, linters, fmt, outgoing, workdir, edit, list_linters=None, **lintargs):
     from mozlint import LintRoller, formatters
+    from mozlint.editor import edit_results
 
     if list_linters:
         lint_paths = find_linters(linters)
@@ -156,10 +156,8 @@ def run(paths, linters, fmt, outgoing, workdir, edit, list_linters=None, **linta
     # run all linters
     results = lint.roll(paths, outgoing=outgoing, workdir=workdir)
 
-    if edit:
-        editor = os.environ['EDITOR']
-        for path in results:
-            subprocess.call([editor, path])
+    if edit and results:
+        edit_results(results)
         results = lint.roll(results.keys())
 
     formatter = formatters.get(fmt)
