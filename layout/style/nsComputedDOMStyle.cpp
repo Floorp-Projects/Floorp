@@ -3108,7 +3108,8 @@ nsComputedDOMStyle::DoGetGridTemplateColumns()
     info = gridFrame->GetComputedTemplateColumns();
   }
 
-  return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateColumns, info);
+  return GetGridTemplateColumnsRows(
+    StylePosition()->GridTemplateColumns(), info);
 }
 
 already_AddRefed<CSSValue>
@@ -3124,7 +3125,7 @@ nsComputedDOMStyle::DoGetGridTemplateRows()
     info = gridFrame->GetComputedTemplateRows();
   }
 
-  return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateRows, info);
+  return GetGridTemplateColumnsRows(StylePosition()->GridTemplateRows(), info);
 }
 
 already_AddRefed<CSSValue>

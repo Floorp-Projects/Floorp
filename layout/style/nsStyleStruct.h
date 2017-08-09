@@ -1628,16 +1628,16 @@ struct nsStyleGridTemplate
   {
   }
 
-  inline bool operator!=(const nsStyleGridTemplate& aOther) const {
+  inline bool operator==(const nsStyleGridTemplate& aOther) const {
     return
-      mIsSubgrid != aOther.mIsSubgrid ||
-      mLineNameLists != aOther.mLineNameLists ||
-      mMinTrackSizingFunctions != aOther.mMinTrackSizingFunctions ||
-      mMaxTrackSizingFunctions != aOther.mMaxTrackSizingFunctions ||
-      mIsAutoFill != aOther.mIsAutoFill ||
-      mRepeatAutoIndex != aOther.mRepeatAutoIndex ||
-      mRepeatAutoLineNameListBefore != aOther.mRepeatAutoLineNameListBefore ||
-      mRepeatAutoLineNameListAfter != aOther.mRepeatAutoLineNameListAfter;
+      mIsSubgrid == aOther.mIsSubgrid &&
+      mLineNameLists == aOther.mLineNameLists &&
+      mMinTrackSizingFunctions == aOther.mMinTrackSizingFunctions &&
+      mMaxTrackSizingFunctions == aOther.mMaxTrackSizingFunctions &&
+      mIsAutoFill == aOther.mIsAutoFill &&
+      mRepeatAutoIndex == aOther.mRepeatAutoIndex &&
+      mRepeatAutoLineNameListBefore == aOther.mRepeatAutoLineNameListBefore &&
+      mRepeatAutoLineNameListAfter == aOther.mRepeatAutoLineNameListAfter;
   }
 
   bool HasRepeatAuto() const {
@@ -1723,8 +1723,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   float         mFlexGrow;              // [reset] float
   float         mFlexShrink;            // [reset] float
   nsStyleCoord  mZIndex;                // [reset] integer, auto
-  nsStyleGridTemplate mGridTemplateColumns;
-  nsStyleGridTemplate mGridTemplateRows;
+  mozilla::UniquePtr<nsStyleGridTemplate> mGridTemplateColumns;
+  mozilla::UniquePtr<nsStyleGridTemplate> mGridTemplateRows;
 
   // nullptr for 'none'
   RefPtr<mozilla::css::GridTemplateAreasValue> mGridTemplateAreas;
@@ -1807,6 +1807,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   inline bool BSizeDependsOnContainer(mozilla::WritingMode aWM) const;
   inline bool MinBSizeDependsOnContainer(mozilla::WritingMode aWM) const;
   inline bool MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const;
+
+  const nsStyleGridTemplate& GridTemplateColumns() const;
+  const nsStyleGridTemplate& GridTemplateRows() const;
 
 private:
   static bool WidthCoordDependsOnContainer(const nsStyleCoord &aCoord);

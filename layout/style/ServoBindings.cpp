@@ -1727,30 +1727,37 @@ Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
                                                         aElementSize, aElementAlign);
 }
 
-void Gecko_SetStyleGridTemplateArrayLengths(nsStyleGridTemplate* aValue,
-                                            uint32_t aTrackSizes)
-{
-  aValue->mMinTrackSizingFunctions.SetLength(aTrackSizes);
-  aValue->mMaxTrackSizingFunctions.SetLength(aTrackSizes);
-  aValue->mLineNameLists.SetLength(aTrackSizes + 1);
-}
-
-void Gecko_SetGridTemplateLineNamesLength(nsStyleGridTemplate* aValue,
-                                          uint32_t aNames)
-{
-  aValue->mLineNameLists.SetLength(aNames);
-}
-
 void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* aArray, uint32_t aLength)
 {
   aArray->SetLength(aLength);
 }
 
 void
-Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* aGridTemplate,
+Gecko_SetStyleGridTemplate(UniquePtr<nsStyleGridTemplate>* aGridTemplate,
+                           nsStyleGridTemplate* aValue)
+{
+  aGridTemplate->reset(aValue);
+}
+
+nsStyleGridTemplate*
+Gecko_CreateStyleGridTemplate(uint32_t aTrackSizes, uint32_t aNameSize)
+{
+  nsStyleGridTemplate* result = new nsStyleGridTemplate;
+  result->mMinTrackSizingFunctions.SetLength(aTrackSizes);
+  result->mMaxTrackSizingFunctions.SetLength(aTrackSizes);
+  result->mLineNameLists.SetLength(aNameSize);
+  return result;
+}
+
+void
+Gecko_CopyStyleGridTemplateValues(UniquePtr<nsStyleGridTemplate>* aGridTemplate,
                                   const nsStyleGridTemplate* aOther)
 {
-  *aGridTemplate = *aOther;
+  if (aOther) {
+    *aGridTemplate = MakeUnique<nsStyleGridTemplate>(*aOther);
+  } else {
+    *aGridTemplate = nullptr;
+  }
 }
 
 mozilla::css::GridTemplateAreasValue*
