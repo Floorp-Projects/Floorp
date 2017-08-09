@@ -684,6 +684,12 @@ CallSite.prototype.safeString = function()
 var errorCount = 0;
 var errorLimit = 100;
 
+// We want to suppress output for functions that ended up not having any
+// hazards, for brevity of the final output. So each new toplevel function will
+// initialize this to a string, which should be printed only if an error is
+// seen.
+var errorHeader;
+
 var startTime = new Date;
 function elapsedTime()
 {
@@ -753,7 +759,7 @@ for (var bodyIndex = minStream; bodyIndex <= maxStream; bodyIndex++) {
 print(elapsedTime() + "Found " + roots.length + " roots.");
 for (var i = 0; i < roots.length; i++) {
     var root = roots[i];
-    print(elapsedTime() + "#" + (i + 1) + " Analyzing " + root + " ...");
+    errorHeader = elapsedTime() + "#" + (i + 1) + " Analyzing " + root + " ...";
     try {
         processRoot(root);
     } catch (e) {
@@ -776,6 +782,11 @@ var reachableLoops;
 
 function dumpError(entry, location, text)
 {
+    if (errorHeader) {
+        print(errorHeader);
+        errorHeader = undefined;
+    }
+
     var stack = entry.stack;
     print("Error: " + text);
     print("Location: " + entry.name + (location ? " @ " + location : "") + stack[0].safeString());
