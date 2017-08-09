@@ -275,7 +275,7 @@ StaticAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 
 //----------------------------------------------------------------------
 
-MozExternalRefCountType
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsIAtom::AddRef()
 {
   MOZ_ASSERT(!IsHTML5Atom(), "Attempt to AddRef an nsHtml5Atom");
@@ -286,7 +286,7 @@ nsIAtom::AddRef()
   return static_cast<DynamicAtom*>(this)->DoAddRef();
 }
 
-MozExternalRefCountType
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsIAtom::Release()
 {
   MOZ_ASSERT(!IsHTML5Atom(), "Attempt to Release an nsHtml5Atom");
