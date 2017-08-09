@@ -1133,6 +1133,18 @@ BrowserGlue.prototype = {
       ContextualIdentityService.load();
     });
 
+    // Load the Login Manager data from disk off the main thread, some time
+    // after startup.  If the data is required before this runs, for example
+    // because a restored page contains a password field, it will be loaded on
+    // the main thread, and this initialization request will be ignored.
+    Services.tm.idleDispatchToMainThread(() => {
+      try {
+        Services.logins;
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }, 3000);
+
     // It's important that SafeBrowsing is initialized reasonably
     // early, so we use a maximum timeout for it.
     Services.tm.idleDispatchToMainThread(() => {
