@@ -434,7 +434,7 @@ AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext)
   return result.forget();
 }
 
-ThreadSharedFloatArrayBufferList*
+const AudioChunk&
 AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext)
 {
   if (mSharedChannels.IsNull()) {
@@ -447,7 +447,7 @@ AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext)
     }
   }
 
-  return mSharedChannels.mBuffer->AsThreadSharedFloatArrayBufferList();
+  return mSharedChannels;
 }
 
 size_t

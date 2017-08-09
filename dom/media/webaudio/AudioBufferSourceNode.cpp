@@ -144,7 +144,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
   }
-  void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
+  void SetBuffer(AudioChunk&& aBuffer) override
   {
     mBuffer = aBuffer;
   }
@@ -215,12 +215,13 @@ public:
   void BorrowFromInputBuffer(AudioBlock* aOutput,
                              uint32_t aChannels)
   {
-    aOutput->SetBuffer(mBuffer);
+    aOutput->SetBuffer(mBuffer.mBuffer);
     aOutput->mChannelData.SetLength(aChannels);
     for (uint32_t i = 0; i < aChannels; ++i) {
-      aOutput->mChannelData[i] = mBuffer->GetData(i) + mBufferPosition;
+      aOutput->mChannelData[i] =
+        mBuffer.ChannelData<float>()[i] + mBufferPosition;
     }
-    aOutput->mVolume = 1.0f;
+    aOutput->mVolume = mBuffer.mVolume;
     aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
   }
 
@@ -230,10 +231,11 @@ public:
                            uint32_t aChannels,
                            uintptr_t aOffsetWithinBlock,
                            uint32_t aNumberOfFrames) {
+    MOZ_ASSERT(mBuffer.mVolume == 1.0f);
     for (uint32_t i = 0; i < aChannels; ++i) {
       float* baseChannelData = aOutput->ChannelFloatsForWrite(i);
       memcpy(baseChannelData + aOffsetWithinBlock,
-             mBuffer->GetData(i) + mBufferPosition,
+             mBuffer.ChannelData<float>()[i] + mBufferPosition,
              aNumberOfFrames * sizeof(float));
     }
   }
@@ -290,9 +292,11 @@ public:
       }
       inputLimit = std::min(inputLimit, availableInInputBuffer);
 
+      MOZ_ASSERT(mBuffer.mVolume == 1.0f);
       for (uint32_t i = 0; true; ) {
         uint32_t inSamples = inputLimit;
-        const float* inputData = mBuffer->GetData(i) + mBufferPosition;
+        const float* inputData =
+          mBuffer.ChannelData<float>()[i] + mBufferPosition;
 
         uint32_t outSamples = aAvailableInOutput;
         float* outputData =
@@ -420,7 +424,7 @@ public:
 
     bool inputBufferAligned = true;
     for (uint32_t i = 0; i < aChannels; ++i) {
-      if (!IS_ALIGNED16(mBuffer->GetData(i) + mBufferPosition)) {
+      if (!IS_ALIGNED16(mBuffer.ChannelData<float>()[i] + mBufferPosition)) {
         inputBufferAligned = false;
       }
     }
@@ -489,7 +493,7 @@ public:
     }
 
     StreamTime streamPosition = mDestination->GraphTimeToStreamTime(aFrom);
-    uint32_t channels = mBuffer ? mBuffer->GetChannels() : 0;
+    uint32_t channels = mBuffer.ChannelCount();
 
     UpdateSampleRateIfNeeded(channels, streamPosition);
 
@@ -569,7 +573,7 @@ public:
   // indicates that the resampler has begun processing.
   StreamTime mBeginProcessing;
   StreamTime mStop;
-  RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
+  AudioChunk mBuffer;
   SpeexResamplerState* mResampler;
   // mRemainingResamplerTail, like mBufferPosition, and
   // mBufferEnd, is measured in input buffer samples.
@@ -730,16 +734,15 @@ AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
   }
 
   if (mBuffer) {
-    RefPtr<ThreadSharedFloatArrayBufferList> data =
-      mBuffer->GetThreadSharedChannelsForRate(aCx);
-    ns->SetBuffer(data.forget());
+    AudioChunk data = mBuffer->GetThreadSharedChannelsForRate(aCx);
+    ns->SetBuffer(Move(data));
 
     if (mStartCalled) {
       SendOffsetAndDurationParametersToStream(ns);
     }
   } else {
     ns->SetInt32Parameter(BUFFEREND, 0);
-    ns->SetBuffer(nullptr);
+    ns->SetBuffer(AudioChunk());
 
     MarkInactive();
   }

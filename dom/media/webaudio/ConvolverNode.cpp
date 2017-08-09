@@ -30,7 +30,6 @@ class ConvolverNodeEngine final : public AudioNodeEngine
 public:
   ConvolverNodeEngine(AudioNode* aNode, bool aNormalize)
     : AudioNodeEngine(aNode)
-    , mBufferLength(0)
     , mLeftOverData(INT32_MIN)
     , mSampleRate(0.0f)
     , mUseBackgroundThreads(!aNode->Context()->IsOffline())
@@ -39,20 +38,12 @@ public:
   }
 
   enum Parameters {
-    BUFFER_LENGTH,
     SAMPLE_RATE,
     NORMALIZE
   };
   void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
-    case BUFFER_LENGTH:
-      // BUFFER_LENGTH is the first parameter that we set when setting a new buffer,
-      // so we should be careful to invalidate the rest of our state here.
-      mSampleRate = 0.0f;
-      mBufferLength = aParam;
-      mLeftOverData = INT32_MIN;
-      break;
     case NORMALIZE:
       mNormalize = !!aParam;
       break;
@@ -72,10 +63,8 @@ public:
       NS_ERROR("Bad ConvolverNodeEngine DoubleParameter");
     }
   }
-  void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
+  void SetBuffer(AudioChunk&& aBuffer) override
   {
-    RefPtr<ThreadSharedFloatArrayBufferList> buffer = aBuffer;
-
     // Note about empirical tuning (this is copied from Blink)
     // The maximum FFT size affects reverb performance and accuracy.
     // If the reverb is single-threaded and processes entirely in the real-time audio thread,
@@ -84,14 +73,14 @@ public:
     // Very large FFTs will have worse phase errors. Given these constraints 32768 is a good compromise.
     const size_t MaxFFTSize = 32768;
 
-    if (!buffer || !mBufferLength || !mSampleRate) {
+    mLeftOverData = INT32_MIN; // reset
+
+    if (aBuffer.IsNull() || !mSampleRate) {
       mReverb = nullptr;
-      mLeftOverData = INT32_MIN;
       return;
     }
 
-    mReverb = new WebCore::Reverb(buffer, mBufferLength,
-                                  MaxFFTSize, mUseBackgroundThreads,
+    mReverb = new WebCore::Reverb(aBuffer, MaxFFTSize, mUseBackgroundThreads,
                                   mNormalize, mSampleRate);
   }
 
@@ -142,7 +131,7 @@ public:
         aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
           refchanged.forget());
       }
-      mLeftOverData = mBufferLength;
+      mLeftOverData = mReverb->impulseResponseLength();
       MOZ_ASSERT(mLeftOverData > 0);
     }
     aOutput->AllocateChannels(2);
@@ -173,7 +162,6 @@ public:
 
 private:
   nsAutoPtr<WebCore::Reverb> mReverb;
-  int32_t mBufferLength;
   int32_t mLeftOverData;
   float mSampleRate;
   bool mUseBackgroundThreads;
@@ -269,15 +257,12 @@ ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv)
   AudioNodeStream* ns = mStream;
   MOZ_ASSERT(ns, "Why don't we have a stream here?");
   if (mBuffer) {
-    uint32_t length = mBuffer->Length();
-    RefPtr<ThreadSharedFloatArrayBufferList> data =
-      mBuffer->GetThreadSharedChannelsForRate(aCx);
-    SendInt32ParameterToStream(ConvolverNodeEngine::BUFFER_LENGTH, length);
+    AudioChunk data = mBuffer->GetThreadSharedChannelsForRate(aCx);
     SendDoubleParameterToStream(ConvolverNodeEngine::SAMPLE_RATE,
                                 mBuffer->SampleRate());
-    ns->SetBuffer(data.forget());
+    ns->SetBuffer(Move(data));
   } else {
-    ns->SetBuffer(nullptr);
+    ns->SetBuffer(AudioChunk());
   }
 }
 
