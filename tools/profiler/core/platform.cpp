@@ -3333,57 +3333,6 @@ profiler_current_thread_id()
   return Thread::GetCurrentId();
 }
 
-// NOTE: The callback function passed in will be called while the target thread
-// is paused. Doing stuff in this function like allocating which may try to
-// claim locks is a surefire way to deadlock.
-void
-profiler_suspend_and_sample_thread(
-  int aThreadId,
-  const std::function<ProfilerStackCallback>& aCallback,
-  bool aSampleNative /* = true */)
-{
-  // Allocate the space for the native stack
-  NativeStack nativeStack;
-
-  // Lock the profiler mutex
-  PSAutoLock lock(gPSMutex);
-
-  const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(lock);
-  for (uint32_t i = 0; i < liveThreads.size(); i++) {
-    ThreadInfo* info = liveThreads.at(i);
-
-    if (info->ThreadId() == aThreadId) {
-      // Suspend, sample, and then resume the target thread.
-      Sampler sampler(lock);
-      sampler.SuspendAndSampleAndResumeThread(lock, *info,
-                                              [&](const Registers& aRegs) {
-        // The target thread is now suspended. Collect a native backtrace, and
-        // call the callback.
-#if defined(HAVE_FASTINIT_NATIVE_UNWIND)
-        if (aSampleNative) {
-          // We can only use FramePointerStackWalk or MozStackWalk from
-          // suspend_and_sample_thread as other stackwalking methods may not be
-          // initialized.
-# if defined(USE_FRAME_POINTER_STACK_WALK)
-          DoFramePointerBacktrace(lock, *info, aRegs, nativeStack);
-# elif defined(USE_MOZ_STACK_WALK)
-          DoMozStackWalkBacktrace(lock, *info, aRegs, nativeStack);
-# else
-#  error "Invalid configuration"
-# endif
-        }
-#endif
-        aCallback(nativeStack.mPCs, nativeStack.mCount, info->IsMainThread());
-      });
-
-      // NOTE: Make sure to disable the sampler before it is destroyed, in case
-      // the profiler is running at the same time.
-      sampler.Disable(lock);
-      break;
-    }
-  }
-}
-
 // NOTE: aCollector's methods will be called while the target thread is paused.
 // Doing things in those methods like allocating -- which may try to claim
 // locks -- is a surefire way to deadlock.
