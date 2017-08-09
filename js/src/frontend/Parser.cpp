@@ -6167,7 +6167,7 @@ Parser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
         if (!tokenStream.peekToken(&next))
             return false;
 
-        parsingLexicalDeclaration = nextTokenContinuesLetDeclaration(next, yieldHandling);
+        parsingLexicalDeclaration = nextTokenContinuesLetDeclaration(next);
         if (!parsingLexicalDeclaration) {
             tokenStream.ungetToken();
             letIsIdentifier = true;
@@ -7467,8 +7467,7 @@ Parser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
 
 template <class ParseHandler, typename CharT>
 bool
-Parser<ParseHandler, CharT>::nextTokenContinuesLetDeclaration(TokenKind next,
-                                                              YieldHandling yieldHandling)
+Parser<ParseHandler, CharT>::nextTokenContinuesLetDeclaration(TokenKind next)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LET));
 
@@ -7478,42 +7477,23 @@ Parser<ParseHandler, CharT>::nextTokenContinuesLetDeclaration(TokenKind next,
     MOZ_ASSERT(next == verify);
 #endif
 
-    // Destructuring is (for once) the easy case.
+    // Destructuring continues a let declaration.
     if (next == TOK_LB || next == TOK_LC)
         return true;
 
-    // If we have the name "yield", the grammar parameter exactly states
-    // whether this is okay.  (This wasn't true for SpiderMonkey's ancient
-    // legacy generator syntax, but that's dead now.)  If YieldIsName,
-    // declaration-parsing code will (if necessary) enforce a strict mode
-    // restriction on defining "yield".  If YieldIsKeyword, consider this the
-    // end of the declaration, in case ASI induces a semicolon that makes the
-    // "yield" valid.
-    if (next == TOK_YIELD)
-        return yieldHandling == YieldIsName;
-
-    // Somewhat similar logic applies for "await", except that it's not tracked
-    // with an AwaitHandling argument.
-    if (next == TOK_AWAIT)
-        return !awaitIsKeyword();
+    // A "let" edge case deserves special comment.  Consider this:
+    //
+    //   let     // not an ASI opportunity
+    //   let;
+    //
+    // Static semantics in §13.3.1.1 turn a LexicalDeclaration that binds
+    // "let" into an early error.  Does this retroactively permit ASI so
+    // that we should parse this as two ExpressionStatements?   No.  ASI
+    // resolves during parsing.  Static semantics only apply to the full
+    // parse tree with ASI applied.  No backsies!
 
     // Otherwise a let declaration must have a name.
-    if (TokenKindIsPossibleIdentifier(next)) {
-        // A "let" edge case deserves special comment.  Consider this:
-        //
-        //   let     // not an ASI opportunity
-        //   let;
-        //
-        // Static semantics in §13.3.1.1 turn a LexicalDeclaration that binds
-        // "let" into an early error.  Does this retroactively permit ASI so
-        // that we should parse this as two ExpressionStatements?   No.  ASI
-        // resolves during parsing.  Static semantics only apply to the full
-        // parse tree with ASI applied.  No backsies!
-        return true;
-    }
-
-    // Otherwise not a let declaration.
-    return false;
+    return TokenKindIsPossibleIdentifier(next);
 }
 
 template <class ParseHandler, typename CharT>
@@ -7816,7 +7796,7 @@ Parser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandling,
         if (!tokenStream.peekToken(&next))
             return null();
 
-        if (tt == TOK_LET && nextTokenContinuesLetDeclaration(next, yieldHandling))
+        if (tt == TOK_LET && nextTokenContinuesLetDeclaration(next))
             return lexicalDeclaration(yieldHandling, DeclarationKind::Let);
 
         if (tt == TOK_ASYNC) {

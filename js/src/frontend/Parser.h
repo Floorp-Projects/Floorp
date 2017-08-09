@@ -660,7 +660,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     // While on a |let| TOK_NAME token, examine |next|.  Indicate whether
     // |next|, the next token already gotten with modifier TokenStream::None,
     // continues a LexicalDeclaration.
-    bool nextTokenContinuesLetDeclaration(TokenKind next, YieldHandling yieldHandling);
+    bool nextTokenContinuesLetDeclaration(TokenKind next);
 
     Node lexicalDeclaration(YieldHandling yieldHandling, DeclarationKind kind);
 
