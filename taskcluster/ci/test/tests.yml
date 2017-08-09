@@ -1145,7 +1145,6 @@ reftest-no-accel:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-qr/.*: ['mozilla-central', 'try']
             # Deactivate try on Buildbot, by default. We don't have enough machines
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
