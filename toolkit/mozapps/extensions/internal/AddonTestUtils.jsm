@@ -614,8 +614,13 @@ var AddonTestUtils = {
         let shutdownError = XPIscope.XPIProvider._shutdownError;
 
         AddonManagerPrivate.unregisterProvider(XPIscope.XPIProvider);
-        Cu.unload("resource://gre/modules/addons/XPIProvider.jsm");
-        Cu.unload("resource://gre/modules/addons/XPIInstall.jsm");
+
+        let cachedModules = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {}).modules;
+        for (let url of ["resource://gre/modules/addons/XPIProvider.jsm",
+                         "resource://gre/modules/addons/XPIInstall.jsm"]) {
+          Cu.unload(url);
+          delete cachedModules[url];
+        }
 
         // We need to set this in order reset the startup service, which
         // is only possible when running in automation.
