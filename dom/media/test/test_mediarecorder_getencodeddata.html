@@ -53,6 +53,9 @@ SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
           'Events fired from onerror should have a DOMException in their error member');
         is(evt.error.name, 'UnknownError', 'Error name should be UnknownError.');
         is(evt.error.message, 'The operation failed for an unknown transient reason');
+        ok(evt.error.stack.includes('test_mediarecorder_getencodeddata.html'),
+          'Events fired from onerror should include an error with a stack trace indicating ' +
+          'an error in this test');
         onErrorFired = true;
       };
       mediaRecorder.start(0);
