@@ -126,7 +126,7 @@ extern MOZ_MUST_USE bool
 GetFirstDollarIndex(JSContext* cx, unsigned argc, Value* vp);
 
 extern MOZ_MUST_USE bool
-GetFirstDollarIndexRaw(JSContext* cx, HandleString str, int32_t* index);
+GetFirstDollarIndexRaw(JSContext* cx, JSString* str, int32_t* index);
 
 extern int32_t
 GetFirstDollarIndexRawFlat(JSLinearString* text);
