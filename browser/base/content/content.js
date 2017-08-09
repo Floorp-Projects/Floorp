@@ -1111,8 +1111,10 @@ addMessageListener("ContextMenu:SetAsDesktopBackground", (message) => {
       let ctx = canvas.getContext("2d");
       ctx.drawImage(target, 0, 0);
       let dataUrl = canvas.toDataURL();
+      let url = (new URL(target.ownerDocument.location.href)).pathname;
+      let imageName = url.substr(url.lastIndexOf("/") + 1);
       sendAsyncMessage("ContextMenu:SetAsDesktopBackground:Result",
-                       { dataUrl });
+                       { dataUrl, imageName });
     } catch (e) {
       Cu.reportError(e);
       disable = true;
