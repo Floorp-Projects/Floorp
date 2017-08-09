@@ -272,8 +272,7 @@ if toolkit == 'gtk3':
         'nsIApplicationChooser.idl',
     ]
 
-if not CONFIG['MOZ_B2G']:
-    DEFINES['MOZ_CROSS_PROCESS_IME'] = True
+DEFINES['MOZ_CROSS_PROCESS_IME'] = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
