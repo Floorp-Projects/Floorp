@@ -10,6 +10,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Move.h"
+#include "mozilla/Unused.h"
 #include "nsINamed.h"
 #include "nsQueryObject.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -302,9 +303,39 @@ SchedulerGroup::LabeledDispatch(TaskCategory aCategory,
 {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (XRE_IsContentProcess()) {
-    runnable = new Runnable(runnable.forget(), this);
+    RefPtr<Runnable> internalRunnable = new Runnable(runnable.forget(), this);
+    return InternalUnlabeledDispatch(aCategory, internalRunnable.forget());
   }
   return UnlabeledDispatch(aCategory, runnable.forget());
+}
+
+/*static*/ nsresult
+SchedulerGroup::InternalUnlabeledDispatch(TaskCategory aCategory,
+                                          already_AddRefed<Runnable>&& aRunnable)
+{
+  if (NS_IsMainThread()) {
+    // NS_DispatchToCurrentThread will not leak the passed in runnable
+    // when it fails, so we don't need to do anything special.
+    return NS_DispatchToCurrentThread(Move(aRunnable));
+  }
+
+  RefPtr<Runnable> runnable(aRunnable);
+  nsresult rv = NS_DispatchToMainThread(do_AddRef(runnable));
+  if (NS_FAILED(rv)) {
+    // Dispatch failed.  This is a situation where we would have used
+    // NS_DispatchToMainThread rather than calling into the SchedulerGroup
+    // machinery, and the caller would be expecting to leak the nsIRunnable
+    // originally passed in.  But because we've had to wrap things up
+    // internally, we were going to leak the nsIRunnable *and* our Runnable
+    // wrapper.  But there's no reason that we have to leak our Runnable
+    // wrapper; we can just leak the wrapped nsIRunnable, and let the caller
+    // take care of unleaking it if they need to.
+    Unused << runnable->mRunnable.forget().take();
+    nsrefcnt refcnt = runnable.get()->Release();
+    MOZ_RELEASE_ASSERT(refcnt == 1, "still holding an unexpected reference!");
+  }
+
+  return rv;
 }
 
 void
