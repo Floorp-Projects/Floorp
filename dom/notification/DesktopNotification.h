@@ -159,10 +159,6 @@ class AlertServiceObserver: public nsIObserver
 
     // forward to parent
     if (mNotification) {
-#ifdef MOZ_B2G
-    if (NS_FAILED(mNotification->CheckInnerWindowCorrectness()))
-      return NS_ERROR_NOT_AVAILABLE;
-#endif
       mNotification->HandleAlertServiceNotification(aTopic);
     }
     return NS_OK;

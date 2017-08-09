@@ -8,6 +8,8 @@
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
+var isWindows = (getPlatform() == "windows");
+
 var apz_touch_action_prefs = [
   // Obviously we need touch-action support enabled for testing touch-action.
   ["layout.css.touch_action.enabled", true],
@@ -30,6 +32,7 @@ var apz_touch_action_prefs = [
   // position is synced back to the main thread. So we disable displayport
   // expiry for these tests.
   ["apz.displayport_expiry_ms", 0],
+  ["apz.test.fails_with_native_injection", isWindows],
 ];
 
 function apzScriptInjector(name) {
