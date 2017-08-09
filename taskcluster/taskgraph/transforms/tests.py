@@ -491,10 +491,10 @@ def set_treeherder_machine_platform(config, tests):
         'win64-pgo/opt': 'windows10-64/pgo',
         # The build names for Android platforms have partially evolved over the
         # years and need to be translated.
-        'android-api-15/debug': 'android-4-3-armv7-api15/debug',
-        'android-api-15/opt': 'android-4-3-armv7-api15/opt',
+        'android-api-16/debug': 'android-4-3-armv7-api16/debug',
+        'android-api-16/opt': 'android-4-3-armv7-api16/opt',
         'android-x86/opt': 'android-4-2-x86/opt',
-        'android-api-15-gradle/opt': 'android-api-15-gradle/opt',
+        'android-api-16-gradle/opt': 'android-api-16-gradle/opt',
     }
     for test in tests:
         # For most desktop platforms, the above table is not used for "regular"
@@ -544,8 +544,8 @@ def set_tier(config, tests):
                                          'windows10-64-nightly/opt',
                                          'macosx64/opt',
                                          'macosx64/debug',
-                                         'android-4.3-arm7-api-15/opt',
-                                         'android-4.3-arm7-api-15/debug',
+                                         'android-4.3-arm7-api-16/opt',
+                                         'android-4.3-arm7-api-16/debug',
                                          'android-4.2-x86/opt']:
                 test['tier'] = 1
             else:

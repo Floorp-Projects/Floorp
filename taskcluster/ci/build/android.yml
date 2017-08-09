@@ -1,10 +1,10 @@
-android-api-15/debug:
-    description: "Android 4.0 API15+ Debug"
+android-api-16/debug:
+    description: "Android 4.0 api-16+ Debug"
     index:
         product: mobile
-        job-name: android-api-15-debug
+        job-name: android-api-16-debug
     treeherder:
-        platform: android-4-0-armv7-api15/debug
+        platform: android-4-0-armv7-api16/debug
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
@@ -20,7 +20,7 @@ android-api-15/debug:
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: api-15-debug
+        custom-build-variant-cfg: api-16-debug
         tooltool-downloads: internal
     toolchains:
         - linux64-gcc
@@ -86,13 +86,13 @@ android-x86-nightly/opt:
         - linux64-gcc
         - linux64-sccache
 
-android-api-15/opt:
-    description: "Android 4.0 API15+ Opt"
+android-api-16/opt:
+    description: "Android 4.0 api-16+ Opt"
     index:
         product: mobile
-        job-name: android-api-15-opt
+        job-name: android-api-16-opt
     treeherder:
-        platform: android-4-0-armv7-api15/opt
+        platform: android-4-0-armv7-api16/opt
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
@@ -108,22 +108,22 @@ android-api-15/opt:
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: api-15
+        custom-build-variant-cfg: api-16
         tooltool-downloads: internal
     toolchains:
         - linux64-gcc
         - linux64-sccache
 
-android-api-15-nightly/opt:
-    description: "Android 4.0 API15+ Nightly"
+android-api-16-nightly/opt:
+    description: "Android 4.0 api-16+ Nightly"
     attributes:
         nightly: true
     index:
         product: mobile
-        job-name: android-api-15-opt
+        job-name: android-api-16-opt
         type: nightly-with-multi-l10n
     treeherder:
-        platform: android-4-0-armv7-api15/opt
+        platform: android-4-0-armv7-api16/opt
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
@@ -140,7 +140,7 @@ android-api-15-nightly/opt:
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: api-15
+        custom-build-variant-cfg: api-16
         tooltool-downloads: internal
     toolchains:
         - linux64-gcc
@@ -208,13 +208,13 @@ android-x86-old-id-nightly/opt:
         - linux64-gcc
         - linux64-sccache
 
-android-api-15-old-id/opt:
-    description: "Android 4.0 API15+ Opt OldId"
+android-api-16-old-id/opt:
+    description: "Android 4.0 api-16+ Opt OldId"
     index:
         product: mobile
-        job-name: android-api-15-old-id-opt
+        job-name: android-api-16-old-id-opt
     treeherder:
-        platform: android-4-0-armv7-api15-old-id/opt
+        platform: android-4-0-armv7-api16-old-id/opt
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
@@ -230,23 +230,23 @@ android-api-15-old-id/opt:
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: api-15-old-id
+        custom-build-variant-cfg: api-16-old-id
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
     toolchains:
         - linux64-gcc
         - linux64-sccache
 
-android-api-15-old-id-nightly/opt:
-    description: "Android 4.0 API15+ OldId Nightly"
+android-api-16-old-id-nightly/opt:
+    description: "Android 4.0 api-16+ OldId Nightly"
     attributes:
         nightly: true
     index:
         product: mobile
-        job-name: android-api-15-old-id-opt
+        job-name: android-api-16-old-id-opt
         type: nightly-with-multi-l10n
     treeherder:
-        platform: android-4-0-armv7-api15-old-id/opt
+        platform: android-4-0-armv7-api16-old-id/opt
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
@@ -263,20 +263,20 @@ android-api-15-old-id-nightly/opt:
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: api-15-old-id
+        custom-build-variant-cfg: api-16-old-id
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
     toolchains:
         - linux64-gcc
         - linux64-sccache
 
-android-api-15-gradle/opt:
-    description: "Android 4.0 API15+ (Gradle) Opt"
+android-api-16-gradle/opt:
+    description: "Android 4.0 api-16+ (Gradle) Opt"
     index:
         product: mobile
-        job-name: android-api-15-gradle-opt
+        job-name: android-api-16-gradle-opt
     treeherder:
-        platform: android-api-15-gradle/opt
+        platform: android-api-16-gradle/opt
         symbol: tc(Bg)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
@@ -305,7 +305,7 @@ android-api-15-gradle/opt:
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: api-15-gradle
+        custom-build-variant-cfg: api-16-gradle
         tooltool-downloads: internal
     toolchains:
         - linux64-gcc

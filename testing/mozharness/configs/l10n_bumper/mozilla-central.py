@@ -23,7 +23,7 @@ config = {
         "format": "json",
         "name": "Fennec l10n changesets",
         "platform_configs": [{
-            "platforms": ["android-api-15", "android"],
+            "platforms": ["android-api-16", "android"],
             "path": "mobile/android/locales/all-locales"
         }, {
             "platforms": ["android-multilocale"],

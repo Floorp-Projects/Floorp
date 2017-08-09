@@ -16,18 +16,18 @@ kind-dependencies:
 only-for-build-platforms:
    - linux64/opt
    - linux/opt
-   - android-api-15/opt
+   - android-api-16/opt
    #- macosx64/opt
 
 job-template:
    description:
       by-build-platform:
          default: Localization
-         android-api-15-l10n: Single Locale Repack
+         android-api-16-l10n: Single Locale Repack
    locales-file:
       by-build-platform:
          default: browser/locales/all-locales
-         android-api-15-l10n: mobile/locales/l10n-changesets.json
+         android-api-16-l10n: mobile/locales/l10n-changesets.json
    ignore-locales:
       by-build-platform:
          # OSX has a special locale for japanese
@@ -36,11 +36,11 @@ job-template:
    run-time:
       by-build-platform:
          default: 36000
-         android-api-15-l10n: 18000
+         android-api-16-l10n: 18000
    tooltool:
       by-build-platform:
          default: public
-         android-api-15-l10n: internal
+         android-api-16-l10n: internal
          macosx64-nightly: internal
    worker-type:
       by-build-platform:
@@ -56,7 +56,7 @@ job-template:
             linux64-l10n: linux64/opt
             linux-l10n: linux32/opt
             macosx64: osx-cross/opt
-            android-api-15-l10n: android-4-0-armv7-api15/opt
+            android-api-16-l10n: android-4-0-armv7-api16/opt
    mozharness:
       config:
          by-build-platform:
@@ -66,9 +66,9 @@ job-template:
                - single_locale/tc_linux64.py
             macosx64:
                - single_locale/tc_macosx64.py
-            android-api-15-l10n:
-               - single_locale/{project}_android-api-15.py
-               - single_locale/tc_android-api-15.py
+            android-api-16-l10n:
+               - single_locale/{project}_android-api-16.py
+               - single_locale/tc_android-api-16.py
             # no default, so we fail on new entries
       options:
          by-build-platform:
@@ -96,12 +96,12 @@ job-template:
       actions:
          by-build-platform:
             default: [clone-locales list-locales setup repack summary]
-            android-api-15-l10n: [clone-locales list-locales setup repack
+            android-api-16-l10n: [clone-locales list-locales setup repack
                                   upload-repacks summary]
       script:
          by-build-platform:
             default: mozharness/scripts/desktop_l10n.py
-            android-api-15-l10n: mozharness/scripts/mobile_l10n.py
+            android-api-16-l10n: mozharness/scripts/mobile_l10n.py
    when:
       files-changed:
          - browser/locales/all-locales
