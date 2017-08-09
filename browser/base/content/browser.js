@@ -1667,26 +1667,11 @@ var gBrowserInit = {
       MenuTouchModeObserver.init();
     }
 
-    // initialize the sync UI
-    requestIdleCallback(() => {
-      gSync.init();
-    }, {timeout: 1000 * 5});
-
     if (AppConstants.MOZ_DATA_REPORTING)
       gDataNotificationInfoBar.init();
 
     if (!AppConstants.MOZILLA_OFFICIAL)
       DevelopmentHelpers.init();
-
-    requestIdleCallback(() => {
-      // setup simple gestures support
-      gGestureSupport.init(true);
-
-      // setup history swipe animation
-      gHistorySwipeAnimation.init();
-    });
-
-    requestIdleCallback(() => { gBrowserThumbnails.init(); });
 
     gExtensionsNotifications.init();
 
@@ -1773,7 +1758,22 @@ var gBrowserInit = {
       }, options);
     }
 
-    // TODO: Functions to be added here using scheduleIdleTask
+    scheduleIdleTask(() => {
+      // Initialize the Sync UI
+      gSync.init();
+    });
+
+    scheduleIdleTask(() => {
+      // setup simple gestures support
+      gGestureSupport.init(true);
+
+      // setup history swipe animation
+      gHistorySwipeAnimation.init();
+    });
+
+    scheduleIdleTask(() => {
+      gBrowserThumbnails.init();
+    });
   },
 
   // Returns the URI(s) to load at startup.
