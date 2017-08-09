@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Zaznaczenie jest za małe"
   },
+  "privateWindowErrorTitle": {
+    "message": "Firefox Screenshots jest wyłączony w trybie prywatnym"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Przepraszamy za utrudnienia. Pracujemy nad dodaniem tej funkcji."
+  },
   "genericErrorTitle": {
     "message": "Firefox Screenshots wymknęło się spod kontroli."
   },

@@ -12,7 +12,7 @@
     "message": "Mes captures d’écran"
   },
   "screenshotInstructions": {
-    "message": "Sélectionnez une zone de la page par cliquer-glisser ou en cliquant sur l’élément à sélectionner. Appuyez sur Échap pour annuler."
+    "message": "Sélectionnez une zone de la page par cliquer-glisser. Appuyez sur Échap pour annuler."
   },
   "saveScreenshotSelectedArea": {
     "message": "Enregistrer"
@@ -66,6 +66,12 @@
   },
   "emptySelectionErrorTitle": {
     "message": "La zone sélectionnée est trop petite"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots est désactivé en mode de navigation privée"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Désolé pour la gêne occasionnée. Nous travaillons sur cette fonctionnalité pour de prochaines versions."
   },
   "genericErrorTitle": {
     "message": "Firefox Screenshots semble avoir un problème."
