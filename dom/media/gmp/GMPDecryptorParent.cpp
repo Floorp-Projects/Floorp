@@ -5,6 +5,7 @@
 
 #include "GMPDecryptorParent.h"
 #include "GMPContentParent.h"
+#include "GMPUtils.h"
 #include "MediaData.h"
 #include "mozilla/Unused.h"
 

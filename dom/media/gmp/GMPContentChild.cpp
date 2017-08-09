@@ -10,6 +10,7 @@
 #include "GMPVideoEncoderChild.h"
 #include "ChromiumCDMChild.h"
 #include "base/task.h"
+#include "GMPUtils.h"
 
 namespace mozilla {
 namespace gmp {

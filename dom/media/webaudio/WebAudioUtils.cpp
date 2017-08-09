@@ -11,6 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "AudioEventTimeline.h"
 
 namespace mozilla {
 

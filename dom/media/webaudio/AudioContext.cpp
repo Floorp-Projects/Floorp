@@ -41,6 +41,7 @@
 #include "AudioChannelService.h"
 #include "AudioDestinationNode.h"
 #include "AudioListener.h"
+#include "AudioNodeStream.h"
 #include "AudioStream.h"
 #include "BiquadFilterNode.h"
 #include "ChannelMergerNode.h"

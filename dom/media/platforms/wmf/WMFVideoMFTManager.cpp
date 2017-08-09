@@ -20,6 +20,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -32,6 +33,7 @@
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
+#include "WMFDecoderModule.h"
 #include <algorithm>
 #include <psapi.h>
 #include <winsdkver.h>
@@ -63,7 +65,9 @@ const GUID MFVideoFormat_VP90 =
 };
 #endif
 
-const CLSID CLSID_WebmMfVpxDec =
+// Note: CLSID_WebmMfVpxDec needs to be extern for the CanCreateWMFDecoder
+// template in WMFDecoderModule.cpp to work.
+extern const GUID CLSID_WebmMfVpxDec =
 {
   0xe3aaf548,
   0xc9a4,

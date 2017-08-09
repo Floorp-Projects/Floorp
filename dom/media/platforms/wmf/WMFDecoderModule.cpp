@@ -30,6 +30,8 @@
 #include "prsystem.h"
 #include "nsIXULRuntime.h"
 
+extern const GUID CLSID_WebmMfVpxDec;
+
 namespace mozilla {
 
 static Atomic<bool> sDXVAEnabled(false);
