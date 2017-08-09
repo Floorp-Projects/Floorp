@@ -21,9 +21,9 @@
 function format_mode(mode) {
   if (mode <= 0o777) {
     return ("0000" + mode.toString(8)).slice(-4);
-  } else {
-    return "0" + mode.toString(8);
   }
+    return "0" + mode.toString(8);
+
 }
 
 const _umask = OS.Constants.Sys.umask;
