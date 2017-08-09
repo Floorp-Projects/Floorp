@@ -9289,20 +9289,22 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerLayerParameters& aParameters)
 {
-  if (ShouldPaintOnMaskLayer(aManager)) {
-    return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-                                         mList, GetAnimatedGeometryRoot());
+  if (CanPaintOnMaskLayer(aManager)) {
+    LayerState result = RequiredLayerStateForChildren(aBuilder, aManager,
+        aParameters, mList, GetAnimatedGeometryRoot());
+    // When we're not active, FrameLayerBuilder will call PaintAsLayer()
+    // on us during painting. In that case we don't want a mask layer to
+    // be created, because PaintAsLayer() takes care of applying the mask.
+    // So we return LAYER_SVG_EFFECTS instead of LAYER_INACTIVE so that
+    // FrameLayerBuilder doesn't set a mask layer on our layer.
+    return result == LAYER_INACTIVE ? LAYER_SVG_EFFECTS : result;
   }
 
   return LAYER_SVG_EFFECTS;
 }
 
-bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
+bool nsDisplayMask::CanPaintOnMaskLayer(LayerManager* aManager)
 {
-  if (!aManager->IsCompositingCheap()) {
-    return false;
-  }
-
   if (!nsSVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
     return false;
   }
@@ -9368,8 +9370,6 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                             gfxContext* aCtx,
                             LayerManager* aManager)
 {
-  MOZ_ASSERT(!ShouldPaintOnMaskLayer(aManager));
-
   // Clip the drawing target by mVisibleRect, which contains the visible
   // region of the target frame and its out-of-flow and inflow descendants.
   gfxContext* context = aCtx;
