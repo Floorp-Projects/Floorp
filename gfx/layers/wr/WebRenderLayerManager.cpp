@@ -368,9 +368,9 @@ WebRenderLayerManager::PushImage(nsDisplayItem* aItem,
     return false;
   }
 
-  wr::ImageRendering filter = wr::ImageRendering::Auto;
   auto r = aSc.ToRelativeLayoutRect(aRect);
-  aBuilder.PushImage(r, r, filter, key.value());
+  SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
+  aBuilder.PushImage(r, r, wr::ToImageRendering(sampleFilter), key.value());
 
   return true;
 }
@@ -557,9 +557,10 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
   }
 
   wr::LayoutRect dest = aSc.ToRelativeLayoutRect(imageRect + offset);
+  SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
   aBuilder.PushImage(dest,
                      dest,
-                     wr::ImageRendering::Auto,
+                     wr::ToImageRendering(sampleFilter),
                      fallbackData->GetKey().value());
   return true;
 }
