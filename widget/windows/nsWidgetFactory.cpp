@@ -35,6 +35,7 @@
 // Drag & Drop, Clipboard
 #include "nsClipboardHelper.h"
 #include "nsClipboard.h"
+#include "HeadlessClipboard.h"
 #include "nsBidiKeyboard.h"
 #include "nsDragService.h"
 #include "nsTransferable.h"
@@ -103,9 +104,25 @@ ColorPickerConstructor(nsISupports *aOuter, REFNSIID aIID,
   return picker->QueryInterface(aIID, aResult);
 }
 
+static nsresult
+nsClipboardConstructor(nsISupports *aOuter, REFNSIID aIID,
+                       void **aResult)
+{
+  *aResult = nullptr;
+  if (aOuter != nullptr) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsCOMPtr<nsIClipboard> inst;
+  if (gfxPlatform::IsHeadless()) {
+    inst = new HeadlessClipboard();
+  } else {
+    inst = new nsClipboard();
+  }
+  return inst->QueryInterface(aIID, aResult);
+}
+
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ScreenManager, ScreenManager::GetAddRefedSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceWin, nsIdleServiceWin::GetInstance)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIClipboard, nsClipboard::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISound, nsSound::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(WinTaskbar)
@@ -177,7 +194,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_GFXINFO_CID, false, nullptr, GfxInfoConstructor },
   { &kNS_THEMERENDERER_CID, false, nullptr, NS_NewNativeTheme },
   { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceWinConstructor },
-  { &kNS_CLIPBOARD_CID, false, nullptr, nsIClipboardConstructor, Module::MAIN_PROCESS_ONLY },
+  { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor, Module::MAIN_PROCESS_ONLY },
   { &kNS_CLIPBOARDHELPER_CID, false, nullptr, nsClipboardHelperConstructor },
   { &kNS_SOUND_CID, false, nullptr, nsISoundConstructor, Module::MAIN_PROCESS_ONLY },
   { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },

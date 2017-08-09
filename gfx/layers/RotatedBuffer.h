@@ -305,9 +305,9 @@ public:
   RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
                                                           DrawIterator* aIter);
 
-  void ExpandDrawRegion(PaintState& aPaintState,
-                        DrawIterator* aIter,
-                        gfx::BackendType aBackendType);
+  nsIntRegion ExpandDrawRegion(PaintState& aPaintState,
+                               DrawIterator* aIter,
+                               gfx::BackendType aBackendType);
 
   static bool PrepareDrawTargetForPainting(CapturedPaintState*);
   enum {

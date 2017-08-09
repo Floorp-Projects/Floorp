@@ -9,7 +9,7 @@
 #include "gfxUserFontSet.h"
 #include "nsFontFaceLoader.h"
 #include "mozilla/gfx/2D.h"
-#include "decode.h"
+#include "brotli/decode.h"
 #include "zlib.h"
 #include "mozilla/dom/FontFaceSet.h"
 
@@ -208,10 +208,10 @@ nsFontFace::GetMetadata(nsAString & aMetadata)
         case gfxUserFontData::kBrotliCompression:
           {
             size_t decodedSize = userFontData->mMetaOrigLen;
-            if (BrotliDecompressBuffer(userFontData->mMetadata.Length(),
-                                       userFontData->mMetadata.Elements(),
-                                       &decodedSize,
-                                       (uint8_t*)str.BeginWriting()) == 1 &&
+            if (BrotliDecoderDecompress(userFontData->mMetadata.Length(),
+                                        userFontData->mMetadata.Elements(),
+                                        &decodedSize,
+                                        (uint8_t*)str.BeginWriting()) == 1 &&
                 decodedSize == userFontData->mMetaOrigLen) {
               AppendUTF8toUTF16(str, aMetadata);
             }

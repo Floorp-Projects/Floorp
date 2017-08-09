@@ -8,7 +8,7 @@
 #include "nsJARInputStream.h"
 #include "zipstruct.h"         // defines ZIP compression codes
 #ifdef MOZ_JAR_BROTLI
-#include "decode.h"  // brotli
+#include "brotli/decode.h"  // brotli
 #endif
 #include "nsZipArchive.h"
 
@@ -56,7 +56,7 @@ nsJARInputStream::InitFile(nsJAR *aJar, nsZipItem *item)
 
 #ifdef MOZ_JAR_BROTLI
        case MOZ_JAR_BROTLI:
-           mBrotliState = BrotliCreateState(nullptr, nullptr, nullptr);
+           mBrotliState = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
            mMode = MODE_BROTLI;
            mInCrc = item->CRC32();
            mOutCrc = crc32(0L, Z_NULL, 0);
@@ -266,7 +266,7 @@ nsJARInputStream::Close()
     }
 #ifdef MOZ_JAR_BROTLI
     if (mMode == MODE_BROTLI) {
-        BrotliDestroyState(mBrotliState);
+        BrotliDecoderDestroyInstance(mBrotliState);
     }
 #endif
     mMode = MODE_CLOSED;
@@ -311,18 +311,19 @@ nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
         size_t avail_in = mZs.avail_in;
         size_t avail_out = mZs.avail_out;
         size_t total_out = mZs.total_out;
-        BrotliResult result = BrotliDecompressStream(
+        BrotliDecoderResult result = BrotliDecoderDecompressStream(
+            mBrotliState,
             &avail_in, const_cast<const unsigned char**>(&mZs.next_in),
-            &avail_out, &mZs.next_out, &total_out, mBrotliState);
+            &avail_out, &mZs.next_out, &total_out);
         /* We don't need to update avail_out, it's not used outside this
          * function. */
         mZs.total_out = total_out;
         mZs.avail_in = avail_in;
-        if (result == BROTLI_RESULT_ERROR) {
+        if (result == BROTLI_DECODER_RESULT_ERROR) {
             nsZipArchive::sFileCorruptedReason = "nsJARInputStream: brotli decompression error";
             return NS_ERROR_FILE_CORRUPTED;
         }
-        finished = (result == BROTLI_RESULT_SUCCESS);
+        finished = (result == BROTLI_DECODER_RESULT_SUCCESS);
 #endif
     }
 

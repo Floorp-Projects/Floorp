@@ -227,7 +227,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           } else {
             let originalUrl = ReaderMode.getOriginalUrlObjectForDisplay(aValue);
             if (originalUrl) {
-              returnValue = originalUrl.spec;
+              returnValue = originalUrl.displaySpec;
             }
           }
 
@@ -981,7 +981,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           // Avoid copying 'about:reader?url=', and always provide the original URI:
           // Reader mode ensures we call createExposableURI itself.
-          let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(uri.spec);
+          let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(uri.displaySpec);
           if (readerStrippedURI) {
             uri = readerStrippedURI;
           } else {
@@ -997,12 +997,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (inputVal == selectedVal &&
               !uri.schemeIs("javascript") && !uri.schemeIs("data") &&
               !Services.prefs.getBoolPref("browser.urlbar.decodeURLsOnCopy")) {
-            return uri.spec;
+            return uri.displaySpec;
           }
 
           // Just the beginning of the URL is selected, or we want a decoded
           // url. First check for a trimmed value.
-          let spec = uri.spec;
+          let spec = uri.displaySpec;
           let trimmedSpec = this.trimValue(spec);
           if (spec != trimmedSpec) {
             // Prepend the portion that trimValue removed from the beginning.
@@ -1525,7 +1525,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.getAttribute("pageproxystate") != "valid")
           return;
 
-        var urlString = gBrowser.selectedBrowser.currentURI.spec;
+        var urlString = gBrowser.selectedBrowser.currentURI.displaySpec;
         var title = gBrowser.selectedBrowser.contentTitle || urlString;
         var htmlString = "<a href=\"" + urlString + "\">" + urlString + "</a>";
 

@@ -1,3 +1,12 @@
+Overview of changes leading to 1.4.8
+Tuesday, August 8, 2017
+====================================
+
+- Major fix to avar table handling.
+- Rename hb-shape --show-message to --trace.
+- Build fixes.
+
+
 Overview of changes leading to 1.4.7
 Tuesday, July 18, 2017
 ====================================

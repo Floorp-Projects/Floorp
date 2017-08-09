@@ -454,6 +454,12 @@ RustURL::GetDisplayHost(nsACString &aUnicodeHost)
 }
 
 NS_IMETHODIMP
+RustURL::GetDisplayPrePath(nsACString & aPrePath)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 RustURL::GetHasRef(bool *aHasRef)
 {
   *aHasRef = false;
