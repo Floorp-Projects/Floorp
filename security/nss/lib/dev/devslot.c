@@ -226,15 +226,16 @@ nssSlot_GetToken(
     NSSSlot *slot)
 {
     NSSToken *rvToken = NULL;
-    nssSlot_EnterMonitor(slot);
 
-    /* Even if a token should be present, check `slot->token` too as it
-     * might be gone already. This would happen mostly on shutdown. */
-    if (nssSlot_IsTokenPresent(slot) && slot->token) {
-        rvToken = nssToken_AddRef(slot->token);
+    if (nssSlot_IsTokenPresent(slot)) {
+        /* Even if a token should be present, check `slot->token` too as it
+	 * might be gone already. This would happen mostly on shutdown. */
+        nssSlot_EnterMonitor(slot);
+        if (slot->token)
+            rvToken = nssToken_AddRef(slot->token);
+        nssSlot_ExitMonitor(slot);
     }
 
-    nssSlot_ExitMonitor(slot);
     return rvToken;
 }
 
