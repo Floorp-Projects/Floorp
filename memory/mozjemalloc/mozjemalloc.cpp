@@ -2170,18 +2170,6 @@ label_return:
 		base_node_dealloc(xprev);
 }
 
-static bool
-chunk_dalloc_mmap(void *chunk, size_t size)
-{
-	if (CAN_RECYCLE(size) && load_acquire_z(&recycled_size) < recycle_limit)
-		return true;
-
-	pages_unmap(chunk, size);
-	return false;
-}
-
-#undef CAN_RECYCLE
-
 static void
 chunk_dealloc(void *chunk, size_t size, ChunkType type)
 {
@@ -2193,9 +2181,15 @@ chunk_dealloc(void *chunk, size_t size, ChunkType type)
 
 	malloc_rtree_set(chunk_rtree, (uintptr_t)chunk, nullptr);
 
-	if (chunk_dalloc_mmap(chunk, size))
+	if (CAN_RECYCLE(size) && load_acquire_z(&recycled_size) < recycle_limit) {
 		chunk_record(&chunks_szad_mmap, &chunks_ad_mmap, chunk, size, type);
+		return;
+	}
+
+	pages_unmap(chunk, size);
 }
+
+#undef CAN_RECYCLE
 
 /*
  * End chunk management functions.
