@@ -103,7 +103,6 @@ mozilla::image::EnsureModuleInitialized()
   mozilla::image::ImageFactory::Initialize();
   mozilla::image::DecodePool::Initialize();
   mozilla::image::SurfaceCache::Initialize();
-  mozilla::image::SurfacePipe::Initialize();
   imgLoader::GlobalInit();
   sInitialized = true;
   return NS_OK;
