@@ -19,10 +19,12 @@
 //// NullPrincipalURI
 
 NullPrincipalURI::NullPrincipalURI()
+  : mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
 {
 }
 
 NullPrincipalURI::NullPrincipalURI(const NullPrincipalURI& aOther)
+  : mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
 {
   mPath.Assign(aOther.mPath);
 }
@@ -38,9 +40,9 @@ NullPrincipalURI::Init()
   nsresult rv = uuidgen->GenerateUUIDInPlace(&id);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPath.SetLength(NSID_LENGTH - 1); // -1 because NSID_LENGTH counts the '\0'
-  id.ToProvidedString(
-    *reinterpret_cast<char(*)[NSID_LENGTH]>(mPath.BeginWriting()));
+  MOZ_ASSERT(mPathBytes == mPath.BeginWriting());
+
+  id.ToProvidedString(mPathBytes);
 
   MOZ_ASSERT(mPath.Length() == NSID_LENGTH - 1);
   MOZ_ASSERT(strlen(mPath.get()) == NSID_LENGTH - 1);
