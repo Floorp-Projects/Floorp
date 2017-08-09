@@ -994,17 +994,6 @@ var StackRenderer = {
   }
 };
 
-var RawPayload = {
-  /**
-   * Renders the raw payload
-   */
-  render(aPing) {
-    setHasData("raw-ping-data-section", true);
-    let pre = document.getElementById("raw-ping-data");
-    pre.textContent = JSON.stringify(aPing, null, 2);
-  }
-};
-
 function SymbolicationRequest(aPrefix, aRenderHeader,
                               aMemoryMap, aStacks, aDurations = null) {
   this.prefix = aPrefix;
@@ -1893,13 +1882,18 @@ function changeUrlPath(selectedSection, subSection) {
  * Change the section displayed
  */
 function show(selected) {
+  let selectedValue = selected.getAttribute("value");
+  if (selectedValue === "raw-json-viewer") {
+    openJsonInFirefoxJsonViewer(JSON.stringify(gPingData, null, 2));
+    return;
+  }
+
   let current_button = document.querySelector(".category.selected");
   current_button.classList.remove("selected");
   selected.classList.add("selected");
   // Hack because subsection text appear selected. See Bug 1375114.
   document.getSelection().empty();
 
-  let selectedValue = selected.getAttribute("value");
   let current_section = document.querySelector("section.active");
   let selected_section = document.getElementById(selectedValue);
   if (current_section == selected_section)
@@ -2045,6 +2039,10 @@ function urlStateRestore() {
       }
     }
   }
+}
+
+function openJsonInFirefoxJsonViewer(json) {
+  window.open("data:application/json;base64," + btoa(json));
 }
 
 function onLoad() {
@@ -2295,7 +2293,7 @@ function togglePingSections(isMainPing) {
                                 "home",
                                 "general-data-section",
                                 "environment-data-section",
-                                "raw-ping-data-section"]);
+                                "raw-json-viewer"]);
 
   let elements = document.querySelectorAll(".category");
   for (let section of elements) {
@@ -2308,9 +2306,6 @@ function togglePingSections(isMainPing) {
 
 function displayPingData(ping, updatePayloadList = false) {
   gPingData = ping;
-  // Render raw ping data.
-  RawPayload.render(ping);
-
   try {
     PingPicker.render();
     displayRichPingData(ping, updatePayloadList);
