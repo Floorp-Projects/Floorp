@@ -15,7 +15,7 @@ function run_test() {
 
   // Create a console listener.
   let consoleListener = {
-    observe: function(aMessage) {
+    observe(aMessage) {
       // Ignore unexpected messages.
       if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
         return;
@@ -71,4 +71,3 @@ function run_test() {
   // Once both messages are observed OS.Shared.DEBUG, and OS.Shared.TEST
   // are reset to false.
 }
-

@@ -37,7 +37,7 @@ if (typeof Components != "undefined") {
   throw new Error("Please open this module with Component.utils.import or with require()");
 }
 
-var LOG = SharedAll.LOG.bind(SharedAll, "Unix", "allthreads");
+SharedAll.LOG.bind(SharedAll, "Unix", "allthreads");
 var Const = SharedAll.Constants.libc;
 
 // Open libc
