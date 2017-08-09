@@ -457,14 +457,6 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
     FreeSpan* newListTail = &newListHead;
     size_t nmarked = 0;
 
-    if (MOZ_UNLIKELY(MemProfiler::enabled())) {
-        for (ArenaCellIterUnderFinalize i(this); !i.done(); i.next()) {
-            T* t = i.get<T>();
-            if (t->asTenured().isMarkedAny())
-                MemProfiler::MarkTenured(reinterpret_cast<void*>(t));
-        }
-    }
-
     for (ArenaCellIterUnderFinalize i(this); !i.done(); i.next()) {
         T* t = i.get<T>();
         if (t->asTenured().isMarkedAny()) {
@@ -832,7 +824,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     stats_(rt),
     marker(rt),
     usage(nullptr),
-    mMemProfiler(rt),
     nextCellUniqueId_(LargestTaggedNullCellPointer + 1), // Ensure disjoint from null tagged pointers.
     numArenasFreeCommitted(0),
     verifyPreData(nullptr),
@@ -3984,7 +3975,6 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
             zone->arenas.prepareForIncrementalGC();
     }
 
-    MemProfiler::MarkTenuredStart(rt);
     marker.start();
     GCMarker* gcmarker = &marker;
 
@@ -6261,7 +6251,6 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
     MOZ_ASSERT(marker.isDrained());
     marker.stop();
     clearBufferedGrayRoots();
-    MemProfiler::SweepTenured(rt);
 
     uint64_t currentTime = PRMJ_Now();
     schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);

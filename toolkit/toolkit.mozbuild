@@ -108,7 +108,6 @@ DIRS += [
     '/tools/code-coverage',
     '/tools/power',
     '/tools/profiler',
-    '/tools/memory-profiler',
     '/xpfe/components',
 ]
 

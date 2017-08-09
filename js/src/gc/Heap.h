@@ -460,7 +460,6 @@ class FreeSpan
         }
         checkSpan(arena);
         JS_EXTRA_POISON(reinterpret_cast<void*>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        MemProfiler::SampleTenured(reinterpret_cast<void*>(thing), thingSize);
         return reinterpret_cast<TenuredCell*>(thing);
     }
 

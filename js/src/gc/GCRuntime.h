@@ -1123,8 +1123,6 @@ class GCRuntime
     GCSchedulingTunables tunables;
     GCSchedulingState schedulingState;
 
-    MemProfiler mMemProfiler;
-
     // State used for managing atom mark bitmaps in each zone. Protected by the
     // exclusive access lock.
     AtomMarkingRuntime atomMarking;
