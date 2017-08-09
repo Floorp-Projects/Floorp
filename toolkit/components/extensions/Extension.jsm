@@ -45,36 +45,23 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount.extension");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-                                  "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionAPIs",
-                                  "resource://gre/modules/ExtensionAPI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionCommon",
-                                  "resource://gre/modules/ExtensionCommon.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPermissions",
-                                  "resource://gre/modules/ExtensionPermissions.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
-                                  "resource://gre/modules/ExtensionStorage.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestCommon",
-                                  "resource://testing-common/ExtensionTestCommon.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Log",
-                                  "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
-                                  "resource://gre/modules/MessageChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
-                                  "resource://gre/modules/Schemas.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
-                                  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
-                                  "resource://gre/modules/TelemetryStopwatch.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  ExtensionAPIs: "resource://gre/modules/ExtensionAPI.jsm",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
+  ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
+  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
+  Log: "resource://gre/modules/Log.jsm",
+  MessageChannel: "resource://gre/modules/MessageChannel.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Schemas: "resource://gre/modules/Schemas.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(
   this, "processScript",
@@ -84,12 +71,10 @@ XPCOMUtils.defineLazyGetter(
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
-                                   "@mozilla.org/addons/addon-manager-startup;1",
-                                   "amIAddonManagerStartup");
-XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetters(this, {
+  aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
+  uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
                                       "extensions.webextensions.remote", false);
