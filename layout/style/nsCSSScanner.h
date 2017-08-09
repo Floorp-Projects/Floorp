@@ -232,6 +232,9 @@ class nsCSSScanner {
   uint32_t GetTokenEndOffset() const
   { return mOffset; }
 
+  const nsAString& GetSourceMapURL() const
+  { return mSourceMapURL; }
+
   // Get the text of the line containing the first character of
   // the most recently processed token.
   nsDependentSubstring GetCurrentLine() const;
@@ -361,6 +364,8 @@ protected:
   bool mRecording;
   bool mSeenBadToken;
   bool mSeenVariableReference;
+
+  nsString mSourceMapURL;
 };
 
 // Token for the grid-template-areas micro-syntax
