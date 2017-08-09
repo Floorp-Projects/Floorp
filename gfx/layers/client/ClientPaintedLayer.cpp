@@ -262,6 +262,8 @@ ClientPaintedLayer::PaintOffMainThread()
 
     didUpdate = true;
   }
+
+  PaintThread::Get()->FinishedLayerBatch();
   mContentClient->EndPaint(nullptr);
 
   if (didUpdate) {
