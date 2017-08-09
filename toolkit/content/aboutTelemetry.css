@@ -30,10 +30,6 @@ body {
   left: 0;
 }
 
-#category-raw.selected {
-   background-color: var(--in-content-category-background-active);
-}
-
 .heading {
   display: flex;
   flex-direction: column;
