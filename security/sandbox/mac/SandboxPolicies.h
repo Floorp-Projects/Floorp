@@ -183,7 +183,6 @@ static const char contentSandboxRules[] = R"(
   (allow signal (target self))
 
   (allow mach-lookup
-      (global-name "com.apple.coreservices.launchservicesd")
       (global-name "com.apple.audio.coreaudiod")
       (global-name "com.apple.audio.audiohald"))
 
