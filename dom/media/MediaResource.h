@@ -164,8 +164,6 @@ public:
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
 
   // These methods are called off the main thread.
-  // The mode is initially MODE_PLAYBACK.
-  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) = 0;
   // Read up to aCount bytes from the stream. The read starts at
   // aOffset in the stream, seeking to that location initially if
   // it is not the current stream offset. The remaining arguments,
@@ -324,6 +322,9 @@ public:
 
   // Resume any downloads that have been suspended.
   virtual void Resume() = 0;
+
+  // The mode is initially MODE_PLAYBACK.
+  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) = 0;
 
   /**
    * Open the stream. This creates a stream listener and returns it in
