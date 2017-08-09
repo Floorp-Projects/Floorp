@@ -1530,30 +1530,25 @@ static bool
 intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 5);
 
-    MOZ_ASSERT(args.length() == 6);
+    RootedObject matchResult(cx, &args[0].toObject());
+#ifdef DEBUG
+    bool isArray = false;
+    MOZ_ALWAYS_TRUE(IsArray(cx, matchResult, &isArray));
+    MOZ_ASSERT(isArray);
+#endif
 
-    RootedString matched(cx, args[0].toString());
     RootedString string(cx, args[1].toString());
 
     int32_t position = int32_t(args[2].toNumber());
     MOZ_ASSERT(position >= 0);
 
-    RootedObject captures(cx, &args[3].toObject());
-#ifdef DEBUG
-    bool isArray = false;
-    MOZ_ALWAYS_TRUE(IsArray(cx, captures, &isArray));
-    MOZ_ASSERT(isArray);
-#endif
+    RootedString replacement(cx, args[3].toString());
 
-    RootedString replacement(cx, args[4].toString());
-
-    int32_t firstDollarIndex = int32_t(args[5].toNumber());
+    int32_t firstDollarIndex = int32_t(args[4].toNumber());
     MOZ_ASSERT(firstDollarIndex >= 0);
 
-    RootedLinearString matchedLinear(cx, matched->ensureLinear(cx));
-    if (!matchedLinear)
-        return false;
     RootedLinearString stringLinear(cx, string->ensureLinear(cx));
     if (!stringLinear)
         return false;
@@ -1561,7 +1556,7 @@ intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc, Value* vp)
     if (!replacementLinear)
         return false;
 
-    return RegExpGetSubstitution(cx, matchedLinear, stringLinear, size_t(position), captures,
+    return RegExpGetSubstitution(cx, matchResult, stringLinear, size_t(position),
                                  replacementLinear, size_t(firstDollarIndex), args.rval());
 }
 
@@ -2549,7 +2544,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     RegExpPrototypeOptimizable),
     JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,0,
                     RegExpInstanceOptimizable),
-    JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 6,0),
+    JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 5,0),
     JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1,0),
     JS_FN("GetStringDataProperty", intrinsic_GetStringDataProperty, 2,0),
     JS_INLINABLE_FN("GetFirstDollarIndex", GetFirstDollarIndex, 1,0,
