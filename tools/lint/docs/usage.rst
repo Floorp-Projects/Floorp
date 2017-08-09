@@ -75,3 +75,31 @@ To enable a pre-commit git hook, run the following command:
 .. parsed-literal::
 
     $ ln -s /path/to/gecko/tools/lint/hooks.py .git/hooks/pre-commit
+
+
+Fixing Lint Errors
+==================
+
+``Mozlint`` has a best-effort ability to fix lint errors:
+
+.. parsed-literal::
+
+    $ ./mach lint --fix
+
+Not all linters support fixing, and even the ones that do can not usually fix
+all types of errors. Any errors that cannot be automatically fixed, will be
+printed to stdout like normal. In that case, you can also fix errors manually:
+
+.. parsed-literal::
+
+    $ ./mach lint --edit
+
+This requires the $EDITOR environment variable be defined. For most editors,
+this will simply open each file containing errors one at a time. For vim (or
+neovim), this will populate the `quickfix list`_ with the errors.
+
+The ``--fix`` and ``--edit`` arguments can be combined, in which case any
+errors that can be fixed automatically will be, and the rest will be opened
+with your $EDITOR.
+
+.. _quickfix list: http://vimdoc.sourceforge.net/htmldoc/quickfix.html
