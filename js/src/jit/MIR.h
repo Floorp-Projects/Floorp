@@ -10167,8 +10167,11 @@ class MArrayJoin
     : public MBinaryInstruction,
       public MixPolicy<ObjectPolicy<0>, StringPolicy<1> >::Data
 {
-    MArrayJoin(MDefinition* array, MDefinition* sep)
-        : MBinaryInstruction(array, sep)
+    bool optimizeForArray_;
+
+    MArrayJoin(MDefinition* array, MDefinition* sep, bool optimizeForArray)
+        : MBinaryInstruction(array, sep),
+          optimizeForArray_(optimizeForArray)
     {
         setResultType(MIRType::String);
     }
@@ -10177,6 +10180,9 @@ class MArrayJoin
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, array), (1, sep))
 
+    bool optimizeForArray() const {
+        return optimizeForArray_;
+    }
     bool possiblyCalls() const override {
         return true;
     }
