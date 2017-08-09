@@ -19,7 +19,7 @@ from taskgraph.taskgraph import TaskGraph
     name='add-new-jobs',
     title='Add new jobs',
     symbol='add-new',
-    description="Add new jobs using task labels",
+    description="Add new jobs using task labels.",
     order=10000,
     context=[],
     schema={
