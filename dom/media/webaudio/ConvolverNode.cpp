@@ -272,23 +272,6 @@ ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv)
     uint32_t length = mBuffer->Length();
     RefPtr<ThreadSharedFloatArrayBufferList> data =
       mBuffer->GetThreadSharedChannelsForRate(aCx);
-    if (data && length < WEBAUDIO_BLOCK_SIZE) {
-      // For very small impulse response buffers, we need to pad the
-      // buffer with 0 to make sure that the Reverb implementation
-      // has enough data to compute FFTs from.
-      length = WEBAUDIO_BLOCK_SIZE;
-      RefPtr<ThreadSharedFloatArrayBufferList> paddedBuffer =
-        new ThreadSharedFloatArrayBufferList(data->GetChannels());
-      void* channelData = malloc(sizeof(float) * length * data->GetChannels() + 15);
-      float* alignedChannelData = ALIGNED16(channelData);
-      ASSERT_ALIGNED16(alignedChannelData);
-      for (uint32_t i = 0; i < data->GetChannels(); ++i) {
-        PodCopy(alignedChannelData + length * i, data->GetData(i), mBuffer->Length());
-        PodZero(alignedChannelData + length * i + mBuffer->Length(), WEBAUDIO_BLOCK_SIZE - mBuffer->Length());
-        paddedBuffer->SetData(i, (i == 0) ? channelData : nullptr, free, alignedChannelData);
-      }
-      data = paddedBuffer;
-    }
     SendInt32ParameterToStream(ConvolverNodeEngine::BUFFER_LENGTH, length);
     SendDoubleParameterToStream(ConvolverNodeEngine::SAMPLE_RATE,
                                 mBuffer->SampleRate());
