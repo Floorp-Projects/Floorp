@@ -300,7 +300,6 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
   list-style-image: url("chrome://browser/skin/zoom-in.svg");
 }
 
-#PlacesChevron,
 #nav-bar-overflow-button {
   list-style-image: url("chrome://browser/skin/chevron.svg");
 }
