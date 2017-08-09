@@ -13,16 +13,5 @@ namespace mozilla {
 // minimum allowed level.
 int GetEffectiveContentSandboxLevel();
 
-// Returns whether or not the currently running build is a development build -
-// where development build means "the files in the .app are symlinks to the src
-// directory". This check is implemented by looking for omni.ja in
-// .app/Contents/Resources/.
-bool IsDevelopmentBuild();
-
-// Return the repo directory and the repo object directory respectively. These
-// should only be used on developer builds to determine the path to the repo
-// or object directory.
-nsresult GetRepoDir(nsIFile **aRepoDir);
-nsresult GetObjDir(nsIFile **aObjDir);
 }
 #endif // mozilla_SandboxPolicies_h
