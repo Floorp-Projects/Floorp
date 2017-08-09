@@ -18,7 +18,7 @@
 // steps 8.b-16.
 // Optimized path for @@replace with the following conditions:
 //   * global flag is true
-function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
+function FUNC_NAME(rx, S, lengthS, replaceValue, flags
 #ifdef SUBSTITUTION
                    , firstDollarIndex
 #endif
@@ -27,6 +27,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
 #endif
                   )
 {
+    // Step 8.a.
+    var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
+
     // Step 8.b.
     var lastIndex = 0;
     rx.lastIndex = 0;
@@ -35,7 +38,7 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
     // Save the original source and flags, so we can check if the replacer
     // function recompiled the regexp.
     var originalSource = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
-    var originalFlags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+    var originalFlags = flags;
 #endif
 
     // Step 12 (reordered).
