@@ -9,6 +9,7 @@
   <string name="menu_share">Споделяне…</string>
   <string name="menu_open_with_default_browser">Отваряне с %1$s</string>
   <string name="menu_open_with_a_browser">Отваряне с…</string>
+  <string name="menu_add_to_home_screen">Добавяне към началния екран</string>
   <string name="menu_settings">Настройки</string>
   <string name="menu_about">Относно</string>
   <string name="menu_help">Помощ</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Споделяне чрез</string>
   <string name="notification_erase_text">Изчистване историята на разглеждането</string>
   <string name="notification_action_open">Отваряне</string>
+  <string name="notification_action_erase_and_open">Изтриване и отваряне</string>
   <string name="shortcut_erase_short_label">Изчистване</string>
   <string name="shortcut_erase_long_label">Изчистване историята на разглеждането</string>
   <string name="text_selection_search_action">Поверително търсене</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">Спиране на следене през друго съдържание</string>
   <string name="preference_privacy_block_content_summary">Видео и някои уеб страници може да не работят</string>
   <string name="preference_privacy_secure_mode">Невидим</string>
+  <string name="preference_privacy_stealth_summary">Скриване на страниците при превключване на приложения</string>
   <string name="preference_category_performance">Производителност</string>
   <string name="preference_performance_block_webfonts">Спиране на уебшрифтовете</string>
   <string name="preference_performance_block_webfonts_summary">Може да доведе до липсващи икони или изображения</string>
@@ -101,4 +104,7 @@
   <string name="firstrun_skip_button">Пропускане</string>
   <string name="firstrun_next_button">Напред</string>
   <string name="content_blocking_disabled">–</string>
+  <string name="dialog_addtohomescreen_title">Добавяне към началния екран</string>
+  <string name="dialog_addtohomescreen_action_add">Добавяне</string>
+  <string name="dialog_addtohomescreen_action_cancel">Отказ</string>
 </resources>

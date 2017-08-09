@@ -33,7 +33,7 @@
   <string name="preference_privacy_block_analytics">Sekat penjejak analitik</string>
   <string name="preference_privacy_block_social">Sekat penjejak sosial</string>
   <string name="preference_privacy_block_content">Sekat penjejak kandungan lain</string>
-  <string name="preference_privacy_block_content_summary">Boleh mengganggu beberapa video dan laman Web</string>
+  <string name="preference_privacy_block_content_summary">Boleh mengganggu sesetengah kandungan video dan laman Web</string>
   <string name="preference_privacy_secure_mode">Halimunan</string>
   <string name="preference_privacy_stealth_summary">Sorok laman web apabila bertukar aplikasi</string>
   <string name="preference_category_performance">Prestasi</string>
