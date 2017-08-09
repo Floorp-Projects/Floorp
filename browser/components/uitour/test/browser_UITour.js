@@ -104,19 +104,18 @@ var tests = [
     gContentAPI.showHighlight("urlbar");
     waitForElementToBeVisible(highlight, test_highlight_2, "Highlight should be shown after showHighlight()");
   },
-  function test_highlight_circle(done) {
+  function test_highlight_toolbar_button(done) {
     function check_highlight_size() {
       let panel = highlight.parentElement;
       let anchor = panel.anchorNode;
       let anchorRect = anchor.getBoundingClientRect();
       info("addons target: width: " + anchorRect.width + " height: " + anchorRect.height);
-      let maxDimension = Math.round(Math.max(anchorRect.width, anchorRect.height));
+      let dimension = anchorRect.width;
       let highlightRect = highlight.getBoundingClientRect();
       info("highlight: width: " + highlightRect.width + " height: " + highlightRect.height);
-      is(Math.round(highlightRect.width), maxDimension, "The width of the highlight should be equal to the largest dimension of the target");
-      is(Math.round(highlightRect.height), maxDimension, "The height of the highlight should be equal to the largest dimension of the target");
-      is(Math.round(highlightRect.height), Math.round(highlightRect.width), "The height and width of the highlight should be the same to create a circle");
-      is(highlight.style.borderRadius, "100%", "The border-radius should be 100% to create a circle");
+      is(Math.round(highlightRect.width), dimension, "The width of the highlight should be equal to the width of the target");
+      is(Math.round(highlightRect.height), dimension, "The height of the highlight should be equal to the width of the target");
+      is(highlight.classList.contains("rounded-highlight"), true, "Highlight should be rounded-rectangle styled");
       done();
     }
     let highlight = document.getElementById("UITourHighlight");
@@ -130,6 +129,7 @@ var tests = [
     gContentAPI.showHighlight("customize");
     waitForElementToBeVisible(highlight, function checkPanelIsOpen() {
       isnot(PanelUI.panel.state, "closed", "Panel should have opened");
+      isnot(highlight.classList.contains("rounded-highlight"), true, "Highlight should not be round-rectangle styled.");
 
       // Move the highlight outside which should close the app menu.
       gContentAPI.showHighlight("appMenu");

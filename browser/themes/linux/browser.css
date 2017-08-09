@@ -75,19 +75,6 @@
   border-style: none;
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
-  overflow: -moz-hidden-unscrollable;
-  max-height: 4em;
-  transition: min-height 170ms ease-out, max-height 170ms ease-out;
-  padding: 1px 4px;
-}
-
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar)[collapsed=true] {
-  min-height: 0.1px;
-  max-height: 0;
-  transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
-}
-
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
   border-top: 1px solid var(--tabs-border) !important;
   background-clip: padding-box;
@@ -99,14 +86,6 @@
 #nav-bar {
   padding-top: 2px;
   padding-bottom: 2px;
-}
-
-/* This only has an effect when this element is placed on the bookmarks toolbar.
- * It's 30px to make sure buttons with 18px icons fit along with the default 16px
- * icons, without changing the size of the toolbar.
- */
-#personal-bookmarks {
-  min-height: 30px;
 }
 
 #browser-bottombox {

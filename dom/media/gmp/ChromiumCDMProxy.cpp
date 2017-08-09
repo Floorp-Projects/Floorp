@@ -9,6 +9,7 @@
 #include "GMPUtils.h"
 #include "nsPrintfCString.h"
 #include "GMPService.h"
+#include "content_decryption_module.h"
 
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
 
