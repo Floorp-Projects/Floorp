@@ -11385,6 +11385,9 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     aFrameItems.AddChild(blockFrame);
 
     aFrame->AddStateBits(NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK);
+    MOZ_ASSERT(!aFrame->IsLeaf(),
+               "Why do we have an nsLeafBoxFrame here?");
+    aFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
   }
 }
 
