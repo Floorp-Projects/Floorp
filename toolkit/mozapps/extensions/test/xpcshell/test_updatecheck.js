@@ -180,7 +180,7 @@ add_task(async function() {
 
       throw "Update check should have failed";
     } catch (e) {
-      equal(e.status, AddonUpdateChecker.ERROR_PARSE_ERROR);
+      equal(e.status, AddonManager.ERROR_PARSE_ERROR);
     }
   }
 });

@@ -101,7 +101,7 @@ PROT_ListManager.prototype.registerTable = function(tableName,
     // Using the V4 backoff algorithm for both V2 and V4. See bug 1273398.
     this.requestBackoffs_[updateUrl] = new RequestBackoffV4(
                                             4 /* num requests */,
-                                   60*60*1000 /* request time, 60 min */);
+                               60 * 60 * 1000 /* request time, 60 min */);
   }
   this.needsUpdate_[updateUrl][tableName] = false;
 
@@ -212,9 +212,8 @@ PROT_ListManager.prototype.requireTableUpdates = function() {
 /**
  *  Set timer to check update after delay
  */
-PROT_ListManager.prototype.setUpdateCheckTimer = function (updateUrl,
-                                                           delay)
-{
+PROT_ListManager.prototype.setUpdateCheckTimer = function(updateUrl,
+                                                          delay) {
   this.updateCheckers_[updateUrl] = Cc["@mozilla.org/timer;1"]
                                     .createInstance(Ci.nsITimer);
   this.updateCheckers_[updateUrl].initWithCallback(() => {
@@ -225,8 +224,7 @@ PROT_ListManager.prototype.setUpdateCheckTimer = function (updateUrl,
 /**
  * Acts as a nsIUrlClassifierCallback for getTables.
  */
-PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
-{
+PROT_ListManager.prototype.kickoffUpdate_ = function(onDiskTableData) {
   this.startingUpdate_ = false;
   var initialUpdateDelay = 3000;
   // Add a fuzz of 0-1 minutes for both v2 and v4 according to Bug 1305478.
@@ -262,11 +260,7 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
       let updateDelay = initialUpdateDelay;
       let nextUpdatePref = "browser.safebrowsing.provider." + provider +
                            ".nextupdatetime";
-      let nextUpdate;
-      try {
-        nextUpdate = Services.prefs.getCharPref(nextUpdatePref);
-      } catch (ex) {
-      }
+      let nextUpdate = Services.prefs.getCharPref(nextUpdatePref, "");
 
       if (nextUpdate) {
         updateDelay = Math.min(maxDelayMs, Math.max(0, nextUpdate - Date.now()));
@@ -371,13 +365,13 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
     // Check if |updateURL| is for 'proto'. (only v4 uses protobuf for now.)
     // We use the table name 'goog-*-proto' and an additional provider "google4"
     // to describe the v4 settings.
-    let isCurTableProto = tableName.endsWith('-proto');
+    let isCurTableProto = tableName.endsWith("-proto");
     if (!onceThru) {
       useProtobuf = isCurTableProto;
       onceThru = true;
     } else if (useProtobuf !== isCurTableProto) {
       log('ERROR: Cannot mix "proto" tables with other types ' +
-          'within the same provider.');
+          "within the same provider.");
     }
 
     if (this.needsUpdate_[this.tablesData[tableName].updateUrl][tableName]) {
@@ -641,6 +635,7 @@ function Init() {
   // Pull the library in.
   var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
               .getService().wrappedJSObject;
+  /* global BindToObject, RequestBackoffV4 */
   modScope.BindToObject = jslib.BindToObject;
   modScope.RequestBackoffV4 = jslib.RequestBackoffV4;
 
@@ -648,13 +643,12 @@ function Init() {
   modScope.Init = function() {};
 }
 
-function RegistrationData()
-{
+function RegistrationData() {
 }
 RegistrationData.prototype = {
     classID: Components.ID("{ca168834-cc00-48f9-b83c-fd018e58cae3}"),
     _xpcom_factory: {
-        createInstance: function(outer, iid) {
+        createInstance(outer, iid) {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
             Init();

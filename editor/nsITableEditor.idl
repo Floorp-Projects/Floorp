@@ -10,7 +10,7 @@ interface nsIDOMNode;
 interface nsIDOMElement;
 interface nsIDOMRange;
 
-[scriptable, uuid(4805e684-49b9-11d3-9ce4-ed60bd6cb5bc)]
+[scriptable, builtinclass, uuid(4805e684-49b9-11d3-9ce4-ed60bd6cb5bc)]
 
 interface nsITableEditor : nsISupports
 {

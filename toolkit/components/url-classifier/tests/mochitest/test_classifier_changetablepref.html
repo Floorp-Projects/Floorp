@@ -78,7 +78,7 @@ function runTest() {
    * url specified in the table will be blocked after update.
    */
   var pushPrefPromise = SpecialPowers.pushPrefEnv(
-    {"set" : [["urlclassifier.trackingTable", testTable]]});
+    {"set": [["urlclassifier.trackingTable", testTable]]});
 
   // To make sure url is not blocked by an already blocked url.
   // Here we use non-tracking.example.com as a tracked url.
@@ -94,11 +94,11 @@ function runTest() {
 
 // Set nextupdatetime to 1 to trigger an update
 SpecialPowers.pushPrefEnv(
-  {"set" : [["privacy.trackingprotection.enabled", true],
-            ["channelclassifier.allowlist_example", true],
-            ["browser.safebrowsing.provider.mozilla.nextupdatetime", "1"],
-            ["browser.safebrowsing.provider.mozilla.lists", testTable],
-            ["browser.safebrowsing.provider.mozilla.updateURL", UPDATE_URL]]},
+  {"set": [["privacy.trackingprotection.enabled", true],
+           ["channelclassifier.allowlist_example", true],
+           ["browser.safebrowsing.provider.mozilla.nextupdatetime", "1"],
+           ["browser.safebrowsing.provider.mozilla.lists", testTable],
+           ["browser.safebrowsing.provider.mozilla.updateURL", UPDATE_URL]]},
   runTest);
 
 // Expected finish() call is in "bug_1281083.html".

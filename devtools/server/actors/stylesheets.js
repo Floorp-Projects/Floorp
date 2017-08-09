@@ -8,6 +8,7 @@ const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const events = require("sdk/event/core");
 const protocol = require("devtools/shared/protocol");
@@ -319,7 +320,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       return this._cssRules;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let onSheetLoaded = (event) => {
       this.ownerNode.removeEventListener("load", onSheetLoaded);
@@ -546,7 +547,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         A promise that resolves with a SourceMapConsumer, or null.
    */
   _fetchSourceMap: function () {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     this._getText().then(sheetContent => {
       let url = this._extractSourceMapUrl(sheetContent);

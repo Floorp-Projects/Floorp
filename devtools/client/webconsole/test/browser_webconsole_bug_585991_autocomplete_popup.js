@@ -16,7 +16,7 @@ add_task(function* () {
 });
 
 function consoleOpened(HUD) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let items = [
     {label: "item0", value: "value0"},

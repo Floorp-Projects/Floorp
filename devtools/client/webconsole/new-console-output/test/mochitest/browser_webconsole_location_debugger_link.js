@@ -40,35 +40,3 @@ add_task(function* () {
   yield toolbox.selectTool("webconsole");
   yield testOpenInDebugger(hud, toolbox, "document.bar");
 });
-
-function* testOpenInDebugger(hud, toolbox, text) {
-  info(`Testing message with text "${text}"`);
-  let messageNode = yield waitFor(() => findMessage(hud, text));
-  let frameLinkNode = messageNode.querySelector(".message-location .frame-link");
-  ok(frameLinkNode, "The message does have a location link");
-  yield checkClickOnNode(hud, toolbox, frameLinkNode);
-}
-
-function* checkClickOnNode(hud, toolbox, frameLinkNode) {
-  info("checking click on node location");
-
-  let url = frameLinkNode.getAttribute("data-url");
-  ok(url, `source url found ("${url}")`);
-
-  let line = frameLinkNode.getAttribute("data-line");
-  ok(line, `source line found ("${line}")`);
-
-  let onSourceInDebuggerOpened = once(hud.ui, "source-in-debugger-opened");
-
-  EventUtils.sendMouseEvent({ type: "click" },
-    frameLinkNode.querySelector(".frame-link-filename"));
-
-  yield onSourceInDebuggerOpened;
-
-  let dbg = toolbox.getPanel("jsdebugger");
-  is(
-    dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
-    url,
-    "expected source url"
-  );
-}

@@ -38,13 +38,13 @@ public class HighlightItem extends StreamItem implements IconCallback {
     private static final String LOGTAG = "GeckoHighlightItem";
 
     public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
+    private static final double SIZE_RATIO = 0.75;
 
     private Highlight highlight;
     private int position;
 
     private final FaviconView pageIconView;
     private final TextView pageTitleView;
-    private final TextView vTimeSince;
     private final TextView pageSourceView;
     private final TextView pageDomainView;
     private final ImageView pageSourceIconView;
@@ -60,7 +60,6 @@ public class HighlightItem extends StreamItem implements IconCallback {
         tilesMargin = itemView.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
 
         pageTitleView = (TextView) itemView.findViewById(R.id.card_history_label);
-        vTimeSince = (TextView) itemView.findViewById(R.id.card_history_time_since);
         pageIconView = (FaviconView) itemView.findViewById(R.id.icon);
         pageSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
         pageDomainView = (TextView) itemView.findViewById(R.id.page);
@@ -100,18 +99,17 @@ public class HighlightItem extends StreamItem implements IconCallback {
         ViewUtil.enableTouchRipple(menuButton);
     }
 
-    public void bind(Highlight highlight, int position, int tilesWidth, int tilesHeight) {
+    public void bind(Highlight highlight, int position, int tilesWidth) {
         this.highlight = highlight;
         this.position = position;
 
         final String backendHightlightTitle = highlight.getTitle();
         final String uiHighlightTitle = !TextUtils.isEmpty(backendHightlightTitle) ? backendHightlightTitle : highlight.getUrl();
         pageTitleView.setText(uiHighlightTitle);
-        vTimeSince.setText(highlight.getRelativeTimeSpan());
 
         ViewGroup.LayoutParams layoutParams = pageIconView.getLayoutParams();
-        layoutParams.width = tilesWidth - tilesMargin;
-        layoutParams.height = tilesHeight;
+        layoutParams.width = tilesWidth;
+        layoutParams.height = (int) Math.floor(tilesWidth * SIZE_RATIO);
         pageIconView.setLayoutParams(layoutParams);
 
         updateUiForSource(highlight.getSource());

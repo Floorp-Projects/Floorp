@@ -23,7 +23,7 @@ add_task(function* () {
 });
 
 function consoleOpened(hud) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   for (let i = 0; i < 200; i++) {
     content.console.log("test message " + i);

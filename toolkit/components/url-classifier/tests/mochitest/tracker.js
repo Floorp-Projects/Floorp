@@ -1,3 +1,3 @@
 function getTrackerTimeout() {
-  return window.setTimeout(function(){}, 0);
+  return window.setTimeout(function() {}, 0);
 }

@@ -24,7 +24,7 @@ let clearCookies = async function(options) {
 
   if (options.since) {
     // Convert it to microseconds
-    let since =  options.since*1000;
+    let since =  options.since * 1000;
     // Iterate through the cookies and delete any created after our cutoff.
     let cookiesEnum = cookieMgr.enumerator;
     while (cookiesEnum.hasMoreElements()) {
@@ -66,7 +66,7 @@ this.browsingData = class extends ExtensionAPI {
           for (let item of PREF_LIST) {
             // The property formData needs a different case than the
             // formdata preference.
-            switch(item){
+            switch (item) {
               case "formdata":
                 name = "formData";
                 break;

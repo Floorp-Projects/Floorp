@@ -61,7 +61,6 @@ function checkTestModuleExists() {
 function checkModuleTelemetry(additionalExpectedModule = undefined) {
   let expectedModules = [
     "NSS Internal PKCS #11 Module",
-    `${AppConstants.DLL_PREFIX}nssckbi${AppConstants.DLL_SUFFIX}`,
   ];
   if (additionalExpectedModule) {
     expectedModules.push(additionalExpectedModule);

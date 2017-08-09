@@ -40,7 +40,7 @@ add_task(function* () {
       statusText: "Connected",
       type: "plain",
       fullMimeType: "text/plain",
-      transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 10),
+      transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 60),
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 64),
       time: true
     });

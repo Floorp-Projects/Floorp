@@ -125,7 +125,7 @@ Prompt.prototype = {
       value: aOptions.value,
       hint: aOptions.hint,
       autofocus: aOptions.autofocus,
-      id : aOptions.id
+      id: aOptions.id
     });
   },
 

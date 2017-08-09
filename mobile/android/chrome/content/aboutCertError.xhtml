@@ -39,8 +39,7 @@
       // which is the URL displayed in the location bar, i.e.
       // the URI that the user attempted to load.
 
-      function getCSSClass()
-      {
+      function getCSSClass() {
         var url = document.documentURI;
         var matches = url.match(/s\=([^&]+)\&/);
         // s is optional, if no match just return nothing
@@ -51,8 +50,7 @@
         return decodeURIComponent(matches[1]);
       }
 
-      function getDescription()
-      {
+      function getDescription() {
         var url = document.documentURI;
         var desc = url.search(/d\=/);
 
@@ -64,25 +62,24 @@
         return decodeURIComponent(url.slice(desc + 2));
       }
 
-      function initPage()
-      {
+      function initPage() {
         // Replace the "#1" string in the intro with the hostname.  Trickier
         // than it might seem since we want to preserve the <b> tags, but
         // not allow for any injection by just using innerHTML.  Instead,
         // just find the right target text node.
-        var intro = document.getElementById('introContentP1');
+        var intro = document.getElementById("introContentP1");
         function replaceWithHost(node) {
           if (node.textContent == "#1")
             node.textContent = location.host;
           else
-            for(var i = 0; i < node.childNodes.length; i++)
+            for (var i = 0; i < node.childNodes.length; i++)
               replaceWithHost(node.childNodes[i]);
-        };
-        replaceWithHost(intro);
+        }
+  replaceWithHost(intro);
 
         if (getCSSClass() == "expertBadCert") {
-          toggle('technicalContent');
-          toggle('expertContent');
+          toggle("technicalContent");
+          toggle("expertContent");
         }
 
         // Disallow overrides if this is a Strict-Transport-Security
@@ -149,7 +146,7 @@
         }
 
         // Then initialize the cert domain link.
-        var link = document.getElementById('cert_domain_link');
+        var link = document.getElementById("cert_domain_link");
         if (!link)
           return;
 

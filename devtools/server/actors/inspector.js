@@ -56,6 +56,7 @@ const protocol = require("devtools/shared/protocol");
 const {LayoutActor} = require("devtools/server/actors/layout");
 const {LongStringActor} = require("devtools/server/actors/string");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const events = require("sdk/event/core");
 const {WalkerSearch} = require("devtools/server/actors/utils/walker-search");
@@ -2750,7 +2751,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return this._walkerPromise;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this._walkerPromise = deferred.promise;
 
     let window = this.window;

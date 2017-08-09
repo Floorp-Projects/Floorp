@@ -174,7 +174,7 @@ public class TestIconRequestBuilder {
                 .pageUrl(TEST_PAGE_URL_1)
                 .build();
 
-        Assert.assertEquals(32, request.getTargetSize());
+        Assert.assertEquals(112, request.getTargetSize());
 
         request.modify()
                 .forLauncherIcon()

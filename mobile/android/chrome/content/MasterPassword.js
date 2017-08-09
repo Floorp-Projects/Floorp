@@ -31,7 +31,7 @@ var MasterPassword = {
       }
 
       return true;
-    } catch(e) {
+    } catch (e) {
       dump("MasterPassword.setPassword: " + e);
     }
     return false;
@@ -44,7 +44,7 @@ var MasterPassword = {
         token.changePassword(aOldPassword, "");
         return true;
       }
-    } catch(e) {
+    } catch (e) {
       dump("MasterPassword.removePassword: " + e + "\n");
     }
     Snackbars.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), Snackbars.LENGTH_LONG);

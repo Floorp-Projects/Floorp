@@ -10,12 +10,12 @@ function Linkifier() {
 }
 
 Linkifier.prototype = {
-  _buildAnchor : function(aDoc, aNumberText) {
+  _buildAnchor: function(aDoc, aNumberText) {
     let anchorNode = aDoc.createElement("a");
     let cleanedText = "";
     for (let i = 0; i < aNumberText.length; i++) {
       let c = aNumberText.charAt(i);
-      if ((c >= '0' && c <= '9') || c == '+')  //assuming there is only the leading '+'.
+      if ((c >= "0" && c <= "9") || c == "+")  // assuming there is only the leading '+'.
         cleanedText += c;
     }
     anchorNode.setAttribute("href", "tel:" + cleanedText);
@@ -24,7 +24,7 @@ Linkifier.prototype = {
     return anchorNode;
   },
 
-  _linkifyNodeNumbers : function(aNodeToProcess, aDoc) {
+  _linkifyNodeNumbers: function(aNodeToProcess, aDoc) {
     let parent = aNodeToProcess.parentNode;
     let nodeText = aNodeToProcess.nodeValue;
 
@@ -48,13 +48,13 @@ Linkifier.prototype = {
       if (!prevNode) // first time, need to replace the whole node with the first new one.
         parent.replaceChild(nodeToAdd, aNodeToProcess);
       else
-        parent.insertBefore(nodeToAdd, prevNode.nextSibling); //inserts after.
+        parent.insertBefore(nodeToAdd, prevNode.nextSibling); // inserts after.
 
       if (textExistsBeforeNumber) // if we added the text node before the anchor, we still need to add the anchor node.
         parent.insertBefore(anchorNode, nodeToAdd.nextSibling);
 
       // next nodes need to be appended to this node.
-      prevNode = anchorNode; 
+      prevNode = anchorNode;
       startIndex = m.index + m[0].length;
     }
 
@@ -74,16 +74,15 @@ Linkifier.prototype = {
       this._linkifyTimer = null;
     }
 
-    let filterNode = function (node) {
-      if (node.parentNode.tagName != 'A' &&
-         node.parentNode.tagName != 'SCRIPT' &&
-         node.parentNode.tagName != 'NOSCRIPT' &&
-         node.parentNode.tagName != 'STYLE' &&
-         node.parentNode.tagName != 'APPLET' &&
-         node.parentNode.tagName != 'TEXTAREA')
+    let filterNode = function(node) {
+      if (node.parentNode.tagName != "A" &&
+         node.parentNode.tagName != "SCRIPT" &&
+         node.parentNode.tagName != "NOSCRIPT" &&
+         node.parentNode.tagName != "STYLE" &&
+         node.parentNode.tagName != "APPLET" &&
+         node.parentNode.tagName != "TEXTAREA")
         return NodeFilter.FILTER_ACCEPT;
-      else
-        return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_REJECT;
     }
 
     let nodeWalker = aDoc.createTreeWalker(aDoc.body, NodeFilter.SHOW_TEXT, filterNode, false);
@@ -103,6 +102,6 @@ Linkifier.prototype = {
       }
     };
 
-    this._linkifyTimer = setTimeout(parseNode, LINKIFY_TIMEOUT); 
+    this._linkifyTimer = setTimeout(parseNode, LINKIFY_TIMEOUT);
   }
 };

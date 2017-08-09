@@ -9,6 +9,7 @@ var { Task } = require("devtools/shared/task");
 
 var Services = require("Services");
 var promise = require("promise");
+const defer = require("devtools/shared/defer");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");
@@ -68,7 +69,7 @@ function loadFrameScripts() {
 function addTab(aUrl, aWindow) {
   info("Adding tab: " + aUrl);
 
-  let deferred = promise.defer();
+  let deferred = defer();
   let targetWindow = aWindow || window;
   let targetBrowser = targetWindow.gBrowser;
 
@@ -87,7 +88,7 @@ function addTab(aUrl, aWindow) {
 function removeTab(aTab, aWindow) {
   info("Removing tab.");
 
-  let deferred = promise.defer();
+  let deferred = defer();
   let targetWindow = aWindow || window;
   let targetBrowser = targetWindow.gBrowser;
   let tabContainer = targetBrowser.tabContainer;
@@ -128,7 +129,7 @@ function createCanvas() {
 function once(aTarget, aEventName, aUseCapture = false) {
   info("Waiting for event: '" + aEventName + "' on " + aTarget + ".");
 
-  let deferred = promise.defer();
+  let deferred = defer();
 
   for (let [add, remove] of [
     ["on", "off"], // Use event emitter before DOM events for consistency
@@ -152,7 +153,7 @@ function once(aTarget, aEventName, aUseCapture = false) {
 // array of all of the arguments in the handler. These should be consolidated
 // into the same function, but many tests will need to be changed.
 function onceSpread(aTarget, aEvent) {
-  let deferred = promise.defer();
+  let deferred = defer();
   aTarget.once(aEvent, (...args) => deferred.resolve(args));
   return deferred.promise;
 }
@@ -160,7 +161,7 @@ function onceSpread(aTarget, aEvent) {
 function observe(aNotificationName, aOwnsWeak = false) {
   info("Waiting for observer notification: '" + aNotificationName + ".");
 
-  let deferred = promise.defer();
+  let deferred = defer();
 
   Services.obs.addObserver(function onNotification(...aArgs) {
     Services.obs.removeObserver(onNotification, aNotificationName);
@@ -276,7 +277,7 @@ function teardown(aPanel) {
 // `onAdd` function that calls with the entire actors array on program link
 function getPrograms(front, count, onAdd) {
   let actors = [];
-  let deferred = promise.defer();
+  let deferred = defer();
   front.on("program-linked", function onLink(actor) {
     if (actors.length !== count) {
       actors.push(actor);

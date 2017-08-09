@@ -26,6 +26,7 @@
 #include "pkcs12.h"
 #include "prerror.h"
 #include "prio.h"
+#include "prmem.h"
 #include "sechash.h"
 #include "secmod.h"
 #include "secpkcs7.h"
@@ -327,9 +328,9 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePORTString,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePRFileDesc,
                                       PRFileDesc,
                                       PR_Close)
-MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePRLibraryName,
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePRString,
                                       char,
-                                      PR_FreeLibraryName)
+                                      PR_Free)
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECAlgorithmID,
                                       SECAlgorithmID,

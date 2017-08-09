@@ -2,127 +2,113 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:gecko="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="0dp"
-    android:orientation="vertical">
+    android:background="?android:attr/selectableItemBackground"
+    android:orientation="horizontal">
 
-    <RelativeLayout
-        android:layout_width="fill_parent"
+    <!-- On some devices, marginBottom is ignored for Views within a RelativeLayout.
+         Wrapping in a FrameLayout appears to be a sufficient workaround for this issue -->
+    <FrameLayout
+        android:id="@+id/icon_wrapper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <org.mozilla.gecko.widget.FaviconView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/favicon_bg"
+            android:layout_height="@dimen/favicon_bg"
+            android:layout_marginBottom="@dimen/activity_stream_base_margin"
+            android:layout_marginLeft="@dimen/activity_stream_base_margin"
+            android:layout_marginStart="@dimen/activity_stream_base_margin"
+            android:layout_marginTop="@dimen/activity_stream_base_margin"
+            gecko:enableRoundCorners="false"
+            gecko:overrideScaleType="false"
+            android:scaleType="fitCenter"
+            tools:background="@drawable/favicon_globe" />
+
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/menu"
+        android:layout_width="32dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="right|end|top"
+        android:contentDescription="@string/menu"
+        android:paddingBottom="16dp"
+        android:paddingTop="16dp" />
+
+    <TextView
+        android:id="@+id/page"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/icon_wrapper"
+        android:layout_toLeftOf="@id/menu"
+        android:layout_toRightOf="@id/icon_wrapper"
+        android:layout_toStartOf="@id/menu"
+        android:paddingLeft="@dimen/activity_stream_base_margin"
+        android:paddingStart="@dimen/activity_stream_base_margin"
+        android:paddingTop="@dimen/activity_stream_base_margin"
+        android:textColor="@color/activity_stream_subtitle"
+        android:textSize="12sp"
+        tools:text="twitter" />
+
+    <TextView
+        android:id="@+id/card_history_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/page"
+        android:layout_toEndOf="@id/icon_wrapper"
+        android:layout_toLeftOf="@id/menu"
+        android:layout_toRightOf="@id/icon_wrapper"
+        android:layout_toStartOf="@id/menu"
+        android:ellipsize="end"
+        android:maxLines="3"
+        android:paddingLeft="@dimen/activity_stream_base_margin"
+        android:paddingStart="@dimen/activity_stream_base_margin"
+        android:textColor="#ff000000"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="Descriptive title of a page that is veeeeeeery long - maybe even too long?" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/card_history_label"
+        android:layout_toEndOf="@id/icon_wrapper"
+        android:layout_toRightOf="@id/icon_wrapper"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:background="?android:attr/selectableItemBackground">
-
-
-        <!-- On some devices, marginBottom is ignored for Views within a RelativeLayout.
-             Wrapping in a FrameLayout appears to be a sufficient workaround for this issue -->
-        <FrameLayout
-            android:id="@+id/icon_wrapper"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <org.mozilla.gecko.widget.FaviconView
-                android:id="@+id/icon"
-                android:layout_width="@dimen/favicon_bg"
-                android:layout_height="@dimen/favicon_bg"
-                android:layout_marginStart="@dimen/activity_stream_base_margin"
-                android:layout_marginLeft="@dimen/activity_stream_base_margin"
-                android:layout_marginTop="@dimen/activity_stream_base_margin"
-                android:layout_marginBottom="@dimen/activity_stream_base_margin"
-                android:layout_gravity="center"
-                gecko:enableRoundCorners="false"
-                tools:background="@drawable/favicon_globe" />
-
-        </FrameLayout>
+        android:paddingBottom="@dimen/activity_stream_base_margin"
+        android:paddingEnd="@dimen/activity_stream_base_margin"
+        android:paddingLeft="@dimen/activity_stream_base_margin"
+        android:paddingRight="@dimen/activity_stream_base_margin"
+        android:paddingStart="@dimen/activity_stream_base_margin"
+        android:paddingTop="4dp"
+        tools:ignore="UseCompoundDrawables">
 
         <ImageView
-            android:id="@+id/menu"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_margin="2dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentTop="true"
-            android:layout_gravity="right|end|top"
-            android:contentDescription="@string/menu"
-            android:src="@drawable/menu"
-            android:padding="@dimen/activity_stream_base_margin" />
+            android:id="@+id/source_icon"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            tools:src="@drawable/ic_as_bookmarked" />
 
         <TextView
-            android:id="@+id/page"
-            android:layout_width="match_parent"
+            android:id="@+id/card_history_source"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            tools:text="twitter"
-            android:textSize="12sp"
+            android:layout_marginLeft="2dp"
+            android:layout_weight="1"
             android:textColor="@color/activity_stream_subtitle"
-            android:layout_toRightOf="@id/icon_wrapper"
-            android:layout_toEndOf="@id/icon_wrapper"
-            android:layout_toLeftOf="@id/menu"
-            android:layout_toStartOf="@id/menu"
-            android:paddingTop="@dimen/activity_stream_base_margin"
-            android:paddingLeft="@dimen/activity_stream_base_margin"
-            android:paddingStart="@dimen/activity_stream_base_margin"/>
+            android:textSize="12sp"
+            tools:text="Bookmarked" />
 
-        <TextView
-            android:id="@+id/card_history_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/icon_wrapper"
-            android:layout_toRightOf="@id/icon_wrapper"
-            android:maxLines="3"
-            android:ellipsize="end"
-            android:paddingLeft="@dimen/activity_stream_base_margin"
-            android:paddingStart="@dimen/activity_stream_base_margin"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="#ff000000"
-            android:layout_below="@id/page"
-            android:layout_toLeftOf="@id/menu"
-            android:layout_toStartOf="@id/menu"
-            tools:text="Descriptive title of a page that is veeeeeeery long - maybe even too long?" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_toRightOf="@id/icon_wrapper"
-            android:layout_toEndOf="@id/icon_wrapper"
-            android:layout_alignParentBottom="true"
-            android:paddingLeft="@dimen/activity_stream_base_margin"
-            android:paddingStart="@dimen/activity_stream_base_margin"
-            android:paddingRight="@dimen/activity_stream_base_margin"
-            android:paddingEnd="@dimen/activity_stream_base_margin"
-            android:paddingTop="4dp"
-            android:paddingBottom="@dimen/activity_stream_base_margin"
-            android:gravity="center_vertical"
-            android:layout_below="@id/card_history_label">
-
-            <ImageView
-                android:id="@+id/source_icon"
-                android:layout_width="12dp"
-                android:layout_height="12dp" />
-
-            <TextView
-                android:id="@+id/card_history_source"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="2dp"
-                android:textSize="12sp"
-                android:layout_weight="1"
-                android:textColor="@color/activity_stream_subtitle"
-                tools:text="Bookmarked" />
-
-            <TextView
-                android:id="@+id/card_history_time_since"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:textColor="@color/activity_stream_timestamp"
-                tools:text="20m" />
-
-        </LinearLayout>
-    </RelativeLayout>
-</FrameLayout>
+    </LinearLayout>
+</RelativeLayout>

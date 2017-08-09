@@ -9,7 +9,7 @@ var AddonUpdateChecker = tempScope.AddonUpdateChecker;
 const updaterdf = RELATIVE_DIR + "browser_updatessl.rdf";
 const redirect = RELATIVE_DIR + "redirect.sjs?";
 const SUCCESS = 0;
-const DOWNLOAD_ERROR = AddonUpdateChecker.ERROR_DOWNLOAD_ERROR;
+const DOWNLOAD_ERROR = AddonManager.ERROR_DOWNLOAD_ERROR;
 
 const HTTP = "http://example.com/";
 const HTTPS = "https://example.com/";

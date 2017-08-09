@@ -44,8 +44,8 @@ public class ActivityStreamPanel extends FrameLayout {
      */
     private static final int HIGHLIGHTS_LIMIT = 10;
 
-    private static final int MINIMUM_TILES = 4;
-    private static final int MAXIMUM_TILES = 6;
+    public static final int TOP_SITES_COLUMNS = 4;
+    public static final int TOP_SITES_ROWS = 2;
 
     private int desiredTileWidth;
     private int desiredTilesHeight;
@@ -103,30 +103,35 @@ public class ActivityStreamPanel extends FrameLayout {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
-        int tiles = (w - tileMargin) / (desiredTileWidth + tileMargin);
+        // This code does two things:
+        //  * Calculate the size of the tiles we want to display (using a desired width as anchor point)
+        //  * Add padding to the left/right side if there's too much space that we do not need
 
-        if (tiles < MINIMUM_TILES) {
-            tiles = MINIMUM_TILES;
 
+        // Calculate how many tiles fit into the available horizontal space if we are using our
+        // desired tile width.
+        int fittingTiles = (w - tileMargin) / (desiredTileWidth + tileMargin);
+
+        if (fittingTiles <= TOP_SITES_COLUMNS) {
+            // We can't fit all tiles (or they fit exactly) if we are using the desired tiles width.
+            // We will still show all tiles but they might be smaller than what we would like them to be.
             setPadding(0, 0, 0, 0);
-        } else if (tiles > MAXIMUM_TILES) {
-            tiles = MAXIMUM_TILES;
-
-            // Use the remaining space as padding
-            int needed = tiles * (desiredTileWidth + tileMargin) + tileMargin;
+        } else if (fittingTiles > TOP_SITES_COLUMNS) {
+            // We can fit more tiles than we want to display. Calculate how much space we need and
+            // use the remaining space as padding on the left and right.
+            int needed = TOP_SITES_COLUMNS * (desiredTileWidth + tileMargin) + tileMargin;
             int padding = (w - needed) / 2;
+
+            // With the padding applied we have less space available for the tiles
             w = needed;
 
             setPadding(padding, 0, padding, 0);
-        } else {
-            setPadding(0, 0, 0, 0);
         }
 
-        final float ratio = (float) desiredTilesHeight / (float) desiredTileWidth;
-        final int tilesWidth = (w - (tiles * tileMargin) - tileMargin) / tiles;
-        final int tilesHeight = (int) (ratio * tilesWidth);
+        // Now calculate how large an individual tile is
+        final int tilesSize = (w - (TOP_SITES_COLUMNS * tileMargin) - tileMargin) / TOP_SITES_COLUMNS;
 
-        adapter.setTileSize(tiles, tilesWidth, tilesHeight);
+        adapter.setTileSize(TOP_SITES_COLUMNS * TOP_SITES_ROWS, tilesSize);
     }
 
     private class HighlightsCallbacks implements LoaderManager.LoaderCallbacks<List<Highlight>> {
@@ -149,11 +154,13 @@ public class ActivityStreamPanel extends FrameLayout {
     private class TopSitesCallback implements LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            final int topSitesPerPage = TOP_SITES_COLUMNS * TOP_SITES_ROWS;
+
             final Context context = getContext();
             return BrowserDB.from(context).getActivityStreamTopSites(
                     context,
-                    MAXIMUM_TILES * TopSitesPagerAdapter.SUGGESTED_SITES_MAX_PAGES,
-                    MAXIMUM_TILES * TopSitesPagerAdapter.PAGES);
+                    topSitesPerPage * TopSitesPagerAdapter.SUGGESTED_SITES_MAX_PAGES,
+                    topSitesPerPage * TopSitesPagerAdapter.PAGES);
         }
 
         @Override

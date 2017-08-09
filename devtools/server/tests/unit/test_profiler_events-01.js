@@ -57,7 +57,7 @@ add_task(function* () {
 });
 
 function getChromeActors() {
-  let deferred = promise.defer();
+  let deferred = defer();
   get_chrome_actors((client, form) => deferred.resolve([client, form]));
   return deferred.promise;
 }

@@ -36,7 +36,7 @@ function test() {
     const hud = yield openConsole(tab);
     const jsterm = hud.jsterm;
 
-    let deferred = promise.defer();
+    let deferred = defer();
     jsterm.once("variablesview-fetched", (_, val) => deferred.resolve(val));
     jsterm.execute("inspect(document.querySelectorAll('div'))");
 

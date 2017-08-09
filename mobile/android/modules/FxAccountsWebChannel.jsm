@@ -11,12 +11,12 @@
  */
 this.EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components; /*global Components */
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components; /* global Components */
 
-Cu.import("resource://gre/modules/Accounts.jsm"); /*global Accounts */
-Cu.import("resource://gre/modules/Services.jsm"); /*global Services */
-Cu.import("resource://gre/modules/WebChannel.jsm"); /*global WebChannel */
-Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /*global XPCOMUtils */
+Cu.import("resource://gre/modules/Accounts.jsm"); /* global Accounts */
+Cu.import("resource://gre/modules/Services.jsm"); /* global Services */
+Cu.import("resource://gre/modules/WebChannel.jsm"); /* global WebChannel */
+Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /* global XPCOMUtils */
 
 const log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("FxAccounts");
 
@@ -33,7 +33,7 @@ const COMMAND_SYNC_PREFERENCES     = "fxaccounts:sync_preferences";
 const PREF_LAST_FXA_USER           = "identity.fxaccounts.lastSignedInUserHash";
 
 XPCOMUtils.defineLazyGetter(this, "strings",
-                            () => Services.strings.createBundle("chrome://browser/locale/aboutAccounts.properties")); /*global strings */
+                            () => Services.strings.createBundle("chrome://browser/locale/aboutAccounts.properties")); /* global strings */
 
 XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Prompt", "resource://gre/modules/Prompt.jsm");
@@ -271,7 +271,7 @@ this.FxAccountsWebChannel.prototype = {
                   UITelemetry.addEvent("action.1", "content", null, "fxaccount-create");
                   return success;
                 });
-              } else {
+              }
                 return Accounts.updateFirefoxAccountFromJSON(data).then(success => {
                   if (!success) {
                     throw new Error("Could not update Firefox Account!");
@@ -279,7 +279,7 @@ this.FxAccountsWebChannel.prototype = {
                   UITelemetry.addEvent("action.1", "content", null, "fxaccount-login");
                   return success;
                 });
-              }
+
             })
             .then(success => {
               if (!success) {

@@ -8,21 +8,21 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
-////////////////////////////////////////////////////////////////////////////////
-//// Constants
+// //////////////////////////////////////////////////////////////////////////////
+// // Constants
 
-//// SVG placeholder image for blocked image content
+// // SVG placeholder image for blocked image content
 const PLACEHOLDER_IMG = "chrome://browser/skin/images/placeholder_image.svg";
 
-//// Telemetry
+// // Telemetry
 const TELEMETRY_TAP_TO_LOAD_ENABLED = "TAP_TO_LOAD_ENABLED";
 const TELEMETRY_SHOW_IMAGE_SIZE = "TAP_TO_LOAD_IMAGE_SIZE";
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 
-//// Gecko preference
+// // Gecko preference
 const PREF_IMAGEBLOCKING = "browser.image_blocking";
 
-//// Enabled options
+// // Enabled options
 const OPTION_NEVER = 0;
 const OPTION_ALWAYS = 1;
 const OPTION_WIFI_ONLY = 2;
@@ -87,7 +87,7 @@ ImageBlockingPolicy.prototype = {
     let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
     return !(network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
         network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
-        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB  ||
+        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB ||
         network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI);
   },
 
@@ -95,7 +95,7 @@ ImageBlockingPolicy.prototype = {
     return Services.prefs.getIntPref(PREF_IMAGEBLOCKING);
   },
 
-  observe : function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == TOPIC_GATHER_TELEMETRY) {
       Services.telemetry.getHistogramById(TELEMETRY_TAP_TO_LOAD_ENABLED).add(this._enabled());
     }
@@ -105,7 +105,7 @@ ImageBlockingPolicy.prototype = {
 function sendImageSizeTelemetry(imageURL) {
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
   xhr.open("HEAD", imageURL, true);
-  xhr.onreadystatechange = function (e) {
+  xhr.onreadystatechange = function(e) {
     if (xhr.readyState != 4) {
       return;
     }

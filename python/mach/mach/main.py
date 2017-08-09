@@ -23,6 +23,7 @@ from .base import (
     NoCommandError,
     UnknownCommandError,
     UnrecognizedArgumentError,
+    FailedCommandError,
 )
 
 from .decorators import (
@@ -452,6 +453,9 @@ To see more help for a specific command, run:
                 debug_command=args.debug_command, **vars(args.command_args))
         except KeyboardInterrupt as ki:
             raise ki
+        except FailedCommandError as e:
+            print(e.message)
+            return e.exit_code
         except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
 

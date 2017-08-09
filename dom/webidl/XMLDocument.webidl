@@ -19,5 +19,6 @@ partial interface XMLDocument {
 
 // Gecko extensions?
 partial interface XMLDocument {
+  [UseCounter]
   attribute boolean async;
 };

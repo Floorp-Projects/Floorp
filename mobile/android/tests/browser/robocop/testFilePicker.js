@@ -50,7 +50,7 @@ add_test(function filepicker_open() {
 
   try {
     fp.init(chromeWin, "Open", Ci.nsIFilePicker.modeOpen);
-  } catch(ex) {
+  } catch (ex) {
     ok(false, "Android should support FilePicker.modeOpen: " + ex);
   }
   fp.open(fpCallback);
@@ -61,7 +61,7 @@ add_test(function filepicker_save() {
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   try {
     fp.init(null, "Save", Ci.nsIFilePicker.modeSave);
-  } catch(ex) {
+  } catch (ex) {
     failed = true;
   }
   ok(failed, "Android does not support FilePicker.modeSave");

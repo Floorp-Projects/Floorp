@@ -12,6 +12,7 @@
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
+#include "nsNSSComponent.h"
 #include "nsPK11TokenDB.h"
 #include "nsPromiseFlatString.h"
 #include "secmod.h"
@@ -429,6 +430,11 @@ nsPKCS11ModuleDB::FindModuleByName(const nsACString& name,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsresult rv = BlockUntilLoadableRootsLoaded();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   UniqueSECMODModule mod(SECMOD_FindModule(PromiseFlatCString(name).get()));
   if (!mod) {
     return NS_ERROR_FAILURE;
@@ -451,6 +457,11 @@ nsPKCS11ModuleDB::FindSlotByName(const nsACString& name,
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv = BlockUntilLoadableRootsLoaded();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   if (name.IsEmpty()) {
@@ -476,6 +487,11 @@ nsPKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv = BlockUntilLoadableRootsLoaded();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID);

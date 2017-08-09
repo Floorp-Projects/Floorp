@@ -31,7 +31,7 @@ struct IMEState;
 
 native IMEState(mozilla::widget::IMEState);
 
-[scriptable, uuid(094be624-f0bf-400f-89e2-6a84baab9474)]
+[scriptable, builtinclass, uuid(094be624-f0bf-400f-89e2-6a84baab9474)]
 interface nsIEditor  : nsISupports
 {
 %{C++

@@ -510,18 +510,6 @@ project_flag('MOZ_ALLOW_LEGACY_EXTENSIONS',
              help='Allow legacy browser extensions',
              default=True, set_as_define=True)
 
-option(env='MOZ_PHOTON_PREFERENCES',
-       help='Enable Photon preferences',
-       default=milestone.is_nightly)
-
-@depends('MOZ_PHOTON_PREFERENCES')
-def photon_preferences(value):
-    if value:
-        return bool(value)
-
-set_config('MOZ_PHOTON_PREFERENCES', photon_preferences)
-set_define('MOZ_PHOTON_PREFERENCES', photon_preferences)
-
 @depends('MOZ_PLACES', 'MOZ_ANDROID_HISTORY')
 def check_places_and_android_history(places, android_history):
     if places and android_history:

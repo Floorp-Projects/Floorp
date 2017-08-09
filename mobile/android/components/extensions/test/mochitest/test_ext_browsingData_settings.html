@@ -26,11 +26,11 @@ function checkPrefs(key, actualValue, prefs, prefSuffix) {
   is(actualValue, prefValue, `${key} property of dataToRemove matches the expected pref.`);
 }
 
-function testSettingsPreferences(dataToRemove){
+function testSettingsPreferences(dataToRemove) {
   let prefs = SharedPreferences.forProfile().getSetPref(PREF_DOMAIN);
 
   for (let key of Object.keys(dataToRemove)) {
-    switch(key){
+    switch (key) {
       case "formData":
         checkPrefs(key, dataToRemove[key], prefs, "formdata");
         break;
