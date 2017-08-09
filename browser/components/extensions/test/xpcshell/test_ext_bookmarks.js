@@ -240,7 +240,7 @@ add_task(async function test_bookmarks() {
       checkOnCreated(results[3].id, bookmarkGuids.unfiledGuid, 0, "EFF", "http://eff.org/", results[3].dateAdded);
       checkOnCreated(results[2].id, bookmarkGuids.unfiledGuid, 0, "Mozilla Folder", undefined, results[2].dateAdded);
       checkOnCreated(results[1].id, bookmarkGuids.unfiledGuid, 0, "Example", "http://example.org/", results[1].dateAdded);
-      checkOnCreated(results[0].id, bookmarkGuids.unfiledGuid, 0, "MØzillä", "http://møzîllä.örg/", results[0].dateAdded);
+      checkOnCreated(results[0].id, bookmarkGuids.unfiledGuid, 0, "MØzillä", "http://xn--mzll-ooa1dud.xn--rg-eka/", results[0].dateAdded);
 
       for (let result of results) {
         if (result.title !== "Mozilla Folder") {

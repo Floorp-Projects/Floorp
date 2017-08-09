@@ -268,120 +268,100 @@ var tests =
    {
      args: ["PASS", "http://sub1.παράδειγμα.δοκιμή"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    {
      args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    {
      args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80/"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    {
      args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80/foobar"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    // 40
    {
      args: ["PASS", "http://sub1.παράδειγμα.δοκιμή/foobar"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    {
      args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    {
      args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    {
      args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80/"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    {
      args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80/foo"],
      source: "idnKidWhitelist",
-     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
    },
    // 45
    {
      args: ["PASS", "http://sub1.exaмple.test"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    {
      args: ["PASS", "http://sub1.exaмple.test:80"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    {
      args: ["PASS", "http://sub1.exaмple.test:80/"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    {
      args: ["PASS", "http://sub1.exaмple.test/"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    {
      args: ["PASS", "http://sub1.exaмple.test/foobar"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    // 50
    {
      args: ["PASS", "http://sub1.xn--exaple-kqf.test"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    {
      args: ["PASS", "http://sub1.xn--exaple-kqf.test:80"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    {
      args: ["PASS", "http://sub1.xn--exaple-kqf.test:80/"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    {
      args: ["PASS", "http://sub1.xn--exaple-kqf.test/"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    {
      args: ["PASS", "http://sub1.xn--exaple-kqf.test/foobar"],
      source: "idnKidNoWhitelist",
-     returnOrigin: "http://sub1.exaмple.test",
-
-     hasWrongReturnOriginBug: true
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
    // 55
    {
