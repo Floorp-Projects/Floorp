@@ -32,7 +32,7 @@ add_task(async function check_failure() {
   } catch (err) {
     exception = err;
     await OS.File.queue;
-  }  
-  do_check_true(exception!=null);
+  }
+  do_check_true(exception != null);
   do_print("Function resolved");
 });

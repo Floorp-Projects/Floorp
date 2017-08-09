@@ -58,7 +58,7 @@ add_task(async function() {
  * Test the error thrown by OS.File.open when attempting to open a directory
  * that does not exist.
  */
-add_task(async function test_error_attributes () {
+add_task(async function test_error_attributes() {
 
   let dir = OS.Path.join(do_get_profile().path, "test_osfileErrorAttrs");
   let fpath = OS.Path.join(dir, "test_error_attributes.txt");

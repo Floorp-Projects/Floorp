@@ -20,7 +20,7 @@ async function test_setPosition(forward, current, backward) {
   await removeTestFile(path);
 
   try {
-    let file = await OS.File.open(path, {write:true, append:false});
+    let file = await OS.File.open(path, {write: true, append: false});
     try {
       let pos = 0;
 
@@ -46,7 +46,7 @@ async function test_setPosition(forward, current, backward) {
       await file.setPosition(0, OS.File.POS_START);
       await file.close();
     }
-  } catch(ex) {
+  } catch (ex) {
     await removeTestFile(path);
   }
 }
@@ -60,7 +60,7 @@ async function test_setPosition_failures() {
   await removeTestFile(path);
 
   try {
-    let file = await OS.File.open(path, {write:true, append:false});
+    let file = await OS.File.open(path, {write: true, append: false});
     try {
       let pos = 0;
 
@@ -103,7 +103,7 @@ async function test_setPosition_failures() {
       await file.close();
       await removeTestFile(path);
     }
-  } catch(ex) {
+  } catch (ex) {
     do_throw(ex);
   }
 }
