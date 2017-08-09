@@ -234,8 +234,6 @@ const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
 // Maximum interval between backups.  If the last backup is older than these
 // days we will try to create a new one more aggressively.
 const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 3;
-// Seconds of idle time before reporting media telemetry.
-const MEDIA_TELEMETRY_IDLE_TIME_SEC = 20;
 // Seconds of idle time before the late idle tasks will be scheduled.
 const LATE_TASKS_IDLE_TIME_SEC = 20;
 
@@ -581,10 +579,6 @@ BrowserGlue.prototype = {
     if (this._lateTasksIdleObserver) {
       this._idleService.removeIdleObserver(this._lateTasksIdleObserver, LATE_TASKS_IDLE_TIME_SEC);
       delete this._lateTasksIdleObserver;
-    }
-    if (this._mediaTelemetryIdleObserver) {
-      this._idleService.removeIdleObserver(this._mediaTelemetryIdleObserver, MEDIA_TELEMETRY_IDLE_TIME_SEC);
-      delete this._mediaTelemetryIdleObserver;
     }
     try {
       os.removeObserver(this, "places-init-complete");
@@ -979,27 +973,12 @@ BrowserGlue.prototype = {
 
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
-
-    this._mediaTelemetryIdleObserver = {
-      browserGlue: this,
-      observe(aSubject, aTopic, aData) {
-        if (aTopic != "idle") {
-          return;
-        }
-        this.browserGlue._sendMediaTelemetry();
-      }
-    };
-    this._idleService.addIdleObserver(this._mediaTelemetryIdleObserver,
-                                      MEDIA_TELEMETRY_IDLE_TIME_SEC);
   },
 
   _sendMediaTelemetry() {
     let win = RecentWindow.getMostRecentBrowserWindow();
     let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
     v.reportCanPlayTelemetry();
-    this._idleService.removeIdleObserver(this._mediaTelemetryIdleObserver,
-                                         MEDIA_TELEMETRY_IDLE_TIME_SEC);
-    delete this._mediaTelemetryIdleObserver;
   },
 
   /**
@@ -1179,7 +1158,9 @@ BrowserGlue.prototype = {
    * value, this is unlikely.
    */
   _scheduleArbitrarilyLateIdleTasks() {
-    // TODO: Functions to be added here with Services.tm.idleDispatchToMainThread
+    Services.tm.idleDispatchToMainThread(() => {
+      this._sendMediaTelemetry();
+    });
   },
 
   _createExtraDefaultProfile() {
