@@ -7,9 +7,9 @@
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 *|*:root {
-  --in-content-page-color: #424e5a;
-  --in-content-page-background: #fbfbfb;
-  --in-content-text-color: #333;
+  --in-content-page-color: #0c0c0d;
+  --in-content-page-background: #fafafc;
+  --in-content-text-color: #0c0c0d;
   --in-content-selected-text: #fff;
   --in-content-header-border-color: #c8c8c8;
   --in-content-box-background: #fff;
@@ -19,15 +19,11 @@
   --in-content-box-border-color: #c1c1c1;
   --in-content-item-hover: rgba(0,149,221,0.25);
   --in-content-item-selected: #0a84ff;
-  --in-content-border-highlight: #ff9500;
+  --in-content-border-highlight: #0a84ff;
   --in-content-border-focus: #0a84ff;
   --in-content-border-color: #c1c1c1;
   --in-content-category-text: #0c0c0d;
-  --in-content-category-border-focus: 1px dotted #fff;
   --in-content-category-text-selected: #0a84ff;
-  --in-content-category-background: #424f5a;
-  --in-content-category-background-hover: #5e6972;
-  --in-content-category-background-active: #343f48;
   --in-content-tab-color: #424f5a;
   --in-content-link-color: #0a84ff;
   --in-content-link-color-hover: #0060df;
@@ -647,22 +643,16 @@ xul|*.radio-label-box {
   -moz-appearance: none;
   color: var(--in-content-category-text);
   border-inline-end-width: 0;
-  padding-inline-start: 15px;
+  padding-inline-start: 40px;
   padding-inline-end: 21px;
   min-height: 40px;
   transition: background-color 150ms;
 }
 
-*|*.category:hover {
-  background-color: var(--in-content-category-background-hover);
-}
-
 *|*.category[selected],
 *|*.category.selected {
-  background-color: var(--in-content-category-background-active);
   color: var(--in-content-category-text-selected);
-  padding-inline-start: 11px; /* compensate the 4px border */
-  border-inline-start: solid 4px var(--in-content-border-highlight);
+  background: none;
 }
 
 *|*#categories[keyboard-navigation="true"]:-moz-focusring > *|*.category[current] {
@@ -672,7 +662,7 @@ xul|*.radio-label-box {
 
 *|*.category-name {
   line-height: 22px;
-  font-size: 1.25rem;
+  font-size: 1.45rem;
   padding-bottom: 2px;
   padding-inline-start: 9px;
   margin: 0;
