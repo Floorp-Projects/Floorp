@@ -1646,6 +1646,8 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
       mSection = eCSSSection_General;
     }
   }
+
+  mSheet->SetSourceMapURLFromComment(scanner.GetSourceMapURL());
   ReleaseScanner();
 
   mParsingMode = css::eAuthorSheetFeatures;
