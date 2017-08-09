@@ -268,6 +268,30 @@ this.XPCOMUtils = {
   },
 
   /**
+   * Defines a lazy service getter on a specified object for each
+   * property in the given object.
+   *
+   * @param aObject
+   *        The object to define the lazy getter on.
+   * @param aServices
+   *        An object with a property for each service to be
+   *        imported, where the property name is the name of the
+   *        symbol to define, and the value is a 2-element array
+   *        containing the contract ID and the interface name of the
+   *        service, as passed to defineLazyServiceGetter.
+   */
+  defineLazyServiceGetters: function XPCU_defineLazyServiceGetters(
+                                   aObject, aServices)
+  {
+    for (let [name, service] of Object.entries(aServices)) {
+      // Note: This is hot code, and cross-compartment array wrappers
+      // are not JIT-friendly to destructuring or spread operators, so
+      // we need to use indexed access instead.
+      this.defineLazyServiceGetter(aObject, name, service[0], service[1]);
+    }
+  },
+
+  /**
    * Defines a getter on a specified object for a module.  The module will not
    * be imported until first use. The getter allows to execute setup and
    * teardown code (e.g.  to register/unregister to services) and accepts
@@ -317,6 +341,25 @@ this.XPCOMUtils = {
       }
       return temp[aSymbol || aName];
     });
+  },
+
+  /**
+   * Defines a lazy module getter on a specified object for each
+   * property in the given object.
+   *
+   * @param aObject
+   *        The object to define the lazy getter on.
+   * @param aModules
+   *        An object with a property for each module property to be
+   *        imported, where the property name is the name of the
+   *        imported symbol and the value is the module URI.
+   */
+  defineLazyModuleGetters: function XPCU_defineLazyModuleGetters(
+                                   aObject, aModules)
+  {
+    for (let [name, module] of Object.entries(aModules)) {
+      this.defineLazyModuleGetter(aObject, name, module);
+    }
   },
 
   /**
