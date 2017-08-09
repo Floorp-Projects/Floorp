@@ -861,7 +861,7 @@ const JSPropertySpec js::regexp_static_props[] = {
 
 template <typename CharT>
 static bool
-IsTrailSurrogateWithLeadSurrogateImpl(JSContext* cx, HandleLinearString input, size_t index)
+IsTrailSurrogateWithLeadSurrogateImpl(HandleLinearString input, size_t index)
 {
     JS::AutoCheckCannotGC nogc;
     MOZ_ASSERT(index > 0 && index < input->length());
@@ -872,14 +872,14 @@ IsTrailSurrogateWithLeadSurrogateImpl(JSContext* cx, HandleLinearString input, s
 }
 
 static bool
-IsTrailSurrogateWithLeadSurrogate(JSContext* cx, HandleLinearString input, int32_t index)
+IsTrailSurrogateWithLeadSurrogate(HandleLinearString input, int32_t index)
 {
     if (index <= 0 || size_t(index) >= input->length())
         return false;
 
     return input->hasLatin1Chars()
-           ? IsTrailSurrogateWithLeadSurrogateImpl<Latin1Char>(cx, input, index)
-           : IsTrailSurrogateWithLeadSurrogateImpl<char16_t>(cx, input, index);
+           ? IsTrailSurrogateWithLeadSurrogateImpl<Latin1Char>(input, index)
+           : IsTrailSurrogateWithLeadSurrogateImpl<char16_t>(input, index);
 }
 
 /*
@@ -898,7 +898,7 @@ ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
      */
 
     /* Steps 1-2 performed by the caller. */
-    Rooted<RegExpObject*> reobj(cx, &regexp->as<RegExpObject>());
+    Handle<RegExpObject*> reobj = regexp.as<RegExpObject>();
 
     RootedRegExpShared re(cx, RegExpObject::getShared(cx, reobj));
     if (!re)
@@ -946,7 +946,7 @@ ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
          * However, the spec will change to match our implementation's
          * behavior. See https://github.com/tc39/ecma262/issues/128.
          */
-        if (IsTrailSurrogateWithLeadSurrogate(cx, input, lastIndex))
+        if (IsTrailSurrogateWithLeadSurrogate(input, lastIndex))
             lastIndex--;
     }
 
@@ -1511,7 +1511,7 @@ js::GetFirstDollarIndex(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
-    RootedString str(cx, args[0].toString());
+    JSString* str = args[0].toString();
 
     // Should be handled in different path.
     MOZ_ASSERT(str->length() != 0);
@@ -1545,11 +1545,11 @@ js::GetFirstDollarIndexRawFlat(JSLinearString* text)
     if (text->hasLatin1Chars())
         return GetFirstDollarIndexImpl(text->latin1Chars(nogc), len);
 
-    return  GetFirstDollarIndexImpl(text->twoByteChars(nogc), len);
+    return GetFirstDollarIndexImpl(text->twoByteChars(nogc), len);
 }
 
 bool
-js::GetFirstDollarIndexRaw(JSContext* cx, HandleString str, int32_t* index)
+js::GetFirstDollarIndexRaw(JSContext* cx, JSString* str, int32_t* index)
 {
     JSLinearString* text = str->ensureLinear(cx);
     if (!text)
@@ -1762,7 +1762,7 @@ js::intrinsic_GetElemBaseForLambda(JSContext* cx, unsigned argc, Value* vp)
 /*
  * Emulates `b[a]` property access, that is detected in GetElemBaseForLambda.
  * It returns the property value only if the property is data property and the
- * propety value is a string.  Otherwise it returns undefined.
+ * property value is a string.  Otherwise it returns undefined.
  */
 bool
 js::intrinsic_GetStringDataProperty(JSContext* cx, unsigned argc, Value* vp)
@@ -1773,21 +1773,18 @@ js::intrinsic_GetStringDataProperty(JSContext* cx, unsigned argc, Value* vp)
     RootedObject obj(cx, &args[0].toObject());
     if (!obj->isNative()) {
         // The object is already checked to be native in GetElemBaseForLambda,
-        // but it can be swapped to the other class that is non-native.
+        // but it can be swapped to another class that is non-native.
         // Return undefined to mark failure to get the property.
         args.rval().setUndefined();
         return true;
     }
 
-    RootedNativeObject nobj(cx, &obj->as<NativeObject>());
-    RootedString name(cx, args[1].toString());
-
-    RootedAtom atom(cx, AtomizeString(cx, name));
+    JSAtom* atom = AtomizeString(cx, args[1].toString());
     if (!atom)
         return false;
 
-    RootedValue v(cx);
-    if (GetPropertyPure(cx, nobj, AtomToId(atom), v.address()) && v.isString())
+    Value v;
+    if (GetPropertyPure(cx, obj, AtomToId(atom), &v) && v.isString())
         args.rval().set(v);
     else
         args.rval().setUndefined();
