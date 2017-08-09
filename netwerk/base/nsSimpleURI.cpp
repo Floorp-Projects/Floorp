@@ -274,6 +274,12 @@ nsSimpleURI::GetDisplayHost(nsACString &aUnicodeHost)
 }
 
 NS_IMETHODIMP
+nsSimpleURI::GetDisplayPrePath(nsACString &aPrePath)
+{
+    return GetPrePath(aPrePath);
+}
+
+NS_IMETHODIMP
 nsSimpleURI::GetHasRef(bool *result)
 {
     *result = mIsRefValid;

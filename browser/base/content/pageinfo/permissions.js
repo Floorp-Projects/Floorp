@@ -41,7 +41,7 @@ function onLoadPermission(uri, principal) {
     gPermURI = uri;
     gPermPrincipal = principal;
     var hostText = document.getElementById("hostText");
-    hostText.value = gPermURI.prePath;
+    hostText.value = gPermURI.displayPrePath;
 
     for (var i of gPermissions)
       initRow(i);
