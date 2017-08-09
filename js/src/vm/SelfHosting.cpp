@@ -1982,24 +1982,12 @@ intrinsic_InstantiateModuleFunctionDeclarations(JSContext* cx, unsigned argc, Va
 }
 
 static bool
-intrinsic_SetModuleState(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
-    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-    ModuleState newState = args[1].toInt32();
-    module->setState(newState);
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
-intrinsic_EvaluateModule(JSContext* cx, unsigned argc, Value* vp)
+intrinsic_ExecuteModule(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
     RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-    return ModuleObject::evaluate(cx, module, args.rval());
+    return ModuleObject::execute(cx, module, args.rval());
 }
 
 static bool
@@ -2566,8 +2554,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CreateNamespaceBinding", intrinsic_CreateNamespaceBinding, 3, 0),
     JS_FN("InstantiateModuleFunctionDeclarations",
           intrinsic_InstantiateModuleFunctionDeclarations, 1, 0),
-    JS_FN("SetModuleState", intrinsic_SetModuleState, 1, 0),
-    JS_FN("EvaluateModule", intrinsic_EvaluateModule, 1, 0),
+    JS_FN("ExecuteModule", intrinsic_ExecuteModule, 1, 0),
     JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
     JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4, 0),
     JS_FN("ModuleNamespaceExports", intrinsic_ModuleNamespaceExports, 1, 0),
