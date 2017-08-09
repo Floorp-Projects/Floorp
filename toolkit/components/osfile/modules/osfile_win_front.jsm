@@ -12,6 +12,7 @@
 /* eslint-env mozilla/chrome-worker, node */
 /* global OS */
 
+// eslint-disable-next-line no-lone-blocks
 {
   if (typeof Components != "undefined") {
     // We do not wish osfile_win_front.jsm to be used directly as a main thread
@@ -1153,10 +1154,10 @@
       * Get/set the current directory by |curDir|.
       */
      Object.defineProperty(File, "curDir", {
-         set: function(path) {
+         set(path) {
            this.setCurrentDirectory(path);
          },
-         get: function() {
+         get() {
            return this.getCurrentDirectory();
          }
        }
@@ -1190,40 +1191,6 @@
       */
      function throw_on_zero(operation, result, path) {
        if (result == 0) {
-         throw new File.Error(operation, ctypes.winLastError, path);
-       }
-       return result;
-     }
-
-     /**
-      * Utility function to sort errors represented as "-1" from successes.
-      *
-      * @param {string=} operation The name of the operation. If unspecified,
-      * the name of the caller function.
-      * @param {number} result The result of the operation that may
-      * represent either an error or a success. If -1, this function raises
-      * an error holding ctypes.winLastError, otherwise it returns |result|.
-      * @param {string=} path The path of the file.
-      */
-     function throw_on_negative(operation, result, path) {
-       if (result < 0) {
-         throw new File.Error(operation, ctypes.winLastError, path);
-       }
-       return result;
-     }
-
-     /**
-      * Utility function to sort errors represented as |null| from successes.
-      *
-      * @param {string=} operation The name of the operation. If unspecified,
-      * the name of the caller function.
-      * @param {pointer} result The result of the operation that may
-      * represent either an error or a success. If |null|, this function raises
-      * an error holding ctypes.winLastError, otherwise it returns |result|.
-      * @param {string=} path The path of the file.
-      */
-     function throw_on_null(operation, result, path) {
-       if (result == null || (result.isNull && result.isNull())) {
          throw new File.Error(operation, ctypes.winLastError, path);
        }
        return result;

@@ -78,7 +78,7 @@ add_test_pair(async function read_write_all() {
       let START = 10;
       let LENGTH = 100;
       contents = new Uint8Array(300);
-      for (var i = 0; i < contents.byteLength; i++)
+      for (let i = 0; i < contents.byteLength; i++)
         contents[i] = i % 256;
       view = new Uint8Array(contents.buffer, START, LENGTH);
       bytesWritten = await OS.File.writeAtomic(DEST_PATH, view, options);
@@ -86,8 +86,8 @@ add_test_pair(async function read_write_all() {
 
       let array2 = await OS.File.read(DEST_PATH);
       do_check_eq(LENGTH, array2.length);
-      for (var i = 0; i < LENGTH; i++)
-        do_check_eq(array2[i], (i + START) % 256);
+      for (let j = 0; j < LENGTH; j++)
+        do_check_eq(array2[j], (j + START) % 256);
 
       // Cleanup.
       await OS.File.remove(DEST_PATH);

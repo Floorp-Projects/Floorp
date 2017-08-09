@@ -1,5 +1,7 @@
 "use strict";
 
+/* eslint-disable no-lone-blocks */
+
 Components.utils.import("resource://gre/modules/osfile.jsm");
 
 /**
@@ -106,7 +108,7 @@ add_task(async function test_proto() {
                               "test_osfile_async_setDates_proto.tmp");
   await OS.File.writeAtomic(path, new Uint8Array(1));
 
-  try {
+  try {
     let fd = await OS.File.open(path, {write: true});
 
     try {

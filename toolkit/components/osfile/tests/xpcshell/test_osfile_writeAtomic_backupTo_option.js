@@ -103,7 +103,6 @@ add_task(async function test_non_backupTo_option() {
  * @result no back up file exists
  */
 add_task(async function test_backupTo_option_without_destination_file() {
-  let DEFAULT_CONTENTS = "default contents" + Math.random();
   let WRITE_CONTENTS = "abc" + Math.random();
   let path = Path.join(Constants.Path.tmpDir,
                        "test_backupTo_option_without_destination_file.tmp");
