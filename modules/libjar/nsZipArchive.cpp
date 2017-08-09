@@ -13,7 +13,7 @@
 #define READTYPE  int32_t
 #include "zlib.h"
 #ifdef MOZ_JAR_BROTLI
-#include "decode.h" // brotli
+#include "brotli/decode.h" // brotli
 #endif
 #include "nsISupportsUtils.h"
 #include "prio.h"
@@ -1196,7 +1196,7 @@ nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, uint8_t* aBuf,
 
 #ifdef MOZ_JAR_BROTLI
   if (mItem->Compression() == MOZ_JAR_BROTLI) {
-    mBrotliState = BrotliCreateState(nullptr, nullptr, nullptr);
+    mBrotliState = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
   }
 #endif
 
@@ -1211,7 +1211,7 @@ nsZipCursor::~nsZipCursor()
   }
 #ifdef MOZ_JAR_BROTLI
   if (mItem->Compression() == MOZ_JAR_BROTLI) {
-    BrotliDestroyState(mBrotliState);
+    BrotliDecoderDestroyInstance(mBrotliState);
   }
 #endif
 }
@@ -1258,19 +1258,20 @@ MOZ_WIN_MEM_TRY_BEGIN
      * unsigned int for avail_*. So use temporary stack values. */
     size_t avail_out = mBufSize;
     size_t avail_in = mZs.avail_in;
-    BrotliResult result = BrotliDecompressStream(
+    BrotliDecoderResult result = BrotliDecoderDecompressStream(
+      mBrotliState,
       &avail_in, const_cast<const unsigned char**>(&mZs.next_in),
-      &avail_out, &mZs.next_out, nullptr, mBrotliState);
+      &avail_out, &mZs.next_out, nullptr);
     /* We don't need to update avail_out, it's not used outside this
      * function. */
     mZs.avail_in = avail_in;
 
-    if (result == BROTLI_RESULT_ERROR) {
+    if (result == BROTLI_DECODER_RESULT_ERROR) {
       return nullptr;
     }
 
     *aBytesRead = mZs.next_out - buf;
-    verifyCRC = (result == BROTLI_RESULT_SUCCESS);
+    verifyCRC = (result == BROTLI_DECODER_RESULT_SUCCESS);
     break;
   }
 #endif

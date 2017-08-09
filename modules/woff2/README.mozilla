@@ -17,5 +17,6 @@ redefine-unique_ptr.patch redefines the class std::unique_ptr to workaround a
 build issue with missing C++11 features.
 See https://bugzilla.mozilla.org/show_bug.cgi?id=1227058
 
-missing-assert-header.patch contains the upstream change from commit
-07cd303dd2959cbf69a6840706c0896e49e42677 adding the missing assert.h header.
+brotli-0.6.0-api-change.patch adjusts the WOFF2 code to match Brotli API
+changes in the 0.6.0 release. (Will be superseded by next WOFF2 update.)
+See https://bugzilla.mozilla.org/show_bug.cgi?id=1340910

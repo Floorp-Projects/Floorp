@@ -1,0 +1,43 @@
+diff --git a/modules/woff2/src/woff2_dec.cc b/modules/woff2/src/woff2_dec.cc
+--- a/modules/woff2/src/woff2_dec.cc
++++ b/modules/woff2/src/woff2_dec.cc
+@@ -31,17 +31,17 @@
+ namespace std
+ {
+   using mozilla::DefaultDelete;
+   using mozilla::UniquePtr;
+   #define default_delete DefaultDelete
+   #define unique_ptr UniquePtr
+ }
+ 
+-#include "./decode.h"
++#include "brotli/decode.h"
+ #include "./buffer.h"
+ #include "./port.h"
+ #include "./round.h"
+ #include "./store_bytes.h"
+ #include "./table_tags.h"
+ #include "./variable_length.h"
+ #include "./woff2_common.h"
+ 
+@@ -746,18 +746,18 @@ bool ReconstructTransformedHmtx(const ui
+   }
+ 
+   return true;
+ }
+ 
+ bool Woff2Uncompress(uint8_t* dst_buf, size_t dst_size,
+   const uint8_t* src_buf, size_t src_size) {
+   size_t uncompressed_size = dst_size;
+-  int ok = BrotliDecompressBuffer(src_size, src_buf,
+-                                  &uncompressed_size, dst_buf);
++  int ok = BrotliDecoderDecompress(src_size, src_buf,
++                                   &uncompressed_size, dst_buf);
+   if (PREDICT_FALSE(!ok || uncompressed_size != dst_size)) {
+     return FONT_COMPRESSION_FAILURE();
+   }
+   return true;
+ }
+ 
+ bool ReadTableDirectory(Buffer* file, std::vector<Table>* tables,
+     size_t num_tables) {

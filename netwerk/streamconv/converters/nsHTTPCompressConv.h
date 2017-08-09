@@ -62,14 +62,14 @@ public:
     , mStatus(NS_OK)
     , mBrotliStateIsStreamEnd(false)
   {
-    BrotliStateInit(&mState);
+    BrotliDecoderStateInit(&mState);
   }
   ~BrotliWrapper()
   {
-    BrotliStateCleanup(&mState);
+    BrotliDecoderStateCleanup(&mState);
   }
 
-  BrotliState             mState;
+  BrotliDecoderState      mState;
   Atomic<size_t, Relaxed> mTotalOut;
   nsresult                mStatus;
   Atomic<bool, Relaxed>   mBrotliStateIsStreamEnd;
