@@ -195,6 +195,38 @@
   -moz-box-align: center;
 }
 
+toolbarbutton.chevron {
+  list-style-image: url("chrome://global/skin/icons/chevron.png");
+  margin: 1px 0 0;
+  padding: 0;
+}
+
+toolbar[brighttext] toolbarbutton.chevron {
+  list-style-image: url("chrome://global/skin/icons/chevron-inverted.png");
+}
+
+toolbarbutton.chevron > .toolbarbutton-text {
+  display: none;
+}
+
+toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
+@media (min-resolution: 2dppx) {
+  toolbarbutton.chevron {
+    list-style-image: url("chrome://global/skin/icons/chevron@2x.png");
+  }
+
+  toolbar[brighttext] toolbarbutton.chevron {
+    list-style-image: url("chrome://global/skin/icons/chevron-inverted@2x.png");
+  }
+
+  toolbarbutton.chevron > .toolbarbutton-icon {
+    width: 13px;
+  }
+}
+
 /* ----- BOOKMARK BUTTONS ----- */
 
 .bookmark-item[container] {
@@ -1038,6 +1070,10 @@ html|span.ac-emphasize-text-url {
   border-top: @scopeBarSeparatorBorder@;
   color: -moz-DialogText;
   text-shadow: none;
+}
+
+toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
+  display: none;
 }
 
 .bookmark-item {
