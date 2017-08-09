@@ -15,6 +15,7 @@
 
 <script class="testbody" type="text/javascript">
   SimpleTest.requestFlakyTimeout("Delay to make sure ping is made prior than XHR");
+  /* import-globals-from classifierHelper.js */
 
   const timeout = 200;
   const host_nottrack = "http://not-tracking.example.com/";
@@ -74,8 +75,8 @@
 
   function ping(id, host) {
     var elm = document.createElement("a");
-    elm.setAttribute('ping', host + path_ping + "?id=" + id);
-    elm.setAttribute('href', "#");
+    elm.setAttribute("ping", host + path_ping + "?id=" + id);
+    elm.setAttribute("href", "#");
     document.body.appendChild(elm);
 
     // Trigger ping.
@@ -87,12 +88,12 @@
   function isPingedWithRetry(id, expected, msg, callback, retryCnt) {
     var url = "http://mochi.test:8888/" + path_ping;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', url + "?id=" + id);
+    xhr.open("GET", url + "?id=" + id);
     xhr.onload = function() {
-      var isPinged = xhr.response === "ping";
-      let success = isPinged === expected;
+      let pinged = xhr.response === "ping";
+      let success = pinged === expected;
       if (success || 0 === retryCnt) {
-        is(expected, isPinged, msg);
+        is(expected, pinged, msg);
         callback();
         return;
       }

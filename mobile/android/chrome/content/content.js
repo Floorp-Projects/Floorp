@@ -166,7 +166,7 @@ var AboutReaderListener = {
     } else if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader ||
         !(content.document instanceof content.HTMLDocument) ||
         content.document.mozSyntheticDocument) {
-      return;
+
     } else {
         this.scheduleReadabilityCheckPostPaint(forceNonArticle);
     }

@@ -88,7 +88,7 @@ function testMessages() {
 }
 
 function pushPrefEnv() {
-  let deferred = promise.defer();
+  let deferred = defer();
   let options = {
     set: [["devtools.webconsole.filter.networkinfo", true]]
   };

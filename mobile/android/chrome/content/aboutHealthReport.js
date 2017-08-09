@@ -32,7 +32,7 @@ const EVENT_HEALTH_RESPONSE = "HealthReport:Response";
 var sharedPrefs = SharedPreferences.forApp();
 
 var healthReportWrapper = {
-  init: function () {
+  init: function() {
     let iframe = document.getElementById("remote-report");
     iframe.addEventListener("load", healthReportWrapper.initRemotePage);
     let report = this._getReportURI();
@@ -43,7 +43,7 @@ var healthReportWrapper = {
     Services.obs.addObserver(this, EVENT_HEALTH_RESPONSE);
   },
 
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == PREF_UPLOAD_ENABLED) {
       this.updatePrefState();
     } else if (topic == EVENT_HEALTH_RESPONSE) {
@@ -51,12 +51,12 @@ var healthReportWrapper = {
     }
   },
 
-  uninit: function () {
+  uninit: function() {
     sharedPrefs.removeObserver(PREF_UPLOAD_ENABLED, this);
     Services.obs.removeObserver(this, EVENT_HEALTH_RESPONSE);
   },
 
-  _getReportURI: function () {
+  _getReportURI: function() {
     let url = Services.urlFormatter.formatURLPref(PREF_REPORTURL);
     // This handles URLs that already have query parameters.
     let uri = Services.io.newURI(url).QueryInterface(Ci.nsIURL);
@@ -64,19 +64,19 @@ var healthReportWrapper = {
     return uri;
   },
 
-  onOptIn: function () {
+  onOptIn: function() {
     console.log("AboutHealthReport: page sent opt-in command.");
     sharedPrefs.setBoolPref(PREF_UPLOAD_ENABLED, true);
     this.updatePrefState();
   },
 
-  onOptOut: function () {
+  onOptOut: function() {
     console.log("AboutHealthReport: page sent opt-out command.");
     sharedPrefs.setBoolPref(PREF_UPLOAD_ENABLED, false);
     this.updatePrefState();
   },
 
-  updatePrefState: function () {
+  updatePrefState: function() {
     console.log("AboutHealthReport: sending pref state to page.");
     try {
       let prefs = {
@@ -88,14 +88,14 @@ var healthReportWrapper = {
     }
   },
 
-  refreshPayload: function () {
+  refreshPayload: function() {
     console.log("AboutHealthReport: page requested fresh payload.");
     EventDispatcher.instance.sendRequest({
       type: EVENT_HEALTH_REQUEST,
     });
   },
 
-  updatePayload: function (data) {
+  updatePayload: function(data) {
     healthReportWrapper.injectData("payload", data);
     // Data is supposed to be a string, so the length should be
     // defined.  Just in case, we do this after injecting the data.
@@ -103,7 +103,7 @@ var healthReportWrapper = {
          "(" + typeof(data) + " of length " + data.length + ").");
   },
 
-  injectData: function (type, content) {
+  injectData: function(type, content) {
     let report = this._getReportURI();
 
     // file: URIs can't be used for targetOrigin, so we use "*" for
@@ -120,7 +120,7 @@ var healthReportWrapper = {
     iframe.contentWindow.postMessage(data, reportUrl);
   },
 
-  showSettings: function () {
+  showSettings: function() {
     console.log("AboutHealthReport: showing settings.");
     EventDispatcher.instance.sendRequest({
       type: "Settings:Show",
@@ -128,14 +128,14 @@ var healthReportWrapper = {
     });
   },
 
-  launchUpdater: function () {
+  launchUpdater: function() {
     console.log("AboutHealthReport: launching updater.");
     EventDispatcher.instance.sendRequest({
       type: "Updater:Launch",
     });
   },
 
-  handleRemoteCommand: function (evt) {
+  handleRemoteCommand: function(evt) {
     switch (evt.detail.command) {
       case "DisableDataSubmission":
         this.onOptOut();
@@ -162,10 +162,10 @@ var healthReportWrapper = {
     }
   },
 
-  initRemotePage: function () {
+  initRemotePage: function() {
     let iframe = document.getElementById("remote-report").contentDocument;
     iframe.addEventListener("RemoteHealthReportCommand",
-                            function onCommand(e) {healthReportWrapper.handleRemoteCommand(e);});
+                            function onCommand(e) { healthReportWrapper.handleRemoteCommand(e); });
     healthReportWrapper.injectData("begin", null);
   },
 
@@ -174,18 +174,18 @@ var healthReportWrapper = {
   ERROR_PAYLOAD_FAILED: 2,
   ERROR_PREFS_FAILED:   3,
 
-  reportFailure: function (error) {
+  reportFailure: function(error) {
     let details = {
       errorType: error,
     };
     healthReportWrapper.injectData("error", details);
   },
 
-  handleInitFailure: function () {
+  handleInitFailure: function() {
     healthReportWrapper.reportFailure(healthReportWrapper.ERROR_INIT_FAILED);
   },
 
-  handlePayloadFailure: function () {
+  handlePayloadFailure: function() {
     healthReportWrapper.reportFailure(healthReportWrapper.ERROR_PAYLOAD_FAILED);
   },
 };

@@ -123,7 +123,7 @@ var CastingApps = {
     return Services.prefs.getBoolPref("browser.casting.enabled");
   },
 
-  onEvent: function (event, message, callback) {
+  onEvent: function(event, message, callback) {
     switch (event) {
       case "Casting:Play":
         if (this.session && this.session.remoteMedia.status == "paused") {
@@ -143,7 +143,7 @@ var CastingApps = {
     }
   },
 
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "ssdp-service-found":
         this.serviceAdded(SimpleServiceDiscovery.findServiceForID(aData));
@@ -294,7 +294,7 @@ var CastingApps = {
           return;
         }
       }
-    } catch(e) {}
+    } catch (e) {}
   },
 
   _getContentTypeForURI: function(aURI, aElement, aCallback) {
@@ -313,7 +313,7 @@ var CastingApps = {
         securityFlags: secFlags,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_VIDEO
       });
-    } catch(e) {
+    } catch (e) {
      aCallback(null);
      return;
     }
@@ -334,7 +334,7 @@ var CastingApps = {
             break;
         }
       },
-      onStopRequest: function(request, context, statusCode)  {},
+      onStopRequest: function(request, context, statusCode) {},
       onDataAvailable: function(request, context, stream, offset, count) {}
     };
 
@@ -416,14 +416,12 @@ var CastingApps = {
         if (this.allowableMimeType(aType, aTypes)) {
           // We found a supported mimetype.
           aCallback({ element: aElement, source: sourceURI.spec, poster: posterURL, sourceURI: sourceURI, type: aType });
-        } else {
+        } else if (aURIs.length > 0) {
           // This URI was not a supported mimetype, so let's try the next, if we have more.
-          if (aURIs.length > 0) {
-            _getContentTypeForURIs(aURIs);
-          } else {
-            // We were not able to find a supported mimetype.
-            aCallback(null);
-          }
+          _getContentTypeForURIs(aURIs);
+        } else {
+          // We were not able to find a supported mimetype.
+          aCallback(null);
         }
       });
     }
@@ -457,7 +455,7 @@ var CastingApps = {
           return element.mozAllowCasting;
         }
       }
-    } catch(e) {}
+    } catch (e) {}
 
     return false;
   },

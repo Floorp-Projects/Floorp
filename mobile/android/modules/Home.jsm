@@ -25,7 +25,7 @@ function resolveGeckoURI(aURI) {
     throw "Can't resolve an empty uri";
 
   if (aURI.startsWith("chrome://")) {
-    let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci.nsIChromeRegistry);
+    let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
     return registry.convertChromeURL(Services.io.newURI(aURI)).spec;
   } else if (aURI.startsWith("resource://")) {
     let handler = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
@@ -61,7 +61,7 @@ function BannerMessage(options) {
 // private members without leaking it outside Home.jsm.
 var HomeBannerMessageHandlers;
 
-var HomeBanner = (function () {
+var HomeBanner = (function() {
   // Whether there is a "HomeBanner:Get" request we couldn't fulfill.
   let _pendingRequest = false;
 
@@ -125,7 +125,7 @@ var HomeBanner = (function () {
 
   return Object.freeze({
     onEvent: function(event, data, callback) {
-      switch(event) {
+      switch (event) {
         case "HomeBanner:Click":
           _handleClick(data.id);
           break;
@@ -190,7 +190,7 @@ var HomeBanner = (function () {
 // private members without leaking it outside Home.jsm.
 var HomePanelsMessageHandlers;
 
-var HomePanels = (function () {
+var HomePanels = (function() {
   // Functions used to handle messages sent from Java.
   HomePanelsMessageHandlers = {
 
@@ -204,7 +204,7 @@ var HomePanels = (function () {
         if (ids == null || ids.indexOf(id) >= 0) {
           try {
             panels.push(_generatePanel(id));
-          } catch(e) {
+          } catch (e) {
             Cu.reportError("Home.panels: Invalid options, panel.id = " + id + ": " + e);
           }
         }
@@ -472,7 +472,7 @@ this.Home = Object.freeze({
   panels: HomePanels,
 
   // Lazy notification observer registered in browser.js
-  onEvent: function (event, data, callback) {
+  onEvent: function(event, data, callback) {
     if (event in HomeBannerMessageHandlers) {
       HomeBannerMessageHandlers[event](data);
     } else if (event in HomePanelsMessageHandlers) {

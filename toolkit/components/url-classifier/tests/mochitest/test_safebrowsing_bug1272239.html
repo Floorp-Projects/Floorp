@@ -46,9 +46,9 @@ for (var child of children) {
 // Get lists from |browser.safebrowsing.provider.PROVIDER_NAME.lists| preference.
 var listsWithProvider = [];
 var listsToProvider = [];
-for (var provider in providers) {
-  var pref = "browser.safebrowsing.provider." + provider + ".lists";
-  var list = SpecialPowers.getCharPref(pref).split(",");
+for (let provider in providers) {
+  let pref = "browser.safebrowsing.provider." + provider + ".lists";
+  let list = SpecialPowers.getCharPref(pref).split(",");
 
   listsToProvider = listsToProvider.concat(list.map( () => { return provider; }));
   listsWithProvider = listsWithProvider.concat(list);
@@ -56,7 +56,7 @@ for (var provider in providers) {
 
 // Get all the lists
 var lists = [];
-for (var pref of prefs) {
+for (let pref of prefs) {
   lists = lists.concat(SpecialPowers.getCharPref(pref).split(","));
 }
 
@@ -65,7 +65,7 @@ var listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].
 
 let googleKey = SpecialPowers.Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
 
-for (var list of lists) {
+for (let list of lists) {
   if (!list)
     continue;
 
@@ -75,8 +75,8 @@ for (var list of lists) {
   var url = listmanager.getGethashUrl(list);
   var index = listsWithProvider.indexOf(list);
   if (index >= 0) {
-    var provider = listsToProvider[index];
-    var pref = "browser.safebrowsing.provider." + provider + ".gethashURL";
+    let provider = listsToProvider[index];
+    let pref = "browser.safebrowsing.provider." + provider + ".gethashURL";
     if ((provider == "google" || provider == "google4") &&
         (!googleKey || googleKey == "no-google-api-key")) {
       is(url, "", "getHash url of " + list + " should be empty");

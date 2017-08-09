@@ -14,6 +14,7 @@
 <pre id="test">
 
 <script class="testbody" type="application/javascript">
+/* import-globals-from classifierHelper.js */
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 var Cr = SpecialPowers.Cr;
@@ -48,12 +49,12 @@ var inputDatas = [
 ];
 
 function hashPrefix(str) {
-  function bytesFromString(str) {
+  function bytesFromString(str1) {
     let converter =
       Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                        .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
-    return converter.convertToByteArray(str);
+    return converter.convertToByteArray(str1);
   }
 
   let hasher = Cc["@mozilla.org/security/hash;1"]
@@ -72,7 +73,7 @@ var testDatas = [
     expect: { error: Cr.NS_ERROR_BLOCKED_URI,
               table: "mochi-block-simple",
               provider: "",
-              prefix: (function(){
+              prefix: (function() {
                 return hashPrefix("malware.example.com/");
               })(),
             }
@@ -82,7 +83,7 @@ var testDatas = [
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochi1-malware-simple",
               provider: "mozilla",
-              prefix: (function(){
+              prefix: (function() {
                 return hashPrefix("malware1.example.com/");
               })(),
             }
@@ -92,7 +93,7 @@ var testDatas = [
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochi2-malware-simple",
               provider: "mozilla",
-              prefix: (function(){
+              prefix: (function() {
                 return hashPrefix("malware2.example.com/");
               })(),
             }
@@ -102,7 +103,7 @@ var testDatas = [
     expect: { error: Cr.NS_ERROR_MALWARE_URI,
               table: "mochig3-malware-simple",
               provider: "google",
-              prefix: (function(){
+              prefix: (function() {
                 return hashPrefix("malware3.example.com/");
               })(),
             }
@@ -171,7 +172,7 @@ function runTest() {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["browser.safebrowsing.malware.enabled", true]]},
+  {"set": [["browser.safebrowsing.malware.enabled", true]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => setupTestData(inputDatas))

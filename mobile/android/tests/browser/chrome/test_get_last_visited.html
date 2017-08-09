@@ -29,9 +29,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1214366
       type: "History:GetPrePathLastVisitedTimeMilliseconds",
       prePath: prePath,
     });
-  };
+  }
 
-  var browser = BrowserApp.addTab("about:blank").browser;
+var browser = BrowserApp.addTab("about:blank").browser;
 
   // It's useful to see *all* "link-visited" events in the face of intermittent failures.
   let observe = function(subject, topic, data) {
@@ -50,15 +50,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1214366
   function add_history_visit(url) {
     browser.loadURI(url, null, null);
     return promiseLinkVisit(url);
-  };
+  }
 
-  // Be aware that some paths under mochi.test and example.org redirect.  The
-  // blank robocop pages appear to not.  Redirects can impact this test, since
-  // they can write to the history database.
+// Be aware that some paths under mochi.test and example.org redirect.  The
+// blank robocop pages appear to not.  Redirects can impact this test, since
+// they can write to the history database.
 
-  // The apparent mis-ordering here just uses simpler pages (01 and 03) for the
-  // real test, and a more complex page (02) for a final delay.  See comment below.
-  const url1 = "http://example.org/tests/robocop/robocop_blank_01.html";
+// The apparent mis-ordering here just uses simpler pages (01 and 03) for the
+// real test, and a more complex page (02) for a final delay.  See comment below.
+const url1 = "http://example.org/tests/robocop/robocop_blank_01.html";
   const url2 = "http://example.org/tests/robocop/robocop_blank_03.html";
   const url3 = "http://example.org/tests/robocop/robocop_blank_02.html";
 

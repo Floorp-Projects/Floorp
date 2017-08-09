@@ -121,6 +121,9 @@ var whitelist = [
   // Needed by Normandy
   {file: "resource://gre/modules/IndexedDB.jsm"},
 
+  // New L10n API that is not yet used in production
+  {file: "resource://gre/modules/Localization.jsm"},
+
   // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339420
   {file: "chrome://branding/content/icon128.png"},

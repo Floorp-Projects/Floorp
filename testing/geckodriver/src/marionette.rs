@@ -488,13 +488,10 @@ impl MarionetteHandler {
 
         prefs.insert_slice(&extra_prefs[..]);
 
-        // fallbacks can be removed when Firefox 54 becomes stable
         if let Some(ref level) = self.current_log_level {
             prefs.insert("marionette.log.level", Pref::new(level.to_string()));
-            prefs.insert("marionette.logging", Pref::new(level.to_string()));  // fallback
         };
         prefs.insert("marionette.port", Pref::new(port as i64));
-        prefs.insert("marionette.defaultPrefs.port", Pref::new(port as i64));  // fallback
 
         prefs.write().map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
                                                       "Unable to write Firefox profile"))

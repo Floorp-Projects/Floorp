@@ -10,7 +10,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-bug-600183-charset.html";
 
 function performTest(lastFinishedRequest, console) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   ok(lastFinishedRequest, "charset test page was loaded and logged");
   HUDService.lastFinishedRequest.callback = null;
@@ -37,7 +37,7 @@ function performTest(lastFinishedRequest, console) {
 }
 
 function waitForRequest() {
-  let deferred = promise.defer();
+  let deferred = defer();
   HUDService.lastFinishedRequest.callback = (req, console) => {
     performTest(req, console).then(deferred.resolve);
   };

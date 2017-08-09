@@ -7,7 +7,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const { NetworkThrottleManager } =
       require("devtools/shared/webconsole/throttle");
 const nsIScriptableInputStream = Ci.nsIScriptableInputStream;
@@ -42,7 +42,7 @@ TestStreamListener.prototype = {
 
   onStateChanged: function () {
     if (!this._deferred) {
-      this._deferred = promise.defer();
+      this._deferred = defer();
     }
     return this._deferred.promise;
   }

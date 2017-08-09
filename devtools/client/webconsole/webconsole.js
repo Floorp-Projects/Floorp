@@ -15,6 +15,7 @@ const BrowserLoaderModule = {};
 Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
 
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {PrefObserver} = require("devtools/client/shared/prefs");
@@ -405,7 +406,7 @@ WebConsoleFrame.prototype = {
       return promise.resolve(null);
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     let newValue = !!value;
     let toSet = {
       "NetworkMonitor.saveRequestAndResponseBodies": newValue,
@@ -436,7 +437,7 @@ WebConsoleFrame.prototype = {
       return promise.resolve(null);
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     let toSet = {
       "NetworkMonitor.throttleData": value,
     };
@@ -505,7 +506,7 @@ WebConsoleFrame.prototype = {
       return this._initDefer.promise;
     }
 
-    this._initDefer = promise.defer();
+    this._initDefer = defer();
     this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
 
     this.proxy.connect().then(() => {
@@ -2710,7 +2711,7 @@ WebConsoleFrame.prototype = {
       return this._destroyer.promise;
     }
 
-    this._destroyer = promise.defer();
+    this._destroyer = defer();
 
     let toolbox = gDevTools.getToolbox(this.owner.target);
     if (toolbox) {

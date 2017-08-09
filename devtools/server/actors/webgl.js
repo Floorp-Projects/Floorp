@@ -7,7 +7,7 @@
 
 const {Cu} = require("chrome");
 const events = require("sdk/event/core");
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const protocol = require("devtools/shared/protocol");
 const { ContentObserver } = require("devtools/shared/content-observer");
 const { on, off, emit } = events;
@@ -258,7 +258,7 @@ exports.WebGLActor = protocol.ActorClassWithSpec(webGLSpec, {
    * Used in tests.
    */
   waitForFrame: function () {
-    let deferred = promise.defer();
+    let deferred = defer();
     this.tabActor.window.requestAnimationFrame(deferred.resolve);
     return deferred.promise;
   },

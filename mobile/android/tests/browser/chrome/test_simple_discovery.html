@@ -14,7 +14,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   "use strict";
 
-  /*globals SimpleServiceDiscovery */
+  /* globals SimpleServiceDiscovery */
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
@@ -34,12 +34,12 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     is(service.modelName, "Eureka Dongle");
 
     SimpleTest.finish();
-  };
+  }
 
-  var testDevice = {
+var testDevice = {
     id: "test:dummy",
     target: "test:service",
-    factory: function(service) { /* dummy */  },
+    factory: function(service) { },
     types: ["video/mp4"],
     extensions: ["mp4"]
   };

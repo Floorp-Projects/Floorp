@@ -186,6 +186,11 @@ private:
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.
   nsCOMPtr<nsISupports> mCacheKey;
+  nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
+  RefPtr<InterceptStreamListener> mInterceptListener;
+  // Needed to call AsyncOpen in FinishInterceptedRedirect
+  nsCOMPtr<nsIStreamListener> mInterceptedRedirectListener;
+  nsCOMPtr<nsISupports> mInterceptedRedirectContext;
 
   // Proxy release all members above on main thread.
   void ReleaseMainThreadOnlyReferences();
@@ -271,8 +276,6 @@ private:
   void CancelOnMainThread(nsresult aRv);
 
   RequestHeaderTuples mClientSetRequestHeaders;
-  nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
-  RefPtr<InterceptStreamListener> mInterceptListener;
   RefPtr<nsInputStreamPump> mSynthesizedResponsePump;
   nsCOMPtr<nsIInputStream> mSynthesizedInput;
   int64_t mSynthesizedStreamLength;
@@ -351,9 +354,6 @@ private:
   // or AsyncAbort.
   void CleanupBackgroundChannel();
 
-  // Needed to call AsyncOpen in FinishInterceptedRedirect
-  nsCOMPtr<nsIStreamListener> mInterceptedRedirectListener;
-  nsCOMPtr<nsISupports> mInterceptedRedirectContext;
   // Needed to call CleanupRedirectingChannel in FinishInterceptedRedirect
   RefPtr<HttpChannelChild> mInterceptingChannel;
   // Used to call OverrideWithSynthesizedResponse in FinishInterceptedRedirect

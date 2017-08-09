@@ -5,7 +5,7 @@
 
 /* global XPCNativeWrapper */
 
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const protocol = require("devtools/shared/protocol");
 const {CallWatcherActor} = require("devtools/server/actors/call-watcher");
 const {CallWatcherFront} = require("devtools/shared/fronts/call-watcher");
@@ -203,7 +203,7 @@ exports.CanvasActor = protocol.ActorClassWithSpec(canvasSpec, {
     this._webGLPrimitiveCounter.resetCounts();
     this._callWatcher.resumeRecording();
 
-    let deferred = this._currentAnimationFrameSnapshot = promise.defer();
+    let deferred = this._currentAnimationFrameSnapshot = defer();
     return deferred.promise;
   },
 

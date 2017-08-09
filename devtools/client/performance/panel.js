@@ -6,8 +6,8 @@
 "use strict";
 
 const { Task } = require("devtools/shared/task");
+const defer = require("devtools/shared/defer");
 
-loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 
@@ -32,7 +32,7 @@ PerformancePanel.prototype = {
     if (this._opening) {
       return this._opening;
     }
-    let deferred = promise.defer();
+    let deferred = defer();
     this._opening = deferred.promise;
 
     this.panelWin.gToolbox = this.toolbox;

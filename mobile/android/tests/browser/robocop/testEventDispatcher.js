@@ -57,10 +57,10 @@ function send_test_message(scope, type) {
 }
 
 function get_dispatcher(scope) {
-  if (scope === 'global') {
+  if (scope === "global") {
     return EventDispatcher.instance;
   }
-  if (scope === 'window') {
+  if (scope === "window") {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     return EventDispatcher.for(win);
   }
@@ -120,7 +120,7 @@ function check_response(key, response) {
 }
 
 let listener = {
-  _checkObject: function (obj) {
+  _checkObject: function(obj) {
     do_check_eq(obj.boolean, true);
     do_check_eq(obj.booleanArray.length, 2);
     do_check_eq(obj.booleanArray[0], false);
@@ -163,7 +163,7 @@ let listener = {
     do_check_eq(obj.mixedArray[1], 1.5);
   },
 
-  onEvent: function (event, data, callback) {
+  onEvent: function(event, data, callback) {
     do_check_eq(event, this._type);
     this._callCount++;
 
@@ -186,7 +186,7 @@ let listener = {
 };
 
 let callbackListener = {
-  onEvent: function (event, data, callback) {
+  onEvent: function(event, data, callback) {
     do_check_eq(event, this._type);
     this._callCount++;
 

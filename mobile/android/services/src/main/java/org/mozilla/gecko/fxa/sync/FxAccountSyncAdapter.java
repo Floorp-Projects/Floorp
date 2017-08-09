@@ -33,6 +33,7 @@ import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncDelegate.Result;
+import org.mozilla.gecko.sync.BackoffException;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.PrefsBackoffHandler;
@@ -176,17 +177,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       super.handleError(globalSession, ex, reason);
       // If an error hasn't been set downstream, record what we know at this point.
       if (!telemetryCollector.hasError()) {
-        telemetryCollector.setError(TelemetryCollector.KEY_ERROR_INTERNAL, reason, ex);
-      }
-      recordTelemetry();
-    }
-
-    @Override
-    public void handleError(GlobalSession globalSession, Exception ex) {
-      super.handleError(globalSession, ex);
-      // If an error hasn't been set downstream, record what we know at this point.
-      if (!telemetryCollector.hasError()) {
-        telemetryCollector.setError(TelemetryCollector.KEY_ERROR_INTERNAL, ex);
+        telemetryCollector.setError(TelemetryCollector.KEY_ERROR_INTERNAL, ex, reason);
       }
       recordTelemetry();
     }
@@ -197,7 +188,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       // Note to future maintainers: while there are reasons, other than 'backoff', this method
       // might be called, in practice that _is_ the only reason it gets called at the moment of
       // writing this. If this changes, please do expand this telemetry handling.
-      this.telemetryCollector.setError(TelemetryCollector.KEY_ERROR_INTERNAL, "backoff");
+      this.telemetryCollector.setError(TelemetryCollector.KEY_ERROR_INTERNAL, new BackoffException(), reason);
       recordTelemetry();
     }
 
@@ -293,13 +284,8 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     @Override
     public void handleError(GlobalSession globalSession, Exception ex, String reason) {
-      this.handleError(globalSession, ex);
-    }
-
-    @Override
-    public void handleError(GlobalSession globalSession, Exception e) {
       Logger.warn(LOG_TAG, "Global session failed."); // Exception will be dumped by delegate below.
-      syncDelegate.handleError(e);
+      syncDelegate.handleError(ex);
       // TODO: should we reduce the periodic sync interval?
     }
 
@@ -428,8 +414,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           callback.getCollector().setIDs(token.hashedFxaUid, clientsDataDelegate.getAccountGUID());
           globalSession.start(syncDeadline);
         } catch (Exception e) {
-          callback.handleError(globalSession, e);
-          return;
+          callback.handleError(globalSession, e, "Unexpected error while starting a sync");
         }
       }
 
@@ -446,22 +431,16 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         } finally {
           fxAccount.releaseSharedAccountStateLock();
         }
-        callback.getCollector().setError(
-                TelemetryCollector.KEY_ERROR_TOKEN,
-                e.getClass().getSimpleName()
-        );
-        callback.handleError(null, e);
+        callback.getCollector().setError(TelemetryCollector.KEY_ERROR_TOKEN, e);
+        callback.handleError(null, e, "Failure processing a token");
       }
 
       @Override
       public void handleError(Exception e) {
         Logger.error(LOG_TAG, "Failed to get token.", e);
         fxAccount.releaseSharedAccountStateLock();
-        callback.getCollector().setError(
-                TelemetryCollector.KEY_ERROR_TOKEN,
-                e.getClass().getSimpleName()
-        );
-        callback.handleError(null, e);
+        callback.getCollector().setError(TelemetryCollector.KEY_ERROR_TOKEN, e);
+        callback.handleError(null, e, "Error getting a token");
       }
 
       @Override

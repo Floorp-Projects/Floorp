@@ -14,7 +14,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   "use strict";
 
-  /*globals SimpleServiceDiscovery */
+  /* globals SimpleServiceDiscovery */
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
@@ -38,7 +38,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   var testDevice = {
     id: "test:dummy",
     target: "test:service",
-    factory: function(service) { /* dummy */  },
+    factory: function(service) { },
     types: ["video/mp4", "video/webm"],
     extensions: ["mp4", "webm"]
   };
@@ -134,7 +134,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   // On debug runs, 10 assertions typically observed; 5 each of:
   //  - ASSERTION: cancel with non-failure status code: 'NS_FAILED(status)'
   //  - ASSERTION: OnDataAvailable implementation consumed no data: 'Error'
-  SimpleTest.expectAssertions(0,10);
+  SimpleTest.expectAssertions(0, 10);
   setup_browser();
 
   </script>

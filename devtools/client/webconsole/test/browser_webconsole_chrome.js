@@ -26,7 +26,7 @@ function test() {
     input.value = "docu";
     input.setSelectionRange(4, 4);
 
-    let deferred = promise.defer();
+    let deferred = defer();
 
     jsterm.complete(jsterm.COMPLETE_HINT_ONLY, function () {
       is(jsterm.completeNode.value, "    ment", "'docu' completion");

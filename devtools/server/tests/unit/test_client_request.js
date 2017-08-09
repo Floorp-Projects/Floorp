@@ -149,7 +149,7 @@ function test_close_client_while_sending_requests() {
     type: "hello"
   });
 
-  let expectReply = promise.defer();
+  let expectReply = defer();
   gClient.expectReply("root", function (response) {
     do_check_eq(response.error, "connectionClosed");
     do_check_eq(response.message,

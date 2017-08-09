@@ -46,7 +46,7 @@ var notifications = new Map();
 var DownloadNotifications = {
   _notificationKey: "downloads",
 
-  init: function () {
+  init: function() {
     Downloads.getList(Downloads.ALL)
              .then(list => list.addView(this))
              .then(() => this._viewAdded = true, Cu.reportError);
@@ -55,7 +55,7 @@ var DownloadNotifications = {
     Notifications.registerHandler(this._notificationKey, this);
   },
 
-  onDownloadAdded: function (download) {
+  onDownloadAdded: function(download) {
     // Don't create notifications for pre-existing succeeded downloads.
     // We still add notifications for canceled downloads in case the
     // user decides to retry the download.
@@ -80,7 +80,7 @@ var DownloadNotifications = {
     }
   },
 
-  onDownloadChanged: function (download) {
+  onDownloadChanged: function(download) {
     let notification = notifications.get(download);
 
     if (download.succeeded) {
@@ -108,7 +108,7 @@ var DownloadNotifications = {
     }
   },
 
-  onDownloadRemoved: function (download) {
+  onDownloadRemoved: function(download) {
     let notification = notifications.get(download);
     if (!notification) {
       Cu.reportError("Download doesn't have a notification.");
@@ -138,7 +138,7 @@ var DownloadNotifications = {
     // TODO: I'm not sure what we do here...
   },
 
-  showInAboutDownloads: function (download) {
+  showInAboutDownloads: function(download) {
     let hash = "#" + window.encodeURIComponent(download.target.path);
 
     // Force using string equality to find a tab
@@ -191,7 +191,7 @@ function DownloadNotification(download) {
 }
 
 DownloadNotification.prototype = {
-  _updateFromDownload: function () {
+  _updateFromDownload: function() {
     this._downloading = !this.download.stopped;
     this._paused = this.download.canceled && this.download.hasPartialData;
     this._succeeded = this.download.succeeded;
@@ -229,12 +229,12 @@ DownloadNotification.prototype = {
     return options;
   },
 
-  _updateOptionsForStatic : function (options, titleName) {
+  _updateOptionsForStatic: function(options, titleName) {
     options.title = strings.GetStringFromName(titleName);
     options.message = this._fileName;
   },
 
-  _updateOptionsForOngoing: function (options, buttons) {
+  _updateOptionsForOngoing: function(options, buttons) {
     options.title = this._fileName;
     options.message = this.download.progress + "%";
     options.buttons = buttons;
@@ -243,7 +243,7 @@ DownloadNotification.prototype = {
     options.persistent = true;
   },
 
-  showOrUpdate: function () {
+  showOrUpdate: function() {
     this._updateFromDownload();
 
     if (this._show) {
@@ -263,7 +263,7 @@ DownloadNotification.prototype = {
     }
   },
 
-  hide: function () {
+  hide: function() {
     if (this.id) {
       Notifications.cancel(this.id);
       this.id = null;
@@ -272,7 +272,7 @@ DownloadNotification.prototype = {
 };
 
 var ConfirmCancelPrompt = {
-  show: function (download) {
+  show: function(download) {
     // Open a prompt that offers a choice to cancel the download
     let title = strings.GetStringFromName("downloadCancelPromptTitle1");
     let message = strings.GetStringFromName("downloadCancelPromptMessage1");

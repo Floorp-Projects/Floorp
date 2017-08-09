@@ -25,6 +25,7 @@ _appInfo.updateAppInfo({
 const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { worker } = Cu.import("resource://devtools/shared/worker/loader.js", {});
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
 const { console } = require("resource://gre/modules/Console.jsm");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
@@ -821,7 +822,7 @@ function getSourceContent(sourceClient) {
  * @returns Promise<SourceClient>
  */
 function getSource(threadClient, url) {
-  let deferred = promise.defer();
+  let deferred = defer();
   threadClient.getSources((res) => {
     let source = res.sources.filter(function (s) {
       return s.url === url;
@@ -842,7 +843,7 @@ function getSource(threadClient, url) {
  * @returns Promise<response>
  */
 function reload(tabClient) {
-  let deferred = promise.defer();
+  let deferred = defer();
   tabClient._reload({}, deferred.resolve);
   return deferred.promise;
 }

@@ -31,7 +31,7 @@ var contextMenu = {
   _items: [],
   _targetDownload: null,
 
-  init: function () {
+  init: function() {
     let element = document.getElementById("downloadmenu");
     element.addEventListener("click",
                              event => event.download = this._targetDownload,
@@ -72,11 +72,11 @@ var contextMenu = {
     ];
   },
 
-  addContextMenuEventListener: function (element) {
+  addContextMenuEventListener: function(element) {
     element.addEventListener("contextmenu", this.onContextMenu.bind(this));
   },
 
-  onContextMenu: function (event) {
+  onContextMenu: function(event) {
     let target = event.target;
     while (target && !target.download) {
       target = target.parentNode;
@@ -103,7 +103,7 @@ function ContextMenuItem(name, isVisible, action) {
 }
 
 ContextMenuItem.prototype = {
-  updateVisibility: function (download) {
+  updateVisibility: function(download) {
     this.element.hidden = !this.isVisible(download);
   }
 };
@@ -137,7 +137,7 @@ DownloadListView.prototype = {
     return finished;
   },
 
-  insertOrMoveItem: function (item) {
+  insertOrMoveItem: function(item) {
     var compare = (a, b) => {
       // active downloads always before stopped downloads
       if (a.stopped != b.stopped) {
@@ -154,13 +154,13 @@ DownloadListView.prototype = {
     this.listElement.insertBefore(item.element, insertLocation);
   },
 
-  onDownloadAdded: function (download) {
+  onDownloadAdded: function(download) {
     let item = new DownloadItem(download);
     this.items.set(download, item);
     this.insertOrMoveItem(item);
   },
 
-  onDownloadChanged: function (download) {
+  onDownloadChanged: function(download) {
     let item = this.items.get(download);
     if (!item) {
       Cu.reportError("No DownloadItem found for download");
@@ -174,7 +174,7 @@ DownloadListView.prototype = {
     item.onDownloadChanged();
   },
 
-  onDownloadRemoved: function (download) {
+  onDownloadRemoved: function(download) {
     let item = this.items.get(download);
     if (!item) {
       Cu.reportError("No DownloadItem found for download");
@@ -192,7 +192,7 @@ DownloadListView.prototype = {
 };
 
 var downloadLists = {
-  init: function () {
+  init: function() {
     this.publicDownloads = new DownloadListView(Downloads.PUBLIC, "public-downloads-list");
     this.privateDownloads = new DownloadListView(Downloads.PRIVATE, "private-downloads-list");
   },
@@ -201,7 +201,7 @@ var downloadLists = {
     return this.publicDownloads.finished.concat(this.privateDownloads.finished);
   },
 
-  removeFinished: function () {
+  removeFinished: function() {
     let finished = this.finished;
     if (finished.length == 0) {
       return;
@@ -244,7 +244,7 @@ const kDownloadStatePropertyNames = [
 ];
 
 DownloadItem.prototype = {
-  _htmlEscape : function (s) {
+  _htmlEscape: function(s) {
     s = s.replace(/&/g, "&amp;");
     s = s.replace(/>/g, "&gt;");
     s = s.replace(/</g, "&lt;");
@@ -253,7 +253,7 @@ DownloadItem.prototype = {
     return s;
   },
 
-  _updateFromDownload: function () {
+  _updateFromDownload: function() {
     this._state = {};
     kDownloadStatePropertyNames.forEach(
       name => this._state[name] = this._download[name],
@@ -295,7 +295,7 @@ DownloadItem.prototype = {
     return element;
   },
 
-  updateElement: function (element) {
+  updateElement: function(element) {
     element.querySelector(".date").textContent = this.startDate;
     element.querySelector(".domain").textContent = this.domain;
     element.querySelector(".icon").src = this.iconUrl;
@@ -304,13 +304,13 @@ DownloadItem.prototype = {
     element.querySelector(".title").setAttribute("value", this.fileName);
   },
 
-  onClick: function (event) {
+  onClick: function(event) {
     if (this.download.succeeded) {
       this.download.launch().catch(Cu.reportError);
     }
   },
 
-  onDownloadChanged: function () {
+  onDownloadChanged: function() {
     this._updateFromDownload();
     this.updateElement(this.element);
   },

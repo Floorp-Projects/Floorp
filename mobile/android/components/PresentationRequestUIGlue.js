@@ -6,7 +6,7 @@
 
 "use strict"
 
-const { interfaces: Ci, utils: Cu, classes: Cc  } = Components;
+const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH = "presentation-receiver:launch";
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE = "presentation-receiver:launch:response";
@@ -54,14 +54,14 @@ PresentationRequestUIGlue.prototype = {
 
         Services.obs.removeObserver(handleObserve,
                                     TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE);
-        switch(data.result) {
+        switch (data.result) {
           case "success":
             aResolve(aSubject);
             break;
           case "error":
             aReject();
             break;
-        };
+        }
       };
 
       Services.obs.addObserver(handleObserve,

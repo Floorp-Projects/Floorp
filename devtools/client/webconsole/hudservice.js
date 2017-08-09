@@ -11,6 +11,7 @@ var {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 var {Tools} = require("devtools/client/definitions");
 const { Task } = require("devtools/shared/task");
 var promise = require("promise");
+const defer = require("devtools/shared/defer");
 var Services = require("Services");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/webconsole", true);
@@ -173,11 +174,11 @@ HUD_SERVICE.prototype =
       return this._browserConsoleDefer.promise;
     }
 
-    this._browserConsoleDefer = promise.defer();
+    this._browserConsoleDefer = defer();
 
     function connect()
     {
-      let deferred = promise.defer();
+      let deferred = defer();
 
       if (!DebuggerServer.initialized) {
         DebuggerServer.init();
@@ -203,7 +204,7 @@ HUD_SERVICE.prototype =
     function openWindow(aTarget)
     {
       target = aTarget;
-      let deferred = promise.defer();
+      let deferred = defer();
       // Using the old frontend for now in the browser console.  This can be switched to
       // Tools.webConsole.url to use whatever is preffed on.
       let url = Tools.webConsole.oldWebConsoleURL;
@@ -558,7 +559,7 @@ WebConsole.prototype = {
 
     HUDService.consoles.delete(this.hudId);
 
-    this._destroyer = promise.defer();
+    this._destroyer = defer();
 
     // The document may already be removed
     if (this.chromeUtilsWindow && this.mainPopupSet) {
@@ -678,7 +679,7 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
 
     this._telemetry.toolClosed("browserconsole");
 
-    this._bc_destroyer = promise.defer();
+    this._bc_destroyer = defer();
 
     let chromeWindow = this.chromeWindow;
     this.$destroy().then(() =>

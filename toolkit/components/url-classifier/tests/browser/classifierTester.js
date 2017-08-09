@@ -48,7 +48,7 @@ var classifierTester = {
     }
   ],
 
-  setPrefs: function ({setDBs = true, flashBlockEnable = true, flashSetting = classifierTester.ALWAYS_ACTIVATE_PREF_VALUE} = {}) {
+  setPrefs({setDBs = true, flashBlockEnable = true, flashSetting = classifierTester.ALWAYS_ACTIVATE_PREF_VALUE} = {}) {
     if (setDBs) {
       let DBs = [];
 
@@ -69,7 +69,7 @@ var classifierTester = {
     Services.prefs.setBoolPref(classifierTester.ALLOW_CTA_PREF, true);
   },
 
-  unsetPrefs: function () {
+  unsetPrefs() {
     for (let dbData of classifierTester.dbUrls) {
       Services.prefs.clearUserPref(dbData.pref);
     }
@@ -184,8 +184,8 @@ var classifierTester = {
 
   // Returns null if this value should not be verified given the combination
   // of inputs
-  expectedPluginFallbackType: function (classification, flashSetting) {
-    switch(classification) {
+  expectedPluginFallbackType(classification, flashSetting) {
+    switch (classification) {
       case "unknown":
         if (flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE) {
           return null;
@@ -208,8 +208,8 @@ var classifierTester = {
 
   // Returns null if this value should not be verified given the combination
   // of inputs
-  expectedActivated: function (classification, flashSetting) {
-    switch(classification) {
+  expectedActivated(classification, flashSetting) {
+    switch (classification) {
       case "unknown":
         return (flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE);
       case "allowed":
@@ -222,8 +222,8 @@ var classifierTester = {
 
   // Returns null if this value should not be verified given the combination
   // of inputs
-  expectedHasRunningPlugin: function (classification, flashSetting) {
-    switch(classification) {
+  expectedHasRunningPlugin(classification, flashSetting) {
+    switch (classification) {
       case "unknown":
         return (flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE);
       case "allowed":
@@ -236,12 +236,12 @@ var classifierTester = {
 
   // Returns null if this value should not be verified given the combination
   // of inputs
-  expectedPluginListed: function (classification, flashSetting) {
+  expectedPluginListed(classification, flashSetting) {
     if (flashSetting == classifierTester.ASK_TO_ACTIVATE_PREF_VALUE &&
-        Services.prefs.getCharPref('plugins.navigator.hidden_ctp_plugin') == "Shockwave Flash") {
+        Services.prefs.getCharPref("plugins.navigator.hidden_ctp_plugin") == "Shockwave Flash") {
       return false;
     }
-    switch(classification) {
+    switch (classification) {
       case "unknown":
       case "allowed":
         return (flashSetting != classifierTester.NEVER_ACTIVATE_PREF_VALUE);
@@ -251,7 +251,7 @@ var classifierTester = {
     throw new Error("Invalid classification or flash setting");
   },
 
-  buildTestCaseInNewTab: function (browser, testCase) {
+  buildTestCaseInNewTab(browser, testCase) {
     return (async function() {
       let iframeDomains = testCase.domains.slice();
       let pageDomain = iframeDomains.shift();
@@ -265,7 +265,7 @@ var classifierTester = {
         let url = domain + classifierTester.URL_PATH + "?date=" + Date.now() + "rand=" + Math.random();
         let domainLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, url);
 
-        ContentTask.spawn(tab.linkedBrowser, {iframeId: classifierTester.IFRAME_ID, url: url, depth: depth},
+        ContentTask.spawn(tab.linkedBrowser, {iframeId: classifierTester.IFRAME_ID, url, depth},
                           async function({iframeId, url, depth}) {
           let doc = content.document;
           for (let i = 0; i < depth; ++i) {
@@ -281,9 +281,9 @@ var classifierTester = {
     })();
   },
 
-  getPluginInfo: function (browser, depth) {
+  getPluginInfo(browser, depth) {
     return ContentTask.spawn(browser,
-                             {iframeId: classifierTester.IFRAME_ID, depth: depth},
+                             {iframeId: classifierTester.IFRAME_ID, depth},
                              async function({iframeId, depth}) {
       let doc = content.document;
       let win = content.window;
@@ -307,7 +307,7 @@ var classifierTester = {
     });
   },
 
-  checkPluginInfo: function (pluginInfo, expectedClassification, flashSetting) {
+  checkPluginInfo(pluginInfo, expectedClassification, flashSetting) {
     is(pluginInfo.flashClassification, expectedClassification,
        "Page's classification should match expected");
 

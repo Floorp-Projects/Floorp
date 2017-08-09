@@ -1688,6 +1688,9 @@ var gBrowserInit = {
     if (AppConstants.MOZ_DATA_REPORTING)
       gDataNotificationInfoBar.init();
 
+    if (!AppConstants.MOZILLA_OFFICIAL)
+      DevelopmentHelpers.init();
+
     requestIdleCallback(() => {
       // setup simple gestures support
       gGestureSupport.init(true);

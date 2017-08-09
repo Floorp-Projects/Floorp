@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
 var EmbedRT = {
   _scopes: {},
 
-  onEvent: function (event, data, callback) {
+  onEvent: function(event, data, callback) {
     switch (event) {
       case "GeckoView:ImportScript":
         this.importScript(data.scriptURL);
@@ -56,7 +56,7 @@ var EmbedRT = {
 
       try {
         sandbox.load(params);
-      } catch(e) {
+      } catch (e) {
         dump("Exception calling 'load' method in script: " + scriptURL + "\n" + e);
       }
     }

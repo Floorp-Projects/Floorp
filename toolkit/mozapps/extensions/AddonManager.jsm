@@ -3341,7 +3341,18 @@ this.AddonManager = {
     // The addon did not have the expected ID
     ["ERROR_INCORRECT_ID", -7],
   ]),
-
+  // The update check timed out
+  ERROR_TIMEOUT: -1,
+  // There was an error while downloading the update information.
+  ERROR_DOWNLOAD_ERROR: -2,
+  // The update information was malformed in some way.
+  ERROR_PARSE_ERROR: -3,
+  // The update information was not in any known format.
+  ERROR_UNKNOWN_FORMAT: -4,
+  // The update information was not correctly signed or there was an SSL error.
+  ERROR_SECURITY_ERROR: -5,
+  // The update was cancelled
+  ERROR_CANCELLED: -6,
   // These must be kept in sync with AddonUpdateChecker.
   // No error was encountered.
   UPDATE_STATUS_NO_ERROR: 0,
@@ -3357,7 +3368,6 @@ this.AddonManager = {
   UPDATE_STATUS_SECURITY_ERROR: -5,
   // The update was cancelled.
   UPDATE_STATUS_CANCELLED: -6,
-
   // Constants to indicate why an update check is being performed
   // Update check has been requested by the user.
   UPDATE_WHEN_USER_REQUESTED: 1,

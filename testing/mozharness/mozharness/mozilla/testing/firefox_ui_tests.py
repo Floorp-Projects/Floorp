@@ -252,7 +252,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         env.update({'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']})
         if self.query_minidump_stackwalk():
             env.update({'MINIDUMP_STACKWALK': self.minidump_stackwalk_path})
-        env['RUST_BACKTRACE'] = '1'
+        env['RUST_BACKTRACE'] = 'full'
 
         # If code coverage is enabled, set GCOV_PREFIX and JS_CODE_COVERAGE_OUTPUT_DIR env variables
         if self.config.get('code_coverage'):

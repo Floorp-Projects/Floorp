@@ -392,13 +392,28 @@ add_task(async function getTopFrecentSites_dedupeWWW() {
   Assert.equal(links[0].frecency, 200, "frecency scores are combined");
 
   // add another page visit with www and without www
-  testURI = "http://mozilla.com/page";
-  await PlacesTestUtils.addVisits(testURI);
-  testURI = "http://www.mozilla.com/page";
-  await PlacesTestUtils.addVisits(testURI);
+  let noWWW = "http://mozilla.com/page";
+  await PlacesTestUtils.addVisits(noWWW);
+  let withWWW = "http://www.mozilla.com/page";
+  await PlacesTestUtils.addVisits(withWWW);
   links = await provider.getTopSites();
   Assert.equal(links.length, 1, "adding both www. and no-www. yields one link");
   Assert.equal(links[0].frecency, 200, "frecency scores are combined ignoring extra pages");
+
+  // add another visit with www
+  await PlacesTestUtils.addVisits(withWWW);
+  links = await provider.getTopSites();
+  Assert.equal(links.length, 1, "still yields one link");
+  Assert.equal(links[0].url, withWWW, "more frecent www link is used");
+  Assert.equal(links[0].frecency, 300, "frecency scores are combined ignoring extra pages");
+
+  // add a couple more visits to the no-www page
+  await PlacesTestUtils.addVisits(noWWW);
+  await PlacesTestUtils.addVisits(noWWW);
+  links = await provider.getTopSites();
+  Assert.equal(links.length, 1, "still yields one link");
+  Assert.equal(links[0].url, noWWW, "now more frecent no-www link is used");
+  Assert.equal(links[0].frecency, 500, "frecency scores are combined ignoring extra pages");
 });
 
 add_task(async function getTopFrencentSites_maxLimit() {
@@ -443,6 +458,13 @@ add_task(async function getTopFrencentSites_allowedProtocols() {
 
   links = await provider.getTopSites();
   Assert.equal(links.length, 1, "we still only accept http:// and https:// for top sites");
+
+  // add a different allowed protocol
+  testURI = "https://https";
+  await PlacesTestUtils.addVisits(testURI);
+
+  links = await provider.getTopSites();
+  Assert.equal(links.length, 2, "we now accept both http:// and https:// for top sites");
 });
 
 add_task(async function getTopFrecentSites_order() {
