@@ -75,7 +75,7 @@ function reference_fetch_file(path, test) {
       });
 
   });
-};
+}
 
 /**
  * Compare asynchronously the contents two files using xpcom.
@@ -94,7 +94,7 @@ function reference_compare_files(a, b, test) {
     let b_contents = await reference_fetch_file(b, test);
     do_check_eq(a_contents, b_contents);
   })();
-};
+}
 
 async function removeTestFile(filePath, ignoreNoSuchFile = true) {
   try {

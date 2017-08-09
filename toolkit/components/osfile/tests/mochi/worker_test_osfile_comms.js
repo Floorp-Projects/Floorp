@@ -3,7 +3,7 @@
 
 "use strict";
 
-importScripts('worker_test_osfile_shared.js');
+importScripts("worker_test_osfile_shared.js");
 
 // The set of samples for communications test. Declare as a global
 // variable to prevent this from being garbage-collected too early.
@@ -130,7 +130,7 @@ self.onmessage = function(msg) {
     // 4. Test sending serialized
     info("Attempting to send message");
     try {
-      self.postMessage({kind:"value",
+      self.postMessage({kind: "value",
         typename: sample.typename,
         value: serialized,
         check: check.toSource()});
