@@ -1186,15 +1186,6 @@ BrowserGlue.prototype = {
       });
     }
 
-    // Let's load the contextual identities.
-    Services.tm.idleDispatchToMainThread(() => {
-      ContextualIdentityService.load();
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
-      SafeBrowsing.init();
-    }, 5000);
-
     this._sanitizer.onStartup();
     E10SAccessibilityCheck.onWindowsRestored();
 
@@ -1233,7 +1224,15 @@ BrowserGlue.prototype = {
    * to the other ones scheduled together.
    */
   _scheduleStartupIdleTasks() {
-    // TODO: Functions to be added here with Services.tm.idleDispatchToMainThread
+    Services.tm.idleDispatchToMainThread(() => {
+      ContextualIdentityService.load();
+    });
+
+    // It's important that SafeBrowsing is initialized reasonably
+    // early, so we use a maximum timeout for it.
+    Services.tm.idleDispatchToMainThread(() => {
+      SafeBrowsing.init();
+    }, 5000);
   },
 
   /**
