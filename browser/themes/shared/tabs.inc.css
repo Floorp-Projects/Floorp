@@ -443,9 +443,6 @@
 #TabsToolbar > #new-tab-button ,
 #TabsToolbar > toolbarpaletteitem > #new-tab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.svg);
-  -moz-context-properties: fill;
-  fill: currentColor;
-  color: inherit;
 }
 
 .tabs-newtab-button {
@@ -466,8 +463,6 @@
 
 #alltabs-button {
   list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
-  -moz-context-properties: fill;
-  fill: currentColor;
 }
 
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
