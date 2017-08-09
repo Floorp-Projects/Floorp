@@ -5,6 +5,7 @@
 %filter substitution
 
 %define menuPanelWidth 22.35em
+%define wideMenuPanelWidth 29em
 %define standaloneSubviewWidth 30em
 % XXXgijs This is the ugliest bit of code I think I've ever written for Mozilla.
 % Basically, the 0.1px is there to avoid CSS rounding errors causing buttons to wrap.
@@ -348,6 +349,13 @@ photonpanelmultiview panelview {
 #customizationui-widget-multiview panelview:not([extension]) {
   min-width: @menuPanelWidth@;
   max-width: 30em;
+}
+
+#customizationui-widget-multiview #appMenu-libraryView,
+#pageActionPanel panelview,
+#widget-overflow panelview {
+  min-width: @wideMenuPanelWidth@;
+  max-width: @wideMenuPanelWidth@;
 }
 
 /* Add 2 * 12px extra width for touch mode button padding. */
@@ -1460,7 +1468,7 @@ menuitem.panel-subview-footer@menuStateActive@,
   padding-left: 6px;
 }
 
-#widget-overflow-scroller > toolbarseparator,
+#widget-overflow-mainView > .panel-subview-body > toolbarseparator,
 .PanelUI-subView menuseparator,
 .PanelUI-subView toolbarseparator,
 .cui-widget-panelview menuseparator,
@@ -1578,11 +1586,6 @@ toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutt
   display: none;
 }
 
-#search-container[cui-areatype="menu-panel"],
-#wrapper-search-container[place="panel"] {
-  width: @menuPanelWidth@;
-}
-
 #search-container[cui-areatype="menu-panel"] {
   margin-top: 6px;
   margin-bottom: 6px;
@@ -1663,19 +1666,14 @@ toolbarpaletteitem[place=panel] > .toolbaritem-combined-buttons > toolbarbutton 
   overflow-x: hidden;
 }
 
-#widget-overflow-scroller {
-  margin-top: 4px;
-  margin-bottom: 4px;
-}
-
 .widget-overflow-list {
-  width: @menuPanelWidth@;
+  width: @wideMenuPanelWidth@;
 }
 
 toolbaritem[overflowedItem=true],
 .widget-overflow-list .toolbarbutton-1 {
   width: 100%;
-  max-width: @menuPanelWidth@;
+  max-width: @wideMenuPanelWidth@;
   background-repeat: no-repeat;
   background-position: 0 center;
 }
