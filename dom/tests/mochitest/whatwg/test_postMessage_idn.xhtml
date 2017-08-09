@@ -36,7 +36,7 @@ function receiveMessage(evt)
     ok(evt.isTrusted === false, "shouldn't have been a trusted event");
   }
 
-  is(evt.origin, "http://sub1.ält.example.org:8000",
+  is(evt.origin, "http://sub1.xn--lt-uia.example.org:8000",
      "wrong origin -- IDN issue, perhaps?");
 
   is(evt.data, "idn-response", "unexpected test result");

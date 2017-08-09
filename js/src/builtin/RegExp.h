@@ -118,15 +118,15 @@ extern MOZ_MUST_USE bool
 RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto);
 
 extern MOZ_MUST_USE bool
-RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinearString string,
-                      size_t position, HandleObject capturesObj, HandleLinearString replacement,
-                      size_t firstDollarIndex, MutableHandleValue rval);
+RegExpGetSubstitution(JSContext* cx, HandleObject matchResult, HandleLinearString string,
+                      size_t position, HandleLinearString replacement, size_t firstDollarIndex,
+                      MutableHandleValue rval);
 
 extern MOZ_MUST_USE bool
 GetFirstDollarIndex(JSContext* cx, unsigned argc, Value* vp);
 
 extern MOZ_MUST_USE bool
-GetFirstDollarIndexRaw(JSContext* cx, HandleString str, int32_t* index);
+GetFirstDollarIndexRaw(JSContext* cx, JSString* str, int32_t* index);
 
 extern int32_t
 GetFirstDollarIndexRawFlat(JSLinearString* text);

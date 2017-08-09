@@ -82,9 +82,9 @@ add_task(async function test_principal_permissions() {
     scope: 'https://example.com/',
     originAttributes: '^userContextId=1',
   }, {
-    scope: 'https://блог.фанфрог.рф/',
+    scope: 'https://xn--90aexm.xn--80ag3aejvc.xn--p1ai/',
   }, {
-    scope: 'https://блог.фанфрог.рф/',
+    scope: 'https://xn--90aexm.xn--80ag3aejvc.xn--p1ai/',
     originAttributes: '^userContextId=1',
   }];
   for (let props of testProps) {

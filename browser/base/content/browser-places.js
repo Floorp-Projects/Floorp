@@ -462,7 +462,7 @@ var PlacesCommandHook = {
       try {
         title = docInfo.isErrorPage ? PlacesUtils.history.getPageTitle(uri)
                                     : aBrowser.contentTitle;
-        title = title || uri.spec;
+        title = title || uri.displaySpec;
         description = docInfo.description;
         charset = aBrowser.characterSet;
       } catch (e) { }

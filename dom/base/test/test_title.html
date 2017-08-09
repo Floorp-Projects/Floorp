@@ -22,19 +22,20 @@
   <iframe id="xhtml4" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'/>"></iframe>
   <iframe id="xhtml5" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'><head/></html>"></iframe>
   <iframe id="xhtml6" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'><head><style/></head></html>"></iframe>
-  <iframe id="xul1" src="data:application/vnd.mozilla.xul+xml,<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' title='Test'/>"></iframe>
-  <iframe id="xul2" src="data:application/vnd.mozilla.xul+xml,<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' title='Test'/>"></iframe>
+  <iframe id="xul1" src="file_title.xul"></iframe>
+  <iframe id="xul2" src="file_title.xul"></iframe>
   <iframe id="svg1" src="data:text/xml,<svg xmlns='http://www.w3.org/2000/svg'><title id='t'>Test</title></svg>"></iframe>
   <iframe id="svg2" src="data:text/xml,<svg xmlns='http://www.w3.org/2000/svg'><title id='t'>Test</title></svg>"></iframe>
 </div>
-
 <pre id="test">
 <script>
 SimpleTest.waitForExplicitFinish();
 
 function runTests() {
   function testStatic(id, expect, description) {
-    is(document.getElementById(id).contentDocument.title, expect, description);
+    var myFrame = document.getElementById(id);
+    var wrappedDoc = SpecialPowers.wrap(myFrame).contentDocument;
+    is(wrappedDoc.title, expect, description);
   }
 
   testStatic("html1", "Test", "HTML <title>");

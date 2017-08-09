@@ -320,4 +320,11 @@ interface nsIURI : nsISupports
      * the network.IDN_show_punycode pref is false)
      */
     readonly attribute AUTF8String displaySpec;
+
+    /**
+     * Returns the same as calling .prePath, only with a UTF8 encoded hostname
+     * (if that hostname doesn't contain blacklisted characters, and
+     * the network.IDN_show_punycode pref is false)
+     */
+    readonly attribute AUTF8String displayPrePath;
 };

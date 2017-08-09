@@ -56,11 +56,11 @@ function run_test() {
     // http://lists.w3.org/Archives/Public/public-iri/2004Mar/0012.html
     var uri4 = ios.newURI("http://xn--jos-dma.example.net.ch/");
     do_check_eq(uri4.asciiHost, "xn--jos-dma.example.net.ch");
-    do_check_eq(uri4.host, "jos\u00e9.example.net.ch");
+    do_check_eq(uri4.displayHost, "jos\u00e9.example.net.ch");
     
     var uri5 = round_trip(uri4);
     do_check_true(uri4.equals(uri5));
-    do_check_eq(uri4.host, uri5.host);
+    do_check_eq(uri4.displayHost, uri5.displayHost);
     do_check_eq(uri4.asciiHost, uri5.asciiHost);
   } finally {
     for (var pref of prefData) {

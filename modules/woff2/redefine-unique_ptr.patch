@@ -19,7 +19,7 @@ diff --git a/modules/woff2/src/woff2_dec.cc b/modules/woff2/src/woff2_dec.cc
 +  #define unique_ptr UniquePtr
 +}
 +
- #include "./decode.h"
+ #include "./brotli/decode.h"
  #include "./buffer.h"
  #include "./port.h"
  #include "./round.h"

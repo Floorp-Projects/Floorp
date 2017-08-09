@@ -64,6 +64,9 @@
         }
 
         function recordPointerEvent(event) {
+          if (event.type === "contextmenu") {
+            event.preventDefault();
+          }
           allEvents.events.push({
             "type": event.type,
             "button": event.button,

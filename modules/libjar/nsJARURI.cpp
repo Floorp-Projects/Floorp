@@ -241,6 +241,12 @@ nsJARURI::GetDisplayHostPort(nsACString &aUnicodeHostPort)
 }
 
 NS_IMETHODIMP
+nsJARURI::GetDisplayPrePath(nsACString &aPrePath)
+{
+    return GetPrePath(aPrePath);
+}
+
+NS_IMETHODIMP
 nsJARURI::GetDisplayHost(nsACString &aUnicodeHost)
 {
     return GetHost(aUnicodeHost);

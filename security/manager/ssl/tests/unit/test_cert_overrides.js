@@ -266,7 +266,7 @@ function add_simple_tests() {
     let cert = constructCertFromFile("bad_certs/idn-certificate.pem");
     Assert.ok(certOverrideService.hasMatchingOverride(uri.asciiHost, 8443, cert, {}, {}),
               "IDN certificate should have matching override using ascii host");
-    Assert.ok(!certOverrideService.hasMatchingOverride(uri.host, 8443, cert, {}, {}),
+    Assert.ok(!certOverrideService.hasMatchingOverride(uri.displayHost, 8443, cert, {}, {}),
               "IDN certificate should not have matching override using (non-ascii) host");
     run_next_test();
   });
