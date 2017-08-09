@@ -21,7 +21,7 @@ from taskgraph.taskgraph import TaskGraph
     symbol='add-new',
     description="Add new jobs using task labels",
     order=10000,
-    context=[{}],
+    context=[],
     schema={
         'type': 'object',
         'properties': {
