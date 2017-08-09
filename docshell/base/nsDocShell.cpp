@@ -5738,6 +5738,7 @@ nsDocShell::LoadPage(nsISupports* aPageDescriptor, uint32_t aDisplayType)
     }
     shEntry->SetURI(newUri);
     shEntry->SetOriginalURI(nullptr);
+    shEntry->SetResultPrincipalURI(nullptr);
     // shEntry's current triggering principal is whoever loaded that page initially.
     // But now we're doing another load of the page, via an API that is only exposed
     // to system code.  The triggering principal for this load should be the system
