@@ -62,8 +62,6 @@ async function test_setPosition_failures() {
   try {
     let file = await OS.File.open(path, {write: true, append: false});
     try {
-      let pos = 0;
-
       // 1. Use an invalid position value
       try {
         await file.setPosition(0.5, OS.File.POS_START);
@@ -114,7 +112,7 @@ function run_test() {
   add_task(test_setPosition.bind(null, 1000, 100, 50));
   add_task(test_setPosition.bind(null, 1000, -100, -50));
 
-  if (OS.Constants.Win || ctypes.off_t.size >= 8) {
+  if (OS.Constants.Win || ctypes.off_t.size >= 8) {
     // Now verify stuff still works for large values.
     // 1. Multiple small seeks, which add up to > MAXINT32
     add_task(test_setPosition.bind(null, 0x7fffffff, 0x7fffffff, 0));
