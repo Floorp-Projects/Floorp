@@ -11,7 +11,6 @@
 #define nsTString_CharT                     nsString
 #define nsTStringRepr_CharT                 nsStringRepr
 #define nsTFixedString_CharT                nsFixedString
-#define nsTAutoStringN_CharT                nsAutoStringN
 #define nsTAutoString_CharT                 nsAutoString
 #define nsTSubstring_CharT                  nsAString
 #define PrintfAppend_CharT                  PrintfAppend_nsAString
