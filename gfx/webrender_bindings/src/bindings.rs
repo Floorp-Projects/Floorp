@@ -56,6 +56,21 @@ fn make_slice_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
     }
 }
 
+pub struct DocumentHandle {
+    api: RenderApi,
+    document_id: DocumentId,
+}
+
+impl DocumentHandle {
+    pub fn new(api: RenderApi, size: DeviceUintSize) -> DocumentHandle {
+        let doc = api.add_document(size);
+        DocumentHandle {
+            api: api,
+            document_id: doc
+        }
+    }
+}
+
 #[repr(C)]
 pub struct WrVecU8 {
     data: *mut u8,
@@ -531,7 +546,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 gl_context: *mut c_void,
                                 thread_pool: *mut WrThreadPool,
                                 enable_profiler: bool,
-                                out_api: &mut *mut RenderApi,
+                                out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer)
                                 -> bool {
     assert!(unsafe { is_in_render_thread() });
@@ -571,8 +586,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         ..Default::default()
     };
 
-    let window_size = DeviceUintSize::new(window_width, window_height);
-    let (renderer, sender) = match Renderer::new(gl, opts, window_size) {
+    let (renderer, sender) = match Renderer::new(gl, opts) {
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
@@ -588,7 +602,9 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                               window_id: window_id,
                                           }));
 
-    *out_api = Box::into_raw(Box::new(sender.create_api()));
+    let window_size = DeviceUintSize::new(window_width, window_height);
+    *out_handle = Box::into_raw(Box::new(
+            DocumentHandle::new(sender.create_api(), window_size)));
     *out_renderer = Box::into_raw(Box::new(renderer));
 
     return true;
@@ -596,69 +612,70 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
-pub unsafe extern "C" fn wr_api_delete(api: *mut RenderApi) {
-    let api = Box::from_raw(api);
-    api.shut_down();
+pub unsafe extern "C" fn wr_api_delete(dh: *mut DocumentHandle) {
+    let handle = Box::from_raw(dh);
+    handle.api.delete_document(handle.document_id);
+    handle.api.shut_down();
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_image(api: &mut RenderApi,
+pub extern "C" fn wr_api_add_image(dh: &mut DocumentHandle,
                                    image_key: WrImageKey,
                                    descriptor: &WrImageDescriptor,
                                    bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
-    api.add_image(image_key,
-                  descriptor.into(),
-                  ImageData::new(copied_bytes),
-                  None);
+    dh.api.add_image(image_key,
+                     descriptor.into(),
+                     ImageData::new(copied_bytes),
+                     None);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_blob_image(api: &mut RenderApi,
+pub extern "C" fn wr_api_add_blob_image(dh: &mut DocumentHandle,
                                         image_key: WrImageKey,
                                         descriptor: &WrImageDescriptor,
                                         bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
-    api.add_image(image_key,
-                  descriptor.into(),
-                  ImageData::new_blob_image(copied_bytes),
-                  None);
+    dh.api.add_image(image_key,
+                     descriptor.into(),
+                     ImageData::new_blob_image(copied_bytes),
+                     None);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_external_image(api: &mut RenderApi,
+pub extern "C" fn wr_api_add_external_image(dh: &mut DocumentHandle,
                                             image_key: WrImageKey,
                                             descriptor: &WrImageDescriptor,
                                             external_image_id: WrExternalImageId,
                                             buffer_type: WrExternalImageBufferType,
                                             channel_index: u8) {
     assert!(unsafe { is_in_compositor_thread() });
-    api.add_image(image_key,
-                  descriptor.into(),
-                  ImageData::External(ExternalImageData {
-                                          id: external_image_id.into(),
-                                          channel_index: channel_index,
-                                          image_type: buffer_type,
-                                      }),
-                  None);
+    dh.api.add_image(image_key,
+                     descriptor.into(),
+                     ImageData::External(ExternalImageData {
+                                             id: external_image_id.into(),
+                                             channel_index: channel_index,
+                                             image_type: buffer_type,
+                                         }),
+                     None);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_update_image(api: &mut RenderApi,
+pub extern "C" fn wr_api_update_image(dh: &mut DocumentHandle,
                                       key: WrImageKey,
                                       descriptor: &WrImageDescriptor,
                                       bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
 
-    api.update_image(key, descriptor.into(), ImageData::new(copied_bytes), None);
+    dh.api.update_image(key, descriptor.into(), ImageData::new(copied_bytes), None);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_api_update_external_image(
-    api: &mut RenderApi,
+    dh: &mut DocumentHandle,
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
     external_image_id: WrExternalImageId,
@@ -675,47 +692,49 @@ pub extern "C" fn wr_api_update_external_image(
         }
     );
 
-    api.update_image(key, descriptor.into(), data, None);
+    dh.api.update_image(key, descriptor.into(), data, None);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_update_blob_image(api: &mut RenderApi,
+pub extern "C" fn wr_api_update_blob_image(dh: &mut DocumentHandle,
                                            image_key: WrImageKey,
                                            descriptor: &WrImageDescriptor,
                                            bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
-    api.update_image(
-        image_key,
-        descriptor.into(),
-        ImageData::new_blob_image(copied_bytes),
-        None
+    dh.api.update_image(
+           image_key,
+           descriptor.into(),
+           ImageData::new_blob_image(copied_bytes),
+           None
     );
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_delete_image(api: &mut RenderApi,
+pub extern "C" fn wr_api_delete_image(dh: &mut DocumentHandle,
                                       key: WrImageKey) {
     assert!(unsafe { is_in_compositor_thread() });
-    api.delete_image(key)
+    dh.api.delete_image(key)
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_set_root_pipeline(api: &mut RenderApi,
+pub extern "C" fn wr_api_set_root_pipeline(dh: &mut DocumentHandle,
                                            pipeline_id: WrPipelineId) {
-    api.set_root_pipeline(pipeline_id);
+    dh.api.set_root_pipeline(dh.document_id, pipeline_id);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_set_window_parameters(api: &mut RenderApi,
+pub extern "C" fn wr_api_set_window_parameters(dh: &mut DocumentHandle,
                                                width: i32,
                                                height: i32) {
     let size = DeviceUintSize::new(width as u32, height as u32);
-    api.set_window_parameters(size, DeviceUintRect::new(DeviceUintPoint::new(0, 0), size));
+    dh.api.set_window_parameters(dh.document_id,
+                                 size,
+                                 DeviceUintRect::new(DeviceUintPoint::new(0, 0), size));
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut RenderApi,
+pub unsafe extern "C" fn wr_api_set_root_display_list(dh: &mut DocumentHandle,
                                                       color: ColorF,
                                                       epoch: WrEpoch,
                                                       viewport_width: f32,
@@ -741,34 +760,36 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut RenderApi,
     dl_vec.extend_from_slice(dl_slice);
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    api.set_display_list(color,
-                         epoch,
-                         LayoutSize::new(viewport_width, viewport_height),
-                         (pipeline_id, content_size.into(), dl),
-                         preserve_frame_state);
+    dh.api.set_display_list(dh.document_id,
+                            epoch,
+                            color,
+                            LayoutSize::new(viewport_width, viewport_height),
+                            (pipeline_id, content_size.into(), dl),
+                            preserve_frame_state);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_api_clear_root_display_list(api: &mut RenderApi,
+pub unsafe extern "C" fn wr_api_clear_root_display_list(dh: &mut DocumentHandle,
                                                         epoch: WrEpoch,
                                                         pipeline_id: WrPipelineId) {
     let preserve_frame_state = true;
     let frame_builder = WebRenderFrameBuilder::new(pipeline_id, LayoutSize::zero());
 
-    api.set_display_list(None,
-                         epoch,
-                         LayoutSize::new(0.0, 0.0),
-                         frame_builder.dl_builder.finalize(),
-                         preserve_frame_state);
+    dh.api.set_display_list(dh.document_id,
+                            epoch,
+                            None,
+                            LayoutSize::new(0.0, 0.0),
+                            frame_builder.dl_builder.finalize(),
+                            preserve_frame_state);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_generate_frame(api: &mut RenderApi) {
-    api.generate_frame(None);
+pub extern "C" fn wr_api_generate_frame(dh: &mut DocumentHandle) {
+    dh.api.generate_frame(dh.document_id, None);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut RenderApi,
+pub extern "C" fn wr_api_generate_frame_with_properties(dh: &mut DocumentHandle,
                                                         opacity_array: *const WrOpacityProperty,
                                                         opacity_count: usize,
                                                         transform_array: *const WrTransformProperty,
@@ -803,20 +824,20 @@ pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut RenderApi,
         }
     }
 
-    api.generate_frame(Some(properties));
+    dh.api.generate_frame(dh.document_id, Some(properties));
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
-pub extern "C" fn wr_api_send_external_event(api: &mut RenderApi,
+pub extern "C" fn wr_api_send_external_event(dh: &mut DocumentHandle,
                                              evt: usize) {
     assert!(unsafe { !is_in_render_thread() });
 
-    api.send_external_event(ExternalEvent::from_raw(evt));
+    dh.api.send_external_event(ExternalEvent::from_raw(evt));
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_raw_font(api: &mut RenderApi,
+pub extern "C" fn wr_api_add_raw_font(dh: &mut DocumentHandle,
                                       key: WrFontKey,
                                       font_buffer: *mut u8,
                                       buffer_size: usize,
@@ -827,19 +848,19 @@ pub extern "C" fn wr_api_add_raw_font(api: &mut RenderApi,
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
-    api.add_raw_font(key, font_vector, index);
+    dh.api.add_raw_font(key, font_vector, index);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_delete_font(api: &mut RenderApi,
+pub extern "C" fn wr_api_delete_font(dh: &mut DocumentHandle,
                                      key: WrFontKey) {
     assert!(unsafe { is_in_compositor_thread() });
-    api.delete_font(key);
+    dh.api.delete_font(key);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_api_get_namespace(api: &mut RenderApi) -> WrIdNamespace {
-    api.id_namespace
+pub unsafe extern "C" fn wr_api_get_namespace(dh: &mut DocumentHandle) -> WrIdNamespace {
+    dh.document_id.0
 }
 
 // RenderThread WIP notes:
@@ -1050,13 +1071,13 @@ pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_scroll_layer_with_id(api: &mut RenderApi,
+pub extern "C" fn wr_scroll_layer_with_id(dh: &mut DocumentHandle,
                                           pipeline_id: WrPipelineId,
                                           scroll_id: u64,
                                           new_scroll_origin: LayoutPoint) {
     assert!(unsafe { is_in_compositor_thread() });
     let clip_id = ClipId::new(scroll_id, pipeline_id);
-    api.scroll_node_with_id(new_scroll_origin.into(), clip_id, ScrollClamping::NoClamping);
+    dh.api.scroll_node_with_id(dh.document_id, new_scroll_origin.into(), clip_id, ScrollClamping::NoClamping);
 }
 
 #[no_mangle]

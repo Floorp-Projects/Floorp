@@ -126,8 +126,8 @@ public:
   layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
 
 protected:
-  WebRenderAPI(wr::RenderApi* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
-    : mRenderApi(aRawApi)
+  WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
+    : mDocHandle(aHandle)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
@@ -138,7 +138,7 @@ protected:
   // Should be used only for shutdown handling
   void WaitFlushed();
 
-  wr::RenderApi* mRenderApi;
+  wr::DocumentHandle* mDocHandle;
   wr::WindowId mId;
   GLint mMaxTextureSize;
   bool mUseANGLE;
