@@ -6,7 +6,7 @@
     "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
-    "message": "Pořídit snímek obrazovky"
+    "message": "Pořídit snímek stránky"
   },
   "myShotsLink": {
     "message": "Mé snímky"
@@ -66,6 +66,12 @@
   },
   "emptySelectionErrorTitle": {
     "message": "Vybraná oblast je moc malá"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Služba Firefox Screenshots je v anonymním prohlížení vypnutá"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Omlouváme se za nepříjemnosti. Na této funkci pracujeme pro některé příští vydání."
   },
   "genericErrorTitle": {
     "message": "Jejda! Služba Firefox Screenshots přestala pracovat."

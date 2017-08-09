@@ -33,7 +33,7 @@
     "message": "Link kopieret"
   },
   "notificationLinkCopiedDetails": {
-    "message": "Linket til dit skærmbillede er blevet gemt i udklipsholderen. Tryk på $META_KEY$-V for at sætte ind. ",
+    "message": "Linket til dit skærmbillede er blevet gemt i udklipsholderen. Tryk på $META_KEY$-V for at sætte ind.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -50,22 +50,28 @@
     "message": "Vi kan ikke oprette forbindelse til dine skærmbilleder."
   },
   "connectionErrorDetails": {
-    "message": "Kontroller din internet-forbindelse. Hvis du ikke kan oprette forbindelse til internettet, kan der være et midlertidigt teknisk problem med Firefox Screenshots. "
+    "message": "Kontroller din internet-forbindelse. Hvis du ikke kan oprette forbindelse til internettet, kan der være et midlertidigt teknisk problem med Firefox Screenshots."
   },
   "loginErrorDetails": {
-    "message": "Vi kunne ikke gemme dit skærmbillede, fordi der er et teknisk problem med Firefox Screenshots. Prøv igen senere. "
+    "message": "Vi kunne ikke gemme dit skærmbillede, fordi der er et teknisk problem med Firefox Screenshots. Prøv igen senere."
   },
   "unshootablePageErrorTitle": {
-    "message": "Vi kan ikke tage et skærmbillede af denne side. "
+    "message": "Vi kan ikke tage et skærmbillede af denne side."
   },
   "unshootablePageErrorDetails": {
-    "message": "Dette er ikke en almindelig webside, så du kan ikke tage skærmbilleder af den. "
+    "message": "Dette er ikke en almindelig webside, så du kan ikke tage skærmbilleder af den."
   },
   "selfScreenshotErrorTitle": {
     "message": "Du kan ikke tage skærmbilleder af en side i Firefox Screenshots."
   },
   "emptySelectionErrorTitle": {
     "message": "Din markering er for lille"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots er deaktiveret i privat browsing-tilstand"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Vi beklager ulejligheden. Vi arbejder på at få funktionen til at virke i fremtidige udgivelser."
   },
   "genericErrorTitle": {
     "message": "Hov! Noget gik helt galt med Firefox Screenshots."
@@ -74,7 +80,7 @@
     "message": "Vi er ikke sikre på, hvad der lige skete. Vil du prøve igen - eller vil du tage et skærmbillede af en anden side?"
   },
   "tourBodyOne": {
-    "message": "Tag, gem og del skærmbilleder uden at forlade Firefox. "
+    "message": "Tag, gem og del skærmbilleder uden at forlade Firefox."
   },
   "tourHeaderTwo": {
     "message": "Gem lige hvad du vil."

@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Pe itwero mako cal me potbuk pa Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Yer mamegi tidi tutwal"
+  },
   "genericErrorTitle": {
     "message": "Woo! Firefox Screenshots opo oo."
   },

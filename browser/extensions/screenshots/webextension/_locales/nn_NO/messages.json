@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Markeringa di er for lita"
   },
+  "privateWindowErrorTitle": {
+    "message": "Skjermbildeknipsing er slått av i Privat nettlesings-modus"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Ein er lei for ulempa. Vi jobbar med denne funksjonen for framtidige versjonar."
+  },
   "genericErrorTitle": {
     "message": "Oj! Det ser ut til at Firefox Screenshots ikkje fungerer korrekt."
   },

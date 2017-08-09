@@ -1,0 +1,132 @@
+{
+  "addonDescription": {
+    "message": "გადაუღეთ ვიდეოები ან სურათები ვებ-გვერდებს და შეინახეთ დროებით ან მუდმივად."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "ეკრანისთვის სურათის გადაღება"
+  },
+  "myShotsLink": {
+    "message": "ჩემი გადაღებულები"
+  },
+  "screenshotInstructions": {
+    "message": "გადაადგილეთ ან დააწკაპეთ გვერდზე არეალის მოსანიშნად. გასაუქმებლად დააჭირეთ ESC-ს."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "შენახვა"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "ხილული ნაწილის შენახვა"
+  },
+  "saveScreenshotFullPage": {
+    "message": "მთლიანი გვერდის შენახვა"
+  },
+  "cancelScreenshot": {
+    "message": "გაუქმება"
+  },
+  "downloadScreenshot": {
+    "message": "ჩამოტვირთვა"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "ბმული დაკოპირებულია"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "თქვენი სურათის ბმული დაკოპირებულია. ჩასმისთვის დააწექით $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "გაფუჭებულია."
+  },
+  "requestErrorDetails": {
+    "message": "ვწუხვარ! გადაღებული სურათის შენახვა ვერ ხერხდება. მოგვიანებით სცადეთ."
+  },
+  "connectionErrorTitle": {
+    "message": "თქვენს გადაღებულ სურათებთან კავშირი ვერ ხერხდება."
+  },
+  "connectionErrorDetails": {
+    "message": "გთხოვთ შეამოწმოთ ქსელთან კავშირი. თუ ინტერნეტში თავისუფლად გადიხართ, ე.ი. Firefox Screenshot-ის მომსახურებას აქვს დროებითი პრობლემა."
+  },
+  "loginErrorDetails": {
+    "message": "თქვენი სურათის შენახვა ვერ ხერხდება, რადგან შეფერხებაა Firefox Screenshots მომსახურებასთან დაკავშირებით. გთხოვთ, სცადოთ მოგვიანებით."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "ამ გვერდისთვის სურათის გადაღება ვერ ხერხდება."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "ეს არ არის ჩვეულებრივი ვებ-გვერდი, ამიტომაც შეუძლებელია სურათის გადაღება."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox Screenshots-ის გვერდისთვის სურათის გადაღება არ შეგიძლიათ!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "შერჩეული არეალი ძალიან პატარაა"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots გათიშულია პირადი თვალიერების რეჟიმისას"
+  },
+  "privateWindowErrorDetails": {
+    "message": "ბოდიშს გიხდით გაუგებრობის გამო. ჩვენ ვმუშაობთ ამ შესაძლებლობის დამატებაზე, სამომავლო ვერსიებში."
+  },
+  "genericErrorTitle": {
+    "message": "ვაი! Firefox Screenshots მწყობრიდან გამოვიდა."
+  },
+  "genericErrorDetails": {
+    "message": "გაუგებარია რა მოხდა. ისევ ცდით ხელახლა თუ სხვა ვებ-გვერდს გადაუღებთ სურათს?"
+  },
+  "tourBodyOne": {
+    "message": "გადაიღეთ, შეინახეთ და გააზიარეთ ეკრანის სურათები Firefox-იდან გაუსვლელად."
+  },
+  "tourHeaderTwo": {
+    "message": "გადაუღეთ სურათი რასაც გინდათ"
+  },
+  "tourBodyTwo": {
+    "message": "გადაადგილეთ ან დააწკაპეთ გვერდზე გადასაღები ნაწილის შესარჩევად. ასევე, კურსორის გადატარებით შეგიძლიათ მონიშნოთ სასურველი არეალი."
+  },
+  "tourHeaderThree": {
+    "message": "გადაუღეთ სურათები ფანჯრებს ან მთლიან ვებ-გვერდებს"
+  },
+  "tourBodyThree": {
+    "message": "მარჯვენა ზედა კუთხეში არსებული ღილაკების საშუალებით, შეგიძლიათ გადაუღოთ სურათი ხილულ ნაწილს, ან მთლიან გვერდს."
+  },
+  "tourHeaderFour": {
+    "message": "როგორც გენებოთ"
+  },
+  "tourBodyFour": {
+    "message": "ამოჭრილი სურათების შენახვა შეგიძლიათ ინტერნეტში, მარტივად გასაზიარებლად, ან შეგიძლიათ კომპიუტერში ჩამოტვირთვა. ასევე, ღილაკზე \"ჩემი გადაღებულები\" დაწკაპებით, იხილავთ თქვენს მიერ გადაღებულ ყველა სურათს."
+  },
+  "tourSkip": {
+    "message": "გამოტოვება"
+  },
+  "tourNext": {
+    "message": "შემდეგი"
+  },
+  "tourPrevious": {
+    "message": "წინა"
+  },
+  "tourDone": {
+    "message": "მზადაა"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Firefox Screenshots-ის გამოყენებით, თქვენ ეთანხმებით $TERMSANDPRIVACYNOTICETERMSLINK$ და $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "პირობებს"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "პირადი მონაცემების შესახებ განცხადებას"
+  }
+}

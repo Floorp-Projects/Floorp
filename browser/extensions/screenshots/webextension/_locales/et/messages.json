@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Valik on liiga väike"
   },
+  "privateWindowErrorTitle": {
+    "message": "Ekraanipilte ei saa privaatsel veebilehitsemisel teha"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Vabandame tüli tekitamise pärast. Töötame selle võimaluse lisamiseks tulevikus."
+  },
   "genericErrorTitle": {
     "message": "Oi-oi! Firefox Screenshots läks sassi."
   },

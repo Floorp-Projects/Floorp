@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "您的選擇範圍太小"
   },
+  "privateWindowErrorTitle": {
+    "message": "隱私瀏覽模式中將停用 Screenshots 套件"
+  },
+  "privateWindowErrorDetails": {
+    "message": "很抱歉帶來不便，我們將在未來提供此功能。"
+  },
   "genericErrorTitle": {
     "message": "唉呀，Firefox Screenshots 有點秀逗了。"
   },
@@ -80,10 +86,10 @@
     "message": "只拍你想拍的"
   },
   "tourBodyTwo": {
-    "message": "點擊並拖曳出頁面當中的一部份，您也可以停留下來，強調選擇範圍。"
+    "message": "點擊並拖曳出要擷取的範圍。或者您也可以用滑鼠移上頁面中的各部分，擷取該範圍。"
   },
   "tourHeaderThree": {
-    "message": "拍攝視窗或整張網頁"
+    "message": "擷取可見範圍或整張網頁"
   },
   "tourBodyThree": {
     "message": "透過右上角的不同按鈕來選擇只拍攝視窗中的可見區域，或是整張網頁。"
@@ -92,7 +98,7 @@
     "message": "用您想要的方式分享"
   },
   "tourBodyFour": {
-    "message": "直接將裁切過的擷圖傳到網路上方便分享，或者下載到電腦上。您也可以點擊「我的擷圖」按鈕，尋找您拍過的所有擷圖。"
+    "message": "裁切過的擷圖，可直接傳到網路上方便分享，也能下載到電腦裡。您也可以點擊「我的擷圖」按鈕，尋找您拍過的所有擷圖。"
   },
   "tourSkip": {
     "message": "略過"

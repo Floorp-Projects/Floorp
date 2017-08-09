@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "การเลือกของคุณเล็กเกินไป"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots ถูกปิดใช้งานในโหมดการท่องเว็บแบบส่วนตัว"
+  },
+  "privateWindowErrorDetails": {
+    "message": "ขออภัยในความไม่สะดวก เรากำลังพัฒนาคุณลักษณะนี้สำหรับรุ่นในอนาคต"
+  },
   "genericErrorTitle": {
     "message": "โอ๊ย! Firefox Screenshots รวน"
   },

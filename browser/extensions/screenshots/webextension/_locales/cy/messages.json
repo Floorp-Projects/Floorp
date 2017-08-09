@@ -64,6 +64,15 @@
   "selfScreenshotErrorTitle": {
     "message": "Nid oes modd cymryd llun o dudalen lluniau sgrin Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Mae eich dewis yn rhy fach"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Mae Screenshot wedi ei analluogi yn y Modd Pori Preifat"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Ymddiheuriadau am yr anhwylustod. Rydym yn gweithio ar y nodwedd hwn ar gyfer fersiynau'r dyfodol."
+  },
   "genericErrorTitle": {
     "message": "Www! Mae Firefox Screenshots wedi mynd yn hurt."
   },

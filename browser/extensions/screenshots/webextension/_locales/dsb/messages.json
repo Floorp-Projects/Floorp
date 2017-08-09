@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Waš wuběrk jo pśemały"
   },
+  "privateWindowErrorTitle": {
+    "message": "Firefox Screenshots jo w priwatnem modusu znjemóžnjony"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Wódajśo pšosym wobuznosći. Źěłamy na toś tej funkciji za pśichodne wersije."
+  },
   "genericErrorTitle": {
     "message": "Hopla! Firefox Screenshots njeźěła."
   },

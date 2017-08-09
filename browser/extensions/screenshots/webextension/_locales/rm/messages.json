@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Impussibel da far in maletg da visur dad ina pagina da Firefox Screenshots."
   },
+  "emptySelectionErrorTitle": {
+    "message": "La zona selecziunada è memia pitschna"
+  },
   "genericErrorTitle": {
     "message": "Oh dieu! Firefox Screenshots ha il singlut."
   },

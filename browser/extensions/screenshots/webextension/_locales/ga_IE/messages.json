@@ -1,0 +1,118 @@
+{
+  "addonDescription": {
+    "message": "Glac gearrthóga agus gabhálacha scáileáin ón Ghréasán agus sábháil iad, go sealadach nó go buan."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Glac Gabháil Scáileáin"
+  },
+  "myShotsLink": {
+    "message": "Mo Chuid Gabhálacha"
+  },
+  "screenshotInstructions": {
+    "message": "Tarraing nó cliceáil ar an leathanach chun réigiún a roghnú. Brúigh ESC le cealú."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Sábháil"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Sábháil an réigiún infheicthe"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Sábháil an leathanach iomlán"
+  },
+  "cancelScreenshot": {
+    "message": "Cealaigh"
+  },
+  "downloadScreenshot": {
+    "message": "Íoslódáil"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Cóipeáladh an Nasc"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Cóipeáladh nasc leis an ngabháil go dtí an ghearrthaisce. Brúigh $META_KEY$-V lena ghreamú.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Tá rud éigin as alt."
+  },
+  "requestErrorDetails": {
+    "message": "Ár leithscéal! Theip orainn an ghabháil a shábháil. Bain triail eile as ar ball."
+  },
+  "connectionErrorTitle": {
+    "message": "Ní féidir linn ceangal le do chuid gabhálacha."
+  },
+  "connectionErrorDetails": {
+    "message": "Deimhnigh go bhfuil tú ceangailte leis an Idirlíon. Mura bhfuil tú ceangailte, ní bheidh tú in ann úsáid a bhaint as seirbhís Gabhálacha Scáileáin Firefox."
+  },
+  "loginErrorDetails": {
+    "message": "Níorbh fhéidir linn an ghabháil scáileáin a shábháil toisc gur tharla earráid le seirbhís Gabhálacha Scáileáin Firefox. Bain triail eile as ar ball."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ní féidir linn gabháil scáileáin a ghlacadh ar an leathanach seo."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ní féidir gabháil scáileáin a ghlacadh toisc nach gnáthleathanach Gréasáin é seo."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Ní féidir leat gabháil scáileáin a ghlacadh ar leathanach Gabhálacha Scáileáin Firefox!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Roghnaigh tú réigiún róbheag"
+  },
+  "genericErrorTitle": {
+    "message": "Úps! Tá Gabhálacha Scáileáin Firefox imithe sa fhraoch."
+  },
+  "genericErrorDetails": {
+    "message": "Nílimid cinnte cad a tharla. An bhfuil fonn ort triail eile a bhaint as, nó gabháil scáileáin eile a ghlacadh?"
+  },
+  "tourBodyOne": {
+    "message": "Glac, sábháil, agus comhroinn gabhálacha scáileáin gan Firefox a fhágáil."
+  },
+  "tourHeaderTwo": {
+    "message": "An rud atá uait a ghabháil"
+  },
+  "tourBodyTwo": {
+    "message": "Cliceáil agus tarraing le cuid de leathanach a ghabháil. Nó is féidir leat an luch a chur os cionn an réigiúin le gabháil."
+  },
+  "tourHeaderThree": {
+    "message": "Fuinneoga nó leathanaigh iomlána a ghabháil"
+  },
+  "tourBodyThree": {
+    "message": "Úsáid na cnaipí ag barr na fuinneoige ar dheis chun an réigiún infheicthe san fhuinneog a ghabháil, nó an leathanach iomlán."
+  },
+  "tourHeaderFour": {
+    "message": "Go díreach mar is áil leat"
+  },
+  "tourBodyFour": {
+    "message": "Is féidir leat gabhálacha a bhearradh agus a shábháil ar an nGréasán, nó iad a íoslódáil ar do ríomhaire. Is féidir teacht orthu go léir leis an gcnaipe Mo Chuid Gabhálacha."
+  },
+  "tourSkip": {
+    "message": "NÁ BAC LEIS"
+  },
+  "tourNext": {
+    "message": "An chéad sleamhnán eile"
+  },
+  "tourPrevious": {
+    "message": "An sleamhnán roimhe seo"
+  },
+  "tourDone": {
+    "message": "Críochnaithe"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Má úsáideann tú Gabhálacha Scáileáin Firefox, glacann tú leis na {termsAndPrivacyNoticeTermsLink} agus leis an {termsAndPrivacyNoticePrivacyLink}."
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Téarmaí"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "bhFógra Príobháideachais"
+  }
+}

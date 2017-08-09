@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "A sua seleção é demasiado pequena"
   },
+  "privateWindowErrorTitle": {
+    "message": "O Screenshots está desativado no modo de navegação privada"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Desculpe pela inconveniência. Estamos a trabalhar nesta funcionalidade para futuros lançamentos."
+  },
   "genericErrorTitle": {
     "message": "Uau! Algo correu mal com o Firefox Screenshots."
   },
@@ -89,10 +95,10 @@
     "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou para capturar uma página inteira."
   },
   "tourHeaderFour": {
-    "message": "Como gosta"
+    "message": "Como você gostar"
   },
   "tourBodyFour": {
-    "message": "Guarde as suas capturas na Web para partilhar mais facilmente, ou descarregue-as para o seu computador. Pode também clicar no botão Minhas capturas para encontras todas as capturas que tirou."
+    "message": "Guarde as suas capturas na Web para partilhar mais facilmente, ou descarregue-as para o seu computador. Pode também clicar no botão Minhas capturas para encontrar todas as capturas que tirou."
   },
   "tourSkip": {
     "message": "SALTAR"
