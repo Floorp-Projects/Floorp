@@ -47,8 +47,8 @@ def test_cli_run_with_edit(run, parser, capfd):
     assert ret == 1
     assert len(out) == 5
     assert out[0].endswith('foobar.js')  # from the `echo` editor
-    assert "files/foobar.js: line 1, col 1, Error" in out[1]
-    assert "files/foobar.js: line 2, col 1, Error" in out[2]
+    assert "foobar.js: line 1, col 1, Error" in out[1]
+    assert "foobar.js: line 2, col 1, Error" in out[2]
 
     del os.environ['EDITOR']
     with pytest.raises(SystemExit):
