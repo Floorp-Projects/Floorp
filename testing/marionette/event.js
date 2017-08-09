@@ -57,6 +57,18 @@ event.Modifiers = {
   metaKey: 3,
 };
 
+event.MouseButton = {
+  isPrimary(button) {
+    return button === 0;
+  },
+  isAuxiliary(button) {
+    return button === 1;
+  },
+  isSecondary(button) {
+    return button === 2;
+  },
+};
+
 /**
  * Sends a mouse event to given target.
  *
