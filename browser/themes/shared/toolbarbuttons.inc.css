@@ -19,7 +19,10 @@
   --toolbarbutton-height: 0;
 }
 
-/* Larger buttons in touch mode */
+:root[uidensity=compact] {
+  --toolbarbutton-inner-padding: 5px;
+}
+
 :root[uidensity=touch] {
   --toolbarbutton-inner-padding: 9px;
 }
