@@ -2,11 +2,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import hashlib
 import json
 import os
 
 from mozpack.files import FileFinder
 import mozpack.path as mozpath
+
+
+def sha512_digest(data):
+    '''
+    Generate the SHA-512 digest of `data` and return it as a hex string.
+    '''
+    return hashlib.sha512(data).hexdigest()
+
+
+def get_filename_with_digest(name, contents):
+    '''
+    Return the filename that will be used to store the generated file
+    in the S3 bucket, consisting of the SHA-512 digest of `contents`
+    joined with the relative path `name`.
+    '''
+    digest = sha512_digest(contents)
+    return mozpath.join(digest, name)
 
 
 def get_generated_sources():
@@ -38,3 +56,18 @@ def get_generated_sources():
     finder = FileFinder(mozpath.join(buildconfig.topobjdir, base))
     for p, f in finder.find('**/*.rs'):
         yield mozpath.join(base, p), f
+
+
+def get_s3_region_and_bucket():
+    '''
+    Return a tuple of (region, bucket) giving the AWS region and S3
+    bucket to which generated sources should be uploaded.
+    '''
+    region = 'us-west-2'
+    level = os.environ.get('MOZ_SCM_LEVEL', '1')
+    bucket = {
+        '1': 'gecko-generated-sources-l1',
+        '2': 'gecko-generated-sources-l2',
+        '3': 'gecko-generated-sources',
+    }[level]
+    return (region, bucket)
