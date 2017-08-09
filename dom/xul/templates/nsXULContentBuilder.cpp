@@ -600,7 +600,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // given node.
             // SynchronizeUsingTemplate contains code used to update textnodes,
             // so make sure to modify both when changing this
-            nsAutoString attrValue;
+            char16_t attrbuf[128];
+            nsFixedString attrValue(attrbuf, ArrayLength(attrbuf), 0);
             tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
             if (!attrValue.IsEmpty()) {
                 nsAutoString value;
@@ -736,7 +737,11 @@ nsXULContentBuilder::CopyAttributesToElement(nsIContent* aTemplateNode,
 
         // XXXndeakin ignore namespaces until bug 321182 is fixed
         if (attribName != nsGkAtoms::id && attribName != nsGkAtoms::uri) {
-            nsAutoString attribValue;
+            // Create a buffer here, because there's a chance that an
+            // attribute in the template is going to be an RDF URI, which is
+            // usually longish.
+            char16_t attrbuf[128];
+            nsFixedString attribValue(attrbuf, ArrayLength(attrbuf), 0);
             aTemplateNode->GetAttr(attribNameSpaceID, attribName, attribValue);
             if (!attribValue.IsEmpty()) {
                 nsAutoString value;
@@ -873,7 +878,8 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
         // This code is similar to that in BuildContentFromTemplate
         if (tmplKid->NodeInfo()->Equals(nsGkAtoms::textnode,
                                         kNameSpaceID_XUL)) {
-            nsAutoString attrValue;
+            char16_t attrbuf[128];
+            nsFixedString attrValue(attrbuf, ArrayLength(attrbuf), 0);
             tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
             if (!attrValue.IsEmpty()) {
                 nsAutoString value;

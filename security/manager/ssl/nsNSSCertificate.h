@@ -20,6 +20,7 @@
 
 namespace mozilla { namespace pkix { class DERArray; } }
 
+class nsAutoString;
 class nsINSSComponent;
 class nsIASN1Sequence;
 

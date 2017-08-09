@@ -255,7 +255,8 @@ nsXULContentUtils::GetResource(int32_t aNameSpaceID, const nsAString& aAttribute
 
     nsresult rv;
 
-    nsAutoStringN<256> uri;
+    char16_t buf[256];
+    nsFixedString uri(buf, ArrayLength(buf), 0);
     if (aNameSpaceID != kNameSpaceID_Unknown && aNameSpaceID != kNameSpaceID_None) {
         rv = nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, uri);
         // XXX ignore failure; treat as "no namespace"

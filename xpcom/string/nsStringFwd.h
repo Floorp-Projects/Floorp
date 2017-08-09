@@ -24,14 +24,11 @@ class nsCStringRepr;
 } // namespace detail
 } // namespace mozilla
 
-static const size_t AutoStringDefaultStorageSize = 64;
-
 // Double-byte (char16_t) string types.
 class nsAString;
 class nsSubstringTuple;
 class nsString;
-template<size_t N> class nsAutoStringN;
-using nsAutoString = nsAutoStringN<AutoStringDefaultStorageSize>;
+class nsAutoString;
 class nsDependentString;
 class nsDependentSubstring;
 class nsPromiseFlatString;
@@ -43,8 +40,7 @@ class nsXPIDLString;
 class nsACString;
 class nsCSubstringTuple;
 class nsCString;
-template<size_t N> class nsAutoCStringN;
-using nsAutoCString = nsAutoCStringN<AutoStringDefaultStorageSize>;
+class nsAutoCString;
 class nsDependentCString;
 class nsDependentCSubstring;
 class nsPromiseFlatCString;
