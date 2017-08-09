@@ -248,8 +248,6 @@ ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement)
   }
 
   aElement->ClearServoData();
-  aElement->UnsetHasDirtyDescendantsForServo();
-  aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
 }
 
 /* static */ void

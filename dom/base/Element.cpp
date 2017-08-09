@@ -4123,8 +4123,11 @@ Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32
 
 void
 Element::ClearServoData() {
+  MOZ_ASSERT(IsStyledByServo());
 #ifdef MOZ_STYLO
   Servo_Element_ClearData(this);
+  UnsetFlags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO |
+             ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
 #else
   MOZ_CRASH("Accessing servo node data in non-stylo build");
 #endif
