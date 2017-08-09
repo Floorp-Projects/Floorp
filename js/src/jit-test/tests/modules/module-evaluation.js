@@ -6,16 +6,17 @@ load(libdir + "dummyModuleResolveHook.js");
 function parseAndEvaluate(source) {
     let m = parseModule(source);
     m.declarationInstantiation();
-    return m.evaluation();
+    m.evaluation();
+    return m;
 }
 
 // Check the evaluation of an empty module succeeds.
-assertEq(typeof parseAndEvaluate(""), "undefined");
+parseAndEvaluate("");
 
 // Check evaluation returns evaluation result the first time, then undefined.
 let m = parseModule("1");
 m.declarationInstantiation();
-assertEq(m.evaluation(), 1);
+assertEq(m.evaluation(), undefined);
 assertEq(typeof m.evaluation(), "undefined");
 
 // Check top level variables are initialized by evaluation.
@@ -60,31 +61,35 @@ parseAndEvaluate("export default class { constructor() {} };");
 parseAndEvaluate("export default class foo { constructor() {} };");
 
 // Test default import
-m = parseModule("import a from 'a'; a;")
+m = parseModule("import a from 'a'; export { a };")
 m.declarationInstantiation();
-assertEq(m.evaluation(), 2);
+m.evaluation()
+assertEq(getModuleEnvironmentValue(m, "a"), 2);
 
 // Test named import
-m = parseModule("import { x as y } from 'a'; y;")
+m = parseModule("import { x as y } from 'a'; export { y };")
 m.declarationInstantiation();
-assertEq(m.evaluation(), 1);
+m.evaluation();
+assertEq(getModuleEnvironmentValue(m, "y"), 1);
 
 // Call exported function
-m = parseModule("import { f } from 'a'; f(3);")
+m = parseModule("import { f } from 'a'; export let x = f(3);")
 m.declarationInstantiation();
-assertEq(m.evaluation(), 4);
+m.evaluation();
+assertEq(getModuleEnvironmentValue(m, "x"), 4);
 
 // Test importing an indirect export
 moduleRepo['b'] = parseModule("export { x as z } from 'a';");
-assertEq(parseAndEvaluate("import { z } from 'b'; z"), 1);
+m = parseAndEvaluate("import { z } from 'b'; export { z }");
+assertEq(getModuleEnvironmentValue(m, "z"), 1);
 
 // Test cyclic dependencies
 moduleRepo['c1'] = parseModule("export var x = 1; export {y} from 'c2'");
 moduleRepo['c2'] = parseModule("export var y = 2; export {x} from 'c1'");
-assertDeepEq(parseAndEvaluate(`import { x as x1, y as y1 } from 'c1';
-                               import { x as x2, y as y2 } from 'c2';
-                               [x1, y1, x2, y2]`),
-             [1, 2, 1, 2]);
+m = parseAndEvaluate(`import { x as x1, y as y1 } from 'c1';
+                      import { x as x2, y as y2 } from 'c2';
+                      export let z = [x1, y1, x2, y2]`),
+assertDeepEq(getModuleEnvironmentValue(m, "z"), [1, 2, 1, 2]);
 
 // Import access in functions
 m = parseModule("import { x } from 'a'; function f() { return x; }")
