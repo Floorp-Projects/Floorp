@@ -812,28 +812,6 @@ html|span.ac-emphasize-text-url {
   font-weight: bold;
 }
 
-
-toolbarbutton.chevron {
-  list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
-}
-
-toolbar[brighttext] toolbarbutton.chevron {
-  list-style-image: url("chrome://global/skin/toolbar/chevron-inverted.png") !important;
-}
-
-toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
-toolbarbutton.chevron > .toolbarbutton-text,
-toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
-toolbarbutton.chevron > .toolbarbutton-icon {
-  margin: 0;
-}
-
 /* Status panel */
 
 .statuspanel-label {
