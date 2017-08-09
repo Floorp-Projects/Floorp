@@ -2,10 +2,64 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Test DuckDuckGo search plugin URLs
+ * Test search plugin URLs
  */
 
 "use strict";
+
+const SEARCH_ENGINE_DETAILS = [{
+  alias: "a",
+  baseURL: "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
+  codes: {
+    context: "",
+    keyword: "",
+    newTab: "",
+    submission: "",
+  },
+  name: "Amazon.com",
+}, {
+  alias: "b",
+  baseURL: "https://www.bing.com/search?q=foo&pc=MOZI",
+  codes: {
+    context: "&form=MOZCON",
+    keyword: "&form=MOZLBR",
+    newTab: "&form=MOZTSB",
+    submission: "&form=MOZSBR",
+  },
+  name: "Bing",
+}, {
+  alias: "d",
+  baseURL: "https://duckduckgo.com/?q=foo",
+  codes: {
+    context: "&t=ffcm",
+    keyword: "&t=ffab",
+    newTab: "&t=ffnt",
+    submission: "&t=ffsb",
+  },
+  name: "DuckDuckGo",
+}, {
+// TODO: Google is tested in browser_google_behaviors.js - we can't test it here
+// yet because of bug 1315953.
+//   alias: "g",
+//   baseURL: "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8",
+//   codes: {
+//     context: "",
+//     keyword: "",
+//     newTab: "",
+//     submission: "",
+//   },
+//   name: "Google",
+// }, {
+  alias: "y",
+  baseURL: "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla",
+  codes: {
+    context: "&hsimp=yhs-005",
+    keyword: "&hsimp=yhs-002",
+    newTab: "&hsimp=yhs-004",
+    submission: "&hsimp=yhs-001",
+  },
+  name: "Yahoo",
+}];
 
 function promiseStateChangeURI() {
   return new Promise(resolve => {
@@ -52,33 +106,35 @@ function promiseContentSearchReady(browser) {
   });
 }
 
-add_task(async function() {
-  let previouslySelectedEngine = Services.search.currentEngine;
+for (let engine of SEARCH_ENGINE_DETAILS) {
+  add_task(async function() {
+    let previouslySelectedEngine = Services.search.currentEngine;
 
-  registerCleanupFunction(function() {
-    Services.search.currentEngine = previouslySelectedEngine;
+    registerCleanupFunction(function() {
+      Services.search.currentEngine = previouslySelectedEngine;
+    });
+
+    await testSearchEngine(engine);
   });
+}
 
-  await testSearchEngine();
-});
-
-async function testSearchEngine() {
-  let engine = Services.search.getEngineByName("DuckDuckGo");
-  ok(engine, "DuckDuckGo is installed");
+async function testSearchEngine(engineDetails) {
+  let engine = Services.search.getEngineByName(engineDetails.name);
+  Assert.ok(engine, `${engineDetails.name} is installed`);
 
   Services.search.currentEngine = engine;
-  engine.alias = "d";
+  engine.alias = engineDetails.alias;
 
-  let base = "https://duckduckgo.com/?q=foo";
+  let base = engineDetails.baseURL;
 
   // Test search URLs (including purposes).
   let url = engine.getSubmission("foo").uri.spec;
-  Assert.equal(url, base + "&t=ffsb", "Check search URL for 'foo'");
+  Assert.equal(url, base + engineDetails.codes.submission, "Check search URL for 'foo'");
 
   let engineTests = [
     {
       name: "context menu search",
-      searchURL: base + "&t=ffcm",
+      searchURL: base + engineDetails.codes.context,
       run() {
         // Simulate a contextmenu search
         // FIXME: This is a bit "low-level"...
@@ -87,7 +143,7 @@ async function testSearchEngine() {
     },
     {
       name: "keyword search",
-      searchURL: base + "&t=ffab",
+      searchURL: base + engineDetails.codes.keyword,
       run() {
         gURLBar.value = "? foo";
         gURLBar.focus();
@@ -96,16 +152,16 @@ async function testSearchEngine() {
     },
     {
       name: "keyword search with alias",
-      searchURL: base + "&t=ffab",
+      searchURL: base + engineDetails.codes.keyword,
       run() {
-        gURLBar.value = "d foo";
+        gURLBar.value = `${engineDetails.alias} foo`;
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
       }
     },
     {
       name: "search bar search",
-      searchURL: base + "&t=ffsb",
+      searchURL: base + engineDetails.codes.submission,
       run() {
         let sb = BrowserSearch.searchBar;
         sb.focus();
@@ -118,7 +174,7 @@ async function testSearchEngine() {
     },
     {
       name: "new tab search",
-      searchURL: base + "&t=ffnt",
+      searchURL: base + engineDetails.codes.newTab,
       async preTest(tab) {
         let browser = tab.linkedBrowser
         await BrowserTestUtils.loadURI(browser, "about:newtab");
