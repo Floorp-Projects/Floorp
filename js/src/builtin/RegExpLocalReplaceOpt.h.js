@@ -92,7 +92,7 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
     var position = result.index;
 
     // Step 14.l.iii (reordered)
-    // To set rx.lastIndex before RegExpGetComplexReplacement.
+    // To set rx.lastIndex before RegExpGetFunctionalReplacement.
     var nextSourcePosition = position + matchLength;
 #else
     // Steps 14.a-d (skipped).

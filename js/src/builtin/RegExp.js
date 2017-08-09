@@ -281,32 +281,25 @@ function RegExpReplace(string, replaceValue) {
 
         // Steps 8-16.
         if (global) {
-            // Step 8.a.
-            var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
-
             if (functionalReplace) {
                 // For large strings check if the replacer function is
                 // applicable for the elem-base optimization.
                 if (lengthS > 5000) {
                     var elemBase = GetElemBaseForLambda(replaceValue);
                     if (IsObject(elemBase)) {
-                        return RegExpGlobalReplaceOptElemBase(rx, S, lengthS, replaceValue,
-                                                              fullUnicode, elemBase);
+                        return RegExpGlobalReplaceOptElemBase(rx, S, lengthS, replaceValue, flags,
+                                                              elemBase);
                     }
                 }
-                return RegExpGlobalReplaceOptFunc(rx, S, lengthS, replaceValue,
-                                                  fullUnicode);
+                return RegExpGlobalReplaceOptFunc(rx, S, lengthS, replaceValue, flags);
             }
             if (firstDollarIndex !== -1) {
-                return RegExpGlobalReplaceOptSubst(rx, S, lengthS, replaceValue,
-                                                   fullUnicode, firstDollarIndex);
+                return RegExpGlobalReplaceOptSubst(rx, S, lengthS, replaceValue, flags,
+                                                   firstDollarIndex);
             }
-            if (lengthS < 0x7fff) {
-                return RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue,
-                                                   fullUnicode);
-            }
-            return RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue,
-                                          fullUnicode);
+            if (lengthS < 0x7fff)
+                return RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags);
+            return RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue, flags);
         }
 
         if (functionalReplace)
@@ -537,8 +530,11 @@ function RegExpGetFunctionalReplacement(result, S, position, replaceValue) {
 //   * global flag is true
 //   * S is a short string (lengthS < 0x7fff)
 //   * replaceValue is a string without "$"
-function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, fullUnicode)
+function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags)
 {
+    // Step 8.a.
+    var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
+
     // Step 8.b.
     var lastIndex = 0;
     rx.lastIndex = 0;
