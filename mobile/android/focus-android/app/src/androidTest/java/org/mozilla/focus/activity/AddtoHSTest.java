@@ -16,6 +16,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -192,6 +193,7 @@ public class AddtoHSTest {
     }
 
     @Test
+    @Ignore("Feature has been disabled for the current milestone")
     public void SearchTermShortcutTest() throws InterruptedException, UiObjectNotFoundException, IOException {
         UiObject shortcutIcon = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
@@ -226,6 +228,6 @@ public class AddtoHSTest {
         TestHelper.browserURLbar.waitForExists(waitingTime);
         TestHelper.browserURLbar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        Assert.assertEquals(TestHelper.inlineAutocompleteEditText.getText(), "hello world");
+        Assert.assertEquals("hello world", TestHelper.inlineAutocompleteEditText.getText());
     }
 }
