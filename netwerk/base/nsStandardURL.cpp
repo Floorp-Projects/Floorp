@@ -1508,6 +1508,19 @@ nsStandardURL::GetPrePath(nsACString &result)
     return NS_OK;
 }
 
+// result may contain unescaped UTF-8 characters
+NS_IMETHODIMP
+nsStandardURL::GetDisplayPrePath(nsACString &result)
+{
+    result = Prepath();
+    CheckIfHostIsAscii();
+    MOZ_ASSERT(mCheckedIfHostA);
+    if (!mDisplayHost.IsEmpty()) {
+        result.Replace(mHost.mPos, mHost.mLen, mDisplayHost);
+    }
+    return NS_OK;
+}
+
 // result is strictly US-ASCII
 NS_IMETHODIMP
 nsStandardURL::GetScheme(nsACString &result)
