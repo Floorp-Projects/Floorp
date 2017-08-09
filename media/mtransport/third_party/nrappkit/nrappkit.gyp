@@ -160,6 +160,7 @@
                     '-Wno-strict-prototypes',
                     '-Wmissing-prototypes',
                     '-Wno-format',
+                    '-Wno-format-security',
                  ],
                  'defines' : [
                      'HAVE_LIBM=1',
@@ -207,6 +208,7 @@
                      '-Wno-strict-prototypes',
                      '-Wmissing-prototypes',
                      '-Wno-format',
+                     '-Wno-format-security',
                  ],
                  'defines' : [
                      'LINUX',
