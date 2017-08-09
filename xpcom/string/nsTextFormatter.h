@@ -53,12 +53,6 @@ public:
                            const char16_t* aFmt, ...);
 
   /*
-   * sprintf into a moz_xmalloc'd buffer. Return a pointer to
-   * buffer on success, nullptr on failure. Use free() to free the buffer.
-   */
-  static char16_t* smprintf(const char16_t* aFmt, ...);
-
-  /*
    * sprintf into an existing nsAString, overwriting any contents it already
    * has. Infallible.
    */
@@ -69,7 +63,6 @@ public:
    */
   static uint32_t vsnprintf(char16_t* aOut, uint32_t aOutLen, const char16_t* aFmt,
                             va_list aAp);
-  static char16_t* vsmprintf(const char16_t* aFmt, va_list aAp);
   static uint32_t vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp);
 };
 
