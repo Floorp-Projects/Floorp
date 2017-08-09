@@ -122,7 +122,7 @@ function test_ReadWrite() {
     }
     while (bytes_left.value > 0) {
       log("test_ReadWrite: writing " + bytes_left.value);
-      let ptr = array.addressOfElement(write_from);
+      array.addressOfElement(write_from);
       // Note: |WriteFile| launches an exception in case of error
       result = OS.Win.File.WriteFile(output, array, bytes_left, bytes_written_ptr, null);
       isnot(result, 0, "test_ReadWrite: write success");
@@ -193,7 +193,7 @@ function test_passing_undefined() {
   let exceptionRaised = false;
 
   try {
-    let file = OS.Win.File.CreateFile(
+    OS.Win.File.CreateFile(
       undefined,
       OS.Constants.Win.GENERIC_READ,
       0,

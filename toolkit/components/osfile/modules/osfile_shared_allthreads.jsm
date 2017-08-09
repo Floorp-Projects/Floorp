@@ -109,7 +109,7 @@ var defineLazyGetter = function defineLazyGetter(object, name, getter) {
       delete this[name];
       let value = getter.call(this);
       Object.defineProperty(object, name, {
-        value: value
+        value
       });
       return value;
     }
@@ -213,10 +213,10 @@ var clone = function(object, refs = []) {
   let refer = function refer(result, key, object) {
     Object.defineProperty(result, key, {
       enumerable: true,
-      get: function() {
+      get() {
         return object[key];
       },
-      set: function(value) {
+      set(value) {
         object[key] = value;
       }
     });
@@ -301,7 +301,7 @@ Type.prototype = {
       this);
     Object.defineProperty(this, "in_ptr",
     {
-      get: function() {
+      get() {
         return ptr_t;
       }
     });
@@ -319,7 +319,7 @@ Type.prototype = {
       this);
     Object.defineProperty(this, "out_ptr",
     {
-      get: function() {
+      get() {
         return ptr_t;
       }
     });
@@ -341,7 +341,7 @@ Type.prototype = {
       this);
     Object.defineProperty(this, "inout_ptr",
     {
-      get: function() {
+      get() {
         return ptr_t;
       }
     });
@@ -865,7 +865,7 @@ HollowStructure.prototype = {
                       " at offset " + offset +
                       " without exceeding its size of " + this.size);
     }
-    let field = {name: name, type: type};
+    let field = {name, type};
     this.offset_to_field_info[offset] = field;
   },
 
@@ -991,7 +991,7 @@ Library.prototype = Object.freeze({
     }
     let error = new Error("Could not open library " + this.name);
     Object.defineProperty(this, "library", {
-      get: function() {
+      get() {
         throw error;
       }
     });
@@ -1010,10 +1010,10 @@ Library.prototype = Object.freeze({
    * @param {Type} returnType The type of values returned by the function.
    * @param {...Type} argTypes The type of arguments to the function.
    */
-  declareLazyFFI: function(object, field, ...args) {
+  declareLazyFFI(object, field, ...args) {
     let lib = this;
     Object.defineProperty(object, field, {
-      get: function() {
+      get() {
         delete this[field];
         let ffi = declareFFI(lib.library, ...args);
         if (ffi) {
@@ -1037,10 +1037,10 @@ Library.prototype = Object.freeze({
    * @param {ctypes.CType} returnType The type of values returned by the function.
    * @param {...ctypes.CType} argTypes The type of arguments to the function.
    */
-  declareLazy: function(object, field, ...args) {
+  declareLazy(object, field, ...args) {
     let lib = this;
     Object.defineProperty(object, field, {
-      get: function() {
+      get() {
         delete this[field];
         let ffi = lib.library.declare(...args);
         if (ffi) {
@@ -1067,10 +1067,10 @@ Library.prototype = Object.freeze({
    * @param {ctypes.CType} returnType The type of values returned by the function.
    * @param {...ctypes.CType} argTypes The type of arguments to the function.
    */
-  declareLazyWithFallback: function(fallbacklibrary, object, field, ...args) {
+  declareLazyWithFallback(fallbacklibrary, object, field, ...args) {
     let lib = this;
     Object.defineProperty(object, field, {
-      get: function() {
+      get() {
         delete this[field];
         try {
           let ffi = lib.library.declare(...args);
@@ -1089,7 +1089,7 @@ Library.prototype = Object.freeze({
     });
   },
 
-  toString: function() {
+  toString() {
     return "[Library " + this.name + "]";
   }
 });
@@ -1126,7 +1126,6 @@ var declareFFI = function declareFFI(lib, symbol, abi,
     throw new TypeError("declareFFI expects as third argument an instance of Type");
   }
   let signature = [symbol, abi];
-  let argtypes  = [];
   for (let i = 3; i < arguments.length; ++i) {
     let current = arguments[i];
     if (!current) {
@@ -1176,7 +1175,7 @@ exports.declareFFI = declareFFI;
  */
 function declareLazyFFI(object, field, ...declareFFIArgs) {
   Object.defineProperty(object, field, {
-    get: function() {
+    get() {
       delete this[field];
       let ffi = declareFFI(...declareFFIArgs);
       if (ffi) {
@@ -1204,7 +1203,7 @@ exports.declareLazyFFI = declareLazyFFI;
  */
 function declareLazy(object, field, lib, ...declareArgs) {
   Object.defineProperty(object, field, {
-    get: function() {
+    get() {
       delete this[field];
       try {
         let ffi = lib.declare(...declareArgs);
@@ -1279,31 +1278,31 @@ exports.OSError = OSError;
 exports.OS = {
   Constants: exports.Constants,
   Shared: {
-    LOG: LOG,
-    clone: clone,
-    Type: Type,
-    HollowStructure: HollowStructure,
+    LOG,
+    clone,
+    Type,
+    HollowStructure,
     Error: OSError,
-    declareFFI: declareFFI,
-    projectValue: projectValue,
-    isTypedArray: isTypedArray,
-    defineLazyGetter: defineLazyGetter
+    declareFFI,
+    projectValue,
+    isTypedArray,
+    defineLazyGetter
   }
 };
 
 Object.defineProperty(exports.OS.Shared, "DEBUG", {
-  get: function() {
+  get() {
     return Config.DEBUG;
   },
-  set: function(x) {
+  set(x) {
     return Config.DEBUG = x;
   }
 });
 Object.defineProperty(exports.OS.Shared, "TEST", {
-  get: function() {
+  get() {
     return Config.TEST;
   },
-  set: function(x) {
+  set(x) {
     return Config.TEST = x;
   }
 });

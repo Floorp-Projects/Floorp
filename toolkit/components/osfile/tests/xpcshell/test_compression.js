@@ -36,7 +36,7 @@ add_task(async function test_uncompressed() {
   for (let i = 0; i < array.byteLength; ++i) {
     array[i] = i;
   }
-  let bytes = await OS.File.writeAtomic(path, array); // No compression
+  await OS.File.writeAtomic(path, array); // No compression
 
   let exn;
   // Force decompression, reading should fail
@@ -56,7 +56,7 @@ add_task(async function test_no_header() {
 
   do_print("Writing data with no header");
 
-  let bytes = await OS.File.writeAtomic(path, array); // No compression
+  await OS.File.writeAtomic(path, array); // No compression
   let exn;
   // Force decompression, reading should fail
   try {
@@ -80,7 +80,7 @@ add_task(async function test_invalid_content() {
 
   do_print("Writing invalid data (with a valid header and only ones after that)");
 
-  let bytes = await OS.File.writeAtomic(path, array); // No compression
+  await OS.File.writeAtomic(path, array); // No compression
   let exn;
   // Force decompression, reading should fail
   try {
