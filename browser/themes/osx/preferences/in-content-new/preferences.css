@@ -19,10 +19,6 @@ prefpane .groupbox-title {
   padding-inline-start: 3px;
 }
 
-#fxaProfileImage {
-  -moz-user-focus: normal;
-}
-
 textbox + button {
   margin-inline-start: -4px;
 }
@@ -37,17 +33,4 @@ filefield + button {
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
   border-bottom: none;
-}
-
-#advancedPrefs {
-  margin-right: 0; /*override margin from normal preferences.css */
-  margin-left: 0;
-}
-
-/**
- * Dialog
- */
-
-#dialogTitle {
-  font-size: 1.1em;
 }
