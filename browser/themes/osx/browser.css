@@ -142,15 +142,8 @@
 }
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
-  overflow: -moz-hidden-unscrollable;
-  max-height: 4em;
-  transition: min-height 170ms ease-out, max-height 170ms ease-out;
-}
-
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar)[collapsed=true] {
-  min-height: 0.1px;
-  max-height: 0;
-  transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
+  /* add extra padding to compensate the bottom border */
+  padding-bottom: 2px;
 }
 
 /* Draw the bottom border of the tabs toolbar when it's not using
@@ -190,25 +183,12 @@
   position: relative;
 }
 
-#PersonalToolbar {
-  padding: 0 4px 4px;
-}
-
-#PersonalToolbar:not([collapsed=true]) {
-  /* 4px padding ^  plus 19px personal-bookmarks (see below) */
-  min-height: 23px;
-}
-
 #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
 #nav-bar:not(:-moz-lwtheme):-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
 }
 
 /* ----- BOOKMARK TOOLBAR ----- */
-
-#personal-bookmarks {
-  min-height: 19px; /* 16px button height + 2px padding + 1px margin-bottom */
-}
 
 #nav-bar-customization-target > #wrapper-personal-bookmarks > #personal-bookmarks {
   min-height: 32px;
