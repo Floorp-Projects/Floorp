@@ -1,0 +1,50 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Chụp ảnh màn hình"
+  },
+  "myShotsLink": {
+    "message": "Các ảnh chụp của tôi"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Lưu lại"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Lưu phần nhìn thấy"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Lưu toàn trang"
+  },
+  "cancelScreenshot": {
+    "message": "Hủy bỏ"
+  },
+  "downloadScreenshot": {
+    "message": "Tải xuống"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Đã sao chép liên kết"
+  },
+  "tourHeaderFour": {
+    "message": "Như bạn thích"
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "Slide tiếp theo"
+  },
+  "tourPrevious": {
+    "message": "Slide trước đó"
+  },
+  "tourDone": {
+    "message": "Xong"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Điều khoản"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Chính sách riêng tư"
+  }
+}

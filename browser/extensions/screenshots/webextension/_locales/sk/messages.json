@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Váš výber je príliš malý"
   },
+  "privateWindowErrorTitle": {
+    "message": "Služba Firefox Screenshots je v režime Súkromné prehliadanie zakázaná"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Ospravedlňujeme sa za spôsobené nepríjemnosti. Pracujeme na vylepšení tejto funkcie v budúcich verziách."
+  },
   "genericErrorTitle": {
     "message": "Ups! Služba Firefox Screenshots prestala pracovať."
   },
@@ -89,10 +95,10 @@
     "message": "Kliknutím na tlačidlo v pravom hornom rohu môžete zachytiť viditeľnú časť stránky. Pomocou ďalšieho tlačidla zachytíte celú stránku."
   },
   "tourHeaderFour": {
-    "message": "Tak ako to chcete"
+    "message": "Urobte to, čo chcete"
   },
   "tourBodyFour": {
-    "message": "Uložte si orezanú snímku na web, aby ste ju mohli ľahšie zdieľať alebo si ju prevziať do počítača. Môžete si taktiež pozrieť všetky vaše snímky, stačí ak kliknete na tlačidlo Moje snímky."
+    "message": "Uložte si orezanú snímku na web, aby ste ju mohli ľahšie zdieľať alebo si ju prevziať do počítača. Môžete si taktiež pozrieť všetky vaše snímky - stačí, ak kliknete na tlačidlo Moje snímky."
   },
   "tourSkip": {
     "message": "Preskočiť"
