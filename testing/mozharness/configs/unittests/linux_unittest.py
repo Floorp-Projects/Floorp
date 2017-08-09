@@ -222,7 +222,8 @@ config = {
             "tests": ["tests/jsreftest/tests/jstests.list"]
         },
         "reftest": {
-            "options": ["--suite=reftest"],
+            "options": ["--suite=reftest",
+                        "--setpref=layers.acceleration.force-enabled=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
         "reftest-no-accel": {
