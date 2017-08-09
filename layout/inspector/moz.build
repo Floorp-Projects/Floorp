@@ -50,5 +50,4 @@ LOCAL_INCLUDES += [
     '../style',
     '/dom/base',
     '/dom/xbl',
-    '/modules/brotli/dec',
 ]
