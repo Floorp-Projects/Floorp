@@ -67,11 +67,17 @@
   "emptySelectionErrorTitle": {
     "message": "Uw selectie is te klein"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots is uitgeschakeld in Privénavigatiemodus"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Sorry voor het ongemak. Voor toekomstige releases wordt aan deze functie gewerkt."
+  },
   "genericErrorTitle": {
     "message": "Ho! Er is iets mis met Firefox Screenshots."
   },
   "genericErrorDetails": {
-    "message": "We weten niet precies wat er zonet is gebeurd. Wilt u het nogmaals proberen of een schermafbeelding van een andere pagina maken?"
+    "message": "We weten niet precies wat er zonet is gebeurd. Wilt u het nogmaals proberen, of een schermafbeelding van een andere pagina maken?"
   },
   "tourBodyOne": {
     "message": "Maak, bewaar en deel schermafbeeldingen zonder Firefox te verlaten."

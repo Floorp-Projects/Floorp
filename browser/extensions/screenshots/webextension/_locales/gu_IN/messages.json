@@ -64,6 +64,15 @@
   "selfScreenshotErrorTitle": {
     "message": "તમે પૃષ્ઠના Firefox સ્ક્રીનશોટ્સ શોટ લઇ શકો નહિ!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "તમારી પસંદગી ખૂબ નાની છે"
+  },
+  "privateWindowErrorTitle": {
+    "message": "ખાનગી બ્રાઉઝિંગ મોડમાં સ્ક્રીનશોટ અક્ષમ કરેલ છે"
+  },
+  "privateWindowErrorDetails": {
+    "message": "અસુવીધી બદલ માફી. અમે ભવિષ્યના પ્રકાશનો માટે આ સુવિધા પર કામ કરી રહ્યા છીએ."
+  },
   "genericErrorTitle": {
     "message": "થોભો! Firefox સ્ક્રીનશોટ્સ અવ્યવસ્થિત થઈ ગયા."
   },

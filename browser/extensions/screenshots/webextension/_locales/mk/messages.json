@@ -1,0 +1,132 @@
+{
+  "addonDescription": {
+    "message": "Земете исечоци и слики од Интернет и зачувајте ги привремено или трајно."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Фатете слика"
+  },
+  "myShotsLink": {
+    "message": "Мои слики"
+  },
+  "screenshotInstructions": {
+    "message": "Влечете и кликнете на страницата за да означите регион. Притиснете ESC за да се откажете."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Сними"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Сними видлив дел"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Сними цела страница"
+  },
+  "cancelScreenshot": {
+    "message": "Откажи"
+  },
+  "downloadScreenshot": {
+    "message": "Преземи"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Врската е ископирана"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Врската до Вашата слика е ископирана во меморија. Притиснете $META_KEY$-V за да ја вметнете.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Не работи."
+  },
+  "requestErrorDetails": {
+    "message": "Извинете! Не можевме да ја снимиме Вашата слика. Ве молиме обидете се повторно подоцна."
+  },
+  "connectionErrorTitle": {
+    "message": "Не можеме да пристапиме до Вашите слики од екран."
+  },
+  "connectionErrorDetails": {
+    "message": "Ве молиме проверете ја Вашата Интернет-врска. Ако можете да се поврзете на Интернет, тогаш можно е да има привремен проблем со сервисот Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Не можевме да ја зачуваме Вашата слика бидејќи има проблем со сервисот Firefox Screenshots. Ве молиме обидете се повторно подоцна."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Не можеме да фатиме слика од оваа страница."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ова не е обична веб-страница, па не можете да фатите слика од неа."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Не можете да фатите слика од страницата на Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Делот што го избравте е премногу мал"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots е деактивиран во текот на Приватното прелистување"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Извинете за незгодата. Работиме на оваа функционалност за во идните верзии."
+  },
+  "genericErrorTitle": {
+    "message": "Ајдее! Firefox Screenshots излезе од контрола."
+  },
+  "genericErrorDetails": {
+    "message": "Не сме баш сигурни што се случи. Сакате да се обидете повторно или да направите слика од друга страница?"
+  },
+  "tourBodyOne": {
+    "message": "Фаќајте, снимајте и споделувајте слики од екран без да го напуштите Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Фатете слика од тоа што сакате"
+  },
+  "tourBodyTwo": {
+    "message": "Кликнете и влечете за да фатите само дел од страницата. Исто така можете да означите дел и со покажувачот."
+  },
+  "tourHeaderThree": {
+    "message": "Фатете слика од прозорци или цели страници"
+  },
+  "tourBodyThree": {
+    "message": "Кликнете на копчињата во горниот десен дел за да го снимите видливиот дел на прозорецот или пак, целата страница."
+  },
+  "tourHeaderFour": {
+    "message": "Како што Вие сакате"
+  },
+  "tourBodyFour": {
+    "message": "Снимете ги Вашите исечоци на Интернет за полесно споделување или преземете ги на Вашиот компјутер. Исто така можете да кликнете на копчето Мои слики за да ги најдете сите слики што ги имате направено."
+  },
+  "tourSkip": {
+    "message": "ПРЕСКОКНИ"
+  },
+  "tourNext": {
+    "message": "Следен слајд"
+  },
+  "tourPrevious": {
+    "message": "Претходен слајд"
+  },
+  "tourDone": {
+    "message": "Готово"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Со користење на Firefox Screenshots, се согласувате со нашите $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Услови"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Известување за приватност"
+  }
+}

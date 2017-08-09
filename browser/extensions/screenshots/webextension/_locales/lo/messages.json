@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "ທ່ານບໍ່ສາມາດຖ່າຍພາບຫນ້າຈໍຂອງ Firefox ໄດ້!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "ການເລືອກຂອງທ່ານນ້ອຍເກີນໄປ"
+  },
   "genericErrorTitle": {
     "message": "ໂອ! Firefox Screenshots ລວນ."
   },

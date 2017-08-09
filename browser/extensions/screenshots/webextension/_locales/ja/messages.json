@@ -33,7 +33,7 @@
     "message": "リンクをコピーしました"
   },
   "notificationLinkCopiedDetails": {
-    "message": "ショットへのリンクがクリップボードにコピーされました。$META_KEY$+V キーで貼り付けられます。",
+    "message": "ショットへのリンクがクリップボードへコピーされました。$META_KEY$+V キーで貼り付けられます。",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -47,7 +47,7 @@
     "message": "申し訳ありませんが、ショットを保存できませんでした。また後で試してください。"
   },
   "connectionErrorTitle": {
-    "message": "スクリーンショットへ接続できません。"
+    "message": "Screenshots ライブラリへ接続できません。"
   },
   "connectionErrorDetails": {
     "message": "お使いのインターネット接続を確認してください。インターネットへ接続できる場合は、Firefox Screenshots サービスに一時的な問題が発生しているものと思われます。"
@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "選択範囲が小さすぎます"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots はプライベートブラウジングモードでは使用できません"
+  },
+  "privateWindowErrorDetails": {
+    "message": "ご不便をおかけして申し訳ありません。今後のリリースでこの機能を提供できるよう取り組んでいます。"
+  },
   "genericErrorTitle": {
     "message": "Firefox Screenshots に問題が発生しました。"
   },
@@ -77,16 +83,16 @@
     "message": "Firefox を離れることなく、スクリーンショットを撮影、保存、共有。"
   },
   "tourHeaderTwo": {
-    "message": "必要なものだけをキャプチャー"
+    "message": "必要な部分だけをキャプチャ"
   },
   "tourBodyTwo": {
-    "message": "クリック＆ドラッグでページの一部だけをキャプチャーできます。また、マウスを当てれば選択範囲が強調表示されます。"
+    "message": "クリック＆ドラッグでページの一部だけをキャプチャできます。また、マウスを当てれば選択範囲が強調表示されます。"
   },
   "tourHeaderThree": {
-    "message": "ウィンドウもしくはページ全体をキャプチャー"
+    "message": "ウィンドウもしくはページ全体をキャプチャ"
   },
   "tourBodyThree": {
-    "message": "右上のボタンを選択して、ウィンドウ内の表示範囲もしくはページ全体をキャプチャーしましょう。"
+    "message": "右上のボタンを選択して、ウィンドウ内の表示範囲もしくはページ全体をキャプチャしましょう。"
   },
   "tourHeaderFour": {
     "message": "お好きなように"

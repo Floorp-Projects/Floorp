@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Tu selección es muy pequeña"
   },
+  "privateWindowErrorTitle": {
+    "message": "Firefox Screenshots está desactivado en el modo de navegación privada"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Disculpa las molestias. Estamos trabajando en esta función para una futura versión."
+  },
   "genericErrorTitle": {
     "message": "¡Guau! Firefox Screenshots se copetió."
   },

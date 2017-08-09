@@ -6,7 +6,7 @@
     "message": "ఒక తెరపట్టు తీసుకోండి"
   },
   "myShotsLink": {
-    "message": "నా షాట్లు"
+    "message": "నా తెరపట్లు"
   },
   "saveScreenshotSelectedArea": {
     "message": "భద్రపరచు"
@@ -32,6 +32,27 @@
   "requestErrorDetails": {
     "message": "క్షమిచండి! మీ తెరను భద్రపరచలేకపోయాం. దయచేసి కాసేపాగి మళ్ళీ ప్రయత్నించండి."
   },
+  "connectionErrorTitle": {
+    "message": "మేము మీ స్క్రీన్షాట్లకు కనెక్ట్ చేయలేము."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "మేము ఈ పేజీని స్క్రీన్షాట్ చేయలేము."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "ఇది ప్రామాణిక వెబ్ పేజీ కాదు, కాబట్టి దాని యొక్క స్క్రీన్షాట్ని మీరు తీసుకోలేరు."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "మీరు Firefox స్క్రీన్షాట్స్ పేజీ యొక్క షాట్ ను తీసుకోలేరు!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "మీ ఎంపిక చాలా చిన్న్దగా ఉంది"
+  },
+  "genericErrorTitle": {
+    "message": "అయ్యో! Firefox స్క్రీన్షాట్లు haywire వెళ్ళింది."
+  },
+  "tourBodyOne": {
+    "message": "Firefox ను వదలకుండా స్క్రీన్షాట్లను తీసుకోండి, సేవ్ చేయండి మరియు పంచండి."
+  },
   "tourHeaderTwo": {
     "message": ""
   },
@@ -54,6 +75,6 @@
     "message": "నియమాలు"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
-    "message": "అంతరంగికత గమనిక"
+    "message": "గోప్యతా నోటీసు"
   }
 }
