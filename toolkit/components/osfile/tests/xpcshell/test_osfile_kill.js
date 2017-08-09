@@ -62,7 +62,7 @@ add_task(async function test_kill_race() {
   await OS.File.exists("foo.foo");
 
   do_print("issuing first request");
-  let firstRequest = OS.File.exists("foo.bar");
+  let firstRequest = OS.File.exists("foo.bar"); // eslint-disable-line no-unused-vars
   let secondRequest;
   let secondResolved = false;
 
