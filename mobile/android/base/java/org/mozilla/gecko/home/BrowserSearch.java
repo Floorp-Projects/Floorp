@@ -33,7 +33,6 @@ import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.SearchLoader.SearchCursorLoader;
 import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -1197,10 +1196,9 @@ public class BrowserSearch extends HomeFragment
                 final Cursor c = getCursor(position);
                 final TwoLinePageRow row = (TwoLinePageRow) view;
 
-                if (SkinConfig.isPhoton()) {
-                    // Highlight all substrings in title field if they matches the search term.
-                    row.setTitleFormatter(mTwoLinePageRowTitleFormatter);
-                }
+                // Highlight all substrings in title field if they matches the search term.
+                row.setTitleFormatter(mTwoLinePageRowTitleFormatter);
+
                 row.updateFromCursor(c);
                 row.setPrivateMode(isPrivate);
             }

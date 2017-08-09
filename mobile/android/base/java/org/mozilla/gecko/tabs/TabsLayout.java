@@ -8,7 +8,6 @@ package org.mozilla.gecko.tabs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import android.content.Context;
@@ -74,15 +73,11 @@ public abstract class TabsLayout extends RecyclerView
 
     @Override
     public void show() {
-        if (SkinConfig.isPhoton()) {
-            final boolean hasTabs = (tabsAdapter.getItemCount() > 0);
-            setVisibility(hasTabs ? VISIBLE : GONE);
+        final boolean hasTabs = (tabsAdapter.getItemCount() > 0);
+        setVisibility(hasTabs ? VISIBLE : GONE);
 
-            if (emptyView != null) {
-                emptyView.setVisibility(hasTabs ? GONE : VISIBLE);
-            }
-        } else {
-            setVisibility(View.VISIBLE);
+        if (emptyView != null) {
+            emptyView.setVisibility(hasTabs ? GONE : VISIBLE);
         }
 
         Tabs.getInstance().refreshThumbnails();
