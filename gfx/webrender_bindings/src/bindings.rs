@@ -610,12 +610,26 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     return true;
 }
 
+#[no_mangle]
+pub extern "C" fn wr_api_clone(dh: &mut DocumentHandle,
+                                      out_handle: &mut *mut DocumentHandle) {
+    assert!(unsafe { is_in_compositor_thread() });
+
+    let handle = DocumentHandle {
+        api: dh.api.clone_sender().create_api(),
+        document_id: dh.document_id,
+    };
+    *out_handle = Box::into_raw(Box::new(handle));
+}
+
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_delete(dh: *mut DocumentHandle) {
     let handle = Box::from_raw(dh);
-    handle.api.delete_document(handle.document_id);
-    handle.api.shut_down();
+    if handle.document_id.0 == handle.api.get_namespace_id() {
+        handle.api.delete_document(handle.document_id);
+        handle.api.shut_down();
+    }
 }
 
 #[no_mangle]
@@ -860,7 +874,7 @@ pub extern "C" fn wr_api_delete_font(dh: &mut DocumentHandle,
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_get_namespace(dh: &mut DocumentHandle) -> WrIdNamespace {
-    dh.document_id.0
+    dh.api.get_namespace_id()
 }
 
 // RenderThread WIP notes:
