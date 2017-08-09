@@ -13,34 +13,23 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/debug.js");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
-  "resource://gre/modules/TelemetryStopwatch.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
-  "resource://gre/modules/Deprecated.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SearchStaticData",
-  "resource://gre/modules/SearchStaticData.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
-  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
-  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Lz4",
-  "resource://gre/modules/lz4.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
+  Deprecated: "resource://gre/modules/Deprecated.jsm",
+  SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
+  Lz4: "resource://gre/modules/lz4.js",
+});
 
-XPCOMUtils.defineLazyServiceGetter(this, "gTextToSubURI",
-                                   "@mozilla.org/intl/texttosuburi;1",
-                                   "nsITextToSubURI");
-XPCOMUtils.defineLazyServiceGetter(this, "gEnvironment",
-                                   "@mozilla.org/process/environment;1",
-                                   "nsIEnvironment");
-XPCOMUtils.defineLazyServiceGetter(this, "gChromeReg",
-                                   "@mozilla.org/chrome/chrome-registry;1",
-                                   "nsIChromeRegistry");
+XPCOMUtils.defineLazyServiceGetters(this, {
+  gTextToSubURI: ["@mozilla.org/intl/texttosuburi;1", "nsITextToSubURI"],
+  gEnvironment: ["@mozilla.org/process/environment;1", "nsIEnvironment"],
+  gChromeReg: ["@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry"],
+});
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 

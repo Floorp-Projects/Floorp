@@ -34,17 +34,16 @@ Cu.import("resource://gre/modules/osfile.jsm", this);
 
 Cu.importGlobalProperties(["FileReader"]);
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-  "resource://gre/modules/NetUtil.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-  "resource://gre/modules/FileUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Deprecated: "resource://gre/modules/Deprecated.jsm",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  PageThumbUtils: "resource://gre/modules/PageThumbUtils.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUpdateTimerManager",
   "@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager");
@@ -59,15 +58,6 @@ XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function() {
   converter.charset = "utf8";
   return converter;
 });
-
-XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
-  "resource://gre/modules/Deprecated.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbUtils",
-  "resource://gre/modules/PageThumbUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 /**
  * Utilities for dealing with promises and Task.jsm

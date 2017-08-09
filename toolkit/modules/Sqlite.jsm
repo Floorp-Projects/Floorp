@@ -16,25 +16,20 @@ const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000 // 4 minutes
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-                                  "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Log",
-                                  "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Log: "resource://gre/modules/Log.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  Task: "resource://gre/modules/Task.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  console: "resource://gre/modules/Console.jsm",
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
                                    "@mozilla.org/toolkit/finalizationwitness;1",
                                    "nsIFinalizationWitnessService");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/Console.jsm");
 
 // Regular expression used by isInvalidBoundLikeQuery
 var likeSqlRegex = /\bLIKE\b\s(?![@:?])/i;

@@ -20,14 +20,12 @@ Cu.importGlobalProperties(["fetch"]);
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
-                                  "resource://gre/modules/MessageChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
-                                  "resource://gre/modules/Schemas.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  MessageChannel: "resource://gre/modules/MessageChannel.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Schemas: "resource://gre/modules/Schemas.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "@mozilla.org/content/style-sheet-service;1",
@@ -1162,12 +1160,11 @@ class SchemaAPIManager extends EventEmitter {
 
     XPCOMUtils.defineLazyGetter(global, "console", getConsole);
 
-    XPCOMUtils.defineLazyModuleGetter(global, "ExtensionUtils",
-                                      "resource://gre/modules/ExtensionUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(global, "XPCOMUtils",
-                                      "resource://gre/modules/XPCOMUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(global, "require",
-                                      "resource://devtools/shared/Loader.jsm");
+    XPCOMUtils.defineLazyModuleGetters(global, {
+      ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
+      XPCOMUtils: "resource://gre/modules/XPCOMUtils.jsm",
+      require: "resource://devtools/shared/Loader.jsm",
+    });
 
     return global;
   }
