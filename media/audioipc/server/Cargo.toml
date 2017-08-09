@@ -6,8 +6,8 @@ description = "Remote cubeb server"
 
 [dependencies]
 audioipc = { path = "../audioipc" }
-cubeb = { git = "https://github.com/djg/cubeb-rs", version="^0.3" }
-cubeb-core = { git = "https://github.com/djg/cubeb-rs", version="^0.1" }
+cubeb = { path = "../../cubeb-rs/cubeb-api" }
+cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
 error-chain = "0.10.0"
 lazycell = "^0.4"
 log = "^0.3.6"

@@ -6,6 +6,6 @@ description = "Cubeb Backend for talking to remote cubeb server."
 
 [dependencies]
 audioipc = { path="../audioipc" }
-cubeb-core = { git="https://github.com/djg/cubeb-rs", version="^0.1" }
-cubeb-backend = { git="https://github.com/djg/cubeb-rs", version="^0.2" }
+cubeb-core = { path="../../cubeb-rs/cubeb-core" }
+cubeb-backend = { path="../../cubeb-rs/cubeb-backend" }
 log = "^0.3.6"
