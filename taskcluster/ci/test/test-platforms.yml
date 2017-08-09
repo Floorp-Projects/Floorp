@@ -286,14 +286,14 @@ macosx64-devedition/opt:
 ##
 # Android platforms (matching /android.*/)
 
-android-4.3-arm7-api-15/debug:
-    build-platform: android-api-15/debug
+android-4.3-arm7-api-16/debug:
+    build-platform: android-api-16/debug
     test-sets:
         - android-common-tests
         - android-debug-tests
 
-android-4.3-arm7-api-15/opt:
-    build-platform: android-api-15/opt
+android-4.3-arm7-api-16/opt:
+    build-platform: android-api-16/opt
     test-sets:
         - android-common-tests
         - android-opt-tests
@@ -303,7 +303,7 @@ android-4.2-x86/opt:
     test-sets:
         - android-x86-tests
 
-android-4.3-arm7-api-15-gradle/opt:
-    build-platform: android-api-15-gradle/opt
+android-4.3-arm7-api-16-gradle/opt:
+    build-platform: android-api-16-gradle/opt
     test-sets:
         - android-gradle-tests

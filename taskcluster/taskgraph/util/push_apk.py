@@ -11,7 +11,7 @@ from taskgraph.util.schema import validate_schema
 
 REQUIRED_ARCHITECTURES = {
     'android-x86-nightly',
-    'android-api-15-nightly',
+    'android-api-16-nightly',
 }
 PLATFORM_REGEX = re.compile(r'signing-android-(\S+)-nightly')
 
