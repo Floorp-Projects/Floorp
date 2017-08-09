@@ -488,14 +488,13 @@ LogConsoleMessage(const char16_t* fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
-  char16_t* msg = nsTextFormatter::vsmprintf(fmt, args);
+  nsString msg;
+  nsTextFormatter::vssprintf(msg, fmt, args);
   va_end(args);
 
   nsCOMPtr<nsIConsoleService> cs = do_GetService("@mozilla.org/consoleservice;1");
   if (cs)
-    cs->LogStringMessage(msg);
-
-  free(msg);
+    cs->LogStringMessage(msg.get());
 }
 
 nsresult

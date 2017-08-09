@@ -1687,21 +1687,21 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
       u"CC(T+%.1f)[%s-%i] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
       u"ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, max sync: %lu ms, removed: %lu";
     nsString msg;
-    msg.Adopt(nsTextFormatter::smprintf(kFmt, double(delta) / PR_USEC_PER_SEC,
-                                        ProcessNameForCollectorLog(), getpid(),
-                                        gCCStats.mMaxSliceTime, gCCStats.mTotalSliceTime,
-                                        aResults.mNumSlices, gCCStats.mSuspected,
-                                        aResults.mVisitedRefCounted, aResults.mVisitedGCed, mergeMsg.get(),
-                                        aResults.mFreedRefCounted, aResults.mFreedGCed,
-                                        sCCollectedWaitingForGC, sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
-                                        gcMsg.get(),
-                                        sForgetSkippableBeforeCC,
-                                        minForgetSkippableTime / PR_USEC_PER_MSEC,
-                                        sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
-                                        (sTotalForgetSkippableTime / cleanups) /
-                                          PR_USEC_PER_MSEC,
-                                        sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
-                                        gCCStats.mMaxSkippableDuration, sRemovedPurples));
+    nsTextFormatter::ssprintf(msg, kFmt, double(delta) / PR_USEC_PER_SEC,
+                              ProcessNameForCollectorLog(), getpid(),
+                              gCCStats.mMaxSliceTime, gCCStats.mTotalSliceTime,
+                              aResults.mNumSlices, gCCStats.mSuspected,
+                              aResults.mVisitedRefCounted, aResults.mVisitedGCed, mergeMsg.get(),
+                              aResults.mFreedRefCounted, aResults.mFreedGCed,
+                              sCCollectedWaitingForGC, sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
+                              gcMsg.get(),
+                              sForgetSkippableBeforeCC,
+                              minForgetSkippableTime / PR_USEC_PER_MSEC,
+                              sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
+                              (sTotalForgetSkippableTime / cleanups) /
+                              PR_USEC_PER_MSEC,
+                              sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
+                              gCCStats.mMaxSkippableDuration, sRemovedPurples);
     if (sPostGCEventsToConsole) {
       nsCOMPtr<nsIConsoleService> cs =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -1741,27 +1741,27 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
              u"\"total\": %lu, "
              u"\"removed\": %lu } "
        u"}";
-    nsString json;
 
-    json.Adopt(nsTextFormatter::smprintf(kJSONFmt, PR_Now(), ccNowDuration,
-                                         gCCStats.mMaxSliceTime,
-                                         gCCStats.mTotalSliceTime,
-                                         gCCStats.mMaxGCDuration,
-                                         gCCStats.mMaxSkippableDuration,
-                                         gCCStats.mSuspected,
-                                         aResults.mVisitedRefCounted, aResults.mVisitedGCed,
-                                         aResults.mFreedRefCounted, aResults.mFreedGCed,
-                                         sCCollectedWaitingForGC,
-                                         sCCollectedZonesWaitingForGC,
-                                         sLikelyShortLivingObjectsNeedingGC,
-                                         aResults.mForcedGC,
-                                         sForgetSkippableBeforeCC,
-                                         minForgetSkippableTime / PR_USEC_PER_MSEC,
-                                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
-                                         (sTotalForgetSkippableTime / cleanups) /
-                                           PR_USEC_PER_MSEC,
-                                         sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
-                                         sRemovedPurples));
+    nsString json;
+    nsTextFormatter::ssprintf(json, kJSONFmt, PR_Now(), ccNowDuration,
+                              gCCStats.mMaxSliceTime,
+                              gCCStats.mTotalSliceTime,
+                              gCCStats.mMaxGCDuration,
+                              gCCStats.mMaxSkippableDuration,
+                              gCCStats.mSuspected,
+                              aResults.mVisitedRefCounted, aResults.mVisitedGCed,
+                              aResults.mFreedRefCounted, aResults.mFreedGCed,
+                              sCCollectedWaitingForGC,
+                              sCCollectedZonesWaitingForGC,
+                              sLikelyShortLivingObjectsNeedingGC,
+                              aResults.mForcedGC,
+                              sForgetSkippableBeforeCC,
+                              minForgetSkippableTime / PR_USEC_PER_MSEC,
+                              sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
+                              (sTotalForgetSkippableTime / cleanups) /
+                              PR_USEC_PER_MSEC,
+                              sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
+                              sRemovedPurples);
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (observerService) {
       observerService->NotifyObservers(nullptr, "cycle-collection-statistics", json.get());
@@ -2253,12 +2253,12 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       PRTime delta = GetCollectionTimeDelta();
 
       if (sPostGCEventsToConsole) {
-        nsString prefix, gcstats;
+        nsString gcstats;
         gcstats.Adopt(aDesc.formatSummaryMessage(aCx));
-        prefix.Adopt(nsTextFormatter::smprintf(u"GC(T+%.1f)[%s-%i] ",
-                                               double(delta) / PR_USEC_PER_SEC,
-                                               ProcessNameForCollectorLog(),
-                                               getpid()));
+        nsAutoString prefix;
+        nsTextFormatter::ssprintf(prefix, u"GC(T+%.1f)[%s-%i] ",
+                                  double(delta) / PR_USEC_PER_SEC,
+                                  ProcessNameForCollectorLog(), getpid());
         nsString msg = prefix + gcstats;
         nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
@@ -2339,11 +2339,11 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       }
 
       if (sPostGCEventsToConsole) {
-        nsString prefix, gcstats;
+        nsString gcstats;
         gcstats.Adopt(aDesc.formatSliceMessage(aCx));
-        prefix.Adopt(nsTextFormatter::smprintf(u"[%s-%i] ",
-                                               ProcessNameForCollectorLog(),
-                                               getpid()));
+        nsAutoString prefix;
+        nsTextFormatter::ssprintf(prefix, u"[%s-%i] ",
+                                  ProcessNameForCollectorLog(), getpid());
         nsString msg = prefix + gcstats;
         nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
