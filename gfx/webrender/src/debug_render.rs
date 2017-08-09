@@ -3,18 +3,73 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use debug_font_data;
-use device::{Device, GpuMarker, ProgramId, VAOId, TextureId, VertexFormat};
-use device::{TextureFilter, VertexUsageHint, TextureTarget};
+use device::{Device, GpuMarker, Program, VAOId, TextureId, VertexDescriptor};
+use device::{TextureFilter, VertexAttribute, VertexUsageHint, VertexAttributeKind, TextureTarget};
 use euclid::{Transform3D, Point2D, Size2D, Rect};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, TextureSampler};
-use internal_types::{DebugFontVertex, DebugColorVertex, RenderTargetMode};
+use internal_types::RenderTargetMode;
 use std::f32;
 use api::{ColorU, ImageFormat, DeviceUintSize};
+
+const DESC_FONT: VertexDescriptor = VertexDescriptor {
+    vertex_attributes: &[
+        VertexAttribute { name: "aPosition", count: 2, kind: VertexAttributeKind::F32 },
+        VertexAttribute { name: "aColor", count: 4, kind: VertexAttributeKind::U8Norm },
+        VertexAttribute { name: "aColorTexCoord", count: 2, kind: VertexAttributeKind::F32 },
+    ],
+    instance_attributes: &[]
+};
+
+const DESC_COLOR: VertexDescriptor = VertexDescriptor {
+    vertex_attributes: &[
+        VertexAttribute { name: "aPosition", count: 2, kind: VertexAttributeKind::F32 },
+        VertexAttribute { name: "aColor", count: 4, kind: VertexAttributeKind::U8Norm },
+    ],
+    instance_attributes: &[]
+};
+
+#[repr(C)]
+pub struct DebugFontVertex {
+    pub x: f32,
+    pub y: f32,
+    pub color: ColorU,
+    pub u: f32,
+    pub v: f32,
+}
+
+impl DebugFontVertex {
+    pub fn new(x: f32, y: f32, u: f32, v: f32, color: ColorU) -> DebugFontVertex {
+        DebugFontVertex {
+            x,
+            y,
+            color,
+            u,
+            v,
+        }
+    }
+}
+
+#[repr(C)]
+pub struct DebugColorVertex {
+    pub x: f32,
+    pub y: f32,
+    pub color: ColorU,
+}
+
+impl DebugColorVertex {
+    pub fn new(x: f32, y: f32, color: ColorU) -> DebugColorVertex {
+        DebugColorVertex {
+            x,
+            y,
+            color,
+        }
+    }
+}
 
 pub struct DebugRenderer {
     font_vertices: Vec<DebugFontVertex>,
     font_indices: Vec<u32>,
-    font_program_id: ProgramId,
+    font_program: Program,
     font_vao: VAOId,
     font_texture_id: TextureId,
 
@@ -23,17 +78,17 @@ pub struct DebugRenderer {
     tri_vao: VAOId,
     line_vertices: Vec<DebugColorVertex>,
     line_vao: VAOId,
-    color_program_id: ProgramId,
+    color_program: Program,
 }
 
 impl DebugRenderer {
     pub fn new(device: &mut Device) -> DebugRenderer {
-        let font_program_id = device.create_program("debug_font", "shared_other", VertexFormat::DebugFont).unwrap();
-        let color_program_id = device.create_program("debug_color", "shared_other", VertexFormat::DebugColor).unwrap();
+        let font_program = device.create_program("debug_font", "shared_other", &DESC_FONT).unwrap();
+        let color_program = device.create_program("debug_color", "shared_other", &DESC_COLOR).unwrap();
 
-        let font_vao = device.create_vao(VertexFormat::DebugFont, 32);
-        let line_vao = device.create_vao(VertexFormat::DebugColor, 32);
-        let tri_vao = device.create_vao(VertexFormat::DebugColor, 32);
+        let font_vao = device.create_vao(&DESC_FONT, 32);
+        let line_vao = device.create_vao(&DESC_COLOR, 32);
+        let tri_vao = device.create_vao(&DESC_COLOR, 32);
 
         let font_texture_id = device.create_texture_ids(1, TextureTarget::Default)[0];
         device.init_texture(font_texture_id,
@@ -51,12 +106,17 @@ impl DebugRenderer {
             tri_vao,
             tri_vertices: Vec::new(),
             tri_indices: Vec::new(),
-            font_program_id,
-            color_program_id,
+            font_program,
+            color_program,
             font_vao,
             line_vao,
             font_texture_id,
         }
+    }
+
+    pub fn deinit(&mut self, device: &mut Device) {
+        device.delete_program(&mut self.font_program);
+        device.delete_program(&mut self.color_program);
     }
 
     pub fn line_height(&self) -> f32 {
@@ -170,7 +230,8 @@ impl DebugRenderer {
 
         // Triangles
         if !self.tri_vertices.is_empty() {
-            device.bind_program(self.color_program_id, &projection);
+            device.bind_program(&self.color_program);
+            device.set_uniforms(&self.color_program, &projection);
             device.bind_vao(self.tri_vao);
             device.update_vao_indices(self.tri_vao,
                                       &self.tri_indices,
@@ -183,7 +244,8 @@ impl DebugRenderer {
 
         // Lines
         if !self.line_vertices.is_empty() {
-            device.bind_program(self.color_program_id, &projection);
+            device.bind_program(&self.color_program);
+            device.set_uniforms(&self.color_program, &projection);
             device.bind_vao(self.line_vao);
             device.update_vao_main_vertices(self.line_vao,
                                             &self.line_vertices,
@@ -193,7 +255,8 @@ impl DebugRenderer {
 
         // Glyph
         if !self.font_indices.is_empty() {
-            device.bind_program(self.font_program_id, &projection);
+            device.bind_program(&self.font_program);
+            device.set_uniforms(&self.font_program, &projection);
             device.bind_texture(TextureSampler::Color0, self.font_texture_id);
             device.bind_vao(self.font_vao);
             device.update_vao_indices(self.font_vao,

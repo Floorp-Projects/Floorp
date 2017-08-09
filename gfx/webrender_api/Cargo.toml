@@ -15,6 +15,7 @@ app_units = "0.5"
 bincode = "0.8"
 byteorder = "1.0"
 euclid = "0.15"
+fxhash = "0.2.1"
 gleam = "0.4.5"
 heapsize = ">= 0.3.6, < 0.5"
 ipc-channel = {version = "0.8", optional = true}

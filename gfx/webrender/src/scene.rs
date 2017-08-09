@@ -2,25 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use fnv::FnvHasher;
-use std::collections::HashMap;
-use std::hash::BuildHasherDefault;
 use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch, LayerSize, LayoutSize};
 use api::{LayoutTransform, PipelineId, PropertyBinding, PropertyBindingId};
+use internal_types::FastHashMap;
 
 /// Stores a map of the animated property bindings for the current display list. These
 /// can be used to animate the transform and/or opacity of a display list without
 /// re-submitting the display list itself.
 pub struct SceneProperties {
-    transform_properties: HashMap<PropertyBindingId, LayoutTransform>,
-    float_properties: HashMap<PropertyBindingId, f32>,
+    transform_properties: FastHashMap<PropertyBindingId, LayoutTransform>,
+    float_properties: FastHashMap<PropertyBindingId, f32>,
 }
 
 impl SceneProperties {
     pub fn new() -> SceneProperties {
         SceneProperties {
-            transform_properties: HashMap::default(),
-            float_properties: HashMap::default(),
+            transform_properties: FastHashMap::default(),
+            float_properties: FastHashMap::default(),
         }
     }
 
@@ -91,8 +89,8 @@ pub struct ScenePipeline {
 /// A complete representation of the layout bundling visible pipelines together.
 pub struct Scene {
     pub root_pipeline_id: Option<PipelineId>,
-    pub pipeline_map: HashMap<PipelineId, ScenePipeline, BuildHasherDefault<FnvHasher>>,
-    pub display_lists: HashMap<PipelineId, BuiltDisplayList, BuildHasherDefault<FnvHasher>>,
+    pub pipeline_map: FastHashMap<PipelineId, ScenePipeline>,
+    pub display_lists: FastHashMap<PipelineId, BuiltDisplayList>,
     pub properties: SceneProperties,
 }
 
@@ -100,8 +98,8 @@ impl Scene {
     pub fn new() -> Scene {
         Scene {
             root_pipeline_id: None,
-            pipeline_map: HashMap::default(),
-            display_lists: HashMap::default(),
+            pipeline_map: FastHashMap::default(),
+            display_lists: FastHashMap::default(),
             properties: SceneProperties::new(),
         }
     }

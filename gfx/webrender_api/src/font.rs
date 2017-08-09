@@ -80,6 +80,14 @@ pub enum FontRenderMode {
     Subpixel,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]
+pub enum SubpixelDirection {
+    None = 0,
+    Horizontal,
+    Vertical,
+}
+
 const FIXED16_SHIFT: i32 = 16;
 
 // This matches the behaviour of SkScalarToFixed
@@ -92,10 +100,6 @@ impl FontRenderMode {
     // Skia quantizes subpixel offets into 1/4 increments.
     // Given the absolute position, return the quantized increment
     fn subpixel_quantize_offset(&self, pos: f32) -> SubpixelOffset {
-        if *self != FontRenderMode::Subpixel {
-            return SubpixelOffset::Zero;
-        }
-
         const SUBPIXEL_BITS: i32 = 2;
         const SUBPIXEL_FIXED16_MASK: i32 = ((1 << SUBPIXEL_BITS) - 1) << (FIXED16_SHIFT - SUBPIXEL_BITS);
 
@@ -133,26 +137,6 @@ impl Into<f64> for SubpixelOffset {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]
-pub struct SubpixelPoint {
-    pub x: SubpixelOffset,
-    pub y: SubpixelOffset,
-}
-
-impl SubpixelPoint {
-    pub fn new(point: LayoutPoint,
-               render_mode: FontRenderMode) -> SubpixelPoint {
-        SubpixelPoint {
-            x: render_mode.subpixel_quantize_offset(point.x),
-            y: render_mode.subpixel_quantize_offset(point.y),
-        }
-    }
-
-    pub fn to_f64(&self) -> (f64, f64) {
-        (self.x.into(), self.y.into())
-    }
-}
-
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct GlyphOptions {
     // These are currently only used on windows for dwrite fonts.
@@ -172,6 +156,7 @@ pub struct FontInstanceKey {
     pub color: ColorU,
     pub render_mode: FontRenderMode,
     pub glyph_options: Option<GlyphOptions>,
+    pub subpx_dir: SubpixelDirection,
 }
 
 impl FontInstanceKey {
@@ -179,7 +164,8 @@ impl FontInstanceKey {
                size: Au,
                mut color: ColorF,
                render_mode: FontRenderMode,
-               glyph_options: Option<GlyphOptions>) -> FontInstanceKey {
+               glyph_options: Option<GlyphOptions>,
+               subpx_dir: SubpixelDirection) -> FontInstanceKey {
         // In alpha/mono mode, the color of the font is irrelevant.
         // Forcing it to black in those cases saves rasterizing glyphs
         // of different colors when not needed.
@@ -193,6 +179,15 @@ impl FontInstanceKey {
             color: color.into(),
             render_mode,
             glyph_options,
+            subpx_dir,
+        }
+    }
+
+    pub fn get_subpx_offset(&self, glyph: &GlyphKey) -> (f64, f64) {
+        match self.subpx_dir {
+            SubpixelDirection::None => (0.0, 0.0),
+            SubpixelDirection::Horizontal => (glyph.subpixel_offset.into(), 0.0),
+            SubpixelDirection::Vertical => (0.0, glyph.subpixel_offset.into()),
         }
     }
 }
@@ -200,23 +195,32 @@ impl FontInstanceKey {
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]
 pub struct GlyphKey {
     pub index: u32,
-    pub subpixel_point: SubpixelPoint,
+    pub subpixel_offset: SubpixelOffset,
 }
 
 impl GlyphKey {
     pub fn new(index: u32,
                point: LayoutPoint,
-               render_mode: FontRenderMode) -> GlyphKey {
+               render_mode: FontRenderMode,
+               subpx_dir: SubpixelDirection) -> GlyphKey {
+        let pos = match subpx_dir {
+            SubpixelDirection::None => 0.0,
+            SubpixelDirection::Horizontal => point.x,
+            SubpixelDirection::Vertical => point.y,
+        };
+
         GlyphKey {
             index,
-            subpixel_point: SubpixelPoint::new(point, render_mode),
+            subpixel_offset: render_mode.subpixel_quantize_offset(pos),
         }
     }
 }
 
+pub type GlyphIndex = u32;
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct GlyphInstance {
-    pub index: u32,
+    pub index: GlyphIndex,
     pub point: LayoutPoint,
 }

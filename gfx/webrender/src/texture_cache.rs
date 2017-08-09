@@ -3,16 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use device::TextureFilter;
-use fnv::FnvHasher;
 use freelist::{FreeList, FreeListItem, FreeListItemId};
 use gpu_cache::GpuCacheHandle;
-use internal_types::{TextureUpdate, TextureUpdateOp, UvRect};
+use internal_types::{FastHashMap, TextureUpdate, TextureUpdateOp, UvRect};
 use internal_types::{CacheTextureId, RenderTargetMode, TextureUpdateList};
 use profiler::TextureCacheProfileCounters;
 use std::cmp;
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::hash::BuildHasherDefault;
 use std::mem;
 use std::slice::Iter;
 use time;
@@ -575,7 +572,7 @@ impl CacheTextureIdList {
 
 pub struct TextureCache {
     cache_id_list: CacheTextureIdList,
-    free_texture_levels: HashMap<ImageFormat, Vec<FreeTextureLevel>, BuildHasherDefault<FnvHasher>>,
+    free_texture_levels: FastHashMap<ImageFormat, Vec<FreeTextureLevel>>,
     items: FreeList<TextureCacheItem>,
     arena: TextureCacheArena,
     pending_updates: TextureUpdateList,
@@ -603,7 +600,7 @@ impl TextureCache {
 
         TextureCache {
             cache_id_list: CacheTextureIdList::new(),
-            free_texture_levels: HashMap::default(),
+            free_texture_levels: FastHashMap::default(),
             items: FreeList::new(),
             pending_updates: TextureUpdateList::new(),
             arena: TextureCacheArena::new(),
@@ -688,9 +685,18 @@ impl TextureCache {
             ImageFormat::Invalid | ImageFormat::RGBAF32 => unreachable!(),
         };
 
+
         // TODO(gw): Handle this sensibly (support failing to render items that can't fit?)
-        assert!(requested_size.width <= self.max_texture_size);
-        assert!(requested_size.height <= self.max_texture_size);
+        assert!(
+            requested_size.width <= self.max_texture_size,
+            "Width {:?} > max texture size (format: {:?}).",
+            requested_size.width, format
+        );
+        assert!(
+            requested_size.height <= self.max_texture_size,
+            "Height {:?} > max texture size (format: {:?}).",
+            requested_size.height, format
+        );
 
         let mut page_id = None; //using ID here to please the borrow checker
         for (i, page) in page_list.iter_mut().enumerate() {
@@ -816,8 +822,23 @@ impl TextureCache {
         }
 
         let op = match data {
-            ImageData::External(..) => {
-                panic!("Doesn't support Update() for external image.");
+            ImageData::External(ext_image) => {
+                match ext_image.image_type {
+                    ExternalImageType::Texture2DHandle |
+                    ExternalImageType::TextureRectHandle |
+                    ExternalImageType::TextureExternalHandle => {
+                        panic!("External texture handle should not go through texture_cache.");
+                    }
+                    ExternalImageType::ExternalBuffer => {
+                        TextureUpdateOp::UpdateForExternalBuffer {
+                            rect: existing_item.allocated_rect,
+                            id: ext_image.id,
+                            channel_index: ext_image.channel_index,
+                            stride: descriptor.stride,
+                            offset: descriptor.offset,
+                        }
+                    }
+                }
             }
             ImageData::Blob(..) => {
                 panic!("The vector image should have been rasterized into a raw image.");
