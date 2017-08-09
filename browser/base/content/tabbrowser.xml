@@ -2219,14 +2219,10 @@
               let setter;
               switch (name) {
                 case "audioMuted":
-                  getter = () => {
-                    return false;
-                  };
+                  getter = () => false;
                   break;
                 case "contentTitle":
-                  getter = () => {
-                    return SessionStore.getLazyTabValue(aTab, "title");
-                  };
+                  getter = () => SessionStore.getLazyTabValue(aTab, "title");
                   break;
                 case "currentURI":
                   getter = () => {
@@ -2234,29 +2230,23 @@
                     return Services.io.newURI(url);
                   };
                   break;
+                case "fullZoom":
+                case "textZoom":
+                  getter = () => 1;
+                  break;
                 case "getTabBrowser":
-                  getter = () => {
-                    return () => {
-                      return this;
-                    };
-                  };
+                  getter = () => () => this;
                   break;
                 case "isRemoteBrowser":
-                  getter = () => {
-                    return browser.getAttribute("remote") == "true";
-                  };
+                  getter = () => browser.getAttribute("remote") == "true";
                   break;
                 case "permitUnload":
-                  getter = () => {
-                    return () => {
-                      return { permitUnload: true, timedOut: false };
-                    };
-                  };
+                  getter = () => () => ({ permitUnload: true, timedOut: false });
                   break;
                 case "reload":
                 case "reloadWithFlags":
-                  getter = () => {
-                    return (params) => {
+                  getter = () =>
+                    params => {
                       // Wait for load handler to be instantiated before
                       // initializing the reload.
                       aTab.addEventListener("SSTabRestoring", () => {
@@ -2264,25 +2254,21 @@
                       }, { once: true });
                       gBrowser._insertBrowser(aTab);
                     };
-                  };
                   break;
                 case "resumeMedia":
-                  getter = () => {
-                    return () => {
+                  getter = () =>
+                    () => {
                       // No need to insert a browser, so we just call the browser's
                       // method.
                       aTab.addEventListener("SSTabRestoring", () => {
                         browser[name]();
                       }, { once: true });
                     };
-                  };
                   break;
                 case "userTypedValue":
                 case "userTypedClear":
                 case "mediaBlocked":
-                  getter = () => {
-                    return SessionStore.getLazyTabValue(aTab, name);
-                  };
+                  getter = () => SessionStore.getLazyTabValue(aTab, name);
                   break;
                 default:
                   getter = () => {
@@ -2294,7 +2280,7 @@
                     this._insertBrowser(aTab);
                     return browser[name];
                   };
-                  setter = (value) => {
+                  setter = value => {
                     if (AppConstants.NIGHTLY_BUILD) {
                       let message =
                         `[bug 1345098] Lazy browser prematurely inserted via '${name}' property access:\n`
