@@ -894,17 +894,6 @@ BrowserGlue.prototype = {
       Services.ppmm.loadProcessScript("resource://pdf.js/pdfjschildbootstrap-enabled.js", true);
     }
 
-    if (AppConstants.platform == "win") {
-      // For Windows 7, initialize the jump list module.
-      const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
-      if (WINTASKBAR_CONTRACTID in Cc &&
-          Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
-        let temp = {};
-        Cu.import("resource:///modules/WindowsJumpLists.jsm", temp);
-        temp.WinTaskbarJumpList.startup();
-      }
-    }
-
     TabCrashHandler.init();
     if (AppConstants.MOZ_CRASHREPORTER) {
       PluginCrashReporter.init();
@@ -1154,6 +1143,19 @@ BrowserGlue.prototype = {
     if (AppConstants.MOZ_CRASHREPORTER) {
       Services.tm.idleDispatchToMainThread(() => {
         UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+      });
+    }
+
+    if (AppConstants.platform == "win") {
+      Services.tm.idleDispatchToMainThread(() => {
+        // For Windows 7, initialize the jump list module.
+        const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
+        if (WINTASKBAR_CONTRACTID in Cc &&
+            Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
+          let temp = {};
+          Cu.import("resource:///modules/WindowsJumpLists.jsm", temp);
+          temp.WinTaskbarJumpList.startup();
+        }
       });
     }
 
