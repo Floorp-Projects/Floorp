@@ -15,6 +15,6 @@ serde_derive = "1.*.*"
 bincode = "0.8"
 libc = "0.2"
 mio = "0.6.7"
-cubeb-core = { git = "https://github.com/djg/cubeb-rs", version="^0.1" }
+cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
 byteorder = "1"
 memmap = "0.5.2"
