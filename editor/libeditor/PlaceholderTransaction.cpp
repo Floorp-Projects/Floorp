@@ -24,9 +24,12 @@ PlaceholderTransaction::PlaceholderTransaction(
   , mForwarding(nullptr)
   , mCompositionTransaction(nullptr)
   , mCommitted(false)
-  , mStartSel(Move(*aSelState))
   , mEditorBase(&aEditorBase)
 {
+  // Make sure to move aSelState into a local variable to null out the original
+  // Maybe<SelectionState> variable.
+  Maybe<SelectionState> selState(Move(aSelState));
+  mStartSel = *selState;
   mName = aName;
 }
 
