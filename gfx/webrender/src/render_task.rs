@@ -183,7 +183,7 @@ impl RenderTask {
                     raw_clips: &[ClipWorkItem],
                     extra_clip: Option<ClipWorkItem>)
                     -> Option<RenderTask> {
-        /// Filter out all the clip instances that don't contribute to the result
+        // Filter out all the clip instances that don't contribute to the result
         let mut inner_rect = Some(task_rect);
         let clips: Vec<_> = raw_clips.iter()
                                      .chain(extra_clip.iter())

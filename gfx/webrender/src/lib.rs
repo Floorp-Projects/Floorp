@@ -2,39 +2,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! A GPU based renderer for the web.
-//!
-//! It serves as an experimental render backend for [Servo](https://servo.org/),
-//! but it can also be used as such in a standalone application.
-//!
-//! # External dependencies
-//! WebRender currently depends on [FreeType](https://www.freetype.org/)
-//!
-//! # Api Structure
-//! The main entry point to WebRender is the `webrender::renderer::Renderer`.
-//!
-//! By calling `Renderer::new(...)` you get a `Renderer`, as well as a `RenderApiSender`.
-//! Your `Renderer` is responsible to render the previously processed frames onto the screen.
-//!
-//! By calling `yourRenderApiSenderInstance.create_api()`, you'll get a `RenderApi` instance,
-//! which is responsible for the processing of new frames. A worker thread is used internally to
-//! untie the workload from the application thread and therefore be able
-//! to make better use of multicore systems.
-//!
-//! What is referred to as a `frame`, is the current geometry on the screen.
-//! A new Frame is created by calling [`set_display_list()`][newframe] on the `RenderApi`.
-//! When the geometry is processed, the application will be informed via a `RenderNotifier`,
-//! a callback which you employ with [set_render_notifier][notifier] on the `Renderer`
-//! More information about [stacking contexts][stacking_contexts].
-//!
-//! `set_display_list()` also needs to be supplied with `BuiltDisplayList`s.
-//! These are obtained by finalizing a `DisplayListBuilder`. These are used to draw your geometry.
-//! But it doesn't only contain trivial geometry, it can also store another StackingContext, as
-//! they're nestable.
-//!
-//! [stacking_contexts]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
-//! [newframe]: ../webrender_api/struct.RenderApi.html#method.set_display_list
-//! [notifier]: renderer/struct.Renderer.html#method.set_render_notifier
+/*!
+A GPU based renderer for the web.
+
+It serves as an experimental render backend for [Servo](https://servo.org/),
+but it can also be used as such in a standalone application.
+
+# External dependencies
+WebRender currently depends on [FreeType](https://www.freetype.org/)
+
+# Api Structure
+The main entry point to WebRender is the `webrender::renderer::Renderer`.
+
+By calling `Renderer::new(...)` you get a `Renderer`, as well as a `RenderApiSender`.
+Your `Renderer` is responsible to render the previously processed frames onto the screen.
+
+By calling `yourRenderApiSender.create_api()`, you'll get a `RenderApi` instance,
+which is responsible for managing resources and documents. A worker thread is used internally
+to untie the workload from the application thread and therefore be able to make better use of
+multicore systems.
+
+## Frame
+
+What is referred to as a `frame`, is the current geometry on the screen.
+A new Frame is created by calling [`set_display_list()`][newframe] on the `RenderApi`.
+When the geometry is processed, the application will be informed via a `RenderNotifier`,
+a callback which you employ with [set_render_notifier][notifier] on the `Renderer`
+More information about [stacking contexts][stacking_contexts].
+
+`set_display_list()` also needs to be supplied with `BuiltDisplayList`s.
+These are obtained by finalizing a `DisplayListBuilder`. These are used to draw your geometry.
+But it doesn't only contain trivial geometry, it can also store another StackingContext, as
+they're nestable.
+
+[stacking_contexts]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
+[newframe]: ../webrender_api/struct.RenderApi.html#method.set_display_list
+[notifier]: renderer/struct.Renderer.html#method.set_render_notifier
+*/
 
 #[macro_use]
 extern crate lazy_static;
@@ -57,6 +61,7 @@ mod frame;
 mod frame_builder;
 mod freelist;
 mod geometry;
+mod glyph_cache;
 mod glyph_rasterizer;
 mod gpu_cache;
 mod internal_types;
@@ -128,7 +133,7 @@ extern crate dwrote;
 extern crate app_units;
 extern crate bincode;
 extern crate euclid;
-extern crate fnv;
+extern crate fxhash;
 extern crate gleam;
 extern crate num_traits;
 //extern crate notify;

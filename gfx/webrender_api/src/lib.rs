@@ -11,6 +11,7 @@ extern crate byteorder;
 #[cfg(feature = "nightly")]
 extern crate core;
 extern crate euclid;
+extern crate fxhash;
 extern crate gleam;
 #[macro_use]
 extern crate heapsize;
@@ -51,3 +52,8 @@ pub use image::*;
 pub use units::*;
 #[cfg(feature = "webgl")]
 pub use webgl::*;
+
+use std::hash::BuildHasherDefault;
+use std::collections::{HashMap, HashSet};
+type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<fxhash::FxHasher>>;
+type FastHashSet<T> = HashSet<T, BuildHasherDefault<fxhash::FxHasher>>;

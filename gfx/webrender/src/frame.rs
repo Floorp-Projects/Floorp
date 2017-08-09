@@ -11,17 +11,13 @@ use api::{ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext,
 use api::{TransformStyle, WorldPoint};
 use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use euclid::rect;
-use fnv::FnvHasher;
 use gpu_cache::GpuCache;
-use internal_types::{RendererFrame};
+use internal_types::{FastHashMap, RendererFrame};
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use mask_cache::ClipRegion;
 use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
-use resource_cache::ResourceCache;
+use resource_cache::{ResourceCache, TiledImageMap};
 use scene::{Scene, SceneProperties};
-use std::cmp;
-use std::collections::HashMap;
-use std::hash::BuildHasherDefault;
 use tiling::{CompositeOps, DisplayListMap, PrimitiveFlags};
 use util::{ComplexClipRegionHelpers, subtract_rect};
 
@@ -91,7 +87,7 @@ impl NestedDisplayListInfo {
 struct FlattenContext<'a> {
     scene: &'a Scene,
     builder: &'a mut FrameBuilder,
-    resource_cache: &'a mut ResourceCache,
+    tiled_image_map: TiledImageMap,
     replacements: Vec<(ClipId, ClipId)>,
     nested_display_list_info: Vec<NestedDisplayListInfo>,
     current_nested_display_list_index: u64,
@@ -100,12 +96,12 @@ struct FlattenContext<'a> {
 impl<'a> FlattenContext<'a> {
     fn new(scene: &'a Scene,
            builder: &'a mut FrameBuilder,
-           resource_cache: &'a mut ResourceCache)
+           resource_cache: &ResourceCache)
            -> FlattenContext<'a> {
         FlattenContext {
             scene,
             builder,
-            resource_cache,
+            tiled_image_map: resource_cache.get_tiled_image_map(),
             replacements: Vec::new(),
             nested_display_list_info: Vec::new(),
             current_nested_display_list_index: 0,
@@ -177,7 +173,7 @@ impl<'a> FlattenContext<'a> {
 // TODO: doc
 pub struct Frame {
     pub clip_scroll_tree: ClipScrollTree,
-    pub pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
+    pub pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
     id: FrameId,
     frame_builder_config: FrameBuilderConfig,
     frame_builder: Option<FrameBuilder>,
@@ -222,7 +218,7 @@ impl StackingContextHelpers for StackingContext {
 impl Frame {
     pub fn new(config: FrameBuilderConfig) -> Frame {
         Frame {
-            pipeline_epoch_map: HashMap::default(),
+            pipeline_epoch_map: FastHashMap::default(),
             clip_scroll_tree: ClipScrollTree::new(),
             id: FrameId(0),
             frame_builder: None,
@@ -539,19 +535,16 @@ impl Frame {
                                                     info.context_id);
             }
             SpecificDisplayItem::Image(ref info) => {
-                let image = context.resource_cache.get_image_properties(info.image_key);
-                if let Some(tile_size) = image.tiling {
+                if let Some(tiling) = context.tiled_image_map.get(&info.image_key) {
                     // The image resource is tiled. We have to generate an image primitive
                     // for each tile.
-                    let image_size = DeviceUintSize::new(image.descriptor.width,
-                                                         image.descriptor.height);
                     self.decompose_image(clip_and_scroll,
-                                         context,
+                                         &mut context.builder,
                                          &item_rect_with_offset,
                                          &clip_with_offset,
                                          info,
-                                         image_size,
-                                         tile_size as u32);
+                                         tiling.image_size,
+                                         tiling.tile_size as u32);
                 } else {
                     context.builder.add_image(clip_and_scroll,
                                               item_rect_with_offset,
@@ -878,7 +871,7 @@ impl Frame {
     /// takes care of the decomposition required by the internal tiling of the image.
     fn decompose_image(&mut self,
                        clip_and_scroll: ClipAndScrollInfo,
-                       context: &mut FlattenContext,
+                       builder: &mut FrameBuilder,
                        item_rect: &LayerRect,
                        item_local_clip: &LocalClip,
                        info: &ImageDisplayItem,
@@ -888,7 +881,7 @@ impl Frame {
         let no_vertical_spacing = info.tile_spacing.height == 0.0;
         if no_vertical_tiling && no_vertical_spacing {
             self.decompose_image_row(clip_and_scroll,
-                                     context,
+                                     builder,
                                      item_rect,
                                      item_local_clip,
                                      info,
@@ -908,7 +901,7 @@ impl Frame {
                 info.stretch_size.height
             ).intersection(item_rect) {
                 self.decompose_image_row(clip_and_scroll,
-                                         context,
+                                         builder,
                                          &row_rect,
                                          item_local_clip,
                                          info,
@@ -920,7 +913,7 @@ impl Frame {
 
     fn decompose_image_row(&mut self,
                            clip_and_scroll: ClipAndScrollInfo,
-                           context: &mut FlattenContext,
+                           builder: &mut FrameBuilder,
                            item_rect: &LayerRect,
                            item_local_clip: &LocalClip,
                            info: &ImageDisplayItem,
@@ -930,7 +923,7 @@ impl Frame {
         let no_horizontal_spacing = info.tile_spacing.width == 0.0;
         if no_horizontal_tiling && no_horizontal_spacing {
             self.decompose_tiled_image(clip_and_scroll,
-                                       context,
+                                       builder,
                                        item_rect,
                                        item_local_clip,
                                        info,
@@ -950,7 +943,7 @@ impl Frame {
                 item_rect.size.height,
             ).intersection(item_rect) {
                 self.decompose_tiled_image(clip_and_scroll,
-                                           context,
+                                           builder,
                                            &decomposed_rect,
                                            item_local_clip,
                                            info,
@@ -962,7 +955,7 @@ impl Frame {
 
     fn decompose_tiled_image(&mut self,
                              clip_and_scroll: ClipAndScrollInfo,
-                             context: &mut FlattenContext,
+                             builder: &mut FrameBuilder,
                              item_rect: &LayerRect,
                              item_local_clip: &LocalClip,
                              info: &ImageDisplayItem,
@@ -1005,14 +998,14 @@ impl Frame {
         if info.stretch_size.width < item_rect.size.width {
             // If this assert blows up it means we haven't properly decomposed the image in decompose_image_row.
             debug_assert!(image_size.width <= tile_size);
-            // we don't actually tile in this dimmension so repeating can be done in the shader.
+            // we don't actually tile in this dimension so repeating can be done in the shader.
             repeat_x = true;
         }
 
         if info.stretch_size.height < item_rect.size.height {
             // If this assert blows up it means we haven't properly decomposed the image in decompose_image.
             debug_assert!(image_size.height <= tile_size);
-            // we don't actually tile in this dimmension so repeating can be done in the shader.
+            // we don't actually tile in this dimension so repeating can be done in the shader.
             repeat_y = true;
         }
 
@@ -1041,7 +1034,7 @@ impl Frame {
         for ty in 0..num_tiles_y {
             for tx in 0..num_tiles_x {
                 self.add_tile_primitive(clip_and_scroll,
-                                        context,
+                                        builder,
                                         item_rect,
                                         item_local_clip,
                                         info,
@@ -1053,7 +1046,7 @@ impl Frame {
             if leftover.width != 0 {
                 // Tiles on the right edge that are smaller than the tile size.
                 self.add_tile_primitive(clip_and_scroll,
-                                        context,
+                                        builder,
                                         item_rect,
                                         item_local_clip,
                                         info,
@@ -1069,7 +1062,7 @@ impl Frame {
             for tx in 0..num_tiles_x {
                 // Tiles on the bottom edge that are smaller than the tile size.
                 self.add_tile_primitive(clip_and_scroll,
-                                        context,
+                                        builder,
                                         item_rect,
                                         item_local_clip,
                                         info,
@@ -1084,7 +1077,7 @@ impl Frame {
             if leftover.width != 0 {
                 // Finally, the bottom-right tile with a "leftover" size.
                 self.add_tile_primitive(clip_and_scroll,
-                                        context,
+                                        builder,
                                         item_rect,
                                         item_local_clip,
                                         info,
@@ -1100,7 +1093,7 @@ impl Frame {
 
     fn add_tile_primitive(&mut self,
                           clip_and_scroll: ClipAndScrollInfo,
-                          context: &mut FlattenContext,
+                          builder: &mut FrameBuilder,
                           item_rect: &LayerRect,
                           item_local_clip: &LocalClip,
                           info: &ImageDisplayItem,
@@ -1144,15 +1137,15 @@ impl Frame {
 
         // Fix up the primitive's rect if it overflows the original item rect.
         if let Some(prim_rect) = prim_rect.intersection(item_rect) {
-            context.builder.add_image(clip_and_scroll,
-                                      prim_rect,
-                                      item_local_clip,
-                                      &stretched_size,
-                                      &info.tile_spacing,
-                                      None,
-                                      info.image_key,
-                                      info.image_rendering,
-                                      Some(tile_offset));
+            builder.add_image(clip_and_scroll,
+                              prim_rect,
+                              item_local_clip,
+                              &stretched_size,
+                              &info.tile_spacing,
+                              None,
+                              info.image_key,
+                              info.image_rendering,
+                              Some(tile_offset));
         }
     }
 
@@ -1172,10 +1165,6 @@ impl Frame {
                                      device_pixel_ratio,
                                      texture_cache_profile,
                                      gpu_cache_profile);
-        // Expire any resources that haven't been used for `cache_expiry_frames`.
-        let num_frames_back = self.frame_builder_config.cache_expiry_frames;
-        let expiry_frame = FrameId(cmp::max(num_frames_back, self.id.0) - num_frames_back);
-        resource_cache.expire_old_resources(expiry_frame);
         frame
     }
 
