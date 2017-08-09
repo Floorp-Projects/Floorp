@@ -58,6 +58,10 @@ public:
    */
   static char16_t* smprintf(const char16_t* aFmt, ...);
 
+  /*
+   * sprintf into an existing nsAString, overwriting any contents it already
+   * has. Infallible.
+   */
   static uint32_t ssprintf(nsAString& aOut, const char16_t* aFmt, ...);
 
   /*
