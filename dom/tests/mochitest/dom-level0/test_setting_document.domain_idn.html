@@ -106,9 +106,7 @@ function receiveMessage(evt)
   }
   else
   {
-    // We're receiving data from the Greek IDN name; since that TLD is
-    // whitelisted for now, the domain we get isn't going to be punycoded.
-    is(evt.origin, "http://sub1.παράδειγμα.δοκιμή", "wrong sender");
+    is(evt.origin, "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp", "wrong sender");
   }
 
   is(messages[state] + "-response", evt.data.split(" ")[0],
