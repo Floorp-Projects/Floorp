@@ -238,8 +238,8 @@
     macro(mode, mode, "mode") \
     macro(module, module, "module") \
     macro(Module, Module, "Module") \
-    macro(ModuleDeclarationInstantiation, ModuleDeclarationInstantiation, "ModuleDeclarationInstantiation") \
-    macro(ModuleEvaluation, ModuleEvaluation, "ModuleEvaluation") \
+    macro(ModuleInstantiate, ModuleInstantiate, "ModuleInstantiate") \
+    macro(ModuleEvaluate, ModuleEvaluate, "ModuleEvaluate") \
     macro(month, month, "month") \
     macro(multiline, multiline, "multiline") \
     macro(name, name, "name") \
