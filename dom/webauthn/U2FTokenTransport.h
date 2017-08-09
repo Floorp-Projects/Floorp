@@ -59,7 +59,7 @@ typedef MozPromise<U2FSignResult, nsresult, true> U2FSignPromise;
 class U2FTokenTransport
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(U2FTokenTransport);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(U2FTokenTransport);
   U2FTokenTransport() {}
 
   virtual RefPtr<U2FRegisterPromise>

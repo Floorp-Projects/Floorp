@@ -57,5 +57,10 @@ LOCAL_INCLUDES += [
     '/security/pkix/lib',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += [
+        'hid',
+    ]
+
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
