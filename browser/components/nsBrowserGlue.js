@@ -1106,9 +1106,6 @@ BrowserGlue.prototype = {
 
     if (AppConstants.MOZ_CRASHREPORTER) {
       UnsubmittedCrashHandler.init();
-      Services.tm.idleDispatchToMainThread(function() {
-        UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
-      });
     }
 
     this._sanitizer.onStartup();
@@ -1158,6 +1155,12 @@ BrowserGlue.prototype = {
     Services.tm.idleDispatchToMainThread(() => {
       SafeBrowsing.init();
     }, 5000);
+
+    if (AppConstants.MOZ_CRASHREPORTER) {
+      Services.tm.idleDispatchToMainThread(() => {
+        UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+      });
+    }
 
     Services.tm.idleDispatchToMainThread(() => {
       this._checkForDefaultBrowser();
