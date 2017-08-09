@@ -792,7 +792,7 @@ WebRenderBridgeParent::RecvRemovePipelineIdForCompositable(const wr::PipelineId&
   }
 
   wrHost->ClearWrBridge();
-  mAsyncImageManager->RemoveAsyncImagePipeline(mApi, aPipelineId);
+  mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId);
   mAsyncCompositables.Remove(wr::AsUint64(aPipelineId));
   return IPC_OK();
 }
@@ -1116,7 +1116,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   nsTArray<wr::WrTransformProperty> transformArray;
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-  mAsyncImageManager->ApplyAsyncImages(mApi);
+  mAsyncImageManager->ApplyAsyncImages();
 
   SampleAnimations(opacityArray, transformArray);
   if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
@@ -1313,7 +1313,7 @@ WebRenderBridgeParent::ClearResources()
     wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
     RefPtr<WebRenderImageHost> host = iter.Data();
     host->ClearWrBridge();
-    mAsyncImageManager->RemoveAsyncImagePipeline(mApi, pipelineId);
+    mAsyncImageManager->RemoveAsyncImagePipeline(pipelineId);
   }
   mAsyncCompositables.Clear();
 
@@ -1329,6 +1329,7 @@ WebRenderBridgeParent::ClearResources()
   }
   mAnimStorage = nullptr;
   mCompositorScheduler = nullptr;
+  mAsyncImageManager = nullptr;
   mApi = nullptr;
   mCompositorBridge = nullptr;
 }
@@ -1452,6 +1453,9 @@ void
 WebRenderBridgeParent::ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
 {
   MOZ_ASSERT(mWidget);
+  if (mDestroyed) {
+    return;
+  }
   mAsyncImageManager->FlushImageNotifications(aNotifications);
 }
 

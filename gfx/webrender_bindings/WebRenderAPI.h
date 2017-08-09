@@ -47,6 +47,8 @@ public:
                                                RefPtr<widget::CompositorWidget>&& aWidget,
                                                LayoutDeviceIntSize aSize);
 
+  already_AddRefed<WebRenderAPI> Clone();
+
   wr::WindowId GetId() const { return mId; }
 
   void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
@@ -143,6 +145,7 @@ protected:
   GLint mMaxTextureSize;
   bool mUseANGLE;
   layers::SyncHandle mSyncHandle;
+  RefPtr<wr::WebRenderAPI> mRootApi;
 
   friend class DisplayListBuilder;
   friend class layers::WebRenderBridgeParent;
