@@ -485,7 +485,9 @@ pub extern "C" fn wr_renderer_current_epoch(renderer: &mut Renderer,
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut Renderer) {
-    Box::from_raw(renderer);
+    let renderer = Box::from_raw(renderer);
+    renderer.deinit();
+    // let renderer go out of scope and get dropped
 }
 
 pub struct WrRenderedEpochs {
