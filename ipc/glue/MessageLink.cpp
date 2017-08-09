@@ -354,20 +354,24 @@ ProcessLink::OnChannelConnected(int32_t peer_pid)
 
     {
         MonitorAutoLock lock(*mChan->mMonitor);
-        // Only update channel state if its still thinks its opening.  Do not
-        // force it into connected if it has errored out, started closing, etc.
-        if (mChan->mChannelState == ChannelOpening) {
-          mChan->mChannelState = ChannelConnected;
-          mChan->mMonitor->Notify();
-          notifyChannel = true;
+        // Do not force it into connected if it has errored out, started
+        // closing, etc. Note that we can be in the Connected state already
+        // since the parent starts out Connected.
+        if (mChan->mChannelState == ChannelOpening ||
+            mChan->mChannelState == ChannelConnected)
+        {
+            mChan->mChannelState = ChannelConnected;
+            mChan->mMonitor->Notify();
+            notifyChannel = true;
         }
     }
 
-    if (mExistingListener)
+    if (mExistingListener) {
         mExistingListener->OnChannelConnected(peer_pid);
+    }
 
     if (notifyChannel) {
-      mChan->OnChannelConnected(peer_pid);
+        mChan->OnChannelConnected(peer_pid);
     }
 }
 
