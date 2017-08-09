@@ -89,7 +89,7 @@
       </div>
     </div>
 
-    <div class="main-content">
+    <div id="main" class="main-content">
 
       <div id="ping-picker" class="hidden">
         <div id="ping-source-picker">
@@ -134,7 +134,7 @@
           <div id="sectionTitle" class="header-name">
               &aboutTelemetry.pageTitle;
           </div>
-          <input type="text" id="search" placeholder="" hidden="true"/>
+          <input type="text" id="search" placeholder=""/>
           <select id="processes" hidden="true"></select>
       </div>
 
@@ -190,9 +190,8 @@
       </section>
 
       <section id="slow-sql-section">
-        <div id="slow-sql-tables" class="data">
-          <p id="sql-warning" class="hidden">&aboutTelemetry.fullSqlWarning;</p>
-        </div>
+        <p id="sql-warning" class="hidden">&aboutTelemetry.fullSqlWarning;</p>
+        <div id="slow-sql-tables" class="data"></div>
       </section>
 
       <section id="chrome-hangs-section">
