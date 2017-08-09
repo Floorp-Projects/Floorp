@@ -559,11 +559,9 @@ addMessageListener("Browser:Thumbnail:Request", function(aMessage) {
  * Remote isSafeForCapture request handler for PageThumbs.
  */
 addMessageListener("Browser:Thumbnail:CheckState", function(aMessage) {
-  requestIdleCallback(() => {
-    let result = PageThumbUtils.shouldStoreContentThumbnail(content, docShell);
-    sendAsyncMessage("Browser:Thumbnail:CheckState:Response", {
-      result
-    });
+  let result = PageThumbUtils.shouldStoreContentThumbnail(content, docShell);
+  sendAsyncMessage("Browser:Thumbnail:CheckState:Response", {
+    result
   });
 });
 
