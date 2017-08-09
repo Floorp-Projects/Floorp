@@ -197,18 +197,19 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   // values
   NS_NAMED_LITERAL_STRING(kPageAndTotal, "&PT");
   if (aStr.Find(kPageAndTotal) != kNotFound) {
-    char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumAndTotalsFormat.get(), mPageNum, mTotNumPages);
-    aNewStr.ReplaceSubstring(kPageAndTotal, nsDependentString(uStr));
-    free(uStr);
+    nsAutoString uStr;
+    nsTextFormatter::ssprintf(uStr, mPD->mPageNumAndTotalsFormat.get(),
+                              mPageNum, mTotNumPages);
+    aNewStr.ReplaceSubstring(kPageAndTotal, uStr);
   }
 
   // Search to see if the page number code is in the string
   // and replace the page number code with the actual value
   NS_NAMED_LITERAL_STRING(kPage, "&P");
   if (aStr.Find(kPage) != kNotFound) {
-    char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat.get(), mPageNum);
-    aNewStr.ReplaceSubstring(kPage, nsDependentString(uStr));
-    free(uStr);
+    nsAutoString uStr;
+    nsTextFormatter::ssprintf(uStr, mPD->mPageNumFormat.get(), mPageNum);
+    aNewStr.ReplaceSubstring(kPage, uStr);
   }
 
   NS_NAMED_LITERAL_STRING(kTitle, "&T");
@@ -223,9 +224,9 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 
   NS_NAMED_LITERAL_STRING(kPageTotal, "&L");
   if (aStr.Find(kPageTotal) != kNotFound) {
-    char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat.get(), mTotNumPages);
-    aNewStr.ReplaceSubstring(kPageTotal, nsDependentString(uStr));
-    free(uStr);
+    nsAutoString uStr;
+    nsTextFormatter::ssprintf(uStr, mPD->mPageNumFormat.get(), mTotNumPages);
+    aNewStr.ReplaceSubstring(kPageTotal, uStr);
   }
 }
 

@@ -40,13 +40,12 @@ doc-upload:
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
+        taskcluster-proxy: true
     run:
         using: run-task
-        command: >
-            cd /home/worker/checkouts/gecko &&
-            ./mach doc-upload --bucket gecko-docs.mozilla.org --region us-west-2
+        command: cd /home/worker/checkouts/gecko && ./mach doc-upload
     scopes:
-        - secrets:get:project/releng/gecko/build/level-3/gecko-docs-upload
+        - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
     when:
         files-changed:
             - '**/*.py'

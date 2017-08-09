@@ -35,6 +35,7 @@ var touch_action_prefs = basic_pan_prefs.slice(); // make a copy
 touch_action_prefs.push(["layout.css.touch_action.enabled", true]);
 
 var isWindows = (getPlatform() == "windows");
+touch_action_prefs.push(["apz.test.fails_with_native_injection", isWindows]);
 
 var subtests = [
   // Simple tests to exercise basic panning behaviour
