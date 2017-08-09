@@ -2,7 +2,7 @@
 
 Components.utils.import("resource://gre/modules/ExtensionCommon.jsm");
 
-const {ExtensionAPIs} = ExtensionCommon;
+const {ExtensionAPI, ExtensionAPIs} = ExtensionCommon;
 
 const {ExtensionManager} = Components.utils.import("resource://gre/modules/ExtensionChild.jsm", {});
 
