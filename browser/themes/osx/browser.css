@@ -1115,6 +1115,7 @@ html|span.ac-emphasize-text-url {
 
 :root:-moz-any([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {
   -moz-appearance: -moz-mac-vibrancy-dark;
+  background-color: #232323;
   color: hsl(240, 9%, 98%);
   text-shadow: none;
 }
