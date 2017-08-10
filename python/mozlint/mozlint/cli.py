@@ -5,11 +5,8 @@
 from __future__ import print_function, unicode_literals
 
 import os
-import subprocess
 import sys
 from argparse import REMAINDER, ArgumentParser
-
-from mozlint.formatters import all_formatters
 
 SEARCH_PATHS = []
 
@@ -39,7 +36,6 @@ class MozlintParser(ArgumentParser):
         [['-f', '--format'],
          {'dest': 'fmt',
           'default': 'stylish',
-          'choices': all_formatters.keys(),
           'help': "Formatter to use. Defaults to 'stylish'.",
           }],
         [['-n', '--no-filter'],
@@ -67,18 +63,6 @@ class MozlintParser(ArgumentParser):
                   "can be used to only consider staged files. Works with "
                   "mercurial or git.",
           }],
-        [['--fix'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Fix lint errors if possible. Any errors that could not be fixed "
-                  "will be printed as normal."
-          }],
-        [['--edit'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Each file containing lint errors will be opened in $EDITOR one after "
-                  "the other."
-          }],
         [['extra_args'],
          {'nargs': REMAINDER,
           'help': "Extra arguments that will be forwarded to the underlying linter.",
@@ -103,13 +87,7 @@ class MozlintParser(ArgumentParser):
         # when using mach's dispatch functionality.
         args, extra = ArgumentParser.parse_known_args(self, *args, **kwargs)
         args.extra_args = extra
-
-        self.validate(args)
         return args, extra
-
-    def validate(self, args):
-        if args.edit and not os.environ.get('EDITOR'):
-            self.error("must set the $EDITOR environment variable to use --edit")
 
 
 def find_linters(linters=None):
@@ -135,7 +113,7 @@ def find_linters(linters=None):
     return lints
 
 
-def run(paths, linters, fmt, outgoing, workdir, edit, list_linters=None, **lintargs):
+def run(paths, linters, fmt, outgoing, workdir, list_linters=None, **lintargs):
     from mozlint import LintRoller, formatters
 
     if list_linters:
@@ -155,13 +133,6 @@ def run(paths, linters, fmt, outgoing, workdir, edit, list_linters=None, **linta
 
     # run all linters
     results = lint.roll(paths, outgoing=outgoing, workdir=workdir)
-
-    if edit:
-        editor = os.environ['EDITOR']
-        for path in results:
-            subprocess.call([editor, path])
-        return 1 if lint.failed else 0
-
     formatter = formatters.get(fmt)
 
     # Encode output with 'replace' to avoid UnicodeEncodeErrors on
