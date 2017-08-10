@@ -19,7 +19,7 @@ PLATFORM_CONFIG = {
     'linux': {
         'exes': {
             'gittool.py': os.path.join(external_tools_path, 'gittool.py'),
-            'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
+            'virtualenv': '/tools/virtualenv/bin/virtualenv',
         },
         'env': {
             'DISPLAY': ':0',
@@ -29,7 +29,7 @@ PLATFORM_CONFIG = {
     'linux64': {
         'exes': {
             'gittool.py': os.path.join(external_tools_path, 'gittool.py'),
-            'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
+            'virtualenv': '/tools/virtualenv/bin/virtualenv',
         },
         'env': {
             'DISPLAY': ':0',
@@ -39,7 +39,7 @@ PLATFORM_CONFIG = {
     'macosx': {
         'exes': {
             'gittool.py': os.path.join(external_tools_path, 'gittool.py'),
-            'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
+            'virtualenv': '/tools/virtualenv/bin/virtualenv',
         },
         'env': {
             'PATH': '%(PATH)s:' + external_tools_path,

@@ -1,7 +1,6 @@
 import os
 import platform
 
-PYTHON = '/tools/buildbot/bin/python'
 VENV_PATH = '%s/build/venv' % os.getcwd()
 if platform.architecture()[0] == '64bit':
     TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux64/releng.manifest"
@@ -13,14 +12,6 @@ else:
 exes = {
     'tooltool.py': "/tools/tooltool.py",
 }
-
-# this Python only exists on Buildbot slaves, not on taskcluster workers where both
-# Python and virtualenv can be found in $PATH
-if os.path.exists(PYTHON):
-    exes.update({
-        'python': PYTHON,
-        'virtualenv': [PYTHON, '/tools/misc-python/virtualenv.py'],
-    })
 
 config = {
     "log_name": "talos",
