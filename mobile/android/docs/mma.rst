@@ -19,14 +19,13 @@ There are three major component in Leanplum SDK.
 2. Deep Links : Actions that users can perform to interact with the prompt message.
 3. Messages :  Campaigns that we want to engage with users. Messages is a combination of an Event and a Deep Link.
 
-
 Data collection
 ~~~~~~~~~~~~~~~
 
 Who will have Leanplum enabled?
 ======================================================
 
-* We use Switchboard to filter users to have Leanplum enabled. Currently, for users in the USA
+* We use Switchboard https://wiki.mozilla.org/Firefox/Kinto to filter users to have Leanplum enabled. Currently, for users in the USA
   and whose locale is set to English, 10% of that users will have Leanplum enabled.
 * If the user has "Health Report" setting enabled.
 * If above two are true, when the app starts, and switchboard configure arrived, Fennec will send the
@@ -95,6 +94,9 @@ following parameters::
   "time" -> "1.497595093902E9"          // System time in second.
   "token" -> "nksZ5pa0R5iegC7wj...."    // Token come from Leanplum backend.
 
+
+  "gcmRegistrationId" -> "APA91...."    // Send GCM token to Leanplum backend. This happens separately when Leanplum SDK gets initialized.
+
 Notes on what data is collected
 -------------------------------
 
@@ -161,11 +163,18 @@ trigger the following deep links
 * Link to home page setting (firefox://preferences_home)
 
 Messages :
-Messages are in-app prompts to the user from Leanplum. The interaction of that prompt will be kept and sent to Leanplum backend (such
+Messages are prompts to the user from Leanplum. Messages can be in-app prompts or push notifications. The interaction of that prompt will be kept and sent to Leanplum backend (such
 as "Accept" and "Show"). A messages is a combination of an Event and a Deep Link. The combinations are downloaded from Leanplum
 when Leanplum SDK is initialized. When the criteria is met (set in Leanplum backend, could be when an event happens a certain number of times,
 and/or targeting certain user attribute ), a prompt message will show up. And there may be buttons for users to click. Those clicks
 may trigger deep links.
+
+We use another Mozilla's Google Cloud Messaging(GCM) sender ID to send push notifications.
+These push notifications will look like the notifications that Sync sends out.
+Sender ID let GCM knows Mozilla is sending push notifications via Leanplum.
+GCM will generate a token at client side. We'll send this GCM token to Leanplum so Leanplum knows whom to send push notifications.
+This token is only useful to Mozilla's sender ID so it's anonymized to other parties.
+Push Notifications can be triggered by Events, or be sent by Mozilla marketing team manually.
 
 The list of current messages for Android can be found here: https://wiki.mozilla.org/Leanplum_Contextual_Hints#Android
 
@@ -200,5 +209,5 @@ MOZ_ANDROID_MMA.
 Notes and links
 ===============
 
-.. _Leanplum web page: http://leanplum.com/
-.. _github repository: https://github.com/Leanplum/Leanplum-Android-SDK
+* Leanplum web page: http://leanplum.com/
+* Leanplum SDK github repo: https://github.com/Leanplum/Leanplum-Android-SDK
