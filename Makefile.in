@@ -175,7 +175,7 @@ ifdef MOZ_ARTIFACT_BUILDS
 install-_tests: NO_REMOVE=1
 endif
 
-.PHONY: $(addprefix install-,$(subst /,_,$(install_manifests)))
+.PHONY: $(addprefix install-,$(install_manifests))
 $(addprefix install-,$(install_manifests)): install-%: $(install_manifest_depends)
 ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
 	@# If we're using the hybrid FasterMake/RecursiveMake backend, we want
