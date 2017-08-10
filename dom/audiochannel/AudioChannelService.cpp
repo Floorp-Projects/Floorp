@@ -364,8 +364,8 @@ AudioChannelService::GetMediaConfig(nsPIDOMWindowOuter* aWindow) const
   do {
     winData = GetWindowData(window->WindowID());
     if (winData) {
-      config.mVolume *= winData->mChannelConfig.mVolume;
-      config.mMuted = config.mMuted || winData->mChannelConfig.mMuted;
+      config.mVolume *= winData->mConfig.mVolume;
+      config.mMuted = config.mMuted || winData->mConfig.mMuted;
       config.mSuspend = winData->mOwningAudioFocus ?
         config.mSuspend : nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE;
     }
@@ -841,10 +841,10 @@ AudioChannelService::AudioChannelWindow::AppendAgentAndIncreaseAgentsNum(AudioCh
 
   mAgents.AppendElement(aAgent);
 
-  ++mChannelConfig.mNumberOfAgents;
+  ++mConfig.mNumberOfAgents;
 
   // TODO: Make NotifyChannelActiveRunnable irrelevant to BrowserElementAudioChannel
-  if (mChannelConfig.mNumberOfAgents == 1) {
+  if (mConfig.mNumberOfAgents == 1) {
     NotifyChannelActive(aAgent->WindowID(), true);
   }
 }
@@ -857,10 +857,10 @@ AudioChannelService::AudioChannelWindow::RemoveAgentAndReduceAgentsNum(AudioChan
 
   mAgents.RemoveElement(aAgent);
 
-  MOZ_ASSERT(mChannelConfig.mNumberOfAgents > 0);
-  --mChannelConfig.mNumberOfAgents;
+  MOZ_ASSERT(mConfig.mNumberOfAgents > 0);
+  --mConfig.mNumberOfAgents;
 
-  if (mChannelConfig.mNumberOfAgents == 0) {
+  if (mConfig.mNumberOfAgents == 0) {
     NotifyChannelActive(aAgent->WindowID(), false);
   }
 }
