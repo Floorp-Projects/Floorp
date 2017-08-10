@@ -98,7 +98,7 @@ public:
     }
 
     mReverb = new WebCore::Reverb(mBuffer, mBufferLength,
-                                  MaxFFTSize, mUseBackgroundThreads,
+                                  MaxFFTSize, 2, mUseBackgroundThreads,
                                   mNormalize, mSampleRate);
   }
 
