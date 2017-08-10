@@ -227,16 +227,18 @@ public:
 
   // Copy aNumberOfFrames frames from the source buffer at offset aSourceOffset
   // and put it at offset aBufferOffset in the destination buffer.
-  void CopyFromInputBuffer(AudioBlock* aOutput,
-                           uint32_t aChannels,
-                           uintptr_t aOffsetWithinBlock,
-                           uint32_t aNumberOfFrames) {
+  template <typename T> void
+  CopyFromInputBuffer(AudioBlock* aOutput,
+                      uint32_t aChannels,
+                      uintptr_t aOffsetWithinBlock,
+                      uint32_t aNumberOfFrames)
+  {
     MOZ_ASSERT(mBuffer.mVolume == 1.0f);
     for (uint32_t i = 0; i < aChannels; ++i) {
       float* baseChannelData = aOutput->ChannelFloatsForWrite(i);
-      memcpy(baseChannelData + aOffsetWithinBlock,
-             mBuffer.ChannelData<float>()[i] + mBufferPosition,
-             aNumberOfFrames * sizeof(float));
+      ConvertAudioSamples(mBuffer.ChannelData<T>()[i] + mBufferPosition,
+                          baseChannelData + aOffsetWithinBlock,
+                          aNumberOfFrames);
     }
   }
 
@@ -295,16 +297,25 @@ public:
       MOZ_ASSERT(mBuffer.mVolume == 1.0f);
       for (uint32_t i = 0; true; ) {
         uint32_t inSamples = inputLimit;
-        const float* inputData =
-          mBuffer.ChannelData<float>()[i] + mBufferPosition;
 
         uint32_t outSamples = aAvailableInOutput;
         float* outputData =
           aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
 
-        WebAudioUtils::SpeexResamplerProcess(resampler, i,
-                                             inputData, &inSamples,
-                                             outputData, &outSamples);
+        if (mBuffer.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
+          const float* inputData =
+            mBuffer.ChannelData<float>()[i] + mBufferPosition;
+          WebAudioUtils::SpeexResamplerProcess(resampler, i,
+                                               inputData, &inSamples,
+                                               outputData, &outSamples);
+        } else {
+          MOZ_ASSERT(mBuffer.mBufferFormat == AUDIO_FORMAT_S16);
+          const int16_t* inputData =
+            mBuffer.ChannelData<int16_t>()[i] + mBufferPosition;
+          WebAudioUtils::SpeexResamplerProcess(resampler, i,
+                                               inputData, &inSamples,
+                                               outputData, &outSamples);
+        }
         if (++i == aChannels) {
           mBufferPosition += inSamples;
           MOZ_ASSERT(mBufferPosition <= mBufferEnd || mLoop);
@@ -422,22 +433,32 @@ public:
     uint32_t numFrames = std::min(aBufferMax - mBufferPosition,
                                   availableInOutput);
 
-    bool inputBufferAligned = true;
-    for (uint32_t i = 0; i < aChannels; ++i) {
-      if (!IS_ALIGNED16(mBuffer.ChannelData<float>()[i] + mBufferPosition)) {
-        inputBufferAligned = false;
+    bool shouldBorrow = false;
+    if (numFrames == WEBAUDIO_BLOCK_SIZE &&
+        mBuffer.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
+      shouldBorrow = true;
+      for (uint32_t i = 0; i < aChannels; ++i) {
+        if (!IS_ALIGNED16(mBuffer.ChannelData<float>()[i] + mBufferPosition)) {
+          shouldBorrow = false;
+          break;
+        }
       }
     }
-
-    if (numFrames == WEBAUDIO_BLOCK_SIZE && inputBufferAligned) {
-      MOZ_ASSERT(mBufferPosition < aBufferMax);
+    MOZ_ASSERT(mBufferPosition < aBufferMax);
+    if (shouldBorrow) {
       BorrowFromInputBuffer(aOutput, aChannels);
     } else {
       if (*aOffsetWithinBlock == 0) {
         aOutput->AllocateChannels(aChannels);
       }
-      MOZ_ASSERT(mBufferPosition < aBufferMax);
-      CopyFromInputBuffer(aOutput, aChannels, *aOffsetWithinBlock, numFrames);
+      if (mBuffer.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
+        CopyFromInputBuffer<float>(aOutput, aChannels,
+                                   *aOffsetWithinBlock, numFrames);
+      } else {
+        MOZ_ASSERT(mBuffer.mBufferFormat == AUDIO_FORMAT_S16);
+        CopyFromInputBuffer<int16_t>(aOutput, aChannels,
+                                     *aOffsetWithinBlock, numFrames);
+      }
     }
     *aOffsetWithinBlock += numFrames;
     *aCurrentPosition += numFrames;
