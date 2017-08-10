@@ -54,6 +54,9 @@ public:
       mBufferLength = aParam;
       mLeftOverData = INT32_MIN;
       break;
+    case SAMPLE_RATE:
+      mSampleRate = aParam;
+      break;
     case NORMALIZE:
       mNormalize = !!aParam;
       break;
