@@ -605,6 +605,7 @@ var dataProviders = {
         Services.prefs.getIntPref("accessibility.force_disabled");
     } catch (e) {}
     data.handlerUsed = Services.appinfo.accessibleHandlerUsed;
+    data.instantiator = Services.appinfo.accessibilityInstantiator;
     done(data);
   },
 

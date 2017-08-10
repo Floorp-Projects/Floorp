@@ -137,6 +137,11 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean accessibleHandlerUsed;
 
   /**
+   * Executable of Windows service that activated accessibility.
+   */
+  readonly attribute DOMString accessibilityInstantiator;
+
+  /**
    * Indicates whether the current Firefox build is 64-bit.
    */
   readonly attribute boolean is64Bit;
