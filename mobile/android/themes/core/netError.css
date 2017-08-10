@@ -183,6 +183,11 @@ div[collapsed="true"] > .expander + * {
   border-radius: 0;
 }
 
+#advisory_provider {
+  color: white;
+  text-decoration: underline;
+}
+
 /* On large screen devices (hopefully a 7+ inch tablet, we already center content (see #errorPageContainer above).
    Apply tablet specific styles here */
 @media (min-width: 550px) {

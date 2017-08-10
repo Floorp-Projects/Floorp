@@ -63,3 +63,8 @@ body {
   margin-top: 1.2em;
   text-align: end;
 }
+
+#advisory_provider {
+  color: white;
+  text-decoration: underline;
+}
