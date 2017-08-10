@@ -40,27 +40,22 @@ public:
               GeckoProcessType aProcess,
               const nsACString& aThreadName,
               const nsACString& aRunnableName,
-              HangStack&& aPseudoStack,
+              HangStack&& aStack,
               HangMonitor::HangAnnotations&& aAnnotations)
     : mDuration(aDuration)
     , mProcess(aProcess)
     , mThreadName(aThreadName)
     , mRunnableName(aRunnableName)
-    , mPseudoStack(Move(aPseudoStack))
+    , mStack(Move(aStack))
     , mAnnotations(Move(aAnnotations))
   {}
 
-  // NOTE: Once we get merged stacks, we will move ProcessedStack into HangStack
-  // and simplify everything. (bug 1367406).
   uint32_t mDuration;
   GeckoProcessType mProcess;
   nsCString mThreadName;
   nsCString mRunnableName;
-  HangStack mPseudoStack;
+  HangStack mStack;
   HangMonitor::HangAnnotations mAnnotations;
-
-  // NOTE: Initialized by ProcessHangStackRunnable.
-  Telemetry::ProcessedStack mStack;
 };
 
 /**
@@ -100,18 +95,15 @@ private:
 class ProcessHangStackRunnable final : public Runnable
 {
 public:
-  ProcessHangStackRunnable(HangDetails&& aHangDetails,
-                           std::vector<uintptr_t>&& aNativeStack)
+  explicit ProcessHangStackRunnable(HangDetails&& aHangDetails)
     : Runnable("ProcessHangStackRunnable")
     , mHangDetails(Move(aHangDetails))
-    , mNativeStack(Move(aNativeStack))
   {}
 
   NS_IMETHOD Run() override;
 
 private:
   HangDetails mHangDetails;
-  std::vector<uintptr_t> mNativeStack;
 };
 
 } // namespace mozilla
