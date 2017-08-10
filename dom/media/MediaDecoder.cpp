@@ -6,7 +6,6 @@
 
 #include "MediaDecoder.h"
 
-#include "AudioChannelService.h"
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "MediaDecoderStateMachine.h"
@@ -368,7 +367,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , mFrameStats(new FrameStatistics())
   , mVideoFrameContainer(aInit.mOwner->GetVideoFrameContainer())
   , mPinnedForSeek(false)
-  , mAudioChannel(aInit.mAudioChannel)
   , mMinimizePreroll(aInit.mMinimizePreroll)
   , mFiredMetadataLoaded(false)
   , mIsDocumentVisible(false)
