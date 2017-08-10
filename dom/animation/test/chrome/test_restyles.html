@@ -66,6 +66,8 @@ SimpleTest.waitForExplicitFinish();
 var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
+var offscreenThrottlingEnabled =
+  SpecialPowers.getBoolPref('dom.animations.offscreen-throttling');
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
@@ -204,7 +206,7 @@ waitForAllPaints(function() {
   });
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -224,7 +226,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function no_restyling_main_thread_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -242,7 +244,7 @@ waitForAllPaints(function() {
   });
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_scrolled_out_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -272,7 +274,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function no_restyling_main_thread_animations_in_scrolled_out_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -302,7 +304,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function no_restyling_main_thread_animations_in_nested_scrolled_out_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -351,7 +353,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function restyling_main_thread_animations_moved_in_view_by_scrolling() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -393,7 +395,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function restyling_main_thread_animations_moved_in_view_by_scrolling() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -431,7 +433,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function restyling_main_thread_animations_move_out_of_view_by_scrolling() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -476,7 +478,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function restyling_main_thread_animations_moved_in_view_by_resizing() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -810,7 +812,7 @@ waitForAllPaints(function() {
 
   // Tests that additive animations don't throttle at all.
   add_task(async function no_throttling_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling') ||
+    if (!offscreenThrottlingEnabled ||
         !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
       return;
     }
@@ -831,7 +833,7 @@ waitForAllPaints(function() {
 
   // Counter part of the above test.
   add_task(async function no_restyling_discrete_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling') ||
+    if (!offscreenThrottlingEnabled ||
         !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
       return;
     }
@@ -897,7 +899,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function throttling_animations_out_of_view_svg() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -957,7 +959,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function throttling_animations_out_of_view_css_transform() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
