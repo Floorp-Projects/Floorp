@@ -10,7 +10,6 @@ SCREEN_RESOLUTION_CHECK = {
 
 import os
 
-PYTHON = '/tools/buildbot/bin/python'
 VENV_PATH = '%s/build/venv' % os.getcwd()
 
 config = {
@@ -24,8 +23,6 @@ config = {
     ],
     "pip_index": False,
     "exes": {
-        'python': PYTHON,
-        'virtualenv': [PYTHON, '/tools/misc-python/virtualenv.py'],
         'tooltool.py': "/tools/tooltool.py",
     },
     "title": os.uname()[1].lower().split('.')[0],
