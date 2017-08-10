@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      // HACK: This is not an ideal way to deliver chrome messages
+      // to an inner frame content but seems only way that would
+      // make `event.source` this (outer frame) window.
+      window.onmessage = function(event) {
+        var frame = document.querySelector("iframe");
+        var content = frame.contentWindow;
+        // If message is posted from chrome it has no `event.source`.
+        if (event.source === null)
+          content.postMessage(event.data, "*");
+      };
+    </script>
+  </head>
+  <body style="overflow: hidden"></body>
+</html>
