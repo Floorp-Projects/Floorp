@@ -7918,7 +7918,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
 
   // Recover first-letter frames
   if (haveFirstLetterStyle) {
-    RecoverLetterFrames(containingBlock);
+    RecoverLetterFrames(containingBlock, haveFirstLineStyle);
   }
 
 #ifdef DEBUG
@@ -8351,7 +8351,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
       // Need check whether a range insert is still safe.
       if (!isSingleInsert && !isRangeInsertSafe) {
         // Need to recover the letter frames first.
-        RecoverLetterFrames(state.mFloatedItems.containingBlock);
+        RecoverLetterFrames(state.mFloatedItems.containingBlock,
+                            haveFirstLineStyle);
 
         // must fall back to a single ContertInserted for each child in the range
         LAYOUT_PHASE_TEMP_EXIT();
@@ -8582,7 +8583,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   if (haveFirstLetterStyle) {
     // Recover the letter frames for the containing block when
     // it has first-letter style.
-    RecoverLetterFrames(state.mFloatedItems.containingBlock);
+    RecoverLetterFrames(state.mFloatedItems.containingBlock,
+                        haveFirstLineStyle);
   }
 
 #ifdef DEBUG
@@ -8916,7 +8918,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     }
 
     if (haveFLS && mRootElementFrame) {
-      RecoverLetterFrames(containingBlock);
+      RecoverLetterFrames(containingBlock,
+                          ShouldHaveFirstLineStyle(containingBlock->GetContent(),
+                                                   containingBlock->StyleContext()));
     }
 
     // If we're just reconstructing frames for the element, then the
@@ -9088,7 +9092,9 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
     frame->CharacterDataChanged(aInfo);
 
     if (haveFirstLetterStyle) {
-      RecoverLetterFrames(block);
+      RecoverLetterFrames(block,
+                          ShouldHaveFirstLineStyle(block->GetContent(),
+                                                   block->StyleContext()));
     }
   }
 }
@@ -12225,7 +12231,8 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsIPresShell* aPresShell,
 
 // Fixup the letter frame situation for the given block
 void
-nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame)
+nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame,
+                                           bool aMayHaveFirstLine)
 {
   aBlockFrame =
     static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
@@ -12253,6 +12260,16 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame)
   if (parentFrame) {
     // Take the old textFrame out of the parents child list
     RemoveFrame(kPrincipalList, textFrame);
+
+    auto* restyleManager = RestyleManager();
+    if (aMayHaveFirstLine && restyleManager->IsServo()) {
+      // When we got the first-letter style from servo, it gave us the style not
+      // affected by the first-line bits.  So we need to reparent the new
+      // frames' styles to deal with that.
+      for (nsIFrame* f : letterFrames) {
+        restyleManager->ReparentStyleContext(f);
+      }
+    }
 
     // Insert in the letter frame(s)
     parentFrame->InsertFrames(kPrincipalList, prevFrame, letterFrames);
