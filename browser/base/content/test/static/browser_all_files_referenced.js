@@ -118,8 +118,9 @@ var whitelist = [
   // browser/extensions/pdfjs/content/web/viewer.js#7450
   {file: "resource://pdf.js/web/debugger.js"},
 
-  // Needed by Normandy
-  {file: "resource://gre/modules/IndexedDB.jsm"},
+  // These are used in content processes. They are actually referenced.
+  {file: "resource://shield-recipe-client-content/shield-content-frame.js"},
+  {file: "resource://shield-recipe-client-content/shield-content-process.js"},
 
   // New L10n API that is not yet used in production
   {file: "resource://gre/modules/Localization.jsm"},
