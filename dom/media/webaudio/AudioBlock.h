@@ -125,7 +125,7 @@ private:
   // AudioBlockBuffer created in a different AudioBlock.  That can happen when
   // this AudioBlock is on a node downstream from the node which created the
   // buffer.  When this is set, the AudioBlockBuffer is notified that this
-  // reference does prevent the upstream node from re-using the buffer next
+  // reference does not prevent the upstream node from re-using the buffer next
   // iteration and modifying its contents.  The AudioBlockBuffer is also
   // notified when mBuffer releases this reference.
   bool mBufferIsDownstreamRef = false;
