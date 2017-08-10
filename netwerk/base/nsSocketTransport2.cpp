@@ -1736,18 +1736,34 @@ nsSocketTransport::RecoverFromError()
         mDNSRecord->ReportUnusable(SocketPort());
     }
 
+#if defined(_WIN64) && defined(WIN95)
     // can only recover from these errors
+    if (mCondition != NS_ERROR_CONNECTION_REFUSED &&
+        mCondition != NS_ERROR_PROXY_CONNECTION_REFUSED &&
+        mCondition != NS_ERROR_NET_TIMEOUT &&
+        mCondition != NS_ERROR_UNKNOWN_HOST &&
+        mCondition != NS_ERROR_UNKNOWN_PROXY_HOST &&
+        !(mFDFastOpenInProgress && (mCondition == NS_ERROR_FAILURE)))
+        return false;
+#else
     if (mCondition != NS_ERROR_CONNECTION_REFUSED &&
         mCondition != NS_ERROR_PROXY_CONNECTION_REFUSED &&
         mCondition != NS_ERROR_NET_TIMEOUT &&
         mCondition != NS_ERROR_UNKNOWN_HOST &&
         mCondition != NS_ERROR_UNKNOWN_PROXY_HOST)
         return false;
+#endif
 
     bool tryAgain = false;
     if (mFDFastOpenInProgress &&
         ((mCondition == NS_ERROR_CONNECTION_REFUSED) ||
          (mCondition == NS_ERROR_NET_TIMEOUT) ||
+#if defined(_WIN64) && defined(WIN95)
+         // On Windows PR_ContinueConnect can return NS_ERROR_FAILURE.
+         // This will be fixed in bug 1386719 and this is just a temporary
+         // work around.
+         (mCondition == NS_ERROR_FAILURE) ||
+#endif
          (mCondition == NS_ERROR_PROXY_CONNECTION_REFUSED))) {
         // TCP Fast Open can be blocked by middle boxes so we will retry
         // without it.
