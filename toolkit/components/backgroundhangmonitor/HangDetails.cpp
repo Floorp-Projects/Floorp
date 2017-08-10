@@ -169,13 +169,11 @@ nsHangDetails::Submit()
 
   RefPtr<nsHangDetails> hangDetails = this;
   nsCOMPtr<nsIRunnable> notifyObservers = NS_NewRunnableFunction("NotifyBHRHangObservers", [hangDetails] {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
-    }
-
-    // If we're not in the parent process, we might need to transmit our hang
-    // details to another process, so that they can be reported there.
+    // The place we need to report the hang to varies depending on process.
+    //
+    // In child processes, we report the hang to our parent process, while if
+    // we're in the parent process, we report a bhr-thread-hang observer
+    // notification.
     switch (XRE_GetProcessType()) {
     case GeckoProcessType_Content: {
       auto cc = dom::ContentChild::GetSingleton();
@@ -191,8 +189,13 @@ nsHangDetails::Submit()
       }
       break;
     }
-    case GeckoProcessType_Default:
+    case GeckoProcessType_Default: {
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+      if (os) {
+        os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
+      }
       break;
+    }
     default:
       // XXX: Consider handling GeckoProcessType_GMPlugin and
       // GeckoProcessType_Plugin?
