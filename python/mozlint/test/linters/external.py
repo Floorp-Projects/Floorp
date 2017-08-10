@@ -11,6 +11,10 @@ def badreturncode(files, config, **lintargs):
 
 
 def external(files, config, **lintargs):
+    if lintargs.get('fix'):
+        # mimics no results because they got fixed
+        return []
+
     results = []
     for path in files:
         with open(path, 'r') as fh:
