@@ -53,7 +53,6 @@ public class WebAppActivity extends AppCompatActivity
     public static final String MANIFEST_PATH = "MANIFEST_PATH";
     private static final String SAVED_INTENT = "savedIntent";
 
-    private TextView mUrlView;
     private GeckoView mGeckoView;
     private PromptService mPromptService;
     private DoorHangerPopup mDoorHangerPopup;
@@ -77,24 +76,8 @@ public class WebAppActivity extends AppCompatActivity
 
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.customtabs_activity);
-
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
-        setSupportActionBar(toolbar);
-
-        final ActionBar actionBar = getSupportActionBar();
-        actionBar.setCustomView(R.layout.webapps_action_bar_custom_view);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.hide();
-
-        final View customView = actionBar.getCustomView();
-        mUrlView = (TextView) customView.findViewById(R.id.webapps_action_bar_url);
-
-        mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
-
+        mGeckoView = new GeckoView(this);
         mGeckoView.setNavigationListener(this);
-
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
         mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
 
@@ -105,6 +88,8 @@ public class WebAppActivity extends AppCompatActivity
         if (u != null) {
             mGeckoView.loadUri(u.toString());
         }
+
+        setContentView(mGeckoView);
 
         loadManifest(getIntent().getStringExtra(MANIFEST_PATH));
     }
@@ -299,13 +284,6 @@ public class WebAppActivity extends AppCompatActivity
     /* GeckoView.NavigationListener */
     @Override
     public void onLocationChange(GeckoView view, String url) {
-        if (isInScope(url)) {
-            getSupportActionBar().hide();
-        } else {
-            getSupportActionBar().show();
-        }
-
-        mUrlView.setText(url);
     }
 
     @Override
