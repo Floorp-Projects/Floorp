@@ -13653,3 +13653,19 @@ nsIDocument::ClearStaleServoDataFromDocument()
   }
   mMightHaveStaleServoData = false;
 }
+
+Selection*
+nsIDocument::GetSelection(ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
+  if (!window) {
+    return nullptr;
+  }
+
+  NS_ASSERTION(window->IsInnerWindow(), "Should have inner window here!");
+  if (!window->IsCurrentInnerWindow()) {
+    return nullptr;
+  }
+
+  return nsGlobalWindow::Cast(window)->GetSelection(aRv);
+}

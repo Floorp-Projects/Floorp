@@ -155,6 +155,7 @@ enum class OrientationType : uint8_t;
 class ProcessingInstruction;
 class Promise;
 class ScriptLoader;
+class Selection;
 class StyleSheetList;
 class SVGDocument;
 class SVGSVGElement;
@@ -990,6 +991,8 @@ public:
    * Return the root element for this document.
    */
   Element* GetRootElement() const;
+
+  mozilla::dom::Selection* GetSelection(mozilla::ErrorResult& aRv);
 
   /**
    * Gets the event target to dispatch key events to if there is no focused
