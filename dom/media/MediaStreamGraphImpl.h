@@ -94,7 +94,7 @@ public:
  * file. It's not in the anonymous namespace because MediaStream needs to
  * be able to friend it.
  *
- * There can be multiple MediaStreamGraph per process: one per AudioChannel.
+ * There can be multiple MediaStreamGraph per process: one per document.
  * Additionaly, each OfflineAudioContext object creates its own MediaStreamGraph
  * object too.
  */
@@ -119,7 +119,6 @@ public:
    */
   explicit MediaStreamGraphImpl(GraphDriverType aGraphDriverRequested,
                                 TrackRate aSampleRate,
-                                dom::AudioChannel aChannel,
                                 AbstractThread* aWindow);
 
   /**
@@ -820,8 +819,6 @@ public:
   RefPtr<AudioOutputObserver> mFarendObserverRef;
 #endif
 
-  dom::AudioChannel AudioChannel() const { return mAudioChannel; }
-
   // used to limit graph shutdown time
   nsCOMPtr<nsITimer> mShutdownTimer;
 
@@ -855,8 +852,6 @@ private:
    */
   bool mCanRunMessagesSynchronously;
 #endif
-
-  dom::AudioChannel mAudioChannel;
 };
 
 } // namespace mozilla

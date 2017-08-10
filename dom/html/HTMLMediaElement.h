@@ -15,6 +15,7 @@
 #include "mozilla/CORSMode.h"
 #include "DecoderTraits.h"
 #include "nsIAudioChannelAgent.h"
+#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TextTrackManager.h"
 #include "mozilla/WeakPtr.h"

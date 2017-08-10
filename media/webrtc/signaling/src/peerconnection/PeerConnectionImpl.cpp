@@ -379,8 +379,7 @@ already_AddRefed<DOMMediaStream>
 PeerConnectionImpl::MakeMediaStream()
 {
   MediaStreamGraph* graph =
-    MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
-                                  AudioChannel::Normal, GetWindow());
+    MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER, GetWindow());
 
   RefPtr<DOMMediaStream> stream =
     DOMMediaStream::CreateSourceStreamAsInput(GetWindow(), graph);
