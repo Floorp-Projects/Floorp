@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict"; // -*- js-indent-level: 2; indent-tabs-mode: nil -*-
 var Cc = Components.classes;
 var Ci = Components.interfaces;

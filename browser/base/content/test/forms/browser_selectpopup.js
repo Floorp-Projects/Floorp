@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 // This test tests <select> in a child process. This is different than
 // single-process as a <menulist> is used to implement the dropdown list.
