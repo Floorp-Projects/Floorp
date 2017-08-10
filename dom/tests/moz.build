@@ -97,9 +97,6 @@ with Files("mochitest/orientation/*507902*"):
 with Files("mochitest/pointerlock/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("mochitest/script/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
-
 with Files("mochitest/sessionstorage/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
@@ -172,7 +169,6 @@ MOCHITEST_MANIFESTS += [
     'mochitest/notification/mochitest.ini',
     'mochitest/orientation/mochitest.ini',
     'mochitest/pointerlock/mochitest.ini',
-    'mochitest/script/mochitest.ini',
     'mochitest/sessionstorage/mochitest.ini',
     'mochitest/storageevent/mochitest.ini',
     'mochitest/webcomponents/mochitest.ini',
