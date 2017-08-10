@@ -23,12 +23,12 @@
 
   <script type="application/javascript" src="chrome://global/content/alerts/alert.js"/>
 
-  <vbox id="alertBox" class="alertBox">
+  <vbox id="alertBox">
     <box id="alertTitleBox">
       <image id="alertIcon"/>
       <label id="alertTitleLabel" class="alertTitle plain" crop="end"/>
-      <vbox class="alertCloseBox">
-        <toolbarbutton class="alertCloseButton close-icon"
+      <vbox>
+        <toolbarbutton class="close-icon"
                        tooltiptext="&closeAlert.tooltip;"
                        onclick="event.stopPropagation();"
                        oncommand="onAlertClose();"/>
