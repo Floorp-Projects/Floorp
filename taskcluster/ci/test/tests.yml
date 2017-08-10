@@ -681,9 +681,12 @@ mochitest-clipboard:
     loopback-video: true
     virtualization: hardware
     instance-size: xlarge
+    run-on-projects:
+        by-test-platform:
             linux64-stylo/debug: ['try']
             linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
+            default: built-projects
     worker-type:
         by-test-platform:
             windows7-32.*: buildbot-bridge/buildbot-bridge
@@ -717,8 +720,11 @@ mochitest-clipboard:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
+    tier:
+        by-test-platform:
             macosx64-stylo/.*: 2
             linux64-stylo/debug: 3
+            default: default
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
