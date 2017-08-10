@@ -652,10 +652,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(AudioChannelAgentCallback)
 
-  AudioChannelAgentCallback(HTMLMediaElement* aOwner,
-                            AudioChannel aChannel)
+  explicit AudioChannelAgentCallback(HTMLMediaElement* aOwner)
     : mOwner(aOwner)
-    , mAudioChannel(aChannel)
     , mAudioChannelVolume(1.0)
     , mPlayingThroughTheAudioChannel(false)
     , mAudioCapturedByWindow(false)
@@ -870,7 +868,7 @@ private:
 
     mAudioChannelAgent = new AudioChannelAgent();
     nsresult rv = mAudioChannelAgent->Init(mOwner->OwnerDoc()->GetInnerWindow(),
-                                           static_cast<int32_t>(mAudioChannel),
+                                           static_cast<int32_t>(AudioChannelService::GetDefaultAudioChannel()),
                                            this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mAudioChannelAgent = nullptr;
@@ -1107,7 +1105,6 @@ private:
   RefPtr<AudioChannelAgent> mAudioChannelAgent;
   HTMLMediaElement* mOwner;
 
-  AudioChannel mAudioChannel;
   // The audio channel volume
   float mAudioChannelVolume;
   // Is this media element playing?
@@ -3863,7 +3860,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mIsEncrypted(false),
     mWaitingForKey(NOT_WAITING_FOR_KEY),
     mDownloadSuspendedByCache(false, "HTMLMediaElement::mDownloadSuspendedByCache"),
-    mAudioChannel(AudioChannelService::GetDefaultAudioChannel()),
     mDisableVideo(false),
     mHasUserInteraction(false),
     mFirstFrameLoaded(false),
@@ -3873,7 +3869,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mMediaTracksConstructed(false),
     mVisibilityState(Visibility::UNTRACKED),
     mErrorSink(new ErrorSink(this)),
-    mAudioChannelWrapper(new AudioChannelAgentCallback(this, mAudioChannel))
+    mAudioChannelWrapper(new AudioChannelAgentCallback(this))
 {
   MOZ_ASSERT(mMainThreadEventTarget);
   MOZ_ASSERT(mAbstractMainThread);
