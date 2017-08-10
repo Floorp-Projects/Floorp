@@ -8150,7 +8150,7 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams = {}) {
     // work correctly with URL objects - so treat them as strings
     let ignoreFragmentWhenComparing = typeof ignoreFragment == "string" &&
                                       ignoreFragment.startsWith("whenComparing");
-      let requestedCompare = cleanURL(
+    let requestedCompare = cleanURL(
           aURI.displaySpec, ignoreQueryString || replaceQueryString, ignoreFragmentWhenComparing);
     let browsers = aWindow.gBrowser.browsers;
     for (let i = 0; i < browsers.length; i++) {
