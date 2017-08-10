@@ -63,9 +63,4 @@ interface nsIHangDetails : nsISupports
    * attribute is a JS object of key-value pairs.
    */
   [implicit_jscontext] readonly attribute jsval annotations;
-
-  /**
-   * A getter for the pseudoStack. This attribute is a JS array of strings.
-   */
-  [implicit_jscontext] readonly attribute jsval pseudoStack;
 };
