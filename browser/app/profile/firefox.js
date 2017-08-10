@@ -1724,5 +1724,13 @@ pref("browser.onboarding.notification.max-prompt-count-per-tour", 8);
 pref("browser.onboarding.newtour", "private,addons,customize,search,default,sync");
 pref("browser.onboarding.updatetour", "");
 
-// Preference that allows individual users to disable Screenshots.
+// Preferences for the Screenshots feature:
+// Temporarily disable Screenshots in Beta & Release, so that we can gradually
+// roll out the feature using SHIELD pref flipping.
+#ifdef NIGHTLY_BUILD
+pref("extensions.screenshots.system-disabled", false);
+#else
+pref("extensions.screenshots.system-disabled", true);
+#endif
+// Permanent pref that allows individual users to disable Screenshots.
 pref("extensions.screenshots.disabled", false);
