@@ -34,7 +34,7 @@ nsMathMLmsqrtFrame::Init(nsIContent*       aContent,
 {
   nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   AllocateMathMLChar(NOTATION_RADICAL);
-  mNotationsToDraw |= NOTATION_RADICAL;
+  mNotationsToDraw += NOTATION_RADICAL;
 }
 
 NS_IMETHODIMP
