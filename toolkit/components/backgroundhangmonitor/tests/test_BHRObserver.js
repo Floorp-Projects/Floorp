@@ -115,6 +115,6 @@ add_task(async function test_BHRObserver() {
     });
   });
 
-  do_send_remote_message('bhr_hangs_detected');
+  do_send_remote_message("bhr_hangs_detected");
   await childDone;
 });
