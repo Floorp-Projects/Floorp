@@ -627,12 +627,6 @@ AudioCallbackDriver::Init()
 
   mSampleRate = output.rate = CubebUtils::PreferredSampleRate();
 
-#if defined(__ANDROID__)
-  output.stream_type = CUBEB_STREAM_TYPE_MUSIC;
-#else
-  (void)mAudioChannel;
-#endif
-
   output.channels = mGraphImpl->AudioChannelCount();
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
     output.format = CUBEB_SAMPLE_S16NE;
