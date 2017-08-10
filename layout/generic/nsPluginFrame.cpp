@@ -1173,7 +1173,7 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (type == nsPresContext::eContext_Print) {
     aLists.Content()->AppendNewToTop(new (aBuilder)
       nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
-                       DisplayItemType::TYPE_PRINT_PLUGIN));
+                       nsDisplayItem::TYPE_PRINT_PLUGIN));
   } else {
     LayerState state = GetLayerState(aBuilder, nullptr);
     if (state == LAYER_INACTIVE &&
@@ -1394,7 +1394,7 @@ nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   RefPtr<Layer> layer =
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
 
-  if (aItem->GetType() == DisplayItemType::TYPE_PLUGIN) {
+  if (aItem->GetType() == nsDisplayItem::TYPE_PLUGIN) {
     RefPtr<ImageContainer> container;
     // Image for Windowed plugins that support window capturing for scroll
     // operations or async windowless rendering.
@@ -1447,7 +1447,7 @@ nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
       lm->AddDidCompositeObserver(mDidCompositeObserver.get());
     }
   } else {
-    NS_ASSERTION(aItem->GetType() == DisplayItemType::TYPE_PLUGIN_READBACK,
+    NS_ASSERTION(aItem->GetType() == nsDisplayItem::TYPE_PLUGIN_READBACK,
                  "Unknown item type");
     MOZ_ASSERT(!IsOpaque(), "Opaque plugins don't use backgrounds");
 
