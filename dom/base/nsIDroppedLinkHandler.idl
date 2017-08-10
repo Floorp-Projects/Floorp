@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIPrincipal.idl"
 
 interface nsIDOMDragEvent;
 
@@ -77,4 +78,10 @@ interface nsIDroppedLinkHandler : nsISupports
                  [optional] in boolean aDisallowInherit,
                  [optional] out unsigned long aCount,
                  [retval, array, size_is(aCount)] out nsIDroppedLinkItem aLinks);
+
+  /**
+   * Given a drop event aEvent, determines the triggering principal for the
+   * event and returns it.
+   */
+  nsIPrincipal getTriggeringPrincipal(in nsIDOMDragEvent aEvent);
 };
