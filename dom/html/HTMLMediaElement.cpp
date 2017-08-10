@@ -867,9 +867,7 @@ private:
     }
 
     mAudioChannelAgent = new AudioChannelAgent();
-    nsresult rv = mAudioChannelAgent->Init(mOwner->OwnerDoc()->GetInnerWindow(),
-                                           static_cast<int32_t>(AudioChannelService::GetDefaultAudioChannel()),
-                                           this);
+    nsresult rv = mAudioChannelAgent->Init(mOwner->OwnerDoc()->GetInnerWindow(), this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mAudioChannelAgent = nullptr;
       MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
