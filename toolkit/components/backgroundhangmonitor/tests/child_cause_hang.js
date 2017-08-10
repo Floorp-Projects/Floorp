@@ -28,17 +28,5 @@ add_task(async function childCauseHang() {
     while ((Date.now() - startTime) < 2000);
   });
 
-
-  let hang = await new Promise(resolve => {
-    const onhang = subject => {
-      Services.obs.removeObserver(onhang, "bhr-thread-hang");
-      resolve(subject.QueryInterface(Ci.nsIHangDetails));
-    };
-    Services.obs.addObserver(onhang, "bhr-thread-hang");
-  });
-
-  equal(hang.process, "tab");
-  equal(hang.thread, "Gecko_Child");
-  // NOTE: This hang should also be sent to the parent process, where it'll be
-  // checked more.
+  await do_await_remote_message('bhr_hangs_detected');
 });

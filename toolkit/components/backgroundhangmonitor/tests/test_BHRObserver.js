@@ -69,7 +69,7 @@ add_task(async function test_BHRObserver() {
     while ((Date.now() - startTime) < 1000);
   });
 
-  run_test_in_child("child_cause_hang.js");
+  let childDone = run_test_in_child("child_cause_hang.js");
 
   // Now we wait for the hangs to have their bhr-thread-hang message fired for
   // them, collect them, and analyize the response.
@@ -114,4 +114,7 @@ add_task(async function test_BHRObserver() {
       equal(typeof entry, "string");
     });
   });
+
+  do_send_remote_message('bhr_hangs_detected');
+  await childDone;
 });
