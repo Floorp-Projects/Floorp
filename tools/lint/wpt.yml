@@ -1,4 +1,3 @@
----
 wpt:
     description: web-platform-tests lint
     include:
