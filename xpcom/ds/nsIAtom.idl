@@ -95,9 +95,6 @@ interface nsIAtom : nsISupports
     return nsStringBuffer::FromData(mString);
   }
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() final;
-  NS_IMETHOD_(MozExternalRefCountType) Release() final;
-
   /**
    * A hashcode that is better distributed than the actual atom
    * pointer, for use in situations that need a well-distributed
