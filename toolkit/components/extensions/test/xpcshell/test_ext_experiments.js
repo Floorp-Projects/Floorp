@@ -6,6 +6,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
 add_task(async function setup() {
+  Services.prefs.setBoolPref("extensions.legacy.enabled", true);
   await ExtensionTestUtils.startAddonManager();
 });
 
