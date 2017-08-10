@@ -59,8 +59,6 @@ public:
 
   void OfflineShutdown();
 
-  AudioChannel MozAudioChannelType() const;
-
   void NotifyMainThreadStreamFinished() override;
   void FireOfflineCompletionEvent();
 
@@ -88,9 +86,6 @@ protected:
   virtual ~AudioDestinationNode();
 
 private:
-  void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
-  bool CheckAudioChannelPermissions(AudioChannel aValue);
-
   SelfReference<AudioDestinationNode> mOfflineRenderingRef;
   uint32_t mFramesToProduce;
 
@@ -99,8 +94,6 @@ private:
 
   RefPtr<Promise> mOfflineRenderingPromise;
 
-  // Audio Channel Type.
-  AudioChannel mAudioChannel;
   bool mIsOffline;
   bool mAudioChannelSuspended;
 
