@@ -8,6 +8,7 @@
 #define nsMathMLmencloseFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EnumSet.h"
 #include "nsMathMLContainerFrame.h"
 
 //
@@ -26,20 +27,20 @@
 
 enum nsMencloseNotation
   {
-    NOTATION_LONGDIV = 0x1,
-    NOTATION_RADICAL = 0x2,
-    NOTATION_ROUNDEDBOX = 0x4,
-    NOTATION_CIRCLE = 0x8,
-    NOTATION_LEFT = 0x10,
-    NOTATION_RIGHT = 0x20,
-    NOTATION_TOP = 0x40,
-    NOTATION_BOTTOM = 0x80,
-    NOTATION_UPDIAGONALSTRIKE = 0x100,
-    NOTATION_DOWNDIAGONALSTRIKE = 0x200,
-    NOTATION_VERTICALSTRIKE = 0x400,
-    NOTATION_HORIZONTALSTRIKE = 0x800,
-    NOTATION_UPDIAGONALARROW = 0x1000,
-    NOTATION_PHASORANGLE = 0x2000
+    NOTATION_LONGDIV,
+    NOTATION_RADICAL,
+    NOTATION_ROUNDEDBOX,
+    NOTATION_CIRCLE,
+    NOTATION_LEFT,
+    NOTATION_RIGHT,
+    NOTATION_TOP,
+    NOTATION_BOTTOM,
+    NOTATION_UPDIAGONALSTRIKE,
+    NOTATION_DOWNDIAGONALSTRIKE,
+    NOTATION_VERTICALSTRIKE,
+    NOTATION_HORIZONTALSTRIKE,
+    NOTATION_UPDIAGONALARROW,
+    NOTATION_PHASORANGLE
   };
 
 class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
@@ -101,10 +102,10 @@ protected:
   void InitNotations();
 
   // Description of the notations to draw
-  uint32_t mNotationsToDraw;
-  bool IsToDraw(nsMencloseNotation mask)
+  mozilla::EnumSet<nsMencloseNotation> mNotationsToDraw;
+  bool IsToDraw(nsMencloseNotation notation)
   {
-    return mask & mNotationsToDraw;
+    return mNotationsToDraw.contains(notation);
   }
 
   nscoord mRuleThickness;
