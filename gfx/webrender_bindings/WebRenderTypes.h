@@ -354,15 +354,8 @@ static inline wr::BorderRadius ToUniformBorderRadius(const mozilla::LayerSize& a
   return br;
 }
 
-static inline wr::BorderRadius EmptyBorderRadius()
-{
-  wr::BorderRadius br;
-  memset(&br, 0, sizeof(br));
-}
-
-template<class T>
-static inline wr::BorderRadius ToBorderRadius(const gfx::SizeTyped<T>& topLeft, const gfx::SizeTyped<T>& topRight,
-                                              const gfx::SizeTyped<T>& bottomLeft, const gfx::SizeTyped<T>& bottomRight)
+static inline wr::BorderRadius ToBorderRadius(const mozilla::LayerSize& topLeft, const mozilla::LayerSize& topRight,
+                                              const mozilla::LayerSize& bottomLeft, const mozilla::LayerSize& bottomRight)
 {
   wr::BorderRadius br;
   br.top_left = ToLayoutSize(topLeft);
