@@ -18,12 +18,6 @@ MainProcessSingleton.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
-  logConsoleMessage(message) {
-    let logMsg = message.data;
-    logMsg.wrappedJSObject = logMsg;
-    Services.obs.notifyObservers(logMsg, "console-api-log-event");
-  },
-
   // Called when a webpage calls window.external.AddSearchProvider
   addSearchEngine({ target: browser, data: { pageURL, engineURL } }) {
     pageURL = NetUtil.newURI(pageURL);
@@ -73,14 +67,12 @@ MainProcessSingleton.prototype = {
       // before other frame scripts.
       Services.mm.loadFrameScript("chrome://global/content/browser-content.js", true);
       Services.ppmm.loadProcessScript("chrome://global/content/process-content.js", true);
-      Services.ppmm.addMessageListener("Console:Log", this.logConsoleMessage);
       Services.mm.addMessageListener("Search:AddEngine", this.addSearchEngine);
       Services.ppmm.loadProcessScript("resource:///modules/ContentObservers.js", true);
       break;
     }
 
     case "xpcom-shutdown":
-      Services.ppmm.removeMessageListener("Console:Log", this.logConsoleMessage);
       Services.mm.removeMessageListener("Search:AddEngine", this.addSearchEngine);
       break;
     }

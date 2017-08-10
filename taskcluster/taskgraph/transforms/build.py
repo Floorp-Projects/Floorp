@@ -20,7 +20,6 @@ def set_defaults(config, jobs):
     for job in jobs:
         job['treeherder'].setdefault('kind', 'build')
         job['treeherder'].setdefault('tier', 1)
-        job.setdefault('needs-sccache', True)
         _, worker_os = worker_type_implementation(job['worker-type'])
         worker = job.setdefault('worker', {})
         if worker_os == "linux":

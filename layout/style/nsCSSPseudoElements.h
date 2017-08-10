@@ -15,6 +15,8 @@
 // Is this pseudo-element a CSS2 pseudo-element that can be specified
 // with the single colon syntax (in addition to the double-colon syntax,
 // which can be used for all pseudo-elements)?
+//
+// Note: We also rely on this for IsEagerlyCascadedInServo.
 #define CSS_PSEUDO_ELEMENT_IS_CSS2                     (1<<0)
 // Is this pseudo-element a pseudo-element that can contain other
 // elements?
@@ -84,6 +86,11 @@ public:
   static bool IsPseudoElement(nsIAtom *aAtom);
 
   static bool IsCSS2PseudoElement(nsIAtom *aAtom);
+
+  static bool IsEagerlyCascadedInServo(const Type aType)
+  {
+    return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_IS_CSS2);
+  }
 
 #define CSS_PSEUDO_ELEMENT(_name, _value, _flags) \
   static nsICSSPseudoElement* _name;

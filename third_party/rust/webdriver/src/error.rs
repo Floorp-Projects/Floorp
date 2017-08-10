@@ -9,7 +9,7 @@ use std::error::Error;
 use std::fmt;
 use std::io;
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ErrorStatus {
     /// The [`ElementClick`] command could not be completed because the
     /// [element] receiving the events is obscuring the element that was

@@ -264,11 +264,15 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       }
     }
 
-    // Note: this call to CreateWebRenderCommands can recurse back into
-    // this function if the |item| is a wrapper for a sublist.
-    if (!item->CreateWebRenderCommands(aBuilder, aSc, mParentCommands, this,
-                                       aDisplayListBuilder)) {
-      PushItemAsImage(item, aBuilder, aSc, aDisplayListBuilder);
+    { // scope the ScrollingLayersHelper
+      ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache);
+
+      // Note: this call to CreateWebRenderCommands can recurse back into
+      // this function if the |item| is a wrapper for a sublist.
+      if (!item->CreateWebRenderCommands(aBuilder, aSc, mParentCommands, this,
+                                         aDisplayListBuilder)) {
+        PushItemAsImage(item, aBuilder, aSc, aDisplayListBuilder);
+      }
     }
 
     if (apzEnabled && forceNewLayerData) {
@@ -624,6 +628,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
         mScrollData.AddLayerData(*i);
       }
       mLayerScrollData.clear();
+      mClipIdCache.clear();
     } else {
       for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
         RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();

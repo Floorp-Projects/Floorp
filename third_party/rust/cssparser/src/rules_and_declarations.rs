@@ -5,10 +5,9 @@
 // https://drafts.csswg.org/css-syntax/#parsing
 
 use cow_rc_str::CowRcStr;
-use parser::{parse_until_before, parse_until_after, parse_nested_block};
+use parser::{parse_until_before, parse_until_after, parse_nested_block, ParserState};
 use std::ascii::AsciiExt;
-use std::ops::Range;
-use super::{Token, Parser, Delimiter, SourcePosition, ParseError, BasicParseError};
+use super::{Token, Parser, Delimiter, ParseError, BasicParseError, SourceLocation};
 
 
 /// Parse `!important`.
@@ -238,7 +237,7 @@ where P: DeclarationParser<'i, Declaration = I, Error = E> +
 
     fn next(&mut self) -> Option<Result<I, PreciseParseError<'i, E>>> {
         loop {
-            let start_position = self.input.position();
+            let start = self.input.state();
             // FIXME: remove intermediate variable when lifetimes are non-lexical
             let ident = match self.input.next_including_whitespace_and_comments() {
                 Ok(&Token::WhiteSpace(_)) | Ok(&Token::Comment(_)) | Ok(&Token::Semicolon) => continue,
@@ -259,19 +258,21 @@ where P: DeclarationParser<'i, Declaration = I, Error = E> +
                         })
                     }.map_err(|e| PreciseParseError {
                         error: e,
-                        span: start_position..self.input.position()
+                        slice: self.input.slice_from(start.position()),
+                        location: start.source_location(),
                     }))
                 }
                 Ok(Err(name)) => {
                     // At-keyword
-                    return Some(parse_at_rule(start_position, name, self.input, &mut self.parser))
+                    return Some(parse_at_rule(&start, name, self.input, &mut self.parser))
                 }
                 Err(token) => {
                     return Some(self.input.parse_until_after(Delimiter::Semicolon,
                                                              |_| Err(ParseError::Basic(BasicParseError::UnexpectedToken(token.clone()))))
                                 .map_err(|e| PreciseParseError {
                                     error: e,
-                                    span: start_position..self.input.position()
+                                    slice: self.input.slice_from(start.position()),
+                                    location: start.source_location(),
                                 }))
                 }
             }
@@ -341,7 +342,7 @@ where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
 
     fn next(&mut self) -> Option<Result<R, PreciseParseError<'i, E>>> {
         loop {
-            let start_position = self.input.position();
+            let start = self.input.state();
             // FIXME: remove intermediate variable when lifetimes are non-lexical
             let at_keyword = match self.input.next_including_whitespace_and_comments() {
                 Ok(&Token::WhiteSpace(_)) | Ok(&Token::Comment(_)) => continue,
@@ -357,15 +358,16 @@ where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
                     let delimiters = Delimiter::Semicolon | Delimiter::CurlyBracketBlock;
                     let _: Result<(), ParseError<()>> = self.input.parse_until_after(delimiters, |_| Ok(()));
                 } else {
-                    return Some(parse_at_rule(start_position, name.clone(), self.input, &mut self.parser))
+                    return Some(parse_at_rule(&start, name.clone(), self.input, &mut self.parser))
                 }
             } else {
                 self.any_rule_so_far = true;
-                self.input.reset(start_position);
+                self.input.reset(&start);
                 return Some(parse_qualified_rule(self.input, &mut self.parser)
                             .map_err(|e| PreciseParseError {
                                 error: e,
-                                span: start_position..self.input.position()
+                                slice: self.input.slice_from(start.position()),
+                                location: start.source_location(),
                             }))
             }
         }
@@ -379,13 +381,15 @@ pub fn parse_one_declaration<'i, 't, P, E>(input: &mut Parser<'i, 't>, parser: &
                                                      PreciseParseError<'i, E>>
                                            where P: DeclarationParser<'i, Error = E> {
     let start_position = input.position();
+    let start_location = input.current_source_location();
     input.parse_entirely(|input| {
         let name = input.expect_ident()?.clone();
         input.expect_colon()?;
         parser.parse_value(name, input)
     }).map_err(|e| PreciseParseError {
         error: e,
-        span: start_position..input.position()
+        slice: input.slice_from(start_position),
+        location: start_location,
     })
 }
 
@@ -397,7 +401,7 @@ where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
          AtRuleParser<'i, AtRule = R, Error = E> {
     input.parse_entirely(|input| {
         loop {
-            let start_position = input.position();
+            let start = input.state();
             // FIXME: remove intermediate variable when lifetimes are non-lexical
             let at_keyword = match *input.next_including_whitespace_and_comments()? {
                 Token::WhiteSpace(_) | Token::Comment(_) => continue,
@@ -405,21 +409,28 @@ where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
                 _ => None
             };
             if let Some(name) = at_keyword {
-                return parse_at_rule(start_position, name, input, parser).map_err(|e| e.error)
+                return parse_at_rule(&start, name, input, parser).map_err(|e| e.error)
             } else {
-                input.reset(start_position);
+                input.reset(&start);
                 return parse_qualified_rule(input, parser)
             }
         }
     })
 }
 
+/// A parse error with details of where it occured
 pub struct PreciseParseError<'i, E: 'i> {
+    /// Error details
     pub error: ParseError<'i, E>,
-    pub span: Range<SourcePosition>,
+
+    /// The relevant slice of the input.
+    pub slice: &'i str,
+
+    /// The line number and column number of the start of the relevant input slice.
+    pub location: SourceLocation,
 }
 
-fn parse_at_rule<'i: 't, 't, P, E>(start_position: SourcePosition, name: CowRcStr<'i>,
+fn parse_at_rule<'i: 't, 't, P, E>(start: &ParserState, name: CowRcStr<'i>,
                                    input: &mut Parser<'i, 't>, parser: &mut P)
                                    -> Result<<P as AtRuleParser<'i>>::AtRule, PreciseParseError<'i, E>>
                                    where P: AtRuleParser<'i, Error = E> {
@@ -434,7 +445,8 @@ fn parse_at_rule<'i: 't, 't, P, E>(start_position: SourcePosition, name: CowRcSt
                 Ok(&Token::Semicolon) | Err(_) => Ok(rule),
                 Ok(&Token::CurlyBracketBlock) => Err(PreciseParseError {
                     error: ParseError::Basic(BasicParseError::UnexpectedToken(Token::CurlyBracketBlock)),
-                    span: start_position..input.position(),
+                    slice: input.slice_from(start.position()),
+                    location: start.source_location(),
                 }),
                 Ok(_) => unreachable!()
             }
@@ -446,16 +458,19 @@ fn parse_at_rule<'i: 't, 't, P, E>(start_position: SourcePosition, name: CowRcSt
                     parse_nested_block::<'i, 't, _, _, _>(input, move |input| parser.parse_block(prelude, input))
                         .map_err(|e| PreciseParseError {
                             error: e,
-                            span: start_position..input.position(),
+                            slice: input.slice_from(start.position()),
+                            location: start.source_location(),
                         })
                 }
                 Ok(&Token::Semicolon) => Err(PreciseParseError {
                     error: ParseError::Basic(BasicParseError::UnexpectedToken(Token::Semicolon)),
-                    span: start_position..input.position()
+                    slice: input.slice_from(start.position()),
+                    location: start.source_location(),
                 }),
                 Err(e) => Err(PreciseParseError {
                     error: ParseError::Basic(e),
-                    span: start_position..input.position(),
+                    slice: input.slice_from(start.position()),
+                    location: start.source_location(),
                 }),
                 Ok(_) => unreachable!()
             }
@@ -468,7 +483,8 @@ fn parse_at_rule<'i: 't, 't, P, E>(start_position: SourcePosition, name: CowRcSt
                     parse_nested_block::<'i, 't, _, _, _>(input, move |input| parser.parse_block(prelude, input))
                         .map_err(|e| PreciseParseError {
                             error: e,
-                            span: start_position..input.position(),
+                            slice: input.slice_from(start.position()),
+                            location: start.source_location(),
                         })
                 }
                 _ => unreachable!()
@@ -482,7 +498,8 @@ fn parse_at_rule<'i: 't, 't, P, E>(start_position: SourcePosition, name: CowRcSt
             };
             Err(PreciseParseError {
                 error: error,
-                span: start_position..end_position,
+                slice: input.slice(start.position()..end_position),
+                location: start.source_location(),
             })
         }
     }

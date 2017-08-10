@@ -5,28 +5,24 @@
 #[cfg(test)]
 use app_units::Au;
 use device::TextureFilter;
-use fnv::FnvHasher;
 use frame::FrameId;
+use glyph_cache::{CachedGlyphInfo, GlyphCache};
+use internal_types::FastHashSet;
 use platform::font::{FontContext, RasterizedGlyph};
 use profiler::TextureCacheProfileCounters;
 use rayon::ThreadPool;
 use rayon::prelude::*;
-use resource_cache::ResourceClassCache;
-use std::hash::BuildHasherDefault;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::collections::hash_map::Entry;
-use std::collections::HashSet;
 use std::mem;
-use texture_cache::{TextureCacheItemId, TextureCache};
+use texture_cache::TextureCache;
 #[cfg(test)]
-use api::{ColorF, FontRenderMode, IdNamespace};
-use api::{FontInstanceKey, LayoutPoint};
+use api::{ColorF, LayoutPoint, FontRenderMode, IdNamespace, SubpixelDirection};
+use api::{FontInstanceKey};
 use api::{FontKey, FontTemplate};
 use api::{ImageData, ImageDescriptor, ImageFormat};
-use api::{GlyphKey, GlyphInstance, GlyphDimensions};
-
-pub type GlyphCache = ResourceClassCache<GlyphRequest, Option<TextureCacheItemId>>;
+use api::{GlyphKey, GlyphDimensions};
 
 pub struct FontContexts {
     // These worker are mostly accessed from their corresponding worker threads.
@@ -79,17 +75,17 @@ pub struct GlyphRasterizer {
     workers: Arc<ThreadPool>,
     font_contexts: Arc<FontContexts>,
 
-    // Receives the rendered glyphs.
-    glyph_rx: Receiver<Vec<GlyphRasterJob>>,
-    glyph_tx: Sender<Vec<GlyphRasterJob>>,
-
     // Maintain a set of glyphs that have been requested this
     // frame. This ensures the glyph thread won't rasterize
     // the same glyph more than once in a frame. This is required
     // because the glyph cache hash table is not updated
     // until the end of the frame when we wait for glyph requests
     // to be resolved.
-    pending_glyphs: HashSet<GlyphRequest>,
+    pending_glyphs: FastHashSet<GlyphRequest>,
+
+    // Receives the rendered glyphs.
+    glyph_rx: Receiver<Vec<GlyphRasterJob>>,
+    glyph_tx: Sender<Vec<GlyphRasterJob>>,
 
     // We defer removing fonts to the end of the frame so that:
     // - this work is done outside of the critical path,
@@ -117,9 +113,9 @@ impl GlyphRasterizer {
                     workers: Arc::clone(&workers),
                 }
             ),
+            pending_glyphs: FastHashSet::default(),
             glyph_rx,
             glyph_tx,
-            pending_glyphs: HashSet::new(),
             workers,
             fonts_to_remove: Vec::new(),
         }
@@ -151,29 +147,20 @@ impl GlyphRasterizer {
         glyph_cache: &mut GlyphCache,
         current_frame_id: FrameId,
         font: FontInstanceKey,
-        glyph_instances: &[GlyphInstance],
-        requested_items: &mut HashSet<TextureCacheItemId, BuildHasherDefault<FnvHasher>>,
-    ) {
+        glyph_keys: &[GlyphKey]) {
         assert!(self.font_contexts.lock_shared_context().has_font(&font.font_key));
+        let mut glyphs = Vec::new();
 
-        let mut glyphs = Vec::with_capacity(glyph_instances.len());
+        let glyph_key_cache = glyph_cache.get_glyph_key_cache_for_font_mut(font.clone());
 
         // select glyphs that have not been requested yet.
-        for glyph in glyph_instances {
-            let glyph_request = GlyphRequest::new(font.clone(),
-                                                  glyph.index,
-                                                  glyph.point);
-
-            match glyph_cache.entry(glyph_request.clone(), current_frame_id) {
-                Entry::Occupied(entry) => {
-                    if let &Some(texture_cache_item_id) = entry.get() {
-                        requested_items.insert(texture_cache_item_id);
-                    }
-                }
+        for key in glyph_keys {
+            match glyph_key_cache.entry(key.clone(), current_frame_id) {
+                Entry::Occupied(..) => {}
                 Entry::Vacant(..) => {
-                    if !self.pending_glyphs.contains(&glyph_request) {
-                        self.pending_glyphs.insert(glyph_request.clone());
-                        glyphs.push(glyph_request.clone());
+                    let request = GlyphRequest::new(&font, key);
+                    if self.pending_glyphs.insert(request.clone()) {
+                        glyphs.push(request);
                     }
                 }
             }
@@ -225,12 +212,12 @@ impl GlyphRasterizer {
         current_frame_id: FrameId,
         glyph_cache: &mut GlyphCache,
         texture_cache: &mut TextureCache,
-        requested_items: &mut HashSet<TextureCacheItemId, BuildHasherDefault<FnvHasher>>,
         texture_cache_profile: &mut TextureCacheProfileCounters,
     ) {
         let mut rasterized_glyphs = Vec::with_capacity(self.pending_glyphs.len());
 
         // Pull rasterized glyphs from the queue.
+
         while !self.pending_glyphs.is_empty() {
             // TODO: rather than blocking until all pending glyphs are available
             // we could try_recv and steal work from the thread pool to take advantage
@@ -271,14 +258,18 @@ impl GlyphRasterizer {
                         [glyph.left, glyph.top],
                         texture_cache_profile,
                     );
-                    requested_items.insert(image_id);
                     Some(image_id)
                 } else {
                     None
                 }
             );
 
-            glyph_cache.insert(job.request, image_id, current_frame_id);
+            let glyph_key_cache = glyph_cache.get_glyph_key_cache_for_font_mut(job.request.font);
+
+            glyph_key_cache.insert(job.request.key, CachedGlyphInfo {
+                texture_cache_id: image_id,
+                last_access: current_frame_id,
+            });
         }
 
         // Now that we are done with the critical path (rendering the glyphs),
@@ -321,13 +312,10 @@ pub struct GlyphRequest {
 }
 
 impl GlyphRequest {
-    pub fn new(
-        font: FontInstanceKey,
-        index: u32,
-        point: LayoutPoint) -> Self {
+    pub fn new(font: &FontInstanceKey, key: &GlyphKey) -> Self {
         GlyphRequest {
-            key: GlyphKey::new(index, point, font.render_mode),
-            font,
+            key: key.clone(),
+            font: font.clone(),
         }
     }
 }
@@ -349,7 +337,6 @@ fn raterize_200_glyphs() {
     let workers = Arc::new(ThreadPool::new(Configuration::new()).unwrap());
     let mut glyph_rasterizer = GlyphRasterizer::new(workers);
     let mut glyph_cache = GlyphCache::new();
-    let mut requested_items = HashSet::default();
 
     let mut font_file = File::open("../wrench/reftests/text/VeraBd.ttf").expect("Couldn't open font file");
     let mut font_data = vec![];
@@ -360,29 +347,26 @@ fn raterize_200_glyphs() {
 
     let frame_id = FrameId(1);
 
-    let mut glyph_instances = Vec::with_capacity(200);
-    for i in 0..200 {
-        glyph_instances.push(GlyphInstance {
-            index: i, // It doesn't matter which glyphs we are actually rendering.
-            point: LayoutPoint::new(0.0, 0.0),
-        });
-    }
-
     let font = FontInstanceKey {
         font_key,
         color: ColorF::new(0.0, 0.0, 0.0, 1.0).into(),
         size: Au::from_px(32),
         render_mode: FontRenderMode::Subpixel,
         glyph_options: None,
+        subpx_dir: SubpixelDirection::Horizontal,
     };
+
+    let mut glyph_keys = Vec::with_capacity(200);
+    for i in 0..200 {
+        glyph_keys.push(GlyphKey::new(i, LayoutPoint::zero(), font.render_mode, font.subpx_dir));
+    }
 
     for i in 0..4 {
         glyph_rasterizer.request_glyphs(
             &mut glyph_cache,
             frame_id,
             font.clone(),
-            &glyph_instances[(50 * i)..(50 * (i + 1))],
-            &mut requested_items,
+            &glyph_keys[(50 * i)..(50 * (i + 1))],
         );
     }
 
@@ -392,7 +376,6 @@ fn raterize_200_glyphs() {
         frame_id,
         &mut glyph_cache,
         &mut TextureCache::new(4096),
-        &mut requested_items,
         &mut TextureCacheProfileCounters::new(),
     );
 }

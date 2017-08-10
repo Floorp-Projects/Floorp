@@ -87,14 +87,8 @@ const whitelist = [
   },
 
   {
-    file: "chrome://global/skin/icons/chevron.png",
-    hidpi: "chrome://global/skin/icons/chevron@2x.png",
-    platforms: ["macosx"],
-  },
-
-  {
-    file: "chrome://global/skin/toolbar/chevron.gif",
-    platforms: ["win", "linux"],
+    file: "chrome://browser/skin/chevron.svg",
+    platforms: ["win", "linux", "macosx"],
   },
 
   {

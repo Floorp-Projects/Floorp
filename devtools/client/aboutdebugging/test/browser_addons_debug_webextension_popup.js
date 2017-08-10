@@ -37,28 +37,48 @@ function makeWidgetId(id) {
 }
 
 add_task(function* testWebExtensionsToolboxSwitchToPopup() {
+  let onReadyForOpenPopup;
+  let onPopupCustomMessage;
+
+  Management.on("startup", function listener(event, extension) {
+    if (extension.name != ADDON_NAME) {
+      return;
+    }
+
+    Management.off("startup", listener);
+
+    function waitForExtensionTestMessage(expectedMessage) {
+      return new Promise(done => {
+        extension.on("test-message", function testLogListener(evt, ...args) {
+          const [message, ] = args;
+
+          if (message !== expectedMessage) {
+            return;
+          }
+
+          extension.off("test-message", testLogListener);
+          done(args);
+        });
+      });
+    }
+
+    // Wait for the test script running in the browser toolbox process
+    // to be ready for selecting the popup page in the frame list selector.
+    onReadyForOpenPopup = waitForExtensionTestMessage("readyForOpenPopup");
+
+    // Wait for a notification sent by a script evaluated the test addon via
+    // the web console.
+    onPopupCustomMessage = waitForExtensionTestMessage("popupPageFunctionCalled");
+  });
+
   let {
     tab, document, debugBtn,
   } = yield setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_MANIFEST_PATH);
 
-  let onReadyForOpenPopup = new Promise(done => {
-    Services.obs.addObserver(function listener(message, topic) {
-      let apiMessage = message.wrappedJSObject;
-      if (apiMessage.addonId != ADDON_ID) {
-        return;
-      }
-
-      if (apiMessage.arguments[0] == "readyForOpenPopup") {
-        Services.obs.removeObserver(listener, "console-api-log-event");
-        done();
-      }
-    }, "console-api-log-event");
-  });
-
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
-  let env = Cc["@mozilla.org/process/environment;1"]
-        .getService(Ci.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+
   let testScript = function () {
     /* eslint-disable no-undef */
 
@@ -66,7 +86,7 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
     let popupFramePromise;
 
     toolbox.selectTool("webconsole")
-      .then(console => {
+      .then(async (console) => {
         dump(`Clicking the noautohide button\n`);
         toolbox.doc.getElementById("command-button-noautohide").click();
         dump(`Clicked the noautohide button\n`);
@@ -81,32 +101,25 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
           toolbox.target.on("frame-update", listener);
         });
 
-        let waitForFrameListUpdate = new Promise((done) => {
-          toolbox.target.once("frame-update", () => {
-            done(console);
-          });
-        });
+        let waitForFrameListUpdate = toolbox.target.once("frame-update");
 
         jsterm = console.hud.jsterm;
         jsterm.execute("myWebExtensionShowPopup()");
 
-        // Wait the initial frame update (which list the background page).
-        return waitForFrameListUpdate;
-      })
-      .then((console) => {
-        // Wait the new frame update (once the extension popup has been opened).
-        return popupFramePromise;
-      })
-      .then(() => {
+        await Promise.all([
+          // Wait the initial frame update (which list the background page).
+          waitForFrameListUpdate,
+          // Wait the new frame update (once the extension popup has been opened).
+          popupFramePromise,
+        ]);
+
         dump(`Clicking the frame list button\n`);
         let btn = toolbox.doc.getElementById("command-button-frames");
-        let menu = toolbox.showFramesMenu({target: btn});
+        let frameMenu = toolbox.showFramesMenu({target: btn});
         dump(`Clicked the frame list button\n`);
-        return menu.once("open").then(() => {
-          return menu;
-        });
-      })
-      .then(frameMenu => {
+
+        await frameMenu.once("open");
+
         let frames = frameMenu.items;
 
         if (frames.length != 2) {
@@ -125,12 +138,12 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
 
         popupFrameBtn.click();
 
-        return waitForNavigated;
+        await waitForNavigated;
+
+        await jsterm.execute("myWebExtensionPopupAddonFunction()");
+
+        await toolbox.destroy();
       })
-      .then(() => {
-        return jsterm.execute("myWebExtensionPopupAddonFunction()");
-      })
-      .then(() => toolbox.destroy())
       .catch((error) => {
         dump("Error while running code in the browser toolbox process:\n");
         dump(error + "\n");
@@ -141,22 +154,6 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
   env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new " + testScript);
   registerCleanupFunction(() => {
     env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
-  });
-
-  // Wait for a notification sent by a script evaluated the test addon via
-  // the web console.
-  let onPopupCustomMessage = new Promise(done => {
-    Services.obs.addObserver(function listener(message, topic) {
-      let apiMessage = message.wrappedJSObject;
-      if (apiMessage.addonId != ADDON_ID) {
-        return;
-      }
-
-      if (apiMessage.arguments[0] == "Popup page function called") {
-        Services.obs.removeObserver(listener, "console-api-log-event");
-        done(apiMessage.arguments);
-      }
-    }, "console-api-log-event");
   });
 
   let onToolboxClose = BrowserToolboxProcess.once("close");
@@ -174,7 +171,7 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
 
   let args = yield onPopupCustomMessage;
   ok(true, "Received console message from the popup page function as expected");
-  is(args[0], "Popup page function called", "Got the expected console message");
+  is(args[0], "popupPageFunctionCalled", "Got the expected console message");
   is(args[1] && args[1].name, ADDON_NAME,
      "Got the expected manifest from WebExtension API");
 

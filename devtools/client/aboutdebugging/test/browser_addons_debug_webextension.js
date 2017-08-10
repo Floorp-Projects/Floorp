@@ -23,31 +23,39 @@ add_task(function* testWebExtensionsToolboxWebConsole() {
     tab, document, debugBtn,
   } = yield setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_MANIFEST_PATH);
 
-  // Wait for a notification sent by a script evaluated the test addon via
-  // the web console.
-  let onCustomMessage = new Promise(done => {
-    Services.obs.addObserver(function listener(message, topic) {
-      let apiMessage = message.wrappedJSObject;
-      if (apiMessage.addonId != ADDON_ID) {
-        return;
-      }
-      Services.obs.removeObserver(listener, "console-api-log-event");
-      done(apiMessage.arguments);
-    }, "console-api-log-event");
-  });
-
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
   let env = Cc["@mozilla.org/process/environment;1"]
               .getService(Ci.nsIEnvironment);
   let testScript = function () {
     /* eslint-disable no-undef */
+    function findMessages(hud, text, selector = ".message") {
+      const messages = hud.ui.outputNode.querySelectorAll(selector);
+      const elements = Array.prototype.filter.call(
+        messages,
+        (el) => el.textContent.includes(text)
+      );
+      return elements;
+    }
+
+    async function waitFor(condition) {
+      while (!condition()) {
+        await new Promise(done => window.setTimeout(done, 1000));
+      }
+    }
+
     toolbox.selectTool("webconsole")
-      .then(console => {
-        let { jsterm } = console.hud;
-        return jsterm.execute("myWebExtensionAddonFunction()");
+      .then(async console => {
+        let { hud } = console;
+        let { jsterm } = hud;
+        let onMessage = waitFor(() => {
+          return findMessages(hud, "Background page function called").length > 0;
+        });
+        await jsterm.execute("myWebExtensionAddonFunction()");
+        await onMessage;
+        await toolbox.destroy();
       })
-      .then(() => toolbox.destroy());
+      .catch(e => dump("Exception from browser toolbox process: " + e + "\n"));
     /* eslint-enable no-undef */
   };
   env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new " + testScript);
@@ -58,12 +66,6 @@ add_task(function* testWebExtensionsToolboxWebConsole() {
   let onToolboxClose = BrowserToolboxProcess.once("close");
 
   debugBtn.click();
-
-  let args = yield onCustomMessage;
-  ok(true, "Received console message from the background page function as expected");
-  is(args[0], "Background page function called", "Got the expected console message");
-  is(args[1] && args[1].name, ADDON_NAME,
-     "Got the expected manifest from WebExtension API");
 
   yield onToolboxClose;
   ok(true, "Addon toolbox closed");

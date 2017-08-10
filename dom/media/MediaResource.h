@@ -164,8 +164,6 @@ public:
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
 
   // These methods are called off the main thread.
-  // The mode is initially MODE_PLAYBACK.
-  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) = 0;
   // Read up to aCount bytes from the stream. The read starts at
   // aOffset in the stream, seeking to that location initially if
   // it is not the current stream offset. The remaining arguments,
@@ -194,9 +192,6 @@ public:
   // media.
   // A call to ReadAt will update this position.
   virtual int64_t Tell() = 0;
-  // Ensures that the value returned by IsSuspendedByCache below is up to date
-  // (i.e. the cache has examined this stream at least once).
-  virtual void EnsureCacheUpToDate() {}
 
   // These can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
@@ -324,6 +319,9 @@ public:
 
   // Resume any downloads that have been suspended.
   virtual void Resume() = 0;
+
+  // The mode is initially MODE_PLAYBACK.
+  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) = 0;
 
   /**
    * Open the stream. This creates a stream listener and returns it in
@@ -507,7 +505,6 @@ public:
   already_AddRefed<BaseMediaResource> CloneData(
     MediaResourceCallback* aDecoder) override;
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
-  void     EnsureCacheUpToDate() override;
 
   // Other thread
   void     SetReadMode(MediaCacheStream::ReadMode aMode) override;

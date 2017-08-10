@@ -5,8 +5,8 @@
 use api::{BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect, DeviceIntSize, DevicePoint};
 use api::{ExtendMode, FontKey, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
 use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize, TextShadow};
-use api::{LayerToWorldTransform, TileOffset, WebGLContextId, YuvColorSpace, YuvFormat};
-use api::{device_length, FontInstanceKey, LayerVector2D, LineOrientation, LineStyle};
+use api::{GlyphKey, LayerToWorldTransform, TileOffset, WebGLContextId, YuvColorSpace, YuvFormat};
+use api::{device_length, FontInstanceKey, LayerVector2D, LineOrientation, LineStyle, SubpixelDirection};
 use app_units::Au;
 use border::BorderCornerInstance;
 use euclid::{Size2D};
@@ -518,12 +518,13 @@ pub struct TextRunPrimitiveCpu {
     pub logical_font_size: Au,
     pub glyph_range: ItemRange<GlyphInstance>,
     pub glyph_count: usize,
-    // TODO(gw): Maybe make this an Arc for sharing with resource cache
-    pub glyph_instances: Vec<GlyphInstance>,
+    pub glyph_keys: Vec<GlyphKey>,
+    pub glyph_gpu_blocks: Vec<GpuBlockData>,
     pub glyph_options: Option<GlyphOptions>,
     pub normal_render_mode: FontRenderMode,
     pub shadow_render_mode: FontRenderMode,
     pub color: ColorF,
+    pub subpx_dir: SubpixelDirection,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -538,20 +539,6 @@ impl TextRunPrimitiveCpu {
                           device_pixel_ratio: f32,
                           display_list: &BuiltDisplayList,
                           run_mode: TextRunMode) {
-        // Cache the glyph positions, if not in the cache already.
-        // TODO(gw): In the future, remove `glyph_instances`
-        //           completely, and just reference the glyphs
-        //           directly from the displaty list.
-        if self.glyph_instances.is_empty() {
-            let src_glyphs = display_list.get(self.glyph_range);
-            for src in src_glyphs {
-                self.glyph_instances.push(GlyphInstance {
-                    index: src.index,
-                    point: src.point,
-                });
-            }
-        }
-
         let font_size_dp = self.logical_font_size.scale_by(device_pixel_ratio);
         let render_mode = match run_mode {
             TextRunMode::Normal => self.normal_render_mode,
@@ -562,28 +549,58 @@ impl TextRunPrimitiveCpu {
                                         font_size_dp,
                                         self.color,
                                         render_mode,
-                                        self.glyph_options);
+                                        self.glyph_options,
+                                        self.subpx_dir);
 
-        resource_cache.request_glyphs(font, &self.glyph_instances);
+        // Cache the glyph positions, if not in the cache already.
+        // TODO(gw): In the future, remove `glyph_instances`
+        //           completely, and just reference the glyphs
+        //           directly from the display list.
+        if self.glyph_keys.is_empty() {
+            let src_glyphs = display_list.get(self.glyph_range);
+
+            // TODO(gw): If we support chunks() on AuxIter
+            //           in the future, this code below could
+            //           be much simpler...
+            let mut gpu_block = GpuBlockData::empty();
+
+            for (i, src) in src_glyphs.enumerate() {
+                let key = GlyphKey::new(src.index,
+                                        src.point,
+                                        font.render_mode,
+                                        font.subpx_dir);
+                self.glyph_keys.push(key);
+
+                // Two glyphs are packed per GPU block.
+
+                if (i & 1) == 0 {
+                    gpu_block.data[0] = src.point.x;
+                    gpu_block.data[1] = src.point.y;
+                } else {
+                    gpu_block.data[2] = src.point.x;
+                    gpu_block.data[3] = src.point.y;
+                    self.glyph_gpu_blocks.push(gpu_block);
+                }
+            }
+
+            // Ensure the last block is added in the case
+            // of an odd number of glyphs.
+            if (self.glyph_keys.len() & 1) != 0 {
+                self.glyph_gpu_blocks.push(gpu_block);
+            }
+        }
+
+        resource_cache.request_glyphs(font, &self.glyph_keys);
     }
 
     fn write_gpu_blocks(&self,
                         request: &mut GpuDataRequest) {
         request.push(self.color);
-        request.push([self.offset.x, self.offset.y, 0.0, 0.0]);
-
-        // Two glyphs are packed per GPU block.
-        for glyph_chunk in self.glyph_instances.chunks(2) {
-            // In the case of an odd number of glyphs, the
-            // last glyph will get duplicated in the final
-            // GPU block.
-            let first_glyph = glyph_chunk.first().unwrap();
-            let second_glyph = glyph_chunk.last().unwrap();
-            request.push([first_glyph.point.x,
-                          first_glyph.point.y,
-                          second_glyph.point.x,
-                          second_glyph.point.y]);
-        }
+        request.push([self.offset.x,
+                      self.offset.y,
+                      self.subpx_dir as u32 as f32,
+                      0.0]);
+        request.extend_from_slice(&self.glyph_gpu_blocks);
     }
 }
 

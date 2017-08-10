@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ProxySelector;
@@ -29,6 +30,14 @@ import java.util.concurrent.TimeUnit;
  * {@link #loadInBackground()} returns a JSON string of Pocket stories.
  *
  * NB: Using AsyncTaskLoader rather than AsyncTask so that loader is tied Activity lifecycle.
+ *
+ * Access to Pocket Stories is controlled by a private Pocket API token.
+ * Add the following to your mozconfig to compile with the Pocket Stories:
+ *
+ *   export MOZ_ANDROID_POCKET=1
+ *   ac_add_options --with-pocket-api-keyfile=$topsrcdir/mobile/android/base/pocket-api-sandbox.token
+ *
+ * and include the Pocket API token in the token file.
  */
 
 public class PocketStoriesLoader extends AsyncTaskLoader<String> {
@@ -42,7 +51,7 @@ public class PocketStoriesLoader extends AsyncTaskLoader<String> {
     // Pocket API params and defaults
     private static final String GLOBAL_ENDPOINT = "https://getpocket.com/v3/firefox/global-recs";
     private static final String PARAM_APIKEY = "consumer_key";
-    private static final String APIKEY = "KEY_PLACEHOLDER"; // Bug 1386906: Add Pocket keys to builders.
+    private static final String APIKEY = AppConstants.MOZ_POCKET_API_KEY;
     private static final String PARAM_COUNT = "count";
     private static final int DEFAULT_COUNT = 20;
     private static final String PARAM_LOCALE = "locale_lang";
@@ -82,6 +91,10 @@ public class PocketStoriesLoader extends AsyncTaskLoader<String> {
 
     @Override
     public String loadInBackground() {
+        if (APIKEY == null) {
+            Log.e(LOGTAG, "Missing Pocket API key! See class comment about how to set up a mozconfig.");
+            return null;
+        }
         return makeAPIRequestWithKey(APIKEY);
     }
 

@@ -445,7 +445,14 @@ mochitest:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
+    tier:
+        by-test-platform:
+            macosx64-stylo/.*: 2
+            default: default
     mozharness:
         by-test-platform:
             android.*:
@@ -620,6 +627,9 @@ mochitest-chrome:
     run-on-projects:
         by-test-platform:
             windows7-32.*: ['try']
+            linux64-stylo/debug: ['try']
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -660,33 +670,9 @@ mochitest-chrome:
     tier:
         by-test-platform:
             windows7-32.*: 2
+            macosx64-stylo/.*: 2
+            linux64-stylo/debug: 3
             default: default
-
-mochitest-chrome-style:
-    description: "Mochitest chrome run for style system"
-    suite: mochitest/chrome-style
-    treeherder-symbol: tc-M(cs)
-    loopback-video: true
-    run-on-projects:
-        by-test-platform:
-            .*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            default: built-projects
-    e10s: false
-    mozharness:
-        mochitest-flavor: chrome
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --mochitest-suite=chrome-style
 
 mochitest-clipboard:
     description: "Mochitest clipboard run"
@@ -697,7 +683,9 @@ mochitest-clipboard:
     instance-size: xlarge
     run-on-projects:
         by-test-platform:
-            windows.*: ['try']
+            linux64-stylo/debug: ['try']
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -734,7 +722,8 @@ mochitest-clipboard:
                     - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
     tier:
         by-test-platform:
-            windows7-32.*: 2
+            macosx64-stylo/.*: 2
+            linux64-stylo/debug: 3
             default: default
 
 mochitest-devtools-chrome:
@@ -757,7 +746,9 @@ mochitest-devtools-chrome:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
-            .*-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -807,6 +798,9 @@ mochitest-gpu:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -842,6 +836,7 @@ mochitest-gpu:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
+            macosx64-stylo/.*: 2
             default: default
 
 mochitest-jetpack:
@@ -891,6 +886,9 @@ mochitest-media:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -929,32 +927,8 @@ mochitest-media:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
+            macosx64-stylo/.*: 2
             default: default
-
-mochitest-style:
-    description: "Mochitest plain run for style system"
-    suite: mochitest/plain-style
-    treeherder-symbol: tc-M(s)
-    loopback-video: true
-    run-on-projects:
-        by-test-platform:
-            .*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            default: built-projects
-    mozharness:
-        mochitest-flavor: plain
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --mochitest-suite=plain-style
 
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
@@ -996,6 +970,9 @@ mochitest-webgl:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -1046,6 +1023,7 @@ mochitest-webgl:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
+            macosx64-stylo/.*: 2
             default: default
 
 reftest:

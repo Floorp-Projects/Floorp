@@ -80,6 +80,7 @@ def assert_success(response, value=None):
     assert response.status == 200
     if value is not None:
         assert response.body["value"] == value
+    return response.body.get("value")
 
 def assert_dialog_handled(session, expected_text):
     result = session.transport.send("GET",
