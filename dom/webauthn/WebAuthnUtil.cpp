@@ -35,22 +35,90 @@ ReadToCryptoBuffer(pkix::Reader& aSrc, /* out */ CryptoBuffer& aDest,
   return NS_OK;
 }
 
+// Format:
+// 32 bytes: SHA256 of the RP ID
+// 1 byte: flags (TUP & AT)
+// 4 bytes: sign counter
+// variable: attestation data struct
+// variable: CBOR-format extension auth data (optional, not flagged)
 nsresult
-U2FAssembleAuthenticatorData(/* out */ CryptoBuffer& aAuthenticatorData,
-                             const CryptoBuffer& aRpIdHash,
-                             const CryptoBuffer& aSignatureData)
+AssembleAuthenticatorData(const CryptoBuffer& rpIdHashBuf,
+                          const uint8_t flags,
+                          const CryptoBuffer& counterBuf,
+                          const CryptoBuffer& attestationDataBuf,
+                          /* out */ CryptoBuffer& authDataBuf)
 {
-  // The AuthenticatorData for U2F devices is the concatenation of the
-  // RP ID with the output of the U2F Sign operation.
-  if (aRpIdHash.Length() != 32) {
+  if (NS_WARN_IF(!authDataBuf.SetCapacity(32 + 1 + 4 + attestationDataBuf.Length(),
+                                          mozilla::fallible))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (rpIdHashBuf.Length() != 32 || counterBuf.Length() != 4) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!aAuthenticatorData.AppendElements(aRpIdHash, mozilla::fallible)) {
+  uint8_t flagSet = flags;
+  if (!attestationDataBuf.IsEmpty()) {
+    flagSet |= FLAG_AT;
+  }
+
+  authDataBuf.AppendElements(rpIdHashBuf, mozilla::fallible);
+  authDataBuf.AppendElement(flagSet, mozilla::fallible);
+  authDataBuf.AppendElements(counterBuf, mozilla::fallible);
+  authDataBuf.AppendElements(attestationDataBuf, mozilla::fallible);
+  return NS_OK;
+}
+
+// attestation data struct format:
+// - 16 bytes: AAGUID
+// - 2 bytes: Length of Credential ID
+// - L bytes: Credential ID
+// - variable: CBOR-format public key
+nsresult
+AssembleAttestationData(const CryptoBuffer& aaguidBuf,
+                        const CryptoBuffer& keyHandleBuf,
+                        const CryptoBuffer& pubKeyObj,
+                        /* out */ CryptoBuffer& attestationDataBuf)
+{
+  if (NS_WARN_IF(!attestationDataBuf.SetCapacity(aaguidBuf.Length() + 2 +
+                                                 keyHandleBuf.Length() +
+                                                 pubKeyObj.Length(),
+                                                 mozilla::fallible))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (keyHandleBuf.Length() > 0xFFFF) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  attestationDataBuf.AppendElements(aaguidBuf, mozilla::fallible);
+  attestationDataBuf.AppendElement((keyHandleBuf.Length() >> 8) & 0xFF,
+                                   mozilla::fallible);
+  attestationDataBuf.AppendElement((keyHandleBuf.Length() >> 0) & 0xFF,
+                                   mozilla::fallible);
+  attestationDataBuf.AppendElements(keyHandleBuf, mozilla::fallible);
+  attestationDataBuf.AppendElements(pubKeyObj, mozilla::fallible);
+  return NS_OK;
+}
+
+nsresult
+U2FDecomposeSignResponse(const CryptoBuffer& aResponse,
+                         /* out */ uint8_t& aFlags,
+                         /* out */ CryptoBuffer& aCounterBuf,
+                         /* out */ CryptoBuffer& aSignatureBuf)
+{
+  if (aResponse.Length() < 5) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  Span<const uint8_t> rspView = MakeSpan(aResponse);
+  aFlags = rspView[0];
+
+  if (NS_WARN_IF(!aCounterBuf.AppendElements(rspView.FromTo(1, 5),
+                                             mozilla::fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!aAuthenticatorData.AppendElements(aSignatureData, mozilla::fallible)) {
+  if (NS_WARN_IF(!aSignatureBuf.AppendElements(rspView.From(5),
+                                               mozilla::fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
