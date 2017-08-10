@@ -50,7 +50,6 @@ def _defines():
                 'MOZ_ANDROID_PWA',
                 'MOZ_LEANPLUM_SDK_KEY',
                 'MOZ_LEANPLUM_SDK_CLIENTID',
-                'MOZ_ANDROID_POCKET',
                 'MOZ_ANDROID_SEARCH_ACTIVITY',
                 'MOZ_CRASHREPORTER',
                 'MOZ_DEBUG',
