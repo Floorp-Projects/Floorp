@@ -74,8 +74,6 @@ jobs:
               - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
               - "**/*.gradle"
               - "taskcluster/docker/android-gradle-build/**"
-        toolchains:
-          - linux64-sccache
 
     android-test:
         description: "Android armv7 unit tests"
@@ -124,8 +122,6 @@ jobs:
           - - skip-unless-changed
             - - "mobile/android/base/**"
               - "mobile/android/tests/background/junit4/**"
-        toolchains:
-          - linux64-sccache
 
     android-lint:
         description: "Android lint"
@@ -196,8 +192,6 @@ jobs:
               - "mobile/android/**/*.gradle"
               - "mobile/android/**/Makefile.in"
               - "mobile/android/**/moz.build"
-        toolchains:
-          - linux64-sccache
 
     android-checkstyle:
         description: "Android checkstyle"
@@ -252,8 +246,6 @@ jobs:
               - "mobile/android/**/*.gradle"
               - "mobile/android/**/Makefile.in"
               - "mobile/android/**/moz.build"
-        toolchains:
-          - linux64-sccache
 
     android-findbugs:
         description: "Android findbugs"
@@ -313,5 +305,3 @@ jobs:
               - "mobile/android/**/*.gradle"
               - "mobile/android/**/Makefile.in"
               - "mobile/android/**/moz.build"
-        toolchains:
-          - linux64-sccache

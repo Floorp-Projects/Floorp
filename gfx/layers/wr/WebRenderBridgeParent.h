@@ -187,10 +187,6 @@ public:
   void UpdateAPZ();
   const WebRenderScrollData& GetScrollData() const;
 
-  static wr::IdNamespace AllocIdNameSpace() {
-    return wr::IdNamespace { ++sIdNameSpace };
-  }
-
   void FlushRendering(bool aIsSync);
 
   void ScheduleComposition();
@@ -296,8 +292,6 @@ private:
 
   // Can only be accessed on the compositor thread.
   WebRenderScrollData mScrollData;
-
-  static uint32_t sIdNameSpace;
 };
 
 } // namespace layers

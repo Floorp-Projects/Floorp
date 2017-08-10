@@ -1141,13 +1141,13 @@ option('--enable-gold',
        help='Enable GNU Gold Linker when it is not already the default',
        when=build_not_win_mac)
 
+imply_option('--enable-linker',
+             depends_if('--enable-gold', when=build_not_win_mac)(lambda x: 'gold'),
+             when=build_not_win_mac)
 
-@depends('--enable-gold', c_compiler, developer_options, check_build_environment, when=build_not_win_mac)
-@checking('for ld', lambda x: x.KIND)
 @imports('os')
 @imports('shutil')
-def enable_gold(enable_gold_option, c_compiler, developer_options, build_env):
-    linker = None
+def enable_gnu_linker(enable_gold_option, c_compiler, developer_options, build_env, linker_name):
     # Used to check the kind of linker
     version_check = ['-Wl,--version']
     cmd_base = c_compiler.wrapper + [c_compiler.compiler] + c_compiler.flags
@@ -1182,7 +1182,7 @@ def enable_gold(enable_gold_option, c_compiler, developer_options, build_env):
             # The -B trick didn't work, removing the directory
             shutil.rmtree(targetDir)
 
-    if enable_gold_option or developer_options:
+    if (enable_gold_option or developer_options) and linker_name != 'bfd':
         result = resolve_gold()
 
         if result:
@@ -1213,5 +1213,30 @@ def enable_gold(enable_gold_option, c_compiler, developer_options, build_env):
         KIND='other'
     )
 
-set_config('LD_IS_BFD', depends(enable_gold.KIND)(lambda x: x == 'bfd' or None))
-set_config('LINKER_LDFLAGS', enable_gold.LINKER_FLAG)
+js_option('--enable-linker', nargs=1,
+          choices=('bfd', 'gold', 'lld', 'other'),
+          help='Select the linker',
+          when=build_not_win_mac)
+
+@depends('--enable-linker', c_compiler, developer_options, check_build_environment, when=build_not_win_mac)
+@checking('for linker', lambda x: x.KIND)
+def select_linker(linker, c_compiler, developer_options, build_env):
+    linker = linker[0] if linker else 'other'
+    if linker in ('gold', 'bfd', 'other'):
+        return enable_gnu_linker(linker == 'gold', c_compiler, developer_options, build_env, linker)
+    if linker == 'lld':
+        version_check = ['-Wl,--version']
+        cmd_base = c_compiler.wrapper + [c_compiler.compiler] + c_compiler.flags
+        lld = "-fuse-ld=" + linker
+        cmd = cmd_base + [lld] + version_check
+        if 'LLD' in check_cmd_output(*cmd).decode('utf-8'):
+            return namespace(
+                KIND='lld',
+                LINKER_FLAG=lld,
+            )
+        else:
+            die("Could not use lld as linker")
+
+
+set_config('LD_IS_BFD', depends(select_linker.KIND)(lambda x: x == 'bfd' or None))
+set_config('LINKER_LDFLAGS', select_linker.LINKER_FLAG)

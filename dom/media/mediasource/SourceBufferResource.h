@@ -45,10 +45,6 @@ public:
     UNIMPLEMENTED();
     return nullptr;
   }
-  void SetReadMode(MediaCacheStream::ReadMode aMode) override
-  {
-    UNIMPLEMENTED();
-  }
   nsresult ReadAt(int64_t aOffset,
                   char* aBuffer,
                   uint32_t aCount,

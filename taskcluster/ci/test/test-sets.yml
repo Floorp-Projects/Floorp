@@ -84,15 +84,20 @@ stylo-tests:
     - crashtest
     - reftest
     - reftest-stylo
-    - mochitest-style
-    - mochitest-chrome-style
     - web-platform-tests
     - web-platform-tests-reftests
+    - mochitest
+    - mochitest-browser-screenshots
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-gpu
+    - mochitest-media
+    - mochitest-webgl
 
 stylo-sequential-tests:
     - crashtest
     - reftest-stylo
-    - mochitest-style
+    - mochitest
 
 qr-tests:
     - cppunit

@@ -35,7 +35,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -898,7 +897,7 @@ public class FxAccountClient20 implements FxAccountClient {
   }
 
   @Override
-  public void notifyDevices(@NonNull byte[] sessionToken, @NonNull List<String> deviceIds, ExtendedJSONObject payload, Long TTL, RequestDelegate<ExtendedJSONObject> delegate) {
+  public void notifyDevices(@NonNull byte[] sessionToken, ExtendedJSONObject body, RequestDelegate<ExtendedJSONObject> delegate) {
     final byte[] tokenId = new byte[32];
     final byte[] reqHMACKey = new byte[32];
     final byte[] requestKey = new byte[32];
@@ -910,7 +909,6 @@ public class FxAccountClient20 implements FxAccountClient {
     }
 
     final BaseResource resource;
-    final ExtendedJSONObject body = createNotifyDevicesBody(deviceIds, payload, TTL);
     try {
       resource = getBaseResource("account/devices/notify");
     } catch (URISyntaxException | UnsupportedEncodingException e) {
@@ -930,21 +928,5 @@ public class FxAccountClient20 implements FxAccountClient {
     };
 
     post(resource, body);
-  }
-
-  @NonNull
-  @SuppressWarnings("unchecked")
-  private ExtendedJSONObject createNotifyDevicesBody(@NonNull List<String> deviceIds, ExtendedJSONObject payload, Long TTL) {
-    final ExtendedJSONObject body = new ExtendedJSONObject();
-    final JSONArray to = new JSONArray();
-    to.addAll(deviceIds);
-    body.put("to", to);
-    if (payload != null) {
-      body.put("payload", payload);
-    }
-    if (TTL != null) {
-      body.put("TTL", TTL);
-    }
-    return body;
   }
 }

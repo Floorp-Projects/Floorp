@@ -112,8 +112,6 @@ private:
   InfallibleTArray<OpDestroy>* mActorsToDestroy;
 };
 
-/* static */ uint32_t WebRenderBridgeParent::sIdNameSpace = 0;
-
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                                              const wr::PipelineId& aPipelineId,
                                              widget::CompositorWidget* aWidget,
@@ -131,7 +129,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mWrEpoch(0)
-  , mIdNamespace(AllocIdNameSpace())
+  , mIdNamespace(aApi->GetNamespace())
   , mPaused(false)
   , mDestroyed(false)
   , mForceRendering(false)
@@ -150,7 +148,7 @@ WebRenderBridgeParent::WebRenderBridgeParent()
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mWrEpoch(0)
-  , mIdNamespace(AllocIdNameSpace())
+  , mIdNamespace{0}
   , mPaused(false)
   , mDestroyed(true)
   , mForceRendering(false)
@@ -794,7 +792,7 @@ WebRenderBridgeParent::RecvRemovePipelineIdForCompositable(const wr::PipelineId&
   }
 
   wrHost->ClearWrBridge();
-  mAsyncImageManager->RemoveAsyncImagePipeline(mApi, aPipelineId);
+  mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId);
   mAsyncCompositables.Remove(wr::AsUint64(aPipelineId));
   return IPC_OK();
 }
@@ -886,7 +884,7 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
 
   // Update id name space to identify obsoleted keys.
   // Since usage of invalid keys could cause crash in webrender.
-  mIdNamespace = AllocIdNameSpace();
+  mIdNamespace = aApi->GetNamespace();
   // XXX Remove it when webrender supports sharing/moving Keys between different webrender instances.
   // XXX It requests client to update/reallocate webrender related resources,
   // but parent side does not wait end of the update.
@@ -1118,7 +1116,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   nsTArray<wr::WrTransformProperty> transformArray;
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-  mAsyncImageManager->ApplyAsyncImages(mApi);
+  mAsyncImageManager->ApplyAsyncImages();
 
   SampleAnimations(opacityArray, transformArray);
   if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
@@ -1315,7 +1313,7 @@ WebRenderBridgeParent::ClearResources()
     wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
     RefPtr<WebRenderImageHost> host = iter.Data();
     host->ClearWrBridge();
-    mAsyncImageManager->RemoveAsyncImagePipeline(mApi, pipelineId);
+    mAsyncImageManager->RemoveAsyncImagePipeline(pipelineId);
   }
   mAsyncCompositables.Clear();
 
@@ -1331,6 +1329,7 @@ WebRenderBridgeParent::ClearResources()
   }
   mAnimStorage = nullptr;
   mCompositorScheduler = nullptr;
+  mAsyncImageManager = nullptr;
   mApi = nullptr;
   mCompositorBridge = nullptr;
 }
@@ -1454,6 +1453,9 @@ void
 WebRenderBridgeParent::ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
 {
   MOZ_ASSERT(mWidget);
+  if (mDestroyed) {
+    return;
+  }
   mAsyncImageManager->FlushImageNotifications(aNotifications);
 }
 

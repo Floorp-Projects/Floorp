@@ -724,7 +724,7 @@ EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
     RefPtr<Selection> selection = aSelection ? aSelection : GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-    selection->StartBatchChanges();
+    SelectionBatcher selectionBatcher(selection);
 
     nsresult rv;
     if (mTxnMgr) {
@@ -733,14 +733,11 @@ EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
     } else {
       rv = aTxn->DoTransaction();
     }
-    if (NS_SUCCEEDED(rv)) {
-      DoAfterDoTransaction(aTxn);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
-    // no need to check rv here, don't lose result of operation
-    selection->EndBatchChanges();
-
-    NS_ENSURE_SUCCESS(rv, rv);
+    DoAfterDoTransaction(aTxn);
   }
 
   return NS_OK;

@@ -3,19 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState};
-use fnv::FnvHasher;
+use internal_types::{FastHashSet, FastHashMap};
 use print_tree::PrintTree;
-use std::collections::{HashMap, HashSet};
-use std::hash::BuildHasherDefault;
 use api::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform};
 use api::{LayerToWorldTransform, PipelineId, ScrollClamping, ScrollEventPhase};
 use api::{LayerVector2D, ScrollLayerState, ScrollLocation, WorldPoint};
 
-pub type ScrollStates = HashMap<ClipId, ScrollingState, BuildHasherDefault<FnvHasher>>;
+pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
 
 pub struct ClipScrollTree {
-    pub nodes: HashMap<ClipId, ClipScrollNode, BuildHasherDefault<FnvHasher>>,
-    pub pending_scroll_offsets: HashMap<ClipId, (LayerPoint, ScrollClamping)>,
+    pub nodes: FastHashMap<ClipId, ClipScrollNode>,
+    pub pending_scroll_offsets: FastHashMap<ClipId, (LayerPoint, ScrollClamping)>,
 
     /// The ClipId of the currently scrolling node. Used to allow the same
     /// node to scroll even if a touch operation leaves the boundaries of that node.
@@ -36,20 +34,20 @@ pub struct ClipScrollTree {
 
     /// A set of pipelines which should be discarded the next time this
     /// tree is drained.
-    pub pipelines_to_discard: HashSet<PipelineId>,
+    pub pipelines_to_discard: FastHashSet<PipelineId>,
 }
 
 impl ClipScrollTree {
     pub fn new() -> ClipScrollTree {
-        let dummy_pipeline = PipelineId(0, 0);
+        let dummy_pipeline = PipelineId::dummy();
         ClipScrollTree {
-            nodes: HashMap::default(),
-            pending_scroll_offsets: HashMap::new(),
+            nodes: FastHashMap::default(),
+            pending_scroll_offsets: FastHashMap::default(),
             currently_scrolling_node_id: None,
             root_reference_frame_id: ClipId::root_reference_frame(dummy_pipeline),
             topmost_scrolling_node_id: ClipId::root_scroll_node(dummy_pipeline),
             current_new_node_item: 1,
-            pipelines_to_discard: HashSet::new(),
+            pipelines_to_discard: FastHashSet::default(),
         }
     }
 
@@ -68,8 +66,8 @@ impl ClipScrollTree {
     }
 
     pub fn collect_nodes_bouncing_back(&self)
-                                       -> HashSet<ClipId, BuildHasherDefault<FnvHasher>> {
-        let mut nodes_bouncing_back = HashSet::default();
+                                       -> FastHashSet<ClipId> {
+        let mut nodes_bouncing_back = FastHashSet::default();
         for (clip_id, node) in self.nodes.iter() {
             if let NodeType::ScrollFrame(ref scrolling) = node.node_type {
                 if scrolling.bouncing_back {
@@ -123,7 +121,7 @@ impl ClipScrollTree {
     pub fn drain(&mut self) -> ScrollStates {
         self.current_new_node_item = 1;
 
-        let mut scroll_states = HashMap::default();
+        let mut scroll_states = FastHashMap::default();
         for (layer_id, old_node) in &mut self.nodes.drain() {
             if self.pipelines_to_discard.contains(&layer_id.pipeline_id()) {
                 continue;

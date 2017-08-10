@@ -554,7 +554,6 @@ linux64-ccov/opt:
     index:
         product: firefox
         job-name: linux64-ccov-opt
-    needs-sccache: false
     treeherder:
         platform: linux64-ccov/opt
         symbol: tc(B)
@@ -579,7 +578,6 @@ linux64-ccov/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
-        - linux64-sccache
 
 linux64-add-on-devel/opt:
     description: "Linux64 add-on-devel"

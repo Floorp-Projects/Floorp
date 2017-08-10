@@ -273,6 +273,21 @@ private:
   // tree don't duplicate scroll metadata that their ancestors already have.
   std::vector<const ActiveScrolledRoot*> mAsrStack;
 
+public:
+  // Note: two DisplayItemClipChain* A and B might actually be "equal" (as per
+  // DisplayItemClipChain::Equal(A, B)) even though they are not the same pointer
+  // (A != B). In this hopefully-rare case, they will get separate entries
+  // in this map when in fact we could collapse them. However, to collapse
+  // them involves writing a custom hash function for the pointer type such that
+  // A and B hash to the same things whenever DisplayItemClipChain::Equal(A, B)
+  // is true, and that will incur a performance penalty for all the hashmap
+  // operations, so is probably not worth it. With the current code we might
+  // end up creating multiple clips in WR that are effectively identical but
+  // have separate clip ids. Hopefully this won't happen very often.
+  typedef std::unordered_map<const DisplayItemClipChain*, wr::WrClipId> ClipIdMap;
+private:
+  ClipIdMap mClipIdCache;
+
   // Layers that have been mutated. If we have an empty transaction
   // then a display item layer will no longer be valid
   // if it was a mutated layers.

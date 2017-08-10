@@ -17,8 +17,8 @@
 %define buttonStateActive :not([disabled]):-moz-any([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
 %define menuStateMenuActive :not([disabled])[_moz-menuactive]
-
-%include ../browser.inc
+%define inAnyPanel :-moz-any(:not([cui-areatype="toolbar"]), [overflowedItem=true])
+%define panelPaletteIconSize 16px
 
 :root {
   --panel-ui-exit-subview-gutter-width: 38px;
@@ -26,7 +26,6 @@
   --appmenu-yellow-warning-color: #FFEFBF;
   --appmenu-yellow-warning-hover-color: #FFE8A2;
   --appmenu-yellow-warning-active-color: #FFE38F;
-  --panel-palette-icon-size: 16px;
 }
 
 #PanelUI-popup #PanelUI-contents:empty {
