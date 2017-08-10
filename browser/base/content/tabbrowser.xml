@@ -2243,6 +2243,10 @@
                     return Services.io.newURI(url);
                   };
                   break;
+                case "fullZoom":
+                case "textZoom":
+                  getter = () => 1;
+                  break;
                 case "getTabBrowser":
                   getter = () => {
                     return () => {
