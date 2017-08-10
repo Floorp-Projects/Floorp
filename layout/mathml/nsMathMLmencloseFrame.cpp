@@ -47,7 +47,7 @@ NS_NewMathMLmencloseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmencloseFrame)
 
 nsMathMLmencloseFrame::nsMathMLmencloseFrame(nsStyleContext* aContext, ClassID aID) :
-  nsMathMLContainerFrame(aContext, aID),
+  nsMathMLContainerFrame(aContext, aID), mNotationsToDraw(0),
   mRuleThickness(0), mRadicalRuleThickness(0),
   mLongDivCharIndex(-1), mRadicalCharIndex(-1), mContentWidth(0)
 {
@@ -99,47 +99,42 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation)
   if (aNotation.EqualsLiteral("longdiv")) {
     rv = AllocateMathMLChar(NOTATION_LONGDIV);
     NS_ENSURE_SUCCESS(rv, rv);
-    mNotationsToDraw += NOTATION_LONGDIV;
+    mNotationsToDraw |= NOTATION_LONGDIV;
   } else if (aNotation.EqualsLiteral("actuarial")) {
-    mNotationsToDraw += NOTATION_RIGHT;
-    mNotationsToDraw += NOTATION_TOP;
+    mNotationsToDraw |= (NOTATION_RIGHT | NOTATION_TOP);
   } else if (aNotation.EqualsLiteral("radical")) {
     rv = AllocateMathMLChar(NOTATION_RADICAL);
     NS_ENSURE_SUCCESS(rv, rv);
-    mNotationsToDraw += NOTATION_RADICAL;
+    mNotationsToDraw |= NOTATION_RADICAL;
   } else if (aNotation.EqualsLiteral("box")) {
-    mNotationsToDraw += NOTATION_LEFT;
-    mNotationsToDraw += NOTATION_RIGHT;
-    mNotationsToDraw += NOTATION_TOP;
-    mNotationsToDraw += NOTATION_BOTTOM;
+    mNotationsToDraw |= (NOTATION_LEFT | NOTATION_RIGHT |
+                         NOTATION_TOP | NOTATION_BOTTOM);
   } else if (aNotation.EqualsLiteral("roundedbox")) {
-    mNotationsToDraw += NOTATION_ROUNDEDBOX;
+    mNotationsToDraw |= NOTATION_ROUNDEDBOX;
   } else if (aNotation.EqualsLiteral("circle")) {
-    mNotationsToDraw += NOTATION_CIRCLE;
+    mNotationsToDraw |= NOTATION_CIRCLE;
   } else if (aNotation.EqualsLiteral("left")) {
-    mNotationsToDraw += NOTATION_LEFT;
+    mNotationsToDraw |= NOTATION_LEFT;
   } else if (aNotation.EqualsLiteral("right")) {
-    mNotationsToDraw += NOTATION_RIGHT;
+    mNotationsToDraw |= NOTATION_RIGHT;
   } else if (aNotation.EqualsLiteral("top")) {
-    mNotationsToDraw += NOTATION_TOP;
+    mNotationsToDraw |= NOTATION_TOP;
   } else if (aNotation.EqualsLiteral("bottom")) {
-    mNotationsToDraw += NOTATION_BOTTOM;
+    mNotationsToDraw |= NOTATION_BOTTOM;
   } else if (aNotation.EqualsLiteral("updiagonalstrike")) {
-    mNotationsToDraw += NOTATION_UPDIAGONALSTRIKE;
+    mNotationsToDraw |= NOTATION_UPDIAGONALSTRIKE;
   } else if (aNotation.EqualsLiteral("updiagonalarrow")) {
-    mNotationsToDraw += NOTATION_UPDIAGONALARROW;
+    mNotationsToDraw |= NOTATION_UPDIAGONALARROW;
   } else if (aNotation.EqualsLiteral("downdiagonalstrike")) {
-    mNotationsToDraw += NOTATION_DOWNDIAGONALSTRIKE;
+    mNotationsToDraw |= NOTATION_DOWNDIAGONALSTRIKE;
   } else if (aNotation.EqualsLiteral("verticalstrike")) {
-    mNotationsToDraw += NOTATION_VERTICALSTRIKE;
+    mNotationsToDraw |= NOTATION_VERTICALSTRIKE;
   } else if (aNotation.EqualsLiteral("horizontalstrike")) {
-    mNotationsToDraw += NOTATION_HORIZONTALSTRIKE;
+    mNotationsToDraw |= NOTATION_HORIZONTALSTRIKE;
   } else if (aNotation.EqualsLiteral("madruwb")) {
-    mNotationsToDraw += NOTATION_RIGHT;
-    mNotationsToDraw += NOTATION_BOTTOM;
+    mNotationsToDraw |= (NOTATION_RIGHT | NOTATION_BOTTOM);
   } else if (aNotation.EqualsLiteral("phasorangle")) {
-    mNotationsToDraw += NOTATION_BOTTOM;
-    mNotationsToDraw += NOTATION_PHASORANGLE;
+    mNotationsToDraw |= (NOTATION_BOTTOM | NOTATION_PHASORANGLE);
   }
 
   return NS_OK;
@@ -150,7 +145,7 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation)
  */
 void nsMathMLmencloseFrame::InitNotations()
 {
-  mNotationsToDraw.clear();
+  mNotationsToDraw = 0;
   mLongDivCharIndex = mRadicalCharIndex = -1;
   mMathMLChar.Clear();
 
@@ -168,13 +163,13 @@ void nsMathMLmencloseFrame::InitNotations()
       // the two notations are drawn then the strike line may cause the point of
       // the arrow to be too wide. Hence we will only draw the updiagonalarrow
       // and the arrow shaft may be thought to be the updiagonalstrike.
-      mNotationsToDraw -= NOTATION_UPDIAGONALSTRIKE;
+      mNotationsToDraw &= ~NOTATION_UPDIAGONALSTRIKE;
     }
   } else {
     // default: longdiv
     if (NS_FAILED(AllocateMathMLChar(NOTATION_LONGDIV)))
       return;
-    mNotationsToDraw += NOTATION_LONGDIV;
+    mNotationsToDraw = NOTATION_LONGDIV;
   }
 }
 
@@ -225,7 +220,7 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     mMathMLChar[mRadicalCharIndex].GetRect(rect);
     rect.MoveBy(StyleVisibility()->mDirection ? -mContentWidth : rect.width, 0);
     rect.SizeTo(mContentWidth, mRadicalRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists, NOTATION_RADICAL);
+    DisplayBar(aBuilder, this, rect, aLists);
   }
 
   if (IsToDraw(NOTATION_PHASORANGLE)) {
@@ -239,29 +234,29 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsRect rect;
     mMathMLChar[mLongDivCharIndex].GetRect(rect);
     rect.SizeTo(rect.width + mContentWidth, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists, NOTATION_LONGDIV);
+    DisplayBar(aBuilder, this, rect, aLists);
   }
 
   if (IsToDraw(NOTATION_TOP)) {
     nsRect rect(0, 0, mencloseRect.width, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists, NOTATION_TOP);
+    DisplayBar(aBuilder, this, rect, aLists);
   }
 
   if (IsToDraw(NOTATION_BOTTOM)) {
     nsRect rect(0, mencloseRect.height - mRuleThickness,
                 mencloseRect.width, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists, NOTATION_BOTTOM);
+    DisplayBar(aBuilder, this, rect, aLists);
   }
 
   if (IsToDraw(NOTATION_LEFT)) {
     nsRect rect(0, 0, mRuleThickness, mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists, NOTATION_LEFT);
+    DisplayBar(aBuilder, this, rect, aLists);
   }
 
   if (IsToDraw(NOTATION_RIGHT)) {
     nsRect rect(mencloseRect.width - mRuleThickness, 0,
                 mRuleThickness, mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists, NOTATION_RIGHT);
+    DisplayBar(aBuilder, this, rect, aLists);
   }
 
   if (IsToDraw(NOTATION_ROUNDEDBOX)) {
@@ -292,13 +287,13 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (IsToDraw(NOTATION_HORIZONTALSTRIKE)) {
     nsRect rect(0, mencloseRect.height / 2 - mRuleThickness / 2,
                 mencloseRect.width, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists, NOTATION_HORIZONTALSTRIKE);
+    DisplayBar(aBuilder, this, rect, aLists);
   }
 
   if (IsToDraw(NOTATION_VERTICALSTRIKE)) {
     nsRect rect(mencloseRect.width / 2 - mRuleThickness / 2, 0,
                 mRuleThickness, mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists, NOTATION_VERTICALSTRIKE);
+    DisplayBar(aBuilder, this, rect, aLists);
   }
 }
 
@@ -760,10 +755,6 @@ public:
     MOZ_COUNT_DTOR(nsDisplayNotation);
   }
 #endif
-
-  virtual uint32_t GetPerFrameKey() override {
-    return (mType << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
