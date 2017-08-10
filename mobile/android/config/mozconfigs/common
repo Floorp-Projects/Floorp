@@ -79,8 +79,10 @@ else
 fi
 
 # MOZ_ANDROID_POCKET depends on --with-pocket-api-keyfile, and will
-# fail if MOZ_ANDROID_POCKET is specified but a keyfile is not. We set a default
-# dummy key for non-channel builds, because Pocket is not a critical component.
+# fail if MOZ_ANDROID_POCKET is specified but a keyfile is not. There's no default
+# keyfile set, so if we misconfigure beta or release or nightly, the builds will
+# fail (at configure time).
+# Otherwise, Pocket is not a critical component so it can be built with a dummy key.
 if test "$MOZ_UPDATE_CHANNEL" = "release" ; then
     ac_add_options --with-pocket-api-keyfile=/builds/pocket-api-release.token
 elif test "$MOZ_UPDATE_CHANNEL" = "beta" ; then
