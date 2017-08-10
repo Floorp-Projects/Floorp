@@ -27,7 +27,7 @@ function manifestVideo() {
 // name "mochi.test".
 let serverUrl = SpecialPowers.Services.prefs.getCharPref("media.hls.server.url");
 var gHLSTests = [
-  { name: serverUrl + "/bipbop_4x3_variant.m3u8", type:"audio/x-mpegurl", duration:19.95334 }
+  { name: serverUrl + "/bipbop_4x3_variant.m3u8", type:"audio/x-mpegurl", duration:20.000 }
 ];
 
 // These are small test files, good for just seeing if something loads. We

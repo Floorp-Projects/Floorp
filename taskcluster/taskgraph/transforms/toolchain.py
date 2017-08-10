@@ -80,6 +80,9 @@ def use_toolchains(config, jobs):
                                    t, f))
             filenames[f] = t
 
+            if t.endswith('-sccache'):
+                job['needs-sccache'] = True
+
         if toolchains:
             job.setdefault('dependencies', {}).update(
                 ('toolchain-%s' % t, 'toolchain-%s' % t)

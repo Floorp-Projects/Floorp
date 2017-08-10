@@ -52,4 +52,25 @@ ServoStyleContext::GetCachedInheritingAnonBoxStyle(nsIAtom* aAnonBox) const
   return current;
 }
 
+ServoStyleContext*
+ServoStyleContext::GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const
+{
+  MOZ_ASSERT(aPseudo != CSSPseudoElementType::NotPseudo &&
+             aPseudo != CSSPseudoElementType::InheritingAnonBox &&
+             aPseudo != CSSPseudoElementType::NonInheritingAnonBox);
+  MOZ_ASSERT(!IsLazilyCascadedPseudoElement(), "Lazy pseudos can't inherit lazy pseudos");
+
+  if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(aPseudo)) {
+    return nullptr;
+  }
+
+  auto* current = mNextLazyPseudoStyle.get();
+
+  while (current && current->GetPseudoType() != aPseudo) {
+    current = current->mNextLazyPseudoStyle.get();
+  }
+
+  return current;
+}
+
 } // namespace mozilla

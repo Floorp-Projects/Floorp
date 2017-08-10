@@ -258,6 +258,11 @@ ServoStyleSet::ResolveMappedAttrDeclarationBlocks()
 void
 ServoStyleSet::PreTraverseSync()
 {
+  // Get the Document's root element to ensure that the cache is valid before
+  // calling into the (potentially-parallel) Servo traversal, where a cache hit
+  // is necessary to avoid a data race when updating the cache.
+  mozilla::Unused << mPresContext->Document()->GetRootElement();
+
   ResolveMappedAttrDeclarationBlocks();
 
   nsCSSRuleProcessor::InitSystemMetrics();
@@ -332,11 +337,6 @@ ServoStyleSet::PrepareAndTraverseSubtree(
 
   AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(), forThrottledAnimationFlush);
 
-  // Get the Document's root element to ensure that the cache is valid before
-  // calling into the (potentially-parallel) Servo traversal, where a cache hit
-  // is necessary to avoid a data race when updating the cache.
-  mozilla::Unused << aRoot->OwnerDoc()->GetRootElement();
-
   MOZ_ASSERT(!StylistNeedsUpdate());
   AutoSetInServoTraversal guard(this);
 
@@ -371,24 +371,20 @@ ServoStyleSet::PrepareAndTraverseSubtree(
     EffectCompositor::AnimationRestyleType::Throttled;
   if (forReconstruct ? compositor->PreTraverseInSubtree(root, restyleType)
                      : compositor->PreTraverse(restyleType)) {
-    if (Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags)) {
-      MOZ_ASSERT(!forReconstruct);
-      if (isInitial) {
-        // We're doing initial styling, and the additional animation
-        // traversal changed the styles that were set by the first traversal.
-        // This would normally require a post-traversal to update the style
-        // contexts, and the DOM now has dirty descendant bits and RestyleData
-        // in expectation of that post-traversal. But since this is actually
-        // the initial styling, there are no style contexts to update and no
-        // frames to apply the change hints to, so we don't need to do that
-        // post-traversal. Instead, just drop this state and tell the caller
-        // that no post-traversal is required.
-        MOZ_ASSERT(!postTraversalRequired);
-        ServoRestyleManager::ClearRestyleStateFromSubtree(root);
-      } else {
-        postTraversalRequired = true;
-      }
+    if (isInitial) {
+      // We're doing initial styling, and the additional animation
+      // traversal will change the styles that were set by the first traversal.
+      // This would normally require a post-traversal to update the style
+      // contexts, but since this is actually the initial styling, there are
+      // no style contexts to update and no frames to apply the change hints to,
+      // so we just do a forgetful traversal and clear the flags on the way.
+      aFlags |= ServoTraversalFlags::Forgetful |
+                ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
     }
+
+    postTraversalRequired =
+      Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags);
+    MOZ_ASSERT_IF(isInitial || forReconstruct, !postTraversalRequired);
   }
 
   return postTraversalRequired;
@@ -414,7 +410,7 @@ ResolveStyleForTextOrFirstLetterContinuation(
                                          &aParent,
                                          inheritTarget).Consume();
     MOZ_ASSERT(style);
-    aParent.SetCachedInheritedAnonBoxStyle(aAnonBox, *style);
+    aParent.SetCachedInheritedAnonBoxStyle(aAnonBox, style);
   }
 
   return style.forget();
@@ -482,12 +478,21 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
                          mRawSet.get(),
                          ServoTraversalFlags::Empty).Consume();
   } else {
+    bool cacheable =
+      !nsCSSPseudoElements::IsEagerlyCascadedInServo(aType) && aParentContext;
     computedValues =
-      Servo_ResolvePseudoStyle(aOriginatingElement,
-                               aType,
-                               /* is_probe = */ false,
-                               aParentContext,
-                               mRawSet.get()).Consume();
+      cacheable ? aParentContext->GetCachedLazyPseudoStyle(aType) : nullptr;
+
+    if (!computedValues) {
+      computedValues = Servo_ResolvePseudoStyle(aOriginatingElement,
+                                                aType,
+                                                /* is_probe = */ false,
+                                                aParentContext,
+                                                mRawSet.get()).Consume();
+      if (cacheable) {
+        aParentContext->SetCachedLazyPseudoStyle(computedValues);
+      }
+    }
   }
 
   MOZ_ASSERT(computedValues);
@@ -547,7 +552,7 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
                                               mRawSet.get()).Consume();
     MOZ_ASSERT(style);
     if (aParentContext) {
-      aParentContext->SetCachedInheritedAnonBoxStyle(aPseudoTag, *style);
+      aParentContext->SetCachedInheritedAnonBoxStyle(aPseudoTag, style);
     }
   }
 
@@ -809,13 +814,25 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
   // aOriginatingElement's styles anyway.
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
 
+  bool cacheable =
+    !nsCSSPseudoElements::IsEagerlyCascadedInServo(aType) && aParentContext;
+
   RefPtr<ServoStyleContext> computedValues =
-    Servo_ResolvePseudoStyle(aOriginatingElement, aType,
-                             /* is_probe = */ true,
-                             nullptr,
-                             mRawSet.get()).Consume();
+    cacheable ? aParentContext->GetCachedLazyPseudoStyle(aType) : nullptr;
   if (!computedValues) {
-    return nullptr;
+    computedValues = Servo_ResolvePseudoStyle(aOriginatingElement, aType,
+                                              /* is_probe = */ true,
+                                              nullptr,
+                                              mRawSet.get()).Consume();
+    if (!computedValues) {
+      return nullptr;
+    }
+
+    if (cacheable) {
+      // NB: We don't need to worry about the before/after handling below
+      // because those are eager and thus not |cacheable| anyway.
+      aParentContext->SetCachedLazyPseudoStyle(computedValues);
+    }
   }
 
   // For :before and :after pseudo-elements, having display: none or no
@@ -877,9 +894,8 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
 void
 ServoStyleSet::StyleNewSubtree(Element* aRoot)
 {
-  MOZ_ASSERT(!aRoot->HasServoData());
-
-  PreTraverse();
+  MOZ_ASSERT(!aRoot->HasServoData(), "Should have called StyleNewChildren");
+  PreTraverseSync();
 
   DebugOnly<bool> postTraversalRequired =
     PrepareAndTraverseSubtree(aRoot, ServoTraversalFlags::Empty);
@@ -889,7 +905,8 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
 void
 ServoStyleSet::StyleNewChildren(Element* aParent)
 {
-  PreTraverse();
+  MOZ_ASSERT(aParent->HasServoData(), "Should have called StyleNewSubtree");
+  PreTraverseSync();
 
   PrepareAndTraverseSubtree(aParent, ServoTraversalFlags::UnstyledChildrenOnly);
   // We can't assert that Servo_TraverseSubtree returns false, since aParent
@@ -899,20 +916,17 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
 void
 ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
 {
-  PreTraverse();
-
   // In general the element is always styled by the time we're applying XBL
   // bindings, because we need to style the element to know what the binding
   // URI is. However, programmatic consumers of the XBL service (like the
   // XML pretty printer) _can_ apply bindings without having styled the bound
   // element. We could assert against this and require the callers manually
   // resolve the style first, but it's easy enough to just handle here.
-
-  ServoTraversalFlags flags = (MOZ_UNLIKELY(!aElement->HasServoData())
-      ? ServoTraversalFlags::Empty
-      : ServoTraversalFlags::UnstyledChildrenOnly);
-
-  PrepareAndTraverseSubtree(aElement, flags);
+  if (MOZ_LIKELY(aElement->HasServoData())) {
+    StyleNewChildren(aElement);
+  } else {
+    StyleNewSubtree(aElement);
+  }
 }
 
 void

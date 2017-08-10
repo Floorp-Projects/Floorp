@@ -670,3 +670,4 @@ define_empty_heap_size_of!(MixBlendMode);
 define_empty_heap_size_of!(TransformStyle);
 define_empty_heap_size_of!(LocalClip);
 define_empty_heap_size_of!(ScrollSensitivity);
+define_empty_heap_size_of!(ClipAndScrollInfo);

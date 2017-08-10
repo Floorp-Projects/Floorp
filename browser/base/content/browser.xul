@@ -1115,7 +1115,7 @@
                        flex="1"/>
             <toolbarbutton type="menu"
                            id="PlacesChevron"
-                           class="chevron"
+                           class="toolbarbutton-1"
                            mousethrough="never"
                            collapsed="true"
                            tooltiptext="&bookmarksToolbarChevron.tooltip;"

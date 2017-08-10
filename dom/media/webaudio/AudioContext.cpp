@@ -219,6 +219,18 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
 
 /* static */ already_AddRefed<AudioContext>
 AudioContext::Constructor(const GlobalObject& aGlobal,
+                          const OfflineAudioContextOptions& aOptions,
+                          ErrorResult& aRv)
+{
+  return Constructor(aGlobal,
+                     aOptions.mNumberOfChannels,
+                     aOptions.mLength,
+                     aOptions.mSampleRate,
+                     aRv);
+}
+
+/* static */ already_AddRefed<AudioContext>
+AudioContext::Constructor(const GlobalObject& aGlobal,
                           uint32_t aNumberOfChannels,
                           uint32_t aLength,
                           float aSampleRate,

@@ -2125,14 +2125,6 @@ MediaCacheStream::Close()
 }
 
 void
-MediaCacheStream::EnsureCacheUpdate()
-{
-  if (mHasHadUpdate)
-    return;
-  mMediaCache->Update();
-}
-
-void
 MediaCacheStream::CloseInternal(ReentrantMonitorAutoEnter& aReentrantMonitor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");

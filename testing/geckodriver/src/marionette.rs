@@ -45,9 +45,9 @@ use webdriver::command::{
     GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
     ActionsParameters, TakeScreenshotParameters};
 use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse,
-                          NewSessionResponse, RectResponse, TimeoutsResponse, ValueResponse,
-                          WebDriverResponse};
-use webdriver::common::{Date, ELEMENT_KEY, FrameId, Nullable, WebElement};
+                          ElementRectResponse, NewSessionResponse, TimeoutsResponse,
+                          ValueResponse, WebDriverResponse, WindowRectResponse};
+use webdriver::common::{Date, ELEMENT_KEY, FrameId, Nullable, WebElement, WindowState};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::server::{WebDriverHandler, Session};
 use webdriver::httpapi::{WebDriverExtensionRoute};
@@ -757,7 +757,8 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as float");
 
-                WebDriverResponse::ElementRect(RectResponse::new(x, y, width, height))
+                let rect = ElementRectResponse { x, y, width, height };
+                WebDriverResponse::ElementRect(rect)
             },
             FullscreenWindow | MinimizeWindow | MaximizeWindow | GetWindowRect |
             SetWindowRect(_) => {
@@ -789,7 +790,13 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as float");
 
-                WebDriverResponse::WindowRect(RectResponse::new(x, y, width, height))
+                let state = match resp.result.find("state") {
+                    Some(json) => WindowState::from_json(json)?,
+                    None => WindowState::Normal,
+                };
+
+                let rect = WindowRectResponse { x, y, width, height, state };
+                WebDriverResponse::WindowRect(rect)
             },
             GetCookies => {
                 let cookies = try!(self.process_cookies(&resp.result));

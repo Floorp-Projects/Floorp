@@ -710,6 +710,7 @@ this.History = Object.freeze({
  */
 function convertForUpdatePlaces(pageInfo) {
   let info = {
+    guid: pageInfo.guid,
     uri: PlacesUtils.toURI(pageInfo.url),
     title: pageInfo.title,
     visits: [],

@@ -59,6 +59,10 @@
 #define LINE_STYLE_DASHED       2
 #define LINE_STYLE_WAVY         3
 
+#define SUBPX_DIR_NONE        0
+#define SUBPX_DIR_HORIZONTAL  1
+#define SUBPX_DIR_VERTICAL    2
+
 uniform sampler2DArray sCacheA8;
 uniform sampler2DArray sCacheRGBA8;
 
@@ -419,7 +423,9 @@ struct Glyph {
     vec2 offset;
 };
 
-Glyph fetch_glyph(int specific_prim_address, int glyph_index) {
+Glyph fetch_glyph(int specific_prim_address,
+                  int glyph_index,
+                  int subpx_dir) {
     // Two glyphs are packed in each texel in the GPU cache.
     int glyph_address = specific_prim_address +
                         VECS_PER_TEXT_RUN +
@@ -427,6 +433,20 @@ Glyph fetch_glyph(int specific_prim_address, int glyph_index) {
     vec4 data = fetch_from_resource_cache_1(glyph_address);
     // Select XY or ZW based on glyph index.
     vec2 glyph = mix(data.xy, data.zw, bvec2(glyph_index % 2 == 1));
+
+    // In subpixel mode, the subpixel offset has already been
+    // accounted for while rasterizing the glyph.
+    switch (subpx_dir) {
+        case SUBPX_DIR_NONE:
+            break;
+        case SUBPX_DIR_HORIZONTAL:
+            glyph.x = trunc(glyph.x);
+            break;
+        case SUBPX_DIR_VERTICAL:
+            glyph.y = trunc(glyph.y);
+            break;
+    }
+
     return Glyph(glyph);
 }
 
@@ -802,11 +822,12 @@ Line fetch_line(int address) {
 struct TextRun {
     vec4 color;
     vec2 offset;
+    int subpx_dir;
 };
 
 TextRun fetch_text_run(int address) {
     vec4 data[2] = fetch_from_resource_cache_2(address);
-    return TextRun(data[0], data[1].xy);
+    return TextRun(data[0], data[1].xy, int(data[1].z));
 }
 
 struct Image {

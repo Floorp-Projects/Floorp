@@ -7,6 +7,7 @@
 #ifndef AudioContext_h_
 #define AudioContext_h_
 
+#include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "MediaBufferDecoder.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -151,6 +152,12 @@ public:
   // Constructor for regular AudioContext
   static already_AddRefed<AudioContext>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+
+  // Constructor for offline AudioContext with options object
+  static already_AddRefed<AudioContext>
+  Constructor(const GlobalObject& aGlobal,
+              const OfflineAudioContextOptions& aOptions,
+              ErrorResult& aRv);
 
   // Constructor for offline AudioContext
   static already_AddRefed<AudioContext>

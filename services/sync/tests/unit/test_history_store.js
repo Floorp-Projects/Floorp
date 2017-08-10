@@ -137,6 +137,7 @@ add_task(async function test_store_create() {
   ]);
   await onVisitObserved;
   try {
+    do_check_true((await store.itemExists(tbguid)));
     do_check_attribute_count(await store.getAllIDs(), 2);
     let queryres = queryHistoryVisits(tburi);
     do_check_eq(queryres.length, 1);

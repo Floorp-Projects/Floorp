@@ -58,7 +58,8 @@ private:
   static PLDHashNumber ComputeHash(ImageURL* aURI,
                                    const Maybe<uint64_t>& aBlobSerial,
                                    const OriginAttributes& aAttrs,
-                                   void* aControlledDocument);
+                                   void* aControlledDocument,
+                                   bool aIsStyloEnabled);
   static void* GetControlledDocumentToken(nsIDocument* aDocument);
 
   RefPtr<ImageURL> mURI;
@@ -67,6 +68,10 @@ private:
   void* mControlledDocument;
   PLDHashNumber mHash;
   bool mIsChrome;
+  // To prevent the reftests of styloVsGecko taking the same image cache after
+  // refreshing, we need to store different caches of stylo and gecko. So, we
+  // also consider the info of StyloEnabled() in ImageCacheKey.
+  bool mIsStyloEnabled;
 };
 
 } // namespace image

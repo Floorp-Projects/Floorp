@@ -11,8 +11,8 @@
   --backbutton-background: hsla(0,100%,100%,.8);
   --backbutton-hover-background: var(--backbutton-background);
   --backbutton-active-background: var(--toolbarbutton-active-background);
-
   --backbutton-border-color: hsla(240,5%,5%,.3);
+
   /* This default value of --toolbarbutton-height is defined to prevent
      CSS errors for an invalid variable. The value should not get used,
      as a more specific value should be set when the value will be used. */
@@ -49,8 +49,8 @@ toolbar[brighttext] {
   margin-inline-end: 0;
 }
 
-:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > .toolbarbutton-icon,
-:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+.toolbarbutton-1 > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   max-width: 16px;
 }
 
@@ -60,7 +60,6 @@ toolbar[brighttext] {
   margin: 0 0 var(--tab-toolbar-navbar-overlap);
 }
 
-#TabsToolbar .toolbarbutton-1,
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: none;
@@ -89,49 +88,48 @@ toolbar[brighttext] {
   padding: 0;
 }
 
-#nav-bar .toolbarbutton-1 {
+toolbar .toolbarbutton-1 {
   -moz-appearance: none;
   margin: 0;
   padding: 0 2px;
   -moz-box-pack: center;
 }
 
-#nav-bar #PanelUI-menu-button {
+#PanelUI-menu-button {
   padding-inline-start: 5px;
   padding-inline-end: 5px;
 }
 
-#nav-bar .toolbarbutton-1 > menupopup {
+toolbar .toolbarbutton-1 > menupopup {
   margin-top: -3px;
 }
 
-#nav-bar .toolbarbutton-1 > menupopup.cui-widget-panel {
+toolbar .toolbarbutton-1 > menupopup.cui-widget-panel {
   margin-top: -8px;
 }
 
 .findbar-button > .toolbarbutton-text,
 toolbarbutton.bookmark-item:not(.subviewbutton),
-#nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1 > .toolbarbutton-text,
-#nav-bar .toolbarbutton-1 > .toolbarbutton-badge-stack {
+toolbar .toolbarbutton-1 > .toolbarbutton-icon,
+toolbar .toolbarbutton-1 > .toolbarbutton-text,
+toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
   padding: var(--toolbarbutton-inner-padding);
   border-radius: var(--toolbarbutton-border-radius);
   transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
 }
 
-#nav-bar .toolbarbutton-1 > .toolbarbutton-icon {
+toolbar .toolbarbutton-1 > .toolbarbutton-icon {
   /* horizontal padding + actual icon width */
   max-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
 }
 
 .bookmark-item > .toolbarbutton-menu-dropmarker,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker,
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
+toolbar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-#nav-bar .toolbarbutton-1 > .toolbarbutton-text {
+toolbar .toolbarbutton-1 > .toolbarbutton-text {
   padding-top: var(--toolbarbutton-vertical-text-padding);
   padding-bottom: 0;
   /* To make the hover feedback line up with sibling buttons, it needs the same
@@ -141,17 +139,17 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   min-height: calc(16px + 2 * var(--toolbarbutton-inner-padding));
 }
 
-#nav-bar .toolbaritem-combined-buttons {
+toolbar .toolbaritem-combined-buttons {
   margin-left: 2px;
   margin-right: 2px;
 }
 
-#nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1 {
+toolbar .toolbaritem-combined-buttons > .toolbarbutton-1 {
   padding-left: 0;
   padding-right: 0;
 }
 
-#nav-bar .toolbaritem-combined-buttons:not(:hover) > separator {
+toolbar .toolbaritem-combined-buttons:not(:hover) > separator {
   content: "";
   display: -moz-box;
   width: 1px;
@@ -164,19 +162,17 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   opacity: .2;
 }
 
-#nav-bar[brighttext] .toolbaritem-combined-buttons > separator {
+toolbar[brighttext] .toolbaritem-combined-buttons > separator {
   opacity: .3;
 }
 
-#TabsToolbar .toolbarbutton-1:not([disabled=true]):hover,
-#TabsToolbar .toolbarbutton-1[open],
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled=true]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled=true]):hover,
 .findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover > .toolbarbutton-text,
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]),
-#nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
-#nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-stack {
+toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
+toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-stack {
   background-color: var(--toolbarbutton-hover-background);
   color: inherit;
 }
@@ -184,15 +180,15 @@ toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not
 .findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active) > .toolbarbutton-text,
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:active:not([disabled="true"]),
 toolbarbutton.bookmark-item[open="true"],
-#nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
-#nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
+toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
+toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
   background-color: var(--toolbarbutton-active-background);
   transition-duration: 10ms;
   color: inherit;
 }
 
-#nav-bar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
+toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   background-color: var(--toolbarbutton-hover-background);
   transition: background-color .4s;
 }

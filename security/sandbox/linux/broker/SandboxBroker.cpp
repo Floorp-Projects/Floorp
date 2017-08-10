@@ -343,7 +343,7 @@ AllowOperation(int aReqFlags, int aPerms)
 static bool
 AllowAccess(int aReqFlags, int aPerms)
 {
-  if (aReqFlags & ~(R_OK|W_OK|F_OK)) {
+  if (aReqFlags & ~(R_OK|W_OK|X_OK|F_OK)) {
     return false;
   }
   int needed = 0;
@@ -662,17 +662,7 @@ SandboxBroker::ThreadMain(void)
 
       case SANDBOX_FILE_ACCESS:
         if (permissive || AllowAccess(req.mFlags, perms)) {
-          // This can't use access() itself because that uses the ruid
-          // and not the euid.  In theory faccessat() with AT_EACCESS
-          // would work, but Linux doesn't actually implement the
-          // flags != 0 case; glibc has a hack which doesn't even work
-          // in this case so it'll ignore the flag, and Bionic just
-          // passes through the syscall and always ignores the flags.
-          //
-          // Instead, because we've already checked the requested
-          // r/w/x bits against the policy, just return success if the
-          // file exists and hope that's close enough.
-          if (stat(pathBuf, (struct stat*)&respBuf) == 0) {
+          if (access(pathBuf, req.mFlags) == 0) {
             resp.mError = 0;
           } else {
             resp.mError = -errno;

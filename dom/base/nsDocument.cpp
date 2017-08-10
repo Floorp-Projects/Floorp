@@ -13219,7 +13219,10 @@ nsIDocument::UpdateStyleBackendType()
 
 #ifdef MOZ_STYLO
   if (nsLayoutUtils::StyloEnabled()) {
-    if (!mDocumentContainer) {
+    if (IsBeingUsedAsImage()) {
+      // Enable stylo for SVG-as-image.
+      mStyleBackendType = StyleBackendType::Servo;
+    } else if (!mDocumentContainer) {
       NS_WARNING("stylo: No docshell yet, assuming Gecko style system");
     } else if ((IsHTMLOrXHTML() || IsSVGDocument()) &&
                IsContentDocument()) {
