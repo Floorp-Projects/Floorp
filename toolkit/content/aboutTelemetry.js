@@ -1167,6 +1167,7 @@ var ThreadHangStats = {
     let title = document.createElement("h2");
     title.textContent = aThread.name;
     div.appendChild(title);
+    div.id = title;
 
     // Don't localize the histogram name, because the
     // name is also used as the div element's ID
@@ -1476,6 +1477,14 @@ var Search = {
       let keyedScalars = selectedSection.getElementsByClassName("keyed-scalar");
       for (let key of keyedScalars) {
         let datas = key.querySelector("table").rows;
+        keyedElements.push({key, datas});
+      }
+      this.filterKeyedElements(keyedElements, text);
+    } else if (selectedSection.id === "thread-hang-stats-section") {
+      let keyedElements = [];
+      let threads = selectedSection.children[0].children;
+      for (let key of threads) {
+        let datas = key.getElementsByClassName("histogram");
         keyedElements.push({key, datas});
       }
       this.filterKeyedElements(keyedElements, text);
