@@ -392,7 +392,7 @@ VectorImage::SizeOfSourceWithComputedFallback(SizeOfState& aState) const
   }
 
   nsWindowSizes windowSizes(aState);
-  doc->DocAddSizeOfIncludingThis(&windowSizes);
+  doc->DocAddSizeOfIncludingThis(windowSizes);
 
   if (windowSizes.getTotalSize() == 0) {
     // MallocSizeOf fails on this platform. Because we also use this method for
