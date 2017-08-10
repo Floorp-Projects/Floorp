@@ -255,6 +255,7 @@ class AutoSetHandlingSegFault
 # define RIP_sig(p) ((p)->uc_mcontext->__ss.__rip)
 # define RBP_sig(p) ((p)->uc_mcontext->__ss.__rbp)
 # define RSP_sig(p) ((p)->uc_mcontext->__ss.__rsp)
+# define R14_sig(p) ((p)->uc_mcontext->__ss.__lr)
 # define R15_sig(p) ((p)->uc_mcontext->__ss.__pc)
 #else
 # error "Don't know how to read/write to the thread state via the mcontext_t."
@@ -483,7 +484,7 @@ ContextToFP(EMULATOR_CONTEXT* context)
 # elif defined(__i386__)
     return (uint8_t*)context->thread.uts.ts32.__ebp;
 # elif defined(__arm__)
-    return (uint8_t*)context->thread.__fp;
+    return (uint8_t*)context->thread.__r[11];
 # else
 #  error Unsupported architecture
 # endif
