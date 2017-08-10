@@ -98,7 +98,7 @@ function GripMessageBody(props) {
     // Let's remove the property below when problem are fixed in OI.
     disabledFocus: true,
     roots: [{
-      path: grip.actor || JSON.stringify(grip),
+      path: (grip && grip.actor) || JSON.stringify(grip),
       contents: {
         value: grip
       }
@@ -115,7 +115,7 @@ function GripMessageBody(props) {
     },
   };
 
-  if (typeof grip === "string" || grip.type === "longString") {
+  if (typeof grip === "string" || (grip && grip.type === "longString")) {
     Object.assign(objectInspectorProps, {
       useQuotes,
       escapeWhitespace,
