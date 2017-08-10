@@ -554,6 +554,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'CustomEditText.java',
     'customtabs/ActionBarPresenter.java',
     'customtabs/CustomTabsActivity.java',
+    'customtabs/CustomTabsSecurityPopup.java',
     'customtabs/GeckoCustomTabsService.java',
     'customtabs/IntentUtil.java',
     'DataReportingNotification.java',
