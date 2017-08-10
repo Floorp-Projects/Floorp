@@ -2799,7 +2799,7 @@ MediaDecoderStateMachine::CreateAudioSink()
     AudioSink* audioSink = new AudioSink(
       self->mTaskQueue, self->mAudioQueue,
       self->GetMediaTime(),
-      self->Info().mAudio, self->mAudioChannel);
+      self->Info().mAudio);
 
     self->mAudibleListener = audioSink->AudibleEvent().Connect(
       self->mTaskQueue, self.get(),
