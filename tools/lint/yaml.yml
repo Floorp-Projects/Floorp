@@ -3,7 +3,6 @@ yamllint:
     include:
         - .cron.yml
         - python/mozlint/
-        - security/nss/.taskcluster.yml
         - taskcluster
     extensions: ['yml', 'yaml']
     type: external
