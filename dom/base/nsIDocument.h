@@ -2569,11 +2569,11 @@ public:
   // SizeOfExcludingThis function.  However, because nsIDocument objects can
   // only appear at the top of the DOM tree, we have a specialized measurement
   // function which returns multiple sizes.
-  virtual void DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
+  virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const;
   // DocAddSizeOfIncludingThis doesn't need to be overridden by sub-classes
   // because nsIDocument inherits from nsINode;  see the comment above the
   // declaration of nsINode::SizeOfIncludingThis.
-  virtual void DocAddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const;
+  virtual void DocAddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
 
   bool MayHaveDOMMutationObservers()
   {
