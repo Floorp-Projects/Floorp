@@ -1,0 +1,104 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg fill="context-fill" fill-opacity="context-fill-opacity" xmlns="http://www.w3.org/2000/svg"
+     width="32" height="32" viewBox="0 0 32 32">
+  <style>
+    :root > use:not(:target),
+    :root > g:not(:target),
+    :root > circle:not(:target),
+    #strikeout {
+      display: none;
+    }
+    .blocked:target ~ #strikeout {
+      display: block;
+    }
+    .blocked {
+      clip-path: url(#blocked-clipPath);
+    }
+
+    #badge {
+      fill: #3088d4;
+    }
+
+    #update-icon {
+      stroke: #fff;
+      stroke-width: 3px;
+      stroke-linecap: round;
+    }
+  </style>
+
+  <defs>
+    <path id="camera-icon" d="m 2,23 a 3,3 0 0 0 3,3 l 14,0 a 3,3 0 0 0 3,-3 l 0,-4 6,5.5 c 0.5,0.5 1,0.7 2,0.5 l 0,-18 c -1,-0.2 -1.5,0 -2,0.5 l -6,5.5 0,-4 a 3,3 0 0 0 -3,-3 l -14,0 a 3,3 0 0 0 -3,3 z" />
+    <path id="desktop-notification-icon" d="m 2,20 a 4,4 0 0 0 4,4 l 13,0 7,7 0,-7 a 4,4 0 0 0 4,-4 l 0,-12 a 4,4 0 0 0 -4,-4 l -20,0 a 4,4 0 0 0 -4,4 z m 5,-2 a 1,1 0 1 1 0,-2 l 10,0 a 1,1 0 1 1 0,2 z m 0,-4 a 1,1 0 1 1 0,-2 l 14,0 a 1,1 0 1 1 0,2 z m 0,-4 a 1,1 0 1 1 0,-2 l 18,0 a 1,1 0 1 1 0,2 z" />
+    <path id="focus-tab-by-prompt-icon" d="M29.43,25,18.57,3.8A2.92,2.92,0,0,0,16,2a2.92,2.92,0,0,0-2.57,1.8L2.57,25a3.47,3.47,0,0,0,0,3.4A3.15,3.15,0,0,0,5.33,30H26.66a3.15,3.15,0,0,0,2.77-1.6A3.47,3.47,0,0,0,29.43,25ZM16,7.2a2.3,2.3,0,0,1,2.37,2.4L18,18a1.88,1.88,0,0,1-2,2,1.88,1.88,0,0,1-2-2l-.4-8.4A2.3,2.3,0,0,1,16,7.2ZM16,28a3,3,0,0,1,0-6,3,3,0,0,1,0,6Z"/>
+    <path id="geo-linux-icon" d="m 2,15.9 a 14,14 0 1 1 0,0.2 z m 4,2.1 a 10,10 0 0 0 8,8 l 0,-4 4,0 0,4 a 10,10 0 0 0 8,-8 l -4,0 0,-4 4,0 a 10,10 0 0 0 -8,-8 l 0,4 -4,0 0,-4 a 10,10 0 0 0 -8,8 l 4,0 0,4 z" />
+    <path id="geo-linux-detailed-icon" d="m 2,15.9 a 14,14 0 1 1 0,0.2 z m 3,2.1 a 11,11 0 0 0 9,9 l 1,-5 2,0 1,5 a 11,11 0 0 0 9,-9 l -5,-1 0,-2 5,-1 a 11,11 0 0 0 -9,-9 l -1,5 -2,0 -1,-5 a 11,11 0 0 0 -9,9 l 5,1 0,2 z" />
+    <path id="geo-osx-icon" d="m 0,16 16,0 0,16 12,-28 z" />
+    <path id="geo-windows-icon" d="m 2,14 0,4 2,0 a 12,12 0 0 0 10,10 l 0,2 4,0 0,-2 a 12,12 0 0 0 10,-10 l 2,0 0,-4 -2,0 a 12,12 0 0 0 -10,-10 l 0,-2 -4,0 0,2 a 12,12 0 0 0 -10,10 z m 4,1.9 a 10,10 0 1 1 0,0.2 z m 4,0 a 6,6 0 1 1 0,0.2 z" />
+    <path id="geo-windows-detailed-icon" d="m 2,14.5 0,3 2,0.5 a 12,12 0 0 0 10,10 l 0.5,2 3,0 0.5,-2 a 12,12 0 0 0 10,-10 l 2,-0.5 0,-3 -2,-0.5 a 12,12 0 0 0 -10,-10 l -0.5,-2 -3,0 -0.5,2 a 12,12 0 0 0 -10,10 z m 4,1.4 a 10,10 0 1 1 0,0.2 z m 3,0 a 7,7 0 1 1 0,0.2 z" />
+    <path id="indexedDB-icon" d="m 2,24 a 4,4 0 0 0 4,4 l 2,0 0,-4 -2,0 0,-16 20,0 0,16 -2,0 0,4 2,0 a 4,4 0 0 0 4,-4 l 0,-16 a 4,4 0 0 0 -4,-4 l -20,0 a 4,4 0 0 0 -4,4 z m 8,-2 6,7 6,-7 -4,0 0,-8 -4,0 0,8 z" />
+    <path id="login-icon" d="m 2,26 0,4 6,0 0,-2 2,0 0,-2 1,0 0,-1 2,0 0,-3 2,0 2.5,-2.5 1.5,1.5 3,-3 a 8,8 0 1 0 -8,-8 l -3,3 2,2 z m 20,-18.1 a 2,2 0 1 1 0,0.2 z" />
+    <path id="login-detailed-icon" d="m 1,27 0,3.5 a 0.5,0.5 0 0 0 0.5,0.5 l 5,0 a 0.5,0.5 0 0 0 0.5,-0.5 l 0,-1.5 1.5,0 a 0.5,0.5 0 0 0 0.5,-0.5 l 0,-1.5 1,0 a 0.5,0.5 0 0 0 0.5,-0.5 l 0,-1 1,0 a 0.5,0.5 0 0 0 0.5,-0.5 l 0,-2 2,0 2.5,-2.5 q 0.5,-0.5 1,0 l 1,1 c 0.5,0.5 1,0.5 1.5,-0.5 l 1,-2 a 9,9 0 1 0 -8,-8 l -2,1 c -1,0.5 -1,1 -0.5,1.5 l 1.5,1.5 q 0.5,0.5 0,1 z m 21,-19.1 a 2,2 0 1 1 0,0.2 z" />
+    <path id="microphone-icon" d="m 8,14 0,4 a 8,8 0 0 0 6,7.7 l 0,2.3 -2,0 a 2,2 0 0 0 -2,2 l 12,0 a 2,2 0 0 0 -2,-2 l -2,0 0,-2.3 a 8,8 0 0 0 6,-7.7 l 0,-4 -2,0 0,4 a 6,6 0 0 1 -12,0 l 0,-4 z m 4,4 a 4,4 0 0 0 8,0 l 0,-12 a 4,4 0 0 0 -8,0 z" />
+    <path id="microphone-detailed-icon" d="m 8,18 a 8,8 0 0 0 6,7.7 l 0,2.3 -1,0 a 3,2 0 0 0 -3,2 l 12,0 a 3,2 0 0 0 -3,-2 l -1,0 0,-2.3 a 8,8 0 0 0 6,-7.7 l 0,-4 a 1,1 0 0 0 -2,0 l 0,4 a 6,6 0 0 1 -12,0 l 0,-4 a 1,1 0 0 0 -2,0 z m 4,0 a 4,4 0 0 0 8,0 l 0,-12 a 4,4 0 0 0 -8,0 z" />
+    <path id="persistent-storage-icon" d="M26 21.1H6c-1.1 0-2 .9-2 2V27c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2v-3.9c0-1.1-.9-2-2-2zM24.1 27c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM25 3H7C5.3 3 4 4.4 4 6.2v13.3c.6-.3 1.3-.5 2-.5h20c.7 0 1.4.2 2 .5V6.2C28 4.4 26.7 3 25 3z"/>
+    <path id="plugin-icon" d="m 2,26 a 2,2 0 0 0 2,2 l 24,0 a 2,2 0 0 0 2,-2 l 0,-16 a 2,2 0 0 0 -2,-2 l -24,0 a 2,2 0 0 0 -2,2 z m 2,-20 10,0 0,-2 a 2,2 0 0 0 -2,-2 l -6,0 a 2,2 0 0 0 -2,2 z m 14,0 10,0 0,-2 a 2,2 0 0 0 -2,-2 l -6,0 a 2,2 0 0 0 -2,2 z" />
+    <path id="popup-icon" d="m 2,24 a 4,4 0 0 0 4,4 l 8,0 a 10,10 0 0 1 -2,-4 l -4,0 a 2,2 0 0 1 -2,-2 l 0,-12 18,0 0,2 a 10,10 0 0 1 4,2 l 0,-8 a 4,4 0 0 0 -4,-4 l -18,0 a 4,4 0 0 0 -4,4 z m 12,-2.1 a 8,8 0 1 1 0,0.2 m 10.7,-4.3 a 5,5 0 0 0 -6.9,6.9 z m -5.4,8.4 a 5,5 0 0 0 6.9,-6.9 z" />
+    <path id="screen-icon" d="m 2,18 a 2,2 0 0 0 2,2 l 2,0 0,-6 a 4,4 0 0 1 4,-4 l 14,0 0,-6 a 2,2 0 0 0 -2,-2 l -18,0 a 2,2 0 0 0 -2,2 z m 6,10 a 2,2 0 0 0 2,2 l 18,0 a 2,2 0 0 0 2,-2 l 0,-14 a 2,2 0 0 0 -2,-2 l -18,0 a 2,2 0 0 0 -2,2 z" />
+    <path id="update-icon" d="M 16,9 L 16,24 M 16,9 L 11,14 M 16,9 L 21,14" />
+
+    <clipPath id="blocked-clipPath">
+      <path d="m 0,0 0,31 31,-31 z m 6,32 26,0 0,-26 z"/>
+    </clipPath>
+
+    <mask id="i-mask" style="fill-opacity: 1;">
+      <rect fill="white" width="32" height="32"/>
+      <circle fill="black" cx="16" cy="9" r="2.5"/>
+      <rect fill="black" x="14" y="14" width="4" height="10" rx="2" ry="2"/>
+    </mask>
+  </defs>
+
+  <g id="default-info">
+    <circle cx="16" cy="16" r="14" mask="url(#i-mask)"/>
+  </g>
+
+  <use id="camera" href="#camera-icon" />
+  <use id="camera-sharing" href="#camera-icon"/>
+  <use id="camera-indicator" href="#camera-icon" />
+  <use id="camera-blocked" class="blocked" href="#camera-icon" />
+  <use id="desktop-notification" href="#desktop-notification-icon" />
+  <use id="desktop-notification-blocked" class="blocked" href="#desktop-notification-icon" />
+  <use id="focus-tab-by-prompt" href="#focus-tab-by-prompt-icon" />
+  <use id="geo-osx" href="#geo-osx-icon" />
+  <use id="geo-osx-blocked" class="blocked" href="#geo-osx-icon" />
+  <use id="geo-linux" href="#geo-linux-icon" />
+  <use id="geo-linux-blocked" class="blocked" href="#geo-linux-icon" />
+  <use id="geo-linux-detailed" href="#geo-linux-detailed-icon" />
+  <use id="geo-windows" href="#geo-windows-icon" />
+  <use id="geo-windows-blocked" class="blocked" href="#geo-windows-icon" />
+  <use id="geo-windows-detailed" href="#geo-windows-detailed-icon" />
+  <use id="indexedDB" href="#indexedDB-icon" />
+  <use id="indexedDB-blocked" class="blocked" href="#indexedDB-icon" />
+  <use id="login" href="#login-icon" />
+  <use id="login-detailed" href="#login-detailed-icon" />
+  <use id="microphone" href="#microphone-icon" />
+  <use id="microphone-sharing" href="#microphone-icon"/>
+  <use id="microphone-indicator" href="#microphone-icon"/>
+  <use id="microphone-blocked" class="blocked" href="#microphone-icon" />
+  <use id="microphone-detailed" href="#microphone-detailed-icon" />
+  <use id="persistent-storage" href="#persistent-storage-icon" />
+  <use id="persistent-storage-blocked" class="blocked" href="#persistent-storage-icon" />
+  <use id="plugin" href="#plugin-icon" />
+  <use id="plugin-blocked" class="blocked" href="#plugin-icon" />
+  <use id="plugin-badge" href="#badge" />
+  <use id="popup" href="#popup-icon" />
+  <use id="screen" href="#screen-icon" />
+  <use id="screen-sharing" href="#screen-icon"/>
+  <use id="screen-indicator" href="#screen-icon"/>
+  <use id="screen-blocked" class="blocked" href="#screen-icon" />
+  <use id="update" href="#update-icon" />
+
+  <path id="strikeout" d="m 2,28 2,2 26,-26 -2,-2 z"/>
+  <circle id="badge" cx="27" cy="5" r="5"/>
+</svg>
