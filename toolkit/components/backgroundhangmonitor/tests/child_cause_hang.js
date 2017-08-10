@@ -28,5 +28,5 @@ add_task(async function childCauseHang() {
     while ((Date.now() - startTime) < 2000);
   });
 
-  await do_await_remote_message('bhr_hangs_detected');
+  await do_await_remote_message("bhr_hangs_detected");
 });
