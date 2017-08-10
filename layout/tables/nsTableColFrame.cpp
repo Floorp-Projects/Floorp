@@ -124,9 +124,10 @@ nsTableColFrame::Reflow(nsPresContext*          aPresContext,
 
 void
 nsTableColFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aLists);
+  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
 }
 
 int32_t nsTableColFrame::GetSpan()

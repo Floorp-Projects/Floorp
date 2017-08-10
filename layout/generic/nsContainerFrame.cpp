@@ -361,14 +361,17 @@ nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 
 void
 nsContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                   const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists)
 {
   DisplayBorderBackgroundOutline(aBuilder, aLists);
-  BuildDisplayListForNonBlockChildren(aBuilder, aLists);
+
+  BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
 }
 
 void
 nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
+                                                      const nsRect&           aDirtyRect,
                                                       const nsDisplayListSet& aLists,
                                                       uint32_t                aFlags)
 {
@@ -377,7 +380,7 @@ nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aB
   nsDisplayListSet set(aLists, aLists.Content());
   // The children should be in content order
   while (kid) {
-    BuildDisplayListForChild(aBuilder, kid, set, aFlags);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, aFlags);
     kid = kid->GetNextSibling();
   }
 }
@@ -1232,12 +1235,13 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
 
 void
 nsContainerFrame::DisplayOverflowContainers(nsDisplayListBuilder*   aBuilder,
+                                            const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
   nsFrameList* overflowconts = GetPropTableFrames(OverflowContainersProperty());
   if (overflowconts) {
     for (nsIFrame* frame : *overflowconts) {
-      BuildDisplayListForChild(aBuilder, frame, aLists);
+      BuildDisplayListForChild(aBuilder, frame, aDirtyRect, aLists);
     }
   }
 }

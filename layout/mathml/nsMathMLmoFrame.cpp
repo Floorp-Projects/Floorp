@@ -70,13 +70,14 @@ nsMathMLmoFrame::UseMathMLChar()
 
 void
 nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
   bool useMathMLChar = UseMathMLChar();
 
   if (!useMathMLChar) {
     // let the base class do everything
-    nsMathMLTokenFrame::BuildDisplayList(aBuilder, aLists);
+    nsMathMLTokenFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   } else {
     DisplayBorderBackgroundOutline(aBuilder, aLists);
 

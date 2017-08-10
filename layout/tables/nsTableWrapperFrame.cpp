@@ -168,6 +168,7 @@ nsTableWrapperFrame::RemoveFrame(ChildListID  aListID,
 
 void
 nsTableWrapperFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                      const nsRect&           aDirtyRect,
                                       const nsDisplayListSet& aLists)
 {
   // No border, background or outline are painted because they all belong
@@ -176,15 +177,16 @@ nsTableWrapperFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // If there's no caption, take a short cut to avoid having to create
   // the special display list set and then sort it.
   if (mCaptionFrames.IsEmpty()) {
-    BuildDisplayListForInnerTable(aBuilder, aLists);
+    BuildDisplayListForInnerTable(aBuilder, aDirtyRect, aLists);
     return;
   }
 
   nsDisplayListCollection set;
-  BuildDisplayListForInnerTable(aBuilder, set);
+  BuildDisplayListForInnerTable(aBuilder, aDirtyRect, set);
 
   nsDisplayListSet captionSet(set, set.BlockBorderBackgrounds());
-  BuildDisplayListForChild(aBuilder, mCaptionFrames.FirstChild(), captionSet);
+  BuildDisplayListForChild(aBuilder, mCaptionFrames.FirstChild(),
+                           aDirtyRect, captionSet);
 
   // Now we have to sort everything by content order, since the caption
   // may be somewhere inside the table
@@ -198,6 +200,7 @@ nsTableWrapperFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 void
 nsTableWrapperFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
+                                                   const nsRect&           aDirtyRect,
                                                    const nsDisplayListSet& aLists)
 {
   // Just paint the regular children, but the children's background is our
@@ -205,7 +208,7 @@ nsTableWrapperFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuil
   nsIFrame* kid = mFrames.FirstChild();
   // The children should be in content order
   while (kid) {
-    BuildDisplayListForChild(aBuilder, kid, aLists);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
     kid = kid->GetNextSibling();
   }
 }

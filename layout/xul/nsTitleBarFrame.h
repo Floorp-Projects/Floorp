@@ -19,6 +19,7 @@ public:
   explicit nsTitleBarFrame(nsStyleContext* aContext, ClassID = kClassID);
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,

@@ -70,6 +70,7 @@ public:
 
   // nsIFrame
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsRect& aDirtyRect,
                         const nsDisplayListSet& aLists) override;
 
   void Init(nsIContent* aContent,

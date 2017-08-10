@@ -70,6 +70,7 @@ public:
   // nsIFrame
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 #ifdef DEBUG_FRAME_DUMP

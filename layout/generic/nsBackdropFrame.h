@@ -26,6 +26,7 @@ public:
   virtual nsStyleContext*
     GetParentStyleContext(nsIFrame** aProviderFrame) const override;
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                const nsRect& aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
   virtual mozilla::LogicalSize
     ComputeAutoSize(gfxContext*                 aRenderingContext,
