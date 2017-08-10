@@ -328,7 +328,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   : AudioNode(aContext, aIsOffline ? aNumberOfChannels : 2,
               ChannelCountMode::Explicit, ChannelInterpretation::Speakers)
   , mFramesToProduce(aLength)
-  , mAudioChannel(AudioChannel::Normal)
   , mIsOffline(aIsOffline)
   , mAudioChannelSuspended(false)
   , mCaptured(false)
@@ -591,65 +590,6 @@ AudioDestinationNode::WindowAudioCaptureChanged(bool aCapture)
   return NS_OK;
 }
 
-AudioChannel
-AudioDestinationNode::MozAudioChannelType() const
-{
-  return mAudioChannel;
-}
-
-void
-AudioDestinationNode::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv)
-{
-  if (Context()->IsOffline()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  if (aValue != mAudioChannel &&
-      CheckAudioChannelPermissions(aValue)) {
-    mAudioChannel = aValue;
-
-    if (mAudioChannelAgent) {
-      CreateAudioChannelAgent();
-    }
-  }
-}
-
-bool
-AudioDestinationNode::CheckAudioChannelPermissions(AudioChannel aValue)
-{
-  // Only normal channel doesn't need permission.
-  if (aValue == AudioChannel::Normal) {
-    return true;
-  }
-
-  // Maybe this audio channel is equal to the default one.
-  if (aValue == AudioChannelService::GetDefaultAudioChannel()) {
-    return true;
-  }
-
-  nsCOMPtr<nsIPermissionManager> permissionManager =
-    services::GetPermissionManager();
-  if (!permissionManager) {
-    return false;
-  }
-
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(GetOwner());
-  NS_ASSERTION(sop, "Window didn't QI to nsIScriptObjectPrincipal!");
-  nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
-
-  uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
-
-  nsCString channel;
-  channel.AssignASCII(AudioChannelValues::strings[uint32_t(aValue)].value,
-                      AudioChannelValues::strings[uint32_t(aValue)].length);
-  permissionManager->TestExactPermissionFromPrincipal(principal,
-    nsCString(NS_LITERAL_CSTRING("audio-channel-") + channel).get(),
-    &perm);
-
-  return perm == nsIPermissionManager::ALLOW_ACTION;
-}
-
 nsresult
 AudioDestinationNode::CreateAudioChannelAgent()
 {
@@ -667,7 +607,7 @@ AudioDestinationNode::CreateAudioChannelAgent()
 
   mAudioChannelAgent = new AudioChannelAgent();
   rv = mAudioChannelAgent->InitWithWeakCallback(GetOwner(),
-                                           static_cast<int32_t>(mAudioChannel),
+                                           static_cast<int32_t>(AudioChannel::Normal),
                                            this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
