@@ -18,11 +18,13 @@ const MAX_ROWS = 20;
 // Minimum elements required to show select search
 const SEARCH_MINIMUM_ELEMENTS = 40;
 
+// Make sure to clear these objects when the popup closes to avoid leaking.
 var currentBrowser = null;
 var currentMenulist = null;
+var selectRect = null;
+
 var currentZoom = 1;
 var closedWithEnter = false;
-var selectRect;
 var customStylingEnabled = Services.prefs.getBoolPref("dom.forms.select.customstyling");
 var usedSelectBackgroundColor;
 
@@ -183,6 +185,7 @@ this.SelectParentHelper = {
         popup.parentNode.hidden = true;
         currentBrowser = null;
         currentMenulist = null;
+        selectRect = null;
         currentZoom = 1;
         break;
     }
