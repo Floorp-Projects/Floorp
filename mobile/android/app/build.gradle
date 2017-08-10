@@ -107,12 +107,8 @@ android {
              dimension "audience"
         }
 
-        // The default user interface.
-        australis {
-            dimension "skin"
-        }
-
-        // A new user interface, currently under development.
+        // Since Firefox 57, the mobile user interface has followed the Photon design.
+        // Before Firefox 57, the user interface followed the Australis design.
         photon {
             dimension "skin"
         }
@@ -415,26 +411,6 @@ def makeTaskExecutionListener(artifactRootUrl) {
             case ':app:checkstyle':
                 def url = "${artifactRootUrl}/public/android/checkstyle/checkstyle.xml"
                 println "TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: $url"
-                break
-
-            case ':app:lintOfficialAustralisDebug':
-                def url = "${artifactRootUrl}/public/android/lint/lint-results-officialAustralisDebug.html"
-                println "TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: $url"
-                break
-
-            case ':app:testOfficialAustralisDebugUnitTest':
-                def url = "${artifactRootUrl}/public/android/unittest/officialAustralisDebug/index.html"
-                println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: $url"
-                break
-
-            case ':app:findbugsHtmlOfficialAustralisDebug':
-                def url = "${artifactRootUrl}/public/android/findbugs/findbugs-officialAustralisDebug-output.html"
-                println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
-                break
-
-            case ':app:findbugsXmlOfficialAustralisDebug':
-                def url = "${artifactRootUrl}/public/android/findbugs/findbugs-officialAustralisDebug-output.xml"
-                println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
                 break
 
             case ':app:lintOfficialPhotonDebug':

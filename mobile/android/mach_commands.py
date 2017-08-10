@@ -53,7 +53,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_test(self, args):
         gradle_targets = [
-            'app:testOfficialAustralisDebugUnitTest',
             'app:testOfficialPhotonDebugUnitTest',
         ]
         ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
@@ -73,8 +72,7 @@ class MachCommands(MachCommandBase):
         else:
             root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/tests')
 
-        reports = ('officialAustralisDebug',
-                   'officialPhotonDebug',)
+        reports = ('officialPhotonDebug',)
         for report in reports:
             finder = FileFinder(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/test-results/', report))
             for p, _ in finder.find('TEST-*.xml'):
@@ -125,7 +123,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_lint(self, args):
         gradle_targets = [
-            'app:lintOfficialAustralisDebug',
             'app:lintOfficialPhotonDebug',
         ]
         ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
@@ -140,8 +137,7 @@ class MachCommands(MachCommandBase):
         else:
             root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/outputs')
 
-        reports = ('officialAustralisDebug',
-                   'officialPhotonDebug',)
+        reports = ('officialPhotonDebug',)
         for report in reports:
             f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/outputs/lint-results-{}.xml'.format(report)), 'rt')
             tree = ET.parse(f)
@@ -221,8 +217,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_findbugs(self, dryrun=False, args=[]):
         gradle_targets = [
-            'app:findbugsXmlOfficialAustralisDebug',
-            'app:findbugsHtmlOfficialAustralisDebug',
             'app:findbugsXmlOfficialPhotonDebug',
             'app:findbugsHtmlOfficialPhotonDebug',
         ]
@@ -238,8 +232,7 @@ class MachCommands(MachCommandBase):
         else:
             root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/outputs/findbugs')
 
-        reports = ('findbugs-officialAustralisDebug-output.xml',
-                   'findbugs-officialPhotonDebug-output.xml',)
+        reports = ('findbugs-officialPhotonDebug-output.xml',)
         for report in reports:
             try:
                 f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/outputs/findbugs', report), 'rt')
@@ -276,12 +269,6 @@ class MachCommands(MachCommandBase):
         # invoked by the android-* automation jobs.
         gradle_targets = [
             'app:checkstyle',
-            'app:assembleOfficialAustralisRelease',
-            'app:assembleOfficialAustralisDebug',
-            'app:assembleOfficialAustralisDebugAndroidTest',
-            'app:findbugsXmlOfficialAustralisDebug',
-            'app:findbugsHtmlOfficialAustralisDebug',
-            'app:lintOfficialAustralisDebug',
             'app:assembleOfficialPhotonRelease',
             'app:assembleOfficialPhotonDebug',
             'app:assembleOfficialPhotonDebugAndroidTest',
