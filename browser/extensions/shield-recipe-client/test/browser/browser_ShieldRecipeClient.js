@@ -3,28 +3,65 @@
 Cu.import("resource://shield-recipe-client/lib/ShieldRecipeClient.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
+Cu.import("resource://shield-recipe-client-content/AboutPages.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
 
-add_task(async function testStartup() {
-  sinon.stub(RecipeRunner, "init");
-  sinon.stub(PreferenceExperiments, "init");
+function withStubInits(testFunction) {
+  return decorate(
+    withStub(AboutPages, "init"),
+    withStub(AddonStudies, "init"),
+    withStub(PreferenceExperiments, "init"),
+    withStub(RecipeRunner, "init"),
+    testFunction
+  );
+}
 
-  await ShieldRecipeClient.startup();
-  ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
-  ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+decorate_task(
+  withStubInits,
+  async function testStartup() {
+    await ShieldRecipeClient.startup();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+  }
+);
 
-  PreferenceExperiments.init.restore();
-  RecipeRunner.init.restore();
-});
+decorate_task(
+  withStubInits,
+  async function testStartupPrefInitFail() {
+    PreferenceExperiments.init.returns(Promise.reject(new Error("oh no")));
 
-add_task(async function testStartupPrefInitFail() {
-  sinon.stub(RecipeRunner, "init");
-  sinon.stub(PreferenceExperiments, "init").returns(Promise.reject(new Error("oh no")));
+    await ShieldRecipeClient.startup();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+  }
+);
 
-  await ShieldRecipeClient.startup();
-  ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
-  // Even if PreferenceExperiments.init fails, RecipeRunner.init should be called.
-  ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+decorate_task(
+  withStubInits,
+  async function testStartupAboutPagesInitFail() {
+    AboutPages.init.returns(Promise.reject(new Error("oh no")));
 
-  PreferenceExperiments.init.restore();
-  RecipeRunner.init.restore();
-});
+    await ShieldRecipeClient.startup();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+  }
+);
+
+decorate_task(
+  withStubInits,
+  async function testStartupAddonStudiesInitFail() {
+    AddonStudies.init.returns(Promise.reject(new Error("oh no")));
+
+    await ShieldRecipeClient.startup();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+  }
+);
