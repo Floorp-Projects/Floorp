@@ -1672,17 +1672,7 @@
         }
 
         if (links.length) {
-          // Bug 1368481: mozSourceNode is null if the drag event originated
-          // in an external application - needs better fallback!
-          let triggeringPrincipal;
-          let sourceNode = event.dataTransfer.mozSourceNode;
-          if (sourceNode) {
-            triggeringPrincipal = sourceNode.nodePrincipal;
-          } else {
-            var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
-              getService(Components.interfaces.nsIScriptSecurityManager);
-            triggeringPrincipal = secMan.getSystemPrincipal();
-          }
+          let triggeringPrincipal = linkHandler.getTriggeringPrincipal(event);
           this.droppedLinkHandler(event, links, triggeringPrincipal);
         }
       ]]>
