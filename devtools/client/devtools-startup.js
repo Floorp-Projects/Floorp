@@ -238,6 +238,9 @@ DevToolsStartup.prototype = {
     // Key Shortcuts need to be added on all the created windows.
     this.hookKeyShortcuts(window);
 
+    // In some situations (e.g. starting Firefox with --jsconsole) DevTools will be
+    // initialized before the first browser-delayed-startup-finished event is received.
+    // We use a dedicated flag because we still need to hook the developer toggle.
     if (!this.developerToggleCreated) {
       this.hookDeveloperToggle();
       this.developerToggleCreated = true;
