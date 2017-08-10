@@ -323,7 +323,6 @@ NS_IMPL_RELEASE_INHERITED(AudioDestinationNode, AudioNode)
 
 AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                            bool aIsOffline,
-                                           AudioChannel aChannel,
                                            uint32_t aNumberOfChannels,
                                            uint32_t aLength, float aSampleRate)
   : AudioNode(aContext, aIsOffline ? aNumberOfChannels : 2,
@@ -340,7 +339,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
     aIsOffline
       ? MediaStreamGraph::CreateNonRealtimeInstance(aSampleRate, window)
       : MediaStreamGraph::GetInstance(
-          MediaStreamGraph::AUDIO_THREAD_DRIVER, aChannel, window);
+          MediaStreamGraph::AUDIO_THREAD_DRIVER, window);
   AudioNodeEngine* engine = aIsOffline ?
                             new OfflineDestinationNodeEngine(this, aNumberOfChannels,
                                                              aLength, aSampleRate) :
@@ -356,11 +355,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
 
   if (!aIsOffline) {
     graph->NotifyWhenGraphStarted(mStream);
-  }
-
-  if (aChannel != AudioChannel::Normal) {
-    ErrorResult rv;
-    SetMozAudioChannelType(aChannel, rv);
   }
 }
 
@@ -614,10 +608,6 @@ AudioDestinationNode::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& a
   if (aValue != mAudioChannel &&
       CheckAudioChannelPermissions(aValue)) {
     mAudioChannel = aValue;
-
-    if (mStream) {
-      mStream->SetAudioChannelType(mAudioChannel);
-    }
 
     if (mAudioChannelAgent) {
       CreateAudioChannelAgent();
