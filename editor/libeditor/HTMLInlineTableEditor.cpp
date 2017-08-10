@@ -110,12 +110,18 @@ HTMLEditor::HideInlineTableEditingUI()
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
 
-  DeleteRefToAnonymousNode(Move(mAddColumnBeforeButton), ps);
-  DeleteRefToAnonymousNode(Move(mRemoveColumnButton), ps);
-  DeleteRefToAnonymousNode(Move(mAddColumnAfterButton), ps);
-  DeleteRefToAnonymousNode(Move(mAddRowBeforeButton), ps);
-  DeleteRefToAnonymousNode(Move(mRemoveRowButton), ps);
-  DeleteRefToAnonymousNode(Move(mAddRowAfterButton), ps);
+  DeleteRefToAnonymousNode(mAddColumnBeforeButton, ps);
+  mAddColumnBeforeButton = nullptr;
+  DeleteRefToAnonymousNode(mRemoveColumnButton, ps);
+  mRemoveColumnButton = nullptr;
+  DeleteRefToAnonymousNode(mAddColumnAfterButton, ps);
+  mAddColumnAfterButton = nullptr;
+  DeleteRefToAnonymousNode(mAddRowBeforeButton, ps);
+  mAddRowBeforeButton = nullptr;
+  DeleteRefToAnonymousNode(mRemoveRowButton, ps);
+  mRemoveRowButton = nullptr;
+  DeleteRefToAnonymousNode(mAddRowAfterButton, ps);
+  mAddRowAfterButton = nullptr;
 
   return NS_OK;
 }

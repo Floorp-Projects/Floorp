@@ -66,7 +66,6 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
-#include "mozilla/ManualNAC.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
@@ -10349,7 +10348,7 @@ nsContentUtils::AppendNativeAnonymousChildren(
     }
 
     // Get manually created NAC (editor resize handles, etc.).
-    if (auto nac = static_cast<ManualNACArray*>(
+    if (auto nac = static_cast<ManualNAC*>(
           aContent->GetProperty(nsGkAtoms::manualNACProperty))) {
       aKids.AppendElements(*nac);
     }
