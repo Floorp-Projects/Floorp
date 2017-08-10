@@ -66,8 +66,7 @@ public:
     switch (aIndex) {
     case SAMPLE_RATE:
       mSampleRate = aParam;
-      // The buffer is passed after the sample rate.
-      // mReverb will be set using this sample rate when the buffer is received.
+      AdjustReverb();
       break;
     default:
       NS_ERROR("Bad ConvolverNodeEngine DoubleParameter");
@@ -76,7 +75,11 @@ public:
   void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
   {
     mBuffer = aBuffer;
+    AdjustReverb();
+  }
 
+  void AdjustReverb()
+  {
     // Note about empirical tuning (this is copied from Blink)
     // The maximum FFT size affects reverb performance and accuracy.
     // If the reverb is single-threaded and processes entirely in the real-time audio thread,
