@@ -1,0 +1,32 @@
+{
+  "arguments_schema": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+      "addonUrl": {
+        "description": "URL of the add-on XPI file",
+        "format": "uri",
+        "minLength": 1,
+        "type": "string"
+      },
+      "description": {
+        "description": "User-facing description of the study",
+        "minLength": 1,
+        "type": "string"
+      },
+      "name": {
+        "description": "User-facing name of the study",
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "addonUrl"
+    ],
+    "title": "Enroll a user in an opt-out SHIELD study",
+    "type": "object"
+  },
+  "implementation_url": "https://localhost:8443/api/v1/action/opt-out-study/implementation/sha384-HM_avYcD00o27ufwU1V7PIBtiuMAXML6MMwlYrDEqDX-XzGVuOfL52RCM680JExN/",
+  "name": "opt-out-study"
+}
