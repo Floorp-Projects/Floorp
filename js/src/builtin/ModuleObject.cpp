@@ -20,11 +20,10 @@
 using namespace js;
 using namespace js::frontend;
 
-static_assert(MODULE_STATUS_ERRORED < MODULE_STATUS_UNINSTANTIATED &&
-              MODULE_STATUS_UNINSTANTIATED < MODULE_STATUS_INSTANTIATING &&
-              MODULE_STATUS_INSTANTIATING < MODULE_STATUS_INSTANTIATED &&
-              MODULE_STATUS_INSTANTIATED < MODULE_STATUS_EVALUATED,
-              "Module statuses are ordered incorrectly");
+static_assert(MODULE_STATE_FAILED < MODULE_STATE_PARSED &&
+              MODULE_STATE_PARSED < MODULE_STATE_INSTANTIATED &&
+              MODULE_STATE_INSTANTIATED < MODULE_STATE_EVALUATED,
+              "Module states are ordered incorrectly");
 
 template<typename T, Value ValueGetter(const T* obj)>
 static bool
@@ -45,7 +44,7 @@ ModuleValueGetter(JSContext* cx, unsigned argc, Value* vp)
 #define DEFINE_GETTER_FUNCTIONS(cls, name, slot)                              \
     static Value                                                              \
     cls##_##name##Value(const cls* obj) {                                     \
-        return obj->getReservedSlot(cls::slot);                               \
+        return obj->getFixedSlot(cls::slot);                                  \
     }                                                                         \
                                                                               \
     static bool                                                               \
@@ -572,7 +571,7 @@ ModuleObject::class_ = {
     ArrayObject&                                                              \
     cls::name() const                                                         \
     {                                                                         \
-        return getReservedSlot(cls::slot).toObject().as<ArrayObject>();       \
+        return getFixedSlot(cls::slot).toObject().as<ArrayObject>();          \
     }
 
 DEFINE_ARRAY_SLOT_ACCESSOR(ModuleObject, requestedModules, RequestedModulesSlot)
@@ -633,8 +632,6 @@ ModuleObject::finalize(js::FreeOp* fop, JSObject* obj)
 ModuleEnvironmentObject*
 ModuleObject::environment() const
 {
-    MOZ_ASSERT(status() != MODULE_STATUS_ERRORED);
-
     Value value = getReservedSlot(EnvironmentSlot);
     if (value.isUndefined())
         return nullptr;
@@ -698,7 +695,7 @@ void
 ModuleObject::init(HandleScript script)
 {
     initReservedSlot(ScriptSlot, PrivateValue(script));
-    initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_ERRORED));
+    initReservedSlot(StateSlot, Int32Value(MODULE_STATE_FAILED));
 }
 
 void
@@ -719,7 +716,7 @@ ModuleObject::initImportExportData(HandleArrayObject requestedModules,
     initReservedSlot(LocalExportEntriesSlot, ObjectValue(*localExportEntries));
     initReservedSlot(IndirectExportEntriesSlot, ObjectValue(*indirectExportEntries));
     initReservedSlot(StarExportEntriesSlot, ObjectValue(*starExportEntries));
-    setReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNINSTANTIATED));
+    setReservedSlot(StateSlot, Int32Value(MODULE_STATE_PARSED));
 }
 
 static bool
@@ -800,24 +797,17 @@ ModuleObject::script() const
 }
 
 static inline void
-AssertValidModuleStatus(ModuleStatus status)
+AssertValidModuleState(ModuleState state)
 {
-    MOZ_ASSERT(status >= MODULE_STATUS_ERRORED && status <= MODULE_STATUS_EVALUATED);
+    MOZ_ASSERT(state >= MODULE_STATE_FAILED && state <= MODULE_STATE_EVALUATED);
 }
 
-ModuleStatus
-ModuleObject::status() const
+ModuleState
+ModuleObject::state() const
 {
-    ModuleStatus status = getReservedSlot(StatusSlot).toInt32();
-    AssertValidModuleStatus(status);
-    return status;
-}
-
-Value
-ModuleObject::error() const
-{
-    MOZ_ASSERT(status() == MODULE_STATUS_ERRORED);
-    return getReservedSlot(ErrorSlot);
+    ModuleState state = getReservedSlot(StateSlot).toInt32();
+    AssertValidModuleState(state);
+    return state;
 }
 
 Value
@@ -925,8 +915,17 @@ ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject 
     return true;
 }
 
+void
+ModuleObject::setState(int32_t newState)
+{
+    AssertValidModuleState(newState);
+    MOZ_ASSERT(state() != MODULE_STATE_FAILED);
+    MOZ_ASSERT(newState == MODULE_STATE_FAILED || newState > state());
+    setReservedSlot(StateSlot, Int32Value(newState));
+}
+
 /* static */ bool
-ModuleObject::execute(JSContext* cx, HandleModuleObject self, MutableHandleValue rval)
+ModuleObject::evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval)
 {
     MOZ_ASSERT(IsFrozen(cx, self));
 
@@ -976,50 +975,44 @@ InvokeSelfHostedMethod(JSContext* cx, HandleModuleObject self, HandlePropertyNam
 }
 
 /* static */ bool
-ModuleObject::Instantiate(JSContext* cx, HandleModuleObject self)
+ModuleObject::DeclarationInstantiation(JSContext* cx, HandleModuleObject self)
 {
-    return InvokeSelfHostedMethod(cx, self, cx->names().ModuleInstantiate);
+    return InvokeSelfHostedMethod(cx, self, cx->names().ModuleDeclarationInstantiation);
 }
 
 /* static */ bool
-ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self)
+ModuleObject::Evaluation(JSContext* cx, HandleModuleObject self)
 {
-    return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate);
+    return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluation);
 }
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusSlot)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, error, ErrorSlot)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, state, StateSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, RequestedModulesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ImportEntriesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, localExportEntries, LocalExportEntriesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, indirectExportEntries, IndirectExportEntriesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, starExportEntries, StarExportEntriesSlot)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, dfsIndex, DFSIndexSlot)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, dfsAncestorIndex, DFSAncestorIndexSlot)
 
 /* static */ bool
 GlobalObject::initModuleProto(JSContext* cx, Handle<GlobalObject*> global)
 {
     static const JSPropertySpec protoAccessors[] = {
         JS_PSG("namespace", ModuleObject_namespace_Getter, 0),
-        JS_PSG("status", ModuleObject_statusGetter, 0),
-        JS_PSG("error", ModuleObject_errorGetter, 0),
+        JS_PSG("state", ModuleObject_stateGetter, 0),
         JS_PSG("requestedModules", ModuleObject_requestedModulesGetter, 0),
         JS_PSG("importEntries", ModuleObject_importEntriesGetter, 0),
         JS_PSG("localExportEntries", ModuleObject_localExportEntriesGetter, 0),
         JS_PSG("indirectExportEntries", ModuleObject_indirectExportEntriesGetter, 0),
         JS_PSG("starExportEntries", ModuleObject_starExportEntriesGetter, 0),
-        JS_PSG("dfsIndex", ModuleObject_dfsIndexGetter, 0),
-        JS_PSG("dfsAncestorIndex", ModuleObject_dfsAncestorIndexGetter, 0),
         JS_PS_END
     };
 
     static const JSFunctionSpec protoFunctions[] = {
         JS_SELF_HOSTED_FN("getExportedNames", "ModuleGetExportedNames", 1, 0),
         JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 2, 0),
-        JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleInstantiate", 0, 0),
-        JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluate", 0, 0),
+        JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleDeclarationInstantiation", 0, 0),
+        JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluation", 0, 0),
         JS_FS_END
     };
 
