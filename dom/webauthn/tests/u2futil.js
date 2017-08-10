@@ -2,6 +2,9 @@
 var _countCompletions = 0;
 var _expectedCompletions = 0;
 
+const flag_TUP = 0x01;
+const flag_AT = 0x40;
+
 function handleEventMessage(event) {
   if ("test" in event.data) {
     let summary = event.data.test + ": " + event.data.msg;
@@ -127,9 +130,9 @@ function hexDecode(str) {
   return new Uint8Array(str.match(/../g).map(x => parseInt(x, 16)));
 }
 
-function webAuthnDecodeAttestation(aAttestationBuf) {
-  let attObj = CBOR.decode(aAttestationBuf);
-  console.log("Attestation CBOR Object:", attObj);
+function webAuthnDecodeCBORAttestation(aCborAttBuf) {
+  let attObj = CBOR.decode(aCborAttBuf);
+  console.log(":: Attestation CBOR Object ::");
   if (!("authData" in attObj && "fmt" in attObj && "attStmt" in attObj)) {
     throw "Invalid CBOR Attestation Object";
   }
@@ -137,20 +140,44 @@ function webAuthnDecodeAttestation(aAttestationBuf) {
     throw "Invalid CBOR Attestation Statement";
   }
 
-  let rpIdHash = attObj.authData.slice(0, 32);
-  let flags = attObj.authData.slice(32, 33);
-  let counter = attObj.authData.slice(33, 37);
-  let attData = {};
-  attData.aaguid = attObj.authData.slice(37, 53);
-  attData.credIdLen = (attObj.authData[53] << 8) + attObj.authData[54];
-  attData.credId = attObj.authData.slice(55, 55 + attData.credIdLen);
+  return webAuthnDecodeAttestation(attObj.authData)
+  .then(function (aAttestationObj) {
+    aAttestationObj.attestationObject = attObj;
+    return Promise.resolve(aAttestationObj);
+  });
+}
 
-  console.log(":: CBOR Attestation Object Data ::");
+function webAuthnDecodeAttestation(aAuthData) {
+  let rpIdHash = aAuthData.slice(0, 32);
+  let flags = aAuthData.slice(32, 33);
+  let counter = aAuthData.slice(33, 37);
+
+  console.log(":: Attestation Object Data ::");
   console.log("RP ID Hash: " + hexEncode(rpIdHash));
   console.log("Counter: " + hexEncode(counter) + " Flags: " + flags);
+
+  if ((flags & flag_AT) == 0x00) {
+    // No Attestation Data, so we're done.
+    return Promise.resolve({
+      rpIdHash: rpIdHash,
+      flags: flags,
+      counter: counter,
+    });
+  }
+
+  if (aAuthData.length < 38) {
+    throw "Attestation Data flag was set, but not enough data passed in!";
+  }
+
+  let attData = {};
+  attData.aaguid = aAuthData.slice(37, 53);
+  attData.credIdLen = (aAuthData[53] << 8) + aAuthData[54];
+  attData.credId = aAuthData.slice(55, 55 + attData.credIdLen);
+
+  console.log(":: Attestation Data ::");
   console.log("AAGUID: " + hexEncode(attData.aaguid));
 
-  cborPubKey = attObj.authData.slice(55 + attData.credIdLen);
+  cborPubKey = aAuthData.slice(55 + attData.credIdLen);
   var pubkeyObj = CBOR.decode(cborPubKey.buffer);
   if (!("alg" in pubkeyObj && "x" in pubkeyObj && "y" in pubkeyObj)) {
     throw "Invalid CBOR Public Key Object";
@@ -168,12 +195,14 @@ function webAuthnDecodeAttestation(aAttestationBuf) {
 
   return importPublicKey(pubKeyBytes)
   .then(function(aKeyHandle) {
-    return {
-      attestationObject: attObj,
+    return Promise.resolve({
+      rpIdHash: rpIdHash,
+      flags: flags,
+      counter: counter,
       attestationAuthData: attData,
       publicKeyBytes: pubKeyBytes,
       publicKeyHandle: aKeyHandle,
-    };
+    });
   });
 }
 
@@ -190,7 +219,7 @@ function importPublicKey(keyBytes) {
   return crypto.subtle.importKey("jwk", jwk, {name: "ECDSA", namedCurve: "P-256"}, true, ["verify"])
 }
 
-function deriveAppAndChallengeParam(appId, clientData) {
+function deriveAppAndChallengeParam(appId, clientData, attestation) {
   var appIdBuf = string2buffer(appId);
   return Promise.all([
     crypto.subtle.digest("SHA-256", appIdBuf),
@@ -200,6 +229,7 @@ function deriveAppAndChallengeParam(appId, clientData) {
     return {
       appParam: new Uint8Array(digests[0]),
       challengeParam: new Uint8Array(digests[1]),
+      attestation: attestation
     };
   });
 }
@@ -217,10 +247,11 @@ function assemblePublicKeyBytesData(xCoord, yCoord) {
   return keyBytes;
 }
 
-function assembleSignedData(appParam, presenceAndCounter, challengeParam) {
+function assembleSignedData(appParam, flags, counter, challengeParam) {
   let signedData = new Uint8Array(32 + 1 + 4 + 32);
   appParam.map((x, i) => signedData[0 + i] = x);
-  presenceAndCounter.map((x, i) => signedData[32 + i] = x);
+  signedData[32] = flags;
+  counter.map((x, i) => signedData[33 + i] = x);
   challengeParam.map((x, i) => signedData[37 + i] = x);
   return signedData;
 }

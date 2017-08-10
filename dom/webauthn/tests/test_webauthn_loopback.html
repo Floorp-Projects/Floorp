@@ -63,8 +63,10 @@ function() {
     is(clientData.origin, document.domain, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
-    return webAuthnDecodeAttestation(aCredInfo.response.attestationObject.buffer)
+    return webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject.buffer)
     .then(function(decodedResult) {
+      ok(decodedResult.flags == (flag_TUP | flag_AT), "User presence and Attestation Object must both be set");
+
       aCredInfo.clientDataObj = clientData;
       aCredInfo.publicKeyHandle = decodedResult.publicKeyHandle;
       aCredInfo.attestationObject = decodedResult.attestationObject;
@@ -96,26 +98,22 @@ function() {
     is(clientData.origin, document.domain, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
-    // Parse the signature data
-    if (aAssertion.response.signature[0] != 0x01) {
-      throw "User presence byte not set";
-    }
-    let presenceAndCounter = aAssertion.response.signature.slice(0,5);
-    let signatureValue = aAssertion.response.signature.slice(5);
-
-    let rpIdHash = aAssertion.response.authenticatorData.slice(0,32);
-
-    // Assemble the signed data and verify the signature
-    return deriveAppAndChallengeParam(window.location.host, aAssertion.response.clientDataJSON)
+    return webAuthnDecodeAttestation(aAssertion.response.authenticatorData)
+    .then(function(decodedResult) {
+      ok(decodedResult.flags == flag_TUP, "User presence must be the only flag set");
+      is(decodedResult.counter.length, 4, "Counter must be 4 bytes");
+      return deriveAppAndChallengeParam(window.location.host, aAssertion.response.clientDataJSON, decodedResult)
+    })
     .then(function(aParams) {
-      console.log(aParams.appParam, rpIdHash, presenceAndCounter, aParams.challengeParam);
+      console.log(aParams);
       console.log("ClientData buffer: ", hexEncode(aAssertion.response.clientDataJSON));
       console.log("ClientDataHash: ", hexEncode(aParams.challengeParam));
-      return assembleSignedData(aParams.appParam, presenceAndCounter, aParams.challengeParam);
+      return assembleSignedData(aParams.appParam, aParams.attestation.flags,
+                                aParams.attestation.counter, aParams.challengeParam);
     })
     .then(function(aSignedData) {
-      console.log(aPublicKey, aSignedData, signatureValue);
-      return verifySignature(aPublicKey, aSignedData, signatureValue);
+      console.log(aPublicKey, aSignedData, aAssertion.response.signature);
+      return verifySignature(aPublicKey, aSignedData, aAssertion.response.signature);
     })
   }
 
