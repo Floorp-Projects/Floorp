@@ -44,6 +44,7 @@ import android.widget.Toast;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.InstallFirefoxActivity;
+import org.mozilla.focus.animation.TransitionDrawableGroup;
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.menu.BrowserMenu;
@@ -87,14 +88,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     }
 
     private Download pendingDownload;
-    private View backgroundView;
-    private TransitionDrawable backgroundTransition;
+    private TransitionDrawableGroup backgroundTransitionGroup;
     private TextView urlView;
     private AnimatedProgressBar progressView;
     private FrameLayout blockView;
     private ImageView lockView;
-    private ImageView blockIcon;
     private ImageButton menuView;
+    private View statusBar;
+    private View urlBar;
     private WeakReference<BrowserMenu> menuWeakReference = new WeakReference<>(null);
 
     /**
@@ -166,11 +167,40 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         videoContainer = (ViewGroup) view.findViewById(R.id.video_container);
         browserContainer = view.findViewById(R.id.browser_container);
 
+        urlBar = view.findViewById(R.id.urlbar);
+        statusBar = view.findViewById(R.id.status_bar_background);
+
         urlView = (TextView) view.findViewById(R.id.display_url);
         updateURL(getInitialUrl());
 
-        backgroundView = view.findViewById(R.id.background);
-        backgroundTransition = (TransitionDrawable) backgroundView.getBackground();
+        final View toolbarContent = view.findViewById(R.id.toolbar_content);
+
+        final AppBarLayout appBarLayout = (AppBarLayout) view.findViewById(R.id.appbar);
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                // When scrolling the toolbar away we want to fade out the content on the toolbar
+                // with an alpha animation. This will avoid that the text
+
+                // The toolbar content should have 100% alpha when the AppBarLayout is expanded and
+                // should have 0 alpha when the toolbar is collapsed 50% or more.
+                float alpha = -1 * (((100f / (appBarLayout.getTotalScrollRange() * 0.5f)) * verticalOffset) / 100);
+
+                // We never want to go lower than 0 or higher than 1.
+                alpha = Math.max(0, alpha);
+                alpha = Math.min(1, alpha);
+
+                // The calculated value is reversed and we need to invert it (e.g. 0.8 -> 0.2)
+                alpha = 1 - alpha;
+
+                toolbarContent.setAlpha(alpha);
+            }
+        });
+
+        backgroundTransitionGroup = new TransitionDrawableGroup(
+                (TransitionDrawable) urlBar.getBackground(),
+                (TransitionDrawable) statusBar.getBackground()
+        );
 
         if ((refreshButton = view.findViewById(R.id.refresh)) != null) {
             refreshButton.setOnClickListener(this);
@@ -188,7 +218,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             backButton.setOnClickListener(this);
         }
 
-        blockIcon = (ImageView) view.findViewById(R.id.block_image);
+        final ImageView blockIcon = (ImageView) view.findViewById(R.id.block_image);
         blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled);
 
         blockView = (FrameLayout) view.findViewById(R.id.block);
@@ -231,9 +261,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         final int textColor;
 
-        final View toolbar = view.findViewById(R.id.urlbar);
         if (customTabConfig.toolbarColor != null) {
-            toolbar.setBackgroundColor(customTabConfig.toolbarColor);
+            urlBar.setBackgroundColor(customTabConfig.toolbarColor);
 
             textColor = ColorUtils.getReadableTextColor(customTabConfig.toolbarColor);
             urlView.setTextColor(textColor);
@@ -256,7 +285,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         if (customTabConfig.disableUrlbarHiding) {
-            AppBarLayout.LayoutParams params = (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+            AppBarLayout.LayoutParams params = (AppBarLayout.LayoutParams) urlBar.getLayoutParams();
             params.setScrollFlags(0);
         }
 
@@ -344,7 +373,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading));
 
-                backgroundTransition.resetTransition();
+                backgroundTransitionGroup.resetTransition();
 
                 progressView.setProgress(5);
                 progressView.setVisibility(View.VISIBLE);
@@ -356,7 +385,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             public void onPageFinished(boolean isSecure) {
                 updateIsLoading(false);
 
-                backgroundTransition.startTransition(ANIMATION_DURATION);
+                backgroundTransitionGroup.startTransition(ANIMATION_DURATION);
 
                 progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading_finished));
 
@@ -919,8 +948,23 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         if (webView != null) {
             webView.setBlockingEnabled(enabled);
         }
-        backgroundView.setBackgroundResource(enabled ? R.drawable.animated_background : R.drawable.animated_background_disabled);
-        backgroundTransition = (TransitionDrawable) backgroundView.getBackground();
+
+        statusBar.setBackgroundResource(enabled ? R.drawable.animated_background : R.drawable.animated_background_disabled);
+
+        if (!BrowsingSession.getInstance().isCustomTab()) {
+            // Only update the toolbar background if this is not a custom tab. Custom tabs set their
+            // own color and we do not want to override this here.
+            urlBar.setBackgroundResource(enabled ? R.drawable.animated_background : R.drawable.animated_background_disabled);
+
+            backgroundTransitionGroup = new TransitionDrawableGroup(
+                    (TransitionDrawable) urlBar.getBackground(),
+                    (TransitionDrawable) statusBar.getBackground()
+            );
+        } else {
+            backgroundTransitionGroup = new TransitionDrawableGroup(
+                    (TransitionDrawable) statusBar.getBackground()
+            );
+        }
     }
 
     public boolean isBlockingEnabled() {
