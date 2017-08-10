@@ -82,17 +82,13 @@ add_task(async function test_swap_frameloader_pagevisibility_events() {
   gBrowser.selectedTab = newTab;
   let emptyBrowser = newTab.linkedBrowser;
 
-  // Wait for that initial browser to show its pageshow event so that we
-  // don't confuse it with the other expected events. Note that we can't
-  // use BrowserTestUtils.waitForEvent here because we're using the
-  // e10s add-on shims in the e10s-case. I'm doing this because I couldn't
-  // find a way of sending down a frame script to the newly opened windows
-  // and tabs fast enough to attach the event handlers before they were
-  // fired.
-  await new Promise((resolve) => {
-    emptyBrowser.addEventListener("pageshow", function() {
-      resolve();
-    }, {once: true});
+  // Wait for that initial browser to show its pageshow event if it hasn't
+  // happened so that we don't confuse it with the other expected events.
+  await ContentTask.spawn(emptyBrowser, {}, async() => {
+    if (content.document.visibilityState === "hidden") {
+      info("waiting for hidden emptyBrowser to pageshow");
+      await ContentTaskUtils.waitForEvent(content, "pageshow");
+    }
   });
 
   // The empty tab we just added show now fire a pagehide as its replaced,
