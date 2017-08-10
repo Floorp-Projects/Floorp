@@ -16,6 +16,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "CleanupManager",
   "resource://shield-recipe-client/lib/CleanupManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PreferenceExperiments",
   "resource://shield-recipe-client/lib/PreferenceExperiments.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AboutPages",
+  "resource://shield-recipe-client-content/AboutPages.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ShieldPreferences",
+  "resource://shield-recipe-client/lib/ShieldPreferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonStudies",
+  "resource://shield-recipe-client/lib/AddonStudies.jsm");
 
 this.EXPORTED_SYMBOLS = ["ShieldRecipeClient"];
 
@@ -31,19 +37,8 @@ const REASONS = {
   ADDON_UPGRADE: 7,    // The add-on is being upgraded.
   ADDON_DOWNGRADE: 8,  // The add-on is being downgraded.
 };
-const PREF_BRANCH = "extensions.shield-recipe-client.";
-const DEFAULT_PREFS = {
-  api_url: ["https://normandy.cdn.mozilla.net/api/v1", PREF_STRING],
-  dev_mode: [false, PREF_BOOL],
-  enabled: [true, PREF_BOOL],
-  startup_delay_seconds: [300, PREF_INT],
-  "logging.level": [Log.Level.Warn, PREF_INT],
-  user_id: ["", PREF_STRING],
-  run_interval_seconds: [86400, PREF_INT], // 24 hours
-  first_run: [true, PREF_BOOL],
-};
 const PREF_DEV_MODE = "extensions.shield-recipe-client.dev_mode";
-const PREF_LOGGING_LEVEL = PREF_BRANCH + "logging.level";
+const PREF_LOGGING_LEVEL = "extensions.shield-recipe-client.logging.level";
 
 let log = null;
 
@@ -54,8 +49,6 @@ let log = null;
  */
 this.ShieldRecipeClient = {
   async startup() {
-    ShieldRecipeClient.setDefaultPrefs();
-
     // Setup logging and listen for changes to logging prefs
     LogManager.configure(Services.prefs.getIntPref(PREF_LOGGING_LEVEL));
     Services.prefs.addObserver(PREF_LOGGING_LEVEL, LogManager.configure);
@@ -63,6 +56,18 @@ this.ShieldRecipeClient = {
       () => Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure),
     );
     log = LogManager.getLogger("bootstrap");
+
+    try {
+      await AboutPages.init();
+    } catch (err) {
+      log.error("Failed to initialize about pages:", err);
+    }
+
+    try {
+      await AddonStudies.init();
+    } catch (err) {
+      log.error("Failed to initialize addon studies:", err);
+    }
 
     // Initialize experiments first to avoid a race between initializing prefs
     // and recipes rolling back pref changes when experiments end.
@@ -72,35 +77,16 @@ this.ShieldRecipeClient = {
       log.error("Failed to initialize preference experiments:", err);
     }
 
+    try {
+      ShieldPreferences.init();
+    } catch (err) {
+      log.error("Failed to initialize preferences UI:", err);
+    }
+
     await RecipeRunner.init();
   },
 
   shutdown(reason) {
     CleanupManager.cleanup();
-  },
-
-  setDefaultPrefs() {
-    for (const [key, [val, type]] of Object.entries(DEFAULT_PREFS)) {
-      const fullKey = PREF_BRANCH + key;
-      // If someone beat us to setting a default, don't overwrite it.
-      if (!Services.prefs.prefHasUserValue(fullKey)) {
-        switch (type) {
-          case PREF_BOOL:
-            Services.prefs.setBoolPref(fullKey, val);
-            break;
-
-          case PREF_INT:
-            Services.prefs.setIntPref(fullKey, val);
-            break;
-
-          case PREF_STRING:
-            Services.prefs.setStringPref(fullKey, val);
-            break;
-
-          default:
-            throw new TypeError(`Unexpected type (${type}) for preference ${fullKey}.`)
-        }
-      }
-    }
   },
 };
