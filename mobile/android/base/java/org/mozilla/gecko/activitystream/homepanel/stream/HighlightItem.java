@@ -28,6 +28,8 @@ import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.FaviconView;
 
 import java.lang.ref.WeakReference;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 public class HighlightItem extends StreamItem {
@@ -132,20 +134,29 @@ public class HighlightItem extends StreamItem {
     }
 
     private void updatePageDomain() {
-        final UpdatePageDomainAsyncTask hostSLDTask = new UpdatePageDomainAsyncTask(itemView.getContext(),
-                highlight.getUrl(), pageDomainView);
-        hostSLDTask.execute();
+        final URI highlightURI;
+        try {
+            highlightURI = new URI(highlight.getUrl());
+        } catch (final URISyntaxException e) {
+            // If the URL is invalid, there's not much extra processing we can do on it.
+            pageDomainView.setText(highlight.getUrl());
+            return;
+        }
+
+        final UpdatePageDomainAsyncTask updatePageDomainTask = new UpdatePageDomainAsyncTask(itemView.getContext(),
+                highlightURI, pageDomainView);
+        updatePageDomainTask.execute();
     }
 
     /** Updates the text of the given view to the host second level domain. */
-    private static class UpdatePageDomainAsyncTask extends URIUtils.GetHostSecondLevelDomainAsyncTask {
+    private static class UpdatePageDomainAsyncTask extends URIUtils.GetFormattedDomainAsyncTask {
         private static final int VIEW_TAG_ID = R.id.page; // same as the view.
 
         private final WeakReference<TextView> pageDomainViewWeakReference;
         private final UUID viewTagAtStart;
 
-        UpdatePageDomainAsyncTask(final Context contextReference, final String uriString, final TextView pageDomainView) {
-            super(contextReference, uriString);
+        UpdatePageDomainAsyncTask(final Context contextReference, final URI uri, final TextView pageDomainView) {
+            super(contextReference, uri, false, 0); // hostSLD.
             this.pageDomainViewWeakReference = new WeakReference<>(pageDomainView);
 
             // See isTagSameAsStartTag for details.
