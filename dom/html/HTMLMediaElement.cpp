@@ -2524,7 +2524,6 @@ nsresult HTMLMediaElement::LoadResource()
   if (mMediaSource) {
     MediaDecoderInit decoderInit(
       this,
-      mAudioChannel,
       mMuted ? 0.0 : mVolume,
       mPreservesPitch,
       mPlaybackRate,
@@ -4729,7 +4728,6 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
   NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
 
   MediaDecoderInit decoderInit(this,
-                               mAudioChannel,
                                mMuted ? 0.0 : mVolume,
                                mPreservesPitch,
                                mPlaybackRate,
@@ -4816,7 +4814,6 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   }
 
   MediaDecoderInit decoderInit(this,
-                               mAudioChannel,
                                mMuted ? 0.0 : mVolume,
                                mPreservesPitch,
                                mPlaybackRate,
