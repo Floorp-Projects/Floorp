@@ -1059,8 +1059,6 @@ html|span.ac-emphasize-text-url {
 .tab-label {
   margin-top: 1px;
   margin-bottom: 0;
-  -moz-box-flex: 1;
-  text-align: center;
 }
 
 .tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"]) {
