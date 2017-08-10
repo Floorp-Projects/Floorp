@@ -480,7 +480,6 @@ class TreeMetadataEmitter(LoggingMixin):
                     expected_profile = {
                         'opt-level': 2,
                         'rpath': False,
-                        'lto': True,
                         'debug-assertions': False,
                         'panic': 'abort',
                     }
