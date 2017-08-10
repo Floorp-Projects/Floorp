@@ -229,11 +229,11 @@ HTMLEditor::GetElementZIndex(nsIDOMElement* aElement,
   return NS_OK;
 }
 
-ManualNACPtr
+already_AddRefed<Element>
 HTMLEditor::CreateGrabber(nsINode* aParentNode)
 {
   // let's create a grabber through the element factory
-  ManualNACPtr ret =
+  RefPtr<Element> ret =
     CreateAnonymousElement(nsGkAtoms::span, GetAsDOMNode(aParentNode),
                            NS_LITERAL_STRING("mozGrabber"), false);
   if (NS_WARN_IF(!ret)) {
@@ -245,7 +245,7 @@ HTMLEditor::CreateGrabber(nsINode* aParentNode)
   evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"),
                               mEventListener, false);
 
-  return ret;
+  return ret.forget();
 }
 
 NS_IMETHODIMP
@@ -289,8 +289,10 @@ HTMLEditor::HideGrabber()
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
 
-  DeleteRefToAnonymousNode(Move(mGrabber), ps);
-  DeleteRefToAnonymousNode(Move(mPositioningShadow), ps);
+  DeleteRefToAnonymousNode(mGrabber, ps);
+  mGrabber = nullptr;
+  DeleteRefToAnonymousNode(mPositioningShadow, ps);
+  mPositioningShadow = nullptr;
 
   return NS_OK;
 }
@@ -389,7 +391,7 @@ HTMLEditor::EndMoving()
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
     NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
-    DeleteRefToAnonymousNode(Move(mPositioningShadow), ps);
+    DeleteRefToAnonymousNode(mPositioningShadow, ps);
 
     mPositioningShadow = nullptr;
   }
