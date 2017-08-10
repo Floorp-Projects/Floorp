@@ -195,4 +195,3 @@ function getIntl() {
   }
   return intl;
 }
-
