@@ -8,12 +8,15 @@ const {Cc, Ci, components} = require("chrome");
 const {isWindowIncluded} = require("devtools/shared/layout/utils");
 const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-const {CONSOLE_WORKER_IDS, WebConsoleUtils} = require("devtools/server/actors/utils/webconsole-utils");
+const {CONSOLE_WORKER_IDS, WebConsoleUtils} = require("devtools/server/actors/webconsole/utils");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "swm",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
+
+// Process script used to forward console calls from content processes to parent process
+const CONTENT_PROCESS_SCRIPT = "resource://devtools/server/actors/webconsole/content-process-forward.js";
 
 // The page errors listener
 
@@ -450,4 +453,40 @@ ConsoleReflowListener.prototype =
     this.docshell.removeWeakReflowObserver(this);
     this.listener = this.docshell = null;
   },
+};
+
+/**
+ * Forward console message calls from content processes to the parent process.
+ * Used by Browser console and toolbox to see messages from all processes.
+ *
+ * @constructor
+ * @param object owner
+ *        The listener owner which needs to implement:
+ *        - onConsoleAPICall(message)
+ */
+function ContentProcessListener(listener) {
+  this.listener = listener;
+
+  Services.ppmm.addMessageListener("Console:Log", this);
+  Services.ppmm.loadProcessScript(CONTENT_PROCESS_SCRIPT, true);
+}
+
+exports.ContentProcessListener = ContentProcessListener;
+
+ContentProcessListener.prototype = {
+  receiveMessage(message) {
+    let logMsg = message.data;
+    logMsg.wrappedJSObject = logMsg;
+    this.listener.onConsoleAPICall(logMsg);
+  },
+
+  destroy() {
+    // Tell the content processes to stop listening and forwarding messages
+    Services.ppmm.broadcastAsyncMessage("DevTools:StopForwardingContentProcessMessage");
+
+    Services.ppmm.removeMessageListener("Console:Log", this);
+    Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_SCRIPT);
+
+    this.listener = null;
+  }
 };

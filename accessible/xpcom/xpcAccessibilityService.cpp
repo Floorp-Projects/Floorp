@@ -91,8 +91,7 @@ xpcAccessibilityService::Release(void)
   return count;
 }
 
-NS_IMPL_QUERY_INTERFACE(xpcAccessibilityService, nsIAccessibilityService,
-                                                 nsIAccessibleRetrieval)
+NS_IMPL_QUERY_INTERFACE(xpcAccessibilityService, nsIAccessibilityService)
 
 NS_IMETHODIMP
 xpcAccessibilityService::GetApplicationAccessible(nsIAccessible** aAccessibleApplication)

@@ -93,7 +93,7 @@ private:
     : mRefCnt(1)
   {
     mLength = aString.Length();
-    mIsStatic = false;
+    SetKind(AtomKind::DynamicAtom);
     RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
     if (buf) {
       mString = static_cast<char16_t*>(buf->Data());
@@ -171,7 +171,7 @@ public:
   StaticAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash)
   {
     mLength = aLength;
-    mIsStatic = true;
+    SetKind(AtomKind::StaticAtom);
     mString = static_cast<char16_t*>(aStringBuffer->Data());
 
 #if defined(NS_BUILD_REFCNT_LOGGING)

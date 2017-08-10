@@ -9,7 +9,7 @@
 nsHtml5Atom::nsHtml5Atom(const nsAString& aString)
 {
   mLength = aString.Length();
-  mIsStatic = false;
+  SetKind(AtomKind::HTML5Atom);
   RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
   if (buf) {
     mString = static_cast<char16_t*>(buf->Data());

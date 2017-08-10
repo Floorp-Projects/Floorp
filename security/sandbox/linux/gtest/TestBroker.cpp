@@ -133,6 +133,8 @@ SandboxBrokerTest::GetPolicy() const
   policy->AddPath(MAY_READ | MAY_WRITE, "/tmp", AddAlways);
   policy->AddPath(MAY_READ | MAY_WRITE | MAY_CREATE, "/tmp/blublu", AddAlways);
   policy->AddPath(MAY_READ | MAY_WRITE | MAY_CREATE, "/tmp/blublublu", AddAlways);
+  // This should be non-writable by the user running the test:
+  policy->AddPath(MAY_READ | MAY_WRITE, "/etc", AddAlways);
 
   return Move(policy);
 }
@@ -206,6 +208,14 @@ TEST_F(SandboxBrokerTest, Access)
   EXPECT_EQ(-EACCES, Access("/proc/self", R_OK));
 
   EXPECT_EQ(-EACCES, Access("/proc/self/stat", F_OK));
+
+  EXPECT_EQ(0, Access("/tmp", X_OK));
+  EXPECT_EQ(0, Access("/tmp", R_OK|X_OK));
+  EXPECT_EQ(0, Access("/tmp", R_OK|W_OK|X_OK));
+  EXPECT_EQ(0, Access("/proc/self", X_OK));
+
+  EXPECT_EQ(0, Access("/etc", R_OK|X_OK));
+  EXPECT_EQ(-EACCES, Access("/etc", W_OK));
 }
 
 TEST_F(SandboxBrokerTest, Stat)
@@ -257,10 +267,7 @@ TEST_F(SandboxBrokerTest, Chmod)
   close(fd);
   // Set read only. SandboxBroker enforces 0600 mode flags.
   ASSERT_EQ(0, Chmod("/tmp/blublu", S_IRUSR));
-  // SandboxBroker doesn't use real access(), it just checks against
-  // the policy. So it can't see the change in permisions here.
-  // This won't work:
-  // EXPECT_EQ(-EACCES, Access("/tmp/blublu", W_OK));
+  EXPECT_EQ(-EACCES, Access("/tmp/blublu", W_OK));
   statstruct realStat;
   EXPECT_EQ(0, statsyscall("/tmp/blublu", &realStat));
   EXPECT_EQ((mode_t)S_IRUSR, realStat.st_mode & 0777);

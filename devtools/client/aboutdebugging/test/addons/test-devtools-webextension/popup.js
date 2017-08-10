@@ -6,8 +6,10 @@
 
 "use strict";
 
-// This function is called from the webconsole test:
+// This function is called from the following about:debugging test:
 // browser_addons_debug_webextension.js
-function myWebExtensionPopupAddonFunction() {  // eslint-disable-line no-unused-vars
-  console.log("Popup page function called", browser.runtime.getManifest());
+//
+// eslint-disable-next-line no-unused-vars
+function myWebExtensionPopupAddonFunction() {
+  browser.test.sendMessage("popupPageFunctionCalled", browser.runtime.getManifest());
 }

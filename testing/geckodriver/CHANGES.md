@@ -4,8 +4,18 @@ All notable changes to this program is documented in this file.
 
 ## Unreleased
 
+### Added
+- New window `state` field on the window rect response object, returned from [`GetWindowRect`], [`SetWindowRect`], [`MinimizeWindow`], [`MaximizeWindow`], and [`FullscreenWindow`] commands
+
+[`FullscreenWindow`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.FullscreenWindow
+[`GetWindowRect`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.GetWindowRect
+[`MaximizeWindow`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.MaximizeWindow
+[`MinimizeWindow`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.MinimizeWindow
+[`SetWindowRect`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.SetWindowRect
+
 ### Changed
-- `/moz/addon/install` command accepts an `addon` parameter, in lieu of `path`, containing an add-on as a base64 string.
+- The `proxyType` `noproxy` has been replaced with `direct` in accordance with recent WebDriver specification changes
+- `/moz/addon/install` command accepts an `addon` parameter, in lieu of `path`, containing an addon as a Base64 string
 
 ## 0.18.0 (2017-07-10)
 

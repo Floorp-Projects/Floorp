@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use std::hash::{Hash, Hasher};
+
 /// Represents RGBA screen colors with floating point numbers.
 ///
 /// All components must be between 0.0 and 1.0.
@@ -48,6 +50,26 @@ impl ColorF {
     pub fn premultiplied(&self) -> ColorF {
         self.scale_rgb(self.a)
     }
+}
+
+// Floats don't impl Hash/Eq...
+impl Eq for ColorF { }
+impl Hash for ColorF {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // Note: this is inconsistent with the Eq impl for -0.0 (don't care).
+        self.r._to_bits().hash(state);
+        self.g._to_bits().hash(state);
+        self.b._to_bits().hash(state);
+        self.a._to_bits().hash(state);
+    }
+}
+
+// FIXME: remove this when Rust 1.21 is stable (float_bits_conv)
+trait ToBits {
+    fn _to_bits(self) -> u32;
+}
+impl ToBits for f32 {
+    fn _to_bits(self) -> u32 { unsafe { ::std::mem::transmute(self) } }
 }
 
 /// Represents RGBA screen colors with one byte per channel.

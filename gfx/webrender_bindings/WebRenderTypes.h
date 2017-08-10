@@ -649,6 +649,10 @@ static inline wr::WrFilterOp ToWrFilterOp(const layers::CSSFilter& filter) {
 // and the compiler will catch accidental conversions between the two.
 struct WrClipId {
   uint64_t id;
+
+  bool operator==(const WrClipId& other) const {
+    return id == other.id;
+  }
 };
 
 } // namespace wr
