@@ -1,4 +1,3 @@
----
 ExplicitPathLinter:
     description: Only lint a specific file name
     rule: no-foobar
