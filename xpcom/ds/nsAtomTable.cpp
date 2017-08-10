@@ -128,16 +128,8 @@ private:
   ~DynamicAtom();
 
 public:
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIATOM
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) final;
-  typedef mozilla::TrueType HasThreadSafeRefCnt;
-
-  MozExternalRefCountType DoAddRef();
-  MozExternalRefCountType DoRelease();
-
-protected:
-  ThreadSafeAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 };
 
 #if defined(NS_BUILD_REFCNT_LOGGING)
@@ -207,11 +199,23 @@ public:
   // StaticAtom* pointer (in AtomTableClearEntry()), not an nsIAtom* pointer.
   ~StaticAtom() {}
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) final;
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIATOM
 };
 
-NS_IMPL_QUERY_INTERFACE(StaticAtom, nsIAtom);
+NS_IMPL_QUERY_INTERFACE(StaticAtom, nsIAtom)
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+StaticAtom::AddRef()
+{
+  return 2;
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+StaticAtom::Release()
+{
+  return 1;
+}
 
 NS_IMETHODIMP
 DynamicAtom::ScriptableToString(nsAString& aBuf)
@@ -271,30 +275,6 @@ StaticAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
   // Don't measure the string buffer pointed to by the StaticAtom because it's
   // in static memory.
   return n;
-}
-
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsIAtom::AddRef()
-{
-  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to AddRef an nsHtml5Atom");
-  if (!IsDynamicAtom()) {
-    MOZ_ASSERT(IsStaticAtom());
-    return 2;
-  }
-  return static_cast<DynamicAtom*>(this)->DoAddRef();
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsIAtom::Release()
-{
-  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to Release an nsHtml5Atom");
-  if (!IsDynamicAtom()) {
-    MOZ_ASSERT(IsStaticAtom());
-    return 1;
-  }
-  return static_cast<DynamicAtom*>(this)->DoRelease();
 }
 
 //----------------------------------------------------------------------
@@ -504,8 +484,8 @@ DynamicAtom::GCAtomTableLocked(const MutexAutoLock& aProofOfLock,
 
 NS_IMPL_QUERY_INTERFACE(DynamicAtom, nsIAtom)
 
-MozExternalRefCountType
-DynamicAtom::DoAddRef()
+NS_IMETHODIMP_(MozExternalRefCountType)
+DynamicAtom::AddRef(void)
 {
   nsrefcnt count = ++mRefCnt;
   if (count == 1) {
@@ -522,8 +502,8 @@ static const uint32_t kAtomGCThreshold = 20;
 static const uint32_t kAtomGCThreshold = 10000;
 #endif
 
-MozExternalRefCountType
-DynamicAtom::DoRelease()
+NS_IMETHODIMP_(MozExternalRefCountType)
+DynamicAtom::Release(void)
 {
   MOZ_ASSERT(mRefCnt > 0);
   nsrefcnt count = --mRefCnt;
