@@ -15,6 +15,7 @@ const { PlainTextConsole } = require("../console/plain-text");
 const { when: unload } = require("../system/unload");
 lazyRequire(this, "../console/traceback", "format", "fromException");
 const system = require("../system");
+const { gc: gcPromise } = require('./memory');
 const { defer } = require('../core/promise');
 const { extend } = require('../core/heritage');
 
@@ -143,7 +144,43 @@ function dictDiff(last, curr) {
   return diff;
 }
 
+function reportMemoryUsage() {
+  if (!profileMemory) {
+    return emptyPromise();
+  }
+
+  return gcPromise().then((() => {
+    var mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
+              .getService(Ci.nsIMemoryReporterManager);
+    let count = 0;
+    function logReporter(process, path, kind, units, amount, description) {
+      print(((++count == 1) ? "\n" : "") + description + ": " + amount + "\n");
+    }
+    mgr.getReportsForThisProcess(logReporter, null, /* anonymize = */ false);
+  }));
+}
+
 var gWeakrefInfo;
+
+function checkMemory() {
+  return gcPromise().then(_ => {
+    let leaks = getPotentialLeaks();
+
+    let compartmentURLs = Object.keys(leaks.compartments).filter(function(url) {
+      return !(url in startLeaks.compartments);
+    });
+
+    let windowURLs = Object.keys(leaks.windows).filter(function(url) {
+      return !(url in startLeaks.windows);
+    });
+
+    for (let url of compartmentURLs)
+      console.warn("LEAKED", leaks.compartments[url]);
+
+    for (let url of windowURLs)
+      console.warn("LEAKED", leaks.windows[url]);
+  }).then(showResults);
+}
 
 function showResults() {
   let { promise, resolve } = defer();
@@ -206,7 +243,7 @@ function cleanup() {
     console.exception(e);
   };
 
-  setTimeout(showResults, 1);
+  setTimeout(require("./options").checkMemory ? checkMemory : showResults, 1);
 
   // dump the coverobject
   if (Object.keys(coverObject).length){
@@ -340,19 +377,21 @@ function nextIteration(tests) {
     results.passed += tests.passed;
     results.failed += tests.failed;
 
-    let testRun = [];
-    for (let test of tests.testRunSummary) {
-      let testCopy = {};
-      for (let info in test) {
-        testCopy[info] = test[info];
+    reportMemoryUsage().then(_ => {
+      let testRun = [];
+      for (let test of tests.testRunSummary) {
+        let testCopy = {};
+        for (let info in test) {
+          testCopy[info] = test[info];
+        }
+        testRun.push(testCopy);
       }
-      testRun.push(testCopy);
-    }
 
-    results.testRuns.push(testRun);
-    iterationsLeft--;
+      results.testRuns.push(testRun);
+      iterationsLeft--;
 
-    checkForEnd();
+      checkForEnd();
+    })
   }
   else {
     checkForEnd();
