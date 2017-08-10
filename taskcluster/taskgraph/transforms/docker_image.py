@@ -119,7 +119,7 @@ def fill_template(config, tasks):
                 'chain-of-trust': True,
                 'docker-in-docker': True,
                 'taskcluster-proxy': True,
-                'max-run-time': 3600,
+                'max-run-time': 7200,
             },
         }
 

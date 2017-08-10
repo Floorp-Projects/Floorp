@@ -9,5 +9,6 @@ cd /setup
 . /setup/install-mercurial.sh
 . /setup/install-make.sh
 . /setup/install-cmake.sh
+. /setup/install-debug-symbols.sh
 
 rm -rf /setup
