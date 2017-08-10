@@ -16,9 +16,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "NormandyApi", "resource://shield-recipe
 XPCOMUtils.defineLazyModuleGetter(
     this,
     "PreferenceExperiments",
-    "resource://shield-recipe-client/lib/PreferenceExperiments.jsm",
+    "resource://shield-recipe-client/lib/PreferenceExperiments.jsm"
 );
 XPCOMUtils.defineLazyModuleGetter(this, "Utils", "resource://shield-recipe-client/lib/Utils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Addons", "resource://shield-recipe-client/lib/Addons.jsm");
 
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
@@ -36,7 +37,7 @@ this.ClientEnvironment = {
    * The server request is made lazily and is cached for the entire browser
    * session.
    */
-  getClientClassification() {
+  async getClientClassification() {
     if (!_classifyRequest) {
       _classifyRequest = NormandyApi.classifyClient();
     }
@@ -195,6 +196,11 @@ this.ClientEnvironment = {
       }
 
       return names;
+    });
+
+    XPCOMUtils.defineLazyGetter(environment, "addons", async () => {
+      const addons = await Addons.getAll();
+      return Utils.keyBy(addons, "id");
     });
 
     XPCOMUtils.defineLazyGetter(environment, "isFirstRun", () => {
