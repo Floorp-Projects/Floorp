@@ -1,10 +1,13 @@
 "use strict";
 
+Cu.import("resource://testing-common/TestUtils.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/CleanupManager.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/NormandyApi.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/ActionSandboxManager.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/Uptake.jsm", this);
 
 add_task(async function getFilterContext() {
   const recipe = {id: 17, arguments: {foo: "bar"}, unrelated: false};
@@ -69,7 +72,7 @@ add_task(withMockNormandyApi(async function testClientClassificationCache() {
 
   await SpecialPowers.pushPrefEnv({set: [
     ["extensions.shield-recipe-client.api_url",
-     "https://example.com/selfsupport-dummy"],
+      "https://example.com/selfsupport-dummy"],
   ]});
 
   // When the experiment pref is false, eagerly call getClientClassification.
@@ -98,27 +101,36 @@ add_task(withMockNormandyApi(async function testClientClassificationCache() {
 async function withMockActionSandboxManagers(actions, testFunction) {
   const managers = {};
   for (const action of actions) {
-    managers[action.name] = new ActionSandboxManager("");
+    const manager = new ActionSandboxManager("");
+    manager.addHold("testing");
+    managers[action.name] = manager;
     sinon.stub(managers[action.name], "runAsyncCallback");
   }
 
-  const loadActionSandboxManagers = sinon.stub(
-    RecipeRunner,
-    "loadActionSandboxManagers",
-    async () => managers,
-  );
+  const loadActionSandboxManagers = sinon.stub(RecipeRunner, "loadActionSandboxManagers")
+    .resolves(managers);
   await testFunction(managers);
   loadActionSandboxManagers.restore();
+
+  for (const manager of Object.values(managers)) {
+    manager.removeHold("testing");
+    await manager.isNuked();
+  }
 }
 
 add_task(withMockNormandyApi(async function testRun(mockApi) {
+  const closeSpy = sinon.spy(AddonStudies, "close");
+  const reportRunner = sinon.stub(Uptake, "reportRunner");
+  const reportAction = sinon.stub(Uptake, "reportAction");
+  const reportRecipe = sinon.stub(Uptake, "reportRecipe");
+
   const matchAction = {name: "matchAction"};
   const noMatchAction = {name: "noMatchAction"};
   mockApi.actions = [matchAction, noMatchAction];
 
-  const matchRecipe = {action: "matchAction", filter_expression: "true"};
-  const noMatchRecipe = {action: "noMatchAction", filter_expression: "false"};
-  const missingRecipe = {action: "missingAction", filter_expression: "true"};
+  const matchRecipe = {id: "match", action: "matchAction", filter_expression: "true"};
+  const noMatchRecipe = {id: "noMatch", action: "noMatchAction", filter_expression: "false"};
+  const missingRecipe = {id: "missing", action: "missingAction", filter_expression: "true"};
   mockApi.recipes = [matchRecipe, noMatchRecipe, missingRecipe];
 
   await withMockActionSandboxManagers(mockApi.actions, async managers => {
@@ -139,18 +151,99 @@ add_task(withMockNormandyApi(async function testRun(mockApi) {
     sinon.assert.calledWith(noMatchManager.runAsyncCallback, "postExecution");
 
     // missing is never called at all due to no matching action/manager.
-    await matchManager.isNuked();
-    await noMatchManager.isNuked();
+
+    // Test uptake reporting
+    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_SUCCESS);
+    sinon.assert.calledWith(reportAction, "matchAction", Uptake.ACTION_SUCCESS);
+    sinon.assert.calledWith(reportAction, "noMatchAction", Uptake.ACTION_SUCCESS);
+    sinon.assert.calledWith(reportRecipe, "match", Uptake.RECIPE_SUCCESS);
+    sinon.assert.neverCalledWith(reportRecipe, "noMatch", Uptake.RECIPE_SUCCESS);
+    sinon.assert.calledWith(reportRecipe, "missing", Uptake.RECIPE_INVALID_ACTION);
   });
+
+  // Ensure storage is closed after the run.
+  sinon.assert.calledOnce(closeSpy);
+
+  closeSpy.restore();
+  reportRunner.restore();
+  reportAction.restore();
+  reportRecipe.restore();
+}));
+
+add_task(withMockNormandyApi(async function testRunRecipeError(mockApi) {
+  const reportRecipe = sinon.stub(Uptake, "reportRecipe");
+
+  const action = {name: "action"};
+  mockApi.actions = [action];
+
+  const recipe = {id: "recipe", action: "action", filter_expression: "true"};
+  mockApi.recipes = [recipe];
+
+  await withMockActionSandboxManagers(mockApi.actions, async managers => {
+    const manager = managers.action;
+    manager.runAsyncCallback.callsFake(async callbackName => {
+      if (callbackName === "action") {
+        throw new Error("Action execution failure");
+      }
+    });
+
+    await RecipeRunner.run();
+
+    // Uptake should report that the recipe threw an exception
+    sinon.assert.calledWith(reportRecipe, "recipe", Uptake.RECIPE_EXECUTION_ERROR);
+  });
+
+  reportRecipe.restore();
+}));
+
+add_task(withMockNormandyApi(async function testRunFetchFail(mockApi) {
+  const closeSpy = sinon.spy(AddonStudies, "close");
+  const reportRunner = sinon.stub(Uptake, "reportRunner");
+
+  const action = {name: "action"};
+  mockApi.actions = [action];
+  mockApi.fetchRecipes.rejects(new Error("Signature not valid"));
+
+  await withMockActionSandboxManagers(mockApi.actions, async managers => {
+    const manager = managers.action;
+    await RecipeRunner.run();
+
+    // If the recipe fetch failed, do not run anything.
+    sinon.assert.notCalled(manager.runAsyncCallback);
+    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_SERVER_ERROR);
+
+    // Test that network errors report a specific uptake error
+    reportRunner.reset();
+    mockApi.fetchRecipes.rejects(new Error("NetworkError: The system was down"));
+    await RecipeRunner.run();
+    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_NETWORK_ERROR);
+
+    // Test that signature issues report a specific uptake error
+    reportRunner.reset();
+    mockApi.fetchRecipes.rejects(new NormandyApi.InvalidSignatureError("Signature fail"));
+    await RecipeRunner.run();
+    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_INVALID_SIGNATURE);
+  });
+
+  // If the recipe fetch failed, we don't need to call close since nothing
+  // opened a connection in the first place.
+  sinon.assert.notCalled(closeSpy);
+
+  closeSpy.restore();
+  reportRunner.restore();
 }));
 
 add_task(withMockNormandyApi(async function testRunPreExecutionFailure(mockApi) {
+  const closeSpy = sinon.spy(AddonStudies, "close");
+  const reportAction = sinon.stub(Uptake, "reportAction");
+  const reportRecipe = sinon.stub(Uptake, "reportRecipe");
+
   const passAction = {name: "passAction"};
   const failAction = {name: "failAction"};
   mockApi.actions = [passAction, failAction];
 
-  const passRecipe = {action: "passAction", filter_expression: "true"};
-  const failRecipe = {action: "failAction", filter_expression: "true"};
+  const passRecipe = {id: "pass", action: "passAction", filter_expression: "true"};
+  const failRecipe = {id: "fail", action: "failAction", filter_expression: "true"};
   mockApi.recipes = [passRecipe, failRecipe];
 
   await withMockActionSandboxManagers(mockApi.actions, async managers => {
@@ -170,9 +263,47 @@ add_task(withMockNormandyApi(async function testRunPreExecutionFailure(mockApi) 
     sinon.assert.neverCalledWith(failManager.runAsyncCallback, "action", failRecipe);
     sinon.assert.neverCalledWith(failManager.runAsyncCallback, "postExecution");
 
-    await passManager.isNuked();
-    await failManager.isNuked();
+    sinon.assert.calledWith(reportAction, "passAction", Uptake.ACTION_SUCCESS);
+    sinon.assert.calledWith(reportAction, "failAction", Uptake.ACTION_PRE_EXECUTION_ERROR);
+    sinon.assert.calledWith(reportRecipe, "fail", Uptake.RECIPE_ACTION_DISABLED);
   });
+
+  // Ensure storage is closed after the run, despite the failures.
+  sinon.assert.calledOnce(closeSpy);
+  closeSpy.restore();
+  reportAction.restore();
+  reportRecipe.restore();
+}));
+
+add_task(withMockNormandyApi(async function testRunPostExecutionFailure(mockApi) {
+  const reportAction = sinon.stub(Uptake, "reportAction");
+
+  const failAction = {name: "failAction"};
+  mockApi.actions = [failAction];
+
+  const failRecipe = {action: "failAction", filter_expression: "true"};
+  mockApi.recipes = [failRecipe];
+
+  await withMockActionSandboxManagers(mockApi.actions, async managers => {
+    const failManager = managers.failAction;
+    failManager.runAsyncCallback.callsFake(async callbackName => {
+      if (callbackName === "postExecution") {
+        throw new Error("postExecution failure");
+      }
+    });
+
+    await RecipeRunner.run();
+
+    // fail should be called for every stage
+    sinon.assert.calledWith(failManager.runAsyncCallback, "preExecution");
+    sinon.assert.calledWith(failManager.runAsyncCallback, "action", failRecipe);
+    sinon.assert.calledWith(failManager.runAsyncCallback, "postExecution");
+
+    // Uptake should report a post-execution error
+    sinon.assert.calledWith(reportAction, "failAction", Uptake.ACTION_POST_EXECUTION_ERROR);
+  });
+
+  reportAction.restore();
 }));
 
 add_task(withMockNormandyApi(async function testLoadActionSandboxManagers(mockApi) {
@@ -193,42 +324,65 @@ add_task(withMockNormandyApi(async function testLoadActionSandboxManagers(mockAp
   );
 }));
 
-add_task(async function testStartup() {
-  const runStub = sinon.stub(RecipeRunner, "run");
-  const addCleanupHandlerStub = sinon.stub(CleanupManager, "addCleanupHandler");
-  const updateRunIntervalStub = sinon.stub(RecipeRunner, "updateRunInterval");
-
-  // in dev mode
-  await SpecialPowers.pushPrefEnv({
+decorate_task(
+  withPrefEnv({
     set: [
       ["extensions.shield-recipe-client.dev_mode", true],
       ["extensions.shield-recipe-client.first_run", false],
     ],
-  });
+  }),
+  withStub(RecipeRunner, "run"),
+  withStub(CleanupManager, "addCleanupHandler"),
+  withStub(RecipeRunner, "updateRunInterval"),
+  async function testInitDevMode(runStub, addCleanupHandlerStub, updateRunIntervalStub) {
+    RecipeRunner.init();
+    ok(runStub.called, "RecipeRunner.run is called immediately when in dev mode");
+    ok(addCleanupHandlerStub.called, "A cleanup function is registered when in dev mode");
+    ok(updateRunIntervalStub.called, "A timer is registered when in dev mode");
+  }
+);
 
-  RecipeRunner.init();
-  ok(runStub.called, "RecipeRunner.run is called immediately when in dev mode");
-  ok(addCleanupHandlerStub.called, "A cleanup function is registered when in dev mode");
-  ok(updateRunIntervalStub.called, "A timer is registered when in dev mode");
-
-  runStub.reset();
-  addCleanupHandlerStub.reset();
-  updateRunIntervalStub.reset();
-
-  // not in dev mode
-  await SpecialPowers.pushPrefEnv({
+decorate_task(
+  withPrefEnv({
     set: [
       ["extensions.shield-recipe-client.dev_mode", false],
       ["extensions.shield-recipe-client.first_run", false],
     ],
-  });
+  }),
+  withStub(RecipeRunner, "run"),
+  withStub(CleanupManager, "addCleanupHandler"),
+  withStub(RecipeRunner, "updateRunInterval"),
+  async function testInit(runStub, addCleanupHandlerStub, updateRunIntervalStub) {
+    RecipeRunner.init();
+    ok(!runStub.called, "RecipeRunner.run is not called immediately when not in dev mode");
+    ok(addCleanupHandlerStub.called, "A cleanup function is registered when not in dev mode");
+    ok(updateRunIntervalStub.called, "A timer is registered when not in dev mode");
+  }
+);
 
-  RecipeRunner.init();
-  ok(!runStub.called, "RecipeRunner.run is not called immediately when not in dev mode");
-  ok(addCleanupHandlerStub.called, "A cleanup function is registered when not in dev mode");
-  ok(updateRunIntervalStub.called, "A timer is registered when not in dev mode");
+decorate_task(
+  withPrefEnv({
+    set: [
+      ["extensions.shield-recipe-client.dev_mode", false],
+      ["extensions.shield-recipe-client.first_run", true],
+    ],
+  }),
+  withStub(RecipeRunner, "run"),
+  withStub(RecipeRunner, "registerTimer"),
+  withStub(CleanupManager, "addCleanupHandler"),
+  withStub(RecipeRunner, "updateRunInterval"),
+  async function testInitFirstRun(runStub, registerTimerStub) {
+    RecipeRunner.init();
+    ok(!runStub.called, "RecipeRunner.run is not called immediately");
+    ok(!registerTimerStub.called, "RecipeRunner.registerTimer is not called immediately");
 
-  runStub.restore();
-  addCleanupHandlerStub.restore();
-  updateRunIntervalStub.restore();
-});
+    Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+    await TestUtils.topicObserved("shield-init-complete");
+    ok(runStub.called, "RecipeRunner.run is called after the UI is available");
+    ok(registerTimerStub.called, "RecipeRunner.registerTimer is called after the UI is available");
+    ok(
+      !Services.prefs.getBoolPref("extensions.shield-recipe-client.first_run"),
+      "On first run, the first run pref is set to false after the UI is available"
+    );
+  }
+);
