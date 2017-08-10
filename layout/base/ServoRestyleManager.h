@@ -185,9 +185,9 @@ public:
    * restyling process and this restyle event will be processed in the second
    * traversal of the same restyling process.
    */
-  static void PostRestyleEventForAnimations(dom::Element* aElement,
-                                            CSSPseudoElementType aPseudoType,
-                                            nsRestyleHint aRestyleHint);
+  void PostRestyleEventForAnimations(dom::Element* aElement,
+                                     CSSPseudoElementType aPseudoType,
+                                     nsRestyleHint aRestyleHint);
 protected:
   ~ServoRestyleManager() override
   {
