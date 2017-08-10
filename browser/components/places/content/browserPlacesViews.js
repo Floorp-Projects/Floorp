@@ -2020,7 +2020,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
   get events() {
     if (this._events)
       return this._events;
-    return this._events = ["click", "command", "dragend", "dragstart", "ViewHiding", "ViewShown"];
+    return this._events = ["command", "dragend", "dragstart", "ViewHiding", "ViewShown"];
   }
 
   get panel() {
@@ -2033,11 +2033,6 @@ this.PlacesPanelview = class extends PlacesViewBase {
 
   handleEvent(event) {
     switch (event.type) {
-      case "click":
-        // For left and middle clicks, fall through to the command handler.
-        if (event.button >= 2) {
-          break;
-        }
       case "command":
         this._onCommand(event);
         break;
@@ -2065,7 +2060,6 @@ this.PlacesPanelview = class extends PlacesViewBase {
       return;
 
     PlacesUIUtils.openNodeWithEvent(button._placesNode, event);
-    this.panelMultiView.closest("panel").hidePopup();
   }
 
   _onDragEnd() {
