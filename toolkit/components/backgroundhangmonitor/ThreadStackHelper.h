@@ -9,6 +9,7 @@
 
 #include "js/ProfilingStack.h"
 #include "HangDetails.h"
+#include "nsThread.h"
 
 #include <stddef.h>
 
@@ -50,11 +51,9 @@ namespace mozilla {
  * Only non-copying labels are included in the stack, which means labels
  * with custom text and markers are not included.
  */
-class ThreadStackHelper
+class ThreadStackHelper : public ProfilerStackCollector
 {
 public:
-  typedef HangStack Stack;
-
   // When a native stack is gathered, this vector holds the raw program counter
   // values that FramePointerStackWalk will return to us after it walks the
   // stack. When gathering the Telemetry payload, Telemetry will take care of
@@ -62,23 +61,15 @@ public:
   typedef NativeHangStack NativeStack;
 
 private:
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
-  Stack* mStackToFill;
-  const PseudoStack* const mPseudoStack;
+  HangStack* mStackToFill;
+  Array<char, nsThread::kRunnableNameBufSize>* mRunnableNameBuffer;
+  // const PseudoStack* const mPseudoStack;
   size_t mMaxStackSize;
   size_t mMaxBufferSize;
-#endif
-#ifdef MOZ_THREADSTACKHELPER_NATIVE
-  NativeStack* mNativeStackToFill;
-#endif
+  size_t mDesiredStackSize;
+  size_t mDesiredBufferSize;
 
-  bool PrepareStackBuffer(Stack& aStack);
-  void FillStackBuffer();
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
-  const char* AppendJSEntry(const js::ProfileEntry* aEntry,
-                            intptr_t& aAvailableBufferSize,
-                            const char* aPrevLabel);
-#endif
+  bool PrepareStackBuffer(HangStack& aStack);
 
 public:
   /**
@@ -87,43 +78,27 @@ public:
   ThreadStackHelper();
 
   /**
-   * Retrieve the current pseudostack of the thread associated
-   * with this ThreadStackHelper.
+   * Retrieve the current interleaved stack of the thread associated with this ThreadStackHelper.
    *
-   * @param aStack         Stack instance to be filled.
-   * @param aRunnableName  The name of the current runnable on the target thread.
+   * @param aStack        HangStack instance to be filled.
+   * @param aRunnableName The name of the current runnable on the target thread.
+   * @param aStackWalk    If true, native stack frames will be collected
+   *                      along with pseudostack frames.
    */
-  void GetPseudoStack(Stack& aStack, nsACString& aRunnableName);
+  void GetStack(HangStack& aStack, nsACString& aRunnableName, bool aStackWalk);
 
+protected:
   /**
-   * Retrieve the current native stack of the thread associated
-   * with this ThreadStackHelper.
-   *
-   * @param aNativeStack   NativeStack instance to be filled.
-   * @param aRunnableName  The name of the current runnable on the target thread.
+   * ProfilerStackCollector
    */
-  void GetNativeStack(NativeStack& aNativeStack, nsACString& aRunnableName);
-
-  /**
-   * Retrieve the current pseudostack and native stack of the thread associated
-   * with this ThreadStackHelper. This method only pauses the target thread once
-   * to get both stacks.
-   *
-   * @param aStack         Stack instance to be filled with the pseudostack.
-   * @param aNativeStack   NativeStack instance to be filled with the native stack.
-   * @param aRunnableName  The name of the current runnable on the target thread.
-   */
-  void GetPseudoAndNativeStack(Stack& aStack,
-                               NativeStack& aNativeStack,
-                               nsACString& aRunnableName);
+  virtual void SetIsMainThread() override;
+  virtual void CollectNativeLeafAddr(void* aAddr) override;
+  virtual void CollectJitReturnAddr(void* aAddr) override;
+  virtual void CollectWasmFrame(const char* aLabel) override;
+  virtual void CollectPseudoEntry(const js::ProfileEntry& aEntry) override;
 
 private:
-  // Fill in the passed aStack and aNativeStack datastructures with backtraces.
-  // If only aStack needs to be collected, nullptr may be passed for
-  // aNativeStack, and vice versa.
-  void GetStacksInternal(Stack* aStack,
-                         NativeStack* aNativeStack,
-                         nsACString& aRunnableName);
+  void TryAppendFrame(mozilla::HangStack::Frame aFrame);
 
   // The profiler's unique thread identifier for the target thread.
   int mThreadId;
