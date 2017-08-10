@@ -52,8 +52,6 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
   , mHasSourceMapURL(false)
   , mIsDefer(false)
   , mIsAsync(false)
-  , mPreloadAsAsync(false)
-  , mPreloadAsDefer(false)
   , mIsNonAsyncScriptInserted(false)
   , mIsXSLT(false)
   , mIsCanceled(false)
