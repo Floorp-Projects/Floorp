@@ -1,5 +1,6 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
