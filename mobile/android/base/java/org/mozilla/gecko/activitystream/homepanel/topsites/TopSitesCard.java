@@ -25,6 +25,7 @@ import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.DrawableUtil;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.util.ViewUtil;
@@ -109,26 +110,21 @@ import java.util.concurrent.Future;
         }
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(title, pinDrawable, null, null, null);
 
-        final String provider = topSite.getMetadata().getProvider();
-        if (!TextUtils.isEmpty(provider)) {
-            title.setText(provider.toLowerCase());
-        } else {
-            final URI topSiteURI;
-            try {
-                topSiteURI = new URI(topSite.getUrl());
-            } catch (final URISyntaxException e) {
-                // If this is not a valid URI, there is not much processing we can do on it.
-                // Also, see comment below regarding setCenteredText.
-                setTopSiteTitle(title, topSite.getUrl());
-                return;
-            }
-
-            // Our AsyncTask calls setCenteredText(), which needs to have all drawable's in place to correctly
-            // layout the text, so we need to wait with requesting the title until we've set our pin icon.
-            final UpdateCardTitleAsyncTask titleAsyncTask = new UpdateCardTitleAsyncTask(itemView.getContext(),
-                    topSiteURI, title);
-            titleAsyncTask.execute();
+        final URI topSiteURI;
+        try {
+            topSiteURI = new URI(topSite.getUrl());
+        } catch (final URISyntaxException e) {
+            // If this is not a valid URI, there is not much processing we can do on it.
+            // Also, see comment below regarding setCenteredText.
+            setTopSiteTitle(title, topSite.getUrl());
+            return;
         }
+
+        // Our AsyncTask calls setCenteredText(), which needs to have all drawable's in place to correctly
+        // layout the text, so we need to wait with requesting the title until we've set our pin icon.
+        final UpdateCardTitleAsyncTask titleAsyncTask = new UpdateCardTitleAsyncTask(itemView.getContext(),
+                topSiteURI, title);
+        titleAsyncTask.execute();
     }
 
     private static void setTopSiteTitle(final TextView textView, final String title) {
@@ -150,7 +146,7 @@ import java.util.concurrent.Future;
         private final UUID viewTagAtStart;
 
         UpdateCardTitleAsyncTask(final Context contextReference, final URI uri, final TextView titleView) {
-            super(contextReference, uri, false, 0); // hostSLD.
+            super(contextReference, uri, false, 1); // subdomain.domain.
             this.titleViewWeakReference = new WeakReference<>(titleView);
 
             // See isTagSameAsStartTag for details.
@@ -159,14 +155,19 @@ import java.util.concurrent.Future;
         }
 
         @Override
-        protected void onPostExecute(final String hostSLD) {
-            super.onPostExecute(hostSLD);
+        protected void onPostExecute(final String hostText) {
+            super.onPostExecute(hostText);
             final TextView titleView = titleViewWeakReference.get();
             if (titleView == null || !isTagSameAsStartTag(titleView)) {
                 return;
             }
 
-            final String updateText = !TextUtils.isEmpty(hostSLD) ? hostSLD : uri.toString();
+            final String updateText;
+            if (TextUtils.isEmpty(hostText)) {
+                updateText = "";
+            } else {
+                updateText = StringUtils.stripCommonSubdomains(hostText);
+            }
             setTopSiteTitle(titleView, updateText);
         }
 
