@@ -107,7 +107,6 @@ public:
           // Forget any previous custom data.
           mCustomLength = 0;
           mCustomDisableNormalization = false;
-          mCustom = nullptr;
           mPeriodicWave = nullptr;
           mRecomputeParameters = true;
         }
@@ -144,12 +143,12 @@ public:
   void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
   {
     MOZ_ASSERT(mCustomLength, "Custom buffer sent before length");
-    mCustom = aBuffer;
-    MOZ_ASSERT(mCustom->GetChannels() == 2,
+    RefPtr<ThreadSharedFloatArrayBufferList> custom = aBuffer;
+    MOZ_ASSERT(custom->GetChannels() == 2,
                "PeriodicWave should have sent two channels");
     mPeriodicWave = WebCore::PeriodicWave::create(mSource->SampleRate(),
-                                                  mCustom->GetData(0),
-                                                  mCustom->GetData(1),
+                                                  custom->GetData(0),
+                                                  custom->GetData(1),
                                                   mCustomLength,
                                                   mCustomDisableNormalization);
   }
@@ -373,10 +372,6 @@ public:
     // - mFrequency (internal ref owned by node)
     // - mDetune (internal ref owned by node)
 
-    if (mCustom) {
-      amount += mCustom->SizeOfIncludingThis(aMallocSizeOf);
-    }
-
     if (mPeriodicWave) {
       amount += mPeriodicWave->sizeOfIncludingThis(aMallocSizeOf);
     }
@@ -401,7 +396,6 @@ public:
   float mFinalFrequency;
   float mPhaseIncrement;
   bool mRecomputeParameters;
-  RefPtr<ThreadSharedFloatArrayBufferList> mCustom;
   RefPtr<BasicWaveFormCache> mBasicWaveFormCache;
   uint32_t mCustomLength;
   bool mCustomDisableNormalization;
