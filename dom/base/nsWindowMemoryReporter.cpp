@@ -53,13 +53,13 @@ AddNonJSSizeOfWindowAndItsDescendents(nsGlobalWindow* aWindow,
   // Measure the window.
   SizeOfState state(moz_malloc_size_of);
   nsWindowSizes windowSizes(state);
-  aWindow->AddSizeOfIncludingThis(&windowSizes);
+  aWindow->AddSizeOfIncludingThis(windowSizes);
 
   // Measure the inner window, if there is one.
   nsGlobalWindow* inner = aWindow->IsOuterWindow() ? aWindow->GetCurrentInnerWindowInternal()
                                                    : nullptr;
   if (inner) {
-    inner->AddSizeOfIncludingThis(&windowSizes);
+    inner->AddSizeOfIncludingThis(windowSizes);
   }
 
   windowSizes.addToTabSizes(aSizes);
@@ -313,7 +313,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   // this window.
   SizeOfState state(WindowsMallocSizeOf);
   nsWindowSizes windowSizes(state);
-  aWindow->AddSizeOfIncludingThis(&windowSizes);
+  aWindow->AddSizeOfIncludingThis(windowSizes);
 
   REPORT_SIZE("/dom/element-nodes", windowSizes.mDOMElementNodesSize,
               "Memory used by the element nodes in a window's DOM.");
