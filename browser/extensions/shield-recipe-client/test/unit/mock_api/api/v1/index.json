@@ -1,5 +1,6 @@
 {
   "action-list": "/api/v1/action/",
+  "action-signed": "/api/v1/action/signed/",
   "classify-client": "/api/v1/classify_client/",
   "filters": "/api/v1/filters/",
   "recipe-list": "/api/v1/recipe/",

@@ -33,6 +33,16 @@
         "description": "URL to redirect the user to after rating Firefox or clicking the engagement button",
         "type": "string"
       },
+      "repeatEvery": {
+        "default": null,
+        "description": "How often (in days) the action is displayed.",
+        "type": "number"
+      },
+      "repeatOption": {
+        "default": "once",
+        "description": "Determines how often an action executes. (once|nag|xdays)",
+        "type": "string"
+      },
       "surveyId": {
         "description": "Slug uniquely identifying this survey in telemetry",
         "type": "string"
@@ -51,6 +61,6 @@
     "title": "Show a Heartbeat survey.",
     "type": "object"
   },
-  "implementation_url": "https://localhost:8000/api/v1/action/show-heartbeat/implementation/448bbffce82ff27b3d532fd7196bcb190be5c067/",
+  "implementation_url": "https://localhost:8443/api/v1/action/show-heartbeat/implementation/sha384-dEGiyKPEln8Ns5cQHzGpMIGdirSAAX0X-Kwlu-U3sJ05yNbO-ANij_a6c5SyL7G4/",
   "name": "show-heartbeat"
 }
