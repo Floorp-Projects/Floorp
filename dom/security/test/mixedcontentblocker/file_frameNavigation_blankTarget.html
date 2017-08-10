@@ -21,11 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=841850
     observe: function(subject, topic, data) {
       if(topic == "content-document-global-created" && data =="http://example.com") {
          parent.parent.postMessage({"test": "blankTarget", "msg": "opened an http link with target=_blank from a secure page"}, "http://mochi.test:8888");
-         os.removeAsyncObserver(observer, "content-document-global-created");
+         os.removeObserver(observer, "content-document-global-created");
       }
     }
   }
-  os.addAsyncObserver(observer, "content-document-global-created");
+  os.addObserver(observer, "content-document-global-created");
 
 </script>
 </body>
