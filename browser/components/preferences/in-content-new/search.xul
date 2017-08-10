@@ -85,6 +85,6 @@
       <separator class="thin"/>
 
       <hbox id="addEnginesBox" pack="start">
-        <label id="addEngines" class="text-link" value="&findMoreSearchEngines.label;"/>
+        <label id="addEngines" class="text-link">&findMoreSearchEngines.label;</label>
       </hbox>
     </groupbox>
