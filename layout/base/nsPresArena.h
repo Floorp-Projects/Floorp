@@ -22,7 +22,7 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 
-struct nsArenaMemoryStats;
+class nsWindowSizes;
 
 class nsPresArena {
 public:
@@ -95,11 +95,10 @@ public:
   void ClearArenaRefPtrs(mozilla::ArenaObjectID aObjectID);
 
   /**
-   * Increment aArenaStats with sizes of interesting objects allocated in this
-   * arena and its mOther field with the size of everything else.
+   * Increment nsWindowSizes with sizes of interesting objects allocated in this
+   * arena.
    */
-  void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                              nsArenaMemoryStats* aArenaStats);
+  void AddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const;
 
 private:
   void* Allocate(uint32_t aCode, size_t aSize);
