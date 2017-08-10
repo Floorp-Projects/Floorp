@@ -1,7 +1,7 @@
 "use strict";
 
-Cu.import("resource://shield-recipe-client/lib/ActionSandboxManager.jsm");
-Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm");
+Cu.import("resource://shield-recipe-client/lib/ActionSandboxManager.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
 
 async function withManager(script, testFunction) {
   const manager = new ActionSandboxManager(script);
@@ -12,7 +12,7 @@ async function withManager(script, testFunction) {
 
 add_task(async function testMissingCallbackName() {
   await withManager("1 + 1", async manager => {
-    equal(
+    is(
       await manager.runAsyncCallback("missingCallback"),
       undefined,
       "runAsyncCallback returns undefined when given a missing callback name",
@@ -29,7 +29,7 @@ add_task(async function testCallback() {
 
   await withManager(script, async manager => {
     const result = await manager.runAsyncCallback("testCallback");
-    equal(result, 5, "runAsyncCallback executes the named callback inside the sandbox");
+    is(result, 5, "runAsyncCallback executes the named callback inside the sandbox");
   });
 });
 
@@ -42,7 +42,7 @@ add_task(async function testArguments() {
 
   await withManager(script, async manager => {
     const result = await manager.runAsyncCallback("testCallback", 4, 6);
-    equal(result, 10, "runAsyncCallback passes arguments to the callback");
+    is(result, 10, "runAsyncCallback passes arguments to the callback");
   });
 });
 
@@ -56,7 +56,7 @@ add_task(async function testCloning() {
   await withManager(script, async manager => {
     const result = await manager.runAsyncCallback("testCallback", {baz: "biff"});
 
-    deepEqual(
+    Assert.deepEqual(
       result,
       {foo: "bar", baz: "biff"},
       (
@@ -79,28 +79,26 @@ add_task(async function testError() {
       await manager.runAsyncCallback("testCallback");
       ok(false, "runAsnycCallbackFromScript throws errors when raised by the sandbox");
     } catch (err) {
-      equal(err.message, "WHY", "runAsnycCallbackFromScript clones error messages");
+      is(err.message, "WHY", "runAsnycCallbackFromScript throws errors when raised by the sandbox");
     }
   });
 });
 
 add_task(async function testDriver() {
+  // The value returned by runAsyncCallback is cloned without the cloneFunctions
+  // option, so we can't inspect the driver itself since its methods will not be
+  // present. Instead, we inspect the properties on it available to the sandbox.
   const script = `
     registerAsyncCallback("testCallback", async function(normandy) {
-      return normandy;
+      return Object.keys(normandy);
     });
   `;
 
   await withManager(script, async manager => {
-    const sandboxDriver = await manager.runAsyncCallback("testCallback");
+    const sandboxDriverKeys = await manager.runAsyncCallback("testCallback");
     const referenceDriver = new NormandyDriver(manager);
-    equal(
-      sandboxDriver.constructor.name,
-      "NormandyDriver",
-      "runAsyncCallback passes a driver as the first parameter",
-    );
-    for (const prop in referenceDriver) {
-      ok(prop in sandboxDriver, "runAsyncCallback passes a driver as the first parameter");
+    for (const prop of Object.keys(referenceDriver)) {
+      ok(sandboxDriverKeys.includes(prop), `runAsyncCallback's driver has the "${prop}" property.`);
     }
   });
 });
@@ -159,8 +157,8 @@ add_task(async function testRegisterActionShim() {
 
   await withManager(script, async manager => {
     const result = await manager.runAsyncCallback("action", recipe);
-    equal(result.foo, "bar", "registerAction registers an async callback for actions");
-    equal(
+    is(result.foo, "bar", "registerAction registers an async callback for actions");
+    is(
       result.isDriver,
       true,
       "registerAction passes the driver to the action class constructor",
