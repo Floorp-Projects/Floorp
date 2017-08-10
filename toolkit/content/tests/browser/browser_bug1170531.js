@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 // Test for bug 1170531
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1170531
 
