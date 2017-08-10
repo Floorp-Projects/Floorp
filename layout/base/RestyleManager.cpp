@@ -1067,7 +1067,6 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       // opacity updates in many cases.
       needInvalidatingPaint = true;
 
-      ActiveLayerTracker::NotifyRestyle(aFrame, eCSSProperty_opacity);
       if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
         // SVG effects paints the opacity without using
         // nsDisplayOpacity. We need to invalidate manually.
