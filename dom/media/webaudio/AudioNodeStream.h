@@ -91,7 +91,6 @@ public:
   void SetDoubleParameter(uint32_t aIndex, double aValue);
   void SetInt32Parameter(uint32_t aIndex, int32_t aValue);
   void SetThreeDPointParameter(uint32_t aIndex, const dom::ThreeDPoint& aValue);
-  void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& aBuffer);
   void SetBuffer(AudioChunk&& aBuffer);
   // This sends a single event to the timeline on the MSG thread side.
   void SendTimelineEvent(uint32_t aIndex, const dom::AudioTimelineEvent& aEvent);

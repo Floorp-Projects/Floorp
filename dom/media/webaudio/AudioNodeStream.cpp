@@ -254,27 +254,6 @@ AudioNodeStream::SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aVa
 }
 
 void
-AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& aBuffer)
-{
-  class Message final : public ControlMessage
-  {
-  public:
-    Message(AudioNodeStream* aStream,
-            already_AddRefed<ThreadSharedFloatArrayBufferList>& aBuffer)
-      : ControlMessage(aStream), mBuffer(aBuffer)
-    {}
-    void Run() override
-    {
-      static_cast<AudioNodeStream*>(mStream)->Engine()->
-          SetBuffer(mBuffer.forget());
-    }
-    RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aBuffer));
-}
-
-void
 AudioNodeStream::SetBuffer(AudioChunk&& aBuffer)
 {
   class Message final : public ControlMessage
