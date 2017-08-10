@@ -8,9 +8,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 @namespace svg url("http://www.w3.org/2000/svg");
 
-%include ../shared/browser.inc
-%define toolbarShadowColor hsla(209,67%,12%,0.35)
-
 %include ../shared/browser.inc.css
 
 :root {

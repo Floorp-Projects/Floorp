@@ -10,8 +10,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 @namespace svg url("http://www.w3.org/2000/svg");
 
-%include ../shared/browser.inc
-
 %include ../shared/browser.inc.css
 
 :root {
