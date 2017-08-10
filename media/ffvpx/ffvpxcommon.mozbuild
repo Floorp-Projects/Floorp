@@ -50,7 +50,8 @@ if CONFIG['GNU_CC']:
     if CONFIG['CLANG_CXX']:
         CFLAGS += [
             '-Wno-incompatible-pointer-types-discards-qualifiers',
-            '-Wno-logical-op-parentheses',
+            '-Wno-string-conversion',
+            '-Wno-visibility',
         ]
     else:
         CFLAGS += [
