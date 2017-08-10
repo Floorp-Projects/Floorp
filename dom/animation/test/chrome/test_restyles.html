@@ -760,13 +760,11 @@ waitForAllPaints(function() {
     document.body.appendChild(div);
 
     markers = await observeStyling(1);
-    // We are observing restyles in rAF callback which is processed before
-    // restyling process in each frame, so in the first frame there should be
-    // no observed restyle since we don't process restyle while the element
-    // is not attached to the document.
-    is(markers.length, 0,
-       'We observe no restyle in the first frame right after re-atatching ' +
-       'to the document');
+    // Bug 1388557: We should call RequestRestyle(Layer) when an element which
+    // has running script animations is attached to a document.
+    todo_is(markers.length, 1,
+            'Bug 1388557 We should observe one restyle in the first frame ' +
+            'right after re-attaching to the document');
     markers = await observeStyling(5);
     is(markers.length, 5,
        'Animation on re-attached to the document begins to update style');
