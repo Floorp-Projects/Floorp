@@ -2075,6 +2075,9 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
 
 ScrollFrameHelper::~ScrollFrameHelper()
 {
+  if (mScrollEvent) {
+    mScrollEvent->Revoke();
+  }
 }
 
 /*
@@ -4727,26 +4730,19 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent)
 /* ============= Scroll events ========== */
 
 ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper)
-  : mHelper(aHelper)
+  : Runnable("ScrollFrameHelper::ScrollEvent")
+  , mHelper(aHelper)
 {
-  mDriver = mHelper->mOuter->PresContext()->RefreshDriver();
-  mDriver->AddRefreshObserver(this, FlushType::Layout);
+  mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this);
 }
 
-ScrollFrameHelper::ScrollEvent::~ScrollEvent()
+NS_IMETHODIMP
+ScrollFrameHelper::ScrollEvent::Run()
 {
-  if (mDriver) {
-    mDriver->RemoveRefreshObserver(this, FlushType::Layout);
-    mDriver = nullptr;
+  if (mHelper) {
+    mHelper->FireScrollEvent();
   }
-}
-
-void
-ScrollFrameHelper::ScrollEvent::WillRefresh(mozilla::TimeStamp aTime)
-{
-  mDriver->RemoveRefreshObserver(this, FlushType::Layout);
-  mDriver = nullptr;
-  mHelper->FireScrollEvent();
+  return NS_OK;
 }
 
 void
@@ -4754,6 +4750,7 @@ ScrollFrameHelper::FireScrollEvent()
 {
   AutoProfilerTracing tracing("Paint", "FireScrollEvent");
   MOZ_ASSERT(mScrollEvent);
+  mScrollEvent->Revoke();
   mScrollEvent = nullptr;
 
   ActiveLayerTracker::SetCurrentScrollHandlerFrame(mOuter);

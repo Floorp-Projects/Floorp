@@ -37,6 +37,7 @@ class nsIRunnable;
 
 namespace mozilla {
 class RefreshDriverTimer;
+class Runnable;
 namespace layout {
 class VsyncChild;
 } // namespace layout
@@ -124,6 +125,9 @@ public:
                           mozilla::FlushType aFlushType);
   bool RemoveRefreshObserver(nsARefreshObserver *aObserver,
                              mozilla::FlushType aFlushType);
+
+  void PostScrollEvent(mozilla::Runnable* aScrollEvent);
+  void DispatchScrollEvents();
 
   /**
    * Add an observer that will be called after each refresh. The caller
@@ -362,6 +366,7 @@ public:
 
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
+  typedef nsTArray<RefPtr<mozilla::Runnable>> ScrollEventArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
   struct ImageStartData {
     ImageStartData()
@@ -468,6 +473,7 @@ private:
   RequestTable mRequests;
   ImageStartTable mStartTable;
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> mEarlyRunners;
+  ScrollEventArray mScrollEvents;
 
   struct PendingEvent {
     nsCOMPtr<nsINode> mTarget;
