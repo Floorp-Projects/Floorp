@@ -16,6 +16,7 @@ module.metadata = {
 
 const { Cc, Ci } = require("chrome");
 const { DataURL } = require("./url");
+const apiUtils = require("./deprecated/api-utils");
 /*
 While these data flavors resemble Internet media types, they do
 no directly map to them.
@@ -88,6 +89,15 @@ exports.set = function(aData, aDataType) {
       }
     }
   }
+
+  options = apiUtils.validateOptions(options, {
+    data: {
+      is: ["string"]
+    },
+    datatype: {
+      is: ["string"]
+    }
+  });
 
   let flavor = fromJetpackFlavor(options.datatype);
 
@@ -197,6 +207,12 @@ exports.get = function(aDataType) {
     else
       options.datatype = "text";
   }
+
+  options = apiUtils.validateOptions(options, {
+    datatype: {
+      is: ["string"]
+    }
+  });
 
   var xferable = Cc["@mozilla.org/widget/transferable;1"].
                  createInstance(Ci.nsITransferable);

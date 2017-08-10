@@ -1,0 +1,436 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+// The panel module currently supports only Firefox and SeaMonkey.
+// See: https://bugzilla.mozilla.org/show_bug.cgi?id=jetpack-panel-apps
+module.metadata = {
+  "stability": "stable",
+  "engines": {
+    "Firefox": "*",
+    "SeaMonkey": "*"
+  }
+};
+
+const { Cu, Ci } = require("chrome");
+lazyRequire(this, './timers', "setTimeout");
+const { Class } = require("./core/heritage");
+const { DefaultWeakMap, merge } = require("./util/object");
+const { WorkerHost } = require("./content/utils");
+lazyRequire(this, "./deprecated/sync-worker", "Worker");
+const { Disposable } = require("./core/disposable");
+const { WeakReference } = require('./core/reference');
+const { contract: loaderContract } = require("./content/loader");
+const { contract } = require("./util/contract");
+lazyRequire(this, "./event/core", "on", "off", "emit", "setListeners");
+const { EventTarget } = require("./event/target");
+lazyRequireModule(this, "./panel/utils", "domPanel");
+lazyRequire(this, './frame/utils', "getDocShell");
+const { events } = require("./panel/events");
+const { filter, pipe, stripListeners } = require("./event/utils");
+lazyRequire(this, "./view/core", "getNodeView", "getActiveView");
+lazyRequire(this, "./lang/type", "isNil", "isObject", "isNumber");
+lazyRequire(this, "./content/utils", "getAttachEventType");
+const { number, boolean, object } = require('./deprecated/api-utils');
+lazyRequire(this, "./stylesheet/style", "Style");
+lazyRequire(this, "./content/mod", "attach", "detach");
+
+var isRect = ({top, right, bottom, left}) => [top, right, bottom, left].
+  some(value => isNumber(value) && !isNaN(value));
+
+var isSDKObj = obj => obj instanceof Class;
+
+var rectContract = contract({
+  top: number,
+  right: number,
+  bottom: number,
+  left: number
+});
+
+var position = {
+  is: object,
+  map: v => (isNil(v) || isSDKObj(v) || !isObject(v)) ? v : rectContract(v),
+  ok: v => isNil(v) || isSDKObj(v) || (isObject(v) && isRect(v)),
+  msg: 'The option "position" must be a SDK object registered as anchor; ' +
+        'or an object with one or more of the following keys set to numeric ' +
+        'values: top, right, bottom, left.'
+}
+
+var displayContract = contract({
+  width: number,
+  height: number,
+  focus: boolean,
+  position: position
+});
+
+var panelContract = contract(merge({
+  // contentStyle* / contentScript* are sharing the same validation constraints,
+  // so they can be mostly reused, except for the messages.
+  contentStyle: merge(Object.create(loaderContract.rules.contentScript), {
+    msg: 'The `contentStyle` option must be a string or an array of strings.'
+  }),
+  contentStyleFile: merge(Object.create(loaderContract.rules.contentScriptFile), {
+    msg: 'The `contentStyleFile` option must be a local URL or an array of URLs'
+  }),
+  contextMenu: boolean,
+  allow: {
+    is: ['object', 'undefined', 'null'],
+    map: function (allow) { return { script: !allow || allow.script !== false }}
+  },
+}, displayContract.rules, loaderContract.rules));
+
+function Allow(panel) {
+  return {
+    get script() { return getDocShell(viewFor(panel).backgroundFrame).allowJavascript; },
+    set script(value) { return setScriptState(panel, value); },
+  };
+}
+
+function setScriptState(panel, value) {
+  let view = viewFor(panel);
+  getDocShell(view.backgroundFrame).allowJavascript = value;
+  getDocShell(view.viewFrame).allowJavascript = value;
+  view.setAttribute("sdkscriptenabled", "" + value);
+}
+
+function isDisposed(panel) {
+  return !views.has(panel);
+}
+
+var optionsMap = new WeakMap();
+var panels = new WeakMap();
+var models = new WeakMap();
+var views = new DefaultWeakMap(panel => {
+  let model = models.get(panel);
+
+  // Setup view
+  let viewOptions = {allowJavascript: !model.allow || (model.allow.script !== false)};
+  let view = domPanel.make(null, viewOptions);
+  panels.set(view, panel);
+
+  // Load panel content.
+  domPanel.setURL(view, model.contentURL);
+
+  // Allow context menu
+  domPanel.allowContextMenu(view, model.contextMenu);
+
+  return view;
+});
+var workers = new DefaultWeakMap(panel => {
+  let options = optionsMap.get(panel);
+
+  let worker = new Worker(stripListeners(options));
+  workers.set(panel, worker);
+
+  // pipe events from worker to a panel.
+  pipe(worker, panel);
+
+  return worker;
+});
+var styles = new WeakMap();
+
+const viewFor = (panel) => views.get(panel);
+const modelFor = (panel) => models.get(panel);
+const panelFor = (view) => panels.get(view);
+const workerFor = (panel) => workers.get(panel);
+const styleFor = (panel) => styles.get(panel);
+
+function getPanelFromWeakRef(weakRef) {
+  if (!weakRef) {
+    return null;
+  }
+  let panel = weakRef.get();
+  if (!panel) {
+    return null;
+  }
+  if (isDisposed(panel)) {
+    return null;
+  }
+  return panel;
+}
+
+var SinglePanelManager = {
+  visiblePanel: null,
+  enqueuedPanel: null,
+  enqueuedPanelCallback: null,
+  // Calls |callback| with no arguments when the panel may be shown.
+  requestOpen: function(panelToOpen, callback) {
+    let currentPanel = getPanelFromWeakRef(SinglePanelManager.visiblePanel);
+    if (currentPanel || SinglePanelManager.enqueuedPanel) {
+      SinglePanelManager.enqueuedPanel = Cu.getWeakReference(panelToOpen);
+      SinglePanelManager.enqueuedPanelCallback = callback;
+      if (currentPanel && currentPanel.isShowing) {
+        currentPanel.hide();
+      }
+    } else {
+      SinglePanelManager.notifyPanelCanOpen(panelToOpen, callback);
+    }
+  },
+  notifyPanelCanOpen: function(panel, callback) {
+    let view = viewFor(panel);
+    // Can't pass an arrow function as the event handler because we need to be
+    // able to call |removeEventListener| later.
+    view.addEventListener("popuphidden", SinglePanelManager.onVisiblePanelHidden, true);
+    view.addEventListener("popupshown", SinglePanelManager.onVisiblePanelShown);
+    SinglePanelManager.enqueuedPanel = null;
+    SinglePanelManager.enqueuedPanelCallback = null;
+    SinglePanelManager.visiblePanel = Cu.getWeakReference(panel);
+    callback();
+  },
+  onVisiblePanelShown: function(event) {
+    let panel = panelFor(event.target);
+    if (SinglePanelManager.enqueuedPanel) {
+      // Another panel started waiting for |panel| to close before |panel| was
+      // even done opening.
+      panel.hide();
+    }
+  },
+  onVisiblePanelHidden: function(event) {
+    let view = event.target;
+    let panel = panelFor(view);
+    let currentPanel = getPanelFromWeakRef(SinglePanelManager.visiblePanel);
+    if (currentPanel && currentPanel != panel) {
+      return;
+    }
+    SinglePanelManager.visiblePanel = null;
+    view.removeEventListener("popuphidden", SinglePanelManager.onVisiblePanelHidden, true);
+    view.removeEventListener("popupshown", SinglePanelManager.onVisiblePanelShown);
+    let nextPanel = getPanelFromWeakRef(SinglePanelManager.enqueuedPanel);
+    let nextPanelCallback = SinglePanelManager.enqueuedPanelCallback;
+    if (nextPanel) {
+      SinglePanelManager.notifyPanelCanOpen(nextPanel, nextPanelCallback);
+    }
+  }
+};
+
+const Panel = Class({
+  implements: [
+    // Generate accessors for the validated properties that update model on
+    // set and return values from model on get.
+    panelContract.properties(modelFor),
+    EventTarget,
+    Disposable,
+    WeakReference
+  ],
+  extends: WorkerHost(workerFor),
+  setup: function setup(options) {
+    let model = merge({
+      defaultWidth: 320,
+      defaultHeight: 240,
+      focus: true,
+      position: Object.freeze({}),
+      contextMenu: false
+    }, panelContract(options));
+    model.ready = false;
+    models.set(this, model);
+
+    if (model.contentStyle || model.contentStyleFile) {
+      styles.set(this, Style({
+        uri: model.contentStyleFile,
+        source: model.contentStyle
+      }));
+    }
+
+    optionsMap.set(this, options);
+
+    // Setup listeners.
+    setListeners(this, options);
+  },
+  dispose: function dispose() {
+    if (views.has(this))
+      this.hide();
+    off(this);
+
+    workerFor(this).destroy();
+    detach(styleFor(this));
+
+    if (views.has(this))
+      domPanel.dispose(viewFor(this));
+
+    views.delete(this);
+  },
+  /* Public API: Panel.width */
+  get width() {
+    return modelFor(this).width;
+  },
+  set width(value) {
+    this.resize(value, this.height);
+  },
+  /* Public API: Panel.height */
+  get height() {
+    return modelFor(this).height;
+  },
+  set height(value) {
+    this.resize(this.width, value);
+  },
+
+  /* Public API: Panel.focus */
+  get focus() {
+    return modelFor(this).focus;
+  },
+
+  /* Public API: Panel.position */
+  get position() {
+    return modelFor(this).position;
+  },
+
+  /* Public API: Panel.contextMenu */
+  get contextMenu() {
+    return modelFor(this).contextMenu;
+  },
+  set contextMenu(allow) {
+    let model = modelFor(this);
+    model.contextMenu = panelContract({ contextMenu: allow }).contextMenu;
+    domPanel.allowContextMenu(viewFor(this), model.contextMenu);
+  },
+
+  get contentURL() {
+    return modelFor(this).contentURL;
+  },
+  set contentURL(value) {
+    let model = modelFor(this);
+    model.contentURL = panelContract({ contentURL: value }).contentURL;
+    domPanel.setURL(viewFor(this), model.contentURL);
+    // Detach worker so that messages send will be queued until it's
+    // reatached once panel content is ready.
+    workerFor(this).detach();
+  },
+
+  get allow() { return Allow(this); },
+  set allow(value) {
+    let allowJavascript = panelContract({ allow: value }).allow.script;
+    return setScriptState(this, value);
+  },
+
+  /* Public API: Panel.isShowing */
+  get isShowing() {
+    return !isDisposed(this) && domPanel.isOpen(viewFor(this));
+  },
+
+  /* Public API: Panel.show */
+  show: function show(options={}, anchor) {
+    let view = viewFor(this);
+    SinglePanelManager.requestOpen(this, () => {
+      if (options instanceof Ci.nsIDOMElement) {
+        [anchor, options] = [options, null];
+      }
+
+      if (anchor instanceof Ci.nsIDOMElement) {
+        console.warn(
+          "Passing a DOM node to Panel.show() method is an unsupported " +
+          "feature that will be soon replaced. " +
+          "See: https://bugzilla.mozilla.org/show_bug.cgi?id=878877"
+        );
+      }
+
+      let model = modelFor(this);
+      let anchorView = getNodeView(anchor || options.position || model.position);
+
+      options = merge({
+        position: model.position,
+        width: model.width,
+        height: model.height,
+        defaultWidth: model.defaultWidth,
+        defaultHeight: model.defaultHeight,
+        focus: model.focus,
+        contextMenu: model.contextMenu
+      }, displayContract(options));
+
+      if (!isDisposed(this)) {
+        domPanel.show(view, options, anchorView);
+      }
+    });
+    return this;
+  },
+
+  /* Public API: Panel.hide */
+  hide: function hide() {
+    // Quit immediately if panel is disposed or there is no state change.
+    domPanel.close(viewFor(this));
+
+    return this;
+  },
+
+  /* Public API: Panel.resize */
+  resize: function resize(width, height) {
+    let model = modelFor(this);
+    let view = viewFor(this);
+    let change = panelContract({
+      width: width || model.width || model.defaultWidth,
+      height: height || model.height || model.defaultHeight
+    });
+
+    model.width = change.width
+    model.height = change.height
+
+    domPanel.resize(view, model.width, model.height);
+
+    return this;
+  }
+});
+exports.Panel = Panel;
+
+// Note must be defined only after value to `Panel` is assigned.
+getActiveView.define(Panel, viewFor);
+
+// Filter panel events to only panels that are create by this module.
+var panelEvents = filter(events, ({target}) => panelFor(target));
+
+// Panel events emitted after panel has being shown.
+var shows = filter(panelEvents, ({type}) => type === "popupshown");
+
+// Panel events emitted after panel became hidden.
+var hides = filter(panelEvents, ({type}) => type === "popuphidden");
+
+// Panel events emitted after content inside panel is ready. For different
+// panels ready may mean different state based on `contentScriptWhen` attribute.
+// Weather given event represents readyness is detected by `getAttachEventType`
+// helper function.
+var ready = filter(panelEvents, ({type, target}) =>
+  getAttachEventType(modelFor(panelFor(target))) === type);
+
+// Panel event emitted when the contents of the panel has been loaded.
+var readyToShow = filter(panelEvents, ({type}) => type === "DOMContentLoaded");
+
+// Styles should be always added as soon as possible, and doesn't makes them
+// depends on `contentScriptWhen`
+var start = filter(panelEvents, ({type}) => type === "document-element-inserted");
+
+// Forward panel show / hide events to panel's own event listeners.
+on(shows, "data", ({target}) => {
+  let panel = panelFor(target);
+  if (modelFor(panel).ready)
+    emit(panel, "show");
+});
+
+on(hides, "data", ({target}) => {
+  let panel = panelFor(target);
+  if (modelFor(panel).ready)
+    emit(panel, "hide");
+});
+
+on(ready, "data", ({target}) => {
+  let panel = panelFor(target);
+  let window = domPanel.getContentDocument(target).defaultView;
+
+  workerFor(panel).attach(window);
+});
+
+on(readyToShow, "data", ({target}) => {
+  let panel = panelFor(target);
+
+  if (!modelFor(panel).ready) {
+    modelFor(panel).ready = true;
+
+    if (viewFor(panel).state == "open")
+      emit(panel, "show");
+  }
+});
+
+on(start, "data", ({target}) => {
+  let panel = panelFor(target);
+  let window = domPanel.getContentDocument(target).defaultView;
+
+  attach(styleFor(panel), window);
+});
