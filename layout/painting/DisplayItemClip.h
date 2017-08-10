@@ -20,12 +20,6 @@ namespace gfx {
 class DrawTarget;
 class Path;
 } // namespace gfx
-namespace layers {
-class StackingContextHelper;
-} // namespace layers
-namespace wr {
-struct WrComplexClipRegion;
-} // namepsace wr
 } // namespace mozilla
 
 namespace mozilla {
@@ -44,7 +38,7 @@ class DisplayItemClip {
 public:
   struct RoundedRect {
     nsRect mRect;
-    // Indices into mRadii are the HalfCorner values in gfx/2d/Types.h
+    // Indices into mRadii are the NS_CORNER_* constants in nsStyleConsts.h
     nscoord mRadii[8];
 
     RoundedRect operator+(const nsPoint& aOffset) const {
@@ -179,10 +173,6 @@ public:
                                      uint32_t aMax) const;
   uint32_t GetRoundedRectCount() const { return mRoundedClipRects.Length(); }
   void AppendRoundedRects(nsTArray<RoundedRect>* aArray, uint32_t aCount) const;
-
-  void ToWrComplexClipRegions(int32_t aAppUnitsPerDevPixel,
-                              const layers::StackingContextHelper& aSc,
-                              nsTArray<wr::WrComplexClipRegion>& aOutArray) const;
 
   static const DisplayItemClip& NoClip();
 
