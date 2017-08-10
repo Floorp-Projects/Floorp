@@ -67,7 +67,7 @@
   <string name="external_multiple_apps_matched_exit">అంతరంగిక విహరణను చాలించాలా?</string>
   <string name="download_snackbar_finished">%1$s పూర్తయింది</string>
   <string name="download_snackbar_open">తెరువు</string>
-  <string name="download_dialog_warning"><![CDATA["మీరు %1$s చరిత్రను తీసివేసినప్పుడు దింపుకొన్న ఫైళ్ళు "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#3108;&#3146;&#3122;&#3095;&#3135;&#3074;&#3098;&#3116;&#3105;&#3125;&#3137; "</b>.]]></string>
+  <string name="download_dialog_warning"><![CDATA["మీరు %1$s చరిత్రను తీసివేసినప్పుడు దింపుకున్న ఫైళ్ళు "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#3108;&#3146;&#3122;&#3095;&#3135;&#3074;&#3098;&#3116;&#3105;&#3125;&#3137; "</b>.]]></string>
   <string name="download_dialog_title">ఫైలు దింపుకోలు</string>
   <string name="download_dialog_action_cancel">రద్దుచేయి</string>
   <string name="download_dialog_action_download">దింపు</string>
