@@ -23,6 +23,7 @@ public:
                     nsIFrame*         aPrevInFlow) override;
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;

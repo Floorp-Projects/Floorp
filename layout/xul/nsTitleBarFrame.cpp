@@ -42,6 +42,7 @@ nsTitleBarFrame::nsTitleBarFrame(nsStyleContext* aContext, ClassID aID)
 
 void
 nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                             const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
 {
   // override, since we don't want children to get events
@@ -50,7 +51,7 @@ nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                nsGkAtoms::_true, eCaseMatters))
       return;
   }
-  nsBoxFrame::BuildDisplayListForChildren(aBuilder, aLists);
+  nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 nsresult

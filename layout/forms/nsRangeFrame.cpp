@@ -255,6 +255,7 @@ nsDisplayRangeFocusRing::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                               const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
 {
   const nsStyleDisplay* disp = StyleDisplay();
@@ -270,10 +271,10 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsIFrame* thumb = mThumbDiv->GetPrimaryFrame();
     if (thumb) {
       nsDisplayListSet set(aLists, aLists.Content());
-      BuildDisplayListForChild(aBuilder, thumb, set, DISPLAY_CHILD_INLINE);
+      BuildDisplayListForChild(aBuilder, thumb, aDirtyRect, set, DISPLAY_CHILD_INLINE);
     }
   } else {
-    BuildDisplayListForInline(aBuilder, aLists);
+    BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
   }
 
   // Draw a focus outline if appropriate:

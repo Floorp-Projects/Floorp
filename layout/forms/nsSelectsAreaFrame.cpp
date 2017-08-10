@@ -126,15 +126,16 @@ public:
 
 void
 nsSelectsAreaFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
   if (!aBuilder->IsForEventDelivery()) {
-    BuildDisplayListInternal(aBuilder, aLists);
+    BuildDisplayListInternal(aBuilder, aDirtyRect, aLists);
     return;
   }
 
   nsDisplayListCollection set;
-  BuildDisplayListInternal(aBuilder, set);
+  BuildDisplayListInternal(aBuilder, aDirtyRect, set);
 
   nsOptionEventGrabberWrapper wrapper;
   wrapper.WrapLists(aBuilder, this, set, aLists);
@@ -142,9 +143,10 @@ nsSelectsAreaFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 void
 nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
+                                             const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
 {
-  nsBlockFrame::BuildDisplayList(aBuilder, aLists);
+  nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 
   nsListControlFrame* listFrame = GetEnclosingListFrame(this);
   if (listFrame && listFrame->IsFocused()) {

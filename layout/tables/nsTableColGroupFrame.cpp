@@ -389,9 +389,10 @@ nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
 
 void
 nsTableColGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                       const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
-  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aLists);
+  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
 }
 
 nsTableColFrame * nsTableColGroupFrame::GetFirstColumn()

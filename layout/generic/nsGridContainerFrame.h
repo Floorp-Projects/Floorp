@@ -104,6 +104,7 @@ public:
   }
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                        const nsRect&           aDirtyRect,
                         const nsDisplayListSet& aLists) override;
 
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override

@@ -365,9 +365,10 @@ nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
 
 void
 nsSplitterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsBoxFrame::BuildDisplayList(aBuilder, aLists);
+  nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 
   // if the mouse is captured always return us as the frame.
   if (mInner->mDragging)

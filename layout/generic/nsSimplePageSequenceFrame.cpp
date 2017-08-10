@@ -827,6 +827,7 @@ ComputePageSequenceTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
 
 void
 nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                            const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
   DisplayBorderBackgroundOutline(aBuilder, aLists);
@@ -840,16 +841,13 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     clipState.Clear();
 
     nsIFrame* child = PrincipalChildList().FirstChild();
-    nsRect dirty = aBuilder->GetDirtyRect();
+    nsRect dirty = aDirtyRect;
     dirty.ScaleInverseRoundOut(PresContext()->GetPrintPreviewScale());
 
     while (child) {
       if (child->GetVisualOverflowRectRelativeToParent().Intersects(dirty)) {
-        nsDisplayListBuilder::AutoBuildingDisplayList
-          buildingForChild(aBuilder, child,
-                           dirty - child->GetPosition(),
-                           aBuilder->IsAtRootOfPseudoStackingContext());
-        child->BuildDisplayListForStackingContext(aBuilder, &content);
+        child->BuildDisplayListForStackingContext(aBuilder,
+            dirty - child->GetPosition(), &content);
         aBuilder->ResetMarkedFramesForDisplayList();
       }
       child = child->GetNextSibling();
