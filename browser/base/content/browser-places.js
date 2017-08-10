@@ -1298,6 +1298,12 @@ var RecentBookmarksMenuUI = {
   RECENTLY_BOOKMARKED_PREF: "browser.bookmarks.showRecentlyBookmarked",
   MAX_RESULTS: 5,
 
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsINavBookmarkObserver,
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference
+  ]),
+
   showRecentlyBookmarked() {
     Services.prefs.setBoolPref(this.RECENTLY_BOOKMARKED_PREF, true);
   },
@@ -1306,50 +1312,22 @@ var RecentBookmarksMenuUI = {
     Services.prefs.setBoolPref(this.RECENTLY_BOOKMARKED_PREF, false);
   },
 
-  init(aHeaderItem, aExtraCSSClass) {
-    this._populateRecentBookmarks(aHeaderItem, aExtraCSSClass);
+  observe(subject, topic, data) {
+    if (topic == "nsPref:changed" && data == this.RECENTLY_BOOKMARKED_PREF) {
+      this._populateRecentBookmarks();
+    }
+  },
+
+  init(aHeaderItem, aExtraCSSClass = "") {
+    this.headerItem = aHeaderItem;
+    this.extraCSSClass = aExtraCSSClass;
+
+    this._populateRecentBookmarks();
 
     // Add observers and listeners and remove them again when the menupopup closes.
 
     let bookmarksMenu = aHeaderItem.parentNode;
     let placesContextMenu = document.getElementById("placesContext");
-
-    let prefObserver = () => {
-      this._populateRecentBookmarks(aHeaderItem, aExtraCSSClass);
-    };
-
-    this._recentlyBookmarkedObserver = {
-      QueryInterface: XPCOMUtils.generateQI([
-        Ci.nsINavBookmarkObserver,
-        Ci.nsISupportsWeakReference
-      ])
-    };
-    this._recentlyBookmarkedObserver.onItemRemoved = () => {
-      // Update the menu when a bookmark has been removed.
-      // The native menubar on Mac doesn't support live update, so this won't
-      // work there.
-      this._populateRecentBookmarks(aHeaderItem, aExtraCSSClass);
-    };
-
-    let updatePlacesContextMenu = (shouldHidePrefUI = false) => {
-      let showItem = document.getElementById("placesContext_showRecentlyBookmarked");
-      // On Mac the menuitem doesn't exist when we're in the Library window context.
-      if (!showItem) {
-        return;
-      }
-      let hideItem = document.getElementById("placesContext_hideRecentlyBookmarked");
-      let separator = document.getElementById("placesContext_recentlyBookmarkedSeparator");
-      let prefEnabled = !shouldHidePrefUI && Services.prefs.getBoolPref(this.RECENTLY_BOOKMARKED_PREF);
-      showItem.hidden = shouldHidePrefUI || prefEnabled;
-      hideItem.hidden = shouldHidePrefUI || !prefEnabled;
-      separator.hidden = shouldHidePrefUI;
-      if (!shouldHidePrefUI) {
-        // Move to the bottom of the menu.
-        separator.parentNode.appendChild(separator);
-        showItem.parentNode.appendChild(showItem);
-        hideItem.parentNode.appendChild(hideItem);
-      }
-    };
 
     let onPlacesContextMenuShowing = event => {
       if (event.target == event.currentTarget) {
@@ -1358,26 +1336,29 @@ var RecentBookmarksMenuUI = {
           triggerPopup = triggerPopup.parentNode;
         }
         let shouldHidePrefUI = triggerPopup != bookmarksMenu;
-        updatePlacesContextMenu(shouldHidePrefUI);
+        this._updatePlacesContextMenu(shouldHidePrefUI);
       }
     };
 
     let onBookmarksMenuHidden = event => {
       if (event.target == event.currentTarget) {
-        updatePlacesContextMenu(true);
+        this._updatePlacesContextMenu(true);
 
-        Services.prefs.removeObserver(this.RECENTLY_BOOKMARKED_PREF, prefObserver);
-        PlacesUtils.bookmarks.removeObserver(this._recentlyBookmarkedObserver);
+        Services.prefs.removeObserver(this.RECENTLY_BOOKMARKED_PREF, this);
+        PlacesUtils.bookmarks.removeObserver(this);
         this._recentlyBookmarkedObserver = null;
         if (placesContextMenu) {
           placesContextMenu.removeEventListener("popupshowing", onPlacesContextMenuShowing);
         }
         bookmarksMenu.removeEventListener("popuphidden", onBookmarksMenuHidden);
+
+        delete this.headerItem;
+        delete this.extraCSSClass;
       }
     };
 
-    Services.prefs.addObserver(this.RECENTLY_BOOKMARKED_PREF, prefObserver);
-    PlacesUtils.bookmarks.addObserver(this._recentlyBookmarkedObserver, true);
+    Services.prefs.addObserver(this.RECENTLY_BOOKMARKED_PREF, this, true);
+    PlacesUtils.bookmarks.addObserver(this, true);
 
     // The context menu doesn't exist in non-browser windows on Mac
     if (placesContextMenu) {
@@ -1387,15 +1368,15 @@ var RecentBookmarksMenuUI = {
     bookmarksMenu.addEventListener("popuphidden", onBookmarksMenuHidden);
   },
 
-  _populateRecentBookmarks(aHeaderItem, aExtraCSSClass = "") {
-    while (aHeaderItem.nextSibling &&
-           aHeaderItem.nextSibling.localName == "menuitem") {
-      aHeaderItem.nextSibling.remove();
+  _populateRecentBookmarks() {
+    while (this.headerItem.nextSibling &&
+           this.headerItem.nextSibling.localName == "menuitem") {
+      this.headerItem.nextSibling.remove();
     }
 
     let shouldShow = Services.prefs.getBoolPref(this.RECENTLY_BOOKMARKED_PREF);
-    let separator = aHeaderItem.previousSibling;
-    aHeaderItem.hidden = !shouldShow;
+    let separator = this.headerItem.previousSibling;
+    this.headerItem.hidden = !shouldShow;
     separator.hidden = !shouldShow;
 
     if (!shouldShow) {
@@ -1429,7 +1410,7 @@ var RecentBookmarksMenuUI = {
       item.setAttribute("targetURI", uri);
       item.setAttribute("simulated-places-node", true);
       item.setAttribute("class", "menuitem-iconic menuitem-with-favicon bookmark-item " +
-                                 aExtraCSSClass);
+                                 this.extraCSSClass);
       if (icon) {
         item.setAttribute("image", icon);
         item.setAttribute("loadingprincipal", loadingPrincipal);
@@ -1438,8 +1419,49 @@ var RecentBookmarksMenuUI = {
       fragment.appendChild(item);
     }
     root.containerOpen = false;
-    aHeaderItem.parentNode.insertBefore(fragment, aHeaderItem.nextSibling);
+    this.headerItem.parentNode.insertBefore(fragment, this.headerItem.nextSibling);
   },
+
+  _updatePlacesContextMenu(shouldHidePrefUI = false) {
+    let showItem = document.getElementById("placesContext_showRecentlyBookmarked");
+    // On Mac the menuitem doesn't exist when we're in the Library window context.
+    if (!showItem) {
+      return;
+    }
+    let hideItem = document.getElementById("placesContext_hideRecentlyBookmarked");
+    let separator = document.getElementById("placesContext_recentlyBookmarkedSeparator");
+    let prefEnabled = !shouldHidePrefUI && Services.prefs.getBoolPref(this.RECENTLY_BOOKMARKED_PREF);
+    showItem.hidden = shouldHidePrefUI || prefEnabled;
+    hideItem.hidden = shouldHidePrefUI || !prefEnabled;
+    separator.hidden = shouldHidePrefUI;
+    if (!shouldHidePrefUI) {
+      // Move to the bottom of the menu.
+      separator.parentNode.appendChild(separator);
+      showItem.parentNode.appendChild(showItem);
+      hideItem.parentNode.appendChild(hideItem);
+    }
+  },
+
+  /**
+   * nsINavBookmarkObserver methods.
+   */
+
+  onItemRemoved() {
+    // Update the menu when a bookmark has been removed.
+    // The native menubar on Mac doesn't support live update, so this is
+    // unlikely to be called there.
+    this._populateRecentBookmarks();
+  },
+
+  skipTags: true,
+  skipDescendantsOnItemRemoval: false,
+
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
+  onItemAdded() {},
+  onItemChanged() {},
+  onItemVisited() {},
+  onItemMoved() {},
 }
 
 /**
