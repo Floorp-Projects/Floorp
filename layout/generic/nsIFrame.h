@@ -618,6 +618,8 @@ public:
     , mMayHaveRoundedCorners(false)
     , mHasImageRequest(false)
     , mHasFirstLetterChild(false)
+    , mParentIsWrapperAnonBox(false)
+    , mIsWrapperBoxNeedingRestyle(false)
   {
     mozilla::PodZero(&mOverflow);
   }
@@ -3993,6 +3995,23 @@ public:
   bool HasFirstLetterChild() const { return mHasFirstLetterChild; }
 
   /**
+   * Whether this frame's parent is a wrapper anonymous box.  See documentation
+   * for mParentIsWrapperAnonBox.
+   */
+  bool ParentIsWrapperAnonBox() const { return mParentIsWrapperAnonBox; }
+  void SetParentIsWrapperAnonBox() { mParentIsWrapperAnonBox = true; }
+
+  /**
+   * Whether this is a wrapper anonymous box needing a restyle.
+   */
+  bool IsWrapperAnonBoxNeedingRestyle() const {
+    return mIsWrapperBoxNeedingRestyle;
+  }
+  void SetIsWrapperAnonBoxNeedingRestyle(bool aNeedsRestyle) {
+    mIsWrapperBoxNeedingRestyle = aNeedsRestyle;
+  }
+
+  /**
    * If this returns true, the frame it's called on should get the
    * NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
    * if it's already in reflow, or via calling FrameNeedsReflow() to schedule a
@@ -4138,7 +4157,27 @@ protected:
    */
   bool mHasFirstLetterChild : 1;
 
-  // There is a 13-bit gap left here.
+  /**
+   * True if this frame's parent is a wrapper anonymous box (e.g. a table
+   * anonymous box as specified at
+   * <https://www.w3.org/TR/CSS21/tables.html#anonymous-boxes>).
+   *
+   * We could compute this information directly when we need it, but it wouldn't
+   * be all that cheap, and since this information is immutable for the lifetime
+   * of the frame we might as well cache it.
+   *
+   * Note that our parent may itself have mParentIsWrapperAnonBox set to true.
+   */
+  bool mParentIsWrapperAnonBox : 1;
+
+  /**
+   * True if this is a wrapper anonymous box needing a restyle.  This is used to
+   * track, during stylo post-traversal, whether we've already recomputed the
+   * style of this anonymous box, if we end up seeing it twice.
+   */
+  bool mIsWrapperBoxNeedingRestyle : 1;
+
+  // There is an 11-bit gap left here.
 
   // Helpers
   /**
