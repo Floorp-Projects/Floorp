@@ -760,6 +760,7 @@ nsSVGOuterSVGFrame::IsSVGTransformed(Matrix* aOwnTransform,
 
 void
 nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
   if (GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
@@ -783,7 +784,7 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsDisplayList *contentList = aLists.Content();
     nsDisplayListSet set(contentList, contentList, contentList,
                          contentList, contentList, contentList);
-    BuildDisplayListForNonBlockChildren(aBuilder, set);
+    BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, set);
   } else if (IsVisibleForPainting(aBuilder) || !aBuilder->IsForPainting()) {
     aLists.Content()->AppendNewToTop(
       new (aBuilder) nsDisplayOuterSVG(aBuilder, this));

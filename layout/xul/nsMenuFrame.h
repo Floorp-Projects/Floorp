@@ -105,6 +105,7 @@ public:
 
   // Overridden to prevent events from going to children of the menu.
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) override;
 
   // this method can destroy the frame

@@ -69,6 +69,7 @@ public:
               nsReflowStatus& aStatus) override;
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                        const nsRect&           aDirtyRect,
                         const nsDisplayListSet& aLists) override;
 
   // nsIPageSequenceFrame

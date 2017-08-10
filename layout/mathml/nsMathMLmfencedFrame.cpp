@@ -160,11 +160,12 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
 
 void
 nsMathMLmfencedFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                       const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
   /////////////
   // display the content
-  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aLists);
+  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 
   ////////////
   // display fences and separators

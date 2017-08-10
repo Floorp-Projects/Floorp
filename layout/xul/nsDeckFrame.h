@@ -33,12 +33,14 @@ public:
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aState) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   virtual void RemoveFrame(ChildListID aListID,
                            nsIFrame* aOldFrame) override;
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) override;
 
   virtual void Init(nsIContent*       aContent,

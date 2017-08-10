@@ -68,6 +68,7 @@ public:
                                nsEventStatus* aEventStatus) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   virtual void GetInitialOrientation(bool& aIsHorizontal) override;

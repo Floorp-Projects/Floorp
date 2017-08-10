@@ -39,6 +39,7 @@ nsListItemFrame::GetXULPrefSize(nsBoxLayoutState& aState)
 
 void
 nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                             const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
 {
   if (aBuilder->IsForEventDelivery()) {
@@ -47,7 +48,7 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       return;
   }
 
-  nsGridRowLeafFrame::BuildDisplayListForChildren(aBuilder, aLists);
+  nsGridRowLeafFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

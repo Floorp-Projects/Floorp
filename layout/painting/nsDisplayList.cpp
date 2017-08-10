@@ -1047,9 +1047,10 @@ nsDisplayListBuilder::FindAnimatedGeometryRootFor(nsDisplayItem* aItem)
 
 
 void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
-                                                        nsIFrame* aFrame)
+                                                        nsIFrame* aFrame,
+                                                        const nsRect& aDirtyRect)
 {
-  nsRect dirtyRectRelativeToDirtyFrame = GetDirtyRect();
+  nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
   if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
       IsPaintingToWindow()) {
     NS_ASSERTION(aDirtyFrame == aFrame->GetParent(), "Dirty frame should be viewport frame");
@@ -1064,8 +1065,7 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
       dirtyRectRelativeToDirtyFrame.SizeTo(aDirtyFrame->GetSize());
     }
   }
-  nsPoint offset = aFrame->GetOffsetTo(aDirtyFrame);
-  nsRect dirty = dirtyRectRelativeToDirtyFrame - offset;
+  nsRect dirty = dirtyRectRelativeToDirtyFrame - aFrame->GetOffsetTo(aDirtyFrame);
   nsRect overflowRect = aFrame->GetVisualOverflowRect();
 
   if (aFrame->IsTransformed() &&
@@ -1105,7 +1105,6 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
       return;
     f->RemoveStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
   }
-
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
@@ -1281,7 +1280,8 @@ nsDisplayListBuilder::ResetMarkedFramesForDisplayList()
 
 void
 nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
-                                               const nsFrameList& aFrames) {
+                                               const nsFrameList& aFrames,
+                                               const nsRect& aDirtyRect) {
   for (nsIFrame* e : aFrames) {
     // Skip the AccessibleCaret frame when building no caret.
     if (!IsBuildingCaret()) {
@@ -1295,7 +1295,7 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
     }
 
     mFramesMarkedForDisplay.AppendElement(e);
-    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e);
+    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e, aDirtyRect);
   }
 
   if (!aDirtyFrame->GetParent()) {
@@ -1313,7 +1313,7 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
     const DisplayItemClipChain* combinedClipChain = mClipState.GetCurrentCombinedClipChain(this);
     const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
     CurrentPresShellState()->mFixedBackgroundDisplayData.emplace(
-      clipChain, combinedClipChain, asr, GetDirtyRect());
+      clipChain, combinedClipChain, asr, aDirtyRect);
   }
 }
 
@@ -3306,7 +3306,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
           // There cannot be any transforms between aFrame and rootFrame
           // because then bgData.shouldFixToViewport would have been false.
           nsRect dirtyRect = displayData->mDirtyRect + aFrame->GetOffsetTo(rootFrame);
-          aBuilder->SetDirtyRect(dirtyRect);
+          buildingDisplayList.SetDirtyRect(dirtyRect);
         }
       }
       nsDisplayBackgroundImage* bgItem = nullptr;
@@ -3316,7 +3316,8 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
         DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
         bgImageClip.Clear();
         if (aSecondaryReferenceFrame) {
-          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(bgData, aSecondaryReferenceFrame);
+          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(bgData,
+                                                                aSecondaryReferenceFrame);
         } else {
           bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
         }

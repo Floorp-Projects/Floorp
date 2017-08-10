@@ -45,6 +45,7 @@ public:
 
   // nsIFrame methods:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override {}
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,

@@ -54,6 +54,7 @@ ViewportFrame::Init(nsIContent*       aContent,
 
 void
 ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
   AUTO_PROFILER_LABEL("ViewportFrame::BuildDisplayList", GRAPHICS);
@@ -62,7 +63,7 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // make the kid's BorderBackground our own. This ensures that the canvas
     // frame's background becomes our own background and therefore appears
     // below negative z-index elements.
-    BuildDisplayListForChild(aBuilder, kid, aLists);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
   }
 
   nsDisplayList topLayerList;
@@ -123,12 +124,8 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
     asrSetter.SetCurrentActiveScrolledRoot(
       savedOutOfFlowData->mContainingBlockActiveScrolledRoot);
   }
-  nsDisplayListBuilder::AutoBuildingDisplayList
-    buildingForChild(aBuilder, aFrame, dirty,
-                     aBuilder->IsAtRootOfPseudoStackingContext());
-
   nsDisplayList list;
-  aFrame->BuildDisplayListForStackingContext(aBuilder, &list);
+  aFrame->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
   aList->AppendToTop(&list);
 }
 

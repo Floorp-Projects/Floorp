@@ -140,6 +140,7 @@ public:
   nsSplittableType GetSplittableType() const override;
   bool IsFloatContainingBlock() const override;
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsRect& aDirtyRect,
                         const nsDisplayListSet& aLists) override;
   bool IsFrameOfType(uint32_t aFlags) const override
   {

@@ -462,6 +462,7 @@ nsHTMLCanvasFrame::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
 
 void
 nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                    const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
