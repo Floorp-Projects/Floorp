@@ -138,15 +138,6 @@
   }
 }
 
-/* The animations for the pocket-button and library-button are disabled
-   outside of the nav-bar due to bug 1382894. */
-:-moz-any(#pocket-button, #library-button) > .toolbarbutton-animatable-box {
-  display: none;
-}
-#nav-bar :-moz-any(#pocket-button, #library-button) > .toolbarbutton-animatable-box {
-  display: -moz-box;
-}
-
 /* We need to use an animation here instead of a transition
    to guarantee that the animation succeeds. With transitions
    if the starting value is already equal to the end value
@@ -160,17 +151,17 @@
   }
 }
 
-#library-button[animate="pocket"] {
-  position: relative;
-}
-
-#library-button[animate="pocket"] > .toolbarbutton-animatable-box {
+.toolbarbutton-animatable-box[animate="pocket"] {
   position: absolute;
   overflow: hidden;
-  top: calc(50% - 27px); /* 27px is half the height of the sprite */
+  /* Position the sprite at the y-position of the library-button, then adjust
+     based on the size difference between half of the button height and half
+     of the sprite height. */
+  top: calc(var(--library-button-y) + var(--library-button-height) / 2 - 27px);
   /* Since .toolbarbutton-icon uses a different width than the animatable box,
-     we need to set a padding relative to the difference in widths. */
-  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 22px) / 2);
+     we need to set a margin relative to the difference in widths.
+     margin-left is used here even in RTL because the item is positioned using `left` */
+  left: calc(var(--library-icon-x) + (16px + 2 * var(--toolbarbutton-inner-padding) - 22px) / 2);
   /* Set the min- and max- width and height of the box equal to that
      of each frame of the SVG sprite. Setting the width and height via
      the `width` and `height` CSS properties causes an assertion for
@@ -182,14 +173,15 @@
      sprite's icon on top of the toolbar icon when using position:absolute;. */
   min-height: 54px;
   max-height: 54px;
+  z-index: 2;
 }
 
-#library-button[animate="pocket"] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+.toolbarbutton-animatable-box[animate="pocket"] > .toolbarbutton-animatable-image {
   height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
   min-height: 54px; /* Minimum height must be equal to the height of the SVG sprite */
 }
 
-#library-button[animate="pocket"] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+.toolbarbutton-animatable-box[animate="pocket"] > .toolbarbutton-animatable-image {
   background-image: url("chrome://pocket-shared/skin/library-pocket-animation.svg");
   width: 1078px;
   animation-name: library-pocket-animation;
@@ -197,12 +189,12 @@
   animation-timing-function: steps(48);
 }
 
-#library-button[animate="pocket"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+.toolbarbutton-animatable-box[animate="pocket"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-image {
   animation-name: library-pocket-animation-rtl;
   transform: scaleX(-1);
 }
 
-#library-button[animate="pocket"][fade] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+.toolbarbutton-animatable-box[animate="pocket"][fade] > .toolbarbutton-animatable-image {
   animation-name: library-pocket-fade;
   animation-duration: 2s;
   animation-timing-function: ease-out;

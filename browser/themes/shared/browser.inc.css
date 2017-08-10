@@ -55,3 +55,17 @@
   padding-bottom: 0;
 }
 
+/* Library animation */
+
+#navigator-toolbox[animate] {
+  position: relative;
+}
+
+#library-animatable-box {
+  display: none;
+}
+
+#library-animatable-box[animate] {
+  display: -moz-box;
+}
+
