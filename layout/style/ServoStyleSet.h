@@ -457,29 +457,8 @@ public:
                        Element* aElement);
 
 private:
-  // On construction, sets sInServoTraversal to the given ServoStyleSet.
-  // On destruction, clears sInServoTraversal and calls RunPostTraversalTasks.
-  class MOZ_STACK_CLASS AutoSetInServoTraversal
-  {
-  public:
-    explicit AutoSetInServoTraversal(ServoStyleSet* aSet)
-      : mSet(aSet)
-    {
-      MOZ_ASSERT(!sInServoTraversal);
-      MOZ_ASSERT(aSet);
-      sInServoTraversal = aSet;
-    }
-
-    ~AutoSetInServoTraversal()
-    {
-      MOZ_ASSERT(sInServoTraversal);
-      sInServoTraversal = nullptr;
-      mSet->RunPostTraversalTasks();
-    }
-
-  private:
-    ServoStyleSet* mSet;
-  };
+  friend class AutoSetInServoTraversal;
+  friend class AutoPrepareTraversal;
 
   /**
    * Gets the pending snapshots to handle from the restyle manager.
