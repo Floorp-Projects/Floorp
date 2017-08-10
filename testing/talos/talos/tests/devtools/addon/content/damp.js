@@ -3,8 +3,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const { devtools } =
   Components.utils.import("resource://devtools/shared/Loader.jsm", {});
-const { getActiveTab } = devtools.require("sdk/tabs/utils");
-const { getMostRecentBrowserWindow } = devtools.require("sdk/window/utils");
 const ThreadSafeChromeUtils = devtools.require("ThreadSafeChromeUtils");
 const { EVENTS } = devtools.require("devtools/client/netmonitor/src/constants");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
@@ -13,6 +11,14 @@ const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 
 const SIMPLE_URL = webserver + "/tests/devtools/addon/content/pages/simple.html";
 const COMPLICATED_URL = webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
+
+function getMostRecentBrowserWindow() {
+  return Services.wm.getMostRecentWindow("navigator:browser");
+}
+
+function getActiveTab(window) {
+  return window.gBrowser.selectedTab;
+}
 
 /* globals res:true */
 
