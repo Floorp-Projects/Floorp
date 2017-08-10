@@ -1,5 +1,0 @@
-yamllint:
-    description: YAML linter
-    extensions: ['yml', 'yaml']
-    type: external
-    payload: yamllint_:lint
