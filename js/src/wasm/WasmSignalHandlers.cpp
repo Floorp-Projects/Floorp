@@ -444,15 +444,15 @@ ContextToSP(CONTEXT* context)
 {
     return reinterpret_cast<uint8_t*>(SP_sig(context));
 }
-#endif
 
-#if defined(__arm__) || defined(__aarch64__)
+# if defined(__arm__) || defined(__aarch64__)
 static uint8_t*
 ContextToLR(CONTEXT* context)
 {
     return reinterpret_cast<uint8_t*>(LR_sig(context));
 }
-#endif
+# endif
+#endif // JS_CODEGEN_NONE
 
 #if defined(XP_DARWIN)
 
@@ -490,6 +490,14 @@ ContextToFP(EMULATOR_CONTEXT* context)
 # endif
 }
 
+# if defined(__arm__) || defined(__aarch64__)
+static uint8_t*
+ContextToLR(EMULATOR_CONTEXT* context)
+{
+    return (uint8_t*)context->thread.__lr;
+}
+# endif
+
 static uint8_t*
 ContextToSP(EMULATOR_CONTEXT* context)
 {
@@ -511,7 +519,9 @@ ToRegisterState(EMULATOR_CONTEXT* context)
     state.fp = ContextToFP(context);
     state.pc = *ContextToPC(context);
     state.sp = ContextToSP(context);
-    // no ARM on Darwin => don't fill state.lr.
+# if defined(__arm__) || defined(__aarch64__)
+    state.lr = ContextToLR(context);
+# endif
     return state;
 }
 #endif // XP_DARWIN
