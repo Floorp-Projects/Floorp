@@ -6302,6 +6302,16 @@ CanvasRenderingContext2D::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilde
   data.mDidTransCallback = CanvasRenderingContext2DUserData::DidTransactionCallback;
   data.mDidTransCallbackData = this;
 
+  if (!mBufferProvider) {
+    // Force the creation of a buffer provider.
+    EnsureTarget();
+    ReturnTarget();
+    if (!mBufferProvider) {
+      MarkContextClean();
+      return false;
+    }
+  }
+
   if (mIsSkiaGL) {
       GLuint skiaGLTex = SkiaGLTex();
       if (skiaGLTex) {
