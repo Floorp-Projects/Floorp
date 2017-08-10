@@ -98,11 +98,3 @@ interface nsIAccessibilityService : nsISupports
    */
   boolean isLogged(in AString aModule);
 };
-
-/**
- * @deprecated, use nsIAccessibilityService instead.
- */
-[scriptable, builtinclass, uuid(d85e0cbe-47ce-490c-8488-f821dd2be0c2)]
-interface nsIAccessibleRetrieval : nsIAccessibilityService
-{
-};

@@ -47,6 +47,8 @@ public:
                                                RefPtr<widget::CompositorWidget>&& aWidget,
                                                LayoutDeviceIntSize aSize);
 
+  already_AddRefed<WebRenderAPI> Clone();
+
   wr::WindowId GetId() const { return mId; }
 
   void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
@@ -126,8 +128,8 @@ public:
   layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
 
 protected:
-  WebRenderAPI(wr::RenderApi* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
-    : mRenderApi(aRawApi)
+  WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
+    : mDocHandle(aHandle)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
@@ -138,11 +140,12 @@ protected:
   // Should be used only for shutdown handling
   void WaitFlushed();
 
-  wr::RenderApi* mRenderApi;
+  wr::DocumentHandle* mDocHandle;
   wr::WindowId mId;
   GLint mMaxTextureSize;
   bool mUseANGLE;
   layers::SyncHandle mSyncHandle;
+  RefPtr<wr::WebRenderAPI> mRootApi;
 
   friend class DisplayListBuilder;
   friend class layers::WebRenderBridgeParent;
@@ -174,8 +177,10 @@ public:
                            const nsTArray<wr::WrFilterOp>& aFilters);
   void PopStackingContext();
 
-  void PushClip(const wr::LayoutRect& aClipRect,
-                const wr::WrImageMask* aMask);
+  wr::WrClipId DefineClip(const wr::LayoutRect& aClipRect,
+                          const nsTArray<wr::WrComplexClipRegion>* aComplex = nullptr,
+                          const wr::WrImageMask* aMask = nullptr);
+  void PushClip(const wr::WrClipId& aClipId);
   void PopClip();
 
   void PushBuiltDisplayList(wr::BuiltDisplayList &dl);

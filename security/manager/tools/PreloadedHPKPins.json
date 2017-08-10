@@ -92,13 +92,14 @@
     // they'd like us to be more liberal. For the initial list, we are using
     // the certs from http://pki.google.com/roots.pem.
     // We have no built-in for commented out CAs.
+    // This list should be updated via the dumpGoogleRoots.js script.
     {
       "name": "google_root_pems",
       "sha256_hashes": [
         "AddTrust External Root",
         "AddTrust Low-Value Services Root",
-        "AddTrust Public Services Root",
-        "AddTrust Qualified Certificates Root",
+        // "AddTrust Public CA Root",
+        // "AddTrust Qualified CA Root",
         "AffirmTrust Commercial",
         "AffirmTrust Networking",
         "AffirmTrust Premium",
@@ -108,8 +109,6 @@
         "COMODO Certification Authority",
         "COMODO ECC Certification Authority",
         "COMODO RSA Certification Authority",
-        "Comodo Secure Services root",
-        "Comodo Trusted Services root",
         "Cybertrust Global Root",
         "DigiCert Assured ID Root CA",
         "DigiCert Assured ID Root G2",
@@ -125,33 +124,42 @@
         "Entrust.net Premium 2048 Secure Server CA",
         // "Equifax Secure Certificate Authority",
         "GeoTrust Global CA",
-        "GeoTrust Global CA 2",
+        // "GeoTrust Global CA 2",
         "GeoTrust Primary Certification Authority",
         "GeoTrust Primary Certification Authority - G2",
         "GeoTrust Primary Certification Authority - G3",
         "GeoTrust Universal CA",
         "GeoTrust Universal CA 2",
+        // "GlobalSign",
         "GlobalSign ECC Root CA - R4",
         "GlobalSign ECC Root CA - R5",
         "GlobalSign Root CA",
         "GlobalSign Root CA - R2",
         "GlobalSign Root CA - R3",
+        // "GlobalSign Root CA - R8",
         "Go Daddy Class 2 CA",
         "Go Daddy Root Certificate Authority - G2",
+        // "GTS Root R1",
+        // "GTS Root R2",
+        // "GTS Root R3",
+        // "GTS Root R4",
+        // "Secure Certificate Services",
         "Starfield Class 2 CA",
         "Starfield Root Certificate Authority - G2",
         "thawte Primary Root CA",
         "thawte Primary Root CA - G2",
         "thawte Primary Root CA - G3",
+        // "Trusted Certificate Services",
         "USERTrust ECC Certification Authority",
         "USERTrust RSA Certification Authority",
-        "UTN USERFirst Hardware Root CA",
+        // "UTN-USERFirst-Hardware",
         "Verisign Class 3 Public Primary Certification Authority - G3",
         "VeriSign Class 3 Public Primary Certification Authority - G4",
         "VeriSign Class 3 Public Primary Certification Authority - G5",
         "VeriSign Universal Root Certification Authority"
       ]
     }
+    // The list above should be updated via the dumpGoogleRoots.js script.
   ],
 
   "entries": [

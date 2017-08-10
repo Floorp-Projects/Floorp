@@ -7,6 +7,7 @@
 #include "ExtensionProtocolHandler.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
@@ -20,7 +21,7 @@
 #include "LoadInfo.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsContentUtils.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
 #include "nsIFileStreams.h"
@@ -43,10 +44,6 @@
 #if defined(XP_WIN)
 #include "nsILocalFileWin.h"
 #include "WinUtils.h"
-#endif
-
-#if !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-#include "mozilla/SandboxSettings.h"
 #endif
 
 #define EXTENSION_SCHEME "moz-extension"
@@ -367,9 +364,12 @@ ExtensionProtocolHandler::GetSingleton()
 
 ExtensionProtocolHandler::ExtensionProtocolHandler()
   : SubstitutingProtocolHandler(EXTENSION_SCHEME)
-#if !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#if !defined(XP_WIN)
+#if defined(XP_MACOSX)
   , mAlreadyCheckedDevRepo(false)
-#endif
+#endif /* XP_MACOSX */
+  , mAlreadyCheckedAppDir(false)
+#endif /* ! XP_WIN */
 {
   mUseRemoteFileChannels = IsNeckoChild() &&
     Preferences::GetBool("extensions.webextensions.protocol.remote");
@@ -524,32 +524,118 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   return NS_OK;
 }
 
-#if !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-// The |aRequestedFile| argument must already be Normalize()'d
 Result<Ok, nsresult>
-ExtensionProtocolHandler::DevRepoContains(nsIFile* aRequestedFile,
-                                          bool *aResult)
+ExtensionProtocolHandler::AllowExternalResource(nsIFile* aExtensionDir,
+                                                nsIFile* aRequestedFile,
+                                                bool* aResult)
 {
   MOZ_ASSERT(!IsNeckoChild());
   MOZ_ASSERT(aResult);
   *aResult = false;
 
-  // On the first invocation, set mDevRepo if this is a development build
+#if defined(XP_WIN)
+  // On Windows, dev builds don't use symlinks so we never need to
+  // allow a resource from outside of the extension dir.
+  return Ok();
+#else
+  if (!mozilla::IsDevelopmentBuild()) {
+    return Ok();
+  }
+
+  // On Mac and Linux unpackaged dev builds, system extensions use
+  // symlinks to point to resources in the repo dir which we have to
+  // allow loading. Before we allow an unpacked extension to load a
+  // resource outside of the extension dir, we make sure the extension
+  // dir is within the app directory.
+  MOZ_TRY(AppDirContains(aExtensionDir, aResult));
+  if (!*aResult) {
+    return Ok();
+  }
+
+#if defined(XP_MACOSX)
+  // Additionally, on Mac dev builds, we make sure that the requested
+  // resource is within the repo dir. We don't perform this check on Linux
+  // because we don't have a reliable path to the repo dir on Linux.
+  MOZ_TRY(DevRepoContains(aRequestedFile, aResult));
+#endif /* XP_MACOSX */
+
+  return Ok();
+#endif /* defined(XP_WIN) */
+}
+
+#if defined(XP_MACOSX)
+// The |aRequestedFile| argument must already be Normalize()'d
+Result<Ok, nsresult>
+ExtensionProtocolHandler::DevRepoContains(nsIFile* aRequestedFile,
+                                          bool* aResult)
+{
+  MOZ_ASSERT(mozilla::IsDevelopmentBuild());
+  MOZ_ASSERT(!IsNeckoChild());
+  MOZ_ASSERT(aResult);
+  *aResult = false;
+
+  // On the first invocation, set mDevRepo
   if (!mAlreadyCheckedDevRepo) {
     mAlreadyCheckedDevRepo = true;
-    if (mozilla::IsDevelopmentBuild()) {
-      NS_TRY(mozilla::GetRepoDir(getter_AddRefs(mDevRepo)));
+    NS_TRY(mozilla::GetRepoDir(getter_AddRefs(mDevRepo)));
+    if (MOZ_LOG_TEST(gExtProtocolLog, LogLevel::Debug)) {
+      nsAutoCString repoPath;
+      Unused << mDevRepo->GetNativePath(repoPath);
+      LOG("Repo path: %s", repoPath.get());
     }
   }
 
   if (mDevRepo) {
-    // This is a development build
     NS_TRY(mDevRepo->Contains(aRequestedFile, aResult));
   }
 
   return Ok();
 }
-#endif /* !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX) */
+#endif /* XP_MACOSX */
+
+#if !defined(XP_WIN)
+Result<Ok, nsresult>
+ExtensionProtocolHandler::AppDirContains(nsIFile* aExtensionDir,
+                                         bool* aResult)
+{
+  MOZ_ASSERT(mozilla::IsDevelopmentBuild());
+  MOZ_ASSERT(!IsNeckoChild());
+  MOZ_ASSERT(aResult);
+  *aResult = false;
+
+  // On the first invocation, set mAppDir
+  if (!mAlreadyCheckedAppDir) {
+    mAlreadyCheckedAppDir = true;
+    NS_TRY(NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(mAppDir)));
+    if (MOZ_LOG_TEST(gExtProtocolLog, LogLevel::Debug)) {
+      nsAutoCString appDirPath;
+      Unused << mAppDir->GetNativePath(appDirPath);
+      LOG("AppDir path: %s", appDirPath.get());
+    }
+  }
+
+  if (mAppDir) {
+    NS_TRY(mAppDir->Contains(aExtensionDir, aResult));
+  }
+
+  return Ok();
+}
+#endif /* !defined(XP_WIN) */
+
+static void
+LogExternalResourceError(nsIFile* aExtensionDir, nsIFile* aRequestedFile)
+{
+  MOZ_ASSERT(aExtensionDir);
+  MOZ_ASSERT(aRequestedFile);
+
+  nsAutoCString extensionDirPath, requestedFilePath;
+  Unused << aExtensionDir->GetNativePath(extensionDirPath);
+  Unused << aRequestedFile->GetNativePath(requestedFilePath);
+
+  LOG("Rejecting external unpacked extension resource [%s] from "
+      "extension directory [%s]", requestedFilePath.get(),
+      extensionDirPath.get());
+}
 
 Result<nsCOMPtr<nsIInputStream>, nsresult>
 ExtensionProtocolHandler::NewStream(nsIURI* aChildURI, bool* aTerminateSender)
@@ -659,17 +745,12 @@ ExtensionProtocolHandler::NewStream(nsIURI* aChildURI, bool* aTerminateSender)
   bool isResourceFromExtensionDir = false;
   NS_TRY(extensionDir->Contains(requestedFile, &isResourceFromExtensionDir));
   if (!isResourceFromExtensionDir) {
-#if defined(XP_WIN)
-    return Err(NS_ERROR_FILE_ACCESS_DENIED);
-#elif defined(MOZ_CONTENT_SANDBOX)
-    // On a dev build, we allow an unpacked resource that isn't
-    // from the extension directory as long as it is from the repo.
-    bool isResourceFromDevRepo = false;
-    MOZ_TRY(DevRepoContains(requestedFile, &isResourceFromDevRepo));
-    if (!isResourceFromDevRepo) {
+    bool isAllowed = false;
+    MOZ_TRY(AllowExternalResource(extensionDir, requestedFile, &isAllowed));
+    if (!isAllowed) {
+      LogExternalResourceError(extensionDir, requestedFile);
       return Err(NS_ERROR_FILE_ACCESS_DENIED);
     }
-#endif /* defined(XP_WIN) */
   }
 
   nsCOMPtr<nsIInputStream> inputStream;

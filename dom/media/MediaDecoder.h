@@ -450,6 +450,12 @@ protected:
 
   virtual void OnPlaybackEvent(MediaEventType aEvent);
 
+  // Called when the metadata from the media file has been loaded by the
+  // state machine. Call on the main thread only.
+  virtual void MetadataLoaded(UniquePtr<MediaInfo> aInfo,
+                              UniquePtr<MetadataTags> aTags,
+                              MediaDecoderEventVisibility aEventVisibility);
+
   /******
    * The following members should be accessed with the decoder lock held.
    ******/
@@ -489,12 +495,6 @@ protected:
 
 private:
   nsCString GetDebugInfo();
-
-  // Called when the metadata from the media file has been loaded by the
-  // state machine. Call on the main thread only.
-  void MetadataLoaded(UniquePtr<MediaInfo> aInfo,
-                      UniquePtr<MetadataTags> aTags,
-                      MediaDecoderEventVisibility aEventVisibility);
 
   // Called when the owner's activity changed.
   void NotifyCompositor();

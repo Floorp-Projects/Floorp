@@ -166,7 +166,7 @@ def format_header():
     return FZF_HEADER.format(shortcuts=', '.join(shortcuts), t=terminal)
 
 
-def run_fuzzy_try(update):
+def run_fuzzy_try(update=False, query=None):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -188,6 +188,10 @@ def run_fuzzy_try(update):
         '--preview', 'python -c "print(\\"\\n\\".join(sorted([s.strip(\\"\'\\") for s in \\"{+}\\".split()])))"',  # noqa
         '--preview-window=right:20%',
     ]
+
+    if query:
+        cmd.extend(['-f', query])
+
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     selected = proc.communicate('\n'.join(all_tasks))[0].splitlines()
 

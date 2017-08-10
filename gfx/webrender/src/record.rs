@@ -64,19 +64,11 @@ impl ApiRecordingReceiver for BinaryRecorder {
 
 pub fn should_record_msg(msg: &ApiMsg) -> bool {
     match *msg {
-        ApiMsg::AddRawFont(..) |
-        ApiMsg::AddNativeFont(..) |
-        ApiMsg::DeleteFont(..) |
-        ApiMsg::AddImage(..) |
-        ApiMsg::GenerateFrame(..) |
-        ApiMsg::UpdateImage(..) |
-        ApiMsg::DeleteImage(..) |
-        ApiMsg::SetDisplayList(..) |
-        ApiMsg::SetRootPipeline(..) |
-        ApiMsg::Scroll(..) |
-        ApiMsg::TickScrollingBounce |
-        ApiMsg::WebGLCommand(..) |
-        ApiMsg::SetWindowParameters(..) =>
+        ApiMsg::UpdateResources(..) |
+        ApiMsg::AddDocument{..} |
+        ApiMsg::UpdateDocument(..) |
+        ApiMsg::DeleteDocument(..) |
+        ApiMsg::WebGLCommand(..) =>
             true,
         _ => false
     }

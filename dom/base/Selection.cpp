@@ -605,14 +605,24 @@ Selection::GetTableCellLocationFromRange(nsRange* aRange,
   if (!content)
     return NS_ERROR_FAILURE;
 
-  nsIContent *child = content->GetChildAt(aRange->StartOffset());
+  nsCOMPtr<nsIContent> child = content->GetChildAt(aRange->StartOffset());
   if (!child)
     return NS_ERROR_FAILURE;
 
+  // GetCellLayout depends on current frame, we need flush frame to get
+  // nsITableCellLayout
+  nsCOMPtr<nsIPresShell> presShell = mFrameSelection->GetShell();
+  if (presShell) {
+    presShell->FlushPendingNotifications(FlushType::Frames);
+
+    // Since calling FlushPendingNotifications, so check whether disconnected.
+    if (!mFrameSelection || !mFrameSelection->GetShell()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   //Note: This is a non-ref-counted pointer to the frame
   nsITableCellLayout *cellLayout = mFrameSelection->GetCellLayout(child);
-  if (NS_FAILED(result))
-    return result;
   if (!cellLayout)
     return NS_ERROR_FAILURE;
 
@@ -2275,6 +2285,9 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
     // associated with context object. Otherwise, this method must do nothing."
     return;
   }
+
+  // AddTableCellRange might flush frame.
+  RefPtr<Selection> kungFuDeathGrip(this);
 
   // This inserts a table cell range in proper document order
   // and returns NS_OK if range doesn't contain just one table cell

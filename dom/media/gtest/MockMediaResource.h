@@ -20,7 +20,6 @@ public:
   {
     return nullptr;
   }
-  void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                   uint32_t* aBytes) override;
   // Data stored in file, caching recommended.

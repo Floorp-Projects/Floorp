@@ -14,7 +14,7 @@ fn write_shaders(glsl_files: Vec<PathBuf>, shader_file_path: &Path) {
     write!(shader_file, "use std::collections::HashMap;\n").unwrap();
     write!(shader_file, "lazy_static! {{\n").unwrap();
     write!(shader_file, "  pub static ref SHADERS: HashMap<&'static str, &'static str> = {{\n").unwrap();
-    write!(shader_file, "    let mut h = HashMap::with_capacity({});\n", glsl_files.len()).unwrap();
+    write!(shader_file, "    let mut h = HashMap::new();\n").unwrap();
     for glsl in glsl_files {
         let shader_name = glsl.file_name().unwrap().to_str().unwrap();
         // strip .glsl
@@ -27,9 +27,9 @@ fn write_shaders(glsl_files: Vec<PathBuf>, shader_file_path: &Path) {
         write!(shader_file, "    h.insert(\"{}\", include_str!(\"{}\"));\n",
                shader_name, full_name).unwrap();
     }
-    write!(shader_file, "    h\n").unwrap(); 
-    write!(shader_file, "  }};\n").unwrap(); 
-    write!(shader_file, "}}\n").unwrap(); 
+    write!(shader_file, "    h\n").unwrap();
+    write!(shader_file, "  }};\n").unwrap();
+    write!(shader_file, "}}\n").unwrap();
 }
 
 fn main() {

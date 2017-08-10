@@ -6,12 +6,10 @@
 
 :root {
   --tab-toolbar-navbar-overlap: 1px;
-/* Temporarily using the compact tab strip by default because of bug 1386964:
   --tab-min-height: 33px;
 }
 
 :root[uidensity=compact] {
-*/
   --tab-min-height: 29px;
 }
 
@@ -312,6 +310,10 @@
   background-repeat: repeat-x;
 }
 
+:root:not([sizemode=normal]) .tabbrowser-tab[first-visible-tab] > .tab-stack > .tab-background[selected=true] {
+  border-inline-start-style: none;
+}
+
 .tab-line[selected=true] {
   background-color: Highlight;
 }
@@ -439,9 +441,6 @@
 #TabsToolbar > #new-tab-button ,
 #TabsToolbar > toolbarpaletteitem > #new-tab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.svg);
-  -moz-context-properties: fill;
-  fill: currentColor;
-  color: inherit;
 }
 
 .tabs-newtab-button {
@@ -462,8 +461,6 @@
 
 #alltabs-button {
   list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
-  -moz-context-properties: fill;
-  fill: currentColor;
 }
 
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {

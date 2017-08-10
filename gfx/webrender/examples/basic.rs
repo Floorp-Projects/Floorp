@@ -174,7 +174,9 @@ fn main() {
 }
 
 fn body(api: &RenderApi,
+        _document_id: &DocumentId,
         builder: &mut DisplayListBuilder,
+        resources: &mut ResourceUpdates,
         _pipeline_id: &PipelineId,
         layout_size: &LayoutSize) {
     let bounds = LayoutRect::new(LayoutPoint::zero(), *layout_size);
@@ -187,10 +189,12 @@ fn body(api: &RenderApi,
                                   Vec::new());
 
     let image_mask_key = api.generate_image_key();
-    api.add_image(image_mask_key,
-                  ImageDescriptor::new(2, 2, ImageFormat::A8, true),
-                  ImageData::new(vec![0, 80, 180, 255]),
-                  None);
+    resources.add_image(
+        image_mask_key,
+        ImageDescriptor::new(2, 2, ImageFormat::A8, true),
+        ImageData::new(vec![0, 80, 180, 255]),
+        None
+    );
     let mask = ImageMask {
         image: image_mask_key,
         rect: (75, 75).by(100, 100),
@@ -230,7 +234,7 @@ fn body(api: &RenderApi,
     if false { // draw text?
         let font_key = api.generate_font_key();
         let font_bytes = load_file("res/FreeSans.ttf");
-        api.add_raw_font(font_key, font_bytes, 0);
+        resources.add_raw_font(font_key, font_bytes, 0);
 
         let text_bounds = (100, 200).by(700, 300);
         let glyphs = vec![
@@ -322,17 +326,17 @@ lazy_static! {
     static ref TOUCH_STATE: Mutex<TouchState> = Mutex::new(TouchState::new());
 }
 
-fn event_handler(event: &glutin::Event, api: &RenderApi) {
+fn event_handler(event: &glutin::Event, document_id: DocumentId, api: &RenderApi) {
     match *event {
         glutin::Event::Touch(touch) => {
             match TOUCH_STATE.lock().unwrap().handle_event(touch) {
                 TouchResult::Pan(pan) => {
-                    api.set_pan(pan);
-                    api.generate_frame(None);
+                    api.set_pan(document_id, pan);
+                    api.generate_frame(document_id, None);
                 }
                 TouchResult::Zoom(zoom) => {
-                    api.set_pinch_zoom(ZoomFactor::new(zoom));
-                    api.generate_frame(None);
+                    api.set_pinch_zoom(document_id, ZoomFactor::new(zoom));
+                    api.generate_frame(document_id, None);
                 }
                 TouchResult::None => {}
             }

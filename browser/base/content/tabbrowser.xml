@@ -5948,6 +5948,8 @@
 
           Services.prefs.addObserver("privacy.userContext", this);
           this.observe(null, "nsPref:changed", "privacy.userContext.enabled");
+
+          this._setPositionalAttributes();
         ]]>
       </constructor>
 

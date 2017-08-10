@@ -15,17 +15,6 @@ const EXPECTED_OVERFLOW_REFLOWS = [
       "select@chrome://global/content/bindings/textbox.xml",
       "focusAndSelectUrlBar@chrome://browser/content/browser.js",
       "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
-      "updateDisplay/<@chrome://browser/content/tabbrowser.xml",
-      "set_selectedIndex@chrome://browser/content/tabbrowser.xml",
-      "set_selectedPanel@chrome://global/content/bindings/tabbox.xml",
-      "set_selectedIndex@chrome://global/content/bindings/tabbox.xml",
-      "set_selectedItem@chrome://global/content/bindings/tabbox.xml",
-      "set_selectedTab@chrome://global/content/bindings/tabbox.xml",
-      "set_selectedTab@chrome://browser/content/tabbrowser.xml",
-      "loadOneTab@chrome://browser/content/tabbrowser.xml",
-      "openLinkIn@chrome://browser/content/utilityOverlay.js",
-      "openUILinkIn@chrome://browser/content/utilityOverlay.js",
-      "BrowserOpenTab@chrome://browser/content/browser.js",
     ]
   },
 ];

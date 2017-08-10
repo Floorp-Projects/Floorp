@@ -396,8 +396,10 @@
 @RESPATH@/components/nsSearchService.js
 @RESPATH@/components/nsSearchSuggestions.js
 @RESPATH@/components/nsSidebar.js
+#ifdef NIGHTLY_BUILD
 @RESPATH@/components/payments.manifest
 @RESPATH@/components/paymentUIService.js
+#endif
 @RESPATH@/components/passwordmgr.manifest
 @RESPATH@/components/nsLoginInfo.js
 @RESPATH@/components/nsLoginManager.js

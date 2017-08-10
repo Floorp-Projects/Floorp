@@ -212,8 +212,10 @@ const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
 // Maximum interval between backups.  If the last backup is older than these
 // days we will try to create a new one more aggressively.
 const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 3;
-// Seconds of idle time before reporting media telemetry.
-const MEDIA_TELEMETRY_IDLE_TIME_SEC = 20;
+// Seconds of idle time before the late idle tasks will be scheduled.
+const LATE_TASKS_IDLE_TIME_SEC = 20;
+// Time after we stop tracking startup crashes.
+const STARTUP_CRASHES_END_DELAY_MS = 30 * 1000;
 
 // Factory object
 const BrowserGlueServiceFactory = {
@@ -554,9 +556,13 @@ BrowserGlue.prototype = {
       this._idleService.removeIdleObserver(this, this._bookmarksBackupIdleTime);
       delete this._bookmarksBackupIdleTime;
     }
-    if (this._mediaTelemetryIdleObserver) {
-      this._idleService.removeIdleObserver(this._mediaTelemetryIdleObserver, MEDIA_TELEMETRY_IDLE_TIME_SEC);
-      delete this._mediaTelemetryIdleObserver;
+    if (this._lateTasksIdleObserver) {
+      this._idleService.removeIdleObserver(this._lateTasksIdleObserver, LATE_TASKS_IDLE_TIME_SEC);
+      delete this._lateTasksIdleObserver;
+    }
+    if (this._gmpInstallManager) {
+      this._gmpInstallManager.uninit();
+      delete this._gmpInstallManager;
     }
     try {
       os.removeObserver(this, "places-init-complete");
@@ -868,17 +874,6 @@ BrowserGlue.prototype = {
       Services.ppmm.loadProcessScript("resource://pdf.js/pdfjschildbootstrap-enabled.js", true);
     }
 
-    if (AppConstants.platform == "win") {
-      // For Windows 7, initialize the jump list module.
-      const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
-      if (WINTASKBAR_CONTRACTID in Cc &&
-          Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
-        let temp = {};
-        Cu.import("resource:///modules/WindowsJumpLists.jsm", temp);
-        temp.WinTaskbarJumpList.startup();
-      }
-    }
-
     TabCrashHandler.init();
     if (AppConstants.MOZ_CRASHREPORTER) {
       PluginCrashReporter.init();
@@ -951,27 +946,12 @@ BrowserGlue.prototype = {
 
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
-
-    this._mediaTelemetryIdleObserver = {
-      browserGlue: this,
-      observe(aSubject, aTopic, aData) {
-        if (aTopic != "idle") {
-          return;
-        }
-        this.browserGlue._sendMediaTelemetry();
-      }
-    };
-    this._idleService.addIdleObserver(this._mediaTelemetryIdleObserver,
-                                      MEDIA_TELEMETRY_IDLE_TIME_SEC);
   },
 
   _sendMediaTelemetry() {
     let win = RecentWindow.getMostRecentBrowserWindow();
     let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
     v.reportCanPlayTelemetry();
-    this._idleService.removeIdleObserver(this._mediaTelemetryIdleObserver,
-                                         MEDIA_TELEMETRY_IDLE_TIME_SEC);
-    delete this._mediaTelemetryIdleObserver;
   },
 
   /**
@@ -1038,10 +1018,6 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
 
-    if (AppConstants.MOZ_DEV_EDITION) {
-      this._createExtraDefaultProfile();
-    }
-
     this._initServiceDiscovery();
 
     // Show update notification, if needed.
@@ -1076,99 +1052,143 @@ BrowserGlue.prototype = {
       this._notifyDisabledNonMpc();
     }
 
-    // Perform default browser checking.
-    if (ShellService) {
-      let shouldCheck = AppConstants.DEBUG ? false :
-                                             ShellService.shouldCheckDefaultBrowser;
-
-      const skipDefaultBrowserCheck =
-        Services.prefs.getBoolPref("browser.shell.skipDefaultBrowserCheckOnFirstRun") &&
-        !Services.prefs.getBoolPref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun");
-
-      const usePromptLimit = !AppConstants.RELEASE_OR_BETA;
-      let promptCount =
-        usePromptLimit ? Services.prefs.getIntPref("browser.shell.defaultBrowserCheckCount") : 0;
-
-      let willRecoverSession = false;
-      try {
-        let ss = Cc["@mozilla.org/browser/sessionstartup;1"].
-                 getService(Ci.nsISessionStartup);
-        willRecoverSession =
-          (ss.sessionType == Ci.nsISessionStartup.RECOVER_SESSION);
-      } catch (ex) { /* never mind; suppose SessionStore is broken */ }
-
-      // startup check, check all assoc
-      let isDefault = false;
-      let isDefaultError = false;
-      try {
-        isDefault = ShellService.isDefaultBrowser(true, false);
-      } catch (ex) {
-        isDefaultError = true;
-      }
-
-      if (isDefault) {
-        let now = (Math.floor(Date.now() / 1000)).toString();
-        Services.prefs.setCharPref("browser.shell.mostRecentDateSetAsDefault", now);
-      }
-
-      let willPrompt = shouldCheck && !isDefault && !willRecoverSession;
-
-      // Skip the "Set Default Browser" check during first-run or after the
-      // browser has been run a few times.
-      if (willPrompt) {
-        if (skipDefaultBrowserCheck) {
-          Services.prefs.setBoolPref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", true);
-          willPrompt = false;
-        } else {
-          promptCount++;
-        }
-        if (usePromptLimit && promptCount > 3) {
-          willPrompt = false;
-        }
-      }
-
-      if (usePromptLimit && willPrompt) {
-        Services.prefs.setIntPref("browser.shell.defaultBrowserCheckCount", promptCount);
-      }
-
-      try {
-        // Report default browser status on startup to telemetry
-        // so we can track whether we are the default.
-        Services.telemetry.getHistogramById("BROWSER_IS_USER_DEFAULT")
-                          .add(isDefault);
-        Services.telemetry.getHistogramById("BROWSER_IS_USER_DEFAULT_ERROR")
-                          .add(isDefaultError);
-        Services.telemetry.getHistogramById("BROWSER_SET_DEFAULT_ALWAYS_CHECK")
-                          .add(shouldCheck);
-        Services.telemetry.getHistogramById("BROWSER_SET_DEFAULT_DIALOG_PROMPT_RAWCOUNT")
-                          .add(promptCount);
-      } catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
-
-      if (willPrompt) {
-        Services.tm.dispatchToMainThread(function() {
-          DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
-        });
-      }
-    }
-
     if (AppConstants.MOZ_CRASHREPORTER) {
       UnsubmittedCrashHandler.init();
-      Services.tm.idleDispatchToMainThread(function() {
-        UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
-      });
     }
 
-    // Let's load the contextual identities.
+    this._sanitizer.onStartup();
+    E10SAccessibilityCheck.onWindowsRestored();
+
+    this._scheduleStartupIdleTasks();
+
+    this._lateTasksIdleObserver = (idleService, topic, data) => {
+      if (topic == "idle") {
+        idleService.removeIdleObserver(this._lateTasksIdleObserver,
+                                       LATE_TASKS_IDLE_TIME_SEC);
+        delete this._lateTasksIdleObserver;
+        this._scheduleArbitrarilyLateIdleTasks();
+      }
+    };
+    this._idleService.addIdleObserver(
+      this._lateTasksIdleObserver, LATE_TASKS_IDLE_TIME_SEC);
+  },
+
+  /**
+   * Use this function as an entry point to schedule tasks that
+   * need to run only once after startup, and can be scheduled
+   * by using an idle callback.
+   *
+   * The functions scheduled here will fire from idle callbacks
+   * once every window has finished being restored by session
+   * restore, and it's guaranteed that they will run before
+   * the equivalent per-window idle tasks
+   * (from _schedulePerWindowIdleTasks in browser.js).
+   *
+   * If you have something that can wait even further than the
+   * per-window initialization, please schedule them using
+   * _scheduleArbitrarilyLateIdleTasks.
+   * Don't be fooled by thinking that the use of the timeout parameter
+   * will delay your function: it will just ensure that it potentially
+   * happens _earlier_ than expected (when the timeout limit has been reached),
+   * but it will not make it happen later (and out of order) compared
+   * to the other ones scheduled together.
+   */
+  _scheduleStartupIdleTasks() {
     Services.tm.idleDispatchToMainThread(() => {
       ContextualIdentityService.load();
     });
 
+    // Load the Login Manager data from disk off the main thread, some time
+    // after startup.  If the data is required before this runs, for example
+    // because a restored page contains a password field, it will be loaded on
+    // the main thread, and this initialization request will be ignored.
+    Services.tm.idleDispatchToMainThread(() => {
+      try {
+        Services.logins;
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }, 3000);
+
+    // It's important that SafeBrowsing is initialized reasonably
+    // early, so we use a maximum timeout for it.
     Services.tm.idleDispatchToMainThread(() => {
       SafeBrowsing.init();
     }, 5000);
 
-    this._sanitizer.onStartup();
-    E10SAccessibilityCheck.onWindowsRestored();
+    if (AppConstants.MOZ_CRASHREPORTER) {
+      Services.tm.idleDispatchToMainThread(() => {
+        UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+      });
+    }
+
+    if (AppConstants.platform == "win") {
+      Services.tm.idleDispatchToMainThread(() => {
+        // For Windows 7, initialize the jump list module.
+        const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
+        if (WINTASKBAR_CONTRACTID in Cc &&
+            Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
+          let temp = {};
+          Cu.import("resource:///modules/WindowsJumpLists.jsm", temp);
+          temp.WinTaskbarJumpList.startup();
+        }
+      });
+    }
+
+    if (AppConstants.MOZ_DEV_EDITION) {
+      Services.tm.idleDispatchToMainThread(() => {
+        this._createExtraDefaultProfile();
+      });
+    }
+
+    Services.tm.idleDispatchToMainThread(() => {
+      this._checkForDefaultBrowser();
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      let {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+      setTimeout(function() {
+        Services.tm.idleDispatchToMainThread(Services.startup.trackStartupCrashEnd);
+      }, STARTUP_CRASHES_END_DELAY_MS);
+    });
+  },
+
+  /**
+   * Use this function as an entry point to schedule tasks that need
+   * to run once per session, at any arbitrary point in time.
+   * This function will be called from an idle observer. Check the value of
+   * LATE_TASKS_IDLE_TIME_SEC to see the current value for this idle
+   * observer.
+   *
+   * Note: this function may never be called if the user is never idle for the
+   * full length of the period of time specified. But given a reasonably low
+   * value, this is unlikely.
+   */
+  _scheduleArbitrarilyLateIdleTasks() {
+    Services.tm.idleDispatchToMainThread(() => {
+      this._sendMediaTelemetry();
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      // Telemetry for master-password - we do this after a delay as it
+      // can cause IO if NSS/PSM has not already initialized.
+      let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
+                .getService(Ci.nsIPK11TokenDB);
+      let token = tokenDB.getInternalKeyToken();
+      let mpEnabled = token.hasPassword;
+      if (mpEnabled) {
+        Services.telemetry.getHistogramById("MASTER_PASSWORD_ENABLED").add(mpEnabled);
+      }
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      let obj = {};
+      Cu.import("resource://gre/modules/GMPInstallManager.jsm", obj);
+      this._gmpInstallManager = new obj.GMPInstallManager();
+      // We don't really care about the results, if someone is interested they
+      // can check the log.
+      this._gmpInstallManager.simpleCheckAndInstall().catch(() => {});
+    });
   },
 
   _createExtraDefaultProfile() {
@@ -2082,6 +2102,83 @@ BrowserGlue.prototype = {
 
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
+  },
+
+  _checkForDefaultBrowser() {
+    // Perform default browser checking.
+    if (!ShellService) {
+      return;
+    }
+
+    let shouldCheck = AppConstants.DEBUG ? false :
+                                           ShellService.shouldCheckDefaultBrowser;
+
+    const skipDefaultBrowserCheck =
+      Services.prefs.getBoolPref("browser.shell.skipDefaultBrowserCheckOnFirstRun") &&
+      !Services.prefs.getBoolPref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun");
+
+    const usePromptLimit = !AppConstants.RELEASE_OR_BETA;
+    let promptCount =
+      usePromptLimit ? Services.prefs.getIntPref("browser.shell.defaultBrowserCheckCount") : 0;
+
+    let willRecoverSession = false;
+    try {
+      let ss = Cc["@mozilla.org/browser/sessionstartup;1"].
+               getService(Ci.nsISessionStartup);
+      willRecoverSession =
+        (ss.sessionType == Ci.nsISessionStartup.RECOVER_SESSION);
+    } catch (ex) { /* never mind; suppose SessionStore is broken */ }
+
+    // startup check, check all assoc
+    let isDefault = false;
+    let isDefaultError = false;
+    try {
+      isDefault = ShellService.isDefaultBrowser(true, false);
+    } catch (ex) {
+      isDefaultError = true;
+    }
+
+    if (isDefault) {
+      let now = (Math.floor(Date.now() / 1000)).toString();
+      Services.prefs.setCharPref("browser.shell.mostRecentDateSetAsDefault", now);
+    }
+
+    let willPrompt = shouldCheck && !isDefault && !willRecoverSession;
+
+    // Skip the "Set Default Browser" check during first-run or after the
+    // browser has been run a few times.
+    if (willPrompt) {
+      if (skipDefaultBrowserCheck) {
+        Services.prefs.setBoolPref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", true);
+        willPrompt = false;
+      } else {
+        promptCount++;
+      }
+      if (usePromptLimit && promptCount > 3) {
+        willPrompt = false;
+      }
+    }
+
+    if (usePromptLimit && willPrompt) {
+      Services.prefs.setIntPref("browser.shell.defaultBrowserCheckCount", promptCount);
+    }
+
+    try {
+      // Report default browser status on startup to telemetry
+      // so we can track whether we are the default.
+      Services.telemetry.getHistogramById("BROWSER_IS_USER_DEFAULT")
+                        .add(isDefault);
+      Services.telemetry.getHistogramById("BROWSER_IS_USER_DEFAULT_ERROR")
+                        .add(isDefaultError);
+      Services.telemetry.getHistogramById("BROWSER_SET_DEFAULT_ALWAYS_CHECK")
+                        .add(shouldCheck);
+      Services.telemetry.getHistogramById("BROWSER_SET_DEFAULT_DIALOG_PROMPT_RAWCOUNT")
+                        .add(promptCount);
+    } catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
+
+    if (willPrompt) {
+      DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
+    }
   },
 
   // ------------------------------
