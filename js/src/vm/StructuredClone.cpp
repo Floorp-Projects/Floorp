@@ -226,6 +226,10 @@ struct BufferIterator {
         return *reinterpret_cast<T*>(mIter.Data());
     }
 
+    bool canPeek() const {
+        return mIter.HasRoomFor(sizeof(T));
+    }
+
     BufferList& mBuffer;
     typename BufferList::IterImpl mIter;
 };
@@ -639,6 +643,7 @@ DiscardTransferables(mozilla::BufferList<AllocPolicy>& buffer,
         return; // Empty buffer
 
     uint32_t tag, data;
+    MOZ_RELEASE_ASSERT(point.canPeek());
     SCInput::getPair(point.peek(), &tag, &data);
     point.next();
 
@@ -646,6 +651,7 @@ DiscardTransferables(mozilla::BufferList<AllocPolicy>& buffer,
         if (point.done())
             return;
 
+        MOZ_RELEASE_ASSERT(point.canPeek());
         SCInput::getPair(point.peek(), &tag, &data);
         point.next();
     }
@@ -665,20 +671,20 @@ DiscardTransferables(mozilla::BufferList<AllocPolicy>& buffer,
     uint64_t numTransferables = NativeEndian::swapFromLittleEndian(point.peek());
     point.next();
     while (numTransferables--) {
-        if (point.done())
+        if (!point.canPeek())
             return;
 
         uint32_t ownership;
         SCInput::getPair(point.peek(), &tag, &ownership);
         point.next();
         MOZ_ASSERT(tag >= SCTAG_TRANSFER_MAP_PENDING_ENTRY);
-        if (point.done())
+        if (!point.canPeek())
             return;
 
         void* content;
         SCInput::getPtr(point.peek(), &content);
         point.next();
-        if (point.done())
+        if (!point.canPeek())
             return;
 
         uint64_t extraData = NativeEndian::swapFromLittleEndian(point.peek());
@@ -727,7 +733,7 @@ SCInput::SCInput(JSContext* cx, JSStructuredCloneData& data)
 bool
 SCInput::read(uint64_t* p)
 {
-    if (point.done()) {
+    if (!point.canPeek()) {
         *p = 0;  /* initialize to shut GCC up */
         return reportTruncated();
     }
@@ -739,7 +745,7 @@ SCInput::read(uint64_t* p)
 bool
 SCInput::readNativeEndian(uint64_t* p)
 {
-    if (point.done()) {
+    if (!point.canPeek()) {
         *p = 0;  /* initialize to shut GCC up */
         return reportTruncated();
     }
@@ -763,7 +769,7 @@ SCInput::readPair(uint32_t* tagp, uint32_t* datap)
 bool
 SCInput::get(uint64_t* p)
 {
-    if (point.done())
+    if (!point.canPeek())
         return reportTruncated();
     *p = NativeEndian::swapFromLittleEndian(point.peek());
     return true;
@@ -1591,10 +1597,13 @@ JSStructuredCloneWriter::transferOwnership()
     // grabbing out pointers from the transferables and stuffing them into the
     // transfer map.
     auto point = out.iter();
+    MOZ_RELEASE_ASSERT(point.canPeek());
     MOZ_ASSERT(uint32_t(NativeEndian::swapFromLittleEndian(point.peek()) >> 32) == SCTAG_HEADER);
     point++;
+    MOZ_RELEASE_ASSERT(point.canPeek());
     MOZ_ASSERT(uint32_t(NativeEndian::swapFromLittleEndian(point.peek()) >> 32) == SCTAG_TRANSFER_MAP_HEADER);
     point++;
+    MOZ_RELEASE_ASSERT(point.canPeek());
     MOZ_ASSERT(NativeEndian::swapFromLittleEndian(point.peek()) == transferableObjects.count());
     point++;
 
