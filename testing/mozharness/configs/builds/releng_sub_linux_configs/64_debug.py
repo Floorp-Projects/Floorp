@@ -31,7 +31,7 @@ config = {
         'LC_ALL': 'C',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         # 64 bit specific
-        'PATH': '/tools/buildbot/bin:/usr/local/bin:/usr/lib64/ccache:/bin:\
+        'PATH': '/usr/local/bin:/usr/lib64/ccache:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:/tools/python27/bin:\
 /tools/python27-mercurial/bin:/home/cltbld/bin',
         'LD_LIBRARY_PATH': '/tools/gcc-4.3.3/installed/lib64:\
