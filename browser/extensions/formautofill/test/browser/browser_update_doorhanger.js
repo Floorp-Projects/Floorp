@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 const FORM_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
