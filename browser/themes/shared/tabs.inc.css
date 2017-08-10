@@ -6,10 +6,12 @@
 
 :root {
   --tab-toolbar-navbar-overlap: 1px;
+/* Temporarily using the compact tab strip by default because of bug 1386964:
   --tab-min-height: 33px;
 }
 
 :root[uidensity=compact] {
+*/
   --tab-min-height: 29px;
 }
 
