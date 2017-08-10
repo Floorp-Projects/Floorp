@@ -10211,18 +10211,15 @@ CodeGenerator::visitCallGetElement(LCallGetElement* lir)
     }
 }
 
-typedef bool (*SetObjectElementFn)(JSContext*, HandleObject, HandleValue, HandleValue,
-                                   bool strict);
-static const VMFunction SetObjectElementInfo =
-    FunctionInfo<SetObjectElementFn>(SetObjectElement, "SetObjectElement");
-
 void
 CodeGenerator::visitCallSetElement(LCallSetElement* lir)
 {
+    Register obj = ToRegister(lir->getOperand(0));
     pushArg(Imm32(lir->mir()->strict()));
+    pushArg(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
     pushArg(ToValue(lir, LCallSetElement::Value));
     pushArg(ToValue(lir, LCallSetElement::Index));
-    pushArg(ToRegister(lir->getOperand(0)));
+    pushArg(obj);
     callVM(SetObjectElementInfo, lir);
 }
 
