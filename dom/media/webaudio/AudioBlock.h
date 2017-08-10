@@ -133,4 +133,6 @@ private:
 
 } // namespace mozilla
 
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioBlock)
+
 #endif // MOZILLA_AUDIOBLOCK_H_
