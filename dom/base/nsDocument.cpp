@@ -245,7 +245,7 @@
 #include "nsIStructuredCloneContainer.h"
 #include "nsIMutableArray.h"
 #include "mozilla/dom/DOMStringList.h"
-#include "nsWindowMemoryReporter.h"
+#include "nsWindowSizes.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "gfxPrefs.h"
@@ -12395,13 +12395,7 @@ nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
     nsINode::SizeOfExcludingThis(aWindowSizes.mState);
 
   if (mPresShell) {
-    mPresShell->AddSizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf,
-                                       &aWindowSizes.mArenaStats,
-                                       &aWindowSizes.mLayoutPresShellSize,
-                                       &aWindowSizes.mLayoutStyleSetsSize,
-                                       &aWindowSizes.mLayoutTextRunsSize,
-                                       &aWindowSizes.mLayoutPresContextSize,
-                                       &aWindowSizes.mLayoutFramePropertiesSize);
+    mPresShell->AddSizeOfIncludingThis(aWindowSizes);
   }
 
   aWindowSizes.mPropertyTablesSize +=

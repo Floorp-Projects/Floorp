@@ -52,6 +52,7 @@
 #include "nsScriptNameSpaceManager.h"
 #include "nsISlowScriptDebug.h"
 #include "nsWindowMemoryReporter.h"
+#include "nsWindowSizes.h"
 #include "WindowNamedPropertiesHandler.h"
 #include "nsFrameSelection.h"
 #include "nsNetUtil.h"
