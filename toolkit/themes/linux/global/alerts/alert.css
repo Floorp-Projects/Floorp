@@ -2,22 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ===== alert.css =====================================================
-  == Styles specific to the alerts dialog.
-  ======================================================================= */
+%include ../../../shared/alert.inc.css
 
-@import url("chrome://global/skin/alerts/alert-common.css");
-
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-.alertBox {
+#alertBox {
   border: 1px solid threedshadow;
   background-color: -moz-Dialog;
 }
 
-.alertCloseButton {
-  -moz-appearance: none;
-  height: 16px;
-  padding: 4px 2px;
-  width: 16px;
-}
