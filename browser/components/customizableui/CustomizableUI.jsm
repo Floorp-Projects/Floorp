@@ -250,13 +250,6 @@ var CustomizableUIInternal = {
       defaultCollapsed: true,
     }, true);
 
-    this.registerArea(CustomizableUI.AREA_ADDONBAR, {
-      type: CustomizableUI.TYPE_TOOLBAR,
-      legacy: true,
-      defaultPlacements: ["addonbar-closebutton", "status-bar"],
-      defaultCollapsed: false,
-    }, true);
-
     SearchWidgetTracker.init();
   },
 
@@ -265,7 +258,6 @@ var CustomizableUIInternal = {
       CustomizableUI.AREA_NAVBAR,
       CustomizableUI.AREA_BOOKMARKS,
       CustomizableUI.AREA_TABSTRIP,
-      CustomizableUI.AREA_ADDONBAR,
     ]);
     if (AppConstants.platform != "macosx") {
       toolbars.add(CustomizableUI.AREA_MENUBAR);
@@ -2875,12 +2867,6 @@ this.CustomizableUI = {
    * Constant reference to the ID of the bookmarks toolbar.
    */
   AREA_BOOKMARKS: "PersonalToolbar",
-  /**
-   * Constant reference to the ID of the addon-bar toolbar shim.
-   * Do not use, this will be removed as soon as reasonably possible.
-   * @deprecated
-   */
-  AREA_ADDONBAR: "addon-bar",
   /**
    * Constant reference to the ID of the non-dymanic (fixed) list in the overflow panel.
    */

@@ -141,7 +141,7 @@
   background: var(--toolbar-bgcolor);
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
   /* add extra padding to compensate the bottom border */
   padding-bottom: 2px;
 }
