@@ -25,7 +25,6 @@ EXPORTS.mozilla += [
     'EditorUtils.h',
     'EditTransactionBase.h',
     'HTMLEditor.h',
-    'ManualNAC.h',
     'SelectionState.h',
     'TextEditor.h',
     'TextEditRules.h',
