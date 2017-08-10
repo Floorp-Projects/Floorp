@@ -44,7 +44,6 @@
 #include "nsChangeHint.h"
 #include "nsStyleContextInlines.h"
 #include "mozilla/gfx/MatrixFwd.h"
-#include "nsDisplayItemTypes.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -3031,7 +3030,7 @@ public:
   enum {
     UPDATE_IS_ASYNC = 1 << 0
   };
-  Layer* InvalidateLayer(DisplayItemType aDisplayItemKey,
+  Layer* InvalidateLayer(uint32_t aDisplayItemKey,
                          const nsIntRect* aDamageRect = nullptr,
                          const nsRect* aFrameDamageRect = nullptr,
                          uint32_t aFlags = 0);

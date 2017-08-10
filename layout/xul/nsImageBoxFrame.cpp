@@ -780,7 +780,7 @@ nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest)
     return NS_OK;
   }
 
-  InvalidateLayer(DisplayItemType::TYPE_XUL_IMAGE);
+  InvalidateLayer(nsDisplayItem::TYPE_XUL_IMAGE);
 
   return NS_OK;
 }

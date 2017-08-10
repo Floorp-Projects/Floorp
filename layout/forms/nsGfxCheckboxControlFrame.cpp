@@ -129,7 +129,7 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                      IsIndeterminate()
                      ? PaintIndeterminateMark : PaintCheckMark,
                      "CheckedCheckbox",
-                     DisplayItemType::TYPE_CHECKED_CHECKBOX));
+                     nsDisplayItem::TYPE_CHECKED_CHECKBOX));
 }
 
 #endif
