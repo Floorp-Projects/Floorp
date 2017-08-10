@@ -264,6 +264,7 @@ static bool enableNativeRegExp = false;
 static bool enableUnboxedArrays = false;
 static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
 static bool enableWasmBaseline = false;
+static bool enableWasmIon = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
 #ifdef JS_GC_ZEAL
@@ -7812,6 +7813,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     enableNativeRegExp = !op.getBoolOption("no-native-regexp");
     enableUnboxedArrays = op.getBoolOption("unboxed-arrays");
     enableWasmBaseline = !op.getBoolOption("no-wasm-baseline");
+    enableWasmIon = !op.getBoolOption("no-wasm-ion");
     enableAsyncStacks = !op.getBoolOption("no-async-stacks");
     enableStreams = op.getBoolOption("enable-streams");
 
@@ -7820,6 +7822,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
                              .setAsmJS(enableAsmJS)
                              .setWasm(enableWasm)
                              .setWasmBaseline(enableWasmBaseline)
+                             .setWasmIon(enableWasmIon)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays)
                              .setAsyncStack(enableAsyncStacks)
@@ -8106,6 +8109,7 @@ SetWorkerContextOptions(JSContext* cx)
                              .setAsmJS(enableAsmJS)
                              .setWasm(enableWasm)
                              .setWasmBaseline(enableWasmBaseline)
+                             .setWasmIon(enableWasmIon)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays)
                              .setStreams(enableStreams);
@@ -8302,6 +8306,7 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation")
         || !op.addBoolOption('\0', "no-wasm", "Disable WebAssembly compilation")
         || !op.addBoolOption('\0', "no-wasm-baseline", "Disable wasm baseline compiler")
+        || !op.addBoolOption('\0', "no-wasm-ion", "Disable wasm ion compiler")
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
         || !op.addBoolOption('\0', "unboxed-arrays", "Allow creating unboxed arrays")

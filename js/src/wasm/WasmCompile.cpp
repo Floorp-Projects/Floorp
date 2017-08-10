@@ -98,7 +98,9 @@ bool
 CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
 {
     baselineEnabled = cx->options().wasmBaseline();
-    ionEnabled = cx->options().ion();
+
+    // For sanity's sake, just use Ion if both compilers are disabled.
+    ionEnabled = cx->options().wasmIon() || !cx->options().wasmBaseline();
 
     // Debug information such as source view or debug traps will require
     // additional memory and permanently stay in baseline code, so we try to
