@@ -70,9 +70,13 @@ class TrySelect(MachCommandBase):
     @SubCommand('try',
                 'fuzzy',
                 description='Select tasks on try using a fuzzy finder')
+    @CommandArgument('-q', '--query', metavar='STR',
+                     help="Use the given query instead of entering the selection "
+                          "interface. Equivalent to typing <query><ctrl-a><enter> "
+                          "from the interface.")
     @CommandArgument('-u', '--update', action='store_true', default=False,
-                     help="Update fzf before running")
-    def try_fuzzy(self, update):
+                     help="Update fzf before running.")
+    def try_fuzzy(self, *args, **kwargs):
         """Select which tasks to use with fzf.
 
         This selector runs all task labels through a fuzzy finding interface.
@@ -116,7 +120,7 @@ class TrySelect(MachCommandBase):
           ^start 'exact | !ignore fuzzy end$
         """
         from tryselect.selectors.fuzzy import run_fuzzy_try
-        return run_fuzzy_try(update)
+        return run_fuzzy_try(*args, **kwargs)
 
     @SubCommand('try',
                 'syntax',

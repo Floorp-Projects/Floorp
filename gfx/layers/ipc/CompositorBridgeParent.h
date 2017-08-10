@@ -65,6 +65,7 @@ namespace layers {
 class APZCTreeManager;
 class APZCTreeManagerParent;
 class AsyncCompositionManager;
+class AsyncImagePipelineManager;
 class Compositor;
 class CompositorAnimationStorage;
 class CompositorBridgeParent;
@@ -580,6 +581,7 @@ protected:
   RefPtr<HostLayerManager> mLayerManager;
   RefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
+  RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<WebRenderBridgeParent> mWrBridge;
   widget::CompositorWidget* mWidget;
   TimeStamp mTestTime;

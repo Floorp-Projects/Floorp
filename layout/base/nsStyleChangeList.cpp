@@ -41,17 +41,25 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
              (aHint & nsChangeHint_NeedReflow),
              "Reflow hint bits set without actually asking for a reflow");
 
-  // If Servo fires reconstruct at a node, it is the only change hint fired at
-  // that node.
-  if (IsServo()) {
-    for (size_t i = 0; i < Length(); ++i) {
-      MOZ_ASSERT(!aContent || !((aHint | (*this)[i].mHint) & nsChangeHint_ReconstructFrame) ||
-                 (*this)[i].mContent != aContent);
-    }
-  } else {
-    // Filter out all other changes for same content for Gecko (Servo asserts against this
-    // case above).
-    if (aContent && (aHint & nsChangeHint_ReconstructFrame)) {
+  if (aContent && (aHint & nsChangeHint_ReconstructFrame)) {
+    // If Servo fires reconstruct at a node, it is the only change hint fired at
+    // that node.
+    if (IsServo()) {
+      // Note: Because we check whether |aHint| is a reconstruct above (which is
+      // necessary to avoid debug test timeouts on certain crashtests), this check
+      // will not find bugs where we add a non-reconstruct hint for an element after
+      // adding a reconstruct. This is ok though, since ProcessRestyledFrames will
+      // handle that case via mDestroyedFrames.
+      for (size_t i = 0; i < Length(); ++i) {
+        MOZ_ASSERT(aContent != (*this)[i].mContent ||
+                   !((*this)[i].mHint & nsChangeHint_ReconstructFrame),
+                   "Should not append a non-ReconstructFrame hint after \
+                   appending a ReconstructFrame hint for the same \
+                   content.");
+      }
+    } else {
+      // Filter out all other changes for same content for Gecko (Servo asserts against this
+      // case above).
       // NOTE: This is captured by reference to please static analysis.
       // Capturing it by value as a pointer should be fine in this case.
       RemoveElementsBy([&](const nsStyleChangeData& aData) {

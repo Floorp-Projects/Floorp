@@ -110,7 +110,7 @@ PBOverrideStatusFromLoadContext(const SerializedLoadContext& aSerialized)
 }
 
 static already_AddRefed<nsIPrincipal>
-GetRequestingPrincipal(const OptionalLoadInfoArgs aOptionalLoadInfoArgs)
+GetRequestingPrincipal(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs)
 {
   if (aOptionalLoadInfoArgs.type() != OptionalLoadInfoArgs::TLoadInfoArgs) {
     return nullptr;

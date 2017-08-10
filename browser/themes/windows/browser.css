@@ -8,9 +8,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 @namespace svg url("http://www.w3.org/2000/svg");
 
-%include ../shared/browser.inc
-%define toolbarShadowColor hsla(209,67%,12%,0.35)
-
 %include ../shared/browser.inc.css
 
 :root {
@@ -1043,28 +1040,6 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
 
 .alltabs-item[selected="true"] {
   font-weight: bold;
-}
-
-
-toolbarbutton.chevron {
-  list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
-}
-
-toolbar[brighttext] toolbarbutton.chevron {
-  list-style-image: url("chrome://global/skin/toolbar/chevron-inverted.png") !important;
-}
-
-toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
-toolbarbutton.chevron > .toolbarbutton-text,
-toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
-toolbarbutton.chevron > .toolbarbutton-icon {
-  margin: 0;
 }
 
 /* Bookmarks toolbar */

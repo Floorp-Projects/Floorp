@@ -128,6 +128,9 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
+      final Context context = session.getContext();
+      final Account account = FirefoxAccounts.getFirefoxAccount(context);
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
 
       // Hang onto the server's last modified timestamp to use
       // in X-If-Unmodified-Since for upload.
@@ -139,9 +142,11 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
       // If we successfully downloaded all records but ours was not one of them
       // then reset the timestamp.
+      boolean isFirstLocalClientRecordUpload = false;
       if (!localAccountGUIDDownloaded) {
         Logger.info(LOG_TAG, "Local client GUID does not exist on the server. Upload timestamp will be reset.");
         session.config.persistServerClientRecordTimestamp(0);
+        isFirstLocalClientRecordUpload = true;
       }
       localAccountGUIDDownloaded = false;
 
@@ -176,25 +181,31 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
         // before we actually uploaded the records
         uploadRemoteRecords();
 
-        // Notify the clients who got their record written
-        notifyClients(devicesToNotify);
+        // We will send a push notification later anyway.
+        if (!isFirstLocalClientRecordUpload) {
+          // Notify the clients who got their record written
+          notifyClients(fxAccount, devicesToNotify);
+        }
 
         return;
       }
       checkAndUpload();
+      if (isFirstLocalClientRecordUpload) {
+        notifyAllClients(fxAccount);
+      }
     }
 
-    private void notifyClients(final List<String> devicesToNotify) {
-      final ExecutorService executor = Executors.newSingleThreadExecutor();
-      final Context context = session.getContext();
-      final Account account = FirefoxAccounts.getFirefoxAccount(context);
-      if (account == null) {
-        Log.e(LOG_TAG, "Can't notify other clients: no account");
-        return;
-      }
-      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
-      final ExtendedJSONObject payload = createNotifyDevicesPayload();
+    private void notifyClients(@NonNull AndroidFxAccount fxAccount, @NonNull List<String> devicesToNotify) {
+      final ExtendedJSONObject body = createNotifyClientsBody(devicesToNotify);
+      notifyClientsHelper(fxAccount, body);
+    }
 
+    private void notifyAllClients(@NonNull AndroidFxAccount fxAccount) {
+      final ExtendedJSONObject body = createNotifyAllClientsBody(fxAccount.getDeviceId());
+      notifyClientsHelper(fxAccount, body);
+    }
+
+    private void notifyClientsHelper(@NonNull AndroidFxAccount fxAccount, @NonNull ExtendedJSONObject body) {
       final byte[] sessionToken;
       try {
         sessionToken = fxAccount.getState().getSessionToken();
@@ -205,9 +216,10 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
         return;
       }
 
+      final ExecutorService executor = Executors.newSingleThreadExecutor();
       // API doc : https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#post-v1accountdevicesnotify
       final FxAccountClient fxAccountClient = new FxAccountClient20(fxAccount.getAccountServerURI(), executor);
-      fxAccountClient.notifyDevices(sessionToken, devicesToNotify, payload, NOTIFY_TAB_SENT_TTL_SECS, new FxAccountClient20.RequestDelegate<ExtendedJSONObject>() {
+      fxAccountClient.notifyDevices(sessionToken, body, new FxAccountClient20.RequestDelegate<ExtendedJSONObject>() {
         @Override
         public void handleError(Exception e) {
           Log.e(LOG_TAG, "Error while notifying devices", e);
@@ -220,9 +232,37 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
         @Override
         public void handleSuccess(ExtendedJSONObject result) {
-          Log.i(LOG_TAG, devicesToNotify.size() + " devices notified");
+          Log.i(LOG_TAG, "Devices notified");
         }
       });
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    private ExtendedJSONObject createNotifyClientsBody(@NonNull List<String> devicesToNotify) {
+      final ExtendedJSONObject body = new ExtendedJSONObject();
+      final JSONArray to = new JSONArray();
+      to.addAll(devicesToNotify);
+      body.put("to", to);
+      createNotifyClientsHelper(body);
+      return body;
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    private ExtendedJSONObject createNotifyAllClientsBody(@NonNull String localFxADeviceId) {
+      final ExtendedJSONObject body = new ExtendedJSONObject();
+      body.put("to", "all");
+      final JSONArray excluded = new JSONArray();
+      excluded.add(localFxADeviceId);
+      body.put("excluded", excluded);
+      createNotifyClientsHelper(body);
+      return body;
+    }
+
+    private void createNotifyClientsHelper(ExtendedJSONObject body) {
+      body.put("payload", createNotifyDevicesPayload());
+      body.put("TTL", NOTIFY_TAB_SENT_TTL_SECS);
     }
 
     @NonNull

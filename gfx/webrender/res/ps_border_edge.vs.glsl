@@ -37,7 +37,10 @@ void write_alpha_select(float style) {
     }
 }
 
-void write_color(vec4 color, float style, bool flip) {
+// write_color function is duplicated to work around a Mali-T880 GPU driver program link error.
+// See https://github.com/servo/webrender/issues/1403 for more info.
+// TODO: convert back to a single function once the driver issues are resolved, if ever.
+void write_color0(vec4 color, float style, bool flip) {
     vec2 modulate;
 
     switch (int(style)) {
@@ -57,6 +60,27 @@ void write_color(vec4 color, float style, bool flip) {
     }
 
     vColor0 = vec4(color.rgb * modulate.x, color.a);
+}
+
+void write_color1(vec4 color, float style, bool flip) {
+    vec2 modulate;
+
+    switch (int(style)) {
+        case BORDER_STYLE_GROOVE:
+        {
+            modulate = flip ? vec2(1.3, 0.7) : vec2(0.7, 1.3);
+            break;
+        }
+        case BORDER_STYLE_RIDGE:
+        {
+            modulate = flip ? vec2(0.7, 1.3) : vec2(1.3, 0.7);
+            break;
+        }
+        default:
+            modulate = vec2(1.0);
+            break;
+    }
+
     vColor1 = vec4(color.rgb * modulate.y, color.a);
 }
 
@@ -176,7 +200,8 @@ void main(void) {
     }
 
     write_alpha_select(style);
-    write_color(color, style, color_flip);
+    write_color0(color, style, color_flip);
+    write_color1(color, style, color_flip);
 
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(segment_rect,

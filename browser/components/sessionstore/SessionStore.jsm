@@ -232,6 +232,10 @@ this.SessionStore = {
     return SessionStoreInternal.promiseInitialized;
   },
 
+  get promiseAllWindowsRestored() {
+    return SessionStoreInternal.promiseAllWindowsRestored;
+  },
+
   get canRestoreLastSession() {
     return SessionStoreInternal.canRestoreLastSession;
   },
@@ -549,6 +553,22 @@ var SessionStoreInternal = {
 
   // Whether session has been initialized
   _sessionInitialized: false,
+
+  // A promise resolved once all windows are restored.
+  _deferredAllWindowsRestored: (function() {
+    let deferred = {};
+
+    deferred.promise = new Promise((resolve, reject) => {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+    });
+
+    return deferred;
+  })(),
+
+  get promiseAllWindowsRestored() {
+    return this._deferredAllWindowsRestored.promise;
+  },
 
   // Promise that is resolved when we're ready to initialize
   // and restore the session.
@@ -1147,6 +1167,7 @@ var SessionStoreInternal = {
 
           // Nothing to restore now, notify observers things are complete.
           Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
+          this._deferredAllWindowsRestored.resolve();
         } else {
           TelemetryTimestamps.add("sessionRestoreRestoring");
           this._restoreCount = aInitialState.windows ? aInitialState.windows.length : 0;
@@ -1165,6 +1186,7 @@ var SessionStoreInternal = {
       } else {
         // Nothing to restore, notify observers things are complete.
         Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
+        this._deferredAllWindowsRestored.resolve();
       }
     // this window was opened by _openWindowWithState
     } else if (!this._isWindowLoaded(aWindow)) {
@@ -4468,8 +4490,15 @@ var SessionStoreInternal = {
       return;
 
     // This was the last window restored at startup, notify observers.
-    Services.obs.notifyObservers(null,
-      this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED);
+    if (!this._browserSetState) {
+      Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
+      this._deferredAllWindowsRestored.resolve();
+    } else {
+      // _browserSetState is used only by tests, and it uses an alternate
+      // notification in order not to retrigger startup observers that
+      // are listening for NOTIFY_WINDOWS_RESTORED.
+      Services.obs.notifyObservers(null, NOTIFY_BROWSER_STATE_RESTORED);
+    }
 
     this._browserSetState = false;
     this._restoreCount = -1;

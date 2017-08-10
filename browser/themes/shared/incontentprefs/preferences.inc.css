@@ -115,23 +115,10 @@ caption > label {
 
 #categories {
   max-height: 100vh;
-  background-color: #fafafc;
 }
 
 #categories > scrollbox {
   overflow-x: hidden !important;
-}
-
-.category-name {
-  font-size: 1.45rem;
-}
-
-.category,
-.category:hover,
-.category[selected] {
-  background-color: transparent;
-  border-inline-start: initial;
-  padding-inline-start: 44px;
 }
 
 /**

@@ -50,6 +50,7 @@ def _defines():
                 'MOZ_ANDROID_PWA',
                 'MOZ_LEANPLUM_SDK_KEY',
                 'MOZ_LEANPLUM_SDK_CLIENTID',
+                'MOZ_ANDROID_POCKET',
                 'MOZ_ANDROID_SEARCH_ACTIVITY',
                 'MOZ_CRASHREPORTER',
                 'MOZ_DEBUG',
@@ -111,6 +112,9 @@ def _defines():
     if CONFIG['MOZ_ANDROID_MMA']:
         DEFINES['MOZ_LEANPLUM_SDK_KEY'] = CONFIG['MOZ_LEANPLUM_SDK_KEY']
         DEFINES['MOZ_LEANPLUM_SDK_CLIENTID'] = CONFIG['MOZ_LEANPLUM_SDK_CLIENTID']
+
+    if CONFIG['MOZ_ANDROID_POCKET']:
+        DEFINES['MOZ_POCKET_API_KEY'] = CONFIG['MOZ_POCKET_API_KEY']
 
     DEFINES['MOZ_BUILDID'] = open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
 

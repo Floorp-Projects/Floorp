@@ -147,14 +147,18 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType proce
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
       MOZ_CRASH("GetModuleFileNameW failed (FIXME)");
     }
-    std::wstring exePathStr = exePathBuf;
 #if defined(MOZ_SANDBOX)
     // We need to start the child process using the real path, so that the
     // sandbox policy rules will match for DLLs loaded from the bin dir after
     // we have lowered the sandbox.
-    widget::WinUtils::ResolveJunctionPointsAndSymLinks(exePathStr);
+    std::wstring exePathStr = exePathBuf;
+    if (widget::WinUtils::ResolveJunctionPointsAndSymLinks(exePathStr)) {
+      exePath = FilePath::FromWStringHack(exePathStr);
+    } else
 #endif
-    exePath = FilePath::FromWStringHack(exePathStr);
+    {
+      exePath = FilePath::FromWStringHack(exePathBuf);
+    }
 #elif defined(OS_POSIX)
     exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
 #else

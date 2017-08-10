@@ -140,6 +140,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 
 #ifdef MOZ_MEMORY_WINDOWS
 
@@ -148,7 +149,6 @@
 #include <io.h>
 #include <windows.h>
 #include <intrin.h>
-#include <algorithm>
 
 #define	SIZE_T_MAX SIZE_MAX
 #define	STDERR_FILENO 2
@@ -2170,18 +2170,6 @@ label_return:
 		base_node_dealloc(xprev);
 }
 
-static bool
-chunk_dalloc_mmap(void *chunk, size_t size)
-{
-	if (CAN_RECYCLE(size) && load_acquire_z(&recycled_size) < recycle_limit)
-		return true;
-
-	pages_unmap(chunk, size);
-	return false;
-}
-
-#undef CAN_RECYCLE
-
 static void
 chunk_dealloc(void *chunk, size_t size, ChunkType type)
 {
@@ -2193,9 +2181,28 @@ chunk_dealloc(void *chunk, size_t size, ChunkType type)
 
 	malloc_rtree_set(chunk_rtree, (uintptr_t)chunk, nullptr);
 
-	if (chunk_dalloc_mmap(chunk, size))
-		chunk_record(&chunks_szad_mmap, &chunks_ad_mmap, chunk, size, type);
+	if (CAN_RECYCLE(size)) {
+		size_t recycled_so_far = load_acquire_z(&recycled_size);
+		// In case some race condition put us above the limit.
+		if (recycled_so_far < recycle_limit) {
+			size_t recycle_remaining = recycle_limit - recycled_so_far;
+			size_t to_recycle;
+			if (size > recycle_remaining) {
+				to_recycle = recycle_remaining;
+				// Drop pages that would overflow the recycle limit
+				pages_trim(chunk, size, 0, to_recycle);
+			} else {
+				to_recycle = size;
+			}
+			chunk_record(&chunks_szad_mmap, &chunks_ad_mmap, chunk, to_recycle, type);
+			return;
+		}
+	}
+
+	pages_unmap(chunk, size);
 }
+
+#undef CAN_RECYCLE
 
 /*
  * End chunk management functions.

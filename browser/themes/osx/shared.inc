@@ -1,5 +1,4 @@
 %include ../../../toolkit/themes/osx/global/shared.inc
-%include ../shared/browser.inc
 
 %filter substitution
 

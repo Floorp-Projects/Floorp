@@ -25,20 +25,21 @@ loader.lazyRequireGetter(this, "ServerLoggingListener", "devtools/shared/webcons
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
 loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);
 loader.lazyRequireGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm", true);
-loader.lazyRequireGetter(this, "addWebConsoleCommands", "devtools/server/actors/utils/webconsole-utils", true);
-loader.lazyRequireGetter(this, "CONSOLE_WORKER_IDS", "devtools/server/actors/utils/webconsole-utils", true);
-loader.lazyRequireGetter(this, "WebConsoleUtils", "devtools/server/actors/utils/webconsole-utils", true);
+loader.lazyRequireGetter(this, "addWebConsoleCommands", "devtools/server/actors/webconsole/utils", true);
+loader.lazyRequireGetter(this, "CONSOLE_WORKER_IDS", "devtools/server/actors/webconsole/utils", true);
+loader.lazyRequireGetter(this, "WebConsoleUtils", "devtools/server/actors/webconsole/utils", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
 
 // Overwrite implemented listeners for workers so that we don't attempt
 // to load an unsupported module.
 if (isWorker) {
-  loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/utils/webconsole-worker-listeners", true);
-  loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/utils/webconsole-worker-listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/webconsole/worker-listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/webconsole/worker-listeners", true);
 } else {
-  loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/utils/webconsole-listeners", true);
-  loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/utils/webconsole-listeners", true);
-  loader.lazyRequireGetter(this, "ConsoleReflowListener", "devtools/server/actors/utils/webconsole-listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/webconsole/listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/webconsole/listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleReflowListener", "devtools/server/actors/webconsole/listeners", true);
+  loader.lazyRequireGetter(this, "ContentProcessListener", "devtools/server/actors/webconsole/listeners", true);
 }
 
 /**
@@ -368,6 +369,10 @@ WebConsoleActor.prototype =
       this.serverLoggingListener.destroy();
       this.serverLoggingListener = null;
     }
+    if (this.contentProcessListener) {
+      this.contentProcessListener.destroy();
+      this.contentProcessListener = null;
+    }
 
     events.off(this.parentActor, "changed-toplevel-document",
                this._onChangedToplevelDocument);
@@ -664,6 +669,16 @@ WebConsoleActor.prototype =
           }
           startedListeners.push(listener);
           break;
+        case "ContentProcessMessages":
+          // Workers don't support this message type
+          if (isWorker) {
+            break;
+          }
+          if (!this.contentProcessListener) {
+            this.contentProcessListener = new ContentProcessListener(this);
+          }
+          startedListeners.push(listener);
+          break;
       }
     }
 
@@ -693,7 +708,7 @@ WebConsoleActor.prototype =
     // listeners.
     let toDetach = request.listeners ||
       ["PageError", "ConsoleAPI", "NetworkActivity",
-       "FileActivity", "ServerLogging"];
+       "FileActivity", "ServerLogging", "ContentProcessMessages"];
 
     while (toDetach.length > 0) {
       let listener = toDetach.shift();
@@ -746,6 +761,13 @@ WebConsoleActor.prototype =
           if (this.serverLoggingListener) {
             this.serverLoggingListener.destroy();
             this.serverLoggingListener = null;
+          }
+          stoppedListeners.push(listener);
+          break;
+        case "ContentProcessMessages":
+          if (this.contentProcessListener) {
+            this.contentProcessListener.destroy();
+            this.contentProcessListener = null;
           }
           stoppedListeners.push(listener);
           break;

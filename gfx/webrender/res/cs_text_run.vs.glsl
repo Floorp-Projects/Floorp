@@ -24,7 +24,10 @@ void main(void) {
     PrimitiveGeometry shadow_geom = fetch_primitive_geometry(text_shadow_address);
     TextShadow shadow = fetch_text_shadow(text_shadow_address + VECS_PER_PRIM_HEADER);
 
-    Glyph glyph = fetch_glyph(prim.specific_prim_address, glyph_index);
+    Glyph glyph = fetch_glyph(prim.specific_prim_address,
+                              glyph_index,
+                              text.subpx_dir);
+
     GlyphResource res = fetch_glyph_resource(resource_address);
 
     // Glyphs size is already in device-pixels.

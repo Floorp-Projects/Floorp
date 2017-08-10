@@ -57,6 +57,10 @@ protected:
   void OnPlaybackEvent(MediaEventType aEvent) override;
   void DurationChanged() override;
   void DownloadProgressed() override;
+  void MetadataLoaded(UniquePtr<MediaInfo> aInfo,
+                      UniquePtr<MetadataTags> aTags,
+                      MediaDecoderEventVisibility aEventVisibility) override;
+
   RefPtr<ResourceCallback> mResourceCallback;
   RefPtr<BaseMediaResource> mResource;
 

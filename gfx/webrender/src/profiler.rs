@@ -131,6 +131,18 @@ pub struct TimeProfileCounter {
     invert: bool,
 }
 
+pub struct Timer<'a> {
+    start: u64,
+    result: &'a mut u64,
+}
+
+impl<'a> Drop for Timer<'a> {
+    fn drop(&mut self) {
+        let end = precise_time_ns();
+        *self.result += end - self.start;
+    }
+}
+
 impl TimeProfileCounter {
     pub fn new(description: &'static str, invert: bool) -> TimeProfileCounter {
         TimeProfileCounter {
@@ -156,6 +168,13 @@ impl TimeProfileCounter {
         let ns = t1 - t0;
         self.nanoseconds += ns;
         val
+    }
+
+    pub fn timer(&mut self) -> Timer {
+        Timer {
+            start: precise_time_ns(),
+            result: &mut self.nanoseconds,
+        }
     }
 
     pub fn inc(&mut self, ns: u64) {

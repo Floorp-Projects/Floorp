@@ -814,9 +814,6 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
 
   Invalidate();
 
-  // This can run cache callbacks.
-  GetResource()->EnsureCacheUpToDate();
-
   // The element can run javascript via events
   // before reaching here, so only change the
   // state if we're still set to the original
@@ -824,10 +821,6 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   if (mPlayState == PLAY_STATE_LOADING) {
     ChangeState(mNextState);
   }
-
-  // Run NotifySuspendedStatusChanged now to give us a chance to notice
-  // that autoplay should run.
-  NotifySuspendedStatusChanged();
 
   // GetOwner()->FirstFrameLoaded() might call us back. Put it at the bottom of
   // this function to avoid unexpected shutdown from reentrant calls.
