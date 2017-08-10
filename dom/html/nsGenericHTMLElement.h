@@ -708,8 +708,7 @@ public:
   static inline bool
   ShouldExposeIdAsHTMLDocumentProperty(Element* aElement)
   {
-    if (aElement->IsAnyOfHTMLElements(nsGkAtoms::embed,
-                                      nsGkAtoms::object)) {
+    if (aElement->IsHTMLElement(nsGkAtoms::object)) {
       return true;
     }
 
