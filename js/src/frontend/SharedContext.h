@@ -562,6 +562,10 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     void setStart(const TokenStream& tokenStream) {
         uint32_t offset = tokenStream.currentToken().pos.begin;
+        setStart(tokenStream, offset);
+    }
+
+    void setStart(const TokenStream& tokenStream, uint32_t offset) {
         bufStart = offset;
         tokenStream.srcCoords.lineNumAndColumnIndex(offset, &startLine, &startColumn);
     }
