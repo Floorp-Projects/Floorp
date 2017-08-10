@@ -294,10 +294,6 @@ public:
   {
     NS_ERROR("Invalid SetThreeDPointParameter index");
   }
-  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
-  {
-    NS_ERROR("SetBuffer called on engine that doesn't support it");
-  }
   virtual void SetBuffer(AudioChunk&& aBuffer)
   {
     NS_ERROR("SetBuffer called on engine that doesn't support it");
