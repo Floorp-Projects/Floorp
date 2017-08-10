@@ -53,6 +53,11 @@ const ConsoleTable = createClass({
   },
 
   getRows: function (columns, items) {
+    const {
+      dispatch,
+      serviceContainer,
+    } = this.props;
+
     return items.map(item => {
       let cells = [];
       columns.forEach((value, key) => {
@@ -63,6 +68,8 @@ const ConsoleTable = createClass({
               grip: item[key],
               mode: MODE.SHORT,
               useQuotes: false,
+              serviceContainer,
+              dispatch,
             })
           )
         );
