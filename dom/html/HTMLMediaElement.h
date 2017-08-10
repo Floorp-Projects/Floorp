@@ -15,7 +15,6 @@
 #include "mozilla/CORSMode.h"
 #include "DecoderTraits.h"
 #include "nsIAudioChannelAgent.h"
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TextTrackManager.h"
 #include "mozilla/WeakPtr.h"
@@ -1681,9 +1680,6 @@ protected:
 
   // True if the media's channel's download has been suspended.
   Watchable<bool> mDownloadSuspendedByCache;
-
-  // Audio Channel.
-  AudioChannel mAudioChannel;
 
   // Disable the video playback by track selection. This flag might not be
   // enough if we ever expand the ability of supporting multi-tracks video
