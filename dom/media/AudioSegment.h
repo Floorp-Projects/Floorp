@@ -221,10 +221,10 @@ struct AudioChunk {
   }
 
   template<typename T>
-  const nsTArray<const T*>& ChannelData()
+  const nsTArray<const T*>& ChannelData() const
   {
     MOZ_ASSERT(AudioSampleTypeToFormat<T>::Format == mBufferFormat);
-    return *reinterpret_cast<nsTArray<const T*>*>(&mChannelData);
+    return *reinterpret_cast<const nsTArray<const T*>*>(&mChannelData);
   }
 
   PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
