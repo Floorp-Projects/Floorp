@@ -34,6 +34,7 @@ public:
     , mFirstFrameTimeout(FrameTimeout::FromRawMilliseconds(0))
     , mAnimationMode(aAnimationMode)
     , mHasBeenDecoded(false)
+    , mHasRequestedDecode(false)
     , mIsCurrentlyDecoded(false)
     , mCompositedFrameInvalid(false)
     , mDiscarded(false)
@@ -65,6 +66,11 @@ public:
    * Returns true if this image has been fully decoded before.
    */
   bool GetHasBeenDecoded() { return mHasBeenDecoded; }
+
+  /**
+   * Returns true if this image has ever requested a decode before.
+   */
+  bool GetHasRequestedDecode() { return mHasRequestedDecode; }
 
   /**
    * Returns true if this image has been discarded and a decoded has not yet
@@ -220,6 +226,9 @@ private:
 
   //! Whether this image has been decoded at least once.
   bool mHasBeenDecoded;
+
+  //! Whether this image has ever requested a decode.
+  bool mHasRequestedDecode;
 
   //! Whether this image is currently fully decoded.
   bool mIsCurrentlyDecoded;
