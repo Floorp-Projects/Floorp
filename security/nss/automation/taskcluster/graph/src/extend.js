@@ -24,6 +24,10 @@ const WINDOWS_CHECKOUT_CMD =
   "bash -c \"hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss || " +
     "(sleep 2; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss) || " +
     "(sleep 5; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss)\"";
+const MAC_CHECKOUT_CMD = ["bash", "-c",
+            "hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss || " +
+            "(sleep 2; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss) || " +
+            "(sleep 5; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss)"];
 
 /*****************************************************************************/
 
@@ -51,6 +55,15 @@ queue.filter(task => {
     if (task.platform == "aarch64") {
       return false;
     }
+
+    // No mac
+    if (task.platform == "mac") {
+      return false;
+    }
+  }
+
+  if (task.tests == "fips" && task.platform == "mac") {
+    return false;
   }
 
   // Only old make builds have -Ddisable_libpkix=0 and can run chain tests.
@@ -216,6 +229,71 @@ export default async function main() {
       collection: "opt",
     }, aarch64_base)
   );
+
+  await scheduleMac("Mac (opt)", {collection: "opt"}, "--opt");
+  await scheduleMac("Mac (debug)", {collection: "debug"});
+}
+
+
+async function scheduleMac(name, base, args = "") {
+  let mac_base = merge(base, {
+    env: {
+      PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+      NSS_TASKCLUSTER_MAC: "1",
+      DOMSUF: "localdomain",
+      HOST: "localhost",
+    },
+    provisioner: "localprovisioner",
+    workerType: "nss-macos-10-12",
+    platform: "mac",
+    tier: 3
+  });
+
+  // Build base definition.
+  let build_base = merge({
+    command: [
+      MAC_CHECKOUT_CMD,
+      ["bash", "-c",
+       "nss/automation/taskcluster/scripts/build_gyp.sh", args]
+    ],
+    provisioner: "localprovisioner",
+    workerType: "nss-macos-10-12",
+    platform: "mac",
+    maxRunTime: 7200,
+    artifacts: [{
+      expires: 24 * 7,
+      type: "directory",
+      path: "public"
+    }],
+    kind: "build",
+    symbol: "B"
+  }, mac_base);
+
+  // The task that builds NSPR+NSS.
+  let task_build = queue.scheduleTask(merge(build_base, {name}));
+
+  // The task that generates certificates.
+  let task_cert = queue.scheduleTask(merge(build_base, {
+    name: "Certificates",
+    command: [
+      MAC_CHECKOUT_CMD,
+      ["bash", "-c",
+       "nss/automation/taskcluster/scripts/gen_certs.sh"]
+    ],
+    parent: task_build,
+    symbol: "Certs"
+  }));
+
+  // Schedule tests.
+  scheduleTests(task_build, task_cert, merge(mac_base, {
+    command: [
+      MAC_CHECKOUT_CMD,
+      ["bash", "-c",
+       "nss/automation/taskcluster/scripts/run_tests.sh"]
+    ]
+  }));
+
+  return queue.submit();
 }
 
 /*****************************************************************************/
