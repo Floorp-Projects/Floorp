@@ -325,16 +325,16 @@ ImageLoader::GetPresContext()
 void InvalidateImagesCallback(nsIFrame* aFrame,
                               DisplayItemData* aItem)
 {
-  DisplayItemType type = GetDisplayItemTypeFromKey(aItem->GetDisplayItemKey());
-  uint8_t flags = GetDisplayItemFlagsForType(type);
+  nsDisplayItem::Type type = nsDisplayItem::GetDisplayItemTypeFromKey(aItem->GetDisplayItemKey());
+  uint8_t flags = nsDisplayItem::GetDisplayItemFlagsForType(type);
 
-  if (flags & TYPE_RENDERS_NO_IMAGES) {
+  if (flags & nsDisplayItem::TYPE_RENDERS_NO_IMAGES) {
     return;
   }
 
   if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
     printf_stderr("Invalidating display item(type=%d) based on frame %p \
-      because it might contain an invalidated image\n", static_cast<uint32_t>(type), aFrame);
+      because it might contain an invalidated image\n", type, aFrame);
   }
   aItem->Invalidate();
   aFrame->SchedulePaint();

@@ -18,7 +18,6 @@
 #include "LayerState.h"
 #include "Layers.h"
 #include "LayerUserData.h"
-#include "nsDisplayItemTypes.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
@@ -423,7 +422,7 @@ public:
    * for the given display item key. If there isn't one, we return null,
    * otherwise we return the layer.
    */
-  static Layer* GetDedicatedLayer(nsIFrame* aFrame, DisplayItemType aDisplayItemType);
+  static Layer* GetDedicatedLayer(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
   /**
    * This callback must be provided to EndTransaction. The callback data
