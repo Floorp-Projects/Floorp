@@ -785,14 +785,6 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
     return;
   }
 
-  CryptoBuffer authenticatorDataBuf;
-  rv = U2FAssembleAuthenticatorData(authenticatorDataBuf, rpIdHashBuf,
-                                    signatureBuf);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    Cancel(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-
   // Construct the public key object
   CryptoBuffer pubKeyObj;
   rv = CBOREncodePublicKeyObj(pubKeyBuf, pubKeyObj);
@@ -801,41 +793,37 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
     return;
   }
 
-  // Format:
-  // 32 bytes: SHA256 of the RP ID
-  // 1 byte: flags (TUP & AT)
-  // 4 bytes: sign counter
-  // variable: attestation data struct
-  // - 16 bytes: AAGUID
-  // - 2 bytes: Length of Credential ID
-  // - L bytes: Credential ID
-  // - variable: CBOR-format public key
-  // variable: CBOR-format extension auth data (optional, not flagged)
-
-  mozilla::dom::CryptoBuffer authDataBuf;
-  if (NS_WARN_IF(!authDataBuf.SetCapacity(32 + 1 + 4 + aaguidBuf.Length() + 2 +
-                                          keyHandleBuf.Length() +
-                                          pubKeyObj.Length(),
-                                          mozilla::fallible))) {
+  // During create credential, counter is always 0 for U2F
+  // See https://github.com/w3c/webauthn/issues/507
+  mozilla::dom::CryptoBuffer counterBuf;
+  if (NS_WARN_IF(!counterBuf.SetCapacity(4, mozilla::fallible))) {
     Cancel(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
+  counterBuf.AppendElement(0x00, mozilla::fallible);
+  counterBuf.AppendElement(0x00, mozilla::fallible);
+  counterBuf.AppendElement(0x00, mozilla::fallible);
+  counterBuf.AppendElement(0x00, mozilla::fallible);
 
-  authDataBuf.AppendElements(rpIdHashBuf, mozilla::fallible);
-  authDataBuf.AppendElement(FLAG_TUP | FLAG_AT, mozilla::fallible);
-  // During create credential, counter is always 0 for U2F
-  // See https://github.com/w3c/webauthn/issues/507
-  authDataBuf.AppendElement(0x00, mozilla::fallible);
-  authDataBuf.AppendElement(0x00, mozilla::fallible);
-  authDataBuf.AppendElement(0x00, mozilla::fallible);
-  authDataBuf.AppendElement(0x00, mozilla::fallible);
+  // Construct the Attestation Data, which slots into the end of the
+  // Authentication Data buffer.
+  CryptoBuffer attDataBuf;
+  rv = AssembleAttestationData(aaguidBuf, keyHandleBuf, pubKeyObj, attDataBuf);
+  if (NS_FAILED(rv)) {
+    Cancel(rv);
+    return;
+  }
 
-  authDataBuf.AppendElements(aaguidBuf, mozilla::fallible);
-  authDataBuf.AppendElement((keyHandleBuf.Length() >> 8) & 0xFF, mozilla::fallible);
-  authDataBuf.AppendElement((keyHandleBuf.Length() >> 0) & 0xFF, mozilla::fallible);
-  authDataBuf.AppendElements(keyHandleBuf, mozilla::fallible);
-  authDataBuf.AppendElements(pubKeyObj, mozilla::fallible);
+  mozilla::dom::CryptoBuffer authDataBuf;
+  rv = AssembleAuthenticatorData(rpIdHashBuf, FLAG_TUP, counterBuf, attDataBuf,
+                                 authDataBuf);
+  if (NS_FAILED(rv)) {
+    Cancel(rv);
+    return;
+  }
 
+  // The Authentication Data buffer gets CBOR-encoded with the Cert and
+  // Signature to build the Attestation Object.
   CryptoBuffer attObj;
   rv = CBOREncodeAttestationObj(authDataBuf, attestationCertBuf, signatureBuf,
                                 attObj);
@@ -869,8 +857,9 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
   MOZ_ASSERT(mTransactionPromise);
   MOZ_ASSERT(mInfo.isSome());
 
-  CryptoBuffer signatureData;
-  if (NS_WARN_IF(!signatureData.Assign(aSigBuffer.Elements(), aSigBuffer.Length()))) {
+  CryptoBuffer tokenSignatureData;
+  if (NS_WARN_IF(!tokenSignatureData.Assign(aSigBuffer.Elements(),
+                                            aSigBuffer.Length()))) {
     Cancel(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -887,9 +876,21 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
     return;
   }
 
+  CryptoBuffer signatureBuf;
+  CryptoBuffer counterBuf;
+  uint8_t flags = 0;
+  nsresult rv = U2FDecomposeSignResponse(tokenSignatureData, flags, counterBuf,
+                                         signatureBuf);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Cancel(rv);
+    return;
+  }
+
+  CryptoBuffer attestationDataBuf;
   CryptoBuffer authenticatorDataBuf;
-  nsresult rv = U2FAssembleAuthenticatorData(authenticatorDataBuf, rpIdHashBuf,
-                                             signatureData);
+  rv = AssembleAuthenticatorData(rpIdHashBuf, FLAG_TUP, counterBuf,
+                                 /* deliberately empty */ attestationDataBuf,
+                                 authenticatorDataBuf);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Cancel(rv);
     return;
@@ -917,7 +918,7 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
     new AuthenticatorAssertionResponse(mCurrentParent);
   assertion->SetClientDataJSON(clientDataBuf);
   assertion->SetAuthenticatorData(authenticatorDataBuf);
-  assertion->SetSignature(signatureData);
+  assertion->SetSignature(signatureBuf);
 
   RefPtr<PublicKeyCredential> credential =
     new PublicKeyCredential(mCurrentParent);
