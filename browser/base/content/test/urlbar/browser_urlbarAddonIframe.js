@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 // The purpose of this test is to test the urlbar popup's add-on iframe.  It has
