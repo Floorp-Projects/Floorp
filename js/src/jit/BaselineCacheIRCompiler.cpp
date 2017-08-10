@@ -2007,6 +2007,42 @@ BaselineCacheIRCompiler::emitCallProxySetByValue()
 }
 
 bool
+BaselineCacheIRCompiler::emitMegamorphicSetElement()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    bool strict = reader.readBool();
+
+    allocator.discardStack(masm);
+
+    // We need a scratch register but we don't have any registers available on
+    // x86, so temporarily store |obj| in the frame's scratch slot.
+    int scratchOffset = BaselineFrame::reverseOffsetOfScratchValue();
+    masm.storePtr(obj, Address(BaselineFrameReg, scratchOffset));
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, obj);
+
+    // Restore |obj|. Because we entered a stub frame we first have to load
+    // the original frame pointer.
+    masm.loadPtr(Address(BaselineFrameReg, 0), obj);
+    masm.loadPtr(Address(obj, scratchOffset), obj);
+
+    masm.Push(Imm32(strict));
+    masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
+    masm.Push(val);
+    masm.Push(idVal);
+    masm.Push(obj);
+
+    if (!callVM(masm, SetObjectElementInfo))
+        return false;
+
+    stubFrame.leave(masm);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {
     allocator.discardStack(masm);
