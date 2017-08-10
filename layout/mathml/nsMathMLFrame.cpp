@@ -328,8 +328,8 @@ nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
 class nsDisplayMathMLBar : public nsDisplayItem {
 public:
   nsDisplayMathMLBar(nsDisplayListBuilder* aBuilder,
-                     nsIFrame* aFrame, const nsRect& aRect)
-    : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
+                     nsIFrame* aFrame, const nsRect& aRect, uint32_t aIndex)
+    : nsDisplayItem(aBuilder, aFrame), mRect(aRect), mIndex(aIndex) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBar);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -338,11 +338,16 @@ public:
   }
 #endif
 
+  virtual uint32_t GetPerFrameKey() override {
+    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
+  }
+
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLBar", TYPE_MATHML_BAR)
 private:
   nsRect    mRect;
+  uint32_t  mIndex;
 };
 
 void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
@@ -362,12 +367,13 @@ void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
 void
 nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder,
                           nsIFrame* aFrame, const nsRect& aRect,
-                          const nsDisplayListSet& aLists) {
+                          const nsDisplayListSet& aLists,
+                          uint32_t aIndex) {
   if (!aFrame->StyleVisibility()->IsVisible() || aRect.IsEmpty())
     return;
 
   aLists.Content()->AppendNewToTop(new (aBuilder)
-    nsDisplayMathMLBar(aBuilder, aFrame, aRect));
+    nsDisplayMathMLBar(aBuilder, aFrame, aRect, aIndex));
 }
 
 void
