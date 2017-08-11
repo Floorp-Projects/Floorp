@@ -8,7 +8,6 @@
 #define AudioSinkWrapper_h_
 
 #include "mozilla/AbstractThread.h"
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -16,7 +15,6 @@
 #include "MediaSink.h"
 
 namespace mozilla {
-
 class MediaData;
 template <class T> class MediaQueue;
 

@@ -14,7 +14,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TaskQueue.h"
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include "nsIRunnable.h"
@@ -527,9 +526,6 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  void SetAudioChannelType(dom::AudioChannel aType) { mAudioChannelType = aType; }
-  dom::AudioChannel AudioChannelType() const { return mAudioChannelType; }
-
   bool IsSuspended() { return mSuspendedCount > 0; }
   void IncrementSuspendCount();
   void DecrementSuspendCount();
@@ -662,8 +658,6 @@ protected:
 
   // Our media stream graph.  null if destroyed on the graph thread.
   MediaStreamGraphImpl* mGraph;
-
-  dom::AudioChannel mAudioChannelType;
 };
 
 /**
@@ -1275,7 +1269,6 @@ public:
 
   // Main thread only
   static MediaStreamGraph* GetInstance(GraphDriverType aGraphDriverRequested,
-                                       dom::AudioChannel aChannel,
                                        nsPIDOMWindowInner* aWindow);
   static MediaStreamGraph* CreateNonRealtimeInstance(
     TrackRate aSampleRate,

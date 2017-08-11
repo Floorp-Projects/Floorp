@@ -39,7 +39,7 @@ NS_IMETHODIMP
 nsViewSourceHandler::GetProtocolFlags(uint32_t *result)
 {
     *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
-        URI_NON_PERSISTABLE;
+        URI_LOADABLE_BY_EXTENSIONS | URI_NON_PERSISTABLE;
     return NS_OK;
 }
 

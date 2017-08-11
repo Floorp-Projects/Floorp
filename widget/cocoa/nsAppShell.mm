@@ -682,13 +682,19 @@ nsAppShell::Run(void)
     AddScreenWakeLockListener();
   }
 
-  NS_OBJC_TRY_ABORT([NSApp run]);
+  // We use the native Gecko event loop in content processes.
+  nsresult rv = NS_OK;
+  if (XRE_UseNativeEventProcessing()) {
+    NS_OBJC_TRY_ABORT([NSApp run]);
+  } else {
+    rv = nsBaseAppShell::Run();
+  }
 
   if (XRE_IsParentProcess()) {
     RemoveScreenWakeLockListener();
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

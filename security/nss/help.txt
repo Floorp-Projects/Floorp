@@ -19,6 +19,8 @@ NSS build tool options:
     --gyp|-g         force a rerun of gyp
     --opt|-o         do an opt build
     -m32             do a 32-bit build on a 64-bit system
+    --clang          build with clang and clang++
+    --gcc            build with gcc and g++
     --test           ignore map files and export everything we have
     --fuzz           build fuzzing targets (this always enables test builds)
                      --fuzz=tls to enable TLS fuzzing mode

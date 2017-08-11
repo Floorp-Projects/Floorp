@@ -61,7 +61,7 @@ private:
   // nsIAudioChannelAgentCallback out of mWeakCallback.
   already_AddRefed<nsIAudioChannelAgentCallback> GetCallback();
 
-  nsresult InitInternal(nsPIDOMWindowInner* aWindow, int32_t aAudioAgentType,
+  nsresult InitInternal(nsPIDOMWindowInner* aWindow,
                         nsIAudioChannelAgentCallback* aCallback,
                         bool aUseWeakRef);
 
@@ -74,7 +74,6 @@ private:
 
   nsWeakPtr mWeakCallback;
 
-  int32_t mAudioChannelType;
   uint64_t mInnerWindowID;
   bool mIsRegToService;
 };

@@ -203,6 +203,7 @@ extern const char* CacheKindNames[];
     _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
     _(MegamorphicStoreSlot)               \
+    _(MegamorphicSetElement)              \
     _(MegamorphicHasOwnResult)            \
                                           \
     /* See CacheIR.cpp 'DOM proxies' comment. */ \
@@ -222,6 +223,7 @@ extern const char* CacheKindNames[];
     _(StoreDenseElement)                  \
     _(StoreDenseElementHole)              \
     _(ArrayPush)                          \
+    _(ArrayJoinResult)                    \
     _(StoreTypedElement)                  \
     _(StoreUnboxedArrayElement)           \
     _(StoreUnboxedArrayElementHole)       \
@@ -580,10 +582,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardSpecificSymbol, sym);
         addStubField(uintptr_t(expected), StubField::Type::Symbol);
     }
-    void guardSpecificInt32Immediate(Int32OperandId operand, int32_t expected) {
+    void guardSpecificInt32Immediate(Int32OperandId operand, int32_t expected,
+                                     Assembler::Condition cond = Assembler::Equal)
+    {
         writeOp(CacheOp::GuardSpecificInt32Immediate);
         writeOperandId(operand);
         writeInt32Immediate(expected);
+        buffer_.writeByte(uint32_t(cond));
     }
     void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
         writeOpWithOperandId(CacheOp::GuardMagicValue, val);
@@ -828,6 +833,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::ArrayPush, obj);
         writeOperandId(rhs);
     }
+    void arrayJoinResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::ArrayJoinResult, obj);
+    }
     void callScriptedSetter(ObjOperandId obj, JSFunction* setter, ValOperandId rhs) {
         writeOpWithOperandId(CacheOp::CallScriptedSetter, obj);
         addStubField(uintptr_t(setter), StubField::Type::JSObject);
@@ -872,6 +880,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(uintptr_t(name), StubField::Type::String);
         writeOperandId(rhs);
         buffer_.writeByte(needsTypeBarrier);
+    }
+    void megamorphicSetElement(ObjOperandId obj, ValOperandId id, ValOperandId rhs, bool strict) {
+        writeOpWithOperandId(CacheOp::MegamorphicSetElement, obj);
+        writeOperandId(id);
+        writeOperandId(rhs);
+        buffer_.writeByte(uint32_t(strict));
     }
     void megamorphicHasOwnResult(ObjOperandId obj, ValOperandId id) {
         writeOpWithOperandId(CacheOp::MegamorphicHasOwnResult, obj);
@@ -1086,6 +1100,9 @@ class MOZ_RAII CacheIRReader
         return ReferenceTypeDescr::Type(buffer_.readByte());
     }
 
+    uint8_t readByte() {
+        return buffer_.readByte();
+    }
     bool readBool() {
         uint8_t b = buffer_.readByte();
         MOZ_ASSERT(b <= 1);
@@ -1414,6 +1431,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                                   ValOperandId rhsId);
     bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId);
     bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId, ValOperandId rhsId);
+    bool tryAttachMegamorphicSetElement(HandleObject obj, ObjOperandId objId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 
@@ -1501,6 +1519,7 @@ class MOZ_RAII GetIteratorIRGenerator : public IRGenerator
 class MOZ_RAII CallIRGenerator : public IRGenerator
 {
   private:
+    JSOp op_;
     uint32_t argc_;
     HandleValue callee_;
     HandleValue thisval_;
@@ -1510,13 +1529,14 @@ class MOZ_RAII CallIRGenerator : public IRGenerator
 
     bool tryAttachStringSplit();
     bool tryAttachArrayPush();
+    bool tryAttachArrayJoin();
 
     void trackAttached(const char* name);
     void trackNotAttached();
 
   public:
     CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                    ICCall_Fallback* stub, ICState::Mode mode,
+                    JSOp op, ICCall_Fallback* stub, ICState::Mode mode,
                     uint32_t argc, HandleValue callee, HandleValue thisval,
                     HandleValueArray args);
 

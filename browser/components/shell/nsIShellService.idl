@@ -55,8 +55,12 @@ interface nsIShellService : nsISupports
      *                      a background image from which to source the
      *                      background image. 
      * @param aPosition     How to place the image on the desktop
+     * @param aImageName    The image name. Equivalent to the leaf name of the
+     *                      location.href.
      */
-  void setDesktopBackground(in nsIDOMElement aElement, in long aPosition);
+  void setDesktopBackground(in nsIDOMElement aElement,
+                            in long aPosition,
+                            in ACString aImageName);
 
   /**
    * Constants identifying applications that can be opened with

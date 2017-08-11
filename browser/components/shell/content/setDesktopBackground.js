@@ -13,6 +13,7 @@ var gSetBackground = {
   _screenHeight: 0,
   _image: null,
   _canvas: null,
+  _imageName: null,
 
   get _shell() {
     return Components.classes["@mozilla.org/browser/shell-service;1"]
@@ -43,12 +44,13 @@ var gSetBackground = {
 
     // make sure that the correct dimensions will be used
     setTimeout(function(self) {
-      self.init(window.arguments[0]);
+      self.init(window.arguments[0], window.arguments[1]);
     }, 0, this);
   },
 
-  init(aImage) {
+  init(aImage, aImageName) {
     this._image = aImage;
+    this._imageName = aImageName;
 
     // set the size of the coordinate space
     this._canvas.width = this._canvas.clientWidth;
@@ -87,8 +89,10 @@ var gSetBackground = {
       setDesktopBackground.disabled = true;
       setDesktopBackground.label = bundle.getString("DesktopBackgroundDownloading");
     }
-    this._shell.setDesktopBackground(this._image,
-                                     Ci.nsIShellService["BACKGROUND_" + this._position]);
+    this._shell.setDesktopBackground(
+      this._image,
+      Ci.nsIShellService["BACKGROUND_" + this._position],
+      this._imageName);
   },
 
   updatePosition() {

@@ -892,7 +892,7 @@ private:
           mUndisplayedItems[0].mStyleContext->PresContext()->FrameManager();
         for (uint32_t i = 0; i < mUndisplayedItems.Length(); ++i) {
           UndisplayedItem& item = mUndisplayedItems[i];
-          mgr->SetUndisplayedContent(item.mContent, item.mStyleContext);
+          mgr->RegisterDisplayNoneStyleFor(item.mContent, item.mStyleContext);
         }
       }
     }

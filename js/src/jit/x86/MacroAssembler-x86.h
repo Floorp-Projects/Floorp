@@ -414,6 +414,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmp32(tagOf(address), ImmTag(JSVAL_TAG_BOOLEAN));
         return cond;
     }
+    Condition testString(Condition cond, const Address& address) {
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+        cmp32(tagOf(address), ImmTag(JSVAL_TAG_STRING));
+        return cond;
+    }
     Condition testString(Condition cond, const BaseIndex& address) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmp32(tagOf(address), ImmTag(JSVAL_TAG_STRING));
