@@ -7,6 +7,8 @@ import subprocess
 import sys
 from ConfigParser import SafeConfigParser
 
+import requests
+
 wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 sys.path.insert(0, wpt_root)
 
@@ -145,10 +147,6 @@ def get_parser():
     description = """Detect instabilities in new tests by executing tests
     repeatedly and comparing results between executions."""
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("--comment-pr",
-                        action="store",
-                        default=os.environ.get("TRAVIS_PULL_REQUEST"),
-                        help="PR to comment on with stability results")
     parser.add_argument("--user",
                         action="store",
                         # Travis docs say do not depend on USER env variable.
@@ -197,6 +195,52 @@ def pr():
     return pr if pr != "false" else None
 
 
+def post_results(results, pr_number, iterations, product, url, status):
+    """Post stability results to a given URL."""
+    payload_results = []
+
+    for test_name, test in results.iteritems():
+        subtests = []
+        for subtest_name, subtest in test['subtests'].items():
+            subtests.append({
+                'test': subtest_name,
+                'result': {
+                    'messages': list(subtest['messages']),
+                    'status': subtest['status']
+                },
+            })
+        payload_results.append({
+            'test': test_name,
+            'result': {
+                'status': test['status'],
+                'subtests': subtests
+            }
+        })
+
+    payload = {
+        "pull": {
+            "number": int(pr_number),
+            "sha": os.environ.get("TRAVIS_PULL_REQUEST_SHA"),
+        },
+        "job": {
+            "id": int(os.environ.get("TRAVIS_JOB_ID")),
+            "number": os.environ.get("TRAVIS_JOB_NUMBER"),
+            "allow_failure": os.environ.get("TRAVIS_ALLOW_FAILURE") == 'true',
+            "status": status,
+        },
+        "build": {
+            "id": int(os.environ.get("TRAVIS_BUILD_ID")),
+            "number": os.environ.get("TRAVIS_BUILD_NUMBER"),
+        },
+        "product": product,
+        "iterations": iterations,
+        "message": "All results were stable." if status == "passed" else "Unstable results.",
+        "results": payload_results,
+    }
+
+    requests.post(url, json=payload)
+
+
 def main():
     """Perform check_stability functionality and return exit code."""
 
@@ -223,6 +267,7 @@ def run(venv, wpt_args, **kwargs):
         config.readfp(config_fp)
         skip_tests = config.get("file detection", "skip_tests").split()
         ignore_changes = set(config.get("file detection", "ignore_changes").split())
+        results_url = config.get("file detection", "results_url")
 
     if kwargs["output_bytes"] is not None:
         replace_streams(kwargs["output_bytes"],
@@ -317,8 +362,12 @@ def run(venv, wpt_args, **kwargs):
             logger.info("All results were stable\n")
         with TravisFold("full_results"):
             write_results(logger.info, results, iterations,
-                          pr_number=kwargs["comment_pr"],
+                          pr_number=pr_number,
                           use_details=True)
+            if pr_number:
+                post_results(results, iterations=iterations, url=results_url,
+                             product=wpt_args.product, pr_number=pr_number,
+                             status="failed" if inconsistent else "passed")
     else:
         logger.info("No tests run.")
 
