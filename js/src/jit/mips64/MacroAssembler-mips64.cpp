@@ -1737,19 +1737,6 @@ MacroAssemblerMIPS64Compat::extractTag(const BaseIndex& address, Register scratc
     return extractTag(Address(scratch, address.offset), scratch);
 }
 
-void
-MacroAssemblerMIPS64Compat::moveValue(const Value& val, Register dest)
-{
-    writeDataRelocation(val);
-    movWithPatch(ImmWord(val.asRawBits()), dest);
-}
-
-void
-MacroAssemblerMIPS64Compat::moveValue(const Value& val, const ValueOperand& dest)
-{
-    moveValue(val, dest.valueReg());
-}
-
 /* There are 3 paths trough backedge jump. They are listed here in the order
  * in which instructions are executed.
  *  - The short jump is simple:
@@ -2041,7 +2028,7 @@ MacroAssemblerMIPS64Compat::handleFailureWithHandlerTail(void* handler)
     // No exception handler. Load the error value, load the new stack pointer
     // and return from the entry frame.
     bind(&entryFrame);
-    moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+    asMasm().moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
     loadPtr(Address(StackPointer, offsetof(ResumeFromException, stackPointer)), StackPointer);
 
     // We're going to be returning by the ion calling convention
@@ -2393,6 +2380,54 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
 }
 
 // ===============================================================
+// Move
+
+void
+MacroAssembler::moveValue(const TypedOrValueRegister& src, const ValueOperand& dest)
+{
+    if (src.hasValue()) {
+        moveValue(src.valueReg(), dest);
+        return;
+    }
+
+    MIRType type = src.type();
+    AnyRegister reg = src.typedReg();
+
+    if (!IsFloatingPointType(type)) {
+        boxNonDouble(ValueTypeFromMIRType(type), reg.gpr(), dest);
+        return;
+    }
+
+    FloatRegister scratch = ScratchDoubleReg;
+    FloatRegister freg = reg.fpu();
+    if (type == MIRType::Float32) {
+        convertFloat32ToDouble(freg, scratch);
+        freg = scratch;
+    }
+    boxDouble(freg, dest, scratch);
+}
+
+void
+MacroAssembler::moveValue(const ValueOperand& src, const ValueOperand& dest)
+{
+    if (src == dest)
+        return;
+    movePtr(src.valueReg(), dest.valueReg());
+}
+
+void
+MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
+{
+    if(!src.isGCThing()) {
+        ma_li(dest.valueReg(), ImmWord(src.asRawBits()));
+        return;
+    }
+
+    writeDataRelocation(src);
+    movWithPatch(ImmWord(src.asRawBits()), dest.valueReg());
+}
+
+// ===============================================================
 // Branch functions
 
 void
@@ -2433,7 +2468,8 @@ MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(*this);
-    moveValue(rhs, scratch);
+    MOZ_ASSERT(lhs.valueReg() != scratch);
+    moveValue(rhs, ValueOperand(scratch));
     ma_b(lhs.valueReg(), scratch, label, cond);
 }
 
