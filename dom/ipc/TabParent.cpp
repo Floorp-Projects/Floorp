@@ -172,13 +172,10 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mPreserveLayers(false)
   , mHasPresented(false)
   , mHasBeforeUnload(false)
+  , mIsReadyToHandleInputEvents(false)
   , mIsMouseEnterIntoWidgetEventSuppressed(false)
 {
   MOZ_ASSERT(aManager);
-  // When the input event queue is disabled, we don't need to handle the case
-  // that some input events are dispatched before PBrowserConstructor.
-  mIsReadyToHandleInputEvents =
-    !Preferences::GetBool("prioritized_input_events.enabled", false);
 }
 
 TabParent::~TabParent()
