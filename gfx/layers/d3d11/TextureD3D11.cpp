@@ -1623,6 +1623,7 @@ SyncObjectD3D11Host::Synchronize()
 
 SyncObjectD3D11Client::SyncObjectD3D11Client(SyncHandle aSyncHandle, ID3D11Device* aDevice)
  : mSyncHandle(aSyncHandle)
+ , mSyncLock("SyncObjectD3D11")
 {
   if (!aDevice) {
     mDevice = DeviceManagerDx::Get()->GetContentDevice();
@@ -1678,9 +1679,19 @@ SyncObjectD3D11Client::IsSyncObjectValid()
   return true;
 }
 
+// We have only 1 sync object. As a thing that somehow works,
+// we copy each of the textures that need to be synced with the compositor
+// into our sync object and only use a lock for this sync object.
+// This way, we don't have to sync every texture we send to the compositor.
+// We only have to do this once per transaction.
 void
 SyncObjectD3D11Client::Synchronize()
 {
+  // This can be called from the paint or main thread depending on OMTP.
+  // We need this lock in addition to the AutoTextureLock in case we have to
+  // init here.
+  MutexAutoLock syncLock(mSyncLock);
+
   if (!mSyncedTextures.size()) {
     return;
   }

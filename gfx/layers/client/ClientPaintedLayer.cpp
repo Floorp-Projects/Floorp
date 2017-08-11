@@ -268,6 +268,7 @@ ClientPaintedLayer::PaintOffMainThread()
 
   if (didUpdate) {
     UpdateContentClient(state);
+    ClientManager()->SetNeedTextureSyncOnPaintThread();
   }
   return true;
 }
