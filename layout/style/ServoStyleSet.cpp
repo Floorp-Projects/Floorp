@@ -871,6 +871,10 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
     bool isInitial = !root->HasServoData();
     auto flags = aBaseFlags;
 
+    // If there were text nodes inserted into the document (but not elements),
+    // there may be lazy frame construction to do even if no styling is required.
+    postTraversalRequired |= root->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
+
     // Allow the parallel traversal, unless we're traversing traversing one of
     // the native anonymous document style roots, which are tiny and not worth
     // parallelizing over.
