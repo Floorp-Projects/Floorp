@@ -6,7 +6,7 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { WebAudioFront } = require("devtools/shared/fronts/webaudio");
 
 function WebAudioEditorPanel(iframeWindow, toolbox) {

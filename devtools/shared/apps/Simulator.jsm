@@ -5,7 +5,7 @@
 "use strict";
 
 const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 /**
  * TODO (Bug 1132453) The `Simulator` module is deprecated, and should be

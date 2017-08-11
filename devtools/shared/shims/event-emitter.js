@@ -34,12 +34,12 @@
     const { Deprecated } =
       Cu.import("resource://gre/modules/Deprecated.jsm", {});
     Deprecated.warning("This path to event-emitter.js is deprecated.  Please " +
-                       "use require(\"devtools/shared/event-emitter\") to " +
+                       "use require(\"devtools/shared/old-event-emitter\") to " +
                        "load this module.",
                        "https://bugzil.la/912121");
   }
 
-  const EventEmitter = require("devtools/shared/event-emitter");
+  const EventEmitter = require("devtools/shared/old-event-emitter");
   this.EventEmitter = EventEmitter;
   module.exports = EventEmitter;
 });
