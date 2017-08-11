@@ -640,6 +640,12 @@ if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_BINARYDATA'] = True
     DEFINES['ENABLE_SIMD'] = True
 
+# In-flight WebAssembly atomic operations, sign extension operations,
+# and shared memory objects proposal:
+# https://github.com/WebAssembly/threads
+if CONFIG['NIGHTLY_BUILD']:
+    DEFINES['ENABLE_WASM_THREAD_OPS'] = True
+
 if CONFIG['MOZ_DEBUG'] or CONFIG['NIGHTLY_BUILD']:
     DEFINES['JS_CACHEIR_SPEW'] = True
 
