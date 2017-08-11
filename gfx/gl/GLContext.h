@@ -3312,12 +3312,6 @@ protected:
     virtual bool MakeCurrentImpl(bool aForce) const = 0;
 
 public:
-#ifdef MOZ_GL_DEBUG
-    static void StaticInit() {
-        PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, nullptr);
-    }
-#endif
-
     bool MakeCurrent(bool aForce = false) const;
 
     virtual bool Init() = 0;
@@ -3460,15 +3454,6 @@ protected:
     PlatformThreadId mOwningThreadId;
 
     GLContextSymbols mSymbols;
-
-#ifdef MOZ_GL_DEBUG
-    // Non-zero debug flags will check that we don't send call
-    // to a GLContext that isn't current on the current
-    // thread.
-    // Store the current context when binding to thread local
-    // storage to support debug flags on an arbitrary thread.
-    static unsigned sCurrentGLContextTLS;
-#endif
 
     UniquePtr<GLBlitHelper> mBlitHelper;
     UniquePtr<GLReadTexImageHelper> mReadTexImageHelper;
