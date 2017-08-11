@@ -48,6 +48,10 @@ let tests = [
 
   function() { test_codeExecution(SAME_COMPARTMENT); },
   function() { test_codeExecution(IFRAME_COMPARTMENT); },
+
+  function() { test_global(SAME_COMPARTMENT); },
+  function() { test_global(IFRAME_COMPARTMENT); },
+  function() { workify('test_global'); },
 ];
 
 function next() {
