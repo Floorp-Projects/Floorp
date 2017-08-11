@@ -1615,7 +1615,7 @@ MacroAssemblerMIPS64Compat::unboxPrivate(const ValueOperand& src, Register dest)
 }
 
 void
-MacroAssemblerMIPS64Compat::boxDouble(FloatRegister src, const ValueOperand& dest)
+MacroAssemblerMIPS64Compat::boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister)
 {
     as_dmfc1(dest.valueReg(), src);
 }

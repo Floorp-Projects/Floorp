@@ -124,7 +124,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 
             masm.bind(&toUint);
             masm.convertUInt32ToDouble(scratchReg, FloatReg1);
-            masm.boxDouble(FloatReg1, R0);
+            masm.boxDouble(FloatReg1, R0, ScratchDoubleReg);
         } else {
             masm.ma_b(scratchReg, Imm32(0), &failure, Assembler::LessThan, ShortJump);
             // Move result for return.
