@@ -12,7 +12,7 @@ var spoofedUserAgent;
 
 const SPOOFED_APPNAME        = "Netscape";
 const SPOOFED_APPVERSION     = "5.0 (Windows)";
-const SPOOFED_PLATFORM       = "Win32";
+const SPOOFED_PLATFORM       = "Win64";
 const SPOOFED_OSCPU          = "Windows NT 6.1";
 const SPOOFED_BUILDID        = "20100101";
 const SPOOFED_HW_CONCURRENCY = 2;
