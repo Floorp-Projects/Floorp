@@ -23,7 +23,7 @@ const {PrefObserver} = require("devtools/client/shared/prefs");
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/old-event-emitter");
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "ConsoleOutput", "devtools/client/webconsole/console-output", true);
 loader.lazyRequireGetter(this, "Messages", "devtools/client/webconsole/console-output", true);
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/main", true);
