@@ -195,6 +195,19 @@ class FloatRegister : public FloatRegisterMIPSShared
         return Codes::Spread << reg_;
     }
 
+    static constexpr RegTypeName DefaultType = RegTypeName::Float64;
+
+    template <RegTypeName = DefaultType>
+    static SetType LiveAsIndexableSet(SetType s) {
+        return SetType(0);
+    }
+
+    template <RegTypeName Name = DefaultType>
+    static SetType AllocatableAsIndexableSet(SetType s) {
+        static_assert(Name != RegTypeName::Any, "Allocatable set are not iterable");
+        return LiveAsIndexableSet<Name>(s);
+    }
+
     static Code FromName(const char* name) {
         return FloatRegisters::FromName(name);
     }
@@ -202,6 +215,24 @@ class FloatRegister : public FloatRegisterMIPSShared
     static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
     uint32_t getRegisterDumpOffsetInBytes();
 };
+
+template <> inline FloatRegister::SetType
+FloatRegister::LiveAsIndexableSet<RegTypeName::Float32>(SetType set)
+{
+    return set & FloatRegisters::AllSingleMask;
+}
+
+template <> inline FloatRegister::SetType
+FloatRegister::LiveAsIndexableSet<RegTypeName::Float64>(SetType set)
+{
+    return set & FloatRegisters::AllDoubleMask;
+}
+
+template <> inline FloatRegister::SetType
+FloatRegister::LiveAsIndexableSet<RegTypeName::Any>(SetType set)
+{
+    return set;
+}
 
 } // namespace jit
 } // namespace js
