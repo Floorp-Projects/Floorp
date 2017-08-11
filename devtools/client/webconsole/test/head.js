@@ -1807,3 +1807,18 @@ function getRenderedSource(root) {
     column: location.getAttribute("data-column"),
   } : null;
 }
+
+function waitForBrowserConsole() {
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observer(subject) {
+      Services.obs.removeObserver(observer, "web-console-created");
+      subject.QueryInterface(Ci.nsISupportsString);
+
+      let hud = HUDService.getBrowserConsole();
+      ok(hud, "browser console is open");
+      is(subject.data, hud.hudId, "notification hudId is correct");
+
+      executeSoon(() => resolve(hud));
+    }, "web-console-created");
+  });
+}
