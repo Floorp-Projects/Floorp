@@ -878,6 +878,13 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
     bool isInitial = !root->HasServoData();
     auto flags = aBaseFlags;
 
+    // Allow the parallel traversal, unless we're traversing traversing one of
+    // the native anonymous document style roots, which are tiny and not worth
+    // parallelizing over.
+    if (!root->IsInNativeAnonymousSubtree()) {
+      flags |= ServoTraversalFlags::ParallelTraversal;
+    }
+
     // Do the first traversal.
     bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
     MOZ_ASSERT_IF(isInitial, !required);
@@ -982,10 +989,19 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
   bool hadDirtyDescendants = aParent->HasDirtyDescendantsForServo();
   aParent->SetHasDirtyDescendantsForServo();
 
+  auto flags = ServoTraversalFlags::UnstyledOnly;
+
+  // If there is an XBL binding on the root element, we do the initial document
+  // styling with this API. Not clear how common that is, but we allow parallel
+  // traversals in this case to preserve the old behavior (where Servo would
+  // use the parallel traversal i.f.f. the traversal root was the document root).
+  if (aParent == aParent->OwnerDoc()->GetRootElement()) {
+    flags |= ServoTraversalFlags::ParallelTraversal;
+  }
+
   // Do the traversal. The snapshots will be ignored.
   const SnapshotTable& snapshots = Snapshots();
-  Servo_TraverseSubtree(aParent, mRawSet.get(), &snapshots,
-                        ServoTraversalFlags::UnstyledOnly);
+  Servo_TraverseSubtree(aParent, mRawSet.get(), &snapshots, flags);
 
   // Restore the old state of the dirty descendants bit.
   if (!hadDirtyDescendants) {

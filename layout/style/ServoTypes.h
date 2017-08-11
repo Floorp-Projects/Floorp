@@ -71,6 +71,9 @@ enum class ServoTraversalFlags : uint32_t {
   ClearDirtyDescendants = 1 << 5,
   // Clears the animation-only dirty descendants bit in the subtree.
   ClearAnimationOnlyDirtyDescendants = 1 << 6,
+  // Allows the traversal to run in parallel if there are sufficient cores on
+  // the machine.
+  ParallelTraversal = 1 << 7,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoTraversalFlags)
