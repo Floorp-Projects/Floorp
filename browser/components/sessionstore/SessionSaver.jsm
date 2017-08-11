@@ -112,6 +112,12 @@ var SessionSaverInternal = {
   _timeoutID: null,
 
   /**
+   * The idle callback ID referencing an active idle callback. When no idle
+   * callback is pending, this is null.
+   * */
+  _idleCallbackID: null,
+
+  /**
    * A timestamp that keeps track of when we saved the session last. We will
    * this to determine the correct interval between delayed saves to not deceed
    * the configured session write interval.
@@ -176,7 +182,24 @@ var SessionSaverInternal = {
 
     // Schedule a state save.
     this._wasIdle = this._isIdle;
-    this._timeoutID = setTimeout(() => this._saveStateAsync(), delay);
+    this._timeoutID = setTimeout(() => {
+      let hiddenDOMWindow = Services.appShell.hiddenDOMWindow;
+
+      // Execute _saveStateAsync when we have enough idle time. Otherwise,
+      // another idle request is made to schedule _saveStateAsync again.
+      let saveStateAsyncWhenIdle = (deadline) => {
+        // When looking at the telemetry data, the time it takes to execute
+        // _saveStateAsync is around 5.9ms (median). Therefore,
+        // we'll not execute the function when the idle time is less than 5ms.
+        if (deadline.timeRemaining() < 5) {
+          this._idleCallbackID = hiddenDOMWindow.requestIdleCallback(saveStateAsyncWhenIdle);
+          return;
+        }
+        this._saveStateAsync();
+      };
+
+      this._idleCallbackID = hiddenDOMWindow.requestIdleCallback(saveStateAsyncWhenIdle);
+    }, delay);
   },
 
   /**
@@ -193,6 +216,8 @@ var SessionSaverInternal = {
   cancel() {
     clearTimeout(this._timeoutID);
     this._timeoutID = null;
+    Services.appShell.hiddenDOMWindow.cancelIdleCallback(this._idleCallbackID);
+    this._idleCallbackID = null;
   },
 
   /**
