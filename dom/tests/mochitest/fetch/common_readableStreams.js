@@ -1,3 +1,17 @@
+const BIG_BUFFER_SIZE = 1000000;
+
+function makeBuffer(size) {
+  let buffer = new Uint8Array(size);
+  buffer.fill(42);
+
+  let value = 0;
+  for (let i = 0; i < 1000000; i+= 1000) {
+    buffer.set([++value % 255], i);
+  }
+
+  return buffer;
+}
+
 function test_nativeStream() {
   info("test_nativeStream");
 
@@ -25,8 +39,11 @@ function test_nativeStream() {
 function test_nonNativeStream() {
   info("test_nonNativeStream");
 
+  let buffer = makeBuffer(BIG_BUFFER_SIZE);
+  info("Buffer size: " + buffer.byteLength);
+
   let r = new Response(new ReadableStream({start : controller => {
-    controller.enqueue(new Uint8Array([0x01, 0x00, 0x01]));
+    controller.enqueue(buffer);
     controller.close();
   }}));
 
@@ -46,6 +63,7 @@ function test_nonNativeStream() {
     return b.blob();
   }).then(b => {
     ok(b instanceof Blob, "We have a blob");
+    is(b.size, buffer.byteLength, "Blob size matches");
   }).then(next);
 }
 
@@ -68,7 +86,7 @@ function test_noUint8Array() {
 
 function test_pendingStream() {
   var r = new Response(new ReadableStream({start : controller => {
-    controller.enqueue(new Uint8Array([0x01, 0x00, 0x01]));
+    controller.enqueue(makeBuffer(BIG_BUFFER_SIZE));
     // Let's keep this controler open.
     self.ccc = controller;
   }}));
@@ -110,10 +128,12 @@ async function test_nonNativeStream_cache() {
   let url = '/nonNativeStream';
 
   let cache = await caches.open('nonNativeStream');
+  let buffer = makeBuffer(BIG_BUFFER_SIZE);
+  info("Buffer size: " + buffer.byteLength);
 
   info("Storing a body as a string");
   let r = new Response(new ReadableStream({start : controller => {
-    controller.enqueue(new Uint8Array([0x01, 0x02, 0x03]));
+    controller.enqueue(buffer);
     controller.close();
   }}));
 
@@ -126,11 +146,12 @@ async function test_nonNativeStream_cache() {
   let cacheBody = await cacheResponse.arrayBuffer();
 
   ok(cacheBody instanceof ArrayBuffer, "Body is an array buffer");
-  is(cacheBody.byteLength, 3, "Body length is correct");
+  is(cacheBody.byteLength, BIG_BUFFER_SIZE, "Body length is correct");
 
-  is(new Uint8Array(cacheBody)[0], 0x01, "First byte is correct");
-  is(new Uint8Array(cacheBody)[1], 0x02, "Second byte is correct");
-  is(new Uint8Array(cacheBody)[2], 0x03, "Third byte is correct");
+  let value = 0;
+  for (let i = 0; i < 1000000; i+= 1000) {
+    is(new Uint8Array(cacheBody)[i], ++value % 255, "byte in position " + i + " is correct");
+  }
 
   await caches.delete('nonNativeStream');
 
