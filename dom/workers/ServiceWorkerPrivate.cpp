@@ -459,8 +459,7 @@ public:
     aEvent->SetKeepAliveHandler(keepAliveHandler);
 
     ErrorResult result;
-    bool dummy;
-    result = aWorkerScope->DispatchEvent(aEvent, &dummy);
+    result = aWorkerScope->DispatchDOMEvent(nullptr, aEvent, nullptr, nullptr);
     if (NS_WARN_IF(result.Failed())) {
       result.SuppressException();
       return NS_ERROR_FAILURE;

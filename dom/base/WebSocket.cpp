@@ -1937,8 +1937,7 @@ WebSocket::CreateAndDispatchSimpleEvent(const nsAString& aName)
   event->InitEvent(aName, false, false);
   event->SetTrusted(true);
 
-  bool dummy;
-  return DispatchEvent(event, &dummy);
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 nsresult
@@ -2021,8 +2020,8 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
                           Sequence<OwningNonNull<MessagePort>>());
   event->SetTrusted(true);
 
-  bool dummy;
-  return DispatchEvent(static_cast<Event*>(event), &dummy);
+  return DispatchDOMEvent(nullptr, static_cast<Event*>(event), nullptr,
+                          nullptr);
 }
 
 nsresult
@@ -2056,8 +2055,7 @@ WebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
     CloseEvent::Constructor(this, CLOSE_EVENT_STRING, init);
   event->SetTrusted(true);
 
-  bool dummy;
-  return DispatchEvent(event, &dummy);
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 nsresult

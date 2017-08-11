@@ -1302,8 +1302,7 @@ Notification::DispatchNotificationClickEvent()
 
   event->SetTrusted(true);
   WantsPopupControlCheck popupControlCheck(event);
-  bool dummy;
-  target->DispatchEvent(event, &dummy);
+  target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
   // We always return false since in case of dispatching on the serviceworker,
   // there is no well defined window to focus. The script may use the
   // Client.focus() API if it wishes.

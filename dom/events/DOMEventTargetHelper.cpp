@@ -344,6 +344,16 @@ DOMEventTargetHelper::PostHandleEvent(EventChainPostVisitor& aVisitor)
   return NS_OK;
 }
 
+nsresult
+DOMEventTargetHelper::DispatchDOMEvent(WidgetEvent* aEvent,
+                                       nsIDOMEvent* aDOMEvent,
+                                       nsPresContext* aPresContext,
+                                       nsEventStatus* aEventStatus)
+{
+  return EventDispatcher::DispatchDOMEvent(this, aEvent, aDOMEvent,
+                                           aPresContext, aEventStatus);
+}
+
 EventListenerManager*
 DOMEventTargetHelper::GetOrCreateListenerManager()
 {

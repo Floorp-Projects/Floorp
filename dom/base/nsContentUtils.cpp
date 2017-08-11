@@ -4553,10 +4553,10 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   if (!piTarget)
     return NS_ERROR_INVALID_ARG;
 
-  bool defaultActionEnabled;
-  rv = piTarget->DispatchEvent(event, &defaultActionEnabled);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  rv = piTarget->DispatchDOMEvent(nullptr, event, nullptr, &status);
   if (aDefaultAction) {
-    *aDefaultAction = defaultActionEnabled;
+    *aDefaultAction = (status != nsEventStatus_eConsumeNoDefault);
   }
   return rv;
 }

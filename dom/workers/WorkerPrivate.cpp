@@ -570,8 +570,8 @@ private:
                          EventInit());
     event->SetTrusted(true);
 
-    bool dummy;
-    aWorkerPrivate->DispatchEvent(event, &dummy);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    aWorkerPrivate->DispatchDOMEvent(nullptr, event, nullptr, &status);
     return true;
   }
 };
@@ -778,8 +778,8 @@ public:
 
     domEvent->SetTrusted(true);
 
-    bool dummy;
-    aTarget->DispatchEvent(domEvent, &dummy);
+    nsEventStatus dummy = nsEventStatus_eIgnore;
+    aTarget->DispatchDOMEvent(nullptr, domEvent, nullptr, &dummy);
 
     return true;
   }
@@ -854,8 +854,8 @@ private:
     event->SetTrusted(true);
 
     nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
-    bool dummy;
-    globalScope->DispatchEvent(domEvent, &dummy);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    globalScope->DispatchDOMEvent(nullptr, domEvent, nullptr, &status);
     return true;
   }
 };
@@ -1037,10 +1037,10 @@ public:
           ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
         event->SetTrusted(true);
 
-        bool defaultActionEnabled;
-        aTarget->DispatchEvent(event, &defaultActionEnabled);
+        nsEventStatus status = nsEventStatus_eIgnore;
+        aTarget->DispatchDOMEvent(nullptr, event, nullptr, &status);
 
-        if (!defaultActionEnabled) {
+        if (status == nsEventStatus_eConsumeNoDefault) {
           return;
         }
       }
@@ -3625,8 +3625,7 @@ WorkerPrivate::OfflineStatusChangeEventInternal(bool aIsOffline)
   event->InitEvent(eventType, false, false);
   event->SetTrusted(true);
 
-  bool dummy;
-  globalScope->DispatchEvent(event, &dummy);
+  globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 template <class Derived>
@@ -6983,8 +6982,8 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx,
 
   nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
 
-  bool dummy;
-  globalScope->DispatchEvent(domEvent, &dummy);
+  nsEventStatus dummy = nsEventStatus_eIgnore;
+  globalScope->DispatchDOMEvent(nullptr, domEvent, nullptr, &dummy);
 
   return true;
 }

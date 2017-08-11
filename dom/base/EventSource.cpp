@@ -1501,8 +1501,8 @@ EventSourceImpl::DispatchAllMessageEvents()
                             Sequence<OwningNonNull<MessagePort>>());
     event->SetTrusted(true);
 
-    bool dummy;
-    rv = mEventSource->DispatchEvent(static_cast<Event*>(event), &dummy);
+    rv = mEventSource->DispatchDOMEvent(nullptr, static_cast<Event*>(event),
+                                        nullptr, nullptr);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the message event!!!");
       return;
@@ -1940,8 +1940,7 @@ EventSource::CreateAndDispatchSimpleEvent(const nsAString& aName)
   // it doesn't bubble, and it isn't cancelable
   event->InitEvent(aName, false, false);
   event->SetTrusted(true);
-  bool dummy;
-  return DispatchEvent(event, &dummy);
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 /* static */ already_AddRefed<EventSource>
