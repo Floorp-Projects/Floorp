@@ -20,6 +20,7 @@ EXPORTS += [
     'nsHtml5AttributeEntry.h',
     'nsHtml5AttributeName.h',
     'nsHtml5ByteReadable.h',
+    'nsHtml5ContentCreatorFunction.h',
     'nsHtml5DependentUTF16Buffer.h',
     'nsHtml5DocumentBuilder.h',
     'nsHtml5DocumentMode.h',

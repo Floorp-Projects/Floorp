@@ -2367,9 +2367,7 @@ JsepSessionImpl::SetupDefaultCodecs()
       "webrtc-datachannel",
       WEBRTC_DATACHANNEL_STREAMS_DEFAULT,
       WEBRTC_DATACHANNEL_PORT_DEFAULT,
-      // TODO: Bug 979417 needs to change this to
-      // WEBRTC_DATACHANELL_MAX_MESSAGE_SIZE_DEFAULT
-      0
+      WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL
       ));
 
   // Update the redundant encodings for the RED codec with the supported

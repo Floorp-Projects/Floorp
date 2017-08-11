@@ -8,6 +8,7 @@ use gamma_lut::{GammaLut, Color as ColorLut};
 use internal_types::FastHashMap;
 
 use dwrote;
+use std::sync::Arc;
 
 lazy_static! {
     static ref DEFAULT_FONT_DESCRIPTOR: dwrote::FontDescriptor = dwrote::FontDescriptor {
@@ -105,12 +106,12 @@ impl FontContext {
         self.fonts.contains_key(font_key)
     }
 
-    pub fn add_raw_font(&mut self, font_key: &FontKey, data: &[u8], index: u32) {
+    pub fn add_raw_font(&mut self, font_key: &FontKey, data: Arc<Vec<u8>>, index: u32) {
         if self.fonts.contains_key(font_key) {
             return
         }
 
-        if let Some(font_file) = dwrote::FontFile::new_from_data(data) {
+        if let Some(font_file) = dwrote::FontFile::new_from_data(&**data) {
             let face = font_file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE);
             self.fonts.insert((*font_key).clone(), face);
         } else {

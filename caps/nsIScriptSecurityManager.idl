@@ -155,13 +155,6 @@ interface nsIScriptSecurityManager : nsISupports
                                               in nsIDocShell docShell);
 
     /**
-     * Legacy method for getting a principal with no origin attributes.
-     *
-     * @deprecated use createCodebasePrincipal instead.
-     */
-    [deprecated] nsIPrincipal getCodebasePrincipal(in nsIURI uri);
-
-    /**
      * Returns a principal whose origin is composed of |uri| and |originAttributes|.
      * See nsIPrincipal.idl for a description of origin attributes, and
      * ChromeUtils.webidl for a list of origin attributes and their defaults.

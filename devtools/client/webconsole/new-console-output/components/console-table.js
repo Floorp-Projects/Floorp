@@ -164,14 +164,18 @@ function getTableItems(data = {}, type, headers = null) {
       if (entries) {
         for (let key of Object.keys(entries)) {
           let entry = entries[key];
-          item[key] = entry.value || entry;
+          item[key] = Object.prototype.hasOwnProperty.call(entry, "value")
+            ? entry.value
+            : entry;
         }
       } else {
         if (preview.key) {
           item.key = preview.key;
         }
 
-        item[VALUE_NAME] = preview.value || property;
+        item[VALUE_NAME] = Object.prototype.hasOwnProperty.call(preview, "value")
+          ? preview.value
+          : property;
       }
     } else {
       item[VALUE_NAME] = property;

@@ -1488,12 +1488,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute float displayDPI;
 
   /**
-   * Return the outer window with the given ID, if any.  Can return null.
-   * @deprecated Use nsIWindowMediator.getOuterWindowWithId.  See bug 865664.
-   */
-  nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
-
-  /**
    * Return this window's frame element.
    * Ignores all chrome/content or mozbrowser boundaries.
    */

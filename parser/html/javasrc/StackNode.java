@@ -48,6 +48,11 @@ final class StackNode<T> {
 
     private int refcount = 0;
 
+    /*
+     *  Only valid for formatting elements
+     */
+    // CPPONLY: private @HtmlCreator Object htmlCreator;
+
     // [NOCPP[
 
     private TaintableLocatorImpl locator;
@@ -95,6 +100,10 @@ final class StackNode<T> {
         this.refcount = 0;
     }
 
+    // CPPONLY: public @HtmlCreator Object getHtmlCreator() {
+    // CPPONLY:     return htmlCreator;
+    // CPPONLY: }
+
     /**
      * Setter for copying. This doesn't take another <code>StackNode</code>
      * because in C++ the caller is responsible for reobtaining the local names
@@ -108,9 +117,10 @@ final class StackNode<T> {
      * @param attributes
      */
     void setValues(int flags, @NsUri String ns, @Local String name, T node,
-            @Local String popName, HtmlAttributes attributes
+            @Local String popName, HtmlAttributes attributes,
+            // CPPONLY: @HtmlCreator Object htmlCreator
             // [NOCPP[
-            , TaintableLocatorImpl locator
+            TaintableLocatorImpl locator
             // ]NOCPP]
     ) {
         assert isUnused();
@@ -121,6 +131,10 @@ final class StackNode<T> {
         this.node = node;
         this.attributes = attributes;
         this.refcount = 1;
+        /*
+         * Need to track creator for formatting elements when copying.
+         */
+        // CPPONLY: this.htmlCreator = htmlCreator;
         // [NOCPP[
         this.locator = locator;
         // ]NOCPP]
@@ -146,6 +160,10 @@ final class StackNode<T> {
         this.attributes = null;
         this.refcount = 1;
         assert elementName.isInterned() : "Don't use this constructor for custom elements.";
+        /*
+         * Not used for formatting elements, so no need to track creator.
+         */
+        // CPPONLY: this.htmlCreator = null;
         // [NOCPP[
         this.locator = locator;
         // ]NOCPP]
@@ -172,6 +190,11 @@ final class StackNode<T> {
         this.attributes = attributes;
         this.refcount = 1;
         assert elementName.isInterned() : "Don't use this constructor for custom elements.";
+        /*
+         * Need to track creator for formatting elements in order to be able
+         * to clone them.
+         */
+        // CPPONLY: this.htmlCreator = elementName.getHtmlCreator();
         // [NOCPP[
         this.locator = locator;
         // ]NOCPP]
@@ -197,6 +220,10 @@ final class StackNode<T> {
         this.node = node;
         this.attributes = null;
         this.refcount = 1;
+        /*
+         * Not used for formatting elements, so no need to track creator.
+         */
+        // CPPONLY: this.htmlCreator = null;
         // [NOCPP[
         this.locator = locator;
         // ]NOCPP]
@@ -225,6 +252,10 @@ final class StackNode<T> {
         this.node = node;
         this.attributes = null;
         this.refcount = 1;
+        /*
+         * Not used for formatting elements, so no need to track creator.
+         */
+        // CPPONLY: this.htmlCreator = null;
         // [NOCPP[
         this.locator = locator;
         // ]NOCPP]
@@ -253,6 +284,10 @@ final class StackNode<T> {
         this.node = node;
         this.attributes = null;
         this.refcount = 1;
+        /*
+         * Not used for formatting elements, so no need to track creator.
+         */
+        // CPPONLY: this.htmlCreator = null;
         // [NOCPP[
         this.locator = locator;
         // ]NOCPP]
