@@ -174,55 +174,39 @@
           );
 
           /**
-           * Update the text on the footer.
+           * A handler for updating warning message once selectedIndex has been changed.
+           *
+           * There're three different states of warning message:
+           * 1. None of addresses were selected: We show all the categories intersection of fields in the
+           *    form and fields in the results.
+           * 2. An address was selested: Show the additional categories that will also be filled.
+           * 3. An address was selected, but the focused category is the same as the only one category: Only show
+           * the exact category that we're going to fill in.
            *
            * @private
-           * @param {string|string[]} categories
-           *        A list of categories that used to generate the message.
-           * @param {boolean} hasExtraCategories
-           *        Used to determine if it has the extra categories other than the focued category. If
-           *        the value is true, we show "Also fill ...", otherwise, show "Fill ..." only.
+           * @param {string[]} data.categories
+           *        The categories of all the fields contained in the selected address.
            */
           const namespace = "category.";
-          this._updateText = (categories = this._allFieldCategories, hasExtraCategories = true) => {
-            let warningTextTmplKey = hasExtraCategories ? "phishingWarningMessage" : "phishingWarningMessage2";
-            let sep = this._stringBundle.GetStringFromName("fieldNameSeparator");
+          this._updateWarningNote = ({data} = {}) => {
+            let categories = (data && data.categories) ? data.categories : this._allFieldCategories;
+            // If the length of categories is 1, that means all the fillable fields are in the same
+            // category. We will change the way to inform user according to this flag. When the value
+            // is true, we show "Also autofills ...", otherwise, show "Autofills ..." only.
+            let hasExtraCategories = categories.length > 1;
             // Show the categories in certain order to conform with the spec.
             let orderedCategoryList = ["address", "name", "organization", "tel", "email"];
             let showCategories = hasExtraCategories ?
               orderedCategoryList.filter(category => categories.includes(category) && category != this._focusedCategory) :
               [this._focusedCategory];
-            let categoriesText = showCategories.map(category => this._stringBundle.GetStringFromName(namespace + category)).join(sep);
+
+            let separator = this._stringBundle.GetStringFromName("fieldNameSeparator");
+            let warningTextTmplKey = hasExtraCategories ? "phishingWarningMessage" : "phishingWarningMessage2";
+            let categoriesText = showCategories.map(category => this._stringBundle.GetStringFromName(namespace + category)).join(separator);
 
             this._warningTextBox.textContent = this._stringBundle.formatStringFromName(warningTextTmplKey,
               [categoriesText], 1);
             this.parentNode.parentNode.adjustHeight();
-          };
-
-          /**
-           * A handler for updating warning message once selectedIndex has been changed.
-           *
-           * There're three different states of warning message:
-           * 1. None of addresses were selected: We show all the categories in the form.
-           * 2. An address was selested: Show the additional categories that will also be filled.
-           * 3. An address was selected, but the focused category is the same as the only all categories: Only show
-           * the exact category that we're going to fill in.
-           *
-           * @private
-           * @param {string[]} categories
-           *        The categories of all the fields contained in the selected address.
-           */
-          this._updateWarningMsgHandler = ({data: {categories}} = {data: {}}) => {
-            let hasSelectedAddress = this._focusedCategory && categories;
-            // If the length of categories is 1, that means all the fillable fields are in the same
-            // category. We will change the way to inform user according to this flag.
-            let hasExtraCategories = hasSelectedAddress && categories.length > 1;
-            if (!hasSelectedAddress) {
-              this._updateText();
-              return;
-            }
-
-            this._updateText(categories, hasExtraCategories);
           };
 
           this._adjustAcItem();
@@ -235,7 +219,7 @@
           /* global messageManager */
 
           if (this.showWarningText) {
-            messageManager.removeMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningMsgHandler);
+            messageManager.removeMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningNote);
           }
 
           this._itemBox.removeAttribute("no-warning");
@@ -268,9 +252,9 @@
           this.showWarningText = this._allFieldCategories && this._focusedCategory;
 
           if (this.showWarningText) {
-            messageManager.addMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningMsgHandler);
+            messageManager.addMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningNote);
 
-            this._updateText();
+            this._updateWarningNote();
           } else {
             this._itemBox.setAttribute("no-warning", "true");
           }

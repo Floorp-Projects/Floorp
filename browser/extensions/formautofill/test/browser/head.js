@@ -1,5 +1,5 @@
 /* exported MANAGE_ADDRESSES_DIALOG_URL, EDIT_ADDRESS_DIALOG_URL, BASE_URL,
-            TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3,
+            TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3, TEST_ADDRESS_4, TEST_ADDRESS_5,
             TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3,
             sleep, expectPopupOpen, openPopupOn, expectPopupClose, closePopup, clickDoorhangerButton,
             getAddresses, saveAddress, removeAddresses, saveCreditCard,
@@ -33,6 +33,19 @@ const TEST_ADDRESS_2 = {
 const TEST_ADDRESS_3 = {
   "street-address": "Other Address",
   "postal-code": "12345",
+};
+
+const TEST_ADDRESS_4 = {
+  "given-name": "Timothy",
+  "family-name": "Berners-Lee",
+  organization: "World Wide Web Consortium",
+  "street-address": "32 Vassar Street\nMIT Room 32-G524",
+  country: "US",
+  email: "timbl@w3.org",
+};
+
+const TEST_ADDRESS_5 = {
+  tel: "+16172535702",
 };
 
 const TEST_CREDIT_CARD_1 = {

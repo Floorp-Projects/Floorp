@@ -34,8 +34,6 @@ class ProfileAutoCompleteResult {
     this.searchString = searchString;
     // The field name of the focused input.
     this._focusedFieldName = focusedFieldName;
-    // All field names in the form which contains the focused input.
-    this._allFieldNames = allFieldNames;
     // The matching profiles contains the information for filling forms.
     this._matchingProfiles = matchingProfiles;
     // The default item that should be entered if none is selected
@@ -44,6 +42,14 @@ class ProfileAutoCompleteResult {
     this.errorDescription = "";
     // The value used to determine whether the form is secure or not.
     this._isSecure = isSecure;
+    // All fillable field names in the form including the field name of the currently-focused input.
+    this._allFieldNames = [...this._matchingProfiles.reduce((fieldSet, curProfile) => {
+      for (let field of Object.keys(curProfile)) {
+        fieldSet.add(field);
+      }
+
+      return fieldSet;
+    }, new Set())].filter(field => allFieldNames.includes(field));
 
     // The result code of this result object.
     if (resultCode) {
