@@ -27,9 +27,11 @@ namespace mozilla {
 namespace dom {
 
 class BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
+class BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrReadableStreamOrUSVString;
 class BlobImpl;
 class InternalRequest;
 class OwningBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
+struct  ReadableStream;
 class RequestOrUSVString;
 enum class CallerType : uint32_t;
 
@@ -47,6 +49,7 @@ UpdateRequestReferrer(nsIGlobalObject* aGlobal, InternalRequest* aRequest);
 
 namespace fetch {
 typedef BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString BodyInit;
+typedef BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrReadableStreamOrUSVString ResponseBodyInit;
 typedef OwningBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString OwningBodyInit;
 };
 
@@ -70,6 +73,16 @@ ExtractByteStreamFromBody(const fetch::BodyInit& aBodyInit,
                           nsCString& aContentType,
                           uint64_t& aContentLength);
 
+/*
+ * Non-owning version. This method should go away when BodyInit will contain
+ * ReadableStream.
+ */
+nsresult
+ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
+                          nsIInputStream** aStream,
+                          nsCString& aContentType,
+                          uint64_t& aContentLength);
+
 template <class Derived> class FetchBodyConsumer;
 
 enum FetchConsumeType
@@ -79,6 +92,15 @@ enum FetchConsumeType
   CONSUME_FORMDATA,
   CONSUME_JSON,
   CONSUME_TEXT,
+};
+
+class FetchStreamHolder
+{
+public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  virtual void
+  NullifyStream() = 0;
 };
 
 /*
@@ -115,12 +137,10 @@ enum FetchConsumeType
  * The pump is always released on the main thread.
  */
 template <class Derived>
-class FetchBody
+class FetchBody : public FetchStreamHolder
 {
 public:
   friend class FetchBodyConsumer<Derived>;
-
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   bool
   BodyUsed() const;
@@ -160,6 +180,13 @@ public:
           JS::MutableHandle<JSObject*> aBodyOut,
           ErrorResult& aRv);
 
+  // If the body contains a ReadableStream body object, this method produces a
+  // tee() of it.
+  void
+  MaybeTeeReadableStreamBody(JSContext* aCx,
+                             JS::MutableHandle<JSObject*> aBodyOut,
+                             ErrorResult& aRv);
+
   // Utility public methods accessed by various runnables.
 
   void
@@ -172,6 +199,12 @@ public:
   MimeType() const
   {
     return mMimeType;
+  }
+
+  void
+  NullifyStream() override
+  {
+    mReadableStreamBody = nullptr;
   }
 
 protected:
@@ -191,6 +224,9 @@ protected:
   void
   SetMimeType();
 
+  void
+  SetReadableStreamBody(JSObject* aBody);
+
 private:
   Derived*
   DerivedClass() const
@@ -200,6 +236,9 @@ private:
 
   already_AddRefed<Promise>
   ConsumeBody(JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv);
+
+  void
+  LockStream(JSContext* aCx, JS::HandleObject aStream, ErrorResult& aRv);
 
   bool
   IsOnTargetThread()

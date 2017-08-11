@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSerializer.h"
+#include "nsIGlobalObject.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIStorageStream.h"
