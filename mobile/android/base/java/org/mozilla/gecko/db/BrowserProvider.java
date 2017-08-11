@@ -1218,6 +1218,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                             DBUtils.qualifyColumn(TABLE_TOPSITES, Combined.HISTORY_GUID) + " = " +
                             DBUtils.qualifyColumn(TABLE_PAGE_METADATA, PageMetadata.HISTORY_GUID) +
 
+                    " GROUP BY " + DBUtils.qualifyColumn(TABLE_TOPSITES, Bookmarks.URL) + // remove duplicates.
+
                     // In case position is non-unique (as in Activity Stream pins, whose position
                     // is always zero), we need to ensure we get stable ordering.
                     " ORDER BY " + Bookmarks.POSITION + ", " + Bookmarks.URL,
