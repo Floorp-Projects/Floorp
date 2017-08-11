@@ -6,7 +6,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {createNode, createSVGNode, TimeScale, getFormattedAnimationTitle} =
   require("devtools/client/animationinspector/utils");
 const {SummaryGraphHelper, getPreferredKeyframesProgressThreshold,

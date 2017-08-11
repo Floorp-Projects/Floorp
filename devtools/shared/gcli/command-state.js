@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 const getTargetId = ({tab}) => tab.linkedBrowser.outerWindowID;
 const enabledCommands = new Map();

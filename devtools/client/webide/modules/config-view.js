@@ -4,7 +4,7 @@
 
 const {Cu} = require("chrome");
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const Services = require("Services");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 

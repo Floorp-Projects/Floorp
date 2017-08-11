@@ -76,7 +76,7 @@ webpackConfig.resolve = {
     "devtools/client/shared/components/frame": path.join(__dirname, "../../client/shared/components/frame"),
 
     "devtools/shared/defer": path.join(__dirname, "../../shared/defer"),
-    "devtools/shared/event-emitter": "devtools-modules/shared/event-emitter",
+    "devtools/shared/old-event-emitter": "devtools-modules/shared/event-emitter",
     "devtools/shared/client/main": path.join(__dirname, "new-console-output/test/fixtures/ObjectClient"),
     "devtools/shared/platform/clipboard": path.join(__dirname, "../../shared/platform/content/clipboard"),
   }
