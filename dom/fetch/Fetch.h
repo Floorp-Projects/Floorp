@@ -123,41 +123,42 @@ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   bool
-  BodyUsed() const { return mBodyUsed; }
+  BodyUsed() const;
 
   already_AddRefed<Promise>
-  ArrayBuffer(ErrorResult& aRv)
+  ArrayBuffer(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_ARRAYBUFFER, aRv);
+    return ConsumeBody(aCx, CONSUME_ARRAYBUFFER, aRv);
   }
 
   already_AddRefed<Promise>
-  Blob(ErrorResult& aRv)
+  Blob(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_BLOB, aRv);
+    return ConsumeBody(aCx, CONSUME_BLOB, aRv);
   }
 
   already_AddRefed<Promise>
-  FormData(ErrorResult& aRv)
+  FormData(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_FORMDATA, aRv);
+    return ConsumeBody(aCx, CONSUME_FORMDATA, aRv);
   }
 
   already_AddRefed<Promise>
-  Json(ErrorResult& aRv)
+  Json(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_JSON, aRv);
+    return ConsumeBody(aCx, CONSUME_JSON, aRv);
   }
 
   already_AddRefed<Promise>
-  Text(ErrorResult& aRv)
+  Text(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_TEXT, aRv);
+    return ConsumeBody(aCx, CONSUME_TEXT, aRv);
   }
 
   void
   GetBody(JSContext* aCx,
-          JS::MutableHandle<JSObject*> aMessage);
+          JS::MutableHandle<JSObject*> aBodyOut,
+          ErrorResult& aRv);
 
   // Utility public methods accessed by various runnables.
 
@@ -179,6 +180,10 @@ protected:
   // Always set whenever the FetchBody is created on the worker thread.
   workers::WorkerPrivate* mWorkerPrivate;
 
+  // This is the ReadableStream exposed to content. It's underlying source is a
+  // FetchStream object.
+  JS::Heap<JSObject*> mReadableStreamBody;
+
   explicit FetchBody(nsIGlobalObject* aOwner);
 
   virtual ~FetchBody();
@@ -194,7 +199,7 @@ private:
   }
 
   already_AddRefed<Promise>
-  ConsumeBody(FetchConsumeType aType, ErrorResult& aRv);
+  ConsumeBody(JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv);
 
   bool
   IsOnTargetThread()
