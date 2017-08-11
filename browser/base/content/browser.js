@@ -3193,6 +3193,10 @@ var BrowserOnClick = {
       title = gNavigatorBundle.getString("safebrowsing.reportedUnwantedSite");
       // There is no button for reporting errors since Google doesn't currently
       // provide a URL endpoint for these reports.
+    } else if (reason === "harmful") {
+      title = gNavigatorBundle.getString("safebrowsing.reportedHarmfulSite");
+      // There is no button for reporting errors since Google doesn't currently
+      // provide a URL endpoint for these reports.
     }
 
     let notificationBox = gBrowser.getNotificationBox();
