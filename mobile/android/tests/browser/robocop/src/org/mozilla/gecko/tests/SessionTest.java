@@ -433,6 +433,13 @@ public abstract class SessionTest extends UITest {
         }
     }
 
+    protected void deleteProfileFile(String filename) {
+        File fileToDelete = new File(mProfile, filename);
+        if (!fileToDelete.delete()) {
+            mAsserter.ok(false, "Error deleting " + filename, null);
+        }
+    }
+
     private String readFile(File target) throws IOException {
         if (!target.exists()) {
             return null;
