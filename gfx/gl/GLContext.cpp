@@ -60,10 +60,6 @@ namespace gl {
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-#ifdef MOZ_GL_DEBUG
-unsigned GLContext::sCurrentGLContextTLS = -1;
-#endif
-
 MOZ_THREAD_LOCAL(const GLContext*) GLContext::sCurrentContext;
 
 // If adding defines, don't forget to undefine symbols. See #undef block below.
@@ -3035,20 +3031,6 @@ GLContext::MakeCurrent(bool aForce) const
     if (MOZ_UNLIKELY( IsDestroyed() ))
         return false;
 
-#ifdef MOZ_GL_DEBUG
-    PR_SetThreadPrivate(sCurrentGLContextTLS, (void*)this);
-
-    // XXX this assertion is disabled because it's triggering on Mac;
-    // we need to figure out why and reenable it.
-#if 0
-    // IsOwningThreadCurrent is a bit of a misnomer;
-    // the "owning thread" is the creation thread,
-    // and the only thread that can own this.  We don't
-    // support contexts used on multiple threads.
-    NS_ASSERTION(IsOwningThreadCurrent(),
-                 "MakeCurrent() called on different thread than this context was created on!");
-#endif
-#endif
     if (mUseTLSIsCurrent && !aForce && sCurrentContext.get() == this) {
         MOZ_ASSERT(IsCurrent());
         return true;
@@ -3086,14 +3068,6 @@ GLContext::BeforeGLCall_Debug(const char* const funcName) const
 
     if (mDebugFlags & DebugFlagTrace) {
         printf_stderr("[gl:%p] > %s\n", this, funcName);
-    }
-
-    GLContext* tlsContext = (GLContext*)PR_GetThreadPrivate(sCurrentGLContextTLS);
-    if (this != tlsContext) {
-        printf_stderr("Fatal: %s called on non-current context %p. The"
-                      " current context for this thread is %p.\n",
-                      funcName, this, tlsContext);
-        MOZ_CRASH("GFX: GLContext is not current.");
     }
 }
 
