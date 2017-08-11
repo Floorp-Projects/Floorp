@@ -6,7 +6,6 @@
 #include "InputData.h"
 
 #include "mozilla/dom/Touch.h"
-#include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsThreadUtils.h"
 #include "mozilla/MouseEvents.h"
@@ -131,10 +130,10 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
 
     // Extract data from weird interfaces.
     int32_t identifier = domTouch->Identifier();
-    int32_t radiusX = domTouch->RadiusX(CallerType::System);
-    int32_t radiusY = domTouch->RadiusY(CallerType::System);
-    float rotationAngle = domTouch->RotationAngle(CallerType::System);
-    float force = domTouch->Force(CallerType::System);
+    int32_t radiusX = domTouch->RadiusX();
+    int32_t radiusY = domTouch->RadiusY();
+    float rotationAngle = domTouch->RotationAngle();
+    float force = domTouch->Force();
 
     SingleTouchData data(identifier,
                          ViewAs<ScreenPixel>(domTouch->mRefPoint,
