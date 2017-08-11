@@ -172,6 +172,7 @@ class AutoSetHandlingSegFault
 # if defined(__linux__) && defined(__mips__)
 #  define EPC_sig(p) ((p)->uc_mcontext.pc)
 #  define RFP_sig(p) ((p)->uc_mcontext.gregs[30])
+#  define RSP_sig(p) ((p)->uc_mcontext.gregs[29])
 # endif
 #elif defined(__NetBSD__)
 # define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
@@ -416,6 +417,7 @@ struct macos_arm_context {
 #elif defined(__mips__)
 # define PC_sig(p) EPC_sig(p)
 # define FP_sig(p) RFP_sig(p)
+# define SP_sig(p) RSP_sig(p)
 #endif
 
 static uint8_t**

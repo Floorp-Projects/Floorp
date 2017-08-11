@@ -1134,7 +1134,10 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     // Reserve space to store resumePC and HeapReg.
     masm.subFromStackPtr(Imm32(2 * sizeof(intptr_t)));
     // set to zero so we can use masm.framePushed() below.
-    masm.setFramePushed(0);
+    masm.push(Imm32(0));            // space used as return address, updated below
+    masm.setFramePushed(0);         // set to 0 now so that framePushed is offset of return address
+    masm.PushRegsInMask(AllRegsExceptSP); // save all GP/FP registers (except PC and SP)
+
     static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too.");
     // save all registers,except sp. After this stack is alligned.
     masm.PushRegsInMask(AllRegsExceptSP);
@@ -1144,10 +1147,6 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     // Align the stack.
     masm.ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
 
-    // Store resumePC into the reserved space.
-    masm.loadWasmActivationFromSymbolicAddress(IntArgReg0);
-    masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
-    masm.storePtr(IntArgReg1, Address(s0, masm.framePushed()));
     // Store HeapReg into the reserved space.
     masm.storePtr(HeapReg, Address(s0, masm.framePushed() + sizeof(intptr_t)));
 
@@ -1163,7 +1162,7 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     masm.addToStackPtr(Imm32(4 * sizeof(intptr_t)));
 # endif
 
-    masm.branchIfFalseBool(ReturnReg, throwLabel);
+    masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
 
     // This will restore stack to the address before the call.
     masm.moveToStackPtr(s0);
