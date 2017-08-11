@@ -1960,8 +1960,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
       // and replace old one.
       mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
       pseudoStyleContext =
-        styleSet->AsServo()->ResolveServoStyle(container,
-                                               ServoTraversalFlags::Empty);
+        styleSet->AsServo()->ResolveServoStyle(container);
     }
   } else {
     mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->AsGecko();
