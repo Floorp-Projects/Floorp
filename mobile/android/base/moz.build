@@ -16,9 +16,6 @@ with Files('*Manifest*'):
 with Files('adjust-sdk-sandbox.token'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
-with Files('pocket-api-sandbox.token'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
-
 with Files('android-services.mozbuild'):
     BUG_COMPONENT = ('Android Background Services', 'Android Sync')
 
