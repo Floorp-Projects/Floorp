@@ -261,7 +261,7 @@ var onboardingTourset = {
           <p data-l10n-id="onboarding.tour-library.description"></p>
         </section>
         <section class="onboarding-tour-content">
-          <img src="resource://onboarding/img/figure_search.svg" role="presentation"/>
+          <img src="resource://onboarding/img/figure_library.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
           <button id="onboarding-tour-library-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-library.button"></button>
@@ -288,7 +288,7 @@ var onboardingTourset = {
           <p data-l10n-id="onboarding.tour-singlesearch.description"></p>
         </section>
         <section class="onboarding-tour-content">
-          <img src="resource://onboarding/img/figure_search.svg" role="presentation"/>
+          <img src="resource://onboarding/img/figure_singlesearch.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
           <button id="onboarding-tour-singlesearch-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-singlesearch.button"></button>
@@ -309,15 +309,13 @@ var onboardingTourset = {
     },
     getPage(win, bundle) {
       let div = win.document.createElement("div");
-      // TODO: The content image is a placeholder. It should be replaced upon assets are available.
-      //       This is tracking in Bug 1382520.
       div.innerHTML = `
         <section class="onboarding-tour-description">
           <h1 data-l10n-id="onboarding.tour-performance.title"></h1>
           <p data-l10n-id="onboarding.tour-performance.description"></p>
         </section>
         <section class="onboarding-tour-content">
-          <img src="resource://onboarding/img/figure_sync.svg" role="presentation"/>
+          <img src="resource://onboarding/img/figure_performance.svg" role="presentation"/>
         </section>
       `;
       return div;
