@@ -631,6 +631,19 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
   return parentFrame;
 }
 
+// This is a bit slow, but sometimes we need it.
+static bool
+ParentIsWrapperAnonBox(nsIFrame* aParent)
+{
+  nsIFrame* maybeAnonBox = aParent;
+  if (maybeAnonBox->StyleContext()->GetPseudo() ==
+        nsCSSAnonBoxes::cellContent) {
+    // The thing that would maybe be a wrapper anon box is the cell.
+    maybeAnonBox = maybeAnonBox->GetParent();
+  }
+  return maybeAnonBox->StyleContext()->IsWrapperAnonBox();
+}
+
 //----------------------------------------------------------------------
 
 // Block/inline frame construction logic. We maintain a few invariants here:
@@ -2218,7 +2231,9 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
                "to output a list where the items have their own children");
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     ConstructFramesFromItemList(aState, aItem.mChildItems,
-                                innerFrame, childItems);
+                                innerFrame,
+                                aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
+                                childItems);
   } else {
     ProcessChildren(aState, content, styleContext, innerFrame,
                     true, childItems, false, aItem.mPendingBinding);
@@ -2301,6 +2316,7 @@ nsCSSFrameConstructor::ConstructTableRowOrRowGroup(nsFrameConstructorState& aSta
                "to output a list where the items have their own children");
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
+                                aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
                                 childItems);
   } else {
     ProcessChildren(aState, content, styleContext, newFrame,
@@ -2423,6 +2439,7 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
     }
 
     ConstructFramesFromItemList(aState, aItem.mChildItems, cellInnerFrame,
+                                aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
                                 childItems);
   } else {
     // Process the child content
@@ -3062,7 +3079,9 @@ nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(nsFrameConstructorStat
   AddFCItemsForAnonymousContent(aState, frameAsContainer, anonymousItems, itemsToConstruct);
 
   nsFrameItems frameItems;
-  ConstructFramesFromItemList(aState, itemsToConstruct, frameAsContainer, frameItems);
+  ConstructFramesFromItemList(aState, itemsToConstruct, frameAsContainer,
+                              /* aParentIsWrapperAnonBox = */ false,
+                              frameItems);
   frameAsContainer->AppendFrames(kPrincipalList, frameItems);
 }
 
@@ -3267,7 +3286,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     FrameConstructionItemList fcItems;
     AddFCItemsForAnonymousContent(aState, comboboxFrame, newAnonymousItems,
                                   fcItems);
-    ConstructFramesFromItemList(aState, fcItems, comboboxFrame, childItems);
+    ConstructFramesFromItemList(aState, fcItems, comboboxFrame,
+                                /* aParentIsWrapperAnonBox = */ false,
+                                childItems);
 
     comboboxFrame->SetInitialChildList(kPrincipalList, childItems);
 
@@ -3934,6 +3955,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                 data->mFullConstructor ==
                   &nsCSSFrameConstructor::ConstructNonScrollableBlock),
                "Unexpected FCDATA_FORCED_NON_SCROLLABLE_BLOCK flag");
+  MOZ_ASSERT(!(bits & FCDATA_IS_WRAPPER_ANON_BOX) ||
+             (bits & FCDATA_USE_CHILD_ITEMS),
+             "Wrapper anon boxes should always have FCDATA_USE_CHILD_ITEMS");
 
   // Don't create a subdocument frame for iframes if we're creating extra frames
   if (aState.mCreatingExtraFrames &&
@@ -4170,7 +4194,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         } else if (newFrame->IsFloatContainingBlock()) {
           aState.PushFloatContainingBlock(newFrameAsContainer, floatSaveState);
         }
-        ConstructFramesFromItemList(aState, aItem.mChildItems, newFrameAsContainer,
+        ConstructFramesFromItemList(aState, aItem.mChildItems,
+                                    newFrameAsContainer,
+                                    bits & FCDATA_IS_WRAPPER_ANON_BOX,
                                     childItems);
       } else {
         // Process the child frames.
@@ -4707,7 +4733,9 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
 
     FrameConstructionItemList items;
     AddFCItemsForAnonymousContent(aState, gfxScrollFrame, scrollNAC, items);
-    ConstructFramesFromItemList(aState, items, gfxScrollFrame, anonymousItems);
+    ConstructFramesFromItemList(aState, items, gfxScrollFrame,
+                                /* aParentIsWrapperAnonBox = */ false,
+                                anonymousItems);
   }
 
   aNewFrame = gfxScrollFrame;
@@ -5272,6 +5300,10 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
 
   InitAndRestoreFrame(aState, aContent, aParentFrame, blockFrame);
   ReparentFrames(this, blockFrame, aBlockItems, false);
+  // We have to walk over aBlockItems before we hand it over to blockFrame.
+  for (nsIFrame* f : aBlockItems) {
+    f->SetParentIsWrapperAnonBox();
+  }
   // abs-pos and floats are disabled in MathML children so we don't have to
   // worry about messing up those.
   blockFrame->SetInitialChildList(kPrincipalList, aBlockItems);
@@ -5414,7 +5446,9 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
                "anonymous child to wrap its child frames");
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     ConstructFramesFromItemList(aState, aItem.mChildItems,
-                                innerFrame, childItems);
+                                innerFrame,
+                                aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
+                                childItems);
   } else {
     ProcessChildren(aState, content, styleContext, innerFrame,
                     true, childItems, false, aItem.mPendingBinding);
@@ -7834,7 +7868,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   items.SetParentHasNoXBLChildren(haveNoXBLChildren);
 
   nsFrameItems frameItems;
-  ConstructFramesFromItemList(state, items, parentFrame, frameItems);
+  ConstructFramesFromItemList(state, items, parentFrame,
+                              ParentIsWrapperAnonBox(parentFrame),
+                              frameItems);
 
   for (nsIContent* child = aFirstNewContent;
        child;
@@ -8399,7 +8435,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   // We make no attempt here to set flags to indicate whether the list
   // will be at the start or end of a block. It doesn't seem worthwhile.
   nsFrameItems frameItems, captionItems;
-  ConstructFramesFromItemList(state, items, insertion.mParentFrame, frameItems);
+  ConstructFramesFromItemList(state, items, insertion.mParentFrame,
+                              ParentIsWrapperAnonBox(insertion.mParentFrame),
+                              frameItems);
 
   if (frameItems.NotEmpty()) {
     for (nsIContent* child = aStartChild;
@@ -9527,7 +9565,9 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
                                         ITEM_ALLOW_XBL_BASE |
                                           ITEM_ALLOW_PAGE_BREAK,
                                         nullptr, items);
-      ConstructFramesFromItemList(state, items, canvasFrame, fixedPlaceholders);
+      ConstructFramesFromItemList(state, items, canvasFrame,
+                                  /* aParentIsWrapperAnonBox = */ false,
+                                  fixedPlaceholders);
     }
   }
 
@@ -10189,6 +10229,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Cell
     FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
                      FCDATA_USE_CHILD_ITEMS |
+                     FCDATA_IS_WRAPPER_ANON_BOX |
                      FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
                      &nsCSSFrameConstructor::ConstructTableCell),
     &nsCSSAnonBoxes::tableCell
@@ -10196,6 +10237,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Row
     FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
                      FCDATA_USE_CHILD_ITEMS |
+                     FCDATA_IS_WRAPPER_ANON_BOX |
                      FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
                      &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
     &nsCSSAnonBoxes::tableRow
@@ -10203,6 +10245,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Row group
     FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
                      FCDATA_USE_CHILD_ITEMS |
+                     FCDATA_IS_WRAPPER_ANON_BOX |
                      FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                      &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
     &nsCSSAnonBoxes::tableRowGroup
@@ -10211,18 +10254,21 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
     FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
                 FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
                 FCDATA_SKIP_ABSPOS_PUSH |
+                FCDATA_IS_WRAPPER_ANON_BOX |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                 NS_NewTableColGroupFrame),
     &nsCSSAnonBoxes::tableColGroup
   },
   { // Table
-    FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS,
+    FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS |
+                     FCDATA_IS_WRAPPER_ANON_BOX,
                      &nsCSSFrameConstructor::ConstructTable),
     &nsCSSAnonBoxes::table
   },
   { // Ruby
     FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
                 FCDATA_USE_CHILD_ITEMS |
+                FCDATA_IS_WRAPPER_ANON_BOX |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyFrame),
     &nsCSSAnonBoxes::ruby
@@ -10230,6 +10276,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Ruby Base
     FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
                 FCDATA_IS_LINE_PARTICIPANT |
+                FCDATA_IS_WRAPPER_ANON_BOX |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyBaseFrame),
@@ -10238,6 +10285,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Ruby Base Container
     FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
                 FCDATA_IS_LINE_PARTICIPANT |
+                FCDATA_IS_WRAPPER_ANON_BOX |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyBaseContainerFrame),
@@ -10246,6 +10294,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Ruby Text
     FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
                 FCDATA_IS_LINE_PARTICIPANT |
+                FCDATA_IS_WRAPPER_ANON_BOX |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyTextFrame),
@@ -10253,6 +10302,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   },
   { // Ruby Text Container
     FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
+                FCDATA_IS_WRAPPER_ANON_BOX |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyTextContainerFrame),
@@ -10343,7 +10393,9 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
                                                                  parentStyle);
 
     static const FrameConstructionData sBlockFormattingContextFCData =
-      FCDATA_DECL(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS,
+      FCDATA_DECL(FCDATA_SKIP_FRAMESET |
+                  FCDATA_USE_CHILD_ITEMS |
+                  FCDATA_IS_WRAPPER_ANON_BOX,
                   NS_NewBlockFormattingContext);
 
     FrameConstructionItem* newItem =
@@ -11000,8 +11052,14 @@ inline void
 nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aState,
                                                    FrameConstructionItemList& aItems,
                                                    nsContainerFrame* aParentFrame,
+                                                   bool aParentIsWrapperAnonBox,
                                                    nsFrameItems& aFrameItems)
 {
+  // Ensure aParentIsWrapperAnonBox is correct.  We _could_ compute it directly,
+  // but it would be a bit slow, which is why we pass it from callers, who have
+  // that information offhand in many cases.
+  MOZ_ASSERT(ParentIsWrapperAnonBox(aParentFrame) == aParentIsWrapperAnonBox);
+
   CreateNeededPseudoContainers(aState, aItems, aParentFrame);
   CreateNeededAnonFlexOrGridItems(aState, aItems, aParentFrame);
   CreateNeededPseudoInternalRubyBoxes(aState, aItems, aParentFrame);
@@ -11017,6 +11075,12 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
   VerifyGridFlexContainerChildren(aParentFrame, aFrameItems);
   NS_ASSERTION(!aState.mHavePendingPopupgroup,
                "Should have proccessed it by now");
+
+  if (aParentIsWrapperAnonBox) {
+    for (nsIFrame* f : aFrameItems) {
+      f->SetParentIsWrapperAnonBox();
+    }
+  }
 }
 
 void
@@ -11319,7 +11383,9 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     ClearLazyBits(aContent->GetFirstChild(), nullptr);
   }
 
-  ConstructFramesFromItemList(aState, itemsToConstruct, aFrame, aFrameItems);
+  ConstructFramesFromItemList(aState, itemsToConstruct, aFrame,
+                              /* aParentIsWrapperAnonBox = */ false,
+                              aFrameItems);
 
   NS_ASSERTION(!aAllowBlockStyles || !aFrame->IsXULBoxFrame(),
                "can't be both block and box");
@@ -12239,7 +12305,9 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
                                       aChild->GetNameSpaceID(),
                                       true, styleContext,
                                       ITEM_ALLOW_XBL_BASE, nullptr, items);
-    ConstructFramesFromItemList(state, items, aParentFrame, frameItems);
+    ConstructFramesFromItemList(state, items, aParentFrame,
+                                /* aParentIsWrapperAnonBox = */ false,
+                                frameItems);
 
     nsIFrame* newFrame = frameItems.FirstChild();
     *aNewFrame = newFrame;
@@ -12435,7 +12503,9 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 
   // Process the child content
   nsFrameItems childItems;
-  ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame, childItems);
+  ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
+                              /* aParentIsWrapperAnonBox = */ false,
+                              childItems);
 
   nsFrameList::FrameLinkEnumerator firstBlockEnumerator(childItems);
   if (!aItem.mIsAllInline) {
