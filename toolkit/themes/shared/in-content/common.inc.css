@@ -22,6 +22,7 @@
   --in-content-border-highlight: #0a84ff;
   --in-content-border-focus: #0a84ff;
   --in-content-border-color: #c1c1c1;
+  --in-content-category-border-focus: 1px dotted #0a84ff;
   --in-content-category-text: #0c0c0d;
   --in-content-category-text-selected: #0a84ff;
   --in-content-tab-color: #424f5a;
@@ -656,8 +657,8 @@ xul|*.radio-label-box {
 }
 
 *|*#categories[keyboard-navigation="true"]:-moz-focusring > *|*.category[current] {
-  border-top: var(--in-content-category-border-focus);
-  border-bottom: var(--in-content-category-border-focus);
+  border: var(--in-content-category-border-focus);
+  border-inline-start: none;
 }
 
 *|*.category-name {
