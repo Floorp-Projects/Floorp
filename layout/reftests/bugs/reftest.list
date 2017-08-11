@@ -1383,7 +1383,7 @@ pref(dom.use_xbl_scopes_for_remote_xul,true) == 495385-2f.xhtml 495385-2-ref.htm
 == 495385-2i.html 495385-2-ref.html
 == 495385-3.html 495385-3-ref.html
 == 495385-4.html 495385-4-ref.html
-== 495385-5.html 495385-5-ref.html
+fails-if(styloVsGecko||stylo) == 495385-5.html 495385-5-ref.html
 == 496032-1.html 496032-1-ref.html
 == 496840-1.html 496840-1-ref.html
 fuzzy-if(skiaContent,1,17000) == 498228-1.xul 498228-1-ref.xul
