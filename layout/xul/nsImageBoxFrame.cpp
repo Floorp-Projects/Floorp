@@ -312,10 +312,9 @@ nsImageBoxFrame::UpdateLoadFlags()
 
 void
 nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                  const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsLeafBoxFrame::BuildDisplayList(aBuilder, aLists);
 
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
@@ -781,7 +780,7 @@ nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest)
     return NS_OK;
   }
 
-  InvalidateLayer(nsDisplayItem::TYPE_XUL_IMAGE);
+  InvalidateLayer(DisplayItemType::TYPE_XUL_IMAGE);
 
   return NS_OK;
 }

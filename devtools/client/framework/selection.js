@@ -7,7 +7,7 @@
 "use strict";
 
 const nodeConstants = require("devtools/shared/dom-node-constants");
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/old-event-emitter");
 
 /**
  * API

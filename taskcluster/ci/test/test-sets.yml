@@ -110,7 +110,6 @@ qr-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - reftest-no-accel
     - xpcshell
 
 jsdcov-code-coverage-tests:

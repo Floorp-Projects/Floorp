@@ -7,7 +7,7 @@
 "use strict";
 
 const {Task} = require("devtools/shared/task");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {DomNodePreview} = require("devtools/client/inspector/shared/dom-node-preview");
 
 // Map dom node fronts by animation fronts so we don't have to get them from the

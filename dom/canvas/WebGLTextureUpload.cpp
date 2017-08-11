@@ -454,7 +454,7 @@ WebGLTexture::TexImage(const char* funcName, TexImageTarget target, GLint level,
                        GLsizei depth, GLint border, const webgl::PackingInfo& pi,
                        const TexImageSource& src)
 {
-    dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(dom::RootingCx());
+    dom::RootedSpiderMonkeyInterface<dom::Uint8ClampedArray> scopedArr(dom::RootingCx());
     const auto blob = ValidateTexOrSubImage(mContext, funcName, target, width, height,
                                             depth, border, pi, src, &scopedArr);
     if (!blob)
@@ -470,7 +470,7 @@ WebGLTexture::TexSubImage(const char* funcName, TexImageTarget target, GLint lev
                           const webgl::PackingInfo& pi, const TexImageSource& src)
 {
     const GLint border = 0;
-    dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(dom::RootingCx());
+    dom::RootedSpiderMonkeyInterface<dom::Uint8ClampedArray> scopedArr(dom::RootingCx());
     const auto blob = ValidateTexOrSubImage(mContext, funcName, target, width, height,
                                             depth, border, pi, src, &scopedArr);
     if (!blob)

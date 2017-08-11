@@ -10,7 +10,7 @@ const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { Task } = require("devtools/shared/task");
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 loader.lazyImporter(this, "SystemAppProxy",
                     "resource://gre/modules/SystemAppProxy.jsm");

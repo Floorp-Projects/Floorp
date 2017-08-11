@@ -56,7 +56,7 @@ public:
 
   void Add(InternalRequest* aRequest, BodyAction aBodyAction,
            SchemeAction aSchemeAction, ErrorResult& aRv);
-  void Add(InternalRequest* aRequest, BodyAction aBodyAction,
+  void Add(JSContext* aCx, InternalRequest* aRequest, BodyAction aBodyAction,
            SchemeAction aSchemeAction, Response& aResponse, ErrorResult& aRv);
 
   const CacheOpArgs& SendAsOpArgs();

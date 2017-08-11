@@ -9,7 +9,7 @@ const { ELLIPSIS } = require("devtools/shared/l10n");
 
 loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/event-emitter");
+  "devtools/shared/old-event-emitter");
 
 loader.lazyRequireGetter(this, "getColor",
   "devtools/client/shared/theme", true);

@@ -27,7 +27,7 @@
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");

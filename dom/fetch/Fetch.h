@@ -18,6 +18,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/FetchStreamReader.h"
 #include "mozilla/dom/RequestBinding.h"
 
 class nsIGlobalObject;
@@ -27,9 +28,11 @@ namespace mozilla {
 namespace dom {
 
 class BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
+class BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrReadableStreamOrUSVString;
 class BlobImpl;
 class InternalRequest;
 class OwningBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
+struct  ReadableStream;
 class RequestOrUSVString;
 enum class CallerType : uint32_t;
 
@@ -47,6 +50,7 @@ UpdateRequestReferrer(nsIGlobalObject* aGlobal, InternalRequest* aRequest);
 
 namespace fetch {
 typedef BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString BodyInit;
+typedef BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrReadableStreamOrUSVString ResponseBodyInit;
 typedef OwningBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString OwningBodyInit;
 };
 
@@ -70,6 +74,16 @@ ExtractByteStreamFromBody(const fetch::BodyInit& aBodyInit,
                           nsCString& aContentType,
                           uint64_t& aContentLength);
 
+/*
+ * Non-owning version. This method should go away when BodyInit will contain
+ * ReadableStream.
+ */
+nsresult
+ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
+                          nsIInputStream** aStream,
+                          nsCString& aContentType,
+                          uint64_t& aContentLength);
+
 template <class Derived> class FetchBodyConsumer;
 
 enum FetchConsumeType
@@ -79,6 +93,15 @@ enum FetchConsumeType
   CONSUME_FORMDATA,
   CONSUME_JSON,
   CONSUME_TEXT,
+};
+
+class FetchStreamHolder
+{
+public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  virtual void
+  NullifyStream() = 0;
 };
 
 /*
@@ -115,58 +138,96 @@ enum FetchConsumeType
  * The pump is always released on the main thread.
  */
 template <class Derived>
-class FetchBody
+class FetchBody : public FetchStreamHolder
 {
 public:
   friend class FetchBodyConsumer<Derived>;
 
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
   bool
-  BodyUsed() const { return mBodyUsed; }
+  BodyUsed() const;
 
   already_AddRefed<Promise>
-  ArrayBuffer(ErrorResult& aRv)
+  ArrayBuffer(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_ARRAYBUFFER, aRv);
+    return ConsumeBody(aCx, CONSUME_ARRAYBUFFER, aRv);
   }
 
   already_AddRefed<Promise>
-  Blob(ErrorResult& aRv)
+  Blob(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_BLOB, aRv);
+    return ConsumeBody(aCx, CONSUME_BLOB, aRv);
   }
 
   already_AddRefed<Promise>
-  FormData(ErrorResult& aRv)
+  FormData(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_FORMDATA, aRv);
+    return ConsumeBody(aCx, CONSUME_FORMDATA, aRv);
   }
 
   already_AddRefed<Promise>
-  Json(ErrorResult& aRv)
+  Json(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_JSON, aRv);
+    return ConsumeBody(aCx, CONSUME_JSON, aRv);
   }
 
   already_AddRefed<Promise>
-  Text(ErrorResult& aRv)
+  Text(JSContext* aCx, ErrorResult& aRv)
   {
-    return ConsumeBody(CONSUME_TEXT, aRv);
+    return ConsumeBody(aCx, CONSUME_TEXT, aRv);
   }
+
+  void
+  GetBody(JSContext* aCx,
+          JS::MutableHandle<JSObject*> aBodyOut,
+          ErrorResult& aRv);
+
+  // If the body contains a ReadableStream body object, this method produces a
+  // tee() of it.
+  void
+  MaybeTeeReadableStreamBody(JSContext* aCx,
+                             JS::MutableHandle<JSObject*> aBodyOut,
+                             FetchStreamReader** aStreamReader,
+                             nsIInputStream** aInputStream,
+                             ErrorResult& aRv);
 
   // Utility public methods accessed by various runnables.
 
+  // This method _must_ be called in order to set the body as used. If the body
+  // is a ReadableStream, this method will start reading the stream.
+  // More in details, this method does:
+  // 1) It uses an internal flag to track if the body is used.  This is tracked
+  // separately from the ReadableStream disturbed state due to purely native
+  // streams.
+  // 2) If there is a ReadableStream reflector for the native stream it is
+  // Locked.
+  // 3) If there is a JS ReadableStream then we begin pumping it into the native
+  // body stream.  This effectively locks and disturbs the stream.
+  //
+  // Note that JSContext is used only if there is a ReadableStream (this can
+  // happen because the body is a ReadableStream or because attribute body has
+  // already been used by content). If something goes wrong using
+  // ReadableStream, errors will be reported via ErrorResult and not as JS
+  // exceptions in JSContext. This is done in order to have a centralized error
+  // reporting way.
+  //
+  // Exceptions generated when reading from the ReadableStream are directly sent
+  // to the Console.
   void
-  SetBodyUsed()
-  {
-    mBodyUsed = true;
-  }
+  SetBodyUsed(JSContext* aCx, ErrorResult& aRv);
 
   const nsCString&
   MimeType() const
   {
     return mMimeType;
+  }
+
+  // FetchStreamHolder
+  void
+  NullifyStream() override
+  {
+    mReadableStreamBody = nullptr;
+    mReadableStreamReader = nullptr;
+    mFetchStreamReader = nullptr;
   }
 
 protected:
@@ -175,12 +236,23 @@ protected:
   // Always set whenever the FetchBody is created on the worker thread.
   workers::WorkerPrivate* mWorkerPrivate;
 
+  // This is the ReadableStream exposed to content. It's underlying source is a
+  // FetchStream object.
+  JS::Heap<JSObject*> mReadableStreamBody;
+
+  // This is the Reader used to retrieve data from the body.
+  JS::Heap<JSObject*> mReadableStreamReader;
+  RefPtr<FetchStreamReader> mFetchStreamReader;
+
   explicit FetchBody(nsIGlobalObject* aOwner);
 
   virtual ~FetchBody();
 
   void
   SetMimeType();
+
+  void
+  SetReadableStreamBody(JSObject* aBody);
 
 private:
   Derived*
@@ -190,7 +262,10 @@ private:
   }
 
   already_AddRefed<Promise>
-  ConsumeBody(FetchConsumeType aType, ErrorResult& aRv);
+  ConsumeBody(JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv);
+
+  void
+  LockStream(JSContext* aCx, JS::HandleObject aStream, ErrorResult& aRv);
 
   bool
   IsOnTargetThread()
