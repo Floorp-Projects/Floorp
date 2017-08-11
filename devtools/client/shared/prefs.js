@@ -4,7 +4,7 @@
 "use strict";
 
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 /**
  * Shortcuts for lazily accessing and setting various preferences.

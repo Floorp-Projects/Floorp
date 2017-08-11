@@ -44,6 +44,7 @@
 #include "nsChangeHint.h"
 #include "nsStyleContextInlines.h"
 #include "mozilla/gfx/MatrixFwd.h"
+#include "nsDisplayItemTypes.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -1635,21 +1636,14 @@ public:
    * BuildDisplayListForChild.
    *
    * See nsDisplayList.h for more information about display lists.
-   *
-   * @param aDirtyRect content outside this rectangle can be ignored; the
-   * rectangle is in frame coordinates
    */
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) {}
   /**
    * Displays the caret onto the given display list builder. The caret is
    * painted on top of the rest of the display list items.
-   *
-   * @param aDirtyRect is the dirty rectangle that we're repainting.
    */
   void DisplayCaret(nsDisplayListBuilder* aBuilder,
-                    const nsRect&         aDirtyRect,
                     nsDisplayList*        aList);
 
   /**
@@ -1683,11 +1677,8 @@ public:
   /**
    * Builds a display list for the content represented by this frame,
    * treating this frame as the root of a stacking context.
-   * @param aDirtyRect content outside this rectangle can be ignored; the
-   * rectangle is in frame coordinates
    */
   void BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
-                                          const nsRect&         aDirtyRect,
                                           nsDisplayList*        aList);
 
   enum {
@@ -1706,7 +1697,6 @@ public:
    */
   void BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                 nsIFrame*               aChild,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists,
                                 uint32_t                aFlags = 0);
 
@@ -3043,7 +3033,7 @@ public:
   enum {
     UPDATE_IS_ASYNC = 1 << 0
   };
-  Layer* InvalidateLayer(uint32_t aDisplayItemKey,
+  Layer* InvalidateLayer(DisplayItemType aDisplayItemKey,
                          const nsIntRect* aDamageRect = nullptr,
                          const nsRect* aFrameDamageRect = nullptr,
                          uint32_t aFlags = 0);
@@ -4063,7 +4053,7 @@ private:
   nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
   DisplayItemArray mDisplayItemData;
 
-  void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder, const nsRect& aDirtyRect);
+  void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder);
 
   static void DestroyPaintedPresShellList(nsTArray<nsWeakPtr>* list) {
     list->Clear();

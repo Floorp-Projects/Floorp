@@ -20,7 +20,6 @@ public:
   // overridden so that children of listitems don't handle mouse events,
   // unless allowevents="true" is specified on the listitem
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
-                                           const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) override;
 
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aState) override;

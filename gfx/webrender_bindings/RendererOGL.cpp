@@ -9,6 +9,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/webrender/RenderBufferTextureHost.h"
 #include "mozilla/webrender/RenderTextureHostOGL.h"
 #include "mozilla/widget/CompositorWidget.h"

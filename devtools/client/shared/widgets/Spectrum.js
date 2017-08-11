@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**

@@ -24,3 +24,15 @@ interface Body {
   [Throws]
   Promise<USVString> text();
 };
+
+// These are helper dictionaries for the parsing of a
+// getReader().read().then(data) parsing.
+// See more about how these 2 helpers are used in
+// dom/fetch/FetchStreamReader.cpp
+dictionary FetchReadableStreamReadDataDone {
+  boolean done = false;
+};
+
+dictionary FetchReadableStreamReadDataArray {
+  Uint8Array value;
+};

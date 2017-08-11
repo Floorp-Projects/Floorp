@@ -28,7 +28,7 @@ const NewConsoleOutputWrapper = browserRequire(
   "devtools/client/webconsole/new-console-output/new-console-output-wrapper");
 const actions =
   browserRequire("devtools/client/webconsole/new-console-output/actions/index");
-const EventEmitter = browserRequire("devtools/shared/event-emitter");
+const EventEmitter = browserRequire("devtools/shared/old-event-emitter");
 const testPackets = Array.from({length: NUM_MESSAGES}).map((el, id) => ({
   "from": "server1.conn4.child1/consoleActor2",
   "type": "consoleAPICall",

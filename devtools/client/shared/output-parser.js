@@ -7,7 +7,7 @@
 const {angleUtils} = require("devtools/client/shared/css-angle");
 const {colorUtils} = require("devtools/shared/css/color");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {
   ANGLE_TAKING_FUNCTIONS,
   BASIC_SHAPE_FUNCTIONS,

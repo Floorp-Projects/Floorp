@@ -44,10 +44,9 @@ nsFirstLetterFrame::GetFrameName(nsAString& aResult) const
 
 void
 nsFirstLetterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                     const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
-  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  BuildDisplayListForInline(aBuilder, aLists);
 }
 
 void

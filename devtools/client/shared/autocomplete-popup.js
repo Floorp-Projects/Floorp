@@ -8,7 +8,7 @@
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const Services = require("Services");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 
 let itemIdCounter = 0;

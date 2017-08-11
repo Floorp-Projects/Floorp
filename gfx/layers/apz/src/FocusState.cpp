@@ -103,6 +103,14 @@ FocusState::Update(uint64_t aRootLayerTreeId,
         // Mark what sequence number this target has so we can determine whether
         // it is stale or not
         mLastContentProcessedEvent = target.mSequenceNumber;
+
+        // If this focus state was just created and content has experienced more
+        // events then us, then assume we were recreated and sync focus sequence
+        // numbers.
+        if (mLastAPZProcessedEvent == 1 &&
+            mLastContentProcessedEvent > mLastAPZProcessedEvent) {
+          mLastAPZProcessedEvent = mLastContentProcessedEvent;
+        }
         return;
       }
       case FocusTarget::eNone: {

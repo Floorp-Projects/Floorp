@@ -127,7 +127,7 @@ SpammyLayoutWarningsEnabled()
 void*
 AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder)
 {
-  return aBuilder->Allocate(aSize);
+  return aBuilder->Allocate(aSize, DisplayItemType::TYPE_ZERO);
 }
 
 /* static */ bool
@@ -952,7 +952,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   mFrameToAnimatedGeometryRootMap.Put(aReferenceFrame, &mRootAGR);
 
   nsCSSRendering::BeginFrameTreesLocked();
-  static_assert(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS),
+  static_assert(static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
                 "Check nsDisplayItem::TYPE_MAX should not overflow");
 }
 
@@ -1047,10 +1047,9 @@ nsDisplayListBuilder::FindAnimatedGeometryRootFor(nsDisplayItem* aItem)
 
 
 void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
-                                                        nsIFrame* aFrame,
-                                                        const nsRect& aDirtyRect)
+                                                        nsIFrame* aFrame)
 {
-  nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
+  nsRect dirtyRectRelativeToDirtyFrame = GetDirtyRect();
   if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
       IsPaintingToWindow()) {
     NS_ASSERTION(aDirtyFrame == aFrame->GetParent(), "Dirty frame should be viewport frame");
@@ -1065,7 +1064,8 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
       dirtyRectRelativeToDirtyFrame.SizeTo(aDirtyFrame->GetSize());
     }
   }
-  nsRect dirty = dirtyRectRelativeToDirtyFrame - aFrame->GetOffsetTo(aDirtyFrame);
+  nsPoint offset = aFrame->GetOffsetTo(aDirtyFrame);
+  nsRect dirty = dirtyRectRelativeToDirtyFrame - offset;
   nsRect overflowRect = aFrame->GetVisualOverflowRect();
 
   if (aFrame->IsTransformed() &&
@@ -1105,6 +1105,7 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
       return;
     f->RemoveStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
   }
+
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
@@ -1218,13 +1219,13 @@ DisplayListIsNonBlank(nsDisplayList* aList)
 {
   for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
     switch (i->GetType()) {
-      case nsDisplayItem::TYPE_LAYER_EVENT_REGIONS:
-      case nsDisplayItem::TYPE_CANVAS_BACKGROUND_COLOR:
-      case nsDisplayItem::TYPE_CANVAS_BACKGROUND_IMAGE:
+      case DisplayItemType::TYPE_LAYER_EVENT_REGIONS:
+      case DisplayItemType::TYPE_CANVAS_BACKGROUND_COLOR:
+      case DisplayItemType::TYPE_CANVAS_BACKGROUND_IMAGE:
         continue;
-      case nsDisplayItem::TYPE_SOLID_COLOR:
-      case nsDisplayItem::TYPE_BACKGROUND:
-      case nsDisplayItem::TYPE_BACKGROUND_COLOR:
+      case DisplayItemType::TYPE_SOLID_COLOR:
+      case DisplayItemType::TYPE_BACKGROUND:
+      case DisplayItemType::TYPE_BACKGROUND_COLOR:
         if (i->Frame()->IsCanvasFrame()) {
           continue;
         }
@@ -1280,8 +1281,7 @@ nsDisplayListBuilder::ResetMarkedFramesForDisplayList()
 
 void
 nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
-                                               const nsFrameList& aFrames,
-                                               const nsRect& aDirtyRect) {
+                                               const nsFrameList& aFrames) {
   for (nsIFrame* e : aFrames) {
     // Skip the AccessibleCaret frame when building no caret.
     if (!IsBuildingCaret()) {
@@ -1295,7 +1295,7 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
     }
 
     mFramesMarkedForDisplay.AppendElement(e);
-    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e, aDirtyRect);
+    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e);
   }
 
   if (!aDirtyFrame->GetParent()) {
@@ -1313,7 +1313,7 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
     const DisplayItemClipChain* combinedClipChain = mClipState.GetCurrentCombinedClipChain(this);
     const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
     CurrentPresShellState()->mFixedBackgroundDisplayData.emplace(
-      clipChain, combinedClipChain, asr, aDirtyRect);
+      clipChain, combinedClipChain, asr, GetDirtyRect());
   }
 }
 
@@ -1344,16 +1344,21 @@ nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame)
 }
 
 void*
-nsDisplayListBuilder::Allocate(size_t aSize)
+nsDisplayListBuilder::Allocate(size_t aSize, DisplayItemType aType)
 {
   return mPool.Allocate(aSize);
+}
+
+void
+nsDisplayListBuilder::Destroy(DisplayItemType aType, void* aPtr)
+{
 }
 
 ActiveScrolledRoot*
 nsDisplayListBuilder::AllocateActiveScrolledRoot(const ActiveScrolledRoot* aParent,
                                                  nsIScrollableFrame* aScrollableFrame)
 {
-  void* p = Allocate(sizeof(ActiveScrolledRoot));
+  void* p = Allocate(sizeof(ActiveScrolledRoot), DisplayItemType::TYPE_ZERO);
   ActiveScrolledRoot* asr =
     new (KnownNotNull, p) ActiveScrolledRoot(aParent, aScrollableFrame);
   mActiveScrolledRoots.AppendElement(asr);
@@ -1365,7 +1370,7 @@ nsDisplayListBuilder::AllocateDisplayItemClipChain(const DisplayItemClip& aClip,
                                                    const ActiveScrolledRoot* aASR,
                                                    const DisplayItemClipChain* aParent)
 {
-  void* p = Allocate(sizeof(DisplayItemClipChain));
+  void* p = Allocate(sizeof(DisplayItemClipChain), DisplayItemType::TYPE_ZERO);
   DisplayItemClipChain* c = new (KnownNotNull, p) DisplayItemClipChain{ aClip, aASR, aParent };
   mClipChainsToDestroy.AppendElement(c);
   return c;
@@ -1946,7 +1951,7 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
   if (aBuilder->IsForPluginGeometry() &&
-      aItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS)
+      aItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS)
   {
     // Treat all leaf chrome items as opaque, unless their frames are opacity:0.
     // Since opacity:0 frames generate an nsDisplayOpacity, that item will
@@ -2390,10 +2395,10 @@ nsDisplayItem* nsDisplayList::RemoveBottom() {
   return item;
 }
 
-void nsDisplayList::DeleteAll() {
+void nsDisplayList::DeleteAll(nsDisplayListBuilder* aBuilder) {
   nsDisplayItem* item;
   while ((item = RemoveBottom()) != nullptr) {
-    item->~nsDisplayItem();
+    item->Destroy(aBuilder);
   }
 }
 
@@ -2468,7 +2473,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
     // Collect leaves of the current 3D rendering context.
     for (item = GetBottom(); item; item = item->GetAbove()) {
       auto itemType = item->GetType();
-      if (itemType != nsDisplayItem::TYPE_TRANSFORM ||
+      if (itemType != DisplayItemType::TYPE_TRANSFORM ||
           !static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext()) {
         item->HitTest(aBuilder, aRect, aState, aOutFrames);
       } else {
@@ -2495,12 +2500,12 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
     nsRect r = item->GetBounds(aBuilder, &snap).Intersect(aRect);
     auto itemType = item->GetType();
     bool same3DContext =
-      (itemType == nsDisplayItem::TYPE_TRANSFORM &&
+      (itemType == DisplayItemType::TYPE_TRANSFORM &&
        static_cast<nsDisplayTransform*>(item)->IsParticipating3DContext()) ||
-      (itemType == nsDisplayItem::TYPE_PERSPECTIVE &&
+      (itemType == DisplayItemType::TYPE_PERSPECTIVE &&
        item->Frame()->Extend3DContext());
     if (same3DContext &&
-        (itemType != nsDisplayItem::TYPE_TRANSFORM ||
+        (itemType != DisplayItemType::TYPE_TRANSFORM ||
          !static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext())) {
       if (!item->GetClip().MayIntersect(aRect)) {
         continue;
@@ -2522,7 +2527,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
       // For 3d transforms with preserve-3d we add hit frames into the temp list
       // so we can sort them later, otherwise we add them directly to the output list.
       nsTArray<nsIFrame*> *writeFrames = aOutFrames;
-      if (item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
+      if (item->GetType() == DisplayItemType::TYPE_TRANSFORM &&
           static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext()) {
         if (outFrames.Length()) {
           nsDisplayTransform *transform = static_cast<nsDisplayTransform*>(item);
@@ -3306,7 +3311,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
           // There cannot be any transforms between aFrame and rootFrame
           // because then bgData.shouldFixToViewport would have been false.
           nsRect dirtyRect = displayData->mDirtyRect + aFrame->GetOffsetTo(rootFrame);
-          buildingDisplayList.SetDirtyRect(dirtyRect);
+          aBuilder->SetDirtyRect(dirtyRect);
         }
       }
       nsDisplayBackgroundImage* bgItem = nullptr;
@@ -3316,8 +3321,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
         DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
         bgImageClip.Clear();
         if (aSecondaryReferenceFrame) {
-          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(bgData,
-                                                                aSecondaryReferenceFrame);
+          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(bgData, aSecondaryReferenceFrame);
         } else {
           bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
         }
@@ -3481,12 +3485,12 @@ nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
 static void CheckForBorderItem(nsDisplayItem *aItem, uint32_t& aFlags)
 {
   nsDisplayItem* nextItem = aItem->GetAbove();
-  while (nextItem && nextItem->GetType() == nsDisplayItem::TYPE_BACKGROUND) {
+  while (nextItem && nextItem->GetType() == DisplayItemType::TYPE_BACKGROUND) {
     nextItem = nextItem->GetAbove();
   }
   if (nextItem &&
       nextItem->Frame() == aItem->Frame() &&
-      nextItem->GetType() == nsDisplayItem::TYPE_BORDER) {
+      nextItem->GetType() == DisplayItemType::TYPE_BORDER) {
     aFlags |= nsCSSRendering::PAINTBG_WILL_PAINT_BORDER;
   }
 }
@@ -3848,8 +3852,7 @@ nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
 uint32_t
 nsDisplayBackgroundImage::GetPerFrameKey()
 {
-  return (mLayer << nsDisplayItem::TYPE_BITS) |
-    nsDisplayItem::GetPerFrameKey();
+  return (mLayer << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
 }
 
 nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(const InitData& aData,
@@ -5648,7 +5651,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
   // will have the correct reference frame set (since nsDisplayTransform
   // handles this explictly).
   nsDisplayItem *i = mList.GetBottom();
-  if (i && (!i->GetAbove() || i->GetType() == TYPE_TRANSFORM) &&
+  if (i && (!i->GetAbove() || i->GetType() == DisplayItemType::TYPE_TRANSFORM) &&
       i->Frame() == mFrame) {
     mReferenceFrame = i->ReferenceFrame();
     mToReferenceFrame = i->ToReferenceFrame();
@@ -5684,8 +5687,6 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayWrapList::~nsDisplayWrapList() {
-  mList.DeleteAll();
-
   MOZ_COUNT_DTOR(nsDisplayWrapList);
 }
 
@@ -5766,7 +5767,7 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
     }
 
     LayerState state = i->GetLayerState(aBuilder, aManager, aParameters);
-    if (state == LAYER_ACTIVE && i->GetType() == nsDisplayItem::TYPE_BLEND_MODE) {
+    if (state == LAYER_ACTIVE && i->GetType() == DisplayItemType::TYPE_BLEND_MODE) {
       // nsDisplayBlendMode always returns LAYER_ACTIVE to ensure that the
       // blending operation happens in the intermediate surface of its parent
       // display item (usually an nsDisplayBlendContainer). But this does not
@@ -6025,7 +6026,7 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
   bool snap;
   uint32_t numChildren = 0;
   for (; numChildren < ArrayLength(children) && child; numChildren++, child = child->GetAbove()) {
-    if (child->GetType() == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+    if (child->GetType() == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
       numChildren--;
       continue;
     }
@@ -6099,7 +6100,7 @@ nsDisplayOpacity::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayOpacity::TryMerge(nsDisplayItem* aItem) {
-  if (aItem->GetType() != TYPE_OPACITY)
+  if (aItem->GetType() != DisplayItemType::TYPE_OPACITY)
     return false;
   // items for the same content element should be merged into a single
   // compositing group
@@ -6248,7 +6249,7 @@ bool nsDisplayBlendMode::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayBlendMode::TryMerge(nsDisplayItem* aItem) {
-  if (aItem->GetType() != TYPE_BLEND_MODE)
+  if (aItem->GetType() != DisplayItemType::TYPE_BLEND_MODE)
     return false;
   nsDisplayBlendMode* item = static_cast<nsDisplayBlendMode*>(aItem);
   // items for the same content element should be merged into a single
@@ -6339,7 +6340,7 @@ nsDisplayBlendContainer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 }
 
 bool nsDisplayBlendContainer::TryMerge(nsDisplayItem* aItem) {
-  if (aItem->GetType() != TYPE_BLEND_CONTAINER)
+  if (aItem->GetType() != DisplayItemType::TYPE_BLEND_CONTAINER)
     return false;
   // items for the same content element should be merged into a single
   // compositing group
@@ -6769,7 +6770,7 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayFixedPosition::TryMerge(nsDisplayItem* aItem) {
-  if (aItem->GetType() != TYPE_FIXED_POSITION)
+  if (aItem->GetType() != DisplayItemType::TYPE_FIXED_POSITION)
     return false;
   // Items with the same fixed position frame can be merged.
   nsDisplayFixedPosition* other = static_cast<nsDisplayFixedPosition*>(aItem);
@@ -6928,7 +6929,7 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayStickyPosition::TryMerge(nsDisplayItem* aItem) {
-  if (aItem->GetType() != TYPE_STICKY_POSITION)
+  if (aItem->GetType() != DisplayItemType::TYPE_STICKY_POSITION)
     return false;
   // Items with the same fixed position frame can be merged.
   nsDisplayStickyPosition* other = static_cast<nsDisplayStickyPosition*>(aItem);
@@ -8369,7 +8370,7 @@ nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
   , mIndex(aBuilder->AllocatePerspectiveItemIndex())
 {
   MOZ_ASSERT(mList.GetChildren()->Count() == 1);
-  MOZ_ASSERT(mList.GetChildren()->GetTop()->GetType() == TYPE_TRANSFORM);
+  MOZ_ASSERT(mList.GetChildren()->GetTop()->GetType() == DisplayItemType::TYPE_TRANSFORM);
 }
 
 already_AddRefed<Layer>
@@ -8717,7 +8718,7 @@ nsDisplayMask::~nsDisplayMask()
 
 bool nsDisplayMask::TryMerge(nsDisplayItem* aItem)
 {
-  if (aItem->GetType() != TYPE_MASK)
+  if (aItem->GetType() != DisplayItemType::TYPE_MASK)
     return false;
 
   // Do not merge items for box-decoration-break:clone elements,
@@ -9057,7 +9058,7 @@ nsDisplayFilter::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 bool nsDisplayFilter::TryMerge(nsDisplayItem* aItem)
 {
-  if (aItem->GetType() != TYPE_FILTER) {
+  if (aItem->GetType() != DisplayItemType::TYPE_FILTER) {
     return false;
   }
 

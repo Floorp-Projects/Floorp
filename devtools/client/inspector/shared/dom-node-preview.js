@@ -4,7 +4,7 @@
 "use strict";
 
 const {Task} = require("devtools/shared/task");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {createNode} = require("devtools/client/animationinspector/utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 

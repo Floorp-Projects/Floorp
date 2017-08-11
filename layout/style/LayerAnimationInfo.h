@@ -20,7 +20,7 @@ struct LayerAnimationInfo {
   // a record of the corresponding layer type and change hint.
   struct Record {
     nsCSSPropertyID mProperty;
-    nsDisplayItem::Type mLayerType;
+    DisplayItemType mLayerType;
     nsChangeHint mChangeHint;
   };
 

@@ -6,7 +6,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 loader.lazyRequireGetter(this, "StorageFront",
                          "devtools/shared/fronts/storage", true);
