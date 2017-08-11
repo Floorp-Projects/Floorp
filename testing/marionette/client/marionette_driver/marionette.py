@@ -1168,6 +1168,7 @@ class Marionette(object):
         :param relative_url: The url of a static file, relative to Marionette's www directory.
         '''
         return "{0}{1}".format(self.baseurl, relative_url)
+
     @do_process_check
     def start_session(self, capabilities=None, timeout=60):
         """Create a new WebDriver session.
