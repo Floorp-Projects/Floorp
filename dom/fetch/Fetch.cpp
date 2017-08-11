@@ -900,6 +900,7 @@ FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
   : mOwner(aOwner)
   , mWorkerPrivate(nullptr)
   , mReadableStreamBody(nullptr)
+  , mReadableStreamReader(nullptr)
   , mBodyUsed(false)
 {
   MOZ_ASSERT(aOwner);
@@ -925,6 +926,12 @@ template <class Derived>
 FetchBody<Derived>::~FetchBody()
 {
 }
+
+template
+FetchBody<Request>::~FetchBody();
+
+template
+FetchBody<Response>::~FetchBody();
 
 template <class Derived>
 bool
@@ -974,13 +981,27 @@ FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
 
   SetBodyUsed();
 
-  // If we already created a ReadableStreamBody we have to lock it now because
-  // it can have been shared with other objects.
+  // If we already have a ReadableStreamBody and it has been created by DOM, we
+  // have to lock it now because it can have been shared with other objects.
   if (mReadableStreamBody) {
-    JS::Rooted<JSObject*> body(aCx, mReadableStreamBody);
-    LockStream(aCx, body, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
+    JS::Rooted<JSObject*> readableStreamObj(aCx, mReadableStreamBody);
+    if (JS::ReadableStreamGetMode(readableStreamObj) ==
+          JS::ReadableStreamMode::ExternalSource) {
+      LockStream(aCx, readableStreamObj, aRv);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
+    } else {
+      // If this is not a native ReadableStream, let's activate the
+      // FetchStreamReader.
+      MOZ_ASSERT(mFetchStreamReader);
+      JS::Rooted<JSObject*> reader(aCx);
+      mFetchStreamReader->StartConsuming(aCx, readableStreamObj, &reader, aRv);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
+
+      mReadableStreamReader = reader;
     }
   }
 
@@ -1057,6 +1078,11 @@ FetchBody<Derived>::GetBody(JSContext* aCx,
                             JS::MutableHandle<JSObject*> aBodyOut,
                             ErrorResult& aRv)
 {
+  if (mReadableStreamBody) {
+    aBodyOut.set(mReadableStreamBody);
+    return;
+  }
+
   nsCOMPtr<nsIInputStream> inputStream;
   DerivedClass()->GetBody(getter_AddRefs(inputStream));
 
@@ -1065,30 +1091,27 @@ FetchBody<Derived>::GetBody(JSContext* aCx,
     return;
   }
 
-  if (!mReadableStreamBody) {
-    JS::Rooted<JSObject*> body(aCx,
-                               FetchStream::Create(aCx,
-                                                   this,
-                                                   DerivedClass()->GetParentObject(),
-                                                   inputStream,
-                                                   aRv));
+  JS::Rooted<JSObject*> body(aCx,
+                             FetchStream::Create(aCx,
+                                                 this,
+                                                 DerivedClass()->GetParentObject(),
+                                                 inputStream,
+                                                 aRv));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  MOZ_ASSERT(body);
+
+  // If the body has been already consumed, we lock the stream.
+  if (BodyUsed()) {
+    LockStream(aCx, body, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
-
-    MOZ_ASSERT(body);
-
-    // If the body has been already consumed, we close the stream.
-    if (BodyUsed()) {
-      LockStream(aCx, body, aRv);
-      if (NS_WARN_IF(aRv.Failed())) {
-        return;
-      }
-    }
-
-    mReadableStreamBody = body;
   }
 
+  mReadableStreamBody = body;
   aBodyOut.set(mReadableStreamBody);
 }
 
@@ -1110,7 +1133,15 @@ FetchBody<Derived>::LockStream(JSContext* aCx,
                                JS::HandleObject aStream,
                                ErrorResult& aRv)
 {
-  // TODO: next patch.
+  JS::Rooted<JSObject*> reader(aCx,
+                               JS::ReadableStreamGetReader(aCx, aStream,
+                                                           JS::ReadableStreamReaderMode::Default));
+  if (!reader) {
+    aRv.StealExceptionFromJSContext(aCx);
+    return;
+  }
+
+  mReadableStreamReader = reader;
 }
 
 template
@@ -1129,9 +1160,17 @@ template <class Derived>
 void
 FetchBody<Derived>::MaybeTeeReadableStreamBody(JSContext* aCx,
                                                JS::MutableHandle<JSObject*> aBodyOut,
+                                               FetchStreamReader** aStreamReader,
+                                               nsIInputStream** aInputStream,
                                                ErrorResult& aRv)
 {
+  MOZ_DIAGNOSTIC_ASSERT(aStreamReader);
+  MOZ_DIAGNOSTIC_ASSERT(aInputStream);
   MOZ_DIAGNOSTIC_ASSERT(!BodyUsed());
+
+  aBodyOut.set(nullptr);
+  *aStreamReader = nullptr;
+  *aInputStream = nullptr;
 
   if (!mReadableStreamBody) {
     return;
@@ -1157,18 +1196,27 @@ FetchBody<Derived>::MaybeTeeReadableStreamBody(JSContext* aCx,
 
   mReadableStreamBody = branch1;
   aBodyOut.set(branch2);
+
+  aRv = FetchStreamReader::Create(aCx, mOwner, aStreamReader, aInputStream);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 }
 
 template
 void
 FetchBody<Request>::MaybeTeeReadableStreamBody(JSContext* aCx,
                                                JS::MutableHandle<JSObject*> aMessage,
+                                               FetchStreamReader** aStreamReader,
+                                               nsIInputStream** aInputStream,
                                                ErrorResult& aRv);
 
 template
 void
 FetchBody<Response>::MaybeTeeReadableStreamBody(JSContext* aCx,
                                                 JS::MutableHandle<JSObject*> aMessage,
+                                                FetchStreamReader** aStreamReader,
+                                                nsIInputStream** aInputStream,
                                                 ErrorResult& aRv);
 
 } // namespace dom
