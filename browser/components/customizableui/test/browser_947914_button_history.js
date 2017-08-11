@@ -11,6 +11,8 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PATH + "dummy_history_item.html");
   await BrowserTestUtils.removeTab(tab);
 
+  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PATH); // will 404, but we don't care.
+
   CustomizableUI.addWidgetToArea("history-panelmenu", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   registerCleanupFunction(() => CustomizableUI.reset());
 
@@ -25,12 +27,18 @@ add_task(async function() {
   historyButton.click();
   await promise;
   ok(historyPanel.getAttribute("current"), "History Panel is in view");
-  let historyItems = document.getElementById("appMenu_historyMenu");
-  ok(historyItems.querySelector("toolbarbutton.bookmark-item[label='Happy History Hero']"),
-     "Should have a history item for the history we just made.");
 
+  let browserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let panelHiddenPromise = promiseOverflowHidden(window);
-  document.getElementById("widget-overflow").hidePopup();
+
+  let historyItems = document.getElementById("appMenu_historyMenu");
+  let historyItemForURL = historyItems.querySelector("toolbarbutton.bookmark-item[label='Happy History Hero']");
+  ok(historyItemForURL, "Should have a history item for the history we just made.");
+  historyItemForURL.click();
+  await browserLoaded;
+  is(gBrowser.currentURI.spec, TEST_PATH + "dummy_history_item.html", "Should have expected page load");
+
   await panelHiddenPromise
+  await BrowserTestUtils.removeTab(tab);
   info("Menu panel was closed");
 });
