@@ -23,6 +23,9 @@ interface nsITransferable;
 
 %{C++
 namespace mozilla {
+class EditorBase;
+class HTMLEditor;
+class TextEditor;
 namespace widget {
 struct IMEState;
 } // namespace widget
@@ -589,4 +592,33 @@ interface nsIEditor  : nsISupports
    * whether this editor has active IME transaction
    */
   readonly attribute boolean composing;
+
+%{C++
+  /**
+   * AsEditorBase() returns a pointer to EditorBase class.
+   *
+   * In order to avoid circular dependency issues, this method is defined
+   * in mozilla/EditorBase.h.  Consumers need to #include that header.
+   */
+  inline mozilla::EditorBase* AsEditorBase();
+  inline const mozilla::EditorBase* AsEditorBase() const;
+
+  /**
+   * AsTextEditor() returns a pointer to TextEditor class.
+   *
+   * In order to avoid circular dependency issues, this method is defined
+   * in mozilla/TextEditor.h.  Consumers need to #include that header.
+   */
+  inline mozilla::TextEditor* AsTextEditor();
+  inline const mozilla::TextEditor* AsTextEditor() const;
+
+  /**
+   * AsHTMLEditor() returns a pointer to HTMLEditor class.
+   *
+   * In order to avoid circular dependency issues, this method is defined
+   * in mozilla/HTMLEditor.h.  Consumers need to #include that header.
+   */
+  inline mozilla::HTMLEditor* AsHTMLEditor();
+  inline const mozilla::HTMLEditor* AsHTMLEditor() const;
+%}
 };

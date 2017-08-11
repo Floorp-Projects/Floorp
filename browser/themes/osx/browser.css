@@ -141,7 +141,7 @@
   background: var(--toolbar-bgcolor);
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
   /* add extra padding to compensate the bottom border */
   padding-bottom: 2px;
 }
@@ -1059,8 +1059,6 @@ html|span.ac-emphasize-text-url {
 .tab-label {
   margin-top: 1px;
   margin-bottom: 0;
-  -moz-box-flex: 1;
-  text-align: center;
 }
 
 .tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"]) {
@@ -1117,6 +1115,7 @@ html|span.ac-emphasize-text-url {
 
 :root:-moz-any([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {
   -moz-appearance: -moz-mac-vibrancy-dark;
+  background-color: #232323;
   color: hsl(240, 9%, 98%);
   text-shadow: none;
 }

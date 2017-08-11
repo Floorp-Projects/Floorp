@@ -1131,13 +1131,6 @@
       </toolbaritem>
     </toolbar>
 
-    <!-- This is a shim which will go away ASAP. See bug 749804 for details -->
-    <toolbar id="addon-bar" toolbar-delegate="nav-bar" mode="icons" iconsize="small"
-             customizable="true">
-      <hbox id="addonbar-closebutton"/>
-      <statusbar id="status-bar"/>
-    </toolbar>
-
     <toolbarpalette id="BrowserToolbarPalette">
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"

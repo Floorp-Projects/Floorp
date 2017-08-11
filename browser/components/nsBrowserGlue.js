@@ -1789,7 +1789,7 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 18) {
       // Remove iconsize and mode from all the toolbars
       let toolbars = ["navigator-toolbox", "nav-bar", "PersonalToolbar",
-                      "addon-bar", "TabsToolbar", "toolbar-menubar"];
+                      "TabsToolbar", "toolbar-menubar"];
       for (let resourceName of ["mode", "iconsize"]) {
         for (let toolbarId of toolbars) {
           xulStore.removeValue(BROWSER_DOCURL, toolbarId, resourceName);
@@ -1970,7 +1970,7 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 39) {
       // Remove the 'defaultset' value for all the toolbars
       let toolbars = ["nav-bar", "PersonalToolbar",
-                      "addon-bar", "TabsToolbar", "toolbar-menubar"];
+                      "TabsToolbar", "toolbar-menubar"];
       for (let toolbarId of toolbars) {
         xulStore.removeValue(BROWSER_DOCURL, toolbarId, "defaultset");
       }

@@ -543,17 +543,43 @@ NS_IMETHODIMP
 EditorBase::GetIsSelectionEditable(bool* aIsSelectionEditable)
 {
   NS_ENSURE_ARG_POINTER(aIsSelectionEditable);
+  *aIsSelectionEditable = IsSelectionEditable();
+  return NS_OK;
+}
 
+bool
+EditorBase::IsSelectionEditable()
+{
   // get current selection
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return false;
+  }
 
-  // XXX we just check that the anchor node is editable at the moment
-  //     we should check that all nodes in the selection are editable
-  nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
-  *aIsSelectionEditable = anchorNode && IsEditable(anchorNode);
+  if (!mIsHTMLEditorClass) {
+    // XXX we just check that the anchor node is editable at the moment
+    //     we should check that all nodes in the selection are editable
+    nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
+    return anchorNode && IsEditable(anchorNode);
+  }
 
-  return NS_OK;
+  // Per the editing spec as of June 2012: we have to have a selection whose
+  // start and end nodes are editable, and which share an ancestor editing
+  // host.  (Bug 766387.)
+  bool isSelectionEditable = selection->RangeCount() &&
+                             selection->GetAnchorNode()->IsEditable() &&
+                             selection->GetFocusNode()->IsEditable();
+  if (!isSelectionEditable) {
+    return false;
+  }
+
+  nsINode* commonAncestor =
+    selection->GetAnchorFocusRange()->GetCommonAncestor();
+  while (commonAncestor && !commonAncestor->IsEditable()) {
+    commonAncestor = commonAncestor->GetParentNode();
+  }
+  // If there is no editable common ancestor, return false.
+  return !!commonAncestor;
 }
 
 NS_IMETHODIMP

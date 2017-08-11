@@ -117,6 +117,10 @@ const TESTCASES = [
                  <option id="option-address-level1-XX" value="XX">Dummy</option>
                  <option id="option-address-level1-CA" value="CA">California</option>
                </select>
+               <select autocomplete="country">
+                 <option id="option-country-XX" value="XX">Dummy</option>
+                 <option id="option-country-US" value="US">United States</option>
+               </select>
                </form>`,
     profileData: [Object.assign({}, DEFAULT_PROFILE)],
     expectedResult: [{
@@ -131,6 +135,7 @@ const TESTCASES = [
     }],
     expectedOptionElements: [{
       "address-level1": "option-address-level1-CA",
+      "country": "option-country-US",
     }],
   },
   {
@@ -139,6 +144,10 @@ const TESTCASES = [
                <select autocomplete="address-level1">
                  <option id="option-address-level1-XX" value="XX">Dummy</option>
                  <option id="option-address-level1-OO" value="OO">California</option>
+               </select>
+               <select autocomplete="country">
+                 <option id="option-country-XX" value="XX">Dummy</option>
+                 <option id="option-country-OO" value="OO">United States</option>
                </select>
                </form>`,
     profileData: [Object.assign({}, DEFAULT_PROFILE)],
@@ -154,6 +163,7 @@ const TESTCASES = [
     }],
     expectedOptionElements: [{
       "address-level1": "option-address-level1-OO",
+      "country": "option-country-OO",
     }],
   },
   {
@@ -162,6 +172,10 @@ const TESTCASES = [
                <select autocomplete="address-level1">
                  <option id="option-address-level1-1" value="">Dummy</option>
                  <option id="option-address-level1-2" value="">California</option>
+               </select>
+               <select autocomplete="country">
+                 <option id="option-country-1" value="">Dummy</option>
+                 <option id="option-country-2" value="">United States</option>
                </select>
                </form>`,
     profileData: [Object.assign({}, DEFAULT_PROFILE)],
@@ -177,6 +191,7 @@ const TESTCASES = [
     }],
     expectedOptionElements: [{
       "address-level1": "option-address-level1-2",
+      "country": "option-country-2",
     }],
   },
   {
@@ -185,6 +200,10 @@ const TESTCASES = [
                <select autocomplete="address-level1">
                  <option id="option-address-level1-same1" value="same">Dummy</option>
                  <option id="option-address-level1-same2" value="same">California</option>
+               </select>
+               <select autocomplete="country">
+                 <option id="option-country-same1" value="sametoo">Dummy</option>
+                 <option id="option-country-same2" value="sametoo">United States</option>
                </select>
                </form>`,
     profileData: [Object.assign({}, DEFAULT_PROFILE)],
@@ -200,6 +219,7 @@ const TESTCASES = [
     }],
     expectedOptionElements: [{
       "address-level1": "option-address-level1-same2",
+      "country": "option-country-same2",
     }],
   },
   {
@@ -208,6 +228,10 @@ const TESTCASES = [
                <select autocomplete="address-level1">
                  <option id="option-address-level1-dummy1" value="">Dummy</option>
                  <option id="option-address-level1-dummy2" value="">Dummy 2</option>
+               </select>
+               <select autocomplete="country">
+                 <option id="option-country-dummy1" value="">Dummy</option>
+                 <option id="option-country-dummy2" value="">Dummy 2</option>
                </select>
                </form>`,
     profileData: [Object.assign({}, DEFAULT_PROFILE)],
@@ -218,7 +242,6 @@ const TESTCASES = [
       "address-line1": "2 Harrison St",
       "address-line2": "line2",
       "address-line3": "line3",
-      "country": "US",
     }],
   },
 ];

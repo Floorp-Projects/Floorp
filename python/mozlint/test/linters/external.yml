@@ -1,3 +1,4 @@
+---
 ExternalLinter:
     description: It's bad to have the string foobar in js files.
     include:

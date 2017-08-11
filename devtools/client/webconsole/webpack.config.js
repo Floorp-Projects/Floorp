@@ -43,7 +43,7 @@ let webpackConfig = {
 
 webpackConfig.resolve = {
   alias: {
-    "Services": "devtools-modules/client/shared/shim/Services",
+    "Services": "devtools-modules/src/Services",
 
     "devtools/client/webconsole/jsterm": path.join(projectPath, "jsterm-stub"),
     "devtools/client/webconsole/utils": path.join(__dirname, "new-console-output/test/fixtures/WebConsoleUtils"),
@@ -63,9 +63,10 @@ webpackConfig.resolve = {
     "devtools/shared/locales": path.join(__dirname, "../../shared/locales/en-US"),
     "devtools/shared/plural-form": path.join(__dirname, "../../shared/plural-form"),
     "devtools/shared/l10n": path.join(__dirname, "../../shared/l10n"),
+    "devtools/shared/system": path.join(projectPath, "system-stub"),
 
     "devtools/client/framework/devtools": path.join(__dirname, "../../client/shims/devtools"),
-    "devtools/client/framework/menu": "devtools-modules/client/framework/menu",
+    "devtools/client/framework/menu": "devtools-modules/src/menu",
     "devtools/client/framework/menu-item": path.join(__dirname, "../../client/framework/menu-item"),
 
     "devtools/client/shared/components/reps/reps": path.join(__dirname, "../../client/shared/components/reps/reps"),
@@ -74,9 +75,11 @@ webpackConfig.resolve = {
     "devtools/client/shared/components/stack-trace": path.join(__dirname, "../../client/shared/components/stack-trace"),
     "devtools/client/shared/source-utils": path.join(__dirname, "../../client/shared/source-utils"),
     "devtools/client/shared/components/frame": path.join(__dirname, "../../client/shared/components/frame"),
+    "devtools/client/shared/key-shortcuts": "devtools-modules/src/key-shortcuts",
+    "devtools/client/shared/zoom-keys": "devtools-modules/src/zoom-keys",
 
     "devtools/shared/defer": path.join(__dirname, "../../shared/defer"),
-    "devtools/shared/event-emitter": "devtools-modules/shared/event-emitter",
+    "devtools/shared/event-emitter": "devtools-modules/src/utils/event-emitter",
     "devtools/shared/client/main": path.join(__dirname, "new-console-output/test/fixtures/ObjectClient"),
     "devtools/shared/platform/clipboard": path.join(__dirname, "../../shared/platform/content/clipboard"),
   }

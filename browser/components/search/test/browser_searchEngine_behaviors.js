@@ -2,23 +2,63 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Test Google search plugin URLs
- * TODO: This test is a near duplicate of browser_searchEngine_behaviors.js but
- * specific to Google. This is required due to bug 1315953.
+ * Test search plugin URLs
  */
 
 "use strict";
 
 const SEARCH_ENGINE_DETAILS = [{
-  alias: "g",
-  baseURL: "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8",
+  alias: "a",
+  baseURL: "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
   codes: {
     context: "",
     keyword: "",
     newTab: "",
     submission: "",
   },
-  name: "Google",
+  name: "Amazon.com",
+}, {
+  alias: "b",
+  baseURL: "https://www.bing.com/search?q=foo&pc=MOZI",
+  codes: {
+    context: "&form=MOZCON",
+    keyword: "&form=MOZLBR",
+    newTab: "&form=MOZTSB",
+    submission: "&form=MOZSBR",
+  },
+  name: "Bing",
+}, {
+  alias: "d",
+  baseURL: "https://duckduckgo.com/?q=foo",
+  codes: {
+    context: "&t=ffcm",
+    keyword: "&t=ffab",
+    newTab: "&t=ffnt",
+    submission: "&t=ffsb",
+  },
+  name: "DuckDuckGo",
+}, {
+// TODO: Google is tested in browser_google_behaviors.js - we can't test it here
+// yet because of bug 1315953.
+//   alias: "g",
+//   baseURL: "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8",
+//   codes: {
+//     context: "",
+//     keyword: "",
+//     newTab: "",
+//     submission: "",
+//   },
+//   name: "Google",
+// }, {
+  alias: "y",
+  baseURL: "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla",
+  codes: {
+    context: "&hsimp=yhs-005",
+    keyword: "&hsimp=yhs-002",
+    newTab: "&hsimp=yhs-004",
+    submission: "&hsimp=yhs-001",
+  },
+  name: "Yahoo",
 }];
 
 function promiseStateChangeURI() {

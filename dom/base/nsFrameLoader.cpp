@@ -47,7 +47,6 @@
 #include "nsISHistoryInternal.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXULWindow.h"
-#include "nsIEditor.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsISHistory.h"
 #include "NullPrincipal.h"
@@ -81,6 +80,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
@@ -1188,10 +1188,8 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
       if (designMode.EqualsLiteral("on")) {
         // Hold on to the editor object to let the document reattach to the
         // same editor object, instead of creating a new one.
-        nsCOMPtr<nsIEditor> editor;
-        nsresult rv = mDocShell->GetEditor(getter_AddRefs(editor));
-        NS_ENSURE_SUCCESS(rv, false);
-
+        RefPtr<HTMLEditor> htmlEditor = mDocShell->GetHTMLEditor();
+        Unused << htmlEditor;
         doc->SetDesignMode(NS_LITERAL_STRING("off"));
         doc->SetDesignMode(NS_LITERAL_STRING("on"));
       } else {
@@ -1200,10 +1198,9 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
              hasEditingSession = false;
         mDocShell->GetEditable(&editable);
         mDocShell->GetHasEditingSession(&hasEditingSession);
-        nsCOMPtr<nsIEditor> editor;
-        mDocShell->GetEditor(getter_AddRefs(editor));
-        if (editable && hasEditingSession && editor) {
-          editor->PostCreate();
+        RefPtr<HTMLEditor> htmlEditor = mDocShell->GetHTMLEditor();
+        if (editable && hasEditingSession && htmlEditor) {
+          htmlEditor->PostCreate();
         }
       }
     }

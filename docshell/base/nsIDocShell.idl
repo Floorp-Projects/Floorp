@@ -16,6 +16,7 @@ class nsPresContext;
 class nsIPresShell;
 namespace mozilla {
 class Encoding;
+class HTMLEditor;
 }
 %}
 
@@ -1154,4 +1155,13 @@ interface nsIDocShell : nsIDocShellTreeItem
   * Fire a dummy location change event asynchronously.
   */
   [noscript] void dispatchLocationChangeEvent();
+
+%{C++
+  /**
+   * These methods call nsDocShell::GetHTMLEditorInternal() and
+   * nsDocShell::SetHTMLEditorInternal() with static_cast.
+   */
+  mozilla::HTMLEditor* GetHTMLEditor();
+  nsresult SetHTMLEditor(mozilla::HTMLEditor* aHTMLEditor);
+%}
 };
