@@ -170,17 +170,13 @@ FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream)
     return WriteBuffer();
   }
 
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
-    CloseAndRelease(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return NS_ERROR_FAILURE;
-  }
+  // TODO: We need to verify this is the correct global per the spec.
+  //       See bug 1385890.
+  AutoEntryScript aes(mGlobal, "ReadableStreamReader.read", !mWorkerHolder);
 
-  JSContext* cx = jsapi.cx();
-
-  JS::Rooted<JSObject*> reader(cx, mReader);
-  JS::Rooted<JSObject*> promise(cx,
-                                JS::ReadableStreamDefaultReaderRead(cx,
+  JS::Rooted<JSObject*> reader(aes.cx(), mReader);
+  JS::Rooted<JSObject*> promise(aes.cx(),
+                                JS::ReadableStreamDefaultReaderRead(aes.cx(),
                                                                     reader));
   if (NS_WARN_IF(!promise)) {
     // Let's close the stream.

@@ -1,6 +1,7 @@
 const SAME_COMPARTMENT = "same-compartment";
 const IFRAME_COMPARTMENT = "iframe-compartment";
 const BIG_BUFFER_SIZE = 1000000;
+const ITER_MAX = 10;
 
 function makeBuffer(size) {
   let buffer = new Uint8Array(size);
@@ -265,6 +266,49 @@ async function test_codeExecution_continue(r, that) {
 
   r.body.getReader().read();
   await promise;
+
+  that.next();
+};
+
+async function test_global(compartment) {
+  info("test_global: " + compartment);
+
+  self.foo = 42;
+  self.iter = ITER_MAX;
+
+  let r = new Response(new ReadableStream({
+    start(c) {
+      self.controller = c;
+    },
+    pull() {
+      if (!("iter" in self) || self.iter < 0 || self.iter > ITER_MAX) {
+        throw "Something bad is happening here!"
+      }
+
+      let buffer = new Uint8Array(1);
+      buffer.fill(self.foo);
+      self.controller.enqueue(buffer);
+
+      if (--self.iter == 0) {
+        controller.close();
+      }
+    }
+  }));
+
+  apply_compartment(compartment,
+                    { func: "test_global_continue",
+                    args: r });
+}
+
+async function test_global_continue(r, that) {
+  let a = await r.arrayBuffer();
+
+  that.is(Object.getPrototypeOf(a), that.ArrayBuffer.prototype, "Body is an array buffer");
+  that.is(a.byteLength, ITER_MAX, "Body length is correct");
+
+  for (let i = 0; i < ITER_MAX; ++i) {
+    that.is(new Uint8Array(a)[i], 42, "Byte " + i + " is correct");
+  }
 
   that.next();
 };
