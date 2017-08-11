@@ -377,7 +377,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     }
 
     // boxing code
-    void boxDouble(FloatRegister src, const ValueOperand& dest);
+    void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister);
     void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest);
 
     // Extended unboxing API. If the payload is already in a register, returns
