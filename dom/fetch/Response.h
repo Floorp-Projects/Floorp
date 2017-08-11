@@ -106,6 +106,8 @@ public:
   void
   GetBody(nsIInputStream** aStream) { return mInternalResponse->GetBody(aStream); }
 
+  using FetchBody::GetBody;
+
   static already_AddRefed<Response>
   Error(const GlobalObject& aGlobal);
 
