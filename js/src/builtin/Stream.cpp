@@ -5494,3 +5494,11 @@ ReadableStream::getReader(JSContext* cx, Handle<ReadableStream*> stream,
         return CreateReadableStreamDefaultReader(cx, stream);
     return CreateReadableStreamBYOBReader(cx, stream);
 }
+
+JS_FRIEND_API(JSObject*)
+js::UnwrapReadableStream(JSObject* obj)
+{
+    if (JSObject* unwrapped = CheckedUnwrap(obj))
+        return unwrapped->is<ReadableStream>() ? unwrapped : nullptr;
+    return nullptr;
+}
