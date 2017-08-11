@@ -17,7 +17,7 @@ config = {
     'enable_talos_sendchange': False,
     'enable_unittest_sendchange': False,
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/\
-clang.manifest",
+releng.manifest",
     'platform_supports_post_upload_to_latest': False,
     'objdir': MOZ_OBJDIR,
     'perfherder_extra_options': ['static-analysis'],
