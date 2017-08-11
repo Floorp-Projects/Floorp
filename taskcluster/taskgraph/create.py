@@ -9,6 +9,7 @@ import requests
 import requests.adapters
 import json
 import os
+import sys
 import logging
 
 from slugid import nice as slugid
@@ -20,8 +21,11 @@ logger = logging.getLogger(__name__)
 # the maximum number of parallel createTask calls to make
 CONCURRENCY = 50
 
+# this is set to true for `mach taskgraph action-callback --test`
+testing = False
 
-def create_tasks(taskgraph, label_to_taskid, params):
+
+def create_tasks(taskgraph, label_to_taskid, params, decision_task_id=None):
     taskid_to_label = {t: l for l, t in label_to_taskid.iteritems()}
 
     session = requests.Session()
@@ -34,7 +38,7 @@ def create_tasks(taskgraph, label_to_taskid, params):
     session.mount('https://', http_adapter)
     session.mount('http://', http_adapter)
 
-    decision_task_id = os.environ.get('TASK_ID')
+    decision_task_id = decision_task_id or os.environ.get('TASK_ID')
 
     # when running as an actual decision task, we use the decision task's
     # taskId as the taskGroupId.  The process that created the decision task
@@ -98,6 +102,11 @@ def create_task(session, task_id, label, task_def):
     # Resolve timestamps
     now = current_json_time(datetime_format=True)
     task_def = resolve_timestamps(now, task_def)
+
+    if testing:
+        json.dump([task_id, task_def], sys.stdout,
+                  sort_keys=True, indent=4, separators=(',', ': '))
+        return
 
     logger.debug("Creating task with taskId {} for {}".format(task_id, label))
     res = session.put('http://taskcluster/queue/v1/task/{}'.format(task_id),
