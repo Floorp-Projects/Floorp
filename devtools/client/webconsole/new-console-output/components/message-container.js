@@ -79,6 +79,10 @@ const MessageContainer = createClass({
 });
 
 function getMessageComponent(message) {
+  if (!message) {
+    return componentMap.get("DefaultRenderer");
+  }
+
   switch (message.source) {
     case MESSAGE_SOURCE.CONSOLE_API:
       return componentMap.get("ConsoleApiCall");
