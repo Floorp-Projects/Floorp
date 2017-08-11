@@ -312,7 +312,9 @@ function checkChangeIsEnabled(aWindow, aNext)
   .then(aNext);
 }
 
-SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_move_resize", false]]}, function() {
+SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_move_resize", false],
+                                   ["security.data_uri.unique_opaque_origin", false]]},
+                          function() {
 SimpleTest.waitForFocus(function() {
   if (screen.width <= 200 || screen.height <= 200) {
     todo(false, "The screen needs to be bigger than 200px*200px to run this test.");
