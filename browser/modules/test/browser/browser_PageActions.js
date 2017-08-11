@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 // This is a test for PageActions.jsm, specifically the generalized parts that
