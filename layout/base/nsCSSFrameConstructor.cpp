@@ -7551,8 +7551,15 @@ nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
 {
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    child->NoteDirtyForServo();
+    if (child->IsElement()) {
+      child->AsElement()->NoteDirtyForServo();
+    }
   }
+
+  // NoteDirtyForServo() will ensure a style flush, but we don't invoke it for
+  // text nodes. So since this range might include no elements, we still need
+  // to manually ensure a style flush.
+  mPresShell->EnsureStyleFlush();
 }
 
 void
