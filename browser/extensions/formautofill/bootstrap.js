@@ -14,6 +14,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
+                                  "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillParent",
                                   "resource://formautofill/FormAutofillParent.jsm");
 
@@ -41,6 +43,13 @@ function onMaybeOpenPopup(evt) {
   insertStyleSheet(domWindow, STYLESHEET_URI);
 }
 
+function addUpgradeListener(instanceID) {
+  AddonManager.addUpgradeListener(instanceID, upgrade => {
+    // don't install the upgrade by doing nothing here.
+    // The upgrade will be installed upon next restart.
+  });
+}
+
 function startup(data) {
   if (Services.prefs.getStringPref("extensions.formautofill.available") != "on") {
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
@@ -48,10 +57,15 @@ function startup(data) {
   }
 
   if (data.hasOwnProperty("instanceID") && data.instanceID) {
-    AddonManager.addUpgradeListener(data.instanceID, (upgrade) => {
-      // don't install the upgrade by doing nothing here.
-      // The upgrade will be installed upon next restart.
-    });
+    if (AddonManagerPrivate.isDBLoaded()) {
+      addUpgradeListener(data.instanceID);
+    } else {
+      // Wait for the extension database to be loaded so we don't cause its init.
+      Services.obs.addObserver(function xpiDatabaseLoaded() {
+        Services.obs.removeObserver(xpiDatabaseLoaded, "xpi-database-loaded");
+        addUpgradeListener(data.instanceID);
+      }, "xpi-database-loaded");
+    }
   } else {
     throw Error("no instanceID passed to bootstrap startup");
   }
