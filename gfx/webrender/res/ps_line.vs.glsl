@@ -63,11 +63,11 @@ void main(void) {
             // Choose some arbitrary values to scale thickness,
             // wave period etc.
             // TODO(gw): Tune these to get closer to what Gecko uses.
-            float thickness = 0.2 * size.y;
+            float thickness = 0.15 * size.y;
             vParams = vec4(thickness,
                            size.y * 0.5,
                            size.y * 0.75,
-                           max(3.0, thickness * 2.0));
+                           size.y * 0.5);
             break;
         }
     }

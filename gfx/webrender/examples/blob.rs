@@ -12,14 +12,14 @@ extern crate rayon;
 #[path="common/boilerplate.rs"]
 mod boilerplate;
 
-use boilerplate::HandyDandyRectBuilder;
+use boilerplate::{Example, HandyDandyRectBuilder};
 use rayon::ThreadPool;
 use rayon::Configuration as ThreadPoolConfig;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 use std::sync::mpsc::{channel, Sender, Receiver};
-use webrender::api;
+use webrender::api::{self, RenderApi, DisplayListBuilder, ResourceUpdates, LayoutSize, PipelineId, DocumentId};
 
 // This example shows how to implement a very basic BlobImageRenderer that can only render
 // a checkerboard pattern.
@@ -212,59 +212,70 @@ impl api::BlobImageRenderer for CheckerboardRenderer {
     fn delete_font(&mut self, _font: api::FontKey) { }
 }
 
-fn body(api: &api::RenderApi,
-        _document_id: &api::DocumentId,
-        builder: &mut api::DisplayListBuilder,
-        resources: &mut api::ResourceUpdates,
-        _pipeline_id: &api::PipelineId,
-        layout_size: &api::LayoutSize) {
-    let blob_img1 = api.generate_image_key();
-    resources.add_image(
-        blob_img1,
-        api::ImageDescriptor::new(500, 500, api::ImageFormat::BGRA8, true),
-        api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 50, 150, 255))),
-        Some(128),
-    );
+struct App {
 
-    let blob_img2 = api.generate_image_key();
-    resources.add_image(
-        blob_img2,
-        api::ImageDescriptor::new(200, 200, api::ImageFormat::BGRA8, true),
-        api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 150, 50, 255))),
-        None,
-    );
-
-    let bounds = api::LayoutRect::new(api::LayoutPoint::zero(), *layout_size);
-    builder.push_stacking_context(api::ScrollPolicy::Scrollable,
-                                  bounds,
-                                  None,
-                                  api::TransformStyle::Flat,
-                                  None,
-                                  api::MixBlendMode::Normal,
-                                  Vec::new());
-
-    builder.push_image(
-        (30, 30).by(500, 500),
-        Some(api::LocalClip::from(bounds)),
-        api::LayoutSize::new(500.0, 500.0),
-        api::LayoutSize::new(0.0, 0.0),
-        api::ImageRendering::Auto,
-        blob_img1,
-    );
-
-    builder.push_image(
-        (600, 600).by(200, 200),
-        Some(api::LocalClip::from(bounds)),
-        api::LayoutSize::new(200.0, 200.0),
-        api::LayoutSize::new(0.0, 0.0),
-        api::ImageRendering::Auto,
-        blob_img2,
-    );
-
-    builder.pop_stacking_context();
 }
 
-fn event_handler(_event: &glutin::Event, _document_id: api::DocumentId, _api: &api::RenderApi) {
+impl Example for App {
+    fn render(&mut self,
+              api: &RenderApi,
+              builder: &mut DisplayListBuilder,
+              resources: &mut ResourceUpdates,
+              layout_size: LayoutSize,
+              _pipeline_id: PipelineId,
+              _document_id: DocumentId) {
+        let blob_img1 = api.generate_image_key();
+        resources.add_image(
+            blob_img1,
+            api::ImageDescriptor::new(500, 500, api::ImageFormat::BGRA8, true),
+            api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 50, 150, 255))),
+            Some(128),
+        );
+
+        let blob_img2 = api.generate_image_key();
+        resources.add_image(
+            blob_img2,
+            api::ImageDescriptor::new(200, 200, api::ImageFormat::BGRA8, true),
+            api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 150, 50, 255))),
+            None,
+        );
+
+        let bounds = api::LayoutRect::new(api::LayoutPoint::zero(), layout_size);
+        builder.push_stacking_context(api::ScrollPolicy::Scrollable,
+                                      bounds,
+                                      None,
+                                      api::TransformStyle::Flat,
+                                      None,
+                                      api::MixBlendMode::Normal,
+                                      Vec::new());
+
+        builder.push_image(
+            (30, 30).by(500, 500),
+            Some(api::LocalClip::from(bounds)),
+            api::LayoutSize::new(500.0, 500.0),
+            api::LayoutSize::new(0.0, 0.0),
+            api::ImageRendering::Auto,
+            blob_img1,
+        );
+
+        builder.push_image(
+            (600, 600).by(200, 200),
+            Some(api::LocalClip::from(bounds)),
+            api::LayoutSize::new(200.0, 200.0),
+            api::LayoutSize::new(0.0, 0.0),
+            api::ImageRendering::Auto,
+            blob_img2,
+        );
+
+        builder.pop_stacking_context();
+    }
+
+    fn on_event(&mut self,
+                _event: glutin::Event,
+                _api: &RenderApi,
+                _document_id: DocumentId) -> bool {
+        false
+    }
 }
 
 fn main() {
@@ -282,5 +293,7 @@ fn main() {
         .. Default::default()
     };
 
-    boilerplate::main_wrapper(body, event_handler, Some(opts));
+    let mut app = App {};
+
+    boilerplate::main_wrapper(&mut app, Some(opts));
 }

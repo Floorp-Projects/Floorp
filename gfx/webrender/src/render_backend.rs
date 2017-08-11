@@ -12,6 +12,7 @@ use resource_cache::ResourceCache;
 use scene::Scene;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
+use std::u32;
 use texture_cache::TextureCache;
 use time::precise_time_ns;
 use thread_profiler::register_thread_with_profiler;
@@ -583,6 +584,17 @@ impl RenderBackend {
                     for document in document_ids {
                         self.documents.remove(&document);
                     }
+                }
+                ApiMsg::MemoryPressure => {
+                    self.resource_cache.on_memory_pressure();
+
+                    let pending_update = self.resource_cache.pending_updates();
+                    let msg = ResultMsg::UpdateResources { updates: pending_update, cancel_rendering: true };
+                    self.result_tx.send(msg).unwrap();
+                    // We use new_frame_ready to wake up the renderer and get the
+                    // resource updates processed, but the UpdateResources message
+                    // will cancel rendering the frame.
+                    self.notifier.lock().unwrap().as_mut().unwrap().new_frame_ready();
                 }
                 ApiMsg::ShutDown => {
                     let notifier = self.notifier.lock();
