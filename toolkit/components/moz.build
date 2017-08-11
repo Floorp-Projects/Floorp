@@ -20,7 +20,6 @@ DIRS += [
     'alerts',
     'apppicker',
     'asyncshutdown',
-    'backgroundhangmonitor',
     'browser',
     'cloudstorage',
     'commandlines',
