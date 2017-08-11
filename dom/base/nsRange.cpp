@@ -2133,9 +2133,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
     return rv;
   }
 
-  // We delete backwards to avoid iterator problems!
-
-  iter.Last();
+  iter.First();
 
   bool handled = false;
 
@@ -2148,10 +2146,17 @@ nsRange::CutContents(DocumentFragment** aFragment)
     nsCOMPtr<nsINode> nodeToResult;
     nsCOMPtr<nsINode> node = iter.GetCurrentNode();
 
-    // Before we delete anything, advance the iterator to the
-    // next subtree.
+    // Before we delete anything, advance the iterator to the next node that's
+    // not a descendant of this one.  XXX It's a bit silly to iterate through
+    // the descendants only to throw them out, we should use an iterator that
+    // skips the descendants to begin with.
 
-    iter.Prev();
+    iter.Next();
+    nsCOMPtr<nsINode> nextNode = iter.GetCurrentNode();
+    while (nextNode && nsContentUtils::ContentIsDescendantOf(nextNode, node)) {
+      iter.Next();
+      nextNode = iter.GetCurrentNode();
+    }
 
     handled = false;
 
@@ -2277,12 +2282,11 @@ nsRange::CutContents(DocumentFragment** aFragment)
       nsCOMPtr<nsINode> oldCommonAncestor = commonAncestor;
       if (!iter.IsDone()) {
         // Setup the parameters for the next iteration of the loop.
-        nsCOMPtr<nsINode> prevNode = iter.GetCurrentNode();
-        NS_ENSURE_STATE(prevNode);
+        NS_ENSURE_STATE(nextNode);
 
-        // Get node's and prevNode's common parent. Do this before moving
+        // Get node's and nextNode's common parent. Do this before moving
         // nodes from original DOM to result fragment.
-        commonAncestor = nsContentUtils::GetCommonAncestor(node, prevNode);
+        commonAncestor = nsContentUtils::GetCommonAncestor(node, nextNode);
         NS_ENSURE_STATE(commonAncestor);
 
         nsCOMPtr<nsINode> parentCounterNode = node;
@@ -2301,18 +2305,26 @@ nsRange::CutContents(DocumentFragment** aFragment)
                                getter_AddRefs(farthestAncestor));
       NS_ENSURE_SUCCESS(rv, rv);
 
+      ErrorResult res;
       if (farthestAncestor)
       {
         nsCOMPtr<nsINode> n = do_QueryInterface(commonCloneAncestor);
-        rv = PrependChild(n, farthestAncestor);
-        NS_ENSURE_SUCCESS(rv, rv);
+        n->AppendChild(*farthestAncestor, res);
+        if (NS_WARN_IF(res.Failed())) {
+          return res.StealNSResult();
+        }
       }
 
       nsMutationGuard guard;
       nsCOMPtr<nsINode> parent = nodeToResult->GetParentNode();
-      rv = closestAncestor ? PrependChild(closestAncestor, nodeToResult)
-                           : PrependChild(commonCloneAncestor, nodeToResult);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (closestAncestor) {
+        closestAncestor->AppendChild(*nodeToResult, res);
+      } else {
+        commonCloneAncestor->AppendChild(*nodeToResult, res);
+      }
+      if (NS_WARN_IF(res.Failed())) {
+        return res.StealNSResult();
+      }
       NS_ENSURE_STATE(!guard.Mutated(parent ? 2 : 1) ||
                       ValidateCurrentNode(this, iter));
     } else if (nodeToResult) {

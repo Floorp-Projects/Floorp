@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ===== alert.css =====================================================
-  == Shared styles specific to the alerts dialog.
-  ======================================================================= */
-
 @import url("chrome://global/skin/");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -134,13 +130,17 @@
   min-width: 0;
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
   -moz-context-properties: fill;
-  fill: #4d4d4d;
-  margin-inline-end: 0;
+  fill: currentColor;
+  margin-inline-end: 4px;
   margin-bottom: 0;
 }
 
 #alertSettings > .button-box {
   padding: 0;
+}
+
+#alertSettings .button-icon {
+  margin: 0;
 }
 
 #alertSettings:hover,
@@ -165,3 +165,4 @@
 #alertSettings > .button-box > .box-inherit > .button-text {
   display: none;
 }
+

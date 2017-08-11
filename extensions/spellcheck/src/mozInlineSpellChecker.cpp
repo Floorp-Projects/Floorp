@@ -2016,10 +2016,6 @@ NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
     return NS_OK;
   }
 
-  if (NS_FAILED(spellCheck->GetCurrentDictionary(mPreviousDictionary))) {
-    mPreviousDictionary.Truncate();
-  }
-
   RefPtr<UpdateCurrentDictionaryCallback> cb =
     new UpdateCurrentDictionaryCallback(this, mDisabledAsyncToken);
   NS_ENSURE_STATE(cb);
@@ -2042,12 +2038,6 @@ nsresult mozInlineSpellChecker::CurrentDictionaryUpdated()
                "CurrentDictionaryUpdated called without corresponding "
                "UpdateCurrentDictionary call!");
   ChangeNumPendingSpellChecks(-1);
-
-  nsAutoString currentDictionary;
-  if (!mSpellCheck ||
-      NS_FAILED(mSpellCheck->GetCurrentDictionary(currentDictionary))) {
-    currentDictionary.Truncate();
-  }
 
   nsresult rv = SpellCheckRange(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);

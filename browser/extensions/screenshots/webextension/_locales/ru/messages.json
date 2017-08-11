@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Выбрана слишком небольшая область"
   },
+  "privateWindowErrorTitle": {
+    "message": "Скриншоты отключены в режиме Приватного просмотра"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Приносим извинения за неудобства. Мы работаем над включением этой функции в будущие релизы."
+  },
   "genericErrorTitle": {
     "message": "Ого! Скриншоты Firefox вышли из строя."
   },

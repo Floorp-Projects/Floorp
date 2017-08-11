@@ -61,7 +61,7 @@ add_task(async function checkAddingToToolbar() {
 
 
 add_task(async function checkDragging() {
-  let startArea = CustomizableUI.AREA_NAVBAR;
+  let startArea = CustomizableUI.AREA_TABSTRIP;
   let targetArea = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
   let startingToolbarPlacements = getAreaWidgetIds(startArea);
   let startingTargetPlacements = getAreaWidgetIds(targetArea);

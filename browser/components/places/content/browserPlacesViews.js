@@ -2020,8 +2020,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
   get events() {
     if (this._events)
       return this._events;
-    return this._events = ["command", "destructed", "dragend", "dragstart",
-      "ViewHiding", "ViewShowing", "ViewShown"];
+    return this._events = ["click", "command", "dragend", "dragstart", "ViewHiding", "ViewShown"];
   }
 
   get panel() {
@@ -2034,11 +2033,13 @@ this.PlacesPanelview = class extends PlacesViewBase {
 
   handleEvent(event) {
     switch (event.type) {
+      case "click":
+        // For left and middle clicks, fall through to the command handler.
+        if (event.button >= 2) {
+          break;
+        }
       case "command":
         this._onCommand(event);
-        break;
-      case "destructed":
-        this._onDestructed(event);
         break;
       case "dragend":
         this._onDragEnd(event);
@@ -2052,9 +2053,6 @@ this.PlacesPanelview = class extends PlacesViewBase {
       case "ViewHiding":
         this._onPopupHidden(event);
         break;
-      case "ViewShowing":
-        this._onPopupShowing(event);
-        break;
       case "ViewShown":
         this._onViewShown(event);
         break;
@@ -2067,13 +2065,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
       return;
 
     PlacesUIUtils.openNodeWithEvent(button._placesNode, event);
-  }
-
-  _onDestructed(event) {
-    // The panelmultiview is ephemeral, so let's keep an eye out when the root
-    // element is showing again.
-    this._removeEventListeners(event.target, this.events);
-    this._addEventListeners(this._viewElt, ["ViewShowing"]);
+    this.panelMultiView.closest("panel").hidePopup();
   }
 
   _onDragEnd() {
@@ -2095,7 +2087,6 @@ this.PlacesPanelview = class extends PlacesViewBase {
 
   uninit(event) {
     this._removeEventListeners(this.panelMultiView, this.events);
-    this._removeEventListeners(this._viewElt, ["ViewShowing"]);
     this._removeEventListeners(window, ["unload"]);
     super.uninit(event);
   }
@@ -2177,11 +2168,9 @@ this.PlacesPanelview = class extends PlacesViewBase {
   }
 
   _onPopupShowing(event) {
-    // If the event came from the root element, this is a sign that the panelmultiview
-    // was just instantiated (see `_onDestructed` above) or this is the first time
+    // If the event came from the root element, this is the first time
     // we ever get here.
-    if (event.originalTarget == this._viewElt) {
-      this._removeEventListeners(this._viewElt, ["ViewShowing"]);
+    if (event.originalTarget == this._rootElt) {
       // Start listening for events from all panels inside the panelmultiview.
       this._addEventListeners(this.panelMultiView, this.events);
     }

@@ -194,8 +194,8 @@ public:
     }
 
     int r = nr_ice_peer_ctx_parse_global_attributes(peer_ctx_,
-                                                    attrs_in.size() ?
-                                                    &attrs_in[0] : nullptr,
+                                                    attrs_in.empty() ?
+                                                    nullptr : &attrs_in[0],
                                                     attrs_in.size());
     ASSERT_EQ(0, r);
   }
@@ -212,7 +212,7 @@ public:
       attrs.push_back(const_cast<char*>(attr.c_str()));
     }
 
-    if (attrs.size()) {
+    if (!attrs.empty()) {
       r = nr_ice_peer_ctx_parse_stream_attributes(peer_ctx_, ice_media_stream_, &attrs[0], attrs.size());
       ASSERT_EQ(0, r);
     }

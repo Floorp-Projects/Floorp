@@ -93,7 +93,7 @@ function ConsoleApiCall(props) {
       id: message.id,
       serviceContainer,
       parameters: message.parameters,
-      tableData
+      tableData,
     });
   }
 

@@ -1110,7 +1110,7 @@ this.UITour = {
     let refreshedTarget = await this.getTarget(aChromeWindow, aTarget.targetName);
     let node = aTarget.node = refreshedTarget.node;
     // If the target is in the overflow panel, just return the overflow button.
-    if (node.closest("#widget-overflow-scroller")) {
+    if (node.closest("#widget-overflow-mainView")) {
       return CustomizableUI.getWidget(node.id).forWindow(aChromeWindow).anchor;
     }
     return node;

@@ -36,9 +36,12 @@ namespace mozilla {
 class ServoRestyleState
 {
 public:
-  ServoRestyleState(ServoStyleSet& aStyleSet, nsStyleChangeList& aChangeList)
+  ServoRestyleState(ServoStyleSet& aStyleSet, nsStyleChangeList& aChangeList,
+                    nsTArray<nsIFrame*>& aPendingWrapperRestyles)
     : mStyleSet(aStyleSet)
     , mChangeList(aChangeList)
+    , mPendingWrapperRestyles(aPendingWrapperRestyles)
+    , mPendingWrapperRestyleOffset(aPendingWrapperRestyles.Length())
     , mChangesHandled(nsChangeHint(0))
   {}
 
@@ -55,20 +58,30 @@ public:
   ServoRestyleState(const nsIFrame& aOwner,
                     ServoRestyleState& aParentState,
                     nsChangeHint aHintForThisFrame,
-                    Type aType)
+                    Type aType,
+                    bool aAssertWrapperRestyleLength = true)
     : mStyleSet(aParentState.mStyleSet)
     , mChangeList(aParentState.mChangeList)
+    , mPendingWrapperRestyles(aParentState.mPendingWrapperRestyles)
+    , mPendingWrapperRestyleOffset(aParentState.mPendingWrapperRestyles.Length())
     , mChangesHandled(
         aType == Type::InFlow
           ? aParentState.mChangesHandled | aHintForThisFrame
           : aHintForThisFrame)
 #ifdef DEBUG
     , mOwner(&aOwner)
+    , mAssertWrapperRestyleLength(aAssertWrapperRestyleLength)
 #endif
   {
     if (aType == Type::InFlow) {
       AssertOwner(aParentState);
     }
+  }
+
+  ~ServoRestyleState() {
+    MOZ_ASSERT(!mAssertWrapperRestyleLength ||
+               mPendingWrapperRestyles.Length() == mPendingWrapperRestyleOffset,
+               "Someone forgot to call ProcessWrapperRestyles!");
   }
 
   nsStyleChangeList& ChangeList() { return mChangeList; }
@@ -85,9 +98,53 @@ public:
   }
 #endif
 
+  // Add a pending wrapper restyle.  We don't have to do anything if the thing
+  // being added is already last in the list, but otherwise we do want to add
+  // it, in order for ProcessWrapperRestyles to work correctly.
+  void AddPendingWrapperRestyle(nsIFrame* aWrapperFrame);
+
+  // Process wrapper restyles for this restyle state.  This should be done
+  // before it comes off the stack.
+  void ProcessWrapperRestyles(nsIFrame* aParentFrame);
+
+  // Get the table-aware parent for the given child.  This will walk through
+  // outer table and cellcontent frames.
+  static nsIFrame* TableAwareParentFor(const nsIFrame* aChild);
+
 private:
+  // Process a wrapper restyle at the given index, and restyles for any
+  // wrappers nested in it.  Returns the number of entries from
+  // mPendingWrapperRestyles that we processed.  The return value is always at
+  // least 1.
+  size_t ProcessMaybeNestedWrapperRestyle(nsIFrame* aParent, size_t aIndex);
+
   ServoStyleSet& mStyleSet;
   nsStyleChangeList& mChangeList;
+
+  // A list of pending wrapper restyles.  Anonymous box wrapper frames that need
+  // restyling are added to this list when their non-anonymous kids are
+  // restyled.  This avoids us having to do linear searches along the frame tree
+  // for these anonymous boxes.  The problem then becomes that we can have
+  // multiple kids all with the same anonymous parent, and we don't want to
+  // restyle it more than once.  We use mPendingWrapperRestyles to track which
+  // anonymous wrapper boxes we've requested be restyled and which of them have
+  // already been restyled.  We use a single array propagated through
+  // ServoRestyleStates by reference, because in a situation like this:
+  //
+  //  <div style="display: table"><span></span></div>
+  //
+  // We have multiple wrappers to restyle (cell, row, table-row-group) and we
+  // want to add them in to the list all at once but restyle them using
+  // different ServoRestyleStates with different owners.  When this situation
+  // occurs, the relevant frames will be placed in the array with ancestors
+  // before descendants.
+  nsTArray<nsIFrame*>& mPendingWrapperRestyles;
+
+  // Since we're given a possibly-nonempty mPendingWrapperRestyles to start
+  // with, we need to keep track of where the part of it we're responsible for
+  // starts.
+  size_t mPendingWrapperRestyleOffset;
+
   const nsChangeHint mChangesHandled;
 
   // We track the "owner" frame of this restyle state, that is, the frame that
@@ -98,6 +155,12 @@ private:
 #ifdef DEBUG
   const nsIFrame* mOwner { nullptr };
 #endif
+
+  // Whether we should assert in our destructor that we've processed all of the
+  // relevant wrapper restyles.
+#ifdef DEBUG
+  const bool mAssertWrapperRestyleLength = true;
+#endif // DEBUG
 };
 
 /**
@@ -185,9 +248,9 @@ public:
    * restyling process and this restyle event will be processed in the second
    * traversal of the same restyling process.
    */
-  static void PostRestyleEventForAnimations(dom::Element* aElement,
-                                            CSSPseudoElementType aPseudoType,
-                                            nsRestyleHint aRestyleHint);
+  void PostRestyleEventForAnimations(dom::Element* aElement,
+                                     CSSPseudoElementType aPseudoType,
+                                     nsRestyleHint aRestyleHint);
 protected:
   ~ServoRestyleManager() override
   {
@@ -207,11 +270,14 @@ private:
   bool ProcessPostTraversal(Element* aElement,
                             ServoStyleContext* aParentContext,
                             ServoRestyleState& aRestyleState,
-                            ServoTraversalFlags aFlags);
+                            ServoTraversalFlags aFlags,
+                            bool aParentWasRestyled);
 
   struct TextPostTraversalState;
   bool ProcessPostTraversalForText(nsIContent* aTextNode,
-                                   TextPostTraversalState& aState);
+                                   TextPostTraversalState& aState,
+                                   ServoRestyleState& aRestyleState,
+                                   bool aParentWasRestyled);
 
   inline ServoStyleSet* StyleSet() const
   {

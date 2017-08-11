@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Det valgte området er for liten"
   },
+  "privateWindowErrorTitle": {
+    "message": "Skjermbildetaking er deaktivert i privat nettlesings-modus"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Beklager ulempen. Vi jobber med denne funksjonen for fremtidige utgivelser."
+  },
   "genericErrorTitle": {
     "message": "Oi! Det ser ut til at Firefox Screenshots ikke fungerer korrekt."
   },

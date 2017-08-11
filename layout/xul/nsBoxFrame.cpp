@@ -1906,6 +1906,14 @@ nsBoxFrame::SupportsOrdinalsInChildren()
   return true;
 }
 
+void
+nsBoxFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+{
+  if (GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK) {
+    aResult.AppendElement(OwnedAnonBox(PrincipalChildList().FirstChild()));
+  }
+}
+
 // Helper less-than-or-equal function, used in CheckBoxOrder() as a
 // template-parameter for the sorting functions.
 bool

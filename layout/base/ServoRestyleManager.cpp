@@ -50,12 +50,21 @@ FirstContinuationOrPartOfIBSplit(const nsIFrame* aFrame)
 static const nsIFrame*
 ExpectedOwnerForChild(const nsIFrame& aFrame)
 {
+  const nsIFrame* parent = aFrame.GetParent();
+  if (aFrame.IsTableFrame()) {
+    MOZ_ASSERT(parent->IsTableWrapperFrame());
+    parent = parent->GetParent();
+  }
+
   if (IsAnonBox(aFrame) && !aFrame.IsTextFrame()) {
-    return aFrame.GetParent()->IsViewportFrame() ? nullptr : aFrame.GetParent();
+    if (parent->IsLineFrame()) {
+      parent = parent->GetParent();
+    }
+    return parent->IsViewportFrame() ? nullptr : parent;
   }
 
   if (aFrame.IsBulletFrame()) {
-    return aFrame.GetParent();
+    return parent;
   }
 
   if (aFrame.IsLineFrame()) {
@@ -65,15 +74,10 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
     // block; the blockframe is the column-content anonymous box in that case.
     // So we don't want to end up in the code below, which steps out of anon
     // boxes.  Just return the parent of the line frame, which is the block.
-    return aFrame.GetParent();
+    return parent;
   }
 
-  const nsIFrame* parent = FirstContinuationOrPartOfIBSplit(aFrame.GetParent());
-
-  if (aFrame.IsTableFrame()) {
-    MOZ_ASSERT(parent->IsTableWrapperFrame());
-    parent = FirstContinuationOrPartOfIBSplit(parent->GetParent());
-  }
+  parent = FirstContinuationOrPartOfIBSplit(parent);
 
   // We've handled already anon boxes and bullet frames, so now we're looking at
   // a frame of a DOM element or pseudo. Hop through anon and line-boxes
@@ -118,6 +122,154 @@ ServoRestyleState::ChangesHandledFor(const nsIFrame& aFrame) const
   return mChangesHandled;
 }
 #endif
+
+void
+ServoRestyleState::AddPendingWrapperRestyle(nsIFrame* aWrapperFrame)
+{
+  MOZ_ASSERT(aWrapperFrame->StyleContext()->IsWrapperAnonBox(),
+             "All our wrappers are anon boxes, and why would we restyle "
+             "non-inheriting ones?");
+  MOZ_ASSERT(aWrapperFrame->StyleContext()->IsInheritingAnonBox(),
+             "All our wrappers are anon boxes, and why would we restyle "
+             "non-inheriting ones?");
+  MOZ_ASSERT(aWrapperFrame->StyleContext()->GetPseudo() !=
+             nsCSSAnonBoxes::cellContent,
+             "Someone should be using TableAwareParentFor");
+  MOZ_ASSERT(aWrapperFrame->StyleContext()->GetPseudo() !=
+             nsCSSAnonBoxes::tableWrapper,
+             "Someone should be using TableAwareParentFor");
+  // Make sure we only add first continuations.
+  aWrapperFrame = aWrapperFrame->FirstContinuation();
+  nsIFrame* last = mPendingWrapperRestyles.SafeLastElement(nullptr);
+  if (last == aWrapperFrame) {
+    // Already queued up, nothing to do.
+    return;
+  }
+
+  // Make sure to queue up parents before children.  But don't queue up
+  // ancestors of non-anonymous boxes here; those are handled when we traverse
+  // their non-anonymous kids.
+  if (aWrapperFrame->ParentIsWrapperAnonBox()) {
+    AddPendingWrapperRestyle(TableAwareParentFor(aWrapperFrame));
+  }
+
+  // If the append fails, we'll fail to restyle properly, but that's probably
+  // better than crashing.
+  if (mPendingWrapperRestyles.AppendElement(aWrapperFrame, fallible)) {
+    aWrapperFrame->SetIsWrapperAnonBoxNeedingRestyle(true);
+  }
+}
+
+void
+ServoRestyleState::ProcessWrapperRestyles(nsIFrame* aParentFrame)
+{
+  size_t i = mPendingWrapperRestyleOffset;
+  while (i < mPendingWrapperRestyles.Length()) {
+    i += ProcessMaybeNestedWrapperRestyle(aParentFrame, i);
+  }
+
+  mPendingWrapperRestyles.TruncateLength(mPendingWrapperRestyleOffset);
+}
+
+size_t
+ServoRestyleState::ProcessMaybeNestedWrapperRestyle(nsIFrame* aParent,
+                                                    size_t aIndex)
+{
+  // The frame at index aIndex is something we should restyle ourselves, but
+  // following frames may need separate ServoRestyleStates to restyle.
+  MOZ_ASSERT(aIndex < mPendingWrapperRestyles.Length());
+
+  nsIFrame* cur = mPendingWrapperRestyles[aIndex];
+  MOZ_ASSERT(cur->StyleContext()->IsWrapperAnonBox());
+
+  // Where is cur supposed to inherit from?  From its parent frame, except in
+  // the case when cur is a table, in which case it should be its grandparent.
+  // Also, not in the case when the resulting frame would be a first-line; in
+  // that case we should be inheriting from the block, and the first-line will
+  // do its fixup later if needed.
+  //
+  // Note that after we do all that fixup the parent we get might still not be
+  // aParent; for example aParent could be a scrollframe, in which case we
+  // should inherit from the scrollcontent frame.  Or the parent might be some
+  // continuation of aParent.
+  //
+  // Try to assert as much as we can about the parent we actually end up using
+  // without triggering bogus asserts in all those various edge cases.
+  nsIFrame* parent = cur->GetParent();
+  if (cur->IsTableFrame()) {
+    MOZ_ASSERT(parent->IsTableWrapperFrame());
+    parent = parent->GetParent();
+  }
+  if (parent->IsLineFrame()) {
+    parent = parent->GetParent();
+  }
+  MOZ_ASSERT(parent->FirstContinuation() == aParent ||
+             (parent->StyleContext()->IsInheritingAnonBox() &&
+              parent->GetContent() == aParent->GetContent()));
+
+  // Now "this" is a ServoRestyleState for aParent, so if parent != aParent we
+  // need a new ServoRestyleState for the kid.
+  Maybe<ServoRestyleState> parentRestyleState;
+  if (parent != aParent) {
+    parentRestyleState.emplace(*parent, *this, nsChangeHint_Empty,
+                               Type::InFlow);
+  }
+  ServoRestyleState& curRestyleState =
+    parentRestyleState ? *parentRestyleState : *this;
+
+  // This frame may already have been restyled.  Even if it has, we can't just
+  // return, because the next frame may be a kid of it that does need restyling.
+  if (cur->IsWrapperAnonBoxNeedingRestyle()) {
+    parent->UpdateStyleOfChildAnonBox(cur, curRestyleState);
+    cur->SetIsWrapperAnonBoxNeedingRestyle(false);
+  }
+
+  size_t numProcessed = 1;
+
+  // Note: no overflow possible here, since aIndex < length.
+  if (aIndex + 1 < mPendingWrapperRestyles.Length()) {
+    nsIFrame* next = mPendingWrapperRestyles[aIndex + 1];
+    if (TableAwareParentFor(next) == cur &&
+        next->IsWrapperAnonBoxNeedingRestyle()) {
+      // It might be nice if we could do better than nsChangeHint_Empty.  On
+      // the other hand, presumably our mChangesHandled already has the bits
+      // we really want here so in practice it doesn't matter.
+      ServoRestyleState childState(*cur, curRestyleState, nsChangeHint_Empty,
+                                   Type::InFlow,
+                                   /* aAssertWrapperRestyleLength = */ false);
+      numProcessed += childState.ProcessMaybeNestedWrapperRestyle(cur,
+                                                                  aIndex + 1);
+    }
+  }
+
+  return numProcessed;
+}
+
+nsIFrame*
+ServoRestyleState::TableAwareParentFor(const nsIFrame* aChild)
+{
+  // We want to get the anon box parent for aChild. where aChild has
+  // ParentIsWrapperAnonBox().
+  //
+  // For the most part this is pretty straightforward, but there are two
+  // wrinkles.  First, if aChild is a table, then we really want the parent of
+  // its table wrapper.
+  if (aChild->IsTableFrame()) {
+    aChild = aChild->GetParent();
+    MOZ_ASSERT(aChild->IsTableWrapperFrame());
+  }
+
+  nsIFrame* parent = aChild->GetParent();
+  // Now if parent is a cell-content frame, we actually want the cellframe.
+  if (parent->StyleContext()->GetPseudo() == nsCSSAnonBoxes::cellContent) {
+    parent = parent->GetParent();
+  } else if (parent->IsTableWrapperFrame()) {
+    // Must be a caption.  In that case we want the table here.
+    MOZ_ASSERT(aChild->StyleDisplay()->mDisplay == StyleDisplay::TableCaption);
+    parent = parent->PrincipalChildList().FirstChild();
+  }
+  return parent;
+}
 
 ServoRestyleManager::ServoRestyleManager(nsPresContext* aPresContext)
   : RestyleManager(StyleBackendType::Servo, aPresContext)
@@ -187,7 +339,7 @@ ServoRestyleManager::PostRestyleEventForCSSRuleChanges()
   mPresContext->PresShell()->EnsureStyleFlush();
 }
 
-/* static */ void
+void
 ServoRestyleManager::PostRestyleEventForAnimations(
   Element* aElement,
   CSSPseudoElementType aPseudoType,
@@ -203,6 +355,8 @@ ServoRestyleManager::PostRestyleEventForAnimations(
     return;
   }
 
+  AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(),
+                                   true /* animation-only */);
   Servo_NoteExplicitHints(elementToRestyle, aRestyleHint, nsChangeHint(0));
 }
 
@@ -433,7 +587,8 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
   // NOTE(emilio): We can't use the changes handled for the owner of the
   // backdrop frame, since it's out of flow, and parented to the viewport frame.
   MOZ_ASSERT(backdropFrame->GetParent()->IsViewportFrame());
-  ServoRestyleState state(aStyleSet, aChangeList);
+  nsTArray<nsIFrame*> wrappersToRestyle;
+  ServoRestyleState state(aStyleSet, aChangeList, wrappersToRestyle);
   aFrame->UpdateStyleOfOwnedChildFrame(backdropFrame, newContext, state);
 }
 
@@ -543,15 +698,17 @@ ServoRestyleManager::ProcessPostTraversal(
   Element* aElement,
   ServoStyleContext* aParentContext,
   ServoRestyleState& aRestyleState,
-  ServoTraversalFlags aFlags)
+  ServoTraversalFlags aFlags,
+  bool aParentWasRestyled)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
 
   // NOTE(emilio): This is needed because for table frames the bit is set on the
   // table wrapper (which is the primary frame), not on the table itself.
   const bool isOutOfFlow =
-    aElement->GetPrimaryFrame() &&
-    aElement->GetPrimaryFrame()->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
+    primaryFrame &&
+    primaryFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
 
   // Grab the change hint from Servo.
   // In case of flushing throttled animations, any restyle hints other than
@@ -576,9 +733,24 @@ ServoRestyleManager::ProcessPostTraversal(
     MOZ_ASSERT(!styleFrame);
   }
 
-  if (styleFrame && !isOutOfFlow) {
-    changeHint = NS_RemoveSubsumedHints(
-      changeHint, aRestyleState.ChangesHandledFor(*styleFrame));
+  if (styleFrame) {
+    MOZ_ASSERT(primaryFrame);
+
+    nsIFrame* maybeAnonBoxChild;
+    if (isOutOfFlow) {
+      maybeAnonBoxChild = primaryFrame->GetPlaceholderFrame();
+    } else {
+      maybeAnonBoxChild = primaryFrame;
+      changeHint = NS_RemoveSubsumedHints(
+        changeHint, aRestyleState.ChangesHandledFor(*styleFrame));
+    }
+
+    // If the parent wasn't restyled, the styles of our anon box parents won't
+    // change either.
+    if (aParentWasRestyled && maybeAnonBoxChild->ParentIsWrapperAnonBox()) {
+      aRestyleState.AddPendingWrapperRestyle(
+        ServoRestyleState::TableAwareParentFor(maybeAnonBoxChild));
+    }
   }
 
   // Although we shouldn't generate non-ReconstructFrame hints for elements with
@@ -713,9 +885,12 @@ ServoRestyleManager::ProcessPostTraversal(
         recreatedAnyContext |= ProcessPostTraversal(n->AsElement(),
                                                     upToDateContext,
                                                     childrenRestyleState,
-                                                    aFlags);
+                                                    aFlags,
+                                                    wasRestyled);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
-        recreatedAnyContext |= ProcessPostTraversalForText(n, textState);
+        recreatedAnyContext |= ProcessPostTraversalForText(n, textState,
+                                                           childrenRestyleState,
+                                                           wasRestyled);
       }
     }
   }
@@ -725,6 +900,9 @@ ServoRestyleManager::ProcessPostTraversal(
   // modify the styles of the kids, and the child traversal above would just
   // clobber those modifications.
   if (styleFrame) {
+    // Process anon box wrapper frames before ::first-line bits.
+    childrenRestyleState.ProcessWrapperRestyles(styleFrame);
+
     if (wasRestyled) {
       UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
     } else if (traverseElementChildren &&
@@ -755,13 +933,16 @@ ServoRestyleManager::ProcessPostTraversal(
     aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
   }
   aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
+
   return recreatedAnyContext;
 }
 
 bool
 ServoRestyleManager::ProcessPostTraversalForText(
     nsIContent* aTextNode,
-    TextPostTraversalState& aPostTraversalState)
+    TextPostTraversalState& aPostTraversalState,
+    ServoRestyleState& aRestyleState,
+    bool aParentWasRestyled)
 {
   // Handle lazy frame construction.
   if (aTextNode->HasFlag(NODE_NEEDS_FRAME)) {
@@ -774,6 +955,13 @@ ServoRestyleManager::ProcessPostTraversalForText(
   nsIFrame* primaryFrame = aTextNode->GetPrimaryFrame();
   if (!primaryFrame) {
     return false;
+  }
+
+  // If the parent wasn't restyled, the styles of our anon box parents won't
+  // change either.
+  if (aParentWasRestyled && primaryFrame->ParentIsWrapperAnonBox()) {
+    aRestyleState.AddPendingWrapperRestyle(
+      ServoRestyleState::TableAwareParentFor(primaryFrame));
   }
 
   nsStyleContext& newContext = aPostTraversalState.ComputeStyle(aTextNode);
@@ -920,9 +1108,11 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
       AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(), forThrottledAnimationFlush);
       DocumentStyleRootIterator iter(doc);
       while (Element* root = iter.GetNextStyleRoot()) {
-        ServoRestyleState state(*styleSet, currentChanges);
+        nsTArray<nsIFrame*> wrappersToRestyle;
+        ServoRestyleState state(*styleSet, currentChanges, wrappersToRestyle);
         anyStyleChanged |=
-          ProcessPostTraversal(root, nullptr, state, aFlags);
+          ProcessPostTraversal(root, nullptr, state, aFlags,
+                               /* aParentWasRestyled = */ false);
       }
     }
 
@@ -1246,18 +1436,17 @@ nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
   // This is only called when moving frames in or out of the first-line
-  // pseudo-element (or one of its inline descendants).  So aFrame's ancestors
-  // must all be inline frames up until we find a first-line frame.  Note that
-  // the first-line frame may not actually be the one that corresponds to
-  // ::first-line; when we're moving _out_ of the first-line it will be one of
-  // the continuations instead.
+  // pseudo-element (or one of its descendants).  We can't say much about
+  // aFrame's ancestors, unfortunately (e.g. during a dynamic insert into
+  // something inside an inline-block on the first line the ancestors could be
+  // totally arbitrary), but we will definitely find a line frame on the
+  // ancestor chain.  Note that the lineframe may not actually be the one that
+  // corresponds to ::first-line; when we're moving _out_ of the ::first-line it
+  // will be one of the continuations instead.
 #ifdef DEBUG
   {
     nsIFrame* f = aFrame->GetParent();
     while (f && !f->IsLineFrame()) {
-      MOZ_ASSERT(f->IsInlineFrame(),
-                 "Must only have inline frames between us and the first-line "
-                 "frame");
       f = f->GetParent();
     }
     MOZ_ASSERT(f, "Must have found a first-line frame");

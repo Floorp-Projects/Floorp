@@ -51,7 +51,7 @@ SdpHelper::CopyTransportParams(size_t numComponents,
         candidateAttrs->mValues.push_back(candidate);
       }
     }
-    if (candidateAttrs->mValues.size()) {
+    if (!candidateAttrs->mValues.empty()) {
       newLocalAttrs.SetAttribute(candidateAttrs.release());
     }
   }

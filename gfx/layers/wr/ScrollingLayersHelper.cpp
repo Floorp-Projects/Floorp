@@ -152,8 +152,9 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
     // and save the id
     LayoutDeviceRect clip = LayoutDeviceRect::FromAppUnits(
         aChain->mClip.GetClipRect(), aAppUnitsPerDevPixel);
-    // TODO: deal with rounded corners here
-    clipId = Some(aBuilder.DefineClip(aStackingContext.ToRelativeLayoutRect(clip)));
+    nsTArray<wr::WrComplexClipRegion> wrRoundedRects;
+    aChain->mClip.ToWrComplexClipRegions(aAppUnitsPerDevPixel, aStackingContext, wrRoundedRects);
+    clipId = Some(aBuilder.DefineClip(aStackingContext.ToRelativeLayoutRect(clip), &wrRoundedRects));
     aCache[aChain] = clipId.value();
   }
   // Finally, push the clip onto the WR stack

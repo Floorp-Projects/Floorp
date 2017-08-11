@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Mozilla Bug:
+https://bugzilla.mozilla.org/show_bug.cgi?id=1369309
+Tor Ticket:
+https://trac.torproject.org/projects/tor/ticket/15757
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1369309</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=682299">Mozilla Bug 1369309</a>
+<a target="_blank" href="https://trac.torproject.org/projects/tor/ticket/15757">Tor Ticket 15757</a>
+
+<!-- The main testing script -->
+<script class="testbody" type="text/javascript">
+  var manager = new MediaTestManager;
+  const SPOOFED_FRAMES_PER_SECOND = 30;
+  const SPOOFED_DROPPED_RATIO = 0.05;
+  // Push the setting of 'privacy.resistFingerprinting' into gTestPrefs, which
+  // will be set during MediaTestManager.runTests().
+  gTestPrefs.push(
+    ["privacy.resistFingerprinting", true],
+    // We use 240p as the target resoultion since 480p is greater than every video
+    // source in our test suite, so we need to use 240p here for allowing us to
+    // test dropped rate here.
+    ["privacy.resistFingerprinting.target_video_res", 240]
+  );
+  var testCases = [
+    { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, drop: false },
+    { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966, drop: false },
+    { name:"gizmo.mp4", type:"video/mp4", width:560, height:320, duration:5.56, drop: true }
+  ];
+
+  function checkStats(v, shouldDrop) {
+    // Rounding the current time to 100ms.
+    let currentTime = Math.floor(v.currentTime * 10) / 10;
+    let dropRate = 0;
+
+    if (shouldDrop) {
+      dropRate = SPOOFED_DROPPED_RATIO;
+    }
+
+    is(v.mozParsedFrames, parseInt(currentTime * SPOOFED_FRAMES_PER_SECOND, 10),
+        "mozParsedFrames should be spoofed if fingerprinting resistance is enabled");
+    is(v.mozDecodedFrames, parseInt(currentTime * SPOOFED_FRAMES_PER_SECOND, 10),
+        "mozDecodedFrames should be spoofed if fingerprinting resistance is enabled");
+    is(v.mozPresentedFrames,
+        parseInt(currentTime * SPOOFED_FRAMES_PER_SECOND * (1 - dropRate), 10),
+        "mozPresentedFrames should be spoofed if fingerprinting resistance is enabled");
+    is(v.mozPaintedFrames,
+        parseInt(currentTime * SPOOFED_FRAMES_PER_SECOND * (1 - dropRate), 10),
+        "mozPaintedFrames should be spoofed if fingerprinting resistance is enabled");
+    is(v.mozFrameDelay, 0.0,
+        "mozFrameDelay should be 0.0 if fingerprinting resistance is enabled");
+    let playbackQuality = v.getVideoPlaybackQuality();
+    is(playbackQuality.totalVideoFrames, parseInt(currentTime * SPOOFED_FRAMES_PER_SECOND, 10),
+        "VideoPlaybackQuality.totalVideoFrames should be spoofed if fingerprinting resistance is enabled");
+    is(playbackQuality.droppedVideoFrames, parseInt(currentTime * SPOOFED_FRAMES_PER_SECOND * dropRate, 10),
+        "VideoPlaybackQuality.droppedVideoFrames should be spoofed if fingerprinting resistance is enabled");
+    is(playbackQuality.corruptedVideoFrames, 0,
+        "VideoPlaybackQuality.corruptedVideoFrames should be 0 if fingerprinting resistance is enabled");
+  }
+
+  function startTest(test, token) {
+    let v = document.createElement("video");
+    v.token = token;
+    v.src = test.name;
+    manager.started(token);
+    once(v, "ended", () => {
+      checkStats(v, test.drop);
+      removeNodeAndSource(v);
+      manager.finished(v.token);
+    });
+    v.play();
+  }
+
+  manager.runTests(testCases, startTest);
+
+</script>
+</body>
+</html>

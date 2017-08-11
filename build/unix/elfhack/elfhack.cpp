@@ -729,15 +729,15 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
 
         // Find the beginning of the bss section, and use an aligned location in there
         // for the relocation.
-        for (ElfSegment *segment = elf->getSegmentByType(PT_LOAD); segment;
-             segment = elf->getSegmentByType(PT_LOAD, segment)) {
-            if ((segment->getFlags() & PF_W) == 0)
+        for (ElfSection *s = elf->getSection(1); s != nullptr; s = s->getNext()) {
+            if (s->getType() != SHT_NOBITS || (s->getFlags() & (SHF_TLS | SHF_WRITE)) != SHF_WRITE) {
                 continue;
+            }
             size_t ptr_size = Elf_Addr::size(elf->getClass());
-            size_t aligned_mem_end = (segment->getAddr() + segment->getMemSize() + ptr_size - 1) & ~(ptr_size - 1);
-            size_t aligned_file_end = (segment->getAddr() + segment->getFileSize() + ptr_size - 1) & ~(ptr_size - 1);
-            if (aligned_mem_end - aligned_file_end >= Elf_Addr::size(elf->getClass())) {
-                mprotect_cb = rel.r_offset = aligned_file_end;
+            size_t usable_start = (s->getAddr() + ptr_size - 1) & ~(ptr_size - 1);
+            size_t usable_end = (s->getAddr() + s->getSize()) & ~(ptr_size - 1);
+            if (usable_end - usable_start >= ptr_size) {
+                mprotect_cb = rel.r_offset = usable_start;
                 break;
             }
         }

@@ -20,6 +20,17 @@ class FirefoxUITestRunner(BaseMarionetteTestRunner):
         # select the appropriate GeckoInstance
         self.app = 'fxdesktop'
 
+        # low-noise log messages useful in tests
+        # TODO: should be moved to individual tests once bug 1386810
+        # is fixed
+        moz_log = ''
+        if 'MOZ_LOG' in os.environ:
+            moz_log = os.environ['MOZ_LOG']
+        if len(moz_log) > 0:
+            moz_log += ','
+        moz_log += 'UrlClassifierStreamUpdater:1'
+        os.environ['MOZ_LOG'] = moz_log
+
         self.test_handlers = [MarionetteTestCase]
 
     def duplicate_application(self, application_folder):

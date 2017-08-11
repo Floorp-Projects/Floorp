@@ -151,6 +151,9 @@ protected:
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     GenericSpecifiedValues* aGenericData);
+
+  static bool IsVideoStatsEnabled();
+  double TotalPlayTime() const;
 };
 
 } // namespace dom

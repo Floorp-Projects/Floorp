@@ -3087,23 +3087,6 @@ nsDOMWindowUtils::GetDisplayDPI(float *aDPI)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsDOMWindowUtils::GetOuterWindowWithId(uint64_t aWindowID,
-                                       nsIDOMWindow** aWindow)
-{
-  // XXX This method is deprecated.  See bug 865664.
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DOM"),
-                                  nsContentUtils::GetDocumentFromCaller(),
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  "GetWindowWithOuterIdWarning");
-
-  *aWindow = nsGlobalWindow::GetOuterWindowWithId(aWindowID);
-  NS_IF_ADDREF(*aWindow);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDOMWindowUtils::GetContainerElement(nsIDOMElement** aResult)
 {

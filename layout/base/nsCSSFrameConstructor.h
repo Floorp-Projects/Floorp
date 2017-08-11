@@ -772,6 +772,12 @@ private:
    * a block wrapper when the styles says so.
    */
 #define FCDATA_ALLOW_GRID_FLEX_COLUMNSET 0x200000
+  /**
+   * Whether the kids of this FrameConstructionData should be flagged as having
+   * a wrapper anon box parent.  This should only be set if
+   * FCDATA_USE_CHILD_ITEMS is set.
+   */
+#define FCDATA_IS_WRAPPER_ANON_BOX 0x400000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -1507,6 +1513,7 @@ private:
   void ConstructFramesFromItemList(nsFrameConstructorState& aState,
                                    FrameConstructionItemList& aItems,
                                    nsContainerFrame* aParentFrame,
+                                   bool aParentIsWrapperAnonBox,
                                    nsFrameItems& aFrameItems);
   void ConstructFramesFromItem(nsFrameConstructorState& aState,
                                FCItemIterator& aItem,
@@ -1991,7 +1998,8 @@ private:
                                     nsFrameItems&      aLetterFrames,
                                     bool*              aStopLooking);
 
-  void RecoverLetterFrames(nsContainerFrame* aBlockFrame);
+  void RecoverLetterFrames(nsContainerFrame* aBlockFrame,
+                           bool aMayHaveFirstLine);
 
   //
   void RemoveLetterFrames(nsIPresShell*     aPresShell,
@@ -2042,6 +2050,18 @@ private:
                              nsContainerFrame**       aParentFrame,
                              nsIFrame*                aPrevSibling,
                              nsFrameItems&            aFrameItems);
+
+  /**
+   * When aFrameItems is being inserted into aParentFrame, and aParentFrame has
+   * pseudo-element-affected styles, it's possible that we're inserting under a
+   * ::first-line frame.  In that case, with servo's style system, the styles we
+   * resolved for aFrameItems are wrong (they don't take ::first-line into
+   * account), and we should fix them up, which is what this method does.
+   *
+   * This method does not mutate aFrameItems.
+   */
+  void CheckForFirstLineInsertion(nsIFrame* aParentFrame,
+                                  nsFrameItems& aFrameItems);
 
   /**
    * Find the right frame to use for aContent when looking for sibling

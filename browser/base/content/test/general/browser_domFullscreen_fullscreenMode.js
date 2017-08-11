@@ -1,4 +1,5 @@
 /* eslint-env mozilla/frame-script */
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 "use strict";
 

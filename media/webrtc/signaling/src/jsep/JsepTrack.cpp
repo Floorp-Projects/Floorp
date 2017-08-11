@@ -277,7 +277,7 @@ JsepTrack::CreateEncodings(
 
   size_t max_streams = 1;
 
-  if (mJsEncodeConstraints.size()) {
+  if (!mJsEncodeConstraints.empty()) {
     max_streams = std::min(rids.size(), mJsEncodeConstraints.size());
   }
   // Drop SSRCs if less RIDs were offered than we have encoding constraints

@@ -39,6 +39,16 @@ public:
   static double ReduceTimePrecisionAsUSecs(double aTime);
   static double ReduceTimePrecisionAsSecs(double aTime);
 
+  // This method calculates the video resolution (i.e. height x width) based
+  // on the video quality (480p, 720p, etc).
+  static uint32_t CalculateTargetVideoResolution(uint32_t aVideoQuality);
+
+  // Methods for getting spoofed media statistics and the return value will
+  // depend on the video resolution.
+  static uint32_t GetSpoofedTotalFrames(double aTime);
+  static uint32_t GetSpoofedDroppedFrames(double aTime, uint32_t aWidth, uint32_t aHeight);
+  static uint32_t GetSpoofedPresentedFrames(double aTime, uint32_t aWidth, uint32_t aHeight);
+
 private:
   nsresult Init();
 

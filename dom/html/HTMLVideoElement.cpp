@@ -151,36 +151,56 @@ HTMLVideoElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 uint32_t HTMLVideoElement::MozParsedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
-  if (!sVideoStatsEnabled) {
+  if (!IsVideoStatsEnabled()) {
     return 0;
   }
+
+  if (nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
+    return nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
+  }
+
   return mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
 }
 
 uint32_t HTMLVideoElement::MozDecodedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
-  if (!sVideoStatsEnabled) {
+  if (!IsVideoStatsEnabled()) {
     return 0;
   }
+
+  if (nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
+    return nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
+  }
+
   return mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
 }
 
 uint32_t HTMLVideoElement::MozPresentedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
-  if (!sVideoStatsEnabled) {
+  if (!IsVideoStatsEnabled()) {
     return 0;
   }
+
+  if (nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
+    return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(), VideoWidth(), VideoHeight());
+  }
+
   return mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
 }
 
 uint32_t HTMLVideoElement::MozPaintedFrames()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
-  if (!sVideoStatsEnabled) {
+  if (!IsVideoStatsEnabled()) {
     return 0;
   }
+
+  if (nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
+    return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(), VideoWidth(), VideoHeight());
+  }
+
   layers::ImageContainer* container = GetImageContainer();
   return container ? container->GetPaintCount() : 0;
 }
@@ -188,6 +208,12 @@ uint32_t HTMLVideoElement::MozPaintedFrames()
 double HTMLVideoElement::MozFrameDelay()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+
+  if (!IsVideoStatsEnabled() ||
+      nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
+    return 0.0;
+  }
+
   VideoFrameContainer* container = GetVideoFrameContainer();
   // Hide negative delays. Frame timing tweaks in the compositor (e.g.
   // adding a bias value to prevent multiple dropped/duped frames when
@@ -242,7 +268,7 @@ HTMLVideoElement::GetVideoPlaybackQuality()
   uint32_t droppedFrames = 0;
   uint32_t corruptedFrames = 0;
 
-  if (sVideoStatsEnabled) {
+  if (IsVideoStatsEnabled()) {
     if (nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow()) {
       Performance* perf = window->GetPerformance();
       if (perf) {
@@ -251,25 +277,33 @@ HTMLVideoElement::GetVideoPlaybackQuality()
     }
 
     if (mDecoder) {
-      FrameStatisticsData stats =
-        mDecoder->GetFrameStatistics().GetFrameStatisticsData();
-      if (sizeof(totalFrames) >= sizeof(stats.mParsedFrames)) {
-        totalFrames = stats.mPresentedFrames + stats.mDroppedFrames;
-        droppedFrames = stats.mDroppedFrames;
+      if (nsContentUtils::ShouldResistFingerprinting(OwnerDoc())) {
+        totalFrames = nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
+        droppedFrames = nsRFPService::GetSpoofedDroppedFrames(TotalPlayTime(),
+                                                              VideoWidth(),
+                                                              VideoHeight());
+        corruptedFrames = 0;
       } else {
-        uint64_t total = stats.mPresentedFrames + stats.mDroppedFrames;
-        const auto maxNumber = std::numeric_limits<uint32_t>::max();
-        if (total <= maxNumber) {
-          totalFrames = uint32_t(total);
-          droppedFrames = uint32_t(stats.mDroppedFrames);
+        FrameStatisticsData stats =
+          mDecoder->GetFrameStatistics().GetFrameStatisticsData();
+        if (sizeof(totalFrames) >= sizeof(stats.mParsedFrames)) {
+          totalFrames = stats.mPresentedFrames + stats.mDroppedFrames;
+          droppedFrames = stats.mDroppedFrames;
         } else {
-          // Too big number(s) -> Resize everything to fit in 32 bits.
-          double ratio = double(maxNumber) / double(total);
-          totalFrames = maxNumber; // === total * ratio
-          droppedFrames = uint32_t(double(stats.mDroppedFrames) * ratio);
+          uint64_t total = stats.mPresentedFrames + stats.mDroppedFrames;
+          const auto maxNumber = std::numeric_limits<uint32_t>::max();
+          if (total <= maxNumber) {
+            totalFrames = uint32_t(total);
+            droppedFrames = uint32_t(stats.mDroppedFrames);
+          } else {
+            // Too big number(s) -> Resize everything to fit in 32 bits.
+            double ratio = double(maxNumber) / double(total);
+            totalFrames = maxNumber; // === total * ratio
+            droppedFrames = uint32_t(double(stats.mDroppedFrames) * ratio);
+          }
         }
+        corruptedFrames = 0;
       }
-      corruptedFrames = 0;
     }
   }
 
@@ -323,6 +357,41 @@ void
 HTMLVideoElement::Init()
 {
   Preferences::AddBoolVarCache(&sVideoStatsEnabled, "media.video_stats.enabled");
+}
+
+/* static */
+bool
+HTMLVideoElement::IsVideoStatsEnabled()
+{
+  return sVideoStatsEnabled;
+}
+
+double
+HTMLVideoElement::TotalPlayTime() const
+{
+  double total = 0.0;
+
+  if (mPlayed) {
+    uint32_t timeRangeCount = 0;
+    mPlayed->GetLength(&timeRangeCount);
+
+    for (uint32_t i = 0; i < timeRangeCount; i++) {
+      double begin;
+      double end;
+      mPlayed->Start(i, &begin);
+      mPlayed->End(i, &end);
+      total += end - begin;
+    }
+
+    if (mCurrentPlayRangeStart != -1.0) {
+      double now = CurrentTime();
+      if (mCurrentPlayRangeStart != now) {
+        total += now - mCurrentPlayRangeStart;
+      }
+    }
+  }
+
+  return total;
 }
 
 } // namespace dom

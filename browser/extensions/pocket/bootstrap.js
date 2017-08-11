@@ -405,7 +405,8 @@ var PocketOverlay = {
       for (let id of ["panelMenu_pocket", "menu_pocket", "BMB_pocket",
                       "panelMenu_pocketSeparator", "menu_pocketSeparator",
                       "BMB_pocketSeparator", "appMenu-library-pocket-button"]) {
-        let element = window.document.getElementById(id);
+        let element = window.document.getElementById(id) ||
+                      window.gNavToolbox.palette.querySelector("#" + id);
         if (element)
           element.remove();
       }
@@ -465,7 +466,10 @@ var PocketOverlay = {
 
     // add to bookmarks-menu-button
     sib = document.getElementById("BMB_bookmarksToolbar");
-    if (sib && !document.getElementById("BMB_pocket")) {
+    if (!sib) {
+      sib = window.gNavToolbox.palette.querySelector("#BMB_bookmarksToolbar");
+    }
+    if (sib && !sib.parentNode.querySelector("#BMB_pocket")) {
       let menu = createElementWithAttrs(document, "menuitem", {
         "id": "BMB_pocket",
         "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),

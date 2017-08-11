@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/base/content/test/general/file_double_close_tab.html";
 var testTab;

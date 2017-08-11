@@ -22,14 +22,14 @@ logger = logging.getLogger(__name__)
     name='run-missing-tests',
     title='Run Missing Tests',
     symbol='rmt',
-    description="""
-    Run tests in the selected push that were optimized away, usually by SETA.
-
-    This action is for use on pushes that will be merged into another branch,
-    to check that optimization hasn't hidden any failures.
-    """,
+    description=(
+        "Run tests in the selected push that were optimized away, usually by SETA."
+        "\n"
+        "This action is for use on pushes that will be merged into another branch,"
+        "to check that optimization hasn't hidden any failures."
+    ),
     order=100,  # Useful for sheriffs, but not top of the list
-    context=[],  # Applies to any task
+    context=[],  # Applies to decision task
 )
 def run_missing_tests(parameters, input, task_group_id, task_id, task):
     decision_task_id = find_decision_task(parameters)

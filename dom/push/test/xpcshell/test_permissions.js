@@ -33,8 +33,8 @@ function makePushPermission(url, capability) {
     capability: Ci.nsIPermissionManager[capability],
     expireTime: 0,
     expireType: Ci.nsIPermissionManager.EXPIRE_NEVER,
-    principal: Services.scriptSecurityManager.getCodebasePrincipal(
-      Services.io.newURI(url)
+    principal: Services.scriptSecurityManager.createCodebasePrincipal(
+      Services.io.newURI(url), {}
     ),
     type: 'desktop-notification',
   };

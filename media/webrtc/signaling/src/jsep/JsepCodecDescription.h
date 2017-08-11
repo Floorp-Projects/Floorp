@@ -325,7 +325,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       h264Params.level_asymmetry_allowed = true;
 
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, h264Params));
-    } else if (mName == "red" && mRedundantEncodings.size()) {
+    } else if (mName == "red" && !mRedundantEncodings.empty()) {
       SdpFmtpAttributeList::RedParameters redParams(
           GetRedParameters(mDefaultPt, msection));
       redParams.encodings = mRedundantEncodings;
@@ -819,7 +819,7 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
     if (mRemoteMMSSet) {
       mRemoteMaxMessageSize = message_size;
     } else {
-      mRemoteMaxMessageSize = WEBRTC_DATACHANELL_MAX_MESSAGE_SIZE_DEFAULT;
+      mRemoteMaxMessageSize = WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_REMOTE_DEFAULT;
     }
 
     int sctp_port = remoteMsection.GetSctpPort();

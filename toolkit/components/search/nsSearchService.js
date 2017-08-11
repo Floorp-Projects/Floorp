@@ -4025,6 +4025,9 @@ SearchService.prototype = {
     engine._initFromMetadata(aName, aIconURL, aAlias, aDescription,
                              aMethod, aTemplate, aExtensionID);
     engine._loadPath = "[other]addEngineWithDetails";
+    if (aExtensionID) {
+      engine._loadPath += ":" + aExtensionID;
+    }
     this._addEngineToStore(engine);
   },
 
