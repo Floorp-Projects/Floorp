@@ -1500,9 +1500,7 @@ LocaleData.prototype = {
 
 
   get uiLocale() {
-    // Return the browser locale, but convert it to a Chrome-style
-    // locale code.
-    return Services.locale.getAppLocaleAsBCP47().replace(/-/g, "_");
+    return Services.locale.getAppLocaleAsBCP47();
   },
 };
 
