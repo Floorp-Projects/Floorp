@@ -373,7 +373,7 @@ function readCurrentList(filename) {
 
   while (fis.readLine(line)) {
     let match;
-    entryRegexes.find((r) => match = r.exec(line.value));
+    entryRegexes.find((r) => { match = r.exec(line.value); return match; } );
     if (match) {
       currentHosts[match[1]] = (match[2] == "1" || match[2] == "true");
     }
