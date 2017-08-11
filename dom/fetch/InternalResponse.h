@@ -10,6 +10,7 @@
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
 
+#include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/UniquePtr.h"
