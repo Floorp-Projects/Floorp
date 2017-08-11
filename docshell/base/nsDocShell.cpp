@@ -9730,7 +9730,6 @@ public:
 
 private:
   // Use IDL strings so .get() returns null by default
-  nsXPIDLString mWindowTarget;
   nsXPIDLCString mTypeHint;
   nsString mSrcdoc;
 
