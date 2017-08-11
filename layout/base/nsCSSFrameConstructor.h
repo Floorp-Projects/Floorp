@@ -2052,6 +2052,18 @@ private:
                              nsFrameItems&            aFrameItems);
 
   /**
+   * When aFrameItems is being inserted into aParentFrame, and aParentFrame has
+   * pseudo-element-affected styles, it's possible that we're inserting under a
+   * ::first-line frame.  In that case, with servo's style system, the styles we
+   * resolved for aFrameItems are wrong (they don't take ::first-line into
+   * account), and we should fix them up, which is what this method does.
+   *
+   * This method does not mutate aFrameItems.
+   */
+  void CheckForFirstLineInsertion(nsIFrame* aParentFrame,
+                                  nsFrameItems& aFrameItems);
+
+  /**
    * Find the right frame to use for aContent when looking for sibling
    * frames for aTargetContent.  If aPrevSibling is true, this
    * will look for last continuations, etc, as necessary.  This calls

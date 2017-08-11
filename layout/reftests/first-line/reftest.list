@@ -39,3 +39,18 @@ fuzzy-if(OSX==1010,1,2) == font-styles-nooverflow.html font-styles-ref.html
 fails-if(!stylo) == ib-split-1.html ib-split-1-ref.html
 
 == first-line-in-columnset-1.html first-line-in-columnset-1-ref.html
+
+== insertion-in-first-line-1.html insertion-in-first-line-ref.html
+== insertion-in-first-line-2.html insertion-in-first-line-ref.html
+== insertion-in-first-line-3.html insertion-in-first-line-ref.html
+== insertion-in-first-line-4.html insertion-in-first-line-ref.html
+== insertion-in-first-line-5.html insertion-in-first-line-ref.html
+== insertion-in-first-line-6.html insertion-in-first-line-ref.html
+== insertion-in-first-line-7.html insertion-in-first-line-ref.html
+== insertion-in-first-line-8.html insertion-in-first-line-ref.html
+== insertion-in-first-line-9.html insertion-in-first-line-ref.html
+== insertion-in-first-line-10.html insertion-in-first-line-ref.html
+== insertion-in-first-line-11.html insertion-in-first-line-ref.html
+== insertion-in-first-line-12.html insertion-in-first-line-ref.html
+== caption-insert-in-first-line-1.html caption-insert-in-first-line-ref.html
+== caption-insert-in-first-line-2.html caption-insert-in-first-line-ref.html
