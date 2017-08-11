@@ -64,7 +64,7 @@ using namespace mozilla::layers;
 unsigned GLContext::sCurrentGLContextTLS = -1;
 #endif
 
-MOZ_THREAD_LOCAL(GLContext*) GLContext::sCurrentContext;
+MOZ_THREAD_LOCAL(const GLContext*) GLContext::sCurrentContext;
 
 // If adding defines, don't forget to undefine symbols. See #undef block below.
 #define CORE_SYMBOL(x) { (PRFuncPtr*) &mSymbols.f##x, { #x, nullptr } }
@@ -3028,13 +3028,14 @@ GetBytesPerTexel(GLenum format, GLenum type)
     return 0;
 }
 
-bool GLContext::MakeCurrent(bool aForce)
+bool
+GLContext::MakeCurrent(bool aForce) const
 {
-    if (IsDestroyed())
+    if (MOZ_UNLIKELY( IsDestroyed() ))
         return false;
 
 #ifdef MOZ_GL_DEBUG
-    PR_SetThreadPrivate(sCurrentGLContextTLS, this);
+    PR_SetThreadPrivate(sCurrentGLContextTLS, (void*)this);
 
     // XXX this assertion is disabled because it's triggering on Mac;
     // we need to figure out why and reenable it.

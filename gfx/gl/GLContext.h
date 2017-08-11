@@ -196,7 +196,7 @@ class GLContext
 {
 public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLContext)
-    static MOZ_THREAD_LOCAL(GLContext*) sCurrentContext;
+    static MOZ_THREAD_LOCAL(const GLContext*) sCurrentContext;
 
 // -----------------------------------------------------------------------------
 // basic getters
@@ -296,7 +296,7 @@ public:
 
     virtual GLContextType GetContextType() const = 0;
 
-    virtual bool IsCurrent() = 0;
+    virtual bool IsCurrent() const = 0;
 
     /**
      * Get the default framebuffer for this context.
@@ -307,7 +307,7 @@ public:
 
 protected:
     bool mIsOffscreen;
-    bool mContextLost;
+    mutable bool mContextLost;
     const bool mUseTLSIsCurrent;
 
     /**
@@ -540,13 +540,13 @@ public:
     }
 
 private:
-    GLenum mTopError;
+    mutable GLenum mTopError;
 
-    GLenum RawGetError() {
+    GLenum RawGetError() const {
         return mSymbols.fGetError();
     }
 
-    GLenum RawGetErrorAndClear() {
+    GLenum RawGetErrorAndClear() const {
         GLenum err = RawGetError();
 
         if (err)
@@ -556,7 +556,7 @@ private:
     }
 
 public:
-    GLenum FlushErrors() {
+    GLenum FlushErrors() const {
         GLenum err = RawGetErrorAndClear();
         if (!mTopError)
             mTopError = err;
@@ -3285,7 +3285,7 @@ public:
 protected:
     typedef gfx::SurfaceFormat SurfaceFormat;
 
-    virtual bool MakeCurrentImpl(bool aForce) = 0;
+    virtual bool MakeCurrentImpl(bool aForce) const = 0;
 
 public:
 #ifdef MOZ_GL_DEBUG
@@ -3294,7 +3294,7 @@ public:
     }
 #endif
 
-    bool MakeCurrent(bool aForce = false);
+    bool MakeCurrent(bool aForce = false) const;
 
     virtual bool Init() = 0;
 
@@ -3302,7 +3302,7 @@ public:
 
     virtual void ReleaseSurface() {}
 
-    bool IsDestroyed() {
+    bool IsDestroyed() const {
         // MarkDestroyed will mark all these as null.
         return mSymbols.fUseProgram == nullptr;
     }
