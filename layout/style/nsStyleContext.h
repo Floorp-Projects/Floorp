@@ -102,6 +102,14 @@ public:
     return GetPseudoType() == mozilla::CSSPseudoElementType::NonInheritingAnonBox;
   }
 
+  // This function is rather slow; you probably don't want to use it outside
+  // asserts unless you have to.  We _could_ add a new CSSPseudoElementType for
+  // wrapper anon boxes, but that adds a bunch of complexity everywhere we
+  // resolve anonymous box styles...
+  bool IsWrapperAnonBox() const {
+    return nsCSSAnonBoxes::IsWrapperAnonBox(GetPseudo());
+  }
+
   bool IsAnonBox() const {
     return IsInheritingAnonBox() || IsNonInheritingAnonBox();
   }
