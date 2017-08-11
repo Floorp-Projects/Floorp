@@ -11,7 +11,6 @@
 #include "MainThreadUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/BackgroundHangMonitor.h"
 
 namespace mozilla {
 namespace HangMonitor {
