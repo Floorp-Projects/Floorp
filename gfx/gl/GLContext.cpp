@@ -267,7 +267,8 @@ ChooseDebugFlags(CreateContextFlags createFlags)
 
 GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                      GLContext* sharedContext, bool isOffscreen, bool useTLSIsCurrent)
-  : mIsOffscreen(isOffscreen),
+  : mImplicitMakeCurrent(false),
+    mIsOffscreen(isOffscreen),
     mContextLost(false),
     mUseTLSIsCurrent(ShouldUseTLSIsCurrent(useTLSIsCurrent)),
     mVersion(0),
@@ -3072,6 +3073,65 @@ GLContext::ResetSyncCallCount(const char* resetReason) const
     }
 
     mSyncGLCallCount = 0;
+}
+
+// --
+
+void
+GLContext::BeforeGLCall_Debug(const char* const funcName) const
+{
+    MOZ_ASSERT(mDebugFlags);
+
+    FlushErrors();
+
+    if (mDebugFlags & DebugFlagTrace) {
+        printf_stderr("[gl:%p] > %s\n", this, funcName);
+    }
+
+    GLContext* tlsContext = (GLContext*)PR_GetThreadPrivate(sCurrentGLContextTLS);
+    if (this != tlsContext) {
+        printf_stderr("Fatal: %s called on non-current context %p. The"
+                      " current context for this thread is %p.\n",
+                      funcName, this, tlsContext);
+        MOZ_CRASH("GFX: GLContext is not current.");
+    }
+}
+
+void
+GLContext::AfterGLCall_Debug(const char* const funcName) const
+{
+    MOZ_ASSERT(mDebugFlags);
+
+    // calling fFinish() immediately after every GL call makes sure that if this GL command crashes,
+    // the stack trace will actually point to it. Otherwise, OpenGL being an asynchronous API, stack traces
+    // tend to be meaningless
+    mSymbols.fFinish();
+    GLenum err = FlushErrors();
+
+    if (mDebugFlags & DebugFlagTrace) {
+        printf_stderr("[gl:%p] < %s [%s (0x%04x)]\n", this, funcName,
+                      GLErrorToString(err), err);
+    }
+
+    if (err != LOCAL_GL_NO_ERROR &&
+        !mLocalErrorScopeStack.size())
+    {
+        printf_stderr("[gl:%p] %s: Generated unexpected %s error."
+                      " (0x%04x)\n", this, funcName,
+                      GLErrorToString(err), err);
+
+        if (mDebugFlags & DebugFlagAbortOnError) {
+            MOZ_CRASH("Unexpected error with MOZ_GL_DEBUG_ABORT_ON_ERROR. (Run"
+                      " with MOZ_GL_DEBUG_ABORT_ON_ERROR=0 to disable)");
+        }
+    }
+}
+
+/*static*/ void
+GLContext::OnImplicitMakeCurrentFailure(const char* const funcName)
+{
+    gfxCriticalError() << "Ignoring call to " << funcName << " with failed"
+                       << " mImplicitMakeCurrent.";
 }
 
 } /* namespace gl */
