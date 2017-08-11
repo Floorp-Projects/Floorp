@@ -84,6 +84,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
     // The leaf filename is "user" by default, but is configurable.
     nsPrintfCString shmPath("%s/dconf/", userDir);
     policy->AddPrefix(rdwrcr, shmPath.get());
+    policy->AddAncestors(shmPath.get());
 #ifdef MOZ_PULSEAUDIO
     // PulseAudio, if it can't get server info from X11, will break
     // unless it can open this directory (or create it, but in our use
