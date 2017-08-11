@@ -2598,8 +2598,9 @@ WorkerPrivate::MemoryReporter::CollectReportsRunnable::WorkerRun(JSContext* aCx,
 {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<Performance> performance =
-    aWorkerPrivate->GlobalScope()->GetPerformanceIfExists();
+  RefPtr<WorkerGlobalScope> scope = aWorkerPrivate->GlobalScope();
+  RefPtr<Performance> performance = scope ? scope->GetPerformanceIfExists()
+                                          : nullptr;
   if (performance) {
     size_t userEntries = performance->SizeOfUserEntries(JsWorkerMallocSizeOf);
     size_t resourceEntries =
