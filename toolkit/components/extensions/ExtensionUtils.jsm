@@ -279,10 +279,14 @@ class LimitedSet extends Set {
 
   truncate(limit) {
     for (let item of this) {
-      if (this.size <= limit) {
-        break;
+      // Live set iterators can ge relatively expensive, since they need
+      // to be updated after every modification to the set. Since
+      // breaking out of the loop early will keep the iterator alive
+      // until the next full GC, we're currently better off finishing
+      // the entire loop even after we're done truncating.
+      if (this.size > limit) {
+        this.delete(item);
       }
-      this.delete(item);
     }
   }
 
