@@ -129,7 +129,6 @@ static float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate)
 
 AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
                            bool aIsOffline,
-                           AudioChannel aChannel,
                            uint32_t aNumberOfChannels,
                            uint32_t aLength,
                            float aSampleRate)
@@ -149,7 +148,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
-  mDestination = new AudioDestinationNode(this, aIsOffline, aChannel,
+  mDestination = new AudioDestinationNode(this, aIsOffline,
                                           aNumberOfChannels, aLength, aSampleRate);
 
   // The context can't be muted until it has a destination.
@@ -207,8 +206,7 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
   }
 
   RefPtr<AudioContext> object =
-    new AudioContext(window, false,
-                     AudioChannelService::GetDefaultAudioChannel());
+    new AudioContext(window, false);
   aRv = object->Init();
   if (NS_WARN_IF(aRv.Failed())) {
      return nullptr;
@@ -256,7 +254,6 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
 
   RefPtr<AudioContext> object = new AudioContext(window,
                                                    true,
-                                                   AudioChannel::Normal,
                                                    aNumberOfChannels,
                                                    aLength,
                                                    aSampleRate);

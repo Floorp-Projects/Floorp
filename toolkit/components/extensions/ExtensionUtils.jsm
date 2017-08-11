@@ -37,8 +37,8 @@ function getUniqueId() {
   return `${nextId++}-${uniqueProcessID}`;
 }
 
-async function promiseFileContents(file) {
-  let res = await OS.File.read(file.path);
+async function promiseFileContents(path) {
+  let res = await OS.File.read(path);
   return res.buffer;
 }
 

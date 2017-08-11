@@ -688,15 +688,6 @@ WinUtils::MonitorFromRect(const gfx::Rect& rect)
 #define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
 #endif
 
-static Atomic<bool> sAPCPending;
-
-/* static */
-void
-WinUtils::SetAPCPending()
-{
-  sAPCPending = true;
-}
-
 /* static */
 a11y::Accessible*
 WinUtils::GetRootAccessibleForHWND(HWND aHwnd)
@@ -715,11 +706,6 @@ bool
 WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                       UINT aLastMessage, UINT aOption)
 {
-#ifdef ACCESSIBILITY
-  if (NS_IsMainThread() && sAPCPending.exchange(false)) {
-    while (sNtTestAlert() != STATUS_SUCCESS) ;
-  }
-#endif
 #ifdef NS_ENABLE_TSF
   RefPtr<ITfMessagePump> msgPump = TSFTextStore::GetMessagePump();
   if (msgPump) {
@@ -791,10 +777,6 @@ WinUtils::WaitForMessage(DWORD aTimeoutMs)
 #if defined(ACCESSIBILITY)
     if (result == WAIT_IO_COMPLETION) {
       if (NS_IsMainThread()) {
-        if (sAPCPending.exchange(false)) {
-          // Clear out any pending APCs
-          while (sNtTestAlert() != STATUS_SUCCESS) ;
-        }
         // We executed an APC that would have woken up the hang monitor. Since
         // there are no more APCs pending and we are now going to sleep again,
         // we should notify the hang monitor.

@@ -49,7 +49,7 @@ using namespace mozilla::dom;
 nsFrameManagerBase::nsFrameManagerBase()
   : mPresShell(nullptr)
   , mRootFrame(nullptr)
-  , mUndisplayedMap(nullptr)
+  , mDisplayNoneMap(nullptr)
   , mDisplayContentsMap(nullptr)
   , mIsDestroyingFrames(false)
 {
@@ -122,8 +122,8 @@ nsFrameManager::Destroy()
     mRootFrame = nullptr;
   }
 
-  delete mUndisplayedMap;
-  mUndisplayedMap = nullptr;
+  delete mDisplayNoneMap;
+  mDisplayNoneMap = nullptr;
   delete mDisplayContentsMap;
   mDisplayContentsMap = nullptr;
 
@@ -177,9 +177,9 @@ nsFrameManager::GetAllUndisplayedNodesInMapFor(UndisplayedMap* aMap,
 }
 
 UndisplayedNode*
-nsFrameManager::GetAllUndisplayedContentIn(nsIContent* aParentContent)
+nsFrameManager::GetAllRegisteredDisplayNoneStylesIn(nsIContent* aParentContent)
 {
-  return GetAllUndisplayedNodesInMapFor(mUndisplayedMap, aParentContent);
+  return GetAllUndisplayedNodesInMapFor(mDisplayNoneMap, aParentContent);
 }
 
 /* static */ void
@@ -210,13 +210,13 @@ nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
 }
 
 void
-nsFrameManager::SetUndisplayedContent(nsIContent* aContent,
-                                      nsStyleContext* aStyleContext)
+nsFrameManager::RegisterDisplayNoneStyleFor(nsIContent* aContent,
+                                            nsStyleContext* aStyleContext)
 {
-  if (!mUndisplayedMap) {
-    mUndisplayedMap = new UndisplayedMap;
+  if (!mDisplayNoneMap) {
+    mDisplayNoneMap = new UndisplayedMap;
   }
-  SetStyleContextInMap(mUndisplayedMap, aContent, aStyleContext);
+  SetStyleContextInMap(mDisplayNoneMap, aContent, aStyleContext);
 }
 
 /* static */ void
@@ -243,28 +243,28 @@ nsFrameManager::ChangeStyleContextInMap(UndisplayedMap* aMap,
 }
 
 void
-nsFrameManager::ClearUndisplayedContentIn(nsIContent* aContent,
-                                          nsIContent* aParentContent)
+nsFrameManager::UnregisterDisplayNoneStyleFor(nsIContent* aContent,
+                                              nsIContent* aParentContent)
 {
 #ifdef DEBUG_UNDISPLAYED_MAP
   static int i = 0;
   printf("ClearUndisplayedContent(%d): content=%p parent=%p --> ", i++, (void *)aContent, (void*)aParentContent);
 #endif
 
-  if (!mUndisplayedMap) {
+  if (!mDisplayNoneMap) {
     return;
   }
 
-  for (UndisplayedNode* node = mUndisplayedMap->GetFirstNode(aParentContent);
+  for (UndisplayedNode* node = mDisplayNoneMap->GetFirstNode(aParentContent);
        node; node = node->getNext()) {
     if (node->mContent == aContent) {
-      mUndisplayedMap->RemoveNodeFor(aParentContent, node);
+      mDisplayNoneMap->RemoveNodeFor(aParentContent, node);
 
 #ifdef DEBUG_UNDISPLAYED_MAP
       printf( "REMOVED!\n");
 #endif
       // make sure that there are no more entries for the same content
-      MOZ_ASSERT(!GetUndisplayedContent(aContent),
+      MOZ_ASSERT(!GetDisplayNoneStyleFor(aContent),
                  "Found more undisplayed content data after removal");
       return;
     }
@@ -283,8 +283,8 @@ nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
   printf("ClearAllMapsFor(%d): parent=%p \n", i++, aParentContent);
 #endif
 
-  if (mUndisplayedMap) {
-    mUndisplayedMap->RemoveNodesFor(aParentContent);
+  if (mDisplayNoneMap) {
+    mDisplayNoneMap->RemoveNodesFor(aParentContent);
   }
   if (mDisplayContentsMap) {
     nsAutoPtr<LinkedList<UndisplayedNode>> list =
@@ -305,8 +305,8 @@ nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
   for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
     auto parent = child->GetParent();
     if (parent != aParentContent) {
-      ClearUndisplayedContentIn(child, parent);
-      ClearDisplayContentsIn(child, parent);
+      UnregisterDisplayNoneStyleFor(child, parent);
+      UnregisterDisplayContentsStyleFor(child, parent);
     }
   }
 }
@@ -314,8 +314,8 @@ nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
 //----------------------------------------------------------------------
 
 void
-nsFrameManager::SetDisplayContents(nsIContent* aContent,
-                                   nsStyleContext* aStyleContext)
+nsFrameManager::RegisterDisplayContentsStyleFor(nsIContent* aContent,
+                                                nsStyleContext* aStyleContext)
 {
   if (!mDisplayContentsMap) {
     mDisplayContentsMap = new UndisplayedMap;
@@ -324,14 +324,14 @@ nsFrameManager::SetDisplayContents(nsIContent* aContent,
 }
 
 UndisplayedNode*
-nsFrameManager::GetAllDisplayContentsIn(nsIContent* aParentContent)
+nsFrameManager::GetAllRegisteredDisplayContentsStylesIn(nsIContent* aParentContent)
 {
   return GetAllUndisplayedNodesInMapFor(mDisplayContentsMap, aParentContent);
 }
 
 void
-nsFrameManager::ClearDisplayContentsIn(nsIContent* aContent,
-                                       nsIContent* aParentContent)
+nsFrameManager::UnregisterDisplayContentsStyleFor(nsIContent* aContent,
+                                                  nsIContent* aParentContent)
 {
 #ifdef DEBUG_DISPLAY_CONTENTS_MAP
   static int i = 0;

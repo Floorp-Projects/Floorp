@@ -13,7 +13,6 @@ LIB_SRCDIRS = \
 ifneq ($(NSS_BUILD_WITHOUT_UTIL),1)
 UTIL_SRCDIRS = \
 	util_gtest \
-	der_gtest \
 	$(NULL)
 endif
 
@@ -22,6 +21,7 @@ ifneq ($(NSS_BUILD_UTIL_ONLY),1)
 NSS_SRCDIRS = \
 	certdb_gtest \
 	certhigh_gtest \
+	der_gtest \
 	pk11_gtest \
 	softoken_gtest \
 	ssl_gtest \

@@ -9,19 +9,14 @@ Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-
-XPCOMUtils.defineLazyModuleGetter(this, "SpellCheckHelper",
-  "resource://gre/modules/InlineSpellChecker.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContextMenu",
-  "resource://gre/modules/LoginManagerContextMenu.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
-  "resource://gre/modules/WebNavigationFrames.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-  "resource://gre/modules/ContextualIdentityService.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
-  "chrome://devtools-shim/content/DevToolsShim.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  LoginManagerContextMenu: "resource://gre/modules/LoginManagerContextMenu.jsm",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
+  ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
+  DevToolsShim: "chrome://devtools-shim/content/DevToolsShim.jsm",
+});
 
 var gContextMenuContentData = null;
 
@@ -1330,6 +1325,7 @@ nsContextMenu.prototype = {
 
       let image = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
       image.src = message.data.dataUrl;
+      let imageName = message.data.imageName;
 
       // Confirm since it's annoying if you hit this accidentally.
       const kDesktopBackgroundURL =
@@ -1342,18 +1338,18 @@ nsContextMenu.prototype = {
                    getService(Ci.nsIWindowMediator);
         let dbWin = wm.getMostRecentWindow("Shell:SetDesktopBackground");
         if (dbWin) {
-          dbWin.gSetBackground.init(image);
+          dbWin.gSetBackground.init(image, imageName);
           dbWin.focus();
         } else {
           openDialog(kDesktopBackgroundURL, "",
                      "centerscreen,chrome,dialog=no,dependent,resizable=no",
-                     image);
+                     image, imageName);
         }
       } else {
         // On non-Mac platforms, the Set Wallpaper dialog is modal.
         openDialog(kDesktopBackgroundURL, "",
                    "centerscreen,chrome,dialog,modal,dependent",
-                   image);
+                   image, imageName);
       }
     };
 

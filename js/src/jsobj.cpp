@@ -3176,6 +3176,20 @@ js::ToPrimitiveSlow(JSContext* cx, JSType preferredType, MutableHandleValue vp)
     return OrdinaryToPrimitive(cx, obj, preferredType, vp);
 }
 
+/* ES6 draft rev 28 (2014 Oct 14) 7.1.14 */
+bool
+js::ToPropertyKeySlow(JSContext* cx, HandleValue argument, MutableHandleId result)
+{
+    MOZ_ASSERT(argument.isObject());
+
+    // Steps 1-2.
+    RootedValue key(cx, argument);
+    if (!ToPrimitiveSlow(cx, JSTYPE_STRING, &key))
+        return false;
+
+    // Steps 3-4.
+    return ValueToId<CanGC>(cx, key, result);
+}
 
 /* * */
 

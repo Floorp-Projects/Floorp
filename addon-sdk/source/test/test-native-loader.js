@@ -111,7 +111,7 @@ for (let variant of variants) {
   */
 
   exports[`test native Loader overrides (${variant.description})`] = function*(assert) {
-    const expectedKeys = Object.keys(require("sdk/io/fs")).join(", ");
+    const expectedKeys = Object.keys(require("sdk/io/file")).join(", ");
     const manifest = yield getJSON('/fixtures/native-overrides-test/package.json');
     const rootURI = variant.getRootURI('native-overrides-test');
 
@@ -130,10 +130,10 @@ for (let variant of variants) {
     let overloadKeys = Object.keys(program.overload.fs).join(", ");
     let overloadLibKeys = Object.keys(program.overloadLib.fs).join(", ");
 
-    assert.equal(fooKeys, expectedKeys, "foo exports sdk/io/fs");
-    assert.equal(barKeys, expectedKeys, "bar exports sdk/io/fs");
-    assert.equal(fsKeys, expectedKeys, "sdk/io/fs exports sdk/io/fs");
-    assert.equal(overloadKeys, expectedKeys, "overload exports foo which exports sdk/io/fs");
+    assert.equal(fooKeys, expectedKeys, "foo exports sdk/io/file");
+    assert.equal(barKeys, expectedKeys, "bar exports sdk/io/file");
+    assert.equal(fsKeys, expectedKeys, "sdk/io/file exports sdk/io/file");
+    assert.equal(overloadKeys, expectedKeys, "overload exports foo which exports sdk/io/file");
     assert.equal(overloadLibKeys, expectedKeys, "overload/lib/foo exports foo/lib/foo");
     assert.equal(program.internal, "test", "internal exports ./lib/internal");
     assert.equal(program.extra, true, "fs-extra was exported properly");

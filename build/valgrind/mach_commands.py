@@ -116,6 +116,11 @@ class MachCommands(MachCommandBase):
                 # Avoid excessive delays in the presence of spinlocks.
                 # See bug 1309851.
                 '--fair-sched=yes',
+                # Keep debuginfo after library unmap.  See bug 1382280.
+                '--keep-debuginfo=yes',
+                # Reduce noise level on rustc and/or LLVM compiled code.
+                # See bug 1365915
+                '--expensive-definedness-checks=yes',
             ]
 
             for s in suppressions:

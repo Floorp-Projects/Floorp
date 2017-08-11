@@ -3542,8 +3542,13 @@ LIRGenerator::visitArrayJoin(MArrayJoin* ins)
     MOZ_ASSERT(ins->array()->type() == MIRType::Object);
     MOZ_ASSERT(ins->sep()->type() == MIRType::String);
 
+    LDefinition tempDef = LDefinition::BogusTemp();
+    if (ins->optimizeForArray())
+        tempDef = temp();
+
     LArrayJoin* lir = new(alloc()) LArrayJoin(useRegisterAtStart(ins->array()),
-                                              useRegisterAtStart(ins->sep()));
+                                              useRegisterAtStart(ins->sep()),
+                                              tempDef);
     defineReturn(lir, ins);
     assignSafepoint(lir, ins);
 }

@@ -762,6 +762,21 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         return NS_OK;
     }
 
+    // Check for webextension
+    rv = NS_URIChainHasFlags(aTargetURI,
+                             nsIProtocolHandler::URI_LOADABLE_BY_EXTENSIONS,
+                             &hasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (hasFlags) {
+      nsString addonId;
+      aPrincipal->GetAddonId(addonId);
+
+      if (!addonId.IsEmpty()) {
+        return NS_OK;
+      }
+    }
+
     // If we get here, check all the schemes can link to each other, from the top down:
     nsCaseInsensitiveCStringComparator stringComparator;
     nsCOMPtr<nsIURI> currentURI = sourceURI;

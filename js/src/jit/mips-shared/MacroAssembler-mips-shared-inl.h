@@ -868,6 +868,14 @@ MacroAssembler::branchTestString(Condition cond, Register tag, Label* label)
 }
 
 void
+MacroAssembler::branchTestString(Condition cond, const Address& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestString(cond, scratch2, label);
+}
+
+void
 MacroAssembler::branchTestString(Condition cond, const BaseIndex& address, Label* label)
 {
     SecondScratchRegisterScope scratch2(*this);

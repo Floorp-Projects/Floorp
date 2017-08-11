@@ -462,6 +462,13 @@ XRE_API(bool,
 XRE_API(bool,
         XRE_IsGPUProcess, ())
 
+/**
+ * Returns true if the appshell should run its own native event loop. Returns
+ * false if we should rely solely on the Gecko event loop.
+ */
+XRE_API(bool,
+        XRE_UseNativeEventProcessing, ())
+
 typedef void (*MainFunction)(void* aData);
 
 XRE_API(nsresult,

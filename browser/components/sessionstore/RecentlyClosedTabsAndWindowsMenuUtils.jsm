@@ -110,10 +110,6 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
 
     aEvent.view.undoCloseTab(aEvent.originalTarget.getAttribute("value"));
     aEvent.view.gBrowser.moveTabToEnd();
-    let ancestorPanel = aEvent.target.closest("panel");
-    if (ancestorPanel) {
-      ancestorPanel.hidePopup();
-    }
   },
 };
 

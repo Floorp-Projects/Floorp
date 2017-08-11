@@ -17,78 +17,43 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
-                                  "resource://gre/modules/addons/AddonRepository.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonSettings",
-                                  "resource://gre/modules/addons/AddonSettings.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ChromeManifestParser",
-                                  "resource://gre/modules/ChromeManifestParser.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Extension",
-                                  "resource://gre/modules/Extension.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
-                                  "resource://gre/modules/LightweightThemeManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils",
-                                  "resource://gre/modules/ZipUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
-                                  "resource://gre/modules/PermissionsUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
-                                  "resource://gre/modules/Console.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ProductAddonChecker",
-                                  "resource://gre/modules/addons/ProductAddonChecker.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
-                                  "resource://gre/modules/UpdateUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "isAddonPartOfE10SRollout",
-                                  "resource://gre/modules/addons/E10SAddonsRollout.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
-                                  "resource://gre/modules/JSONFile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LegacyExtensionsUtils",
-                                  "resource://gre/modules/LegacyExtensionsUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ChromeManifestParser: "resource://gre/modules/ChromeManifestParser.jsm",
+  Extension: "resource://gre/modules/Extension.jsm",
+  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  ZipUtils: "resource://gre/modules/ZipUtils.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  PermissionsUtils: "resource://gre/modules/PermissionsUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  ConsoleAPI: "resource://gre/modules/Console.jsm",
+  ProductAddonChecker: "resource://gre/modules/addons/ProductAddonChecker.jsm",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
+  isAddonPartOfE10SRollout: "resource://gre/modules/addons/E10SAddonsRollout.jsm",
+  JSONFile: "resource://gre/modules/JSONFile.jsm",
+  LegacyExtensionsUtils: "resource://gre/modules/LegacyExtensionsUtils.jsm",
 
-/* globals DownloadAddonInstall, LocalAddonInstall, StagedAddonInstall, UpdateChecker, loadManifestFromFile, verifyBundleSignedState */
-for (let sym of [
-  "DownloadAddonInstall",
-  "LocalAddonInstall",
-  "StagedAddonInstall",
-  "UpdateChecker",
-  "loadManifestFromFile",
-  "verifyBundleSignedState",
-]) {
-  XPCOMUtils.defineLazyModuleGetter(this, sym, "resource://gre/modules/addons/XPIInstall.jsm");
-}
+  DownloadAddonInstall: "resource://gre/modules/addons/XPIInstall.jsm",
+  LocalAddonInstall: "resource://gre/modules/addons/XPIInstall.jsm",
+  StagedAddonInstall: "resource://gre/modules/addons/XPIInstall.jsm",
+  UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
+  loadManifestFromFile: "resource://gre/modules/addons/XPIInstall.jsm",
+  verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
+});
 
 const {nsIBlocklistService} = Ci;
-XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
-                                   "@mozilla.org/extensions/blocklist;1",
-                                   "nsIBlocklistService");
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "ChromeRegistry",
-                                   "@mozilla.org/chrome/chrome-registry;1",
-                                   "nsIChromeRegistry");
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "ResProtocolHandler",
-                                   "@mozilla.org/network/protocol;1?name=resource",
-                                   "nsIResProtocolHandler");
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "AddonPolicyService",
-                                   "@mozilla.org/addons/policy-service;1",
-                                   "nsIAddonPolicyService");
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "AddonPathService",
-                                   "@mozilla.org/addon-path-service;1",
-                                   "amIAddonPathService");
-XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
-                                   "@mozilla.org/addons/addon-manager-startup;1",
-                                   "amIAddonManagerStartup");
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  Blocklist: ["@mozilla.org/extensions/blocklist;1", "nsIBlocklistService"],
+  ChromeRegistry: ["@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry"],
+  ResProtocolHandler: ["@mozilla.org/network/protocol;1?name=resource", "nsIResProtocolHandler"],
+  AddonPolicyService: ["@mozilla.org/addons/policy-service;1", "nsIAddonPolicyService"],
+  AddonPathService: ["@mozilla.org/addon-path-service;1", "amIAddonPathService"],
+  aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
+});
 
 Cu.importGlobalProperties(["URL"]);
 

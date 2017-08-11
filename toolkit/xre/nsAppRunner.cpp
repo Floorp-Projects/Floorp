@@ -5012,6 +5012,24 @@ XRE_IsContentProcess()
   return XRE_GetProcessType() == GeckoProcessType_Content;
 }
 
+bool
+XRE_UseNativeEventProcessing()
+{
+  if (XRE_IsContentProcess()) {
+    static bool sInited = false;
+    static bool sUseNativeEventProcessing = false;
+    if (!sInited) {
+      Preferences::AddBoolVarCache(&sUseNativeEventProcessing,
+                                   "dom.ipc.useNativeEventProcessing.content");
+      sInited = true;
+    }
+
+    return sUseNativeEventProcessing;
+  }
+
+  return true;
+}
+
 // If you add anything to this enum, please update about:support to reflect it
 enum {
   kE10sEnabledByUser = 0,

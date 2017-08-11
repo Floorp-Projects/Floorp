@@ -171,7 +171,7 @@ nsSpeechTask::InitDirectAudio()
   // nullptr as final argument here means that this is not tied to a window.
   // This is a global MSG.
   mStream = MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
-                                          AudioChannel::Normal, nullptr)->
+                                          nullptr)->
     CreateSourceStream();
   mIndirectAudio = false;
   mInited = true;
@@ -738,9 +738,7 @@ nsSpeechTask::CreateAudioChannelAgent()
   }
 
   mAudioChannelAgent = new AudioChannelAgent();
-  mAudioChannelAgent->InitWithWeakCallback(mUtterance->GetOwner(),
-                                           static_cast<int32_t>(AudioChannelService::GetDefaultAudioChannel()),
-                                           this);
+  mAudioChannelAgent->InitWithWeakCallback(mUtterance->GetOwner(), this);
 
   AudioPlaybackConfig config;
   nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config,

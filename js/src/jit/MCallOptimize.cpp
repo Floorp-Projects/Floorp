@@ -758,9 +758,25 @@ IonBuilder::inlineArrayJoin(CallInfo& callInfo)
     if (callInfo.getArg(0)->type() != MIRType::String)
         return InliningStatus_NotInlined;
 
+    // If we can confirm that the class is an array, the codegen
+    // for MArrayJoin can be notified to check for common empty and one-item arrays.
+    bool optimizeForArray = ([&](){
+        TemporaryTypeSet* thisTypes = callInfo.thisArg()->resultTypeSet();
+        if (!thisTypes)
+            return false;
+
+        const Class* clasp = thisTypes->getKnownClass(constraints());
+        // TODO: Handle unboxed arrays?
+        if (clasp != &ArrayObject::class_)
+            return false;
+
+        return true;
+    })();
+
     callInfo.setImplicitlyUsedUnchecked();
 
-    MArrayJoin* ins = MArrayJoin::New(alloc(), callInfo.thisArg(), callInfo.getArg(0));
+    MArrayJoin* ins = MArrayJoin::New(alloc(), callInfo.thisArg(), callInfo.getArg(0),
+                                      optimizeForArray);
 
     current->add(ins);
     current->push(ins);

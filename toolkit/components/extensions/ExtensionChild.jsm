@@ -24,14 +24,12 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionContent",
-                                  "resource://gre/modules/ExtensionContent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
-                                  "resource://gre/modules/MessageChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
-                                  "resource://gre/modules/NativeMessaging.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
+  MessageChannel: "resource://gre/modules/MessageChannel.jsm",
+  NativeApp: "resource://gre/modules/NativeMessaging.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+});
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");

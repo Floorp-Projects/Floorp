@@ -18,8 +18,19 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
-                                  "resource://gre/modules/TelemetrySend.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
+  TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
+  TelemetryLog: "resource://gre/modules/TelemetryLog.jsm",
+  ThirdPartyCookieProbe: "resource://gre/modules/ThirdPartyCookieProbe.jsm",
+  UITelemetry: "resource://gre/modules/UITelemetry.jsm",
+  GCTelemetry: "resource://gre/modules/GCTelemetry.jsm",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  TelemetryReportingPolicy: "resource://gre/modules/TelemetryReportingPolicy.jsm",
+});
 
 const Utils = TelemetryUtils;
 
@@ -99,45 +110,14 @@ var gLastMemoryPoll = null;
 
 var gWasDebuggerAttached = false;
 
-XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
-                                   "@mozilla.org/base/telemetry;1",
-                                   "nsITelemetry");
-XPCOMUtils.defineLazyServiceGetter(this, "idleService",
-                                   "@mozilla.org/widget/idleservice;1",
-                                   "nsIIdleService");
-XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
-                                   "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsIMessageSender");
-XPCOMUtils.defineLazyServiceGetter(this, "cpml",
-                                   "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsIMessageListenerManager");
-XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
-                                   "@mozilla.org/parentprocessmessagemanager;1",
-                                   "nsIMessageBroadcaster");
-XPCOMUtils.defineLazyServiceGetter(this, "ppml",
-                                   "@mozilla.org/parentprocessmessagemanager;1",
-                                   "nsIMessageListenerManager");
-
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-                                  "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
-                                  "resource://gre/modules/TelemetryController.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStorage",
-                                  "resource://gre/modules/TelemetryStorage.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
-                                  "resource://gre/modules/TelemetryLog.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ThirdPartyCookieProbe",
-                                  "resource://gre/modules/ThirdPartyCookieProbe.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
-                                  "resource://gre/modules/UITelemetry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "GCTelemetry",
-                                  "resource://gre/modules/GCTelemetry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
-                                  "resource://gre/modules/TelemetryEnvironment.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryReportingPolicy",
-                                  "resource://gre/modules/TelemetryReportingPolicy.jsm");
+XPCOMUtils.defineLazyServiceGetters(this, {
+  Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
+  idleService: ["@mozilla.org/widget/idleservice;1", "nsIIdleService"],
+  cpmm: ["@mozilla.org/childprocessmessagemanager;1", "nsIMessageSender"],
+  cpml: ["@mozilla.org/childprocessmessagemanager;1", "nsIMessageListenerManager"],
+  ppmm: ["@mozilla.org/parentprocessmessagemanager;1", "nsIMessageBroadcaster"],
+  ppml: ["@mozilla.org/parentprocessmessagemanager;1", "nsIMessageListenerManager"],
+});
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
