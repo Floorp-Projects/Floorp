@@ -295,8 +295,7 @@ nsHtml5Tokenizer::strBufToElementNameString()
     } else {
       nonInternedTagName->setNameForNonInterned(
         nsHtml5Portability::newLocalNameFromBuffer(
-          strBuf, 0, strBufLen, interner),
-        true);
+          strBuf, 0, strBufLen, interner));
       tagName = nonInternedTagName;
     }
   } else {
@@ -305,8 +304,7 @@ nsHtml5Tokenizer::strBufToElementNameString()
     if (!tagName) {
       nonInternedTagName->setNameForNonInterned(
         nsHtml5Portability::newLocalNameFromBuffer(
-          strBuf, 0, strBufLen, interner),
-        false);
+          strBuf, 0, strBufLen, interner));
       tagName = nonInternedTagName;
     }
   }
@@ -1808,7 +1806,6 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
             NS_HTML5_BREAK(outer);
           }
           appendCharRefBuf(c);
-          continue;
         }
         outer_end: ;
         if (candidate == -1) {
@@ -4357,7 +4354,6 @@ nsHtml5Tokenizer::eof()
           if (hi < lo) {
             NS_HTML5_BREAK(outer);
           }
-          continue;
         }
         outer_end: ;
         if (candidate == -1) {
@@ -4437,7 +4433,6 @@ nsHtml5Tokenizer::eof()
   }
   eofloop_end: ;
   tokenHandler->eof();
-  return;
 }
 
 void 
@@ -4496,7 +4491,7 @@ nsHtml5Tokenizer::end()
     publicIdentifier = nullptr;
   }
   tagName = nullptr;
-  nonInternedTagName->setNameForNonInterned(nullptr, false);
+  nonInternedTagName->setNameForNonInterned(nullptr);
   attributeName = nullptr;
   nonInternedAttributeName->setNameForNonInterned(nullptr);
   tokenHandler->endTokenization();
@@ -4602,8 +4597,7 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   } else {
     nonInternedTagName->setNameForNonInterned(
       nsHtml5Portability::newLocalFromLocal(other->tagName->getName(),
-                                            interner),
-      other->tagName->isCustom());
+                                            interner));
     tagName = nonInternedTagName;
   }
   if (!other->attributeName) {

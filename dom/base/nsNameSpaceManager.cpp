@@ -15,6 +15,7 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "nsCOMArray.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsString.h"
@@ -189,7 +190,9 @@ NS_NewElement(Element** aResult,
   if (ns == kNameSpaceID_MathML) {
     // If the mathml.disabled pref. is true, convert all MathML nodes into
     // disabled MathML nodes by swapping the namespace.
-    if (ni->NodeInfoManager()->MathMLEnabled()) {
+    nsNameSpaceManager* nsmgr = nsNameSpaceManager::GetInstance();
+    if ((nsmgr && !nsmgr->mMathMLDisabled) ||
+        nsContentUtils::IsSystemPrincipal(ni->GetDocument()->NodePrincipal())) {
       return NS_NewMathMLElement(aResult, ni.forget());
     }
 
@@ -202,7 +205,29 @@ NS_NewElement(Element** aResult,
   if (ns == kNameSpaceID_SVG) {
     // If the svg.disabled pref. is true, convert all SVG nodes into
     // disabled SVG nodes by swapping the namespace.
-    if (ni->NodeInfoManager()->SVGEnabled()) {
+    nsNameSpaceManager* nsmgr = nsNameSpaceManager::GetInstance();
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    bool SVGEnabled = false;
+
+    if (nsmgr && !nsmgr->mSVGDisabled) {
+      SVGEnabled = true;
+    } else {
+      nsCOMPtr<nsIChannel> channel = ni->GetDocument()->GetChannel();
+      // We don't have a channel for SVGs constructed inside a SVG script
+      if (channel) {
+        loadInfo  = channel->GetLoadInfo();
+      }
+    }
+    if (SVGEnabled ||
+        nsContentUtils::IsSystemPrincipal(ni->GetDocument()->NodePrincipal()) ||
+        (loadInfo &&
+         (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_IMAGE ||
+         loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_OTHER) &&
+         (nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal()) ||
+          nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal())
+         )
+        )
+       ) {
       return NS_NewSVGElement(aResult, ni.forget(), aFromParser);
     }
     RefPtr<mozilla::dom::NodeInfo> genericXMLNI =

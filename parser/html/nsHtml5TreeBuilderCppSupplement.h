@@ -68,11 +68,9 @@ nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
 }
 
 nsIContentHandle*
-nsHtml5TreeBuilder::createElement(int32_t aNamespace,
-                                  nsIAtom* aName,
+nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
                                   nsHtml5HtmlAttributes* aAttributes,
-                                  nsIContentHandle* aIntendedParent,
-                                  nsHtml5ContentCreatorFunction aCreator)
+                                  nsIContentHandle* aIntendedParent)
 {
   NS_PRECONDITION(aAttributes, "Got null attributes.");
   NS_PRECONDITION(aName, "Got null name.");
@@ -93,28 +91,13 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
        intendedParent->OwnerDoc()->NodeInfoManager() :
        mBuilder->GetNodeInfoManager();
 
-    nsIContent* elem;
-    if (aNamespace == kNameSpaceID_XHTML) {
-      elem = nsHtml5TreeOperation::CreateHTMLElement(
-        name,
-        aAttributes,
-        mozilla::dom::FROM_PARSER_FRAGMENT,
-        nodeInfoManager,
-        mBuilder,
-        aCreator.html);
-    } else if (aNamespace == kNameSpaceID_SVG) {
-      elem = nsHtml5TreeOperation::CreateSVGElement(
-        name,
-        aAttributes,
-        mozilla::dom::FROM_PARSER_FRAGMENT,
-        nodeInfoManager,
-        mBuilder,
-        aCreator.svg);
-    } else {
-      MOZ_ASSERT(aNamespace == kNameSpaceID_MathML);
-      elem = nsHtml5TreeOperation::CreateMathMLElement(
-        name, aAttributes, nodeInfoManager, mBuilder);
-    }
+    nsIContent* elem =
+      nsHtml5TreeOperation::CreateElement(aNamespace,
+                                          name,
+                                          aAttributes,
+                                          mozilla::dom::FROM_PARSER_FRAGMENT,
+                                          nodeInfoManager,
+                                          mBuilder);
     if (MOZ_UNLIKELY(aAttributes != tokenizer->GetAttributes() &&
                      aAttributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES)) {
       delete aAttributes;
@@ -130,8 +113,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
                aAttributes,
                content,
                aIntendedParent,
-               !!mSpeculativeLoadStage,
-               aCreator);
+               !!mSpeculativeLoadStage);
   // mSpeculativeLoadStage is non-null only in the off-the-main-thread
   // tree builder, which handles the network stream
 
@@ -363,15 +345,13 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
 }
 
 nsIContentHandle*
-nsHtml5TreeBuilder::createElement(int32_t aNamespace,
-                                  nsIAtom* aName,
+nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
                                   nsHtml5HtmlAttributes* aAttributes,
                                   nsIContentHandle* aFormElement,
-                                  nsIContentHandle* aIntendedParent,
-                                  nsHtml5ContentCreatorFunction aCreator)
+                                  nsIContentHandle* aIntendedParent)
 {
-  nsIContentHandle* content =
-    createElement(aNamespace, aName, aAttributes, aIntendedParent, aCreator);
+  nsIContentHandle* content = createElement(aNamespace, aName, aAttributes,
+                                            aIntendedParent);
   if (aFormElement) {
     if (mBuilder) {
       nsHtml5TreeOperation::SetFormElement(static_cast<nsIContent*>(content),
@@ -388,11 +368,8 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
 nsIContentHandle*
 nsHtml5TreeBuilder::createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* aAttributes)
 {
-  nsHtml5ContentCreatorFunction creator;
-  // <html> uses NS_NewHTMLSharedElement creator
-  creator.html = NS_NewHTMLSharedElement;
-  nsIContentHandle* content = createElement(
-    kNameSpaceID_XHTML, nsGkAtoms::html, aAttributes, nullptr, creator);
+  nsIContentHandle* content =
+    createElement(kNameSpaceID_XHTML, nsGkAtoms::html, aAttributes, nullptr);
   if (mBuilder) {
     nsresult rv = nsHtml5TreeOperation::AppendToDocument(static_cast<nsIContent*>(content),
                                                          mBuilder);
@@ -408,14 +385,11 @@ nsHtml5TreeBuilder::createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* aAttribute
 }
 
 nsIContentHandle*
-nsHtml5TreeBuilder::createAndInsertFosterParentedElement(
-  int32_t aNamespace,
-  nsIAtom* aName,
-  nsHtml5HtmlAttributes* aAttributes,
-  nsIContentHandle* aFormElement,
-  nsIContentHandle* aTable,
-  nsIContentHandle* aStackParent,
-  nsHtml5ContentCreatorFunction aCreator)
+nsHtml5TreeBuilder::createAndInsertFosterParentedElement(int32_t aNamespace, nsIAtom* aName,
+                                                         nsHtml5HtmlAttributes* aAttributes,
+                                                         nsIContentHandle* aFormElement,
+                                                         nsIContentHandle* aTable,
+                                                         nsIContentHandle* aStackParent)
 {
   NS_PRECONDITION(aTable, "Null table");
   NS_PRECONDITION(aStackParent, "Null stack parent");
@@ -427,8 +401,8 @@ nsHtml5TreeBuilder::createAndInsertFosterParentedElement(
       static_cast<nsIContent*>(aTable),
       static_cast<nsIContent*>(aStackParent));
 
-    nsIContentHandle* child = createElement(
-      aNamespace, aName, aAttributes, aFormElement, fosterParent, aCreator);
+    nsIContentHandle* child = createElement(aNamespace, aName, aAttributes,
+      aFormElement, fosterParent);
 
     insertFosterParentedChild(child, aTable, aStackParent);
 
@@ -444,8 +418,8 @@ nsHtml5TreeBuilder::createAndInsertFosterParentedElement(
                            aStackParent, fosterParentHandle);
 
   // Create the element with the correct intended parent.
-  nsIContentHandle* child = createElement(
-    aNamespace, aName, aAttributes, aFormElement, fosterParentHandle, aCreator);
+  nsIContentHandle* child = createElement(aNamespace, aName, aAttributes,
+    aFormElement, fosterParentHandle);
 
   // Insert the child into the foster parent.
   insertFosterParentedChild(child, aTable, aStackParent);
