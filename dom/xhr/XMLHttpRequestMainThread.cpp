@@ -1457,8 +1457,7 @@ XMLHttpRequestMainThread::DispatchOrStoreEvent(DOMEventTargetHelper* aTarget,
     return;
   }
 
-  bool dummy;
-  aTarget->DispatchEvent(aEvent, &dummy);
+  aTarget->DispatchDOMEvent(nullptr, aEvent, nullptr, nullptr);
 }
 
 void
@@ -1478,8 +1477,8 @@ XMLHttpRequestMainThread::ResumeEventDispatching()
   pendingEvents.SwapElements(mPendingEvents);
 
   for (uint32_t i = 0; i < pendingEvents.Length(); ++i) {
-    bool dummy;
-    pendingEvents[i].mTarget->DispatchEvent(pendingEvents[i].mEvent, &dummy);
+    pendingEvents[i].mTarget->
+      DispatchDOMEvent(nullptr, pendingEvents[i].mEvent, nullptr, nullptr);
   }
 }
 

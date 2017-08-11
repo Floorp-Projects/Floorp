@@ -159,8 +159,7 @@ DesktopNotification::DispatchNotificationEvent(const nsString& aName)
   // it doesn't bubble, and it isn't cancelable
   event->InitEvent(aName, false, false);
   event->SetTrusted(true);
-  bool dummy;
-  DispatchEvent(event, &dummy);
+  DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 nsresult

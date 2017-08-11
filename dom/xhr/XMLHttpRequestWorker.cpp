@@ -1355,8 +1355,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   event->SetTrusted(true);
 
-  bool dummy;
-  target->DispatchEvent(event, &dummy);
+  target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 
   // After firing the event set mResponse to JSVAL_NULL for chunked response
   // types.
@@ -1758,8 +1757,7 @@ XMLHttpRequestWorker::DispatchPrematureAbortEvent(EventTarget* aTarget,
 
   event->SetTrusted(true);
 
-  bool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  aTarget->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 void
