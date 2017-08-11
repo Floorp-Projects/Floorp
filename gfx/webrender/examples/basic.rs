@@ -8,20 +8,16 @@ extern crate gleam;
 extern crate glutin;
 extern crate webrender;
 
-#[macro_use]
-extern crate lazy_static;
-
 #[path="common/boilerplate.rs"]
 mod boilerplate;
 
 use app_units::Au;
-use boilerplate::HandyDandyRectBuilder;
+use boilerplate::{Example, HandyDandyRectBuilder};
 use euclid::vec2;
 use glutin::TouchPhase;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use std::sync::Mutex;
 use webrender::api::*;
 
 #[derive(Debug)]
@@ -170,177 +166,188 @@ fn load_file(name: &str) -> Vec<u8> {
 }
 
 fn main() {
-    boilerplate::main_wrapper(body, event_handler, None);
+    let mut app = App {
+        touch_state: TouchState::new(),
+    };
+    boilerplate::main_wrapper(&mut app, None);
 }
 
-fn body(api: &RenderApi,
-        _document_id: &DocumentId,
-        builder: &mut DisplayListBuilder,
-        resources: &mut ResourceUpdates,
-        _pipeline_id: &PipelineId,
-        layout_size: &LayoutSize) {
-    let bounds = LayoutRect::new(LayoutPoint::zero(), *layout_size);
-    builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                  bounds,
-                                  None,
-                                  TransformStyle::Flat,
-                                  None,
-                                  MixBlendMode::Normal,
-                                  Vec::new());
-
-    let image_mask_key = api.generate_image_key();
-    resources.add_image(
-        image_mask_key,
-        ImageDescriptor::new(2, 2, ImageFormat::A8, true),
-        ImageData::new(vec![0, 80, 180, 255]),
-        None
-    );
-    let mask = ImageMask {
-        image: image_mask_key,
-        rect: (75, 75).by(100, 100),
-        repeat: false,
-    };
-    let complex = ComplexClipRegion::new((50, 50).to(150, 150), BorderRadius::uniform(20.0));
-    let id = builder.define_clip(None, bounds, vec![complex], Some(mask));
-    builder.push_clip_id(id);
-
-    let bounds = (100, 100).to(200, 200);
-    builder.push_rect(bounds, None, ColorF::new(0.0, 1.0, 0.0, 1.0));
-
-    let bounds = (250, 100).to(350, 200);
-    builder.push_rect(bounds, None, ColorF::new(0.0, 1.0, 0.0, 1.0));
-    let border_side = BorderSide {
-        color: ColorF::new(0.0, 0.0, 1.0, 1.0),
-        style: BorderStyle::Groove,
-    };
-    let border_widths = BorderWidths {
-        top: 10.0,
-        left: 10.0,
-        bottom: 10.0,
-        right: 10.0,
-    };
-    let border_details = BorderDetails::Normal(NormalBorder {
-        top: border_side,
-        right: border_side,
-        bottom: border_side,
-        left: border_side,
-        radius: BorderRadius::uniform(20.0),
-    });
-
-    let bounds = (100, 100).to(200, 200);
-    builder.push_border(bounds, None, border_widths, border_details);
-
-
-    if false { // draw text?
-        let font_key = api.generate_font_key();
-        let font_bytes = load_file("res/FreeSans.ttf");
-        resources.add_raw_font(font_key, font_bytes, 0);
-
-        let text_bounds = (100, 200).by(700, 300);
-        let glyphs = vec![
-            GlyphInstance {
-                index: 48,
-                point: LayoutPoint::new(100.0, 100.0),
-            },
-            GlyphInstance {
-                index: 68,
-                point: LayoutPoint::new(150.0, 100.0),
-            },
-            GlyphInstance {
-                index: 80,
-                point: LayoutPoint::new(200.0, 100.0),
-            },
-            GlyphInstance {
-                index: 82,
-                point: LayoutPoint::new(250.0, 100.0),
-            },
-            GlyphInstance {
-                index: 81,
-                point: LayoutPoint::new(300.0, 100.0),
-            },
-            GlyphInstance {
-                index: 3,
-                point: LayoutPoint::new(350.0, 100.0),
-            },
-            GlyphInstance {
-                index: 86,
-                point: LayoutPoint::new(400.0, 100.0),
-            },
-            GlyphInstance {
-                index: 79,
-                point: LayoutPoint::new(450.0, 100.0),
-            },
-            GlyphInstance {
-                index: 72,
-                point: LayoutPoint::new(500.0, 100.0),
-            },
-            GlyphInstance {
-                index: 83,
-                point: LayoutPoint::new(550.0, 100.0),
-            },
-            GlyphInstance {
-                index: 87,
-                point: LayoutPoint::new(600.0, 100.0),
-            },
-            GlyphInstance {
-                index: 17,
-                point: LayoutPoint::new(650.0, 100.0),
-            },
-        ];
-
-        builder.push_text(text_bounds,
-                          None,
-                          &glyphs,
-                          font_key,
-                          ColorF::new(1.0, 1.0, 0.0, 1.0),
-                          Au::from_px(32),
-                          None);
-    }
-
-    if false { // draw box shadow?
-        let rect = LayoutRect::zero();
-        let simple_box_bounds = (20, 200).by(50, 50);
-        let offset = vec2(10.0, 10.0);
-        let color = ColorF::new(1.0, 1.0, 1.0, 1.0);
-        let blur_radius = 0.0;
-        let spread_radius = 0.0;
-        let simple_border_radius = 8.0;
-        let box_shadow_type = BoxShadowClipMode::Inset;
-
-        builder.push_box_shadow(rect,
-                                Some(LocalClip::from(bounds)),
-                                simple_box_bounds,
-                                offset,
-                                color,
-                                blur_radius,
-                                spread_radius,
-                                simple_border_radius,
-                                box_shadow_type);
-    }
-
-    builder.pop_clip_id();
-    builder.pop_stacking_context();
+struct App {
+    touch_state: TouchState,
 }
 
-lazy_static! {
-    static ref TOUCH_STATE: Mutex<TouchState> = Mutex::new(TouchState::new());
-}
+impl Example for App {
+    fn render(&mut self,
+              api: &RenderApi,
+              builder: &mut DisplayListBuilder,
+              resources: &mut ResourceUpdates,
+              layout_size: LayoutSize,
+              _pipeline_id: PipelineId,
+              _document_id: DocumentId) {
+        let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
+        builder.push_stacking_context(ScrollPolicy::Scrollable,
+                                      bounds,
+                                      None,
+                                      TransformStyle::Flat,
+                                      None,
+                                      MixBlendMode::Normal,
+                                      Vec::new());
 
-fn event_handler(event: &glutin::Event, document_id: DocumentId, api: &RenderApi) {
-    match *event {
-        glutin::Event::Touch(touch) => {
-            match TOUCH_STATE.lock().unwrap().handle_event(touch) {
-                TouchResult::Pan(pan) => {
-                    api.set_pan(document_id, pan);
-                    api.generate_frame(document_id, None);
-                }
-                TouchResult::Zoom(zoom) => {
-                    api.set_pinch_zoom(document_id, ZoomFactor::new(zoom));
-                    api.generate_frame(document_id, None);
-                }
-                TouchResult::None => {}
-            }
+        let image_mask_key = api.generate_image_key();
+        resources.add_image(
+            image_mask_key,
+            ImageDescriptor::new(2, 2, ImageFormat::A8, true),
+            ImageData::new(vec![0, 80, 180, 255]),
+            None
+        );
+        let mask = ImageMask {
+            image: image_mask_key,
+            rect: (75, 75).by(100, 100),
+            repeat: false,
+        };
+        let complex = ComplexClipRegion::new((50, 50).to(150, 150), BorderRadius::uniform(20.0));
+        let id = builder.define_clip(None, bounds, vec![complex], Some(mask));
+        builder.push_clip_id(id);
+
+        let bounds = (100, 100).to(200, 200);
+        builder.push_rect(bounds, None, ColorF::new(0.0, 1.0, 0.0, 1.0));
+
+        let bounds = (250, 100).to(350, 200);
+        builder.push_rect(bounds, None, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        let border_side = BorderSide {
+            color: ColorF::new(0.0, 0.0, 1.0, 1.0),
+            style: BorderStyle::Groove,
+        };
+        let border_widths = BorderWidths {
+            top: 10.0,
+            left: 10.0,
+            bottom: 10.0,
+            right: 10.0,
+        };
+        let border_details = BorderDetails::Normal(NormalBorder {
+            top: border_side,
+            right: border_side,
+            bottom: border_side,
+            left: border_side,
+            radius: BorderRadius::uniform(20.0),
+        });
+
+        let bounds = (100, 100).to(200, 200);
+        builder.push_border(bounds, None, border_widths, border_details);
+
+
+        if false { // draw text?
+            let font_key = api.generate_font_key();
+            let font_bytes = load_file("res/FreeSans.ttf");
+            resources.add_raw_font(font_key, font_bytes, 0);
+
+            let text_bounds = (100, 200).by(700, 300);
+            let glyphs = vec![
+                GlyphInstance {
+                    index: 48,
+                    point: LayoutPoint::new(100.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 68,
+                    point: LayoutPoint::new(150.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 80,
+                    point: LayoutPoint::new(200.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 82,
+                    point: LayoutPoint::new(250.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 81,
+                    point: LayoutPoint::new(300.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 3,
+                    point: LayoutPoint::new(350.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 86,
+                    point: LayoutPoint::new(400.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 79,
+                    point: LayoutPoint::new(450.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 72,
+                    point: LayoutPoint::new(500.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 83,
+                    point: LayoutPoint::new(550.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 87,
+                    point: LayoutPoint::new(600.0, 100.0),
+                },
+                GlyphInstance {
+                    index: 17,
+                    point: LayoutPoint::new(650.0, 100.0),
+                },
+            ];
+
+            builder.push_text(text_bounds,
+                              None,
+                              &glyphs,
+                              font_key,
+                              ColorF::new(1.0, 1.0, 0.0, 1.0),
+                              Au::from_px(32),
+                              None);
         }
-        _ => ()
+
+        if false { // draw box shadow?
+            let rect = LayoutRect::zero();
+            let simple_box_bounds = (20, 200).by(50, 50);
+            let offset = vec2(10.0, 10.0);
+            let color = ColorF::new(1.0, 1.0, 1.0, 1.0);
+            let blur_radius = 0.0;
+            let spread_radius = 0.0;
+            let simple_border_radius = 8.0;
+            let box_shadow_type = BoxShadowClipMode::Inset;
+
+            builder.push_box_shadow(rect,
+                                    Some(LocalClip::from(bounds)),
+                                    simple_box_bounds,
+                                    offset,
+                                    color,
+                                    blur_radius,
+                                    spread_radius,
+                                    simple_border_radius,
+                                    box_shadow_type);
+        }
+
+        builder.pop_clip_id();
+        builder.pop_stacking_context();
+    }
+
+    fn on_event(&mut self,
+                event: glutin::Event,
+                api: &RenderApi,
+                document_id: DocumentId) -> bool {
+        match event {
+            glutin::Event::Touch(touch) => {
+                match self.touch_state.handle_event(touch) {
+                    TouchResult::Pan(pan) => {
+                        api.set_pan(document_id, pan);
+                        api.generate_frame(document_id, None);
+                    }
+                    TouchResult::Zoom(zoom) => {
+                        api.set_pinch_zoom(document_id, ZoomFactor::new(zoom));
+                        api.generate_frame(document_id, None);
+                    }
+                    TouchResult::None => {}
+                }
+            }
+            _ => ()
+        }
+
+        false
     }
 }
