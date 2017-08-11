@@ -92,21 +92,4 @@ interface nsIDOMStorageManager : nsISupports
    */
   bool checkStorage(in nsIPrincipal aPrincipal,
                     in nsIDOMStorage aStorage);
-
-  /**
-   * @deprecated
-   *
-   * Returns instance of localStorage object for aURI's origin.
-   * This method ensures there is always only a single instance
-   * for a single origin.
-   *
-   * Currently just forwards to the createStorage method of this
-   * interface.
-   *
-   * Extension developers are strongly encouraged to use getStorage
-   * or createStorage method instead.
-   */
-  nsIDOMStorage getLocalStorageForPrincipal(in nsIPrincipal aPrincipal,
-                                            in DOMString aDocumentURI,
-                                            [optional] in bool aPrivate);
 };

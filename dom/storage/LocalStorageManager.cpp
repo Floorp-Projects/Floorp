@@ -336,17 +336,6 @@ LocalStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-// Obsolete nsIDOMStorageManager methods
-
-NS_IMETHODIMP
-LocalStorageManager::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
-                                                 const nsAString& aDocumentURI,
-                                                 bool aPrivate,
-                                                 nsIDOMStorage** aRetval)
-{
-  return CreateStorage(nullptr, aPrincipal, aDocumentURI, aPrivate, aRetval);
-}
-
 void
 LocalStorageManager::ClearCaches(uint32_t aUnloadFlags,
                                  const OriginAttributesPattern& aPattern,
