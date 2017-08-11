@@ -10,6 +10,7 @@
   --tab-toolbar-navbar-overlap: 1px;
   --tab-line-color: highlight;
   --tab-min-height: 33px;
+  --tab-loading-fill: #0A84FF;
 }
 
 :root[uidensity=compact] {
@@ -69,7 +70,43 @@
   margin-top: 1px;
 }
 
-.tab-throbber,
+:root[sessionrestored] .tab-throbber[busy] {
+  position: relative;
+  overflow: hidden;
+  width: 16px;
+  height: 16px;
+}
+
+:root[sessionrestored] .tab-throbber[busy]::before {
+  content: "";
+  position: absolute;
+  background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
+  background-position: left center;
+  background-repeat: no-repeat;
+  width: 960px;
+  height: 100%;
+  animation: tab-throbber-animation 1.05s steps(60) infinite;
+  -moz-context-properties: fill;
+
+  /* XXX: It would be nice to transition between the "connecting" color and the
+     "loading" color (see the `.tab-throbber[progress]::before` rule below);
+     however, that currently forces main thread painting. When this is fixed
+     (after WebRender lands), we can do something like
+     `transition: fill 0.333s, opacity 0.333s;` */
+
+  fill: currentColor;
+  opacity: 0.7;
+}
+
+@keyframes tab-throbber-animation {
+  100% { transform: translateX(-100%); }
+}
+
+:root[sessionrestored] .tab-throbber[progress]::before {
+  fill: var(--tab-loading-fill);
+  opacity: 1;
+}
+
 .tab-sharing-icon-overlay,
 .tab-icon-image {
   height: 16px;
@@ -79,7 +116,7 @@
 .tab-throbber:not([pinned]),
 .tab-sharing-icon-overlay:not([pinned]),
 .tab-icon-image:not([pinned]) {
-  margin-inline-end: 6px;
+  margin-inline-end: -16px;
 }
 
 .tab-icon-image {
@@ -94,6 +131,14 @@
 .tab-icon-image[sharing]:not([selected]),
 .tab-sharing-icon-overlay {
   animation: 3s linear tab-sharing-icon-pulse infinite;
+}
+
+.tab-label-container {
+  padding-inline-start: 22px;
+}
+
+.tab-icon-image:not([src]):not([busy]):not([pinned]) ~ .tab-label-container {
+  padding-inline-start: 0;
 }
 
 /* This should remain identical to identity-box-sharing-icon-pulse in identity-block.inc.css */
@@ -184,14 +229,6 @@
 #TabsToolbar[brighttext] .tab-icon-overlay[activemedia-blocked]:not([crashed]):not([selected]):not(:hover),
 .tab-icon-overlay[activemedia-blocked][selected]:-moz-lwtheme-brighttext:not(:hover) {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-small.svg#tab-audio-white-blocked");
-}
-
-.tab-throbber[busy] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
-}
-
-.tab-throbber[progress] {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
 }
 
 .tab-label {
@@ -468,16 +505,6 @@
 
 .tabs-newtab-button {
   width: 36px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .tab-throbber[busy] {
-    list-style-image: url("chrome://browser/skin/tabbrowser/connecting@2x.png");
-  }
-
-  .tab-throbber[progress] {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
 }
 
 /* All tabs button and menupopup */
