@@ -353,8 +353,6 @@ def configure_mercurial(hg, root_state_dir):
 
 def update_mercurial_repo(hg, url, dest, revision):
     """Perform a clone/pull + update of a Mercurial repository."""
-    args = [hg]
-
     # Disable common extensions whose older versions may cause `hg`
     # invocations to abort.
     disable_exts = [
@@ -368,22 +366,31 @@ def update_mercurial_repo(hg, url, dest, revision):
         'push-to-try',
         'reviewboard',
     ]
-    for ext in disable_exts:
-        args.extend(['--config', 'extensions.%s=!' % ext])
+
+    def disable_extensions(args):
+        for ext in disable_exts:
+            args.extend(['--config', 'extensions.%s=!' % ext])
+
+    pull_args = [hg]
+    disable_extensions(pull_args)
 
     if os.path.exists(dest):
-        args.extend(['pull', url])
+        pull_args.extend(['pull', url])
         cwd = dest
     else:
-        args.extend(['clone', '--noupdate', url, dest])
+        pull_args.extend(['clone', '--noupdate', url, dest])
         cwd = '/'
+
+    update_args = [hg]
+    disable_extensions(update_args)
+    update_args.extend(['update', '-r', revision])
 
     print('=' * 80)
     print('Ensuring %s is up to date at %s' % (url, dest))
 
     try:
-        subprocess.check_call(args, cwd=cwd)
-        subprocess.check_call([hg, 'update', '-r', revision], cwd=dest)
+        subprocess.check_call(pull_args, cwd=cwd)
+        subprocess.check_call(update_args, cwd=dest)
     finally:
         print('=' * 80)
 
