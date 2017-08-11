@@ -25,6 +25,7 @@
   --in-content-category-border-focus: 1px dotted #0a84ff;
   --in-content-category-text: #0c0c0d;
   --in-content-category-text-selected: #0a84ff;
+  --in-content-category-hover: rgba(12,12,13,0.1);
   --in-content-tab-color: #424f5a;
   --in-content-link-color: #0a84ff;
   --in-content-link-color-hover: #0060df;
@@ -339,6 +340,7 @@ html|*.help-button:hover {
   fill: white;
   stroke: #808080;
   stroke-opacity: 1;
+  background-color: var(--in-content-category-hover);
 }
 
 html|*.help-button:hover:active {
@@ -640,16 +642,21 @@ xul|*.radio-label-box {
   padding-top: 70px;
   margin: 0;
   border-width: 0;
+  width: 240px;
 }
 
 *|*.category {
-  width: 240px;
   min-height: 48px;
   -moz-appearance: none;
   color: var(--in-content-category-text);
-  padding-inline-start: 44px;
+  margin-inline-start: 34px;
   padding-inline-end: 10px;
+  padding-inline-start: 10px;
   transition: background-color 150ms;
+}
+
+*|*.category:hover {
+  background-color: var(--in-content-category-hover);
 }
 
 *|*.category[selected],
@@ -694,14 +701,16 @@ xul|*.radio-label-box {
   }
 
   .category {
-    padding-inline-start: 47px; /* make category icons align center */
+    padding-inline-start: 13px; /* make category icons align center */
+    margin-inline-end: 40px;
   }
 
   .help-button {
     font-size: 0 !important;
-    margin-inline-start: 51px !important; /* make the question mark icon align center */
-    background-position: 0px !important;
+    margin-inline-start: 41px !important; /* make the question mark icon align center */
+    background-position: 10px !important;
     padding-inline-start: 0px !important;
+    width: 36px !important;
   }
 
   .main-content {

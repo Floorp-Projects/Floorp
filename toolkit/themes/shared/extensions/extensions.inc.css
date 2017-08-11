@@ -152,10 +152,6 @@ button.warning {
   padding-top: 0;
 }
 
-.category[selected="true"]:hover {
-  color: #0060df;
-}
-
 .category[disabled] {
   overflow: hidden;
   height: 0;
