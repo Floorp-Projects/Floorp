@@ -22,7 +22,7 @@ const {ObjectClient} = require("devtools/shared/client/main");
 add_task(function* () {
   yield loadTab(TEST_URI);
 
-  let opened = waitForConsole();
+  let opened = waitForBrowserConsole();
 
   let hud = HUDService.getBrowserConsole();
   ok(!hud, "browser console is not open");
@@ -197,21 +197,4 @@ function* testCPOWInspection(hud) {
   // Just a sanity check to make sure a valid packet came back
   is(prototypeAndProperties.prototype.class, "XBL prototype JSClass",
     "Looks like a valid response");
-}
-
-function waitForConsole() {
-  let deferred = defer();
-
-  Services.obs.addObserver(function observer(aSubject) {
-    Services.obs.removeObserver(observer, "web-console-created");
-    aSubject.QueryInterface(Ci.nsISupportsString);
-
-    let hud = HUDService.getBrowserConsole();
-    ok(hud, "browser console is open");
-    is(aSubject.data, hud.hudId, "notification hudId is correct");
-
-    executeSoon(() => deferred.resolve(hud));
-  }, "web-console-created");
-
-  return deferred.promise;
 }
