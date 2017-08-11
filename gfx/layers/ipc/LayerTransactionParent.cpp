@@ -953,6 +953,28 @@ bool LayerTransactionParent::IsSameProcess() const
   return OtherPid() == base::GetCurrentProcId();
 }
 
+uint64_t
+LayerTransactionParent::FlushTransactionId(TimeStamp& aCompositeEnd)
+{
+#if defined(ENABLE_FRAME_LATENCY_LOG)
+  if (mPendingTransaction) {
+    if (mTxnStartTime) {
+      uint32_t latencyMs = round((aCompositeEnd - mTxnStartTime).ToMilliseconds());
+      printf_stderr("From transaction start to end of generate frame latencyMs %d this %p\n", latencyMs, this);
+    }
+    if (mFwdTime) {
+      uint32_t latencyMs = round((aCompositeEnd - mFwdTime).ToMilliseconds());
+      printf_stderr("From forwarding transaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
+    }
+  }
+  mTxnStartTime = TimeStamp();
+  mFwdTime = TimeStamp();
+#endif
+  uint64_t id = mPendingTransaction;
+  mPendingTransaction = 0;
+  return id;
+}
+
 void
 LayerTransactionParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
 {
