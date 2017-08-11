@@ -9,7 +9,6 @@
 
 #include "cubeb/cubeb.h"
 #include "mozilla/dom/AudioDeviceInfo.h"
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Maybe.h"
 
 namespace mozilla {

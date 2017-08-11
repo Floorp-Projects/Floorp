@@ -14,7 +14,6 @@
 
 #include "AudioChannelAgent.h"
 #include "nsAttrValue.h"
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Logging.h"
 
 #include <functional>
@@ -25,8 +24,6 @@ struct PRLogModuleInfo;
 namespace mozilla {
 namespace dom {
 
-#define NUMBER_OF_AUDIO_CHANNELS (uint32_t)AudioChannel::EndGuard_
-
 class AudioPlaybackConfig
 {
 public:
@@ -34,12 +31,14 @@ public:
     : mVolume(1.0)
     , mMuted(false)
     , mSuspend(nsISuspendedTypes::NONE_SUSPENDED)
+    , mNumberOfAgents(0)
   {}
 
   AudioPlaybackConfig(float aVolume, bool aMuted, uint32_t aSuspended)
     : mVolume(aVolume)
     , mMuted(aMuted)
     , mSuspend(aSuspended)
+    , mNumberOfAgents(0)
   {}
 
   void SetConfig(float aVolume, bool aMuted, uint32_t aSuspended)
@@ -52,6 +51,7 @@ public:
   float mVolume;
   bool mMuted;
   uint32_t mSuspend;
+  uint32_t mNumberOfAgents;
 };
 
 class AudioChannelService final : public nsIObserver
@@ -116,8 +116,7 @@ public:
    * Return the state to indicate this audioChannel for his window should keep
    * playing/muted/suspended.
    */
-  AudioPlaybackConfig GetMediaConfig(nsPIDOMWindowOuter* aWindow,
-                                     uint32_t aAudioChannel) const;
+  AudioPlaybackConfig GetMediaConfig(nsPIDOMWindowOuter* aWindow) const;
 
   /**
    * Called this method when the audible state of the audio playback changed,
@@ -142,10 +141,6 @@ public:
                               uint64_t aInnerWindowID,
                               bool aCapture);
 
-  static const nsAttrValue::EnumTable* GetAudioChannelTable();
-  static AudioChannel GetAudioChannel(const nsAString& aString);
-  static AudioChannel GetDefaultAudioChannel();
-
   void NotifyMediaResumedFromBlock(nsPIDOMWindowOuter* aWindow);
 
 private:
@@ -163,17 +158,6 @@ private:
   static void Shutdown();
 
   void RefreshAgentsAudioFocusChanged(AudioChannelAgent* aAgent);
-
-  class AudioChannelConfig final : public AudioPlaybackConfig
-  {
-  public:
-    AudioChannelConfig()
-      : AudioPlaybackConfig(1.0, false, nsISuspendedTypes::NONE_SUSPENDED)
-      , mNumberOfAgents(0)
-    {}
-
-    uint32_t mNumberOfAgents;
-  };
 
   class AudioChannelWindow final
   {
@@ -197,7 +181,7 @@ private:
 
     uint64_t mWindowID;
     bool mIsAudioCaptured;
-    AudioChannelConfig mChannels[NUMBER_OF_AUDIO_CHANNELS];
+    AudioPlaybackConfig mConfig;
 
     // Raw pointer because the AudioChannelAgent must unregister itself.
     nsTObserverArray<AudioChannelAgent*> mAgents;
@@ -238,8 +222,7 @@ private:
     // We need to do audio competing only when the new incoming agent started.
     void NotifyAudioCompetingChanged(AudioChannelAgent* aAgent);
 
-    uint32_t GetCompetingBehavior(AudioChannelAgent* aAgent,
-                                  int32_t aIncomingChannelType) const;
+    uint32_t GetCompetingBehavior(AudioChannelAgent* aAgent) const;
     bool IsAgentInvolvingInAudioCompeting(AudioChannelAgent* aAgent) const;
     bool IsAudioCompetingInSameTab() const;
     bool IsContainingPlayingAgent(AudioChannelAgent* aAgent) const;

@@ -97,6 +97,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         while let Ok((req, result)) = self.rx.recv() {
             if req == request {
                 // There it is!
+                self.rendered_images.remove(&request);
                 return result
             }
             self.rendered_images.insert(req, Some(result));

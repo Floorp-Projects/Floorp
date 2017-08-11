@@ -11,26 +11,24 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PanelWideWidgetTracker",
-  "resource:///modules/PanelWideWidgetTracker.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SearchWidgetTracker",
-  "resource:///modules/SearchWidgetTracker.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
-  "resource:///modules/CustomizableWidgets.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PanelWideWidgetTracker: "resource:///modules/PanelWideWidgetTracker.jsm",
+  SearchWidgetTracker: "resource:///modules/SearchWidgetTracker.jsm",
+  CustomizableWidgets: "resource:///modules/CustomizableWidgets.jsm",
+  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
+  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
 });
-XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
-  "resource://gre/modules/ShortcutUtils.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gELS",
   "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService");
-XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
-                                  "resource://gre/modules/LightweightThemeManager.jsm");
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 

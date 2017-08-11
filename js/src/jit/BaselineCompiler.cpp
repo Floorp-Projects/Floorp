@@ -2359,11 +2359,6 @@ BaselineCompiler::emit_JSOP_STRICTSETELEM()
     return emit_JSOP_SETELEM();
 }
 
-typedef bool (*SetObjectElementFn)(JSContext*, HandleObject, HandleValue,
-                                  HandleValue, HandleValue, bool);
-static const VMFunction SetObjectElementInfo =
-    FunctionInfo<SetObjectElementFn>(js::SetObjectElement, "SetObjectElement");
-
 bool
 BaselineCompiler::emit_JSOP_SETELEM_SUPER()
 {

@@ -12,6 +12,9 @@ WORKDIR       /home/worker
 VOLUME /home/worker/workspace
 VOLUME /home/worker/tooltool-cache
 
+# %include build/valgrind/valgrind-epochs.patch
+ADD topsrcdir/build/valgrind/valgrind-epochs.patch /tmp/valgrind-epochs.patch
+
 # install non-build specific dependencies in a single layer
 ADD           system-setup.sh   /tmp/system-setup.sh
 RUN           bash /tmp/system-setup.sh

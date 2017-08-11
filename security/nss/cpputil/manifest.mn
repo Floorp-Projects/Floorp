@@ -8,11 +8,16 @@ DEPTH      = ..
 MODULE = nss
 LIBRARY_NAME = cpputil
 
+ifeq ($(NSS_BUILD_UTIL_ONLY),1)
+CPPSRCS = \
+      $(NULL)
+else
 CPPSRCS = \
       dummy_io.cc \
       dummy_io_fwd.cc \
       tls_parser.cc \
       $(NULL)
+endif
 
 EXPORTS = \
       $(NULL)

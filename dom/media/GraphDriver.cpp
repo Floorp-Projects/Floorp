@@ -565,7 +565,6 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
   , mStarted(false)
   , mAudioInput(nullptr)
-  , mAudioChannel(aGraphImpl->AudioChannel())
   , mAddedMixer(false)
   , mInCallback(false)
   , mMicrophoneActive(false)
@@ -626,12 +625,6 @@ AudioCallbackDriver::Init()
       "This is blocking and should never run on the main thread.");
 
   mSampleRate = output.rate = CubebUtils::PreferredSampleRate();
-
-#if defined(__ANDROID__)
-  output.stream_type = CUBEB_STREAM_TYPE_MUSIC;
-#else
-  (void)mAudioChannel;
-#endif
 
   output.channels = mGraphImpl->AudioChannelCount();
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {

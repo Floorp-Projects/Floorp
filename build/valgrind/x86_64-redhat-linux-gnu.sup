@@ -604,3 +604,15 @@
    fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
    fun:_ZN3ots10OTSContext7ProcessEPNS_9OTSStream*
 }
+
+# apparent leaks in libLLVM-3.6-mesa.so, August 2017.  See bug 1382280.
+{
+   static-object-leaks-in-libLLVM-3.6-mesa.so.  See bug 1382280.
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   ...
+   fun:__static_initialization_and_destruction_0
+   fun:_GLOBAL__sub_I_*.cpp
+   obj:/*/lib*/libLLVM-3.6-mesa.so
+}

@@ -3239,6 +3239,9 @@ pref("dom.ipc.processCount.file", 1);
 // WebExtensions only support a single extension process.
 pref("dom.ipc.processCount.extension", 1);
 
+// Don't use a native event loop in the content process.
+pref("dom.ipc.useNativeEventProcessing.content", false);
+
 // Disable support for SVG
 pref("svg.disabled", false);
 

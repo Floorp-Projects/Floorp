@@ -576,7 +576,8 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 
 NS_IMETHODIMP
 nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
-                                            int32_t aPosition)
+                                            int32_t aPosition,
+                                            const nsACString& aImageName)
 {
   nsresult rv;
 

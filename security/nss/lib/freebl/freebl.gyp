@@ -158,6 +158,14 @@
           '-mpclmul',
           '-maes',
         ],
+        'conditions': [
+          [ 'OS=="dragonfly" or OS=="freebsd" or OS=="netbsd" or OS=="openbsd"', {
+            'cflags': [
+              '-mpclmul',
+              '-maes',
+            ],
+          }],
+        ],
       }],
       [ 'OS=="mac"', {
         'xcode_settings': {

@@ -1455,12 +1455,13 @@ CacheIRCompiler::emitGuardSpecificInt32Immediate()
 {
     Register reg = allocator.useRegister(masm, reader.int32OperandId());
     int32_t ival = reader.int32Immediate();
+    Assembler::Condition cond = (Assembler::Condition) reader.readByte();
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
 
-    masm.branch32(Assembler::NotEqual, reg, Imm32(ival), failure->label());
+    masm.branch32(Assembler::InvertCondition(cond), reg, Imm32(ival), failure->label());
     return true;
 }
 
@@ -2064,6 +2065,54 @@ CacheIRCompiler::emitLoadUnboxedArrayElementResult()
     size_t width = UnboxedTypeSize(elementType);
     BaseIndex addr(scratch, index, ScaleFromElemWidth(width));
     masm.loadUnboxedProperty(addr, elementType, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitArrayJoinResult()
+{
+    ObjOperandId objId = reader.objOperandId();
+
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, objId);
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Load obj->elements in scratch.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+    Address lengthAddr(scratch, ObjectElements::offsetOfLength());
+
+    // If array length is 0, return empty string.
+    Label finished;
+
+    {
+        Label arrayNotEmpty;
+        masm.branch32(Assembler::NotEqual, lengthAddr, Imm32(0), &arrayNotEmpty);
+        masm.movePtr(ImmGCPtr(cx_->names().empty), scratch);
+        masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
+        masm.jump(&finished);
+        masm.bind(&arrayNotEmpty);
+    }
+
+    // Otherwise, handle array length 1 case.
+    masm.branch32(Assembler::NotEqual, lengthAddr, Imm32(1), failure->label());
+
+    // But only if initializedLength is also 1.
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::NotEqual, initLength, Imm32(1), failure->label());
+
+    // And only if elem0 is a string.
+    Address elementAddr(scratch, 0);
+    masm.branchTestString(Assembler::NonZero, elementAddr, failure->label());
+
+    // Store the value.
+    masm.loadValue(elementAddr, output.valueReg());
+
+    masm.bind(&finished);
+
     return true;
 }
 
