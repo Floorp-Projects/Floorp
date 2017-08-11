@@ -340,7 +340,7 @@ GLContextWGL::MakeCurrentImpl(bool aForce) const
 }
 
 bool
-GLContextWGL::IsCurrent() const
+GLContextWGL::IsCurrentImpl() const
 {
     return sWGLLib.mSymbols.fGetCurrentContext() == mContext;
 }

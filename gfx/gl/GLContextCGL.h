@@ -47,7 +47,7 @@ public:
 
     virtual bool MakeCurrentImpl(bool aForce) const override;
 
-    virtual bool IsCurrent() const override;
+    virtual bool IsCurrentImpl() const override;
 
     virtual GLenum GetPreferredARGB32Format() const override;
 

@@ -392,7 +392,7 @@ GLContextEGL::MakeCurrentImpl(bool aForce) const
 }
 
 bool
-GLContextEGL::IsCurrent() const
+GLContextEGL::IsCurrentImpl() const
 {
     return sEGLLibrary.fGetCurrentContext() == mContext;
 }
