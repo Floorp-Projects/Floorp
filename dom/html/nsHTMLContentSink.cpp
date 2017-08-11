@@ -83,6 +83,10 @@ using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 
+typedef nsGenericHTMLElement*
+  (*contentCreatorCallback)(already_AddRefed<mozilla::dom::NodeInfo>&&,
+                            FromParser aFromParser);
+
 nsGenericHTMLElement*
 NS_NewHTMLNOTUSEDElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                          FromParser aFromParser)
@@ -93,7 +97,7 @@ NS_NewHTMLNOTUSEDElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
 
 #define HTML_TAG(_tag, _classname, _interfacename) NS_NewHTML##_classname##Element,
 #define HTML_OTHER(_tag) NS_NewHTMLNOTUSEDElement,
-static const HTMLContentCreatorFunction sHTMLContentCreatorFunctions[] = {
+static const contentCreatorCallback sContentCreatorCallbacks[] = {
   NS_NewHTMLUnknownElement,
 #include "nsHTMLTagList.h"
 #undef HTML_TAG
@@ -275,7 +279,7 @@ CreateHTMLElement(uint32_t aNodeType,
                aNodeType == eHTMLTag_userdefined,
                "aNodeType is out of bounds");
 
-  HTMLContentCreatorFunction cb = sHTMLContentCreatorFunctions[aNodeType];
+  contentCreatorCallback cb = sContentCreatorCallbacks[aNodeType];
 
   NS_ASSERTION(cb != NS_NewHTMLNOTUSEDElement,
                "Don't know how to construct tag element!");
