@@ -20,43 +20,162 @@ namespace HangMonitor {
 // ChromeHangs.
 static StaticAutoPtr<Observer::Annotators> gChromehangAnnotators;
 
-void
-HangAnnotations::AddAnnotation(const nsAString& aName, const int32_t aData)
+class BrowserHangAnnotations : public HangAnnotations
 {
-  nsAutoString dataString;
+public:
+  BrowserHangAnnotations();
+  ~BrowserHangAnnotations();
+
+  void AddAnnotation(const nsAString& aName, const int32_t aData) override;
+  void AddAnnotation(const nsAString& aName, const double aData) override;
+  void AddAnnotation(const nsAString& aName, const nsAString& aData) override;
+  void AddAnnotation(const nsAString& aName, const nsACString& aData) override;
+  void AddAnnotation(const nsAString& aName, const bool aData) override;
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t Count() const override;
+  bool IsEmpty() const override;
+  UniquePtr<Enumerator> GetEnumerator() override;
+
+  typedef std::pair<nsString, nsString> AnnotationType;
+  typedef std::vector<AnnotationType> VectorType;
+  typedef VectorType::const_iterator IteratorType;
+
+private:
+  VectorType  mAnnotations;
+};
+
+BrowserHangAnnotations::BrowserHangAnnotations()
+{
+  MOZ_COUNT_CTOR(BrowserHangAnnotations);
+}
+
+BrowserHangAnnotations::~BrowserHangAnnotations()
+{
+  MOZ_COUNT_DTOR(BrowserHangAnnotations);
+}
+
+void
+BrowserHangAnnotations::AddAnnotation(const nsAString& aName, const int32_t aData)
+{
+  nsString dataString;
   dataString.AppendInt(aData);
-  AppendElement(Annotation(aName, dataString));
+  AnnotationType annotation = std::make_pair(nsString(aName), dataString);
+  mAnnotations.push_back(annotation);
 }
 
 void
-HangAnnotations::AddAnnotation(const nsAString& aName, const double aData)
+BrowserHangAnnotations::AddAnnotation(const nsAString& aName, const double aData)
 {
-  nsAutoString dataString;
+  nsString dataString;
   dataString.AppendFloat(aData);
-  AppendElement(Annotation(aName, dataString));
+  AnnotationType annotation = std::make_pair(nsString(aName), dataString);
+  mAnnotations.push_back(annotation);
 }
 
 void
-HangAnnotations::AddAnnotation(const nsAString& aName, const nsAString& aData)
+BrowserHangAnnotations::AddAnnotation(const nsAString& aName, const nsAString& aData)
 {
-  AppendElement(Annotation(aName, aData));
+  AnnotationType annotation = std::make_pair(nsString(aName), nsString(aData));
+  mAnnotations.push_back(annotation);
 }
 
 void
-HangAnnotations::AddAnnotation(const nsAString& aName, const nsACString& aData)
+BrowserHangAnnotations::AddAnnotation(const nsAString& aName, const nsACString& aData)
 {
-  NS_ConvertUTF8toUTF16 dataString(aData);
-  AppendElement(Annotation(aName, dataString));
+  nsString dataString;
+  AppendUTF8toUTF16(aData, dataString);
+  AnnotationType annotation = std::make_pair(nsString(aName), dataString);
+  mAnnotations.push_back(annotation);
 }
 
 void
-HangAnnotations::AddAnnotation(const nsAString& aName, const bool aData)
+BrowserHangAnnotations::AddAnnotation(const nsAString& aName, const bool aData)
 {
-  if (aData) {
-    AppendElement(Annotation(aName, NS_LITERAL_STRING("true")));
-  } else {
-    AppendElement(Annotation(aName, NS_LITERAL_STRING("false")));
+  nsString dataString;
+  dataString += aData ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false");
+  AnnotationType annotation = std::make_pair(nsString(aName), dataString);
+  mAnnotations.push_back(annotation);
+}
+
+/**
+ * This class itself does not use synchronization but it (and its parent object)
+ * should be protected by mutual exclusion in some way. In Telemetry the chrome
+ * hang data is protected via TelemetryImpl::mHangReportsMutex.
+ */
+class ChromeHangAnnotationEnumerator : public HangAnnotations::Enumerator
+{
+public:
+  explicit ChromeHangAnnotationEnumerator(const BrowserHangAnnotations::VectorType& aAnnotations);
+  ~ChromeHangAnnotationEnumerator();
+
+  virtual bool Next(nsAString& aOutName, nsAString& aOutValue);
+
+private:
+  BrowserHangAnnotations::IteratorType mIterator;
+  BrowserHangAnnotations::IteratorType mEnd;
+};
+
+ChromeHangAnnotationEnumerator::ChromeHangAnnotationEnumerator(
+                          const BrowserHangAnnotations::VectorType& aAnnotations)
+  : mIterator(aAnnotations.begin())
+  , mEnd(aAnnotations.end())
+{
+  MOZ_COUNT_CTOR(ChromeHangAnnotationEnumerator);
+}
+
+ChromeHangAnnotationEnumerator::~ChromeHangAnnotationEnumerator()
+{
+  MOZ_COUNT_DTOR(ChromeHangAnnotationEnumerator);
+}
+
+bool
+ChromeHangAnnotationEnumerator::Next(nsAString& aOutName, nsAString& aOutValue)
+{
+  aOutName.Truncate();
+  aOutValue.Truncate();
+  if (mIterator == mEnd) {
+    return false;
   }
+  aOutName = mIterator->first;
+  aOutValue = mIterator->second;
+  ++mIterator;
+  return true;
+}
+
+size_t
+BrowserHangAnnotations::Count() const
+{
+  return mAnnotations.size();
+}
+
+bool
+BrowserHangAnnotations::IsEmpty() const
+{
+  return mAnnotations.empty();
+}
+
+size_t
+BrowserHangAnnotations::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t result = sizeof(mAnnotations) +
+                  mAnnotations.capacity() * sizeof(AnnotationType);
+  for (IteratorType i = mAnnotations.begin(), e = mAnnotations.end(); i != e;
+       ++i) {
+    result += i->first.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    result += i->second.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
+
+  return result;
+}
+
+UniquePtr<HangAnnotations::Enumerator>
+BrowserHangAnnotations::GetEnumerator()
+{
+  if (mAnnotations.empty()) {
+    return nullptr;
+  }
+  return MakeUnique<ChromeHangAnnotationEnumerator>(mAnnotations);
 }
 
 namespace Observer {
@@ -91,19 +210,22 @@ Annotators::Unregister(Annotator& aAnnotator)
   return mAnnotators.empty();
 }
 
-HangAnnotations
+UniquePtr<HangAnnotations>
 Annotators::GatherAnnotations()
 {
-  HangAnnotations annotations;
+  auto annotations = MakeUnique<BrowserHangAnnotations>();
   { // Scope for lock
     MutexAutoLock lock(mMutex);
     for (std::set<Annotator*>::iterator i = mAnnotators.begin(),
                                         e = mAnnotators.end();
          i != e; ++i) {
-      (*i)->AnnotateHang(annotations);
+      (*i)->AnnotateHang(*annotations);
     }
   }
-  return annotations;
+  if (annotations->IsEmpty()) {
+    return nullptr;
+  }
+  return Move(annotations);
 }
 
 } // namespace Observer
@@ -135,41 +257,20 @@ UnregisterAnnotator(Annotator& aAnnotator)
   }
 }
 
-HangAnnotations
+UniquePtr<HangAnnotations>
 ChromeHangAnnotatorCallout()
 {
   if (!gChromehangAnnotators) {
-    return HangAnnotations();
+    return nullptr;
   }
   return gChromehangAnnotators->GatherAnnotations();
 }
 
+UniquePtr<HangAnnotations>
+CreateEmptyHangAnnotations()
+{
+  return MakeUnique<BrowserHangAnnotations>();
+}
+
 } // namespace HangMonitor
 } // namespace mozilla
-
-namespace IPC {
-
-using mozilla::HangMonitor::Annotation;
-
-void
-ParamTraits<Annotation>::Write(Message* aMsg, const Annotation& aParam)
-{
-  WriteParam(aMsg, aParam.mName);
-  WriteParam(aMsg, aParam.mValue);
-}
-
-bool
-ParamTraits<Annotation>::Read(const Message* aMsg,
-                              PickleIterator* aIter,
-                              Annotation* aResult)
-{
-  if (!ReadParam(aMsg, aIter, &aResult->mName)) {
-    return false;
-  }
-  if (!ReadParam(aMsg, aIter, &aResult->mValue)) {
-    return false;
-  }
-  return true;
-}
-
-} // namespace IPC

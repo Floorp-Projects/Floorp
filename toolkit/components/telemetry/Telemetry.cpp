@@ -142,7 +142,7 @@ public:
                                Telemetry::ProcessedStack &aStack,
                                int32_t aSystemUptime,
                                int32_t aFirefoxUptime,
-                               HangAnnotations&& aAnnotations);
+                               HangAnnotationsPtr aAnnotations);
 #endif
 #if defined(MOZ_GECKO_PROFILER)
   static void DoStackCapture(const nsACString& aKey);
@@ -745,11 +745,19 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
       if (!jsAnnotation) {
         return NS_ERROR_FAILURE;
       }
+      UniquePtr<HangAnnotations::Enumerator> annotationsEnum =
+        info->mAnnotations->GetEnumerator();
+      if (!annotationsEnum) {
+        return NS_ERROR_FAILURE;
+      }
 
-      for (auto& annot : info->mAnnotations) {
+      // ... fill it with key:value pairs...
+      nsAutoString key;
+      nsAutoString value;
+      while (annotationsEnum->Next(key, value)) {
         JS::RootedValue jsValue(cx);
-        jsValue.setString(JS_NewUCStringCopyN(cx, annot.mValue.get(), annot.mValue.Length()));
-        if (!JS_DefineUCProperty(cx, jsAnnotation, annot.mName.get(), annot.mName.Length(),
+        jsValue.setString(JS_NewUCStringCopyN(cx, value.get(), value.Length()));
+        if (!JS_DefineUCProperty(cx, jsAnnotation, key.get(), key.Length(),
                                  jsValue, JSPROP_ENUMERATE)) {
           return NS_ERROR_FAILURE;
         }
@@ -1543,16 +1551,22 @@ TelemetryImpl::RecordChromeHang(uint32_t aDuration,
                                 Telemetry::ProcessedStack &aStack,
                                 int32_t aSystemUptime,
                                 int32_t aFirefoxUptime,
-                                HangAnnotations&& aAnnotations)
+                                HangAnnotationsPtr aAnnotations)
 {
   if (!sTelemetry || !TelemetryHistogram::CanRecordExtended())
     return;
+
+  HangAnnotationsPtr annotations;
+  // We only pass aAnnotations if it is not empty.
+  if (aAnnotations && !aAnnotations->IsEmpty()) {
+    annotations = Move(aAnnotations);
+  }
 
   MutexAutoLock hangReportMutex(sTelemetry->mHangReportsMutex);
 
   sTelemetry->mHangReports.AddHang(aStack, aDuration,
                                    aSystemUptime, aFirefoxUptime,
-                                   Move(aAnnotations));
+                                   Move(annotations));
 }
 
 void
@@ -1999,7 +2013,7 @@ void RecordChromeHang(uint32_t duration,
                       ProcessedStack &aStack,
                       int32_t aSystemUptime,
                       int32_t aFirefoxUptime,
-                      HangAnnotations&& aAnnotations)
+                      HangAnnotationsPtr aAnnotations)
 {
   TelemetryImpl::RecordChromeHang(duration, aStack,
                                   aSystemUptime, aFirefoxUptime,
