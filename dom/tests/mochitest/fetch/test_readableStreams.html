@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for ReadableStreams and Fetch</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common_readableStreams.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+let tests = [
+  test_nativeStream,
+  function() { workify('test_nativeStream'); },
+
+  test_nonNativeStream,
+  function() { workify('test_nonNativeStream'); },
+
+  function() { workify('test_pendingStream'); },
+
+  test_noUint8Array,
+  function() { workify('test_noUint8Array'); },
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  let test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+
+  </script>
+</body>
+</html>
+
