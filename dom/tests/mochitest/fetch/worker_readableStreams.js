@@ -17,5 +17,5 @@ function next() {
 }
 
 onmessage = function(e) {
-  self[e.data]();
+  self[e.data](SAME_COMPARTMENT);
 }
