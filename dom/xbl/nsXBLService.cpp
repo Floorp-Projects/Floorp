@@ -145,11 +145,10 @@ public:
     if (shell) {
       nsIFrame* childFrame = mBoundElement->GetPrimaryFrame();
       if (!childFrame) {
-        // Check to see if it's in the undisplayed content map...
+        // Check if it's in the display:none or display:contents maps.
         nsFrameManager* fm = shell->FrameManager();
-        nsStyleContext* sc = fm->GetUndisplayedContent(mBoundElement);
+        nsStyleContext* sc = fm->GetDisplayNoneStyleFor(mBoundElement);
         if (!sc) {
-          // or in the display:contents map.
           sc = fm->GetDisplayContentsStyleFor(mBoundElement);
         }
         if (!sc) {

@@ -73,6 +73,8 @@ while [ $# -gt 0 ]; do
         -j) ninja_params+=(-j "$2"); shift ;;
         -v) ninja_params+=(-v); verbose=1 ;;
         --test) gyp_params+=(-Dtest_build=1) ;;
+        --clang) export CC=clang; export CCC=clang++; export CXX=clang++ ;;
+        --gcc) export CC=gcc; export CCC=g++; export CXX=g++ ;;
         --fuzz) fuzz=1 ;;
         --fuzz=oss) fuzz=1; fuzz_oss=1 ;;
         --fuzz=tls) fuzz=1; fuzz_tls=1 ;;

@@ -77,14 +77,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
-                                  "resource://gre/modules/addons/AddonRepository.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Extension",
-                                  "resource://gre/modules/Extension.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromptUtils",
-                                  "resource://gre/modules/SharedPromptUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  Extension: "resource://gre/modules/Extension.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  PromptUtils: "resource://gre/modules/SharedPromptUtils.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
   let certUtils = {};

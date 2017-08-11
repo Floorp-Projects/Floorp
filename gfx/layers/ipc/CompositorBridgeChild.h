@@ -226,10 +226,6 @@ public:
   // that the paint thread is going to begin painting asynchronously.
   void NotifyBeginAsyncPaint(CapturedPaintState* aState);
 
-  // Must only be called from the paint thread. Notifies the CompositorBridge
-  // that the paint thread has finished an asynchronous paint request.
-  void NotifyFinishedAsyncPaint(CapturedPaintState* aState);
-
   // Must only be called from the main thread. Notifies the CompoistorBridge
   // that a transaction is about to be sent, and if the paint thread is
   // currently painting, to begin delaying IPC messages.
@@ -239,6 +235,15 @@ public:
   // previous frames have been flushed. The main thread blocks until the
   // operation completes.
   void FlushAsyncPaints();
+
+  // Must only be called from the paint thread. Notifies the CompositorBridge
+  // that the paint thread has finished an asynchronous paint request.
+  void NotifyFinishedAsyncPaint(CapturedPaintState* aState);
+
+  // Must only be called from the paint thread. Notifies the CompositorBridge
+  // that the paint thread has finished ALL async requests from a given
+  // ClientPaintedLayer's batch.
+  void NotifyFinishedAsyncPaintLayer();
 
 private:
   // Private destructor, to discourage deletion outside of Release():

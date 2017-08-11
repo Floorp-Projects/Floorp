@@ -4,14 +4,12 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
-                                  "resource://gre/modules/ExtensionParent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
-                                  "resource://gre/modules/ExtensionUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
-                                  "resource://gre/modules/JSONFile.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
+  JSONFile: "resource://gre/modules/JSONFile.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "StartupCache", () => ExtensionParent.StartupCache);
 
@@ -23,13 +21,13 @@ let prefs;
 let _initPromise;
 
 async function _lazyInit() {
-  let file = FileUtils.getFile("ProfD", [FILE_NAME]);
+  let path = OS.Path.join(OS.Constants.Path.profileDir, FILE_NAME);
 
-  prefs = new JSONFile({path: file.path});
+  prefs = new JSONFile({path});
   prefs.data = {};
 
   try {
-    let blob = await ExtensionUtils.promiseFileContents(file);
+    let blob = await ExtensionUtils.promiseFileContents(path);
     prefs.data = JSON.parse(new TextDecoder().decode(blob));
   } catch (e) {
     if (!e.becauseNoSuchFile) {

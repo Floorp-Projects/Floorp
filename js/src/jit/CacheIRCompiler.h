@@ -58,6 +58,7 @@ namespace jit {
     _(CompareStringResult)                \
     _(CompareObjectResult)                \
     _(CompareSymbolResult)                \
+    _(ArrayJoinResult)                    \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
     _(MegamorphicLoadSlotByValueResult)   \

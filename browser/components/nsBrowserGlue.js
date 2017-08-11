@@ -17,33 +17,59 @@ XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils", "@mozilla.org/windows
 XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
   Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
 );
-XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource://gre/modules/ContextualIdentityService.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
-                                  "resource://gre/modules/SafeBrowsing.jsm");
 
 // lazy module getters
 
-/* global AboutHome:false, AddonManager:false, AppMenuNotifications:false,
-          AsyncPrefs: false, AsyncShutdown:false, AutoCompletePopup:false, BookmarkHTMLUtils:false,
-          BookmarkJSONUtils:false, BrowserUITelemetry:false, BrowserUsageTelemetry:false,
-          ContentClick:false, ContentPrefServiceParent:false, ContentSearch:false,
-          DateTimePickerHelper:false, DirectoryLinksProvider:false,
-          ExtensionsUI:false, Feeds:false,
-          FileUtils:false, FormValidationHandler:false, Integration:false,
-          LightweightThemeManager:false, LoginHelper:false, LoginManagerParent:false,
-          NetUtil:false, NewTabUtils:false, OS:false,
-          PageActions:false,
-          PageThumbs:false, PdfJs:false, PermissionUI:false, PlacesBackups:false,
-          PlacesUtils:false, PluralForm:false, PrivateBrowsingUtils:false,
-          ProcessHangMonitor:false, ReaderParent:false, RecentWindow:false,
-          RemotePrompt:false, SessionStore:false,
-          ShellService:false, SimpleServiceDiscovery:false, TabCrashHandler:false,
-          UITour:false, UIState:false, UpdateListener:false, WebChannel:false,
-          WindowsRegistry:false, webrtcUI:false */
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
+  AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  AutoCompletePopup: "resource://gre/modules/AutoCompletePopup.jsm",
+  BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.jsm",
+  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
+  BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  ContentClick: "resource:///modules/ContentClick.jsm",
+  ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
+  DateTimePickerHelper: "resource://gre/modules/DateTimePickerHelper.jsm",
+  DirectoryLinksProvider: "resource:///modules/DirectoryLinksProvider.jsm",
+  ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
+  Feeds: "resource:///modules/Feeds.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
+  Integration: "resource://gre/modules/Integration.jsm",
+  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PageActions: "resource:///modules/PageActions.jsm",
+  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PdfJs: "resource://pdf.js/PdfJs.jsm",
+  PermissionUI: "resource:///modules/PermissionUI.jsm",
+  PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PluralForm: "resource://gre/modules/PluralForm.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
+  ReaderParent: "resource:///modules/ReaderParent.jsm",
+  RecentWindow: "resource:///modules/RecentWindow.jsm",
+  RemotePrompt: "resource:///modules/RemotePrompt.jsm",
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  ShellService: "resource:///modules/ShellService.jsm",
+  SimpleServiceDiscovery: "resource://gre/modules/SimpleServiceDiscovery.jsm",
+  TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
+  UIState: "resource://services-sync/UIState.jsm",
+  UITour: "resource:///modules/UITour.jsm",
+  WebChannel: "resource://gre/modules/WebChannel.jsm",
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
+});
 
-
+/* global AboutHome:false, ContentPrefServiceParent:false, ContentSearch:false,
+          UpdateListener:false, webrtcUI:false */
 
 /**
  * IF YOU ADD OR REMOVE FROM THIS LIST, PLEASE UPDATE THE LIST ABOVE AS WELL.
@@ -54,72 +80,24 @@ let initializedModules = {};
 
 [
   ["AboutHome", "resource:///modules/AboutHome.jsm", "init"],
-  ["AddonManager", "resource://gre/modules/AddonManager.jsm"],
-  ["AppMenuNotifications", "resource://gre/modules/AppMenuNotifications.jsm"],
-  ["AsyncPrefs", "resource://gre/modules/AsyncPrefs.jsm"],
-  ["AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm"],
-  ["AutoCompletePopup", "resource://gre/modules/AutoCompletePopup.jsm"],
-  ["BookmarkHTMLUtils", "resource://gre/modules/BookmarkHTMLUtils.jsm"],
-  ["BookmarkJSONUtils", "resource://gre/modules/BookmarkJSONUtils.jsm"],
-  ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
-  ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
-  ["ContentClick", "resource:///modules/ContentClick.jsm"],
   ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm", "alwaysInit"],
   ["ContentSearch", "resource:///modules/ContentSearch.jsm", "init"],
-  ["DateTimePickerHelper", "resource://gre/modules/DateTimePickerHelper.jsm"],
-  ["DirectoryLinksProvider", "resource:///modules/DirectoryLinksProvider.jsm"],
-  ["ExtensionsUI", "resource:///modules/ExtensionsUI.jsm"],
-  ["Feeds", "resource:///modules/Feeds.jsm"],
-  ["FileUtils", "resource://gre/modules/FileUtils.jsm"],
-  ["FormValidationHandler", "resource:///modules/FormValidationHandler.jsm"],
-  ["Integration", "resource://gre/modules/Integration.jsm"],
-  ["LightweightThemeManager", "resource://gre/modules/LightweightThemeManager.jsm"],
-  ["LoginHelper", "resource://gre/modules/LoginHelper.jsm"],
-  ["LoginManagerParent", "resource://gre/modules/LoginManagerParent.jsm"],
-  ["NetUtil", "resource://gre/modules/NetUtil.jsm"],
-  ["NewTabUtils", "resource://gre/modules/NewTabUtils.jsm"],
-  ["OS", "resource://gre/modules/osfile.jsm"],
-  ["PageActions", "resource:///modules/PageActions.jsm"],
-  ["PageThumbs", "resource://gre/modules/PageThumbs.jsm"],
-  ["PdfJs", "resource://pdf.js/PdfJs.jsm"],
-  ["PermissionUI", "resource:///modules/PermissionUI.jsm"],
-  ["PlacesBackups", "resource://gre/modules/PlacesBackups.jsm"],
-  ["PlacesUtils", "resource://gre/modules/PlacesUtils.jsm"],
-  ["PluralForm", "resource://gre/modules/PluralForm.jsm"],
-  ["PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm"],
-  ["ProcessHangMonitor", "resource:///modules/ProcessHangMonitor.jsm"],
-  ["ReaderParent", "resource:///modules/ReaderParent.jsm"],
-  ["RecentWindow", "resource:///modules/RecentWindow.jsm"],
-  ["RemotePrompt", "resource:///modules/RemotePrompt.jsm"],
-  ["SessionStore", "resource:///modules/sessionstore/SessionStore.jsm"],
-  ["ShellService", "resource:///modules/ShellService.jsm"],
-  ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
-  ["TabCrashHandler", "resource:///modules/ContentCrashHandlers.jsm"],
-  ["UIState", "resource://services-sync/UIState.jsm"],
-  ["UITour", "resource:///modules/UITour.jsm"],
   ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],
-  ["WebChannel", "resource://gre/modules/WebChannel.jsm"],
-  ["WindowsRegistry", "resource://gre/modules/WindowsRegistry.jsm"],
   ["webrtcUI", "resource:///modules/webrtcUI.jsm", "init"],
 ].forEach(([name, resource, init]) => {
-  if (init) {
-    XPCOMUtils.defineLazyGetter(this, name, () => {
-      Cu.import(resource, initializedModules);
-      initializedModules[name][init]();
-      return initializedModules[name];
-    });
-  } else {
-    XPCOMUtils.defineLazyModuleGetter(this, name, resource);
-  }
+  XPCOMUtils.defineLazyGetter(this, name, () => {
+    Cu.import(resource, initializedModules);
+    initializedModules[name][init]();
+    return initializedModules[name];
+  });
 });
 
 if (AppConstants.MOZ_CRASHREPORTER) {
-  XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
-                                    "resource:///modules/ContentCrashHandlers.jsm");
-  XPCOMUtils.defineLazyModuleGetter(this, "UnsubmittedCrashHandler",
-                                    "resource:///modules/ContentCrashHandlers.jsm");
-  XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
-                                    "resource://gre/modules/CrashSubmit.jsm");
+  XPCOMUtils.defineLazyModuleGetters(this, {
+    PluginCrashReporter: "resource:///modules/ContentCrashHandlers.jsm",
+    UnsubmittedCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
+    CrashSubmit: "resource://gre/modules/CrashSubmit.jsm",
+  });
 }
 
 XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {

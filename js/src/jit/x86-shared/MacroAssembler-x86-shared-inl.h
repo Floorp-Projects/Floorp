@@ -899,6 +899,12 @@ MacroAssembler::branchTestString(Condition cond, Register tag, Label* label)
 }
 
 void
+MacroAssembler::branchTestString(Condition cond, const Address& address, Label* label)
+{
+    branchTestStringImpl(cond, address, label);
+}
+
+void
 MacroAssembler::branchTestString(Condition cond, const BaseIndex& address, Label* label)
 {
     branchTestStringImpl(cond, address, label);

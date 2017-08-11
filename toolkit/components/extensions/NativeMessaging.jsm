@@ -13,26 +13,18 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {EventEmitter} = Cu.import("resource://gre/modules/EventEmitter.jsm", {});
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-                                  "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChild",
-                                  "resource://gre/modules/ExtensionChild.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
-                                  "resource://gre/modules/Schemas.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Subprocess",
-                                  "resource://gre/modules/Subprocess.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
-                                  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
-                                  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
-                                  "resource://gre/modules/WindowsRegistry.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Schemas: "resource://gre/modules/Schemas.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  Subprocess: "resource://gre/modules/Subprocess.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
+});
 
 const HOST_MANIFEST_SCHEMA = "chrome://extensions/content/schemas/native_host_manifest.json";
 const VALID_APPLICATION = /^\w+(\.\w+)*$/;

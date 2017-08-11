@@ -839,7 +839,7 @@ XRE_RunAppShell()
     nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
     NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
 #if defined(XP_MACOSX)
-    {
+    if (XRE_UseNativeEventProcessing()) {
       // In content processes that want XPCOM (and hence want
       // AppShell), we usually run our hybrid event loop through
       // MessagePump::Run(), by way of nsBaseAppShell::Run().  The

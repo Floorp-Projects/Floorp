@@ -563,8 +563,7 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
   if (!newStream->GetPlaybackStream()) {
     MOZ_ASSERT(aTracks.IsEmpty());
     MediaStreamGraph* graph =
-      MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
-                                    AudioChannel::Normal, ownerWindow);
+      MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER, ownerWindow);
     newStream->InitPlaybackStreamCommon(graph);
   }
 

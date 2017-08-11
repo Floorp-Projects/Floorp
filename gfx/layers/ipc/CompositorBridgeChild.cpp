@@ -1186,6 +1186,13 @@ CompositorBridgeChild::NotifyFinishedAsyncPaint(CapturedPaintState* aState)
     aState->mTextureClientOnWhite->DropPaintThreadRef();
     aState->mTextureClientOnWhite = nullptr;
   }
+}
+
+void
+CompositorBridgeChild::NotifyFinishedAsyncPaintLayer()
+{
+  MOZ_ASSERT(PaintThread::IsOnPaintThread());
+  MonitorAutoLock lock(mPaintLock);
 
   // It's possible that we painted so fast that the main thread never reached
   // the code that starts delaying messages. If so, mIsWaitingForPaint will be

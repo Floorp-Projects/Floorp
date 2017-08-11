@@ -25,7 +25,7 @@ function parseOptions(opts) {
   let allPlatforms = ["linux", "linux64", "linux64-asan",
                       "win", "win64", "win-make", "win64-make",
                       "linux64-make", "linux-make", "linux-fuzz",
-                      "linux64-fuzz", "aarch64"];
+                      "linux64-fuzz", "aarch64", "mac"];
   let platforms = intersect(opts.platform.split(/\s*,\s*/), allPlatforms);
 
   // If the given value is nonsense or "none" default to all platforms.
