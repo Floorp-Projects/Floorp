@@ -538,6 +538,19 @@ WasmDebuggingIsSupported(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef ENABLE_WASM_THREAD_OPS
+    bool isSupported = wasm::HasSupport(cx);
+#else
+    bool isSupported = false;
+#endif
+    args.rval().setBoolean(isSupported);
+    return true;
+}
+
+static bool
 WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4718,6 +4731,11 @@ gc::ZealModeHelpText),
 "wasmDebuggingIsSupported()",
 "  Returns a boolean indicating whether WebAssembly debugging is supported on the current device;\n"
 "  returns false also if WebAssembly is not supported"),
+
+    JS_FN_HELP("wasmThreadsSupported", WasmThreadsSupported, 0, 0,
+"wasmThreadsSupported()",
+"  Returns a boolean indicating whether the WebAssembly threads proposal is\n"
+"  supported on the current device."),
 
     JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
 "wasmTextToBinary(str)",
