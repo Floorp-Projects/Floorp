@@ -49,13 +49,11 @@ JS_Assert(const char* s, const char* file, int ln);
 #else
 
 namespace js {
-namespace oom {
 
 /*
- * To make testing OOM in certain helper threads more effective,
- * allow restricting the OOM testing to a certain helper thread
- * type. This allows us to fail e.g. in off-thread script parsing
- * without causing an OOM in the active thread first.
+ * Thread types are used to tag threads for certain kinds of testing (see
+ * below), and also used to characterize threads in the thread scheduler (see
+ * js/src/vm/HelperThreads.cpp).
  */
 enum ThreadType {
     THREAD_TYPE_NONE = 0,       // 0
@@ -71,9 +69,16 @@ enum ThreadType {
     THREAD_TYPE_MAX             // Used to check shell function arguments
 };
 
+namespace oom {
+
 /*
- * Getter/Setter functions to encapsulate mozilla::ThreadLocal,
- * implementation is in jsutil.cpp.
+ * Theads are tagged only in certain debug contexts.  Notably, to make testing
+ * OOM in certain helper threads more effective, we allow restricting the OOM
+ * testing to a certain helper thread type. This allows us to fail e.g. in
+ * off-thread script parsing without causing an OOM in the active thread first.
+ *
+ * Getter/Setter functions to encapsulate mozilla::ThreadLocal, implementation
+ * is in jsutil.cpp.
  */
 # if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 extern bool InitThreadType(void);

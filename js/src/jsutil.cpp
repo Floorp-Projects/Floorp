@@ -62,7 +62,7 @@ GetThreadType(void) {
 void
 SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always) {
     MOZ_ASSERT(counter + allocations > counter);
-    MOZ_ASSERT(thread > js::oom::THREAD_TYPE_NONE && thread < js::oom::THREAD_TYPE_MAX);
+    MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
     targetThread = thread;
     maxAllocations = counter + allocations;
     failAlways = always;
