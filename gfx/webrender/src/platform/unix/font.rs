@@ -16,6 +16,7 @@ use freetype::freetype::{FT_New_Memory_Face, FT_GlyphSlot, FT_LcdFilter};
 use freetype::freetype::{FT_Done_Face, FT_Error, FT_Int32, FT_Get_Char_Index};
 
 use std::{mem, ptr, slice};
+use std::sync::Arc;
 
 // This constant is not present in the freetype
 // bindings due to bindgen not handling the way
@@ -30,6 +31,9 @@ const GLYPH_LOAD_FLAGS: FT_Int32 = FT_LOAD_TARGET_LIGHT;
 
 struct Face {
     face: FT_Face,
+    // Raw byte data has to live until the font is deleted, according to
+    // https://www.freetype.org/freetype2/docs/reference/ft2-base_interface.html#FT_New_Memory_Face
+    _bytes: Arc<Vec<u8>>,
 }
 
 pub struct FontContext {
@@ -84,7 +88,7 @@ impl FontContext {
         self.faces.contains_key(font_key)
     }
 
-    pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: &[u8], index: u32) {
+    pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
         if !self.faces.contains_key(&font_key) {
             let mut face: FT_Face = ptr::null_mut();
             let result = unsafe {
@@ -97,7 +101,7 @@ impl FontContext {
             if result.succeeded() && !face.is_null() {
                 self.faces.insert(*font_key, Face {
                     face,
-                    //_bytes: bytes
+                    _bytes: bytes,
                 });
             } else {
                 println!("WARN: webrender failed to load font {:?}", font_key);

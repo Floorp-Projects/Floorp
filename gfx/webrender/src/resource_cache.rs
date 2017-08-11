@@ -553,7 +553,9 @@ impl ResourceCache {
 
         for (loop_index, key) in glyph_keys.iter().enumerate() {
             let glyph = glyph_key_cache.get(key, self.current_frame_id);
-            let cache_item = glyph.texture_cache_id.map(|image_id| self.texture_cache.get(image_id));
+            let cache_item = glyph.texture_cache_id
+                                  .as_ref()
+                                  .map(|image_id| self.texture_cache.get(image_id));
             if let Some(cache_item) = cache_item {
                 f(loop_index, &cache_item.uv_rect_handle);
                 debug_assert!(texture_id == None ||
@@ -594,7 +596,7 @@ impl ResourceCache {
             tile,
         };
         let image_info = &self.cached_images.get(&key, self.current_frame_id);
-        let item = self.texture_cache.get(image_info.texture_cache_id);
+        let item = self.texture_cache.get(&image_info.texture_cache_id);
         CacheItem {
             texture_id: SourceTexture::TextureCache(item.texture_id),
             uv_rect_handle: item.uv_rect_handle,
@@ -756,25 +758,21 @@ impl ResourceCache {
             };
 
             match self.cached_images.entry(request, self.current_frame_id) {
-                Occupied(entry) => {
-                    let image_id = entry.get().texture_cache_id;
+                Occupied(mut entry) => {
+                    let entry = entry.get_mut();
 
                     // We should only get to this code path if the image
                     // definitely needs to be updated.
-                    debug_assert!(entry.get().epoch != image_template.epoch);
-                    self.texture_cache.update(image_id,
+                    debug_assert!(entry.epoch != image_template.epoch);
+                    self.texture_cache.update(&entry.texture_cache_id,
                                               descriptor,
                                               filter,
                                               image_data,
                                               image_template.dirty_rect);
 
                     // Update the cached epoch
-                    debug_assert_eq!(self.current_frame_id, entry.get().last_access);
-                    *entry.into_mut() = CachedImageInfo {
-                        texture_cache_id: image_id,
-                        epoch: image_template.epoch,
-                        last_access: self.current_frame_id,
-                    };
+                    debug_assert_eq!(self.current_frame_id, entry.last_access);
+                    entry.epoch = image_template.epoch;
                     image_template.dirty_rect = None;
                 }
                 Vacant(entry) => {
@@ -797,6 +795,19 @@ impl ResourceCache {
     pub fn end_frame(&mut self) {
         debug_assert_eq!(self.state, State::QueryResources);
         self.state = State::Idle;
+    }
+
+    pub fn on_memory_pressure(&mut self) {
+        // This is drastic. It will basically flush everything out of the cache,
+        // and the next frame will have to rebuild all of its resources.
+        // We may want to look into something less extreme, but on the other hand this
+        // should only be used in situations where are running low enough on memory
+        // that we risk crashing if we don't do something about it.
+        // The advantage of clearing the cache completely is that it gets rid of any
+        // remaining fragmentation that could have persisted if we kept around the most
+        // recently used resources.
+        self.cached_images.clear(&mut self.texture_cache);
+        self.cached_glyphs.clear(&mut self.texture_cache);
     }
 
     pub fn clear_namespace(&mut self, namespace: IdNamespace) {
@@ -823,7 +834,7 @@ impl ResourceCache {
 }
 
 pub trait Resource {
-    fn free(&self, texture_cache: &mut TextureCache);
+    fn free(self, texture_cache: &mut TextureCache);
     fn get_last_access_time(&self) -> FrameId;
     fn set_last_access_time(&mut self, frame_id: FrameId);
     fn add_to_gpu_cache(&self,
@@ -832,7 +843,7 @@ pub trait Resource {
 }
 
 impl Resource for CachedImageInfo {
-    fn free(&self, texture_cache: &mut TextureCache) {
+    fn free(self, texture_cache: &mut TextureCache) {
         texture_cache.free(self.texture_cache_id);
     }
     fn get_last_access_time(&self) -> FrameId {
@@ -844,7 +855,7 @@ impl Resource for CachedImageInfo {
     fn add_to_gpu_cache(&self,
                         texture_cache: &mut TextureCache,
                         gpu_cache: &mut GpuCache) {
-        let item = texture_cache.get_mut(self.texture_cache_id);
+        let item = texture_cache.get_mut(&self.texture_cache_id);
         if let Some(mut request) = gpu_cache.request(&mut item.uv_rect_handle) {
             request.push(item.uv_rect);
         }
