@@ -5,7 +5,7 @@
 const { Cu } = require("chrome");
 
 const { TargetFactory } = require("devtools/client/framework/target");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { Connection } = require("devtools/shared/client/connection-manager");
 const { Task } = require("devtools/shared/task");
 

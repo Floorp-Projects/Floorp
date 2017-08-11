@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { isNodeValid } = require("./utils/markup");
 const { getAdjustedQuads, getCurrentZoom,
         getWindowDimensions } = require("devtools/shared/layout/utils");

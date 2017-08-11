@@ -9,7 +9,7 @@ const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
 loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/event-emitter");
+  "devtools/shared/old-event-emitter");
 
 loader.lazyImporter(this, "DevToolsWorker",
   "resource://devtools/shared/worker/worker.js");

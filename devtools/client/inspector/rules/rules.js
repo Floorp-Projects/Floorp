@@ -31,7 +31,7 @@ const {
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
 const {createChild, promiseWarn, debounce} = require("devtools/client/inspector/shared/utils");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");

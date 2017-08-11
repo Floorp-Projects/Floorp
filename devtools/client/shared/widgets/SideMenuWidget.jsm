@@ -11,7 +11,7 @@ const Cu = Components.utils;
 const SHARED_STRINGS_URI = "devtools/client/locales/shared.properties";
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 

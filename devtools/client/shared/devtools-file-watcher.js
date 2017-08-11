@@ -5,7 +5,7 @@
 
 const { Ci } = require("chrome");
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 

@@ -8,7 +8,7 @@ const { Ci, Cc, Cr, CC } = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpv } = DevToolsUtils;
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const defer = require("devtools/shared/defer");
 
 DevToolsUtils.defineLazyGetter(this, "IOUtil", () => {
