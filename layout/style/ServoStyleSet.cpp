@@ -375,58 +375,6 @@ ServoStyleSet::PreTraverse(Element* aRoot,
   }
 }
 
-bool
-ServoStyleSet::PrepareAndTraverseSubtree(
-  RawGeckoElementBorrowed aRoot,
-  ServoTraversalFlags aFlags)
-{
-  MOZ_ASSERT(MayTraverseFrom(const_cast<Element*>(aRoot)));
-  AutoPrepareTraversal guard(this);
-  const SnapshotTable& snapshots = Snapshots();
-
-  bool isInitial = !aRoot->HasServoData();
-  bool postTraversalRequired =
-    Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags);
-  MOZ_ASSERT(!isInitial || !postTraversalRequired);
-
-  // We don't need to trigger a second traversal if this restyle only for
-  // flushing throttled animations. That's because the first traversal only
-  // performs the animation-only restyle, skipping the normal restyle, and so
-  // will not generate any SequentialTask that could update animation state
-  // requiring a subsequent traversal.
-  if (aFlags & ServoTraversalFlags::AnimationOnly) {
-    return postTraversalRequired;
-  }
-
-  // If there are still animation restyles needed, trigger a second traversal to
-  // update CSS animations or transitions' styles.
-  //
-  // We don't need to do this for SMIL since SMIL only updates its animation
-  // values once at the begin of a tick. As a result, even if the previous
-  // traversal caused, for example, the font-size to change, the SMIL style
-  // won't be updated until the next tick anyway.
-  EffectCompositor* compositor = mPresContext->EffectCompositor();
-  auto restyleType = EffectCompositor::AnimationRestyleType::Throttled;
-  if (compositor->PreTraverse(restyleType)) {
-    if (isInitial) {
-      // We're doing initial styling, and the additional animation
-      // traversal will change the styles that were set by the first traversal.
-      // This would normally require a post-traversal to update the style
-      // contexts, but since this is actually the initial styling, there are
-      // no style contexts to update and no frames to apply the change hints to,
-      // so we just do a forgetful traversal and clear the flags on the way.
-      aFlags |= ServoTraversalFlags::Forgetful |
-                ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
-    }
-
-    postTraversalRequired =
-      Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags);
-    MOZ_ASSERT_IF(isInitial, !postTraversalRequired);
-  }
-
-  return postTraversalRequired;
-}
-
 static inline already_AddRefed<ServoStyleContext>
 ResolveStyleForTextOrFirstLetterContinuation(
     RawServoStyleSetBorrowed aStyleSet,
@@ -911,9 +859,9 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 }
 
 bool
-ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
+ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
 {
-  if (!!(aFlags & ServoTraversalFlags::AnimationOnly)) {
+  if (!!(aBaseFlags & ServoTraversalFlags::AnimationOnly)) {
     PreTraverse(nullptr, EffectCompositor::AnimationRestyleType::Full);
   } else {
     PreTraverse();
@@ -924,10 +872,53 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
   bool postTraversalRequired = false;
   DocumentStyleRootIterator iter(mPresContext->Document());
   while (Element* root = iter.GetNextStyleRoot()) {
-    if (PrepareAndTraverseSubtree(root, aFlags)) {
-      postTraversalRequired = true;
+    MOZ_ASSERT(MayTraverseFrom(const_cast<Element*>(root)));
+    AutoPrepareTraversal guard(this);
+    const SnapshotTable& snapshots = Snapshots();
+    bool isInitial = !root->HasServoData();
+    auto flags = aBaseFlags;
+
+    // Do the first traversal.
+    bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
+    MOZ_ASSERT_IF(isInitial, !required);
+    postTraversalRequired |= required;
+
+    // We don't need to trigger a second traversal if this restyle only for
+    // flushing throttled animations. That's because the first traversal only
+    // performs the animation-only restyle, skipping the normal restyle, and so
+    // will not generate any SequentialTask that could update animation state
+    // requiring a subsequent traversal.
+    if (aBaseFlags & ServoTraversalFlags::AnimationOnly) {
+      continue;
+    }
+
+    // If there are still animation restyles needed, trigger a second traversal to
+    // update CSS animations or transitions' styles.
+    //
+    // We don't need to do this for SMIL since SMIL only updates its animation
+    // values once at the begin of a tick. As a result, even if the previous
+    // traversal caused, for example, the font-size to change, the SMIL style
+    // won't be updated until the next tick anyway.
+    EffectCompositor* compositor = mPresContext->EffectCompositor();
+    auto restyleType = EffectCompositor::AnimationRestyleType::Throttled;
+    if (compositor->PreTraverse(restyleType)) {
+      if (isInitial) {
+        // We're doing initial styling, and the additional animation
+        // traversal will change the styles that were set by the first traversal.
+        // This would normally require a post-traversal to update the style
+        // contexts, but since this is actually the initial styling, there are
+        // no style contexts to update and no frames to apply the change hints to,
+        // so we just do a forgetful traversal and clear the flags on the way.
+        flags |= ServoTraversalFlags::Forgetful |
+                 ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
+      }
+
+      required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
+      MOZ_ASSERT_IF(isInitial, !required);
+      postTraversalRequired |= required;
     }
   }
+
   return postTraversalRequired;
 }
 
