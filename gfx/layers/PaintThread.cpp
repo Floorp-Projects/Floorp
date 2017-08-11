@@ -9,6 +9,8 @@
 #include "base/task.h"
 #include "gfxPrefs.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/SyncObject.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SyncRunnable.h"
@@ -207,6 +209,35 @@ PaintThread::EndAsyncPainting(CompositorBridgeChild* aBridge)
   }
 }
 
+void
+PaintThread::SynchronizePaintTextures(SyncObjectClient* aSyncObject)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSyncObject);
+
+  RefPtr<SyncObjectClient> syncObject(aSyncObject);
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::SyncTextureData",
+    [self, syncObject]() -> void
+  {
+    self->SyncTextureData(syncObject);
+  });
+
+  if (!gfxPrefs::LayersOMTPForceSync()) {
+    sThread->Dispatch(task.forget());
+  } else {
+    SyncRunnable::DispatchToThread(sThread, task);
+  }
+}
+
+void
+PaintThread::SyncTextureData(SyncObjectClient* aSyncObject)
+{
+  MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(aSyncObject);
+
+  aSyncObject->Synchronize();
+}
 
 void
 PaintThread::PaintContents(CapturedPaintState* aState,
