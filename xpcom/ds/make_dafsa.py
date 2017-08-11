@@ -415,17 +415,12 @@ def encode(dafsa):
   return output
 
 
-def to_cxx(data, preamble=None):
+def to_cxx(data):
   """Generates C++ code from a list of encoded bytes."""
   text = '/* This file is generated. DO NOT EDIT!\n\n'
-  text += 'The byte array encodes a dictionary of strings and values. See '
-  text += 'make_dafsa.py for documentation.'
+  text += 'The byte array encodes effective tld names. See make_dafsa.py for'
+  text += ' documentation.'
   text += '*/\n\n'
-
-  if preamble:
-    text += preamble
-    text += '\n\n'
-
   text += 'const unsigned char kDafsa[%s] = {\n' % len(data)
   for i in range(0, len(data), 12):
     text += '  '
@@ -435,24 +430,19 @@ def to_cxx(data, preamble=None):
   return text
 
 
-def words_to_cxx(words, preamble=None):
+def words_to_cxx(words):
   """Generates C++ code from a word list"""
   dafsa = to_dafsa(words)
   for fun in (reverse, join_suffixes, reverse, join_suffixes, join_labels):
     dafsa = fun(dafsa)
-  return to_cxx(encode(dafsa), preamble)
+  return to_cxx(encode(dafsa))
 
 
 def parse_gperf(infile):
   """Parses gperf file and extract strings and return code"""
   lines = [line.strip() for line in infile]
-
-  # Extract the preamble.
-  first_delimeter = lines.index('%%')
-  preamble = '\n'.join(lines[0:first_delimeter])
-
   # Extract strings after the first '%%' and before the second '%%'.
-  begin = first_delimeter + 1
+  begin = lines.index('%%') + 1
   end = lines.index('%%', begin)
   lines = lines[begin:end]
   for line in lines:
@@ -463,13 +453,12 @@ def parse_gperf(infile):
     if line[-1] not in '0124':
       raise InputError('Expected value to be one of {0,1,2,4}, found "%s"' %
                        line[-1])
-  return (preamble, [line[:-3] + line[-1] for line in lines])
+  return [line[:-3] + line[-1] for line in lines]
 
 
 def main(outfile, infile):
   with open(infile, 'r') as infile:
-    preamble, words = parse_gperf(infile)
-    outfile.write(words_to_cxx(words, preamble))
+    outfile.write(words_to_cxx(parse_gperf(infile)))
   return 0
 
 
