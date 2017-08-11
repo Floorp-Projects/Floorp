@@ -8675,12 +8675,13 @@ Parser<ParseHandler, CharT>::generatorComprehensionLambda(unsigned begin)
 
     // Create box for fun->object early to root it.
     Directives directives(/* strict = */ outerpc->sc()->strict());
-    FunctionBox* genFunbox = newFunctionBox(genfn, fun, /* toStringStart = */ 0, directives,
+    FunctionBox* genFunbox = newFunctionBox(genfn, fun, /* toStringStart = */ begin, directives,
                                             StarGenerator, SyncFunction);
     if (!genFunbox)
         return null();
     genFunbox->isGenexpLambda = true;
     genFunbox->initWithEnclosingParseContext(outerpc, Expression);
+    genFunbox->setStart(tokenStream, begin);
 
     SourceParseContext genpc(this, genFunbox, /* newDirectives = */ nullptr);
     if (!genpc.init())

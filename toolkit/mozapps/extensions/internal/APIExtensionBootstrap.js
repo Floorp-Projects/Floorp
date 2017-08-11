@@ -6,8 +6,10 @@
 
 /* exported startup, shutdown, install, uninstall, ExtensionAPIs */
 
-Components.utils.import("resource://gre/modules/ExtensionAPI.jsm");
+Components.utils.import("resource://gre/modules/ExtensionCommon.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+
+const {ExtensionAPIs} = ExtensionCommon;
 
 var namespace;
 var resource;

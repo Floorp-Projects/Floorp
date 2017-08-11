@@ -7,22 +7,17 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
-                                  "resource://gre/modules/FormHistory.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
-                                  "resource://gre/modules/Downloads.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
-                                  "resource:///modules/DownloadsCommon.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
-                                  "resource://gre/modules/TelemetryStopwatch.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/Console.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
-                                  "resource://gre/modules/Timer.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  FormHistory: "resource://gre/modules/FormHistory.jsm",
+  Downloads: "resource://gre/modules/Downloads.jsm",
+  DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
+  TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
+  console: "resource://gre/modules/Console.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
 
 var {classes: Cc, interfaces: Ci} = Components;
 

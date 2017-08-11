@@ -963,7 +963,6 @@
       </toolbarbutton>
 
       <toolbaritem id="PanelUI-button"
-                   class="chromeclass-toolbar-additional"
                    removable="false">
         <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1 badged-button"

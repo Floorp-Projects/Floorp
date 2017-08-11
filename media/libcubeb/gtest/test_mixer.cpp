@@ -115,9 +115,6 @@ downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_l
     STREAM_FREQUENCY,
     layout_infos[in_layout].channels,
     in_layout
-#if defined(__ANDROID__)
-    , CUBEB_STREAM_TYPE_MUSIC
-#endif
   };
 
   cubeb_stream_params out_params = {
@@ -128,9 +125,6 @@ downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_l
     (out_layout == CUBEB_LAYOUT_UNDEFINED) ?
       layout_infos[in_layout].channels : layout_infos[out_layout].channels,
     out_layout
-#if defined(__ANDROID__)
-    , CUBEB_STREAM_TYPE_MUSIC
-#endif
    };
 
   if (!cubeb_should_downmix(&in_params, &out_params)) {

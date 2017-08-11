@@ -1681,9 +1681,6 @@ protected:
   // True if the media's channel's download has been suspended.
   Watchable<bool> mDownloadSuspendedByCache;
 
-  // Audio Channel.
-  AudioChannel mAudioChannel;
-
   // Disable the video playback by track selection. This flag might not be
   // enough if we ever expand the ability of supporting multi-tracks video
   // playback.

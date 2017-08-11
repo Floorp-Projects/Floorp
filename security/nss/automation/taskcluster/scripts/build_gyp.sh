@@ -9,5 +9,10 @@ hg_clone https://hg.mozilla.org/projects/nspr ./nspr default
 nss/build.sh -g -v "$@"
 
 # Package.
-mkdir artifacts
-tar cvfjh artifacts/dist.tar.bz2 dist
+if [[ $(uname) = "Darwin" ]]; then
+  mkdir -p public
+  tar cvfjh public/dist.tar.bz2 dist
+else
+  mkdir artifacts
+  tar cvfjh artifacts/dist.tar.bz2 dist
+fi

@@ -2606,7 +2606,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                "Scrollbars should have been propagated to the viewport");
 
   if (MOZ_UNLIKELY(display->mDisplay == StyleDisplay::None)) {
-    SetUndisplayedContent(aDocElement, styleContext);
+    RegisterDisplayNoneStyleFor(aDocElement, styleContext);
     return nullptr;
   }
 
@@ -5832,8 +5832,8 @@ nsCSSFrameConstructor::SetAsUndisplayedContent(nsFrameConstructorState& aState,
   NS_ASSERTION(!aIsGeneratedContent, "Should have had pseudo type");
 
   if (aState.mCreatingExtraFrames) {
-    MOZ_ASSERT(GetUndisplayedContent(aContent),
-               "should have called SetUndisplayedContent earlier");
+    MOZ_ASSERT(GetDisplayNoneStyleFor(aContent),
+               "should have called RegisterDisplayNoneStyleFor earlier");
     return;
   }
   aList.AppendUndisplayedItem(aContent, aStyleContext);
@@ -6078,9 +6078,11 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     if (!GetDisplayContentsStyleFor(aContent)) {
       MOZ_ASSERT(styleContext->GetPseudo() || !isGeneratedContent,
                  "Should have had pseudo type");
-      aState.mFrameManager->SetDisplayContents(aContent, styleContext);
+      aState.mFrameManager->RegisterDisplayContentsStyleFor(aContent,
+                                                            styleContext);
     } else {
-      aState.mFrameManager->ChangeDisplayContents(aContent, styleContext);
+      aState.mFrameManager->ChangeRegisteredDisplayContentsStyleFor(aContent,
+                                                                    styleContext);
     }
 
     TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
@@ -7246,7 +7248,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
       noPrimaryFrame = needsFrameBitSet = false;
     }
     if (!noPrimaryFrame && !content->GetPrimaryFrame()) {
-      nsStyleContext* sc = GetUndisplayedContent(content);
+      nsStyleContext* sc = GetDisplayNoneStyleFor(content);
       noPrimaryFrame = !GetDisplayContentsStyleFor(content) &&
         (sc && !sc->IsInDisplayNoneSubtree());
     }
@@ -7408,7 +7410,7 @@ nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
   for (nsIContent* child = aStartChild;
        child != aEndChild;
        child = child->GetNextSibling()) {
-    if ((child->GetPrimaryFrame() || GetUndisplayedContent(child) ||
+    if ((child->GetPrimaryFrame() || GetDisplayNoneStyleFor(child) ||
          GetDisplayContentsStyleFor(child))
 #ifdef MOZ_XUL
         //  Except listboxes suck, so do NOT skip anything here if
@@ -8639,7 +8641,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
   if (!childFrame || childFrame->GetContent() != aChild) {
     // XXXbz the GetContent() != aChild check is needed due to bug 135040.
     // Remove it once that's fixed.
-    ClearUndisplayedContentIn(aChild, aContainer);
+    UnregisterDisplayNoneStyleFor(aChild, aContainer);
   }
   MOZ_ASSERT(!childFrame || !GetDisplayContentsStyleFor(aChild),
              "display:contents nodes shouldn't have a frame");
@@ -8675,7 +8677,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
         }
       }
     }
-    ClearDisplayContentsIn(aChild, aContainer);
+    UnregisterDisplayContentsStyleFor(aChild, aContainer);
   }
 
 #ifdef MOZ_XUL
@@ -8834,7 +8836,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
       if (!childFrame || childFrame->GetContent() != aChild) {
         // XXXbz the GetContent() != aChild check is needed due to bug 135040.
         // Remove it once that's fixed.
-        ClearUndisplayedContentIn(aChild, aContainer);
+        UnregisterDisplayNoneStyleFor(aChild, aContainer);
         return;
       }
       parentFrame = childFrame->GetParent();
@@ -9640,7 +9642,7 @@ DefinitelyEqualURIsAndPrincipal(mozilla::css::URLValue* aURI1,
 nsStyleContext*
 nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
 {
-  RefPtr<nsStyleContext> oldContext = GetUndisplayedContent(aElement);
+  RefPtr<nsStyleContext> oldContext = GetDisplayNoneStyleFor(aElement);
   StyleDisplay oldDisplay = StyleDisplay::None;
   if (!oldContext) {
     oldContext = GetDisplayContentsStyleFor(aElement);
@@ -9656,9 +9658,9 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
                     LazyComputeBehavior::Assert);
 
   if (oldDisplay == StyleDisplay::None) {
-    ChangeUndisplayedContent(aElement, newContext);
+    ChangeRegisteredDisplayNoneStyleFor(aElement, newContext);
   } else {
-    ChangeDisplayContents(aElement, newContext);
+    ChangeRegisteredDisplayContentsStyleFor(aElement, newContext);
   }
 
   const nsStyleDisplay* disp = newContext->StyleDisplay();
