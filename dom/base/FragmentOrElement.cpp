@@ -2502,19 +2502,18 @@ FragmentOrElement::FireNodeRemovedForChildren()
   }
 }
 
-size_t
-FragmentOrElement::SizeOfExcludingThis(SizeOfState& aState) const
+void
+FragmentOrElement::AddSizeOfExcludingThis(SizeOfState& aState,
+                                          nsStyleSizes& aSizes,
+                                          size_t* aNodeSize) const
 {
-  size_t n = 0;
-  n += nsIContent::SizeOfExcludingThis(aState);
-  n += mAttrsAndChildren.SizeOfExcludingThis(aState.mMallocSizeOf);
+  nsIContent::AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
+  *aNodeSize += mAttrsAndChildren.SizeOfExcludingThis(aState.mMallocSizeOf);
 
   nsDOMSlots* slots = GetExistingDOMSlots();
   if (slots) {
-    n += slots->SizeOfIncludingThis(aState.mMallocSizeOf);
+    *aNodeSize += slots->SizeOfIncludingThis(aState.mMallocSizeOf);
   }
-
-  return n;
 }
 
 void
