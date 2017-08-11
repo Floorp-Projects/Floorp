@@ -20,8 +20,19 @@
 
 // Element data
 SERVO_BINDING_FUNC(Servo_Element_ClearData, void, RawGeckoElementBorrowed node)
-SERVO_BINDING_FUNC(Servo_Element_SizeOfExcludingThis, size_t, mozilla::MallocSizeOf,
-                   mozilla::SeenPtrs* seen_ptrs, RawGeckoElementBorrowed node)
+SERVO_BINDING_FUNC(Servo_Element_SizeOfExcludingThisAndCVs, size_t,
+                   mozilla::MallocSizeOf, mozilla::SeenPtrs* seen_ptrs,
+                   RawGeckoElementBorrowed node)
+SERVO_BINDING_FUNC(Servo_Element_HasPrimaryComputedValues, bool,
+                   RawGeckoElementBorrowed node)
+SERVO_BINDING_FUNC(Servo_Element_GetPrimaryComputedValues,
+                   ServoStyleContextStrong,
+                   RawGeckoElementBorrowed node)
+SERVO_BINDING_FUNC(Servo_Element_HasPseudoComputedValues, bool,
+                   RawGeckoElementBorrowed node, size_t index)
+SERVO_BINDING_FUNC(Servo_Element_GetPseudoComputedValues,
+                   ServoStyleContextStrong,
+                   RawGeckoElementBorrowed node, size_t index)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetContentsStrong,

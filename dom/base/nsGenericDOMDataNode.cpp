@@ -1109,11 +1109,12 @@ nsGenericDOMDataNode::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return nsChangeHint(0);
 }
 
-size_t
-nsGenericDOMDataNode::SizeOfExcludingThis(SizeOfState& aState) const
+void
+nsGenericDOMDataNode::AddSizeOfExcludingThis(SizeOfState& aState,
+                                             nsStyleSizes& aSizes,
+                                             size_t* aNodeSize) const
 {
-  size_t n = nsIContent::SizeOfExcludingThis(aState);
-  n += mText.SizeOfExcludingThis(aState.mMallocSizeOf);
-  return n;
+  nsIContent::AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
+  *aNodeSize += mText.SizeOfExcludingThis(aState.mMallocSizeOf);
 }
 

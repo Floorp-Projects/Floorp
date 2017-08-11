@@ -7,13 +7,18 @@
 #ifndef mozilla_ServoStyleContext_h
 #define mozilla_ServoStyleContext_h
 
+#include "nsIMemoryReporter.h"
 #include "nsStyleContext.h"
+#include "nsWindowSizes.h"
+#include <algorithm>
 
 namespace mozilla {
 
 namespace dom {
 class Element;
 } // namespace dom
+
+MOZ_DEFINE_MALLOC_SIZE_OF(ServoComputedValuesMallocSizeOf)
 
 class ServoStyleContext final : public nsStyleContext
 {
@@ -94,6 +99,29 @@ public:
    * been resolved.
    */
   inline void ResolveSameStructsAs(const ServoStyleContext* aOther);
+
+  void AddSizeOfIncludingThis(SizeOfState& aState, nsStyleSizes& aSizes,
+                              bool aIsDOM) const
+  {
+    // XXX WARNING: similar to ServoComputedData::AddSizeOfExcludingThis(),
+    // but here we need to step back 4 or 8 bytes to get past the servo_arc::Arc
+    // refcount to the base pointer.
+    static_assert(alignof(ServoStyleContext) == 4 ||
+                  alignof(ServoStyleContext) == 8,
+                  "alignment will break AddSizeOfExcludingThis()");
+    const char* p = reinterpret_cast<const char*>(this);
+    p -= std::max(sizeof(size_t), alignof(ServoStyleContext));
+
+    // We use ServoComputedValuesMallocSizeOf rather than
+    // |aState.mMallocSizeOf| to better distinguish in DMD's output the memory
+    // measured here.
+    if (aIsDOM) {
+      aSizes.mComputedValuesDom += ServoComputedValuesMallocSizeOf(p);
+    } else {
+      aSizes.mComputedValuesNonDom += ServoComputedValuesMallocSizeOf(p);
+    }
+    mSource.AddSizeOfExcludingThis(aState, aSizes);
+  }
 
 private:
   nsPresContext* mPresContext;

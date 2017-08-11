@@ -88,6 +88,7 @@ class nsIContent;
 class nsContainerFrame;
 class nsPlaceholderFrame;
 class nsStyleChangeList;
+class nsWindowSizes;
 
 struct nsPeekOffsetStruct;
 struct nsPoint;
@@ -3541,8 +3542,10 @@ public:
     mProperties.DeleteAll(this);
   }
 
-  // Reports size of the FrameProperties for this frame and its descendants
-  size_t SizeOfFramePropertiesForTree(mozilla::MallocSizeOf aMallocSizeOf) const;
+  // nsIFrames themselves are in the nsPresArena, and so are not measured here.
+  // Instead, this measures heap-allocated things hanging off the nsIFrame, and
+  // likewise for its descendants.
+  void AddSizeOfExcludingThisForTree(nsWindowSizes& aWindowSizes) const;
 
   /**
    * Return true if and only if this frame obeys visibility:hidden.
