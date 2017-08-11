@@ -334,6 +334,18 @@ SessionStartup.prototype = {
   },
 
   /**
+   * Returns a promise that resolves to a boolean indicating whether we will
+   * restore a session that ends up replacing the homepage. The browser uses
+   * this to not start loading the homepage if we're going to stop its load
+   * anyway shortly after.
+   */
+  get willOverrideHomepagePromise() {
+    return new Promise(resolve => {
+      resolve(this.willOverrideHomepage);
+    });
+  },
+
+  /**
    * Get the type of pending session store, if any.
    */
   get sessionType() {
