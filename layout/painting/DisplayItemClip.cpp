@@ -9,6 +9,8 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/layers/StackingContextHelper.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsPresContext.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
@@ -471,6 +473,24 @@ DisplayItemClip::ToString() const
     }
   }
   return str;
+}
+
+void
+DisplayItemClip::ToWrComplexClipRegions(int32_t aAppUnitsPerDevPixel,
+                                        const layers::StackingContextHelper& aSc,
+                                        nsTArray<wr::WrComplexClipRegion>& aOutArray) const
+{
+  for (uint32_t i = 0; i < mRoundedClipRects.Length(); i++) {
+    wr::WrComplexClipRegion* region = aOutArray.AppendElement();
+    region->rect = aSc.ToRelativeLayoutRect(LayoutDeviceRect::FromAppUnits(
+        mRoundedClipRects[i].mRect, aAppUnitsPerDevPixel));
+    const nscoord* radii = mRoundedClipRects[i].mRadii;
+    region->radii = wr::ToBorderRadius(
+        LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerTopLeftX], radii[eCornerTopLeftY]), aAppUnitsPerDevPixel),
+        LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerTopRightX], radii[eCornerTopRightY]), aAppUnitsPerDevPixel),
+        LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]), aAppUnitsPerDevPixel),
+        LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerBottomRightX], radii[eCornerBottomRightY]), aAppUnitsPerDevPixel));
+  }
 }
 
 } // namespace mozilla

@@ -90,7 +90,7 @@ var tests = [
       isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
             "geo anchor should be visible");
 
-      EventUtils.synthesizeMouse(document.getElementById("geo-notification-icon"), 0, 0, {});
+      EventUtils.synthesizeMouse(document.getElementById("geo-notification-icon"), 2, 2, {});
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);

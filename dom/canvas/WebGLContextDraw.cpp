@@ -164,7 +164,7 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
 
 ScopedResolveTexturesForDraw::~ScopedResolveTexturesForDraw()
 {
-    if (!mRebindRequests.size())
+    if (mRebindRequests.empty())
         return;
 
     gl::GLContext* gl = mWebGL->gl;

@@ -18,7 +18,7 @@
 class nsHtml5Atom final : public nsIAtom
 {
   public:
-    NS_DECL_ISUPPORTS
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) final;
     NS_DECL_NSIATOM
 
     explicit nsHtml5Atom(const nsAString& aString);

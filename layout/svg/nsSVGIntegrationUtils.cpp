@@ -137,11 +137,16 @@ GetPreEffectsVisualOverflowUnion(nsIFrame* aFirstContinuation,
   return collector.GetResult() + aFirstContinuationToUserSpace;
 }
 
+/**
+ * Gets the pre-effects visual overflow rect of aCurrentFrame in "user space".
+ */
 static nsRect
 GetPreEffectsVisualOverflow(nsIFrame* aFirstContinuation,
                             nsIFrame* aCurrentFrame,
                             const nsPoint& aFirstContinuationToUserSpace)
 {
+  NS_ASSERTION(!aFirstContinuation->GetPrevContinuation(),
+               "Need first continuation here");
   PreEffectsVisualOverflowCollector collector(aFirstContinuation,
                                               nullptr,
                                               nsRect(),
@@ -151,7 +156,6 @@ GetPreEffectsVisualOverflow(nsIFrame* aFirstContinuation,
   // Return the result in user space:
   return collector.GetResult() + aFirstContinuationToUserSpace;
 }
-
 
 bool
 nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)

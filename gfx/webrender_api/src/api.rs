@@ -170,6 +170,8 @@ pub enum ApiMsg {
     ExternalEvent(ExternalEvent),
     /// Removes all resources associated with a namespace.
     ClearNamespace(IdNamespace),
+    /// Flush from the caches anything that isn't necessary, to free some memory.
+    MemoryPressure,
     ShutDown,
 }
 
@@ -189,6 +191,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::VRCompositorCommand(..) => "ApiMsg::VRCompositorCommand",
             ApiMsg::ExternalEvent(..) => "ApiMsg::ExternalEvent",
             ApiMsg::ClearNamespace(..) => "ApiMsg::ClearNamespace",
+            ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
             ApiMsg::ShutDown => "ApiMsg::ShutDown",
         })
     }
@@ -397,6 +400,10 @@ impl RenderApi {
     pub fn send_external_event(&self, evt: ExternalEvent) {
         let msg = ApiMsg::ExternalEvent(evt);
         self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn notify_memory_pressure(&self) {
+        self.api_sender.send(ApiMsg::MemoryPressure).unwrap();
     }
 
     pub fn shut_down(&self) {

@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Η επιλογή σας είναι πολύ μικρή"
   },
+  "privateWindowErrorTitle": {
+    "message": "Το Screenshots είναι απενεργοποιημένο στη λειτουργία ιδιωτικής περιήγησης"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Λυπούμαστε για την ταλαιπωρία. Εργαζόμαστε πάνω σε αυτό το χαρακτηριστικό για μελλοντικές εκδόσεις."
+  },
   "genericErrorTitle": {
     "message": "Ωχ! Κάτι πήγε στραβά στην υπηρεσία Firefox Screenshots."
   },

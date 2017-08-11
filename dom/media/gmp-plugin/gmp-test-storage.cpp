@@ -25,7 +25,7 @@ public:
 
   void OpenComplete(GMPErr aStatus) override {
     if (GMP_SUCCEEDED(aStatus)) {
-      mRecord->Write(mData.size() ? &mData.front() : nullptr, mData.size());
+      mRecord->Write(mData.empty() ? nullptr : &mData.front(), mData.size());
     } else {
       GMPRunOnMainThread(mOnFailure);
       mOnSuccess->Destroy();

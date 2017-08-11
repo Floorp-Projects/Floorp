@@ -1,5 +1,9 @@
 :root {
-  --toolbarbutton-icon-fill-attention: #177ee5;
+  --toolbarbutton-icon-fill-attention: #0a84ff;
+}
+
+toolbar[brighttext] {
+  --toolbarbutton-icon-fill-attention: #45a1ff;
 }
 
 .toolbarbutton-1 {
@@ -314,11 +318,11 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
     transform: translateX(0);
   }
   50% {
-    fill: #30A3FF;
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
   to {
     transform: translateX(-1260px);
-    fill: #30A3FF;
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
 }
 
@@ -327,11 +331,11 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
     transform: scaleX(-1) translateX(0);
   }
   50% {
-    fill: #30A3FF;
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
   to {
     transform: scaleX(-1) translateX(-1260px);
-    fill: #30A3FF;
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
 }
 
@@ -340,10 +344,10 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
    animation-duration of 730ms, 71% is the point where we start the fade out. */
 @keyframes overflow-fade {
   from {
-    fill: #30A3FF;
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
   71% {
-    fill: #30A3FF;
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
   to {
     fill: inherit;
@@ -429,11 +433,11 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
     fill: inherit;
   }
   50% {
-    fill: rgb(10,132,255);
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
   to {
     transform: translateX(-1056px);
-    fill: rgb(10,132,255);
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
 }
 
@@ -446,17 +450,17 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
     fill: inherit;
   }
   50% {
-    fill: rgb(10,132,255);
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
   to {
     transform: scaleX(-1) translateX(-1056px);
-    fill: rgb(10,132,255);
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
 }
 
 @keyframes library-bookmark-fade {
   from {
-    fill: rgb(10,132,255);
+    fill: var(--toolbarbutton-icon-fill-attention);
   }
   to {
     fill: inherit;
@@ -494,6 +498,8 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
   animation-name: library-bookmark-animation;
   animation-duration: 800ms;
   animation-timing-function: steps(48);
+  -moz-context-properties: fill, stroke;
+  stroke: var(--toolbarbutton-icon-fill-attention);
 }
 
 #library-button[animate="bookmark"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {

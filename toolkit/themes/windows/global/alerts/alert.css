@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ===== alert.css =====================================================
-  == Styles specific to the alerts dialog.
-  ======================================================================= */
-
-@import url("chrome://global/skin/alerts/alert-common.css");
-
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+%include ../../../shared/alert.inc.css
 
 #alertNotification {
   -moz-appearance: none;
@@ -22,26 +16,6 @@
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   box-shadow: 0 2px 10px rgba(0,0,0,0.59);
-}
-
-.alertCloseButton {
-  -moz-appearance: none;
-  padding: 4px 2px;
-  border: none !important;
-}
-
-.alertCloseBox {
-  /* The close button is larger on Windows and has a large
-     circle around it, so we add more space between the close
-     button and the edge of the window. */
-  margin-inline-end: 2px;
-}
-
-#alertSettings {
-  /* The close button is larger on Windows, so the
-     gear button is moved over to accomodate it and
-     keep the two buttons horizontally aligned together. */
-  margin-inline-end: 5px;
 }
 
 @media (-moz-windows-default-theme) {

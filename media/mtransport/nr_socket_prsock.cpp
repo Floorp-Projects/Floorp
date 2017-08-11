@@ -1936,7 +1936,7 @@ int NrTcpSocketIpc::read(void* buf, size_t maxlen, size_t *len) {
     ABORT(R_FAILED);
   }
 
-  if (msg_queue_.size() == 0) {
+  if (msg_queue_.empty()) {
     ABORT(R_WOULDBLOCK);
   }
 
@@ -2102,7 +2102,7 @@ void NrTcpSocketIpc::maybe_post_socket_ready() {
       }
     }
     if (poll_flags() & PR_POLL_READ) {
-      if (msg_queue_.size()) {
+      if (!msg_queue_.empty()) {
         if (msg_queue_.size() > 5) {
           r_log(LOG_GENERIC, LOG_INFO, "Firing read callback (%u)",
                 (uint32_t)msg_queue_.size());

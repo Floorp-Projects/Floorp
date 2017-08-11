@@ -513,6 +513,7 @@ public:
   // XPCOM GetForm() is OK
 
   FileList* GetFiles();
+  void SetFiles(FileList* aFiles);
 
   // XPCOM GetFormAction() is OK
   void SetFormAction(const nsAString& aValue, ErrorResult& aRv)

@@ -225,7 +225,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
          aPrefs.GetWidth(), aPrefs.GetHeight(),
          aPrefs.mFPS, aPrefs.mMinFPS));
     LogConstraints(aConstraints);
-    if (aConstraints.mAdvanced.size()) {
+    if (!aConstraints.mAdvanced.empty()) {
       LOG(("Advanced array[%zu]:", aConstraints.mAdvanced.size()));
       for (auto& advanced : aConstraints.mAdvanced) {
         LogConstraints(advanced);

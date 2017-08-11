@@ -461,7 +461,7 @@
 #define EVENT__SIZEOF_LONG_LONG 8
 
 /* The size of `off_t', as computed by sizeof. */
-#ifdef __LP64__
+#if defined(__LP64__) || (defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64)
 #define EVENT__SIZEOF_OFF_T 8
 #else
 #define EVENT__SIZEOF_OFF_T 4

@@ -1385,7 +1385,10 @@ function StringRep(props) {
         title: token,
         href: token,
         draggable: false,
-        onClick: openLink ? () => openLink(token) : null
+        onClick: openLink ? e => {
+          e.preventDefault();
+          openLink(token);
+        } : null
       }, token));
     }
   });
@@ -4920,6 +4923,7 @@ class ObjectInspector extends Component {
       autoExpandDepth = 1,
       autoExpandAll = true,
       disabledFocus,
+      inline,
       itemHeight = 20,
       disableWrap = false
     } = this.props;
@@ -4930,12 +4934,19 @@ class ObjectInspector extends Component {
     } = this.state;
 
     let roots = this.getRoots();
-    if (roots.length === 1 && nodeIsPrimitive(roots[0])) {
-      return this.renderGrip(roots[0], this.props);
+    if (roots.length === 1) {
+      const root = roots[0];
+      const name = root && root.name;
+      if (nodeIsPrimitive(root) && (name === null || typeof name === "undefined")) {
+        return this.renderGrip(root, this.props);
+      }
     }
 
     return Tree({
-      className: disableWrap ? "nowrap" : "",
+      className: classnames({
+        inline,
+        nowrap: disableWrap
+      }),
       autoExpandAll,
       autoExpandDepth,
       disabledFocus,
@@ -4965,6 +4976,7 @@ ObjectInspector.propTypes = {
   autoExpandDepth: PropTypes.number,
   disabledFocus: PropTypes.bool,
   disableWrap: PropTypes.bool,
+  inline: PropTypes.bool,
   roots: PropTypes.array,
   getObjectProperties: PropTypes.func.isRequired,
   loadObjectProperties: PropTypes.func.isRequired,
@@ -4981,6 +4993,10 @@ module.exports = ObjectInspector;
 /* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 const Tree = __webpack_require__(58);
 
 module.exports = {
@@ -4990,6 +5006,10 @@ module.exports = {
 /***/ }),
 /* 58 */
 /***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { DOM: dom, createClass, createFactory, PropTypes } = __webpack_require__(0);
 
@@ -5250,7 +5270,7 @@ const Tree = module.exports = createClass({
     });
 
     return dom.div({
-      className: "tree",
+      className: `tree ${this.props.className ? this.props.className : ""}`,
       ref: "tree",
       onKeyDown: this._onKeyDown,
       onKeyPress: this._preventArrowKeyScrolling,

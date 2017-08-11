@@ -13691,5 +13691,27 @@
     "kind": "enumerated",
     "n_values": 64,
     "description": "URL CLassifier-related (aka Safe Browsing) UI events. See nsIUrlClassifierUITelemetry.idl for the specific values."
+  },
+ "WEBAUTHN_CREATE_CREDENTIAL_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
+    "expires_in_version": "70",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 120000,
+    "n_buckets": 100,
+    "bug_numbers": [1265472],
+    "description": "Time in milliseconds to complete a WebAuthn create credential."
+  },
+  "WEBAUTHN_GET_ASSERTION_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
+    "expires_in_version": "70",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 120000,
+    "n_buckets": 100,
+    "bug_numbers": [1265472],
+    "description": "Time in milliseconds to complete a WebAuthn get assertion."
   }
 }

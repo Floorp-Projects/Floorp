@@ -177,11 +177,14 @@ public:
           scTransform = scTransform.PreTranslate(0, data->GetSize().height, 0).PreScale(1, -1, 1);
         }
 
+        gfxRect destGFXRect = mFrame->PresContext()->AppUnitsToGfxUnits(dest);
+        scTransform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
+                             destGFXRect.Height() / canvasSizeInPx.height, 1.0f);
+
         MaybeIntSize scaleToSize;
         LayerRect scBounds(0, 0, bounds.width, bounds.height);
         wr::ImageRendering filter = wr::ToImageRendering(nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
         wr::MixBlendMode mixBlendMode = wr::MixBlendMode::Normal;
-
         aManager->WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(data->GetPipelineId().value(),
                                                                                    scBounds,
                                                                                    scTransform,

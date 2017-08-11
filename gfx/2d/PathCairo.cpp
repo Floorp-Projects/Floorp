@@ -293,7 +293,7 @@ PathCairo::SetPathOnContext(cairo_t *aContext) const
 
   cairo_new_path(aContext);
 
-  if (mPathData.size()) {
+  if (!mPathData.empty()) {
     cairo_path_t path;
     path.data = const_cast<cairo_path_data_t*>(&mPathData.front());
     path.num_data = mPathData.size();

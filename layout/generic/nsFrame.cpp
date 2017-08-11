@@ -10205,7 +10205,14 @@ void
 nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
                                     ServoRestyleState& aRestyleState)
 {
-  MOZ_ASSERT(aChildFrame->GetParent() == this,
+  MOZ_ASSERT(aChildFrame->GetParent() == this ||
+             (aChildFrame->IsTableFrame() &&
+              aChildFrame->GetParent()->GetParent() == this) ||
+             (aChildFrame->GetParent()->IsLineFrame() &&
+              aChildFrame->GetParent()->GetParent() == this) ||
+             (aChildFrame->IsTableFrame() &&
+              aChildFrame->GetParent()->GetParent()->IsLineFrame() &&
+              aChildFrame->GetParent()->GetParent()->GetParent() == this),
              "This should only be used for children!");
   MOZ_ASSERT(!GetContent() || !aChildFrame->GetContent() ||
              aChildFrame->GetContent() == GetContent(),
@@ -10364,6 +10371,12 @@ nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame)
 void
 nsIFrame::SetParent(nsContainerFrame* aParent)
 {
+  // If our parent is a wrapper anon box, our new parent should be too.  We
+  // _can_ change parent if our parent is a wrapper anon box, because some
+  // wrapper anon boxes can have continuations.
+  MOZ_ASSERT_IF(ParentIsWrapperAnonBox(),
+                aParent->StyleContext()->IsInheritingAnonBox());
+
   // Note that the current mParent may already be destroyed at this point.
   mParent = aParent;
   if (::IsXULBoxWrapped(this)) {

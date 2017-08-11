@@ -15,7 +15,7 @@ pub struct CachedGlyphInfo {
 }
 
 impl Resource for CachedGlyphInfo {
-    fn free(&self, texture_cache: &mut TextureCache) {
+    fn free(self, texture_cache: &mut TextureCache) {
         if let Some(id) = self.texture_cache_id {
             texture_cache.free(id);
         }
@@ -29,7 +29,7 @@ impl Resource for CachedGlyphInfo {
     fn add_to_gpu_cache(&self,
                         texture_cache: &mut TextureCache,
                         gpu_cache: &mut GpuCache) {
-        if let Some(texture_cache_id) = self.texture_cache_id {
+        if let Some(texture_cache_id) = self.texture_cache_id.as_ref() {
             let item = texture_cache.get_mut(texture_cache_id);
             if let Some(mut request) = gpu_cache.request(&mut item.uv_rect_handle) {
                 request.push(item.uv_rect);
@@ -87,6 +87,15 @@ impl GlyphCache {
         for key in caches_to_remove {
             self.glyph_key_caches.remove(&key).unwrap();
         }
+    }
+
+    pub fn clear(&mut self, texture_cache: &mut TextureCache) {
+        for (_, glyph_key_cache) in &mut self.glyph_key_caches {
+            glyph_key_cache.clear(texture_cache)
+        }
+        // We use this in on_memory_pressure where retaining memory allocations
+        // isn't desirable, so we completely remove the hash map instead of clearing it.
+        self.glyph_key_caches = FastHashMap::default();
     }
 
     pub fn clear_fonts<F>(&mut self, texture_cache: &mut TextureCache, key_fun: F)

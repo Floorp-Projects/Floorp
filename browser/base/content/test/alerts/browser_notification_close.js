@@ -46,7 +46,7 @@ add_task(async function test_notificationClose() {
     let alertIcon = alertWindow.document.getElementById("alertIcon");
     is(alertIcon.src, faviconURI.spec, "Icon of notification should be present");
 
-    let alertCloseButton = alertWindow.document.querySelector(".alertCloseButton");
+    let alertCloseButton = alertWindow.document.querySelector(".close-icon");
     is(alertCloseButton.localName, "toolbarbutton", "close button found");
     let promiseBeforeUnloadEvent =
       BrowserTestUtils.waitForEvent(alertWindow, "beforeunload");

@@ -38,7 +38,7 @@ public:
   ClearKeyDecryptor();
 
   void InitKey(const Key& aKey);
-  bool HasKey() const { return !!mKey.size(); }
+  bool HasKey() const { return !mKey.empty(); }
 
   Status Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
                  const CryptoMetaData& aMetadata);

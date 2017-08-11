@@ -181,7 +181,7 @@ private:
       return const_cast<T**>(&mInlineElements[0]);
     }
 
-    if (!mArray->size()) {
+    if (mArray->empty()) {
       return nullptr;
     }
 

@@ -220,7 +220,7 @@ NormalizedConstraintSet::StringRange::SetFrom(
 auto
 NormalizedConstraintSet::StringRange::Clamp(const ValueType& n) const -> ValueType
 {
-  if (!mExact.size()) {
+  if (mExact.empty()) {
     return n;
   }
   ValueType result;
@@ -235,7 +235,7 @@ NormalizedConstraintSet::StringRange::Clamp(const ValueType& n) const -> ValueTy
 bool
 NormalizedConstraintSet::StringRange::Intersects(const StringRange& aOther) const
 {
-  if (!mExact.size() || !aOther.mExact.size()) {
+  if (mExact.empty() || aOther.mExact.empty()) {
     return true;
   }
 
@@ -243,13 +243,13 @@ NormalizedConstraintSet::StringRange::Intersects(const StringRange& aOther) cons
   set_intersection(mExact.begin(), mExact.end(),
                    aOther.mExact.begin(), aOther.mExact.end(),
                    std::inserter(intersection, intersection.begin()));
-  return !!intersection.size();
+  return !intersection.empty();
 }
 
 void
 NormalizedConstraintSet::StringRange::Intersect(const StringRange& aOther)
 {
-  if (!aOther.mExact.size()) {
+  if (aOther.mExact.empty()) {
     return;
   }
 
@@ -424,10 +424,10 @@ MediaConstraintsHelper::FitnessDistance(
     nsString aN,
     const NormalizedConstraintSet::StringRange& aParams)
 {
-  if (aParams.mExact.size() && aParams.mExact.find(aN) == aParams.mExact.end()) {
+  if (!aParams.mExact.empty() && aParams.mExact.find(aN) == aParams.mExact.end()) {
     return UINT32_MAX;
   }
-  if (aParams.mIdeal.size() && aParams.mIdeal.find(aN) == aParams.mIdeal.end()) {
+  if (!aParams.mIdeal.empty() && aParams.mIdeal.find(aN) == aParams.mIdeal.end()) {
     return 1000;
   }
   return 0;

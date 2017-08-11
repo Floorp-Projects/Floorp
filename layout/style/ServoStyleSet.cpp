@@ -333,9 +333,12 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   ServoTraversalFlags aFlags)
 {
   MOZ_ASSERT(MayTraverseFrom(const_cast<Element*>(aRoot)));
-  bool forThrottledAnimationFlush = !!(aFlags & ServoTraversalFlags::AnimationOnly);
 
-  AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(), forThrottledAnimationFlush);
+  // For markers for animations, we have already set the markers in
+  // ServoRestyleManager::PostRestyleEventForAnimations so that we don't need
+  // to care about animation restyles here.
+  AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(),
+                                   false /* animation-only */);
 
   MOZ_ASSERT(!StylistNeedsUpdate());
   AutoSetInServoTraversal guard(this);
@@ -353,7 +356,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   // performs the animation-only restyle, skipping the normal restyle, and so
   // will not generate any SequentialTask that could update animation state
   // requiring a subsequent traversal.
-  if (forThrottledAnimationFlush) {
+  if (aFlags & ServoTraversalFlags::AnimationOnly) {
     return postTraversalRequired;
   }
 

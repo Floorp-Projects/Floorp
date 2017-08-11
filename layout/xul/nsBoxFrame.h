@@ -169,6 +169,11 @@ public:
    */
   virtual bool SupportsOrdinalsInChildren();
 
+  /**
+   * Return our wrapper block, if any.
+   */
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+
 private:
   explicit nsBoxFrame(nsStyleContext* aContext)
     : nsBoxFrame(aContext, kClassID, false, nullptr) {}

@@ -53,6 +53,21 @@ var tests = {
     ]);
   },
 
+  testEmulateBadMedia: function (options) {
+    return helpers.audit(options, [
+      {
+        setup: "media emulate nonsense",
+        check: {
+          input:  "media emulate nonsense",
+          markup: "VVVVVVVVVVVVVVEEEEEEEE",
+          status: "ERROR",
+        },
+        output: "Can't use `nonsense`",
+        error: true
+      }
+    ]);
+  },
+
   testEndMediaEmulation: function (options) {
     return helpers.audit(options, [
       {

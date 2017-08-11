@@ -1566,6 +1566,8 @@ pref("extensions.interposition.prefetching", true);
 pref("extensions.allow-non-mpc-extensions", false);
 #endif
 
+pref("extensions.legacy.enabled", false);
+
 // Enable blocking of e10s and e10s-multi for add-on users on beta/release.
 #if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
 pref("extensions.e10sBlocksEnabling", true);

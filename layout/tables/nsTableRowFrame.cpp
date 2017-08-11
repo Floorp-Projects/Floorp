@@ -232,6 +232,15 @@ nsTableRowFrame::InsertFrames(ChildListID  aListID,
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
+  if (mFrames.IsEmpty() ||
+      (aPrevFrame && !aPrevFrame->GetNextSibling())) {
+    // This is actually an append (though our caller didn't figure that out),
+    // and our append codepath is both simpler/faster _and_ less buggy.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1388898 tracks the bugginess
+    AppendFrames(aListID, aFrameList);
+    return;
+  }
+
   DrainSelfOverflowList(); // ensure aPrevFrame is in mFrames
   //Insert Frames in the frame list
   const nsFrameList::Slice& newCells = mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
