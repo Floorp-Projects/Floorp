@@ -19,7 +19,6 @@
 #include "nsEditorSpellCheck.h"
 #include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
 #include "nsIContent.h"                 // for nsIContent
-#include "nsIContentPrefService.h"      // for nsIContentPrefService, etc
 #include "nsIContentPrefService2.h"     // for nsIContentPrefService2, etc
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
