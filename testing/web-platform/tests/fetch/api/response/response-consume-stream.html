@@ -57,14 +57,15 @@ promise_test(function(test) {
 
 promise_test(function(test) {
     var response = new Response(formData);
-    return validateStreamFromString(response.body.getReader(), "name=value");
+    return validateStreamFromPartialString(response.body.getReader(),
+      "Content-Disposition: form-data; name=\"name\"\r\n\r\nvalue");
 }, "Read form data response's body as readableStream");
 
 test(function() {
     assert_equals(Response.error().body, null);
 }, "Getting an error Response stream");
 
-promise_test(function(test) {
+test(function() {
     assert_equals(Response.redirect("/").body, null);
 }, "Getting a redirect Response stream");
 
