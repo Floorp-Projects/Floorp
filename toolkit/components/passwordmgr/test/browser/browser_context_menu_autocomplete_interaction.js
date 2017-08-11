@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 /*
  * Test the password manager context menu interaction with autocomplete.
  */

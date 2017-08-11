@@ -13,10 +13,6 @@
 // -----------------------------------------------------------------------------
 
 var helpers = require("../helpers");
-var testTypes = new Set([
-  "browser",
-  "xpcshell"
-]);
 
 module.exports = {
   meta: {
@@ -34,11 +30,11 @@ module.exports = {
   create(context) {
     return {
       "CallExpression": function(node) {
-        // We don't want to run this on mochitest plain as it already
+        // We don't want to run this on mochitests as mochitest already
         // prevents flaky setTimeout at runtime. This check is built-in
-        // to the rule itself as sometimes other tests can live alongside
-        // plain mochitests and so it can't be configured via eslintrc.
-        if (!testTypes.has(helpers.getTestType(context))) {
+        // to the rule itself as sometimes xpcshell tests can live
+        // alongside mochitests and so can't be configured via config.
+        if (helpers.getTestType(context) !== "xpcshell") {
           return;
         }
 

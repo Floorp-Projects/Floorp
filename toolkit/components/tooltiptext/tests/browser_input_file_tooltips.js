@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 let tempFile;
 add_task(async function setup() {

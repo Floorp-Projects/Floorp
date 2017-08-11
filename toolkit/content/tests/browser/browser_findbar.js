@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 Components.utils.import("resource://gre/modules/Timer.jsm", this);
 
 const TEST_PAGE_URI = "data:text/html;charset=utf-8,The letter s.";

@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 function invokeUsingCtrlD(phase) {
   switch (phase) {
   case 1:
