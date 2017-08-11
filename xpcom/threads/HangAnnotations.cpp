@@ -33,7 +33,6 @@ public:
   void AddAnnotation(const nsAString& aName, const bool aData) override;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-  size_t Count() const override;
   bool IsEmpty() const override;
   UniquePtr<Enumerator> GetEnumerator() override;
 
@@ -141,12 +140,6 @@ ChromeHangAnnotationEnumerator::Next(nsAString& aOutName, nsAString& aOutValue)
   aOutValue = mIterator->second;
   ++mIterator;
   return true;
-}
-
-size_t
-BrowserHangAnnotations::Count() const
-{
-  return mAnnotations.size();
 }
 
 bool
@@ -264,12 +257,6 @@ ChromeHangAnnotatorCallout()
     return nullptr;
   }
   return gChromehangAnnotators->GatherAnnotations();
-}
-
-UniquePtr<HangAnnotations>
-CreateEmptyHangAnnotations()
-{
-  return MakeUnique<BrowserHangAnnotations>();
 }
 
 } // namespace HangMonitor
