@@ -5,7 +5,7 @@
 use border::{BorderCornerInstance, BorderCornerSide};
 use device::TextureId;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheUpdateList};
-use internal_types::{BatchTextures, CacheTextureId};
+use internal_types::BatchTextures;
 use internal_types::{FastHashMap, SourceTexture};
 use mask_cache::MaskCacheInfo;
 use prim_store::{CLIP_DATA_GPU_BLOCKS, DeferredResolve, ImagePrimitiveKind, PrimitiveCacheKey};
@@ -18,7 +18,7 @@ use renderer::BlendMode;
 use renderer::ImageBufferKind;
 use resource_cache::ResourceCache;
 use std::{f32, i32, mem, usize};
-use texture_cache::TexturePage;
+use texture_allocator::GuillotineAllocator;
 use util::{TransformedRect, TransformedRectKind};
 use api::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint, ImageKey};
 use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize, FontInstanceKey};
@@ -800,7 +800,7 @@ struct TextureAllocator {
     // render target allocation - this use case doesn't need
     // to deal with coalescing etc that the general texture
     // cache allocator requires.
-    page_allocator: TexturePage,
+    allocator: GuillotineAllocator,
 
     // Track the used rect of the render target, so that
     // we can set a scissor rect and only clear to the
@@ -811,13 +811,13 @@ struct TextureAllocator {
 impl TextureAllocator {
     fn new(size: DeviceUintSize) -> TextureAllocator {
         TextureAllocator {
-            page_allocator: TexturePage::new(CacheTextureId(0), size),
+            allocator: GuillotineAllocator::new(size),
             used_rect: DeviceIntRect::zero(),
         }
     }
 
     fn allocate(&mut self, size: &DeviceUintSize) -> Option<DeviceUintPoint> {
-        let origin = self.page_allocator.allocate(size);
+        let origin = self.allocator.allocate(size);
 
         if let Some(origin) = origin {
             // TODO(gw): We need to make all the device rects

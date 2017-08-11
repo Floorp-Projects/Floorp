@@ -810,6 +810,7 @@ pub struct Renderer {
 pub enum InitError {
     Shader(ShaderError),
     Thread(std::io::Error),
+    MaxTextureSize,
 }
 
 impl From<ShaderError> for InitError {
@@ -839,12 +840,11 @@ impl Renderer {
     /// ```
     /// [rendereroptions]: struct.RendererOptions.html
     pub fn new(gl: Rc<gl::Gl>, mut options: RendererOptions) -> Result<(Renderer, RenderApiSender), InitError> {
+
         let (api_tx, api_rx) = try!{ channel::msg_channel() };
         let (payload_tx, payload_rx) = try!{ channel::payload_channel() };
         let (result_tx, result_rx) = channel();
         let gl_type = gl.get_type();
-
-        register_thread_with_profiler("Compositor".to_owned());
 
         let notifier = Arc::new(Mutex::new(None));
 
@@ -853,9 +853,28 @@ impl Renderer {
             notifier: Arc::clone(&notifier),
         };
 
-        let mut device = Device::new(gl,
-                                     options.resource_override_path.clone(),
-                                     Box::new(file_watch_handler));
+        let mut device = Device::new(
+            gl,
+            options.resource_override_path.clone(),
+            Box::new(file_watch_handler)
+        );
+
+        let device_max_size = device.max_texture_size();
+        // 512 is the minimum that the texture cache can work with.
+        // Broken GL contexts can return a max texture size of zero (See #1260). Better to
+        // gracefully fail now than panic as soon as a texture is allocated.
+        let min_texture_size = 512;
+        if device_max_size < min_texture_size {
+            println!("Device reporting insufficient max texture size ({})", device_max_size);
+            return Err(InitError::MaxTextureSize);
+        }
+        let max_device_size = cmp::max(
+            cmp::min(device_max_size, options.max_texture_size.unwrap_or(device_max_size)),
+            min_texture_size
+        );
+
+        register_thread_with_profiler("Compositor".to_owned());
+
         // device-pixel ratio doesn't matter here - we are just creating resources.
         device.begin_frame(1.0);
 
@@ -1112,10 +1131,9 @@ impl Renderer {
                                      options.precache_shaders)
         };
 
-        let device_max_size = device.max_texture_size();
-        let max_texture_size = cmp::min(device_max_size, options.max_texture_size.unwrap_or(device_max_size));
+        let texture_cache = TextureCache::new(max_device_size);
+        let max_texture_size = texture_cache.max_texture_size();
 
-        let texture_cache = TextureCache::new(max_texture_size);
         let backend_profile_counters = BackendProfileCounters::new();
 
         let dummy_cache_texture_id = device.create_texture_ids(1, TextureTarget::Array)[0];
@@ -1408,6 +1426,17 @@ impl Renderer {
                     }
 
                     self.current_frame = Some(frame);
+                }
+                ResultMsg::UpdateResources { updates, cancel_rendering } => {
+                    self.pending_texture_updates.push(updates);
+                    self.update_texture_cache();
+                    // If we receive a NewFrame message followed by this one within
+                    // the same update we need ot cancel the frame because we might
+                    // have deleted the resources in use in the frame dut to a memory
+                    // pressure event.
+                    if cancel_rendering {
+                        self.current_frame = None;
+                    }
                 }
                 ResultMsg::RefreshShader(path) => {
                     self.pending_shader_updates.push(path);

@@ -190,6 +190,7 @@ impl RendererFrame {
 pub enum ResultMsg {
     RefreshShader(PathBuf),
     NewFrame(DocumentId, RendererFrame, TextureUpdateList, BackendProfileCounters),
+    UpdateResources { updates: TextureUpdateList, cancel_rendering: bool },
 }
 
 #[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]

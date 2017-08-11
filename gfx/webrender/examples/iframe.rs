@@ -9,66 +9,77 @@ extern crate webrender;
 #[path="common/boilerplate.rs"]
 mod boilerplate;
 
-use boilerplate::HandyDandyRectBuilder;
+use boilerplate::{Example, HandyDandyRectBuilder};
 use webrender::api::*;
 
 // This example uses the push_iframe API to nest a second pipeline's displaylist
 // inside the root pipeline's display list. When it works, a green square is
 // shown. If it fails, a red square is shown.
 
-fn body(api: &RenderApi,
-        document_id: &DocumentId,
-        builder: &mut DisplayListBuilder,
-        _resources: &mut ResourceUpdates,
-        pipeline_id: &PipelineId,
-        _layout_size: &LayoutSize) {
+struct App {
 
-    // All the sub_* things are for the nested pipeline
-    let sub_size = DeviceUintSize::new(100, 100);
-    let sub_bounds = (0,0).to(sub_size.width as i32, sub_size.height as i32);
+}
 
-    let sub_pipeline_id = PipelineId(pipeline_id.0, 42);
-    let mut sub_builder = DisplayListBuilder::new(sub_pipeline_id, sub_bounds.size);
+impl Example for App {
+    fn render(&mut self,
+              api: &RenderApi,
+              builder: &mut DisplayListBuilder,
+              _resources: &mut ResourceUpdates,
+              _layout_size: LayoutSize,
+              pipeline_id: PipelineId,
+              document_id: DocumentId) {
+        // All the sub_* things are for the nested pipeline
+        let sub_size = DeviceUintSize::new(100, 100);
+        let sub_bounds = (0,0).to(sub_size.width as i32, sub_size.height as i32);
 
-    sub_builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                      sub_bounds,
-                                      None,
+        let sub_pipeline_id = PipelineId(pipeline_id.0, 42);
+        let mut sub_builder = DisplayListBuilder::new(sub_pipeline_id, sub_bounds.size);
+
+        sub_builder.push_stacking_context(ScrollPolicy::Scrollable,
+                                          sub_bounds,
+                                          None,
+                                          TransformStyle::Flat,
+                                          None,
+                                          MixBlendMode::Normal,
+                                          Vec::new());
+        // green rect visible == success
+        sub_builder.push_rect(sub_bounds, None, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        sub_builder.pop_stacking_context();
+
+        api.set_display_list(
+            document_id,
+            Epoch(0),
+            None,
+            sub_bounds.size,
+            sub_builder.finalize(),
+            true,
+            ResourceUpdates::new(),
+        );
+
+        let bounds = sub_bounds;
+        // And this is for the root pipeline
+        builder.push_stacking_context(ScrollPolicy::Scrollable,
+                                      bounds,
+                                      Some(PropertyBinding::Binding(PropertyBindingKey::new(42))),
                                       TransformStyle::Flat,
                                       None,
                                       MixBlendMode::Normal,
                                       Vec::new());
-    // green rect visible == success
-    sub_builder.push_rect(sub_bounds, None, ColorF::new(0.0, 1.0, 0.0, 1.0));
-    sub_builder.pop_stacking_context();
+        // red rect under the iframe: if this is visible, things have gone wrong
+        builder.push_rect(bounds, None, ColorF::new(1.0, 0.0, 0.0, 1.0));
+        builder.push_iframe(bounds, None, sub_pipeline_id);
+        builder.pop_stacking_context();
+    }
 
-    api.set_display_list(
-        *document_id,
-        Epoch(0),
-        None,
-        sub_bounds.size,
-        sub_builder.finalize(),
-        true,
-        ResourceUpdates::new(),
-    );
-
-    let bounds = sub_bounds;
-    // And this is for the root pipeline
-    builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                  bounds,
-                                  Some(PropertyBinding::Binding(PropertyBindingKey::new(42))),
-                                  TransformStyle::Flat,
-                                  None,
-                                  MixBlendMode::Normal,
-                                  Vec::new());
-    // red rect under the iframe: if this is visible, things have gone wrong
-    builder.push_rect(bounds, None, ColorF::new(1.0, 0.0, 0.0, 1.0));
-    builder.push_iframe(bounds, None, sub_pipeline_id);
-    builder.pop_stacking_context();
-}
-
-fn event_handler(_event: &glutin::Event, _document_id: DocumentId, _api: &RenderApi) {
+    fn on_event(&mut self,
+                _event: glutin::Event,
+                _api: &RenderApi,
+                _document_id: DocumentId) -> bool {
+        false
+    }
 }
 
 fn main() {
-    boilerplate::main_wrapper(body, event_handler, None);
+    let mut app = App {};
+    boilerplate::main_wrapper(&mut app, None);
 }

@@ -105,7 +105,7 @@ var healthReportWrapper = {
 
   handleRemoteCommand(evt) {
     // Do an origin check to harden against the frame content being loaded from unexpected locations.
-    let allowedPrincipal = Services.scriptSecurityManager.getCodebasePrincipal(this._getReportURI());
+    let allowedPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(this._getReportURI(), {});
     let targetPrincipal = evt.target.nodePrincipal;
     if (!allowedPrincipal.equals(targetPrincipal)) {
       Cu.reportError(`Origin check failed for message "${evt.detail.command}": ` +
