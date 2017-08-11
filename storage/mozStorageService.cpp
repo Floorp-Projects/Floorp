@@ -934,6 +934,13 @@ Service::Observe(nsISupports *, const char *aTopic, const char16_t *)
   } else if (strcmp(aTopic, "xpcom-shutdown") == 0) {
     shutdown();
   } else if (strcmp(aTopic, "xpcom-shutdown-threads") == 0) {
+    // The Service is kept alive by our strong observer references and
+    // references held by Connection instances.  Since we're about to remove the
+    // former and then wait for the latter ones to go away, it behooves us to
+    // hold a strong reference to ourselves so our calls to getConnections() do
+    // not happen on a deleted object.
+    RefPtr<Service> kungFuDeathGrip = this;
+
     nsCOMPtr<nsIObserverService> os =
       mozilla::services::GetObserverService();
 
