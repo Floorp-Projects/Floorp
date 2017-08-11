@@ -46,7 +46,7 @@ set_config('MOZ_ANDROID_MMA',
 
 option(env='MOZ_ANDROID_POCKET',
        help='Enable Pocket Stories in Activity Stream.',
-       default=False)
+       default=True)
 
 set_config('MOZ_ANDROID_POCKET',
            depends_if('MOZ_ANDROID_POCKET')(lambda _: True))
