@@ -35,14 +35,6 @@ class TestSession(MarionetteTestCase):
 
         self.assertTrue(self.marionette.session_id is not None)
         self.assertTrue(isinstance(self.marionette.session_id, unicode))
-
-    def test_set_the_session_id(self):
-        # Sends newSession
-        self.marionette.start_session(session_id="ILoveCheese")
-
-        self.assertEqual(self.marionette.session_id, "ILoveCheese")
-        self.assertTrue(isinstance(self.marionette.session_id, unicode))
-
     def test_session_already_started(self):
         self.marionette.start_session()
         self.assertTrue(isinstance(self.marionette.session_id, unicode))
