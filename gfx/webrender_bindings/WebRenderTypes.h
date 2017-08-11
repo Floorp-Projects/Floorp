@@ -17,8 +17,6 @@
 #include "RoundedRect.h"
 #include "nsStyleConsts.h"
 
-//#define ENABLE_FRAME_LATENCY_LOG
-
 namespace mozilla {
 namespace wr {
 
