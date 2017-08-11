@@ -11,16 +11,31 @@
   <script type="application/javascript">
 
 let tests = [
+  function() {
+    SpecialPowers.pushPrefEnv({
+      "set": [["dom.caches.enabled", true],
+              ["dom.caches.testing.enabled", true],
+              ["dom.quotaManager.testing", true]]
+    }, next);
+  },
+
   test_nativeStream,
   function() { workify('test_nativeStream'); },
 
   test_nonNativeStream,
   function() { workify('test_nonNativeStream'); },
 
+  test_pendingStream,
   function() { workify('test_pendingStream'); },
 
   test_noUint8Array,
   function() { workify('test_noUint8Array'); },
+
+  test_nativeStream_cache,
+  function() { workify('test_nativeStream_cache'); },
+
+  test_nonNativeStream_cache,
+  function() { workify('test_nonNativeStream_cache'); },
 ];
 
 function next() {
