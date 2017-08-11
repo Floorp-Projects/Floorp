@@ -9,7 +9,7 @@ const { Cu } = require("chrome");
 const { ObjectClient } = require("devtools/shared/client/main");
 
 const defer = require("devtools/shared/defer");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { Task } = require("devtools/shared/task");
 
 /**

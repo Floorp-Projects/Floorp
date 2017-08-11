@@ -9,7 +9,7 @@ const { Task } = require("devtools/shared/task");
 const defer = require("devtools/shared/defer");
 
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/old-event-emitter");
+  "devtools/shared/event-emitter");
 
 function PerformancePanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
