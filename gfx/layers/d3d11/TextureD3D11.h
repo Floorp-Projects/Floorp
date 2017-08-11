@@ -484,6 +484,7 @@ private:
   RefPtr<ID3D11Texture2D> mSyncTexture;
   RefPtr<IDXGIKeyedMutex> mKeyedMutex;
   std::vector<ID3D11Texture2D*> mSyncedTextures;
+  Mutex mSyncLock;
 };
 
 inline uint32_t GetMaxTextureSizeForFeatureLevel(D3D_FEATURE_LEVEL aFeatureLevel)

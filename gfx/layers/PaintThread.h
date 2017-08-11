@@ -75,6 +75,14 @@ public:
   // and the main thread is finished recording this layer.
   void FinishedLayerBatch();
 
+  // Must be called on the main thread. Tells the paint thread
+  // to schedule a sync textures after all async paints are done.
+  // NOTE: The other paint thread functions are on a per PAINT
+  // or per paint layer basis. This MUST be called at the end
+  // of a layer transaction as multiple paints can occur
+  // with multiple layers. We only have to do this once per transaction.
+  void SynchronizePaintTextures(SyncObjectClient* aSyncObject);
+
   // Sync Runnables need threads to be ref counted,
   // But this thread lives through the whole process.
   // We're only temporarily using sync runnables so
@@ -93,6 +101,7 @@ private:
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
   void EndAsyncPainting(CompositorBridgeChild* aBridge);
+  void SyncTextureData(SyncObjectClient* aSyncObject);
 
   static StaticAutoPtr<PaintThread> sSingleton;
   static StaticRefPtr<nsIThread> sThread;
