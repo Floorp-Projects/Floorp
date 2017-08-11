@@ -782,6 +782,7 @@ this.MessageChannel = {
   abortResponses(sender, reason = this.REASON_DISCONNECTED) {
     for (let response of this.pendingResponses) {
       if (this.matchesFilter(sender, response.sender)) {
+        this.pendingResponses.delete(response);
         this.abortedResponses.add(response.channelId);
         response.reject(reason);
       }
