@@ -146,14 +146,10 @@ class GlobalHelperThreadState
 #endif
 
     enum CondVar {
-        // For notifying threads waiting for work that they may be able to make
-        // progress, ie, a work item has been completed by a helper thread and
-        // the thread that created the work item can now consume it.
+        // For notifying threads waiting for work that they may be able to make progress.
         CONSUMER,
 
-        // For notifying helper threads doing the work that they may be able to
-        // make progress, ie, a work item has been enqueued and an idle helper
-        // thread may pick up up the work item and perform it.
+        // For notifying threads doing work that they may be able to make progress.
         PRODUCER,
 
         // For notifying threads doing work which are paused that they may be
@@ -314,7 +310,7 @@ class GlobalHelperThreadState
     void waitForAllThreads();
 
     template <typename T>
-    bool checkTaskThreadLimit(size_t maxThreads, bool isMaster = false) const;
+    bool checkTaskThreadLimit(size_t maxThreads) const;
 
   private:
 
