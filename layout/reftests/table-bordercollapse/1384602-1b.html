@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<style>
+  table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+  }
+</style>
+<table>
+  <tbody>
+    <tr>
+      <td colspan="4">Spanning.</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr id="target"></tr>
+  </tbody>
+</table>
+<script>
+  onload = function() {
+    var row = document.getElementById("target");
+    for (var i = 1; i <= 4; ++i) {
+      document.body.offsetWidth;
+      var cell = document.createElement("td");
+      cell.textContent = i;
+      row.appendChild(cell);
+    }
+  }
+</script>
