@@ -367,3 +367,9 @@ LIRGeneratorARM64::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
 {
     MOZ_CRASH("NYI");
 }
+
+void
+LIRGeneratorARM64::visitSignExtendInt64(MSignExtendInt64* ins)
+{
+    MOZ_CRASH("NYI");
+}

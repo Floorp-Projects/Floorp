@@ -671,6 +671,41 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition* signExtend(MDefinition* op, uint32_t srcSize, uint32_t targetSize)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MInstruction* ins;
+        switch (targetSize) {
+          case 4: {
+            MSignExtendInt32::Mode mode;
+            switch (srcSize) {
+              case 1:  mode = MSignExtendInt32::Byte; break;
+              case 2:  mode = MSignExtendInt32::Half; break;
+              default: MOZ_CRASH("Bad sign extension");
+            }
+            ins = MSignExtendInt32::New(alloc(), op, mode);
+            break;
+          }
+          case 8: {
+            MSignExtendInt64::Mode mode;
+            switch (srcSize) {
+              case 1:  mode = MSignExtendInt64::Byte; break;
+              case 2:  mode = MSignExtendInt64::Half; break;
+              case 4:  mode = MSignExtendInt64::Word; break;
+              default: MOZ_CRASH("Bad sign extension");
+            }
+            ins = MSignExtendInt64::New(alloc(), op, mode);
+            break;
+          }
+          default: {
+            MOZ_CRASH("Bad sign extension");
+          }
+        }
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition* convertI64ToFloatingPoint(MDefinition* op, MIRType type, bool isUnsigned)
     {
         if (inDeadCode())
@@ -2259,6 +2294,20 @@ EmitTruncate(FunctionCompiler& f, ValType operandType, ValType resultType,
     return true;
 }
 
+#ifdef ENABLE_WASM_THREAD_OPS
+static bool
+EmitSignExtend(FunctionCompiler& f, uint32_t srcSize, uint32_t targetSize)
+{
+    MDefinition* input;
+    ValType type = targetSize == 4 ? ValType::I32 : ValType::I64;
+    if (!f.iter().readConversion(type, type, &input))
+        return false;
+
+    f.iter().setResult(f.signExtend(input, srcSize, targetSize));
+    return true;
+}
+#endif
+
 static bool
 EmitExtendI32(FunctionCompiler& f, bool isUnsigned)
 {
@@ -3600,6 +3649,20 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitReinterpret(f, ValType::F32, ValType::I32, MIRType::Float32));
           case uint16_t(Op::F64ReinterpretI64):
             CHECK(EmitReinterpret(f, ValType::F64, ValType::I64, MIRType::Double));
+
+          // Sign extensions
+#ifdef ENABLE_WASM_THREAD_OPS
+          case uint16_t(Op::I32Extend8S):
+            CHECK(EmitSignExtend(f, 1, 4));
+          case uint16_t(Op::I32Extend16S):
+            CHECK(EmitSignExtend(f, 2, 4));
+          case uint16_t(Op::I64Extend8S):
+            CHECK(EmitSignExtend(f, 1, 8));
+          case uint16_t(Op::I64Extend16S):
+            CHECK(EmitSignExtend(f, 2, 8));
+          case uint16_t(Op::I64Extend32S):
+            CHECK(EmitSignExtend(f, 4, 8));
+#endif
 
           // asm.js-specific operators
 

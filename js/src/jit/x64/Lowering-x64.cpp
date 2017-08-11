@@ -495,3 +495,9 @@ LIRGeneratorX64::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
 {
     defineInt64(new(alloc()) LExtendInt32ToInt64(useAtStart(ins->input())), ins);
 }
+
+void
+LIRGeneratorX64::visitSignExtendInt64(MSignExtendInt64* ins)
+{
+    defineInt64(new(alloc()) LSignExtendInt64(useInt64RegisterAtStart(ins->input())), ins);
+}

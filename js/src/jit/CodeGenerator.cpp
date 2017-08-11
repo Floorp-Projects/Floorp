@@ -12789,16 +12789,16 @@ CodeGenerator::visitRandom(LRandom* ins)
 }
 
 void
-CodeGenerator::visitSignExtend(LSignExtend* ins)
+CodeGenerator::visitSignExtendInt32(LSignExtendInt32* ins)
 {
     Register input = ToRegister(ins->input());
     Register output = ToRegister(ins->output());
 
     switch (ins->mode()) {
-      case MSignExtend::Byte:
+      case MSignExtendInt32::Byte:
         masm.move8SignExtend(input, output);
         break;
-      case MSignExtend::Half:
+      case MSignExtendInt32::Half:
         masm.move16SignExtend(input, output);
         break;
     }

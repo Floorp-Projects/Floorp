@@ -3091,6 +3091,24 @@ CodeGeneratorARM::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
         masm.ma_asr(Imm32(31), output.low, output.high);
 }
 
+void
+CodeGeneratorARM::visitSignExtendInt64(LSignExtendInt64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    switch (lir->mode()) {
+      case MSignExtendInt64::Byte:
+        masm.move8SignExtend(input.low, output.low);
+        break;
+      case MSignExtendInt64::Half:
+        masm.move16SignExtend(input.low, output.low);
+        break;
+      case MSignExtendInt64::Word:
+        break;
+    }
+    masm.ma_asr(Imm32(31), output.low, output.high);
+}
+
 static Register
 WasmGetTemporaryForDivOrMod(Register64 lhs, Register64 rhs)
 {

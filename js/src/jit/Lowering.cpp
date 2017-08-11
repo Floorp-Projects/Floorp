@@ -1361,14 +1361,14 @@ LIRGenerator::visitUrsh(MUrsh* ins)
 }
 
 void
-LIRGenerator::visitSignExtend(MSignExtend* ins)
+LIRGenerator::visitSignExtendInt32(MSignExtendInt32* ins)
 {
     LInstructionHelper<1, 1, 0>* lir;
 
-    if (ins->mode() == MSignExtend::Byte)
-        lir = new(alloc()) LSignExtend(useByteOpRegisterAtStart(ins->input()), ins->mode());
+    if (ins->mode() == MSignExtendInt32::Byte)
+        lir = new(alloc()) LSignExtendInt32(useByteOpRegisterAtStart(ins->input()), ins->mode());
     else
-        lir = new(alloc()) LSignExtend(useRegisterAtStart(ins->input()), ins->mode());
+        lir = new(alloc()) LSignExtendInt32(useRegisterAtStart(ins->input()), ins->mode());
 
     define(lir, ins);
 }
