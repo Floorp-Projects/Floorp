@@ -1,23 +1,29 @@
-function testConversion(resultType, opcode, paramType, op, expect) {
-  if (paramType === 'i64') {
+function testConversion0(resultType, opcode, paramType, op, expect) {
+  function rectify(v, t) {
+    if (t == 'i64')
+      return createI64(v);
+    return v;
+  }
+  if (paramType === 'i64' || resultType == 'i64') {
+    let fullPass = resultType == 'i64' ? wasmFullPassI64 : wasmFullPass;
     // i64 cannot be imported, so we use a wrapper function.
-    wasmFullPass(`(module
-                    (func (param i64) (result ${resultType}) (${resultType}.${opcode}/i64 (get_local 0)))
-                    (export "run" 0))`, expect, {}, createI64(op));
+    fullPass(`(module
+               (func (param ${paramType}) (result ${resultType})
+		(${opcode} (get_local 0)))
+               (export "run" 0))`,
+	     rectify(expect, resultType), {}, rectify(op, paramType));
     // The same, but now the input is a constant.
-    wasmFullPass(`(module
-                    (func (result ${resultType}) (${resultType}.${opcode}/i64 (i64.const ${op})))
-                    (export "run" 0))`, expect);
-  } else if (resultType === 'i64') {
-    wasmFullPassI64(`(module
-                        (func (param ${paramType}) (result i64) (i64.${opcode}/${paramType} (get_local 0)))
-                        (export "run" 0))`, createI64(expect), {}, op);
-    // The same, but now the input is a constant.
-    wasmFullPassI64(`(module
-                        (func (result i64) (i64.${opcode}/${paramType} (${paramType}.const ${op})))
-                        (export "run" 0))`, createI64(expect));
+    fullPass(`(module
+               (func (result ${resultType})
+		(${opcode} (${paramType}.const ${op})))
+               (export "run" 0))`,
+	     rectify(expect, resultType));
   } else {
-    wasmFullPass('(module (func (param ' + paramType + ') (result ' + resultType + ') (' + resultType + '.' + opcode + '/' + paramType + ' (get_local 0))) (export "run" 0))', expect, {}, op);
+      wasmFullPass(`(module
+		     (func (param ${paramType}) (result ${resultType})
+		      (${opcode} (get_local 0)))
+		     (export "run" 0))`,
+		   expect, {}, op);
   }
 
   let formerTestMode = getJitCompilerOptions()['wasm.test-mode'];
@@ -25,19 +31,27 @@ function testConversion(resultType, opcode, paramType, op, expect) {
   for (var bad of ['i32', 'f32', 'f64', 'i64']) {
       if (bad != resultType) {
           wasmFailValidateText(
-              `(module (func (param ${paramType}) (result ${bad}) (${resultType}.${opcode}/${paramType} (get_local 0))))`,
+              `(module (func (param ${paramType}) (result ${bad}) (${opcode} (get_local 0))))`,
               mismatchError(resultType, bad)
           );
       }
 
       if (bad != paramType) {
           wasmFailValidateText(
-              `(module (func (param ${bad}) (result ${resultType}) (${resultType}.${opcode}/${paramType} (get_local 0))))`,
+              `(module (func (param ${bad}) (result ${resultType}) (${opcode} (get_local 0))))`,
               mismatchError(bad, paramType)
           );
       }
   }
   setJitCompilerOption('wasm.test-mode', formerTestMode);
+}
+
+function testConversion(resultType, opcode, paramType, op, expect) {
+  testConversion0(resultType, `${resultType}.${opcode}/${paramType}`, paramType, op, expect);
+}
+
+function testSignExtension(resultType, opcode, paramType, op, expect) {
+  testConversion0(resultType, `${resultType}.${opcode}`, paramType, op, expect);
 }
 
 function testTrap(resultType, opcode, paramType, op, expect) {
@@ -219,6 +233,19 @@ function testTrap(resultType, opcode, paramType, op, expect) {
 
     testConversion('i64', 'reinterpret', 'f64', 40.09999999999968, "0x40440ccccccccca0");
     testConversion('f64', 'reinterpret', 'i64', "0x40440ccccccccca0", 40.09999999999968);
+
+    if (wasmThreadsSupported()) {
+	testSignExtension('i32', 'extend8_s', 'i32', 0x7F, 0x7F);
+	testSignExtension('i32', 'extend8_s', 'i32', 0x80, -0x80);
+	testSignExtension('i32', 'extend16_s', 'i32', 0x7FFF, 0x7FFF);
+	testSignExtension('i32', 'extend16_s', 'i32', 0x8000, -0x8000);
+    	testSignExtension('i64', 'extend8_s', 'i64', 0x7F, 0x7F);
+	testSignExtension('i64', 'extend8_s', 'i64', 0x80, -0x80);
+	testSignExtension('i64', 'extend16_s', 'i64', 0x7FFF, 0x7FFF);
+	testSignExtension('i64', 'extend16_s', 'i64', 0x8000, -0x8000);
+	testSignExtension('i64', 'extend32_s', 'i64', 0x7FFFFFFF, 0x7FFFFFFF);
+	testSignExtension('i64', 'extend32_s', 'i64', "0x80000000", "0xFFFFFFFF80000000");
+    }
 
     setJitCompilerOption('wasm.test-mode', 0);
 }

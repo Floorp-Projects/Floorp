@@ -664,6 +664,11 @@ class BaseAssemblerX64 : public BaseAssembler
         m_formatter.immediate64(imm);
     }
 
+    void movsbq_rr(RegisterID src, RegisterID dst)
+    {
+        spew("movsbq     %s, %s", GPReg32Name(src), GPReg64Name(dst));
+        m_formatter.twoByteOp64(OP2_MOVSX_GvEb, src, dst);
+    }
     void movsbq_mr(int32_t offset, RegisterID base, RegisterID dst)
     {
         spew("movsbq     " MEM_ob ", %s", ADDR_ob(offset, base), GPReg64Name(dst));
@@ -675,6 +680,11 @@ class BaseAssemblerX64 : public BaseAssembler
         m_formatter.twoByteOp64(OP2_MOVSX_GvEb, offset, base, index, scale, dst);
     }
 
+    void movswq_rr(RegisterID src, RegisterID dst)
+    {
+        spew("movswq     %s, %s", GPReg32Name(src), GPReg64Name(dst));
+        m_formatter.twoByteOp64(OP2_MOVSX_GvEw, src, dst);
+    }
     void movswq_mr(int32_t offset, RegisterID base, RegisterID dst)
     {
         spew("movswq     " MEM_ob ", %s", ADDR_ob(offset, base), GPReg64Name(dst));

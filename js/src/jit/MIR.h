@@ -6253,7 +6253,7 @@ class MUrsh : public MShiftInstruction
     ALLOW_CLONE(MUrsh)
 };
 
-class MSignExtend
+class MSignExtendInt32
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
@@ -6266,7 +6266,7 @@ class MSignExtend
   private:
     Mode mode_;
 
-    MSignExtend(MDefinition* op, Mode mode)
+    MSignExtendInt32(MDefinition* op, Mode mode)
       : MUnaryInstruction(op), mode_(mode)
     {
         setResultType(MIRType::Int32);
@@ -6274,17 +6274,67 @@ class MSignExtend
     }
 
   public:
-    INSTRUCTION_HEADER(SignExtend)
+    INSTRUCTION_HEADER(SignExtendInt32)
     TRIVIAL_NEW_WRAPPERS
 
-    Mode mode() { return mode_; }
+    Mode mode() const { return mode_; }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+    bool congruentTo(const MDefinition* ins) const override {
+        if (!congruentIfOperandsEqual(ins))
+            return false;
+        return ins->isSignExtendInt32() && ins->toSignExtendInt32()->mode_ == mode_;
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
 
     MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
 
-    ALLOW_CLONE(MSignExtend)
+    ALLOW_CLONE(MSignExtendInt32)
+};
+
+class MSignExtendInt64
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+  public:
+    enum Mode {
+        Byte,
+        Half,
+        Word
+    };
+
+  private:
+    Mode mode_;
+
+    MSignExtendInt64(MDefinition* op, Mode mode)
+      : MUnaryInstruction(op), mode_(mode)
+    {
+        setResultType(MIRType::Int64);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SignExtendInt64)
+    TRIVIAL_NEW_WRAPPERS
+
+    Mode mode() const { return mode_; }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+    bool congruentTo(const MDefinition* ins) const override {
+        if (!congruentIfOperandsEqual(ins))
+            return false;
+        return ins->isSignExtendInt64() && ins->toSignExtendInt64()->mode_ == mode_;
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    ALLOW_CLONE(MSignExtendInt64)
 };
 
 class MBinaryArithInstruction
