@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/ThreadHangStats.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/SystemGroup.h"
 
@@ -25,7 +26,7 @@
 #include "nsXULAppAPI.h"
 #include "GeckoProfiler.h"
 #include "nsNetCID.h"
-#include "HangDetails.h"
+#include "nsIHangDetails.h"
 
 #include <algorithm>
 
@@ -185,9 +186,9 @@ public:
   // Platform-specific helper to get hang stacks
   ThreadStackHelper mStackHelper;
   // Stack of current hang
-  HangStack mHangStack;
+  Telemetry::HangStack mHangStack;
   // Native stack of current hang
-  NativeHangStack mNativeHangStack;
+  Telemetry::NativeHangStack mNativeHangStack;
   // Annotations for the current hang
   UniquePtr<HangMonitor::HangAnnotations> mAnnotations;
   // Annotators registered for this thread
@@ -196,6 +197,8 @@ public:
   nsCString mRunnableName;
   // The name of the thread which is being monitored
   nsCString mThreadName;
+  // The number of native stacks which have been collected so far.
+  uint32_t mNativeStackCnt;
 
   BackgroundHangThread(const char* aName,
                        uint32_t aTimeoutMs,
@@ -231,6 +234,28 @@ public:
   bool IsShared() {
     return mThreadType == BackgroundHangMonitor::THREAD_SHARED;
   }
+};
+
+/**
+ * HangDetails is the concrete implementaion of nsIHangDetails, and contains the
+ * infromation which we want to expose to observers of the bhr-thread-hang
+ * observer notification.
+ */
+class HangDetails : public nsIHangDetails
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIHANGDETAILS
+
+  HangDetails(uint32_t aDuration, const nsACString& aName)
+    : mDuration(aDuration)
+    , mName(aName)
+    {}
+private:
+  virtual ~HangDetails() {}
+
+  uint32_t mDuration;
+  nsCString mName;
 };
 
 StaticRefPtr<BackgroundHangManager> BackgroundHangManager::sInstance;
@@ -345,12 +370,18 @@ BackgroundHangManager::RunMonitorThread()
         if (MOZ_UNLIKELY(hangTime >= currentThread->mTimeout)) {
           // A hang started
 #ifdef NIGHTLY_BUILD
-          // NOTE: In nightly builds of firefox we want to collect native stacks
-          // for all hangs, not just permahangs.
-          currentThread->mStackHelper.GetPseudoAndNativeStack(
-            currentThread->mHangStack,
-            currentThread->mNativeHangStack,
-            currentThread->mRunnableName);
+          if (currentThread->mNativeStackCnt < Telemetry::kMaximumNativeHangStacks) {
+            // NOTE: In nightly builds of firefox we want to collect native stacks
+            // for all hangs, not just permahangs.
+            currentThread->mNativeStackCnt += 1;
+            currentThread->mStackHelper.GetPseudoAndNativeStack(
+              currentThread->mHangStack,
+              currentThread->mNativeHangStack,
+              currentThread->mRunnableName);
+          } else {
+            currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack,
+                                                       currentThread->mRunnableName);
+          }
 #else
           currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack,
                                                      currentThread->mRunnableName);
@@ -413,6 +444,7 @@ BackgroundHangThread::BackgroundHangThread(const char* aName,
   , mWaiting(true)
   , mThreadType(aThreadType)
   , mThreadName(aName)
+  , mNativeStackCnt(0)
 {
   if (sTlsKeyInitialized && IsShared()) {
     sTlsKey.set(this);
@@ -470,24 +502,20 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     mHangStack.erase(mHangStack.begin() + 1, mHangStack.begin() + elementsToRemove);
   }
 
-  HangDetails hangDetails(aHangTime,
-                          XRE_GetProcessType(),
-                          mThreadName,
-                          mRunnableName,
-                          Move(mHangStack),
-                          Move(mAnnotations));
-  // If we have the stream transport service avaliable, we can process the
-  // native stack on it. Otherwise, we are unable to report a native stack, so
-  // we just report without one.
-  if (mManager->mSTS) {
-    nsCOMPtr<nsIRunnable> processHangStackRunnable =
-      new ProcessHangStackRunnable(Move(hangDetails), Move(mNativeHangStack));
-    mManager->mSTS->Dispatch(processHangStackRunnable.forget());
-  } else {
-    NS_WARNING("Unable to report native stack without a StreamTransportService");
-    RefPtr<nsHangDetails> hd = new nsHangDetails(Move(hangDetails));
-    hd->Submit();
-  }
+  // XXX: HangDetails will be expanded to contain all of the relevant
+  // information and handle reporting a custom ping to telemetry.
+
+  // Notify any observers of the "bhr-thread-hang" topic that a thread has hung.
+  nsCString name;
+  name.Assign(mThreadName);
+  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction("NotifyBHRHangObservers", [=] {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      // NOTE: Make sure to construct this on the main thread.
+      nsCOMPtr<nsIHangDetails> hangDetails = new HangDetails(aHangTime, name);
+      os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
+    }
+  });
 }
 
 void
@@ -726,5 +754,21 @@ BackgroundHangMonitor::UnregisterAnnotator(HangMonitor::Annotator& aAnnotator)
   return false;
 #endif
 }
+
+NS_IMETHODIMP
+HangDetails::GetDuration(uint32_t* aDuration)
+{
+  *aDuration = mDuration;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HangDetails::GetThreadName(nsACString& aName)
+{
+  aName.Assign(mName);
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(HangDetails, nsIHangDetails)
 
 } // namespace mozilla

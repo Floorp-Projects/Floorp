@@ -7,8 +7,8 @@
 #ifndef mozilla_ThreadStackHelper_h
 #define mozilla_ThreadStackHelper_h
 
+#include "mozilla/ThreadHangStats.h"
 #include "js/ProfilingStack.h"
-#include "HangDetails.h"
 
 #include <stddef.h>
 
@@ -53,13 +53,13 @@ namespace mozilla {
 class ThreadStackHelper
 {
 public:
-  typedef HangStack Stack;
+  typedef Telemetry::HangStack Stack;
 
   // When a native stack is gathered, this vector holds the raw program counter
   // values that FramePointerStackWalk will return to us after it walks the
   // stack. When gathering the Telemetry payload, Telemetry will take care of
   // mapping these program counters to proper addresses within modules.
-  typedef NativeHangStack NativeStack;
+  typedef Telemetry::NativeHangStack NativeStack;
 
 private:
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
