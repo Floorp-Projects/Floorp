@@ -362,6 +362,9 @@ public class TopSitesPanel extends HomeFragment {
         }
         final boolean distSetAsHomepage = GeckoSharedPrefs.forProfile(view.getContext()).getBoolean(GeckoPreferences.PREFS_SET_AS_HOMEPAGE, false);
         menu.findItem(R.id.home_set_as_homepage).setVisible(distSetAsHomepage);
+
+        // Hide the AS-specific "pin" item. It doesn't work on classic Top Sites. Bug 1381359.
+        menu.findItem(R.id.home_as_pin).setVisible(false);
     }
 
     @Override
