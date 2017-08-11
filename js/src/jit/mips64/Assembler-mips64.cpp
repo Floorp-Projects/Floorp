@@ -126,7 +126,7 @@ jit::PatchBackedge(CodeLocationJump& jump, CodeLocationLabel label,
 }
 
 void
-Assembler::executableCopy(uint8_t* buffer, bool flushICache = true)
+Assembler::executableCopy(uint8_t* buffer, bool flushICache)
 {
     MOZ_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
