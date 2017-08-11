@@ -284,6 +284,22 @@ SandboxBroker::Policy::AddDynamic(int aPerms, const char* aPath)
 }
 
 void
+SandboxBroker::Policy::AddAncestors(const char* aPath, int aPerms)
+{
+  nsAutoCString path(aPath);
+
+  while (true) {
+    const auto lastSlash = path.RFindCharInSet("/");
+    if (lastSlash <= 0) {
+      MOZ_ASSERT(lastSlash == 0);
+      return;
+    }
+    path.Truncate(lastSlash);
+    AddPath(aPerms, path.get());
+  }
+}
+
+void
 SandboxBroker::Policy::FixRecursivePermissions()
 {
   // This builds an entirely new hashtable in order to avoid iterator

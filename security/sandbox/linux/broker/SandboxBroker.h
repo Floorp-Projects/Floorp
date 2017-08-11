@@ -95,6 +95,10 @@ class SandboxBroker final
     void AddPrefix(int aPerms, const char* aPath);
     // Adds a file or dir (end with /) if it exists, and a prefix otherwhise.
     void AddDynamic(int aPerms, const char* aPath);
+    // Adds permissions on all ancestors of a path.  (This doesn't
+    // include the root directory, but if the path is given with a
+    // trailing slash it includes the path without the slash.)
+    void AddAncestors(const char* aPath, int aPerms = MAY_ACCESS);
     // Default: add file if it exists when creating policy or if we're
     // conferring permission to create it (log files, etc.).
     void AddPath(int aPerms, const char* aPath) {
