@@ -26,7 +26,27 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Response)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Response)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Response, mOwner, mHeaders)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(Response)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Response)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mHeaders)
+
+  tmp->mReadableStreamBody = nullptr;
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Response)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHeaders)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Response)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReadableStreamBody)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Response)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -40,10 +60,13 @@ Response::Response(nsIGlobalObject* aGlobal, InternalResponse* aInternalResponse
   MOZ_ASSERT(aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Immutable ||
              aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Response);
   SetMimeType();
+
+  mozilla::HoldJSObjects(this);
 }
 
 Response::~Response()
 {
+  mozilla::DropJSObjects(this);
 }
 
 /* static */ already_AddRefed<Response>
