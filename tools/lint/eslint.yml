@@ -1,3 +1,4 @@
+---
 eslint:
     description: JavaScript linter
     # ESLint infra handles its own path filtering, so just include cwd

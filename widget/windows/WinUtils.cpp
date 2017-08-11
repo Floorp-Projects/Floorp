@@ -1277,8 +1277,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
   // Decode the image from the format it was returned to us in (probably PNG)
   nsCOMPtr<imgIContainer> container;
   nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
-  rv = imgtool->DecodeImageData(stream, aMimeType,
-                                getter_AddRefs(container));
+  rv = imgtool->DecodeImage(stream, aMimeType, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<SourceSurface> surface =

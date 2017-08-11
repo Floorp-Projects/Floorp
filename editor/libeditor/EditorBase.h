@@ -236,13 +236,6 @@ public:
    */
   EditorBase();
 
-  // Please include TextEditor.h.
-  inline TextEditor* AsTextEditor();
-  inline const TextEditor* AsTextEditor() const;
-  // Please include HTMLEditor.h.
-  inline HTMLEditor* AsHTMLEditor();
-  inline const HTMLEditor* AsHTMLEditor() const;
-
 protected:
   /**
    * The default destructor. This should suffice. Should this be pure virtual
@@ -259,6 +252,21 @@ public:
   already_AddRefed<nsIDocument> GetDocument();
   already_AddRefed<nsIPresShell> GetPresShell();
   already_AddRefed<nsIWidget> GetWidget();
+  nsISelectionController* GetSelectionController() const
+  {
+    if (mSelectionController) {
+      return mSelectionController;
+    }
+    if (!mDocument) {
+      return nullptr;
+    }
+    nsIPresShell* presShell = mDocument->GetShell();
+    if (!presShell) {
+      return nullptr;
+    }
+    nsISelectionController* sc = static_cast<PresShell*>(presShell);
+    return sc;
+  }
   enum NotificationForEditorObservers
   {
     eNotifyEditorObserversOfEnd,
@@ -569,21 +577,6 @@ protected:
    */
   bool EnsureComposition(WidgetCompositionEvent* aCompositionEvent);
 
-  nsISelectionController* GetSelectionController() const
-  {
-    if (mSelectionController) {
-      return mSelectionController;
-    }
-    if (!mDocument) {
-      return nullptr;
-    }
-    nsIPresShell* presShell = mDocument->GetShell();
-    if (!presShell) {
-      return nullptr;
-    }
-    nsISelectionController* sc = static_cast<PresShell*>(presShell);
-    return sc;
-  }
   nsresult GetSelection(SelectionType aSelectionType,
                         nsISelection** aSelection);
 
@@ -786,6 +779,14 @@ public:
         return false;
     }
   }
+
+  /**
+   * Returns true if selection is in an editable element and both the range
+   * start and the range end are editable.  E.g., even if the selection range
+   * includes non-editable elements, returns true when one of common ancestors
+   * of the range start and the range end is editable.  Otherwise, false.
+   */
+  bool IsSelectionEditable();
 
   /**
    * Returns true if aNode is a MozEditorBogus node.
@@ -1253,8 +1254,21 @@ protected:
   friend class AutoSelectionRestorer;
   friend class AutoTransactionsConserveSelection;
   friend class RangeUpdater;
+  friend class nsIEditor;
 };
 
 } // namespace mozilla
+
+mozilla::EditorBase*
+nsIEditor::AsEditorBase()
+{
+  return static_cast<mozilla::EditorBase*>(this);
+}
+
+const mozilla::EditorBase*
+nsIEditor::AsEditorBase() const
+{
+  return static_cast<const mozilla::EditorBase*>(this);
+}
 
 #endif // #ifndef mozilla_EditorBase_h

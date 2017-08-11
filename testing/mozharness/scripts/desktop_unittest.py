@@ -717,6 +717,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
                 if self.config['enable_webrender']:
                     env['MOZ_WEBRENDER'] = '1'
+                    env['MOZ_ACCELERATED'] = '1'
 
                 if self.config['single_stylo_traversal']:
                     env['STYLO_THREADS'] = '1'

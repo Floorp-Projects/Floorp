@@ -24,6 +24,7 @@
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
@@ -13152,24 +13153,41 @@ NS_IMETHODIMP
 nsDocShell::GetEditor(nsIEditor** aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
-
-  if (!mEditorData) {
-    *aEditor = nullptr;
-    return NS_OK;
-  }
-
-  return mEditorData->GetEditor(aEditor);
+  RefPtr<HTMLEditor> htmlEditor = GetHTMLEditorInternal();
+  htmlEditor.forget(aEditor);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetEditor(nsIEditor* aEditor)
 {
+  HTMLEditor* htmlEditor = aEditor ? aEditor->AsHTMLEditor() : nullptr;
+  // If TextEditor comes, throw an error.
+  if (aEditor && !htmlEditor) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return SetHTMLEditorInternal(htmlEditor);
+}
+
+HTMLEditor*
+nsDocShell::GetHTMLEditorInternal()
+{
+  return mEditorData ? mEditorData->GetHTMLEditor() : nullptr;
+}
+
+nsresult
+nsDocShell::SetHTMLEditorInternal(HTMLEditor* aHTMLEditor)
+{
+  if (!aHTMLEditor && !mEditorData) {
+    return NS_OK;
+  }
+
   nsresult rv = EnsureEditorData();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  return mEditorData->SetEditor(aEditor);
+  return mEditorData->SetHTMLEditor(aHTMLEditor);
 }
 
 NS_IMETHODIMP
@@ -15055,4 +15073,18 @@ NS_IMETHODIMP_(void)
 nsDocShell::GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
 {
   aAttrs = mOriginAttributes;
+}
+
+HTMLEditor*
+nsIDocShell::GetHTMLEditor()
+{
+  nsDocShell* docShell = static_cast<nsDocShell*>(this);
+  return docShell->GetHTMLEditorInternal();
+}
+
+nsresult
+nsIDocShell::SetHTMLEditor(HTMLEditor* aHTMLEditor)
+{
+  nsDocShell* docShell = static_cast<nsDocShell*>(this);
+  return docShell->SetHTMLEditorInternal(aHTMLEditor);
 }

@@ -4,9 +4,15 @@
 
 "use strict";
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
+const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
+const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+XPCOMUtils.defineLazyGetter(this, "DevtoolsStartup", () => {
+  return Cc["@mozilla.org/devtools/startup-clh;1"]
+            .getService(Ci.nsICommandLineHandler)
+            .wrappedJSObject;
+});
 
 this.EXPORTED_SYMBOLS = [
   "DevToolsShim",
@@ -230,12 +236,24 @@ this.DevToolsShim = {
       return Promise.resolve();
     }
 
+    // Initialize DevTools explicitly to pass the "ContextMenu" reason to telemetry.
+    if (!this.isInitialized()) {
+      this._initDevTools("ContextMenu");
+    }
+
     return this.gDevTools.inspectNode(tab, selectors);
   },
 
-  _initDevTools: function () {
-    let { loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-    loader.require("devtools/client/framework/devtools-browser");
+  /**
+   * Initialize DevTools via the devtools-startup command line handler component.
+   * Overridden in tests.
+   *
+   * @param {String} reason
+   *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
+   *        in toolkit/components/telemetry/Histograms.json
+   */
+  _initDevTools: function (reason) {
+    DevtoolsStartup.initDevTools(reason);
   },
 
   _onDevToolsRegistered: function () {

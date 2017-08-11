@@ -322,6 +322,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
+            env['MOZ_ACCELERATED'] = '1'
 
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])

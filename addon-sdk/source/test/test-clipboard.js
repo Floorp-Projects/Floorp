@@ -151,7 +151,7 @@ exports["test Set Image Type Not Supported"] = function(assert) {
 
 };
 
-// Notice that `imageTools.decodeImageData`, used by `clipboard.set` method for
+// Notice that `imageTools.decodeImage`, used by `clipboard.set` method for
 // images, write directly to the javascript console the error in case the image
 // is corrupt, even if the error is catched.
 //
