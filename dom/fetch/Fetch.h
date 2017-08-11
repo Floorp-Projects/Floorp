@@ -211,7 +211,7 @@ public:
   // reporting way.
   //
   // Exceptions generated when reading from the ReadableStream are directly sent
-  // to the Console (NOTE FOR THE REVIEWER: this is part of patch 16)
+  // to the Console.
   void
   SetBodyUsed(JSContext* aCx, ErrorResult& aRv);
 

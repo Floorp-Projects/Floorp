@@ -149,6 +149,14 @@ fetchXHR('readable-stream-with-exception.txt', function(xhr) {
   finish();
 });
 
+fetchXHR('readable-stream-with-exception2.txt', function(xhr) {
+  my_ok(false, "This should not be called!");
+  finish();
+}, function() {
+  my_ok(true, "The exception has been correctly handled!");
+  finish();
+});
+
 fetchXHR('readable-stream-already-consumed.txt', function(xhr) {
   my_ok(false, "This should not be called!");
   finish();

@@ -137,6 +137,22 @@ onfetch = function(ev) {
     ));
   }
 
+  else if (ev.request.url.includes("readable-stream-with-exception2.txt")) {
+    ev.respondWith(
+      new Response(
+        new ReadableStream({
+          _controller: null,
+          _count: 0,
+
+          start(controller) { this._controller = controller; },
+          pull() {
+            if (++this._count == 5) { throw "EXCEPTION 2!"; }
+            this._controller.enqueue(new Uint8Array([this._count]));
+          }
+        })
+    ));
+  }
+
   else if (ev.request.url.includes("readable-stream-already-consumed.txt")) {
     let r = new Response(
         new ReadableStream({

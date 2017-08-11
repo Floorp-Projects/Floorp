@@ -55,6 +55,9 @@ private:
   nsresult
   WriteBuffer();
 
+  void
+  ReportErrorToConsole(JSContext* aCx, JS::Handle<JS::Value> aValue);
+
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 
