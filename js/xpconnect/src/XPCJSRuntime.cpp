@@ -2121,16 +2121,6 @@ MOZ_DEFINE_MALLOC_SIZE_OF(OrphanMallocSizeOf)
 
 namespace xpc {
 
-static size_t
-SizeOfTreeIncludingThis(nsINode* tree, SizeOfState& aState)
-{
-    size_t n = tree->SizeOfIncludingThis(aState);
-    for (nsIContent* child = tree->GetFirstChild(); child; child = child->GetNextNode(tree))
-        n += child->SizeOfIncludingThis(aState);
-
-    return n;
-}
-
 class OrphanReporter : public JS::ObjectPrivateVisitor
 {
   public:
@@ -2154,10 +2144,26 @@ class OrphanReporter : public JS::ObjectPrivateVisitor
             // and then record its root so we don't measure it again.
             nsCOMPtr<nsINode> orphanTree = node->SubtreeRoot();
             if (orphanTree && !mState.HaveSeenPtr(orphanTree.get())) {
-                n += SizeOfTreeIncludingThis(orphanTree, mState);
+                n += SizeOfTreeIncludingThis(orphanTree);
             }
         }
         return n;
+    }
+
+    size_t SizeOfTreeIncludingThis(nsINode* tree)
+    {
+        size_t nodeSize = 0;
+        nsStyleSizes sizes;
+        tree->AddSizeOfIncludingThis(mState, sizes, &nodeSize);
+        for (nsIContent* child = tree->GetFirstChild(); child; child = child->GetNextNode(tree))
+            child->AddSizeOfIncludingThis(mState, sizes, &nodeSize);
+
+        // We combine the node size with nsStyleSizes here. It's not ideal, but
+        // it's hard to get the style structs measurements out to
+        // nsWindowMemoryReporter. Also, we drop mServoData in
+        // UnbindFromTree(), so in theory any non-in-tree element won't have
+        // any style data to measure.
+        return nodeSize + sizes.getTotalSize();
     }
 
   private:

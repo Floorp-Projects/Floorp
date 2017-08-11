@@ -10701,22 +10701,29 @@ nsFrame::HasCSSTransitions()
   return collection && collection->mAnimations.Length() > 0;
 }
 
-size_t
-nsIFrame::SizeOfFramePropertiesForTree(MallocSizeOf aMallocSizeOf) const
+void
+nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const
 {
-  size_t result = 0;
+  aSizes.mLayoutFramePropertiesSize +=
+    mProperties.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 
-  result += mProperties.SizeOfExcludingThis(aMallocSizeOf);
+  // We don't do this for Gecko because this stuff is stored in the nsPresArena
+  // and so measured elsewhere.
+  if (mStyleContext->IsServo()) {
+    ServoStyleContext* sc = mStyleContext->AsServo();
+    if (!aSizes.mState.HaveSeenPtr(sc)) {
+      sc->AddSizeOfIncludingThis(aSizes.mState, aSizes.mStyleSizes,
+                                 /* isDOM = */ false);
+    }
+  }
 
   FrameChildListIterator iter(this);
   while (!iter.IsDone()) {
     for (const nsIFrame* f : iter.CurrentList()) {
-      result += f->SizeOfFramePropertiesForTree(aMallocSizeOf);
+      f->AddSizeOfExcludingThisForTree(aSizes);
     }
     iter.Next();
   }
-
-  return result;
 }
 
 // Box layout debugging

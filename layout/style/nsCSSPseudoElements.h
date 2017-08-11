@@ -87,6 +87,9 @@ public:
 
   static bool IsCSS2PseudoElement(nsIAtom *aAtom);
 
+  // This must match EAGER_PSEUDO_COUNT in Rust code.
+  static const size_t kEagerPseudoCount = 4;
+
   static bool IsEagerlyCascadedInServo(const Type aType)
   {
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_IS_CSS2);

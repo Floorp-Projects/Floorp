@@ -1677,7 +1677,9 @@ ReportHelper(const void* aPtr, bool aReportedOnAlloc)
   } else {
     // We have no record of the block. It must be a bogus pointer. This should
     // be extremely rare because Report() is almost always called in
-    // conjunction with a malloc_size_of-style function.
+    // conjunction with a malloc_size_of-style function. Print a message so
+    // that we get some feedback.
+    StatusMsg("Unknown pointer %p\n", aPtr);
   }
 }
 
