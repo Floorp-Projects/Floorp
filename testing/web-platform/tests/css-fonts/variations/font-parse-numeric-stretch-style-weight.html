@@ -25,8 +25,8 @@ var styleValidTests = {
 };
 
 var styleInvalidTests = {
-  'weight': ['100 400'],
-  'stretch': ['100% 110%', '0%', '100% 150%']
+  'weight': ['100 400', 'calc(0 - 100)', 'calc(200 + 801)'],
+  'stretch': ['100% 110%', '0%', '100% 150%', 'calc(1 + 10%)']
 };
 
 function testParseStyle() {
@@ -64,6 +64,9 @@ var faceTests = {
     ['100%', '100%'],
     ['110%', '110%'],
     ['111.5%', '111.5%'],
+    [ "50% 200%", "50% 200%" ],
+    [ "0.1% 1%", "0.1% 1%" ],
+    [ "900% 901%", "900% 901%" ],
     ['ultra-condensed', 'ultra-condensed'],
     ['ultra-expanded', 'ultra-expanded'],
   ],
@@ -71,6 +74,8 @@ var faceTests = {
 
 var faceInvalidTests = {
   'weight': [
+    '0',
+    '0.9',
     '-100 200',
     '100 -200',
     '500 400',
