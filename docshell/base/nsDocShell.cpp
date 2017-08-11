@@ -11973,12 +11973,16 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     } else if (mOSHE) {
       mOSHE->SetCacheKey(cacheKey);
     }
+
+    // Since we're force-reloading, clear all the sub frame history.
+    ClearFrameHistory(mLSHE);
+    ClearFrameHistory(mOSHE);
   }
 
-  // Clear subframe history on refresh or reload.
+  // Clear subframe history on refresh.
   // XXX: history.go(0) won't go this path as aLoadType is LOAD_HISTORY in this
   // case. One should re-validate after bug 1331865 fixed.
-  if (aLoadType == LOAD_REFRESH || (aLoadType & LOAD_CMD_RELOAD)) {
+  if (aLoadType == LOAD_REFRESH) {
     ClearFrameHistory(mLSHE);
     ClearFrameHistory(mOSHE);
   }
