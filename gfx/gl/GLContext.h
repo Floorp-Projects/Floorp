@@ -298,7 +298,14 @@ public:
 
     virtual GLContextType GetContextType() const = 0;
 
-    virtual bool IsCurrent() const = 0;
+    bool IsCurrent() const {
+        if (mImplicitMakeCurrent)
+            return MakeCurrent();
+
+        return IsCurrentImpl();
+    }
+
+    virtual bool IsCurrentImpl() const = 0;
 
     /**
      * Get the default framebuffer for this context.

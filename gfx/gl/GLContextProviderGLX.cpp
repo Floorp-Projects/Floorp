@@ -639,7 +639,7 @@ GLContextGLX::MakeCurrentImpl(bool aForce) const
 }
 
 bool
-GLContextGLX::IsCurrent() const
+GLContextGLX::IsCurrentImpl() const
 {
     return mGLX->fGetCurrentContext() == mContext;
 }
