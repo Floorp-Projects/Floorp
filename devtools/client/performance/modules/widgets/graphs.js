@@ -14,7 +14,7 @@ const MountainGraphWidget = require("devtools/client/shared/widgets/MountainGrap
 const { CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
 
 const defer = require("devtools/shared/defer");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 const { colorUtils } = require("devtools/shared/css/color");
 const { getColor } = require("devtools/client/shared/theme");

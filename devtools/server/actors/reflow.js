@@ -28,7 +28,7 @@ const {Ci} = require("chrome");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
 const events = require("sdk/event/core");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {reflowSpec} = require("devtools/shared/specs/reflow");
 
 /**

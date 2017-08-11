@@ -11,7 +11,7 @@ const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 // Bug 1188401: When loaded from xpcshell tests, we do not have browser/ files
 // and can't load target.js. Should be fixed by bug 912121.

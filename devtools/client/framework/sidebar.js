@@ -6,7 +6,7 @@
 
 var Services = require("Services");
 var {Task} = require("devtools/shared/task");
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/old-event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
