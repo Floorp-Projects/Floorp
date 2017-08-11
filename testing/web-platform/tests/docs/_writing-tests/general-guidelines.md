@@ -150,11 +150,12 @@ new tests. Any of these rules may be broken if the test demands it:
  * Use UNIX-style line endings (i.e. no CR characters at EOL).
 
 We have a lint tool for catching these and other common mistakes. You
-can run it manually by starting the `lint` executable from the root of
-your local web-platform-tests working directory like this:
+can run it manually by starting the `wpt` executable from the root of
+your local web-platform-tests working directory, and invoking the
+`lint` subcommand, like this:
 
 ```
-./lint
+./wpt lint
 ```
 
 The lint tool is also run automatically for every submitted pull request,
