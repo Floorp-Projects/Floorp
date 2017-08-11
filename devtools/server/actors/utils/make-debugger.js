@@ -6,7 +6,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const Debugger = require("Debugger");
 
 const { reportException } = require("devtools/shared/DevToolsUtils");

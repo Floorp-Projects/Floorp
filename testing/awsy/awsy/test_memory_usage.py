@@ -108,20 +108,10 @@ class TestMemoryUsage(MarionetteTestCase):
         self._pages_loaded = 0
 
         # Close all tabs except one
-        for x in range(len(self.marionette.window_handles) - 1):
-            self.logger.info("closing window")
-            try:
-                result = self.marionette.execute_script("gBrowser.removeCurrentTab();",
-                                                        script_timeout=180000)
-            except JavascriptException, e:
-                self.logger.error("gBrowser.removeCurrentTab() JavaScript error: %s" % e)
-            except ScriptTimeoutException:
-                self.logger.error("gBrowser.removeCurrentTab() timed out")
-            except:
-                self.logger.error("gBrowser.removeCurrentTab() Unexpected error: %s" % sys.exc_info()[0])
-            else:
-                self.logger.info(result)
-            time.sleep(0.25)
+        for x in self.marionette.window_handles[1:]:
+            self.logger.info("closing window: %s" % x)
+            self.marionette.switch_to_window(x)
+            self.marionette.close()
 
         self._tabs = self.marionette.window_handles
         self.marionette.switch_to_window(self._tabs[0])

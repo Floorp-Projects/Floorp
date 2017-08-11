@@ -2068,6 +2068,9 @@ class IDLType(IDLObject):
     def isRecord(self):
         return False
 
+    def isReadableStream(self):
+        return False
+
     def isArrayBuffer(self):
         return False
 
@@ -2095,12 +2098,12 @@ class IDLType(IDLObject):
 
     def isSpiderMonkeyInterface(self):
         """ Returns a boolean indicating whether this type is an 'interface'
-            type that is implemented in Spidermonkey.  At the moment, this
-            only returns true for the types from the TypedArray spec. """
+            type that is implemented in SpiderMonkey. """
         return self.isInterface() and (self.isArrayBuffer() or
                                        self.isArrayBufferView() or
                                        self.isSharedArrayBuffer() or
-                                       self.isTypedArray())
+                                       self.isTypedArray() or
+                                       self.isReadableStream())
 
     def isDictionary(self):
         return False
@@ -2292,6 +2295,9 @@ class IDLNullableType(IDLParametrizedType):
 
     def isRecord(self):
         return self.inner.isRecord()
+
+    def isReadableStream(self):
+        return self.inner.isReadableStream()
 
     def isArrayBuffer(self):
         return self.inner.isArrayBuffer()
@@ -2652,6 +2658,9 @@ class IDLTypedefType(IDLType):
     def isRecord(self):
         return self.inner.isRecord()
 
+    def isReadableStream(self):
+        return self.inner.isReadableStream()
+
     def isDictionary(self):
         return self.inner.isDictionary()
 
@@ -2966,7 +2975,8 @@ class IDLBuiltinType(IDLType):
         'Int32Array',
         'Uint32Array',
         'Float32Array',
-        'Float64Array'
+        'Float64Array',
+        'ReadableStream',
         )
 
     TagLookup = {
@@ -3001,7 +3011,8 @@ class IDLBuiltinType(IDLType):
         Types.Int32Array: IDLType.Tags.interface,
         Types.Uint32Array: IDLType.Tags.interface,
         Types.Float32Array: IDLType.Tags.interface,
-        Types.Float64Array: IDLType.Tags.interface
+        Types.Float64Array: IDLType.Tags.interface,
+        Types.ReadableStream: IDLType.Tags.interface,
     }
 
     def __init__(self, location, name, type):
@@ -3048,6 +3059,9 @@ class IDLBuiltinType(IDLType):
         return (self._typeTag >= IDLBuiltinType.Types.Int8Array and
                 self._typeTag <= IDLBuiltinType.Types.Float64Array)
 
+    def isReadableStream(self):
+        return self._typeTag == IDLBuiltinType.Types.ReadableStream
+
     def isInterface(self):
         # TypedArray things are interface types per the TypedArray spec,
         # but we handle them as builtins because SpiderMonkey implements
@@ -3055,7 +3069,8 @@ class IDLBuiltinType(IDLType):
         return (self.isArrayBuffer() or
                 self.isArrayBufferView() or
                 self.isSharedArrayBuffer() or
-                self.isTypedArray())
+                self.isTypedArray() or
+                self.isReadableStream())
 
     def isNonCallbackInterface(self):
         # All the interfaces we can be are non-callback
@@ -3125,6 +3140,7 @@ class IDLBuiltinType(IDLType):
                  # that's not an ArrayBuffer or a callback interface
                  (self.isArrayBuffer() and not other.isArrayBuffer()) or
                  (self.isSharedArrayBuffer() and not other.isSharedArrayBuffer()) or
+                 (self.isReadableStream() and not other.isReadableStream()) or
                  # ArrayBufferView is distinguishable from everything
                  # that's not an ArrayBufferView or typed array.
                  (self.isArrayBufferView() and not other.isArrayBufferView() and
@@ -3234,7 +3250,10 @@ BuiltinTypes = {
                        IDLBuiltinType.Types.Float32Array),
     IDLBuiltinType.Types.Float64Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Float64Array",
-                       IDLBuiltinType.Types.Float64Array)
+                       IDLBuiltinType.Types.Float64Array),
+    IDLBuiltinType.Types.ReadableStream:
+        IDLBuiltinType(BuiltinLocation("<builtin type>"), "ReadableStream",
+                       IDLBuiltinType.Types.ReadableStream),
 }
 
 
@@ -5289,7 +5308,8 @@ class Tokenizer(object):
         "maplike": "MAPLIKE",
         "setlike": "SETLIKE",
         "iterable": "ITERABLE",
-        "namespace": "NAMESPACE"
+        "namespace": "NAMESPACE",
+        "ReadableStream": "READABLESTREAM",
         }
 
     tokens.extend(keywords.values())
@@ -6477,6 +6497,7 @@ class Parser(Tokenizer):
             NonAnyType : PrimitiveType Null
                        | ARRAYBUFFER Null
                        | SHAREDARRAYBUFFER Null
+                       | READABLESTREAM Null
                        | OBJECT Null
         """
         if p[1] == "object":
@@ -6485,6 +6506,8 @@ class Parser(Tokenizer):
             type = BuiltinTypes[IDLBuiltinType.Types.ArrayBuffer]
         elif p[1] == "SharedArrayBuffer":
             type = BuiltinTypes[IDLBuiltinType.Types.SharedArrayBuffer]
+        elif p[1] == "ReadableStream":
+            type = BuiltinTypes[IDLBuiltinType.Types.ReadableStream]
         else:
             type = BuiltinTypes[p[1]]
 

@@ -46,7 +46,6 @@ public:
                     nsIFrame*         aPrevInFlow) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,

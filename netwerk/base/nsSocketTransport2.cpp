@@ -1278,8 +1278,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
             SOCKET_LOG(("  error pushing io layer [%u:%s rv=%" PRIx32 "]\n", i, mTypes[i],
                         static_cast<uint32_t>(rv)));
             if (fd) {
-                CloseSocket(fd,
-                    mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
+                CloseSocket(fd, mSocketTransportService); 
             }
         }
     }
@@ -1473,8 +1472,7 @@ nsSocketTransport::InitiateSocket()
     // inform socket transport about this newly created socket...
     rv = mSocketTransportService->AttachSocket(fd, this);
     if (NS_FAILED(rv)) {
-        CloseSocket(fd,
-            mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
+        CloseSocket(fd, mSocketTransportService);
         return rv;
     }
     mAttached = true;
@@ -1738,18 +1736,34 @@ nsSocketTransport::RecoverFromError()
         mDNSRecord->ReportUnusable(SocketPort());
     }
 
+#if defined(_WIN64) && defined(WIN95)
     // can only recover from these errors
+    if (mCondition != NS_ERROR_CONNECTION_REFUSED &&
+        mCondition != NS_ERROR_PROXY_CONNECTION_REFUSED &&
+        mCondition != NS_ERROR_NET_TIMEOUT &&
+        mCondition != NS_ERROR_UNKNOWN_HOST &&
+        mCondition != NS_ERROR_UNKNOWN_PROXY_HOST &&
+        !(mFDFastOpenInProgress && (mCondition == NS_ERROR_FAILURE)))
+        return false;
+#else
     if (mCondition != NS_ERROR_CONNECTION_REFUSED &&
         mCondition != NS_ERROR_PROXY_CONNECTION_REFUSED &&
         mCondition != NS_ERROR_NET_TIMEOUT &&
         mCondition != NS_ERROR_UNKNOWN_HOST &&
         mCondition != NS_ERROR_UNKNOWN_PROXY_HOST)
         return false;
+#endif
 
     bool tryAgain = false;
     if (mFDFastOpenInProgress &&
         ((mCondition == NS_ERROR_CONNECTION_REFUSED) ||
          (mCondition == NS_ERROR_NET_TIMEOUT) ||
+#if defined(_WIN64) && defined(WIN95)
+         // On Windows PR_ContinueConnect can return NS_ERROR_FAILURE.
+         // This will be fixed in bug 1386719 and this is just a temporary
+         // work around.
+         (mCondition == NS_ERROR_FAILURE) ||
+#endif
          (mCondition == NS_ERROR_PROXY_CONNECTION_REFUSED))) {
         // TCP Fast Open can be blocked by middle boxes so we will retry
         // without it.
@@ -1981,8 +1995,7 @@ public:
 
   NS_IMETHOD Run() override
   {
-    nsSocketTransport::CloseSocket(mFD,
-      gSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
+    nsSocketTransport::CloseSocket(mFD, gSocketTransportService);
     return NS_OK;
   }
 private:
@@ -2017,8 +2030,7 @@ nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd)
           SOCKET_LOG(("Intentional leak"));
         } else if (OnSocketThread()) {
             SOCKET_LOG(("nsSocketTransport: calling PR_Close [this=%p]\n", this));
-            CloseSocket(mFD,
-                mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
+            CloseSocket(mFD, mSocketTransportService);
         } else {
             // Can't PR_Close() a socket off STS thread. Thunk it to STS to die
             STS_PRCloseOnSocketTransport(mFD);
@@ -3437,8 +3449,10 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
 }
 
 void
-nsSocketTransport::CloseSocket(PRFileDesc *aFd, bool aTelemetryEnabled)
+nsSocketTransport::CloseSocket(PRFileDesc *aFd, nsSocketTransportService *aSTS)
 {
+    bool telemetryEnabled = aSTS->IsTelemetryEnabledAndNotSleepPhase();
+
 #if defined(XP_WIN)
     AttachShutdownLayer(aFd);
 #endif
@@ -3447,13 +3461,67 @@ nsSocketTransport::CloseSocket(PRFileDesc *aFd, bool aTelemetryEnabled)
     // nsIOService::LastOfflineStateChange time and
     // nsIOService::LastConectivityChange time to be atomic.
     PRIntervalTime closeStarted;
-    if (aTelemetryEnabled) {
+    if (telemetryEnabled) {
         closeStarted = PR_IntervalNow();
     }
 
-    PR_Close(aFd);
+#if defined(_WIN64) && defined(WIN95)
+    bool canClose = false;
+    if (aSTS->HasFileDesc2PlatformOverlappedIOHandleFunc()) {
+      LPOVERLAPPED ol = nullptr;
+      if (aSTS->CallFileDesc2PlatformOverlappedIOHandleFunc(aFd, (void**)&ol) == PR_SUCCESS) {
+        SOCKET_LOG(("nsSocketTransport::CloseSocket - we have an overlapped "
+                    "structure=%p aFd=%p\n", ol, aFd));
+        PROsfd osfd = PR_FileDesc2NativeHandle(aFd);
+        if (telemetryEnabled) {
+            Telemetry::ScalarAdd(Telemetry::ScalarID::NETWORK_TCP_OVERLAPPED_IO_CANCELED_BEFORE_FINISHED, 1);
+        }
+        if (CancelIo((HANDLE) osfd) == TRUE) {
+            SOCKET_LOG(("nsSocketTransport::CloseSocket - "
+                        "CancelIo succeeded\n"));
+        } else {
+            int err = WSAGetLastError();
+            SOCKET_LOG(("nsSocketTransport::CloseSocket - "
+                        "CancelIo failed err=%x\n", err));
+        }
 
-    if (aTelemetryEnabled) {
+        DWORD rvSent;
+        if (GetOverlappedResult((HANDLE) osfd, ol, &rvSent, FALSE) == TRUE) {
+            SOCKET_LOG(("nsSocketTransport::CloseSocket - "
+                        "GetOverlappedResult done\n"));
+            canClose = true;
+        } else {
+            int err = WSAGetLastError();
+            SOCKET_LOG(("nsSocketTransport::CloseSocket - "
+                        "GetOverlappedResult err=%x\n", err));
+            if (err != ERROR_IO_PENDING) {
+                canClose = true;
+            }
+        }
+
+      } else {
+        SOCKET_LOG(("nsSocketTransport::CloseSocket - no overlapped struct\n"));
+        canClose = true;
+      }
+    } else {
+      SOCKET_LOG(("nsSocketTransport::CloseSocket - there is no "
+                  "PR_FileDesc2PlatformOverlappedIOHandle function.\n"));
+      canClose = true;
+    }
+
+    if (canClose) {
+        PR_Close(aFd);
+    } else {
+        if (telemetryEnabled) {
+            Telemetry::ScalarAdd(Telemetry::ScalarID::NETWORK_TCP_OVERLAPPED_RESULT_DELAYED, 1);
+        }
+        aSTS->AddOverlappedPendingSocket(aFd);
+    }
+#else
+    PR_Close(aFd);
+#endif
+
+    if (telemetryEnabled) {
         SendPRBlockingTelemetry(closeStarted,
             Telemetry::PRCLOSE_TCP_BLOCKING_TIME_NORMAL,
             Telemetry::PRCLOSE_TCP_BLOCKING_TIME_SHUTDOWN,

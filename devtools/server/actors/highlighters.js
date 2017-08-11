@@ -7,7 +7,7 @@
 const { Ci, Cu } = require("chrome");
 
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const events = require("sdk/event/core");
 const protocol = require("devtools/shared/protocol");
 const Services = require("Services");

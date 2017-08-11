@@ -6,7 +6,7 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/old-event-emitter");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =

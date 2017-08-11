@@ -354,7 +354,7 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
     Unused << state->mParent->SendObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), true);
   }
 
-  aLayerTree->SetPendingTransactionId(aInfo.id());
+  aLayerTree->SetPendingTransactionId(aInfo.id(), aInfo.transactionStart(), aInfo.fwdTime());
 }
 
 void
@@ -375,10 +375,9 @@ CrossProcessCompositorBridgeParent::DidCompositeLocked(
 {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   if (LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree) {
-    uint64_t transactionId = layerTree->GetPendingTransactionId();
+    uint64_t transactionId = layerTree->FlushTransactionId(aCompositeEnd);
     if (transactionId) {
       Unused << SendDidComposite(aId, transactionId, aCompositeStart, aCompositeEnd);
-      layerTree->SetPendingTransactionId(0);
     }
   } else if (WebRenderBridgeParent* wrbridge = sIndirectLayerTrees[aId].mWrBridge) {
     uint64_t transactionId = wrbridge->FlushPendingTransactionIds();

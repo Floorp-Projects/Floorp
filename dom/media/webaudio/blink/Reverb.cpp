@@ -77,7 +77,7 @@ static float calculateNormalizationScale(ThreadSharedFloatArrayBufferList* respo
     return scale;
 }
 
-Reverb::Reverb(ThreadSharedFloatArrayBufferList* impulseResponse, size_t impulseResponseBufferLength, size_t maxFFTSize, size_t numberOfChannels, bool useBackgroundThreads, bool normalize, float sampleRate)
+Reverb::Reverb(ThreadSharedFloatArrayBufferList* impulseResponse, size_t impulseResponseBufferLength, size_t maxFFTSize, bool useBackgroundThreads, bool normalize, float sampleRate)
 {
     float scale = 1;
 
@@ -102,7 +102,7 @@ Reverb::Reverb(ThreadSharedFloatArrayBufferList* impulseResponse, size_t impulse
     }
 
     initialize(irChannels, impulseResponseBufferLength,
-               maxFFTSize, numberOfChannels, useBackgroundThreads);
+               maxFFTSize, useBackgroundThreads);
 }
 
 size_t Reverb::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
@@ -122,13 +122,13 @@ size_t Reverb::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
 void Reverb::initialize(const nsTArray<const float*>& impulseResponseBuffer,
                         size_t impulseResponseBufferLength,
-                        size_t maxFFTSize, size_t numberOfChannels, bool useBackgroundThreads)
+                        size_t maxFFTSize, bool useBackgroundThreads)
 {
     m_impulseResponseLength = impulseResponseBufferLength;
 
     // The reverb can handle a mono impulse response and still do stereo processing
     size_t numResponseChannels = impulseResponseBuffer.Length();
-    m_convolvers.SetCapacity(numberOfChannels);
+    m_convolvers.SetCapacity(numResponseChannels);
 
     int convolverRenderPhase = 0;
     for (size_t i = 0; i < numResponseChannels; ++i) {

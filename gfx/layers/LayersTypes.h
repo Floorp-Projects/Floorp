@@ -28,6 +28,8 @@
 
 #define INVALID_OVERLAY -1
 
+//#define ENABLE_FRAME_LATENCY_LOG
+
 namespace IPC {
 template <typename T> struct ParamTraits;
 } // namespace IPC

@@ -405,6 +405,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  const wr::BuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData,
                                  const wr::IdNamespace& aIdNamespace,
+                                 const TimeStamp& aTxnStartTime,
                                  const TimeStamp& aFwdTime)
 {
   AutoProfilerTracing tracing("Paint", "DPTransaction");
@@ -424,7 +425,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   uint32_t wrEpoch = GetNextWrEpoch();
   ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(wrEpoch),
                            aContentSize, dl, dlDesc, aIdNamespace);
-  HoldPendingTransactionId(wrEpoch, aTransactionId, aFwdTime);
+  HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
 
   mScrollData = aScrollData;
   UpdateAPZ();
@@ -519,13 +520,14 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
                                  const wr::BuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData,
                                  const wr::IdNamespace& aIdNamespace,
+                                 const TimeStamp& aTxnStartTime,
                                  const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              aContentSize, dl, dlDesc, aScrollData, aIdNamespace, aFwdTime);
+              aContentSize, dl, dlDesc, aScrollData, aIdNamespace, aTxnStartTime, aFwdTime);
   return IPC_OK();
 }
 
@@ -540,13 +542,14 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
                                      const wr::BuiltDisplayListDescriptor& dlDesc,
                                      const WebRenderScrollData& aScrollData,
                                      const wr::IdNamespace& aIdNamespace,
+                                     const TimeStamp& aTxnStartTime,
                                      const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              aContentSize, dl, dlDesc, aScrollData, aIdNamespace, aFwdTime);
+              aContentSize, dl, dlDesc, aScrollData, aIdNamespace, aTxnStartTime, aFwdTime);
   return IPC_OK();
 }
 
@@ -1150,7 +1153,10 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 }
 
 void
-WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTransactionId, const TimeStamp& aFwdTime)
+WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch,
+                                                uint64_t aTransactionId,
+                                                const TimeStamp& aTxnStartTime,
+                                                const TimeStamp& aFwdTime)
 {
   // The transaction ID might get reset to 1 if the page gets reloaded, see
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
@@ -1160,7 +1166,7 @@ WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTra
   if (aTransactionId == 1) {
     FlushPendingTransactionIds();
   }
-  mPendingTransactionIds.push(PendingTransactionId(wr::NewEpoch(aWrEpoch), aTransactionId, aFwdTime));
+  mPendingTransactionIds.push(PendingTransactionId(wr::NewEpoch(aWrEpoch), aTransactionId, aTxnStartTime, aFwdTime));
 }
 
 uint64_t
@@ -1195,12 +1201,15 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
       break;
     }
 #if defined(ENABLE_FRAME_LATENCY_LOG)
+    if (mPendingTransactionIds.front().mTxnStartTime) {
+      uint32_t latencyMs = round((aEndTime - mPendingTransactionIds.front().mTxnStartTime).ToMilliseconds());
+      printf_stderr("From transaction start to end of generate frame latencyMs %d this %p\n", latencyMs, this);
+    }
     if (mPendingTransactionIds.front().mFwdTime) {
       uint32_t latencyMs = round((aEndTime - mPendingTransactionIds.front().mFwdTime).ToMilliseconds());
-      printf_stderr("From EndTransaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
+      printf_stderr("From forwarding transaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
     }
 #endif
-
     id = mPendingTransactionIds.front().mId;
     mPendingTransactionIds.pop();
     if (diff == 0) {

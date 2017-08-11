@@ -7,7 +7,7 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 /**

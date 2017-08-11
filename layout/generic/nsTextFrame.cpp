@@ -5030,7 +5030,7 @@ public:
   }
 
   bool TryMerge(nsDisplayItem* aItem) override {
-    if (aItem->GetType() != TYPE_TEXT)
+    if (aItem->GetType() != DisplayItemType::TYPE_TEXT)
       return false;
     if (aItem->GetClipChain() != GetClipChain())
       return false;
@@ -5320,7 +5320,6 @@ nsDisplayText::RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
 
 void
 nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))

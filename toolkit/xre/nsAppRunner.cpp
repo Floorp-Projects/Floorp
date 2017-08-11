@@ -979,6 +979,19 @@ nsXULAppInfo::GetAccessibleHandlerUsed(bool* aResult)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetAccessibilityInstantiator(nsAString &aInstantiator)
+{
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+  if (!a11y::GetInstantiator(aInstantiator)) {
+    aInstantiator = NS_LITERAL_STRING("");
+  }
+#else
+  aInstantiator = NS_LITERAL_STRING("");
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetIs64Bit(bool* aResult)
 {
 #ifdef HAVE_64BIT_BUILD

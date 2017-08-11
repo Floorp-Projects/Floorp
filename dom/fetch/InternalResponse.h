@@ -10,6 +10,7 @@
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
 
+#include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/UniquePtr.h"
@@ -43,7 +44,13 @@ public:
         M* aManager,
         UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
 
-  already_AddRefed<InternalResponse> Clone();
+  enum CloneType
+  {
+    eCloneInputStream,
+    eDontCloneInputStream,
+  };
+
+  already_AddRefed<InternalResponse> Clone(CloneType eCloneType);
 
   static already_AddRefed<InternalResponse>
   NetworkError()
