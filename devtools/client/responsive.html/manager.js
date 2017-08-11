@@ -7,7 +7,7 @@
 const { Ci } = require("chrome");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { startup } = require("./utils/window");
 const message = require("./utils/message");
 const { swapToInnerBrowser } = require("./browser/swap");

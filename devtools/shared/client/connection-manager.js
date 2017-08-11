@@ -7,7 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cr} = require("chrome");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/main");
 const Services = require("Services");

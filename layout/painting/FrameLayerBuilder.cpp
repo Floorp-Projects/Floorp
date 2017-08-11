@@ -286,13 +286,13 @@ DisplayItemData::~DisplayItemData()
 void
 DisplayItemData::ClearAnimationCompositorState()
 {
-  if (mDisplayItemKey != nsDisplayItem::TYPE_TRANSFORM &&
-      mDisplayItemKey != nsDisplayItem::TYPE_OPACITY) {
+  if (mDisplayItemKey != static_cast<uint32_t>(DisplayItemType::TYPE_TRANSFORM) &&
+      mDisplayItemKey != static_cast<uint32_t>(DisplayItemType::TYPE_OPACITY)) {
     return;
   }
 
   for (nsIFrame* frame : mFrameList) {
-    nsCSSPropertyID prop = mDisplayItemKey == nsDisplayItem::TYPE_TRANSFORM ?
+    nsCSSPropertyID prop = mDisplayItemKey == static_cast<uint32_t>(DisplayItemType::TYPE_TRANSFORM) ?
       eCSSProperty_transform : eCSSProperty_opacity;
     EffectCompositor::ClearIsRunningOnCompositor(frame, prop);
   }
@@ -357,14 +357,14 @@ public:
       case LAYER_SVG_EFFECTS:
         layerState = "LAYER_SVG_EFFECTS"; break;
       }
-      uint32_t mask = (1 << nsDisplayItem::TYPE_BITS) - 1;
+      uint32_t mask = (1 << TYPE_BITS) - 1;
 
       nsAutoCString str;
       str += prefix;
       str += nsPrintfCString("Frame %p ", data->mFrameList[0]);
       str += nsDisplayItem::DisplayItemTypeName(static_cast<nsDisplayItem::Type>(data->mDisplayItemKey & mask));
-      if ((data->mDisplayItemKey >> nsDisplayItem::TYPE_BITS)) {
-        str += nsPrintfCString("(%i)", data->mDisplayItemKey >> nsDisplayItem::TYPE_BITS);
+      if ((data->mDisplayItemKey >> TYPE_BITS)) {
+        str += nsPrintfCString("(%i)", data->mDisplayItemKey >> TYPE_BITS);
       }
       str += nsPrintfCString(", %s, Layer %p", layerState, data->mLayer.get());
       if (data->mOptLayer) {
@@ -2086,7 +2086,7 @@ FrameLayerBuilder::IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallb
 
   for (uint32_t i = 0; i < array.Length(); i++) {
     DisplayItemData* data = DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
-    if (data->mDisplayItemKey != nsDisplayItem::TYPE_ZERO) {
+    if (data->mDisplayItemKey != 0) {
       aCallback(aFrame, data);
     }
   }
@@ -2500,7 +2500,7 @@ AppUnitsPerDevPixel(nsDisplayItem* aItem)
   // But zoom display items report their bounds etc using the parent document's
   // APD because zoom items act as a conversion layer between the two different
   // APDs.
-  if (aItem->GetType() == nsDisplayItem::TYPE_ZOOM) {
+  if (aItem->GetType() == DisplayItemType::TYPE_ZOOM) {
     return static_cast<nsDisplayZoom*>(aItem)->GetParentAppUnitsPerDevPixel();
   }
   return aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
@@ -3167,7 +3167,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
   }
 
   for (auto& item : data->mAssignedDisplayItems) {
-    MOZ_ASSERT(item.mItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS);
+    MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS);
 
     InvalidateForLayerChange(item.mItem, data->mLayer);
     mLayerBuilder->AddPaintedDisplayItem(data, item.mItem, item.mClip,
@@ -3711,12 +3711,12 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   basic->BeginTransaction();
   basic->SetTarget(context);
 
-  if (aItem->GetType() == nsDisplayItem::TYPE_MASK) {
+  if (aItem->GetType() == DisplayItemType::TYPE_MASK) {
     static_cast<nsDisplayMask*>(aItem)->PaintAsLayer(aBuilder, aCtx, basic);
     if (basic->InTransaction()) {
       basic->AbortTransaction();
     }
-  } else if (aItem->GetType() == nsDisplayItem::TYPE_FILTER){
+  } else if (aItem->GetType() == DisplayItemType::TYPE_FILTER){
     static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aBuilder, aCtx, basic);
     if (basic->InTransaction()) {
       basic->AbortTransaction();
@@ -3954,7 +3954,7 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
 static bool
 IsScrollThumbLayer(nsDisplayItem* aItem)
 {
-  return aItem->GetType() == nsDisplayItem::TYPE_OWN_LAYER &&
+  return aItem->GetType() == DisplayItemType::TYPE_OWN_LAYER &&
          static_cast<nsDisplayOwnLayer*>(aItem)->IsScrollThumbLayer();
 }
 
@@ -3997,15 +3997,15 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   nsDisplayList savedItems;
   nsDisplayItem* item;
   while ((item = aList->RemoveBottom()) != nullptr) {
-    nsDisplayItem::Type itemType = item->GetType();
+    DisplayItemType itemType = item->GetType();
 
     // If the item is a event regions item, but is empty (has no regions in it)
     // then we should just throw it out
-    if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
       nsDisplayLayerEventRegions* eventRegions =
         static_cast<nsDisplayLayerEventRegions*>(item);
       if (eventRegions->IsEmpty()) {
-        item->~nsDisplayItem();
+        item->Destroy(mBuilder);
         continue;
       }
     }
@@ -4016,7 +4016,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     while ((aboveItem = aList->GetBottom()) != nullptr) {
       if (aboveItem->TryMerge(item)) {
         aList->RemoveBottom();
-        item->~nsDisplayItem();
+        item->Destroy(mBuilder);
         item = aboveItem;
         itemType = item->GetType();
       } else {
@@ -4028,7 +4028,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       = item->GetSameCoordinateSystemChildren();
     if (item->ShouldFlattenAway(mBuilder)) {
       aList->AppendToBottom(itemSameCoordinateSystemChildren);
-      item->~nsDisplayItem();
+      item->Destroy(mBuilder);
       continue;
     }
 
@@ -4042,8 +4042,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
 
     if (mParameters.mForEventsAndPluginsOnly && !item->GetChildren() &&
-        (itemType != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS &&
-         itemType != nsDisplayItem::TYPE_PLUGIN)) {
+        (itemType != DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
+         itemType != DisplayItemType::TYPE_PLUGIN)) {
       continue;
     }
 
@@ -4070,7 +4070,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         itemASR = item->GetActiveScrolledRoot();
         const DisplayItemClipChain* itemClipChain = item->GetClipChain();
         if (itemClipChain && itemClipChain->mASR == itemASR &&
-            itemType != nsDisplayItem::TYPE_STICKY_POSITION) {
+            itemType != DisplayItemType::TYPE_STICKY_POSITION) {
           layerClipChain = itemClipChain->mParent;
         } else {
           layerClipChain = itemClipChain;
@@ -4091,13 +4091,13 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
     bool snap;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
-    if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
       nsDisplayLayerEventRegions* eventRegions =
         static_cast<nsDisplayLayerEventRegions*>(item);
       itemContent = eventRegions->GetHitRegionBounds(mBuilder, &snap);
     }
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
-    bool prerenderedTransform = itemType == nsDisplayItem::TYPE_TRANSFORM &&
+    bool prerenderedTransform = itemType == DisplayItemType::TYPE_TRANSFORM &&
         static_cast<nsDisplayTransform*>(item)->MayBeAnimated(mBuilder);
     ParentLayerIntRect clipRect;
     const DisplayItemClip& itemClip = item->GetClip();
@@ -4112,7 +4112,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 #ifdef DEBUG
     nsRect bounds = itemContent;
     bool dummy;
-    if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
       bounds = item->GetBounds(mBuilder, &dummy);
       if (itemClip.HasClip()) {
         bounds.IntersectRect(bounds, itemClip.GetClipRect());
@@ -4176,7 +4176,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
       // 3D-transformed layers don't necessarily draw in the order in which
       // they're added to their parent container layer.
-      bool mayDrawOutOfOrder = itemType == nsDisplayItem::TYPE_TRANSFORM &&
+      bool mayDrawOutOfOrder = itemType == DisplayItemType::TYPE_TRANSFORM &&
         (item->Frame()->Combines3DTransformWithAncestors() ||
          item->Frame()->Extend3DContext());
 
@@ -4201,7 +4201,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
       bool hasScrolledClip = layerClipChain && layerClipChain->mClip.HasClip() &&
         (!ActiveScrolledRoot::IsAncestor(layerClipChain->mASR, itemASR) ||
-         itemType == nsDisplayItem::TYPE_STICKY_POSITION);
+         itemType == DisplayItemType::TYPE_STICKY_POSITION);
 
       if (hasScrolledClip) {
         // If the clip is scrolled, reserve just the area of the clip for
@@ -4264,11 +4264,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       params.mCompositorASR = params.mScrollMetadataASR != mContainerScrollMetadataASR
                                 ? params.mScrollMetadataASR
                                 : mContainerCompositorASR;
-      if (itemType == nsDisplayItem::TYPE_FIXED_POSITION) {
+      if (itemType == DisplayItemType::TYPE_FIXED_POSITION) {
         params.mCompositorASR = itemASR;
       }
 
-      if (itemType == nsDisplayItem::TYPE_PERSPECTIVE) {
+      if (itemType == DisplayItemType::TYPE_PERSPECTIVE) {
         // Perspective items have a single child item, an nsDisplayTransform.
         // If the perspective item is scrolled, but the perspective-inducing
         // frame is outside the scroll frame (indicated by item->Frame()
@@ -4350,18 +4350,18 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         ownLayer->SetScrolledClip(Some(scrolledLayerClip));
       }
 
-      if (item->GetType() == nsDisplayItem::TYPE_MASK) {
+      if (item->GetType() == DisplayItemType::TYPE_MASK) {
         MOZ_ASSERT(itemClip.GetRoundedRectCount() == 0);
 
         nsDisplayMask* maskItem = static_cast<nsDisplayMask*>(item);
         SetupMaskLayerForCSSMask(ownLayer, maskItem);
 
         nsDisplayItem* next = aList->GetBottom();
-        if (next && next->GetType() == nsDisplayItem::TYPE_SCROLL_INFO_LAYER) {
+        if (next && next->GetType() == DisplayItemType::TYPE_SCROLL_INFO_LAYER) {
           // Since we do build a layer for mask, there is no need for this
           // scroll info layer anymore.
           aList->RemoveBottom();
-          next->~nsDisplayItem();
+          next->Destroy(mBuilder);
         }
       }
 
@@ -4387,7 +4387,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       newLayerEntry->mScrollMetadataASR = scrollMetadataASR;
       newLayerEntry->mClipChain = layerClipChain;
       newLayerEntry->mLayerState = layerState;
-      if (itemType == nsDisplayItem::TYPE_FIXED_POSITION) {
+      if (itemType == DisplayItemType::TYPE_FIXED_POSITION) {
         newLayerEntry->mIsFixedToRootScrollFrame =
           item->Frame()->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
           nsLayoutUtils::IsReallyFixedPos(item->Frame());
@@ -4395,7 +4395,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
       // Don't attempt to flatten compnent alpha layers that are within
       // a forced active layer, or an active transform;
-      if (itemType == nsDisplayItem::TYPE_TRANSFORM ||
+      if (itemType == DisplayItemType::TYPE_TRANSFORM ||
           layerState == LAYER_ACTIVE_FORCE) {
         newLayerEntry->mPropagateComponentAlphaFlattening = false;
       }
@@ -4409,13 +4409,13 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       // nsDisplayTransform::BuildLayer must set layerContentsVisibleRect.
       // We rely on this to ensure 3D transforms compute a reasonable
       // layer visible region.
-      NS_ASSERTION(itemType != nsDisplayItem::TYPE_TRANSFORM ||
+      NS_ASSERTION(itemType != DisplayItemType::TYPE_TRANSFORM ||
                    layerContentsVisibleRect.width >= 0,
                    "Transform items must set layerContentsVisibleRect!");
       if (mLayerBuilder->IsBuildingRetainedLayers()) {
         newLayerEntry->mLayerContentsVisibleRect = layerContentsVisibleRect;
-        if (itemType == nsDisplayItem::TYPE_PERSPECTIVE ||
-            (itemType == nsDisplayItem::TYPE_TRANSFORM &&
+        if (itemType == DisplayItemType::TYPE_PERSPECTIVE ||
+            (itemType == DisplayItemType::TYPE_TRANSFORM &&
              (item->Frame()->Extend3DContext() ||
               item->Frame()->Combines3DTransformWithAncestors() ||
               item->Frame()->HasPerspective()))) {
@@ -4433,7 +4433,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           &newLayerEntry->mOpaqueForAnimatedGeometryRootParent);
       } else {
         bool useChildrenVisible =
-          itemType == nsDisplayItem::TYPE_TRANSFORM &&
+          itemType == DisplayItemType::TYPE_TRANSFORM &&
           (item->Frame()->IsPreserve3DLeaf() ||
            item->Frame()->HasPerspective());
         const nsIntRegion &visible = useChildrenVisible ?
@@ -4444,14 +4444,14 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
             layerContentsVisibleRect.width >= 0 ? &layerContentsVisibleRect : nullptr,
             useChildrenVisible);
       }
-      if (itemType == nsDisplayItem::TYPE_SCROLL_INFO_LAYER) {
+      if (itemType == DisplayItemType::TYPE_SCROLL_INFO_LAYER) {
         nsDisplayScrollInfoLayer* scrollItem = static_cast<nsDisplayScrollInfoLayer*>(item);
         newLayerEntry->mOpaqueForAnimatedGeometryRootParent = false;
         newLayerEntry->mBaseScrollMetadata =
             scrollItem->ComputeScrollMetadata(ownLayer, mParameters);
-      } else if ((itemType == nsDisplayItem::TYPE_SUBDOCUMENT ||
-                  itemType == nsDisplayItem::TYPE_ZOOM ||
-                  itemType == nsDisplayItem::TYPE_RESOLUTION) &&
+      } else if ((itemType == DisplayItemType::TYPE_SUBDOCUMENT ||
+                  itemType == DisplayItemType::TYPE_ZOOM ||
+                  itemType == DisplayItemType::TYPE_RESOLUTION) &&
                  gfxPrefs::LayoutUseContainersForRootFrames())
       {
         newLayerEntry->mBaseScrollMetadata =
@@ -4473,7 +4473,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
                                      topLeft);
         });
 
-      if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+      if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
         nsDisplayLayerEventRegions* eventRegions =
             static_cast<nsDisplayLayerEventRegions*>(item);
         paintedLayerData->AccumulateEventRegions(this, eventRegions);
@@ -5473,7 +5473,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     // If the container's transform is animated off main thread, fix a suitable scale size
     // for animation
     if (aContainerItem &&
-        aContainerItem->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
+        aContainerItem->GetType() == DisplayItemType::TYPE_TRANSFORM &&
         EffectCompositor::HasAnimationsForCompositor(
           aContainerFrame, eCSSProperty_transform)) {
       nsSize displaySize = ComputeDesiredDisplaySizeForAnimation(aContainerFrame);
@@ -5573,7 +5573,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                           uint32_t aFlags)
 {
   uint32_t containerDisplayItemKey =
-    aContainerItem ? aContainerItem->GetPerFrameKey() : nsDisplayItem::TYPE_ZERO;
+    aContainerItem ? aContainerItem->GetPerFrameKey() : 0;
   NS_ASSERTION(aContainerFrame, "Container display items here should have a frame");
   NS_ASSERTION(!aContainerItem ||
                aContainerItem->Frame() == aContainerFrame,
@@ -5829,7 +5829,7 @@ FrameLayerBuilder::InvalidateAllLayersForFrame(nsIFrame *aFrame)
 
 /* static */
 Layer*
-FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, uint32_t aDisplayItemKey)
+FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, DisplayItemType aDisplayItemKey)
 {
   //TODO: This isn't completely correct, since a frame could exist as a layer
   // in the normal widget manager, and as a different layer (or no layer)
@@ -5842,7 +5842,7 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, uint32_t aDisplayItemKey)
     if (!element->mParent->mLayerManager->IsWidgetLayerManager()) {
       continue;
     }
-    if (element->mDisplayItemKey == aDisplayItemKey) {
+    if (GetDisplayItemTypeFromKey(element->mDisplayItemKey) == aDisplayItemKey) {
       if (element->mOptLayer) {
         return element->mOptLayer;
       }

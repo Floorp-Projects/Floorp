@@ -726,9 +726,14 @@ private:
     request.SetAsUSVString().Rebind(loadInfo.mFullURL.Data(),
                                     loadInfo.mFullURL.Length());
 
+    // This JSContext will not end up executing JS code because here there are
+    // no ReadableStreams involved.
+    AutoJSAPI jsapi;
+    jsapi.Init();
+
     ErrorResult error;
     RefPtr<Promise> cachePromise =
-      mCacheCreator->Cache_()->Put(request, *response, error);
+      mCacheCreator->Cache_()->Put(jsapi.cx(), request, *response, error);
     if (NS_WARN_IF(error.Failed())) {
       nsresult rv = error.StealNSResult();
       channel->Cancel(rv);
@@ -1619,8 +1624,13 @@ CacheScriptLoader::Load(Cache* aCache)
 
   mozilla::dom::CacheQueryOptions params;
 
+  // This JSContext will not end up executing JS code because here there are
+  // no ReadableStreams involved.
+  AutoJSAPI jsapi;
+  jsapi.Init();
+
   ErrorResult error;
-  RefPtr<Promise> promise = aCache->Match(request, params, error);
+  RefPtr<Promise> promise = aCache->Match(jsapi.cx(), request, params, error);
   if (NS_WARN_IF(error.Failed())) {
     Fail(error.StealNSResult());
     return;

@@ -10,7 +10,7 @@
 
 var Services = require("Services");
 var promise = require("promise");
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/old-event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 var KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 var {Task} = require("devtools/shared/task");

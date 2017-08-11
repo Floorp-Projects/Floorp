@@ -576,6 +576,7 @@ struct TransactionInfo
   uint32_t paintSequenceNumber;
   bool isRepeatTransaction;
   TimeStamp transactionStart;
+  TimeStamp fwdTime;
 };
 
 union MaybeTransform {

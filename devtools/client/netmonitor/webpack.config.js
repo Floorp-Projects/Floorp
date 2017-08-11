@@ -74,7 +74,7 @@ let webpackConfig = {
       "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
       "devtools/shared/async-utils": path.join(__dirname, "../../shared/async-utils"),
       "devtools/shared/defer": path.join(__dirname, "../../shared/defer"),
-      "devtools/shared/event-emitter": "devtools-modules/src/utils/event-emitter",
+      "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
       "devtools/shared/fronts/timeline": path.join(__dirname, "../../shared/shims/fronts/timeline"),
       "devtools/shared/l10n": path.join(__dirname, "../../shared/l10n"),
       "devtools/shared/locales": path.join(__dirname, "../../shared/locales/en-US"),
