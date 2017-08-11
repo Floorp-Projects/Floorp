@@ -34,14 +34,18 @@ public:
     , mProcess(GeckoProcessType_Invalid)
   {}
 
-  HangDetails(const HangDetails& aOther) = default;
+  // XXX: This type has some really gnarly copy/serialize/deserialize methods. I
+  // want to fix this, but I think it needs to happen in a follow up. This patch
+  // is already big enough without me also rewriting/simplifying
+  // HangAnnotations, HangStack, and ProcessedStack.
+  HangDetails(const HangDetails& aOther);
   HangDetails(HangDetails&& aOther) = default;
   HangDetails(uint32_t aDuration,
               GeckoProcessType aProcess,
               const nsACString& aThreadName,
               const nsACString& aRunnableName,
               HangStack&& aPseudoStack,
-              HangMonitor::HangAnnotations&& aAnnotations)
+              UniquePtr<HangMonitor::HangAnnotations>&& aAnnotations)
     : mDuration(aDuration)
     , mProcess(aProcess)
     , mThreadName(aThreadName)
@@ -57,7 +61,7 @@ public:
   nsCString mThreadName;
   nsCString mRunnableName;
   HangStack mPseudoStack;
-  HangMonitor::HangAnnotations mAnnotations;
+  UniquePtr<HangMonitor::HangAnnotations> mAnnotations;
 
   // NOTE: Initialized by ProcessHangStackRunnable.
   Telemetry::ProcessedStack mStack;
