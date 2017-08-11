@@ -75,7 +75,7 @@ public:
 
     virtual bool MakeCurrentImpl(bool aForce) const override;
 
-    virtual bool IsCurrent() const override;
+    virtual bool IsCurrentImpl() const override;
 
     virtual bool RenewSurface(widget::CompositorWidget* aWidget) override;
 

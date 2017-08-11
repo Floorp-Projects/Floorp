@@ -128,7 +128,7 @@ GLContextEAGL::MakeCurrentImpl(bool aForce) const
 }
 
 bool
-GLContextEAGL::IsCurrent() const
+GLContextEAGL::IsCurrentImpl() const
 {
     return [EAGLContext currentContext] == mContext;
 }
