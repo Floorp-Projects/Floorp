@@ -115,6 +115,19 @@ add_task(function* () {
         ["1", "Elena"],
       ]
     }
+  }, {
+    info: "Testing nested object with falsy values",
+    input: [
+      {a: null, b: false, c: undefined, d: 0},
+      {b: null, c: false, d: undefined, e: 0}
+    ],
+    expected: {
+      columns: ["(index)", "a", "b", "c", "d", "e"],
+      rows: [
+        ["0", "null", "false", "undefined", "0", "undefined"],
+        ["1", "undefined", "null", "false", "undefined", "0"],
+      ]
+    }
   }];
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, testCases, function (tests) {
