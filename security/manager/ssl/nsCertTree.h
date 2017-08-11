@@ -27,7 +27,7 @@ struct CompareCacheHashEntry {
 
   void *key; // no ownership
   bool mCritInit[max_criterions];
-  nsXPIDLString mCrit[max_criterions];
+  nsString mCrit[max_criterions];
 };
 
 struct CompareCacheHashEntryPtr : PLDHashEntryHdr {
