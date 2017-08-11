@@ -1078,7 +1078,7 @@ SessionStore.prototype = {
       // data will be sent to Java for Android to hold it in memory.
       for (let i = 0; i < win.tabs.length; ++i) {
         let tab = win.tabs[i];
-        if (tab.type != "BROWSING") {
+        if (tab.type && tab.type != "BROWSING") {
           continue;
         }
 
