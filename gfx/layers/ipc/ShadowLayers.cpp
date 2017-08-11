@@ -738,6 +738,9 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
   info.paintSequenceNumber() = aPaintSequenceNumber;
   info.isRepeatTransaction() = aIsRepeatTransaction;
   info.transactionStart() = aTransactionStart;
+#if defined(ENABLE_FRAME_LATENCY_LOG)
+  info.fwdTime() = TimeStamp::Now();
+#endif
 
   TargetConfig targetConfig(mTxn->mTargetBounds,
                             mTxn->mTargetRotation,
