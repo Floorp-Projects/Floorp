@@ -23,12 +23,14 @@
    GLIBCXX_3.4.19 is from gcc 4.8.1 (199309)
    GLIBCXX_3.4.20 is from gcc 4.9.0 (199307)
    GLIBCXX_3.4.21 is from gcc 5.0 (210290)
+   GLIBCXX_3.4.22 is from gcc 6.0 (222482)
 
 This file adds the necessary compatibility tricks to avoid symbols with
 version GLIBCXX_3.4.16 and bigger, keeping binary compatibility with
 libstdc++ 4.6.1.
 
-WARNING: all symbols from this file must be defined weak.
+WARNING: all symbols from this file must be defined weak when they
+overlap with libstdc++.
 */
 
 #define GLIBCXX_VERSION(a, b, c) (((a) << 16) | ((b) << 8) | (c))
@@ -105,5 +107,56 @@ namespace std {
     : runtime_error(std::string(s))
     {
     }
+}
+#endif
+
+#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 21)
+/* Expose the definitions for the old ABI, allowing us to call its functions */
+#define _GLIBCXX_THREAD_ABI_COMPAT 1
+#include <thread>
+
+namespace std {
+  /* The old ABI has a thread::_M_start_thread(shared_ptr<_Impl_base>),
+   * while the new has thread::_M_start_thread(unique_ptr<_State>, void(*)()).
+   * There is an intermediate ABI at version 3.4.21, with
+   * thread::_M_start_thread(shared_ptr<_Impl_base>, void(*)()).
+   * The void(*)() parameter is only there to keep a reference to pthread_create
+   * on the caller side, and is unused in the implementation
+   * We're creating an entry point for the new and intermediate ABIs, and make
+   * them call the old ABI. */
+
+  __attribute__((weak))
+  void thread::_M_start_thread(shared_ptr<_Impl_base> impl, void (*)())
+  {
+    _M_start_thread(std::move(impl));
+  }
+
+#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 22)
+  /* We need a _Impl_base-derived class wrapping a _State to call the old ABI
+   * from what we got by diverting the new API */
+  struct StateWrapper: public thread::_Impl_base {
+    unique_ptr<thread::_State> mState;
+
+    StateWrapper(unique_ptr<thread::_State> aState)
+    : mState(std::move(aState))
+    { }
+
+    void _M_run() override
+    {
+      mState->_M_run();
+    }
+  };
+
+  __attribute__((weak))
+  void thread::_M_start_thread(unique_ptr<_State> aState, void (*)())
+  {
+    auto impl = std::make_shared<StateWrapper>(std::move(aState));
+    _M_start_thread(std::move(impl));
+  }
+
+  /* For some reason this is a symbol exported by new versions of libstdc++,
+   * even though the destructor is default there too */
+  __attribute__((weak)) thread::_State::~_State() = default;
+#endif
 }
 #endif
