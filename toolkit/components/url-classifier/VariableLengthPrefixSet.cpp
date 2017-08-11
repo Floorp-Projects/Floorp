@@ -315,6 +315,10 @@ VariableLengthPrefixSet::LoadPrefixes(nsIInputStream* in)
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(read == sizeof(uint8_t), NS_ERROR_FAILURE);
 
+    if (prefixSize < PREFIX_SIZE || prefixSize > COMPLETE_SIZE) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+
     uint32_t stringLength;
     rv = in->Read(reinterpret_cast<char*>(&stringLength), sizeof(uint32_t), &read);
     NS_ENSURE_SUCCESS(rv, rv);
