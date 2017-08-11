@@ -950,7 +950,17 @@ nsThread::nsChainedEventQueue::PutEvent(already_AddRefed<nsIRunnable> aEvent,
     }
     break;
   case nsIRunnablePriority::PRIORITY_HIGH:
-    mHighQueue->PutEvent(event.forget(), aProofOfLock);
+    if (mIsInputPrioritizationEnabled) {
+      mHighQueue->PutEvent(event.forget(), aProofOfLock);
+    } else {
+      // During startup, ContentParent sends SetXPCOMProcessAttributes to
+      // initialize ContentChild and enable input event prioritization. After
+      // that, ContentParent sends PBrowserConstructor to create PBrowserChild.
+      // To prevent PBrowserConstructor preempt SetXPCOMProcessAttributes and
+      // cause problems, we have to put high priority events in mNormalQueue to
+      // keep the correct order of initialization.
+      mNormalQueue->PutEvent(event.forget(), aProofOfLock);
+    }
     break;
   default:
     MOZ_ASSERT(false);
