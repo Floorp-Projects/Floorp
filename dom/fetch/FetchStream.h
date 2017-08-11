@@ -25,6 +25,8 @@ namespace workers {
 class WorkerHolder;
 }
 
+class FetchStreamHolder;
+
 class FetchStream final : public nsIInputStreamCallback
                         , public nsIObserver
                         , public nsSupportsWeakReference
@@ -35,14 +37,20 @@ public:
   NS_DECL_NSIOBSERVER
 
   static JSObject*
-  Create(JSContext* aCx, nsIGlobalObject* aGlobal,
-         nsIInputStream* aInputStream, ErrorResult& aRv);
+  Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
+         nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
+         ErrorResult& aRv);
 
   void
   Close();
 
+  static nsresult
+  RetrieveInputStream(void* aUnderlyingReadableStreamSource,
+                      nsIInputStream** aInputStream);
+
 private:
-  FetchStream(nsIGlobalObject* aGlobal, nsIInputStream* aInputStream);
+  FetchStream(nsIGlobalObject* aGlobal, FetchStreamHolder* aStreamHolder,
+              nsIInputStream* aInputStream);
   ~FetchStream();
 
   static void
@@ -77,7 +85,10 @@ private:
   ErrorPropagation(JSContext* aCx, JS::HandleObject aStream, nsresult aRv);
 
   void
-  CloseAndReleaseObjects();
+  CloseAndReleaseObjects(JSContext* aCx, JS::HandleObject aSteam);
+
+  void
+  ReleaseObjects();
 
   // Common methods
 
@@ -105,14 +116,14 @@ private:
   State mState;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<FetchStreamHolder> mStreamHolder;
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 
   // This is the original inputStream received during the CTOR. It will be
   // converted into an nsIAsyncInputStream and stored into mInputStream at the
   // first use.
   nsCOMPtr<nsIInputStream> mOriginalInputStream;
   nsCOMPtr<nsIAsyncInputStream> mInputStream;
-
-  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 
   UniquePtr<workers::WorkerHolder> mWorkerHolder;
 

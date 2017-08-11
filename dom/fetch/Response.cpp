@@ -8,16 +8,20 @@
 
 #include "nsISupportsImpl.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FetchBinding.h"
+#include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URL.h"
 
 #include "nsDOMString.h"
 
+#include "BodyExtractor.h"
+#include "FetchStream.h"
 #include "InternalResponse.h"
 #include "WorkerPrivate.h"
 
@@ -126,7 +130,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
     return nullptr;
   }
 
-  Optional<fetch::BodyInit> body;
+  Optional<fetch::ResponseBodyInit> body;
   ResponseInit init;
   init.mStatus = aStatus;
   RefPtr<Response> r = Response::Constructor(aGlobal, body, init, aRv);
@@ -147,7 +151,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
 
 /*static*/ already_AddRefed<Response>
 Response::Constructor(const GlobalObject& aGlobal,
-                      const Optional<fetch::BodyInit>& aBody,
+                      const Optional<fetch::ResponseBodyInit>& aBody,
                       const ResponseInit& aInit, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -219,16 +223,60 @@ Response::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    nsCOMPtr<nsIInputStream> bodyStream;
     nsCString contentTypeWithCharset;
+    nsCOMPtr<nsIInputStream> bodyStream;
     uint64_t bodySize = 0;
-    aRv = ExtractByteStreamFromBody(aBody.Value(),
-                                    getter_AddRefs(bodyStream),
-                                    contentTypeWithCharset,
-                                    bodySize);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
+
+    if (aBody.Value().IsReadableStream()) {
+      const ReadableStream& readableStream =
+        aBody.Value().GetAsReadableStream();
+
+      JS::Rooted<JSObject*> readableStreamObj(aGlobal.Context(),
+                                              readableStream.Obj());
+
+      if (JS::ReadableStreamIsDisturbed(readableStreamObj) ||
+          JS::ReadableStreamIsLocked(readableStreamObj) ||
+          !JS::ReadableStreamIsReadable(readableStreamObj)) {
+        aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+        return nullptr;
+      }
+
+      r->SetReadableStreamBody(readableStreamObj);
+
+      // TODO: see next patches
+      MOZ_ASSERT(JS::ReadableStreamGetMode(readableStreamObj) !=
+                   JS::ReadableStreamMode::ExternalSource);
+
+      void* underlyingSource = nullptr;
+      if (!JS::ReadableStreamGetExternalUnderlyingSource(aGlobal.Context(),
+                                                         readableStreamObj,
+                                                         &underlyingSource)) {
+        aRv.StealExceptionFromJSContext(aGlobal.Context());
+        return nullptr;
+      }
+
+      bodySize = InternalResponse::UNKNOWN_BODY_SIZE;
+
+      MOZ_ASSERT(underlyingSource);
+      aRv = FetchStream::RetrieveInputStream(underlyingSource,
+                                             getter_AddRefs(bodyStream));
+
+      // The releasing of the external source is needed in order to avoid an extra
+      // stream lock.
+      JS::ReadableStreamReleaseExternalUnderlyingSource(readableStreamObj);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
+    } else {
+      aRv = ExtractByteStreamFromBody(aBody.Value(),
+                                      getter_AddRefs(bodyStream),
+                                      contentTypeWithCharset,
+                                      bodySize);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
     }
+
     internalResponse->SetBody(bodyStream, bodySize);
 
     if (!contentTypeWithCharset.IsVoid() &&
@@ -251,7 +299,7 @@ Response::Constructor(const GlobalObject& aGlobal,
 }
 
 already_AddRefed<Response>
-Response::Clone(ErrorResult& aRv) const
+Response::Clone(JSContext* aCx, ErrorResult& aRv)
 {
   if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
@@ -260,11 +308,26 @@ Response::Clone(ErrorResult& aRv) const
 
   RefPtr<InternalResponse> ir = mInternalResponse->Clone();
   RefPtr<Response> response = new Response(mOwner, ir);
+
+  JS::Rooted<JSObject*> body(aCx);
+  MaybeTeeReadableStreamBody(aCx, &body, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  if (body) {
+    // Maybe we have a body, but we receive null from MaybeTeeReadableStreamBody
+    // if this body is a native stream.   In this case the InternalResponse will
+    // have a clone of the native body and the ReadableStream will be created
+    // lazily if needed.
+    response->SetReadableStreamBody(body);
+  }
+
   return response.forget();
 }
 
 already_AddRefed<Response>
-Response::CloneUnfiltered(ErrorResult& aRv) const
+Response::CloneUnfiltered(JSContext* aCx, ErrorResult& aRv)
 {
   if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
@@ -274,6 +337,21 @@ Response::CloneUnfiltered(ErrorResult& aRv) const
   RefPtr<InternalResponse> clone = mInternalResponse->Clone();
   RefPtr<InternalResponse> ir = clone->Unfiltered();
   RefPtr<Response> ref = new Response(mOwner, ir);
+
+  JS::Rooted<JSObject*> body(aCx);
+  MaybeTeeReadableStreamBody(aCx, &body, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  if (body) {
+    // Maybe we have a body, but we receive null from MaybeTeeReadableStreamBody
+    // if this body is a native stream.   In this case the InternalResponse will
+    // have a clone of the native body and the ReadableStream will be created
+    // lazily if needed.
+    ref->SetReadableStreamBody(body);
+  }
+
   return ref.forget();
 }
 

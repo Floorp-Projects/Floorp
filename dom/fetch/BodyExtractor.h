@@ -7,9 +7,11 @@
 #ifndef mozilla_dom_BodyExtractor_h
 #define mozilla_dom_BodyExtractor_h
 
+#include "jsapi.h"
 #include "nsString.h"
 
 class nsIInputStream;
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -25,7 +27,7 @@ public:
 
 // The implementation versions of this template are:
 // ArrayBuffer, ArrayBufferView, nsIXHRSendable (Blob, FormData,
-// URLSearchParams), nsAString, nsIDocument, nsIInputStream
+// URLSearchParams), nsAString, nsIDocument, nsIInputStream.
 template<typename Type>
 class BodyExtractor final : public BodyExtractorBase
 {
