@@ -259,14 +259,14 @@ add_task(async function test_validate() {
     await profileStorage.creditCards.normalizeCCNumberFields(TEST_CREDIT_CARD_WITH_INVALID_NUMBERS);
     throw new Error("Not receiving invalid characters error");
   } catch (e) {
-    Assert.equal(e.message, "Credit card number contains invalid characters.");
+    Assert.equal(e.message, "Credit card number contains invalid characters or is under 12 digits.");
   }
 
   try {
     await profileStorage.creditCards.normalizeCCNumberFields(TEST_CREDIT_CARD_WITH_SHORT_NUMBERS);
     throw new Error("Not receiving invalid characters error");
   } catch (e) {
-    Assert.equal(e.message, "Invalid credit card number because length is under 12 digits.");
+    Assert.equal(e.message, "Credit card number contains invalid characters or is under 12 digits.");
   }
 });
 
