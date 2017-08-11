@@ -8,6 +8,8 @@
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
 #include "nsProxyRelease.h"
+#include "WorkerPrivate.h"
+#include "Workers.h"
 
 #define FETCH_STREAM_FLAG 0
 
@@ -17,7 +19,67 @@ static NS_DEFINE_CID(kStreamTransportServiceCID,
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS(FetchStream, nsIInputStreamCallback)
+using namespace workers;
+
+namespace {
+
+class FetchStreamWorkerHolder final : public WorkerHolder
+{
+public:
+  explicit FetchStreamWorkerHolder(FetchStream* aStream)
+    : WorkerHolder(WorkerHolder::Behavior::AllowIdleShutdownStart)
+    , mStream(aStream)
+    , mWasNotified(false)
+  {}
+
+  bool Notify(Status aStatus) override
+  {
+    if (!mWasNotified) {
+      mWasNotified = true;
+      mStream->Close();
+    }
+
+    return true;
+  }
+
+  WorkerPrivate* GetWorkerPrivate() const
+  {
+    return mWorkerPrivate;
+  }
+
+private:
+  RefPtr<FetchStream> mStream;
+  bool mWasNotified;
+};
+
+class FetchStreamWorkerHolderShutdown final : public WorkerControlRunnable
+{
+public:
+  FetchStreamWorkerHolderShutdown(WorkerPrivate* aWorkerPrivate,
+                                  UniquePtr<WorkerHolder>&& aHolder,
+                                  nsCOMPtr<nsIGlobalObject>&& aGlobal)
+    : WorkerControlRunnable(aWorkerPrivate)
+    , mHolder(Move(aHolder))
+    , mGlobal(Move(aGlobal))
+  {}
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    mHolder = nullptr;
+    mGlobal = nullptr;
+    return true;
+  }
+
+private:
+  UniquePtr<WorkerHolder> mHolder;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+};
+
+} // anonymous
+
+NS_IMPL_ISUPPORTS(FetchStream, nsIInputStreamCallback, nsIObserver,
+                  nsISupportsWeakReference)
 
 /* static */ JSObject*
 FetchStream::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
@@ -27,6 +89,35 @@ FetchStream::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(aInputStream);
 
   RefPtr<FetchStream> stream = new FetchStream(aGlobal, aInputStream);
+
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (NS_WARN_IF(!os)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    aRv = os->AddObserver(stream, DOM_WINDOW_DESTROYED_TOPIC, true);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+  } else {
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+    MOZ_ASSERT(workerPrivate);
+
+    UniquePtr<FetchStreamWorkerHolder> holder(
+      new FetchStreamWorkerHolder(stream));
+    if (NS_WARN_IF(!holder->HoldWorker(workerPrivate, Closing))) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return nullptr;
+    }
+
+    // Note, this will create a ref-cycle between the holder and the stream.
+    // The cycle is broken when the stream is closed or the worker begins
+    // shutting down.
+    stream->mWorkerHolder = Move(holder);
+  }
 
   if (!JS::HasReadableStreamCallbacks(aCx)) {
     JS::SetReadableStreamCallbacks(aCx,
@@ -228,11 +319,16 @@ FetchStream::FinalizeCallback(void* aUnderlyingSource, uint8_t aFlags)
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
   MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
 
+  // This can be called in any thread.
+
   RefPtr<FetchStream> stream =
     dont_AddRef(static_cast<FetchStream*>(aUnderlyingSource));
 
-  stream->mState = eClosed;
-  stream->mReadableStream = nullptr;
+  if (stream->mState == eClosed) {
+    return;
+  }
+
+  stream->CloseAndReleaseObjects();
 }
 
 FetchStream::FetchStream(nsIGlobalObject* aGlobal,
@@ -248,7 +344,6 @@ FetchStream::FetchStream(nsIGlobalObject* aGlobal,
 
 FetchStream::~FetchStream()
 {
-  NS_ProxyRelease("FetchStream::mGlobal", mOwningEventTarget, mGlobal.forget());
 }
 
 void
@@ -328,6 +423,73 @@ FetchStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
 
   // The WriteInto callback changes mState to eChecking.
   MOZ_DIAGNOSTIC_ASSERT(mState == eChecking);
+
+  return NS_OK;
+}
+
+void
+FetchStream::Close()
+{
+  if (mState == eClosed) {
+    return;
+  }
+
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JSObject*> stream(cx, mReadableStream);
+  JS::ReadableStreamClose(cx, stream);
+
+  CloseAndReleaseObjects();
+}
+
+void
+FetchStream::CloseAndReleaseObjects()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mState != eClosed);
+  mState = eClosed;
+
+  if (mWorkerHolder) {
+    RefPtr<FetchStreamWorkerHolderShutdown> r =
+      new FetchStreamWorkerHolderShutdown(
+        static_cast<FetchStreamWorkerHolder*>(mWorkerHolder.get())->GetWorkerPrivate(),
+        Move(mWorkerHolder), Move(mGlobal));
+    r->Dispatch();
+  } else {
+    RefPtr<FetchStream> self = this;
+    RefPtr<Runnable> r = NS_NewRunnableFunction(
+      "FetchStream::Finalize",
+      [self] () {
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (os) {
+          os->RemoveObserver(self, DOM_WINDOW_DESTROYED_TOPIC);
+        }
+        self->mGlobal = nullptr;
+      });
+
+    mGlobal->Dispatch("FetchStream::FinalizeCallback",
+                      TaskCategory::Other, r.forget());
+  }
+}
+
+// nsIObserver
+// -----------
+
+NS_IMETHODIMP
+FetchStream::Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData)
+{
+  AssertIsOnMainThread();
+
+  MOZ_ASSERT(strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) == 0);
+
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
+  if (SameCOMIdentity(aSubject, window)) {
+    Close();
+  }
 
   return NS_OK;
 }
