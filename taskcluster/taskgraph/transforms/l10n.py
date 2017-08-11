@@ -112,8 +112,8 @@ l10n_description_schema = Schema({
     # Extra environment values to pass to the worker
     Optional('env'): _by_platform({basestring: taskref_or_string}),
 
-    # Number of chunks to split the locale repacks up into
-    Optional('chunks'): _by_platform(int),
+    # Max number locales per chunk
+    Optional('locales-per-chunk'): _by_platform(int),
 
     # Task deps to chain this task with, added in transforms from dependent-task
     # if this is a nightly
@@ -229,7 +229,7 @@ def handle_keyed_by(config, jobs):
     """Resolve fields that can be keyed by platform, etc."""
     fields = [
         "locales-file",
-        "chunks",
+        "locales-per-chunk",
         "worker-type",
         "description",
         "run-time",
@@ -271,12 +271,12 @@ def all_locales_attribute(config, jobs):
 def chunk_locales(config, jobs):
     """ Utilizes chunking for l10n stuff """
     for job in jobs:
-        chunks = job.get('chunks')
+        locales_per_chunk = job.get('locales-per-chunk')
         locales_with_changesets = job['attributes']['all_locales_with_changesets']
-        if chunks:
-            if chunks > len(locales_with_changesets):
-                # Reduce chunks down to the number of locales
-                chunks = len(locales_with_changesets)
+        if locales_per_chunk:
+            chunks, remainder = divmod(len(locales_with_changesets), locales_per_chunk)
+            if remainder:
+                chunks = int(chunks + 1)
             for this_chunk in range(1, chunks + 1):
                 chunked = copy.deepcopy(job)
                 chunked['name'] = chunked['name'].replace(

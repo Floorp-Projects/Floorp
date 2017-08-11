@@ -22,7 +22,6 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/StateMirroring.h"
 #include "mozilla/StateWatching.h"
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "necko-config.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -52,7 +51,6 @@ enum class Visibility : uint8_t;
 struct MOZ_STACK_CLASS MediaDecoderInit
 {
   MediaDecoderOwner* const mOwner;
-  const dom::AudioChannel mAudioChannel;
   const double mVolume;
   const bool mPreservesPitch;
   const double mPlaybackRate;
@@ -62,7 +60,6 @@ struct MOZ_STACK_CLASS MediaDecoderInit
   const MediaContainerType mContainerType;
 
   MediaDecoderInit(MediaDecoderOwner* aOwner,
-                   dom::AudioChannel aAudioChannel,
                    double aVolume,
                    bool aPreservesPitch,
                    double aPlaybackRate,
@@ -71,7 +68,6 @@ struct MOZ_STACK_CLASS MediaDecoderInit
                    bool aLooping,
                    const MediaContainerType& aContainerType)
     : mOwner(aOwner)
-    , mAudioChannel(aAudioChannel)
     , mVolume(aVolume)
     , mPreservesPitch(aPreservesPitch)
     , mPlaybackRate(aPlaybackRate)
@@ -309,8 +305,6 @@ private:
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   bool CanPlayThrough();
-
-  dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
   // Called from HTMLMediaElement when owner document activity changes
   virtual void SetElementVisibility(bool aIsDocumentVisible,
@@ -580,10 +574,6 @@ protected:
   // True when our media stream has been pinned. We pin the stream
   // while seeking.
   bool mPinnedForSeek;
-
-  // Be assigned from media element during the initialization and pass to
-  // AudioStream Class.
-  const dom::AudioChannel mAudioChannel;
 
   // True if the decoder has been directed to minimize its preroll before
   // playback starts. After the first time playback starts, we don't attempt

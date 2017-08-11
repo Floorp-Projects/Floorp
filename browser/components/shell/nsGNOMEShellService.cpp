@@ -366,7 +366,8 @@ WriteImage(const nsCString& aPath, imgIContainer* aImage)
 
 NS_IMETHODIMP
 nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
-                                          int32_t aPosition)
+                                          int32_t aPosition,
+                                          const nsACString& aImageName)
 {
   nsresult rv;
   nsCOMPtr<nsIImageLoadingContent> imageContent = do_QueryInterface(aElement, &rv);

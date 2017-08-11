@@ -608,14 +608,14 @@ ServoRestyleManager::ProcessPostTraversal(
   RefPtr<ServoStyleContext> oldStyleContext =
     styleFrame ? styleFrame->StyleContext()->AsServo() : nullptr;
 
-  UndisplayedNode* displayContentsNode = nullptr;
+  nsStyleContext* displayContentsStyle = nullptr;
   // FIXME(emilio, bug 1303605): This can be simpler for Servo.
   // Note that we intentionally don't check for display: none content.
   if (!oldStyleContext) {
-    displayContentsNode =
-      PresContext()->FrameConstructor()->GetDisplayContentsNodeFor(aElement);
-    if (displayContentsNode) {
-      oldStyleContext = displayContentsNode->mStyle->AsServo();
+    displayContentsStyle =
+      PresContext()->FrameConstructor()->GetDisplayContentsStyleFor(aElement);
+    if (displayContentsStyle) {
+      oldStyleContext = displayContentsStyle->AsServo();
     }
   }
 
@@ -635,7 +635,7 @@ ServoRestyleManager::ProcessPostTraversal(
 
   RefPtr<ServoStyleContext> newContext = nullptr;
   if (wasRestyled && oldStyleContext) {
-    MOZ_ASSERT(styleFrame || displayContentsNode);
+    MOZ_ASSERT(styleFrame || displayContentsStyle);
     newContext =
       aRestyleState.StyleSet().ResolveServoStyle(aElement, aFlags);
     MOZ_ASSERT(oldStyleContext->ComputedData() != newContext->ComputedData());
@@ -657,9 +657,10 @@ ServoRestyleManager::ProcessPostTraversal(
       f->SetStyleContext(newContext);
     }
 
-    if (MOZ_UNLIKELY(displayContentsNode)) {
+    if (MOZ_UNLIKELY(displayContentsStyle)) {
       MOZ_ASSERT(!styleFrame);
-      displayContentsNode->mStyle = newContext;
+      PresContext()->FrameConstructor()->
+        ChangeRegisteredDisplayContentsStyleFor(aElement, newContext);
     }
 
     if (styleFrame) {
@@ -705,7 +706,7 @@ ServoRestyleManager::ProcessPostTraversal(
 
     StyleChildrenIterator it(aElement);
     TextPostTraversalState textState(*upToDateContext,
-                                     displayContentsNode && wasRestyled,
+                                     displayContentsStyle && wasRestyled,
                                      childrenRestyleState);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {

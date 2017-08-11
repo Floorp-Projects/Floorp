@@ -1062,8 +1062,7 @@ public:
       mAudioDevice ? MediaStreamGraph::AUDIO_THREAD_DRIVER
                    : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
     MediaStreamGraph* msg =
-      MediaStreamGraph::GetInstance(graphDriverType,
-                                    dom::AudioChannel::Normal, window);
+      MediaStreamGraph::GetInstance(graphDriverType, window);
 
     RefPtr<DOMMediaStream> domStream;
     RefPtr<SourceMediaStream> stream;
@@ -3719,8 +3718,7 @@ SourceListener::StopSharing()
     MOZ_RELEASE_ASSERT(window);
     window->SetAudioCapture(false);
     MediaStreamGraph* graph =
-      MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
-                                    dom::AudioChannel::Normal, window);
+      MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER, window);
     graph->UnregisterCaptureStreamForWindow(windowID);
     mStream->Destroy();
   }

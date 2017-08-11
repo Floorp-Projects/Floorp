@@ -576,7 +576,6 @@ class js::WasmArrayRawBuffer
         VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)dataEnd, delta);
 #  endif
 
-        MemProfiler::SampleNative(dataEnd, delta);
         return true;
     }
 
@@ -661,7 +660,6 @@ WasmArrayRawBuffer::Allocate(uint32_t numBytes, const Maybe<uint32_t>& maxSize)
         return nullptr;
     }
 # endif  // !XP_WIN
-    MemProfiler::SampleNative(data, numBytesWithHeader);
 
 #  if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
     VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)data + numBytesWithHeader,
@@ -683,7 +681,6 @@ WasmArrayRawBuffer::Release(void* mem)
     MOZ_RELEASE_ASSERT(header->mappedSize() <= SIZE_MAX - gc::SystemPageSize());
     size_t mappedSizeWithHeader = header->mappedSize() + gc::SystemPageSize();
 
-    MemProfiler::RemoveNative(base);
 # ifdef XP_WIN
     VirtualFree(base, 0, MEM_RELEASE);
 # else  // XP_WIN
@@ -833,7 +830,6 @@ ArrayBufferObject::BufferContents
 ArrayBufferObject::createMappedContents(int fd, size_t offset, size_t length)
 {
     void* data = AllocateMappedContent(fd, offset, length, ARRAY_BUFFER_ALIGNMENT);
-    MemProfiler::SampleNative(data, length);
     return BufferContents::create<MAPPED>(data);
 }
 
@@ -865,7 +861,6 @@ ArrayBufferObject::releaseData(FreeOp* fop)
         fop->free_(dataPointer());
         break;
       case MAPPED:
-        MemProfiler::RemoveNative(dataPointer());
         DeallocateMappedContent(dataPointer(), byteLength());
         break;
       case WASM:
@@ -1817,7 +1812,6 @@ JS_CreateMappedArrayBufferContents(int fd, size_t offset, size_t length)
 JS_PUBLIC_API(void)
 JS_ReleaseMappedArrayBufferContents(void* contents, size_t length)
 {
-    MemProfiler::RemoveNative(contents);
     DeallocateMappedContent(contents, length);
 }
 

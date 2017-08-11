@@ -2677,7 +2677,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAbstractMainThread(aDecoder->AbstractMainThread()),
   mFrameStats(&aDecoder->GetFrameStatistics()),
   mVideoFrameContainer(aDecoder->GetVideoFrameContainer()),
-  mAudioChannel(aDecoder->GetAudioChannel()),
   mTaskQueue(new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK),
     "MDSM::mTaskQueue", /* aSupportsTailDispatch = */ true)),
@@ -2776,7 +2775,7 @@ MediaDecoderStateMachine::CreateAudioSink()
     AudioSink* audioSink = new AudioSink(
       self->mTaskQueue, self->mAudioQueue,
       self->GetMediaTime(),
-      self->Info().mAudio, self->mAudioChannel);
+      self->Info().mAudio);
 
     self->mAudibleListener = audioSink->AudibleEvent().Connect(
       self->mTaskQueue, self.get(),

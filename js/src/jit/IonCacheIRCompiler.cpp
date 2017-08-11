@@ -2067,6 +2067,28 @@ IonCacheIRCompiler::emitCallProxySetByValue()
 }
 
 bool
+IonCacheIRCompiler::emitMegamorphicSetElement()
+{
+    AutoSaveLiveRegisters save(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ConstantOrRegister idVal = allocator.useConstantOrRegister(masm, reader.valOperandId());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+    bool strict = reader.readBool();
+
+    allocator.discardStack(masm);
+    prepareVMCall(masm);
+
+    masm.Push(Imm32(strict));
+    masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
+    masm.Push(val);
+    masm.Push(idVal);
+    masm.Push(obj);
+
+    return callVM(masm, SetObjectElementInfo);
+}
+
+bool
 IonCacheIRCompiler::emitLoadTypedObjectResult()
 {
     AutoOutputRegister output(*this);

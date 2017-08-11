@@ -6,7 +6,7 @@
     "acorn": {
       "version": "5.1.1",
       "resolved": "https://registry.npmjs.org/acorn/-/acorn-5.1.1.tgz",
-      "integrity": "sha512-vOk6uEMctu0vQrvuSqFdJyqj1Q0S5VTDL79qtjo+DhRr+1mmaD+tluFSCZqhvi/JUhXSzoZN2BhtstaPEeE8cw=="
+      "integrity": "sha1-U/4WERH5EquZnuiHqQoLxSgi/XU="
     },
     "acorn-jsx": {
       "version": "3.0.1",
@@ -986,7 +986,7 @@
     "sax": {
       "version": "1.2.4",
       "resolved": "https://registry.npmjs.org/sax/-/sax-1.2.4.tgz",
-      "integrity": "sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw=="
+      "integrity": "sha1-KBYjTiN4vdxOU1T6tcqold9xANk="
     },
     "shelljs": {
       "version": "0.7.8",
