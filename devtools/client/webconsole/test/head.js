@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtool
 var {Utils: WebConsoleUtils} = require("devtools/client/webconsole/utils");
 var {Messages} = require("devtools/client/webconsole/console-output");
 const asyncStorage = require("devtools/shared/async-storage");
-const HUDService = require("devtools/client/webconsole/hudservice");
+const {HUDService} = require("devtools/client/webconsole/hudservice");
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
 

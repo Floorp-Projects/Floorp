@@ -304,7 +304,7 @@ function reload(event) {
   // HUDService is going to close it on unload.
   // Instead we have to manually toggle it.
   if (reopenBrowserConsole) {
-    let HUDService = devtools.require("devtools/client/webconsole/hudservice");
+    let {HUDService} = devtools.require("devtools/client/webconsole/hudservice");
     HUDService.toggleBrowserConsole();
   }
 

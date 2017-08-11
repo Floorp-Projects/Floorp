@@ -413,9 +413,9 @@ DevToolsStartup.prototype = {
       this.initDevTools("CommandLine");
 
       let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-      let hudservice = require("devtools/client/webconsole/hudservice");
+      let { HUDService } = require("devtools/client/webconsole/hudservice");
       let { console } = Cu.import("resource://gre/modules/Console.jsm", {});
-      hudservice.toggleBrowserConsole().catch(console.error);
+      HUDService.toggleBrowserConsole().catch(console.error);
     } else {
       // the Browser Console was already open
       window.focus();
