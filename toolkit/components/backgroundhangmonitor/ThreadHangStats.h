@@ -1,20 +1,32 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_HangStack_h
-#define mozilla_HangStack_h
+#ifndef mozilla_BackgroundHangTelemetry_h
+#define mozilla_BackgroundHangTelemetry_h
 
-#include "ipc/IPCMessageUtils.h"
-#include "mozilla/ProcessedStack.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/Array.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/HangAnnotations.h"
 #include "mozilla/Move.h"
-#include "nsTArray.h"
-#include "nsIHangDetails.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/PodOperations.h"
+#include "mozilla/Vector.h"
+#include "mozilla/CombinedStacks.h"
+
+#include "nsString.h"
+#include "prinrval.h"
+#include "jsapi.h"
 
 namespace mozilla {
+namespace Telemetry {
+
+// This variable controls the maximum number of native hang stacks which may be
+// attached to a ping. This is due to how large native stacks can be. We want to
+// reduce the chance of a ping being discarded due to it exceeding the maximum
+// ping size.
+static const uint32_t kMaximumNativeHangStacks = 300;
 
 /* A native stack is a simple list of pointers, so rather than building a
    wrapper type, we typdef the type here. */
@@ -42,7 +54,6 @@ private:
 public:
   HangStack() {}
 
-  HangStack(const HangStack& aOther);
   HangStack(HangStack&& aOther)
     : mImpl(mozilla::Move(aOther.mImpl))
     , mBuffer(mozilla::Move(aOther.mBuffer))
@@ -124,21 +135,7 @@ public:
   const char* AppendViaBuffer(const char* aText, size_t aLength);
 };
 
+} // namespace Telemetry
 } // namespace mozilla
 
-namespace IPC {
-
-template<>
-class ParamTraits<mozilla::HangStack>
-{
-public:
-  typedef mozilla::HangStack paramType;
-  static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg,
-                   PickleIterator* aIter,
-                   paramType* aResult);
-};
-
-} // namespace IPC
-
-#endif // mozilla_HangStack_h
+#endif // mozilla_BackgroundHangTelemetry_h

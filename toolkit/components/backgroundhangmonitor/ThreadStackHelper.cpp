@@ -128,7 +128,7 @@ ThreadStackHelper::GetStacksInternal(Stack* aStack,
   // Prepare the native stack
   if (aNativeStack) {
     aNativeStack->clear();
-    aNativeStack->reserve(HangStack::sMaxNativeFrames);
+    aNativeStack->reserve(Telemetry::HangStack::sMaxNativeFrames);
   }
 
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
