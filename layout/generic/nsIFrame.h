@@ -3347,6 +3347,9 @@ protected:
   void UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
                                  mozilla::ServoRestyleState& aRestyleState);
 
+  // Allow ServoRestyleState to call UpdateStyleOfChildAnonBox.
+  friend class mozilla::ServoRestyleState;
+
 public:
   // A helper both for UpdateStyleOfChildAnonBox, and to update frame-backed
   // pseudo-elements in ServoRestyleManager.
