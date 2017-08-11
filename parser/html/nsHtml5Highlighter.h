@@ -227,14 +227,11 @@ class nsHtml5Highlighter
      * @param aAttributes the attribute holder (ownership will be taken) or
      *        nullptr for no attributes
      * @param aIntendedParent the intended parent node for the created element
-     * @param aCreator the content creator function
      * @return the handle for the element that will be created
      */
-    nsIContent** CreateElement(
-      nsIAtom* aName,
-      nsHtml5HtmlAttributes* aAttributes,
-      nsIContent** aIntendedParent,
-      mozilla::dom::HTMLContentCreatorFunction aCreator);
+    nsIContent** CreateElement(nsIAtom* aName,
+                               nsHtml5HtmlAttributes* aAttributes,
+                               nsIContent** aIntendedParent);
 
     /**
      * Gets the handle for the current node. May be called only after the
@@ -250,11 +247,8 @@ class nsHtml5Highlighter
      * @param aName the name of the element
      * @param aAttributes the attribute holder (ownership will be taken) or
      *        nullptr for no attributes
-     * @param aCreator the content creator function
      */
-    void Push(nsIAtom* aName,
-              nsHtml5HtmlAttributes* aAttributes,
-              mozilla::dom::HTMLContentCreatorFunction aCreator);
+    void Push(nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes);
 
     /**
      * Pops the current node off the stack.

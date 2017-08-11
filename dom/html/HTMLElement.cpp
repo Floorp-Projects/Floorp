@@ -53,12 +53,3 @@ NS_NewHTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
 {
   return new mozilla::dom::HTMLElement(aNodeInfo);
 }
-
-// Distinct from the above in order to have function pointer that compared unequal
-// to a function pointer to the above.
-nsGenericHTMLElement*
-NS_NewCustomElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                    mozilla::dom::FromParser aFromParser)
-{
-  return new mozilla::dom::HTMLElement(aNodeInfo);
-}

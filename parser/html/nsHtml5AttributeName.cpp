@@ -41,7 +41,6 @@
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
 #include "nsHtml5Portability.h"
-#include "nsHtml5ContentCreatorFunction.h"
 
 #include "nsHtml5ElementName.h"
 #include "nsHtml5Tokenizer.h"

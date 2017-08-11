@@ -1120,9 +1120,7 @@ public class Tokenizer implements Locator {
                 tagName = ElementName.ANNOTATION_XML;
             } else {
                 nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
-                        interner)
-                        // CPPONLY: , true
-                        );
+                        interner));
                 tagName = nonInternedTagName;
             }
         } else {
@@ -1130,9 +1128,7 @@ public class Tokenizer implements Locator {
                     interner);
             if (tagName == null) {
                 nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
-                    interner)
-                        // CPPONLY: , false
-                        );
+                    interner));
                 tagName = nonInternedTagName;
             }
         }
@@ -6690,9 +6686,7 @@ public class Tokenizer implements Locator {
             publicIdentifier = null;
         }
         tagName = null;
-        nonInternedTagName.setNameForNonInterned(null
-                // CPPONLY: , false
-                );
+        nonInternedTagName.setNameForNonInterned(null);
         attributeName = null;
         // CPPONLY: nonInternedAttributeName.setNameForNonInterned(null);
         tokenHandler.endTokenization();
@@ -6842,9 +6836,7 @@ public class Tokenizer implements Locator {
             // In the C++ case, the atoms in the other tokenizer are from a
             // different tokenizer-scoped atom table. Therefore, we have to
             // obtain the correspoding atom from our own atom table.
-            nonInternedTagName.setNameForNonInterned(Portability.newLocalFromLocal(other.tagName.getName(), interner)
-                    // CPPONLY: , other.tagName.isCustom()
-                    );
+            nonInternedTagName.setNameForNonInterned(Portability.newLocalFromLocal(other.tagName.getName(), interner));
             tagName = nonInternedTagName;
         }
 
