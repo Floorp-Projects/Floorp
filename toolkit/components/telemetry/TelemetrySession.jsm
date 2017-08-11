@@ -977,6 +977,16 @@ var Impl = {
     return snapshot;
   },
 
+  getThreadHangStats: function getThreadHangStats(stats) {
+    stats.forEach((thread) => {
+      thread.activity = this.packHistogram(thread.activity);
+      thread.hangs.forEach((hang) => {
+        hang.histogram = this.packHistogram(hang.histogram);
+      });
+    });
+    return stats;
+  },
+
   /**
    * Descriptive metadata
    *
@@ -1230,6 +1240,7 @@ var Impl = {
     // Add extended set measurements common to chrome & content processes
     if (Telemetry.canRecordExtended) {
       payloadObj.chromeHangs = protect(() => Telemetry.chromeHangs);
+      payloadObj.threadHangStats = protect(() => this.getThreadHangStats(Telemetry.threadHangStats));
       payloadObj.log = protect(() => TelemetryLog.entries());
       payloadObj.webrtc = protect(() => Telemetry.webrtcStats);
     }
