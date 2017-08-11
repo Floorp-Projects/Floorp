@@ -60,9 +60,9 @@ public:
   DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
   // webidl interface methods
-  already_AddRefed<Promise> Match(const RequestOrUSVString& aRequest,
-                                  const CacheQueryOptions& aOptions,
-                                  ErrorResult& aRv);
+  already_AddRefed<Promise>
+  Match(JSContext* aCx, const RequestOrUSVString& aRequest,
+        const CacheQueryOptions& aOptions, ErrorResult& aRv);
   already_AddRefed<Promise> Has(const nsAString& aKey, ErrorResult& aRv);
   already_AddRefed<Promise> Open(const nsAString& aKey, ErrorResult& aRv);
   already_AddRefed<Promise> Delete(const nsAString& aKey, ErrorResult& aRv);

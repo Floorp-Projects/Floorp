@@ -127,6 +127,36 @@ fetchXHR('http://user:pass@mochi.test:8888/user-pass', function(xhr) {
   finish();
 });
 
+fetchXHR('readable-stream.txt', function(xhr) {
+  my_ok(xhr.status == 200, "loading completed");
+  my_ok(xhr.responseText == 'Hello!', "The message is correct!");
+  finish();
+});
+
+fetchXHR('readable-stream-locked.txt', function(xhr) {
+  my_ok(false, "This should not be called!");
+  finish();
+}, function() {
+  my_ok(true, "The exception has been correctly handled!");
+  finish();
+});
+
+fetchXHR('readable-stream-with-exception.txt', function(xhr) {
+  my_ok(false, "This should not be called!");
+  finish();
+}, function() {
+  my_ok(true, "The exception has been correctly handled!");
+  finish();
+});
+
+fetchXHR('readable-stream-already-consumed.txt', function(xhr) {
+  my_ok(false, "This should not be called!");
+  finish();
+}, function() {
+  my_ok(true, "The exception has been correctly handled!");
+  finish();
+});
+
 var expectedUncompressedResponse = "";
 for (var i = 0; i < 10; ++i) {
   expectedUncompressedResponse += "hello";

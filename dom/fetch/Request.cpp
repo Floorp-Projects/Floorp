@@ -606,7 +606,10 @@ Request::Constructor(const GlobalObject& aGlobal,
     inputReq->GetBody(getter_AddRefs(body));
     if (body) {
       inputReq->SetBody(nullptr);
-      inputReq->SetBodyUsed();
+      inputReq->SetBodyUsed(aGlobal.Context(), aRv);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
     }
   }
   return domRequest.forget();

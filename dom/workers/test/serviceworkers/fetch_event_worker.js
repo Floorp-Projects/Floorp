@@ -99,6 +99,58 @@ onfetch = function(ev) {
     ));
   }
 
+  else if (ev.request.url.includes("readable-stream.txt")) {
+    ev.respondWith(
+      new Response(
+        new ReadableStream({
+          start: function(controller) {
+            controller.enqueue(new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21]));
+            controller.close();
+          }
+        })
+    ));
+  }
+
+  else if (ev.request.url.includes("readable-stream-locked.txt")) {
+    let stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21]));
+            controller.close();
+          }
+        });
+
+    ev.respondWith(new Response(stream));
+
+    // This locks the stream.
+    stream.getReader();
+  }
+
+  else if (ev.request.url.includes("readable-stream-with-exception.txt")) {
+    ev.respondWith(
+      new Response(
+        new ReadableStream({
+          start(controller) {},
+          pull() {
+            throw "EXCEPTION!";
+          }
+        })
+    ));
+  }
+
+  else if (ev.request.url.includes("readable-stream-already-consumed.txt")) {
+    let r = new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21]));
+            controller.close();
+          }
+        }));
+
+    r.blob();
+
+    ev.respondWith(r);
+  }
+
   else if (ev.request.url.includes('user-pass')) {
     ev.respondWith(new Response(ev.request.url));
   }

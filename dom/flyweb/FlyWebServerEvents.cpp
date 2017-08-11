@@ -87,7 +87,13 @@ FlyWebFetchEvent::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   if (response && response->Type() != ResponseType::Opaque) {
     intResponse = response->GetInternalResponse();
 
-    response->SetBodyUsed();
+    IgnoredErrorResult rv;
+    response->SetBodyUsed(aCx, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      // Let's nullify the response. In this way we end up using a NetworkError
+      // response.
+      intResponse = nullptr;
+    }
   }
 
   if (!intResponse) {

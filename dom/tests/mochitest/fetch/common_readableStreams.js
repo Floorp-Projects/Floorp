@@ -80,6 +80,63 @@ function test_pendingStream() {
   });
 }
 
+async function test_nativeStream_cache() {
+  info("test_nativeStream_cache");
+
+  let origBody = '123456789abcdef';
+  let url = '/nativeStream';
+
+  let cache = await caches.open('nativeStream');
+
+  info("Storing a body as a string");
+  await cache.put(url, new Response(origBody));
+
+  info("Retrieving the stored value");
+  let cacheResponse = await cache.match(url);
+
+  info("Converting the response to text");
+  let cacheBody = await cacheResponse.text();
+
+  is(origBody, cacheBody, "Bodies match");
+
+  await caches.delete('nativeStream');
+
+  next();
+};
+
+async function test_nonNativeStream_cache() {
+  info("test_nonNativeStream_cache");
+
+  let url = '/nonNativeStream';
+
+  let cache = await caches.open('nonNativeStream');
+
+  info("Storing a body as a string");
+  let r = new Response(new ReadableStream({start : controller => {
+    controller.enqueue(new Uint8Array([0x01, 0x02, 0x03]));
+    controller.close();
+  }}));
+
+  await cache.put(url, r);
+
+  info("Retrieving the stored value");
+  let cacheResponse = await cache.match(url);
+
+  info("Converting the response to text");
+  let cacheBody = await cacheResponse.arrayBuffer();
+
+  ok(cacheBody instanceof ArrayBuffer, "Body is an array buffer");
+  is(cacheBody.byteLength, 3, "Body length is correct");
+
+  is(new Uint8Array(cacheBody)[0], 0x01, "First byte is correct");
+  is(new Uint8Array(cacheBody)[1], 0x02, "Second byte is correct");
+  is(new Uint8Array(cacheBody)[2], 0x03, "Third byte is correct");
+
+  await caches.delete('nonNativeStream');
+
+  next();
+};
+
 function workify(func) {
   info("Workifing " + func);
 

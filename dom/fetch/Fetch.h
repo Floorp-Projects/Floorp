@@ -192,11 +192,28 @@ public:
 
   // Utility public methods accessed by various runnables.
 
+  // This method _must_ be called in order to set the body as used. If the body
+  // is a ReadableStream, this method will start reading the stream.
+  // More in details, this method does:
+  // 1) It uses an internal flag to track if the body is used.  This is tracked
+  // separately from the ReadableStream disturbed state due to purely native
+  // streams.
+  // 2) If there is a ReadableStream reflector for the native stream it is
+  // Locked.
+  // 3) If there is a JS ReadableStream then we begin pumping it into the native
+  // body stream.  This effectively locks and disturbs the stream.
+  //
+  // Note that JSContext is used only if there is a ReadableStream (this can
+  // happen because the body is a ReadableStream or because attribute body has
+  // already been used by content). If something goes wrong using
+  // ReadableStream, errors will be reported via ErrorResult and not as JS
+  // exceptions in JSContext. This is done in order to have a centralized error
+  // reporting way.
+  //
+  // Exceptions generated when reading from the ReadableStream are directly sent
+  // to the Console (NOTE FOR THE REVIEWER: this is part of patch 16)
   void
-  SetBodyUsed()
-  {
-    mBodyUsed = true;
-  }
+  SetBodyUsed(JSContext* aCx, ErrorResult& aRv);
 
   const nsCString&
   MimeType() const
