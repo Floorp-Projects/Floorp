@@ -12,7 +12,6 @@ Data documentation
    main-ping
    deletion-ping
    crash-ping
-   backgroundhangmonitor-ping
    anonymous-ping
    *-ping
 
