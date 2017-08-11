@@ -175,11 +175,7 @@ add_task(async function() {
   let findBar = gFindBar;
   let initialValue = findBar._findField.value;
 
-  await EventUtils.synthesizeAndWaitKey("f", { accelKey: true }, window, null,
-                                        () => {
-    isnot(document.activeElement, findBar._findField.inputField,
-      "findbar is not yet focused");
-  });
+  EventUtils.synthesizeKey("f", { accelKey: true }, window);
 
   let promises = [
     BrowserTestUtils.sendChar("a", browser),
@@ -187,6 +183,8 @@ add_task(async function() {
     BrowserTestUtils.sendChar("c", browser)
   ];
 
+  isnot(document.activeElement, findBar._findField.inputField,
+    "findbar is not yet focused");
   is(findBar._findField.value, initialValue, "still has initial find query");
 
   await Promise.all(promises);
