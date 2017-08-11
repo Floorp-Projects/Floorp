@@ -42,7 +42,6 @@ const HEADER = "/* This Source Code Form is subject to the terms of the Mozilla 
 "/*****************************************************************************/\n" +
 "\n" +
 "#include <stdint.h>\n";
-const GPERF_DELIM = "%%\n";
 
 function download() {
   var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -241,6 +240,12 @@ function errorToString(status) {
           : status.error);
 }
 
+function writeEntry(status, indices, outputStream) {
+  let includeSubdomains = (status.finalIncludeSubdomains ? "true" : "false");
+  writeTo("  { " + indices[status.name] + ", " + includeSubdomains + " },\n",
+          outputStream);
+}
+
 function output(sortedStatuses, currentList) {
   try {
     var file = FileUtils.getFile("CurWorkD", [OUTPUT]);
@@ -293,14 +298,47 @@ function output(sortedStatuses, currentList) {
       status.finalIncludeSubdomains = incSubdomainsBool;
     }
 
-    writeTo(GPERF_DELIM, fos);
-
+    writeTo("\nstatic const char kSTSHostTable[] = {\n", fos);
+    var indices = {};
+    var currentIndex = 0;
     for (let status of includedStatuses) {
-      let includeSubdomains = (status.finalIncludeSubdomains ? 1 : 0);
-      writeTo(status.name + ", " + includeSubdomains + "\n", fos);
+      indices[status.name] = currentIndex;
+      // Add 1 for the null terminator in C.
+      currentIndex += status.name.length + 1;
+      // Rebuilding the preload list requires reading the previous preload
+      // list.  Write out a comment describing each host prior to writing out
+      // the string for the host.
+      writeTo("  /* \"" + status.name + "\", " +
+              (status.finalIncludeSubdomains ? "true" : "false") + " */ ",
+              fos);
+      // Write out the string itself as individual characters, including the
+      // null terminator.  We do it this way rather than using C's string
+      // concatentation because some compilers have hardcoded limits on the
+      // lengths of string literals, and the preload list is large enough
+      // that it runs into said limits.
+      for (let c of status.name) {
+        writeTo("'" + c + "', ", fos);
+      }
+      writeTo("'\\0',\n", fos);
     }
+    writeTo("};\n", fos);
 
-    writeTo(GPERF_DELIM, fos);
+    const PREFIX = "\n" +
+      "struct nsSTSPreload\n" +
+      "{\n" +
+      "  // See bug 1338873 about making these fields const.\n" +
+      "  uint32_t mHostIndex : 31;\n" +
+      "  uint32_t mIncludeSubdomains : 1;\n" +
+      "};\n" +
+      "\n" +
+      "static const nsSTSPreload kSTSPreloadList[] = {\n";
+    const POSTFIX = "};\n";
+
+    writeTo(PREFIX, fos);
+    for (let status of includedStatuses) {
+      writeEntry(status, indices, fos);
+    }
+    writeTo(POSTFIX, fos);
     FileUtils.closeSafeFileOutputStream(fos);
     FileUtils.closeSafeFileOutputStream(eos);
   } catch (e) {
@@ -360,22 +398,19 @@ function readCurrentList(filename) {
               .createInstance(Ci.nsILineInputStream);
   fis.init(file, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
   var line = {};
-
-  // While we generate entries matching the latest version format,
-  // we still need to be able to read entries in the previous version formats
-  // for bootstrapping a latest version preload list from a previous version
-  // preload list. Hence these regexes.
-  const entryRegexes = [
-    /([^,]+), (0|1)/,                         // v3
-    / {2}\/\* "([^"]*)", (true|false) \*\//,  // v2
-    / {2}{ "([^"]*)", (true|false) },/,       // v1
-  ];
-
+  // While we generate entries matching the version 2 format (see bug 1255425
+  // for details), we still need to be able to read entries in the version 1
+  // format for bootstrapping a version 2 preload list from a version 1
+  // preload list.  Hence these two regexes.
+  var v1EntryRegex = / {2}{ "([^"]*)", (true|false) },/;
+  var v2EntryRegex = / {2}\/\* "([^"]*)", (true|false) \*\//;
   while (fis.readLine(line)) {
-    let match;
-    entryRegexes.find((r) => { match = r.exec(line.value); return match; } );
+    var match = v1EntryRegex.exec(line.value);
+    if (!match) {
+      match = v2EntryRegex.exec(line.value);
+    }
     if (match) {
-      currentHosts[match[1]] = (match[2] == "1" || match[2] == "true");
+      currentHosts[match[1]] = (match[2] == "true");
     }
   }
   return currentHosts;

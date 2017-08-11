@@ -176,13 +176,6 @@ LOCAL_INCLUDES += [
     '!/dist/public/nss',
 ]
 
-GENERATED_FILES = [
-    'nsSTSPreloadList.h',
-]
-dafsa_data = GENERATED_FILES['nsSTSPreloadList.h']
-dafsa_data.script = '../../../xpcom/ds/make_dafsa.py'
-dafsa_data.inputs = ['nsSTSPreloadList.inc']
-
 if CONFIG['NSS_DISABLE_DBM']:
     DEFINES['NSS_DISABLE_DBM'] = '1'
 

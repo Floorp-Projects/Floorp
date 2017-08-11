@@ -41,7 +41,7 @@
 // influence its HSTS status via include subdomains, however).
 // This prevents the preload list from overriding the site's current
 // desired HSTS status.
-#include "nsSTSPreloadList.h"
+#include "nsSTSPreloadList.inc"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -495,7 +495,6 @@ nsSiteSecurityService::nsSiteSecurityService()
   : mMaxMaxAge(kSixtyDaysInSeconds)
   , mUsePreloadList(true)
   , mPreloadListTimeOffset(0)
-  , mDafsa(kDafsa)
 {
 }
 
@@ -731,7 +730,7 @@ nsSiteSecurityService::RemoveStateInternal(
                                               mozilla::DataStorage_Persistent);
   RefPtr<SiteHSTSState> dynamicState =
     new SiteHSTSState(aHost, aOriginAttributes, value);
-  if (GetPreloadStatus(aHost) ||
+  if (GetPreloadListEntry(aHost.get()) ||
       dynamicState->mHSTSState != SecurityPropertyUnset) {
     SSSLOG(("SSS: storing knockout entry for %s", aHost.get()));
     RefPtr<SiteHSTSState> siteState = new SiteHSTSState(
@@ -1371,31 +1370,29 @@ nsSiteSecurityService::IsSecureURI(uint32_t aType, nsIURI* aURI,
                       source, aResult);
 }
 
-// Checks if the given host is in the preload list.
-//
-// @param aHost The host to match. Only does exact host matching.
-// @param aIncludeSubdomains Out, optional. Indicates whether or not to include
-//        subdomains. Only set if the host is matched and this function returns
-//        true.
-//
-// @return True if the host is matched, false otherwise.
-bool
-nsSiteSecurityService::GetPreloadStatus(const nsACString& aHost,
-                                        bool* aIncludeSubdomains) const
+int STSPreloadCompare(const void *key, const void *entry)
 {
-  const int kIncludeSubdomains = 1;
-  bool found = false;
+  const char *keyStr = (const char *)key;
+  const nsSTSPreload *preloadEntry = (const nsSTSPreload *)entry;
+  return strcmp(keyStr, &kSTSHostTable[preloadEntry->mHostIndex]);
+}
 
+// Returns the preload list entry for the given host, if it exists.
+// Only does exact host matching - the user must decide how to use the returned
+// data. May return null.
+const nsSTSPreload *
+nsSiteSecurityService::GetPreloadListEntry(const char *aHost)
+{
   PRTime currentTime = PR_Now() + (mPreloadListTimeOffset * PR_USEC_PER_SEC);
   if (mUsePreloadList && currentTime < gPreloadListExpirationTime) {
-    int result = mDafsa.Lookup(aHost);
-    found = (result != mozilla::Dafsa::kKeyNotFound);
-    if (found && aIncludeSubdomains) {
-      *aIncludeSubdomains = (result == kIncludeSubdomains);
-    }
+    return (const nsSTSPreload *) bsearch(aHost,
+                                          kSTSPreloadList,
+                                          mozilla::ArrayLength(kSTSPreloadList),
+                                          sizeof(nsSTSPreload),
+                                          STSPreloadCompare);
   }
 
-  return found;
+  return nullptr;
 }
 
 // Allows us to determine if we have an HSTS entry for a given host (and, if
@@ -1479,7 +1476,7 @@ nsSiteSecurityService::HostHasHSTSEntry(
       if (dynamicState->mHSTSState == SecurityPropertyUnset) {
         SSSLOG(("No dynamic preload - checking for static preload"));
         // Now check the static preload list.
-        if (!GetPreloadStatus(aHost)) {
+        if (!GetPreloadListEntry(aHost.get())) {
           SSSLOG(("No static preload - removing expired entry"));
           mSiteStateStorage->Remove(storageKey, storageType);
         }
@@ -1523,7 +1520,7 @@ nsSiteSecurityService::HostHasHSTSEntry(
     } else {
       // if a dynamic preload has expired and is not in the static preload
       // list, we can remove it.
-      if (!GetPreloadStatus(aHost)) {
+      if (!GetPreloadListEntry(aHost.get())) {
         mPreloadStateStorage->Remove(preloadKey,
                                      mozilla::DataStorage_Persistent);
       }
@@ -1531,18 +1528,18 @@ nsSiteSecurityService::HostHasHSTSEntry(
     return false;
   }
 
-  bool includeSubdomains = false;
+  const nsSTSPreload* preload = nullptr;
 
   // Finally look in the static preload list.
   if (siteState->mHSTSState == SecurityPropertyUnset &&
       dynamicState->mHSTSState == SecurityPropertyUnset &&
-      GetPreloadStatus(aHost, &includeSubdomains)) {
+      (preload = GetPreloadListEntry(aHost.get())) != nullptr) {
     SSSLOG(("%s is a preloaded HSTS host", aHost.get()));
-    *aResult = aRequireIncludeSubdomains ? includeSubdomains
+    *aResult = aRequireIncludeSubdomains ? preload->mIncludeSubdomains
                                          : true;
     if (aCached) {
       // Only set cached if this includes subdomains
-      *aCached = aRequireIncludeSubdomains ? includeSubdomains
+      *aCached = aRequireIncludeSubdomains ? preload->mIncludeSubdomains
                                            : true;
     }
     if (aSource) {
