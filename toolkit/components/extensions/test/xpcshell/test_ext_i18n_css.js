@@ -115,7 +115,7 @@ async function test_i18n_css(options = {}) {
   cssURL = cssURL.replace(/foo.css$/, "locale.css");
 
   css = await fetch(cssURL);
-  equal(css, '* { content: "en_US ltr rtl left right" }', "CSS file localized in mochitest scope");
+  equal(css, '* { content: "en-US ltr rtl left right" }', "CSS file localized in mochitest scope");
 
   // We don't currently have a good way to mock this.
   if (false) {
