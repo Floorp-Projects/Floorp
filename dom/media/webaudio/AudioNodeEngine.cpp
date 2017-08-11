@@ -354,14 +354,18 @@ AudioBufferSumOfSquares(const float* aInput, uint32_t aLength)
 #ifdef USE_SSE2
   if (mozilla::supports_sse()) {
     const float* alignedInput = ALIGNED16(aInput);
-    uint32_t vLength = (aLength >> 4) << 4;
 
     // use scalar operations for any unaligned data at the beginning
     while (aInput != alignedInput) {
-        sum += *aInput * *aInput;
-        ++aInput;
+      if (!aLength) {
+        return sum;
+      }
+      sum += *aInput * *aInput;
+      ++aInput;
+      --aLength;
     }
 
+    uint32_t vLength = (aLength >> 4) << 4;
     sum += AudioBufferSumOfSquares_SSE(alignedInput, vLength);
 
     // adjust aInput and aLength to use scalar operations for any
