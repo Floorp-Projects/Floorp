@@ -553,7 +553,7 @@ FrameIter::settleOnActivation()
         }
 
         if (activation->isWasm()) {
-            data_.wasmFrames_ = wasm::FrameIterator(data_.activations_->asWasm());
+            data_.wasmFrames_ = wasm::WasmFrameIter(data_.activations_->asWasm());
 
             if (data_.wasmFrames_.done()) {
                 ++data_.activations_;
@@ -1079,7 +1079,7 @@ FrameIter::wasmUpdateBytecodeOffset()
     WasmActivation* activation = data_.activations_->asWasm();
 
     // Relookup the current frame, updating the bytecode offset in the process.
-    data_.wasmFrames_ = wasm::FrameIterator(activation);
+    data_.wasmFrames_ = wasm::WasmFrameIter(activation);
     while (data_.wasmFrames_.debugFrame() != frame)
         ++data_.wasmFrames_;
 
