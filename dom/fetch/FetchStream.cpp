@@ -101,10 +101,10 @@ private:
 NS_IMPL_ISUPPORTS(FetchStream, nsIInputStreamCallback, nsIObserver,
                   nsISupportsWeakReference)
 
-/* static */ JSObject*
+/* static */ void
 FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
                     nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
-                    ErrorResult& aRv)
+                    JS::MutableHandle<JSObject*> aStream, ErrorResult& aRv)
 {
   MOZ_DIAGNOSTIC_ASSERT(aCx);
   MOZ_DIAGNOSTIC_ASSERT(aStreamHolder);
@@ -117,12 +117,12 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (NS_WARN_IF(!os)) {
       aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
+      return;
     }
 
     aRv = os->AddObserver(stream, DOM_WINDOW_DESTROYED_TOPIC, true);
     if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
+      return;
     }
 
   } else {
@@ -133,7 +133,7 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
       new FetchStreamWorkerHolder(stream));
     if (NS_WARN_IF(!holder->HoldWorker(workerPrivate, Closing))) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return nullptr;
+      return;
     }
 
     // Note, this will create a ref-cycle between the holder and the stream.
@@ -156,14 +156,17 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
     JS::NewReadableExternalSourceStreamObject(aCx, stream, FETCH_STREAM_FLAG));
   if (!body) {
     aRv.StealExceptionFromJSContext(aCx);
-    return nullptr;
+    return;
   }
 
   stream->mReadableStream = body;
 
-  // JS engine will call the finalize callback.
+  // This will be released in FetchStream::FinalizeCallback().  We are
+  // guaranteed the jsapi will call FinalizeCallback when ReadableStream
+  // js object is finalized.
   NS_ADDREF(stream.get());
-  return body;
+
+  aStream.set(body);
 }
 
 /* static */ void
@@ -307,7 +310,11 @@ FetchStream::CancelCallback(JSContext* aCx, JS::HandleObject aStream,
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
   MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
 
-  RefPtr<FetchStream> stream = static_cast<FetchStream*>(aUnderlyingSource);
+  // This is safe because we created an extra reference in FetchStream::Create()
+  // that won't be released until FetchStream::FinalizeCallback() is called.
+  // We are guaranteed that won't happen until the js ReadableStream object
+  // is finalized.
+  FetchStream* stream = static_cast<FetchStream*>(aUnderlyingSource);
 
   if (stream->mInputStream) {
     stream->mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
@@ -342,6 +349,7 @@ FetchStream::FinalizeCallback(void* aUnderlyingSource, uint8_t aFlags)
 
   // This can be called in any thread.
 
+  // This takes ownership of the ref created in FetchStream::Create().
   RefPtr<FetchStream> stream =
     dont_AddRef(static_cast<FetchStream*>(aUnderlyingSource));
 
