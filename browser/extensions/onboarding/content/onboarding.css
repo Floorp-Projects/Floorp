@@ -251,6 +251,8 @@
   line-height: 22px;
   padding-inline-start: 40px;
   padding-inline-end: 28px;
+  max-height: 360px;
+  overflow: auto;
 }
 
 .onboarding-tour-description > h1 {
