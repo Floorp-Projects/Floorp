@@ -590,6 +590,8 @@ protected:
   bool mIsTesting;
 
   uint64_t mPendingTransaction;
+  TimeStamp mTxnStartTime;
+  TimeStamp mFwdTime;
 
   bool mPaused;
 

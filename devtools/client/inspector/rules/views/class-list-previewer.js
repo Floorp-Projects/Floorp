@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 
 const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");

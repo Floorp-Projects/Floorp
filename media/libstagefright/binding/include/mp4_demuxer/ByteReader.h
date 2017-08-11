@@ -63,7 +63,7 @@ public:
   {
     auto ptr = Read(1);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     return *ptr;
@@ -75,7 +75,7 @@ public:
   {
     auto ptr = Read(2);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     return mozilla::BigEndian::readUint16(ptr);
@@ -85,7 +85,7 @@ public:
   {
     auto ptr = Read(2);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     return mozilla::LittleEndian::readInt16(ptr);
@@ -95,7 +95,7 @@ public:
   {
     auto ptr = Read(3);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
@@ -110,7 +110,7 @@ public:
   {
     auto ptr = Read(3);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     int32_t result = int32_t(ptr[2] << 16 | ptr[1] << 8 | ptr[0]);
@@ -126,7 +126,7 @@ public:
   {
     auto ptr = Read(4);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     return mozilla::BigEndian::readUint32(ptr);
@@ -136,7 +136,7 @@ public:
   {
     auto ptr = Read(4);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     return mozilla::BigEndian::readInt32(ptr);
@@ -146,7 +146,7 @@ public:
   {
     auto ptr = Read(8);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     return mozilla::BigEndian::readUint64(ptr);
@@ -156,7 +156,7 @@ public:
   {
     auto ptr = Read(8);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to read data");
       return 0;
     }
     return mozilla::BigEndian::readInt64(ptr);
@@ -192,7 +192,7 @@ public:
   {
     auto ptr = Peek(1);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to peek data");
       return 0;
     }
     return *ptr;
@@ -202,7 +202,7 @@ public:
   {
     auto ptr = Peek(2);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to peek data");
       return 0;
     }
     return mozilla::BigEndian::readUint16(ptr);
@@ -212,7 +212,7 @@ public:
   {
     auto ptr = Peek(3);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to peek data");
       return 0;
     }
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
@@ -227,7 +227,7 @@ public:
   {
     auto ptr = Peek(4);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to peek data");
       return 0;
     }
     return mozilla::BigEndian::readUint32(ptr);
@@ -237,7 +237,7 @@ public:
   {
     auto ptr = Peek(4);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to peek data");
       return 0;
     }
     return mozilla::BigEndian::readInt32(ptr);
@@ -247,7 +247,7 @@ public:
   {
     auto ptr = Peek(8);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to peek data");
       return 0;
     }
     return mozilla::BigEndian::readUint64(ptr);
@@ -257,7 +257,7 @@ public:
   {
     auto ptr = Peek(8);
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Failed to peek data");
       return 0;
     }
     return mozilla::BigEndian::readInt64(ptr);
@@ -274,7 +274,7 @@ public:
   const uint8_t* Seek(size_t aOffset)
   {
     if (aOffset >= mLength) {
-      MOZ_ASSERT(false);
+      NS_WARNING("Seek failed");
       return nullptr;
     }
 
@@ -301,7 +301,7 @@ public:
   {
     auto ptr = Read(sizeof(T));
     if (!ptr) {
-      MOZ_ASSERT(false);
+      NS_WARNING("ReadType failed");
       return 0;
     }
     return *reinterpret_cast<const T*>(ptr);
@@ -312,6 +312,7 @@ public:
   {
     auto ptr = Read(aLength * sizeof(T));
     if (!ptr) {
+      NS_WARNING("ReadArray failed");
       return false;
     }
 
@@ -325,6 +326,7 @@ public:
   {
     auto ptr = Read(aLength * sizeof(T));
     if (!ptr) {
+      NS_WARNING("ReadArray failed");
       return false;
     }
 

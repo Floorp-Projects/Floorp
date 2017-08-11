@@ -8,7 +8,7 @@
 "use strict";
 
 function run_test() {
-  let EventEmitter = require("devtools/shared/event-emitter");
+  let EventEmitter = require("devtools/shared/old-event-emitter");
 
   function MonitorClient(client, form) {
     this.client = client;

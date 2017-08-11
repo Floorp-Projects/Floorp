@@ -71,7 +71,7 @@ function OptionsPanel(iframeWindow, toolbox) {
 
   this._addListeners();
 
-  const EventEmitter = require("devtools/shared/event-emitter");
+  const EventEmitter = require("devtools/shared/old-event-emitter");
   EventEmitter.decorate(this);
 }
 

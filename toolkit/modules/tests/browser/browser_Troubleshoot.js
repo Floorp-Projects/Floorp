@@ -567,6 +567,9 @@ const SNAPSHOT_SCHEMA = {
         handlerUsed: {
           type: "boolean",
         },
+        instantiator: {
+          type: "string"
+        }
       },
     },
     libraryVersions: {

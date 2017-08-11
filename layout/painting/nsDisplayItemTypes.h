@@ -10,12 +10,12 @@
  * It's useful to be able to dynamically check the type of certain items.
  * Every subclass of nsDisplayItem must have a new type added here for the purposes
  * of easy comparison and matching of items in different display lists.
- *
- * This is #included inside nsDisplayItem.
  */
 
+#ifndef NSDISPLAYITEMTYPES_H_
+#define NSDISPLAYITEMTYPES_H_
 
-enum Type {
+enum class DisplayItemType {
   TYPE_ZERO = 0, /** Spacer so that the first item starts at 1 */
 
 #define DECLARE_DISPLAY_ITEM_TYPE(name) TYPE_##name,
@@ -36,11 +36,11 @@ enum DisplayItemFlags {
   TYPE_RENDERS_NO_IMAGES = 1 << 0
 };
 
-static const char* DisplayItemTypeName(Type aType)
+inline const char* DisplayItemTypeName(DisplayItemType aType)
 {
   switch (aType) {
-#define DECLARE_DISPLAY_ITEM_TYPE(name) case TYPE_##name: return #name;
-#define DECLARE_DISPLAY_ITEM_TYPE_FLAGS(name,flags) case TYPE_##name: return #name;
+#define DECLARE_DISPLAY_ITEM_TYPE(name) case DisplayItemType::TYPE_##name: return #name;
+#define DECLARE_DISPLAY_ITEM_TYPE_FLAGS(name,flags) case DisplayItemType::TYPE_##name: return #name;
 #include "nsDisplayItemTypesList.h"
 #undef DECLARE_DISPLAY_ITEM_TYPE
 #undef DECLARE_DISPLAY_ITEM_TYPE_FLAGS
@@ -49,9 +49,9 @@ static const char* DisplayItemTypeName(Type aType)
   }
 }
 
-static uint8_t GetDisplayItemFlagsForType(Type aType)
+inline uint8_t GetDisplayItemFlagsForType(DisplayItemType aType)
 {
-  static const uint8_t flags[TYPE_MAX] = {
+  static const uint8_t flags[static_cast<uint32_t>(DisplayItemType::TYPE_MAX)] = {
     0
 #define DECLARE_DISPLAY_ITEM_TYPE(name) ,0
 #define DECLARE_DISPLAY_ITEM_TYPE_FLAGS(name,flags) ,flags
@@ -60,13 +60,15 @@ static uint8_t GetDisplayItemFlagsForType(Type aType)
 #undef DECLARE_DISPLAY_ITEM_TYPE_FLAGS
   };
 
-  return flags[aType];
+  return flags[static_cast<uint32_t>(aType)];
 }
 
-static Type GetDisplayItemTypeFromKey(uint32_t aDisplayItemKey)
+inline DisplayItemType GetDisplayItemTypeFromKey(uint32_t aDisplayItemKey)
 {
   static const uint32_t typeMask = (1 << TYPE_BITS) - 1;
-  Type type = static_cast<Type>(aDisplayItemKey & typeMask);
-  NS_ASSERTION(type > TYPE_ZERO && type < TYPE_MAX, "Invalid display item type!");
+  DisplayItemType type = static_cast<DisplayItemType>(aDisplayItemKey & typeMask);
+  NS_ASSERTION(type >= DisplayItemType::TYPE_ZERO && type < DisplayItemType::TYPE_MAX, "Invalid display item type!");
   return type;
 }
+
+#endif /*NSDISPLAYITEMTYPES_H_*/

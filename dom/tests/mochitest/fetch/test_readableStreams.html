@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for ReadableStreams and Fetch</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common_readableStreams.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <iframe src="iframe_readableStreams.html" id="iframe"></iframe>
+  <script type="application/javascript">
+
+let tests = [
+  function() {
+    SpecialPowers.pushPrefEnv({
+      "set": [["dom.caches.enabled", true],
+              ["dom.caches.testing.enabled", true],
+              ["dom.quotaManager.testing", true],
+              ["dom.streams.enabled", true],
+              ["javascript.options.streams", true]]
+    }, next);
+  },
+
+  function() { test_nativeStream(SAME_COMPARTMENT); },
+  function() { test_nativeStream(IFRAME_COMPARTMENT); },
+  function() { workify('test_nativeStream'); },
+
+  function() { test_nonNativeStream(SAME_COMPARTMENT); },
+  function() { test_nonNativeStream(IFRAME_COMPARTMENT); },
+  function() { workify('test_nonNativeStream'); },
+
+  function() { test_pendingStream(SAME_COMPARTMENT); },
+  function() { test_pendingStream(IFRAME_COMPARTMENT); },
+  function() { workify('test_pendingStream'); },
+
+  function() { test_noUint8Array(SAME_COMPARTMENT); },
+  function() { test_noUint8Array(IFRAME_COMPARTMENT); },
+  function() { workify('test_noUint8Array'); },
+
+  function() { test_nativeStream_cache(SAME_COMPARTMENT); },
+  function() { test_nativeStream_cache(IFRAME_COMPARTMENT); },
+  function() { workify('test_nativeStream_cache'); },
+
+  function() { test_nonNativeStream_cache(SAME_COMPARTMENT); },
+  function() { test_nonNativeStream_cache(IFRAME_COMPARTMENT); },
+  function() { workify('test_nonNativeStream_cache'); },
+
+  function() { test_codeExecution(SAME_COMPARTMENT); },
+  function() { test_codeExecution(IFRAME_COMPARTMENT); },
+
+  function() { test_global(SAME_COMPARTMENT); },
+  function() { test_global(IFRAME_COMPARTMENT); },
+  function() { workify('test_global'); },
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  let test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+
+  </script>
+</body>
+</html>
+

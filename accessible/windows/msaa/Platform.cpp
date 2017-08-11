@@ -30,6 +30,8 @@ static StaticAutoPtr<RegisteredProxy> gRegCustomProxy;
 static StaticAutoPtr<RegisteredProxy> gRegProxy;
 static StaticAutoPtr<RegisteredProxy> gRegAccTlb;
 static StaticAutoPtr<RegisteredProxy> gRegMiscTlb;
+static nsString* gInstantiator = nullptr;
+
 void
 a11y::PlatformInit()
 {
@@ -65,6 +67,11 @@ a11y::PlatformShutdown()
   gRegProxy = nullptr;
   gRegAccTlb = nullptr;
   gRegMiscTlb = nullptr;
+
+  if (gInstantiator) {
+    delete gInstantiator;
+    gInstantiator = nullptr;
+  }
 }
 
 void
@@ -204,5 +211,26 @@ a11y::IsHandlerRegistered()
     return false;
   }
 
+  return true;
+}
+
+void
+a11y::SetInstantiator(const nsAString& aInstantiator)
+{
+  if (!gInstantiator) {
+    gInstantiator = new nsString();
+  }
+
+  gInstantiator->Assign(aInstantiator);
+}
+
+bool
+a11y::GetInstantiator(nsAString& aInstantiator)
+{
+  if (!gInstantiator) {
+    return false;
+  }
+
+  aInstantiator.Assign(*gInstantiator);
   return true;
 }

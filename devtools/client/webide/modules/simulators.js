@@ -11,7 +11,7 @@ loader.lazyRequireGetter(this, "AddonSimulatorProcess", "devtools/client/webide/
 loader.lazyRequireGetter(this, "OldAddonSimulatorProcess", "devtools/client/webide/modules/simulator-process", true);
 loader.lazyRequireGetter(this, "CustomSimulatorProcess", "devtools/client/webide/modules/simulator-process", true);
 const asyncStorage = require("devtools/shared/async-storage");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const Services = require("Services");
 
 const SimulatorRegExp = new RegExp(Services.prefs.getCharPref("devtools.webide.simulatorAddonRegExp"));

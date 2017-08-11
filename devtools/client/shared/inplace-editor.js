@@ -42,7 +42,7 @@ const MAX_POPUP_ENTRIES = 500;
 const FOCUS_FORWARD = focusManager.MOVEFOCUS_FORWARD;
 const FOCUS_BACKWARD = focusManager.MOVEFOCUS_BACKWARD;
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
 
 /**

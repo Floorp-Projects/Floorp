@@ -1257,6 +1257,8 @@ CompositorBridgeParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   // Otherwise, it should be continually increasing.
   MOZ_ASSERT(aInfo.id() == 1 || aInfo.id() > mPendingTransaction);
   mPendingTransaction = aInfo.id();
+  mTxnStartTime = aInfo.transactionStart();
+  mFwdTime = aInfo.fwdTime();
 
   if (root) {
     SetShadowProperties(root);
@@ -1950,6 +1952,20 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
     NotifyDidComposite(mWrBridge->FlushPendingTransactionIds(), aCompositeStart, aCompositeEnd);
   } else {
     NotifyDidComposite(mPendingTransaction, aCompositeStart, aCompositeEnd);
+#if defined(ENABLE_FRAME_LATENCY_LOG)
+    if (mPendingTransaction) {
+      if (mTxnStartTime) {
+        uint32_t latencyMs = round((aCompositeEnd - mTxnStartTime).ToMilliseconds());
+        printf_stderr("From transaction start to end of generate frame latencyMs %d this %p\n", latencyMs, this);
+      }
+      if (mFwdTime) {
+        uint32_t latencyMs = round((aCompositeEnd - mFwdTime).ToMilliseconds());
+        printf_stderr("From forwarding transaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
+      }
+    }
+    mTxnStartTime = TimeStamp();
+    mFwdTime = TimeStamp();
+#endif
     mPendingTransaction = 0;
   }
 }

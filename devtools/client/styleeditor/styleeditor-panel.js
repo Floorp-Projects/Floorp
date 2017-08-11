@@ -8,7 +8,7 @@ var Services = require("Services");
 var promise = require("promise");
 var {Task} = require("devtools/shared/task");
 var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/old-event-emitter");
 
 var {StyleEditorUI} = require("resource://devtools/client/styleeditor/StyleEditorUI.jsm");
 var {getString} = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");

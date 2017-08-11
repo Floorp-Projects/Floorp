@@ -11,7 +11,7 @@ const {Connection} = require("devtools/shared/client/connection-manager");
 const {DebuggerServer} = require("devtools/server/main");
 const {Simulators} = require("devtools/client/webide/modules/simulators");
 const discovery = require("devtools/shared/discovery/discovery");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const promise = require("promise");
 loader.lazyRequireGetter(this, "AuthenticationResult",
   "devtools/shared/security/auth", true);

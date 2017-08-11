@@ -3587,7 +3587,12 @@ nsHttpConnectionMgr::GetOrCreateConnectionEntry(nsHttpConnectionInfo *specificCI
     if (!specificEnt) {
         RefPtr<nsHttpConnectionInfo> clone(specificCI->Clone());
         specificEnt = new nsConnectionEntry(clone);
+#if defined(_WIN64) && defined(WIN95)
+        specificEnt->mUseFastOpen = gHttpHandler->UseFastOpen() &&
+                                    gSocketTransportService->HasFileDesc2PlatformOverlappedIOHandleFunc();
+#else
         specificEnt->mUseFastOpen = gHttpHandler->UseFastOpen();
+#endif
         mCT.Put(clone->HashKey(), specificEnt);
     }
     return specificEnt;

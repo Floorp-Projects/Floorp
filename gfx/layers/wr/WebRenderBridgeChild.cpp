@@ -102,7 +102,8 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
                             const gfx::IntSize& aSize,
                             bool aIsSync,
                             uint64_t aTransactionId,
-                            const WebRenderScrollData& aScrollData)
+                            const WebRenderScrollData& aScrollData,
+                            const mozilla::TimeStamp& aTxnStartTime)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
@@ -119,10 +120,10 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
 
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, fwdTime);
+                        contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, aTxnStartTime, fwdTime);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, fwdTime);
+                    contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, aTxnStartTime, fwdTime);
   }
 
   mParentCommands.Clear();

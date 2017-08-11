@@ -1078,6 +1078,11 @@ public:
 
   static bool PrefetchPreloadEnabled(nsIDocShell* aDocShell);
 
+  static void
+  ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                     nsACString& aSourceSpecOut, uint32_t *aLineOut,
+                     uint32_t *aColumnOut, nsString& aMessageOut);
+
   /**
    * Fill (with the parameters given) the localized string named |aKey| in
    * properties file |aFile|.
@@ -2864,6 +2869,8 @@ public:
   static bool PromiseRejectionEventsEnabled(JSContext* aCx, JSObject* aObj);
 
   static bool PushEnabled(JSContext* aCx, JSObject* aObj);
+
+  static bool StreamsEnabled(JSContext* aCx, JSObject* aObj);
 
   static bool IsNonSubresourceRequest(nsIChannel* aChannel);
 

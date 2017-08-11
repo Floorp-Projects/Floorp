@@ -6,7 +6,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");

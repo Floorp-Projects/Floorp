@@ -562,7 +562,7 @@ void nsChildView::TearDownView()
 }
 
 nsCocoaWindow*
-nsChildView::GetXULWindowWidget()
+nsChildView::GetXULWindowWidget() const
 {
   id windowDelegate = [[mView window] delegate];
   if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
@@ -696,6 +696,10 @@ bool nsChildView::IsVisible() const
 
   if (!mVisible) {
     return mVisible;
+  }
+
+  if (!GetXULWindowWidget()->IsVisible()) {
+    return false;
   }
 
   // mVisible does not accurately reflect the state of a hidden tabbed view

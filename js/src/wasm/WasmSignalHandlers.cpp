@@ -255,6 +255,7 @@ class AutoSetHandlingSegFault
 # define RIP_sig(p) ((p)->uc_mcontext->__ss.__rip)
 # define RBP_sig(p) ((p)->uc_mcontext->__ss.__rbp)
 # define RSP_sig(p) ((p)->uc_mcontext->__ss.__rsp)
+# define R14_sig(p) ((p)->uc_mcontext->__ss.__lr)
 # define R15_sig(p) ((p)->uc_mcontext->__ss.__pc)
 #else
 # error "Don't know how to read/write to the thread state via the mcontext_t."
@@ -443,15 +444,15 @@ ContextToSP(CONTEXT* context)
 {
     return reinterpret_cast<uint8_t*>(SP_sig(context));
 }
-#endif
 
-#if defined(__arm__) || defined(__aarch64__)
+# if defined(__arm__) || defined(__aarch64__)
 static uint8_t*
 ContextToLR(CONTEXT* context)
 {
     return reinterpret_cast<uint8_t*>(LR_sig(context));
 }
-#endif
+# endif
+#endif // JS_CODEGEN_NONE
 
 #if defined(XP_DARWIN)
 
@@ -483,11 +484,19 @@ ContextToFP(EMULATOR_CONTEXT* context)
 # elif defined(__i386__)
     return (uint8_t*)context->thread.uts.ts32.__ebp;
 # elif defined(__arm__)
-    return (uint8_t*)context->thread.__fp;
+    return (uint8_t*)context->thread.__r[11];
 # else
 #  error Unsupported architecture
 # endif
 }
+
+# if defined(__arm__) || defined(__aarch64__)
+static uint8_t*
+ContextToLR(EMULATOR_CONTEXT* context)
+{
+    return (uint8_t*)context->thread.__lr;
+}
+# endif
 
 static uint8_t*
 ContextToSP(EMULATOR_CONTEXT* context)
@@ -510,7 +519,9 @@ ToRegisterState(EMULATOR_CONTEXT* context)
     state.fp = ContextToFP(context);
     state.pc = *ContextToPC(context);
     state.sp = ContextToSP(context);
-    // no ARM on Darwin => don't fill state.lr.
+# if defined(__arm__) || defined(__aarch64__)
+    state.lr = ContextToLR(context);
+# endif
     return state;
 }
 #endif // XP_DARWIN
