@@ -22,6 +22,7 @@
 
 #include "BodyExtractor.h"
 #include "FetchStream.h"
+#include "FetchStreamReader.h"
 #include "InternalResponse.h"
 #include "WorkerPrivate.h"
 
@@ -38,6 +39,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Response)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHeaders)
 
   tmp->mReadableStreamBody = nullptr;
+  tmp->mReadableStreamReader = nullptr;
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -49,6 +51,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Response)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReadableStreamBody)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReadableStreamReader)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -225,7 +228,7 @@ Response::Constructor(const GlobalObject& aGlobal,
 
     nsCString contentTypeWithCharset;
     nsCOMPtr<nsIInputStream> bodyStream;
-    uint64_t bodySize = 0;
+    int64_t bodySize = InternalResponse::UNKNOWN_BODY_SIZE;
 
     if (aBody.Value().IsReadableStream()) {
       const ReadableStream& readableStream =
@@ -243,38 +246,50 @@ Response::Constructor(const GlobalObject& aGlobal,
 
       r->SetReadableStreamBody(readableStreamObj);
 
-      // TODO: see next patches
-      MOZ_ASSERT(JS::ReadableStreamGetMode(readableStreamObj) !=
-                   JS::ReadableStreamMode::ExternalSource);
+      if (JS::ReadableStreamGetMode(readableStreamObj) ==
+            JS::ReadableStreamMode::ExternalSource) {
+        // If this is a DOM generated ReadableStream, we can extract the
+        // inputStream directly.
+        void* underlyingSource = nullptr;
+        if (!JS::ReadableStreamGetExternalUnderlyingSource(aGlobal.Context(),
+                                                           readableStreamObj,
+                                                           &underlyingSource)) {
+          aRv.StealExceptionFromJSContext(aGlobal.Context());
+          return nullptr;
+        }
 
-      void* underlyingSource = nullptr;
-      if (!JS::ReadableStreamGetExternalUnderlyingSource(aGlobal.Context(),
-                                                         readableStreamObj,
-                                                         &underlyingSource)) {
-        aRv.StealExceptionFromJSContext(aGlobal.Context());
-        return nullptr;
-      }
+        MOZ_ASSERT(underlyingSource);
 
-      bodySize = InternalResponse::UNKNOWN_BODY_SIZE;
+        aRv = FetchStream::RetrieveInputStream(underlyingSource,
+                                               getter_AddRefs(bodyStream));
 
-      MOZ_ASSERT(underlyingSource);
-      aRv = FetchStream::RetrieveInputStream(underlyingSource,
-                                             getter_AddRefs(bodyStream));
-
-      // The releasing of the external source is needed in order to avoid an extra
-      // stream lock.
-      JS::ReadableStreamReleaseExternalUnderlyingSource(readableStreamObj);
-      if (NS_WARN_IF(aRv.Failed())) {
-        return nullptr;
+        // The releasing of the external source is needed in order to avoid an
+        // extra stream lock.
+        JS::ReadableStreamReleaseExternalUnderlyingSource(readableStreamObj);
+        if (NS_WARN_IF(aRv.Failed())) {
+          return nullptr;
+        }
+      } else {
+        // If this is a JS-created ReadableStream, let's create a
+        // FetchStreamReader.
+        aRv = FetchStreamReader::Create(aGlobal.Context(), global,
+                                        getter_AddRefs(r->mFetchStreamReader),
+                                        getter_AddRefs(bodyStream));
+        if (NS_WARN_IF(aRv.Failed())) {
+          return nullptr;
+        }
       }
     } else {
+      uint64_t size = 0;
       aRv = ExtractByteStreamFromBody(aBody.Value(),
                                       getter_AddRefs(bodyStream),
                                       contentTypeWithCharset,
-                                      bodySize);
+                                      size);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
       }
+
+      bodySize = size;
     }
 
     internalResponse->SetBody(bodyStream, bodySize);
@@ -306,14 +321,26 @@ Response::Clone(JSContext* aCx, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<InternalResponse> ir = mInternalResponse->Clone();
-  RefPtr<Response> response = new Response(mOwner, ir);
+  RefPtr<FetchStreamReader> streamReader;
+  nsCOMPtr<nsIInputStream> inputStream;
 
   JS::Rooted<JSObject*> body(aCx);
-  MaybeTeeReadableStreamBody(aCx, &body, aRv);
+  MaybeTeeReadableStreamBody(aCx, &body,
+                             getter_AddRefs(streamReader),
+                             getter_AddRefs(inputStream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
+  MOZ_ASSERT_IF(body, streamReader);
+  MOZ_ASSERT_IF(body, inputStream);
+
+  RefPtr<InternalResponse> ir =
+    mInternalResponse->Clone(body
+      ? InternalResponse::eDontCloneInputStream
+      : InternalResponse::eCloneInputStream);
+
+  RefPtr<Response> response = new Response(mOwner, ir);
 
   if (body) {
     // Maybe we have a body, but we receive null from MaybeTeeReadableStreamBody
@@ -321,6 +348,8 @@ Response::Clone(JSContext* aCx, ErrorResult& aRv)
     // have a clone of the native body and the ReadableStream will be created
     // lazily if needed.
     response->SetReadableStreamBody(body);
+    response->mFetchStreamReader = streamReader;
+    ir->SetBody(inputStream, InternalResponse::UNKNOWN_BODY_SIZE);
   }
 
   return response.forget();
@@ -334,15 +363,27 @@ Response::CloneUnfiltered(JSContext* aCx, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<InternalResponse> clone = mInternalResponse->Clone();
-  RefPtr<InternalResponse> ir = clone->Unfiltered();
-  RefPtr<Response> ref = new Response(mOwner, ir);
+  RefPtr<FetchStreamReader> streamReader;
+  nsCOMPtr<nsIInputStream> inputStream;
 
   JS::Rooted<JSObject*> body(aCx);
-  MaybeTeeReadableStreamBody(aCx, &body, aRv);
+  MaybeTeeReadableStreamBody(aCx, &body,
+                             getter_AddRefs(streamReader),
+                             getter_AddRefs(inputStream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
+  MOZ_ASSERT_IF(body, streamReader);
+  MOZ_ASSERT_IF(body, inputStream);
+
+  RefPtr<InternalResponse> clone =
+    mInternalResponse->Clone(body
+      ? InternalResponse::eDontCloneInputStream
+      : InternalResponse::eCloneInputStream);
+
+  RefPtr<InternalResponse> ir = clone->Unfiltered();
+  RefPtr<Response> ref = new Response(mOwner, ir);
 
   if (body) {
     // Maybe we have a body, but we receive null from MaybeTeeReadableStreamBody
@@ -350,6 +391,8 @@ Response::CloneUnfiltered(JSContext* aCx, ErrorResult& aRv)
     // have a clone of the native body and the ReadableStream will be created
     // lazily if needed.
     ref->SetReadableStreamBody(body);
+    ref->mFetchStreamReader = streamReader;
+    ir->SetBody(inputStream, InternalResponse::UNKNOWN_BODY_SIZE);
   }
 
   return ref.forget();

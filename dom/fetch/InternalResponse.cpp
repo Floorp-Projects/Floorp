@@ -137,18 +137,18 @@ InternalResponse::ToIPC(IPCInternalResponse* aIPCResponse,
 }
 
 already_AddRefed<InternalResponse>
-InternalResponse::Clone()
+InternalResponse::Clone(CloneType aCloneType)
 {
   RefPtr<InternalResponse> clone = CreateIncompleteCopy();
 
   clone->mHeaders = new InternalHeaders(*mHeaders);
   if (mWrappedResponse) {
-    clone->mWrappedResponse = mWrappedResponse->Clone();
+    clone->mWrappedResponse = mWrappedResponse->Clone(aCloneType);
     MOZ_ASSERT(!mBody);
     return clone.forget();
   }
 
-  if (!mBody) {
+  if (!mBody || aCloneType == eDontCloneInputStream) {
     return clone.forget();
   }
 
