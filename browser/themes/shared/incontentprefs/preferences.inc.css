@@ -631,25 +631,25 @@ separator.thin:not([orient="vertical"]) {
   background-image: url("chrome://global/skin/icons/help.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: 0.8;
   font-size: 13px;
-  line-height: 16px;
-  height: 16px;
-  background-position: 8px;
+  line-height: 36px;
+  height: 36px;
+  width: 168px;
+  background-position: left 10px top 10px;
+  background-size: 16px;
   padding-inline-start: 38px;
-  margin-inline-start: 44px;
+  margin-inline-start: 34px;
   white-space: nowrap;
 }
 
 .help-button:-moz-locale-dir(rtl) {
-  background-position: right 8px top 0;
+  background-position: right 10px top 10px;
   left: auto;
   right: 0;
 }
 
 .help-button:hover {
   fill: currentColor;
-  fill-opacity: 0.9;
 }
 
 .help-button:link,
