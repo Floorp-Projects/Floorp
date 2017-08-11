@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-env mozilla/frame-script */
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 "use strict";
 

@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 // Bug 1318389 - This test does a lot of window and tab manipulation,

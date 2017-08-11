@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 const HOST = "https://example.com";
 const URL = HOST + "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 const TIMEOUT_PREF = "signon.masterPasswordReprompt.timeout_ms";
