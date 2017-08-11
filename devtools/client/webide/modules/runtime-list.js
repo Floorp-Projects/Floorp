@@ -6,7 +6,7 @@
 
 const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {RuntimeScanners, WiFiScanner} = require("devtools/client/webide/modules/runtimes");
 const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const {Task} = require("devtools/shared/task");

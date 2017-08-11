@@ -8,7 +8,7 @@ const promise = require("promise");
 const {Task} = require("devtools/shared/task");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 const Services = require("Services");
 
