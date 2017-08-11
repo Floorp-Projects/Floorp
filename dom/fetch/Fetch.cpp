@@ -925,5 +925,24 @@ template
 void
 FetchBody<Response>::SetMimeType();
 
+template <class Derived>
+void
+FetchBody<Derived>::GetBody(JSContext* aCx,
+                            JS::MutableHandle<JSObject*> aMessage)
+{
+  // TODO
+}
+
+template
+void
+FetchBody<Request>::GetBody(JSContext* aCx,
+                            JS::MutableHandle<JSObject*> aMessage);
+
+template
+void
+FetchBody<Response>::GetBody(JSContext* aCx,
+                             JS::MutableHandle<JSObject*> aMessage);
+
+
 } // namespace dom
 } // namespace mozilla
