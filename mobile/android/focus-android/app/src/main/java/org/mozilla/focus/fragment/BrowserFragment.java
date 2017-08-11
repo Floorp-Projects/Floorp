@@ -180,11 +180,21 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             @Override
             public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
                 // When scrolling the toolbar away we want to fade out the content on the toolbar
-                // with an alpha animation. This will avoid that the text
+                // with an alpha animation. This will avoid that the text clashes with the status bar.
+
+                final int totalScrollRange = appBarLayout.getTotalScrollRange();
+                if (verticalOffset == 0 || Math.abs(verticalOffset) == totalScrollRange) {
+                    // If the app bar is completely expanded or collapsed we want full opacity. We
+                    // even want full opacity for a collapsed app bar because while loading a website
+                    // the toolbar sometimes pops out when the URL changes. Without setting it to
+                    // opaque the toolbar content might be invisible in this case (See issue #1126)
+                    toolbarContent.setAlpha(1f);
+                    return;
+                }
 
                 // The toolbar content should have 100% alpha when the AppBarLayout is expanded and
                 // should have 0 alpha when the toolbar is collapsed 50% or more.
-                float alpha = -1 * (((100f / (appBarLayout.getTotalScrollRange() * 0.5f)) * verticalOffset) / 100);
+                float alpha = -1 * (((100f / (totalScrollRange * 0.5f)) * verticalOffset) / 100);
 
                 // We never want to go lower than 0 or higher than 1.
                 alpha = Math.max(0, alpha);
