@@ -91,7 +91,7 @@ protected:
   int32_t       mResolution;
   int32_t       mDuplex;
   int32_t       mNumCopies;
-  nsXPIDLString mPrinter;
+  nsString      mPrinter;
   bool          mPrintToFile;
   nsString      mToFileName;
   int16_t       mOutputFormat;

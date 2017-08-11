@@ -50,8 +50,9 @@ nsGfxButtonControlFrame::GetFrameName(nsAString& aResult) const
 nsresult
 nsGfxButtonControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
-  nsXPIDLString label;
-  GetLabel(label);
+  nsAutoString label;
+  nsresult rv = GetLabel(label);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Add a child text content node for the label
   mTextContent = new nsTextNode(mContent->NodeInfo()->NodeInfoManager());
@@ -83,7 +84,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsHTMLButtonControlFrame)
 // label from a string bundle as is done for all other UI strings.
 // See bug 16999 for further details.
 nsresult
-nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString) const
+nsGfxButtonControlFrame::GetDefaultLabel(nsAString& aString) const
 {
   nsCOMPtr<nsIFormControl> form = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(form, NS_ERROR_UNEXPECTED);
@@ -106,7 +107,7 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString) const
 }
 
 nsresult
-nsGfxButtonControlFrame::GetLabel(nsXPIDLString& aLabel)
+nsGfxButtonControlFrame::GetLabel(nsString& aLabel)
 {
   // Get the text from the "value" property on our content if there is
   // one; otherwise set it to a default value (localized).
@@ -160,7 +161,7 @@ nsGfxButtonControlFrame::AttributeChanged(int32_t         aNameSpaceID,
   // If the value attribute is set, update the text of the label
   if (nsGkAtoms::value == aAttribute) {
     if (mTextContent && mContent) {
-      nsXPIDLString label;
+      nsAutoString label;
       rv = GetLabel(label);
       NS_ENSURE_SUCCESS(rv, rv);
 
