@@ -9,44 +9,45 @@
 
 #include <set>
 
-#include "ipc/IPCMessageUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "nsString.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 namespace HangMonitor {
 
 /**
- * This type represents an individual hang annotation.
+ * This class declares an abstraction for a data type that encapsulates all
+ * of the annotations being reported by a registered hang Annotator.
  */
-class Annotation
+class HangAnnotations
 {
 public:
-  Annotation() {}
-  Annotation(const nsAString& aName, const nsAString& aValue)
-    : mName(aName), mValue(aValue)
-  {}
+  virtual ~HangAnnotations() {}
 
-  nsString mName;
-  nsString mValue;
+  virtual void AddAnnotation(const nsAString& aName, const int32_t aData) = 0;
+  virtual void AddAnnotation(const nsAString& aName, const double aData) = 0;
+  virtual void AddAnnotation(const nsAString& aName, const nsAString& aData) = 0;
+  virtual void AddAnnotation(const nsAString& aName, const nsACString& aData) = 0;
+  virtual void AddAnnotation(const nsAString& aName, const bool aData) = 0;
+
+  class Enumerator
+  {
+  public:
+    virtual ~Enumerator() {}
+    virtual bool Next(nsAString& aOutName, nsAString& aOutValue) = 0;
+  };
+
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+  virtual size_t Count() const = 0;
+  virtual bool IsEmpty() const = 0;
+  virtual UniquePtr<Enumerator> GetEnumerator() = 0;
 };
 
-/**
- * This class extends nsTArray<Annotation> with some methods for adding
- * annotations being reported by a registered hang Annotator.
- */
-class HangAnnotations : public nsTArray<Annotation>
-{
-public:
-  void AddAnnotation(const nsAString& aName, const int32_t aData);
-  void AddAnnotation(const nsAString& aName, const double aData);
-  void AddAnnotation(const nsAString& aName, const nsAString& aData);
-  void AddAnnotation(const nsAString& aName, const nsACString& aData);
-  void AddAnnotation(const nsAString& aName, const bool aData);
-};
+typedef UniquePtr<HangAnnotations> HangAnnotationsPtr;
+typedef Vector<HangAnnotationsPtr> HangAnnotationsVector;
 
 class Annotator
 {
@@ -74,9 +75,14 @@ void UnregisterAnnotator(Annotator& aAnnotator);
 
 /**
  * Gathers annotations. This function should be called by ChromeHangs.
- * @return HangAnnotations object.
+ * @return UniquePtr to HangAnnotations object or nullptr if none.
  */
-HangAnnotations ChromeHangAnnotatorCallout();
+HangAnnotationsPtr ChromeHangAnnotatorCallout();
+
+/**
+ * Creates an empty UniquePtr<HangAnnotations>.
+ */
+HangAnnotationsPtr CreateEmptyHangAnnotations();
 
 namespace Observer {
 
@@ -89,7 +95,7 @@ public:
   bool Register(Annotator& aAnnotator);
   bool Unregister(Annotator& aAnnotator);
 
-  HangAnnotations GatherAnnotations();
+  HangAnnotationsPtr GatherAnnotations();
 
 private:
   Mutex                mMutex;
@@ -100,28 +106,5 @@ private:
 
 } // namespace HangMonitor
 } // namespace mozilla
-
-namespace IPC {
-
-template<>
-class ParamTraits<mozilla::HangMonitor::HangAnnotations>
-  : public ParamTraits<nsTArray<mozilla::HangMonitor::Annotation>>
-{
-public:
-  typedef mozilla::HangMonitor::HangAnnotations paramType;
-};
-
-template<>
-class ParamTraits<mozilla::HangMonitor::Annotation>
-{
-public:
-  typedef mozilla::HangMonitor::Annotation paramType;
-  static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg,
-                   PickleIterator* aIter,
-                   paramType* aResult);
-};
-
-} // namespace IPC
 
 #endif // mozilla_HangAnnotations_h
