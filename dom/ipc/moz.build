@@ -20,6 +20,7 @@ EXPORTS.mozilla.dom.ipc += [
 
 EXPORTS.mozilla.dom += [
     'CoalescedInputData.h',
+    'CoalescedMouseData.h',
     'CoalescedWheelData.h',
     'ContentBridgeChild.h',
     'ContentBridgeParent.h',
@@ -51,6 +52,7 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    'CoalescedMouseData.cpp',
     'CoalescedWheelData.cpp',
     'ColorPickerParent.cpp',
     'ContentBridgeChild.cpp',
