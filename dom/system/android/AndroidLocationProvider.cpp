@@ -27,8 +27,10 @@ AndroidLocationProvider::~AndroidLocationProvider()
 NS_IMETHODIMP
 AndroidLocationProvider::Startup()
 {
-    java::GeckoAppShell::EnableLocation(true);
-    return NS_OK;
+    if (java::GeckoAppShell::EnableLocation(true)) {
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -43,8 +45,10 @@ AndroidLocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 NS_IMETHODIMP
 AndroidLocationProvider::Shutdown()
 {
-    java::GeckoAppShell::EnableLocation(false);
-    return NS_OK;
+    if (java::GeckoAppShell::EnableLocation(false)) {
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
