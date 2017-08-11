@@ -198,6 +198,8 @@ public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLContext)
     static MOZ_THREAD_LOCAL(const GLContext*) sCurrentContext;
 
+    bool mImplicitMakeCurrent;
+
 // -----------------------------------------------------------------------------
 // basic getters
 public:
@@ -652,11 +654,6 @@ private:
 // MOZ_GL_DEBUG implementation
 private:
 
-#undef BEFORE_GL_CALL
-#undef AFTER_GL_CALL
-
-#ifdef MOZ_GL_DEBUG
-
 #ifndef MOZ_FUNCTION_NAME
 # ifdef __GNUC__
 #  define MOZ_FUNCTION_NAME __PRETTY_FUNCTION__
@@ -667,51 +664,45 @@ private:
 # endif
 #endif
 
-    void BeforeGLCall(const char* funcName) {
+#ifdef MOZ_WIDGET_ANDROID
+// Record the name of the GL call for better hang stacks on Android.
+#define ANDROID_ONLY_PROFILER_LABEL AUTO_PROFILER_LABEL(__func__, GRAPHICS);
+#else
+#define ANDROID_ONLY_PROFILER_LABEL
+#endif
+
+#define BEFORE_GL_CALL \
+        ANDROID_ONLY_PROFILER_LABEL \
+        if (BeforeGLCall(MOZ_FUNCTION_NAME)) { \
+            do { } while (0)
+
+#define AFTER_GL_CALL \
+            AfterGLCall(MOZ_FUNCTION_NAME); \
+        } \
+        do { } while (0)
+
+    void BeforeGLCall_Debug(const char* funcName) const;
+    void AfterGLCall_Debug(const char* funcName) const;
+    static void OnImplicitMakeCurrentFailure(const char* funcName);
+
+    bool BeforeGLCall(const char* const funcName) const {
+        if (mImplicitMakeCurrent) {
+            if (MOZ_UNLIKELY( !MakeCurrent() )) {
+                OnImplicitMakeCurrentFailure(funcName);
+                return false;
+            }
+        }
         MOZ_ASSERT(IsCurrent());
 
         if (mDebugFlags) {
-            FlushErrors();
-
-            if (mDebugFlags & DebugFlagTrace) {
-                printf_stderr("[gl:%p] > %s\n", this, funcName);
-            }
-
-            GLContext* tlsContext = (GLContext*)PR_GetThreadPrivate(sCurrentGLContextTLS);
-            if (this != tlsContext) {
-                printf_stderr("Fatal: %s called on non-current context %p. The"
-                              " current context for this thread is %p.\n",
-                              funcName, this, tlsContext);
-                MOZ_CRASH("GFX: GLContext is not current.");
-            }
+            BeforeGLCall_Debug(funcName);
         }
+        return true;
     }
 
-    void AfterGLCall(const char* funcName) {
+    void AfterGLCall(const char* const funcName) const {
         if (mDebugFlags) {
-            // calling fFinish() immediately after every GL call makes sure that if this GL command crashes,
-            // the stack trace will actually point to it. Otherwise, OpenGL being an asynchronous API, stack traces
-            // tend to be meaningless
-            mSymbols.fFinish();
-            GLenum err = FlushErrors();
-
-            if (mDebugFlags & DebugFlagTrace) {
-                printf_stderr("[gl:%p] < %s [%s (0x%04x)]\n", this, funcName,
-                              GLErrorToString(err), err);
-            }
-
-            if (err != LOCAL_GL_NO_ERROR &&
-                !mLocalErrorScopeStack.size())
-            {
-                printf_stderr("[gl:%p] %s: Generated unexpected %s error."
-                              " (0x%04x)\n", this, funcName,
-                              GLErrorToString(err), err);
-
-                if (mDebugFlags & DebugFlagAbortOnError) {
-                    MOZ_CRASH("Unexpected error with MOZ_GL_DEBUG_ABORT_ON_ERROR. (Run"
-                              " with MOZ_GL_DEBUG_ABORT_ON_ERROR=0 to disable)");
-                }
-            }
+            AfterGLCall_Debug(funcName);
         }
     }
 
@@ -725,22 +716,7 @@ private:
 
     static void AssertNotPassingStackBufferToTheGL(const void* ptr);
 
-#ifdef MOZ_WIDGET_ANDROID
-// Record the name of the GL call for better hang stacks on Android.
-#define BEFORE_GL_CALL                              \
-            AUTO_PROFILER_LABEL(__func__, GRAPHICS);\
-            BeforeGLCall(MOZ_FUNCTION_NAME)
-#else
-#define BEFORE_GL_CALL                              \
-            do {                                    \
-                BeforeGLCall(MOZ_FUNCTION_NAME);    \
-            } while (0)
-#endif
-
-#define AFTER_GL_CALL                               \
-            do {                                    \
-                AfterGLCall(MOZ_FUNCTION_NAME);     \
-            } while (0)
+#ifdef MOZ_GL_DEBUG
 
 #define TRACKING_CONTEXT(a)                         \
             do {                                    \
@@ -748,20 +724,6 @@ private:
             } while (0)
 
 #define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) AssertNotPassingStackBufferToTheGL(ptr)
-
-#else // ifdef MOZ_GL_DEBUG
-
-#ifdef MOZ_WIDGET_ANDROID
-// Record the name of the GL call for better hang stacks on Android.
-#define BEFORE_GL_CALL AUTO_PROFILER_LABEL(__func__, GRAPHICS)
-#else
-#define BEFORE_GL_CALL do { } while (0)
-#endif
-#define AFTER_GL_CALL do { } while (0)
-#define TRACKING_CONTEXT(a) do {} while (0)
-#define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) do {} while (0)
-
-#endif // ifdef MOZ_GL_DEBUG
 
 #define ASSERT_SYMBOL_PRESENT(func) \
             do {\
@@ -771,6 +733,15 @@ private:
                     MOZ_CRASH("GFX: Uninitialized GL function");\
                 }\
             } while (0)
+
+#else // ifdef MOZ_GL_DEBUG
+
+#define TRACKING_CONTEXT(a) do {} while (0)
+#define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) do {} while (0)
+#define ASSERT_SYMBOL_PRESENT(func) do {} while (0)
+
+#endif // ifdef MOZ_GL_DEBUG
+
 
     // Do whatever setup is necessary to draw to our offscreen FBO, if it's
     // bound.
@@ -1182,8 +1153,9 @@ public:
     }
 
     GLint fGetAttribLocation(GLuint program, const GLchar* name) {
+        GLint retval = 0;
         BEFORE_GL_CALL;
-        GLint retval = mSymbols.fGetAttribLocation(program, name);
+        retval = mSymbols.fGetAttribLocation(program, name);
         OnSyncCall();
         AFTER_GL_CALL;
         return retval;
@@ -1235,9 +1207,10 @@ public:
     }
 
     GLuint fGetDebugMessageLog(GLuint count, GLsizei bufsize, GLenum* sources, GLenum* types, GLuint* ids, GLenum* severities, GLsizei* lengths, GLchar* messageLog) {
+        GLuint ret = 0;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fGetDebugMessageLog);
-        GLuint ret = mSymbols.fGetDebugMessageLog(count, bufsize, sources, types, ids, severities, lengths, messageLog);
+        ret = mSymbols.fGetDebugMessageLog(count, bufsize, sources, types, ids, severities, lengths, messageLog);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
@@ -1306,8 +1279,9 @@ public:
     }
 
     const GLubyte* fGetString(GLenum name) {
+        const GLubyte* result = nullptr;
         BEFORE_GL_CALL;
-        const GLubyte* result = mSymbols.fGetString(name);
+        result = mSymbols.fGetString(name);
         OnSyncCall();
         AFTER_GL_CALL;
         return result;
@@ -1367,8 +1341,9 @@ public:
     }
 
     GLint fGetUniformLocation (GLint programObj, const GLchar* name) {
+        GLint retval = 0;
         BEFORE_GL_CALL;
-        GLint retval = mSymbols.fGetUniformLocation(programObj, name);
+        retval = mSymbols.fGetUniformLocation(programObj, name);
         OnSyncCall();
         AFTER_GL_CALL;
         return retval;
@@ -1402,16 +1377,18 @@ public:
     }
 
     realGLboolean fIsBuffer(GLuint buffer) {
+        realGLboolean retval = false;
         BEFORE_GL_CALL;
-        realGLboolean retval = mSymbols.fIsBuffer(buffer);
+        retval = mSymbols.fIsBuffer(buffer);
         OnSyncCall();
         AFTER_GL_CALL;
         return retval;
     }
 
     realGLboolean fIsEnabled(GLenum capability) {
+        realGLboolean retval = false;
         BEFORE_GL_CALL;
-        realGLboolean retval = mSymbols.fIsEnabled(capability);
+        retval = mSymbols.fIsEnabled(capability);
         AFTER_GL_CALL;
         return retval;
     }
@@ -1433,22 +1410,25 @@ public:
     }
 
     realGLboolean fIsProgram(GLuint program) {
+        realGLboolean retval = false;
         BEFORE_GL_CALL;
-        realGLboolean retval = mSymbols.fIsProgram(program);
+        retval = mSymbols.fIsProgram(program);
         AFTER_GL_CALL;
         return retval;
     }
 
     realGLboolean fIsShader(GLuint shader) {
+        realGLboolean retval = false;
         BEFORE_GL_CALL;
-        realGLboolean retval = mSymbols.fIsShader(shader);
+        retval = mSymbols.fIsShader(shader);
         AFTER_GL_CALL;
         return retval;
     }
 
     realGLboolean fIsTexture(GLuint texture) {
+        realGLboolean retval = false;
         BEFORE_GL_CALL;
-        realGLboolean retval = mSymbols.fIsTexture(texture);
+        retval = mSymbols.fIsTexture(texture);
         AFTER_GL_CALL;
         return retval;
     }
@@ -1888,6 +1868,23 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+        if (mViewportRect[0] == x &&
+            mViewportRect[1] == y &&
+            mViewportRect[2] == width &&
+            mViewportRect[3] == height)
+        {
+            return;
+        }
+        mViewportRect[0] = x;
+        mViewportRect[1] = y;
+        mViewportRect[2] = width;
+        mViewportRect[3] = height;
+        BEFORE_GL_CALL;
+        mSymbols.fViewport(x, y, width, height);
+        AFTER_GL_CALL;
+    }
+
     void fCompileShader(GLuint shader) {
         BEFORE_GL_CALL;
         mSymbols.fCompileShader(shader);
@@ -1978,8 +1975,9 @@ public:
     }
 
     GLenum fCheckFramebufferStatus(GLenum target) {
+        GLenum retval = 0;
         BEFORE_GL_CALL;
-        GLenum retval = mSymbols.fCheckFramebufferStatus(target);
+        retval = mSymbols.fCheckFramebufferStatus(target);
         OnSyncCall();
         AFTER_GL_CALL;
         return retval;
@@ -2022,8 +2020,9 @@ public:
     }
 
     realGLboolean fIsFramebuffer (GLuint framebuffer) {
+        realGLboolean retval = false;
         BEFORE_GL_CALL;
-        realGLboolean retval = mSymbols.fIsFramebuffer(framebuffer);
+        retval = mSymbols.fIsFramebuffer(framebuffer);
         OnSyncCall();
         AFTER_GL_CALL;
         return retval;
@@ -2031,8 +2030,9 @@ public:
 
 public:
     realGLboolean fIsRenderbuffer (GLuint renderbuffer) {
+        realGLboolean retval = false;
         BEFORE_GL_CALL;
-        realGLboolean retval = mSymbols.fIsRenderbuffer(renderbuffer);
+        retval = mSymbols.fIsRenderbuffer(renderbuffer);
         OnSyncCall();
         AFTER_GL_CALL;
         return retval;
@@ -2099,18 +2099,20 @@ public:
     }
 
     void* fMapBuffer(GLenum target, GLenum access) {
+        void* ret = nullptr;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fMapBuffer);
-        void* ret = mSymbols.fMapBuffer(target, access);
+        ret = mSymbols.fMapBuffer(target, access);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
     }
 
     realGLboolean fUnmapBuffer(GLenum target) {
+        realGLboolean ret = false;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fUnmapBuffer);
-        realGLboolean ret = mSymbols.fUnmapBuffer(target);
+        ret = mSymbols.fUnmapBuffer(target);
         AFTER_GL_CALL;
         return ret;
     }
@@ -2118,15 +2120,17 @@ public:
 
 private:
     GLuint raw_fCreateProgram() {
+        GLuint ret = 0;
         BEFORE_GL_CALL;
-        GLuint ret = mSymbols.fCreateProgram();
+        ret = mSymbols.fCreateProgram();
         AFTER_GL_CALL;
         return ret;
     }
 
     GLuint raw_fCreateShader(GLenum t) {
+        GLuint ret = 0;
         BEFORE_GL_CALL;
-        GLuint ret = mSymbols.fCreateShader(t);
+        ret = mSymbols.fCreateShader(t);
         AFTER_GL_CALL;
         return ret;
     }
@@ -2259,9 +2263,10 @@ public:
     }
 
     GLenum fGetGraphicsResetStatus() {
+        GLenum ret = 0;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fGetGraphicsResetStatus);
-        GLenum ret = mSymbols.fGetGraphicsResetStatus();
+        ret = mSymbols.fGetGraphicsResetStatus();
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
@@ -2272,18 +2277,20 @@ public:
 // Extension ARB_sync (GL)
 public:
     GLsync fFenceSync(GLenum condition, GLbitfield flags) {
+        GLsync ret = 0;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fFenceSync);
-        GLsync ret = mSymbols.fFenceSync(condition, flags);
+        ret = mSymbols.fFenceSync(condition, flags);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
     }
 
     realGLboolean fIsSync(GLsync sync) {
+        realGLboolean ret = false;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fIsSync);
-        realGLboolean ret = mSymbols.fIsSync(sync);
+        ret = mSymbols.fIsSync(sync);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
@@ -2297,9 +2304,10 @@ public:
     }
 
     GLenum fClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
+        GLenum ret = 0;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fClientWaitSync);
-        GLenum ret = mSymbols.fClientWaitSync(sync, flags, timeout);
+        ret = mSymbols.fClientWaitSync(sync, flags, timeout);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
@@ -2577,9 +2585,10 @@ public:
 
     GLint fGetFragDataLocation(GLuint program, const GLchar* name)
     {
+        GLint result = 0;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fGetFragDataLocation);
-        GLint result = mSymbols.fGetFragDataLocation(program, name);
+        result = mSymbols.fGetFragDataLocation(program, name);
         OnSyncCall();
         AFTER_GL_CALL;
         return result;
@@ -2674,9 +2683,10 @@ public:
     }
 
     realGLboolean fIsQuery(GLuint query) {
+        realGLboolean retval = false;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fIsQuery);
-        realGLboolean retval = mSymbols.fIsQuery(query);
+        retval = mSymbols.fIsQuery(query);
         OnSyncCall();
         AFTER_GL_CALL;
         return retval;
@@ -2766,9 +2776,10 @@ public:
 
     realGLboolean fIsTransformFeedback(GLuint id)
     {
+        realGLboolean result = false;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fIsTransformFeedback);
-        realGLboolean result = mSymbols.fIsTransformFeedback(id);
+        result = mSymbols.fIsTransformFeedback(id);
         OnSyncCall();
         AFTER_GL_CALL;
         return result;
@@ -2877,9 +2888,10 @@ public:
 
     realGLboolean fIsVertexArray(GLuint array)
     {
+        realGLboolean ret = false;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fIsVertexArray);
-        realGLboolean ret = mSymbols.fIsVertexArray(array);
+        ret = mSymbols.fIsVertexArray(array);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
@@ -2914,9 +2926,10 @@ public:
 
     realGLboolean fTestFence(GLuint fence)
     {
+        realGLboolean ret = false;
         ASSERT_SYMBOL_PRESENT(fTestFence);
         BEFORE_GL_CALL;
-        realGLboolean ret = mSymbols.fTestFence(fence);
+        ret = mSymbols.fTestFence(fence);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
@@ -2933,9 +2946,10 @@ public:
 
     realGLboolean fIsFence(GLuint fence)
     {
+        realGLboolean ret = false;
         ASSERT_SYMBOL_PRESENT(fIsFence);
         BEFORE_GL_CALL;
-        realGLboolean ret = mSymbols.fIsFence(fence);
+        ret = mSymbols.fIsFence(fence);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
@@ -2980,9 +2994,10 @@ public:
     void* fMapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length,
                           GLbitfield access)
     {
+        void* data = nullptr;
         ASSERT_SYMBOL_PRESENT(fMapBufferRange);
         BEFORE_GL_CALL;
-        void* data = mSymbols.fMapBufferRange(target, offset, length, access);
+        data = mSymbols.fMapBufferRange(target, offset, length, access);
         OnSyncCall();
         AFTER_GL_CALL;
         return data;
@@ -3017,9 +3032,10 @@ public:
 
     realGLboolean fIsSampler(GLuint sampler)
     {
+        realGLboolean result = false;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fIsSampler);
-        realGLboolean result = mSymbols.fIsSampler(sampler);
+        result = mSymbols.fIsSampler(sampler);
         OnSyncCall();
         AFTER_GL_CALL;
         return result;
@@ -3106,9 +3122,10 @@ public:
     }
 
     GLuint fGetUniformBlockIndex(GLuint program, const GLchar* uniformBlockName) {
+        GLuint result = 0;
         ASSERT_SYMBOL_PRESENT(fGetUniformBlockIndex);
         BEFORE_GL_CALL;
-        GLuint result = mSymbols.fGetUniformBlockIndex(program, uniformBlockName);
+        result = mSymbols.fGetUniformBlockIndex(program, uniformBlockName);
         OnSyncCall();
         AFTER_GL_CALL;
         return result;
@@ -3235,9 +3252,10 @@ public:
 // GL3+, ES3+
 
     const GLubyte* fGetStringi(GLenum name, GLuint index) {
+        const GLubyte* ret = nullptr;
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fGetStringi);
-        const GLubyte* ret = mSymbols.fGetStringi(name, index);
+        ret = mSymbols.fGetStringi(name, index);
         OnSyncCall();
         AFTER_GL_CALL;
         return ret;
@@ -3262,6 +3280,12 @@ public:
         mSymbols.fPrimitiveRestartIndex(index);
         AFTER_GL_CALL;
     }
+
+#undef BEFORE_GL_CALL
+#undef AFTER_GL_CALL
+#undef ASSERT_SYMBOL_PRESENT
+// #undef TRACKING_CONTEXT // Needed in GLContext.cpp
+#undef ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL
 
 // -----------------------------------------------------------------------------
 // Constructor
@@ -3607,25 +3631,6 @@ public:
     GLsizei MaxSamples() const {
         return mMaxSamples;
     }
-
-    void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-        if (mViewportRect[0] == x &&
-            mViewportRect[1] == y &&
-            mViewportRect[2] == width &&
-            mViewportRect[3] == height)
-        {
-            return;
-        }
-        mViewportRect[0] = x;
-        mViewportRect[1] = y;
-        mViewportRect[2] = width;
-        mViewportRect[3] = height;
-        BEFORE_GL_CALL;
-        mSymbols.fViewport(x, y, width, height);
-        AFTER_GL_CALL;
-    }
-
-#undef ASSERT_SYMBOL_PRESENT
 
 #ifdef MOZ_GL_DEBUG
     void CreatedProgram(GLContext* aOrigin, GLuint aName);
