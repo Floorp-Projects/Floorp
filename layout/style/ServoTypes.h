@@ -74,6 +74,10 @@ enum class ServoTraversalFlags : uint32_t {
   // Allows the traversal to run in parallel if there are sufficient cores on
   // the machine.
   ParallelTraversal = 1 << 7,
+  // Flush throttled animations. By default, we only update throttled animations
+  // when we have other non-throttled work to do. With this flag, we
+  // unconditionally tick and process them.
+  FlushThrottledAnimations = 1 << 8,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoTraversalFlags)
