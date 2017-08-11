@@ -270,13 +270,13 @@ ProxyMessenger = {
    * @returns {object|null} The message manager matching the recipient if found.
    */
   getMessageManagerForRecipient(recipient) {
+    let {tabId} = recipient;
     // tabs.sendMessage / tabs.connect
-    if ("tabId" in recipient) {
+    if (tabId) {
       // `tabId` being set implies that the tabs API is supported, so we don't
       // need to check whether `tabTracker` exists.
-      let tab = apiManager.global.tabTracker.getTab(recipient.tabId, null);
-      if (!tab || tab.getAttribute("pending") === "true") {
-        // No recipients in a tab pending restore.
+      let tab = apiManager.global.tabTracker.getTab(tabId, null);
+      if (!tab) {
         return null;
       }
       let browser = tab.linkedBrowser || tab.browser;
