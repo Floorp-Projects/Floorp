@@ -13,6 +13,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
+#include "gfxTypes.h" // for gfxAlphaType
 #include "nsCycleCollectionParticipant.h"
 
 struct JSContext;
