@@ -127,7 +127,7 @@ public class MmaLeanplumImp implements MmaInterface {
 
     @Override
     public String getMmaSenderId() {
-        return "," + MmaConstants.MOZ_MMA_SENDER_ID;
+        return MmaConstants.MOZ_MMA_SENDER_ID;
     }
 
 }
