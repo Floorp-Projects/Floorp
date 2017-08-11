@@ -3289,6 +3289,8 @@ var SessionStoreInternal = {
       let select = t == selectTab - 1;
       let tab;
 
+      /* Disabled because of bug 1388628:
+
       // Re-use existing selected tab if possible to avoid the overhead of
       // selecting a new tab.
       if (select &&
@@ -3302,6 +3304,7 @@ var SessionStoreInternal = {
           tabbrowser.updateBrowserRemoteness(tab.linkedBrowser, true);
         }
       }
+      */
 
       // Add a new tab if needed.
       if (!tab) {
@@ -3337,7 +3340,7 @@ var SessionStoreInternal = {
         // Prepare connection to the host when users hover mouse over this
         // tab. If we're not restoring on demand, we'll prepare connection
         // when we're restoring next tab.
-        if (!tabData.pinned && restoreOnDemand) {
+        if (!select && !tabData.pinned && restoreOnDemand) {
           this.speculativeConnectOnTabHover(tab, url);
         }
       }
