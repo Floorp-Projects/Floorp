@@ -165,7 +165,7 @@ CodeGeneratorMIPSShared::visitCompareAndBranch(LCompareAndBranch* comp)
 
 #ifdef JS_CODEGEN_MIPS64
     if (mir->compareType() == MCompare::Compare_Object ||
-        mir->compareType() == MCompare::Compare_Symbol)
+        mir->compareType() == MCompare::Compare_Symbol) {
         if (comp->right()->isGeneralReg()) {
             emitBranch(ToRegister(comp->left()), ToRegister(comp->right()), cond,
                        comp->ifTrue(), comp->ifFalse());

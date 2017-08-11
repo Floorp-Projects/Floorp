@@ -194,6 +194,9 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void mov(ImmPtr imm, Register dest) {
         mov(ImmWord(uintptr_t(imm.value)), dest);
     }
+    void mov(CodeOffset* label, Register dest) {
+        ma_li(dest, label);
+    }
     void mov(Register src, Address dest) {
         MOZ_CRASH("NYI-IC");
     }
@@ -277,6 +280,13 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
     CodeOffset movWithPatch(ImmPtr imm, Register dest) {
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
+    }
+
+    void writeCodePointer(CodeOffset* label) {
+        label->bind(currentOffset());
+        ma_liPatchable(ScratchRegister, ImmWord(0));
+        as_jr(ScratchRegister);
+        as_nop();
     }
 
     void jump(Label* label) {
