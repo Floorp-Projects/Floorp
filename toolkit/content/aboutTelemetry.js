@@ -946,7 +946,7 @@ var StackRenderer = {
   },
   renderStacks: function StackRenderer_renderStacks(aPrefix, aStacks,
                                                     aMemoryMap, aRenderHeader) {
-    let div = document.getElementById(aPrefix + "-data");
+    let div = document.getElementById(aPrefix);
     removeAllChildNodes(div);
 
     let fetchE = document.getElementById(aPrefix + "-fetch-symbols");
@@ -980,7 +980,7 @@ var StackRenderer = {
    * @param aFormatArgs formating args to be passed to formatStringFromName.
    */
   renderHeader: function StackRenderer_renderHeader(aPrefix, aFormatArgs) {
-    let div = document.getElementById(aPrefix + "-data");
+    let div = document.getElementById(aPrefix);
 
     let titleElement = document.createElement("span");
     titleElement.className = "stack-title";
@@ -1032,7 +1032,7 @@ function SymbolicationRequest_handleSymbolResponse() {
   fetchElement.hidden = true;
   let hideElement = document.getElementById(this.prefix + "-hide-symbols");
   hideElement.hidden = false;
-  let div = document.getElementById(this.prefix + "-data");
+  let div = document.getElementById(this.prefix);
   removeAllChildNodes(div);
   let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
 
