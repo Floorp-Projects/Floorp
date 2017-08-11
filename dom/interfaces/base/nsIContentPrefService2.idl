@@ -5,10 +5,41 @@
 #include "nsISupports.idl"
 
 interface nsIVariant;
-interface nsIContentPrefObserver;
 interface nsIContentPrefCallback2;
 interface nsILoadContext;
 interface nsIContentPref;
+
+[scriptable, uuid(43635c53-b445-4c4e-8cc5-562697299b55)]
+interface nsIContentPrefObserver : nsISupports
+{
+  /**
+   * Called when a content pref is set to a different value.
+   *
+   * @param    aGroup      the group to which the pref belongs, or null
+   *                       if it's a global pref (applies to all sites)
+   * @param    aName       the name of the pref that was set
+   * @param    aValue      the new value of the pref
+   * @param    aIsPrivate  an optional flag determining whether the
+   *                       original context is private or not
+   */
+  void onContentPrefSet(in AString aGroup,
+                        in AString aName,
+                        in nsIVariant aValue,
+                        [optional] in boolean aIsPrivate);
+
+  /**
+   * Called when a content pref is removed.
+   *
+   * @param    aGroup      the group to which the pref belongs, or null
+   *                       if it's a global pref (applies to all sites)
+   * @param    aName       the name of the pref that was removed
+   * @param    aIsPrivate  an optional flag determining whether the
+   *                       original context is private or not
+   */
+  void onContentPrefRemoved(in AString aGroup,
+                            in AString aName,
+                            [optional] in boolean aIsPrivate);
+};
 
 /**
  * Content Preferences
@@ -403,3 +434,8 @@ interface nsIContentPref : nsISupports
   readonly attribute AString name;
   readonly attribute nsIVariant value;
 };
+
+%{C++
+// The contractID for the generic implementation built in to xpcom.
+#define NS_CONTENT_PREF_SERVICE_CONTRACTID "@mozilla.org/content-pref/service;1"
+%}
