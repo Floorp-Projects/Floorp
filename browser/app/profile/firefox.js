@@ -267,7 +267,7 @@ pref("browser.startup.homepage",            "chrome://branding/locale/browsercon
 pref("browser.startup.firstrunSkipsHomepage", true);
 
 pref("browser.slowStartup.notificationDisabled", false);
-pref("browser.slowStartup.timeThreshold", 30000);
+pref("browser.slowStartup.timeThreshold", 20000);
 pref("browser.slowStartup.maxSamples", 5);
 
 // This url, if changed, MUST continue to point to an https url. Pulling arbitrary content to inject into
