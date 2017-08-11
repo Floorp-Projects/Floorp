@@ -1436,18 +1436,17 @@ nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
   // This is only called when moving frames in or out of the first-line
-  // pseudo-element (or one of its inline descendants).  So aFrame's ancestors
-  // must all be inline frames up until we find a first-line frame.  Note that
-  // the first-line frame may not actually be the one that corresponds to
-  // ::first-line; when we're moving _out_ of the first-line it will be one of
-  // the continuations instead.
+  // pseudo-element (or one of its descendants).  We can't say much about
+  // aFrame's ancestors, unfortunately (e.g. during a dynamic insert into
+  // something inside an inline-block on the first line the ancestors could be
+  // totally arbitrary), but we will definitely find a line frame on the
+  // ancestor chain.  Note that the lineframe may not actually be the one that
+  // corresponds to ::first-line; when we're moving _out_ of the ::first-line it
+  // will be one of the continuations instead.
 #ifdef DEBUG
   {
     nsIFrame* f = aFrame->GetParent();
     while (f && !f->IsLineFrame()) {
-      MOZ_ASSERT(f->IsInlineFrame(),
-                 "Must only have inline frames between us and the first-line "
-                 "frame");
       f = f->GetParent();
     }
     MOZ_ASSERT(f, "Must have found a first-line frame");
