@@ -408,6 +408,15 @@ ShouldLimitDeviceResets(uint32_t count, int32_t deltaMilliseconds)
 }
 
 void
+GPUProcessManager::ResetCompositors()
+{
+  // Note: this will recreate devices in addition to recreating compositors.
+  // This isn't optimal, but this is only used on linux where acceleration
+  // isn't enabled by default, and this way we don't need a new code path.
+  SimulateDeviceReset();
+}
+
+void
 GPUProcessManager::SimulateDeviceReset()
 {
   // Make sure we rebuild environment and configuration for accelerated features.
