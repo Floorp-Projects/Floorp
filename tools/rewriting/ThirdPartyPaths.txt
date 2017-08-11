@@ -1,4 +1,5 @@
 browser/components/translation/cld2/
+browser/extensions/mortar/ppapi/
 db/sqlite3/src/
 dom/media/platforms/ffmpeg/libav
 extensions/spellcheck/hunspell/src/
