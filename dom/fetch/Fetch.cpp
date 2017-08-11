@@ -970,16 +970,17 @@ bool
 FetchBody<Response>::BodyUsed() const;
 
 template <class Derived>
-already_AddRefed<Promise>
-FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
-                                ErrorResult& aRv)
+void
+FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv)
 {
-  if (BodyUsed()) {
-    aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
-    return nullptr;
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(mOwner->EventTargetFor(TaskCategory::Other)->IsOnCurrentThread());
+
+  if (mBodyUsed) {
+    return;
   }
 
-  SetBodyUsed();
+  mBodyUsed = true;
 
   // If we already have a ReadableStreamBody and it has been created by DOM, we
   // have to lock it now because it can have been shared with other objects.
@@ -989,7 +990,7 @@ FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
           JS::ReadableStreamMode::ExternalSource) {
       LockStream(aCx, readableStreamObj, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
-        return nullptr;
+        return;
       }
     } else {
       // If this is not a native ReadableStream, let's activate the
@@ -998,11 +999,35 @@ FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
       JS::Rooted<JSObject*> reader(aCx);
       mFetchStreamReader->StartConsuming(aCx, readableStreamObj, &reader, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
-        return nullptr;
+        return;
       }
 
       mReadableStreamReader = reader;
     }
+  }
+}
+
+template
+void
+FetchBody<Request>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv);
+
+template
+void
+FetchBody<Response>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv);
+
+template <class Derived>
+already_AddRefed<Promise>
+FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
+                                ErrorResult& aRv)
+{
+  if (BodyUsed()) {
+    aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+    return nullptr;
+  }
+
+  SetBodyUsed(aCx, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
   }
 
   nsCOMPtr<nsIGlobalObject> global = DerivedClass()->GetParentObject();

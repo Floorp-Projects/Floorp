@@ -307,7 +307,7 @@ CacheStorage::CacheStorage(nsresult aFailureResult)
 }
 
 already_AddRefed<Promise>
-CacheStorage::Match(const RequestOrUSVString& aRequest,
+CacheStorage::Match(JSContext* aCx, const RequestOrUSVString& aRequest,
                     const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
@@ -317,8 +317,8 @@ CacheStorage::Match(const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
-  RefPtr<InternalRequest> request = ToInternalRequest(aRequest, IgnoreBody,
-                                                        aRv);
+  RefPtr<InternalRequest> request =
+    ToInternalRequest(aCx, aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

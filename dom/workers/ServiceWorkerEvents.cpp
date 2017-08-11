@@ -515,6 +515,44 @@ public:
     }
   }
 
+  // This function steals the error message from a ErrorResult.
+  void
+  SetCancelErrorResult(JSContext* aCx, ErrorResult& aRv)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(aRv.Failed());
+    MOZ_DIAGNOSTIC_ASSERT(!JS_IsExceptionPending(aCx));
+
+    // Storing the error as exception in the JSContext.
+    if (!aRv.MaybeSetPendingException(aCx)) {
+      return;
+    }
+
+    MOZ_ASSERT(!aRv.Failed());
+
+    // Let's take the pending exception.
+    JS::Rooted<JS::Value> exn(aCx);
+    if (!JS_GetPendingException(aCx, &exn)) {
+      return;
+    }
+
+    JS_ClearPendingException(aCx);
+
+    // Converting the exception in a js::ErrorReport.
+    js::ErrorReport report(aCx);
+    if (!report.init(aCx, exn, js::ErrorReport::WithSideEffects)) {
+      JS_ClearPendingException(aCx);
+      return;
+    }
+
+    MOZ_ASSERT(mOwner);
+    MOZ_ASSERT(mMessageName.EqualsLiteral("InterceptionFailedWithURL"));
+    MOZ_ASSERT(mParams.Length() == 1);
+
+    // Let's store the error message here.
+    mMessageName.Assign(report.toStringResult().c_str());
+    mParams.Clear();
+  }
+
   template<typename... Params>
   void SetCancelMessage(const nsACString& aMessageName, Params&&... aParams)
   {
@@ -670,7 +708,12 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   ir->GetUnfilteredBody(getter_AddRefs(body));
   // Errors and redirects may not have a body.
   if (body) {
-    response->SetBodyUsed();
+    IgnoredErrorResult error;
+    response->SetBodyUsed(aCx, error);
+    if (NS_WARN_IF(error.Failed())) {
+      autoCancel.SetCancelErrorResult(aCx, error);
+      return;
+    }
 
     nsCOMPtr<nsIOutputStream> responseBody;
     rv = mInterceptedChannel->GetResponseBody(getter_AddRefs(responseBody));
