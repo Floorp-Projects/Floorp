@@ -339,7 +339,8 @@ GLContextEGL::SetEGLSurfaceOverride(EGLSurface surf) {
 }
 
 bool
-GLContextEGL::MakeCurrentImpl(bool aForce) {
+GLContextEGL::MakeCurrentImpl(bool aForce) const
+{
     bool succeeded = true;
 
     // Assume that EGL has the same problem as WGL does,
@@ -374,7 +375,8 @@ GLContextEGL::MakeCurrentImpl(bool aForce) {
 }
 
 bool
-GLContextEGL::IsCurrent() {
+GLContextEGL::IsCurrent() const
+{
     return sEGLLibrary.fGetCurrentContext() == mContext;
 }
 
