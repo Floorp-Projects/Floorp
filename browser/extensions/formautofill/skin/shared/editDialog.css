@@ -22,24 +22,17 @@ p {
   margin: 0 0 0.5em;
 }
 
-label > span {
+label > span,
+div > span {
   box-sizing: border-box;
-  flex: 0 0 9.5em;
-  padding-inline-end: 0.5em;
+  padding-inline-end: 0.7em;
   align-self: center;
   text-align: end;
   -moz-user-select: none;
 }
 
-input,
-select {
-  box-sizing: border-box;
-  flex: 1 0 auto;
-  width: calc(50% - 9.5em);
-}
-
 option {
-  padding: 5px 10px;
+  padding: 0.3em 0.5em;
 }
 
 textarea {
@@ -53,44 +46,14 @@ button {
   margin-inline-end: 0;
 }
 
-#given-name-container,
-#additional-name-container,
-#address-level1-container,
-#postal-code-container,
-#country-container {
-  flex: 0 1 50%;
-}
-
-#family-name-container,
-#organization-container,
-#street-address-container,
-#address-level2-container,
-#email-container,
-#tel-container,
-#controls-container {
-  flex: 0 1 100%;
-}
-
-#controls-container {
-  justify-content: end;
-}
-
-#family-name,
-#organization,
-#address-level2,
-#tel {
-  flex: 0 0 auto;
-}
-
-#street-address,
-#email {
+input,
+select {
+  box-sizing: border-box;
   flex: 1 0 auto;
 }
 
-#country-warning-message {
-  flex: 1;
-  align-items: center;
-  text-align: start;
-  color: #737373;
-  padding-inline-start: 1em;
+#controls-container {
+  flex: 0 1 100%;
+  justify-content: end;
+  margin: 1em 0 0;
 }

@@ -64,6 +64,13 @@ this.FormAutofillUtils = {
     return this._fieldNameInfo[fieldName] == "creditCard";
   },
 
+  isCCNumber(ccNumber) {
+    // Based on the information on wiki[1], the shortest valid length should be
+    // 12 digits(Maestro).
+    // [1] https://en.wikipedia.org/wiki/Payment_card_number
+    return ccNumber ? ccNumber.replace(/\s/g, "").match(/^\d{12,}$/) : false;
+  },
+
   getCategoryFromFieldName(fieldName) {
     return this._fieldNameInfo[fieldName];
   },
