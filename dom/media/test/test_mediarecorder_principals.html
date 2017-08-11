@@ -31,10 +31,9 @@ let throwOutside = e => setTimeout(() => { throw e; });
 // Loading data from two different origins should be detected by the media
 // cache and result in a null principal so that the MediaRecorder usages below
 // fail.
-// This test relies on that preloading the metadata then loading a sufficiently
-// long video will result in two separate requests to load the resource. This
-// ends up relying on the impl of MediaCache and friends and we should probably
-// replace this test with a more robust gtest or the like.
+// This test relies on that preloading the metadata then forcing another load
+// via video.load() will result in two requests taking place to retreive the
+// resource.
 let key = Math.floor(Math.random()*100000000);
 let interval;
 
@@ -49,9 +48,8 @@ function testPrincipals(resource) {
   video.src =
       "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v1_" +
       key + "&res=" + resource.name;
-  video.load();
-  // To limit readahead, avoid racing with playback and "catching up" mode.
-  return new Promise(resolve => video.onloadeddata = resolve).then(() => {
+  return new Promise(resolve => video.onloadedmetadata = resolve).then(() => {
+    video.load();
     video.play();
     interval = setInterval(() => info("video.currentTime = "+ video.currentTime), 1000);
 
@@ -71,17 +69,17 @@ function testPrincipals(resource) {
     video.src =
         "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v2_" +
         key + "&res=" + resource.name;
-    video.load();
     let rec, hasStopped, hasEnded = new Promise(r => video.onended = r);
     let data = [];
 
     let msgNoThrow = "mediaRecorder.start() should not throw here";
     let msgSecErr = "mediaRecorder.onerror must fire SecurityError";
     let msgOnStop = "mediaRecorder.onstop must also have fired";
-    return new Promise(resolve => video.onloadeddata = resolve).then(() => {
+    return new Promise(resolve => video.onloadedmetadata = resolve).then(() => {
       rec = new MediaRecorder(video.mozCaptureStreamUntilEnded());
       rec.ondataavailable = e => data.push(e.data);
       rec.start();
+      video.load();
       hasStopped = new Promise(resolve => rec.onstop = resolve);
       video.play();
     })
