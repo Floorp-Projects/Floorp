@@ -36,7 +36,7 @@
 #endif
 
 class nsAttrAndChildArray;
-class nsChildContentList;
+class nsAttrChildContentList;
 struct nsCSSSelectorList;
 class nsDOMAttributeMap;
 class nsIAnimationObserver;
@@ -1112,7 +1112,7 @@ public:
      * @see nsIDOMNodeList
      * @see nsGenericHTMLElement::GetChildNodes
      */
-    RefPtr<nsChildContentList> mChildNodes;
+    RefPtr<nsAttrChildContentList> mChildNodes;
 
     /**
      * Weak reference to this node.  This is cleared by the destructor of
