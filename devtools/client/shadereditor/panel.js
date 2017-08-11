@@ -7,7 +7,7 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const promise = require("promise");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { WebGLFront } = require("devtools/shared/fronts/webgl");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 

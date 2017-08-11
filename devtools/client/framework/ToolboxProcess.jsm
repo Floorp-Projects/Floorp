@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
   return require("devtools/client/shared/telemetry");
 });
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function () {
-  return require("devtools/shared/event-emitter");
+  return require("devtools/shared/old-event-emitter");
 });
 const promise = require("promise");
 const Services = require("Services");

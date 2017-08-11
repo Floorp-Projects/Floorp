@@ -9,7 +9,7 @@ const { Cc, Ci, Cu } = require("chrome");
 
 const Environment = Cc["@mozilla.org/process/environment;1"]
                       .getService(Ci.nsIEnvironment);
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const Services = require("Services");
 
 const {Subprocess} = Cu.import("resource://gre/modules/Subprocess.jsm", {});

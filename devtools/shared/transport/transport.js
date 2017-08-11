@@ -31,7 +31,7 @@
   require("devtools/shared/transport/packets");
   const promise = require("promise");
   const defer = require("devtools/shared/defer");
-  const EventEmitter = require("devtools/shared/event-emitter");
+  const EventEmitter = require("devtools/shared/old-event-emitter");
 
   DevToolsUtils.defineLazyGetter(this, "Pipe", () => {
     return CC("@mozilla.org/pipe;1", "nsIPipe", "init");
