@@ -34,6 +34,7 @@ UNIFIED_SOURCES += [
     'FetchDriver.cpp',
     'FetchObserver.cpp',
     'FetchSignal.cpp',
+    'FetchStream.cpp',
     'FetchUtil.cpp',
     'Headers.cpp',
     'InternalHeaders.cpp',
