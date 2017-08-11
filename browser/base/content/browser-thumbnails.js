@@ -88,7 +88,7 @@ var gBrowserThumbnails = {
         this._delayedCapture(aEvent.target.linkedBrowser);
         break;
       case "TabClose": {
-        this._clearTimeout(aEvent.target.linkedBrowser);
+        this._cancelDelayedCapture(aEvent.target.linkedBrowser);
         break;
       }
     }
@@ -158,33 +158,55 @@ var gBrowserThumbnails = {
   },
 
   _delayedCapture: function Thumbnails_delayedCapture(aBrowser) {
-    if (this._timeouts.has(aBrowser))
-      clearTimeout(this._timeouts.get(aBrowser));
-    else
+    if (this._timeouts.has(aBrowser)) {
+      this._cancelDelayedCallbacks(aBrowser);
+    } else {
       aBrowser.addEventListener("scroll", this, true);
+    }
 
-    let timeout = setTimeout(() => {
-      this._clearTimeout(aBrowser);
+    let idleCallback = () => {
+      this._cancelDelayedCapture(aBrowser);
       this._capture(aBrowser);
+    };
+
+    // setTimeout to set a guarantee lower bound for the requestIdleCallback
+    // (and therefore the delayed capture)
+    let timeoutId = setTimeout(() => {
+      let idleCallbackId = requestIdleCallback(idleCallback, {
+        timeout: this._captureDelayMS * 30
+      });
+      this._timeouts.set(aBrowser, { isTimeout: false, id: idleCallbackId });
     }, this._captureDelayMS);
 
-    this._timeouts.set(aBrowser, timeout);
+    this._timeouts.set(aBrowser, { isTimeout: true, id: timeoutId });
   },
 
   _shouldCapture: function Thumbnails_shouldCapture(aBrowser, aCallback) {
-    // Capture only if it's the currently selected tab.
-    if (aBrowser != gBrowser.selectedBrowser) {
+    // Capture only if it's the currently selected tab and not an about: page.
+    if (aBrowser != gBrowser.selectedBrowser ||
+        gBrowser.currentURI.schemeIs("about")) {
       aCallback(false);
       return;
     }
     PageThumbs.shouldStoreThumbnail(aBrowser, aCallback);
   },
 
-  _clearTimeout: function Thumbnails_clearTimeout(aBrowser) {
+  _cancelDelayedCapture: function Thumbnails_cancelDelayedCapture(aBrowser) {
     if (this._timeouts.has(aBrowser)) {
       aBrowser.removeEventListener("scroll", this);
-      clearTimeout(this._timeouts.get(aBrowser));
+      this._cancelDelayedCallbacks(aBrowser);
       this._timeouts.delete(aBrowser);
+    }
+  },
+
+  _cancelDelayedCallbacks: function Thumbnails_cancelDelayedCallbacks(aBrowser) {
+    let timeoutData = this._timeouts.get(aBrowser);
+
+    if (timeoutData.isTimeout) {
+      clearTimeout(timeoutData.id);
+    } else {
+      // idle callback dispatched
+      window.cancelIdleCallback(timeoutData.id);
     }
   }
 };

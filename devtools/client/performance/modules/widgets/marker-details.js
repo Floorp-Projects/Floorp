@@ -7,7 +7,7 @@
  * This file contains the rendering code for the marker sidebar.
  */
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const { MarkerDOMUtils } = require("devtools/client/performance/modules/marker-dom-utils");
 
 /**

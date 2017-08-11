@@ -49,13 +49,9 @@ public:
     case BUFFER_LENGTH:
       // BUFFER_LENGTH is the first parameter that we set when setting a new buffer,
       // so we should be careful to invalidate the rest of our state here.
-      mBuffer = nullptr;
       mSampleRate = 0.0f;
       mBufferLength = aParam;
       mLeftOverData = INT32_MIN;
-      break;
-    case SAMPLE_RATE:
-      mSampleRate = aParam;
       break;
     case NORMALIZE:
       mNormalize = !!aParam;
@@ -69,7 +65,8 @@ public:
     switch (aIndex) {
     case SAMPLE_RATE:
       mSampleRate = aParam;
-      AdjustReverb();
+      // The buffer is passed after the sample rate.
+      // mReverb will be set using this sample rate when the buffer is received.
       break;
     default:
       NS_ERROR("Bad ConvolverNodeEngine DoubleParameter");
@@ -77,12 +74,8 @@ public:
   }
   void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
   {
-    mBuffer = aBuffer;
-    AdjustReverb();
-  }
+    RefPtr<ThreadSharedFloatArrayBufferList> buffer = aBuffer;
 
-  void AdjustReverb()
-  {
     // Note about empirical tuning (this is copied from Blink)
     // The maximum FFT size affects reverb performance and accuracy.
     // If the reverb is single-threaded and processes entirely in the real-time audio thread,
@@ -91,14 +84,14 @@ public:
     // Very large FFTs will have worse phase errors. Given these constraints 32768 is a good compromise.
     const size_t MaxFFTSize = 32768;
 
-    if (!mBuffer || !mBufferLength || !mSampleRate) {
+    if (!buffer || !mBufferLength || !mSampleRate) {
       mReverb = nullptr;
       mLeftOverData = INT32_MIN;
       return;
     }
 
-    mReverb = new WebCore::Reverb(mBuffer, mBufferLength,
-                                  MaxFFTSize, 2, mUseBackgroundThreads,
+    mReverb = new WebCore::Reverb(buffer, mBufferLength,
+                                  MaxFFTSize, mUseBackgroundThreads,
                                   mNormalize, mSampleRate);
   }
 
@@ -165,9 +158,6 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
-    if (mBuffer && !mBuffer->IsShared()) {
-      amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
-    }
 
     if (mReverb) {
       amount += mReverb->sizeOfIncludingThis(aMallocSizeOf);
@@ -182,7 +172,6 @@ public:
   }
 
 private:
-  RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   nsAutoPtr<WebCore::Reverb> mReverb;
   int32_t mBufferLength;
   int32_t mLeftOverData;

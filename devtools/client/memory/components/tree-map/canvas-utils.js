@@ -16,7 +16,7 @@
  * in view of the tree map.
  */
 const { debounce } = require("devtools/shared/debounce");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const FULLSCREEN_STYLE = {

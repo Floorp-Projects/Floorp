@@ -5,7 +5,7 @@
 "use strict";
 
 const defer = require("devtools/shared/defer");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipToggle");
 

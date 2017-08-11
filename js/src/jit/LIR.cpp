@@ -209,8 +209,10 @@ LRecoverInfo::New(MIRGenerator* gen, MResumePoint* mir)
     return recoverInfo;
 }
 
+// de-virtualise MResumePoint::getOperand calls.
+template <typename Node>
 bool
-LRecoverInfo::appendOperands(MNode* ins)
+LRecoverInfo::appendOperands(Node* ins)
 {
     for (size_t i = 0, end = ins->numOperands(); i < end; i++) {
         MDefinition* def = ins->getOperand(i);

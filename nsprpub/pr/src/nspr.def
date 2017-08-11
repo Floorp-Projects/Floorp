@@ -462,3 +462,7 @@ EXPORTS ;-
 		PR_DuplicateEnvironment;
 		PR_GetEnvSecure;
 ;+} NSPR_4.10.3;
+;+NSPR_4.16 {
+;+      global:
+		PR_FileDesc2PlatformOverlappedIOHandle;
+;+} NSPR_4.15;

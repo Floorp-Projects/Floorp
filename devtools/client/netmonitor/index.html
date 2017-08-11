@@ -20,7 +20,7 @@
         window,
       }).require;
 
-      const EventEmitter = require("devtools/shared/event-emitter");
+      const EventEmitter = require("devtools/shared/old-event-emitter");
       const { createFactory } = require("devtools/client/shared/vendor/react");
       const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
       const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);

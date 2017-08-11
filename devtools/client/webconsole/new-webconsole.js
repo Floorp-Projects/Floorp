@@ -7,7 +7,7 @@
 "use strict";
 
 const {Utils: WebConsoleUtils} = require("devtools/client/webconsole/utils");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");

@@ -253,7 +253,7 @@ TCPSocketParent::RecvData(const SendableData& aData,
       const nsTArray<uint8_t>& buffer = aData.get_ArrayOfuint8_t();
       bool ok = IPC::DeserializeArrayBuffer(autoCx, buffer, &val);
       NS_ENSURE_TRUE(ok, IPC_OK());
-      RootedTypedArray<ArrayBuffer> data(autoCx);
+      RootedSpiderMonkeyInterface<ArrayBuffer> data(autoCx);
       data.Init(&val.toObject());
       Optional<uint32_t> byteLength(buffer.Length());
       mSocket->SendWithTrackingNumber(autoCx, data, 0, byteLength, aTrackingNumber, rv);

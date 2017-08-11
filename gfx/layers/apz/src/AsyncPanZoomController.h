@@ -1319,6 +1319,9 @@ private:
                                          ParentLayerPoint& aDelta,
                                          CSSPoint& aStartPosition);
 
+  bool MaybeAdjustDestinationForScrollSnapping(const KeyboardInput& aEvent,
+                                               CSSPoint& aDestination);
+
   // Snap to a snap position nearby the current scroll position, if appropriate.
   void ScrollSnap();
 

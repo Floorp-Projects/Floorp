@@ -6,7 +6,7 @@
 
 const Editor = require("devtools/client/sourceeditor/editor");
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 
 /**
  * A wrapper around the Editor component, that allows editing of HTML.
