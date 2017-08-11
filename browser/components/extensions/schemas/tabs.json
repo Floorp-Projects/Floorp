@@ -1155,7 +1155,7 @@
               {
                 "type": "string",
                 "name": "status",
-                "description": "Save status: Saved, Replaced, Cancelled, Not Saved, Not Replaced."
+                "description": "Save status: saved, replaced, canceled, not_saved, not_replaced."
               }
             ]
           }
