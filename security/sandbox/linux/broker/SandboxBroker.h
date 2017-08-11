@@ -65,6 +65,15 @@ class SandboxBroker final
     Policy(const Policy& aOther);
     ~Policy();
 
+    // Add permissions from AddDir/AddDynamic rules to any rules that
+    // exist for their descendents, and remove any descendent rules
+    // made redundant by this process.
+    //
+    // Call this after adding rules and before using the policy to
+    // prevent the descendent rules from shadowing the ancestor rules
+    // and removing permissions that we expect the file to have.
+    void FixRecursivePermissions();
+
     enum AddCondition {
       AddIfExistsNow,
       AddAlways,
