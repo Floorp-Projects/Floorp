@@ -2,104 +2,105 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct FreeListItemId(u32);
+use std::marker::PhantomData;
+use std::mem;
 
-impl FreeListItemId {
-    #[inline]
-    pub fn new(value: u32) -> FreeListItemId {
-        FreeListItemId(value)
-    }
+// TODO(gw): Add a weak free list handle. This is like a strong
+//           free list handle below, but will contain an epoch
+//           field. Weak handles will use a get_opt style API
+//           which returns an Option<T> instead of T.
 
-    #[inline]
-    pub fn value(&self) -> u32 {
-        self.0
+// TODO(gw): Add an occupied list head, for fast
+//           iteration of the occupied list to implement
+//           retain() style functionality.
+
+#[derive(Debug)]
+pub struct FreeListHandle<T> {
+    index: u32,
+    _marker: PhantomData<T>,
+}
+
+enum SlotValue<T> {
+    Free,
+    Occupied(T),
+}
+
+impl<T> SlotValue<T> {
+    fn take(&mut self) -> T {
+        match mem::replace(self, SlotValue::Free) {
+            SlotValue::Free => unreachable!(),
+            SlotValue::Occupied(data) => data,
+        }
     }
 }
 
-pub trait FreeListItem {
-    fn take(&mut self) -> Self;
-    fn next_free_id(&self) -> Option<FreeListItemId>;
-    fn set_next_free_id(&mut self, id: Option<FreeListItemId>);
-}
-
-struct FreeListIter<'a, T: 'a> {
-    items: &'a [T],
-    cur_index: Option<FreeListItemId>,
-}
-
-impl<'a, T: FreeListItem> Iterator for FreeListIter<'a, T> {
-    type Item = FreeListItemId;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.cur_index.map(|free_id| {
-            self.cur_index = self.items[free_id.0 as usize].next_free_id();
-            free_id
-        })
-    }
+struct Slot<T> {
+    next: Option<u32>,
+    value: SlotValue<T>,
 }
 
 pub struct FreeList<T> {
-    items: Vec<T>,
-    first_free_index: Option<FreeListItemId>,
-    alloc_count: usize,
+    slots: Vec<Slot<T>>,
+    free_list_head: Option<u32>,
 }
 
-impl<T: FreeListItem> FreeList<T> {
+impl<T> FreeList<T> {
     pub fn new() -> FreeList<T> {
         FreeList {
-            items: Vec::new(),
-            first_free_index: None,
-            alloc_count: 0,
+            slots: Vec::new(),
+            free_list_head: None,
         }
     }
 
-    fn free_iter(&self) -> FreeListIter<T> {
-        FreeListIter {
-            items: &self.items,
-            cur_index: self.first_free_index,
+    pub fn get(&self, id: &FreeListHandle<T>) -> &T {
+        match self.slots[id.index as usize].value {
+            SlotValue::Free => unreachable!(),
+            SlotValue::Occupied(ref data) => data,
         }
     }
 
-    pub fn insert(&mut self, item: T) -> FreeListItemId {
-        self.alloc_count += 1;
-        match self.first_free_index {
+    pub fn get_mut(&mut self, id: &FreeListHandle<T>) -> &mut T {
+        match self.slots[id.index as usize].value {
+            SlotValue::Free => unreachable!(),
+            SlotValue::Occupied(ref mut data) => data,
+        }
+    }
+
+    pub fn insert(&mut self, item: T) -> FreeListHandle<T> {
+        match self.free_list_head {
             Some(free_index) => {
-                let FreeListItemId(index) = free_index;
-                let free_item = &mut self.items[index as usize];
-                self.first_free_index = free_item.next_free_id();
-                *free_item = item;
-                free_index
+                let slot = &mut self.slots[free_index as usize];
+
+                // Remove from free list.
+                self.free_list_head = slot.next;
+                slot.next = None;
+                slot.value = SlotValue::Occupied(item);
+
+                FreeListHandle {
+                    index: free_index,
+                    _marker: PhantomData,
+                }
             }
             None => {
-                let item_id = FreeListItemId(self.items.len() as u32);
-                self.items.push(item);
-                item_id
+                let index = self.slots.len() as u32;
+
+                self.slots.push(Slot {
+                    next: None,
+                    value: SlotValue::Occupied(item),
+                });
+
+                FreeListHandle {
+                    index,
+                    _marker: PhantomData,
+                }
             }
         }
     }
 
-    pub fn get(&self, id: FreeListItemId) -> &T {
-        debug_assert_eq!(self.free_iter().find(|&fid| fid==id), None);
-        &self.items[id.0 as usize]
-    }
-
-    pub fn get_mut(&mut self, id: FreeListItemId) -> &mut T {
-        debug_assert_eq!(self.free_iter().find(|&fid| fid==id), None);
-        &mut self.items[id.0 as usize]
-    }
-
-    #[allow(dead_code)]
-    pub fn len(&self) -> usize {
-        self.alloc_count
-    }
-
-    pub fn free(&mut self, id: FreeListItemId) -> T {
-        self.alloc_count -= 1;
-        let FreeListItemId(index) = id;
-        let item = &mut self.items[index as usize];
-        let data = item.take();
-        item.set_next_free_id(self.first_free_index);
-        self.first_free_index = Some(id);
-        data
+    pub fn free(&mut self, id: FreeListHandle<T>) -> T {
+        let slot = &mut self.slots[id.index as usize];
+        slot.next = self.free_list_head;
+        self.free_list_head = Some(id.index);
+        slot.value.take()
     }
 }

@@ -1841,8 +1841,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
           this._invalidate();
 
-          var rect = window.document.documentElement.getBoundingClientRect();
-          var width = rect.right - rect.left;
+          var documentRect = window.document.documentElement.getBoundingClientRect();
+          var width = documentRect.right - documentRect.left;
           this.setAttribute("width", width);
 
           // Adjust the direction of the autocomplete popup list based on the textbox direction, bug 649840
@@ -1853,25 +1853,21 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // of the popup aligns with the window border.
           let elementRect = aElement.getBoundingClientRect();
           if (popupDirection == "rtl") {
-            let offset = elementRect.right - rect.right
+            let offset = elementRect.right - documentRect.right
             this.style.marginRight = offset + "px";
           } else {
-            let offset = rect.left - elementRect.left;
+            let offset = documentRect.left - elementRect.left;
             this.style.marginLeft = offset + "px";
           }
 
           // Keep the popup items' site icons aligned with the urlbar's identity
-          // icon if it's not too far from the edge of the window.  If there are
-          // at most two toolbar buttons between the window edge and the urlbar,
-          // then consider that as "not too far."  The forward button's
-          // visibility may have changed since the last time the popup was
-          // opened, so this needs to happen now.  Do it *before* the popup
-          // opens because otherwise the items will visibly shift.
-          let nodes = [...document.getElementById("nav-bar-customization-target").childNodes];
-          let urlbarPosition = nodes.findIndex(n => n.id == "urlbar-container");
-          let alignSiteIcons = urlbarPosition <= 5 &&
-                               nodes.slice(0, urlbarPosition)
-                                    .every(n => n.localName == "toolbarbutton" || n.id == "stop-reload-button");
+          // icon if it's not too far from the edge of the window.  We define
+          // "too far" as "more than 30% of the window's width AND more than
+          // 250px"
+          let boundToCheck = popupDirection == "rtl" ? "right" : "left";
+          let inputRect = this.DOMWindowUtils.getBoundsWithoutFlushing(aInput);
+          let startOffset = Math.abs(inputRect[boundToCheck] - documentRect[boundToCheck]);
+          let alignSiteIcons = startOffset / width <= 0.3 || startOffset <= 250;
           if (alignSiteIcons) {
             let identityRect =
               document.getElementById("identity-icon").getBoundingClientRect();

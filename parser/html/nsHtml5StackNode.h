@@ -43,6 +43,7 @@
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
 #include "nsHtml5Portability.h"
+#include "nsHtml5ContentCreatorFunction.h"
 
 class nsHtml5StreamParser;
 
@@ -68,6 +69,8 @@ class nsHtml5StackNode
     nsHtml5HtmlAttributes* attributes;
   private:
     int32_t refcount;
+    mozilla::dom::HTMLContentCreatorFunction htmlCreator;
+
   public:
     inline int32_t getFlags()
     {
@@ -80,12 +83,14 @@ class nsHtml5StackNode
     bool isFosterParenting();
     bool isHtmlIntegrationPoint();
     explicit nsHtml5StackNode(int32_t idxInTreeBuilder);
+    mozilla::dom::HTMLContentCreatorFunction getHtmlCreator();
     void setValues(int32_t flags,
                    int32_t ns,
                    nsIAtom* name,
                    nsIContentHandle* node,
                    nsIAtom* popName,
-                   nsHtml5HtmlAttributes* attributes);
+                   nsHtml5HtmlAttributes* attributes,
+                   mozilla::dom::HTMLContentCreatorFunction htmlCreator);
     void setValues(nsHtml5ElementName* elementName, nsIContentHandle* node);
     void setValues(nsHtml5ElementName* elementName,
                    nsIContentHandle* node,

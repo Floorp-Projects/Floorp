@@ -1032,14 +1032,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       return;
     }
 
-    let hasMobileBookmarks = (await db.executeCached(`SELECT EXISTS(
-      SELECT 1 FROM moz_bookmarks b
-      JOIN moz_bookmarks p ON p.id = b.parent
-      WHERE p.guid = :mobileGuid
-    ) AS hasMobile`, {
-      mobileGuid: PlacesUtils.bookmarks.mobileGuid,
-    }))[0].getResultByName("hasMobile");
-
     let allBookmarksGuid = maybeAllBookmarksGuids[0];
     let mobileTitle = PlacesUtils.getString("MobileBookmarksFolderTitle");
 
@@ -1047,24 +1039,16 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       ORGANIZER_QUERY_ANNO, ORGANIZER_MOBILE_QUERY_ANNO_VALUE);
     if (maybeMobileQueryGuids.length) {
       let mobileQueryGuid = maybeMobileQueryGuids[0];
-      if (hasMobileBookmarks) {
-        // We have a left pane query for mobile bookmarks, and at least one
-        // mobile bookmark. Make sure the query title is correct.
-        await PlacesUtils.bookmarks.update({
-          guid: mobileQueryGuid,
-          url: "place:folder=MOBILE_BOOKMARKS",
-          title: mobileTitle,
-          source: SOURCE_SYNC,
-        });
-      } else {
-        // We have a left pane query for mobile bookmarks, but no mobile
-        // bookmarks. Remove the query.
-        await PlacesUtils.bookmarks.remove(mobileQueryGuid, {
-          source: SOURCE_SYNC,
-        });
-      }
-    } else if (hasMobileBookmarks) {
-      // We have mobile bookmarks, but no left pane query. Create the query.
+      // We have a left pane query for mobile bookmarks, make sure the
+      // query title is correct.
+      await PlacesUtils.bookmarks.update({
+        guid: mobileQueryGuid,
+        url: "place:folder=MOBILE_BOOKMARKS",
+        title: mobileTitle,
+        source: SOURCE_SYNC,
+      });
+    } else {
+      // We have no left pane query. Create the query.
       let mobileQuery = await PlacesUtils.bookmarks.insert({
         parentGuid: allBookmarksGuid,
         url: "place:folder=MOBILE_BOOKMARKS",

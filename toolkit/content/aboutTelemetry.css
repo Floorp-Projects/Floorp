@@ -30,10 +30,6 @@ body {
   left: 0;
 }
 
-#category-raw.selected {
-   background-color: var(--in-content-category-background-active);
-}
-
 .heading {
   display: flex;
   flex-direction: column;
@@ -167,10 +163,11 @@ section:not(.active) {
 }
 
 #ping-picker {
-  position: absolute;
+  min-width: 300px;
+  position: fixed;
   z-index: 2;
-  top: 40px;
-  right: 40px;
+  top: 32px;
+  left: 12px;
   border-radius: 2px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.25);
   display: flex;
@@ -188,6 +185,10 @@ section:not(.active) {
 #ping-source-picker {
   margin-left: 5px;
   margin-bottom: 10px;
+}
+
+#ping-source-archive-container.disabled {
+  opacity: 0.5;
 }
 
 .stack-title {

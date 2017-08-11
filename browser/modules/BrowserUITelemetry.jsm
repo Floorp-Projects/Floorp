@@ -56,8 +56,8 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
       "home-button",
       "urlbar-container",
       "search-container",
-      "bookmarks-menu-button",
       "downloads-button",
+      "library-button",
       "sidebar-button",
     ],
     // It's true that toolbar-menubar is not visible
@@ -87,6 +87,7 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREAS", function() {
 
 XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
   let result = [
+    "bookmarks-menu-button",
     "open-file-button",
     "developer-button",
     "feed-button",

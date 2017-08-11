@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 function testExpected(expected, msg) {
   is(document.getElementById("context-openlinkincurrent").hidden, expected, msg);
 }

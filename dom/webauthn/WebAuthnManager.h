@@ -8,7 +8,9 @@
 #define mozilla_dom_WebAuthnManager_h
 
 #include "mozilla/MozPromise.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
+#include "nsIDOMEventListener.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
 
 /*
@@ -61,10 +63,12 @@ class Promise;
 class WebAuthnTransactionChild;
 class WebAuthnTransactionInfo;
 
-class WebAuthnManager final : public nsIIPCBackgroundChildCreateCallback
+class WebAuthnManager final : public nsIIPCBackgroundChildCreateCallback,
+                              public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
   static WebAuthnManager* GetOrCreate();
   static WebAuthnManager* Get();
 
@@ -88,6 +92,7 @@ public:
 
   void StartRegister();
   void StartSign();
+  void StartCancel();
 
   // nsIIPCbackgroundChildCreateCallback methods
   void ActorCreated(PBackgroundChild* aActor) override;

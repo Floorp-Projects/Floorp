@@ -7,7 +7,8 @@ function checkWindowProperties(expectPresent, l) {
 }
 function checkElements(expectPresent, l) {
   for (let id of l) {
-    is(!!document.getElementById(id), expectPresent, "element " + id + (expectPresent ? " is" : " is not") + " present");
+    let el = document.getElementById(id) || gNavToolbox.palette.querySelector("#" + id);
+    is(!!el, expectPresent, "element " + id + (expectPresent ? " is" : " is not") + " present");
   }
 }
 

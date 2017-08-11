@@ -190,6 +190,8 @@
   animation-timing-function: steps(19);
   animation-duration: 317ms;
   width: 660px;
+  -moz-context-properties: fill, stroke;
+  stroke: var(--toolbarbutton-icon-fill-attention);
 }
 
 #star-button-box[animationsenabled] > #star-button[starred][animate]:-moz-locale-dir(rtl) + #star-button-animatable-box > #star-button-animatable-image {

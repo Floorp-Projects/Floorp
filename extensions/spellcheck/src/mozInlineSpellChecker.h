@@ -179,9 +179,6 @@ private:
   // the whole document.
   bool mFullSpellCheckScheduled;
 
-  // Maintains state during the asynchronous UpdateCurrentDictionary call.
-  nsString mPreviousDictionary;
-
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

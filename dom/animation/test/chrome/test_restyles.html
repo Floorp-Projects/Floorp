@@ -66,6 +66,11 @@ SimpleTest.waitForExplicitFinish();
 var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
+var isServo = isStyledByServo();
+var offscreenThrottlingEnabled =
+  SpecialPowers.getBoolPref('dom.animations.offscreen-throttling') &&
+  !isServo; // Bug 1303235 : For stylo we don't yet accumulate change
+            // hints which are used for offscreen throttling.
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
@@ -204,7 +209,7 @@ waitForAllPaints(function() {
   });
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -224,7 +229,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function no_restyling_main_thread_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -242,7 +247,7 @@ waitForAllPaints(function() {
   });
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_scrolled_out_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -272,7 +277,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function no_restyling_main_thread_animations_in_scrolled_out_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -302,7 +307,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function no_restyling_main_thread_animations_in_nested_scrolled_out_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -351,7 +356,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function restyling_main_thread_animations_moved_in_view_by_scrolling() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -393,7 +398,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function restyling_main_thread_animations_moved_in_view_by_scrolling() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -431,7 +436,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function restyling_main_thread_animations_move_out_of_view_by_scrolling() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -476,7 +481,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function restyling_main_thread_animations_moved_in_view_by_resizing() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -756,13 +761,28 @@ waitForAllPaints(function() {
     document.body.appendChild(div);
 
     markers = await observeStyling(1);
-    // We are observing restyles in rAF callback which is processed before
-    // restyling process in each frame, so in the first frame there should be
-    // no observed restyle since we don't process restyle while the element
-    // is not attached to the document.
-    is(markers.length, 0,
-       'We observe no restyle in the first frame right after re-atatching ' +
-       'to the document');
+    if (isServo) {
+      // In Servo, we explicitly set important_rules_change flag to the element
+      // in compute_style() during the initial normal traversal right after
+      // re-attaching which leads to invoking a SequentialTask for
+      // CascadeResults which ends up calling RequestRestyle(Standard). As a
+      // result, the animation is restyled during a second animation restyle in
+      // the first frame. If we fix the behavior when we attach an orphaned
+      // element with script animations to a document so that it requests a
+      // layer restyle (bug 1388557) before fixing important_rules_change in
+      // compute_style() so that it no longer dispatches a needless standard
+      // restyle (bug 1388560), we should add a test case that fails if we
+      // continue to unnecessarily request a standard restyle.
+      is(markers.length, 1,
+         'We should observe one restyle in the first frame right after ' +
+         're-attaching to the document');
+    } else {
+      // Bug 1388557: We should call RequestRestyle(Layer) when an element which
+      // has running script animations is attached to a document.
+      todo_is(markers.length, 1,
+              'Bug 1388557 We should observe one restyle in the first frame ' +
+              'right after re-attaching to the document');
+    }
     markers = await observeStyling(5);
     is(markers.length, 5,
        'Animation on re-attached to the document begins to update style');
@@ -810,7 +830,7 @@ waitForAllPaints(function() {
 
   // Tests that additive animations don't throttle at all.
   add_task(async function no_throttling_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling') ||
+    if (!offscreenThrottlingEnabled ||
         !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
       return;
     }
@@ -831,7 +851,7 @@ waitForAllPaints(function() {
 
   // Counter part of the above test.
   add_task(async function no_restyling_discrete_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling') ||
+    if (!offscreenThrottlingEnabled ||
         !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
       return;
     }
@@ -897,7 +917,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function throttling_animations_out_of_view_svg() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -957,7 +977,7 @@ waitForAllPaints(function() {
   });
 
   add_task(async function throttling_animations_out_of_view_css_transform() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -987,6 +1007,29 @@ waitForAllPaints(function() {
     await ensureElementRemoval(scrollDiv);
   });
 
+  add_task_if_omta_enabled(
+    function* no_restyling_for_compositor_animation_on_unrelated_style_change() {
+      var div = addDiv(null);
+      var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+      yield animation.ready;
+      ok(animation.isRunningOnCompositor,
+         'The opacity animation is running on the compositor');
+
+      div.style.setProperty('color', 'blue', '');
+      var markers = yield observeStyling(5);
+      if (isServo) {
+        is(markers.length, 0,
+           'The opacity animation keeps running on the compositor when ' +
+           'color style is changed');
+      } else {
+        todo_is(markers.length, 0,
+                'Bug 1307341 The opacity animation keeps running on the ' +
+                'compositor when color style is changed');
+      }
+      yield ensureElementRemoval(div);
+    }
+  );
 });
 
 </script>

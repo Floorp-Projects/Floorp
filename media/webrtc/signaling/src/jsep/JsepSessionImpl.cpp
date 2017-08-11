@@ -127,7 +127,7 @@ JsepSessionImpl::AddTrack(const RefPtr<JsepTrack>& track)
     std::vector<JsepTrack::JsConstraints> constraints;
     track->GetJsConstraints(&constraints);
     for (auto constraint : constraints) {
-      if (constraint.rid != "") {
+      if (!constraint.rid.empty()) {
         minimumSsrcCount++;
       }
     }
@@ -311,7 +311,7 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
   SdpDirectionAttribute::Direction addVideoExt = SdpDirectionAttribute::kInactive;
   SdpDirectionAttribute::Direction addAudioExt = SdpDirectionAttribute::kInactive;
   for (auto constraintEntry: constraints) {
-    if (constraintEntry.rid != "") {
+    if (!constraintEntry.rid.empty()) {
       switch (it->mTrack->GetMediaType()) {
         case SdpMediaSection::kVideo: {
           addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
@@ -344,7 +344,7 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
     std::vector<JsepTrack::JsConstraints> constraints;
     track->GetJsConstraints(&constraints);
     for (auto constraint : constraints) {
-      if (constraint.rid != "") {
+      if (!constraint.rid.empty()) {
         minimumSsrcCount++;
       }
     }
@@ -673,7 +673,7 @@ JsepSessionImpl::SetupBundle(Sdp* sdp) const
     }
   }
 
-  if (mids.size() >= 1) {
+  if (!mids.empty()) {
     UniquePtr<SdpGroupAttributeList> groupAttr(new SdpGroupAttributeList);
     groupAttr->PushEntry(SdpGroupAttributeList::kBundle, mids);
     sdp->GetAttributeList().SetAttribute(groupAttr.release());
@@ -2367,9 +2367,7 @@ JsepSessionImpl::SetupDefaultCodecs()
       "webrtc-datachannel",
       WEBRTC_DATACHANNEL_STREAMS_DEFAULT,
       WEBRTC_DATACHANNEL_PORT_DEFAULT,
-      // TODO: Bug 979417 needs to change this to
-      // WEBRTC_DATACHANELL_MAX_MESSAGE_SIZE_DEFAULT
-      0
+      WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL
       ));
 
   // Update the redundant encodings for the RED codec with the supported

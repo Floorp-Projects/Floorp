@@ -521,14 +521,14 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
 
     EGLContext context;
     do {
-        if (rbab_attribs.size()) {
+        if (!rbab_attribs.empty()) {
             context = fnCreate(rbab_attribs);
             if (context)
                 break;
             NS_WARNING("Failed to create EGLContext with rbab_attribs");
         }
 
-        if (robustness_attribs.size()) {
+        if (!robustness_attribs.empty()) {
             context = fnCreate(robustness_attribs);
             if (context)
                 break;

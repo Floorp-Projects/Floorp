@@ -111,3 +111,5 @@ fuzzy(255,40) == border-style-outset-becomes-groove.html border-style-outset-bec
 # is 20px).
 fuzzy(255,40) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
 fuzzy(2,11000) == 1324524.html 1324524-ref.html
+== 1384602-1a.html 1384602-1-ref.html
+== 1384602-1b.html 1384602-1-ref.html

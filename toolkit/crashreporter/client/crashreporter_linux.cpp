@@ -543,7 +543,7 @@ bool UIShowCrashUI(const StringTable& files,
   g_signal_connect(gCloseButton, "clicked", G_CALLBACK(CloseClicked), 0);
 
   gRestartButton = 0;
-  if (restartArgs.size() > 0) {
+  if (!restartArgs.empty()) {
     gRestartButton = gtk_button_new_with_label(gStrings[ST_RESTART].c_str());
     gtk_box_pack_start(GTK_BOX(buttonBox), gRestartButton, FALSE, FALSE, 0);
     gtk_widget_set_can_default(gRestartButton, TRUE);

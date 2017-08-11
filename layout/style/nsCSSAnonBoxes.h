@@ -62,7 +62,8 @@ public:
 #ifdef DEBUG
   // NOTE(emilio): DEBUG only because this does a pretty slow linear search. Try
   // to use IsNonInheritingAnonBox if you know the atom is an anon box already
-  // or, even better, nothing like this.
+  // or, even better, nothing like this.  Note that this function returns true
+  // for wrapper anon boxes as well, since they're all inheriting.
   static bool IsInheritingAnonBox(nsIAtom* aPseudo)
   {
     return
@@ -73,7 +74,24 @@ public:
 #undef CSS_ANON_BOX
       false;
   }
-#endif
+#endif // DEBUG
+
+  // This function is rather slow; you probably don't want to use it outside
+  // asserts unless you have to.
+  static bool IsWrapperAnonBox(nsIAtom* aPseudo) {
+    // We commonly get null passed here, and want to quickly return false for
+    // it.
+    return aPseudo &&
+      (
+#define CSS_ANON_BOX(_name, _value) /* nothing */
+#define CSS_WRAPPER_ANON_BOX(_name, _value) _name == aPseudo ||
+#define CSS_NON_INHERITING_ANON_BOX(_name, _value) /* nothing */
+#include "nsCSSAnonBoxList.h"
+#undef CSS_NON_INHERITING_ANON_BOX
+#undef CSS_WRAPPER_ANON_BOX
+#undef CSS_ANON_BOX
+       false);
+  }
 
   // Get the NonInheriting type for a given pseudo tag.  The pseudo tag must
   // test true for IsNonInheritingAnonBox.

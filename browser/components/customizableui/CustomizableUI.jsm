@@ -57,7 +57,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 8;
+var kVersion = 9;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -192,10 +192,12 @@ var CustomizableUIInternal = {
       "forward-button",
       "stop-reload-button",
       "home-button",
+      "spring",
       "urlbar-container",
       "search-container",
-      "bookmarks-menu-button",
+      "spring",
       "downloads-button",
+      "library-button",
       "sidebar-button",
     ];
 
@@ -205,9 +207,9 @@ var CustomizableUIInternal = {
 
     // Place this last, when createWidget is called for pocket, it will
     // append to the toolbar.
-    if (Services.prefs.getPrefType("extensions.pocket.enabled") != Services.prefs.PREF_INVALID &&
-        Services.prefs.getBoolPref("extensions.pocket.enabled")) {
-        navbarPlacements.push("pocket-button");
+    if (Services.prefs.getBoolPref("extensions.pocket.enabled", false) &&
+        Services.prefs.getBoolPref("extensions.pocket.disablePageAction", false)) {
+      navbarPlacements.push("pocket-button");
     }
 
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
@@ -381,6 +383,40 @@ var CustomizableUIInternal = {
       savedPanelPlacements = savedPanelPlacements.filter(id => defaultPlacements.includes(id));
       if (savedPanelPlacements.length) {
         gSavedState.placements[this.AREA_FIXED_OVERFLOW_PANEL] = savedPanelPlacements;
+      }
+    }
+
+    if (currentVersion < 9 && gSavedState.placements && gSavedState.placements["nav-bar"]) {
+      let placements = gSavedState.placements["nav-bar"];
+      if (placements.includes("urlbar-container")) {
+        let urlbarIndex = placements.indexOf("urlbar-container");
+        let secondSpringIndex = urlbarIndex + 1;
+        // Insert if there isn't already a spring before the urlbar
+        if (urlbarIndex == 0 || !placements[urlbarIndex - 1].startsWith(kSpecialWidgetPfx + "spring")) {
+          placements.splice(urlbarIndex, 0, "spring");
+          // The url bar is now 1 index later, so increment the insertion point for
+          // the second spring.
+          secondSpringIndex++;
+        }
+        // If the search container is present, insert after the search container
+        // instead of after the url bar
+        let searchContainerIndex = placements.indexOf("search-container");
+        if (searchContainerIndex != -1) {
+          secondSpringIndex = searchContainerIndex + 1;
+        }
+        if (secondSpringIndex == placements.length ||
+            !placements[secondSpringIndex].startsWith(kSpecialWidgetPfx + "spring")) {
+          placements.splice(secondSpringIndex, 0, "spring");
+        }
+      }
+
+      // Finally, replace the bookmarks menu button with the library one if present
+      if (placements.includes("bookmarks-menu-button")) {
+        let bmbIndex = placements.indexOf("bookmarks-menu-button");
+        placements.splice(bmbIndex, 1);
+        let downloadButtonIndex = placements.indexOf("downloads-button");
+        let libraryIndex = downloadButtonIndex == -1 ? bmbIndex : (downloadButtonIndex + 1);
+        placements.splice(libraryIndex, 0, "library-button");
       }
     }
   },
@@ -707,7 +743,8 @@ var CustomizableUIInternal = {
           currentNode = currentNode.nextSibling;
         }
 
-        if (currentNode && currentNode.id == id) {
+        if (currentNode &&
+            (currentNode.id == id || this.matchingSpecials(id, currentNode.id))) {
           currentNode = currentNode.nextSibling;
           continue;
         }
@@ -1224,6 +1261,12 @@ var CustomizableUIInternal = {
             aId.startsWith("separator") ||
             aId.startsWith("spring") ||
             aId.startsWith("spacer"));
+  },
+
+  matchingSpecials(aId1, aId2) {
+    return this.isSpecialWidget(aId1) &&
+           this.isSpecialWidget(aId2) &&
+           aId1.match(/spring|spacer|separator/)[0] == aId2.match(/spring|spacer|separator/)[0];
   },
 
   ensureSpecialWidgetId(aId) {
@@ -2798,7 +2841,8 @@ var CustomizableUIInternal = {
       }
 
       for (let i = 0; i < currentPlacements.length; ++i) {
-        if (currentPlacements[i] != defaultPlacements[i]) {
+        if (currentPlacements[i] != defaultPlacements[i] &&
+            !this.matchingSpecials(currentPlacements[i], defaultPlacements[i])) {
           log.debug("Found " + currentPlacements[i] + " in " + areaId + " where " +
                     defaultPlacements[i] + " was expected!");
           return false;

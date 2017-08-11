@@ -3306,6 +3306,9 @@ protected:
   // were created for a pres shell that no longer exists.
   bool mMightHaveStaleServoData : 1;
 
+  // True if we have called BeginLoad and are expecting a paired EndLoad call.
+  bool mDidCallBeginLoad : 1;
+
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;

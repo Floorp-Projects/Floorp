@@ -204,7 +204,7 @@ public:
     void SetFrom(const dom::ConstrainDOMStringParameters& aOther);
     ValueType Clamp(const ValueType& n) const;
     ValueType Get(const ValueType& defaultValue) const {
-      return Clamp(mIdeal.size() ? mIdeal : defaultValue);
+      return Clamp(mIdeal.empty() ? defaultValue : mIdeal);
     }
     bool Intersects(const StringRange& aOther) const;
     void Intersect(const StringRange& aOther);
