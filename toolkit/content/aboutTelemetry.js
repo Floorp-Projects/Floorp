@@ -1418,12 +1418,17 @@ var Search = {
 
   filterElements(elements, filterText) {
     let [isPassFunc, filter] = this.chooseFilter(filterText);
+    let allElementHidden = true;
 
     let needLowerCase = (isPassFunc === this.isPassText);
     for (let element of elements) {
       let subject = needLowerCase ? element.id.toLowerCase() : element.id;
       element.hidden = !isPassFunc(subject, filter);
+      if (allElementHidden && !element.hidden) {
+        allElementHidden = false;
+      }
     }
+    return allElementHidden;
   },
 
   filterKeyedElements(keyedElements, filterText) {
@@ -1491,7 +1496,10 @@ var Search = {
     } else {
       let tables = selectedSection.querySelectorAll("table");
       for (let table of tables) {
-        this.filterElements(table.rows, text);
+        let allElementsHidden = this.filterElements(table.rows, text);
+        if (table.caption) {
+          table.caption.hidden = allElementsHidden;
+        }
       }
     }
   },
