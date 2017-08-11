@@ -474,15 +474,6 @@ private:
   void ResolveMappedAttrDeclarationBlocks();
 
   /**
-   * Perform all lazy operations required before traversing
-   * a subtree.
-   *
-   * Returns whether a post-traversal is required.
-   */
-  bool PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
-                                 ServoTraversalFlags aFlags);
-
-  /**
    * Clear our cached mNonInheritingStyleContexts.
    *
    * We do this when we want to make sure those style contexts won't live too
