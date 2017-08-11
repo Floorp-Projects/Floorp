@@ -50,8 +50,20 @@ function addUpgradeListener(instanceID) {
   });
 }
 
+function isAvailable() {
+  let availablePref = Services.prefs.getCharPref("extensions.formautofill.available");
+  if (availablePref == "on") {
+    return true;
+  } else if (availablePref == "detect") {
+    let locale = Services.locale.getRequestedLocale();
+    let region = Services.prefs.getCharPref("browser.search.region", "");
+    return locale == "en-US" && region == "US";
+  }
+  return false;
+}
+
 function startup(data) {
-  if (Services.prefs.getStringPref("extensions.formautofill.available") != "on") {
+  if (!isAvailable()) {
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
     return;
   }
