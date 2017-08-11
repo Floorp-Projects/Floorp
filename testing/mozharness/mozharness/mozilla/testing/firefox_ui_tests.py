@@ -263,6 +263,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
+            env['MOZ_ACCELERATED'] = '1'
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_work_dir'],

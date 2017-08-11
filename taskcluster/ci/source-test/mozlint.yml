@@ -57,6 +57,28 @@ mozlint-flake8:
             - 'python/mozlint/**'
             - 'tools/lint/**'
 
+mozlint-yaml:
+    description: yamllint run over the gecko codebase
+    platform: lint/opt
+    treeherder:
+        symbol: yaml
+        kind: test
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: lint -l yaml -f treeherder
+    when:
+        files-changed:
+            - '**/*.yml'
+            - '**/*.yaml'
+            - '**/.ymllint'
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
+
 wptlint-gecko:
     description: web-platform-tests linter
     platform: lint/opt
