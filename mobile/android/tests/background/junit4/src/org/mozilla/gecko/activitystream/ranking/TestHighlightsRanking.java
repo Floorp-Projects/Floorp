@@ -3,14 +3,18 @@
 
 package org.mozilla.gecko.activitystream.ranking;
 
+import android.net.Uri;
 import junit.framework.Assert;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(TestRunner.class)
 public class TestHighlightsRanking {
@@ -81,5 +85,54 @@ public class TestHighlightsRanking {
         HighlightCandidate candidate = new HighlightCandidate();
         candidate.updateScore(score);
         return candidate;
+    }
+
+    @Test
+    public void testDedupeSitesRemoveWWWDupeSiteWithNoPath() {
+        final HighlightCandidate maintainedCandidate = mockCandidate("http://feedly.com");
+        final List<HighlightCandidate> candidates = new ArrayList<>(Arrays.asList(
+                mockCandidate("http://www.feedly.com"),
+                maintainedCandidate
+        ));
+
+        HighlightsRanking.dedupeSites(candidates);
+
+        Assert.assertEquals("Expected www. site to be removed", 1, candidates.size());
+        Assert.assertEquals("Expected remaining candidate to be non-www candidate.", maintainedCandidate, candidates.get(0));
+    }
+
+    @Test
+    public void testDedupeSitesRemoveWWWDupeSiteWithSamePath() {
+        final HighlightCandidate maintainedCandidate = mockCandidate("http://feedly.com/feed/whatever");
+        final List<HighlightCandidate> candidates = new ArrayList<>(Arrays.asList(
+                mockCandidate("http://www.feedly.com/feed/whatever"),
+                maintainedCandidate
+        ));
+
+        HighlightsRanking.dedupeSites(candidates);
+
+        Assert.assertEquals("Expected www. site to be removed", 1, candidates.size());
+        Assert.assertEquals("Expected remaining candidate to be non-www candidate.", maintainedCandidate, candidates.get(0));
+    }
+
+    @Test
+    public void testDedupeSitesKeepWWWDupeSiteWithDifferentPath() {
+        final List<HighlightCandidate> candidates = new ArrayList<>(Arrays.asList(
+                mockCandidate("http://www.feedly.com/home"),
+                mockCandidate("http://feedly.com/feed")
+        ));
+
+        HighlightsRanking.dedupeSites(candidates);
+
+        Assert.assertEquals("Expected no candidates to be removed", 2, candidates.size());
+    }
+
+    private HighlightCandidate mockCandidate(final String urlStr) {
+        final String host = Uri.parse(urlStr).getHost();
+
+        final HighlightCandidate mock = mock(HighlightCandidate.class);
+        when(mock.getUrl()).thenReturn(urlStr);
+        when(mock.getHost()).thenReturn(host);
+        return mock;
     }
 }
