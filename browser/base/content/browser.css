@@ -734,7 +734,7 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 toolbarspring {
   -moz-box-flex: 1;
-  min-width: 40px;
+  min-width: 0;
 }
 
 #nav-bar toolbarpaletteitem[id^=wrapper-customizableui-special-spring],
