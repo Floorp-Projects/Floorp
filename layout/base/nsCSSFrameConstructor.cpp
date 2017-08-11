@@ -1948,13 +1948,20 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   //
   // We don't do this for pseudos that may trigger animations or transitions,
   // since those need to be kicked off by the traversal machinery.
-  bool hasServoAnimations = false;
   auto* servoStyle = pseudoStyleContext->GetAsServo();
   if (servoStyle) {
-    hasServoAnimations =
+    bool hasServoAnimations =
       Servo_ComputedValues_SpecifiesAnimationsOrTransitions(servoStyle);
     if (!hasServoAnimations) {
       Servo_SetExplicitStyle(container, servoStyle);
+    } else {
+      // If animations are involved, we avoid the SetExplicitStyle optimization
+      // above. We need to grab style with animations from the pseudo element
+      // and replace old one.
+      mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
+      pseudoStyleContext =
+        styleSet->AsServo()->ResolveServoStyle(container,
+                                               ServoTraversalFlags::Empty);
     }
   } else {
     mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->AsGecko();
@@ -1994,15 +2001,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
 
   // We may need to do a synchronous servo traversal in various uncommon cases.
   if (servoStyle) {
-    if (hasServoAnimations) {
-      // If animations are involved, we avoid the SetExplicitStyle optimization
-      // above. We need to grab style with animations from the pseudo element
-      // and replace old one.
-      mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
-      pseudoStyleContext =
-        styleSet->AsServo()->ResolveServoStyle(container,
-                                               ServoTraversalFlags::Empty);
-    } else if (createdChildElement) {
+    if (createdChildElement) {
       // If we created any children elements, Servo needs to traverse them, but
       // the root is already set up.
       mPresShell->StyleSet()->AsServo()->StyleNewChildren(container);
