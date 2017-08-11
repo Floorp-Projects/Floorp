@@ -10,7 +10,9 @@
 #include "Fetch.h"
 #include "jsapi.h"
 #include "nsIAsyncInputStream.h"
+#include "nsIObserver.h"
 #include "nsISupportsImpl.h"
+#include "nsWeakReference.h"
 
 class nsIGlobalObject;
 
@@ -19,15 +21,25 @@ class nsIInputStream;
 namespace mozilla {
 namespace dom {
 
+namespace workers {
+class WorkerHolder;
+}
+
 class FetchStream final : public nsIInputStreamCallback
+                        , public nsIObserver
+                        , public nsSupportsWeakReference
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAMCALLBACK
+  NS_DECL_NSIOBSERVER
 
   static JSObject*
   Create(JSContext* aCx, nsIGlobalObject* aGlobal,
          nsIInputStream* aInputStream, ErrorResult& aRv);
+
+  void
+  Close();
 
 private:
   FetchStream(nsIGlobalObject* aGlobal, nsIInputStream* aInputStream);
@@ -64,6 +76,9 @@ private:
   void
   ErrorPropagation(JSContext* aCx, JS::HandleObject aStream, nsresult aRv);
 
+  void
+  CloseAndReleaseObjects();
+
   // Common methods
 
   enum State {
@@ -98,6 +113,8 @@ private:
   nsCOMPtr<nsIAsyncInputStream> mInputStream;
 
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+
+  UniquePtr<workers::WorkerHolder> mWorkerHolder;
 
   JS::Heap<JSObject*> mReadableStream;
 };
