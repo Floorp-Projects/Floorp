@@ -104,6 +104,9 @@ fi
 combined_config="$(echo "$combined_config" | grep -v ARCH_X86=no)"
 combined_config="$(echo "$combined_config" | grep -v ARCH_X86_64=no)"
 
+# aom_dsp_rtcd_defs.h checks for definition here, not value.
+combined_config="$(echo "$combined_config" | grep -v CONFIG_EXT_PARTITION_TYPES=no)"
+
 # Print out the unique configurations.
 if [ -n "$out_file" ]; then
   echo "$combined_config" | sort | uniq > $out_file
