@@ -1116,12 +1116,9 @@ FetchBody<Derived>::GetBody(JSContext* aCx,
     return;
   }
 
-  JS::Rooted<JSObject*> body(aCx,
-                             FetchStream::Create(aCx,
-                                                 this,
-                                                 DerivedClass()->GetParentObject(),
-                                                 inputStream,
-                                                 aRv));
+  JS::Rooted<JSObject*> body(aCx);
+  FetchStream::Create(aCx, this, DerivedClass()->GetParentObject(),
+                      inputStream, &body, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

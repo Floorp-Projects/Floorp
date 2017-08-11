@@ -36,10 +36,10 @@ public:
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOBSERVER
 
-  static JSObject*
+  static void
   Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
          nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
-         ErrorResult& aRv);
+         JS::MutableHandle<JSObject*> aStream, ErrorResult& aRv);
 
   void
   Close();
