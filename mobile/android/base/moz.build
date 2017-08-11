@@ -286,6 +286,7 @@ gujar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
     'util/IntentUtils.java',
     'util/IOUtils.java',
     'util/JSONUtils.java',
+    'util/MapUtils.java',
     'util/MenuUtils.java',
     'util/NetworkUtils.java',
     'util/NonEvictingLruCache.java',
