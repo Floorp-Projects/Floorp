@@ -693,16 +693,4 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
 });
 
 const HUDService = new HUD_SERVICE();
-
-(() => {
-  let methods = ["openWebConsole", "openBrowserConsole",
-                 "toggleBrowserConsole", "getOpenWebConsole",
-                 "getBrowserConsole", "getHudByWindow",
-                 "openBrowserConsoleOrFocus", "getHudReferenceById"];
-  for (let method of methods) {
-    exports[method] = HUDService[method].bind(HUDService);
-  }
-
-  exports.consoles = HUDService.consoles;
-  exports.lastFinishedRequest = HUDService.lastFinishedRequest;
-})();
+exports.HUDService = HUDService;

@@ -66,14 +66,14 @@ add_task(async function testAlertNotShownInBackgroundWindow() {
 
   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   require("devtools/client/framework/devtools-browser");
-  let hudservice = require("devtools/client/webconsole/hudservice");
+  let {HUDService} = require("devtools/client/webconsole/hudservice");
 
   // And then double check that we have an actual browser console.
-  let haveConsole = !!hudservice.getBrowserConsole();
+  let haveConsole = !!HUDService.getBrowserConsole();
   ok(haveConsole, "Expected browser console to be open");
 
   if (haveConsole) {
-    await hudservice.toggleBrowserConsole();
+    await HUDService.toggleBrowserConsole();
   }
 
   await extension.unload();
