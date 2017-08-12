@@ -160,18 +160,7 @@ LocalDevice.prototype = {
    * Triggers the |name| setter to persist if needed.
    */
   _generate: function () {
-    if (Services.appinfo.widgetToolkit == "gonk") {
-      // For Firefox OS devices, create one from the device name plus a little
-      // randomness.  The goal is just to distinguish devices in an office
-      // environment where many people may have the same device model for
-      // testing purposes (which would otherwise all report the same name).
-      let name = libcutils.property_get("ro.product.device");
-      // Pick a random number from [0, 2^32)
-      let randomID = Math.floor(Math.random() * Math.pow(2, 32));
-      // To hex and zero pad
-      randomID = ("00000000" + randomID.toString(16)).slice(-8);
-      this.name = name + "-" + randomID;
-    } else if (Services.appinfo.widgetToolkit == "android") {
+    if (Services.appinfo.widgetToolkit == "android") {
       // For Firefox for Android, use the device's model name.
       // TODO: Bug 1180997: Find the right way to expose an editable name
       this.name = sysInfo.get("device");

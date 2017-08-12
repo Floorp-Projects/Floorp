@@ -310,7 +310,7 @@ already_AddRefed<nsIAppShell>
 GetAppShell()
 {
   static const char* platforms[] = {
-    "android", "mac", "gonk", "gtk", "qt", "win"
+    "android", "mac", "gtk", "qt", "win"
   };
 
   NS_NAMED_LITERAL_CSTRING(contractPrefix, "@mozilla.org/widget/appshell/");
