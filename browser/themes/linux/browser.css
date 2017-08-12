@@ -257,14 +257,6 @@ menuitem.bookmark-item {
 }
 .urlbar-history-dropmarker {
   -moz-appearance: toolbarbutton-dropdown;
-  transition: opacity 0.15s ease;
-}
-#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  transition: none;
-}
-
-#navigator-toolbox:not(:hover) #nav-bar:not([customizing="true"]) #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  opacity: 0;
 }
 
 /* ::::: URL Bar Zoom Reset Button ::::: */
