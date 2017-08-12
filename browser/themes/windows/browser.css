@@ -653,7 +653,7 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
   transition: opacity 0.15s ease;
 }
 
-#urlbar-wrapper[switchingtabs] > #urlbar > .urlbar-textbox-container > .urlbar-history-dropmarker {
+#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
   transition: none;
 }
 
