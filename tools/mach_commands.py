@@ -267,19 +267,7 @@ class FormatProvider(MachCommandBase):
                                   "--include", "glob:**.h",
                                   "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
         else:
-            git_process = Popen(["git", "diff", "--no-color", "-U0", "HEAD^"], stdout=PIPE)
-            try:
-                diff_process = Popen(["filterdiff", "--include=*.h",
-                                      "--include=*.cpp", "--include=*.c",
-                                      "--exclude-from-file=.clang-format-ignore"],
-                                     stdin=git_process.stdout, stdout=PIPE)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    print("Can't find filterdiff. Please install patchutils.")
-                else:
-                    print("OSError {0}: {1}".format(e.code, e.reason))
-                return 1
-
+	    diff_process = Popen(["git", "diff", "--no-color", "-U0", "HEAD","--","*.c","*.cpp","*.h"], stdout=PIPE)
         args = [sys.executable, clang_format_diff, "-p1"]
         if not show:
             args.append("-i")
