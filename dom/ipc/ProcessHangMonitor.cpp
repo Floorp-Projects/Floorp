@@ -85,9 +85,11 @@ class HangMonitorChild
 
   typedef ProcessHangMonitor::SlowScriptAction SlowScriptAction;
   SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
-                                    const char* aFileName);
+                                    const char* aFileName,
+                                    const nsString& aAddonId);
   void NotifySlowScriptAsync(TabId aTabId,
-                             const nsCString& aFileName);
+                             const nsCString& aFileName,
+                             const nsString& aAddonId);
 
   bool IsDebuggerStartupComplete();
 
@@ -162,6 +164,7 @@ public:
   NS_IMETHOD GetHangType(uint32_t* aHangType) override;
   NS_IMETHOD GetScriptBrowser(nsIDOMElement** aBrowser) override;
   NS_IMETHOD GetScriptFileName(nsACString& aFileName) override;
+  NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
 
   NS_IMETHOD GetPluginName(nsACString& aPluginName) override;
 
@@ -452,16 +455,18 @@ HangMonitorChild::Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint)
 
 void
 HangMonitorChild::NotifySlowScriptAsync(TabId aTabId,
-                                        const nsCString& aFileName)
+                                        const nsCString& aFileName,
+                                        const nsString& aAddonId)
 {
   if (mIPCOpen) {
-    Unused << SendHangEvidence(SlowScriptData(aTabId, aFileName));
+    Unused << SendHangEvidence(SlowScriptData(aTabId, aFileName, aAddonId));
   }
 }
 
 HangMonitorChild::SlowScriptAction
 HangMonitorChild::NotifySlowScript(nsITabChild* aTabChild,
-                                   const char* aFileName)
+                                   const char* aFileName,
+                                   const nsString& aAddonId)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -488,12 +493,12 @@ HangMonitorChild::NotifySlowScript(nsITabChild* aTabChild,
   }
   nsAutoCString filename(aFileName);
 
-  Dispatch(NewNonOwningRunnableMethod<TabId, nsCString>(
+  Dispatch(NewNonOwningRunnableMethod<TabId, nsCString, nsString>(
     "HangMonitorChild::NotifySlowScriptAsync",
     this,
     &HangMonitorChild::NotifySlowScriptAsync,
     id,
-    filename));
+    filename, aAddonId));
   return SlowScriptAction::Continue;
 }
 
@@ -956,6 +961,18 @@ HangMonitoredProcess::GetScriptFileName(nsACString& aFileName)
 }
 
 NS_IMETHODIMP
+HangMonitoredProcess::GetAddonId(nsAString& aAddonId)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (mHangData.type() != HangData::TSlowScriptData) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aAddonId = mHangData.get_SlowScriptData().addonId();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HangMonitoredProcess::GetPluginName(nsACString& aPluginName)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -1165,10 +1182,11 @@ ProcessHangMonitor::Observe(nsISupports* aSubject, const char* aTopic, const cha
 
 ProcessHangMonitor::SlowScriptAction
 ProcessHangMonitor::NotifySlowScript(nsITabChild* aTabChild,
-                                     const char* aFileName)
+                                     const char* aFileName,
+                                     const nsString& aAddonId)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  return HangMonitorChild::Get()->NotifySlowScript(aTabChild, aFileName);
+  return HangMonitorChild::Get()->NotifySlowScript(aTabChild, aFileName, aAddonId);
 }
 
 bool
