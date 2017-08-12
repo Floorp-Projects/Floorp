@@ -60,7 +60,6 @@ gyp_vars.update({
     'arm_neon': 0,
     'arm_neon_optional': 1,
 
-    'moz_widget_toolkit_gonk': 0,
     'moz_webrtc_omx': 0,
     'moz_webrtc_mediacodec': 0,
 
