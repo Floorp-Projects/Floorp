@@ -71,10 +71,6 @@ MP4Decoder::IsSupportedType(const MediaContainerType& aType,
                        || aType.Type() == MEDIAMIMETYPE("audio/x-m4a");
   const bool isVideo = aType.Type() == MEDIAMIMETYPE("video/mp4")
                        || aType.Type() == MEDIAMIMETYPE("video/quicktime")
-  // On B2G, treat 3GPP as MP4 when Gonk PDM is available.
-#ifdef MOZ_GONK_MEDIACODEC
-                       || aType.Type() == MEDIAMIMETYPE(VIDEO_3GPP)
-#endif
                        || aType.Type() == MEDIAMIMETYPE("video/x-m4v");
 
   if (!isAudio && !isVideo) {
