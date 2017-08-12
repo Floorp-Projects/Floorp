@@ -62,8 +62,6 @@ public:
   NS_IMETHOD GetFile(nsIFile * *aFile);
   NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
-  NS_IMETHOD Show(int16_t *aReturnVal);
-  NS_IMETHOD ShowW(int16_t *aReturnVal);
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
   // IFileDialogEvents
@@ -78,7 +76,9 @@ public:
 protected:
   /* method from nsBaseFilePicker */
   virtual void InitNative(nsIWidget *aParent,
-                          const nsAString& aTitle);
+                          const nsAString& aTitle) override;
+  nsresult Show(int16_t *aReturnVal) override;
+  nsresult ShowW(int16_t *aReturnVal);
   void GetFilterListArray(nsString& aFilterList);
   bool ShowFolderPicker(const nsString& aInitialDir);
   bool ShowFilePicker(const nsString& aInitialDir);

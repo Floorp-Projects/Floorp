@@ -8,7 +8,6 @@ package org.mozilla.gecko.tabs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.animation.Animator;
@@ -274,13 +273,8 @@ public class TabStripView extends RecyclerView
         final float strength = getFadingEdgeStrength(isLTR);
         if (strength > 0.0f) {
             if (isLTR) {
-                if (SkinConfig.isAustralis()) {
-                    final int r = getRight();
-                    canvas.drawRect(r - fadingEdgeSize, getTop(), r, getBottom(), fadingEdgePaint);
-                } else {
-                    final int w = getWidth();
-                    canvas.drawRect(w - fadingEdgeSize, getTop(), w, getBottom(), fadingEdgePaint);
-                }
+                final int w = getWidth();
+                canvas.drawRect(w - fadingEdgeSize, getTop(), w, getBottom(), fadingEdgePaint);
             } else {
                 canvas.drawRect(0, getTop(), fadingEdgeSize, getBottom(), fadingEdgePaint);
             }

@@ -41,10 +41,6 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * compare to Internet Explorer:
  *   new ActiveXObject("Msxml2.XMLHTTP")
  *
- * From JavaScript, the methods and properties visible in the XMLHttpRequest
- * object are a combination of nsIXMLHttpRequest and nsIJSXMLHttpRequest;
- * there is no need to differentiate between those interfaces.
- *
  * From native code, the way to set up onload and onerror handlers is a bit
  * different. Here is a comment from Johnny Stenback <jst@netscape.com>:
  *
@@ -59,10 +55,6 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  *
  *   where mylistener is your event listener object that implements the
  *   interface nsIDOMEventListener.
- *
- *   The 'onload', 'onerror', and 'onreadystatechange' attributes moved to
- *   nsIJSXMLHttpRequest, but if you're coding in C++ you should avoid using
- *   those.
  *
  * Conclusion: Do not use event listeners on XMLHttpRequest from C++, unless
  * you're aware of all the security implications.  And then think twice about
@@ -333,13 +325,6 @@ interface nsIXHRSendable : nsISupports {
                    out uint64_t contentLength,
                    out ACString contentTypeWithCharset,
                    out ACString charset);
-};
-
-/**
- * @deprecated
- */
-[scriptable, uuid(8ae70a39-edf1-40b4-a992-472d23421c25)]
-interface nsIJSXMLHttpRequest : nsISupports {
 };
 
 %{ C++

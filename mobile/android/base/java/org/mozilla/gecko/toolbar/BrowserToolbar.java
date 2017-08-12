@@ -27,7 +27,6 @@ import org.mozilla.gecko.lwt.LightweightThemeDrawable;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
 import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
@@ -35,7 +34,6 @@ import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.WindowUtil;
-import org.mozilla.gecko.widget.themed.ThemedFrameLayout;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
@@ -83,7 +81,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                                                 GeckoMenu.ActionItemBarPresenter {
     private static final String LOGTAG = "GeckoToolbar";
 
-    private static final int LIGHTWEIGHT_THEME_INVERT_ALPHA = 34; // 255 - alpha = invert_alpha
     private static final int LIGHTWEIGHT_THEME_ALPHA = 77;
 
     public interface OnActivateListener {
@@ -124,8 +121,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private ToolbarProgressView progressBar;
     protected final TabCounter tabsCounter;
     protected final View menuButton;
-    // bug 1375351: There is no menuIcon in Photon flavor, menuIcon should be removed
-    protected final ThemedImageView menuIcon;
     private MenuPopup menuPopup;
     protected final List<View> focusOrder;
 
@@ -196,7 +191,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         tabsCounter.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
         menuButton = findViewById(R.id.menu);
-        menuIcon = (ThemedImageView) findViewById(R.id.menu_icon);
 
         // The focusOrder List should be filled by sub-classes.
         focusOrder = new ArrayList<View>();
@@ -849,12 +843,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         urlEditLayout.setPrivateMode(isPrivate);
         urlDisplayLayout.setPrivateMode(isPrivate);
 
-        // bug 1375351: menuButton is a ThemedImageButton in Photon flavor
-        if (SkinConfig.isPhoton()) {
-            ((ThemedImageButton)menuButton).setPrivateMode(isPrivate);
-        } else {
-            ((ThemedFrameLayout)menuButton).setPrivateMode(isPrivate);
-        }
+        ((ThemedImageButton) menuButton).setPrivateMode(isPrivate);
 
         shadowPaint.setColor(isPrivate ? shadowPrivateColor : shadowColor);
 
@@ -948,11 +937,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         final LightweightThemeDrawable drawable = theme.getColorDrawable(view, color);
         if (drawable != null) {
-            if (SkinConfig.isAustralis()) {
-                drawable.setAlpha(LIGHTWEIGHT_THEME_INVERT_ALPHA, LIGHTWEIGHT_THEME_INVERT_ALPHA);
-            } else {
-                drawable.setAlpha(LIGHTWEIGHT_THEME_ALPHA, LIGHTWEIGHT_THEME_ALPHA);
-            }
+            drawable.setAlpha(LIGHTWEIGHT_THEME_ALPHA, LIGHTWEIGHT_THEME_ALPHA);
         }
 
         return drawable;

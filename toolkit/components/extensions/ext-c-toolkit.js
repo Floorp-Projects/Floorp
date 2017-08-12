@@ -18,8 +18,8 @@ global.initializeBackgroundPage = (contentWindow) => {
     if (!alertDisplayedWarning) {
       require("devtools/client/framework/devtools-browser");
 
-      let hudservice = require("devtools/client/webconsole/hudservice");
-      hudservice.openBrowserConsoleOrFocus();
+      let {HUDService} = require("devtools/client/webconsole/hudservice");
+      HUDService.openBrowserConsoleOrFocus();
 
       contentWindow.console.warn("alert() is not supported in background windows; please use console.log instead.");
 

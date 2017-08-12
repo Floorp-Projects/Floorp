@@ -1960,8 +1960,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
       // and replace old one.
       mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
       pseudoStyleContext =
-        styleSet->AsServo()->ResolveServoStyle(container,
-                                               ServoTraversalFlags::Empty);
+        styleSet->AsServo()->ResolveServoStyle(container);
     }
   } else {
     mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->AsGecko();
@@ -7552,10 +7551,7 @@ nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
 {
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    nsINode* parent = child->GetFlattenedTreeParent();
-    if (MOZ_LIKELY(parent) && parent->IsElement()) {
-      parent->AsElement()->NoteDirtyDescendantsForServo();
-    }
+    child->NoteDirtyForServo();
   }
 }
 

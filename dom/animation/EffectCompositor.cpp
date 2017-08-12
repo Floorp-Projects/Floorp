@@ -959,14 +959,14 @@ EffectCompositor::SetPerformanceWarning(
 }
 
 bool
-EffectCompositor::PreTraverse(AnimationRestyleType aRestyleType)
+EffectCompositor::PreTraverse(ServoTraversalFlags aFlags)
 {
-  return PreTraverseInSubtree(nullptr, aRestyleType);
+  return PreTraverseInSubtree(aFlags, nullptr);
 }
 
 bool
-EffectCompositor::PreTraverseInSubtree(Element* aRoot,
-                                       AnimationRestyleType aRestyleType)
+EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
+                                       Element* aRoot)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
@@ -983,7 +983,7 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot,
   // if we are currently flushing all throttled animation restyles.
   bool flushThrottledRestyles =
     (aRoot && aRoot->HasDirtyDescendantsForServo()) ||
-    aRestyleType == AnimationRestyleType::Full;
+    (aFlags & ServoTraversalFlags::FlushThrottledAnimations);
 
   using ElementsToRestyleIterType =
     nsDataHashtable<PseudoElementHashEntry, bool>::Iterator;

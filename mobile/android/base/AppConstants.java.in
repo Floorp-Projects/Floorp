@@ -337,4 +337,11 @@ public class AppConstants {
 //#else
         false;
 //#endif
+
+    public static final String MOZ_POCKET_API_KEY =
+//#ifdef MOZ_ANDROID_POCKET
+        "@MOZ_POCKET_API_KEY@";
+//#else
+        null;
+//#endif
 }

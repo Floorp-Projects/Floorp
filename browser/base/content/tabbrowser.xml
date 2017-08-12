@@ -6344,21 +6344,10 @@
         ]]></body>
       </method>
 
-      <method name="themeLayoutChanged">
-        <body><![CDATA[
-          this._positionPinnedTabs(true);
-        ]]></body>
-      </method>
-
       <field name="_lastNumPinned">0</field>
       <field name="_pinnedTabsLayoutCache">null</field>
       <method name="_positionPinnedTabs">
-        <parameter name="aThemeLayoutChanged"/>
         <body><![CDATA[
-          if (aThemeLayoutChanged) {
-            this._pinnedTabsLayoutCache = null;
-          }
-
           var numPinned = this.tabbrowser._numPinnedTabs;
           var doPosition = this.getAttribute("overflow") == "true" &&
                            numPinned > 0;

@@ -1354,6 +1354,7 @@ nsIDocument::nsIDocument()
     mIsContentDocument(false),
     mMightHaveStaleServoData(false),
     mDidCallBeginLoad(false),
+    mBufferingCSPViolations(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),

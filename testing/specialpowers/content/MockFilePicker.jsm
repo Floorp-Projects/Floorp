@@ -251,9 +251,6 @@ MockFilePickerInstance.prototype = {
       }
     };
   },
-  show() {
-    throw "This is not implemented";
-  },
   open(aFilePickerShownCallback) {
     MockFilePicker.showing = true;
     this.window.setTimeout(() => {

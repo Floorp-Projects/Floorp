@@ -994,6 +994,23 @@ var StackRenderer = {
   }
 };
 
+var RawPayloadData = {
+  /**
+   * Renders the raw pyaload.
+   */
+  render(aPing) {
+    setHasData("raw-payload-section", true);
+    let pre = document.getElementById("raw-payload-data");
+    pre.textContent = JSON.stringify(aPing.payload, null, 2);
+  },
+
+  attachObservers() {
+    document.getElementById("payload-json-viewer").addEventListener("click", (e) => {
+      openJsonInFirefoxJsonViewer(JSON.stringify(gPingData.payload, null, 2));
+    });
+  }
+};
+
 function SymbolicationRequest(aPrefix, aRenderHeader,
                               aMemoryMap, aStacks, aDurations = null) {
   this.prefix = aPrefix;
@@ -1854,7 +1871,7 @@ function adjustSearchState() {
   let selectedSection = document.querySelector("section.active").id;
   let blacklist = [
     "home-section",
-    "raw-ping-data-section"
+    "raw-payload-section"
   ];
   // TODO: Implement global search for the Home section
   let search = document.getElementById("search");
@@ -1937,6 +1954,7 @@ function showSubSection(selected) {
 function setupListeners() {
   Settings.attachObservers();
   PingPicker.attachObservers();
+  RawPayloadData.attachObservers();
 
   let menu = document.getElementById("categories");
   menu.addEventListener("click", (e) => {
@@ -2290,7 +2308,7 @@ function renderPayloadList(ping) {
 function togglePingSections(isMainPing) {
   // We always show the sections that are "common" to all pings.
   let commonSections = new Set(["heading",
-                                "home",
+                                "home-section",
                                 "general-data-section",
                                 "environment-data-section",
                                 "raw-json-viewer"]);
@@ -2300,7 +2318,12 @@ function togglePingSections(isMainPing) {
     if (commonSections.has(section.getAttribute("value"))) {
       continue;
     }
-    section.classList.toggle("has-data", isMainPing);
+    // Only show the raw payload for non main ping.
+    if (section.getAttribute("value") == "raw-payload-section") {
+      section.classList.toggle("has-data", !isMainPing);
+    } else {
+      section.classList.toggle("has-data", isMainPing);
+    }
   }
 }
 
@@ -2328,6 +2351,8 @@ function displayRichPingData(ping, updatePayloadList) {
 
   // Show environment data.
   EnvironmentData.render(ping);
+
+  RawPayloadData.render(ping);
 
   // We only have special rendering code for the payloads from "main" pings.
   // For any other pings we just render the raw JSON payload.

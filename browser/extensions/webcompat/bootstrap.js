@@ -2,12 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+const {utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const PREF_BRANCH = "extensions.webcompat.";
 const PREF_DEFAULTS = {perform_ua_overrides: true};
 
+const UA_OVERRIDES_INIT_TOPIC = "useragentoverrides-initialized";
 const UA_ENABLE_PREF_NAME = "extensions.webcompat.perform_ua_overrides";
 
 XPCOMUtils.defineLazyModuleGetter(this, "UAOverrider", "chrome://webcompat/content/lib/ua_overrider.jsm");
@@ -21,7 +24,6 @@ function UAEnablePrefObserver() {
     overrider = new UAOverrider(UAOverrides);
     overrider.init();
   } else if (!isEnabled && overrider) {
-    overrider.uninit();
     overrider = null;
   }
 }
@@ -60,14 +62,24 @@ this.startup = function({webExtension}) {
   Services.prefs.clearUserPref(UA_ENABLE_PREF_NAME);
   Services.prefs.addObserver(UA_ENABLE_PREF_NAME, UAEnablePrefObserver);
 
-  overrider = new UAOverrider(UAOverrides);
-  overrider.init();
+  // Listen to the useragentoverrides-initialized notification we get and
+  // initialize our overrider there. This is done to avoid slowing down the
+  // apparent startup proces, since we avoid loading anything before the first
+  // window is visible to the user. See bug 1371442 for details.
+  let startupWatcher = {
+    observe(aSubject, aTopic, aData) {
+      if (aTopic !== UA_OVERRIDES_INIT_TOPIC) {
+        return;
+      }
+
+      Services.obs.removeObserver(this, UA_OVERRIDES_INIT_TOPIC);
+      overrider = new UAOverrider(UAOverrides);
+      overrider.init();
+    }
+  };
+  Services.obs.addObserver(startupWatcher, UA_OVERRIDES_INIT_TOPIC);
 };
 
 this.shutdown = function() {
   Services.prefs.removeObserver(UA_ENABLE_PREF_NAME, UAEnablePrefObserver);
-
-  if (overrider) {
-    overrider.uninit();
-  }
 };

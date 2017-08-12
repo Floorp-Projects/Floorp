@@ -4016,17 +4016,6 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
   return NS_OK;
 }
 
-nsresult
-nsGlobalWindow::DispatchDOMEvent(WidgetEvent* aEvent,
-                                 nsIDOMEvent* aDOMEvent,
-                                 nsPresContext* aPresContext,
-                                 nsEventStatus* aEventStatus)
-{
-  return EventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMWindow*>(this),
-                                           aEvent, aDOMEvent, aPresContext,
-                                           aEventStatus);
-}
-
 void
 nsGlobalWindow::PoisonOuterWindowProxy(JSObject *aObject)
 {

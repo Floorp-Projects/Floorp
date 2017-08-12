@@ -9,7 +9,6 @@
 var CompactTheme = {
   styleSheetLocation: "chrome://browser/skin/compacttheme.css",
   styleSheet: null,
-  initialized: false,
 
   get isStyleSheetEnabled() {
     return this.styleSheet && !this.styleSheet.sheet.disabled;
@@ -23,7 +22,6 @@ var CompactTheme = {
   },
 
   init() {
-    this.initialized = true;
     Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
     if (this.isThemeCurrentlyApplied) {
@@ -35,7 +33,6 @@ var CompactTheme = {
     let styleSheetAttr = `href="${this.styleSheetLocation}" type="text/css"`;
     this.styleSheet = document.createProcessingInstruction(
       "xml-stylesheet", styleSheetAttr);
-    this.styleSheet.addEventListener("load", this);
     document.insertBefore(this.styleSheet, document.documentElement);
     this.styleSheet.sheet.disabled = true;
   },
@@ -56,21 +53,6 @@ var CompactTheme = {
     }
   },
 
-  handleEvent(e) {
-    if (e.type === "load") {
-      this.styleSheet.removeEventListener("load", this);
-      this.refreshBrowserDisplay();
-    }
-  },
-
-  refreshBrowserDisplay() {
-    // Don't touch things on the browser if gBrowserInit.onLoad hasn't
-    // yet fired.
-    if (this.initialized) {
-      gBrowser.tabContainer.themeLayoutChanged();
-    }
-  },
-
   _toggleStyleSheet(enabled) {
     let wasEnabled = this.isStyleSheetEnabled;
     if (enabled) {
@@ -80,18 +62,13 @@ var CompactTheme = {
         this.createStyleSheet();
       }
       this.styleSheet.sheet.disabled = false;
-      this.refreshBrowserDisplay();
     } else if (!enabled && wasEnabled) {
       this.styleSheet.sheet.disabled = true;
-      this.refreshBrowserDisplay();
     }
   },
 
   uninit() {
     Services.obs.removeObserver(this, "lightweight-theme-styling-update");
-    if (this.styleSheet) {
-      this.styleSheet.removeEventListener("load", this);
-    }
     this.styleSheet = null;
   }
 };

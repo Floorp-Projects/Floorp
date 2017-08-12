@@ -614,7 +614,8 @@ PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
   event->SetTrusted(true);
   event->SetRequest(this);
 
-  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  bool dummy;
+  return DispatchEvent(event, &dummy);
 }
 
 already_AddRefed<PaymentAddress>

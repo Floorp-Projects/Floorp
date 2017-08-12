@@ -339,7 +339,8 @@ checkbox:-moz-focusring {
 .devtools-toolbarbutton:not([disabled])[label][checked=true],
 .devtools-toolbarbutton:not([disabled])[label][open],
 .devtools-button:not(:empty).checked,
-.theme-firebug .devtools-toolbarbutton:-moz-any([checked],[open]),
+.theme-firebug .devtools-toolbarbutton[checked],
+.theme-firebug .devtools-toolbarbutton[open],
 .theme-firebug .devtools-button.checked:empty {
   background: var(--toolbarbutton-checked-background);
   border-color: var(--toolbarbutton-checked-border-color);

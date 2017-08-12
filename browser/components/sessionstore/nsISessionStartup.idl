@@ -48,6 +48,14 @@ interface nsISessionStartup: nsISupports
   readonly attribute bool willOverrideHomepage;
 
   /**
+   * Returns a promise that resolves to a boolean indicating whether we will
+   * restore a session that ends up replacing the homepage. The browser uses
+   * this to not start loading the homepage if we're going to stop its load
+   * anyway shortly after.
+   */
+  readonly attribute jsval willOverrideHomepagePromise;
+
+  /**
    * What type of session we're restoring.
    * NO_SESSION       There is no data available from the previous session
    * RECOVER_SESSION  The last session crashed. It will either be restored or

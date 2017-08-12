@@ -10,25 +10,16 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.skin.SkinConfig;
-import org.mozilla.gecko.widget.ResizablePathDrawable;
-import org.mozilla.gecko.widget.ResizablePathDrawable.NonScaledPathShape;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Path;
-import android.graphics.Region;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Checkable;
 import android.widget.ImageView;
@@ -48,11 +39,6 @@ public class TabStripItemView extends ThemedLinearLayout
     private final ThemedTextView titleView;
     private final ThemedImageButton closeView;
 
-    private ResizablePathDrawable backgroundDrawable;
-    private final Region tabRegion;
-    private final Region tabClipRegion;
-    private boolean tabRegionNeedsUpdate;
-
     private final int faviconSize;
     private Bitmap lastFavicon;
 
@@ -64,17 +50,7 @@ public class TabStripItemView extends ThemedLinearLayout
         super(context, attrs);
         setOrientation(HORIZONTAL);
 
-        tabRegion = new Region();
-        tabClipRegion = new Region();
-
         final Resources res = context.getResources();
-
-        if (SkinConfig.isAustralis()) {
-            final ColorStateList tabColors =
-                    ResourcesCompat.getColorStateList(res, R.color.tab_strip_item_bg, null);
-            backgroundDrawable = new ResizablePathDrawable(new TabCurveShape(), tabColors);
-            setBackgroundDrawable(backgroundDrawable);
-        }
 
         faviconSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_favicon_size);
 
@@ -110,44 +86,6 @@ public class TabStripItemView extends ThemedLinearLayout
     @RobocopTarget
     public int getTabId() {
         return id;
-    }
-
-    @Override
-    protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
-        super.onSizeChanged(width, height, oldWidth, oldHeight);
-
-        // Queue a tab region update in the next draw() call. We don't
-        // update it immediately here because we need the new path from
-        // the background drawable to be updated first.
-        tabRegionNeedsUpdate = true;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (SkinConfig.isAustralis()) {
-            final int action = event.getActionMasked();
-            final int x = (int) event.getX();
-            final int y = (int) event.getY();
-
-            // Let motion events through if they're off the tab shape bounds.
-            if (action == MotionEvent.ACTION_DOWN && !tabRegion.contains(x, y)) {
-                return false;
-            }
-        }
-
-        return super.onTouchEvent(event);
-    }
-
-    @Override
-    public void draw(Canvas canvas) {
-        super.draw(canvas);
-
-        if (SkinConfig.isAustralis() && tabRegionNeedsUpdate) {
-            final Path path = backgroundDrawable.getPath();
-            tabClipRegion.set(0, 0, getWidth(), getHeight());
-            tabRegion.setPath(path, tabClipRegion);
-            tabRegionNeedsUpdate = false;
-        }
     }
 
     @Override
@@ -241,23 +179,5 @@ public class TabStripItemView extends ThemedLinearLayout
         final Bitmap scaledFavicon =
                 Bitmap.createScaledBitmap(favicon, faviconSize, faviconSize, false);
         faviconView.setImageBitmap(scaledFavicon);
-    }
-
-    private static class TabCurveShape extends NonScaledPathShape {
-        @Override
-        protected void onResize(float width, float height) {
-            final Path path = getPath();
-
-            path.reset();
-
-            final float curveWidth = TabCurve.getWidthForHeight(height);
-
-            path.moveTo(0, height);
-            TabCurve.drawFromBottom(path, 0, height, TabCurve.Direction.RIGHT);
-            path.lineTo(width - curveWidth, 0);
-
-            TabCurve.drawFromTop(path, width - curveWidth, height, TabCurve.Direction.RIGHT);
-            path.lineTo(0, height);
-        }
     }
 }

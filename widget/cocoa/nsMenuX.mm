@@ -36,6 +36,7 @@
 #include "nsIServiceManager.h"
 #include "nsXULPopupManager.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/EventDispatcher.h"
 
 #include "jsapi.h"
 #include "nsIScriptGlobalObject.h"
@@ -361,7 +362,7 @@ nsEventStatus nsMenuX::MenuOpened()
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
+  EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
   return nsEventStatus_eConsumeNoDefault;
 }
@@ -385,7 +386,7 @@ void nsMenuX::MenuClosed()
     nsCOMPtr<nsIContent> popupContent;
     GetMenuPopupContent(getter_AddRefs(popupContent));
     nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-    dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
+    EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
     mDestroyHandlerCalled = true;
     mConstructed = false;
@@ -574,7 +575,7 @@ bool nsMenuX::OnOpen()
 
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  rv = dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
+  rv = EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
   if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
     return false;
 
@@ -612,7 +613,7 @@ bool nsMenuX::OnClose()
 
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  rv = dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
+  rv = EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
   mDestroyHandlerCalled = true;
 

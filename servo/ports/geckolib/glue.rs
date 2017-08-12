@@ -229,7 +229,8 @@ fn traverse_subtree(element: GeckoElement,
     debug!("{:?}", ShowSubtreeData(element.as_node()));
 
     let style_thread_pool = &*STYLE_THREAD_POOL;
-    let traversal_driver = if style_thread_pool.style_thread_pool.is_none() || !element.is_root() {
+    let traversal_driver = if !traversal_flags.contains(traversal_flags::ParallelTraversal) ||
+                              style_thread_pool.style_thread_pool.is_none() {
         TraversalDriver::Sequential
     } else {
         TraversalDriver::Parallel
@@ -260,10 +261,9 @@ pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
     let element = GeckoElement(root);
 
     debug!("Servo_TraverseSubtree (flags={:?})", traversal_flags);
-
-    // It makes no sense to do an animation restyle when we're restyling
+    // It makes no sense to do an animation restyle when we're styling
     // newly-inserted content.
-    if !traversal_flags.contains(traversal_flags::UnstyledChildrenOnly) {
+    if !traversal_flags.contains(traversal_flags::UnstyledOnly) {
         let needs_animation_only_restyle =
             element.has_animation_only_dirty_descendants() ||
             element.has_animation_restyle_hints();
@@ -276,13 +276,6 @@ pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
                              traversal_flags | traversal_flags::AnimationOnly,
                              unsafe { &*snapshots });
         }
-    }
-
-    if traversal_flags.for_animation_only() {
-        debug!("Servo_TraverseSubtree complete (animation-only, aodd={})",
-               element.has_animation_only_dirty_descendants());
-        return element.has_animation_only_dirty_descendants() ||
-               element.borrow_data().unwrap().restyle.is_restyle();
     }
 
     traverse_subtree(element,
@@ -2782,10 +2775,8 @@ pub extern "C" fn Servo_NoteExplicitHints(element: RawGeckoElementBorrowed,
 
 #[no_mangle]
 pub extern "C" fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed,
-                                       raw_flags: ServoTraversalFlags,
                                        was_restyled: *mut bool) -> nsChangeHint
 {
-    let flags = TraversalFlags::from_bits_truncate(raw_flags);
     let mut was_restyled =  unsafe { was_restyled.as_mut().unwrap() };
     let element = GeckoElement(element);
 
@@ -2794,25 +2785,7 @@ pub extern "C" fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed,
             *was_restyled = data.restyle.is_restyle();
 
             let damage = data.restyle.damage;
-            if flags.for_animation_only() {
-                if !*was_restyled {
-                    // Don't touch elements if the element was not restyled
-                    // in throttled animation flush.
-                    debug!("Skip post traversal for throttled animation flush {:?} restyle={:?}",
-                           element, data.restyle);
-                    return nsChangeHint(0);
-                }
-                // In the case where we call this function for post traversal for
-                // flusing throttled animations (i.e. without normal restyle
-                // traversal), we need to preserve restyle hints for normal restyle
-                // traversal. Restyle hints for animations have been already
-                // removed during animation-only traversal.
-                debug_assert!(!data.restyle.hint.has_animation_hint(),
-                              "Animation restyle hints should have been already removed");
-                data.clear_restyle_flags_and_damage();
-            } else {
-                data.clear_restyle_state();
-            }
+            data.clear_restyle_state();
             damage
         }
         None => {
@@ -2828,11 +2801,9 @@ pub extern "C" fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed,
 
 #[no_mangle]
 pub extern "C" fn Servo_ResolveStyle(element: RawGeckoElementBorrowed,
-                                     _raw_data: RawServoStyleSetBorrowed,
-                                     raw_flags: ServoTraversalFlags)
+                                     _raw_data: RawServoStyleSetBorrowed)
                                      -> ServoStyleContextStrong
 {
-    let flags = TraversalFlags::from_bits_truncate(raw_flags);
     let element = GeckoElement(element);
     debug!("Servo_ResolveStyle: {:?}", element);
     let data =
@@ -2840,9 +2811,7 @@ pub extern "C" fn Servo_ResolveStyle(element: RawGeckoElementBorrowed,
 
     // TODO(emilio): Downgrade to debug assertions when close to release.
     assert!(data.has_styles(), "Resolving style on unstyled element");
-    // In the case where we process for throttled animation, there remaings
-    // restyle hints other than animation hints.
-    debug_assert!(element.has_current_styles_for_traversal(&*data, flags),
+    debug_assert!(element.has_current_styles(&*data),
                   "Resolving style on {:?} without current styles: {:?}", element, data);
     data.styles.primary().clone().into()
 }

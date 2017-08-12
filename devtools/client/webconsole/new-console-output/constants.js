@@ -65,6 +65,7 @@ const chromeRDPEnums = {
     START_GROUP_COLLAPSED: "startGroupCollapsed",
     END_GROUP: "endGroup",
     ASSERT: "assert",
+    DEBUG: "debug",
     PROFILE: "profile",
     PROFILE_END: "profileEnd",
     // Undocumented in Chrome RDP, but is used for evaluation results.

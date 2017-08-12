@@ -28,36 +28,58 @@ describe("Filtering", () => {
     numMessages = getVisibleMessages(store.getState()).length;
   });
 
+  /**
+   * Tests for filter buttons in Console toolbar. The test switches off
+   * all filters and consequently tests one by one on the list of messages
+   * created in `prepareBaseStore` method.
+   */
   describe("Level filter", () => {
+    beforeEach(() => {
+      // Switch off all filters (include those which are on by default).
+      store.dispatch(actions.filtersClear());
+      store.dispatch(actions.filterToggle(MESSAGE_LEVEL.DEBUG));
+      store.dispatch(actions.filterToggle(MESSAGE_LEVEL.ERROR));
+      store.dispatch(actions.filterToggle(MESSAGE_LEVEL.INFO));
+      store.dispatch(actions.filterToggle(MESSAGE_LEVEL.LOG));
+      store.dispatch(actions.filterToggle(MESSAGE_LEVEL.WARN));
+
+      let messages = getVisibleMessages(store.getState());
+      expect(messages.length).toEqual(numUnfilterableMessages);
+    });
+
     it("filters log messages", () => {
       store.dispatch(actions.filterToggle(MESSAGE_LEVEL.LOG));
 
       let messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages - 3);
+      expect(messages.length).toEqual(numUnfilterableMessages + 5);
     });
 
     it("filters debug messages", () => {
       store.dispatch(actions.filterToggle(MESSAGE_LEVEL.DEBUG));
 
       let messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages - 1);
+      expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
 
-    // @TODO add info stub
-    it("filters info messages");
+    it("filters info messages", () => {
+      store.dispatch(actions.filterToggle(MESSAGE_LEVEL.INFO));
+
+      let messages = getVisibleMessages(store.getState());
+      expect(messages.length).toEqual(numUnfilterableMessages + 1);
+    });
 
     it("filters warning messages", () => {
       store.dispatch(actions.filterToggle(MESSAGE_LEVEL.WARN));
 
       let messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages - 1);
+      expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
 
     it("filters error messages", () => {
       store.dispatch(actions.filterToggle(MESSAGE_LEVEL.ERROR));
 
       let messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages - 1);
+      expect(messages.length).toEqual(numUnfilterableMessages + 3);
     });
 
     it("filters css messages", () => {
@@ -67,11 +89,11 @@ describe("Filtering", () => {
       store.dispatch(messageAdd(message));
 
       let messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages);
+      expect(messages.length).toEqual(numUnfilterableMessages);
 
       store.dispatch(actions.filterToggle("css"));
       messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages + 1);
+      expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
 
     it("filters xhr messages", () => {
@@ -79,11 +101,11 @@ describe("Filtering", () => {
       store.dispatch(messageAdd(message));
 
       let messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages);
+      expect(messages.length).toEqual(numUnfilterableMessages);
 
       store.dispatch(actions.filterToggle("netxhr"));
       messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages + 1);
+      expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
 
     it("filters network messages", () => {
@@ -91,11 +113,11 @@ describe("Filtering", () => {
       store.dispatch(messageAdd(message));
 
       let messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages);
+      expect(messages.length).toEqual(numUnfilterableMessages);
 
       store.dispatch(actions.filterToggle("net"));
       messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numMessages + 1);
+      expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
   });
 
@@ -230,7 +252,12 @@ function prepareBaseStore() {
     "new Date(0)",
     // PageError
     "ReferenceError: asdf is not defined",
-    "console.group('bar')"
+    "console.group('bar')",
+    "console.debug('debug message');",
+    "console.info('info message');",
+    "console.error('error message');",
+    "console.table(['red', 'green', 'blue']);",
+    "console.assert(false, {message: 'foobar'})",
   ]);
 
   // Console Command - never filtered
