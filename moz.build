@@ -16,9 +16,6 @@ with Files('LEGAL'):
 with Files('aclocal.m4'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
-with Files('Android.mk'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
-
 with Files('client.*'):
     BUG_COMPONENT = ('Core', 'Build Config')
 

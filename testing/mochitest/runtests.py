@@ -2162,11 +2162,10 @@ toolbar#nav-bar {
             # install specialpowers and mochikit addons
             addons = Addons(self.marionette)
 
-            if mozinfo.info.get('toolkit') != 'gonk':
-                addons.install(create_zip(
-                    os.path.join(here, 'extensions', 'specialpowers')
-                ))
-                addons.install(create_zip(self.mochijar))
+            addons.install(create_zip(
+                os.path.join(here, 'extensions', 'specialpowers')
+            ))
+            addons.install(create_zip(self.mochijar))
 
             self.execute_start_script()
 
