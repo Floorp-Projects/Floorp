@@ -108,12 +108,16 @@
 }
 
 /* Page action urlbar buttons */
+
 #urlbar-icons {
+  -moz-box-align: center;
   /* Add more space between the last icon and the urlbar's edge. */
   margin-inline-end: 3px;
 }
 
 .urlbar-icon {
+  padding: 0 3px;
+  /* 16x16 icon with border-box sizing */
   width: 22px;
   height: 16px;
   margin-inline-start: 6px;
