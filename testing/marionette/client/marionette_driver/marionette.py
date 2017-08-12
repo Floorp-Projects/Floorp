@@ -1124,10 +1124,7 @@ class Marionette(object):
         if not self.instance:
             raise errors.MarionetteException("restart() can only be called "
                                              "on Gecko instances launched by Marionette")
-
         context = self._send_message("getContext", key="value")
-        session_id = self.session_id
-
         if in_app:
             if clean:
                 raise ValueError("An in_app restart cannot be triggered with the clean flag set")
@@ -1154,9 +1151,7 @@ class Marionette(object):
             self.delete_session()
             self.instance.restart(clean=clean)
             self.raise_for_port(timeout=self.DEFAULT_STARTUP_TIMEOUT)
-
-        self.start_session(session_id=session_id)
-
+        self.start_session()
         # Restore the context as used before the restart
         self.set_context(context)
 
@@ -1175,9 +1170,8 @@ class Marionette(object):
         return "{0}{1}".format(self.baseurl, relative_url)
 
     @do_process_check
-    def start_session(self, capabilities=None, session_id=None, timeout=60):
+    def start_session(self, capabilities=None, timeout=60):
         """Create a new WebDriver session.
-
         This method must be called before performing any other action.
 
         :param capabilities: An optional dictionary of
@@ -1187,11 +1181,7 @@ class Marionette(object):
             or requriedCapabilities), and only recognises extension
             capabilities that are specific to Marionette.
         :param timeout: Timeout in seconds for the server to be ready.
-        :param session_id: Unique identifier for the session. If no
-            session ID is passed in then one will be generated.
-
         :returns: A dictionary of the capabilities offered.
-
         """
         self.crashed = 0
 
@@ -1211,10 +1201,25 @@ class Marionette(object):
         timeout = timeout or self.startup_timeout
         self.wait_for_port(timeout=timeout)
         self.protocol, _ = self.client.connect()
+        body = capabilities
+        if body is None:
+            body = {}
 
-        body = {"capabilities": capabilities, "sessionId": session_id}
+        # Duplicate capabilities object so the body we end up
+        # sending looks like this:
+        #
+        #     {acceptInsecureCerts: true, {capabilities: {acceptInsecureCerts: true}}}
+        #
+        # We do this because geckodriver sends the capabilities at the
+        # top-level, and after bug 1388424 removed support for overriding
+        # the session ID, we also do this with this client.  However,
+        # because this client is used with older Firefoxen (through upgrade
+        # tests et al.) we need to preserve backwards compatibility until
+        # Firefox 60.
+        if "capabilities" not in body and capabilities is not None:
+            body["capabilities"] = dict(capabilities)
+
         resp = self._send_message("newSession", body)
-
         self.session_id = resp["sessionId"]
         self.session = resp["value"] if self.protocol == 1 else resp["capabilities"]
         # fallback to processId can be removed in Firefox 55

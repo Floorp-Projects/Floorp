@@ -16,7 +16,7 @@
 #define SPOOFED_APPNAME    "Netscape"
 #define SPOOFED_APPVERSION "5.0 (Windows)"
 #define SPOOFED_OSCPU      "Windows NT 6.1"
-#define SPOOFED_PLATFORM   "Win32"
+#define SPOOFED_PLATFORM   "Win64"
 
 #define LEGACY_BUILD_ID    "20100101"
 

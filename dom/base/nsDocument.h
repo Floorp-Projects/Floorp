@@ -983,7 +983,7 @@ public:
   // to notify window when the page was first visited.
   void MaybeActiveMediaComponents();
 
-  virtual void DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const override;
+  virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }

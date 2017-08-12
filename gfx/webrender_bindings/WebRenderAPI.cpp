@@ -24,7 +24,7 @@ class NewRenderer : public RendererEvent
 {
 public:
   NewRenderer(wr::DocumentHandle** aDocHandle, layers::CompositorBridgeParentBase* aBridge,
-              GLint* aMaxTextureSize,
+              uint32_t* aMaxTextureSize,
               bool* aUseANGLE,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
@@ -69,13 +69,13 @@ public:
       return;
     }
 
-    gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, mMaxTextureSize);
     *mUseANGLE = gl->IsANGLE();
 
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(aWindowId, mSize.width, mSize.height, gl.get(),
                        aRenderThread.ThreadPool().Raw(),
-                       this->mEnableProfiler, mDocHandle, &wrRenderer)) {
+                       this->mEnableProfiler, mDocHandle, &wrRenderer,
+                       mMaxTextureSize)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       return;
     }
@@ -105,7 +105,7 @@ public:
 
 private:
   wr::DocumentHandle** mDocHandle;
-  GLint* mMaxTextureSize;
+  uint32_t* mMaxTextureSize;
   bool* mUseANGLE;
   layers::CompositorBridgeParentBase* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
@@ -154,7 +154,7 @@ WebRenderAPI::Create(bool aEnableProfiler,
   auto id = NewWindowId(sNextId++);
 
   wr::DocumentHandle* docHandle = nullptr;
-  GLint maxTextureSize = 0;
+  uint32_t maxTextureSize = 0;
   bool useANGLE = false;
   layers::SyncHandle syncHandle = 0;
 
