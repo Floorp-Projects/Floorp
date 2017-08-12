@@ -4,8 +4,6 @@
 
 toolkit.jar:
 %   content payments %content/payments/
-    content/payments/paymentDialog.js                 (content/paymentDialog.js)
-    content/payments/paymentDialogFrameScript.js      (content/paymentDialogFrameScript.js)
-    content/payments/paymentDialog.xhtml              (content/paymentDialog.xhtml)
-%   resource payments %res/payments/
-    res/payments (res/paymentRequest.*)
+    content/payments/paymentRequest.css                (content/paymentRequest.css)
+    content/payments/paymentRequest.js                 (content/paymentRequest.js)
+    content/payments/paymentRequest.xhtml              (content/paymentRequest.xhtml)
