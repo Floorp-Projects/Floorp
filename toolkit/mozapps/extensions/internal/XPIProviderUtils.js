@@ -58,7 +58,6 @@ const PREF_E10S_BLOCKED_BY_ADDONS     = "extensions.e10sBlockedByAddons";
 const PREF_E10S_MULTI_BLOCKED_BY_ADDONS = "extensions.e10sMultiBlockedByAddons";
 const PREF_E10S_HAS_NONEXEMPT_ADDON   = "extensions.e10s.rollout.hasAddon";
 
-const KEY_APP_PROFILE                 = "app-profile";
 const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
 const KEY_APP_SYSTEM_DEFAULTS         = "app-system-defaults";
 const KEY_APP_GLOBAL                  = "app-global";
@@ -1279,11 +1278,7 @@ this.XPIDatabaseReconcile = {
         logger.warn("Disabling foreign installed add-on " + aNewAddon.id + " in "
             + aInstallLocation.name);
         aNewAddon.userDisabled = true;
-
-        // If we don't have an old app version then this is a new profile in
-        // which case just mark any sideloaded add-ons as already seen.
-        aNewAddon.seen = (aInstallLocation.name != KEY_APP_PROFILE &&
-                          !aOldAppVersion);
+        aNewAddon.seen = false;
       }
     }
 
