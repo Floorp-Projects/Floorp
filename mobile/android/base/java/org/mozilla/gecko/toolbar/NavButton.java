@@ -7,7 +7,6 @@ package org.mozilla.gecko.toolbar;
 import android.content.res.TypedArray;
 import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.skin.SkinConfig;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -59,10 +58,8 @@ abstract class NavButton extends ShapedButton {
     public void draw(Canvas canvas) {
         super.draw(canvas);
 
-        if (SkinConfig.isPhoton()) {
-            final double alpha = 255 * (isEnabled() ? 1 : 0.05);
-            mBorderPaint.setAlpha((int) alpha);
-        }
+        final double alpha = 255 * (isEnabled() ? 1 : 0.05);
+        mBorderPaint.setAlpha((int) alpha);
 
         // Draw the border on top.
         canvas.drawPath(mBorderPath, mBorderPaint);

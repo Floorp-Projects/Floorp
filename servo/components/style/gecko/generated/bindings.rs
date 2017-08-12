@@ -1082,8 +1082,11 @@ extern "C" {
     pub fn Gecko_UnsetNodeFlags(node: RawGeckoNodeBorrowed, flags: u32);
 }
 extern "C" {
-    pub fn Gecko_SetOwnerDocumentNeedsStyleFlush(element:
-                                                     RawGeckoElementBorrowed);
+    pub fn Gecko_NoteDirtyElement(element: RawGeckoElementBorrowed);
+}
+extern "C" {
+    pub fn Gecko_NoteAnimationOnlyDirtyElement(element:
+                                                   RawGeckoElementBorrowed);
 }
 extern "C" {
     pub fn Gecko_GetStyleContext(element: RawGeckoElementBorrowed,
@@ -2812,13 +2815,11 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed,
-                                flags: ServoTraversalFlags,
                                 was_restyled: *mut bool) -> nsChangeHint;
 }
 extern "C" {
     pub fn Servo_ResolveStyle(element: RawGeckoElementBorrowed,
-                              set: RawServoStyleSetBorrowed,
-                              flags: ServoTraversalFlags)
+                              set: RawServoStyleSetBorrowed)
      -> ServoStyleContextStrong;
 }
 extern "C" {

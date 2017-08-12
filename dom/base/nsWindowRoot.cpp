@@ -94,17 +94,6 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, bool *aRetVal)
   return rv;
 }
 
-nsresult
-nsWindowRoot::DispatchDOMEvent(WidgetEvent* aEvent,
-                               nsIDOMEvent* aDOMEvent,
-                               nsPresContext* aPresContext,
-                               nsEventStatus* aEventStatus)
-{
-  return EventDispatcher::DispatchDOMEvent(static_cast<EventTarget*>(this),
-                                           aEvent, aDOMEvent,
-                                           aPresContext, aEventStatus);
-}
-
 NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType,
                                nsIDOMEventListener *aListener,

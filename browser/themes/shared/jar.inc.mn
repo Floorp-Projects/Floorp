@@ -85,6 +85,7 @@
   skin/classic/browser/preferences/in-content-new/search.css       (../shared/incontentprefs/search.css)
   skin/classic/browser/preferences/in-content-new/search.svg       (../shared/incontentprefs/search.svg)
   skin/classic/browser/preferences/in-content-new/siteDataSettings.css (../shared/incontentprefs/siteDataSettings.css)
+  skin/classic/browser/preferences/in-content-new/privacy.css      (../shared/incontentprefs/privacy.css)
   skin/classic/browser/preferences/in-content-new/sync.svg         (../shared/incontentprefs/sync.svg)
 * skin/classic/browser/preferences/in-content-new/containers.css   (../shared/incontentprefs/containers.css)
   skin/classic/browser/preferences/in-content/icons.svg        (../shared/incontentprefs-old/icons.svg)

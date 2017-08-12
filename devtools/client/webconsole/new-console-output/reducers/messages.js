@@ -431,22 +431,57 @@ function getToplevelMessageCount(record) {
   return record.messagesById.count(message => !message.groupId);
 }
 
+/**
+ * Returns true if given message should be visible, false otherwise.
+ */
 function shouldMessageBeVisible(message, messagesState, filtersState, checkGroup = true) {
-  return (
-    (
-      checkGroup === false
-      || isInOpenedGroup(message, messagesState.groupsById, messagesState.messagesUiById)
-    )
-    && (
-      isUnfilterable(message)
-      || (
-        matchLevelFilters(message, filtersState)
-        && matchCssFilters(message, filtersState)
-        && matchNetworkFilters(message, filtersState)
-        && matchSearchFilters(message, filtersState)
-      )
-    )
-  );
+  // Do not display the message if it's in closed group.
+  if (
+    checkGroup
+    && !isInOpenedGroup(message, messagesState.groupsById, messagesState.messagesUiById)
+  ) {
+    return false;
+  }
+
+  // Some messages can't be filtered out (e.g. groups).
+  // So, always return true for those.
+  if (isUnfilterable(message)) {
+    return true;
+  }
+
+  // Let's check all filters and hide the message if they say so.
+  if (!matchFilters(message, filtersState)) {
+    return false;
+  }
+
+  // If there is a free text available for filtering use it to decide
+  // whether the message is displayed or not.
+  let text = (filtersState.text || "").trim();
+  if (text) {
+    return matchSearchFilters(message, text);
+  }
+
+  return true;
+}
+
+function matchFilters(message, filtersState) {
+  if (matchLevelFilters(message, filtersState)) {
+    return true;
+  }
+
+  // Return true if the message source is 'css'
+  // and CSS filter is enabled.
+  if (matchCssFilters(message, filtersState)) {
+    return true;
+  }
+
+  // Return true if the message is network event
+  // and Network and/or XHR filter is enabled.
+  if (matchNetworkFilters(message, filtersState)) {
+    return true;
+  }
+
+  return false;
 }
 
 function isUnfilterable(message) {
@@ -474,31 +509,33 @@ function isGroupClosed(groupId, messagesUI) {
   return messagesUI.includes(groupId) === false;
 }
 
-function matchLevelFilters(message, filters) {
-  return filters.get(message.level) === true;
-}
-
 function matchNetworkFilters(message, filters) {
   return (
-    message.source !== MESSAGE_SOURCE.NETWORK
-    || (filters.get("net") === true && message.isXHR === false)
-    || (filters.get("netxhr") === true && message.isXHR === true)
+    message.source === MESSAGE_SOURCE.NETWORK &&
+    (filters.get("net") === true && message.isXHR === false) ||
+    (filters.get("netxhr") === true && message.isXHR === true)
+  );
+}
+
+function matchLevelFilters(message, filters) {
+  return (
+    (message.source === MESSAGE_SOURCE.CONSOLE_API ||
+    message.source === MESSAGE_SOURCE.JAVASCRIPT) &&
+    filters.get(message.level) === true
   );
 }
 
 function matchCssFilters(message, filters) {
   return (
-    message.source != MESSAGE_SOURCE.CSS
-    || filters.get("css") === true
+    message.source === MESSAGE_SOURCE.CSS &&
+    filters.get("css") === true
   );
 }
 
-function matchSearchFilters(message, filters) {
-  let text = (filters.text || "").trim();
+function matchSearchFilters(message, text) {
   return (
-    text === ""
     // Look for a match in parameters.
-    || isTextInParameters(text, message.parameters)
+    isTextInParameters(text, message.parameters)
     // Look for a match in location.
     || isTextInFrame(text, message.frame)
     // Look for a match in net events.

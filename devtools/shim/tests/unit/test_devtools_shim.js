@@ -22,8 +22,8 @@ function createMockDevTools() {
     "unregisterTool",
     "unregisterTheme",
     "emit",
-    "getOpenedScratchpads",
-    "restoreScratchpadSession",
+    "saveDevToolsSession",
+    "restoreDevToolsSession",
   ];
 
   let mock = {
@@ -231,18 +231,20 @@ function test_scratchpad_apis() {
   ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
-  // Ensure that getOpenedScratchpads doesn't initialize the tools
-  DevToolsShim.getOpenedScratchpads();
+  // Ensure that saveDevToolsSession doesn't initialize the tools
+  DevToolsShim.saveDevToolsSession({});
 
   ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
-  // Check that restoreScratchpadSession doesn't crash.
-  DevToolsShim.restoreScratchpadSession([{}]);
+  // Check that restoreDevToolsSession doesn't crash.
+  DevToolsShim.restoreDevToolsSession({
+    scratchpads: [{}],
+    browserConsole: true,
+  });
 
-  let scratchpads = DevToolsShim.getOpenedScratchpads();
-  equal(scratchpads.length, 0,
-      "getOpenedScratchpads returns [] when DevTools are not installed");
+  // Check that saveDevToolsSession doesn't crash.
+  DevToolsShim.saveDevToolsSession({});
 
   mockDevToolsInstalled(true);
 
@@ -251,19 +253,19 @@ function test_scratchpad_apis() {
 
   let mock = createMockDevTools();
   DevToolsShim._initDevTools = () => {
-    // Next call to restoreScratchpadSession is expected to initialize DevTools, which we
+    // Next call to restoreDevToolsSession is expected to initialize DevTools, which we
     // simulate here by registering our mock.
     DevToolsShim.register(mock);
   };
 
   let scratchpadSessions = [{}];
-  DevToolsShim.restoreScratchpadSession(scratchpadSessions);
-  checkCalls(mock, "restoreScratchpadSession", 1, [scratchpadSessions]);
+  DevToolsShim.restoreDevToolsSession(scratchpadSessions);
+  checkCalls(mock, "restoreDevToolsSession", 1, [scratchpadSessions]);
 
   ok(DevToolsShim.isInitialized(), "DevTools are initialized");
 
-  DevToolsShim.getOpenedScratchpads();
-  checkCalls(mock, "getOpenedScratchpads", 1, []);
+  DevToolsShim.saveDevToolsSession({});
+  checkCalls(mock, "saveDevToolsSession", 1, []);
 
   restoreDevToolsInstalled();
 }

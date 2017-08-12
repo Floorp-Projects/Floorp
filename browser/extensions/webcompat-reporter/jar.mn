@@ -6,20 +6,4 @@
 % content webcompat-reporter %content/
   content/ (content/*)
 % skin webcompat-reporter classic/1.0 %skin/
-#ifdef XP_WIN
-  skin/   (skin/windows/*)
-% override chrome://webcompat-reporter/skin/lightbulb.png    chrome://webcompat-reporter/skin/lightbulb-win7.png    osversion=6.1
-% override chrome://webcompat-reporter/skin/lightbulb@2x.png chrome://webcompat-reporter/skin/lightbulb-win7@2x.png osversion=6.1
-% override chrome://webcompat-reporter/skin/lightbulb.png    chrome://webcompat-reporter/skin/lightbulb-win8.png    osversion=6.2
-% override chrome://webcompat-reporter/skin/lightbulb@2x.png chrome://webcompat-reporter/skin/lightbulb-win8@2x.png osversion=6.2
-% override chrome://webcompat-reporter/skin/lightbulb.png    chrome://webcompat-reporter/skin/lightbulb-win8.png    osversion=6.3
-% override chrome://webcompat-reporter/skin/lightbulb@2x.png chrome://webcompat-reporter/skin/lightbulb-win8@2x.png osversion=6.3
-#elifdef XP_MACOSX
-  skin/   (skin/osx/*)
-% override chrome://webcompat-reporter/skin/lightbulb.png    chrome://webcompat-reporter/skin/lightbulb-yosemite.png    osversion>=10.10
-% override chrome://webcompat-reporter/skin/lightbulb@2x.png chrome://webcompat-reporter/skin/lightbulb-yosemite@2x.png osversion>=10.10
-#else
-  skin/   (skin/linux/*)
-#endif
-  skin/lightbulb.css (skin/shared/lightbulb.css)
-* skin/lightbulb.svg (skin/shared/lightbulb.svg)
+  skin/  (skin/*)

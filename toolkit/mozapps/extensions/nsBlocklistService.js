@@ -627,7 +627,6 @@ Blocklist.prototype = {
     request.channel.notificationCallbacks = new gCertUtils.BadCertHandler();
     request.overrideMimeType("text/xml");
     request.setRequestHeader("Cache-Control", "no-cache");
-    request.QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
 
     request.addEventListener("error", event => this.onXMLError(event));
     request.addEventListener("load", event => this.onXMLLoad(event));

@@ -560,6 +560,8 @@ simple_keyfile('Adjust SDK')
 
 id_and_secret_keyfile('Leanplum SDK')
 
+simple_keyfile('Pocket API')
+
 # Servo integration
 # ==============================================================
 option('--enable-stylo', nargs='?', choices=('build',),

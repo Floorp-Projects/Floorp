@@ -1126,6 +1126,7 @@ def developer_options(value):
         return True
 
 add_old_configure_assignment('DEVELOPER_OPTIONS', developer_options)
+set_config('DEVELOPER_OPTIONS', developer_options)
 
 # Linker detection
 # ==============================================================

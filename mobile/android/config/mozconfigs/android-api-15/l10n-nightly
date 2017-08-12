@@ -33,6 +33,7 @@ ac_add_options --without-mozilla-api-keyfile
 ac_add_options --without-google-api-keyfile
 ac_add_options --without-adjust-sdk-keyfile
 ac_add_options --without-leanplum-sdk-keyfile
+ac_add_options --without-pocket-api-keyfile
 # Similarly explicitly disable install tracking for l10n, we'll inherit from en-US
 export MOZ_INSTALL_TRACKING=
 

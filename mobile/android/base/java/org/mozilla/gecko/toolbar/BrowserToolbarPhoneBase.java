@@ -14,7 +14,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 
@@ -113,11 +112,7 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     public void setPrivateMode(final boolean isPrivate) {
         super.setPrivateMode(isPrivate);
 
-        if (SkinConfig.isAustralis()) {
-            ((ThemedImageView) editCancel).setPrivateMode(isPrivate);
-        } else {
-            ((ThemedImageButton) editCancel).setPrivateMode(isPrivate);
-        }
+        ((ThemedImageButton) editCancel).setPrivateMode(isPrivate);
     }
 
     @Override
@@ -142,28 +137,10 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     }
 
     @Override
-    public void draw(final Canvas canvas) {
-        super.draw(canvas);
-
-        // bug 1375351: Only draw curve in Australis flavor
-        if (SkinConfig.isAustralis()) {
-            if (uiMode == UIMode.DISPLAY) {
-                canvas.drawPath(roundCornerShape, roundCornerPaint);
-            }
-        }
-    }
-
-    @Override
     public void triggerTabsPanelTransition(final PropertyAnimator animator, final boolean areTabsShown) {
         if (areTabsShown) {
             ViewHelper.setAlpha(tabsCounter, 0.0f);
-
-            // bug 1375351: menuIcon only exists in Australis flavor
-            if (SkinConfig.isAustralis()) {
-                ViewHelper.setAlpha(menuIcon, 0.0f);
-            } else {
-                ViewHelper.setAlpha(menuButton, 0.0f);
-            }
+            ViewHelper.setAlpha(menuButton, 0.0f);
             return;
         }
 
@@ -173,16 +150,9 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
                                PropertyAnimator.Property.ALPHA,
                                1.0f);
 
-        // bug 1375351: menuIcon only exists in Australis flavor
-        if (SkinConfig.isAustralis()) {
-            buttonsAnimator.attach(menuIcon,
-                    PropertyAnimator.Property.ALPHA,
-                    1.0f);
-        } else {
-            buttonsAnimator.attach(menuButton,
-                    PropertyAnimator.Property.ALPHA,
-                    1.0f);
-        }
+        buttonsAnimator.attach(menuButton,
+                               PropertyAnimator.Property.ALPHA,
+                               1.0f);
 
         buttonsAnimator.start();
     }
@@ -262,21 +232,13 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     public void onLightweightThemeChanged() {
         super.onLightweightThemeChanged();
 
-        if (SkinConfig.isAustralis()) {
-            ((ThemedImageView) editCancel).onLightweightThemeChanged();
-        } else {
-            ((ThemedImageButton) editCancel).onLightweightThemeChanged();
-        }
+        ((ThemedImageButton) editCancel).onLightweightThemeChanged();
     }
 
     @Override
     public void onLightweightThemeReset() {
         super.onLightweightThemeReset();
 
-        if (SkinConfig.isAustralis()) {
-            ((ThemedImageView) editCancel).onLightweightThemeReset();
-        } else {
-            ((ThemedImageButton) editCancel).onLightweightThemeReset();
-        }
+        ((ThemedImageButton) editCancel).onLightweightThemeReset();
     }
 }

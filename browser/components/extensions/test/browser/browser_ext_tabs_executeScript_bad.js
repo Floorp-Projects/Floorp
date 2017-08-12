@@ -113,6 +113,57 @@ add_task(async function testBadPermissions() {
     },
   });
 
+  info("Test no special permissions, _execute_browser_action command");
+  await testHasNoPermission({
+    manifest: {
+      "permissions": ["http://example.com/"],
+      "browser_action": {},
+      "commands": {
+        "_execute_browser_action": {
+          "suggested_key": {
+            "default": "Alt+Shift+K",
+          },
+        },
+      },
+    },
+    contentSetup: function() {
+      browser.browserAction.onClicked.addListener(() => {
+        browser.test.sendMessage("tabs-command-key-pressed");
+      });
+      return Promise.resolve();
+    },
+    setup: async function(extension) {
+      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await extension.awaitMessage("tabs-command-key-pressed");
+    },
+  });
+
+  info("Test no special permissions, _execute_page_action command");
+  await testHasNoPermission({
+    manifest: {
+      "permissions": ["http://example.com/"],
+      "page_action": {},
+      "commands": {
+        "_execute_page_action": {
+          "suggested_key": {
+            "default": "Alt+Shift+K",
+          },
+        },
+      },
+    },
+    contentSetup: async function() {
+      browser.pageAction.onClicked.addListener(() => {
+        browser.test.sendMessage("tabs-command-key-pressed");
+      });
+      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      await browser.pageAction.show(tab.id);
+    },
+    setup: async function(extension) {
+      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await extension.awaitMessage("tabs-command-key-pressed");
+    },
+  });
+
   info("Test active tab, commands, no key press");
   await testHasNoPermission({
     manifest: {

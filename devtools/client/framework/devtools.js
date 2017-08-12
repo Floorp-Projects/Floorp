@@ -14,6 +14,7 @@ loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/targe
 loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
 loader.lazyRequireGetter(this, "ToolboxHostManager", "devtools/client/framework/toolbox-host-manager", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
+loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice", true);
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 
 // Dependencies required for addon sdk compatibility layer.
@@ -397,24 +398,32 @@ DevTools.prototype = {
   },
 
   /**
-   * Get the array of currently opened scratchpad windows.
+   * Called from SessionStore.jsm in mozilla-central when saving the current state.
    *
-   * @return {Array} array of currently opened scratchpad windows.
-   *         Empty array if the scratchpad manager is not loaded.
+   * @param {Object} state
+   *                 A SessionStore state object that gets modified by reference
    */
-  getOpenedScratchpads: function () {
+  saveDevToolsSession: function (state) {
+    state.browserConsole = HUDService.getBrowserConsoleSessionState();
+
     // Check if the module is loaded to avoid loading ScratchpadManager for no reason.
-    if (!Cu.isModuleLoaded("resource://devtools/client/scratchpad/scratchpad-manager.jsm")) {
-      return [];
+    state.scratchpads = [];
+    if (Cu.isModuleLoaded("resource://devtools/client/scratchpad/scratchpad-manager.jsm")) {
+      state.scratchpads = ScratchpadManager.getSessionState();
     }
-    return ScratchpadManager.getSessionState();
   },
 
   /**
-   * Restore the provided array of scratchpad window states.
+   * Restore the devtools session state as provided by SessionStore.
    */
-  restoreScratchpadSession: function (scratchpads) {
-    ScratchpadManager.restoreSession(scratchpads);
+  restoreDevToolsSession: function ({scratchpads, browserConsole}) {
+    if (scratchpads) {
+      ScratchpadManager.restoreSession(scratchpads);
+    }
+
+    if (browserConsole && !HUDService.getBrowserConsole()) {
+      HUDService.toggleBrowserConsole();
+    }
   },
 
   /**

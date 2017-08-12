@@ -34,7 +34,6 @@ public:
   NS_IMETHOD GetFile(nsIFile * *aFile) override;
   NS_IMETHOD GetFileURL(nsIURI * *aFileURL) override;
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles) override;
-  NS_IMETHOD Show(int16_t *_retval) override; 
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter) override;
 
   /**
@@ -48,6 +47,7 @@ protected:
   virtual ~nsFilePicker();
 
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle) override;
+  nsresult Show(int16_t *_retval) override;
 
   // actual implementations of get/put dialogs using NSOpenPanel & NSSavePanel
   // aFile is an existing but unspecified file. These functions must specify it.

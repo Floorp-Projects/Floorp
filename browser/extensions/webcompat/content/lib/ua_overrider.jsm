@@ -7,10 +7,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Console.jsm");
 
-const DefaultUA = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
-const NS_HTTP_ON_USERAGENT_REQUEST_TOPIC = "http-on-useragent-request";
-
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides", "resource://gre/modules/UserAgentOverrides.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "eTLDService", "@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService");
 
 class UAOverrider {
@@ -35,25 +33,17 @@ class UAOverrider {
   }
 
   init() {
-    Services.obs.addObserver(this, NS_HTTP_ON_USERAGENT_REQUEST_TOPIC);
+    UserAgentOverrides.addComplexOverride(this.overrideCallback.bind(this));
   }
 
-  uninit() {
-    Services.obs.removeObserver(this, NS_HTTP_ON_USERAGENT_REQUEST_TOPIC);
-  }
-
-  observe(subject, topic) {
-    if (topic !== NS_HTTP_ON_USERAGENT_REQUEST_TOPIC) {
-      return;
-    }
-
-    let channel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
-    let uaOverride = this.lookupUAOverride(channel.URI);
-
+  overrideCallback(channel, defaultUA) {
+    let uaOverride = this.lookupUAOverride(channel.URI, defaultUA);
     if (uaOverride) {
       console.log("The user agent has been overridden for compatibility reasons.");
-      channel.setRequestHeader("User-Agent", uaOverride, false);
+      return uaOverride;
     }
+
+    return false;
   }
 
   /**
@@ -88,12 +78,12 @@ class UAOverrider {
    * If there are more than one possible overrides, that is if two or more
    * uriMatchers would return true, the first one gets applied.
    */
-  lookupUAOverride(uri) {
+  lookupUAOverride(uri, defaultUA) {
     let baseDomain = this.getBaseDomainFromURI(uri);
     if (baseDomain && this._overrides[baseDomain]) {
       for (let uaOverride of this._overrides[baseDomain]) {
         if (uaOverride.uriMatcher(uri.specIgnoringRef)) {
-          return uaOverride.uaTransformer(DefaultUA);
+          return uaOverride.uaTransformer(defaultUA);
         }
       }
     }

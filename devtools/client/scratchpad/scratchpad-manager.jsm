@@ -158,9 +158,7 @@ this.ScratchpadManager = {
  */
 var ShutdownObserver = {
   _initialized: false,
-
-  init: function SDO_init()
-  {
+  init() {
     if (this._initialized) {
       return;
     }
@@ -170,16 +168,14 @@ var ShutdownObserver = {
     this._initialized = true;
   },
 
-  observe: function SDO_observe(aMessage, aTopic, aData)
-  {
-    if (aTopic == "quit-application-granted") {
+  observe(message, topic) {
+    if (topic == "quit-application-granted") {
       ScratchpadManager.saveOpenWindows();
       this.uninit();
     }
   },
 
-  uninit: function SDO_uninit()
-  {
+  uninit() {
     Services.obs.removeObserver(this, "quit-application-granted");
   }
 };

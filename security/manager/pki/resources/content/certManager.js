@@ -399,11 +399,11 @@ function restoreCerts() {
   });
 }
 
-function exportCerts() {
+async function exportCerts() {
   getSelectedCerts();
 
   for (let cert of selected_certs) {
-    exportToFile(window, cert);
+    await exportToFile(window, cert);
   }
 }
 

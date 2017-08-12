@@ -69,7 +69,6 @@ NS_INTERFACE_TABLE_INHERITED(HTMLEmbedElement,
                              imgIOnloadBlocker,
                              nsIChannelEventSink)
 NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLEmbedElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLEmbedElement)
@@ -353,13 +352,6 @@ HTMLEmbedElement::GetContentPolicyType() const
 {
   return nsIContentPolicy::TYPE_INTERNAL_EMBED;
 }
-
-NS_IMPL_STRING_ATTR(HTMLEmbedElement, Align, align)
-NS_IMPL_STRING_ATTR(HTMLEmbedElement, Width, width)
-NS_IMPL_STRING_ATTR(HTMLEmbedElement, Height, height)
-NS_IMPL_STRING_ATTR(HTMLEmbedElement, Name, name)
-NS_IMPL_URI_ATTR(HTMLEmbedElement, Src, src)
-NS_IMPL_STRING_ATTR(HTMLEmbedElement, Type, type)
 
 } // namespace dom
 } // namespace mozilla

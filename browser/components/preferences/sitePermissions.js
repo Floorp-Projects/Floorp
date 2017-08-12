@@ -24,6 +24,7 @@ var gSitePermissionsManager = {
   _bundle: null,
   _removeButton: null,
   _removeAllButton: null,
+  _searchBox: null,
 
   onLoad() {
     let params = window.arguments[0];
@@ -41,6 +42,7 @@ var gSitePermissionsManager = {
     this._list = document.getElementById("permissionsBox");
     this._removeButton = document.getElementById("removePermission");
     this._removeAllButton = document.getElementById("removeAllPermissions");
+    this._searchBox = document.getElementById("searchBox");
 
     let permissionsText = document.getElementById("permissionsText");
     while (permissionsText.hasChildNodes())
@@ -50,6 +52,8 @@ var gSitePermissionsManager = {
     document.title = params.windowTitle;
 
     this._loadPermissions();
+
+    this._searchBox.focus();
   },
 
   uninit() {
@@ -71,6 +75,9 @@ var gSitePermissionsManager = {
 
     if (data == "added") {
       this._addPermissionToList(permission);
+      if (this._searchBox.value != "") {
+        this.filterPermissionsList();
+      }
     } else if (data == "changed") {
       let p = this._permissions.get(permission.principal.origin);
       p.capability = permission.capability;
@@ -251,5 +258,24 @@ var gSitePermissionsManager = {
       SitePermissions.remove(uri, p.type);
     }
     window.close();
+  },
+
+  filterPermissionsList() {
+    // Clear old entries.
+    let oldItems = this._list.querySelectorAll("richlistitem");
+    for (let item of oldItems) {
+      item.remove();
+    }
+
+    let keyword = this._searchBox.value.toLowerCase().trim();
+    let permissions = this._permissions;
+    for (let [origin, permission] of permissions) {
+      if (keyword && !origin.includes(keyword)) {
+        continue;
+      }
+
+      this._createPermissionListItem(permission);
+    }
+    this._setRemoveButtonState();
   },
 };
