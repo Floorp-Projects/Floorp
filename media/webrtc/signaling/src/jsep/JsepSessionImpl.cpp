@@ -2259,12 +2259,8 @@ JsepSessionImpl::SetupDefaultCodecs()
       48000,
       2,
       960,
-#ifdef WEBRTC_GONK
       // TODO Move this elsewhere to be adaptive to rate - Bug 1207925
-      16000 // B2G uses lower capture sampling rate
-#else
       40000
-#endif
       ));
 
   mSupportedCodecs.values.push_back(new JsepAudioCodecDescription(
