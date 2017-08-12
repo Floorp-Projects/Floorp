@@ -51,8 +51,8 @@ exports.declareFFI = declareFFI;
 var LazyBindings = {};
 libc.declareLazy(LazyBindings, "strerror",
                  "strerror", ctypes.default_abi,
-                 /* return*/ ctypes.char.ptr,
-                 /* errnum*/ ctypes.int);
+                 /*return*/ ctypes.char.ptr,
+                 /*errnum*/ ctypes.int);
 
 /**
  * A File-related error.
@@ -88,7 +88,7 @@ OSError.prototype = Object.create(SharedAll.OSError.prototype);
 OSError.prototype.toString = function toString() {
   return "Unix error " + this.unixErrno +
     " during operation " + this.operation +
-    (this.path ? " on file " + this.path : "") +
+    (this.path? " on file " + this.path : "") +
     " (" + LazyBindings.strerror(this.unixErrno).readString() + ")";
 };
 OSError.prototype.toMsg = function toMsg() {
@@ -366,7 +366,7 @@ var EXPORTED_SYMBOLS = [
   "POS_END"
 ];
 
-// ////////// Boilerplate
+//////////// Boilerplate
 if (typeof Components != "undefined") {
   this.EXPORTED_SYMBOLS = EXPORTED_SYMBOLS;
   for (let symbol of EXPORTED_SYMBOLS) {

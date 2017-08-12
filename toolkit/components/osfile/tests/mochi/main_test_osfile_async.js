@@ -123,7 +123,7 @@ var reference_dir_contents = function reference_dir_contents(path) {
 };
 
 // Set/Unset OS.Shared.DEBUG, OS.Shared.TEST and a console listener.
-function toggleDebugTest(pref, consoleListener) {
+function toggleDebugTest (pref, consoleListener) {
   Services.prefs.setBoolPref("toolkit.osfile.log", pref);
   Services.prefs.setBoolPref("toolkit.osfile.log.redirect", pref);
   Services.console[pref ? "registerListener" : "unregisterListener"](
@@ -276,7 +276,7 @@ var test_iter = maketest("iter", function iter(test) {
     test.info("Double closing DirectoryIterator");
     iterator = new OS.File.DirectoryIterator(currentDir);
     await iterator.close();
-    await iterator.close(); // double closing |DirectoryIterator|
+    await iterator.close(); //double closing |DirectoryIterator|
     test.ok(true, "|DirectoryIterator| was closed twice successfully");
 
     let allFiles2 = [];
@@ -309,7 +309,7 @@ var test_iter = maketest("iter", function iter(test) {
     await iterator.forEach(function cb(entry, index, iterator) {
       if (index < BATCH_LENGTH) {
         test.is(entry.path, someFiles1[index].path, "Both runs return the same files (part 1)");
-      } else if (index < 2 * BATCH_LENGTH) {
+      } else if (index < 2*BATCH_LENGTH) {
         test.is(entry.path, someFiles2[index - BATCH_LENGTH].path, "Both runs return the same files (part 2)");
       } else if (index == 2 * BATCH_LENGTH) {
         test.info("Attempting to stop asynchronous forEach");
@@ -380,7 +380,7 @@ var test_exists = maketest("exists", function exists(test) {
  */
 var test_debug = maketest("debug", function debug(test) {
   return (async function() {
-    function testSetDebugPref(pref) {
+    function testSetDebugPref (pref) {
       try {
         Services.prefs.setBoolPref("toolkit.osfile.log", pref);
       } catch (x) {
@@ -407,7 +407,7 @@ var test_debug_test = maketest("debug_test", function debug_test(test) {
   return (async function() {
     // Create a console listener.
     let consoleListener = {
-      observe: function(aMessage) {
+      observe: function (aMessage) {
         // Ignore unexpected messages.
         if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
           return;
