@@ -8,21 +8,28 @@
   }],
 */
 
+const REQUEST_ID_PREFIX = "paymentRequest-";
 const BLANK_PAGE_URL = "https://example.com/browser/toolkit/components/" +
                        "payments/test/browser/blank_page.html";
 const PREF_PAYMENT_ENABLED = "dom.payments.request.enabled";
-const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
-                     .getService().wrappedJSObject;
 
 
 async function getDialogWindow() {
   let win;
   await BrowserTestUtils.waitForCondition(() => {
     win = Services.wm.getMostRecentWindow(null);
-    return win.name.startsWith(paymentUISrv.REQUEST_ID_PREFIX);
+    return win.name.startsWith(REQUEST_ID_PREFIX);
   }, "payment dialog should be the most recent");
 
   return win;
+}
+
+function requestIdForWindow(window) {
+  let windowName = window.name;
+
+  return windowName.startsWith(REQUEST_ID_PREFIX) ?
+    windowName.replace(REQUEST_ID_PREFIX, "") : // returns suffix, which is the requestId
+    null;
 }
 
 /**
