@@ -118,7 +118,7 @@ function test_read_write() {
       break;
     }
     while (bytes > 0) {
-      array.addressOfElement(write_from);
+      let ptr = array.addressOfElement(write_from);
       // Note: |write| launches an exception in case of error
       let written = OS.Unix.File.write(output, array, bytes);
       isnot(written, -1, "test_read_write: no write error");
@@ -186,10 +186,10 @@ function test_passing_undefined() {
   let exceptionRaised = false;
 
   try {
-    OS.Unix.File.open(undefined, OS.Constants.libc.O_RDWR
-                                 | OS.Constants.libc.O_CREAT
-                                 | OS.Constants.libc.O_TRUNC,
-                                   OS.Constants.libc.S_IRWXU);
+    let file = OS.Unix.File.open(undefined, OS.Constants.libc.O_RDWR
+                                            | OS.Constants.libc.O_CREAT
+                                            | OS.Constants.libc.O_TRUNC,
+                                            OS.Constants.libc.S_IRWXU);
   } catch (e) {
     if (e instanceof TypeError && e.message.indexOf("open") > -1) {
       exceptionRaised = true;

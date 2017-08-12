@@ -65,7 +65,7 @@ function test_open_non_existing_file() {
   info("Starting test_open_non_existing");
   let exn;
   try {
-    OS.File.open("/I do not exist");
+    let file = OS.File.open("/I do not exist");
   } catch (x) {
     exn = x;
     info("test_open_non_existing_file: Exception detail " + exn);

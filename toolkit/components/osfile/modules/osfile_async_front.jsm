@@ -261,7 +261,7 @@ var Scheduler = this.Scheduler = {
   /**
    * Restart the OS.File worker killer timer.
    */
-  restartTimer(arg) {
+  restartTimer: function(arg) {
     this.hasRecentActivity = true;
   },
 
@@ -275,7 +275,7 @@ var Scheduler = this.Scheduler = {
    *   would not cause leaks. Otherwise, assume that the worker will be shutdown
    *   through some other mean.
    */
-  kill({shutdown, reset}) {
+  kill: function({shutdown, reset}) {
     // Grab the kill queue to make sure that we
     // cannot be interrupted by another call to `kill`.
     let killQueue = this._killQueue;
@@ -382,7 +382,7 @@ var Scheduler = this.Scheduler = {
    * @return {Promise} A promise with the same behavior as
    * the promise returned by |code|.
    */
-  push(code) {
+  push: function(code) {
     let promise = this.queue.then(code);
     // By definition, |this.queue| can never reject.
     this.queue = promise.catch(() => undefined);
@@ -482,7 +482,7 @@ var Scheduler = this.Scheduler = {
    *
    * This is only useful on first launch.
    */
-  _updateTelemetry() {
+  _updateTelemetry: function() {
     let worker = this.worker;
     let workerTimeStamps = worker.workerTimeStamps;
     if (!workerTimeStamps) {
@@ -1270,10 +1270,10 @@ var DirectoryIterator = function DirectoryIterator(path, options) {
   this._isClosed = false;
 };
 DirectoryIterator.prototype = {
-  iterator() {
+  iterator: function() {
     return this;
   },
-  __iterator__() {
+  __iterator__: function() {
     return this;
   },
 
@@ -1481,7 +1481,7 @@ this.OS.Path = Path;
 
 // Returns a resolved promise when all the queued operation have been completed.
 Object.defineProperty(OS.File, "queue", {
-  get() {
+  get: function() {
     return Scheduler.queue;
   }
 });
@@ -1500,7 +1500,7 @@ var Barriers = {
   /**
    * Return the shutdown state of OS.File
    */
-  getDetails() {
+  getDetails: function() {
     let result = {
       launched: Scheduler.launched,
       shutdown: Scheduler.shutdown,
