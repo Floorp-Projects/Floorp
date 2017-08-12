@@ -18,9 +18,6 @@
 #ifdef MOZ_APPLEMEDIA
 #include "AppleDecoderModule.h"
 #endif
-#ifdef MOZ_GONK_MEDIACODEC
-#include "GonkDecoderModule.h"
-#endif
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidDecoderModule.h"
 #endif
@@ -370,12 +367,6 @@ PDMFactory::CreatePDMs()
 #ifdef MOZ_APPLEMEDIA
   m = new AppleDecoderModule();
   StartupPDM(m);
-#endif
-#ifdef MOZ_GONK_MEDIACODEC
-  if (MediaPrefs::PDMGonkDecoderEnabled()) {
-    m = new GonkDecoderModule();
-    StartupPDM(m);
-  }
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   if(MediaPrefs::PDMAndroidMediaCodecEnabled()){
