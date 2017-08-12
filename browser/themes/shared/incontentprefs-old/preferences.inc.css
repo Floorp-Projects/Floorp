@@ -465,7 +465,7 @@ description > html|a {
 }
 
 .separator {
-  border-bottom: 1px solid var(--in-content-header-border-color);
+  border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
 .fxaAccountBox {
