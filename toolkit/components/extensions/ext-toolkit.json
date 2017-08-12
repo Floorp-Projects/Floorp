@@ -56,10 +56,6 @@
       ["extension"]
     ]
   },
-  "geolocation": {
-    "url": "chrome://extensions/content/ext-geolocation.js",
-    "events": ["startup"]
-  },
   "i18n": {
     "url": "chrome://extensions/content/ext-i18n.js",
     "schema": "chrome://extensions/content/schemas/i18n.json",
