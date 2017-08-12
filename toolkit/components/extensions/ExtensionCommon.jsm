@@ -1245,7 +1245,7 @@ class SchemaAPIManager extends EventEmitter {
   _createExtGlobal() {
     let global = Cu.Sandbox(Services.scriptSecurityManager.getSystemPrincipal(), {
       wantXrays: false,
-      sandboxName: `Namespace of ext-*.js scripts for ${this.processType}`,
+      sandboxName: `Namespace of ext-*.js scripts for ${this.processType} (from: resource://gre/modules/ExtensionCommon.jsm)`,
     });
 
     Object.assign(global, {global, Cc, Ci, Cu, Cr, XPCOMUtils, ChromeWorker, ExtensionAPI, ExtensionCommon, MatchPattern, MatchPatternSet, StructuredCloneHolder, extensions: this});
