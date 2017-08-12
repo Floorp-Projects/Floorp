@@ -75,6 +75,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsRange.h"
+#include "nsWindowSizes.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
@@ -123,7 +124,6 @@
 #include "SVGContentUtils.h"
 #include "nsSVGEffects.h"
 #include "SVGFragmentIdentifier.h"
-#include "nsArenaMemoryStats.h"
 #include "nsFrameSelection.h"
 
 #include "mozilla/dom/Performance.h"
@@ -11018,39 +11018,35 @@ PresShell::GetRootPresShell()
 }
 
 void
-PresShell::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
-                                  nsArenaMemoryStats* aArenaObjectsSize,
-                                  size_t* aPresShellSize,
-                                  size_t* aStyleSetsSize,
-                                  size_t* aTextRunsSize,
-                                  size_t* aPresContextSize,
-                                  size_t* aFramePropertiesSize)
+PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 {
-  mFrameArena.AddSizeOfExcludingThis(aMallocSizeOf, aArenaObjectsSize);
-  *aPresShellSize += aMallocSizeOf(this);
+  MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
+  mFrameArena.AddSizeOfExcludingThis(aSizes);
+  aSizes.mLayoutPresShellSize += mallocSizeOf(this);
   if (mCaret) {
-    *aPresShellSize += mCaret->SizeOfIncludingThis(aMallocSizeOf);
+    aSizes.mLayoutPresShellSize += mCaret->SizeOfIncludingThis(mallocSizeOf);
   }
-  *aPresShellSize += mApproximatelyVisibleFrames.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  *aPresShellSize += mFramesToDirty.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  *aPresShellSize += aArenaObjectsSize->mOther;
+  aSizes.mLayoutPresShellSize +=
+    mApproximatelyVisibleFrames.ShallowSizeOfExcludingThis(mallocSizeOf) +
+    mFramesToDirty.ShallowSizeOfExcludingThis(mallocSizeOf);
 
   if (nsStyleSet* styleSet = StyleSet()->GetAsGecko()) {
-    *aStyleSetsSize += styleSet->SizeOfIncludingThis(aMallocSizeOf);
+    aSizes.mLayoutStyleSetsSize += styleSet->SizeOfIncludingThis(mallocSizeOf);
   } else if (ServoStyleSet* styleSet = StyleSet()->GetAsServo()) {
-    *aStyleSetsSize += styleSet->SizeOfIncludingThis(aMallocSizeOf);
+    aSizes.mLayoutStyleSetsSize += styleSet->SizeOfIncludingThis(mallocSizeOf);
   } else {
     MOZ_CRASH();
   }
 
-  *aTextRunsSize += SizeOfTextRuns(aMallocSizeOf);
+  aSizes.mLayoutTextRunsSize += SizeOfTextRuns(mallocSizeOf);
 
-  *aPresContextSize += mPresContext->SizeOfIncludingThis(aMallocSizeOf);
+  aSizes.mLayoutPresContextSize +=
+    mPresContext->SizeOfIncludingThis(mallocSizeOf);
 
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (rootFrame) {
-    *aFramePropertiesSize +=
-      rootFrame->SizeOfFramePropertiesForTree(aMallocSizeOf);
+    aSizes.mLayoutFramePropertiesSize +=
+      rootFrame->SizeOfFramePropertiesForTree(mallocSizeOf);
   }
 }
 

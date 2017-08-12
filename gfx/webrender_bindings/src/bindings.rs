@@ -552,7 +552,8 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 thread_pool: *mut WrThreadPool,
                                 enable_profiler: bool,
                                 out_handle: &mut *mut DocumentHandle,
-                                out_renderer: &mut *mut Renderer)
+                                out_renderer: &mut *mut Renderer,
+                                out_max_texture_size: *mut u32)
                                 -> bool {
     assert!(unsafe { is_in_render_thread() });
 
@@ -608,7 +609,9 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     renderer.set_render_notifier(Box::new(CppNotifier {
                                               window_id: window_id,
                                           }));
-
+    unsafe {
+        *out_max_texture_size = renderer.get_max_texture_size();
+    }
     let window_size = DeviceUintSize::new(window_width, window_height);
     *out_handle = Box::into_raw(Box::new(
             DocumentHandle::new(sender.create_api(), window_size)));
