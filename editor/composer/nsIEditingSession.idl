@@ -9,6 +9,13 @@
 interface mozIDOMWindowProxy;
 interface nsIEditor;
 
+%{ C++
+class mozIDOMWindowProxy;
+namespace mozilla {
+class HTMLEditor;
+} // namespace mozilla
+%}
+
 [scriptable, builtinclass, uuid(24f963d1-e6fc-43ea-a206-99ac5fcc5265)]
 
 interface nsIEditingSession : nsISupports
@@ -100,5 +107,15 @@ interface nsIEditingSession : nsISupports
    * Whether this session has disabled JS and plugins.
    */
   readonly attribute boolean jsAndPluginsDisabled;
+
+%{C++
+  /**
+   * This method is implemented with nsIDocShell::GetHTMLEditor().  I.e.,
+   * This method doesn't depend on nsEditingSession.  Therefore, even if
+   * there were some implementation of nsIEditingSession interface, this
+   * would be safe to use.
+   */
+  mozilla::HTMLEditor* GetHTMLEditorForWindow(mozIDOMWindowProxy* aWindow);
+%}
 };
 
