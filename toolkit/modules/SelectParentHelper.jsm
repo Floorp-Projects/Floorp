@@ -26,12 +26,40 @@ var selectRect = null;
 var currentZoom = 1;
 var closedWithEnter = false;
 var customStylingEnabled = Services.prefs.getBoolPref("dom.forms.select.customstyling");
-var usedSelectBackgroundColor;
 
 this.SelectParentHelper = {
+  /**
+   * `populate` takes the `menulist` element and a list of `items` and generates
+   * a popup list of options.
+   *
+   * If `customStylingEnabled` is set to `true`, the function will alse
+   * style the select and its popup trying to prevent the text
+   * and background to end up in the same color.
+   *
+   * All `ua*` variables represent the color values for the default colors
+   * for their respective form elements used by the user agent.
+   * The `select*` variables represent the color values defined for the
+   * particular <select> element.
+   *
+   * The `customoptionstyling` attribute controls the application of
+   * `-moz-appearance` on the elements and is disabled if the element is
+   * defining its own background-color.
+   *
+   * @param {Element}        menulist
+   * @param {Array<Element>} items
+   * @param {Number}         selectedIndex
+   * @param {Number}         zoom
+   * @param {String}         uaBackgroundColor
+   * @param {String}         uaColor
+   * @param {String}         uaSelectBackgroundColor
+   * @param {String}         uaSelectColor
+   * @param {String}         selectBackgroundColor
+   * @param {String}         selectColor
+   * @param {String}         selectTextShadow
+   */
   populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor,
-           uaSelectBackgroundColor, uaSelectColor, selectBackgroundColor, selectColor,
-           selectTextShadow) {
+           uaSelectBackgroundColor, uaSelectColor, selectBackgroundColor,
+           selectColor, selectTextShadow) {
     // Clear the current contents of the popup
     menulist.menupopup.textContent = "";
     let stylesheet = menulist.querySelector("#ContentSelectDropdownStylesheet");
@@ -50,6 +78,9 @@ this.SelectParentHelper = {
     }
 
     let ruleBody = "";
+    let usedSelectBackgroundColor;
+    let usedSelectColor;
+    let selectBackgroundSet = false;
 
     // Some webpages set the <select> backgroundColor to transparent,
     // but they don't intend to change the popup to transparent.
@@ -58,27 +89,41 @@ this.SelectParentHelper = {
         selectBackgroundColor != "rgba(0, 0, 0, 0)") {
       ruleBody = `background-image: linear-gradient(${selectBackgroundColor}, ${selectBackgroundColor});`;
       usedSelectBackgroundColor = selectBackgroundColor;
+      selectBackgroundSet = true;
     } else {
       usedSelectBackgroundColor = uaSelectBackgroundColor;
     }
 
     if (customStylingEnabled &&
         selectColor != uaSelectColor &&
-        selectColor != selectBackgroundColor &&
-        (selectBackgroundColor != "rgba(0, 0, 0, 0)" ||
-         selectColor != uaSelectBackgroundColor)) {
+        selectColor != usedSelectBackgroundColor) {
       ruleBody += `color: ${selectColor};`;
+      usedSelectColor = selectColor;
+    } else {
+      usedSelectColor = uaColor;
     }
 
     if (customStylingEnabled &&
         selectTextShadow != "none") {
       ruleBody += `text-shadow: ${selectTextShadow};`;
+      sheet.insertRule(`#ContentSelectDropdown > menupopup > [_moz-menuactive="true"] {
+        text-shadow: none;
+      }`, 0);
     }
 
     if (ruleBody) {
       sheet.insertRule(`#ContentSelectDropdown > menupopup {
         ${ruleBody}
       }`, 0);
+      sheet.insertRule(`#ContentSelectDropdown > menupopup > :not([_moz-menuactive="true"]) {
+         color: inherit;
+      }`, 0);
+    }
+
+    // We only set the `customoptionstyling` if the background has been
+    // manually set. This prevents the overlap between moz-appearance and
+    // background-color. `color` and `text-shadow` do not interfere with it.
+    if (selectBackgroundSet) {
       menulist.menupopup.setAttribute("customoptionstyling", "true");
     } else {
       menulist.menupopup.removeAttribute("customoptionstyling");
@@ -87,7 +132,7 @@ this.SelectParentHelper = {
     currentZoom = zoom;
     currentMenulist = menulist;
     populateChildren(menulist, items, selectedIndex, zoom,
-                     uaBackgroundColor, uaColor, sheet);
+                     usedSelectBackgroundColor, usedSelectColor, selectTextShadow, selectBackgroundSet, sheet);
   },
 
   open(browser, menulist, rect, isOpenedViaTouch) {
@@ -253,10 +298,36 @@ this.SelectParentHelper = {
 
 };
 
+/**
+ * `populateChildren` creates all <menuitem> elements for the popup menu
+ * based on the list of <option> elements from the <select> element.
+ *
+ * It attempts to intelligently add per-item CSS rules if the single
+ * item values differ from the parent menu values and attempting to avoid
+ * ending up with the same color of text and background.
+ *
+ * @param {Element}        menulist
+ * @param {Array<Element>} options
+ * @param {Number}         selectedIndex
+ * @param {Number}         zoom
+ * @param {String}         usedSelectBackgroundColor
+ * @param {String}         usedSelectColor
+ * @param {String}         selectTextShadow
+ * @param {String}         selectBackgroundSet
+ * @param {CSSStyleSheet}  sheet
+ * @param {Element}        parentElement
+ * @param {Boolean}        isGroupDisabled
+ * @param {Number}         adjustedTextSize
+ * @param {Boolean}        addSearch
+ * @param {Number}         nthChildIndex
+ * @returns {Number}
+ */
 function populateChildren(menulist, options, selectedIndex, zoom,
-                          uaBackgroundColor, uaColor, sheet,
+                          usedSelectBackgroundColor, usedSelectColor,
+                          selectTextShadow, selectBackgroundSet, sheet,
                           parentElement = null, isGroupDisabled = false,
-                          adjustedTextSize = -1, addSearch = true, nthChildIndex = 1) {
+                          adjustedTextSize = -1, addSearch = true,
+                          nthChildIndex = 1) {
   let element = menulist.menupopup;
   let win = element.ownerGlobal;
 
@@ -284,21 +355,30 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     item.setAttribute("tooltiptext", option.tooltip);
 
     let ruleBody = "";
+    let usedBackgroundColor;
+    let optionBackgroundSet = false;
+
     if (customStylingEnabled &&
         option.backgroundColor &&
         option.backgroundColor != "rgba(0, 0, 0, 0)" &&
         option.backgroundColor != usedSelectBackgroundColor) {
       ruleBody = `background-color: ${option.backgroundColor};`;
+      usedBackgroundColor = option.backgroundColor;
+      optionBackgroundSet = true;
+    } else {
+      usedBackgroundColor = usedSelectBackgroundColor;
     }
 
     if (customStylingEnabled &&
         option.color &&
-        option.color != uaColor) {
+        option.color != usedBackgroundColor &&
+        option.color != usedSelectColor) {
       ruleBody += `color: ${option.color};`;
     }
 
     if (customStylingEnabled &&
-        option.textShadow) {
+        option.textShadow &&
+        option.textShadow != selectTextShadow) {
       ruleBody += `text-shadow: ${option.textShadow};`;
     }
 
@@ -307,7 +387,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
         ${ruleBody}
       }`, 0);
 
-      if (option.textShadow) {
+      if (option.textShadow && option.textShadow != selectTextShadow) {
         // Need to explicitly disable the possibly inherited
         // text-shadow rule when _moz-menuactive=true since
         // _moz-menuactive=true disables custom option styling.
@@ -315,7 +395,10 @@ function populateChildren(menulist, options, selectedIndex, zoom,
           text-shadow: none;
         }`, 0);
       }
+    }
 
+    if (customStylingEnabled &&
+        (optionBackgroundSet || selectBackgroundSet)) {
       item.setAttribute("customoptionstyling", "true");
     } else {
       item.removeAttribute("customoptionstyling");
@@ -333,7 +416,8 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     if (isOptGroup) {
       nthChildIndex =
         populateChildren(menulist, option.children, selectedIndex, zoom,
-                         uaBackgroundColor, uaColor, sheet,
+                         usedSelectBackgroundColor, usedSelectColor,
+                         selectTextShadow, selectBackgroundSet, sheet,
                          item, isDisabled, adjustedTextSize, false, nthChildIndex);
     } else {
       if (option.index == selectedIndex) {
