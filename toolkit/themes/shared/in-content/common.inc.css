@@ -11,7 +11,6 @@
   --in-content-page-background: #f9f9fa;
   --in-content-text-color: #0c0c0d;
   --in-content-selected-text: #fff;
-  --in-content-header-border-color: #c8c8c8;
   --in-content-box-background: #fff;
   --in-content-box-background-odd: #f3f6fa;
   --in-content-box-background-hover: #ebebeb;
@@ -726,7 +725,6 @@ xul|*.radio-label-box {
 /* header */
 
 *|*.header {
-  border-bottom: 1px solid var(--in-content-header-border-color);
   margin-inline-end: 4px; /* add the 4px end-margin of other elements */
   margin-bottom: 15px;
   padding-bottom: 15px;
