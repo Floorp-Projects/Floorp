@@ -60,8 +60,6 @@
     <dimen name="tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->
     <dimen name="tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
-    <dimen name="tablet_browser_toolbar_menu_item_inset_vertical">5dp</dimen>
-    <dimen name="tablet_browser_toolbar_menu_item_inset_horizontal">3dp</dimen>
     <dimen name="tablet_tab_strip_button_inset">5dp</dimen>
 
     <!-- Dimensions used by Favicons and FaviconView -->
@@ -86,11 +84,8 @@
     <dimen name="overlay_prompt_container_width">@dimen/match_parent</dimen>
 
     <!-- Site security icon -->
-    <dimen name="browser_toolbar_site_security_height">32dp</dimen>
     <dimen name="browser_toolbar_site_security_width">32dp</dimen>
     <dimen name="browser_toolbar_site_security_margin_end">0dp</dimen>
-    <dimen name="browser_toolbar_site_security_padding_vertical">7dp</dimen>
-    <dimen name="browser_toolbar_site_security_padding_horizontal">7dp</dimen>
 
     <!-- If one of these values changes, they all should. -->
     <dimen name="browser_toolbar_site_security_margin_bottom">.5dp</dimen>

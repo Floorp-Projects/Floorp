@@ -189,7 +189,7 @@ NSView* nsFilePicker::GetAccessoryView()
 }
 
 // Display the file dialog
-NS_IMETHODIMP nsFilePicker::Show(int16_t *retval)
+nsresult nsFilePicker::Show(int16_t *retval)
 {
   NS_ENSURE_ARG_POINTER(retval);
 

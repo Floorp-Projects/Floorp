@@ -22,12 +22,8 @@
     <dimen name="browser_toolbar_image_button_width">56dp</dimen>
     <dimen name="browser_toolbar_image_button_h_spacing">4dp</dimen>
 
-    <dimen name="browser_toolbar_site_security_height">60dp</dimen>
     <dimen name="browser_toolbar_site_security_width">34dp</dimen>
     <dimen name="browser_toolbar_site_security_margin_end">6dp</dimen>
-    <!-- We primarily use padding (instead of margins) to increase the hit area. -->
-    <dimen name="browser_toolbar_site_security_padding_vertical">21dp</dimen>
-    <dimen name="browser_toolbar_site_security_padding_horizontal">8dp</dimen>
 
     <dimen name="firstrun_background_height">300dp</dimen>
 

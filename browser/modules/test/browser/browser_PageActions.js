@@ -14,6 +14,8 @@ add_task(async function init() {
     gBrowser,
     url: "http://example.com/",
   });
+
+  await disableNonReleaseActions();
   registerCleanupFunction(async () => {
     await BrowserTestUtils.removeTab(tab);
   });

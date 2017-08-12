@@ -108,6 +108,8 @@ add_task(async function test_unsigned_no_id_temp_install() {
   ]);
   // The IDs should be the same.
   equal(secondAddon.id, addon.id, "Reinstalled add-on has the expected ID");
+  equal(secondAddon.installDate.valueOf(), addon.installDate.valueOf(),
+        "Reloaded add-on has the expected installDate.");
 
   secondAddon.uninstall();
   Services.obs.notifyObservers(addonDir, "flush-cache-entry");

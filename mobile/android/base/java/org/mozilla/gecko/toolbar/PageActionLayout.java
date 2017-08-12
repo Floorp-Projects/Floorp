@@ -57,9 +57,8 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
         refreshPageActionIcons();
     }
 
-    // Bug 1375351 - should change to protected after bug 1366704 land
     @Override
-    public void onAttachedToWindow() {
+    protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
@@ -67,9 +66,8 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
             "PageActions:Remove");
     }
 
-    // Bug 1375351 - should change to protected after bug 1366704 land
     @Override
-    public void onDetachedFromWindow() {
+    protected void onDetachedFromWindow() {
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
             "PageActions:Add",
             "PageActions:Remove");

@@ -178,17 +178,6 @@ interface nsIFilePicker : nsISupports
   attribute boolean addToRecentDocs;
 
  /**
-  * This method is **deprecated**. Please use open()
-  *
-  * Show File Dialog. The dialog is displayed modally.
-  *
-  * @return returnOK if the user selects OK, returnCancel if the user selects cancel
-  *
-  */
-  [deprecated] short show();
-
-
- /**
   * Opens the file dialog asynchrounously.
   * The passed in object's done method will be called upon completion.
   */

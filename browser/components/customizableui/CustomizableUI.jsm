@@ -57,7 +57,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 9;
+var kVersion = 10;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -375,11 +375,6 @@ var CustomizableUIInternal = {
         defaultPlacements.push("characterencoding-button");
       }
 
-      if (AppConstants.MOZ_DEV_EDITION || AppConstants.NIGHTLY_BUILD) {
-        if (Services.prefs.getBoolPref("extensions.webcompat-reporter.enabled")) {
-          defaultPlacements.push("webcompat-reporter-button");
-        }
-      }
       savedPanelPlacements = savedPanelPlacements.filter(id => defaultPlacements.includes(id));
       if (savedPanelPlacements.length) {
         gSavedState.placements[this.AREA_FIXED_OVERFLOW_PANEL] = savedPanelPlacements;
@@ -417,6 +412,15 @@ var CustomizableUIInternal = {
         let downloadButtonIndex = placements.indexOf("downloads-button");
         let libraryIndex = downloadButtonIndex == -1 ? bmbIndex : (downloadButtonIndex + 1);
         placements.splice(libraryIndex, 0, "library-button");
+      }
+    }
+
+    if (currentVersion < 10 && gSavedState && gSavedState.placements) {
+      for (let placements of Object.values(gSavedState.placements)) {
+        if (placements.includes("webcompat-reporter-button")) {
+          placements.splice(placements.indexOf("webcompat-reporter-button"), 1);
+          break;
+        }
       }
     }
   },

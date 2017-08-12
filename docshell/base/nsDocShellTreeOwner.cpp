@@ -43,7 +43,6 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
@@ -1545,10 +1544,10 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 
   // First, checks for nodes that never have children.
   if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-    nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(node));
-    if (content) {
+    nsCOMPtr<nsIImageLoadingContent> imageContent(do_QueryInterface(node));
+    if (imageContent) {
       nsCOMPtr<nsIURI> imgUri;
-      content->GetCurrentURI(getter_AddRefs(imgUri));
+      imageContent->GetCurrentURI(getter_AddRefs(imgUri));
       if (imgUri) {
         flags |= nsIContextMenuListener::CONTEXT_IMAGE;
         flags2 |= nsIContextMenuListener2::CONTEXT_IMAGE;
@@ -1587,9 +1586,9 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
     if (!(flags & nsIContextMenuListener::CONTEXT_IMAGE)) {
       objectElement = do_QueryInterface(node);
     }
-    nsCOMPtr<nsIDOMHTMLEmbedElement> embedElement(do_QueryInterface(node));
 
-    if (objectElement || embedElement) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+    if (objectElement || (content && content->IsHTMLElement(nsGkAtoms::embed))) {
       return NS_OK;
     }
   }

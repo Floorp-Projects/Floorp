@@ -16,6 +16,9 @@ with Files('*Manifest*'):
 with Files('adjust-sdk-sandbox.token'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
+with Files('pocket-api-sandbox.token'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
 with Files('android-services.mozbuild'):
     BUG_COMPONENT = ('Android Background Services', 'Android Sync')
 
@@ -1007,12 +1010,10 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/themed/ThemedTextView.java',
     'widget/themed/ThemedView.java',
 ]]
-# The following sources are Photon specific, Eventually they should be merged into base/
-# when we are ready to drop Australis sources.
+# The following sources are Photon specific, Eventually they should be merged into base.
 gbjar.sources += ['../app/src/photon/java/org/mozilla/gecko/' + x for x in [
     'home/SearchEngineRow.java',
     'home/SuggestionItem.java',
-    'skin/SkinConfig.java',
     'toolbar/BrowserToolbarTablet.java',
     'toolbar/BrowserToolbarTabletBase.java',
     'toolbar/ForwardButton.java',
