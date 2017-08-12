@@ -46,8 +46,7 @@ startupRecorder.prototype = {
       modules: this.loader.loadedModules(),
       services: Object.keys(Cc).filter(c => {
         try {
-          Cm.isServiceInstantiatedByContractID(c, Ci.nsISupports);
-          return true;
+          return Cm.isServiceInstantiatedByContractID(c, Ci.nsISupports);
         } catch (e) {
           return false;
         }
