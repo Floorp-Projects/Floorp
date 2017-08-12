@@ -501,12 +501,7 @@ SandboxBroker::ThreadMain(void)
 
   while (true) {
     struct iovec ios[2];
-    // We will receive the path strings in 1 buffer and split them back up.
-    char recvBuf[2 * (kMaxPathLen + 1)];
-    char pathBuf[kMaxPathLen + 1];
-    char pathBuf2[kMaxPathLen + 1];
-    size_t pathLen = 0;
-    size_t pathLen2 = 0;
+    char recvBuf[kMaxPathLen + 1];
     char respBuf[kMaxPathLen + 1]; // Also serves as struct stat
     Request req;
     Response resp;
@@ -515,13 +510,10 @@ SandboxBroker::ThreadMain(void)
     // Make sure stat responses fit in the response buffer
     MOZ_ASSERT((kMaxPathLen + 1) > sizeof(struct stat));
 
-    // This makes our string handling below a bit less error prone.
-    memset(recvBuf, 0, sizeof(recvBuf));
-
     ios[0].iov_base = &req;
     ios[0].iov_len = sizeof(req);
     ios[1].iov_base = recvBuf;
-    ios[1].iov_len = sizeof(recvBuf);
+    ios[1].iov_len = sizeof(recvBuf) - 1;
 
     const ssize_t recvd = RecvWithFd(mFileDesc, ios, 2, &respfd);
     if (recvd == 0) {
@@ -553,7 +545,6 @@ SandboxBroker::ThreadMain(void)
 
     // Initialize the response with the default failure.
     memset(&resp, 0, sizeof(resp));
-    memset(&respBuf, 0, sizeof(respBuf));
     resp.mError = -EACCES;
     ios[0].iov_base = &resp;
     ios[0].iov_len = sizeof(resp);
@@ -561,62 +552,28 @@ SandboxBroker::ThreadMain(void)
     ios[1].iov_len = 0;
     int openedFd = -1;
 
-    // Clear permissions
-    int perms;
+    size_t origPathLen = static_cast<size_t>(recvd) - sizeof(req);
+    // Null-terminate to get a C-style string.
+    MOZ_RELEASE_ASSERT(origPathLen < sizeof(recvBuf));
+    recvBuf[origPathLen] = '\0';
 
-    // Find end of first string, make sure the buffer is still
-    // 0 terminated.
-    size_t recvBufLen = static_cast<size_t>(recvd) - sizeof(req);
-    if (recvBufLen > 0 && recvBuf[recvBufLen - 1] != 0) {
-      SANDBOX_LOG_ERROR("corrupted path buffer from pid %d", mChildPid);
-      shutdown(mFileDesc, SHUT_RD);
-      break;
-    }
+    // Look up the pathname but first translate relative paths.
+    // (Make a copy so we can get back the original path if needed.)
+    char pathBuf[kMaxPathLen + 1];
+    base::strlcpy(pathBuf, recvBuf, sizeof(pathBuf));
+    size_t pathLen = ConvertToRealPath(pathBuf, sizeof(pathBuf), origPathLen);
+    int perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
 
-    // First path should fit in maximum path length buffer.
-    size_t first_len = strlen(recvBuf);
-    if (first_len <= kMaxPathLen) {
-      strcpy(pathBuf, recvBuf);
-      // Skip right over the terminating 0, and try to copy in the
-      // second path, if any. If there's no path, this will hit a
-      // 0 immediately (we nulled the buffer before receiving).
-      // We do not assume the second path is 0-terminated, this is
-      // enforced below.
-      strncpy(pathBuf2, recvBuf + first_len + 1, kMaxPathLen + 1);
-
-      // First string is guaranteed to be 0-terminated.
-      pathLen = first_len;
-
-      // Look up the first pathname but first translate relative paths.
-      pathLen = ConvertToRealPath(pathBuf, sizeof(pathBuf), pathLen);
-      perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
-
-      // We don't have read permissions on the requested dir.
-      // Did we arrive from a symlink in a path that is not writable?
-      // Then try to figure out the original path and see if that is readable.
-      if (!(perms & MAY_READ)) {
-          // Work on the original path,
-          // this reverses ConvertToRealPath above.
-          int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
-          if (symlinkPerms > 0) {
-            perms = symlinkPerms;
-          }
+    // We don't have read permissions on the requested dir.
+    // Did we arrive from a symlink in a path that is not writable?
+    // Then try to figure out the original path and see if that is readable.
+    if (!(perms & MAY_READ)) {
+      // Work on the original path,
+      // this reverses ConvertToRealPath above.
+      int symlinkPerms = SymlinkPermissions(recvBuf, origPathLen);
+      if (symlinkPerms > 0) {
+        perms = symlinkPerms;
       }
-
-      // Same for the second path.
-      pathLen2 = strnlen(pathBuf2, kMaxPathLen);
-      if (pathLen2 > 0) {
-        // Force 0 termination.
-        pathBuf2[pathLen2] = '\0';
-        pathLen2 = ConvertToRealPath(pathBuf2, sizeof(pathBuf2), pathLen2);
-        int perms2 = mPolicy->Lookup(nsDependentCString(pathBuf2, pathLen2));
-
-        // Take the intersection of the permissions for both paths.
-        perms &= perms2;
-      }
-    } else {
-      // Failed to receive intelligible paths.
-      perms = 0;
     }
 
     // And now perform the operation if allowed.
@@ -726,9 +683,12 @@ SandboxBroker::ThreadMain(void)
 
       case SANDBOX_FILE_READLINK:
         if (permissive || AllowOperation(R_OK, perms)) {
-          ssize_t respSize = readlink(pathBuf, (char*)&respBuf, sizeof(respBuf));
+          ssize_t respSize = readlink(pathBuf, (char*)&respBuf, sizeof(respBuf) - 1);
           if (respSize >= 0) {
-              if (respSize > 0) {
+            if (respSize > 0) {
+              // Null-terminate for nsDependentCString.
+              MOZ_RELEASE_ASSERT(respSize < sizeof(respBuf));
+              respBuf[respSize] = '\0';
               // Record the mapping so we can invert the file to the original
               // symlink.
               nsDependentCString orig(pathBuf, pathLen);
