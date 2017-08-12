@@ -68,7 +68,7 @@ const PropertyInfo gShorthandProperties[] = {
 #undef LISTCSSPROPERTIES_INNER_MACRO
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
-#define CSS_PROP_ALIAS(name_, id_, method_, pref_) \
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
     { #name_, #method_, pref_ },
 
 #include "nsCSSPropAliasList.h"
@@ -89,7 +89,7 @@ const char* gShorthandPropertiesWithDOMProp[] = {
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 
-#define CSS_PROP_ALIAS(name_, id_, method_, pref_) \
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
     #name_,
 
 #include "nsCSSPropAliasList.h"
