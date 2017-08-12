@@ -16,7 +16,8 @@ Components.utils.import("resource://gre/modules/osfile/ospath_unix.jsm", ImportU
 var Win = ImportWin;
 var Unix = ImportUnix;
 
-function do_check_fail(f) {
+function do_check_fail(f)
+{
   try {
     let result = f();
     do_print("Failed do_check_fail: " + result);
@@ -24,9 +25,10 @@ function do_check_fail(f) {
   } catch (ex) {
     do_check_true(true);
   }
-}
+};
 
-function run_test() {
+function run_test()
+{
   do_print("Testing Windows paths");
 
   do_print("Backslash-separated, no drive");

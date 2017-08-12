@@ -68,7 +68,7 @@ var Native = Cu.import("resource://gre/modules/osfile/osfile_native.jsm", {});
 // Here, we make them lazy loaders.
 
 function lazyPathGetter(constProp, dirKey) {
-  return function() {
+  return function () {
     let path;
     try {
       path = Services.dirsvc.get(dirKey, Ci.nsIFile).path;
@@ -436,7 +436,7 @@ var Scheduler = this.Scheduler = {
 
       // The last object inside the args may be an options object.
       let options = null;
-      if (args && args.length >= 1 && typeof args[args.length - 1] === "object") {
+      if (args && args.length >= 1 && typeof args[args.length-1] === "object") {
         options = args[args.length - 1];
       }
 
@@ -512,7 +512,7 @@ const PREF_OSFILE_LOG_REDIRECT = "toolkit.osfile.log.redirect";
 function readDebugPref(prefName, oldPref = false) {
   // If neither pref nor oldPref were set, default it to false.
   return Services.prefs.getBoolPref(prefName, oldPref);
-}
+};
 
 /**
  * Listen to PREF_OSFILE_LOG changes and update gShouldLog flag
@@ -682,7 +682,7 @@ File.prototype = {
       [this._fdmsg,
        Type.void_t.in_ptr.toMsg(buffer),
        options],
-       buffer/* Ensure that |buffer| is not gc-ed*/);
+       buffer/*Ensure that |buffer| is not gc-ed*/);
   },
 
   /**
@@ -1190,10 +1190,10 @@ File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
   // As options.tmpPath is a path, we need to encode it as |Type.path| message
   if ("tmpPath" in options) {
     options.tmpPath = Type.path.toMsg(options.tmpPath);
-  }
+  };
   if (isTypedArray(buffer) && (!("bytes" in options))) {
     options.bytes = buffer.byteLength;
-  }
+  };
   let refObj = {};
   TelemetryStopwatch.start("OSFILE_WRITEATOMIC_JANK_MS", refObj);
   let promise = Scheduler.post("writeAtomic",
@@ -1270,10 +1270,10 @@ var DirectoryIterator = function DirectoryIterator(path, options) {
   this._isClosed = false;
 };
 DirectoryIterator.prototype = {
-  iterator: function() {
+  iterator: function () {
     return this;
   },
-  __iterator__: function() {
+  __iterator__: function () {
     return this;
   },
 
