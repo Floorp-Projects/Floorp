@@ -1501,7 +1501,7 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
 
   if (nsLayoutUtils::IsPopup(aFrame))
     return AGR_YES;
-  if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(aFrame)) {
+  if (ActiveLayerTracker::IsOffsetStyleAnimated(aFrame)) {
     const bool inBudget = AddToAGRBudget(aFrame);
     if (inBudget) {
       return AGR_YES;
