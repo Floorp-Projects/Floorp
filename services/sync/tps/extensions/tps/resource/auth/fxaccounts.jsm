@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsConfig.jsm");
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://tps/logger.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -31,8 +30,8 @@ var Authentication = {
   /**
    * Check if an user has been logged in
    */
-  get isLoggedIn() {
-    return !!this.getSignedInUser();
+  async isLoggedIn() {
+    return !!(await this.getSignedInUser());
   },
 
   _getRestmailUsername(user) {
@@ -141,17 +140,9 @@ var Authentication = {
    *
    * @returns Information about the currently signed in user
    */
-  getSignedInUser: function getSignedInUser() {
-    let cb = Async.makeSpinningCallback();
-
-    fxAccounts.getSignedInUser().then(user => {
-      cb(null, user);
-    }, error => {
-      cb(error);
-    })
-
+  async getSignedInUser() {
     try {
-      return cb.wait();
+      return (await fxAccounts.getSignedInUser());
     } catch (error) {
       Logger.logError("getSignedInUser() failed with: " + JSON.stringify(error));
       throw error;
@@ -168,38 +159,27 @@ var Authentication = {
    * @param account.password
    *        The user's password
    */
-  signIn: function signIn(account) {
-    let cb = Async.makeSpinningCallback();
-
+  async signIn(account) {
     Logger.AssertTrue(account.username, "Username has been found");
     Logger.AssertTrue(account.password, "Password has been found");
 
     Logger.logInfo("Login user: " + account.username);
 
-    // Required here since we don't go through the real login page
-    Async.promiseSpinningly(FxAccountsConfig.ensureConfigured());
-
-    let client = new FxAccountsClient();
-    client.signIn(account.username, account.password, true).then(credentials => {
-      return fxAccounts.setSignedInUser(credentials);
-    }).then(() => {
-      return this._completeVerification(account.username)
-    }).then(() => {
-      cb(null, true);
-    }, error => {
-      cb(error, false);
-    });
-
     try {
-      cb.wait();
+      // Required here since we don't go through the real login page
+      await FxAccountsConfig.ensureConfigured();
+
+      let client = new FxAccountsClient();
+      let credentials = await client.signIn(account.username, account.password, true)
+      await fxAccounts.setSignedInUser(credentials);
+      await this._completeVerification(account.username)
 
       if (Weave.Status.login !== Weave.LOGIN_SUCCEEDED) {
         Logger.logInfo("Logging into Weave.");
-        Async.promiseSpinningly(Weave.Service.login());
+        await Weave.Service.login();
         Logger.AssertEqual(Weave.Status.login, Weave.LOGIN_SUCCEEDED,
                            "Weave logged in");
       }
-
       return true;
     } catch (error) {
       throw new Error("signIn() failed with: " + error.message);
@@ -209,9 +189,9 @@ var Authentication = {
   /**
    * Sign out of Firefox Accounts. It also clears out the device ID, if we find one.
    */
-  signOut() {
-    if (Authentication.isLoggedIn) {
-      let user = Authentication.getSignedInUser();
+  async signOut() {
+    if (await Authentication.isLoggedIn()) {
+      let user = await Authentication.getSignedInUser();
       if (!user) {
         throw new Error("Failed to get signed in user!");
       }
@@ -219,11 +199,11 @@ var Authentication = {
       let { sessionToken, deviceId } = user;
       if (deviceId) {
         Logger.logInfo("Destroying device " + deviceId);
-        Async.promiseSpinningly(fxAccounts.deleteDeviceRegistration(sessionToken, deviceId));
-        Async.promiseSpinningly(fxAccounts.signOut(true));
+        await fxAccounts.deleteDeviceRegistration(sessionToken, deviceId);
+        await fxAccounts.signOut(true);
       } else {
         Logger.logError("No device found.");
-        Async.promiseSpinningly(fxc.signOut(sessionToken, { service: "sync" }));
+        await fxc.signOut(sessionToken, { service: "sync" });
       }
     }
   }
