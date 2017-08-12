@@ -1040,7 +1040,9 @@ void
 ServoStyleSet::ForceAllStyleDirty()
 {
   SetStylistStyleSheetsDirty();
-  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), mAuthorStyleDisabled);
+  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(),
+                                        mAuthorStyleDisabled,
+                                        OriginFlags::All);
 }
 
 void
