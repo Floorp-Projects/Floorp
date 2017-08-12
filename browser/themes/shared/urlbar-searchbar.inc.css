@@ -107,6 +107,18 @@
   list-style-image: url("chrome://browser/skin/sync.svg");
 }
 
+.urlbar-history-dropmarker {
+  transition: opacity 0.15s ease;
+}
+
+#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
+  transition: none;
+}
+
+#navigator-toolbox:not(:hover) > #nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
+  opacity: 0;
+}
+
 /* Page action urlbar buttons */
 
 #urlbar-icons {
