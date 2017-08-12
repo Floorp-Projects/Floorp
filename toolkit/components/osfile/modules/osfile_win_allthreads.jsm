@@ -37,7 +37,7 @@ if (typeof Components != "undefined") {
   throw new Error("Please open this module with Component.utils.import or with require()");
 }
 
-SharedAll.LOG.bind(SharedAll, "Win", "allthreads");
+var LOG = SharedAll.LOG.bind(SharedAll, "Win", "allthreads");
 var Const = SharedAll.Constants.Win;
 
 // Open libc
@@ -85,6 +85,7 @@ libc.declareLazy(Scope, "FormatMessage",
  */
 var OSError = function OSError(operation = "unknown operation",
                                lastError = ctypes.winLastError, path = "") {
+  operation = operation;
   SharedAll.OSError.call(this, operation, path);
   this.winLastError = lastError;
 };

@@ -22,7 +22,7 @@ var SharedAll =
 var Path = require("resource://gre/modules/osfile/ospath.jsm");
 var Lz4 =
   require("resource://gre/modules/lz4.js");
-SharedAll.LOG.bind(SharedAll, "Shared front-end");
+var LOG = SharedAll.LOG.bind(SharedAll, "Shared front-end");
 var clone = SharedAll.clone;
 
 /**
@@ -152,7 +152,7 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
 
   try {
     return {
-      path,
+      path: path,
       file: OS.File.open(path, mode)
     };
   } catch (ex) {
@@ -179,7 +179,6 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
       }
       throw OS.File.Error.exists("could not find an unused file name.", path);
     }
-    throw ex;
   }
 };
 
