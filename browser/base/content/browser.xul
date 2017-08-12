@@ -781,7 +781,6 @@
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      removable="false"
                      class="chromeclass-location" overflows="false">
-          <hbox id="urlbar-wrapper" flex="1">
             <textbox id="urlbar" flex="1"
                      placeholder="&urlbar.placeholder2;"
                      type="autocomplete"
@@ -916,7 +915,6 @@
                 <image id="userContext-indicator"/>
               </hbox>
             </textbox>
-          </hbox>
         </toolbaritem>
 
         <toolbaritem id="search-container" title="&searchItem.title;"

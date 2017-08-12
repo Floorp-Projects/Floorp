@@ -1150,10 +1150,9 @@
             this.mCurrentTab = this.tabContainer.selectedItem;
             this.showTab(this.mCurrentTab);
 
-            var forwardButtonContainer = document.getElementById("urlbar-wrapper");
-            forwardButtonContainer.setAttribute("switchingtabs", "true");
+            gURLBar.setAttribute("switchingtabs", "true");
             window.addEventListener("MozAfterPaint", function() {
-              forwardButtonContainer.removeAttribute("switchingtabs");
+              gURLBar.removeAttribute("switchingtabs");
             }, {once: true});
 
             this._appendStatusPanel();
