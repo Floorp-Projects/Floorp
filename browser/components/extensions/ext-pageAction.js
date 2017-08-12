@@ -163,7 +163,7 @@ this.pageAction = class extends ExtensionAPI {
     return {style};
   }
 
-  // Create an |image| node and add it to the |page-action-buttons|
+  // Create an |image| node and add it to the |urlbar-icons|
   // container in the given window.
   addButton(window) {
     let document = window.document;
@@ -179,7 +179,7 @@ this.pageAction = class extends ExtensionAPI {
       document.addEventListener("popupshowing", this);
     }
 
-    document.getElementById("page-action-buttons").appendChild(button);
+    document.getElementById("urlbar-icons").appendChild(button);
 
     return button;
   }

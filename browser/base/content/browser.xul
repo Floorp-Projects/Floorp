@@ -783,6 +783,7 @@
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      removable="false"
                      class="chromeclass-location" overflows="false">
+          <hbox id="urlbar-wrapper" flex="1">
             <textbox id="urlbar" flex="1"
                      placeholder="&urlbar.placeholder2;"
                      type="autocomplete"
@@ -880,7 +881,7 @@
                 <label id="switchtab" class="urlbar-display urlbar-display-switchtab" value="&urlbar.switchToTab.label;"/>
                 <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
               </box>
-              <hbox id="page-action-buttons">
+              <hbox id="urlbar-icons">
                 <image id="page-report-button"
                        class="urlbar-icon"
                        hidden="true"
@@ -918,6 +919,7 @@
                 <image id="userContext-indicator"/>
               </hbox>
             </textbox>
+          </hbox>
         </toolbaritem>
 
         <toolbaritem id="search-container" title="&searchItem.title;"
