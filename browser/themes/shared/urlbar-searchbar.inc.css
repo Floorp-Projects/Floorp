@@ -123,6 +123,10 @@
   color: inherit;
 }
 
+.urlbar-icon:hover {
+  fill-opacity: 0.8;
+}
+
 #pageActionButton {
   list-style-image: url("chrome://browser/skin/page-action.svg");
 }
