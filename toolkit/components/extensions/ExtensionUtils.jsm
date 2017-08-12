@@ -261,11 +261,20 @@ class EventEmitter {
 /**
  * A set with a limited number of slots, which flushes older entries as
  * newer ones are added.
+ *
+ * @param {integer} limit
+ *        The maximum size to trim the set to after it grows too large.
+ * @param {integer} [slop = limit * .25]
+ *        The number of extra entries to allow in the set after it
+ *        reaches the size limit, before it is truncated to the limit.
+ * @param {iterable} [iterable]
+ *        An iterable of initial entries to add to the set.
  */
 class LimitedSet extends Set {
-  constructor(limit, iterable = undefined) {
+  constructor(limit, slop = Math.round(limit * .25), iterable = undefined) {
     super(iterable);
     this.limit = limit;
+    this.slop = slop;
   }
 
   truncate(limit) {
@@ -278,7 +287,7 @@ class LimitedSet extends Set {
   }
 
   add(item) {
-    if (!this.has(item) && this.size >= this.limit) {
+    if (!this.has(item) && this.size >= this.limit + this.slop) {
       this.truncate(this.limit - 1);
     }
     super.add(item);
