@@ -595,8 +595,6 @@ public:
     void PurgeSkiaGPUCache();
     static void PurgeSkiaFontCache();
 
-    virtual bool IsInGonkEmulator() const { return false; }
-
     static bool UsesOffMainThreadCompositing();
 
     bool HasEnoughTotalSystemMemoryForSkiaGL();

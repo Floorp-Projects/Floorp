@@ -123,7 +123,7 @@ switch(osName)
     break;
 
   default:
-    if (xr.OS == "Android" && xr.widgetToolkit != "gonk") {
+    if (xr.OS == "Android") {
       isnot(acceleratedWindows, 0, "Acceleration enabled on Android");
     } else {
       is(acceleratedWindows, 0, "Acceleration not supported on '" + osName + "'");
