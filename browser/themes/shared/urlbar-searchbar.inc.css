@@ -60,20 +60,6 @@
   -moz-appearance: none;
 }
 
-.urlbar-history-dropmarker {
-  -moz-appearance: none;
-  list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
-  transition: opacity 0.15s ease;
-}
-
-#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  transition: none;
-}
-
-#navigator-toolbox:not(:hover) > #nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  opacity: 0;
-}
-
 /* Page action panel */
 .pageAction-panel-button > .toolbarbutton-icon {
   width: 16px;
@@ -122,26 +108,19 @@
 }
 
 /* Page action urlbar buttons */
-
-#page-action-buttons {
-  -moz-box-align: center;
+#urlbar-icons {
   /* Add more space between the last icon and the urlbar's edge. */
   margin-inline-end: 3px;
 }
 
 .urlbar-icon {
-  padding: 0 6px;
-  /* 16x16 icon with border-box sizing */
-  width: 28px;
+  width: 22px;
   height: 16px;
+  margin-inline-start: 6px;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
   color: inherit;
-}
-
-.urlbar-icon:hover {
-  fill-opacity: 0.8;
 }
 
 #pageActionButton {
