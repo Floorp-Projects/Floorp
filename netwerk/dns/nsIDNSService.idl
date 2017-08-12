@@ -132,8 +132,7 @@ interface nsIDNSService : nsISupports
      * This function is identical to asyncResolve except an additional
      * parameter aNetwortInterface. If parameter aNetworkInterface is an empty
      * string function will return the same result as asyncResolve.
-     * Setting aNetworkInterface value make only sense for gonk,because it
-     * an per networking interface query is possible.
+     * Setting aNetworkInterface is deprecated.
      */
     [implicit_jscontext, optional_argc]
     nsICancelable asyncResolveExtended(in AUTF8String       aHostName,
