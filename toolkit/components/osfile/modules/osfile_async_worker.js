@@ -85,7 +85,7 @@ if (this.Components) {
     */
    add: function(resource, info) {
      let id = this._idgen++;
-     this._map.set(id, {resource: resource, info: info});
+     this._map.set(id, {resource:resource, info:info});
      return id;
    },
    /**
