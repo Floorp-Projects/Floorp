@@ -16,7 +16,9 @@
 #include "mozilla/UniquePtr.h"
 #include "gfxPoint.h"
 #include "nsRect.h"
+#ifdef MOZ_ENABLE_SKIA
 #include "mozilla/gfx/ConvolutionFilter.h"
+#endif
 
 namespace mozilla {
 namespace image {
