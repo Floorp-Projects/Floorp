@@ -7,7 +7,6 @@ import os
 import subprocess
 import sys
 from abc import ABCMeta, abstractmethod, abstractproperty
-from distutils.spawn import find_executable
 
 GIT_CINNABAR_NOT_FOUND = """
 Could not detect `git-cinnabar`.
@@ -53,11 +52,12 @@ class VCSHelper(object):
         )
 
         for cmd in commands:
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output = proc.communicate()[0].strip()
+            try:
+                output = subprocess.check_output(cmd).strip()
+            except (subprocess.CalledProcessError, OSError):
+                continue
 
-            if proc.returncode == 0:
-                return cmd[0], output
+            return cmd[0], output
         return None, ''
 
     @classmethod
@@ -139,7 +139,9 @@ class GitHelper(VCSHelper):
     def push_to_try(self, msg, labels=None):
         self.check_working_directory()
 
-        if not find_executable('git-cinnabar'):
+        try:
+            subprocess.check_output(['git', 'cinnabar', '--version'], stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError:
             print(GIT_CINNABAR_NOT_FOUND)
             return 1
 

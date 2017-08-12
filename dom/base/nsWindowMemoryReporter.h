@@ -18,67 +18,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
-#include "nsArenaMemoryStats.h"
-
-class nsWindowSizes {
-#define FOR_EACH_SIZE(macro) \
-  macro(DOM,   mDOMElementNodesSize) \
-  macro(DOM,   mDOMTextNodesSize) \
-  macro(DOM,   mDOMCDATANodesSize) \
-  macro(DOM,   mDOMCommentNodesSize) \
-  macro(DOM,   mDOMEventTargetsSize) \
-  macro(DOM,   mDOMPerformanceUserEntries) \
-  macro(DOM,   mDOMPerformanceResourceEntries) \
-  macro(DOM,   mDOMOtherSize) \
-  macro(Style, mStyleSheetsSize) \
-  macro(Other, mLayoutPresShellSize) \
-  macro(Style, mLayoutStyleSetsSize) \
-  macro(Other, mLayoutTextRunsSize) \
-  macro(Other, mLayoutPresContextSize) \
-  macro(Other, mLayoutFramePropertiesSize) \
-  macro(Other, mPropertyTablesSize) \
-
-public:
-  explicit nsWindowSizes(mozilla::SizeOfState& aState)
-    :
-      #define ZERO_SIZE(kind, mSize)  mSize(0),
-      FOR_EACH_SIZE(ZERO_SIZE)
-      #undef ZERO_SIZE
-      mDOMEventTargetsCount(0),
-      mDOMEventListenersCount(0),
-      mArenaStats(),
-      mState(aState)
-  {}
-
-  void addToTabSizes(nsTabSizes *sizes) const {
-    #define ADD_TO_TAB_SIZES(kind, mSize) sizes->add(nsTabSizes::kind, mSize);
-    FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
-    #undef ADD_TO_TAB_SIZES
-    mArenaStats.addToTabSizes(sizes);
-  }
-
-  size_t getTotalSize() const
-  {
-    size_t total = 0;
-    #define ADD_TO_TOTAL_SIZE(kind, mSize) total += mSize;
-    FOR_EACH_SIZE(ADD_TO_TOTAL_SIZE)
-    #undef ADD_TO_TOTAL_SIZE
-    total += mArenaStats.getTotalSize();
-    return total;
-  }
-
-  #define DECL_SIZE(kind, mSize) size_t mSize;
-  FOR_EACH_SIZE(DECL_SIZE);
-  #undef DECL_SIZE
-
-  uint32_t mDOMEventTargetsCount;
-  uint32_t mDOMEventListenersCount;
-
-  nsArenaMemoryStats mArenaStats;
-  mozilla::SizeOfState& mState;
-
-#undef FOR_EACH_SIZE
-};
 
 /**
  * nsWindowMemoryReporter is responsible for the 'explicit/window-objects'

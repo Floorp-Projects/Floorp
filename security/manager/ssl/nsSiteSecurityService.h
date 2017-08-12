@@ -6,6 +6,7 @@
 #define __nsSiteSecurityService_h__
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Dafsa.h"
 #include "mozilla/DataStorage.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
@@ -208,7 +209,8 @@ private:
                         const OriginAttributes& aOriginAttributes,
                         bool* aResult, bool* aCached,
                         SecurityPropertySource* aSource);
-  const nsSTSPreload *GetPreloadListEntry(const char *aHost);
+  bool GetPreloadStatus(const nsACString& aHost,
+                        /*optional out*/ bool* aIncludeSubdomains = nullptr) const;
   nsresult IsSecureHost(uint32_t aType, const nsACString& aHost,
                         uint32_t aFlags,
                         const OriginAttributes& aOriginAttributes,
@@ -221,6 +223,7 @@ private:
   bool mProcessPKPHeadersFromNonBuiltInRoots;
   RefPtr<mozilla::DataStorage> mSiteStateStorage;
   RefPtr<mozilla::DataStorage> mPreloadStateStorage;
+  const mozilla::Dafsa mDafsa;
 };
 
 #endif // __nsSiteSecurityService_h__

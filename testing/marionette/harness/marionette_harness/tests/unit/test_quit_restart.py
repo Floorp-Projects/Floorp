@@ -102,8 +102,7 @@ class TestQuitRestart(MarionetteTestCase):
     def test_force_clean_restart(self):
         self.marionette.restart(clean=True)
         self.assertNotEqual(self.marionette.profile, self.profile)
-        self.assertEqual(self.marionette.session_id, self.session_id)
-
+        self.assertNotEqual(self.marionette.session_id, self.session_id)
         # A forced restart will cause a new process id
         self.assertNotEqual(self.marionette.process_id, self.pid)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
@@ -112,8 +111,7 @@ class TestQuitRestart(MarionetteTestCase):
     def test_force_restart(self):
         self.marionette.restart()
         self.assertEqual(self.marionette.profile, self.profile)
-        self.assertEqual(self.marionette.session_id, self.session_id)
-
+        self.assertNotEqual(self.marionette.session_id, self.session_id)
         # A forced restart will cause a new process id
         self.assertNotEqual(self.marionette.process_id, self.pid)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
