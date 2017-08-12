@@ -6,6 +6,7 @@
 
 :root {
   --tab-toolbar-navbar-overlap: 1px;
+  --tab-line-color: highlight;
   --tab-min-height: 33px;
 }
 
@@ -15,6 +16,10 @@
 
 :root[uidensity=touch] {
   --tab-min-height: 41px;
+}
+
+:root:-moz-lwtheme {
+  --tab-line-color: var(--lwt-accent-color);
 }
 
 #tabbrowser-tabs,
@@ -315,7 +320,7 @@
 }
 
 .tab-line[selected=true] {
-  background-color: Highlight;
+  background-color: var(--tab-line-color);
 }
 
 /*
