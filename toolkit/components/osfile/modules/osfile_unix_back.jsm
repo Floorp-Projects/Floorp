@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env mozilla/chrome-worker, node */
-/* global OS */
-
 {
   if (typeof Components != "undefined") {
     // We do not wish osfile_unix_back.jsm to be used directly as a main thread

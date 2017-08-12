@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-env mozilla/chrome-worker, node */
-
 importScripts("worker_test_osfile_shared.js");
 
 self.onmessage = function(msg) {

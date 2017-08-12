@@ -9,9 +9,6 @@
  * This front-end is meant to be imported by a worker thread.
  */
 
-/* eslint-env mozilla/chrome-worker, node */
-/* global OS */
-
 {
   if (typeof Components != "undefined") {
     // We do not wish osfile_unix_front.jsm to be used directly as a main thread
