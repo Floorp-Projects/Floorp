@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env worker */
 
 if (this.Components) {
   throw new Error("This worker can only be loaded from a worker thread");
