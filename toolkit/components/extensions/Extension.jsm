@@ -41,10 +41,6 @@ Cu.importGlobalProperties(["TextEncoder"]);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-/* globals processCount */
-
-XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount.extension");
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
@@ -75,6 +71,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount.extension");
 XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
                                       "extensions.webextensions.remote", false);
 
@@ -231,8 +228,6 @@ var UninstallObserver = {
   init() {
     if (!this.initialized) {
       AddonManager.addAddonListener(this);
-      XPCOMUtils.defineLazyPreferenceGetter(this, "leaveStorage", LEAVE_STORAGE_PREF, false);
-      XPCOMUtils.defineLazyPreferenceGetter(this, "leaveUuid", LEAVE_UUID_PREF, false);
       this.initialized = true;
     }
   },
@@ -252,7 +247,7 @@ var UninstallObserver = {
       return;
     }
 
-    if (!this.leaveStorage) {
+    if (!Services.prefs.getBoolPref(LEAVE_STORAGE_PREF, false)) {
       // Clear browser.local.storage
       AsyncShutdown.profileChangeTeardown.addBlocker(
         `Clear Extension Storage ${addon.id}`,
@@ -277,7 +272,7 @@ var UninstallObserver = {
       Services.perms.removeFromPrincipal(principal, "persistent-storage");
     }
 
-    if (!this.leaveUuid) {
+    if (!Services.prefs.getBoolPref(LEAVE_UUID_PREF, false)) {
       // Clear the entry in the UUID map
       UUIDMap.remove(addon.id);
     }
