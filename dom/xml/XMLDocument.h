@@ -54,7 +54,7 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                          bool aPreallocateChildren) const override;
 
-  virtual void DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const override;
+  virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
 

@@ -52,6 +52,7 @@ DevToolsModules(
     'DevToolsUtils.js',
     'dom-node-constants.js',
     'dom-node-filter-constants.js',
+    'event-emitter.js',
     'extend.js',
     'flags.js',
     'generate-uuid.js',

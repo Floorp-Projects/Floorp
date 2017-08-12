@@ -37,6 +37,7 @@
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
 #include "jsapi.h"
+#include "mozilla/dom/Element.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_LENGTH 64
@@ -1952,10 +1953,25 @@ History::InitMemoryReporter()
   RegisterWeakMemoryReporter(this);
 }
 
+// Helper function which performs the checking required to fetch the document
+// object for the given link. May return null if the link does not have an owner
+// document.
+static nsIDocument*
+GetLinkDocument(Link* aLink)
+{
+  // NOTE: Theoretically GetElement should never return nullptr, but it does
+  // in GTests because they use a mock_Link which returns null from this
+  // method.
+  Element* element = aLink->GetElement();
+  return element ? element->OwnerDoc() : nullptr;
+}
+
 NS_IMETHODIMP
 History::NotifyVisited(nsIURI* aURI)
 {
   NS_ENSURE_ARG(aURI);
+  // NOTE: This can be run within the SystemGroup, and thus cannot directly
+  // interact with webpages.
 
   nsAutoScriptBlocker scriptBlocker;
 
@@ -1977,14 +1993,55 @@ History::NotifyVisited(nsIURI* aURI)
   if (!key) {
     return NS_OK;
   }
+  key->mVisited = true;
 
-  // Update status of each Link node.
+  // If we have a key, it should have at least one observer.
+  MOZ_ASSERT(!key->array.IsEmpty());
+
+  // Dispatch an event to each document which has a Link observing this URL.
+  // These will fire asynchronously in the correct DocGroup.
   {
-    // RemoveEntry will destroy the array, this iterator should not survive it.
-    ObserverArray::ForwardIterator iter(key->array);
+    nsTArray<nsIDocument*> seen; // Don't dispatch duplicate runnables.
+    ObserverArray::BackwardIterator iter(key->array);
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
-      link->SetLinkState(eLinkState_Visited);
+      nsIDocument* doc = GetLinkDocument(link);
+      if (seen.Contains(doc)) {
+        continue;
+      }
+      seen.AppendElement(doc);
+      DispatchNotifyVisited(aURI, doc);
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+History::NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument)
+{
+  // Make sure that nothing invalidates our observer array while we're walking
+  // over it.
+  nsAutoScriptBlocker scriptBlocker;
+
+  // If we have no observers for this URI, we have nothing to notify about.
+  KeyClass* key = mObservers.GetEntry(aURI);
+  if (!key) {
+    return;
+  }
+
+  {
+    // Update status of each Link node. We iterate over the array backwards so
+    // we can remove the items as we encounter them.
+    ObserverArray::BackwardIterator iter(key->array);
+    while (iter.HasMore()) {
+      Link* link = iter.GetNext();
+      nsIDocument* doc = GetLinkDocument(link);
+      if (doc == aDocument) {
+        link->SetLinkState(eLinkState_Visited);
+        iter.Remove();
+      }
+
       // Verify that the observers hash doesn't mutate while looping through
       // the links associated with this URI.
       MOZ_ASSERT(key == mObservers.GetEntry(aURI),
@@ -1992,9 +2049,30 @@ History::NotifyVisited(nsIURI* aURI)
     }
   }
 
-  // All the registered nodes can now be removed for this URI.
-  mObservers.RemoveEntry(key);
-  return NS_OK;
+  // If we don't have any links left, we can remove the array.
+  if (key->array.IsEmpty()) {
+    mObservers.RemoveEntry(key);
+  }
+}
+
+void
+History::DispatchNotifyVisited(nsIURI* aURI, nsIDocument* aDocument)
+{
+  // Capture strong references to the arguments to capture in the closure.
+  nsCOMPtr<nsIDocument> doc = aDocument;
+  nsCOMPtr<nsIURI> uri = aURI;
+
+  // Create and dispatch the runnable to call NotifyVisitedForDocument.
+  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction("History::DispatchNotifyVisited", [uri, doc] {
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    static_cast<History*>(history.get())->NotifyVisitedForDocument(uri, doc);
+  });
+
+  if (doc) {
+    doc->Dispatch(TaskCategory::Other, runnable.forget());
+  } else {
+    NS_DispatchToMainThread(runnable.forget());
+  }
 }
 
 class ConcurrentStatementsHolder final : public mozIStorageCompletionCallback {
@@ -2617,6 +2695,13 @@ History::RegisterVisitedCallback(nsIURI* aURI,
     // Curses - unregister and return failure.
     (void)UnregisterVisitedCallback(aURI, aLink);
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // If this link has already been visited, we cannot synchronously mark
+  // ourselves as visited, so instead we fire a runnable into our docgroup,
+  // which will handle it for us.
+  if (key->mVisited) {
+    DispatchNotifyVisited(aURI, GetLinkDocument(aLink));
   }
 
   return NS_OK;

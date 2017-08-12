@@ -2465,7 +2465,7 @@ toolbar#nav-bar {
         for m in sorted(manifests):
             self.log.info("Running manifest: {}".format(m))
 
-            prefs = self.prefs_by_manifest[m].pop()
+            prefs = list(self.prefs_by_manifest[m])[0]
             options.extraPrefs = origPrefs[:]
             if prefs:
                 prefs = prefs.strip().split()

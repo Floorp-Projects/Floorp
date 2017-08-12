@@ -123,6 +123,7 @@ EXPORTS += [
     'nsTreeSanitizer.h',
     'nsViewportInfo.h',
     'nsWindowMemoryReporter.h',
+    'nsWindowSizes.h',
     'nsWrapperCache.h',
     'nsWrapperCacheInlines.h',
     'nsXMLNameSpaceMap.h',

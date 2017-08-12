@@ -4,12 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* API for getting a stack trace of the C/C++ stack on the current thread */
+/* APIs for getting a stack trace of the current thread */
 
 #ifndef mozilla_StackWalk_h
 #define mozilla_StackWalk_h
-
-/* WARNING: This file is intended to be included from C or C++ files. */
 
 #include "mozilla/Types.h"
 #include <stdint.h>
@@ -31,7 +29,7 @@ typedef void
                         void* aClosure);
 
 /**
- * Call aCallback for the C/C++ stack frames on the current thread, from
+ * Call aCallback for each stack frame on the current thread, from
  * the caller of MozStackWalk to main (or above).
  *
  * @param aCallback    Callback function, called once per frame.
@@ -57,7 +55,7 @@ MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
 
 /**
  * Like MozStackWalk, but walks the stack for another thread.
- * Call aCallback for the C/C++ stack frames on the current thread, from
+ * Call aCallback for each stack frame on the current thread, from
  * the caller of MozStackWalk to main (or above).
  *
  * @param aCallback    Same as for MozStackWalk().
