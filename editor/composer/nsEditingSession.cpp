@@ -596,11 +596,12 @@ NS_IMETHODIMP
 nsEditingSession::GetEditorForWindow(mozIDOMWindowProxy* aWindow,
                                      nsIEditor **outEditor)
 {
-  NS_ENSURE_STATE(aWindow);
-  nsCOMPtr<nsIDocShell> docShell = nsPIDOMWindowOuter::From(aWindow)->GetDocShell();
-  NS_ENSURE_STATE(docShell);
-
-  return docShell->GetEditor(outEditor);
+  if (NS_WARN_IF(!aWindow)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIEditor> editor = GetHTMLEditorForWindow(aWindow);
+  editor.forget(outEditor);
+  return NS_OK;
 }
 
 /*---------------------------------------------------------------------------
@@ -1393,4 +1394,20 @@ nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow)
 #endif // DEBUG
 
   return NS_OK;
+}
+
+HTMLEditor*
+nsIEditingSession::GetHTMLEditorForWindow(mozIDOMWindowProxy* aWindow)
+{
+  if (NS_WARN_IF(!aWindow)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell =
+    nsPIDOMWindowOuter::From(aWindow)->GetDocShell();
+  if (NS_WARN_IF(!docShell)) {
+    return nullptr;
+  }
+
+  return docShell->GetHTMLEditor();
 }
