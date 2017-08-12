@@ -468,7 +468,7 @@ public:
                 {
                 }
 
-                explicit LoadResultEntry(LoadResultEntry&& aOther)
+                LoadResultEntry(LoadResultEntry&& aOther)
                   : nsPtrHashKey(aOther.mKey)
                   , mAllowed(aOther.mAllowed)
                   , mViolations(mozilla::Move(aOther.mViolations))
