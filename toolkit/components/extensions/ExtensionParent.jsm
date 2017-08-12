@@ -270,15 +270,22 @@ ProxyMessenger = {
    * @returns {object|null} The message manager matching the recipient if found.
    */
   getMessageManagerForRecipient(recipient) {
-    let {tabId} = recipient;
     // tabs.sendMessage / tabs.connect
-    if (tabId) {
+    if ("tabId" in recipient) {
       // `tabId` being set implies that the tabs API is supported, so we don't
       // need to check whether `tabTracker` exists.
-      let tab = apiManager.global.tabTracker.getTab(tabId, null);
+      let tab = apiManager.global.tabTracker.getTab(recipient.tabId, null);
       if (!tab) {
         return null;
       }
+
+      // There can be no recipients in a tab pending restore,
+      // So we bail early to avoid instantiating the lazy browser.
+      let node = tab.browser || tab;
+      if (node.getAttribute("pending") === "true") {
+        return null;
+      }
+
       let browser = tab.linkedBrowser || tab.browser;
 
       // Options panels in the add-on manager currently require

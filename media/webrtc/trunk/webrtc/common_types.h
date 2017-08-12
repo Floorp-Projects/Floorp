@@ -819,9 +819,9 @@ struct PlayoutDelay {
   int max_ms;
 };
 
-// Class to represent RtpStreamId which is a string.
+// Class to represent RtpStreamId and RepairedRtpStreamId which is a string.
 // Unlike std::string, it can be copied with memcpy and cleared with memset.
-// Empty value represent unset RtpStreamId.
+// Empty value represent unset stream id.
 class StreamId {
  public:
   // Stream id is limited to 16 bytes because it is the maximum length
@@ -889,7 +889,7 @@ struct RTPHeaderExtension {
   // https://tools.ietf.org/html/draft-ietf-avtext-rid-09
   // TODO(danilchap): Update url from draft to release version.
   StreamId rtpStreamId;
-  StreamId repairedStreamId;
+  StreamId repairedRtpStreamId;
 };
 
 struct RTPHeader {

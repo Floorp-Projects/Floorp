@@ -330,6 +330,8 @@ interface nsIBrowserSearchService : nsISupports
    * @param iconURL
    *        Optional: A URL string pointing to the icon to be used to represent
    *        the engine.
+   *        This is a jsval so that an object can be passed to replace the
+   *        parameters below.
    *
    * @param alias
    *        Optional: A unique shortcut that can be used to retrieve the
@@ -339,8 +341,9 @@ interface nsIBrowserSearchService : nsISupports
    *        Optional: a description of the search engine.
    *
    * @param method
-   *        The HTTP request method used when submitting a search query.
-   *        Must be a case insensitive value of either "get" or "post".
+   *        Optional: The HTTP request method used when submitting a search query.
+   *        Case insensitive value of either "get" or "post".
+   *        Defaults to "get".
    *
    * @param url
    *        The URL to which search queries should be sent.
@@ -348,13 +351,29 @@ interface nsIBrowserSearchService : nsISupports
    *
    * @param extensionID [optional]
    *        Optional: The correct extensionID if called by an add-on.
+   *
+   * Alternatively, all of these parameters except for name can be
+   * passed as an object in place of parameter two.
+   *
+   *   Services.search.addEngineWithDetails("Example engine", {
+   *     template: "http://example.com/?search={searchTerms}",
+   *     description: "Example search engine description",
+   *     suggestURL: http://example.com/?suggest={searchTerms},
+   * });
+   *
+   * Using this method, you can use a new parameter, suggestURL:
+   *
+   * @param suggestURL [optional]
+   *        Optional: The URL to which search suggestion requests
+   *        should be sent.
+   *
    */
   void addEngineWithDetails(in AString name,
-                            in AString iconURL,
-                            in AString alias,
-                            in AString description,
-                            in AString method,
-                            in AString url,
+                            in jsval iconURL,
+                            [optional] in AString alias,
+                            [optional] in AString description,
+                            [optional] in AString method,
+                            [optional] in AString url,
                             [optional] in AString extensionID);
 
   /**

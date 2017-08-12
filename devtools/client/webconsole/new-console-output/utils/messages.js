@@ -328,7 +328,7 @@ function getLevelFromType(type) {
     clear: levels.LEVEL_LOG,
     trace: levels.LEVEL_LOG,
     table: levels.LEVEL_LOG,
-    debug: levels.LEVEL_LOG,
+    debug: levels.LEVEL_DEBUG,
     dir: levels.LEVEL_LOG,
     dirxml: levels.LEVEL_LOG,
     group: levels.LEVEL_LOG,
@@ -336,7 +336,7 @@ function getLevelFromType(type) {
     groupEnd: levels.LEVEL_LOG,
     time: levels.LEVEL_LOG,
     timeEnd: levels.LEVEL_LOG,
-    count: levels.LEVEL_DEBUG,
+    count: levels.LEVEL_LOG,
   };
 
   return levelMap[type] || MESSAGE_TYPE.LOG;

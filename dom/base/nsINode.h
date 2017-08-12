@@ -942,6 +942,9 @@ public:
    */
   inline nsINode* GetFlattenedTreeParentNodeForStyle() const;
 
+  inline mozilla::dom::Element* GetFlattenedTreeParentElement() const;
+  inline mozilla::dom::Element* GetFlattenedTreeParentElementForStyle() const;
+
   /**
    * Get the parent nsINode for this node if it is an Element.
    * @return the parent node

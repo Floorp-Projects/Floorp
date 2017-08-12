@@ -1805,20 +1805,22 @@ Engine.prototype = {
   /**
    * Initialize this Engine object from a collection of metadata.
    */
-  _initFromMetadata: function SRCH_ENG_initMetaData(aName, aIconURL, aAlias,
-                                                    aDescription, aMethod,
-                                                    aTemplate, aExtensionID) {
+  _initFromMetadata: function SRCH_ENG_initMetaData(aName, aParams) {
     ENSURE_WARN(!this._readOnly,
                 "Can't call _initFromMetaData on a readonly engine!",
                 Cr.NS_ERROR_FAILURE);
 
-    this._urls.push(new EngineURL(URLTYPE_SEARCH_HTML, aMethod, aTemplate));
+    let method = aParams.method || "GET";
+    this._urls.push(new EngineURL(URLTYPE_SEARCH_HTML, method, aParams.template));
+    if (aParams.suggestURL) {
+      this._urls.push(new EngineURL(URLTYPE_SUGGEST_JSON, "GET", aParams.suggestURL));
+    }
 
     this._name = aName;
-    this.alias = aAlias;
-    this._description = aDescription;
-    this._setIcon(aIconURL, true);
-    this._extensionID = aExtensionID;
+    this.alias = aParams.alias;
+    this._description = aParams.description;
+    this._setIcon(aParams.iconURL, true);
+    this._extensionID = aParams.extensionID;
   },
 
   /**
@@ -4008,25 +4010,37 @@ SearchService.prototype = {
     return null;
   },
 
-  addEngineWithDetails: function SRCH_SVC_addEWD(aName, aIconURL, aAlias,
-                                                 aDescription, aMethod,
-                                                 aTemplate, aExtensionID) {
+  addEngineWithDetails: function SRCH_SVC_addEWD(aName, iconURL, alias,
+                                                 description, method,
+                                                 template, extensionID) {
+    var params;
+
+    if (iconURL && typeof iconURL == "object") {
+      params = iconURL;
+    } else {
+      params = {
+        iconURL,
+        alias,
+        description,
+        method,
+        template,
+        extensionID,
+      };
+    }
+
     this._ensureInitialized();
     if (!aName)
       FAIL("Invalid name passed to addEngineWithDetails!");
-    if (!aMethod)
-      FAIL("Invalid method passed to addEngineWithDetails!");
-    if (!aTemplate)
+    if (!params.template)
       FAIL("Invalid template passed to addEngineWithDetails!");
     if (this._engines[aName])
       FAIL("An engine with that name already exists!", Cr.NS_ERROR_FILE_ALREADY_EXISTS);
 
     var engine = new Engine(sanitizeName(aName), false);
-    engine._initFromMetadata(aName, aIconURL, aAlias, aDescription,
-                             aMethod, aTemplate, aExtensionID);
+    engine._initFromMetadata(aName, params);
     engine._loadPath = "[other]addEngineWithDetails";
-    if (aExtensionID) {
-      engine._loadPath += ":" + aExtensionID;
+    if (params.extensionID) {
+      engine._loadPath += ":" + params.extensionID;
     }
     this._addEngineToStore(engine);
   },

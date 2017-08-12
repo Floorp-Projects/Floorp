@@ -540,17 +540,73 @@
       <column/>
     </columns>
     <rows>
-      <row id="notificationsPolicyRow" align="center">
+      <row id="locationSettingsRow" align="center">
         <description flex="1">
-          <label id="notificationsPolicy">&notificationsPolicyDesc4.label;</label>
-          <label id="notificationsPolicyLearnMore"
-                 class="learnMore text-link">&notificationsPolicyLearnMore.label;</label>
+          <image class="geo-icon permission-icon" />
+          <separator orient="vertical" class="thin"/>
+          <label id="locationPermissionsLabel">&locationPermissions.label;</label>
         </description>
         <hbox pack="end">
-          <button id="notificationsPolicyButton"
+          <button id="locationSettingsButton"
                   class="accessory-button"
-                  label="&notificationsPolicyButton.label;"
-                  accesskey="&notificationsPolicyButton.accesskey;"
+                  label="&permissionSettingsButton.label;"
+                  accesskey="&locationSettingsButton.accesskey;"
+                  searchkeywords="&removepermission2.label;
+                                  &removeallpermissions2.label;
+                                  &button.cancel.label;
+                                  &button.ok.label;"/>
+        </hbox>
+      </row>
+
+      <row id="cameraSettingsRow" align="center">
+        <description flex="1">
+          <image class="camera-icon permission-icon" />
+          <separator orient="vertical" class="thin"/>
+          <label id="cameraPermissionsLabel">&cameraPermissions.label;</label>
+        </description>
+        <hbox pack="end">
+          <button id="cameraSettingsButton"
+                  class="accessory-button"
+                  label="&permissionSettingsButton.label;"
+                  accesskey="&cameraSettingsButton.accesskey;"
+                  searchkeywords="&removepermission2.label;
+                                  &removeallpermissions2.label;
+                                  &button.cancel.label;
+                                  &button.ok.label;"/>
+        </hbox>
+      </row>
+
+      <row id="microphoneSettingsRow" align="center">
+        <description flex="1">
+          <image class="microphone-icon permission-icon" />
+          <separator orient="vertical" class="thin"/>
+          <label id="microphonePermissionsLabel">&microphonePermissions.label;</label>
+        </description>
+        <hbox pack="end">
+          <button id="microphoneSettingsButton"
+                  class="accessory-button"
+                  label="&permissionSettingsButton.label;"
+                  accesskey="&microphoneSettingsButton.accesskey;"
+                  searchkeywords="&removepermission2.label;
+                                  &removeallpermissions2.label;
+                                  &button.cancel.label;
+                                  &button.ok.label;"/>
+        </hbox>
+      </row>
+
+      <row id="notificationSettingsRow" align="center">
+        <description flex="1">
+          <image class="desktop-notification-icon permission-icon" />
+          <separator orient="vertical" class="thin"/>
+          <label id="notificationPermissionsLabel">&notificationPermissions.label;</label>
+          <label id="notificationPermissionsLearnMore"
+                 class="learnMore text-link">&notificationPermissionsLearnMore.label;</label>
+        </description>
+        <hbox pack="end">
+          <button id="notificationSettingsButton"
+                  class="accessory-button"
+                  label="&permissionSettingsButton.label;"
+                  accesskey="&notificationSettingsButton.accesskey;"
                   searchkeywords="&removepermission2.label;
                                   &removeallpermissions2.label;
                                   &button.cancel.label;
@@ -559,6 +615,9 @@
       </row>
     </rows>
   </grid>
+
+  <separator flex="1"/>
+
   <vbox id="notificationsDoNotDisturbBox" hidden="true">
     <checkbox id="notificationsDoNotDisturb" label="&notificationsDoNotDisturb.label;"
               accesskey="&notificationsDoNotDisturb.accesskey;"/>

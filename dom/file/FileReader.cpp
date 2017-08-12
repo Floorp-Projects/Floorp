@@ -619,7 +619,8 @@ FileReader::DispatchProgressEvent(const nsAString& aType)
     ProgressEvent::Constructor(this, aType, init);
   event->SetTrusted(true);
 
-  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  bool dummy;
+  return DispatchEvent(event, &dummy);
 }
 
 // nsITimerCallback

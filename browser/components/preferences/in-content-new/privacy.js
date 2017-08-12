@@ -160,8 +160,14 @@ var gPrivacyPane = {
     this.updateCacheSizeInputField();
     this.updateActualCacheSize();
 
-    setEventListener("notificationsPolicyButton", "command",
+    setEventListener("notificationSettingsButton", "command",
       gPrivacyPane.showNotificationExceptions);
+    setEventListener("locationSettingsButton", "command",
+      gPrivacyPane.showLocationExceptions);
+    setEventListener("cameraSettingsButton", "command",
+      gPrivacyPane.showCameraExceptions);
+    setEventListener("microphoneSettingsButton", "command",
+      gPrivacyPane.showMicrophoneExceptions);
     setEventListener("popupPolicyButton", "command",
       gPrivacyPane.showPopupExceptions);
     setEventListener("notificationsDoNotDisturb", "command",
@@ -221,7 +227,7 @@ var gPrivacyPane = {
 
     let notificationInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "push";
-    document.getElementById("notificationsPolicyLearnMore").setAttribute("href",
+    document.getElementById("notificationPermissionsLearnMore").setAttribute("href",
                                                                          notificationInfoURL);
     let drmInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
@@ -267,9 +273,21 @@ var gPrivacyPane = {
       bundlePrefs.getString("popuppermissionstitle2"),
       bundlePrefs.getString("popuppermissionstext"),
     ]);
-    appendSearchKeywords("notificationsPolicyButton", [
+    appendSearchKeywords("notificationSettingsButton", [
       bundlePrefs.getString("notificationspermissionstitle2"),
       bundlePrefs.getString("notificationspermissionstext5"),
+    ]);
+    appendSearchKeywords("locationSettingsButton", [
+      bundlePrefs.getString("locationpermissionstitle"),
+      bundlePrefs.getString("locationpermissionstext"),
+    ]);
+    appendSearchKeywords("cameraSettingsButton", [
+      bundlePrefs.getString("camerapermissionstitle"),
+      bundlePrefs.getString("camerapermissionstext"),
+    ]);
+    appendSearchKeywords("microphoneSettingsButton", [
+      bundlePrefs.getString("microphonepermissionstitle"),
+      bundlePrefs.getString("microphonepermissionstext"),
     ]);
     appendSearchKeywords("addonExceptions", [
       bundlePrefs.getString("addons_permissions_title2"),
@@ -797,6 +815,54 @@ var gPrivacyPane = {
    toggleDoNotDisturbNotifications(event) {
      AlertsServiceDND.manualDoNotDisturb = event.target.checked;
    },
+
+  // GEOLOCATION
+
+  /**
+   * Displays the location exceptions dialog where specific site location
+   * preferences can be set.
+   */
+  showLocationExceptions() {
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let params = { permissionType: "geo"};
+    params.windowTitle = bundlePreferences.getString("locationpermissionstitle");
+    params.introText = bundlePreferences.getString("locationpermissionstext");
+
+    gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
+                    "resizable=yes", params);
+  },
+
+  // CAMERA
+
+  /**
+   * Displays the camera exceptions dialog where specific site camera
+   * preferences can be set.
+   */
+  showCameraExceptions() {
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let params = { permissionType: "camera"};
+    params.windowTitle = bundlePreferences.getString("camerapermissionstitle");
+    params.introText = bundlePreferences.getString("camerapermissionstext");
+
+    gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
+                    "resizable=yes", params);
+  },
+
+  // MICROPHONE
+
+  /**
+   * Displays the microphone exceptions dialog where specific site microphone
+   * preferences can be set.
+   */
+  showMicrophoneExceptions() {
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let params = { permissionType: "microphone"};
+    params.windowTitle = bundlePreferences.getString("microphonepermissionstitle");
+    params.introText = bundlePreferences.getString("microphonepermissionstext");
+
+    gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
+                    "resizable=yes", params);
+  },
 
   // NOTIFICATIONS
 

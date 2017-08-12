@@ -19,7 +19,6 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
@@ -103,7 +102,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private OnTitleChangeListener mTitleChangeListener;
 
     private final ThemedImageButton mSiteSecurity;
-    private final ImageButton mStop;
+    private final ThemedImageButton mStop;
     private OnStopListener mStopListener;
 
     private final PageActionLayout mPageActionLayout;
@@ -159,7 +158,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mSiteIdentityPopup.setAnchor(this);
         mSiteIdentityPopup.setOnVisibilityChangeListener(mActivity);
 
-        mStop = (ImageButton) findViewById(R.id.stop);
+        mStop = (ThemedImageButton) findViewById(R.id.stop);
         mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
     }
 
@@ -167,15 +166,9 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     public void setPrivateMode(boolean isPrivate) {
         super.setPrivateMode(isPrivate);
         mSiteSecurity.setPrivateMode(isPrivate);
-
-        // Bug 1375351 should change class type to ThemedImageButton to avoid casting
-        if (SkinConfig.isPhoton()) {
-            ((ThemedImageButton)mStop).setPrivateMode(isPrivate);
-        }
-
+        mStop.setPrivateMode(isPrivate);
         mPageActionLayout.setPrivateMode(isPrivate);
     }
-
 
     @Override
     public void onAttachedToWindow() {
