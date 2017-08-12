@@ -57,6 +57,7 @@ script.addMessageListener('opening-request-completed', function ml(msg) {
   }
 
   script.removeMessageListener('opening-request-completed', ml);
+  script.sendAsyncMessage("finish");
   SimpleTest.finish();
 });
 

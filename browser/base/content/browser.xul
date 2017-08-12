@@ -735,6 +735,7 @@
         <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&backCmd.label;"
                        removable="false" overflows="false"
+                       keepbroadcastattributeswhencustomizing="true"
                        command="Browser:BackOrBackDuplicate"
                        onclick="checkForMiddleClick(this, event);"
                        tooltip="back-button-tooltip"
@@ -742,6 +743,7 @@
         <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&forwardCmd.label;"
                        removable="false" overflows="false"
+                       keepbroadcastattributeswhencustomizing="true"
                        command="Browser:ForwardOrForwardDuplicate"
                        onclick="checkForMiddleClick(this, event);"
                        tooltip="forward-button-tooltip"
@@ -898,6 +900,7 @@
                        onclick="BrowserPageActions.mainButtonClicked(event);"/>
                 <hbox id="star-button-box"
                       hidden="true"
+                      class="urlbar-icon-wrapper"
                       context="pageActionPanelContextMenu"
                       oncontextmenu="BrowserPageActions.onContextMenu(event);"
                       onclick="BrowserPageActions.bookmark.onUrlbarNodeClicked(event);">

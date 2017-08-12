@@ -468,9 +468,6 @@ public:
 
   Directionality GetComputedDirectionality() const;
 
-  inline Element* GetFlattenedTreeParentElement() const;
-  inline Element* GetFlattenedTreeParentElementForStyle() const;
-
   bool HasDirtyDescendantsForServo() const
   {
     MOZ_ASSERT(IsStyledByServo());
@@ -487,21 +484,20 @@ public:
     UnsetFlags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
-  inline void NoteDirtyDescendantsForServo();
-
   bool HasAnimationOnlyDirtyDescendantsForServo() const {
     MOZ_ASSERT(IsStyledByServo());
     return HasFlag(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+
+  void SetHasAnimationOnlyDirtyDescendantsForServo() {
+    MOZ_ASSERT(IsStyledByServo());
+    SetFlags(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
   void UnsetHasAnimationOnlyDirtyDescendantsForServo() {
     MOZ_ASSERT(IsStyledByServo());
     UnsetFlags(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
   }
-
-#ifdef DEBUG
-  inline bool DirtyDescendantsBitIsPropagatedForServo();
-#endif
 
   bool HasServoData() const {
     return !!mServoData.Get();

@@ -368,15 +368,41 @@ tup = check_prog('TUP', tup_progs)
 # watchman detection
 # ==============================================================
 
-watchman = check_prog('WATCHMAN', ('watchman',), allow_missing=True)
+option(env='WATCHMAN', nargs=1, help='Path to the watchman program')
 
-@depends_if(watchman)
-@checking('for watchman version')
+@depends('WATCHMAN')
 @imports('json')
-def watchman_version(watchman):
-    out = check_cmd_output(watchman, 'version')
-    res = json.loads(out)
-    return Version(res['version'])
+def watchman_info(prog):
+    if not prog:
+        prog = find_program('watchman')
+
+    if not prog:
+        return
+
+    out = check_cmd_output(prog, 'version', onerror=lambda: None)
+    if out is None:
+        return
+
+    # Assume a process not emitting JSON is not watchman or is a
+    # broken watchman.
+    try:
+        res = json.loads(out)
+    except ValueError:
+        return
+
+    return namespace(path=prog, version=Version(res['version']))
+
+@depends_if(watchman_info)
+@checking('for watchman')
+def watchman(w):
+    return w.path
+
+@depends_if(watchman_info)
+@checking('for watchman version')
+def watchman_version(w):
+    return w.version
+
+set_config('WATCHMAN', watchman)
 
 @depends_all(hg_version, hg_config, watchman)
 @checking('for watchman Mercurial integration')

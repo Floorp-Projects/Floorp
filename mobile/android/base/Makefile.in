@@ -234,11 +234,11 @@ ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .gradle.deps: .aapt.deps FORCE
 	@$(TOUCH) $@
 	$(topsrcdir)/mach gradle \
-		app:assembleOfficialAustralisDebug app:assembleOfficialAustralisDebugAndroidTest -x lint
+		app:assembleOfficialPhotonDebug app:assembleOfficialPhotonDebugAndroidTest -x lint
 
 classes.dex: .gradle.deps
 	$(REPORT_BUILD)
-	cp $(gradle_dir)/app/intermediates/transforms/dex/officialAustralis/debug/folders/1000/1f/main/classes.dex $@
+	cp $(gradle_dir)/app/intermediates/transforms/dex/officialPhoton/debug/folders/1000/1f/main/classes.dex $@
 else
 classes.dex: .proguard.deps
 	$(REPORT_BUILD)
@@ -480,7 +480,7 @@ $(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,generated/,./))
 
 ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .aapt.nodeps: FORCE
-	cp $(gradle_dir)/app/intermediates/res/resources-official-australis-debug.ap_ gecko-nodeps.ap_
+	cp $(gradle_dir)/app/intermediates/res/resources-official-photon-debug.ap_ gecko-nodeps.ap_
 else
 # .aapt.nodeps: AndroidManifest.xml FORCE
 $(eval $(call aapt_command,.aapt.nodeps,AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))

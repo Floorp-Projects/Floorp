@@ -17,6 +17,7 @@ transforms:
 
 jobs-from:
     - android.yml
+    - android-stuff.yml
     - linux.yml
     - macosx.yml
     - windows.yml

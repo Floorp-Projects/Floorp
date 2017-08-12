@@ -70,19 +70,19 @@
 #  define GETRANDOM_NR 278
 # elif defined(__arm__)
 #  define GETRANDOM_NR 384
-// Added other architectures:
-# elif defined(__ppc64le__)
+# elif defined(__powerpc__)
 #  define GETRANDOM_NR 359
-# elif defined(__PPC64LE__)
-#  define GETRANDOM_NR 359
-# elif defined(__ppc64__)
-#  define GETRANDOM_NR 359
-# elif defined(__PPC64__)
-#  define GETRANDOM_NR 359
-# elif defined(__s390x__)
-#  define GETRANDOM_NR 349
 # elif defined(__s390__)
 #  define GETRANDOM_NR 349
+# elif defined(__mips__)
+#  include <sgidefs.h>
+#  if _MIPS_SIM == _MIPS_SIM_ABI32
+#    define GETRANDOM_NR 4353
+#  elif _MIPS_SIM == _MIPS_SIM_ABI64
+#    define GETRANDOM_NR 5313
+#  elif _MIPS_SIM == _MIPS_SIM_NABI32
+#    define GETRANDOM_NR 6317
+#  endif
 # endif
 
 # if defined(SYS_getrandom)

@@ -622,6 +622,10 @@ GetWidget(WidgetNodeType aWidgetType)
   GtkWidget* widget = sWidgetStorage[aWidgetType];
   if (!widget) {
     widget = CreateWidget(aWidgetType);
+    // Some widgets (MOZ_GTK_COMBOBOX_SEPARATOR for instance) may not be
+    // available or implemented.
+    if (!widget)
+      return nullptr;
     // In GTK versions prior to 3.18, automatic invalidation of style contexts
     // for widgets was delayed until the next resize event.  Gecko however,
     // typically uses the style context before the resize event runs and so an

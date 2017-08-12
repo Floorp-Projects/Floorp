@@ -371,13 +371,17 @@ Gecko_UnsetNodeFlags(RawGeckoNodeBorrowed aNode, uint32_t aFlags)
 }
 
 void
-Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed aElement)
+Gecko_NoteDirtyElement(RawGeckoElementBorrowed aElement)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  const_cast<Element*>(aElement)->NoteDirtyForServo();
+}
 
-  if (nsIPresShell* shell = aElement->OwnerDoc()->GetShell()) {
-    shell->EnsureStyleFlush();
-  }
+void
+Gecko_NoteAnimationOnlyDirtyElement(RawGeckoElementBorrowed aElement)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  const_cast<Element*>(aElement)->NoteAnimationOnlyDirtyForServo();
 }
 
 nsStyleContext*

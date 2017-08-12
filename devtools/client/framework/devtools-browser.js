@@ -312,7 +312,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         BrowserToolboxProcess.init();
         break;
       case "browserConsole":
-        let HUDService = require("devtools/client/webconsole/hudservice");
+        let {HUDService} = require("devtools/client/webconsole/hudservice");
         HUDService.openBrowserConsoleOrFocus();
         break;
       case "responsiveDesignMode":

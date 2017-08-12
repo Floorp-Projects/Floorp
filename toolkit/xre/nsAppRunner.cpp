@@ -4377,8 +4377,9 @@ XREMain::XRE_mainRun()
 #ifdef XP_WIN
   if (!PR_GetEnv("XRE_NO_DLL_READAHEAD"))
   {
-    PR_CreateThread(PR_USER_THREAD, ReadAheadDlls_ThreadStart, 0, PR_PRIORITY_LOW,
-                    PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+    PR_CreateThread(PR_USER_THREAD, ReadAheadDlls_ThreadStart, 0,
+                    PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                    PR_UNJOINABLE_THREAD, 0);
   }
 #endif
 

@@ -152,7 +152,7 @@ def make_job_description(config, jobs):
             worker_type = 'aws-provisioner-v1/gecko-%s-b-macosx64' % level
 
             run['tooltool-downloads'] = 'internal'
-            worker['docker-image'] = {"in-tree": "desktop-build"},
+            worker['docker-image'] = {"in-tree": "desktop-build"}
 
             cot = job.setdefault('extra', {}).setdefault('chainOfTrust', {})
             cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}

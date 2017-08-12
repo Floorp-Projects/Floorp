@@ -12,20 +12,17 @@
 #include "nsObjectLoadingContent.h"
 #include "nsGkAtoms.h"
 #include "nsError.h"
-#include "nsIDOMHTMLEmbedElement.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLEmbedElement final : public nsGenericHTMLElement
                              , public nsObjectLoadingContent
-                             , public nsIDOMHTMLEmbedElement
 {
 public:
   explicit HTMLEmbedElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                             mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
-  NS_DECL_NSIDOMHTMLEMBEDELEMENT
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLEmbedElement, embed)
@@ -104,7 +101,10 @@ public:
     SetHTMLAttr(nsGkAtoms::width, aValue, aRv);
   }
   // WebIDL <embed> api
-  // XPCOM GetSrc is ok; note that it's a URI attribute
+  void GetSrc(DOMString& aValue)
+  {
+    GetURIAttr(nsGkAtoms::src, nullptr, aValue);
+  }
   void SetSrc(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::src, aValue, aRv);

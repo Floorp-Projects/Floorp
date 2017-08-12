@@ -4158,3 +4158,81 @@ Element::SizeOfExcludingThis(SizeOfState& aState) const
   return n;
 }
 
+struct DirtyDescendantsBit {
+  static bool HasBit(const Element* aElement)
+  {
+    return aElement->HasDirtyDescendantsForServo();
+  }
+  static void SetBit(Element* aElement)
+  {
+    aElement->SetHasDirtyDescendantsForServo();
+  }
+};
+
+struct AnimationOnlyDirtyDescendantsBit {
+  static bool HasBit(const Element* aElement)
+  {
+    return aElement->HasAnimationOnlyDirtyDescendantsForServo();
+  }
+  static void SetBit(Element* aElement)
+  {
+    aElement->SetHasAnimationOnlyDirtyDescendantsForServo();
+  }
+};
+
+#ifdef DEBUG
+template<typename Traits>
+bool
+BitIsPropagated(const Element* aElement)
+{
+  const Element* curr = aElement;
+  while (curr) {
+    if (!Traits::HasBit(curr)) {
+      return false;
+    }
+    nsINode* parentNode = curr->GetParentNode();
+    curr = curr->GetFlattenedTreeParentElementForStyle();
+    MOZ_ASSERT_IF(!curr,
+                  parentNode == aElement->OwnerDoc() ||
+                  parentNode == parentNode->OwnerDoc()->GetRootElement());
+  }
+  return true;
+}
+#endif
+
+template<typename Traits>
+void
+NoteDirtyContent(nsIContent* aContent)
+{
+  MOZ_ASSERT(aContent->IsInComposedDoc());
+  nsIDocument* doc = aContent->GetComposedDoc();
+  nsIPresShell* shell = doc->GetShell();
+  NS_ENSURE_TRUE_VOID(shell);
+  shell->EnsureStyleFlush();
+
+  Element* parent = aContent->GetFlattenedTreeParentElementForStyle();
+  if (!parent || !parent->HasServoData()) {
+    // The bits only apply to styled elements.
+    return;
+  }
+
+  Element* curr = parent;
+  while (curr && !Traits::HasBit(curr)) {
+    Traits::SetBit(curr);
+    curr = curr->GetFlattenedTreeParentElementForStyle();
+  }
+
+  MOZ_ASSERT(BitIsPropagated<Traits>(parent));
+}
+
+void
+nsIContent::NoteDirtyForServo()
+{
+  NoteDirtyContent<DirtyDescendantsBit>(this);
+}
+
+void
+nsIContent::NoteAnimationOnlyDirtyForServo()
+{
+  NoteDirtyContent<AnimationOnlyDirtyDescendantsBit>(this);
+}

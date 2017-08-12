@@ -380,6 +380,9 @@ this.PageActions = {
  *                The action's ID.  Treat this like the ID of a DOM node.
  *         @param title (string, required)
  *                The action's title.
+ *         @param anchorIDOverride (string, optional)
+ *                Pass a string for this property if to override which element
+ *                that the temporary panel is anchored to.
  *         @param iconURL (string, optional)
  *                The URL of the action's icon.  Usually you want to specify an
  *                icon in CSS, but this option is useful if that would be a pain
@@ -388,11 +391,27 @@ this.PageActions = {
  *         @param nodeAttributes (object, optional)
  *                An object of name-value pairs.  Each pair will be added as
  *                an attribute to DOM nodes created for this action.
+ *         @param onBeforePlacedInWindow (function, optional)
+ *                Called before the action is placed in the window. Passed the
+ *                following arguments:
+ *                * window: The window that the action will be placed in.
  *         @param onCommand (function, optional)
  *                Called when the action is clicked, but only if it has neither
  *                a subview nor an iframe.  Passed the following arguments:
  *                * event: The triggering event.
  *                * buttonNode: The button node that was clicked.
+ *         @param onIframeHiding (function, optional)
+ *                Called when the action's iframe is hiding. Passed the
+ *                following arguments:
+ *                * iframeNode: The iframe.
+ *                * parentPanelNode: The panel node in which the iframe is
+ *                  shown.
+ *         @param onIframeHidden (function, optional)
+ *                Called when the action's iframe is hidden. Passed the
+ *                following arguments:
+ *                * iframeNode: The iframe.
+ *                * parentPanelNode: The panel node in which the iframe is
+ *                  shown.
  *         @param onIframeShown (function, optional)
  *                Called when the action's iframe is shown to the user.  Passed
  *                the following arguments:
@@ -432,9 +451,13 @@ function Action(options) {
   setProperties(this, options, {
     id: true,
     title: !options._isSeparator,
+    anchorIDOverride: false,
     iconURL: false,
     nodeAttributes: false,
+    onBeforePlacedInWindow: false,
     onCommand: false,
+    onIframeHiding: false,
+    onIframeHidden: false,
     onIframeShown: false,
     onPlacedInPanel: false,
     onPlacedInUrlbar: false,
@@ -532,6 +555,13 @@ Action.prototype = {
   },
 
   /**
+   * Override for the ID of the action's temporary panel anchor (string, nullable)
+   */
+  get anchorIDOverride() {
+    return this._anchorIDOverride;
+  },
+
+  /**
    * Override for the ID of the action's urlbar node (string, nullable)
    */
   get urlbarIDOverride() {
@@ -553,6 +583,18 @@ Action.prototype = {
   },
 
   /**
+   * Call this when before placing the action in the window.
+   *
+   * @param  window (DOM window, required)
+   *         The window the action will be placed in.
+   */
+  onBeforePlacedInWindow(window) {
+    if (this._onBeforePlacedInWindow) {
+      this._onBeforePlacedInWindow(window);
+    }
+  },
+
+  /**
    * Call this when the user activates the action.
    *
    * @param  event (DOM event, required)
@@ -563,6 +605,34 @@ Action.prototype = {
   onCommand(event, buttonNode) {
     if (this._onCommand) {
       this._onCommand(event, buttonNode);
+    }
+  },
+
+  /**
+   * Call this when the action's iframe is hiding.
+   *
+   * @param  iframeNode (DOM node, required)
+   *         The iframe that's hiding.
+   * @param  parentPanelNode (DOM node, required)
+   *         The panel in which the iframe is hiding.
+   */
+  onIframeHiding(iframeNode, parentPanelNode) {
+    if (this._onIframeHiding) {
+      this._onIframeHiding(iframeNode, parentPanelNode);
+    }
+  },
+
+  /**
+   * Call this when the action's iframe is hidden.
+   *
+   * @param  iframeNode (DOM node, required)
+   *         The iframe that's being hidden.
+   * @param  parentPanelNode (DOM node, required)
+   *         The panel in which the iframe is hidden.
+   */
+  onIframeHidden(iframeNode, parentPanelNode) {
+    if (this._onIframeHidden) {
+      this._onIframeHidden(iframeNode, parentPanelNode);
     }
   },
 

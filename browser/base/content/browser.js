@@ -8397,7 +8397,7 @@ var TabContextMenu = {
 Object.defineProperty(this, "HUDService", {
   get: function HUDService_getter() {
     let devtools = Cu.import("resource://devtools/shared/Loader.jsm", {}).devtools;
-    return devtools.require("devtools/client/webconsole/hudservice");
+    return devtools.require("devtools/client/webconsole/hudservice").HUDService;
   },
   configurable: true,
   enumerable: true

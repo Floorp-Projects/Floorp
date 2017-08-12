@@ -20,6 +20,10 @@ Archived ping data
 Raw JSON
 ">
 
+<!ENTITY aboutTelemetry.showInFirefoxJsonViewer "
+Open in the firefox JSON viewer
+">
+
 <!ENTITY aboutTelemetry.showSubsessionData "
 Show subsession data
 ">
@@ -118,6 +122,10 @@ Older
 
 <!ENTITY aboutTelemetry.lateWritesSection "
   Late Writes
+">
+
+<!ENTITY aboutTelemetry.rawPayloadSection "
+Raw Payload
 ">
 
 <!ENTITY aboutTelemetry.sessionInfoSection "

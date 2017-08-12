@@ -591,7 +591,7 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
 ///////////////////////////////////////////////////////////////////////////////
 // nsIFilePicker impl.
 
-NS_IMETHODIMP
+nsresult
 nsFilePicker::ShowW(int16_t *aReturnVal)
 {
   NS_ENSURE_ARG_POINTER(aReturnVal);
@@ -647,7 +647,7 @@ nsFilePicker::ShowW(int16_t *aReturnVal)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFilePicker::Show(int16_t *aReturnVal)
 {
   return ShowW(aReturnVal);

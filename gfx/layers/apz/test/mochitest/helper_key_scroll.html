@@ -43,11 +43,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
       if (window.scrollY < window.scrollYMax) {
         return;
       }
+      SimpleTest.info("Reached final scroll position of sync VK_END scroll");
       window.removeEventListener("scroll", waitForScrollBottom);
 
-      // Wait for scrolling to finish before dispatching the next key input or
-      // the default action won't occur.
+      // Spin the refresh driver a few times, so that the AsyncScroll instance
+      // that was running the main-thread scroll animation finishes up and
+      // triggers any repaints that it needs to.
+      var utils = SpecialPowers.DOMWindowUtils;
+      for (var i = 0; i < 10; i++) {
+        utils.advanceTimeAndRefresh(50);
+      }
+      utils.restoreNormalRefresh();
+
+      // Wait for the APZ to reach a stable state as well, before dispatching
+      // the next key input or the default action won't occur.
       waitForApzFlushedRepaints(function () {
+        SimpleTest.is(checkHasAsyncKeyScrolled(false), false, "expected no async key scrolling before VK_HOME dispatch");
+
         // This scroll should be asynchronous now that the focus state is up to date.
         window.addEventListener("scroll", waitForScrollTop);
         window.synthesizeKey("VK_HOME", {});
@@ -58,6 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
       if (window.scrollY > 0) {
         return;
       }
+      SimpleTest.info("Reached final scroll position of async VK_HOME scroll");
       window.removeEventListener("scroll", waitForScrollTop);
 
       // Wait for APZ to settle and then check that async scrolling happened.

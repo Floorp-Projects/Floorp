@@ -1,0 +1,250 @@
+android-dependencies/opt:
+    description: "Android armv7 API 15+ gradle dependencies"
+    index:
+        product: mobile
+        job-name: android-dependencies
+    treeherder:
+        platform: android-4-0-armv7-api15/opt
+        kind: build
+        tier: 2
+        symbol: tc(Deps)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        docker-image: {in-tree: android-gradle-build}
+        env:
+            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle-online"
+            PERFHERDER_EXTRA_OPTIONS: android-dependencies
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-gradle-dependencies/releng.manifest"
+        artifacts:
+          - name: public/build
+            path: /home/worker/artifacts/
+            type: directory
+          - name: private/android-sdk
+            path: /home/worker/private/android-sdk
+            type: directory
+          - name: private/java_home
+            path: /home/worker/private/java_home
+            type: directory
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: api-15-gradle-dependencies
+        tooltool-downloads: internal
+        job-script: taskcluster/scripts/builder/build-android-dependencies.sh
+    optimizations:
+      - - skip-unless-changed
+        - - "mobile/android/config/**"
+          - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
+          - "**/*.gradle"
+          - "taskcluster/docker/android-gradle-build/**"
+
+android-test/opt:
+    description: "Android armv7 unit tests"
+    index:
+        product: mobile
+        job-name: android-test
+    treeherder:
+        platform: android-4-0-armv7-api15/opt
+        kind: build
+        tier: 2
+        symbol: tc(test)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        docker-image: {in-tree: desktop-build}
+        env:
+            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+            PERFHERDER_EXTRA_OPTIONS: android-test
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
+        artifacts:
+          - name: public/android/unittest
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
+            type: directory
+          - name: public/build
+            path: /home/worker/artifacts/
+            type: directory
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: android-test
+        tooltool-downloads: internal
+    optimizations:
+      - - skip-unless-changed
+        - - "mobile/android/base/**"
+          - "mobile/android/tests/background/junit4/**"
+          - "**/*.gradle"
+
+android-lint/opt:
+    description: "Android lint"
+    index:
+        product: mobile
+        job-name: android-lint
+    treeherder:
+        platform: android-4-0-armv7-api15/opt
+        kind: build
+        tier: 2
+        symbol: tc(lint)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        docker-image: {in-tree: desktop-build}
+        env:
+            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+            PERFHERDER_EXTRA_OPTIONS: android-lint
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
+        artifacts:
+          - name: public/android/lint/lint-results-officialAustralisDebug.html
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.html
+            type: file
+          - name: public/android/lint/lint-results-officialAustralisDebug.xml
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.xml
+            type: file
+          - name: public/android/lint/lint-results-officialAustralisDebug_files
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug_files
+            type: directory
+          - name: public/android/lint/lint-results-officialPhotonDebug.html
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.html
+            type: file
+          - name: public/android/lint/lint-results-officialPhotonDebug.xml
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.xml
+            type: file
+          - name: public/android/lint/lint-results-officialPhotonDebug_files
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug_files
+            type: directory
+          - name: public/build
+            path: /home/worker/artifacts/
+            type: directory
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: android-lint
+        tooltool-downloads: internal
+    optimizations:
+      - - skip-unless-changed
+        - - "mobile/android/**/*.java"
+          - "mobile/android/**/*.jpeg"
+          - "mobile/android/**/*.jpg"
+          - "mobile/android/**/*.png"
+          - "mobile/android/**/*.svg"
+          - "mobile/android/**/*.xml" # Manifest & android resources
+          - "mobile/android/**/Makefile.in"
+          - "mobile/android/**/moz.build"
+          - "**/*.gradle"
+
+android-checkstyle/opt:
+    description: "Android checkstyle"
+    index:
+        product: mobile
+        job-name: android-checkstyle
+    treeherder:
+        platform: android-4-0-armv7-api15/opt
+        kind: build
+        tier: 2
+        symbol: tc(checkstyle)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        docker-image: {in-tree: desktop-build}
+        env:
+            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+            PERFHERDER_EXTRA_OPTIONS: android-checkstyle
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
+        artifacts:
+          - name: public/android/checkstyle/checkstyle.html
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
+            type: file
+          - name: public/android/checkstyle/checkstyle.xml
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
+            type: file
+          - name: public/build
+            path: /home/worker/artifacts/
+            type: directory
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: android-checkstyle
+        tooltool-downloads: internal
+    optimizations:
+      - - skip-unless-changed
+        - - "mobile/android/**/checkstyle.xml"
+          - "mobile/android/**/*.java"
+          - "mobile/android/**/Makefile.in"
+          - "mobile/android/**/moz.build"
+          - "**/*.gradle"
+
+android-findbugs/opt:
+    description: "Android findbugs"
+    index:
+        product: mobile
+        job-name: android-findbugs
+    treeherder:
+        platform: android-4-0-armv7-api15/opt
+        kind: build
+        tier: 2
+        symbol: tc(findbugs)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        docker-image: {in-tree: desktop-build}
+        env:
+            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+            PERFHERDER_EXTRA_OPTIONS: android-findbugs
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
+        artifacts:
+          - name: public/android/findbugs/findbugs-officialAustralisDebug-output.html
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
+            type: file
+          - name: public/android/findbugs/findbugs-officialAustralisDebug-output.xml
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.xml
+            type: file
+          - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.html
+            type: file
+          - name: public/android/findbugs/findbugs-officialPhotonDebug-output.xml
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.xml
+            type: file
+          - name: public/build
+            path: /home/worker/artifacts/
+            type: directory
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: android-findbugs
+        tooltool-downloads: internal
+    optimizations:
+      - - skip-unless-changed
+        - - "mobile/android/**/*.java"
+          - "mobile/android/**/Makefile.in"
+          - "mobile/android/**/moz.build"
+          - "**/*.gradle"

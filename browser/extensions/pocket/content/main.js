@@ -225,6 +225,7 @@ var pktUI = (function() {
             onShow() {
                 var saveLinkMessageId = "saveLink";
                 _lastAddSucceeded = false;
+                getPanelFrame().setAttribute("itemAdded", "false");
 
                 // Send error message for invalid url
                 if (!isValidURL) {
@@ -257,6 +258,7 @@ var pktUI = (function() {
                         };
                         pktUIMessaging.sendMessageToPanel(panelId, saveLinkMessageId, successResponse);
                         _lastAddSucceeded = true;
+                        getPanelFrame().setAttribute("itemAdded", "true");
                     },
                     error(error, request) {
                         // If user is not authorized show singup page
@@ -487,6 +489,7 @@ var pktUI = (function() {
                     var successResponse = {status: "success"};
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _deleteItemMessageId, successResponse);
                     _lastAddSucceeded = false;
+                    getPanelFrame().setAttribute("itemAdded", "false");
                 },
                 error(error, response) {
                     pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _deleteItemMessageId, error);

@@ -504,12 +504,10 @@ SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed elemen
 SERVO_BINDING_FUNC(Servo_TakeChangeHint,
                    nsChangeHint,
                    RawGeckoElementBorrowed element,
-                   mozilla::ServoTraversalFlags flags,
                    bool* was_restyled)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element,
-                   RawServoStyleSetBorrowed set,
-                   mozilla::ServoTraversalFlags flags)
+                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_ResolveStyleAllowStale, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoStyleContextStrong,
