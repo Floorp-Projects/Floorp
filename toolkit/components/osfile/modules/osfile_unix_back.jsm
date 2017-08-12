@@ -5,7 +5,6 @@
 /* eslint-env mozilla/chrome-worker, node */
 /* global OS */
 
-// eslint-disable-next-line no-lone-blocks
 {
   if (typeof Components != "undefined") {
     // We do not wish osfile_unix_back.jsm to be used directly as a main thread
@@ -25,7 +24,7 @@
        require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
      let SysAll =
        require("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
-     SharedAll.LOG.bind(SharedAll, "Unix", "back");
+     let LOG = SharedAll.LOG.bind(SharedAll, "Unix", "back");
      let libc = SysAll.libc;
      let Const = SharedAll.Constants.libc;
 
@@ -36,18 +35,19 @@
       */
      // FIXME: Both |init| and |aDeclareFFI| are deprecated, we should remove them
      let init = function init(aDeclareFFI) {
+       let declareFFI;
        if (aDeclareFFI) {
-         aDeclareFFI.bind(null, libc);
+         declareFFI = aDeclareFFI.bind(null, libc);
        } else {
-         SysAll.declareFFI;
+         declareFFI = SysAll.declareFFI;
        }
-       SharedAll.declareLazyFFI;
+       let declareLazyFFI = SharedAll.declareLazyFFI;
 
        // Initialize types that require additional OS-specific
        // support - either finalization or matching against
        // OS-specific constants.
        let Type = Object.create(SysAll.Type);
-       let SysFile = exports.OS.Unix.File = { Type };
+       let SysFile = exports.OS.Unix.File = { Type: Type };
 
        /**
         * A file descriptor.

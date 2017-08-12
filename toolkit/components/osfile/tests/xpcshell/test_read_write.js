@@ -86,7 +86,7 @@ add_test_pair(async function read_write_all() {
 
       let array2 = await OS.File.read(DEST_PATH);
       do_check_eq(LENGTH, array2.length);
-      for (var j = 0; j < LENGTH; j++)
+      for (var i = 0; i < LENGTH; i++)
         do_check_eq(array2[i], (i + START) % 256);
 
       // Cleanup.
