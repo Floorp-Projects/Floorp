@@ -529,67 +529,90 @@ this.ExtensionData = class {
       let normalized = Schemas.normalize(this.manifest, "manifest.WebExtensionManifest", context);
       if (normalized.error) {
         this.manifestError(normalized.error);
-      } else {
-        return normalized.value;
+        return null;
       }
+
+      let manifest = normalized.value;
+
+      let id;
+      try {
+        if (manifest.applications.gecko.id) {
+          id = manifest.applications.gecko.id;
+        }
+      } catch (e) {
+        // Errors are handled by the type checks above.
+      }
+
+      let apiNames = new Set();
+      let dependencies = new Set();
+      let hostPermissions = new Set();
+      let permissions = new Set();
+
+      for (let perm of manifest.permissions) {
+        if (perm === "geckoProfiler") {
+          const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
+          if (!acceptedExtensions.split(",").includes(id)) {
+            this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
+            continue;
+          }
+        }
+
+        let type = classifyPermission(perm);
+        if (type.origin) {
+          let matcher = new MatchPattern(perm, {ignorePath: true});
+
+          perm = matcher.pattern;
+          hostPermissions.add(perm);
+        } else if (type.api) {
+          apiNames.add(type.api);
+        }
+
+        permissions.add(perm);
+      }
+
+      // An extension always gets permission to its own url.
+      if (this.id) {
+        let matcher = new MatchPattern(this.getURL(), {ignorePath: true});
+        hostPermissions.add(matcher.pattern);
+      }
+
+      for (let api of apiNames) {
+        dependencies.add(`${api}@experiments.addons.mozilla.org`);
+      }
+
+      // Normalize all patterns to contain a single leading /
+      let webAccessibleResources = (manifest.web_accessible_resources || [])
+          .map(path => path.replace(/^\/*/, "/"));
+
+      return {apiNames, dependencies, hostPermissions, id, manifest, permissions,
+              webAccessibleResources};
     });
   }
 
   // Reads the extension's |manifest.json| file, and stores its
   // parsed contents in |this.manifest|.
   async loadManifest() {
-    [this.manifest] = await Promise.all([
+    let [manifestData] = await Promise.all([
       this.parseManifest(),
       Management.lazyInit(),
     ]);
 
-    if (!this.manifest) {
+    if (!manifestData) {
       return;
     }
 
-    try {
-      // Do not override the add-on id that has been already assigned.
-      if (!this.id && this.manifest.applications.gecko.id) {
-        this.id = this.manifest.applications.gecko.id;
-      }
-    } catch (e) {
-      // Errors are handled by the type checks above.
+    // Do not override the add-on id that has been already assigned.
+    if (!this.id) {
+      this.id = manifestData.id;
     }
 
-    let whitelist = [];
-    for (let perm of this.manifest.permissions) {
-      if (perm === "geckoProfiler") {
-        const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
-        if (!acceptedExtensions.split(",").includes(this.id)) {
-          this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
-          continue;
-        }
-      }
+    this.manifest = manifestData.manifest;
+    this.apiNames = manifestData.apiNames;
+    this.dependencies = manifestData.dependencies;
+    this.permissions = manifestData.permissions;
 
-      let type = classifyPermission(perm);
-      if (type.origin) {
-        let matcher = new MatchPattern(perm, {ignorePath: true});
-
-        whitelist.push(matcher);
-        perm = matcher.pattern;
-      } else if (type.api) {
-        this.apiNames.add(type.api);
-      }
-
-      this.permissions.add(perm);
-    }
-
-    // An extension always gets permission to its own url.
-    if (this.id) {
-      let matcher = new MatchPattern(this.getURL(), {ignorePath: true});
-      whitelist.push(matcher);
-    }
-
-    this.whiteListedHosts = new MatchPatternSet(whitelist);
-
-    for (let api of this.apiNames) {
-      this.dependencies.add(`${api}@experiments.addons.mozilla.org`);
-    }
+    this.webAccessibleResources = manifestData.webAccessibleResources.map(res => new MatchGlob(res));
+    this.whiteListedHosts = new MatchPatternSet(manifestData.hostPermissions);
 
     return this.manifest;
   }
@@ -947,23 +970,24 @@ this.Extension = class extends ExtensionData {
                                       () => super.parseManifest());
   }
 
-  loadManifest() {
-    return super.loadManifest().then(manifest => {
-      if (this.errors.length) {
-        return Promise.reject({errors: this.errors});
-      }
+  async loadManifest() {
+    let manifest = await super.loadManifest();
 
+    if (this.errors.length) {
+      return Promise.reject({errors: this.errors});
+    }
+
+    if (this.apiNames.size) {
       // Load Experiments APIs that this extension depends on.
-      return Promise.all(
-        Array.from(this.apiNames, api => ExtensionCommon.ExtensionAPIs.load(api))
-      ).then(apis => {
-        for (let API of apis) {
-          this.apis.push(new API(this));
-        }
+      let apis = await Promise.all(
+        Array.from(this.apiNames, api => ExtensionCommon.ExtensionAPIs.load(api)));
 
-        return manifest;
-      });
-    });
+      for (let API of apis) {
+        this.apis.push(new API(this));
+      }
+    }
+
+    return manifest;
   }
 
   // Representation of the extension to send to content
@@ -1159,13 +1183,6 @@ this.Extension = class extends ExtensionData {
         this.whiteListedHosts = new MatchPatternSet([...patterns, ...perms.origins],
                                                     {ignorePath: true});
       }
-
-      // Normalize all patterns to contain a single leading /
-      let resources = (this.manifest.web_accessible_resources || [])
-          .map(path => path.replace(/^\/*/, "/"));
-
-      this.webAccessibleResources = resources.map(res => new MatchGlob(res));
-
 
       this.policy.active = false;
       this.policy = processScript.initExtension(this.serialize(), this);
