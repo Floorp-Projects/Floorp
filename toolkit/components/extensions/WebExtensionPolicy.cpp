@@ -89,6 +89,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
                                        ErrorResult& aRv)
   : mId(NS_AtomizeMainThread(aInit.mId))
   , mHostname(aInit.mMozExtensionHostname)
+  , mName(aInit.mName)
   , mContentSecurityPolicy(aInit.mContentSecurityPolicy)
   , mLocalizeCallback(aInit.mLocalizeCallback)
   , mPermissions(new AtomSet(aInit.mPermissions))
