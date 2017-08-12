@@ -123,12 +123,12 @@ public:
   bool Resume();
 
   wr::WrIdNamespace GetNamespace();
-  GLint GetMaxTextureSize() const { return mMaxTextureSize; }
+  uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
   layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
 
 protected:
-  WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
+  WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, uint32_t aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
     : mDocHandle(aHandle)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
@@ -142,7 +142,7 @@ protected:
 
   wr::DocumentHandle* mDocHandle;
   wr::WindowId mId;
-  GLint mMaxTextureSize;
+  uint32_t mMaxTextureSize;
   bool mUseANGLE;
   layers::SyncHandle mSyncHandle;
   RefPtr<wr::WebRenderAPI> mRootApi;
