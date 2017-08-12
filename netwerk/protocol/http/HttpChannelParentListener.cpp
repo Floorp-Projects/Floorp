@@ -12,7 +12,6 @@
 #include "mozilla/Unused.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
-#include "nsIHttpEventSink.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsIPromptFactory.h"
@@ -123,7 +122,6 @@ NS_IMETHODIMP
 HttpChannelParentListener::GetInterface(const nsIID& aIID, void **result)
 {
   if (aIID.Equals(NS_GET_IID(nsIChannelEventSink)) ||
-      aIID.Equals(NS_GET_IID(nsIHttpEventSink))  ||
       aIID.Equals(NS_GET_IID(nsINetworkInterceptController))  ||
       aIID.Equals(NS_GET_IID(nsIRedirectResultListener)))
   {
