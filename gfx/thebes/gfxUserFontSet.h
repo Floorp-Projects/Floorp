@@ -265,7 +265,13 @@ public:
 
     // check whether content policies allow the given URI to load.
     virtual bool IsFontLoadAllowed(nsIURI* aFontLocation,
-                                   nsIPrincipal* aPrincipal) = 0;
+                                   nsIPrincipal* aPrincipal,
+                                   nsTArray<nsCOMPtr<nsIRunnable>>* aViolations) = 0;
+
+    // Dispatches all of the specified runnables to the font face set's
+    // document's event queue.
+    virtual void DispatchFontLoadViolations(
+        nsTArray<nsCOMPtr<nsIRunnable>>& aViolations) = 0;
 
     // initialize the process that loads external font data, which upon
     // completion will call FontDataDownloadComplete method
@@ -430,9 +436,12 @@ public:
             gfxFontEntry* GetFontEntry() const { return mFontEntry; }
             bool IsPrivate() const { return mPrivate; }
 
-            bool IsFontSetAllowed(gfxUserFontSet* aUserFontSet) const;
+            bool CheckIsFontSetAllowed(gfxUserFontSet* aUserFontSet) const;
+            bool CheckIsFontSetAllowedAndDispatchViolations(gfxUserFontSet* aUserFontSet) const;
             bool IsFontSetAllowedKnown(gfxUserFontSet* aUserFontSet) const;
-            void SetIsFontSetAllowed(gfxUserFontSet* aUserFontSet, bool aAllowed);
+            void SetIsFontSetAllowed(gfxUserFontSet* aUserFontSet,
+                                     bool aAllowed,
+                                     nsTArray<nsCOMPtr<nsIRunnable>>&& aViolations);
             void ClearIsFontSetAllowed(gfxUserFontSet* aUserFontSet);
 
             void ReportMemory(nsIHandleReportCallback* aHandleReport,
@@ -449,6 +458,37 @@ public:
                                           aFeatures.Length() * sizeof(gfxFontFeature));
             }
 
+            // An entry in mAllowedFontSets.
+            class LoadResultEntry : public nsPtrHashKey<gfxUserFontSet>
+            {
+            public:
+                explicit LoadResultEntry(KeyTypePointer aKey)
+                  : nsPtrHashKey(aKey)
+                  , mAllowed(false)
+                {
+                }
+
+                LoadResultEntry(LoadResultEntry&& aOther)
+                  : nsPtrHashKey(aOther.mKey)
+                  , mAllowed(aOther.mAllowed)
+                  , mViolations(mozilla::Move(aOther.mViolations))
+                {
+                }
+
+                ~LoadResultEntry() {}
+
+                // Whether the user font set (the key) is allowed to load this
+                // entry's font.
+                bool mAllowed;
+
+                // If the load is not allowed, the CSP violation reports that
+                // must be dispatched when we attempt to use the entry's font.
+                // (Should be empty if mAllowed is true.)
+                nsTArray<nsCOMPtr<nsIRunnable>> mViolations;
+
+                enum { ALLOW_MEMMOVE = false };
+            };
+
             // Set of gfxUserFontSets that are allowed to use this cached font
             // entry.
             //
@@ -461,7 +501,7 @@ public:
             // to record IsFontLoadAllowed results for the new entries.  When
             // a FontFaceSet is going away, it calls ClearAllowedFontSets
             // to remove entries from the mAllowedFontSets tables.
-            nsDataHashtable<nsPtrHashKey<gfxUserFontSet>, bool> mAllowedFontSets;
+            nsTHashtable<LoadResultEntry> mAllowedFontSets;
 
             RefPtr<gfxFontSrcURI>  mURI;
             RefPtr<gfxFontSrcPrincipal> mPrincipal; // or nullptr for data: URLs

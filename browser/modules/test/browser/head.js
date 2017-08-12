@@ -228,3 +228,14 @@ function getPopupNotificationNode() {
   return popupNotifications[0];
 }
 
+
+/**
+ * Disable non-release page actions (that are tested elsewhere).
+ *
+ * @return void
+ */
+async function disableNonReleaseActions() {
+  if (AppConstants.MOZ_DEV_EDITION || AppConstants.NIGHTLY_BUILD) {
+    await SpecialPowers.pushPrefEnv({set: [["extensions.webcompat-reporter.enabled", false]]});
+  }
+}

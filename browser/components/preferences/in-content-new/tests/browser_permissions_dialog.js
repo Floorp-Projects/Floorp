@@ -27,7 +27,7 @@ async function openPermissionsDialog() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     let doc = content.document;
-    let settingsButton = doc.getElementById("notificationsPolicyButton");
+    let settingsButton = doc.getElementById("notificationSettingsButton");
     settingsButton.click();
   });
 
@@ -208,6 +208,28 @@ add_task(async function onPermissionDeleteCancel() {
   Assert.equal(SitePermissions.get(URI, "desktop-notification").state,
                SitePermissions.ALLOW,
                "Permission state does not change on clicking cancel");
+
+  SitePermissions.remove(URI, "desktop-notification");
+});
+
+add_task(async function onSearch() {
+  await openPermissionsDialog();
+  let doc = sitePermissionsDialog.document;
+  let richlistbox = doc.getElementById("permissionsBox");
+  let searchBox = doc.getElementById("searchBox");
+
+  SitePermissions.set(URI, "desktop-notification", SitePermissions.ALLOW);
+  searchBox.value = "www.example.com";
+
+  let u = Services.io.newURI("http://www.test.com");
+  SitePermissions.set(u, "desktop-notification", SitePermissions.ALLOW);
+
+  Assert.equal(doc.getElementsByAttribute("origin", "http://www.test.com")[0], null);
+  Assert.equal(doc.getElementsByAttribute("origin", "http://www.example.com")[0],
+               richlistbox.getItemAtIndex(0));
+
+  SitePermissions.remove(URI, "desktop-notification");
+  SitePermissions.remove(u, "desktop-notification");
 });
 
 add_task(async function removeTab() {

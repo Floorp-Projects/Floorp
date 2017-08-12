@@ -118,38 +118,18 @@ function isInDevEdition() {
   return AppConstants.MOZ_DEV_EDITION;
 }
 
-function isInNightly() {
-  return AppConstants.NIGHTLY_BUILD;
-}
-
-function isNotReleaseOrBeta() {
-  return (isInDevEdition() || isInNightly());
-}
-
 function removeNonReleaseButtons(areaPanelPlacements) {
   if (isInDevEdition() && areaPanelPlacements.includes("developer-button")) {
     areaPanelPlacements.splice(areaPanelPlacements.indexOf("developer-button"), 1);
-  }
-
-  if (AppConstants.RELEASE_OR_BETA && !AppConstants.MOZ_DEV_EDITION) {
-    if (areaPanelPlacements.includes("webcompat-reporter-button")) {
-      areaPanelPlacements.splice(areaPanelPlacements.indexOf("webcompat-reporter-button"), 1);
-    }
   }
 }
 
 function removeNonOriginalButtons() {
   CustomizableUI.removeWidgetFromArea("sync-button");
-  if (isNotReleaseOrBeta()) {
-    CustomizableUI.removeWidgetFromArea("webcompat-reporter-button");
-  }
 }
 
 function restoreNonOriginalButtons() {
   CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
-  if (isNotReleaseOrBeta()) {
-    CustomizableUI.addWidgetToArea("webcompat-reporter-button", CustomizableUI.AREA_PANEL);
-  }
 }
 
 function assertAreaPlacements(areaId, expectedPlacements) {

@@ -836,6 +836,54 @@ public:
   }
 
   /**
+   * After calling this function, any CSP violation reports will be buffered up
+   * by the document (by calling BufferCSPViolation) instead of being sent
+   * immediately.
+   *
+   * This facility is used by the user font cache, which wants to pre-emptively
+   * check whether a given font load would violate CSP directives, and so
+   * shouldn't immediately send the report.
+   */
+  void StartBufferingCSPViolations()
+  {
+    MOZ_ASSERT(!mBufferingCSPViolations);
+    mBufferingCSPViolations = true;
+  }
+
+  /**
+   * Stops buffering CSP violation reports, and stores any buffered reports in
+   * aResult.
+   */
+  void StopBufferingCSPViolations(nsTArray<nsCOMPtr<nsIRunnable>>& aResult)
+  {
+    MOZ_ASSERT(mBufferingCSPViolations);
+    mBufferingCSPViolations = false;
+
+    aResult.SwapElements(mBufferedCSPViolations);
+    mBufferedCSPViolations.Clear();
+  }
+
+  /**
+   * Returns whether we are currently buffering CSP violation reports.
+   */
+  bool ShouldBufferCSPViolations() const
+  {
+    return mBufferingCSPViolations;
+  }
+
+  /**
+   * Called when a CSP violation is encountered that would generate a report
+   * while buffering is enabled.
+   */
+  void BufferCSPViolation(nsIRunnable* aReportingRunnable)
+  {
+    MOZ_ASSERT(mBufferingCSPViolations);
+
+    // Dropping the CSP violation report seems preferable to OOMing.
+    mBufferedCSPViolations.AppendElement(aReportingRunnable, mozilla::fallible);
+  }
+
+  /**
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
    */
@@ -3309,6 +3357,10 @@ protected:
   // True if we have called BeginLoad and are expecting a paired EndLoad call.
   bool mDidCallBeginLoad : 1;
 
+  // True if any CSP violation reports for this doucment will be buffered in
+  // mBufferedCSPViolations instead of being sent immediately.
+  bool mBufferingCSPViolations : 1;
+
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;
@@ -3489,6 +3541,10 @@ protected:
   // calling NoteScriptTrackingStatus().  Currently we assume that a URL not
   // existing in the set means the corresponding script isn't a tracking script.
   nsTHashtable<nsCStringHashKey> mTrackingScripts;
+
+  // CSP violation reports that have been buffered up due to a call to
+  // StartBufferingCSPViolations.
+  nsTArray<nsCOMPtr<nsIRunnable>> mBufferedCSPViolations;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

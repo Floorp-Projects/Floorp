@@ -44,6 +44,13 @@ option(env='MOZ_ANDROID_MMA',
 set_config('MOZ_ANDROID_MMA',
            depends_if('MOZ_ANDROID_MMA')(lambda _: True))
 
+option(env='MOZ_ANDROID_POCKET',
+       help='Enable Pocket Stories in Activity Stream.',
+       default=False)
+
+set_config('MOZ_ANDROID_POCKET',
+           depends_if('MOZ_ANDROID_POCKET')(lambda _: True))
+
 project_flag('MOZ_ANDROID_DOWNLOADS_INTEGRATION',
              help='Enable system download manager on Android',
              default=True)
@@ -159,3 +166,10 @@ def check_android_mma(android_mma,
         if not leanplum_sdk_keyfile:
             die('You must specify --with-leanplum-sdk-keyfile=/path/to/keyfile when'
                 ' building with MOZ_ANDROID_MMA=1')
+
+@depends('MOZ_ANDROID_POCKET',
+         '--with-pocket-api-keyfile')
+def check_android_pocket(android_pocket, pocket_api_keyfile):
+    if android_pocket and not pocket_api_keyfile:
+        die('You must specify --with-pocket-api-keyfile=/path/to/keyfile when'
+            ' building with MOZ_ANDROID_POCKET=1')

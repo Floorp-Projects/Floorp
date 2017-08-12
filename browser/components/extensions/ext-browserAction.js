@@ -267,6 +267,7 @@ this.browserAction = class extends ExtensionAPI {
       let event = new window.CustomEvent("command", {bubbles: true, cancelable: true});
       widget.node.dispatchEvent(event);
     } else {
+      this.tabManager.addActiveTabPermission(tab);
       this.emit("click");
     }
   }

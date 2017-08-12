@@ -349,8 +349,7 @@ public:
    *
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
-  already_AddRefed<ServoStyleContext>
-  ResolveServoStyle(dom::Element* aElement, ServoTraversalFlags aFlags);
+  already_AddRefed<ServoStyleContext> ResolveServoStyle(dom::Element* aElement);
 
   bool GetKeyframesForName(const nsString& aName,
                            const nsTimingFunction& aTimingFunction,
@@ -457,29 +456,8 @@ public:
                        Element* aElement);
 
 private:
-  // On construction, sets sInServoTraversal to the given ServoStyleSet.
-  // On destruction, clears sInServoTraversal and calls RunPostTraversalTasks.
-  class MOZ_STACK_CLASS AutoSetInServoTraversal
-  {
-  public:
-    explicit AutoSetInServoTraversal(ServoStyleSet* aSet)
-      : mSet(aSet)
-    {
-      MOZ_ASSERT(!sInServoTraversal);
-      MOZ_ASSERT(aSet);
-      sInServoTraversal = aSet;
-    }
-
-    ~AutoSetInServoTraversal()
-    {
-      MOZ_ASSERT(sInServoTraversal);
-      sInServoTraversal = nullptr;
-      mSet->RunPostTraversalTasks();
-    }
-
-  private:
-    ServoStyleSet* mSet;
-  };
+  friend class AutoSetInServoTraversal;
+  friend class AutoPrepareTraversal;
 
   /**
    * Gets the pending snapshots to handle from the restyle manager.
@@ -493,15 +471,6 @@ private:
    * Call this before jumping into Servo's style system.
    */
   void ResolveMappedAttrDeclarationBlocks();
-
-  /**
-   * Perform all lazy operations required before traversing
-   * a subtree.
-   *
-   * Returns whether a post-traversal is required.
-   */
-  bool PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
-                                 ServoTraversalFlags aFlags);
 
   /**
    * Clear our cached mNonInheritingStyleContexts.
@@ -518,9 +487,9 @@ private:
    * When aRoot is null, the entire document is pre-traversed.  Otherwise,
    * only the subtree rooted at aRoot is pre-traversed.
    */
-  void PreTraverse(dom::Element* aRoot = nullptr,
-                   EffectCompositor::AnimationRestyleType =
-                     EffectCompositor::AnimationRestyleType::Throttled);
+  void PreTraverse(ServoTraversalFlags aFlags,
+                   dom::Element* aRoot = nullptr);
+
   // Subset of the pre-traverse steps that involve syncing up data
   void PreTraverseSync();
 

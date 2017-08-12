@@ -570,8 +570,8 @@ private:
                          EventInit());
     event->SetTrusted(true);
 
-    nsEventStatus status = nsEventStatus_eIgnore;
-    aWorkerPrivate->DispatchDOMEvent(nullptr, event, nullptr, &status);
+    bool dummy;
+    aWorkerPrivate->DispatchEvent(event, &dummy);
     return true;
   }
 };
@@ -778,8 +778,8 @@ public:
 
     domEvent->SetTrusted(true);
 
-    nsEventStatus dummy = nsEventStatus_eIgnore;
-    aTarget->DispatchDOMEvent(nullptr, domEvent, nullptr, &dummy);
+    bool dummy;
+    aTarget->DispatchEvent(domEvent, &dummy);
 
     return true;
   }
@@ -854,8 +854,8 @@ private:
     event->SetTrusted(true);
 
     nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
-    nsEventStatus status = nsEventStatus_eIgnore;
-    globalScope->DispatchDOMEvent(nullptr, domEvent, nullptr, &status);
+    bool dummy;
+    globalScope->DispatchEvent(domEvent, &dummy);
     return true;
   }
 };
@@ -1037,10 +1037,10 @@ public:
           ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
         event->SetTrusted(true);
 
-        nsEventStatus status = nsEventStatus_eIgnore;
-        aTarget->DispatchDOMEvent(nullptr, event, nullptr, &status);
+        bool defaultActionEnabled;
+        aTarget->DispatchEvent(event, &defaultActionEnabled);
 
-        if (status == nsEventStatus_eConsumeNoDefault) {
+        if (!defaultActionEnabled) {
           return;
         }
       }
@@ -3626,7 +3626,8 @@ WorkerPrivate::OfflineStatusChangeEventInternal(bool aIsOffline)
   event->InitEvent(eventType, false, false);
   event->SetTrusted(true);
 
-  globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  bool dummy;
+  globalScope->DispatchEvent(event, &dummy);
 }
 
 template <class Derived>
@@ -6983,8 +6984,8 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx,
 
   nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
 
-  nsEventStatus dummy = nsEventStatus_eIgnore;
-  globalScope->DispatchDOMEvent(nullptr, domEvent, nullptr, &dummy);
+  bool dummy;
+  globalScope->DispatchEvent(domEvent, &dummy);
 
   return true;
 }

@@ -9,7 +9,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
-import org.mozilla.gecko.skin.SkinConfig;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -123,21 +122,10 @@ class BrowserToolbarPhone extends BrowserToolbarPhoneBase {
         animator.attach(menuButton,
                         PropertyAnimator.Property.TRANSLATION_X,
                         curveTranslation);
-
-        // bug 1375351: menuIcon only exists in Australis flavor
-        if (SkinConfig.isAustralis()) {
-            animator.attach(menuIcon,
-                    PropertyAnimator.Property.TRANSLATION_X,
-                    curveTranslation);
-        }
     }
 
     @Override
     protected Drawable getLWTDefaultStateSetDrawable() {
-        if (SkinConfig.isAustralis()) {
-            return getTheme().getDrawable(this);
-        } else {
-            return BrowserToolbar.getLightweightThemeDrawable(this, getTheme(), R.color.toolbar_grey);
-        }
+        return BrowserToolbar.getLightweightThemeDrawable(this, getTheme(), R.color.toolbar_grey);
     }
 }

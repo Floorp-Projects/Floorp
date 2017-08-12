@@ -12,16 +12,10 @@ import android.view.View;
 import android.view.Window;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.skin.SkinConfig;
 
 public class WindowUtil {
 
     public static void invalidateStatusBarColor(final Activity activity, boolean darkTheme) {
-        // Don't support status bar color change in Australis.
-        if (SkinConfig.isAustralis()) {
-            return;
-        }
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return;
         }

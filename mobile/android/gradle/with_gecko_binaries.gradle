@@ -96,7 +96,7 @@ task syncAssetsFromDistDir(type: Sync, dependsOn: checkAssetsExistInDistDir) {
 }
 
 ext.configureVariantWithGeckoBinaries = { variant ->
-    // Like 'localAustralis' or 'localOldAustralis'; may be null.
+    // Like 'localPhoton' or 'localOldPhoton'; may be null.
     def productFlavor = ""
     def productFlavorNames = variant.productFlavors.collect { it.name.capitalize() }
     if (!productFlavorNames.isEmpty()) {
