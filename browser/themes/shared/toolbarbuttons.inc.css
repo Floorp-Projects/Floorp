@@ -66,16 +66,7 @@ toolbar[brighttext] {
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: none;
-  padding: 0;
-  min-width: 26px;
-  border: 1px solid transparent;
-  border-bottom-style: none;
-  border-radius: var(--toolbarbutton-border-radius) var(--toolbarbutton-border-radius) 0 0;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up,
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  border-radius: 0;
+  padding: 0 var(--toolbarbutton-inner-padding);
 }
 
 #navigator-toolbox:not(:hover) > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-down:not([highlight]) {
