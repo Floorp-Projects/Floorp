@@ -121,6 +121,9 @@ public:
   // completelness check.
   ServoCSSRuleList* GetCssRulesInternal();
 
+  // Returns the stylesheet's Servo origin as an OriginFlags value.
+  OriginFlags GetOrigin();
+
 protected:
   virtual ~ServoStyleSheet();
 
