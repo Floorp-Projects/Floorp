@@ -1530,6 +1530,13 @@ class CacheStore {
     return result;
   }
 
+  async set(path, value) {
+    let [store, key] = await this.getStore(path);
+
+    store.set(key, value);
+    StartupCache.save();
+  }
+
   async getAll() {
     let [store] = await this.getStore();
 
