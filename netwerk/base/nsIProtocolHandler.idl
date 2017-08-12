@@ -330,7 +330,7 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_SCHEME_NOT_SELF_LINKABLE = (1 << 21);
 
     /**
-     * The URIs for this protocol can be loaded only by extensions.
+     * The URIs for this protocol can be loaded by extensions.
      */
     const unsigned long URI_LOADABLE_BY_EXTENSIONS = (1 << 22);
 };

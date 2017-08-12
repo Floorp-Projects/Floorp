@@ -406,6 +406,42 @@ typedef TypedRect_f32__LayerPixel LayerRect;
 
 typedef LayerRect LayoutRect;
 
+struct BorderRadius {
+  LayoutSize top_left;
+  LayoutSize top_right;
+  LayoutSize bottom_left;
+  LayoutSize bottom_right;
+
+  bool operator==(const BorderRadius& aOther) const {
+    return top_left == aOther.top_left &&
+           top_right == aOther.top_right &&
+           bottom_left == aOther.bottom_left &&
+           bottom_right == aOther.bottom_right;
+  }
+};
+
+struct WrComplexClipRegion {
+  LayoutRect rect;
+  BorderRadius radii;
+
+  bool operator==(const WrComplexClipRegion& aOther) const {
+    return rect == aOther.rect &&
+           radii == aOther.radii;
+  }
+};
+
+struct WrImageMask {
+  WrImageKey image;
+  LayoutRect rect;
+  bool repeat;
+
+  bool operator==(const WrImageMask& aOther) const {
+    return image == aOther.image &&
+           rect == aOther.rect &&
+           repeat == aOther.repeat;
+  }
+};
+
 struct BorderWidths {
   float left;
   float top;
@@ -427,20 +463,6 @@ struct BorderSide {
   bool operator==(const BorderSide& aOther) const {
     return color == aOther.color &&
            style == aOther.style;
-  }
-};
-
-struct BorderRadius {
-  LayoutSize top_left;
-  LayoutSize top_right;
-  LayoutSize bottom_left;
-  LayoutSize bottom_right;
-
-  bool operator==(const BorderRadius& aOther) const {
-    return top_left == aOther.top_left &&
-           top_right == aOther.top_right &&
-           bottom_left == aOther.bottom_left &&
-           bottom_right == aOther.bottom_right;
   }
 };
 
@@ -511,28 +533,6 @@ struct TypedVector2D_f32__LayerPixel {
 typedef TypedVector2D_f32__LayerPixel LayerVector2D;
 
 typedef LayerVector2D LayoutVector2D;
-
-struct WrComplexClipRegion {
-  LayoutRect rect;
-  BorderRadius radii;
-
-  bool operator==(const WrComplexClipRegion& aOther) const {
-    return rect == aOther.rect &&
-           radii == aOther.radii;
-  }
-};
-
-struct WrImageMask {
-  WrImageKey image;
-  LayoutRect rect;
-  bool repeat;
-
-  bool operator==(const WrImageMask& aOther) const {
-    return image == aOther.image &&
-           rect == aOther.rect &&
-           repeat == aOther.repeat;
-  }
-};
 
 struct WrFilterOp {
   WrFilterOpType filter_type;
@@ -1077,7 +1077,8 @@ bool wr_window_new(WrWindowId aWindowId,
                    WrThreadPool *aThreadPool,
                    bool aEnableProfiler,
                    DocumentHandle **aOutHandle,
-                   Renderer **aOutRenderer)
+                   Renderer **aOutRenderer,
+                   uint32_t *aOutMaxTextureSize)
 WR_FUNC;
 
 } // namespace wr

@@ -2408,6 +2408,8 @@ ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& a
   return IPC_OK();
 }
 
+// NOTE: This method is being run in the SystemGroup, and thus cannot directly
+// touch pages. See GetSpecificMessageEventTarget.
 mozilla::ipc::IPCResult
 ContentChild::RecvNotifyVisited(const URIParams& aURI)
 {
@@ -3567,7 +3569,8 @@ already_AddRefed<nsIEventTarget>
 ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
   if (aMsg.type() == PJavaScript::Msg_DropTemporaryStrongReferences__ID
-      || aMsg.type() == PJavaScript::Msg_DropObject__ID) {
+      || aMsg.type() == PJavaScript::Msg_DropObject__ID
+      || aMsg.type() == PContent::Msg_NotifyVisited__ID) {
     return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
   }
 
