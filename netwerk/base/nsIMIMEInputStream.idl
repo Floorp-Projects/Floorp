@@ -15,19 +15,6 @@
 interface nsIMIMEInputStream : nsIInputStream
 {
     /**
-     * When true a "Content-Length" header is automatically added to the
-     * stream. The value of the content-length is automatically calculated
-     * using the available() method on the data stream. The value is
-     * recalculated every time the stream is rewinded to the start.
-     * Not allowed to be changed once the stream has been started to be read.
-     *
-     * @deprecated A Content-Length header is automatically added when
-     * attaching the stream to a channel, so this setting no longer has any
-     * effect, and may not be set to false.
-     */
-    attribute boolean addContentLength;
-
-    /**
      * Adds an additional header to the stream on the form "name: value". May
      * not be called once the stream has been started to be read.
      * @param name   name of the header
