@@ -13,7 +13,6 @@ toolkit.jar:
     content/extensions/ext-cookies.js
     content/extensions/ext-downloads.js
     content/extensions/ext-extension.js
-    content/extensions/ext-geolocation.js
     content/extensions/ext-i18n.js
     content/extensions/ext-idle.js
     content/extensions/ext-management.js
