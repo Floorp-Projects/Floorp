@@ -169,6 +169,19 @@ nsresult
 NS_EscapeURL(const nsACString& aStr, uint32_t aFlags, nsACString& aResult,
              const mozilla::fallible_t&);
 
+// Forward declaration for nsASCIIMask.h
+typedef std::array<bool, 128> ASCIIMaskArray;
+
+/**
+ * The same as NS_EscapeURL, except it also filters out characters that match
+ * aFilterMask.
+ */
+nsresult
+NS_EscapeAndFilterURL(const nsACString& aStr, uint32_t aFlags,
+                      const ASCIIMaskArray* aFilterMask,
+                      nsACString& aResult, const mozilla::fallible_t&);
+
+
 inline const nsACString&
 NS_UnescapeURL(const nsACString& aStr, uint32_t aFlags, nsACString& aResult)
 {
