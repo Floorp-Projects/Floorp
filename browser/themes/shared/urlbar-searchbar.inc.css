@@ -125,6 +125,8 @@
   opacity: 0;
 }
 
+/* Page actions */
+
 #page-action-buttons {
   -moz-box-align: center;
   /* Add more space between the last icon and the urlbar's edge. */
@@ -220,7 +222,19 @@
   animation-name: bookmark-animation-rtl;
 }
 
+/* Reader mode icon */
+
+#reader-mode-button {
+  list-style-image: url(chrome://browser/skin/readerMode.svg);
+}
+
+#reader-mode-button[readeractive] {
+  fill: var(--toolbarbutton-icon-fill-attention);
+  fill-opacity: 1;
+}
+
 /* Zoom button */
+
 #urlbar-zoom-button {
   margin: 0 3px;
   font-size: .8em;
