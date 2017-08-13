@@ -152,6 +152,9 @@ interface nsIThread : nsISerialEventTarget
    */
   [noscript] void idleDispatch(in alreadyAddRefed_nsIRunnable event);
 
+  [noscript] void enableEventPrioritization();
+  [noscript] bool isEventPrioritizationEnabled();
+
   /**
    * Use this attribute to dispatch runnables to the thread. Eventually, the
    * eventTarget attribute will be the only way to dispatch events to a
