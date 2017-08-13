@@ -22,7 +22,8 @@ Cu.import("resource://services-common/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                           "resource://gre/modules/LightweightThemeManager.jsm");
 
-const PREFS_GUID = CommonUtils.encodeBase64URL(Services.appinfo.ID);
+XPCOMUtils.defineLazyGetter(this, "PREFS_GUID",
+                            () => CommonUtils.encodeBase64URL(Services.appinfo.ID));
 
 this.PrefRec = function PrefRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
