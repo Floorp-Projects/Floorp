@@ -695,12 +695,12 @@ nsSimpleURI::Resolve(const nsACString &relativePath, nsACString &result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetAsciiSpec(nsACString &result)
+nsSimpleURI::GetAsciiSpec(nsACString &aResult)
 {
-    nsAutoCString buf;
-    nsresult rv = GetSpec(buf);
+    nsresult rv = GetSpec(aResult);
     if (NS_FAILED(rv)) return rv;
-    return NS_EscapeURL(buf, esc_OnlyNonASCII|esc_AlwaysCopy, result, fallible);
+    MOZ_ASSERT(IsASCII(aResult), "The spec should be ASCII");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
