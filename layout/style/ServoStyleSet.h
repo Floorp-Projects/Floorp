@@ -528,9 +528,9 @@ private:
    * When aRoot is null, the entire document is pre-traversed.  Otherwise,
    * only the subtree rooted at aRoot is pre-traversed.
    */
-  void PreTraverse(dom::Element* aRoot = nullptr,
-                   EffectCompositor::AnimationRestyleType =
-                     EffectCompositor::AnimationRestyleType::Throttled);
+  void PreTraverse(ServoTraversalFlags aFlags,
+                   dom::Element* aRoot = nullptr);
+
   // Subset of the pre-traverse steps that involve syncing up data
   void PreTraverseSync();
 

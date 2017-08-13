@@ -285,8 +285,7 @@ ServoStyleSet::PreTraverseSync()
 }
 
 void
-ServoStyleSet::PreTraverse(Element* aRoot,
-                           EffectCompositor::AnimationRestyleType aRestyleType)
+ServoStyleSet::PreTraverse(ServoTraversalFlags aFlags, Element* aRoot)
 {
   PreTraverseSync();
 
@@ -296,12 +295,12 @@ ServoStyleSet::PreTraverse(Element* aRoot,
     mPresContext->Document()->GetAnimationController();
   if (aRoot) {
     mPresContext->EffectCompositor()
-                ->PreTraverseInSubtree(aRoot, aRestyleType);
+                ->PreTraverseInSubtree(aFlags, aRoot);
     if (smilController) {
       smilController->PreTraverseInSubtree(aRoot);
     }
   } else {
-    mPresContext->EffectCompositor()->PreTraverse(aRestyleType);
+    mPresContext->EffectCompositor()->PreTraverse(aFlags);
     if (smilController) {
       smilController->PreTraverse();
     }
@@ -334,15 +333,6 @@ ServoStyleSet::PrepareAndTraverseSubtree(
     Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags);
   MOZ_ASSERT(!(isInitial || forReconstruct) || !postTraversalRequired);
 
-  // We don't need to trigger a second traversal if this restyle only for
-  // flushing throttled animations. That's because the first traversal only
-  // performs the animation-only restyle, skipping the normal restyle, and so
-  // will not generate any SequentialTask that could update animation state
-  // requiring a subsequent traversal.
-  if (forThrottledAnimationFlush) {
-    return postTraversalRequired;
-  }
-
   auto root = const_cast<Element*>(aRoot);
 
   // If there are still animation restyles needed, trigger a second traversal to
@@ -353,10 +343,8 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   // traversal caused, for example, the font-size to change, the SMIL style
   // won't be updated until the next tick anyway.
   EffectCompositor* compositor = mPresContext->EffectCompositor();
-  EffectCompositor::AnimationRestyleType restyleType =
-    EffectCompositor::AnimationRestyleType::Throttled;
-  if (forReconstruct ? compositor->PreTraverseInSubtree(root, restyleType)
-                     : compositor->PreTraverse(restyleType)) {
+  if (forReconstruct ? compositor->PreTraverseInSubtree(aFlags, root)
+                     : compositor->PreTraverse(aFlags)) {
     if (Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags)) {
       MOZ_ASSERT(!forReconstruct);
       if (isInitial) {
@@ -824,11 +812,7 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 bool
 ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
 {
-  if (!!(aFlags & ServoTraversalFlags::AnimationOnly)) {
-    PreTraverse(nullptr, EffectCompositor::AnimationRestyleType::Full);
-  } else {
-    PreTraverse();
-  }
+  PreTraverse(aFlags);
 
   // Restyle the document from the root element and each of the document level
   // NAC subtree roots.
@@ -847,7 +831,7 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
 {
   MOZ_ASSERT(!aRoot->HasServoData());
 
-  PreTraverse();
+  PreTraverse(ServoTraversalFlags::Empty);
 
   DebugOnly<bool> postTraversalRequired =
     PrepareAndTraverseSubtree(aRoot, ServoTraversalFlags::Empty);
@@ -857,7 +841,7 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
 void
 ServoStyleSet::StyleNewChildren(Element* aParent)
 {
-  PreTraverse();
+  PreTraverse(ServoTraversalFlags::Empty);
 
   PrepareAndTraverseSubtree(aParent, ServoTraversalFlags::UnstyledChildrenOnly);
   // We can't assert that Servo_TraverseSubtree returns false, since aParent
@@ -867,7 +851,7 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
 void
 ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
 {
-  PreTraverse();
+  PreTraverse(ServoTraversalFlags::Empty);
 
   // In general the element is always styled by the time we're applying XBL
   // bindings, because we need to style the element to know what the binding
@@ -886,7 +870,7 @@ ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
 void
 ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
 {
-  PreTraverse(aRoot);
+  PreTraverse(ServoTraversalFlags::Empty, aRoot);
 
   auto flags = ServoTraversalFlags::Forgetful |
                ServoTraversalFlags::AggressivelyForgetful |
