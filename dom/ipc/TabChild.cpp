@@ -1680,7 +1680,7 @@ TabChild::MaybeDispatchCoalescedWheelEvent()
     return;
   }
   const WidgetWheelEvent* wheelEvent =
-    mCoalescedWheelData.GetCoalescedWheelEvent();
+    mCoalescedWheelData.GetCoalescedEvent();
   MOZ_ASSERT(wheelEvent);
   DispatchWheelEvent(*wheelEvent,
                      mCoalescedWheelData.GetScrollableLayerGuid(),
