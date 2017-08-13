@@ -86,7 +86,7 @@ public:
    * Return true if any of aFrame's offset property styles should be considered
    * as being animated for constructing active layers.
    */
-  static bool IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame);
+  static bool IsOffsetStyleAnimated(nsIFrame* aFrame);
   /**
    * Return true if aFrame's background-position-x or background-position-y
    * property is animated.

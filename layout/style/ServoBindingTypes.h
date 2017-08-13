@@ -36,6 +36,7 @@ struct ComputedTiming;
 struct Keyframe;
 struct PropertyValuePair;
 struct PropertyStyleAnimationValuePair;
+enum class OriginFlags : uint8_t;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 } // namespace mozilla
 namespace nsStyleTransformMatrix {

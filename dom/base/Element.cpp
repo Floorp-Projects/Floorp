@@ -4202,15 +4202,15 @@ BitIsPropagated(const Element* aElement)
 
 template<typename Traits>
 void
-NoteDirtyContent(nsIContent* aContent)
+NoteDirtyElement(Element* aElement)
 {
-  MOZ_ASSERT(aContent->IsInComposedDoc());
-  nsIDocument* doc = aContent->GetComposedDoc();
+  MOZ_ASSERT(aElement->IsInComposedDoc());
+  nsIDocument* doc = aElement->GetComposedDoc();
   nsIPresShell* shell = doc->GetShell();
   NS_ENSURE_TRUE_VOID(shell);
   shell->EnsureStyleFlush();
 
-  Element* parent = aContent->GetFlattenedTreeParentElementForStyle();
+  Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
   if (!parent || !parent->HasServoData()) {
     // The bits only apply to styled elements.
     return;
@@ -4226,13 +4226,13 @@ NoteDirtyContent(nsIContent* aContent)
 }
 
 void
-nsIContent::NoteDirtyForServo()
+Element::NoteDirtyForServo()
 {
-  NoteDirtyContent<DirtyDescendantsBit>(this);
+  NoteDirtyElement<DirtyDescendantsBit>(this);
 }
 
 void
-nsIContent::NoteAnimationOnlyDirtyForServo()
+Element::NoteAnimationOnlyDirtyForServo()
 {
-  NoteDirtyContent<AnimationOnlyDirtyDescendantsBit>(this);
+  NoteDirtyElement<AnimationOnlyDirtyDescendantsBit>(this);
 }
