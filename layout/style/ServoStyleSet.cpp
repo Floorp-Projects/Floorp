@@ -171,7 +171,9 @@ ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged)
     Servo_StyleSet_MediumFeaturesChanged(mRawSet.get(), &viewportUnitsUsed);
 
   if (rulesChanged) {
-    ForceAllStyleDirty();
+    // XXXheycam Should be able to tell which origin to pass in here
+    // (bug 1389871).
+    MarkOriginsDirty(OriginFlags::All);
     return eRestyle_Subtree;
   }
 
@@ -217,7 +219,7 @@ ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
   }
 
   mAuthorStyleDisabled = aStyleDisabled;
-  ForceAllStyleDirty();
+  MarkOriginsDirty(OriginFlags::Author);
 
   return NS_OK;
 }
@@ -871,6 +873,10 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
     bool isInitial = !root->HasServoData();
     auto flags = aBaseFlags;
 
+    // If there were text nodes inserted into the document (but not elements),
+    // there may be lazy frame construction to do even if no styling is required.
+    postTraversalRequired |= root->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
+
     // Allow the parallel traversal, unless we're traversing traversing one of
     // the native anonymous document style roots, which are tiny and not worth
     // parallelizing over.
@@ -1033,10 +1039,12 @@ ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
 }
 
 void
-ServoStyleSet::ForceAllStyleDirty()
+ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
 {
   SetStylistStyleSheetsDirty();
-  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), mAuthorStyleDisabled);
+  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(),
+                                        mAuthorStyleDisabled,
+                                        aChangedOrigins);
 }
 
 void
@@ -1044,13 +1052,12 @@ ServoStyleSet::RecordStyleSheetChange(
     ServoStyleSheet* aSheet,
     StyleSheet::ChangeType aChangeType)
 {
-  SetStylistStyleSheetsDirty();
   switch (aChangeType) {
     case StyleSheet::ChangeType::RuleAdded:
     case StyleSheet::ChangeType::RuleRemoved:
     case StyleSheet::ChangeType::RuleChanged:
       // FIXME(emilio): We can presumably do better in a bunch of these.
-      return ForceAllStyleDirty();
+      return MarkOriginsDirty(aSheet->GetOrigin());
     case StyleSheet::ChangeType::ApplicableStateChanged:
     case StyleSheet::ChangeType::Added:
     case StyleSheet::ChangeType::Removed:

@@ -178,8 +178,3 @@ browser.jar:
 % overlay chrome://browser/content/browser.xul chrome://browser/content/report-phishing-overlay.xul
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/aboutNetError.xhtml
-
-# L10n resource overrides.
-% override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
-% override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
-% override chrome://mozapps/locale/downloads/settingsChange.dtd chrome://browser/locale/downloads/settingsChange.dtd

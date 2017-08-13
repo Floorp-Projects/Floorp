@@ -980,9 +980,6 @@ public:
 
   virtual bool OwnedOnlyByTheDOMTree() { return false; }
 
-  void NoteDirtyForServo();
-  void NoteAnimationOnlyDirtyForServo();
-
 protected:
   /**
    * Hook for implementing GetID.  This is guaranteed to only be

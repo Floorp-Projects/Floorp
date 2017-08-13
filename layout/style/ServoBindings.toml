@@ -90,6 +90,7 @@ hide-types = [
 bitfield-enums = [
     "nsChangeHint",
     "nsRestyleHint",
+    "OriginFlags",
 ]
 constified-enums = [
     "UpdateAnimationsTasks",
@@ -137,6 +138,7 @@ whitelist-types = [
     "mozilla::dom::StyleChildrenIterator",
     "mozilla::HalfCorner",
     "mozilla::MallocSizeOf",
+    "mozilla::OriginFlags",
     "mozilla::PropertyStyleAnimationValuePair",
     "mozilla::ServoTraversalFlags",
     "mozilla::StylePrefs",
@@ -367,6 +369,7 @@ structs-types = [
     "mozilla::css::URLValue",
     "mozilla::css::URLValueData",
     "mozilla::MallocSizeOf",
+    "mozilla::OriginFlags",
     "mozilla::Side",
     "mozilla::UniquePtr",
     "nsIContent",
