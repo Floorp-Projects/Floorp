@@ -835,8 +835,8 @@ this.UITour = {
         node: aWindow.PanelUI.panel,
         events: [
           [ "popuphidden", this.onPanelHidden ],
-          [ "popuphiding", this.hideAppMenuAnnotations ],
-          [ "ViewShowing", this.hideAppMenuAnnotations ]
+          [ "popuphiding", this.onAppMenuHiding ],
+          [ "ViewShowing", this.onAppMenuSubviewShowing ]
         ]
       },
       {
@@ -844,8 +844,8 @@ this.UITour = {
         node: aWindow.BrowserPageActions.panelNode,
         events: [
           [ "popuphidden", this.onPanelHidden ],
-          [ "popuphiding", this.hidePageActionPanelAnnotations ],
-          [ "ViewShowing", this.hidePageActionPanelAnnotations ]
+          [ "popuphiding", this.onPageActionPanelHiding ],
+          [ "ViewShowing", this.onPageActionPanelSubviewShowing ]
         ]
       },
       {
@@ -853,7 +853,7 @@ this.UITour = {
         node: aWindow.gIdentityHandler._identityPopup,
         events: [
           [ "popuphidden", this.onPanelHidden ],
-          [ "popuphiding", this.hideControlCenterAnnotations ]
+          [ "popuphiding", this.onControlCenterHiding ]
         ]
       },
     ];
@@ -1125,7 +1125,7 @@ this.UITour = {
    * @see UITour.highlightEffects
    */
   async showHighlight(aChromeWindow, aTarget, aEffect = "none") {
-    let showHighlightPanel = (aAnchorEl) => {
+    let showHighlightElement = (aAnchorEl) => {
       let highlighter = aChromeWindow.document.getElementById("UITourHighlight");
 
       let effect = aEffect;
@@ -1185,17 +1185,21 @@ this.UITour = {
     try {
       await this._ensureTarget(aChromeWindow, aTarget);
       let anchorEl = await this._correctAnchor(aChromeWindow, aTarget);
-      showHighlightPanel(anchorEl);
+      showHighlightElement(anchorEl);
     } catch (e) {
       log.warn(e);
     }
   },
 
-  hideHighlight(aWindow) {
+  _hideHighlightElement(aWindow) {
     let highlighter = aWindow.document.getElementById("UITourHighlight");
     this._removeAnnotationPanelMutationObserver(highlighter.parentElement);
     highlighter.parentElement.hidePopup();
     highlighter.removeAttribute("active");
+  },
+
+  hideHighlight(aWindow) {
+    this._hideHighlightElement(aWindow);
     this._setMenuStateForAnnotation(aWindow, false, "appMenu");
     this._setMenuStateForAnnotation(aWindow, false, "pageActionPanel");
   },
@@ -1215,7 +1219,7 @@ this.UITour = {
    */
   async showInfo(aChromeWindow, aAnchor, aTitle = "", aDescription = "",
            aIconURL = "", aButtons = [], aOptions = {}) {
-    let showInfoPanel = (aAnchorEl) => {
+    let showInfoElement = (aAnchorEl) => {
       aAnchorEl.focus();
 
       let document = aChromeWindow.document;
@@ -1314,7 +1318,7 @@ this.UITour = {
     try {
       await this._ensureTarget(aChromeWindow, aAnchor);
       let anchorEl = await this._correctAnchor(aChromeWindow, aAnchor);
-      showInfoPanel(anchorEl);
+      showInfoElement(anchorEl);
     } catch (e) {
       log.warn(e);
     }
@@ -1326,17 +1330,20 @@ this.UITour = {
     return tooltip.getAttribute("targetName") == aTargetName && tooltip.state != "closed";
   },
 
-  hideInfo(aWindow) {
+  _hideInfoElement(aWindow) {
     let document = aWindow.document;
     let tooltip = document.getElementById("UITourTooltip");
     this._removeAnnotationPanelMutationObserver(tooltip);
     tooltip.hidePopup();
-    this._setMenuStateForAnnotation(aWindow, false, "appMenu");
-    this._setMenuStateForAnnotation(aWindow, false, "pageActionPanel");
-
     let tooltipButtons = document.getElementById("UITourTooltipButtons");
     while (tooltipButtons.firstChild)
       tooltipButtons.firstChild.remove();
+  },
+
+  hideInfo(aWindow) {
+    this._hideInfoElement(aWindow);
+    this._setMenuStateForAnnotation(aWindow, false, "appMenu");
+    this._setMenuStateForAnnotation(aWindow, false, "pageActionPanel");
   },
 
   showMenu(aWindow, aMenuName, aOpenCallback = null) {
@@ -1358,11 +1365,13 @@ this.UITour = {
       };
       if (aMenuName == "appMenu") {
         menu.node = aWindow.PanelUI.panel;
-        menu.hideMenuAnnotations = this.hideAppMenuAnnotations;
+        menu.onPopupHiding = this.onAppMenuHiding;
+        menu.onViewShowing = this.onAppMenuSubviewShowing;
         menu.show = () => aWindow.PanelUI.show();
       } else {
         menu.node = aWindow.BrowserPageActions.panelNode;
-        menu.hideMenuAnnotations = this.hidePageActionPanelAnnotations;
+        menu.onPopupHiding = this.onPageActionPanelHiding;
+        menu.onViewShowing = this.onPageActionPanelSubviewShowing;
         menu.show = () => aWindow.BrowserPageActions.showPanel();
       }
 
@@ -1375,8 +1384,8 @@ this.UITour = {
         menu.node.addEventListener("popupshown", aOpenCallback, { once: true });
       }
       menu.node.addEventListener("popuphidden", menu.onPanelHidden);
-      menu.node.addEventListener("popuphiding", menu.hideMenuAnnotations);
-      menu.node.addEventListener("ViewShowing", menu.hideMenuAnnotations);
+      menu.node.addEventListener("popuphiding", menu.onPopupHiding);
+      menu.node.addEventListener("ViewShowing", menu.onViewShowing);
       menu.show();
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
@@ -1386,7 +1395,7 @@ this.UITour = {
 
       // Add the listener even if the panel is already open since it will still
       // only get registered once even if it was UITour that opened it.
-      popup.addEventListener("popuphiding", this.hideControlCenterAnnotations);
+      popup.addEventListener("popuphiding", this.onControlCenterHiding);
       popup.addEventListener("popuphidden", this.onPanelHidden);
 
       popup.setAttribute("noautohide", "true");
@@ -1491,12 +1500,22 @@ this.UITour = {
     aWindow.openLinkIn("about:newtab", "current", {targetBrowser: aBrowser});
   },
 
-  _hideAnnotationsForPanel(aEvent, aTargetPositionCallback) {
+  _hideAnnotationsForPanel(aEvent, aShouldClosePanel, aTargetPositionCallback) {
     let win = aEvent.target.ownerGlobal;
+    let hideHighlightMethod = null;
+    let hideInfoMethod = null;
+    if (aShouldClosePanel) {
+      hideHighlightMethod = aWin => this.hideHighlight(aWin);
+      hideInfoMethod = aWin => this.hideInfo(aWin);
+    } else {
+      // Don't have to close panel, let's only hide annotation elements
+      hideHighlightMethod = aWin => this._hideHighlightElement(aWin);
+      hideInfoMethod = aWin => this._hideInfoElement(aWin);
+    }
     let annotationElements = new Map([
       // [annotationElement (panel), method to hide the annotation]
-      [win.document.getElementById("UITourHighlightContainer"), UITour.hideHighlight.bind(UITour)],
-      [win.document.getElementById("UITourTooltip"), UITour.hideInfo.bind(UITour)],
+      [win.document.getElementById("UITourHighlightContainer"), hideHighlightMethod],
+      [win.document.getElementById("UITourTooltip"), hideInfoMethod],
     ]);
     annotationElements.forEach((hideMethod, annotationElement) => {
       if (annotationElement.state != "closed") {
@@ -1515,16 +1534,24 @@ this.UITour = {
     });
   },
 
-  hideAppMenuAnnotations(aEvent) {
-    UITour._hideAnnotationsForPanel(aEvent, UITour.targetIsInAppMenu);
+  onAppMenuHiding(aEvent) {
+    UITour._hideAnnotationsForPanel(aEvent, true, UITour.targetIsInAppMenu);
   },
 
-  hidePageActionPanelAnnotations(aEvent) {
-    UITour._hideAnnotationsForPanel(aEvent, UITour.targetIsInPageActionPanel);
+  onAppMenuSubviewShowing(aEvent) {
+    UITour._hideAnnotationsForPanel(aEvent, false, UITour.targetIsInAppMenu);
   },
 
-  hideControlCenterAnnotations(aEvent) {
-    UITour._hideAnnotationsForPanel(aEvent, (aTarget) => {
+  onPageActionPanelHiding(aEvent) {
+    UITour._hideAnnotationsForPanel(aEvent, true, UITour.targetIsInPageActionPanel);
+  },
+
+  onPageActionPanelSubviewShowing(aEvent) {
+    UITour._hideAnnotationsForPanel(aEvent, false, UITour.targetIsInPageActionPanel);
+  },
+
+  onControlCenterHiding(aEvent) {
+    UITour._hideAnnotationsForPanel(aEvent, true, (aTarget) => {
       return aTarget.targetName.startsWith("controlCenter-");
     });
   },
