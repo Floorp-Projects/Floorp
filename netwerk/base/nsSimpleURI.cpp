@@ -312,7 +312,8 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
     ToLowerCase(mScheme);
 
     // This sets mPath, mQuery and mRef.
-    return SetPathQueryRef(Substring(spec, colonPos + 1));
+    return SetPathQueryRefEscaped(Substring(spec, colonPos + 1),
+                                  /* needsEscape = */ false);
 }
 
 NS_IMETHODIMP
@@ -461,10 +462,22 @@ nsSimpleURI::SetPathQueryRef(const nsACString &aPath)
 {
     NS_ENSURE_STATE(mMutable);
 
+    return SetPathQueryRefEscaped(aPath, true);
+}
+nsresult
+nsSimpleURI::SetPathQueryRefEscaped(const nsACString &aPath, bool aNeedsEscape)
+{
+    nsresult rv;
     nsAutoCString path;
-    if (!path.Assign(aPath, fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
+    if (aNeedsEscape) {
+        rv = NS_EscapeURL(aPath, esc_OnlyNonASCII, path, fallible);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+    } else {
+        path.Assign(aPath);
     }
+
     int32_t queryPos = path.FindChar('?');
     int32_t hashPos = path.FindChar('#');
 
@@ -502,7 +515,7 @@ nsSimpleURI::SetPathQueryRef(const nsACString &aPath)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv = SetQuery(query);
+    rv = SetQuery(query);
     if (NS_FAILED(rv)) {
         return rv;
     }
