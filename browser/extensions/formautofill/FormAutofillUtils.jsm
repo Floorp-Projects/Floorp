@@ -50,6 +50,7 @@ this.FormAutofillUtils = {
     "cc-number": "creditCard",
     "cc-exp-month": "creditCard",
     "cc-exp-year": "creditCard",
+    "cc-exp": "creditCard",
   },
   _addressDataLoaded: false,
   _collators: {},
@@ -204,6 +205,16 @@ this.FormAutofillUtils = {
     return null;
   },
 
+  findSelectOption(selectEl, record, fieldName) {
+    if (this.isAddressField(fieldName)) {
+      return this.findAddressSelectOption(selectEl, record, fieldName);
+    }
+    if (this.isCreditCardField(fieldName)) {
+      return this.findCreditCardSelectOption(selectEl, record, fieldName);
+    }
+    return null;
+  },
+
   /**
    * Try to find the abbreviation of the given state name
    * @param   {string[]} stateValues A list of inferable state values.
@@ -254,7 +265,7 @@ this.FormAutofillUtils = {
    * @param   {string} fieldName
    * @returns {DOMElement}
    */
-  findSelectOption(selectEl, address, fieldName) {
+  findAddressSelectOption(selectEl, address, fieldName) {
     let value = address[fieldName];
     if (!value) {
       return null;
@@ -306,6 +317,66 @@ this.FormAutofillUtils = {
             if (this.identifyCountryCode(option.text, value) || this.identifyCountryCode(option.value, value)) {
               return option;
             }
+          }
+        }
+        break;
+      }
+    }
+
+    return null;
+  },
+
+  findCreditCardSelectOption(selectEl, creditCard, fieldName) {
+    let oneDigitMonth = creditCard["cc-exp-month"].toString();
+    let twoDigitsMonth = oneDigitMonth.padStart(2, "0");
+    let fourDigitsYear = creditCard["cc-exp-year"].toString();
+    let twoDigitsYear = fourDigitsYear.substr(2, 2);
+    let options = Array.from(selectEl.options);
+
+    switch (fieldName) {
+      case "cc-exp-month": {
+        for (let option of options) {
+          if ([option.text, option.label, option.value].some(s => {
+            let result = /[1-9]\d*/.exec(s);
+            return result && result[0] == oneDigitMonth;
+          })) {
+            return option;
+          }
+        }
+        break;
+      }
+      case "cc-exp-year": {
+        for (let option of options) {
+          if ([option.text, option.label, option.value].some(
+            s => s == twoDigitsYear || s == fourDigitsYear
+          )) {
+            return option;
+          }
+        }
+        break;
+      }
+      case "cc-exp": {
+        let patterns = [
+          oneDigitMonth + "/" + twoDigitsYear,    // 8/22
+          oneDigitMonth + "/" + fourDigitsYear,   // 8/2022
+          twoDigitsMonth + "/" + twoDigitsYear,   // 08/22
+          twoDigitsMonth + "/" + fourDigitsYear,  // 08/2022
+          oneDigitMonth + "-" + twoDigitsYear,    // 8-22
+          oneDigitMonth + "-" + fourDigitsYear,   // 8-2022
+          twoDigitsMonth + "-" + twoDigitsYear,   // 08-22
+          twoDigitsMonth + "-" + fourDigitsYear,  // 08-2022
+          twoDigitsYear + "-" + twoDigitsMonth,   // 22-08
+          fourDigitsYear + "-" + twoDigitsMonth,  // 2022-08
+          fourDigitsYear + "/" + oneDigitMonth,   // 2022/8
+          twoDigitsMonth + twoDigitsYear,         // 0822
+          twoDigitsYear + twoDigitsMonth,         // 2208
+        ];
+
+        for (let option of options) {
+          if ([option.text, option.label, option.value].some(
+            str => patterns.some(pattern => str.includes(pattern))
+          )) {
+            return option;
           }
         }
         break;

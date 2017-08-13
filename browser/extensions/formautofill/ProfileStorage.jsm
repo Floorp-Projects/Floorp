@@ -1471,6 +1471,13 @@ class CreditCards extends AutofillRecords {
       hasNewComputedFields = true;
     }
 
+    let year = creditCard["cc-exp-year"];
+    let month = creditCard["cc-exp-month"];
+    if (!creditCard["cc-exp"] && month && year) {
+      creditCard["cc-exp"] = String(year) + "-" + String(month).padStart(2, "0");
+      hasNewComputedFields = true;
+    }
+
     return hasNewComputedFields;
   }
 
