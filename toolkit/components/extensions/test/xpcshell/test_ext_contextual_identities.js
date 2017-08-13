@@ -2,67 +2,38 @@
 
 do_get_profile();
 
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://modules/AddonManager.jsm");
+add_task(async function startup() {
+  await ExtensionTestUtils.startAddonManager();
+});
+
 add_task(async function test_contextualIdentities_without_permissions() {
-  function backgroundScript() {
+  function background() {
     browser.test.assertTrue(!browser.contextualIdentities,
                             "contextualIdentities API is not available when the contextualIdentities permission is not required");
-    browser.test.notifyPass("contextualIdentities_permission");
+    browser.test.notifyPass("contextualIdentities_without_permission");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
+    useAddonManager: "temporary",
+    background,
     manifest: {
+      applications: {
+        gecko: {id: "testing@thing.com"},
+      },
       permissions: [],
     },
   });
 
   await extension.startup();
-  await extension.awaitFinish("contextualIdentities_permission");
+  await extension.awaitFinish("contextualIdentities_without_permission");
   await extension.unload();
-});
-
-
-add_task(async function test_contextualIdentity_no_containers() {
-  async function backgroundScript() {
-    let ci = await browser.contextualIdentities.get("foobar");
-    browser.test.assertEq(false, ci, "No identity should be returned here");
-
-    ci = await browser.contextualIdentities.get("firefox-container-1");
-    browser.test.assertEq(false, ci, "We don't have any identity");
-
-    let cis = await browser.contextualIdentities.query({});
-    browser.test.assertEq(false, cis, "no containers, 0 containers");
-
-    ci = await browser.contextualIdentities.create({name: "foobar", color: "red", icon: "icon"});
-    browser.test.assertEq(false, ci, "We don't have any identity");
-
-    ci = await browser.contextualIdentities.update("firefox-container-1", {name: "barfoo", color: "blue", icon: "icon icon"});
-    browser.test.assertEq(false, ci, "We don't have any identity");
-
-    ci = await browser.contextualIdentities.remove("firefox-container-1");
-    browser.test.assertEq(false, ci, "We have an identity");
-
-    browser.test.notifyPass("contextualIdentities");
-  }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
-    manifest: {
-      permissions: ["contextualIdentities"],
-    },
-  });
-
-  Services.prefs.setBoolPref("privacy.userContext.enabled", false);
-
-  await extension.startup();
-  await extension.awaitFinish("contextualIdentities");
-  await extension.unload();
-
-  Services.prefs.clearUserPref("privacy.userContext.enabled");
 });
 
 add_task(async function test_contextualIdentity_events() {
-  async function backgroundScript() {
+  const CONTAINERS_PREF = "privacy.userContext.enabled";
+  async function background() {
     function createOneTimeListener(type) {
       return new Promise((resolve, reject) => {
         try {
@@ -113,23 +84,29 @@ add_task(async function test_contextualIdentity_events() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
+    background,
+    useAddonManager: "temporary",
     manifest: {
+      applications: {
+        gecko: {id: "testing@thing.com"},
+      },
       permissions: ["contextualIdentities"],
     },
   });
 
-  Services.prefs.setBoolPref("privacy.userContext.enabled", true);
+  Services.prefs.setBoolPref(CONTAINERS_PREF, true);
 
   await extension.startup();
   await extension.awaitFinish("contextualIdentities_events");
   await extension.unload();
 
-  Services.prefs.clearUserPref("privacy.userContext.enabled");
+  Services.prefs.clearUserPref(CONTAINERS_PREF);
 });
 
 add_task(async function test_contextualIdentity_with_permissions() {
-  async function backgroundScript() {
+  const CONTAINERS_PREF = "privacy.userContext.enabled";
+  const initial = Services.prefs.getBoolPref(CONTAINERS_PREF);
+  async function background(ver) {
     let ci = await browser.contextualIdentities.get("foobar");
     browser.test.assertEq(null, ci, "No identity should be returned here");
 
@@ -189,19 +166,74 @@ add_task(async function test_contextualIdentity_with_permissions() {
 
     browser.test.notifyPass("contextualIdentities");
   }
+  function makeExtension(id) {
+    return ExtensionTestUtils.loadExtension({
+      useAddonManager: "temporary",
+      background,
+      manifest: {
+        applications: {
+          gecko: {id},
+        },
+        permissions: ["contextualIdentities"],
+      },
+    });
+  }
 
-  let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
-    manifest: {
-      permissions: ["contextualIdentities"],
-    },
-  });
-
-  Services.prefs.setBoolPref("privacy.userContext.enabled", true);
-
+  let extension = makeExtension("containers-test@mozilla.org");
   await extension.startup();
   await extension.awaitFinish("contextualIdentities");
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
   await extension.unload();
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), initial, "Pref should now be initial state");
 
-  Services.prefs.clearUserPref("privacy.userContext.enabled");
+  Services.prefs.clearUserPref(CONTAINERS_PREF);
+});
+
+add_task(async function test_contextualIdentity_extensions_enable_containers() {
+  const CONTAINERS_PREF = "privacy.userContext.enabled";
+  const initial = Services.prefs.getBoolPref(CONTAINERS_PREF);
+  async function background(ver) {
+    let ci = await browser.contextualIdentities.get("firefox-container-1");
+    browser.test.assertTrue(!!ci, "We have an identity");
+
+    browser.test.notifyPass("contextualIdentities");
+  }
+  function makeExtension(id) {
+    return ExtensionTestUtils.loadExtension({
+      useAddonManager: "temporary",
+      background,
+      manifest: {
+        applications: {
+          gecko: {id},
+        },
+        permissions: ["contextualIdentities"],
+      },
+    });
+  }
+
+  let extension = makeExtension("containers-test@mozilla.org");
+  await extension.startup();
+  await extension.awaitFinish("contextualIdentities");
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
+  await extension.unload();
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), initial, "Pref should now be initial state");
+
+  // Lets set containers explicitly to be on and test we keep it that way after removal
+  Services.prefs.setBoolPref(CONTAINERS_PREF, true);
+
+  let extension2 = makeExtension("containers-test-2@mozilla.org");
+  let extension3 = makeExtension("containers-test-3@mozilla.org");
+  await extension2.startup();
+  await extension2.awaitFinish("contextualIdentities");
+  await extension3.startup();
+  await extension3.awaitFinish("contextualIdentities");
+
+  // Flip the ordering to check it's still enabled
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled 1");
+  await extension3.unload();
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled 2");
+  await extension2.unload();
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled 3");
+
+  Services.prefs.clearUserPref(CONTAINERS_PREF);
 });
