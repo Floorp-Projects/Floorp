@@ -7,17 +7,14 @@ const ID = "bootstrap1@tests.mozilla.org";
 let profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-// By default disable add-ons from the profile and the system-wide scope
-const SCOPES = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_SYSTEM;
-Services.prefs.setIntPref("extensions.enabledScopes", SCOPES);
-Services.prefs.setIntPref("extensions.autoDisableScopes", SCOPES);
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+startupManager();
+
+// By default disable add-ons from the profile
+Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_PROFILE);
 
 // Installing an add-on through the API should mark it as seen
 add_task(async function() {
-  await promiseStartupManager();
-
   let install = await promiseInstallFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
@@ -50,57 +47,16 @@ add_task(async function() {
   do_check_true(addon.seen);
 
   addon.uninstall();
-
   await promiseShutdownManager();
 });
 
-// Sideloading an add-on in the systemwide location should mark it as unseen
-add_task(async function() {
-  let savedStartupScanScopes = Services.prefs.getIntPref("extensions.startupScanScopes");
-  Services.prefs.setIntPref("extensions.startupScanScopes", 0);
-
-  let systemParentDir = gTmpD.clone();
-  systemParentDir.append("systemwide-extensions");
-  registerDirectory("XRESysSExtPD", systemParentDir.clone());
-  do_register_cleanup(() => {
-    systemParentDir.remove(true);
-  });
-
-  let systemDir = systemParentDir.clone();
-  systemDir.append(Services.appinfo.ID);
-
-  let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), systemDir, ID);
-  // Make sure the startup code will detect sideloaded updates
-  setExtensionModifiedTime(path, Date.now() - 10000);
-
-  await promiseStartupManager();
-  await AddonManagerPrivate.getNewSideloads();
-
-  let addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "1.0");
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
-
-  await promiseRestartManager();
-
-  addon = await promiseAddonByID(ID);
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
-
-  await promiseShutdownManager();
-  path.remove(true);
-
-  Services.prefs.setIntPref("extensions.startupScanScopes", savedStartupScanScopes);
-});
-
-// Sideloading an add-on in the profile should mark it as unseen and it should
-// remain unseen after an update is sideloaded.
+// Sideloading an add-on should mark it as unseen
 add_task(async function() {
   let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 
-  await promiseStartupManager();
+  startupManager();
 
   let addon = await promiseAddonByID(ID);
   do_check_eq(addon.version, "1.0");
@@ -120,7 +76,7 @@ add_task(async function() {
   manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir, ID);
   setExtensionModifiedTime(path, Date.now());
 
-  await promiseStartupManager();
+  startupManager();
 
   addon = await promiseAddonByID(ID);
   do_check_eq(addon.version, "2.0");
@@ -131,14 +87,13 @@ add_task(async function() {
   await promiseShutdownManager();
 });
 
-// Sideloading an add-on in the profile should mark it as unseen and it should
-// remain unseen after a regular update.
+// Sideloading an add-on should mark it as unseen
 add_task(async function() {
   let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 
-  await promiseStartupManager();
+  startupManager();
 
   let addon = await promiseAddonByID(ID);
   do_check_eq(addon.version, "1.0");
@@ -171,14 +126,13 @@ add_task(async function() {
   await promiseShutdownManager();
 });
 
-// After a sideloaded addon has been seen, sideloading an update should
-// not reset it to unseen.
+// Sideloading an add-on should mark it as unseen
 add_task(async function() {
   let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 
-  await promiseStartupManager();
+  startupManager();
 
   let addon = await promiseAddonByID(ID);
   do_check_eq(addon.version, "1.0");
@@ -200,7 +154,7 @@ add_task(async function() {
   manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir, ID);
   setExtensionModifiedTime(path, Date.now());
 
-  await promiseStartupManager();
+  startupManager();
 
   addon = await promiseAddonByID(ID);
   do_check_eq(addon.version, "2.0");
@@ -211,14 +165,13 @@ add_task(async function() {
   await promiseShutdownManager();
 });
 
-// After a sideloaded addon has been seen, manually applying an update should
-// not reset it to unseen.
+// Sideloading an add-on should mark it as unseen
 add_task(async function() {
   let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 
-  await promiseStartupManager();
+  startupManager();
 
   let addon = await promiseAddonByID(ID);
   do_check_eq(addon.version, "1.0");
