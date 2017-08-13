@@ -1,6 +1,5 @@
 /* Menu panel and palette styles */
 
-#appMenuRecentlyClosedWindows,
 #appMenu-new-window-button {
   list-style-image: url(chrome://browser/skin/new-window.svg);
 }
@@ -63,7 +62,7 @@
 }
 
 #appMenu-fullscreen-button {
-  list-style-image: url(chrome://browser/skin/fullscreen-enter.svg);
+  list-style-image: url(chrome://browser/skin/fullscreen.svg);
 }
 
 #appMenu-fullscreen-button[checked] {
@@ -123,3 +122,8 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 #appMenuRestoreLastSession {
   list-style-image: url("chrome://browser/skin/reload.svg");
 }
+
+#appMenuRecentlyClosedWindows {
+  list-style-image: url(chrome://browser/skin/window.svg);
+}
+
