@@ -12,6 +12,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/MessageChannel.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -19,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
-  MessageChannel: "resource://gre/modules/MessageChannel.jsm",
 });
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
