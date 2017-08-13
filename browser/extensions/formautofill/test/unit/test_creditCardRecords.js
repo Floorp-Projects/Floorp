@@ -264,10 +264,13 @@ add_task(async function test_validate() {
 
   do_check_eq(creditCards[0]["cc-exp-month"], undefined);
   do_check_eq(creditCards[0]["cc-exp-year"], undefined);
+  do_check_eq(creditCards[0]["cc-exp"], undefined);
 
-  do_check_eq(creditCards[1]["cc-exp-month"], TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR["cc-exp-month"]);
-  do_check_eq(creditCards[1]["cc-exp-year"],
-    parseInt(TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR["cc-exp-year"], 10) + 2000);
+  let month = TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR["cc-exp-month"];
+  let year = parseInt(TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR["cc-exp-year"], 10) + 2000;
+  do_check_eq(creditCards[1]["cc-exp-month"], month);
+  do_check_eq(creditCards[1]["cc-exp-year"], year);
+  do_check_eq(creditCards[1]["cc-exp"], year + "-" + month.toString().padStart(2, "0"));
 
   do_check_eq(creditCards[2]["cc-number"].length, 16);
 
