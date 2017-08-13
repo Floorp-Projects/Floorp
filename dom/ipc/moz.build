@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom.ipc += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'CoalescedInputData.h',
     'CoalescedWheelData.h',
     'ContentBridgeChild.h',
     'ContentBridgeParent.h',
