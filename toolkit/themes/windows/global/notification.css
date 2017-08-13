@@ -4,68 +4,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-notification {
-  color: InfoText;
-  background-color: InfoBackground;
-  text-shadow: none;
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-}
-
-notificationbox[notificationside="top"] > notification {
-  border-top-style: none;
-}
-
-notificationbox[notificationside="bottom"] > notification {
-  border-bottom-style: none;
-}
-
-notification[type="info"] {
-  color: -moz-DialogText;
-  background-color: -moz-Dialog;
-}
-
-notification[type="critical"] {
-  color: white;
-  background-image: linear-gradient(rgb(212,0,0), rgb(152,0,0));
-}
-
-.messageText > .text-link {
-  color: inherit !important;
-  text-decoration: underline;
-}
-
-.messageImage {
-  width: 16px;
-  height: 16px;
-  margin-inline-start: 6px;
-  margin-inline-end: 1px;
-}
-
-/* Default icons for notifications */
-
-.messageImage[type="info"] {
-  list-style-image: url("chrome://global/skin/icons/information-16.png");
-}
-
-.messageImage[type="warning"] {
-  list-style-image: url("chrome://global/skin/icons/warning-16.png");
-}
-
-.messageImage[type="critical"] {
-  list-style-image: url("chrome://global/skin/icons/error-16.png");
-}
-
-.messageCloseButton {
-  -moz-appearance: none;
-  padding: 4px 2px;
-  border: none !important;
-}
-
-.messageCloseButton > .toolbarbutton-icon {
-  margin-inline-end: 5px;
-}
-
+%include ../../shared/notification.inc.css
 %include ../../shared/popupnotification.inc.css
 
 /* Override default icon size which is too small for this dropdown */
