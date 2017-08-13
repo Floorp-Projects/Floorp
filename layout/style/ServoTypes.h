@@ -70,6 +70,10 @@ enum class ServoTraversalFlags : uint32_t {
   ClearDirtyDescendants = 1 << 5,
   // Clears the animation-only dirty descendants bit in the subtree.
   ClearAnimationOnlyDirtyDescendants = 1 << 6,
+  // Flush throttled animations. By default, we only update throttled animations
+  // when we have other non-throttled work to do. With this flag, we
+  // unconditionally tick and process them.
+  FlushThrottledAnimations = 1 << 7,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoTraversalFlags)
