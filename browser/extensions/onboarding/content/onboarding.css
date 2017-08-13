@@ -345,30 +345,21 @@
 }
 
 /* Tour Icons */
-#onboarding-tour-search {
+#onboarding-tour-search,
+#onboarding-tour-singlesearch {
   background-image: url("img/icons_search.svg");
 }
 
 #onboarding-tour-search.onboarding-active,
-#onboarding-tour-search:hover {
+#onboarding-tour-search:hover,
+#onboarding-tour-singlesearch.onboarding-active,
+#onboarding-tour-singlesearch:hover {
   background-image: url("img/icons_search-colored.svg");
 }
 
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-search] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_search-notification.svg");
-}
-
-#onboarding-tour-singlesearch {
-  background-image: url("img/icons_singlesearch.svg");
-}
-
-#onboarding-tour-singlesearch.onboarding-active,
-#onboarding-tour-singlesearch:hover {
-  background-image: url("img/icons_singlesearch-colored.svg");
-}
-
+#onboarding-notification-bar[data-target-tour-id=onboarding-tour-search] #onboarding-notification-tour-icon,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-singlesearch] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_singlesearch-notification.svg");
+  background-image: url("img/icons_search-notification.svg");
 }
 
 #onboarding-tour-private-browsing {
@@ -438,16 +429,13 @@
 }
 
 #onboarding-tour-library {
-  background-image: url("img/icons_library.svg");
+  background-image: url("img/icons_search.svg");
 }
 
 #onboarding-tour-library.onboarding-active,
-#onboarding-tour-library:hover {
-  background-image: url("img/icons_library-colored.svg");
-}
-
+#onboarding-tour-library:hover,
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-library] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_library-notification.svg");
+  background-image: url("img/icons_search-colored.svg");
 }
 
 #onboarding-tour-performance {
@@ -460,7 +448,9 @@
 }
 
 #onboarding-notification-bar[data-target-tour-id=onboarding-tour-performance] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_performance-notification.svg");
+  /* TODO: Placeholder icon. It should be replaced upon assets are available.
+           This is tracking in Bug 1382520. */
+  background-image: url("img/icons_sync-notification.svg");
 }
 
 /* Tour Notifications */
