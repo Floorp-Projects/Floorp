@@ -297,15 +297,10 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
     }
     ToLowerCase(mScheme);
 
-    // filter out unexpected chars "\r\n\t" if necessary
-    nsAutoCString filteredSpec;
-    net_FilterURIString(aSpec, filteredSpec);
-
-    // nsSimpleURI currently restricts the charset to US-ASCII
     nsAutoCString spec;
-    rv = NS_EscapeURL(filteredSpec, esc_OnlyNonASCII, spec, fallible);
+    rv = net_FilterAndEscapeURI(aSpec, esc_OnlyNonASCII, spec);
     if (NS_FAILED(rv)) {
-      return rv;
+        return rv;
     }
 
     int32_t colonPos = spec.FindChar(':');
