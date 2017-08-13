@@ -58,6 +58,16 @@ enum class StylistState : uint8_t {
   StyleSheetsDirty,
 };
 
+// Bitfield type to represent Servo stylesheet origins.
+enum class OriginFlags : uint8_t {
+  UserAgent = 0x01,
+  User      = 0x02,
+  Author    = 0x04,
+  All       = 0x07,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OriginFlags)
+
 /**
  * The set of style sheets that apply to a document, backed by a Servo
  * Stylist.  A ServoStyleSet contains ServoStyleSheets.
@@ -99,7 +109,7 @@ public:
   void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) {
     // FIXME(emilio): When we properly support shadow dom we'll need to do
     // better.
-    ForceAllStyleDirty();
+    MarkOriginsDirty(OriginFlags::All);
   }
 
   bool StyleSheetsHaveChanged() const
@@ -287,13 +297,6 @@ public:
    * so no change hints will be processed.
    */
   void StyleSubtreeForReconstruct(dom::Element* aRoot);
-
-  /**
-   * Records that the contents of style sheets have changed since the last
-   * restyle.  Calling this will ensure that the Stylist rebuilds its
-   * selector maps.
-   */
-  void ForceAllStyleDirty();
 
   /**
    * Helper for correctly calling UpdateStylist without paying the cost of an
@@ -492,6 +495,13 @@ private:
 
   // Subset of the pre-traverse steps that involve syncing up data
   void PreTraverseSync();
+
+  /**
+   * Records that the contents of style sheets at the specified origin have
+   * changed since the last.  Calling this will ensure that the Stylist
+   * rebuilds its selector maps.
+   */
+  void MarkOriginsDirty(OriginFlags aChangedOrigins);
 
   /**
    * Note that the stylist needs a style flush due to style sheet changes.

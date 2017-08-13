@@ -38,6 +38,13 @@ def read_conf(conf_filename):
                 yield { 'type': 'property',
                         'property_name': property_name }
                 continue
+            m = re.match(r'custom ([A-Za-z0-9_]+) (.*)$', line)
+            if m:
+                name, desc = m.groups()
+                yield { 'type': 'custom',
+                        'name': name,
+                        'desc': desc }
+                continue
             raise ValueError('error parsing %s at line %d' % (conf_filename, line_num))
 
     return parse_counters(stream)
@@ -67,5 +74,7 @@ def generate_histograms(filename):
         elif counter['type'] == 'property':
             prop = counter['property_name']
             append_counters('PROPERTY_%s' % prop.replace('-', '_').upper(), "used the '%s' property" % prop)
+        elif counter['type'] == 'custom':
+            append_counters(counter['name'].upper(), counter['desc'])
 
     return items

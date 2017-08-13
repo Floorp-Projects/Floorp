@@ -463,4 +463,10 @@ ServoStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+OriginFlags
+ServoStyleSheet::GetOrigin()
+{
+  return Servo_StyleSheet_GetOrigin(Inner()->mContents);
+}
+
 } // namespace mozilla
