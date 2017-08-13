@@ -402,8 +402,6 @@ var gMainPane = {
     this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this);
     this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
 
-    setEventListener("focusSearch1", "command", gMainPane.focusFilterBox);
-    setEventListener("focusSearch2", "command", gMainPane.focusFilterBox);
     setEventListener("filter", "command", gMainPane.filter);
     setEventListener("handlersView", "select",
       gMainPane.onSelectionChanged);

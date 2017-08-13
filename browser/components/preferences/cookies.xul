@@ -27,7 +27,6 @@
   <keyset>
     <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
     <key key="&focusSearch1.key;" modifiers="accel" oncommand="gCookiesWindow.focusFilterBox();"/>
-    <key key="&focusSearch2.key;" modifiers="accel" oncommand="gCookiesWindow.focusFilterBox();"/>
   </keyset>
 
   <vbox flex="1" class="contentPane largeDialogContainer">
