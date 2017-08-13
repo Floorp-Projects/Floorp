@@ -74,6 +74,7 @@ UNIFIED_SOURCES += [
     'BlockingResourceBase.cpp',
     'HangAnnotations.cpp',
     'HangMonitor.cpp',
+    'InputEventStatistics.cpp',
     'LazyIdleThread.cpp',
     'MainThreadIdlePeriod.cpp',
     'nsEnvironment.cpp',
