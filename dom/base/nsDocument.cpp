@@ -13657,7 +13657,7 @@ nsIDocument::ClearStaleServoDataFromDocument()
 Selection*
 nsIDocument::GetSelection(ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
+  nsCOMPtr<nsPIDOMWindowInner> window = GetInnerWindow();
   if (!window) {
     return nullptr;
   }
