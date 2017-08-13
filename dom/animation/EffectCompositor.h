@@ -12,6 +12,7 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/PseudoElementHashEntry.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ServoTypes.h"
 #include "nsCSSPropertyID.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
@@ -227,27 +228,19 @@ public:
     nsCSSPropertyID aProperty,
     const AnimationPerformanceWarning& aWarning);
 
-  // The type which represents what kind of animation restyle we want.
-  enum class AnimationRestyleType {
-    Throttled, // Restyle elements that have posted animation restyles.
-    Full       // Restyle all elements with animations (i.e. even if the
-               // animations are throttled).
-  };
-
   // Do a bunch of stuff that we should avoid doing during the parallel
   // traversal (e.g. changing member variables) for all elements that we expect
   // to restyle on the next traversal.
   //
   // Returns true if there are elements needing a restyle for animation.
-  bool PreTraverse(AnimationRestyleType aRestyleType);
+  bool PreTraverse(ServoTraversalFlags aFlags);
 
   // Similar to the above but only for the (pseudo-)element.
   bool PreTraverse(dom::Element* aElement, CSSPseudoElementType aPseudoType);
 
   // Similar to the above but for all elements in the subtree rooted
   // at aElement.
-  bool PreTraverseInSubtree(dom::Element* aElement,
-                            AnimationRestyleType aRestyleType);
+  bool PreTraverseInSubtree(ServoTraversalFlags aFlags, dom::Element* aElement);
 
   // Returns the target element for restyling.
   //
