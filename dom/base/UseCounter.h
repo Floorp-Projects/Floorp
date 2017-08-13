@@ -18,10 +18,13 @@ enum UseCounter : int16_t {
     eUseCounter_##interface_##_##name_##_setter,
 #define USE_COUNTER_CSS_PROPERTY(name_, id_) \
     eUseCounter_property_##id_,
+#define USE_COUNTER_CUSTOM(name_, desc_) \
+    eUseCounter_custom_##name_,
 #include "mozilla/dom/UseCounterList.h"
 #undef USE_COUNTER_DOM_METHOD
 #undef USE_COUNTER_DOM_ATTRIBUTE
 #undef USE_COUNTER_CSS_PROPERTY
+#undef USE_COUNTER_CUSTOM
 
 #define DEPRECATED_OPERATION(op_) \
   eUseCounter_##op_,

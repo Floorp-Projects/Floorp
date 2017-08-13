@@ -66,12 +66,10 @@ def attributeParamlist(a, getter):
 
 
 def attributeAsNative(a, getter, declType = 'NS_IMETHOD'):
-        deprecated = a.deprecated and "NS_DEPRECATED " or ""
-        params = {'deprecated': deprecated,
-                  'returntype': attributeReturnType(a, declType),
+        params = {'returntype': attributeReturnType(a, declType),
                   'binaryname': attributeNativeName(a, getter),
                   'paramlist': attributeParamlist(a, getter)}
-        return "%(deprecated)s%(returntype)s %(binaryname)s(%(paramlist)s)" % params
+        return "%(returntype)s %(binaryname)s(%(paramlist)s)" % params
 
 
 def methodNativeName(m):
@@ -393,8 +391,6 @@ def write_interface(iface, fd):
     if not foundcdata:
         fd.write("NS_NO_VTABLE ")
 
-    if iface.attributes.deprecated:
-        fd.write("MOZ_DEPRECATED ")
     fd.write(iface.name)
     if iface.base:
         fd.write(" : public %s" % iface.base)

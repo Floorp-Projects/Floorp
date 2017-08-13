@@ -791,14 +791,18 @@ ServoRestyleManager::ProcessPostTraversal(
   ServoRestyleState& childrenRestyleState =
     thisFrameRestyleState ? *thisFrameRestyleState : aRestyleState;
 
-  RefPtr<ServoStyleContext> newContext = nullptr;
+  RefPtr<ServoStyleContext> upToDateContext =
+    (wasRestyled || !oldStyleContext)
+      ? aRestyleState.StyleSet().ResolveServoStyle(aElement)
+      : oldStyleContext;
+
+  MOZ_ASSERT(upToDateContext);
+
   if (wasRestyled && oldStyleContext) {
     MOZ_ASSERT(styleFrame || displayContentsStyle);
-    newContext =
-      aRestyleState.StyleSet().ResolveServoStyle(aElement);
-    MOZ_ASSERT(oldStyleContext->ComputedData() != newContext->ComputedData());
+    MOZ_ASSERT(oldStyleContext->ComputedData() != upToDateContext->ComputedData());
 
-    newContext->ResolveSameStructsAs(oldStyleContext);
+    upToDateContext->ResolveSameStructsAs(oldStyleContext);
 
     // We want to walk all the continuations here, even the ones with different
     // styles.  In practice, the only reason we get continuations with different
@@ -812,13 +816,13 @@ ServoRestyleManager::ProcessPostTraversal(
     // initial continuations; ::first-line fixes that up after the fact.
     for (nsIFrame* f = styleFrame; f; f = f->GetNextContinuation()) {
       MOZ_ASSERT_IF(f != styleFrame, !f->GetAdditionalStyleContext(0));
-      f->SetStyleContext(newContext);
+      f->SetStyleContext(upToDateContext);
     }
 
     if (MOZ_UNLIKELY(displayContentsStyle)) {
       MOZ_ASSERT(!styleFrame);
       PresContext()->FrameConstructor()->
-        ChangeRegisteredDisplayContentsStyleFor(aElement, newContext);
+        ChangeRegisteredDisplayContentsStyleFor(aElement, upToDateContext);
     }
 
     if (styleFrame) {
@@ -856,9 +860,6 @@ ServoRestyleManager::ProcessPostTraversal(
   const bool traverseTextChildren = wasRestyled || descendantsNeedFrames;
   bool recreatedAnyContext = wasRestyled;
   if (traverseElementChildren || traverseTextChildren) {
-    ServoStyleContext* upToDateContext =
-      wasRestyled ? newContext : oldStyleContext;
-
     StyleChildrenIterator it(aElement);
     TextPostTraversalState textState(*upToDateContext,
                                      displayContentsStyle && wasRestyled,
