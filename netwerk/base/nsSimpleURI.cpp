@@ -291,26 +291,25 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
 {
     NS_ENSURE_STATE(mMutable);
 
+    nsresult rv = net_ExtractURLScheme(aSpec, mScheme);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    ToLowerCase(mScheme);
+
     // filter out unexpected chars "\r\n\t" if necessary
     nsAutoCString filteredSpec;
     net_FilterURIString(aSpec, filteredSpec);
 
     // nsSimpleURI currently restricts the charset to US-ASCII
     nsAutoCString spec;
-    nsresult rv = NS_EscapeURL(filteredSpec, esc_OnlyNonASCII, spec, fallible);
+    rv = NS_EscapeURL(filteredSpec, esc_OnlyNonASCII, spec, fallible);
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     int32_t colonPos = spec.FindChar(':');
-    if (colonPos < 0 || !net_IsValidScheme(spec.get(), colonPos))
-        return NS_ERROR_MALFORMED_URI;
-
-    mScheme.Truncate();
-    DebugOnly<int32_t> n = spec.Left(mScheme, colonPos);
-    NS_ASSERTION(n == colonPos, "Left failed");
-    ToLowerCase(mScheme);
-
+    MOZ_ASSERT(colonPos != kNotFound, "A colon should be in this string");
     // This sets mPath, mQuery and mRef.
     return SetPathQueryRefEscaped(Substring(spec, colonPos + 1),
                                   /* needsEscape = */ false);
