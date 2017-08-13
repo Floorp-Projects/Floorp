@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Note: All overrides should go to browser/base/jar.mn in order to avoid
-# having to create the same override entry for each locale.
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
@@ -121,6 +119,9 @@
     locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
     locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
     locale/browser/downloads/settingsChange.dtd  (%chrome/overrides/settingsChange.dtd)
+% override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
+% override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
+% override chrome://mozapps/locale/downloads/settingsChange.dtd chrome://browser/locale/downloads/settingsChange.dtd
 % locale pdf.js @AB_CD@ %locale/pdfviewer/
     locale/pdfviewer/viewer.properties             (%pdfviewer/viewer.properties)
     locale/pdfviewer/chrome.properties             (%pdfviewer/chrome.properties)
