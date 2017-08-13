@@ -2585,9 +2585,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                                   getter_AddRefs(binding), &resolveStyle);
     if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED) {
       // Binding will load asynchronously.
-      if (aDocElement->IsStyledByServo()) {
-        ServoRestyleManager::ClearServoDataFromSubtree(aDocElement);
-      }
       return nullptr;
     }
 
@@ -8663,35 +8660,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
   const InsertionKind insertionKind = (aFlags == REMOVE_FOR_RECONSTRUCTION)
                                         ? InsertionKind::Sync
                                         : InsertionKind::Async;
-
-  // We're destroying our frame(s). This normally happens either when the
-  // content is being removed from the DOM (in which case we'll drop all Servo
-  // data in UnbindFromTree), or when we're recreating frames (usually in
-  // response to having retrieved a ReconstructFrame change hint after
-  // restyling). In both of those cases, there are no pending restyles we need
-  // to worry about.
-  //
-  // However, there is also the (rare) DestroyFramesFor path, in which we tear
-  // down (and usually recreate) the frames for a subtree. In this case, leaving
-  // the style data on the elements is problematic for our invariants, because
-  // there might be pending restyles in the subtree. If we simply leave them
-  // as-is, the subsequent traversal when recreating frames will generate a
-  // bunch of bogus change hints to update frames that no longer exist.
-  //
-  // So the two obvious options are to (1) process all pending restyles and take
-  // all the change hints before destroying the frames, or (2) drop all the
-  // style data.  We chose the latter, since that matches the performance
-  // characteristics of the old Gecko style system.
-  //
-  // That said, it's almost certainly possible to optimize this if it turns out
-  // to be hot. It's just not a priority at the moment.
-  //
-  // FIXME(emilio): This really really feels like a hack, and it's only for the
-  // XBL/Shadow DOM path, so we should do this there instead.
-  if (aFlags == REMOVE_DESTROY_FRAMES && aChild->IsElement() &&
-      aChild->IsStyledByServo()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(aChild->AsElement());
-  }
 
   nsPresContext* presContext = mPresShell->GetPresContext();
   MOZ_ASSERT(presContext, "Our presShell should have a valid presContext");
