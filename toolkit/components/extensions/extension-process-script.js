@@ -54,7 +54,15 @@ function parseScriptOptions(options) {
 }
 
 var extensions = new DefaultWeakMap(policy => {
-  let extension = new ExtensionChild.BrowserExtensionContent(policy.initData);
+  let data = policy.initData;
+  if (data.serialize) {
+    // We have an actual Extension rather than serialized extension
+    // data, so serialize it now to make sure we have consistent inputs
+    // between parent and child processes.
+    data = data.serialize();
+  }
+
+  let extension = new ExtensionChild.BrowserExtensionContent(data);
   extension.policy = policy;
   return extension;
 });
@@ -290,34 +298,43 @@ ExtensionManager = {
     }
   },
 
-  initExtensionPolicy(data, extension) {
-    let policy = WebExtensionPolicy.getByID(data.id);
+  initExtensionPolicy(extension) {
+    let policy = WebExtensionPolicy.getByID(extension.id);
     if (!policy) {
-      let localizeCallback = (
-        extension ? extension.localize.bind(extension)
-                  : str => extensions.get(policy).localize(str));
+      let localizeCallback, allowedOrigins, webAccessibleResources;
+      if (extension.localize) {
+        // We have a real Extension object.
+        localizeCallback = extension.localize.bind(extension);
+        allowedOrigins = extension.whiteListedHosts;
+        webAccessibleResources = extension.webAccessibleResources;
+      } else {
+        // We have serialized extension data;
+        localizeCallback = str => extensions.get(policy).localize(str);
+        allowedOrigins = new MatchPatternSet(extension.whiteListedHosts);
+        webAccessibleResources = extension.webAccessibleResources.map(host => new MatchGlob(host));
+      }
 
       policy = new WebExtensionPolicy({
-        id: data.id,
-        mozExtensionHostname: data.uuid,
-        baseURL: data.resourceURL,
+        id: extension.id,
+        mozExtensionHostname: extension.uuid,
+        baseURL: extension.resourceURL,
 
-        permissions: Array.from(data.permissions),
-        allowedOrigins: new MatchPatternSet(data.whiteListedHosts),
-        webAccessibleResources: data.webAccessibleResources.map(host => new MatchGlob(host)),
+        permissions: Array.from(extension.permissions),
+        allowedOrigins,
+        webAccessibleResources,
 
-        contentSecurityPolicy: data.manifest.content_security_policy,
+        contentSecurityPolicy: extension.manifest.content_security_policy,
 
         localizeCallback,
 
-        backgroundScripts: (data.manifest.background &&
-                            data.manifest.background.scripts),
+        backgroundScripts: (extension.manifest.background &&
+                            extension.manifest.background.scripts),
 
-        contentScripts: (data.manifest.content_scripts || []).map(parseScriptOptions),
+        contentScripts: extension.contentScripts.map(parseScriptOptions),
       });
 
       policy.active = true;
-      policy.initData = data;
+      policy.initData = extension;
     }
     return policy;
   },
@@ -387,8 +404,8 @@ ExtensionProcessScript.prototype = {
     return extGlobal && extGlobal.getFrameData(force);
   },
 
-  initExtension(data, extension) {
-    return ExtensionManager.initExtensionPolicy(data, extension);
+  initExtension(extension) {
+    return ExtensionManager.initExtensionPolicy(extension);
   },
 
   initExtensionDocument(policy, doc) {
