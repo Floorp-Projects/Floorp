@@ -424,14 +424,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   padding: 0 3px;
   list-style-image: var(--urlbar-dropmarker-url);
   -moz-image-region: var(--urlbar-dropmarker-region);
-  transition: opacity 0.15s ease;
-}
-#urlbar-wrapper[switchingtabs] > #urlbar > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  transition: none;
-}
-
-#navigator-toolbox:not(:hover) #nav-bar:not([customizing="true"]) #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  opacity: 0;
 }
 
 .urlbar-history-dropmarker[open="true"],
@@ -453,17 +445,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   .urlbar-history-dropmarker > .dropmarker-icon {
     width: 11px;
   }
-}
-
-#urlbar-icons {
-  -moz-box-align: center;
-}
-
-.urlbar-icon {
-  padding: 0 3px;
-  /* 16x16 icon with border-box sizing */
-  width: 22px;
-  height: 16px;
 }
 
 /* ::::: URL Bar Zoom Reset Button ::::: */
