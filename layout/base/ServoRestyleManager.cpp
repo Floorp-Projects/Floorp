@@ -264,9 +264,7 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
   }
 
   bool wasRestyled;
-  Unused << Servo_TakeChangeHint(aElement,
-                                 ServoTraversalFlags::Empty,
-                                 &wasRestyled);
+  Unused << Servo_TakeChangeHint(aElement, &wasRestyled);
   aElement->UnsetHasDirtyDescendantsForServo();
   aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
   aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
@@ -544,9 +542,7 @@ ServoRestyleManager::ProcessPostTraversal(
 
   // Grab the change hint from Servo.
   bool wasRestyled;
-  nsChangeHint changeHint = Servo_TakeChangeHint(aElement,
-                                                 aFlags,
-                                                 &wasRestyled);
+  nsChangeHint changeHint = Servo_TakeChangeHint(aElement, &wasRestyled);
 
   // We should really fix the weird primary frame mapping for image maps
   // (bug 135040)...
@@ -623,7 +619,7 @@ ServoRestyleManager::ProcessPostTraversal(
   if (wasRestyled && oldStyleContext) {
     MOZ_ASSERT(styleFrame || displayContentsNode);
     newContext =
-      aRestyleState.StyleSet().ResolveServoStyle(aElement, aFlags);
+      aRestyleState.StyleSet().ResolveServoStyle(aElement);
     MOZ_ASSERT(oldStyleContext->ComputedData() != newContext->ComputedData());
 
     newContext->ResolveSameStructsAs(oldStyleContext);

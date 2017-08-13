@@ -353,8 +353,7 @@ public:
    *
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
-  already_AddRefed<ServoStyleContext>
-  ResolveServoStyle(dom::Element* aElement, ServoTraversalFlags aFlags);
+  already_AddRefed<ServoStyleContext> ResolveServoStyle(dom::Element* aElement);
 
   bool GetKeyframesForName(const nsString& aName,
                            const nsTimingFunction& aTimingFunction,

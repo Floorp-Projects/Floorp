@@ -183,7 +183,7 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
         aElement, CSSPseudoElementType::NotPseudo, nullptr, aParentContext);
   }
 
-  return ResolveServoStyle(aElement, ServoTraversalFlags::Empty);
+  return ResolveServoStyle(aElement);
 }
 
 /**
@@ -438,9 +438,7 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
   if (aPseudoElement) {
     MOZ_ASSERT(aType == aPseudoElement->GetPseudoElementType());
     computedValues =
-      Servo_ResolveStyle(aPseudoElement,
-                         mRawSet.get(),
-                         ServoTraversalFlags::Empty).Consume();
+      Servo_ResolveStyle(aPseudoElement, mRawSet.get()).Consume();
   } else {
     computedValues =
       Servo_ResolvePseudoStyle(aOriginatingElement,
@@ -1102,13 +1100,11 @@ UpdateBodyTextColorIfNeeded(
 }
 
 already_AddRefed<ServoStyleContext>
-ServoStyleSet::ResolveServoStyle(Element* aElement, ServoTraversalFlags aFlags)
+ServoStyleSet::ResolveServoStyle(Element* aElement)
 {
   UpdateStylistIfNeeded();
   RefPtr<ServoStyleContext> result =
-    Servo_ResolveStyle(aElement,
-                       mRawSet.get(),
-                       aFlags).Consume();
+    Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
   UpdateBodyTextColorIfNeeded(*aElement, *result, *mPresContext);
   return result.forget();
 }
