@@ -468,6 +468,9 @@ public:
 
   Directionality GetComputedDirectionality() const;
 
+  void NoteDirtyForServo();
+  void NoteAnimationOnlyDirtyForServo();
+
   bool HasDirtyDescendantsForServo() const
   {
     MOZ_ASSERT(IsStyledByServo());
