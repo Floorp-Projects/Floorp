@@ -18,10 +18,11 @@ interface nsIRunnable : nsISupports
     void run();
 };
 
-[uuid(e75aa42a-80a9-11e6-afb5-e89d87348e2c)]
+[scriptable, uuid(e75aa42a-80a9-11e6-afb5-e89d87348e2c)]
 interface nsIRunnablePriority : nsISupports
 {
     const unsigned short PRIORITY_NORMAL = 0;
-    const unsigned short PRIORITY_HIGH = 1;
+    const unsigned short PRIORITY_INPUT = 1;
+    const unsigned short PRIORITY_HIGH = 2;
     readonly attribute unsigned long priority;
 };
