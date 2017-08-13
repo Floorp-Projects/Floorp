@@ -292,6 +292,7 @@ UninstallObserver.init();
 this.ExtensionData = class {
   constructor(rootURI) {
     this.rootURI = rootURI;
+    this.resourceURL = rootURI.spec;
 
     this.manifest = null;
     this.id = null;
@@ -994,9 +995,9 @@ this.Extension = class extends ExtensionData {
       uuid: this.uuid,
       instanceId: this.instanceId,
       manifest: this.manifest,
-      resourceURL: this.addonData.resourceURI.spec,
+      resourceURL: this.resourceURL,
       baseURL: this.baseURI.spec,
-      content_scripts: this.manifest.content_scripts || [],  // eslint-disable-line camelcase
+      contentScripts: this.contentScripts,
       webAccessibleResources: this.webAccessibleResources.map(res => res.glob),
       whiteListedHosts: this.whiteListedHosts.patterns.map(pat => pat.pattern),
       localeData: this.localeData.serialize(),
@@ -1004,6 +1005,10 @@ this.Extension = class extends ExtensionData {
       principal: this.principal,
       optionalPermissions: this.manifest.optional_permissions,
     };
+  }
+
+  get contentScripts() {
+    return this.manifest.content_scripts || [];
   }
 
   broadcast(msg, data) {
@@ -1196,7 +1201,7 @@ this.Extension = class extends ExtensionData {
       }
 
       this.policy.active = false;
-      this.policy = processScript.initExtension(this.serialize(), this);
+      this.policy = processScript.initExtension(this);
 
       this.updatePermissions(this.startupReason);
 
