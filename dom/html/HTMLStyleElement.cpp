@@ -48,7 +48,6 @@ NS_IMPL_RELEASE_INHERITED(HTMLStyleElement, Element)
 // QueryInterface implementation for HTMLStyleElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLStyleElement)
   NS_INTERFACE_TABLE_INHERITED(HTMLStyleElement,
-                               nsIDOMHTMLStyleElement,
                                nsIStyleSheetLinkingElement,
                                nsIMutationObserver)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
@@ -56,27 +55,11 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 NS_IMPL_ELEMENT_CLONE(HTMLStyleElement)
 
 
-NS_IMETHODIMP
-HTMLStyleElement::GetMozDisabled(bool* aDisabled)
-{
-  NS_ENSURE_ARG_POINTER(aDisabled);
-
-  *aDisabled = Disabled();
-  return NS_OK;
-}
-
 bool
 HTMLStyleElement::Disabled()
 {
   StyleSheet* ss = GetSheet();
   return ss && ss->Disabled();
-}
-
-NS_IMETHODIMP
-HTMLStyleElement::SetMozDisabled(bool aDisabled)
-{
-  SetDisabled(aDisabled);
-  return NS_OK;
 }
 
 void
@@ -86,10 +69,6 @@ HTMLStyleElement::SetDisabled(bool aDisabled)
     ss->SetDisabled(aDisabled);
   }
 }
-
-NS_IMPL_STRING_ATTR(HTMLStyleElement, Media, media)
-NS_IMPL_BOOL_ATTR(HTMLStyleElement, Scoped, scoped)
-NS_IMPL_STRING_ATTR(HTMLStyleElement, Type, type)
 
 void
 HTMLStyleElement::CharacterDataChanged(nsIDocument* aDocument,

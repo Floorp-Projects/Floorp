@@ -41,7 +41,6 @@
 
 #include "nsILoadGroup.h"
 
-#include "nsIDOMHTMLMapElement.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/GenericSpecifiedValuesInlines.h"

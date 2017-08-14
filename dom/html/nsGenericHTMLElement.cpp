@@ -30,7 +30,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMHTMLMenuElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsMappedAttributes.h"
