@@ -22,12 +22,9 @@ HTMLPreElement::~HTMLPreElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLPreElement, nsGenericHTMLElement,
-                            nsIDOMHTMLPreElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLPreElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLPreElement)
-
-NS_IMPL_INT_ATTR(HTMLPreElement, Width, width)
 
 bool
 HTMLPreElement::ParseAttribute(int32_t aNamespaceID,

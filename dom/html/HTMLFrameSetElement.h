@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
-#include "nsIDOMHTMLFrameSetElement.h"
 #include "nsGenericHTMLElement.h"
 
 /**
@@ -44,8 +43,7 @@ namespace dom {
 
 class OnBeforeUnloadEventHandlerNonNull;
 
-class HTMLFrameSetElement final : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLFrameSetElement
+class HTMLFrameSetElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLFrameSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -61,9 +59,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLFrameSetElement
-  NS_DECL_NSIDOMHTMLFRAMESETELEMENT
 
   void GetCols(DOMString& aCols)
   {

@@ -21,8 +21,7 @@ HTMLHRElement::~HTMLHRElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLHRElement, nsGenericHTMLElement,
-                            nsIDOMHTMLHRElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLHRElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLHRElement)
 
