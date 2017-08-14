@@ -194,6 +194,9 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void mov(ImmPtr imm, Register dest) {
         mov(ImmWord(uintptr_t(imm.value)), dest);
     }
+    void mov(CodeOffset* label, Register dest) {
+        ma_li(dest, label);
+    }
     void mov(Register src, Address dest) {
         MOZ_CRASH("NYI-IC");
     }
@@ -279,6 +282,13 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
+    void writeCodePointer(CodeOffset* label) {
+        label->bind(currentOffset());
+        ma_liPatchable(ScratchRegister, ImmWord(0));
+        as_jr(ScratchRegister);
+        as_nop();
+    }
+
     void jump(Label* label) {
         ma_b(label);
     }
@@ -332,7 +342,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 
     // boxing code
-    void boxDouble(FloatRegister src, const ValueOperand& dest);
+    void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister);
     void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest);
 
     // Extended unboxing API. If the payload is already in a register, returns
@@ -996,12 +1006,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         as_movs(dest, src);
     }
     void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-        loadPtr(Address(GlobalReg, globalDataOffset - WasmGlobalRegBias), dest);
+        loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, globalArea) + globalDataOffset), dest);
     }
     void loadWasmPinnedRegsFromTls() {
         loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
-        loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, globalData)), GlobalReg);
-        ma_addu(GlobalReg, Imm32(WasmGlobalRegBias));
     }
 
     // Instrumentation for entering and leaving the profiler.

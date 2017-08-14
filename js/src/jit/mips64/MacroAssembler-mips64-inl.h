@@ -671,9 +671,27 @@ void
 MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
 {
     uint64_t magic = MagicValue(why).asRawBits();
-    ScratchRegisterScope scratch(*this);
+    SecondScratchRegisterScope scratch(*this);
     loadPtr(valaddr, scratch);
     ma_b(scratch, ImmWord(magic), label, cond);
+}
+
+void
+MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
+{
+    int32_t shift = Imm32::ShiftOf(addr.scale).value;
+    if (shift) {
+        // 6 instructions : lui ori dror32 ori jr nop
+        ma_mul(ScratchRegister, addr.index, Imm32(6 * 4));
+        as_daddu(ScratchRegister, addr.base, ScratchRegister);
+    } else {
+        as_daddu(ScratchRegister, addr.base, addr.index);
+    }
+
+    if (addr.offset)
+        asMasm().addPtr(Imm32(addr.offset), ScratchRegister);
+    as_jr(ScratchRegister);
+    as_nop();
 }
 
 // ========================================================================
