@@ -309,6 +309,9 @@ nsSVGDisplayContainerFrame::GetFrameForPoint(const gfxPoint& aPoint)
 void
 nsSVGDisplayContainerFrame::ReflowSVG()
 {
+  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
+               "This call is probably a wasteful mistake");
+
   MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
              "ReflowSVG mechanism not designed for this");
 
