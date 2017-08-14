@@ -595,6 +595,16 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
     presShell = aPresShell;
     if (!presShell)
       return nullptr;
+
+    // In some edge cases, the caller document might be using a different style
+    // backend than the callee. This causes problems because the cached parsed
+    // style attributes in the callee document will be a different format than
+    // the caller expects. Supporting this would be a pain, and we're already
+    // in edge-case-squared, so we just return.
+    if (presShell->GetDocument()->GetStyleBackendType() !=
+        aElement->OwnerDoc()->GetStyleBackendType()) {
+      return nullptr;
+    }
   }
 
   // We do this check to avoid having to add too much special casing of
