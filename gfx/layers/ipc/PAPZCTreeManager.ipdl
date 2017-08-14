@@ -71,8 +71,6 @@ parent:
 
   async UpdateZoomConstraints(ScrollableLayerGuid aGuid, MaybeZoomConstraints aConstraints);
 
-  async CancelAnimation(ScrollableLayerGuid aGuid);
-
   async SetKeyboardMap(KeyboardMap aKeyboardMap);
 
   async SetDPI(float aDpiValue);
