@@ -941,7 +941,7 @@ class SchemaAPIManager extends EventEmitter {
 
     this._modulesJSONLoaded = false;
 
-    this.schemaURLs = new Set();
+    this.schemaURLs = new Map();
 
     this.apis = new DefaultWeakMap(() => new Map());
 
@@ -1002,7 +1002,10 @@ class SchemaAPIManager extends EventEmitter {
       this.modules.set(name, details);
 
       if (details.schema) {
-        this.schemaURLs.add(details.schema);
+        let content = (details.scopes &&
+                       (details.scopes.includes("content_parent") ||
+                        details.scopes.includes("content_child")));
+        this.schemaURLs.set(details.schema, {content});
       }
 
       for (let event of details.events || []) {
