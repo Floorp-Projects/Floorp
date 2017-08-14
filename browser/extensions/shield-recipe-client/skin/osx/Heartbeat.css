@@ -9,16 +9,3 @@ notification.heartbeat {
   border-bottom: 1px solid #C1C1C1 !important;
   height: 40px;
 }
-
-/* In themes/osx/global/notification.css the close icon is inverted because notifications
-   on OSX are usually dark. Heartbeat is light, so override that behaviour. */
-
-notification.heartbeat[type="info"] .close-icon:not(:hover) {
-  -moz-image-region: rect(0, 16px, 16px, 0) !important;
-}
-
-@media (min-resolution: 2dppx) {
-  notification.heartbeat[type="info"] .close-icon:not(:hover) {
-    -moz-image-region: rect(0, 32px, 32px, 0) !important;
-  }
-}
