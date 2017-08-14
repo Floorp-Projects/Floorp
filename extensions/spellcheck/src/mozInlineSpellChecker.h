@@ -6,7 +6,7 @@
 #ifndef __mozinlinespellchecker_h__
 #define __mozinlinespellchecker_h__
 
-#include "mozilla/EditorBase.h"
+#include "mozilla/TextEditor.h"
 
 #include "mozISpellI18NUtil.h"
 
@@ -133,7 +133,7 @@ private:
                             SpellCheck_Available = 1};
   static SpellCheckingState gCanEnableSpellChecking;
 
-  nsCOMPtr<nsIEditor> mEditor;
+  RefPtr<mozilla::TextEditor> mTextEditor;
   nsCOMPtr<nsIEditorSpellCheck> mSpellCheck;
   nsCOMPtr<nsIEditorSpellCheck> mPendingSpellCheck;
   nsCOMPtr<nsIDOMTreeWalker> mTreeWalker;
