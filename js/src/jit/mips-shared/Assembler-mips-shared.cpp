@@ -1596,13 +1596,13 @@ AssemblerMIPSShared::retarget(Label* label, Label* target)
             // Then patch the head of label's use chain to the tail of
             // target's use chain, prepending the entire use chain of target.
             Instruction* inst = editSrc(labelBranchOffset);
-            int32_t prev = target->use(label->offset());
+            int32_t prev = target->offset();
+            target->use(label->offset());
             inst[1].setData(prev);
         } else {
             // The target is unbound and unused.  We can just take the head of
             // the list hanging off of label, and dump that into target.
-            DebugOnly<uint32_t> prev = target->use(label->offset());
-            MOZ_ASSERT((int32_t)prev == Label::INVALID_OFFSET);
+            target->use(label->offset());
         }
     }
     label->reset();

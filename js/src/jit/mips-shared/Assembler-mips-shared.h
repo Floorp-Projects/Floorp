@@ -1196,6 +1196,9 @@ class AssemblerMIPSShared : public AssemblerShared
     void bind(CodeOffset* label) {
         label->bind(currentOffset());
     }
+    void use(CodeOffset* label) {
+        label->bind(currentOffset());
+    }
     uint32_t currentOffset() {
         return nextOffset().getOffset();
     }

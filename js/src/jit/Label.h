@@ -25,6 +25,9 @@ struct LabelBase
 
     void operator=(const LabelBase& label) = delete;
 
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  public:
+#endif
     static const uint32_t INVALID_OFFSET = 0x7fffffff; // UINT31_MAX.
 
   public:
