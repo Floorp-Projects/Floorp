@@ -863,9 +863,6 @@ private:
     void OnResumedCompositor()
     {
         MOZ_ASSERT(NS_IsMainThread());
-        if (!mWindow) {
-            return; // Already shut down.
-        }
 
         // When we receive this, the compositor has already been told to
         // resume. (It turns out that waiting till we reach here to tell
@@ -987,7 +984,11 @@ public:
                 JNIEnv* const env = jni::GetGeckoThreadEnv();
                 LayerViewSupport* const lvs = GetNative(
                         LayerView::Compositor::LocalRef(env, mCompositor));
-                MOZ_CATCH_JNI_EXCEPTION(env);
+
+                if (!lvs || !lvs->mWindow) {
+                    env->ExceptionClear();
+                    return; // Already shut down.
+                }
 
                 lvs->OnResumedCompositor();
             }
