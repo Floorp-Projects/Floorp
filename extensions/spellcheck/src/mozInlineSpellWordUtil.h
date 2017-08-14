@@ -15,8 +15,11 @@
 //#define DEBUG_SPELLCHECK
 
 class nsRange;
-class nsIEditor;
 class nsINode;
+
+namespace mozilla {
+class TextEditor;
+} // namespace mozilla
 
 /**
  *    This class extracts text from the DOM and builds it into a single string.
@@ -62,7 +65,7 @@ public:
       mSoftBegin(nullptr, 0), mSoftEnd(nullptr, 0),
       mNextWordIndex(-1), mSoftTextValid(false) {}
 
-  nsresult Init(nsIEditor* aEditor);
+  nsresult Init(mozilla::TextEditor* aTextEditor);
 
   nsresult SetEnd(nsINode* aEndNode, int32_t aEndOffset);
 
