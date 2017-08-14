@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_frame_iterator_h
-#define wasm_frame_iterator_h
+#ifndef wasm_frame_iter_h
+#define wasm_frame_iter_h
 
 #include "js/ProfilingFrameIterator.h"
 
@@ -49,7 +49,7 @@ struct CallableOffsets;
 // the backtrace may not be correct. That being said, we try our best printing
 // an informative message to the user and at least the name of the innermost
 // function stack frame.
-class FrameIterator
+class WasmFrameIter
 {
   public:
     enum class Unwind { True, False };
@@ -66,8 +66,8 @@ class FrameIterator
     void popFrame();
 
   public:
-    explicit FrameIterator();
-    explicit FrameIterator(WasmActivation* activation, Unwind unwind = Unwind::False);
+    explicit WasmFrameIter();
+    explicit WasmFrameIter(WasmActivation* activation, Unwind unwind = Unwind::False);
     void operator++();
     bool done() const;
     const char* filename() const;
@@ -236,4 +236,4 @@ StartUnwinding(const WasmActivation& activation, const RegisterState& registers,
 } // namespace wasm
 } // namespace js
 
-#endif // wasm_frame_iterator_h
+#endif // wasm_frame_iter_h

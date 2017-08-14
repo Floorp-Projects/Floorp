@@ -34,7 +34,6 @@ struct LinkData;
 struct LinkDataTier;
 struct Metadata;
 struct MetadataTier;
-class FrameIterator;
 
 // ShareableBytes is a reference-counted Vector of bytes.
 

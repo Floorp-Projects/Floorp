@@ -998,6 +998,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               opacity: *const f32,
                                               transform: *const LayoutTransform,
                                               transform_style: TransformStyle,
+                                              perspective: *const LayoutTransform,
                                               mix_blend_mode: MixBlendMode,
                                               filters: *const WrFilterOp,
                                               filter_count: usize) {
@@ -1038,13 +1039,18 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         _ => Some(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))),
     };
 
+    let perspective_ref = unsafe { perspective.as_ref() };
+    let perspective = match perspective_ref {
+        Some(perspective) => Some(perspective.clone()),
+        None => None,
+    };
     state.frame_builder
          .dl_builder
          .push_stacking_context(webrender_api::ScrollPolicy::Scrollable,
                                 bounds,
                                 transform_binding,
                                 transform_style,
-                                None,
+                                perspective,
                                 mix_blend_mode,
                                 filters);
 }

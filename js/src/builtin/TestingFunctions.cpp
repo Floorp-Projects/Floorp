@@ -1369,7 +1369,7 @@ static bool
 OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(js::oom::THREAD_TYPE_MAX);
+    args.rval().setInt32(js::THREAD_TYPE_MAX);
     return true;
 }
 
@@ -1402,11 +1402,11 @@ SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
         return false;
     }
 
-    uint32_t targetThread = js::oom::THREAD_TYPE_COOPERATING;
+    uint32_t targetThread = js::THREAD_TYPE_COOPERATING;
     if (args.length() > 1 && !ToUint32(cx, args[1], &targetThread))
         return false;
 
-    if (targetThread == js::oom::THREAD_TYPE_NONE || targetThread >= js::oom::THREAD_TYPE_MAX) {
+    if (targetThread == js::THREAD_TYPE_NONE || targetThread >= js::THREAD_TYPE_MAX) {
         JS_ReportErrorASCII(cx, "Invalid thread type specified");
         return false;
     }
@@ -1486,13 +1486,13 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
     bool verbose = EnvVarIsDefined("OOM_VERBOSE");
 
-    unsigned threadStart = oom::THREAD_TYPE_COOPERATING;
-    unsigned threadEnd = oom::THREAD_TYPE_MAX;
+    unsigned threadStart = THREAD_TYPE_COOPERATING;
+    unsigned threadEnd = THREAD_TYPE_MAX;
 
     // Test a single thread type if specified by the OOM_THREAD environment variable.
     int threadOption = 0;
     if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
-        if (threadOption < oom::THREAD_TYPE_COOPERATING || threadOption > oom::THREAD_TYPE_MAX) {
+        if (threadOption < THREAD_TYPE_COOPERATING || threadOption > THREAD_TYPE_MAX) {
             JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
             return false;
         }

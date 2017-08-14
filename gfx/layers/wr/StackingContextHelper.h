@@ -56,6 +56,7 @@ public:
                         uint64_t aAnimationsId,
                         float* aOpacityPtr,
                         gfx::Matrix4x4* aTransformPtr,
+                        gfx::Matrix4x4* aPerspectivePtr = nullptr,
                         const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>(),
                         const gfx::CompositionOp& aMixBlendMode = gfx::CompositionOp::OP_OVER);
   // This version of the constructor should only be used at the root level
