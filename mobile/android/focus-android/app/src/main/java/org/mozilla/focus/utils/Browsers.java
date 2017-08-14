@@ -85,7 +85,7 @@ public class Browsers {
         findKnownBrowsers(packageManager, browsers, uri);
 
         this.browsers = browsers;
-        this.defaultBrowser = findDefault(packageManager, uri);
+        this.defaultBrowser = findDefault(context, packageManager, uri);
         this.firefoxBrandedBrowser = findFirefoxBrandedBrowser();
     }
 
@@ -152,7 +152,7 @@ public class Browsers {
         }
     }
 
-    private ActivityInfo findDefault(PackageManager packageManager, @NonNull Uri uri) {
+    private ActivityInfo findDefault(Context context, PackageManager packageManager, @NonNull Uri uri) {
         final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 
         final ResolveInfo resolveInfo = packageManager.resolveActivity(intent, 0);
@@ -165,7 +165,8 @@ public class Browsers {
             return null;
         }
 
-        if (!browsers.containsKey(resolveInfo.activityInfo.packageName)) {
+        if (!browsers.containsKey(resolveInfo.activityInfo.packageName)
+                && !resolveInfo.activityInfo.packageName.equals(context.getPackageName())) {
             // This default browser wasn't returned when we asked for *all* browsers. It's likely
             // that this is actually the resolver activity (aka intent chooser). Let's ignore it.
             return null;
