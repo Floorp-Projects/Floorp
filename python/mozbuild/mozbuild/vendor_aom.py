@@ -126,6 +126,11 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         else:
             new_readme = '%s\n\n%s %s.' % (readme, prefix, revision)
 
+        prefix = 'The last update was pulled from'
+        new_readme = re.sub(prefix + ' https*://.*',
+                            prefix + ' %s' % self.repo_url,
+                            new_readme)
+
         if readme != new_readme:
             with open(filename, 'w') as f:
                 f.write(new_readme)
