@@ -1421,14 +1421,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean usingAdvancedLayers;
 
   /**
-   * Returns a Promise that will be resolved with a string once the capabilities
-   * of the h264 decoder have been determined.
-   * Success does not mean that all h264 video decoding will be done
-   * in hardware.
-   */
-  readonly attribute jsval supportsHardwareH264Decoding;
-
-  /**
    * Returns the current audio backend as a free-form string.
    */
   readonly attribute AString currentAudioBackend;
