@@ -35,6 +35,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Services.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/dom/Selection.h"
 #include "mozInlineSpellChecker.h"
 #include "mozInlineSpellWordUtil.h"
@@ -217,17 +218,18 @@ mozInlineSpellStatus::InitForNavigation(
     nsIDOMNode* aNewAnchorNode, int32_t aNewAnchorOffset,
     bool* aContinue)
 {
-  nsresult rv;
   mOp = eOpNavigation;
 
   mForceNavigationWordCheck = aForceCheck;
   mNewNavigationPositionOffset = aNewPositionOffset;
 
   // get the root node for checking
-  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mSpellChecker->mEditor, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIEditor> editor = mSpellChecker->mEditor;
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<nsIDOMElement> rootElt;
-  rv = editor->GetRootElement(getter_AddRefs(rootElt));
+  nsresult rv = editor->GetRootElement(getter_AddRefs(rootElt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // the anchor node might not be in the DOM anymore, check
@@ -346,7 +348,7 @@ mozInlineSpellStatus::FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil)
 nsresult
 mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mSpellChecker->mEditor);
+  nsCOMPtr<nsIEditor> editor = mSpellChecker->mEditor;
   if (! editor)
     return NS_ERROR_FAILURE; // editor is gone
 
@@ -368,9 +370,9 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // aWordUtil.GetRangeForWord flushes pending notifications, check editor again.
-  editor = do_QueryReferent(mSpellChecker->mEditor);
-  if (! editor)
+  if (!mSpellChecker->mEditor) {
     return NS_ERROR_FAILURE; // editor is gone
+  }
 
   // get the DOM position of the new caret, the range should be collapsed
   rv = mAnchorRange->GetStartContainer(getter_AddRefs(newAnchorNode));
@@ -431,16 +433,17 @@ mozInlineSpellStatus::FillNoCheckRangeFromAnchor(
 nsresult
 mozInlineSpellStatus::GetDocument(nsIDOMDocument** aDocument)
 {
-  nsresult rv;
   *aDocument = nullptr;
   if (! mSpellChecker->mEditor)
     return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mSpellChecker->mEditor, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIEditor> editor = mSpellChecker->mEditor;
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = editor->GetDocument(getter_AddRefs(domDoc));
+  nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(domDoc, NS_ERROR_NULL_POINTER);
   domDoc.forget(aDocument);
@@ -546,6 +549,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(mozInlineSpellChecker)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozInlineSpellChecker)
 
 NS_IMPL_CYCLE_COLLECTION(mozInlineSpellChecker,
+                         mEditor,
                          mSpellCheck,
                          mTreeWalker,
                          mCurrentSelectionAnchorNode)
@@ -584,7 +588,7 @@ mozInlineSpellChecker::GetSpellChecker(nsIEditorSpellCheck **aSpellCheck)
 NS_IMETHODIMP
 mozInlineSpellChecker::Init(nsIEditor *aEditor)
 {
-  mEditor = do_GetWeakReference(aEditor);
+  mEditor = aEditor;
   return NS_OK;
 }
 
@@ -622,7 +626,7 @@ nsresult mozInlineSpellChecker::Cleanup(bool aDestroyingFrames)
   // observers.  They may receive two consecutive STARTED notifications for
   // example, which we guarantee will not happen.
 
-  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditor);
+  nsCOMPtr<nsIEditor> editor = mEditor.forget();
   if (mPendingSpellCheck) {
     // Cancel the pending editor spell checker initialization.
     mPendingSpellCheck = nullptr;
@@ -646,7 +650,6 @@ nsresult mozInlineSpellChecker::Cleanup(bool aDestroyingFrames)
     ChangeNumPendingSpellChecks(-mNumPendingSpellChecks, editor);
   }
 
-  mEditor = nullptr;
   mFullSpellCheckScheduled = false;
 
   return rv;
@@ -701,13 +704,14 @@ mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking()
 nsresult
 mozInlineSpellChecker::RegisterEventListeners()
 {
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ENSURE_TRUE(editor, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  editor->AddEditActionListener(this);
+  mEditor->AddEditActionListener(this);
 
   nsCOMPtr<nsIDOMDocument> doc;
-  nsresult rv = editor->GetDocument(getter_AddRefs(doc));
+  nsresult rv = mEditor->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<EventTarget> piTarget = do_QueryInterface(doc, &rv);
@@ -727,13 +731,14 @@ mozInlineSpellChecker::RegisterEventListeners()
 nsresult
 mozInlineSpellChecker::UnregisterEventListeners()
 {
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ENSURE_TRUE(editor, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  editor->RemoveEditActionListener(this);
+  mEditor->RemoveEditActionListener(this);
 
   nsCOMPtr<nsIDOMDocument> doc;
-  editor->GetDocument(getter_AddRefs(doc));
+  mEditor->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<EventTarget> piTarget = do_QueryInterface(doc);
@@ -796,9 +801,8 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
     NS_ENSURE_STATE(mPendingInitEditorSpellCheckCallback);
   }
 
-  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditor);
   nsresult rv = mPendingSpellCheck->InitSpellChecker(
-                  editor, false, mPendingInitEditorSpellCheckCallback);
+                  mEditor, false, mPendingInitEditorSpellCheckCallback);
   if (NS_FAILED(rv)) {
     mPendingSpellCheck = nullptr;
     mPendingInitEditorSpellCheckCallback = nullptr;
@@ -857,10 +861,9 @@ mozInlineSpellChecker::NotifyObservers(const char* aTopic, nsIEditor* aEditor)
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os)
     return;
-  nsCOMPtr<nsIEditor> editor = aEditor;
-  if (!editor) {
-    editor = do_QueryReferent(mEditor);
-  }
+  // XXX Do we need to grab the editor here?  If it's necessary, each observer
+  //     should do it instead.
+  nsCOMPtr<nsIEditor> editor = aEditor ? aEditor : mEditor.get();
   os->NotifyObservers(editor, aTopic, nullptr);
 }
 
@@ -955,9 +958,9 @@ NS_IMETHODIMP
 mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
                                    const nsAString &newword)
 {
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ENSURE_TRUE(editor, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(newword.Length() != 0, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!mEditor) || NS_WARN_IF(newword.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMRange> range;
   nsresult res = GetMisspelledWord(aNode, aOffset, getter_AddRefs(range));
@@ -972,17 +975,18 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
     res = range->CloneRange(getter_AddRefs(editorRange));
     NS_ENSURE_SUCCESS(res, res);
 
-    AutoPlaceHolderBatch phb(editor, nullptr);
+    AutoPlaceHolderBatch phb(mEditor, nullptr);
 
     nsCOMPtr<nsISelection> selection;
-    res = editor->GetSelection(getter_AddRefs(selection));
+    res = mEditor->GetSelection(getter_AddRefs(selection));
     NS_ENSURE_SUCCESS(res, res);
     selection->RemoveAllRanges();
     selection->AddRange(editorRange);
 
-    nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryReferent(mEditor));
-    if (textEditor)
-      textEditor->InsertText(newword);
+    MOZ_ASSERT(mEditor);
+    RefPtr<TextEditor> textEditor = mEditor->AsTextEditor();
+    MOZ_ASSERT(textEditor);
+    textEditor->InsertText(newword);
   }
 
   return NS_OK;
@@ -1165,11 +1169,12 @@ mozInlineSpellChecker::MakeSpellCheckRange(
   nsresult rv;
   *aRange = nullptr;
 
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ENSURE_TRUE(editor, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMDocument> doc;
-  rv = editor->GetDocument(getter_AddRefs(doc));
+  rv = mEditor->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
@@ -1179,7 +1184,7 @@ mozInlineSpellChecker::MakeSpellCheckRange(
   // possibly use full range of the editor
   nsCOMPtr<nsIDOMElement> rootElem;
   if (! aStartNode || ! aEndNode) {
-    rv = editor->GetRootElement(getter_AddRefs(rootElem));
+    rv = mEditor->GetRootElement(getter_AddRefs(rootElem));
     NS_ENSURE_SUCCESS(rv, rv);
 
     aStartNode = rootElem;
@@ -1464,7 +1469,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
 
   // get the editor for ShouldSpellCheckNode, this may fail in reasonable
   // circumstances since the editor could have gone away
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+  nsCOMPtr<nsIEditor> editor = mEditor;
   if (! editor)
     return NS_ERROR_FAILURE;
 
@@ -1499,10 +1504,9 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
   }
 
   // aWordUtil.SetPosition flushes pending notifications, check editor again.
-  // XXX Uhhh, *we're* holding a strong ref to the editor.
-  editor = do_QueryReferent(mEditor);
-  if (! editor)
+  if (!mEditor) {
     return NS_ERROR_FAILURE;
+  }
 
   int32_t wordsChecked = 0;
   PRTime beginTime = PR_Now();
@@ -1657,9 +1661,9 @@ mozInlineSpellChecker::ResumeCheck(UniquePtr<mozInlineSpellStatus>&& aStatus)
   if (! mSpellCheck)
     return NS_OK; // spell checking has been turned off
 
-  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditor);
-  if (! editor)
-    return NS_OK; // editor is gone
+  if (!mEditor) {
+    return NS_OK;
+  }
 
   mozInlineSpellWordUtil wordUtil;
   nsresult rv = wordUtil.Init(mEditor);
@@ -1815,26 +1819,30 @@ mozInlineSpellChecker::AddRange(nsISelection* aSpellCheckSelection,
   return rv;
 }
 
-nsresult mozInlineSpellChecker::GetSpellCheckSelection(nsISelection ** aSpellCheckSelection)
+nsresult
+mozInlineSpellChecker::GetSpellCheckSelection(
+                         nsISelection** aSpellCheckSelection)
 {
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ENSURE_TRUE(editor, NS_ERROR_NULL_POINTER);
-
+  if (NS_WARN_IF(!mEditor)) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<nsISelectionController> selcon;
-  nsresult rv = editor->GetSelectionController(getter_AddRefs(selcon));
+  nsresult rv = mEditor->GetSelectionController(getter_AddRefs(selcon));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return selcon->GetSelection(nsISelectionController::SELECTION_SPELLCHECK, aSpellCheckSelection);
 }
 
-nsresult mozInlineSpellChecker::SaveCurrentSelectionPosition()
+nsresult
+mozInlineSpellChecker::SaveCurrentSelectionPosition()
 {
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ENSURE_TRUE(editor, NS_OK);
+  if (NS_WARN_IF(!mEditor)) {
+    return NS_OK; // XXX Why NS_OK?
+  }
 
   // figure out the old caret position based on the current selection
   nsCOMPtr<nsISelection> selection;
-  nsresult rv = editor->GetSelection(getter_AddRefs(selection));
+  nsresult rv = mEditor->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = selection->GetFocusNode(getter_AddRefs(mCurrentSelectionAnchorNode));
