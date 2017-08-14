@@ -271,6 +271,8 @@ NotificationController::DropMutationEvent(AccTreeMutationEvent* aEvent)
   } else if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
     aEvent->GetAccessible()->SetShowEventTarget(false);
   } else {
+    aEvent->GetAccessible()->SetHideEventTarget(false);
+
     AccHideEvent* hideEvent = downcast_accEvent(aEvent);
     MOZ_ASSERT(hideEvent);
 
