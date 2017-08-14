@@ -132,18 +132,6 @@ public class GeckoAppShell
         }
 
         @Override
-        public void uncaughtException(final Thread thread, final Throwable exc) {
-            if (GeckoThread.isState(GeckoThread.State.EXITING) ||
-                    GeckoThread.isState(GeckoThread.State.EXITED)) {
-                // We've called System.exit. All exceptions after this point are Android
-                // berating us for being nasty to it.
-                return;
-            }
-
-            super.uncaughtException(thread, exc);
-        }
-
-        @Override
         public boolean reportException(final Thread thread, final Throwable exc) {
             try {
                 if (exc instanceof OutOfMemoryError) {
