@@ -1016,7 +1016,7 @@ HTMLEditor::TypedText(const nsAString& aString,
 {
   MOZ_ASSERT(!aString.IsEmpty() || aAction != eTypedText);
 
-  AutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
+  AutoPlaceholderBatch batch(this, nsGkAtoms::TypingTxnName);
 
   if (aAction == eTypedBR) {
     // only inserts a br node
@@ -1230,7 +1230,7 @@ HTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
   // Mac linebreaks: Map any remaining CR to LF:
   inputString.ReplaceSubstring(u"\r", u"\n");
 
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
 
   // Get the first range in the selection, for context:
   RefPtr<nsRange> range = selection->GetRangeAt(0);
@@ -1318,7 +1318,7 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   }
 
   // Time to change the document
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
 
   nsReadingIterator<char16_t> endtotal;
   aSourceString.EndReading(endtotal);
@@ -1538,7 +1538,7 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
 
   CommitComposition();
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
                                nsIEditor::eNext);
 
@@ -1997,7 +1997,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
 
   bool cancel, handled;
 
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::makeList, nsIEditor::eNext);
 
   // pre-process
@@ -2068,7 +2068,7 @@ HTMLEditor::RemoveList(const nsAString& aListType)
 
   bool cancel, handled;
 
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::removeList, nsIEditor::eNext);
 
   // pre-process
@@ -2103,7 +2103,7 @@ HTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
 
   bool cancel, handled;
 
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::makeDefListItem,
                                nsIEditor::eNext);
 
@@ -2136,7 +2136,7 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
 
   bool cancel, handled;
 
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::makeBasicBlock,
                                nsIEditor::eNext);
 
@@ -2208,7 +2208,7 @@ HTMLEditor::Indent(const nsAString& aIndent)
   if (aIndent.LowerCaseEqualsLiteral("outdent")) {
     opID = EditAction::outdent;
   }
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
@@ -2277,7 +2277,7 @@ HTMLEditor::Align(const nsAString& aAlignType)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> rules(mRules);
 
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::align, nsIEditor::eNext);
 
   bool cancel, handled;
@@ -2689,7 +2689,7 @@ HTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
     return NS_OK;
   }
 
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
 
   // Set all attributes found on the supplied anchor element
   nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
@@ -3452,7 +3452,7 @@ HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
                              bool aWasAlternate,
                              nsresult aStatus)
 {
-  AutoEditBatch batchIt(this);
+  AutoPlaceholderBatch batchIt(this);
 
   if (!mLastStyleSheetURL.IsEmpty())
     RemoveStyleSheet(mLastStyleSheetURL);
@@ -4535,7 +4535,7 @@ HTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
 
   bool isCollapsed = selection->Collapsed();
 
-  AutoEditBatch batchIt(this);
+  AutoPlaceholderBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
                                nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);

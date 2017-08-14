@@ -970,7 +970,7 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
     res = range->CloneRange(getter_AddRefs(editorRange));
     NS_ENSURE_SUCCESS(res, res);
 
-    AutoPlaceHolderBatch phb(mTextEditor, nullptr);
+    AutoPlaceholderBatch phb(mTextEditor, nullptr);
 
     nsCOMPtr<nsISelection> selection;
     res = mTextEditor->GetSelection(getter_AddRefs(selection));
