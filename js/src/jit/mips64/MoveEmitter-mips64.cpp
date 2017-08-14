@@ -128,9 +128,9 @@ MoveEmitterMIPS64::completeCycle(const MoveOperand& from, const MoveOperand& to,
 void
 MoveEmitterMIPS64::emitDoubleMove(const MoveOperand& from, const MoveOperand& to)
 {
-    // Ensure that we can use ScratchDoubleReg in memory move.
-    MOZ_ASSERT_IF(from.isFloatReg(), from.floatReg() != ScratchDoubleReg);
-    MOZ_ASSERT_IF(to.isFloatReg(), to.floatReg() != ScratchDoubleReg);
+    // Ensure that we can use SecondScratchDoubleReg in memory move.
+    MOZ_ASSERT_IF(from.isFloatReg(), from.floatReg() != SecondScratchDoubleReg);
+    MOZ_ASSERT_IF(to.isFloatReg(), to.floatReg() != SecondScratchDoubleReg);
 
     if (from.isFloatReg()) {
         if (to.isFloatReg()) {
@@ -149,7 +149,7 @@ MoveEmitterMIPS64::emitDoubleMove(const MoveOperand& from, const MoveOperand& to
     } else {
         MOZ_ASSERT(from.isMemory());
         MOZ_ASSERT(to.isMemory());
-        masm.loadDouble(getAdjustedAddress(from), ScratchDoubleReg);
-        masm.storeDouble(ScratchDoubleReg, getAdjustedAddress(to));
+        masm.loadDouble(getAdjustedAddress(from), SecondScratchDoubleReg);
+        masm.storeDouble(SecondScratchDoubleReg, getAdjustedAddress(to));
     }
 }

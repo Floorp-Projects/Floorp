@@ -740,6 +740,11 @@ nsComponentManagerImpl::RereadChromeManifests(bool aChromeOnly)
     ComponentLocation& l = sModuleLocations->ElementAt(i);
     RegisterManifest(l.type, l.location, aChromeOnly);
   }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "chrome-manifests-loaded", nullptr);
+  }
 }
 
 bool

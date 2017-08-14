@@ -144,7 +144,7 @@ jit::PatchBackedge(CodeLocationJump& jump, CodeLocationLabel label,
     if (BOffImm16::IsInRange(targetAddr - sourceAddr)) {
         branch->setBOffImm16(BOffImm16(targetAddr - sourceAddr));
     } else {
-        if (target == JitRuntime::BackedgeLoopHeader) {
+        if (target == JitZoneGroup::BackedgeLoopHeader) {
             Instruction* lui = &branch[1];
             AssemblerMIPSShared::UpdateLuiOriValue(lui, lui->next(), targetAddr);
             // Jump to ori. The lui will be executed in delay slot.
