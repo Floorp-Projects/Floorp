@@ -616,3 +616,21 @@
    fun:_GLOBAL__sub_I_*.cpp
    obj:/*/lib*/libLLVM-3.6-mesa.so
 }
+
+{
+   map_or<selectors::parser::Combinator,bool,closure> #1 (see bug 1365915)
+   Memcheck:Cond
+   fun:map_or<selectors::parser::Combinator,bool,closure>
+   fun:_ZN9selectors8matching33matches_complex_selector_internal*
+   fun:_ZN9selectors8matching24matches_complex_selector*
+   fun:matches_selector<style::gecko::wrapper::GeckoElement,closure>
+}
+
+{
+   map_or<selectors::parser::Combinator,bool,closure> #2 (see bug 1365915)
+   Memcheck:Cond
+   fun:map_or<selectors::parser::Combinator,bool,closure>
+   fun:_ZN9selectors8matching33matches_complex_selector_internal*
+   fun:_ZN9selectors8matching24matches_complex_selector*
+   fun:{{closure}}<closure>
+}
