@@ -2582,7 +2582,7 @@ module.exports = {
     icon: "bookmark",
     action: ac.SendToMain({
       type: at.BOOKMARK_URL,
-      data: site.url
+      data: {url: site.url, title: site.title}
     }),
     userEvent: "BOOKMARK_ADD"
   }),
