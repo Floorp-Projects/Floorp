@@ -1961,7 +1961,7 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
            .setNoScriptRval(true);
 
     if (mScriptLoader.mWorkerScriptType == DebuggerScript) {
-      options.setVersion(JSVERSION_LATEST);
+      options.setVersion(JSVERSION_DEFAULT);
     }
 
     MOZ_ASSERT(loadInfo.mMutedErrorFlag.isSome());
