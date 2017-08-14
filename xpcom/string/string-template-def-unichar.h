@@ -20,7 +20,6 @@
 #define nsTDependentString_CharT            nsDependentString
 #define nsTDependentSubstring_CharT         nsDependentSubstring
 #define nsTLiteralString_CharT              nsLiteralString
-#define nsTXPIDLString_CharT                nsXPIDLString
 #define nsTGetterCopies_CharT               nsGetterCopies
 #define nsTPromiseFlatString_CharT          nsPromiseFlatString
 #define TPromiseFlatString_CharT            PromiseFlatString

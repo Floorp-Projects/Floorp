@@ -55,7 +55,6 @@ UNIFIED_SOURCES += [
     'TestTimeStamp.cpp',
     'TestTokenizer.cpp',
     'TestUTF.cpp',
-    'TestXPIDLString.cpp',
 ]
 
 if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT') and CONFIG['OS_TARGET'] != 'Android':

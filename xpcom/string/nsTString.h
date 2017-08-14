@@ -706,8 +706,8 @@ public:
  *       moz_xmalloc, such as "out string" parameters in XPIDL.
  *
  * NAMES:
- *   nsXPIDLString for wide characters
- *   nsXPIDLCString for narrow characters
+ *   nsXPIDLString for wide characters (no longer available)
+ *   nsXPIDLCString for narrow characters (deprecated)
  */
 class nsTXPIDLString_CharT : public nsTString_CharT
 {
