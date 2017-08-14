@@ -1,22 +1,24 @@
 <html>
   <head>
     <script>
-      var timerID = 0;
-      function testDone() {
-        clearTimeout(timerID);
-        var l = document.body.firstChild.contentWindow.location.href;
-        opener.ok(l.endsWith("file_fragment_handling_during_load_frame2.html"),
-                 "Should have loaded a new document");
+      function checkHaveLoadedNewDoc() {
+        let l = document.body.firstChild.contentWindow.location.href;
+        if (!l.endsWith("file_fragment_handling_during_load_frame2.html")) {
+          opener.ok(true, "Fine. We will check later.");
+          setTimeout(checkHaveLoadedNewDoc, 500);
+          return;
+        }
+        opener.ok(true, "Have loaded a new document.");
         opener.nextTest();
         window.close();
       }
       function test() {
         var ifr = document.getElementsByTagName("iframe")[0];
-        ifr.onload = testDone;
+        ifr.onload = checkHaveLoadedNewDoc;
         ifr.contentWindow.location.hash = "b";
         ifr.contentWindow.location.href = "file_fragment_handling_during_load_frame2.html";
         history.back();
-        timerID = setTimeout(testDone, 2000);
+        checkHaveLoadedNewDoc();
       }
     </script>
   </head>
