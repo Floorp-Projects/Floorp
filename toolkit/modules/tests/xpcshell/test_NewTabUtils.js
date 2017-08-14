@@ -555,38 +555,6 @@ add_task(async function activitySteamProvider_deleteHistoryLink() {
   Assert.equal(size, 1, "expected history size");
 });
 
-add_task(async function activityStream_addBookmark() {
-  await setUpActivityStreamTest();
-
-  let provider = NewTabUtils.activityStreamLinks;
-  let bookmarks = [
-    "https://mozilla1.com/0",
-    "https://mozilla1.com/1"
-  ];
-
-  let bookmarksSize = await NewTabUtils.activityStreamProvider.getBookmarksSize();
-  Assert.equal(bookmarksSize, 0, "empty bookmarks yields 0 size");
-
-  for (let url of bookmarks) {
-    await provider.addBookmark(url);
-  }
-  bookmarksSize = await NewTabUtils.activityStreamProvider.getBookmarksSize();
-  Assert.equal(bookmarksSize, 2, "size 2 for 2 bookmarks added");
-});
-
-add_task(async function activityStream_getBookmark() {
-    await setUpActivityStreamTest();
-
-    let provider = NewTabUtils.activityStreamLinks;
-    let bookmark = await provider.addBookmark("https://mozilla1.com/0");
-
-    let result = await NewTabUtils.activityStreamProvider.getBookmark(bookmark.guid);
-    Assert.equal(result.bookmarkGuid, bookmark.guid, "got the correct bookmark guid");
-    Assert.equal(result.bookmarkTitle, bookmark.title, "got the correct bookmark title");
-    Assert.equal(result.lastModified, bookmark.lastModified.getTime(), "got the correct bookmark time");
-    Assert.equal(result.url, bookmark.url.href, "got the correct bookmark url");
-});
-
 add_task(async function activityStream_deleteBookmark() {
   await setUpActivityStreamTest();
 
