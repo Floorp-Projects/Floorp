@@ -54,6 +54,16 @@ if (Services.appinfo.OS == "WINNT") {
   EXPECTED_REFLOWS.push(
     {
       stack: [
+        "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
+        "_update@chrome://browser/content/browser-tabsintitlebar.js",
+        "init@chrome://browser/content/browser-tabsintitlebar.js",
+        "handleEvent@chrome://browser/content/tabbrowser.xml",
+      ],
+      times: 2, // This number should only ever go down - never up.
+    },
+
+    {
+      stack: [
         "handleEvent@chrome://browser/content/tabbrowser.xml",
         "inferFromText@chrome://browser/content/browser.js",
         "handleEvent@chrome://browser/content/browser.js",
