@@ -205,6 +205,45 @@ this.FormAutofillUtils = {
   },
 
   /**
+   * Try to find the abbreviation of the given state name
+   * @param   {string[]} stateValues A list of inferable state values.
+   * @param   {string} country A country name to be identified.
+   * @returns {string} The matching state abbreviation.
+   */
+  getAbbreviatedStateName(stateValues, country = this.DEFAULT_COUNTRY_CODE) {
+    let values = Array.isArray(stateValues) ? stateValues : [stateValues];
+
+    let collators = this.getCollators(country);
+    let {sub_keys: subKeys, sub_names: subNames} = this.getCountryAddressData(country);
+
+    if (!Array.isArray(subKeys)) {
+      subKeys = subKeys.split("~");
+    }
+    if (!Array.isArray(subNames)) {
+      subNames = subNames.split("~");
+    }
+
+    let speculatedSubIndexes = [];
+    for (const val of values) {
+      let identifiedValue = this.identifyValue(subKeys, subNames, val, collators);
+      if (identifiedValue) {
+        return identifiedValue;
+      }
+
+      // Predict the possible state by partial-matching if no exact match.
+      [subKeys, subNames].forEach(sub => {
+        speculatedSubIndexes.push(sub.findIndex(token => {
+          let pattern = new RegExp("\\b" + this.escapeRegExp(token) + "\\b");
+
+          return pattern.test(val);
+        }));
+      });
+    }
+
+    return subKeys[speculatedSubIndexes.find(i => !!~i)] || null;
+  },
+
+  /**
    * Find the option element from select element.
    * 1. Try to find the locale using the country from address.
    * 2. First pass try to find exact match.
