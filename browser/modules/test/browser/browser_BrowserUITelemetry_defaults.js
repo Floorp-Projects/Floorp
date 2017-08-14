@@ -18,11 +18,12 @@ function test() {
 
   let result = BrowserUITelemetry._getWindowMeasurements(window, 0);
 
-  // Bug 1278176 - DevEdition always reports the developer-button is moved.
+  Assert.deepEqual(result.defaultMoved, []);
+  // Bug 1278176 - DevEdition always reports the developer-button is added to
+  // the toolbar.
   if (!AppConstants.MOZ_DEV_EDITION) {
-    Assert.deepEqual(result.defaultMoved, []);
+    Assert.deepEqual(result.nondefaultAdded, []);
   }
-  Assert.deepEqual(result.nondefaultAdded, []);
 
   Assert.deepEqual(result.defaultRemoved, []);
 
