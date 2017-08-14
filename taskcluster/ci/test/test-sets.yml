@@ -100,6 +100,20 @@ stylo-sequential-tests:
     - reftest-stylo
     - mochitest
 
+qr-talos:
+    - talos-chrome
+    - talos-dromaeojs
+    # - talos-g1 # doesn't work with QR yet
+    # - talos-g2 # doesn't work with QR yet
+    - talos-g3
+    - talos-g4
+    - talos-g5
+    - talos-other
+    - talos-svgr
+    - talos-tp5o
+    - talos-perf-reftest
+    - talos-perf-reftest-singletons
+
 qr-tests:
     - cppunit
     - crashtest
