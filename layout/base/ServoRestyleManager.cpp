@@ -1163,14 +1163,10 @@ ServoRestyleManager::ProcessPendingRestyles()
 }
 
 void
-ServoRestyleManager::UpdateOnlyAnimationStyles()
+ServoRestyleManager::UpdateAnimationStylesForHitTesting()
 {
-  // Bug 1365855: We also need to implement this for SMIL.
-  bool doCSS = PresContext()->EffectCompositor()->HasPendingStyleUpdates();
-  if (!doCSS) {
-    return;
-  }
-
+  MOZ_ASSERT(PresContext()->EffectCompositor()->HasThrottledStyleUpdates(),
+             "Should have throttled animation");
   DoProcessPendingRestyles(ServoTraversalFlags::FlushThrottledAnimations);
 }
 

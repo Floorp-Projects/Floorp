@@ -550,27 +550,27 @@ GeckoRestyleManager::ProcessPendingRestyles()
     mHavePendingNonAnimationRestyles || mDoRebuildAllStyleData;
   if (haveNonAnimation) {
     ++mAnimationGeneration;
-    UpdateOnlyAnimationStyles();
+    UpdateAnimationStyles();
   } else {
     // If we don't have non-animation style updates, then we have queued
     // up animation style updates from the refresh driver tick.  This
     // doesn't necessarily include *all* animation style updates, since
     // we might be suppressing main-thread updates for some animations,
-    // so we don't want to call UpdateOnlyAnimationStyles, which updates
+    // so we don't want to call UpdateAnimationStyles, which updates
     // all animations.  In other words, the work that we're about to do
     // to process the pending restyles queue is a *subset* of the work
-    // that UpdateOnlyAnimationStyles would do, since we're *not*
+    // that UpdateAnimationStyles would do, since we're *not*
     // updating transitions that are running on the compositor thread
     // and suppressed on the main thread.
     //
     // But when we update those styles, we want to suppress updates to
-    // transitions just like we do in UpdateOnlyAnimationStyles.  So we
+    // transitions just like we do in UpdateAnimationStyles.  So we
     // want to tell the transition manager to act as though we're in
-    // UpdateOnlyAnimationStyles.
+    // UpdateAnimationStyles.
     //
     // FIXME: In the future, we might want to refactor the way the
     // animation and transition manager do their refresh driver ticks so
-    // that we can use UpdateOnlyAnimationStyles, with a different
+    // that we can use UpdateAnimationStyles, with a different
     // boolean argument, for this update as well, instead of having them
     // post style updates in their WillRefresh methods.
     PresContext()->TransitionManager()->SetInAnimationOnlyStyleUpdate(true);
@@ -642,7 +642,7 @@ GeckoRestyleManager::EndProcessingRestyles()
 }
 
 void
-GeckoRestyleManager::UpdateOnlyAnimationStyles()
+GeckoRestyleManager::UpdateAnimationStyles()
 {
   bool doCSS = PresContext()->EffectCompositor()->HasPendingStyleUpdates();
 
@@ -673,6 +673,27 @@ GeckoRestyleManager::UpdateOnlyAnimationStyles()
   if (doSMIL) {
     animationController->AddStyleUpdatesTo(tracker);
   }
+
+  ProcessRestyles(tracker);
+
+  transitionManager->SetInAnimationOnlyStyleUpdate(false);
+}
+
+void
+GeckoRestyleManager::UpdateAnimationStylesForHitTesting()
+{
+  MOZ_ASSERT(PresContext()->EffectCompositor()->HasThrottledStyleUpdates(),
+             "Should have throttled animation");
+
+  nsTransitionManager* transitionManager = PresContext()->TransitionManager();
+
+  transitionManager->SetInAnimationOnlyStyleUpdate(true);
+
+  RestyleTracker tracker(ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE |
+                         ELEMENT_IS_POTENTIAL_ANIMATION_ONLY_RESTYLE_ROOT);
+  tracker.Init(this);
+
+  PresContext()->EffectCompositor()->AddStyleUpdatesTo(tracker);
 
   ProcessRestyles(tracker);
 
