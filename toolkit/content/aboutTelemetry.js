@@ -349,30 +349,30 @@ var PingPicker = {
     let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">" + pings + "</a>";
     let pingName = this._getSelectedPingName();
 
-    // Display the type and controls if the ping is not current
     let pingDate = document.getElementById("ping-date");
+    pingDate.textContent = pingName;
+    pingDate.setAttribute("title", pingName);
+
+    // Display the type and controls if the ping is not current
     let pingType = document.getElementById("ping-type");
-    let controls = document.getElementById("controls");
+    let older = document.getElementById("older-ping");
+    let newer = document.getElementById("newer-ping");
     let explanation;
     if (!this.viewCurrentPingData) {
-      // Change sidebar heading text.
-      pingDate.textContent = pingName;
-      pingDate.setAttribute("title", pingName);
       let pingTypeText = this._getSelectedPingType();
-      controls.classList.remove("hidden");
+      pingType.hidden = false;
+      older.hidden = false;
+      newer.hidden = false;
       pingType.textContent = pingTypeText;
-
-      // Change home page text.
       pingName = bundle.formatStringFromName("namedPing", [pingName, pingTypeText], 2);
       let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
       let parameters = [pingLink, pingNameHtml, pingTypeText];
       explanation = bundle.formatStringFromName("pingDetails", parameters, 3);
     } else {
-      // Change sidebar heading text.
-      controls.classList.add("hidden");
-      pingType.textContent = bundle.GetStringFromName("currentPingSidebar");
-
-      // Change home page text.
+      pingType.hidden = true;
+      older.hidden = true;
+      newer.hidden = true;
+      pingDate.textContent = bundle.GetStringFromName("currentPingSidebar");
       let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
       explanation = bundle.formatStringFromName("pingDetailsCurrent", [pingLink, pingNameHtml], 2);
     }
