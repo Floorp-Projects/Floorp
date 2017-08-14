@@ -186,13 +186,9 @@ Var ProfileCleanupButtonString
 !define BlurbDisplayMS 19500
 !define BlurbBlankMS 500
 
-; Amount of physical memory required for the 64-bit build to be selected.
-; Machines with less RAM than this get the 32-bit build, even with a 64-bit OS.
-; The value 1800 MB was chosen based on an initial requirement of 2 GB, reduced
-; to allow for hardware such as integrated graphics that reserves some of the
-; installed RAM for its own use.
-; 1800 MB * 1024 KB/MB * 1024 B/KB = 1887436800 bytes
-!define RAM_NEEDED_FOR_64BIT 1887436800
+; Amount of physical memory required for the 64-bit build to be selected (2 GB).
+; Machines with this or less RAM get the 32-bit build, even with a 64-bit OS.
+!define RAM_NEEDED_FOR_64BIT 0x80000000
 
 ; Attempt to elevate Standard Users in addition to users that
 ; are a member of the Administrators group.
@@ -333,7 +329,7 @@ Function .onInit
   System::Free $0
 
   ${If} ${RunningX64}
-  ${AndIf} $1 L>= ${RAM_NEEDED_FOR_64BIT}
+  ${AndIf} $1 L> ${RAM_NEEDED_FOR_64BIT}
     StrCpy $DroplistArch "$(VERSION_64BIT)"
     StrCpy $INSTDIR "${DefaultInstDir64bit}"
   ${Else}
