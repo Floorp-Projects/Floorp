@@ -43,6 +43,8 @@ void main(void) {
     return;
   }
 
+  DriverInfo.dump(x => ok(true, x));
+
   function errorFunc(str) {
     ok(false, 'Error: ' + str);
   }
