@@ -829,23 +829,24 @@ mozInlineSpellChecker::EditorSpellCheckInited()
 // info on the aEditor parameter.
 void
 mozInlineSpellChecker::ChangeNumPendingSpellChecks(int32_t aDelta,
-                                                   nsIEditor* aEditor)
+                                                   TextEditor* aTextEditor)
 {
   int8_t oldNumPending = mNumPendingSpellChecks;
   mNumPendingSpellChecks += aDelta;
   NS_ASSERTION(mNumPendingSpellChecks >= 0,
                "Unbalanced ChangeNumPendingSpellChecks calls!");
   if (oldNumPending == 0 && mNumPendingSpellChecks > 0) {
-    NotifyObservers(INLINESPELL_STARTED_TOPIC, aEditor);
+    NotifyObservers(INLINESPELL_STARTED_TOPIC, aTextEditor);
   } else if (oldNumPending > 0 && mNumPendingSpellChecks == 0) {
-    NotifyObservers(INLINESPELL_ENDED_TOPIC, aEditor);
+    NotifyObservers(INLINESPELL_ENDED_TOPIC, aTextEditor);
   }
 }
 
 // Broadcasts the given topic to observers.  aEditor is passed to observers if
 // nonnull; otherwise mTextEditor is passed.
 void
-mozInlineSpellChecker::NotifyObservers(const char* aTopic, nsIEditor* aEditor)
+mozInlineSpellChecker::NotifyObservers(const char* aTopic,
+                                       TextEditor* aTextEditor)
 {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os)
@@ -853,7 +854,7 @@ mozInlineSpellChecker::NotifyObservers(const char* aTopic, nsIEditor* aEditor)
   // XXX Do we need to grab the editor here?  If it's necessary, each observer
   //     should do it instead.
   RefPtr<TextEditor> textEditor =
-    aEditor ? aEditor->AsTextEditor() : mTextEditor.get();
+    aTextEditor ? aTextEditor : mTextEditor.get();
   os->NotifyObservers(static_cast<nsIEditor*>(textEditor.get()),
                       aTopic, nullptr);
 }
@@ -1246,7 +1247,7 @@ mozInlineSpellChecker::SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
 //    for these cases.
 
 bool
-mozInlineSpellChecker::ShouldSpellCheckNode(nsIEditor* aEditor,
+mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
                                             nsINode *aNode)
 {
   MOZ_ASSERT(aNode);
@@ -1255,9 +1256,7 @@ mozInlineSpellChecker::ShouldSpellCheckNode(nsIEditor* aEditor,
 
   nsIContent *content = aNode->AsContent();
 
-  uint32_t flags;
-  aEditor->GetFlags(&flags);
-  if (flags & nsIPlaintextEditor::eEditorMailMask) {
+  if (aTextEditor->IsMailEditor()) {
     nsIContent *parent = content->GetParent();
     while (parent) {
       if (parent->IsHTMLElement(nsGkAtoms::blockquote) &&
