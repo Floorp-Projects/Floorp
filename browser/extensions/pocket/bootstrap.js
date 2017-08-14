@@ -212,7 +212,7 @@ var PocketPageAction = {
           wrapper.appendChild(pocketButton);
           wrapper.appendChild(animatableBox);
           animatableBox.appendChild(animatableImage);
-          let iconBox = doc.getElementById("urlbar-icons");
+          let iconBox = doc.getElementById("page-action-buttons");
           iconBox.appendChild(wrapper);
           wrapper.hidden = true;
           wrapper.addEventListener("click", event => {
