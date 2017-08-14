@@ -830,7 +830,7 @@ class Onboarding {
   _renderOverlayButton() {
     let button = this._window.document.createElement("button");
     let tooltipStringId = this._tourType === "new" ?
-      "onboarding.overlay-icon-tooltip" : "onboarding.overlay-icon-tooltip-updated";
+      "onboarding.overlay-icon-tooltip2" : "onboarding.overlay-icon-tooltip-updated2";
     let tooltip = this._bundle.formatStringFromName(tooltipStringId, [BRAND_SHORT_NAME], 1);
     button.setAttribute("aria-label", tooltip);
     button.id = "onboarding-overlay-button";
