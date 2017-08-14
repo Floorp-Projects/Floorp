@@ -50,18 +50,14 @@ inline bool IsConditionalPunctuation(char16_t ch)
 // mozInlineSpellWordUtil::Init
 
 nsresult
-mozInlineSpellWordUtil::Init(const nsWeakPtr& aWeakEditor)
+mozInlineSpellWordUtil::Init(nsIEditor* aEditor)
 {
-  nsresult rv;
-
-  // getting the editor can fail commonly because the editor was detached, so
-  // don't assert
-  nsCOMPtr<nsIEditor> editor = do_QueryReferent(aWeakEditor, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_WARN_IF(!aEditor)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = editor->GetDocument(getter_AddRefs(domDoc));
+  nsresult rv = aEditor->GetDocument(getter_AddRefs(domDoc));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(domDoc, NS_ERROR_NULL_POINTER);
 
@@ -71,7 +67,7 @@ mozInlineSpellWordUtil::Init(const nsWeakPtr& aWeakEditor)
   // Find the root node for the editor. For contenteditable we'll need something
   // cleverer here.
   nsCOMPtr<nsIDOMElement> rootElt;
-  rv = editor->GetRootElement(getter_AddRefs(rootElt));
+  rv = aEditor->GetRootElement(getter_AddRefs(rootElt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsINode> rootNode = do_QueryInterface(rootElt);
