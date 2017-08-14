@@ -1433,7 +1433,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         options.creationOptions().setNewZoneInSystemZoneGroup();
         if (xpc::SharedMemoryEnabled())
             options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
-        options.behaviors().setVersion(JSVERSION_LATEST);
+        options.behaviors().setVersion(JSVERSION_DEFAULT);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = nsXPConnect::XPConnect()->
             InitClassesWithNewWrappedGlobal(cx,
