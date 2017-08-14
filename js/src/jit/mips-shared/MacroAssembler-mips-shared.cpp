@@ -1662,6 +1662,13 @@ MacroAssembler::call(wasm::SymbolicAddress target)
 }
 
 void
+MacroAssembler::call(const Address& addr)
+{
+    loadPtr(addr, CallReg);
+    call(CallReg);
+}
+
+void
 MacroAssembler::call(ImmWord target)
 {
     call(ImmPtr((void*)target.value));

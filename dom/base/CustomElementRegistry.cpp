@@ -19,7 +19,7 @@ namespace dom {
 void
 CustomElementCallback::Call()
 {
-  ErrorResult rv;
+  IgnoredErrorResult rv;
   switch (mType) {
     case nsIDocument::eCreated:
     {
@@ -55,10 +55,6 @@ CustomElementCallback::Call()
         mArgs.name, mArgs.oldValue, mArgs.newValue, rv);
       break;
   }
-
-  // If callbacks throw exceptions, it'll be handled and reported in
-  // Lifecycle*Callback::Call function.
-  rv.SuppressException();
 }
 
 void
@@ -81,7 +77,37 @@ CustomElementCallback::CustomElementCallback(Element* aThisObject,
     mOwnerData(aOwnerData)
 {
 }
+//-----------------------------------------------------
+// CustomElementConstructor
 
+already_AddRefed<Element>
+CustomElementConstructor::Construct(const char* aExecutionReason,
+                                    ErrorResult& aRv)
+{
+  CallSetup s(this, aRv, aExecutionReason,
+              CallbackFunction::eRethrowExceptions);
+
+  JSContext* cx = s.GetContext();
+  if (!cx) {
+    MOZ_ASSERT(aRv.Failed());
+    return nullptr;
+  }
+
+  JS::Rooted<JSObject*> result(cx);
+  JS::Rooted<JS::Value> constructor(cx, JS::ObjectValue(*mCallback));
+  if (!JS::Construct(cx, constructor, JS::HandleValueArray::empty(), &result)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<Element> element;
+  if (NS_FAILED(UNWRAP_OBJECT(Element, &result, element))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return element.forget();
+}
 //-----------------------------------------------------
 // CustomElementData
 
@@ -100,6 +126,33 @@ CustomElementData::CustomElementData(nsIAtom* aType, State aState)
 
 //-----------------------------------------------------
 // CustomElementRegistry
+
+namespace {
+
+class MOZ_RAII AutoConstructionStackEntry final
+{
+public:
+  AutoConstructionStackEntry(nsTArray<RefPtr<nsGenericHTMLElement>>& aStack,
+                             nsGenericHTMLElement* aElement)
+    : mStack(aStack)
+  {
+    mIndex = mStack.Length();
+    mStack.AppendElement(aElement);
+  }
+
+  ~AutoConstructionStackEntry()
+  {
+    MOZ_ASSERT(mIndex == mStack.Length() - 1,
+               "Removed element should be the last element");
+    mStack.RemoveElementAt(mIndex);
+  }
+
+private:
+  nsTArray<RefPtr<nsGenericHTMLElement>>& mStack;
+  uint32_t mIndex;
+};
+
+} // namespace anonymous
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementRegistry)
@@ -139,6 +192,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementRegistry)
         "mCustomDefinitions->mCallbacks->mDetachedCallback");
       cb.NoteXPCOMChild(callbacks->mDetachedCallback.Value());
     }
+
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+      "mCustomDefinitions->mConstructor");
+    cb.NoteXPCOMChild(iter.UserData()->mConstructor);
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWhenDefinedPromiseMap)
@@ -147,9 +204,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CustomElementRegistry)
   for (auto iter = tmp->mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
-    aCallbacks.Trace(&iter.UserData()->mConstructor,
-                     "mCustomDefinitions constructor",
-                     aClosure);
     aCallbacks.Trace(&iter.UserData()->mPrototype,
                      "mCustomDefinitions prototype",
                      aClosure);
@@ -428,8 +482,7 @@ CustomElementRegistry::GetCustomPrototype(nsIAtom* aAtom,
 }
 
 void
-CustomElementRegistry::UpgradeCandidates(JSContext* aCx,
-                                         nsIAtom* aKey,
+CustomElementRegistry::UpgradeCandidates(nsIAtom* aKey,
                                          CustomElementDefinition* aDefinition,
                                          ErrorResult& aRv)
 {
@@ -439,6 +492,7 @@ CustomElementRegistry::UpgradeCandidates(JSContext* aCx,
     return;
   }
 
+  // TODO: Bug 1326028 - Upgrade custom element in shadow-including tree order
   nsAutoPtr<nsTArray<nsWeakPtr>> candidates;
   if (mCandidatesMap.Remove(aKey, &candidates)) {
     MOZ_ASSERT(candidates);
@@ -726,7 +780,7 @@ CustomElementRegistry::Define(const nsAString& aName,
   CustomElementDefinition* definition =
     new CustomElementDefinition(nameAtom,
                                 localNameAtom,
-                                constructor,
+                                &aFunctionConstructor,
                                 constructorPrototype,
                                 callbacks,
                                 0 /* TODO dependent on HTML imports. Bug 877072 */);
@@ -739,8 +793,7 @@ CustomElementRegistry::Define(const nsAString& aName,
   /**
    * 13. 14. 15. Upgrade candidates
    */
-  // TODO: Bug 1299363 - Implement custom element v1 upgrade algorithm
-  UpgradeCandidates(cx, nameAtom, definition, aRv);
+  UpgradeCandidates(nameAtom, definition, aRv);
 
   /**
    * 16. If this CustomElementRegistry's when-defined promise map contains an
@@ -770,7 +823,7 @@ CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
     return;
   }
 
-  aRetVal.setObject(*data->mConstructor);
+  aRetVal.setObjectOrNull(data->mConstructor->CallableOrNull());
 }
 
 already_AddRefed<Promise>
@@ -804,57 +857,67 @@ CustomElementRegistry::WhenDefined(const nsAString& aName, ErrorResult& aRv)
   return promise.forget();
 }
 
+namespace {
+
+static void
+DoUpgrade(Element* aElement,
+          CustomElementConstructor* aConstructor,
+          ErrorResult& aRv)
+{
+  // Rethrow the exception since it might actually throw the exception from the
+  // upgrade steps back out to the caller of document.createElement.
+  RefPtr<Element> constructResult =
+    aConstructor->Construct("Custom Element Upgrade", aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (constructResult.get() != aElement) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+}
+
+} // anonymous namespace
+
+// https://html.spec.whatwg.org/multipage/scripting.html#upgrades
 void
 CustomElementRegistry::Upgrade(Element* aElement,
-                               CustomElementDefinition* aDefinition)
+                               CustomElementDefinition* aDefinition,
+                               ErrorResult& aRv)
 {
-  // TODO: This function will be replaced to v1 upgrade in bug 1299363
   aElement->RemoveStates(NS_EVENT_STATE_UNRESOLVED);
 
-  // Make sure that the element name matches the name in the definition.
-  // (e.g. a definition for x-button extending button should match
-  // <button is="x-button"> but not <x-button>.
-  if (aElement->NodeInfo()->NameAtom() != aDefinition->mLocalName) {
-    //Skip over this element because definition does not apply.
+  RefPtr<CustomElementData> data = aElement->GetCustomElementData();
+  MOZ_ASSERT(data, "CustomElementData should exist");
+
+  // Step 1 and step 2.
+  if (data->mState == CustomElementData::State::eCustom ||
+      data->mState == CustomElementData::State::eFailed) {
     return;
   }
 
-  MOZ_ASSERT(aElement->IsHTMLElement(aDefinition->mLocalName));
+  // Step 3 and Step 4.
+  // TODO: Bug 1334051 - Implement list of observed attributes for custom elements' attributeChanged callbacks
+  // TODO: Bug 1334043 - Implement connected lifecycle callbacks for custom elements
 
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
+  // Step 5.
+  AutoConstructionStackEntry acs(aDefinition->mConstructionStack,
+                                 nsGenericHTMLElement::FromContent(aElement));
+
+  // Step 6 and step 7.
+  DoUpgrade(aElement, aDefinition->mConstructor, aRv);
+  if (aRv.Failed()) {
+    data->mState = CustomElementData::State::eFailed;
+    // Empty element's custom element reaction queue.
+    data->mReactionQueue.Clear();
     return;
   }
 
-  JSContext* cx = jsapi.cx();
+  // Step 8.
+  data->mState = CustomElementData::State::eCustom;
 
-  JS::Rooted<JSObject*> reflector(cx, aElement->GetWrapper());
-  if (reflector) {
-    Maybe<JSAutoCompartment> ac;
-    JS::Rooted<JSObject*> prototype(cx, aDefinition->mPrototype);
-    if (aElement->NodePrincipal()->SubsumesConsideringDomain(nsContentUtils::ObjectPrincipal(prototype))) {
-      ac.emplace(cx, reflector);
-      if (!JS_WrapObject(cx, &prototype) ||
-          !JS_SetPrototype(cx, reflector, prototype)) {
-        return;
-      }
-    } else {
-      // We want to set the custom prototype in the compartment where it was
-      // registered. We store the prototype from define() without unwrapped,
-      // hence the prototype's compartment is the compartment where it was
-      // registered.
-      // In the case that |reflector| and |prototype| are in different
-      // compartments, this will set the prototype on the |reflector|'s wrapper
-      // and thus only visible in the wrapper's compartment, since we know
-      // reflector's principal does not subsume prototype's in this case.
-      ac.emplace(cx, prototype);
-      if (!JS_WrapObject(cx, &reflector) ||
-          !JS_SetPrototype(cx, reflector, prototype)) {
-        return;
-      }
-    }
-  }
-
+  // This is for old spec.
   EnqueueLifecycleCallback(nsIDocument::eCreated, aElement, nullptr, aDefinition);
 }
 
@@ -865,7 +928,7 @@ void
 CustomElementReactionsStack::CreateAndPushElementQueue()
 {
   // Push a new element queue onto the custom element reactions stack.
-  mReactionsStack.AppendElement();
+  mReactionsStack.AppendElement(MakeUnique<ElementQueue>());
 }
 
 void
@@ -876,15 +939,25 @@ CustomElementReactionsStack::PopAndInvokeElementQueue()
   MOZ_ASSERT(!mReactionsStack.IsEmpty(),
              "Reaction stack shouldn't be empty");
 
-  ElementQueue& elementQueue = mReactionsStack.LastElement();
+  const uint32_t lastIndex = mReactionsStack.Length() - 1;
+  ElementQueue* elementQueue = mReactionsStack.ElementAt(lastIndex).get();
   // Check element queue size in order to reduce function call overhead.
-  if (!elementQueue.IsEmpty()) {
-    InvokeReactions(elementQueue);
+  if (!elementQueue->IsEmpty()) {
+    // It is still not clear what error reporting will look like in custom
+    // element, see https://github.com/w3c/webcomponents/issues/635.
+    // We usually report the error to entry global in gecko, so just follow the
+    // same behavior here.
+    nsIGlobalObject* global = GetEntryGlobal();
+    MOZ_ASSERT(global, "Should always have a entry global here!");
+    InvokeReactions(elementQueue, global);
   }
 
-  DebugOnly<bool> isRemovedElement = mReactionsStack.RemoveElement(elementQueue);
-  MOZ_ASSERT(isRemovedElement,
-             "Reaction stack should have an element queue to remove");
+  // InvokeReactions() might create other custom element reactions, but those
+  // new reactions should be already consumed and removed at this point.
+  MOZ_ASSERT(lastIndex == mReactionsStack.Length() - 1,
+             "reactions created by InvokeReactions() should be consumed and removed");
+
+  mReactionsStack.RemoveElementAt(lastIndex);
 }
 
 void
@@ -914,7 +987,7 @@ CustomElementReactionsStack::Enqueue(Element* aElement,
 
   // Add element to the current element queue.
   if (!mReactionsStack.IsEmpty()) {
-    mReactionsStack.LastElement().AppendElement(do_GetWeakReference(aElement));
+    mReactionsStack.LastElement()->AppendElement(do_GetWeakReference(aElement));
     elementData->mReactionQueue.AppendElement(aReaction);
     return;
   }
@@ -939,16 +1012,27 @@ CustomElementReactionsStack::InvokeBackupQueue()
 {
   // Check backup queue size in order to reduce function call overhead.
   if (!mBackupQueue.IsEmpty()) {
-    InvokeReactions(mBackupQueue);
+    // Upgrade reactions won't be scheduled in backup queue and the exception of
+    // callback reactions will be automatically reported in CallSetup.
+    // If the reactions are invoked from backup queue (in microtask check point),
+    // we don't need to pass global object for error reporting.
+    InvokeReactions(&mBackupQueue, nullptr);
   }
 }
 
 void
-CustomElementReactionsStack::InvokeReactions(ElementQueue& aElementQueue)
+CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
+                                             nsIGlobalObject* aGlobal)
 {
+  // This is used for error reporting.
+  Maybe<AutoEntryScript> aes;
+  if (aGlobal) {
+    aes.emplace(aGlobal, "custom elements reaction invocation");
+  }
+
   // Note: It's possible to re-enter this method.
-  for (uint32_t i = 0; i < aElementQueue.Length(); ++i) {
-    nsCOMPtr<Element> element = do_QueryReferent(aElementQueue[i]);
+  for (uint32_t i = 0; i < aElementQueue->Length(); ++i) {
+    nsCOMPtr<Element> element = do_QueryReferent(aElementQueue->ElementAt(i));
 
     if (!element) {
       continue;
@@ -963,12 +1047,21 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue& aElementQueue)
       // this funciton. The entry will be removed when bug 1379573 is landed.
       auto reaction(Move(reactions.ElementAt(j)));
       if (reaction) {
-        reaction->Invoke(element);
+        ErrorResult rv;
+        reaction->Invoke(element, rv);
+        if (aes) {
+          JSContext* cx = aes->cx();
+          if (rv.MaybeSetPendingException(cx)) {
+            aes->ReportException();
+          }
+          MOZ_ASSERT(!JS_IsExceptionPending(cx));
+        }
+        MOZ_ASSERT(!rv.Failed());
       }
     }
     reactions.Clear();
   }
-  aElementQueue.Clear();
+  aElementQueue->Clear();
 }
 
 //-----------------------------------------------------
@@ -976,13 +1069,13 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue& aElementQueue)
 
 CustomElementDefinition::CustomElementDefinition(nsIAtom* aType,
                                                  nsIAtom* aLocalName,
-                                                 JSObject* aConstructor,
+                                                 Function* aConstructor,
                                                  JSObject* aPrototype,
                                                  LifecycleCallbacks* aCallbacks,
                                                  uint32_t aDocOrder)
   : mType(aType),
     mLocalName(aLocalName),
-    mConstructor(aConstructor),
+    mConstructor(new CustomElementConstructor(aConstructor)),
     mPrototype(aPrototype),
     mCallbacks(aCallbacks),
     mDocOrder(aDocOrder)
@@ -994,16 +1087,16 @@ CustomElementDefinition::CustomElementDefinition(nsIAtom* aType,
 // CustomElementUpgradeReaction
 
 /* virtual */ void
-CustomElementUpgradeReaction::Invoke(Element* aElement)
+CustomElementUpgradeReaction::Invoke(Element* aElement, ErrorResult& aRv)
 {
-  mRegistry->Upgrade(aElement, mDefinition);
+  mRegistry->Upgrade(aElement, mDefinition, aRv);
 }
 
 //-----------------------------------------------------
 // CustomElementCallbackReaction
 
 /* virtual */ void
-CustomElementCallbackReaction::Invoke(Element* aElement)
+CustomElementCallbackReaction::Invoke(Element* aElement, ErrorResult& aRv)
 {
   mCustomElementCallback->Call();
 }

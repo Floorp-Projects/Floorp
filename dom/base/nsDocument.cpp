@@ -6121,19 +6121,63 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
     return true;
   }
 
-  nsDependentAtomString localName(definition->mLocalName);
+  RefPtr<Element> element;
 
-  nsCOMPtr<Element> element =
-    document->CreateElem(localName, nullptr, kNameSpaceID_XHTML);
-  NS_ENSURE_TRUE(element, true);
+  // We integrate with construction stack and do prototype swizzling here, so
+  // that old upgrade behavior could also share the new upgrade steps.
+  // And this old upgrade will be remove at some point (when everything is
+  // switched to latest custom element spec).
+  nsTArray<RefPtr<nsGenericHTMLElement>>& constructionStack =
+    definition->mConstructionStack;
+  if (constructionStack.Length()) {
+    element = constructionStack.LastElement();
+    NS_ENSURE_TRUE(element != ALEADY_CONSTRUCTED_MARKER, false);
 
-  if (definition->mLocalName != typeAtom) {
-    // This element is a custom element by extension, thus we need to
-    // do some special setup. For non-extended custom elements, this happens
-    // when the element is created.
-    nsContentUtils::SetupCustomElement(element, &elemName);
+    // Do prototype swizzling if dom reflector exists.
+    JS::Rooted<JSObject*> reflector(aCx, element->GetWrapper());
+    if (reflector) {
+      Maybe<JSAutoCompartment> ac;
+      JS::Rooted<JSObject*> prototype(aCx, definition->mPrototype);
+      if (element->NodePrincipal()->SubsumesConsideringDomain(nsContentUtils::ObjectPrincipal(prototype))) {
+        ac.emplace(aCx, reflector);
+        if (!JS_WrapObject(aCx, &prototype) ||
+            !JS_SetPrototype(aCx, reflector, prototype)) {
+          return false;
+        }
+      } else {
+        // We want to set the custom prototype in the compartment where it was
+        // registered. We store the prototype from define() without unwrapped,
+        // hence the prototype's compartment is the compartment where it was
+        // registered.
+        // In the case that |reflector| and |prototype| are in different
+        // compartments, this will set the prototype on the |reflector|'s wrapper
+        // and thus only visible in the wrapper's compartment, since we know
+        // reflector's principal does not subsume prototype's in this case.
+        ac.emplace(aCx, prototype);
+        if (!JS_WrapObject(aCx, &reflector) ||
+            !JS_SetPrototype(aCx, reflector, prototype)) {
+          return false;
+        }
+      }
+
+      // Wrap into current context.
+      if (!JS_WrapObject(aCx, &reflector)) {
+        return false;
+      }
+
+      args.rval().setObject(*reflector);
+      return true;
+    }
+  } else {
+    nsDependentAtomString localName(definition->mLocalName);
+    element =
+      document->CreateElem(localName, nullptr, kNameSpaceID_XHTML,
+                           (definition->mLocalName != typeAtom) ? &elemName
+                                                                : nullptr);
+    NS_ENSURE_TRUE(element, false);
   }
 
+  // The prototype setup happens in Element::WrapObject().
   nsresult rv = nsContentUtils::WrapNative(aCx, element, element, args.rval());
   NS_ENSURE_SUCCESS(rv, true);
 
