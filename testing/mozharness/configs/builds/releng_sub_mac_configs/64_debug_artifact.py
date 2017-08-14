@@ -16,6 +16,9 @@ config = {
         'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
+    'exes': {
+        "buildbot": "/tools/buildbot/bin/buildbot",
+    },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': False,
@@ -51,7 +54,7 @@ config = {
         # debug-specific
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         ## 64 bit specific
-        'PATH': '/tools/python/bin:/opt/local/bin:/usr/bin:'
+        'PATH': '/tools/python/bin:/tools/buildbot/bin:/opt/local/bin:/usr/bin:'
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
         ##
     },

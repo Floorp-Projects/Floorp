@@ -18,6 +18,9 @@ config = {
         'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
+    'exes': {
+        "buildbot": "/tools/buildbot/bin/buildbot",
+    },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': False,
@@ -53,7 +56,7 @@ config = {
         'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         # 32 bit specific
-        'PATH': '/usr/local/bin:/usr/lib/ccache:\
+        'PATH': '/tools/buildbot/bin:/usr/local/bin:/usr/lib/ccache:\
 /bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:\
 /tools/python27/bin:/tools/python27-mercurial/bin:/home/cltbld/bin',
         'LD_LIBRARY_PATH': "/tools/gcc-4.3.3/installed/lib",
