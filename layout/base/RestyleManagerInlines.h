@@ -80,18 +80,9 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 }
 
 void
-RestyleManager::UpdateAnimationStylesForHitTesting()
+RestyleManager::UpdateOnlyAnimationStyles()
 {
-  // Throttled SMIL samples never affect hit-testing since they only apply to
-  // display:none subtrees so we don't need to handle them here.
-  //
-  // Bug 1353212: We don't need to flush opacity animations running on the
-  // compositor since opacity animations don't affect hit-testing.
-  if (!PresContext()->EffectCompositor()->HasThrottledStyleUpdates()) {
-    return;
-  }
-
-  MOZ_STYLO_FORWARD(UpdateAnimationStylesForHitTesting, ());
+  MOZ_STYLO_FORWARD(UpdateOnlyAnimationStyles, ());
 }
 
 } // namespace mozilla

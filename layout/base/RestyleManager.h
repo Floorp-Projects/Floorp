@@ -192,17 +192,7 @@ public:
                                const nsAttrValue* aOldValue);
   inline nsresult ReparentStyleContext(nsIFrame* aFrame);
 
-  // Update styles for animations if there are animations that are running on
-  // the compositor and whose updating is suppressed on the main thread (to save
-  // unnecessary work). This is needed to ensure that transform animations
-  // running on the compositor are updated on the main thread giving elements
-  // their up-to-date geometry before we attempt to perform hit-testing.
-  //
-  // Although SMIL animations may also be throttled, such animations do not
-  // affect hit-testing since only animations on elements in display:none
-  // subtree are throttled for SMIL. As a result, this method does not update
-  // throttled SMIL animations.
-  inline void UpdateAnimationStylesForHitTesting();
+  inline void UpdateOnlyAnimationStyles();
 
   // Get a counter that increments on every style change, that we use to
   // track whether off-main-thread animations are up-to-date.
