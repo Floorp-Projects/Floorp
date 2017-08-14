@@ -3563,7 +3563,7 @@ GetCustomElementReactionsStack(JS::Handle<JSObject*> aObj)
 // https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor
 already_AddRefed<nsGenericHTMLElement>
 CreateHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
-                  ErrorResult& aRv)
+                  JS::Handle<JSObject*> aGivenProto, ErrorResult& aRv)
 {
   // Step 1.
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
@@ -3671,20 +3671,51 @@ CreateHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
 
   // Step 6 and Step 7 are in the code output by CGClassConstructor.
   // Step 8.
-  // Construction stack will be implemented in bug 1287348. So we always run
-  // "construction stack is empty" case for now.
-  RefPtr<nsGenericHTMLElement> element;
-  if (tag == eHTMLTag_userdefined) {
-    // Autonomous custom element.
-    element = NS_NewHTMLElement(nodeInfo.forget());
-  } else {
-    // Customized built-in element.
-    element = CreateHTMLElement(tag, nodeInfo.forget(), NOT_FROM_PARSER);
+  nsTArray<RefPtr<nsGenericHTMLElement>>& constructionStack =
+    definition->mConstructionStack;
+  if (constructionStack.IsEmpty()) {
+    RefPtr<nsGenericHTMLElement> newElement;
+    if (tag == eHTMLTag_userdefined) {
+      // Autonomous custom element.
+      newElement = NS_NewHTMLElement(nodeInfo.forget());
+    } else {
+      // Customized built-in element.
+      newElement = CreateHTMLElement(tag, nodeInfo.forget(), NOT_FROM_PARSER);
+    }
+
+    newElement->SetCustomElementData(
+      new CustomElementData(definition->mType, CustomElementData::State::eCustom));
+
+    return newElement.forget();
   }
 
-  element->SetCustomElementData(
-    new CustomElementData(definition->mType, CustomElementData::State::eCustom));
+  // Step 9.
+  RefPtr<nsGenericHTMLElement>& element = constructionStack.LastElement();
 
+  // Step 10.
+  if (element == ALEADY_CONSTRUCTED_MARKER) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  // Step 11.
+  // Do prototype swizzling for upgrading a custom element here, for cases when
+  // we have a reflector already.  If we don't have one yet, our caller will
+  // create it with the right proto (by calling DoGetOrCreateDOMReflector with
+  // that proto).
+  JS::Rooted<JSObject*> reflector(cx, element->GetWrapper());
+  if (reflector) {
+    // reflector might be in different compartment.
+    JSAutoCompartment ac(cx, reflector);
+    JS::Rooted<JSObject*> givenProto(cx, aGivenProto);
+    if (!JS_WrapObject(cx, &givenProto) ||
+        !JS_SetPrototype(cx, reflector, givenProto)) {
+      aRv.NoteJSContextException(cx);
+      return nullptr;
+    }
+  }
+
+  // Step 12 and Step 13.
   return element.forget();
 }
 
