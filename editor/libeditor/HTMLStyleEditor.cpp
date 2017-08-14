@@ -122,7 +122,7 @@ HTMLEditor::SetInlineProperty(nsIAtom* aProperty,
     return NS_OK;
   }
 
-  AutoEditBatch batchIt(this);
+  AutoPlaceholderBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
                                nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
@@ -1180,7 +1180,7 @@ HTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom* aProperty,
 NS_IMETHODIMP
 HTMLEditor::RemoveAllInlineProperties()
 {
-  AutoEditBatch batchIt(this);
+  AutoPlaceholderBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::resetTextProperties,
                                nsIEditor::eNext);
 
@@ -1224,7 +1224,7 @@ HTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
     return NS_OK;
   }
 
-  AutoEditBatch batchIt(this);
+  AutoPlaceholderBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::removeTextProperty,
                                nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
@@ -1381,7 +1381,7 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
   }
 
   // Wrap with txn batching, rules sniffing, and selection preservation code
-  AutoEditBatch batchIt(this);
+  AutoPlaceholderBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::setTextProperty,
                                nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);

@@ -594,6 +594,18 @@ protected:
   nsresult GetSelection(SelectionType aSelectionType,
                         nsISelection** aSelection);
 
+  /**
+   * (Begin|End)PlaceholderTransaction() are called by AutoPlaceholderBatch.
+   * This set of methods are similar to the (Begin|End)Transaction(), but do
+   * not use the transaction managers batching feature.  Instead we use a
+   * placeholder transaction to wrap up any further transaction while the
+   * batch is open.  The advantage of this is that placeholder transactions
+   * can later merge, if needed.  Merging is unavailable between transaction
+   * manager batches.
+   */
+  void BeginPlaceholderTransaction(nsIAtom* aTransactionName);
+  void EndPlaceholderTransaction();
+
 public:
   /**
    * All editor operations which alter the doc should be prefaced
@@ -1294,6 +1306,7 @@ protected:
   bool mIsHTMLEditorClass;
 
   friend bool NSCanUnload(nsISupports* serviceMgr);
+  friend class AutoPlaceholderBatch;
   friend class AutoRules;
   friend class AutoSelectionRestorer;
   friend class AutoTransactionsConserveSelection;
