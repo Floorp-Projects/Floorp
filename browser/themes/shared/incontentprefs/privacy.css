@@ -11,17 +11,23 @@
 }
 
 .geo-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-linux);
+%ifdef XP_MACOSX
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-osx.svg);
+%elif defined(MOZ_WIDGET_GTK)
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-linux.svg);
+%else
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-windows.svg);
+%endif
 }
 
 .camera-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#camera);
+  list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
 }
 
 .microphone-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone);
+  list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
 }
 
 .desktop-notification-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#desktop-notification);
+  list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification.svg);
 }
