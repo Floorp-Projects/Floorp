@@ -173,6 +173,7 @@ public:
                            const float* aOpacity,
                            const gfx::Matrix4x4* aTransform,
                            wr::TransformStyle aTransformStyle,
+                           const gfx::Matrix4x4* aPerspective,
                            const wr::MixBlendMode& aMixBlendMode,
                            const nsTArray<wr::WrFilterOp>& aFilters);
   void PopStackingContext();

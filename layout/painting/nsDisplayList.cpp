@@ -6157,6 +6157,7 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
                            animationsId,
                            opacityForSC,
                            nullptr,
+                           nullptr,
                            filters);
 
   aManager->CreateWebRenderCommandsFromDisplayList(&mList,
@@ -6208,7 +6209,7 @@ nsDisplayBlendMode::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
 {
   nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc, aBuilder, aDisplayListBuilder, this,
-                           &mList, nullptr, 0, nullptr, nullptr,
+                           &mList, nullptr, 0, nullptr, nullptr, nullptr,
                            filters, nsCSSRendering::GetGFXBlendMode(mBlendMode));
 
   return nsDisplayWrapList::CreateWebRenderCommands(aBuilder, sc, aParentCommands,
@@ -7853,6 +7854,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            animationsId,
                            nullptr,
                            transformForSC,
+                           nullptr,
                            filters);
 
   return mStoredList.CreateWebRenderCommands(aBuilder, sc, aParentCommands,
@@ -8433,6 +8435,61 @@ nsDisplayPerspective::GetLayerState(nsDisplayListBuilder* aBuilder,
                                     const ContainerLayerParameters& aParameters)
 {
   return LAYER_ACTIVE_FORCE;
+}
+
+bool
+nsDisplayPerspective::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                              const StackingContextHelper& aSc,
+                                              nsTArray<WebRenderParentCommand>& aParentCommands,
+                                              WebRenderLayerManager* aManager,
+                                              nsDisplayListBuilder* aDisplayListBuilder)
+{
+  float appUnitsPerPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  Matrix4x4 perspectiveMatrix;
+  DebugOnly<bool> hasPerspective =
+    nsDisplayTransform::ComputePerspectiveMatrix(mTransformFrame, appUnitsPerPixel,
+                                                 perspectiveMatrix);
+  MOZ_ASSERT(hasPerspective, "Why did we create nsDisplayPerspective?");
+
+  /*
+   * ClipListToRange can remove our child after we were created.
+   */
+  if (!mList.GetChildren()->GetTop()) {
+    return false;
+  }
+
+  /*
+   * The resulting matrix is still in the coordinate space of the transformed
+   * frame. Append a translation to the reference frame coordinates.
+   */
+  nsDisplayTransform* transform =
+    static_cast<nsDisplayTransform*>(mList.GetChildren()->GetTop());
+
+  Point3D newOrigin =
+    Point3D(NSAppUnitsToFloatPixels(transform->ToReferenceFrame().x, appUnitsPerPixel),
+            NSAppUnitsToFloatPixels(transform->ToReferenceFrame().y, appUnitsPerPixel),
+            0.0f);
+  Point3D roundedOrigin(NS_round(newOrigin.x),
+                        NS_round(newOrigin.y),
+                        0);
+
+  gfx::Matrix4x4 transformForSC = gfx::Matrix4x4::Translation(roundedOrigin);
+
+  nsTArray<mozilla::wr::WrFilterOp> filters;
+  StackingContextHelper sc(aSc,
+                           aBuilder,
+                           aDisplayListBuilder,
+                           this,
+                           mList.GetChildren(),
+                           nullptr,
+                           0,
+                           nullptr,
+                           &transformForSC,
+                           &perspectiveMatrix,
+                           filters);
+
+  return mList.CreateWebRenderCommands(aBuilder, sc, aParentCommands,
+                                       aManager, aDisplayListBuilder);
 }
 
 int32_t
@@ -9197,6 +9254,7 @@ nsDisplayFilter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                            &mList,
                            nullptr,
                            0,
+                           nullptr,
                            nullptr,
                            nullptr,
                            wrFilters);
