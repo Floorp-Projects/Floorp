@@ -34,7 +34,6 @@ class nsDependentSubstring;
 class nsPromiseFlatString;
 class nsStringComparator;
 class nsDefaultStringComparator;
-class nsXPIDLString;
 
 // Single-byte (char) string types.
 class nsACString;
@@ -46,6 +45,6 @@ class nsDependentCSubstring;
 class nsPromiseFlatCString;
 class nsCStringComparator;
 class nsDefaultCStringComparator;
-class nsXPIDLCString;
+class nsXPIDLCString; // deprecated
 
 #endif /* !defined(nsStringFwd_h___) */
