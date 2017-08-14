@@ -21,14 +21,8 @@ if [ -f /etc/lsb-release ]; then
         HG_COMMON_SIZE=1919078
         HG_COMMON_FILENAME=mercurial-common_4.1.2_all.deb
     elif [ "${DISTRIB_ID}" = "Ubuntu" -a "${DISTRIB_RELEASE}" = "12.04" ]; then
-        HG_DEB=1
-        HG_DIGEST=67823aa455c59dbdc24ec1f044b0afdb5c03520ef3601509cb5466dc0ac332846caf96176f07de501c568236f6909e55dfc8f4b02f8c69fa593a4abca9abfeb8
-        HG_SIZE=167880
-        HG_FILENAME=mercurial_4.1.2_amd64.deb
-
-        HG_COMMON_DIGEST=5e1c462a9b699d2068f7a0c14589f347ca719c216181ef7a625033df757185eeb3a8fed57986829a7943f16af5a8d66ddf457cc7fc4af557be88eb09486fe665
-        HG_COMMON_SIZE=3091596
-        HG_COMMON_FILENAME=mercurial-common_4.1.2_all.deb
+        echo "Ubuntu 12.04 not supported"
+        exit 1
     fi
 
     CERT_PATH=/etc/ssl/certs/ca-certificates.crt
