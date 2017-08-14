@@ -1315,6 +1315,16 @@ nsFrameMessageManager::GetProcessMessageManager(nsIMessageSender** aPMM)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameMessageManager::GetRemoteType(nsAString& aRemoteType)
+{
+  aRemoteType.Truncate();
+  if (mCallback) {
+    return mCallback->DoGetRemoteType(aRemoteType);
+  }
+  return NS_OK;
+}
+
 namespace {
 
 struct MessageManagerReferentCount

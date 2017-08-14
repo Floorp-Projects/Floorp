@@ -200,6 +200,12 @@ public:
 
   const nsAString& GetRemoteType() const;
 
+  virtual nsresult DoGetRemoteType(nsAString& aRemoteType) const override
+  {
+    aRemoteType = GetRemoteType();
+    return NS_OK;
+  }
+
   enum CPIteratorPolicy {
     eLive,
     eAll
