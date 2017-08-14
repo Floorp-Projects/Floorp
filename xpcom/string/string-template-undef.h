@@ -26,3 +26,4 @@
 #undef nsTPromiseFlatString_CharT
 #undef TPromiseFlatString_CharT
 #undef nsTSubstringSplitter_CharT
+#undef TNullString_CharT
