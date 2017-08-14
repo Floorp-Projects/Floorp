@@ -235,6 +235,46 @@ ServoComputedData::GetStyleVariables() const
             "called");
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleStructsMallocSizeOf)
+
+void
+ServoComputedData::AddSizeOfExcludingThis(SizeOfState& aState,
+                                          nsStyleSizes& aSizes) const
+{
+  // XXX WARNING: GetStyleFoo() returns an nsStyleFoo pointer. This nsStyleFoo
+  // sits within a servo_arc::Arc, i.e. it is preceded by a word-sized
+  // refcount. So this pointer is an interior pointer. To get the start address
+  // of the heap block we move the pointer back by one word. For this to work,
+  // two things must be true.
+  //
+  // - The layout of servo_arc::Arc must stay the same.
+  //
+  // - The alignment of each nsStyleFoo must not be greater than the size of a
+  //   word (otherwise padding might be inserted between the refcount and the
+  //   struct in the servo_arc::Arc).
+  //
+  // In the long run a better solution here is for mozjemalloc to provide a
+  // function that converts an interior pointer to a start pointer (bug
+  // 1389305), but that's not available right now.
+  //
+  // Also, we use ServoStyleStructsMallocSizeOf rather than
+  // |aState.mMallocSizeOf| to better distinguish in DMD's output the memory
+  // measured here.
+#define STYLE_STRUCT(name_, cb_) \
+  static_assert(alignof(nsStyle##name_) <= sizeof(size_t), \
+                "alignment will break AddSizeOfExcludingThis()"); \
+  const char* p##name_ = reinterpret_cast<const char*>(GetStyle##name_()); \
+  p##name_ -= sizeof(size_t); \
+  if (!aState.HaveSeenPtr(p##name_)) { \
+    aSizes.NS_STYLE_SIZES_FIELD(name_) += \
+      ServoStyleStructsMallocSizeOf(p##name_); \
+  }
+  #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
+}
+
 void
 Gecko_ServoStyleContext_Destroy(ServoStyleContext* aContext)
 {

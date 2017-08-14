@@ -115,10 +115,8 @@ use style::string_cache::Atom;
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::{CssRule, CssRules, CssRuleType, CssRulesHelpers, DocumentRule};
 use style::stylesheets::{FontFeatureValuesRule, ImportRule, KeyframesRule, MallocSizeOfWithGuard};
-use style::stylesheets::{MallocSizeOfWithRepeats, MediaRule};
-use style::stylesheets::{NamespaceRule, Origin, PageRule, SizeOfState, StyleRule, SupportsRule};
-use style::stylesheets::StylesheetContents;
-use style::stylesheets::StylesheetInDocument;
+use style::stylesheets::{MediaRule, NamespaceRule, Origin, PageRule, SizeOfState, StyleRule};
+use style::stylesheets::{StylesheetContents, StylesheetInDocument, SupportsRule};
 use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
@@ -131,6 +129,7 @@ use style::traversal_flags::{TraversalFlags, self};
 use style::values::{CustomIdent, KeyframesName};
 use style::values::animated::ToAnimatedZero;
 use style::values::computed::Context;
+use style::values::distance::ComputeSquaredDistance;
 use style_traits::{PARSING_MODE_DEFAULT, ToCss};
 use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::StylesheetLoader;
@@ -380,7 +379,7 @@ pub extern "C" fn Servo_AnimationValues_ComputeDistance(from: RawServoAnimationV
                                                         -> f64 {
     let from_value = AnimationValue::as_arc(&from);
     let to_value = AnimationValue::as_arc(&to);
-    from_value.compute_distance(to_value).unwrap_or(0.0)
+    from_value.compute_squared_distance(to_value).map(|d| d.sqrt()).unwrap_or(0.0)
 }
 
 #[no_mangle]
@@ -758,9 +757,9 @@ pub extern "C" fn Servo_Element_ClearData(element: RawGeckoElementBorrowed) {
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Element_SizeOfExcludingThis(malloc_size_of: MallocSizeOf,
-                                                    seen_ptrs: *mut SeenPtrs,
-                                                    element: RawGeckoElementBorrowed) -> usize {
+pub extern "C" fn Servo_Element_SizeOfExcludingThisAndCVs(malloc_size_of: MallocSizeOf,
+                                                          seen_ptrs: *mut SeenPtrs,
+                                                          element: RawGeckoElementBorrowed) -> usize {
     let malloc_size_of = malloc_size_of.unwrap();
     let element = GeckoElement(element);
     let borrow = element.borrow_data();
@@ -769,10 +768,47 @@ pub extern "C" fn Servo_Element_SizeOfExcludingThis(malloc_size_of: MallocSizeOf
             malloc_size_of: malloc_size_of,
             seen_ptrs: seen_ptrs,
         };
-        (*data).malloc_size_of_children(&mut state)
+        (*data).malloc_size_of_children_excluding_cvs(&mut state)
     } else {
         0
     }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_Element_HasPrimaryComputedValues(element: RawGeckoElementBorrowed) -> bool
+{
+    let element = GeckoElement(element);
+    let data = element.borrow_data().expect("Looking for CVs on unstyled element");
+    data.has_styles()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_Element_GetPrimaryComputedValues(element: RawGeckoElementBorrowed)
+                                                         -> ServoStyleContextStrong
+{
+    let element = GeckoElement(element);
+    let data = element.borrow_data().expect("Getting CVs on unstyled element");
+    assert!(data.has_styles(), "Getting CVs on unstyled element");
+    data.styles.primary().clone().into()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_Element_HasPseudoComputedValues(element: RawGeckoElementBorrowed,
+                                                        index: usize) -> bool
+{
+    let element = GeckoElement(element);
+    let data = element.borrow_data().expect("Looking for CVs on unstyled element");
+    data.styles.pseudos.as_array()[index].is_some()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_Element_GetPseudoComputedValues(element: RawGeckoElementBorrowed,
+                                                        index: usize) -> ServoStyleContextStrong
+{
+    let element = GeckoElement(element);
+    let data = element.borrow_data().expect("Getting CVs that aren't present");
+    data.styles.pseudos.as_array()[index].as_ref().expect("Getting CVs that aren't present")
+        .clone().into()
 }
 
 #[no_mangle]

@@ -227,14 +227,16 @@ function assertSitesListed(doc, hosts) {
   is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
 }
 
-function evaluateSearchResults(keyword, searchReults) {
+async function evaluateSearchResults(keyword, searchReults) {
   searchReults = Array.isArray(searchReults) ? searchReults : [searchReults];
   searchReults.push("header-searchResults");
 
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
   searchInput.focus();
-  searchInput.value = keyword;
-  searchInput.doCommand();
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == keyword);
+  EventUtils.sendString(keyword);
+  await searchCompletedPromise;
 
   let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
   for (let i = 0; i < mainPrefTag.childElementCount; i++) {

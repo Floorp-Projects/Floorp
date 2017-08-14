@@ -2569,13 +2569,13 @@ nsINode::GetAccessibleNode()
   return nullptr;
 }
 
-size_t
-nsINode::SizeOfExcludingThis(SizeOfState& aState) const
+void
+nsINode::AddSizeOfExcludingThis(SizeOfState& aState, nsStyleSizes& aSizes,
+                                size_t* aNodeSize) const
 {
-  size_t n = 0;
   EventListenerManager* elm = GetExistingListenerManager();
   if (elm) {
-    n += elm->SizeOfIncludingThis(aState.mMallocSizeOf);
+    *aNodeSize += elm->SizeOfIncludingThis(aState.mMallocSizeOf);
   }
 
   // Measurement of the following members may be added later if DMD finds it is
@@ -2586,7 +2586,6 @@ nsINode::SizeOfExcludingThis(SizeOfState& aState) const
   // The following members are not measured:
   // - mParent, mNextSibling, mPreviousSibling, mFirstChild: because they're
   //   non-owning
-  return n;
 }
 
 #define EVENT(name_, id_, type_, struct_)                                    \

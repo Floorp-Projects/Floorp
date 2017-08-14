@@ -219,11 +219,13 @@ HTMLAreaElement::IntrinsicState() const
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 
-size_t
-HTMLAreaElement::SizeOfExcludingThis(mozilla::SizeOfState& aState) const
+void
+HTMLAreaElement::AddSizeOfExcludingThis(SizeOfState& aState,
+                                        nsStyleSizes& aSizes,
+                                        size_t* aNodeSize) const
 {
-  return nsGenericHTMLElement::SizeOfExcludingThis(aState) +
-         Link::SizeOfExcludingThis(aState);
+  nsGenericHTMLElement::AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
+  *aNodeSize += Link::SizeOfExcludingThis(aState);
 }
 
 JSObject*
