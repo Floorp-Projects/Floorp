@@ -1,0 +1,29 @@
+<html>
+    <head>
+       <script>
+            try { o1 = document.createElement("tr") } catch(e) { }
+            try { o2 = document.createElement("td") } catch(e) { }
+            try { o3 = document.createElement("tr") } catch(e) { }
+            try { o4 = document.createElement("div") } catch(e) { }
+            try { o5 = document.createElement("input") } catch(e) { }
+            try { o6 = document.createElement('map') } catch(e) { }
+            try { o7 = document.createElement('select') } catch(e) { }
+            try { o8 = document.createElement("canvas") } catch(e) { }
+            try { o9 = document.createElement("area") } catch(e) { };
+            try { o1.appendChild(o2) } catch(e) { }
+            try { document.documentElement.appendChild(o3)  } catch(e) { }
+            try { document.documentElement.appendChild(o4)  } catch(e) { }
+            try { document.documentElement.appendChild(o6) } catch(e) { }
+            try { o3.appendChild(o7) } catch(e) { }
+            try { o4.appendChild(o8) } catch(e) { }
+            try { o3.appendChild(o5); } catch(e) { }
+            try { o3.appendChild(o1); } catch(e) { }
+            try { o6.contentEditable = "true" } catch(e) { };
+            try { o6.offsetHeight } catch(e) { };
+            try { o4.appendChild(o9) } catch(e) { };
+            try { o2.insertAdjacentHTML("beforeBegin", "<button id='id0'></button>\n"); } catch(e) { }
+            try { document.replaceChild(document.documentElement, document.documentElement); } catch(e) { }
+            try { document.execCommand("selectall",false,null) } catch(e) { }
+        </script>
+    </head>
+</html>
