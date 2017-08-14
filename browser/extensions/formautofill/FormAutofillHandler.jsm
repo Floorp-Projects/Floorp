@@ -481,6 +481,22 @@ FormAutofillHandler.prototype = {
         let element = detail.elementWeakRef.get();
         // Remove the unnecessary spaces
         let value = element && element.value.trim();
+
+        // Try to abbreviate the value of select element.
+        if (type == "address" &&
+            detail.fieldName == "address-level1" &&
+            element instanceof Ci.nsIDOMHTMLSelectElement) {
+          // Don't save the record when the option value is empty *OR* there
+          // are multiple options being selected. The empty option is usually
+          // assumed to be default along with a meaningless text to users.
+          if (!value || element.selectedOptions.length != 1) {
+            return;
+          }
+
+          let text = element.selectedOptions[0].text.trim();
+          value = FormAutofillUtils.getAbbreviatedStateName([value, text]) || text;
+        }
+
         if (!value) {
           return;
         }

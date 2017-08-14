@@ -5,6 +5,19 @@ Cu.import("resource://formautofill/FormAutofillContent.jsm");
 const MOCK_DOC = MockDocument.createTestDocument("http://localhost:8080/test/",
                    `<form id="form1">
                       <input id="street-addr" autocomplete="street-address">
+                      <select id="address-level1" autocomplete="address-level1">
+                        <option value=""></option>
+                        <option value="AL">Alabama</option>
+                        <option value="AK">Alaska</option>
+                        <option value="AP">Armed Forces Pacific</option>
+
+                        <option value="ca">california</option>
+                        <option value="AR">US-Arkansas</option>
+                        <option value="US-CA">California</option>
+                        <option value="CA">California</option>
+                        <option value="US-AZ">US_Arizona</option>
+                        <option value="Ariz">Arizonac</option>
+                      </select>
                       <input id="city" autocomplete="address-level2">
                       <input id="country" autocomplete="country">
                       <input id="email" autocomplete="email">
@@ -166,6 +179,185 @@ const TESTCASES = [
       },
     },
   },
+  {
+    description: "Save state with regular select option",
+    formValue: {
+      "address-level1": "CA",
+      "street-addr": "331 E. Evelyn Avenue",
+      "country": "USA",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: {
+          guid: null,
+          record: {
+            "address-level1": "CA",
+            "street-address": "331 E. Evelyn Avenue",
+            "country": "USA",
+          },
+          untouchedFields: [],
+        },
+      },
+    },
+  },
+  {
+    description: "Save state with lowercase value",
+    formValue: {
+      "address-level1": "ca",
+      "street-addr": "331 E. Evelyn Avenue",
+      "country": "USA",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: {
+          guid: null,
+          record: {
+            "address-level1": "CA",
+            "street-address": "331 E. Evelyn Avenue",
+            "country": "USA",
+          },
+          untouchedFields: [],
+        },
+      },
+    },
+  },
+  {
+    description: "Save state with a country code prefixed to the label",
+    formValue: {
+      "address-level1": "AR",
+      "street-addr": "331 E. Evelyn Avenue",
+      "country": "USA",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: {
+          guid: null,
+          record: {
+            "address-level1": "AR",
+            "street-address": "331 E. Evelyn Avenue",
+            "country": "USA",
+          },
+          untouchedFields: [],
+        },
+      },
+    },
+  },
+  {
+    description: "Save state with a country code prefixed to the value",
+    formValue: {
+      "address-level1": "US-CA",
+      "street-addr": "331 E. Evelyn Avenue",
+      "country": "USA",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: {
+          guid: null,
+          record: {
+            "address-level1": "CA",
+            "street-address": "331 E. Evelyn Avenue",
+            "country": "USA",
+          },
+          untouchedFields: [],
+        },
+      },
+    },
+  },
+  {
+    description: "Save state with a country code prefixed to the value and label",
+    formValue: {
+      "address-level1": "US-AZ",
+      "street-addr": "331 E. Evelyn Avenue",
+      "country": "USA",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: {
+          guid: null,
+          record: {
+            "address-level1": "AZ",
+            "street-address": "331 E. Evelyn Avenue",
+            "country": "USA",
+          },
+          untouchedFields: [],
+        },
+      },
+    },
+  },
+  {
+    description: "Should save select label instead when failed to abbreviate the value",
+    formValue: {
+      "address-level1": "Ariz",
+      "street-addr": "331 E. Evelyn Avenue",
+      "country": "USA",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: {
+          guid: null,
+          record: {
+            "address-level1": "Arizonac",
+            "street-address": "331 E. Evelyn Avenue",
+            "country": "USA",
+          },
+          untouchedFields: [],
+        },
+      },
+    },
+  },
+  {
+    description: "Shouldn't save select with multiple selections",
+    formValue: {
+      "address-level1": ["AL", "AK", "AP"],
+      "street-addr": "331 E. Evelyn Avenue",
+      "country": "USA",
+      "tel": "1-650-903-0800",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: {
+          guid: null,
+          record: {
+            "street-address": "331 E. Evelyn Avenue",
+            "country": "USA",
+            "tel": "1-650-903-0800",
+          },
+          untouchedFields: [],
+        },
+      },
+    },
+  },
+  {
+    description: "Shouldn't save select with empty value",
+    formValue: {
+      "address-level1": "",
+      "street-addr": "331 E. Evelyn Avenue",
+      "country": "USA",
+      "tel": "1-650-903-0800",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: {
+          guid: null,
+          record: {
+            "street-address": "331 E. Evelyn Avenue",
+            "country": "USA",
+            "tel": "1-650-903-0800",
+          },
+          untouchedFields: [],
+        },
+      },
+    },
+  },
+
 ];
 
 add_task(async function handle_earlyformsubmit_event() {
@@ -186,7 +378,16 @@ TESTCASES.forEach(testcase => {
     form.reset();
     for (let key in testcase.formValue) {
       let input = MOCK_DOC.getElementById(key);
-      input.value = testcase.formValue[key];
+      let value = testcase.formValue[key];
+
+      if (input instanceof Ci.nsIDOMHTMLSelectElement && value) {
+        input.multiple = Array.isArray(value);
+        [...input.options].forEach(option => {
+          option.selected = value.includes(option.value);
+        });
+      } else {
+        input.value = testcase.formValue[key];
+      }
     }
     sinon.stub(FormAutofillContent, "_onFormSubmit");
 
