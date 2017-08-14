@@ -33,6 +33,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   mBuilder->PushStackingContext(scBounds, 0, &opacity,
                                 mTransform.IsIdentity() ? nullptr : &mTransform,
                                 wr::TransformStyle::Flat,
+                                nullptr,
                                 wr::ToMixBlendMode(layer->GetMixBlendMode()),
                                 aFilters);
   mOrigin = aLayer->Bounds().TopLeft();
@@ -57,6 +58,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 aOpacityPtr,
                                 aTransformPtr,
                                 wr::TransformStyle::Flat,
+                                nullptr,
                                 wr::ToMixBlendMode(aLayer->GetLayer()->GetMixBlendMode()),
                                 aFilters);
   mOrigin = aLayer->Bounds().TopLeft();
@@ -71,19 +73,28 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              uint64_t aAnimationsId,
                                              float* aOpacityPtr,
                                              gfx::Matrix4x4* aTransformPtr,
+                                             gfx::Matrix4x4* aPerspectivePtr,
                                              const nsTArray<wr::WrFilterOp>& aFilters,
                                              const gfx::CompositionOp& aMixBlendMode)
   : mBuilder(&aBuilder)
 {
-  nsRect itemBounds = aDisplayList->GetClippedBoundsWithRespectToASR(aDisplayListBuilder, aItem->GetActiveScrolledRoot());
-  nsRect childrenVisible = aItem->GetVisibleRectForChildren();
-  nsRect visibleRect = itemBounds.Intersect(childrenVisible);
+  nsRect visibleRect;
+  bool is2d = aTransformPtr && aTransformPtr->Is2D() && !aPerspectivePtr;
+  if (is2d) {
+    nsRect itemBounds = aDisplayList->GetClippedBoundsWithRespectToASR(aDisplayListBuilder, aItem->GetActiveScrolledRoot());
+    nsRect childrenVisible = aItem->GetVisibleRectForChildren();
+    visibleRect = itemBounds.Intersect(childrenVisible);
+  } else {
+    visibleRect = aDisplayList->GetBounds(aDisplayListBuilder);
+    // The position of bounds are calculated by transform and perspective matrix in 3d case. reset it to (0, 0)
+    visibleRect.MoveTo(0, 0);
+  }
   float appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   LayerRect bounds = ViewAs<LayerPixel>(LayoutDeviceRect::FromAppUnits(visibleRect, appUnitsPerDevPixel),
                                         PixelCastJustification::WebRenderHasUnitResolution);
 
   // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-  if (aBoundTransform && !aBoundTransform->IsIdentity()) {
+  if (aBoundTransform && !aBoundTransform->IsIdentity() && is2d) {
     bounds.MoveTo(aBoundTransform->TransformPoint(bounds.TopLeft()));
   }
 
@@ -96,7 +107,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 aAnimationsId,
                                 aOpacityPtr,
                                 aTransformPtr,
-                                wr::TransformStyle::Flat,
+                                is2d ? wr::TransformStyle::Flat : wr::TransformStyle::Preserve3D,
+                                aPerspectivePtr,
                                 wr::ToMixBlendMode(aMixBlendMode),
                                 aFilters);
 

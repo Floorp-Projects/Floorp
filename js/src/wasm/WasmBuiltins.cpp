@@ -102,7 +102,7 @@ WasmHandleDebugTrap()
     MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
 
-    FrameIterator iter(activation);
+    WasmFrameIter iter(activation);
     MOZ_ASSERT(iter.debugEnabled());
     const CallSite* site = iter.debugTrapCallsite();
     MOZ_ASSERT(site);
@@ -169,18 +169,18 @@ WasmHandleThrow()
     WasmActivation* activation = CallingActivation();
     JSContext* cx = activation->cx();
 
-    // FrameIterator iterates down wasm frames in the activation starting at
+    // WasmFrameIter iterates down wasm frames in the activation starting at
     // WasmActivation::exitFP. Pass Unwind::True to pop WasmActivation::exitFP
-    // once each time FrameIterator is incremented, ultimately leaving exitFP
-    // null when the FrameIterator is done(). This is necessary to prevent a
+    // once each time WasmFrameIter is incremented, ultimately leaving exitFP
+    // null when the WasmFrameIter is done().  This is necessary to prevent a
     // DebugFrame from being observed again after we just called onLeaveFrame
     // (which would lead to the frame being re-added to the map of live frames,
     // right as it becomes trash).
-    FrameIterator iter(activation, FrameIterator::Unwind::True);
+    WasmFrameIter iter(activation, WasmFrameIter::Unwind::True);
     MOZ_ASSERT(!iter.done());
 
     // Live wasm code on the stack is kept alive (in wasm::TraceActivations) by
-    // marking the instance of every wasm::Frame found by FrameIterator.
+    // marking the instance of every wasm::Frame found by WasmFrameIter.
     // However, as explained above, we're popping frames while iterating which
     // means that a GC during this loop could collect the code of frames whose
     // code is still on the stack. This is actually mostly fine: as soon as we

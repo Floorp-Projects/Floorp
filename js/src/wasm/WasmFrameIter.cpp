@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmFrameIterator.h"
+#include "wasm/WasmFrameIter.h"
 
 #include "wasm/WasmInstance.h"
 
@@ -30,9 +30,9 @@ using mozilla::DebugOnly;
 using mozilla::Swap;
 
 /*****************************************************************************/
-// FrameIterator implementation
+// WasmFrameIter implementation
 
-FrameIterator::FrameIterator()
+WasmFrameIter::WasmFrameIter()
   : activation_(nullptr),
     code_(nullptr),
     callsite_(nullptr),
@@ -44,7 +44,7 @@ FrameIterator::FrameIterator()
     MOZ_ASSERT(done());
 }
 
-FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
+WasmFrameIter::WasmFrameIter(WasmActivation* activation, Unwind unwind)
   : activation_(activation),
     code_(nullptr),
     callsite_(nullptr),
@@ -83,7 +83,7 @@ FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
 }
 
 bool
-FrameIterator::done() const
+WasmFrameIter::done() const
 {
     MOZ_ASSERT(!!fp_ == !!code_);
     MOZ_ASSERT(!!fp_ == !!codeRange_);
@@ -91,7 +91,7 @@ FrameIterator::done() const
 }
 
 void
-FrameIterator::operator++()
+WasmFrameIter::operator++()
 {
     MOZ_ASSERT(!done());
 
@@ -115,7 +115,7 @@ FrameIterator::operator++()
 }
 
 void
-FrameIterator::popFrame()
+WasmFrameIter::popFrame()
 {
     Frame* prevFP = fp_;
     fp_ = prevFP->callerFP;
@@ -149,28 +149,28 @@ FrameIterator::popFrame()
 }
 
 const char*
-FrameIterator::filename() const
+WasmFrameIter::filename() const
 {
     MOZ_ASSERT(!done());
     return code_->metadata().filename.get();
 }
 
 const char16_t*
-FrameIterator::displayURL() const
+WasmFrameIter::displayURL() const
 {
     MOZ_ASSERT(!done());
     return code_->metadata().displayURL();
 }
 
 bool
-FrameIterator::mutedErrors() const
+WasmFrameIter::mutedErrors() const
 {
     MOZ_ASSERT(!done());
     return code_->metadata().mutedErrors();
 }
 
 JSAtom*
-FrameIterator::functionDisplayAtom() const
+WasmFrameIter::functionDisplayAtom() const
 {
     MOZ_ASSERT(!done());
 
@@ -185,7 +185,7 @@ FrameIterator::functionDisplayAtom() const
 }
 
 unsigned
-FrameIterator::lineOrBytecode() const
+WasmFrameIter::lineOrBytecode() const
 {
     MOZ_ASSERT(!done());
     MOZ_ASSERT_IF(!callsite_, activation_->interrupted());
@@ -193,14 +193,14 @@ FrameIterator::lineOrBytecode() const
 }
 
 Instance*
-FrameIterator::instance() const
+WasmFrameIter::instance() const
 {
     MOZ_ASSERT(!done());
     return fp_->tls->instance;
 }
 
 void**
-FrameIterator::unwoundAddressOfReturnAddress() const
+WasmFrameIter::unwoundAddressOfReturnAddress() const
 {
     MOZ_ASSERT(done());
     MOZ_ASSERT(unwind_ == Unwind::True);
@@ -209,7 +209,7 @@ FrameIterator::unwoundAddressOfReturnAddress() const
 }
 
 bool
-FrameIterator::debugEnabled() const
+WasmFrameIter::debugEnabled() const
 {
     MOZ_ASSERT(!done());
 
@@ -223,7 +223,7 @@ FrameIterator::debugEnabled() const
 }
 
 DebugFrame*
-FrameIterator::debugFrame() const
+WasmFrameIter::debugFrame() const
 {
     MOZ_ASSERT(!done());
     MOZ_ASSERT(debugEnabled());
@@ -231,7 +231,7 @@ FrameIterator::debugFrame() const
 }
 
 const CallSite*
-FrameIterator::debugTrapCallsite() const
+WasmFrameIter::debugTrapCallsite() const
 {
     MOZ_ASSERT(!done());
     MOZ_ASSERT(callsite_);
@@ -1009,7 +1009,7 @@ wasm::TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer
 {
     for (ActivationIterator iter(cx, target); !iter.done(); ++iter) {
         if (iter.activation()->isWasm()) {
-            for (FrameIterator fi(iter.activation()->asWasm()); !fi.done(); ++fi)
+            for (WasmFrameIter fi(iter.activation()->asWasm()); !fi.done(); ++fi)
                 fi.instance()->trace(trc);
         }
     }
