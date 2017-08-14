@@ -152,12 +152,21 @@ VideoDecoderChild::InitIPDL(const VideoInfo& aVideoInfo,
 {
   RefPtr<VideoDecoderManagerChild> manager =
     VideoDecoderManagerChild::GetSingleton();
-  // If the manager isn't available, then don't initialize mIPDLSelfRef and
+
+  // The manager isn't available because VideoDecoderManagerChild has been
+  // initialized with null end points and we don't want to decode video on GPU
+  // process anymore. Return false here so that we can fallback to other PDMs.
+  if (!manager) {
+    return false;
+  }
+
+  // The manager doesn't support sending messages because we've just crashed
+  // and are working on reinitialization. Don't initialize mIPDLSelfRef and
   // leave us in an error state. We'll then immediately reject the promise when
   // Init() is called and the caller can try again. Hopefully by then the new
   // manager is ready, or we've notified the caller of it being no longer
   // available. If not, then the cycle repeats until we're ready.
-  if (!manager || !manager->CanSend()) {
+  if (!manager->CanSend()) {
     return true;
   }
 
