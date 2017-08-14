@@ -37,15 +37,7 @@ browser.jar:
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
-  skin/classic/browser/sync-horizontalbar.png
-  skin/classic/browser/sync-horizontalbar@2x.png
-  skin/classic/browser/sync-horizontalbar-win7.png
-  skin/classic/browser/sync-horizontalbar-win7@2x.png
   skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
-  skin/classic/browser/syncProgress-horizontalbar.png
-  skin/classic/browser/syncProgress-horizontalbar@2x.png
-  skin/classic/browser/syncProgress-horizontalbar-win7.png
-  skin/classic/browser/syncProgress-horizontalbar-win7@2x.png
   skin/classic/browser/toolbarbutton-dropdown-arrow-win7.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-history-dropmarker.png
@@ -121,10 +113,6 @@ browser.jar:
 % override chrome://browser/skin/privatebrowsing-mask-titlebar.png    chrome://browser/skin/privatebrowsing-mask-titlebar-win7.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/reload-stop-go.png                   chrome://browser/skin/reload-stop-go-win7.png                 os=WINNT osversion<=6.1
 % override chrome://browser/skin/reload-stop-go@2x.png                chrome://browser/skin/reload-stop-go-win7@2x.png              os=WINNT osversion<=6.1
-% override chrome://browser/skin/sync-horizontalbar.png               chrome://browser/skin/sync-horizontalbar-win7.png             os=WINNT osversion<=6.1
-% override chrome://browser/skin/sync-horizontalbar@2x.png            chrome://browser/skin/sync-horizontalbar-win7@2x.png          os=WINNT osversion<=6.1
-% override chrome://browser/skin/syncProgress-horizontalbar.png       chrome://browser/skin/syncProgress-horizontalbar-win7.png     os=WINNT osversion<=6.1
-% override chrome://browser/skin/syncProgress-horizontalbar@2x.png    chrome://browser/skin/syncProgress-horizontalbar-win7@2x.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-win7.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-win7.png      os=WINNT osversion<=6.1
 % override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-win7@2x.png   os=WINNT osversion<=6.1
