@@ -7,16 +7,17 @@
 #define __mozinlinespellchecker_h__
 
 #include "mozilla/EditorBase.h"
-#include "nsRange.h"
-#include "nsIEditorSpellCheck.h"
-#include "nsIEditActionListener.h"
-#include "nsIInlineSpellChecker.h"
-#include "nsIDOMTreeWalker.h"
-#include "nsWeakReference.h"
-#include "nsIDOMEventListener.h"
-#include "nsWeakReference.h"
+
 #include "mozISpellI18NUtil.h"
+
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMTreeWalker.h"
+#include "nsIEditActionListener.h"
+#include "nsIEditorSpellCheck.h"
+#include "nsIInlineSpellChecker.h"
+#include "nsRange.h"
+#include "nsWeakReference.h"
 
 // X.h defines KeyPress
 #ifdef KeyPress
@@ -132,7 +133,7 @@ private:
                             SpellCheck_Available = 1};
   static SpellCheckingState gCanEnableSpellChecking;
 
-  nsWeakPtr mEditor;
+  nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsIEditorSpellCheck> mSpellCheck;
   nsCOMPtr<nsIEditorSpellCheck> mPendingSpellCheck;
   nsCOMPtr<nsIDOMTreeWalker> mTreeWalker;

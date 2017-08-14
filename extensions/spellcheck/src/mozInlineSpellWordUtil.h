@@ -15,6 +15,7 @@
 //#define DEBUG_SPELLCHECK
 
 class nsRange;
+class nsIEditor;
 class nsINode;
 
 /**
@@ -61,7 +62,7 @@ public:
       mSoftBegin(nullptr, 0), mSoftEnd(nullptr, 0),
       mNextWordIndex(-1), mSoftTextValid(false) {}
 
-  nsresult Init(const nsWeakPtr& aWeakEditor);
+  nsresult Init(nsIEditor* aEditor);
 
   nsresult SetEnd(nsINode* aEndNode, int32_t aEndOffset);
 
