@@ -216,6 +216,7 @@ private:
   void BeginProcessingRestyles(RestyleTracker& aRestyleTracker);
   void EndProcessingRestyles();
 
+public:
   // Perform any pending animation restyles.
   //
   // This is a superset of the work performed by
@@ -239,8 +240,6 @@ private:
   // compare against.  When we do this, we don't bother touching frames
   // other than primary frames.
   void UpdateAnimationStyles();
-
-public:
   void UpdateAnimationStylesForHitTesting();
 
   // Rebuilds all style data by throwing out the old rule tree and
