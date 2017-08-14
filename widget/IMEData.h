@@ -606,8 +606,8 @@ struct IMENotification final
     {
       mX = aRect.x;
       mY = aRect.y;
-      mWidth = aRect.width;
-      mHeight = aRect.height;
+      mWidth = aRect.Width();
+      mHeight = aRect.Height();
     }
     nsIntRect AsIntRect() const
     {

@@ -170,7 +170,7 @@ PalettedRowsAreSolidColor(Decoder* aDecoder,
 {
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
   IntRect frameRect = currentFrame->GetRect();
-  IntRect solidColorRect(frameRect.x, aStartRow, frameRect.width, aRowCount);
+  IntRect solidColorRect(frameRect.x, aStartRow, frameRect.Width(), aRowCount);
   return PalettedRectIsSolidColor(aDecoder, solidColorRect, aColor);
 }
 
@@ -243,7 +243,7 @@ PalettedRectIsSolidColor(Decoder* aDecoder, const IntRect& aRect, uint8_t aColor
 
   // Walk through the image data and make sure that the entire rect has the
   // palette index |aColor|.
-  int32_t rowLength = frameRect.width;
+  int32_t rowLength = frameRect.Width();
   for (int32_t row = rect.y; row < rect.YMost(); ++row) {
     for (int32_t col = rect.x; col < rect.XMost(); ++col) {
       int32_t i = row * rowLength + col;
@@ -430,7 +430,7 @@ CheckWritePixels(Decoder* aDecoder,
     return AsVariant(BGRAColor::Green().AsPixel());
   });
   EXPECT_EQ(WriteState::FINISHED, result);
-  EXPECT_EQ(inputWriteRect.width * inputWriteRect.height, count);
+  EXPECT_EQ(inputWriteRect.Width() * inputWriteRect.Height(), count);
 
   AssertCorrectPipelineFinalState(aFilter, inputRect, outputRect);
 
@@ -477,7 +477,7 @@ CheckPalettedWritePixels(Decoder* aDecoder,
     return AsVariant(uint8_t(255));
   });
   EXPECT_EQ(WriteState::FINISHED, result);
-  EXPECT_EQ(inputWriteRect.width * inputWriteRect.height, count);
+  EXPECT_EQ(inputWriteRect.Width() * inputWriteRect.Height(), count);
 
   AssertCorrectPipelineFinalState(aFilter, inputRect, outputRect);
 
@@ -505,7 +505,7 @@ CheckPalettedWritePixels(Decoder* aDecoder,
   uint32_t imageLength;
   currentFrame->GetImageData(&imageData, &imageLength);
   ASSERT_TRUE(imageData != nullptr);
-  ASSERT_EQ(outputWriteRect.width * outputWriteRect.height, int32_t(imageLength));
+  ASSERT_EQ(outputWriteRect.Width() * outputWriteRect.Height(), int32_t(imageLength));
   for (uint32_t i = 0; i < imageLength; ++i) {
     ASSERT_EQ(uint8_t(255), imageData[i]);
   }
