@@ -7,7 +7,6 @@ package org.mozilla.focus.webkit;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,16 +23,14 @@ import android.webkit.WebView;
 import android.webkit.WebViewDatabase;
 
 import org.mozilla.focus.BuildConfig;
+import org.mozilla.focus.session.Session;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.FileUtils;
 import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
-import org.mozilla.focus.web.BrowsingSession;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
-
-import java.util.UUID;
 
 public class WebkitView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "WebkitView";
@@ -83,14 +80,18 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     }
 
     @Override
-    public void restoreWebViewState(Bundle inBundle) {
-        final BrowsingSession session = BrowsingSession.getInstance();
-
+    public void restoreWebViewState(Session session, Bundle inBundle) {
         // Let's see if there's a UUID in the bundle and whether we have a state assigned to this UUID.
         final String uuid = inBundle.getString(KEY_STATE_UUID);
+        if (!session.getUUID().equals(uuid)) {
+            // This session and the stored state do not match.
+            return;
+        }
 
-        final WebBackForwardList backForwardList = session.hasWebViewState(uuid)
-                ? super.restoreState(session.getWebViewState(uuid))
+        final Bundle stateData = session.getWebViewState();
+
+        final WebBackForwardList backForwardList = stateData != null
+                ? super.restoreState(stateData)
                 : null;
 
         // Pages are only added to the back/forward list when loading finishes. If a new page is
@@ -116,21 +117,19 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     }
 
     @Override
-    public void saveWebViewState(Bundle outState) {
+    public void saveWebViewState(Session session, Bundle outState) {
         // We store the actual state into another bundle that we will keep in memory as long as this
         // browsing session is active. The data that WebView stores in this bundle is too large for
         // Android to save and restore as part of the state bundle.
         final Bundle stateData = new Bundle();
         super.saveState(stateData);
 
-        // We generate a UUID that we will store in the bundle that Android saves and restores. The
+        session.saveWebViewState(stateData);
+
+        // We will only store the session UUID in the bundle that Android saves and restores. The
         // actual data will be kept in memory and we are going to use the UUID to lookup the data
         // when restoring.
-        final String uuid = UUID.randomUUID().toString();
-
-        BrowsingSession.getInstance().putWebViewState(uuid, stateData);
-
-        outState.putString(KEY_STATE_UUID, uuid);
+        outState.putString(KEY_STATE_UUID, session.getUUID());
 
         // See restoreWebViewState() for an explanation of why we need to save this in _addition_
         // to WebView's state
@@ -219,7 +218,7 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
                     // so we can only check the updated url in onProgressChanges(), or in onPageFinished()
                     // (which is even later).
                     final String viewURL = view.getUrl();
-                    if (!UrlUtils.isInternalErrorURL(viewURL)) {
+                    if (!UrlUtils.isInternalErrorURL(viewURL) && viewURL != null) {
                         callback.onURLChanged(viewURL);
                     }
                     callback.onProgress(newProgress);

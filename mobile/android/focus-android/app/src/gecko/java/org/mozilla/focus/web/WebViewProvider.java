@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.NestedScrollingChild;
@@ -21,6 +22,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 
+import org.mozilla.focus.session.Session;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoView;
@@ -112,16 +114,6 @@ public class WebViewProvider {
             return true;
         }
 
-        @Override
-        public void saveWebViewState(Bundle outState) {
-            // TODO: save anything needed for navigation history restoration.
-        }
-
-        @Override
-        public void restoreWebViewState(Bundle inState) {
-            // TODO: restore navigation history, and reopen previously opened page
-        }
-
         private ContentListener createContentListener() {
             return new ContentListener() {
                 @Override
@@ -189,6 +181,16 @@ public class WebViewProvider {
         @Override
         public boolean canGoBack() {
             return canGoBack;
+        }
+
+        @Override
+        public void restoreWebViewState(Session session, Bundle inState) {
+            // TODO: restore navigation history, and reopen previously opened page
+        }
+
+        @Override
+        public void saveWebViewState(@NonNull Session session, @NonNull Bundle outState) {
+            // TODO: save anything needed for navigation history restoration.
         }
 
         @Override

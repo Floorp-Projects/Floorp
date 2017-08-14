@@ -18,6 +18,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,6 +85,11 @@ public class SwitchContextTest {
             }
         }
     };
+
+    @After
+    public void tearDown() throws Exception {
+        mActivityTestRule.getActivity().finishAndRemoveTask();
+    }
 
     private UiObject titleMsg = TestHelper.mDevice.findObject(new UiSelector()
             .description("focus test page")

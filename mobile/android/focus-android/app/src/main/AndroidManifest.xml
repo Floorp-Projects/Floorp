@@ -31,7 +31,7 @@
         <activity android:name=".activity.MainActivity"
             android:launchMode="singleTask"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
-            android:windowSoftInputMode="adjustResize"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -65,7 +65,7 @@
             </intent-filter>
 
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
-        </activity>"
+        </activity>
 
         <activity android:name=".activity.TextActionActivity"
             android:label="@string/text_selection_search_action"
@@ -88,6 +88,9 @@
         <activity android:name=".activity.InstallFirefoxActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
+        <activity android:name=".activity.EraseShortcutActivity"
+            android:theme="@android:style/Theme.Translucent" />
+
         <service
             android:name=".customtabs.CustomTabsService"
             android:exported="true"
@@ -97,7 +100,7 @@
             </intent-filter>
         </service>
 
-        <service android:name=".notification.BrowsingNotificationService"
+        <service android:name=".session.SessionNotificationService"
             android:exported="false" />
 
         <meta-data android:name="android.webkit.WebView.MetricsOptOut"

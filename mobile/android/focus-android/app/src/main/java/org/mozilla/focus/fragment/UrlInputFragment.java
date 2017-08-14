@@ -11,11 +11,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.PopupMenu;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -30,7 +32,11 @@ import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.autocomplete.UrlAutoCompleteFilter;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.locale.LocaleAwareFragment;
+import org.mozilla.focus.session.Session;
+import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.session.Source;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
@@ -42,25 +48,20 @@ import org.mozilla.focus.widget.InlineAutocompleteEditText;
 public class UrlInputFragment extends LocaleAwareFragment implements View.OnClickListener, InlineAutocompleteEditText.OnCommitListener, InlineAutocompleteEditText.OnFilterListener, PopupMenu.OnMenuItemClickListener {
     public static final String FRAGMENT_TAG = "url_input";
 
-    private static final String ARGUMENT_URL = "url";
     private static final String ARGUMENT_ANIMATION = "animation";
     private static final String ARGUMENT_X = "x";
     private static final String ARGUMENT_Y = "y";
     private static final String ARGUMENT_WIDTH = "width";
     private static final String ARGUMENT_HEIGHT = "height";
-    private static final String ARGUMENT_OVERLAY = "translucent";
+
+    private static final String ARGUMENT_SESSION_UUID = "sesssion_uuid";
 
     private static final String ANIMATION_BROWSER_SCREEN = "browser_screen";
 
     private static final int ANIMATION_DURATION = 200;
 
-    /**
-     * Create a new UrlInputFragment with a gradient background (and the Focus logo). This configuration
-     * is usually shown if there's no content to be shown below (e.g. the current website).
-     */
-    public static UrlInputFragment createWithBackground() {
+    public static UrlInputFragment createWithoutSession() {
         final Bundle arguments = new Bundle();
-        arguments.putBoolean(ARGUMENT_OVERLAY, false);
 
         final UrlInputFragment fragment = new UrlInputFragment();
         fragment.setArguments(arguments);
@@ -68,30 +69,11 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
         return fragment;
     }
 
-    @Override
-    public void applyLocale() {
-        if (isOverlay()) {
-            getActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.container, UrlInputFragment.createAsOverlay(ARGUMENT_URL, urlView), UrlInputFragment.FRAGMENT_TAG)
-                    .commit();
-        } else {
-            getActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.container, UrlInputFragment.createWithBackground(), UrlInputFragment.FRAGMENT_TAG)
-                    .commit();
-        }
-    }
-
-    /**
-     * Create a new UrlInputFragment as an overlay shown on top of a different view (e.g. the
-     * current website).
-     */
-    public static UrlInputFragment createAsOverlay(String url, View urlView) {
+    public static UrlInputFragment createWithSession(@NonNull Session session, View urlView) {
         final Bundle arguments = new Bundle();
+
+        arguments.putString(ARGUMENT_SESSION_UUID, session.getUUID());
         arguments.putString(ARGUMENT_ANIMATION, ANIMATION_BROWSER_SCREEN);
-        arguments.putString(ARGUMENT_URL, url);
-        arguments.putBoolean(ARGUMENT_OVERLAY, true);
 
         int[] screenLocation = new int[2];
         urlView.getLocationOnScreen(screenLocation);
@@ -100,6 +82,19 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
         arguments.putInt(ARGUMENT_Y, screenLocation[1]);
         arguments.putInt(ARGUMENT_WIDTH, urlView.getWidth());
         arguments.putInt(ARGUMENT_HEIGHT, urlView.getHeight());
+
+        final UrlInputFragment fragment = new UrlInputFragment();
+        fragment.setArguments(arguments);
+
+        return fragment;
+    }
+
+    /**
+     * Create a new UrlInputFragment with a gradient background (and the Focus logo). This configuration
+     * is usually shown if there's no content to be shown below (e.g. the current website).
+     */
+    public static UrlInputFragment createWithBackground() {
+        final Bundle arguments = new Bundle();
 
         final UrlInputFragment fragment = new UrlInputFragment();
         fragment.setArguments(arguments);
@@ -123,8 +118,20 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
 
     private volatile boolean isAnimating;
 
+    private Session session;
+
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        final String sessionUUID = getArguments().getString(ARGUMENT_SESSION_UUID);
+        if (sessionUUID != null) {
+            session = SessionManager.getInstance().getSessionByUUID(sessionUUID);
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_urlinput, container, false);
 
         dismissView = view.findViewById(R.id.dismiss);
@@ -143,15 +150,6 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
 
         urlView = (InlineAutocompleteEditText) view.findViewById(R.id.url_edit);
         urlView.setOnFilterListener(this);
-        urlView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                // Avoid showing keyboard again when returning to the previous page by back key.
-                if (hasFocus && !isAnimating) {
-                    ViewUtils.showKeyboard(urlView);
-                }
-            }
-        });
 
         toolbarBackgroundView = view.findViewById(R.id.toolbar_background);
         urlInputBackgroundView = view.findViewById(R.id.url_input_background);
@@ -184,16 +182,31 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
 
         urlView.setOnCommitListener(this);
 
-        if (getArguments().containsKey(ARGUMENT_URL)) {
-            urlView.setText(getArguments().getString(ARGUMENT_URL));
+        if (session != null) {
+            urlView.setText(session.getUrl().getValue());
             clearView.setVisibility(View.VISIBLE);
         }
 
         return view;
     }
 
+    @Override
+    public void applyLocale() {
+        if (isOverlay()) {
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, UrlInputFragment.createWithSession(session, urlView), UrlInputFragment.FRAGMENT_TAG)
+                    .commit();
+        } else {
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, UrlInputFragment.createWithBackground(), UrlInputFragment.FRAGMENT_TAG)
+                    .commit();
+        }
+    }
+
     private boolean isOverlay() {
-        return getArguments().getBoolean(ARGUMENT_OVERLAY, false);
+        return session != null;
     }
 
     public boolean onBackPressed() {
@@ -209,7 +222,14 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
     public void onStart() {
         super.onStart();
 
-        urlView.requestFocus();
+        if (!Settings.getInstance(getContext()).shouldShowFirstrun()) {
+            // Only show keyboard if we are not displaying the first run tour on top.
+            showKeyboard();
+        }
+    }
+
+    public void showKeyboard() {
+        ViewUtils.showKeyboard(urlView);
     }
 
     @Override
@@ -476,10 +496,7 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
                     .remove(this)
                     .commit();
         } else {
-            fragmentManager
-                    .beginTransaction()
-                    .replace(R.id.container, BrowserFragment.create(url), BrowserFragment.FRAGMENT_TAG)
-                    .commit();
+            SessionManager.getInstance().createSession(Source.USER_ENTERED, url);
         }
     }
 

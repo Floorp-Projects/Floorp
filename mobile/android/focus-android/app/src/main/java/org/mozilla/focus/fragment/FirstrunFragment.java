@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
@@ -22,6 +23,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.firstrun.FirstrunPagerAdapter;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.ViewUtils;
 
 public class FirstrunFragment extends Fragment implements View.OnClickListener {
     public static final String FRAGMENT_TAG = "firstrun";
@@ -58,6 +60,7 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
         final FirstrunPagerAdapter adapter = new FirstrunPagerAdapter(container.getContext(), this);
 
         viewPager = (ViewPager) view.findViewById(R.id.pager);
+        viewPager.setFocusable(true);
 
         viewPager.setPageTransformer(true, new ViewPager.PageTransformer() {
             @Override
@@ -128,11 +131,21 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
     }
 
     private void finishFirstrun() {
+        final FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+
         PreferenceManager.getDefaultSharedPreferences(getContext())
                 .edit()
                 .putBoolean(FIRSTRUN_PREF, true)
                 .apply();
 
-        ((MainActivity) getActivity()).firstrunFinished();
+        fragmentManager
+                .beginTransaction()
+                .remove(this)
+                .commit();
+
+        final UrlInputFragment inputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
+        if (inputFragment != null) {
+            inputFragment.showKeyboard();
+        }
     }
 }

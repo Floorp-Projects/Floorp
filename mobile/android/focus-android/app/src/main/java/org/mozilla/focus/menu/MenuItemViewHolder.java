@@ -25,7 +25,10 @@ import org.mozilla.focus.fragment.BrowserFragment;
     /* package-private */ void bind(BrowserMenuAdapter.MenuItem menuItem) {
         menuItemView.setId(menuItem.id);
         menuItemView.setText(menuItem.label);
-        if (menuItem.id == R.id.add_to_homescreen && browserFragment.isLoading()) {
+
+        final boolean isLoading = browserFragment.getSession().getLoading().getValue();
+
+        if (menuItem.id == R.id.add_to_homescreen && isLoading) {
             menuItemView.setTextColor(browserFragment.getResources().getColor(R.color.inactive_text));
             menuItemView.setClickable(false);
         } else {

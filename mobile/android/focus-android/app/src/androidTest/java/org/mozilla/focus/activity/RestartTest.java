@@ -20,6 +20,7 @@ import android.support.test.uiautomator.Until;
 
 import junit.framework.Assert;
 
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,6 +92,11 @@ public class RestartTest {
             }
         }
     };
+
+    @After
+    public void tearDown() throws Exception {
+        mActivityTestRule.getActivity().finishAndRemoveTask();
+    }
 
     @Test
     public void restartFocus() throws InterruptedException, UiObjectNotFoundException, RemoteException {

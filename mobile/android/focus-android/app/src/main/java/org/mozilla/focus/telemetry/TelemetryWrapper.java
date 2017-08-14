@@ -233,11 +233,11 @@ public final class TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue();
     }
 
-    public static void shareIntentEvent(boolean isURL) {
-        if (isURL) {
-            TelemetryEvent.create(Category.ACTION, Method.SHARE_INTENT, Object.APP, Value.URL).queue();
-        } else {
+    public static void shareIntentEvent(boolean isSearch) {
+        if (isSearch) {
             TelemetryEvent.create(Category.ACTION, Method.SHARE_INTENT, Object.APP, Value.SEARCH).queue();
+        } else {
+            TelemetryEvent.create(Category.ACTION, Method.SHARE_INTENT, Object.APP, Value.URL).queue();
         }
     }
 
@@ -322,10 +322,6 @@ public final class TelemetryWrapper {
 
     public static void eraseNotificationEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION, Value.ERASE).queue();
-    }
-
-    public static void eraseNotificationActionEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.ERASE).queue();
     }
 
     public static void eraseAndOpenNotificationActionEvent() {

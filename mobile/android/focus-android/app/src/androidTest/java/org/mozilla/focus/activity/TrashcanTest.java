@@ -16,6 +16,7 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +51,11 @@ public class TrashcanTest {
                     .apply();
         }
     };
+
+    @After
+    public void tearDown() throws Exception {
+        mActivityTestRule.getActivity().finishAndRemoveTask();
+    }
 
     @Test
     public void TrashTest() throws InterruptedException, UiObjectNotFoundException {

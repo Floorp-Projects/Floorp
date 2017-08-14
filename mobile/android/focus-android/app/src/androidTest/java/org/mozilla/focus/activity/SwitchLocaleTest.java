@@ -17,6 +17,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,6 +54,11 @@ public class SwitchLocaleTest {
     };
 
     public SwitchLocaleTest() throws UiObjectNotFoundException {
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @SuppressWarnings("deprecation")

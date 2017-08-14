@@ -7,24 +7,19 @@ package org.mozilla.focus.webkit;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.support.annotation.WorkerThread;
-import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.web.BrowsingSession;
+import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.webkit.matcher.UrlMatcher;
 
 public class TrackingProtectionWebViewClient extends WebViewClient {
     private static volatile UrlMatcher MATCHER;
-
-    private boolean blockingEnabled;
-    /* package */ String currentPageURL;
 
     public static void triggerPreload(final Context context) {
         // Only trigger loading if MATCHER is null. (If it's null, MATCHER could already be loading,
@@ -49,12 +44,20 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         return MATCHER;
     }
 
+    private boolean blockingEnabled;
+    /* package */ String currentPageURL;
+    protected IWebView.Callback callback;
+
     /* package */ TrackingProtectionWebViewClient(final Context context) {
         // Hopefully we have loaded background data already. We call triggerPreload() to try to trigger
         // background loading of the lists as early as possible.
         triggerPreload(context);
 
         this.blockingEnabled = true;
+    }
+
+    public void setCallback(IWebView.Callback callback) {
+        this.callback = callback;
     }
 
     public void setBlockingEnabled(boolean enabled) {
@@ -103,7 +106,9 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         final Uri pageUri = Uri.parse(currentPageURL);
         if ((!request.isForMainFrame()) &&
                 matcher.matches(resourceUri, pageUri)) {
-            BrowsingSession.getInstance().countBlockedTracker();
+            if (callback != null) {
+                callback.countBlockedTracker();
+            }
             return new WebResourceResponse(null, null, null);
         }
 
@@ -123,8 +128,8 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
 
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        if (blockingEnabled) {
-            BrowsingSession.getInstance().resetTrackerCount();
+        if (callback != null) {
+            callback.resetBlockedTrackers();
         }
 
         currentPageURL = url;

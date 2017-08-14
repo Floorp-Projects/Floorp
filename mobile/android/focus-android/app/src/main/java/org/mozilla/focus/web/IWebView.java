@@ -5,11 +5,12 @@
 
 package org.mozilla.focus.web;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
+
+import org.mozilla.focus.session.Session;
 
 public interface IWebView {
     class HitTarget {
@@ -43,9 +44,6 @@ public interface IWebView {
 
         void onURLChanged(final String url);
 
-        /** Return true if the URL was handled, false if we should continue loading the current URL. */
-        boolean handleExternalUrl(String url);
-
         void onDownloadStart(Download download);
 
         void onLongPress(final HitTarget hitTarget);
@@ -67,6 +65,10 @@ public interface IWebView {
          * be hidden now.
          */
         void onExitFullScreen();
+
+        void countBlockedTracker();
+
+        void resetBlockedTrackers();
     }
 
     interface FullscreenCallback {
@@ -106,9 +108,9 @@ public interface IWebView {
 
     boolean canGoBack();
 
-    void restoreWebViewState(Bundle inState);
+    void restoreWebViewState(Session session, Bundle inState);
 
-    void saveWebViewState(Bundle outState);
+    void saveWebViewState(@NonNull Session session, @NonNull Bundle outState);
 
     /**
      * Get the title of the currently displayed website.

@@ -12,8 +12,7 @@
         <intent
             android:action="erase"
             android:targetPackage="${applicationId}"
-            android:targetClass="org.mozilla.focus.activity.MainActivity">
-                <extra android:name="finish" android:value="true" />
+            android:targetClass="org.mozilla.focus.activity.EraseShortcutActivity">
                 <extra android:name="shortcut" android:value="true" />
         </intent>
     </shortcut>

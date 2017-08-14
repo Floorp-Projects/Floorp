@@ -19,8 +19,9 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.HardwareUtils;
-import org.mozilla.focus.web.CustomTabConfig;
+import org.mozilla.focus.customtabs.CustomTabConfig;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +47,8 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
     private final BrowserFragment fragment;
 
     private List<MenuItem> items;
+    private WeakReference<NavigationItemViewHolder> navigationItemViewHolderReference;
+    private WeakReference<BlockingItemViewHolder> blockingItemViewHolderReference;
 
     public BrowserMenuAdapter(Context context, BrowserMenu menu, BrowserFragment fragment,
                               final @Nullable CustomTabConfig customTabConfig) {
@@ -107,16 +110,44 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
         }
     }
 
+    public void updateTrackers(int trackers) {
+        if (blockingItemViewHolderReference == null) {
+            return;
+        }
+
+        final BlockingItemViewHolder navigationItemViewHolder = blockingItemViewHolderReference.get();
+        if (navigationItemViewHolder != null) {
+            navigationItemViewHolder.updateTrackers(trackers);
+        }
+    }
+
+    public void updateLoading(boolean loading) {
+        if (navigationItemViewHolderReference == null) {
+            return;
+        }
+
+        final NavigationItemViewHolder navigationItemViewHolder = navigationItemViewHolderReference.get();
+        if (navigationItemViewHolder != null) {
+            navigationItemViewHolder.updateLoading(loading);
+        }
+    }
+
     @Override
     public BrowserMenuViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         if (viewType == NavigationItemViewHolder.LAYOUT_ID) {
-            return new NavigationItemViewHolder(inflater.inflate(R.layout.menu_navigation, parent, false), fragment);
+            NavigationItemViewHolder navigationItemViewHolder = new NavigationItemViewHolder(
+                    inflater.inflate(R.layout.menu_navigation, parent, false), fragment);
+            navigationItemViewHolderReference = new WeakReference<>(navigationItemViewHolder);
+            return navigationItemViewHolder;
         } else if (viewType == MenuItemViewHolder.LAYOUT_ID) {
             return new MenuItemViewHolder(inflater.inflate(R.layout.menu_item, parent, false));
         } else if (viewType == BlockingItemViewHolder.LAYOUT_ID) {
-            return new BlockingItemViewHolder(inflater.inflate(R.layout.menu_blocking_switch, parent, false), fragment);
+            final BlockingItemViewHolder blockingItemViewHolder = new BlockingItemViewHolder(
+                    inflater.inflate(R.layout.menu_blocking_switch, parent, false), fragment);
+            blockingItemViewHolderReference = new WeakReference<>(blockingItemViewHolder);
+            return blockingItemViewHolder;
         } else if (viewType == CustomTabMenuItemViewHolder.LAYOUT_ID) {
             return new CustomTabMenuItemViewHolder(inflater.inflate(R.layout.custom_tab_menu_item, parent, false));
         }

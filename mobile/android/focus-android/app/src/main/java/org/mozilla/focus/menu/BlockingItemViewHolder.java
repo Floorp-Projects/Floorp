@@ -14,11 +14,11 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.ThreadUtils;
-import org.mozilla.focus.web.BrowsingSession;
 
 /* package */ class BlockingItemViewHolder extends BrowserMenuViewHolder implements CompoundButton.OnCheckedChangeListener {
     /* package */ static final int LAYOUT_ID = R.layout.menu_blocking_switch;
 
+    private TextView trackerCounter;
     private BrowserFragment fragment;
 
     /* package */ BlockingItemViewHolder(View itemView, final BrowserFragment fragment) {
@@ -40,18 +40,17 @@ import org.mozilla.focus.web.BrowsingSession;
             }
         });
 
-        final TextView trackerCounter = (TextView) itemView.findViewById(R.id.trackers_count);
+        trackerCounter = (TextView) itemView.findViewById(R.id.trackers_count);
 
-        BrowsingSession.getInstance().setTrackingCountListener(new BrowsingSession.TrackingCountListener() {
-            @Override
-            public void onTrackingCountChanged(int trackingCount) {
-                if (fragment.isBlockingEnabled()) {
-                    updateTrackingCount(trackerCounter, trackingCount);
-                } else {
-                    disableTrackingCount(trackerCounter);
-                }
-            }
-        });
+        updateTrackers(fragment.getSession().getBlockedTrackers().getValue());
+    }
+
+    /* package */ void updateTrackers(int trackers) {
+        if (fragment.isBlockingEnabled()) {
+            updateTrackingCount(trackerCounter, trackers);
+        } else {
+            disableTrackingCount(trackerCounter);
+        }
     }
 
     private void updateTrackingCount(final TextView view, final int count) {

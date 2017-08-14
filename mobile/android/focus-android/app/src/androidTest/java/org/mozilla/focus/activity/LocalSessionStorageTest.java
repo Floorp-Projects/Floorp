@@ -15,6 +15,7 @@ import android.support.test.uiautomator.UiSelector;
 
 import junit.framework.Assert;
 
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,6 +77,11 @@ public class LocalSessionStorageTest {
             }
         }
     };
+
+    @After
+    public void tearDown() throws Exception {
+        mActivityTestRule.getActivity().finishAndRemoveTask();
+    }
 
     /**
      * Make sure that session storage values are kept and written but removed at the end of a session.

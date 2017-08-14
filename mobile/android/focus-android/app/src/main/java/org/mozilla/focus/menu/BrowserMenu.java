@@ -20,17 +20,21 @@ import android.widget.PopupWindow;
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.utils.ViewUtils;
-import org.mozilla.focus.web.CustomTabConfig;
+import org.mozilla.focus.customtabs.CustomTabConfig;
 
 public class BrowserMenu extends PopupWindow {
+    private BrowserMenuAdapter adapter;
+
     public BrowserMenu(Context context, BrowserFragment fragment, final @Nullable CustomTabConfig customTabConfig) {
         @SuppressLint("InflateParams") // This View will have it's params ignored anyway:
         final View view = LayoutInflater.from(context).inflate(R.layout.menu, null);
         setContentView(view);
 
+        adapter = new BrowserMenuAdapter(context, this, fragment, customTabConfig);
+
         RecyclerView menuList = (RecyclerView) view.findViewById(R.id.list);
         menuList.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        menuList.setAdapter(new BrowserMenuAdapter(context, this, fragment, customTabConfig));
+        menuList.setAdapter(adapter);
 
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
@@ -40,6 +44,14 @@ public class BrowserMenu extends PopupWindow {
         setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
 
         setElevation(context.getResources().getDimension(R.dimen.menu_elevation));
+    }
+
+    public void updateTrackers(int trackers) {
+        adapter.updateTrackers(trackers);
+    }
+
+    public void updateLoading(boolean loading) {
+        adapter.updateLoading(loading);
     }
 
     public void show(View anchor) {

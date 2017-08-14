@@ -1,4 +1,4 @@
-package org.mozilla.focus.web;
+package org.mozilla.focus.customtabs;
 
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
+import org.mozilla.focus.customtabs.CustomTabConfig;
 import org.mozilla.focus.utils.SafeIntent;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;

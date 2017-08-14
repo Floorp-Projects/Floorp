@@ -23,6 +23,7 @@ import android.webkit.WebViewClient;
 import org.mozilla.focus.R;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.HtmlLoader;
+import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.IWebView;
@@ -36,17 +37,12 @@ import java.util.Map;
 /* package */ class FocusWebViewClient extends TrackingProtectionWebViewClient {
     private final static String ERROR_PROTOCOL = "error:";
 
-    private IWebView.Callback callback;
     private boolean errorReceived;
     private Context context;
 
-    public FocusWebViewClient(Context context) {
+    /* package */ FocusWebViewClient(Context context) {
         super(context);
         this.context = context;
-    }
-
-    public void setCallback(IWebView.Callback callback) {
-        this.callback = callback;
     }
 
     /**
@@ -214,7 +210,7 @@ import java.util.Map;
         final Uri uri = Uri.parse(url);
         if (!UrlUtils.isSupportedProtocol(uri.getScheme()) &&
                 callback != null &&
-                callback.handleExternalUrl(url)) {
+                IntentUtils.handleExternalUri(view.getContext(), (IWebView) view, url)) {
             return true;
         }
 

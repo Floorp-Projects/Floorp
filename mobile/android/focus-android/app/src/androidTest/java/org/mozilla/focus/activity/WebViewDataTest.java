@@ -16,6 +16,7 @@ import android.support.test.uiautomator.UiSelector;
 
 import junit.framework.Assert;
 
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -132,7 +133,10 @@ public class WebViewDataTest {
         }
     };
 
-
+    @After
+    public void tearDown() throws Exception {
+        mActivityTestRule.getActivity().finishAndRemoveTask();
+    }
 
     @Test
     public void DeleteWebViewDataTest() throws InterruptedException, UiObjectNotFoundException, IOException {
