@@ -111,7 +111,7 @@ jit::PatchBackedge(CodeLocationJump& jump, CodeLocationLabel label,
     if (BOffImm16::IsInRange(targetAddr - sourceAddr)) {
         branch->setBOffImm16(BOffImm16(targetAddr - sourceAddr));
     } else {
-        if (target == JitRuntime::BackedgeLoopHeader) {
+        if (target == JitZoneGroup::BackedgeLoopHeader) {
             Instruction* inst = &branch[1];
             Assembler::UpdateLoad64Value(inst, targetAddr);
             // Jump to first ori. The lui will be executed in delay slot.
@@ -126,7 +126,7 @@ jit::PatchBackedge(CodeLocationJump& jump, CodeLocationLabel label,
 }
 
 void
-Assembler::executableCopy(uint8_t* buffer, bool flushICache = true)
+Assembler::executableCopy(uint8_t* buffer, bool flushICache)
 {
     MOZ_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);

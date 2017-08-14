@@ -1015,6 +1015,24 @@ MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMag
     bind(&notMagic);
 }
 
+void
+MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
+{
+    int32_t shift = Imm32::ShiftOf(addr.scale).value;
+    if (shift) {
+        // 4 instructions : lui ori jr nop
+        ma_mul(ScratchRegister, addr.index, Imm32(4 * 4));
+        as_addu(ScratchRegister, addr.base, ScratchRegister);
+    } else {
+        as_addu(ScratchRegister, addr.base, addr.index);
+    }
+
+    if (addr.offset)
+        asMasm().addPtr(Imm32(addr.offset), ScratchRegister);
+    as_jr(ScratchRegister);
+    as_nop();
+}
+
 // ========================================================================
 // Memory access primitives.
 void

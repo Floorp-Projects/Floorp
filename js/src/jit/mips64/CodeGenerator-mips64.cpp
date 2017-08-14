@@ -247,7 +247,7 @@ CodeGeneratorMIPS64::visitCompareB(LCompareB* lir)
 
     // Load boxed boolean in ScratchRegister.
     if (rhs->isConstant())
-        masm.moveValue(rhs->toConstant()->toJSValue(), ScratchRegister);
+        masm.moveValue(rhs->toConstant()->toJSValue(), ValueOperand(ScratchRegister));
     else
         masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchRegister);
 
@@ -266,7 +266,7 @@ CodeGeneratorMIPS64::visitCompareBAndBranch(LCompareBAndBranch* lir)
 
     // Load boxed boolean in ScratchRegister.
     if (rhs->isConstant())
-        masm.moveValue(rhs->toConstant()->toJSValue(), ScratchRegister);
+        masm.moveValue(rhs->toConstant()->toJSValue(), ValueOperand(ScratchRegister));
     else
         masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchRegister);
 
