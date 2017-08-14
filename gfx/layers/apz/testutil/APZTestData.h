@@ -86,7 +86,6 @@ private:
                        ViewID aScrollId,
                        const std::string& aKey,
                        const std::string& aValue) {
-    MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");
     auto bucketIterator = aDataStore.find(aSequenceNumber);
     if (bucketIterator == aDataStore.end()) {
       MOZ_ASSERT(false, "LogTestDataImpl called with nonexistent sequence number");
@@ -105,8 +104,9 @@ class APZPaintLogHelper {
 public:
   APZPaintLogHelper(APZTestData* aTestData, SequenceNumber aPaintSequenceNumber)
     : mTestData(aTestData),
-      mPaintSequenceNumber(aPaintSequenceNumber)
-  {}
+      mPaintSequenceNumber(aPaintSequenceNumber) {
+    MOZ_ASSERT(!aTestData || gfxPrefs::APZTestLoggingEnabled(), "don't call me");
+  }
 
   template <typename Value>
   void LogTestData(FrameMetrics::ViewID aScrollId,
