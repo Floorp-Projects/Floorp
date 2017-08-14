@@ -377,7 +377,9 @@ ExtensionManager = {
       }
 
       case "Schema:Add": {
-        this.schemaJSON.set(data.url, data.schema);
+        for (let [url, schema] of data) {
+          this.schemaJSON.set(url, schema);
+        }
         break;
       }
     }

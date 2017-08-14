@@ -51,7 +51,7 @@
   "extension": {
     "url": "chrome://extensions/content/ext-extension.js",
     "schema": "chrome://extensions/content/schemas/extension.json",
-    "scopes": ["addon_parent"],
+    "scopes": ["addon_parent", "content_child"],
     "paths": [
       ["extension"]
     ]
@@ -136,7 +136,7 @@
   },
   "test": {
     "schema": "chrome://extensions/content/schemas/test.json",
-    "scopes": []
+    "scopes": ["content_child"]
   },
   "theme": {
     "url": "chrome://extensions/content/ext-theme.js",
