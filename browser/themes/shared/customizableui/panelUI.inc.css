@@ -743,16 +743,22 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 
 #appMenu-fxa-label,
 #appMenu-fxa-icon {
-  -moz-image-region: rect(0, 16px, 16px, 0);
-  list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  list-style-image: url(chrome://browser/skin/sync.svg);
 }
 
 #appMenu-fxa-label {
   -moz-box-flex: 1;
 }
 
-#appMenu-fxa-icon[syncstatus="active"] {
-  list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
+@keyframes syncRotate {
+  to { transform: rotate(360deg); }
+}
+
+#appMenu-fxa-icon[syncstatus="active"] > .toolbarbutton-icon {
+  animation: syncRotate 0.8s linear infinite;
+  fill: #0a84ff;
 }
 
 #appMenu-fxa-status {
@@ -762,18 +768,6 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 #appMenu-fxa-avatar {
   pointer-events: none;
   list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #appMenu-fxa-label,
-  #appMenu-fxa-icon {
-    list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  #appMenu-fxa-icon[syncstatus="active"] {
-    list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
-  }
 }
 
 /* Handle different UI states. */
@@ -870,11 +864,6 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   width: calc(@menuPanelWidth@ + 30px);
   padding-inline-start: 15px;
   border-inline-start-style: none;
-}
-
-#PanelUI-fxa-label,
-#PanelUI-fxa-icon {
-  list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
 }
 
 #PanelUI-remotetabs {
@@ -990,10 +979,6 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 
 #PanelUI-remotetabs-main[devices-status="single"] > #PanelUI-remotetabs-buttons {
   display: none;
-}
-
-#PanelUI-fxa-icon[syncstatus="active"] {
-  list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
 }
 
 #PanelUI-customize {
@@ -1914,15 +1899,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
   .panel-banner-item[notificationid^=update] {
     list-style-image: url(chrome://branding/content/icon32.png);
-  }
-
-  #PanelUI-fxa-label,
-  #PanelUI-fxa-icon {
-    list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
-  }
-
-  #PanelUI-fxa-icon[syncstatus="active"] {
-    list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
   }
 
   #PanelUI-customize {
