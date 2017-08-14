@@ -33,7 +33,7 @@ add_task(async function() {
 });
 
 async function test1(gTestBrowser) {
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   await ContentTask.spawn(gTestBrowser, null, function() {
     var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
@@ -45,7 +45,7 @@ async function test1(gTestBrowser) {
 }
 
 async function test2(gTestBrowser) {
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
 
   await ContentTask.spawn(gTestBrowser, null, function() {
     var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
@@ -57,7 +57,7 @@ async function test2(gTestBrowser) {
 }
 
 async function test3(gTestBrowser) {
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   await ContentTask.spawn(gTestBrowser, null, function() {
     var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");

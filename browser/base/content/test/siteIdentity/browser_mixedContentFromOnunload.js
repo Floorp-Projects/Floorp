@@ -30,7 +30,7 @@ add_task(async function() {
     // check security state.  Since current url is https and doesn't have any
     // mixed content resources, we expect it to be secure.
     isSecurityState(browser, "secure");
-    assertMixedContentBlockingState(browser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
+    await assertMixedContentBlockingState(browser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
     // Navigation from an http page to a https page that has mixed display content
     // The https page loads an http image on unload
     url = HTTP_TEST_ROOT_2 + "file_mixedContentFromOnunload.html";
@@ -40,6 +40,6 @@ add_task(async function() {
     await BrowserTestUtils.loadURI(browser, url);
     await BrowserTestUtils.browserLoaded(browser);
     isSecurityState(browser, "broken");
-    assertMixedContentBlockingState(browser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
+    await assertMixedContentBlockingState(browser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
   });
 });
