@@ -217,15 +217,13 @@ private:
   void EndProcessingRestyles();
 
 public:
-  // Update styles for animations that are running on the compositor and
-  // whose updating is suppressed on the main thread (to save
-  // unnecessary work), while leaving all other aspects of style
-  // out-of-date.
+  // Perform any pending animation restyles.
   //
-  // Performs an animation-only style flush to make styles from
-  // throttled transitions up-to-date prior to processing an unrelated
-  // style change, so that any transitions triggered by that style
-  // change produce correct results.
+  // This is a superset of the work performed by
+  // UpdateAnimationStylesForHitTesting since it includes not only any
+  // animations whose restyles might have been suppressed on the main thread
+  // because they are running on the compositor, but *any* animations with
+  // pending restyles including SMIL animation restyles.
   //
   // In more detail:  when we're able to run animations on the
   // compositor, we sometimes "throttle" these animations by skipping
@@ -241,7 +239,8 @@ public:
   // process the queued style updates we'll have correct old data to
   // compare against.  When we do this, we don't bother touching frames
   // other than primary frames.
-  void UpdateOnlyAnimationStyles();
+  void UpdateAnimationStyles();
+  void UpdateAnimationStylesForHitTesting();
 
   // Rebuilds all style data by throwing out the old rule tree and
   // building a new one, and additionally applying aExtraHint (which
