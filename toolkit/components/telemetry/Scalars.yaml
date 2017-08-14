@@ -786,6 +786,21 @@ gfx.advanced.layers:
       - 'main'
 
 # The following section contains the form autofill related scalars.
+formautofill:
+  availability:
+    bug_numbers:
+      - 1386959
+    description: A boolean sent once per session to represent whether the formautofill is available in the build
+    expires: never
+    kind: boolean
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - jcheng@mozilla.com
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 formautofill.addresses:
   fill_type_manual:
     bug_numbers:
