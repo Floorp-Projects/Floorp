@@ -247,7 +247,7 @@ public:
   nsresult UnregisterEventListeners();
   nsresult HandleNavigationEvent(bool aForceWordSpellCheck, int32_t aNewPositionOffset = 0);
 
-  nsresult GetSpellCheckSelection(nsISelection ** aSpellCheckSelection);
+  already_AddRefed<mozilla::dom::Selection> GetSpellCheckSelection();
   nsresult SaveCurrentSelectionPosition();
 
   nsresult ResumeCheck(mozilla::UniquePtr<mozInlineSpellStatus>&& aStatus);
