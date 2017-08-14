@@ -2020,7 +2020,6 @@ nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd)
     mLock.AssertCurrentThreadOwns();
 
     NS_ASSERTION(mFD == fd, "wrong fd");
-    SOCKET_LOG(("JIMB: ReleaseFD_Locked: mFDref = %" PRIuPTR "\n", mFDref));
 
     if (--mFDref == 0) {
         if (gIOService->IsNetTearingDown() &&
