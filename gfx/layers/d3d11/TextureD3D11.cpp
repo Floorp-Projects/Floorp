@@ -1687,9 +1687,9 @@ SyncObjectD3D11Client::IsSyncObjectValid()
 void
 SyncObjectD3D11Client::Synchronize()
 {
-  // This can be called from the paint or main thread depending on OMTP.
-  // We need this lock in addition to the AutoTextureLock in case we have to
-  // init here.
+  // Since this can be called from either the Paint or Main thread.
+  // We don't want this to race since we initialize the sync texture here
+  // too.
   MutexAutoLock syncLock(mSyncLock);
 
   if (!mSyncedTextures.size()) {
