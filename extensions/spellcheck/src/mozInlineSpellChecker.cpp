@@ -602,11 +602,12 @@ mozInlineSpellChecker::Init(nsIEditor* aEditor)
 nsresult mozInlineSpellChecker::Cleanup(bool aDestroyingFrames)
 {
   mNumWordsInSpellSelection = 0;
-  nsCOMPtr<nsISelection> spellCheckSelection;
-  nsresult rv = GetSpellCheckSelection(getter_AddRefs(spellCheckSelection));
-  if (NS_FAILED(rv)) {
+  RefPtr<Selection> spellCheckSelection = GetSpellCheckSelection();
+  nsresult rv = NS_OK;
+  if (!spellCheckSelection) {
     // Ensure we still unregister event listeners (but return a failure code)
     UnregisterEventListeners();
+    rv = NS_ERROR_FAILURE;
   } else {
     if (!aDestroyingFrames) {
       spellCheckSelection->RemoveAllRanges();
@@ -936,11 +937,13 @@ NS_IMETHODIMP
 mozInlineSpellChecker::GetMisspelledWord(nsIDOMNode *aNode, int32_t aOffset,
                                          nsIDOMRange **newword)
 {
-  NS_ENSURE_ARG_POINTER(aNode);
-  nsCOMPtr<nsISelection> spellCheckSelection;
-  nsresult res = GetSpellCheckSelection(getter_AddRefs(spellCheckSelection));
-  NS_ENSURE_SUCCESS(res, res);
-
+  if (NS_WARN_IF(!aNode)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  RefPtr<Selection> spellCheckSelection = GetSpellCheckSelection();
+  if (NS_WARN_IF(!spellCheckSelection)) {
+    return NS_ERROR_FAILURE;
+  }
   return IsPointInSelection(spellCheckSelection, aNode, aOffset, newword);
 }
 
@@ -1658,12 +1661,10 @@ mozInlineSpellChecker::ResumeCheck(UniquePtr<mozInlineSpellStatus>&& aStatus)
   if (NS_FAILED(rv))
     return NS_OK; // editor doesn't like us, don't assert
 
-  nsCOMPtr<nsISelection> spellCheckSelectionRef;
-  rv = GetSpellCheckSelection(getter_AddRefs(spellCheckSelectionRef));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  auto spellCheckSelection =
-    static_cast<Selection *>(spellCheckSelectionRef.get());
+  RefPtr<Selection> spellCheckSelection = GetSpellCheckSelection();
+  if (NS_WARN_IF(!spellCheckSelection)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsAutoString currentDictionary;
   rv = mSpellCheck->GetCurrentDictionary(currentDictionary);
@@ -1807,20 +1808,18 @@ mozInlineSpellChecker::AddRange(nsISelection* aSpellCheckSelection,
   return rv;
 }
 
-nsresult
-mozInlineSpellChecker::GetSpellCheckSelection(
-                         nsISelection** aSpellCheckSelection)
+already_AddRefed<Selection>
+mozInlineSpellChecker::GetSpellCheckSelection()
 {
   if (NS_WARN_IF(!mTextEditor)) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
   RefPtr<Selection> selection =
     mTextEditor->GetSelection(SelectionType::eSpellCheck);
   if (!selection) {
-    return NS_ERROR_NULL_POINTER;
+    return nullptr;
   }
-  selection.forget(aSpellCheckSelection);
-  return NS_OK;
+  return selection.forget();
 }
 
 nsresult
