@@ -41,8 +41,8 @@ RotatedBuffer::GetQuadrantRectangle(XSide aXSide, YSide aYSide) const
   // quadrantTranslation is the amount we translate the top-left
   // of the quadrant by to get coordinates relative to the layer
   IntPoint quadrantTranslation = -mBufferRotation;
-  quadrantTranslation.x += aXSide == LEFT ? mBufferRect.width : 0;
-  quadrantTranslation.y += aYSide == TOP ? mBufferRect.height : 0;
+  quadrantTranslation.x += aXSide == LEFT ? mBufferRect.Width() : 0;
+  quadrantTranslation.y += aYSide == TOP ? mBufferRect.Height() : 0;
   return mBufferRect + quadrantTranslation;
 }
 
@@ -52,17 +52,17 @@ RotatedBuffer::GetSourceRectangle(XSide aXSide, YSide aYSide) const
   Rect result;
   if (aXSide == LEFT) {
     result.x = 0;
-    result.width = mBufferRotation.x;
+    result.SetWidth(mBufferRotation.x);
   } else {
     result.x = mBufferRotation.x;
-    result.width = mBufferRect.width - mBufferRotation.x;
+    result.SetWidth(mBufferRect.Width() - mBufferRotation.x);
   }
   if (aYSide == TOP) {
     result.y = 0;
-    result.height = mBufferRotation.y;
+    result.SetHeight(mBufferRotation.y);
   } else {
     result.y = mBufferRotation.y;
-    result.height = mBufferRect.height - mBufferRotation.y;
+    result.SetHeight(mBufferRect.Height() - mBufferRotation.y);
   }
   return result;
 }
@@ -415,7 +415,7 @@ ComputeBufferRect(const IntRect& aRequestedRect)
   // dimensions). 64 used to be the magic number needed to work around
   // a rendering glitch on b2g (see bug 788411). Now that we don't support
   // this device anymore we should be fine with 8 pixels as the minimum.
-  rect.width = std::max(aRequestedRect.width, 8);
+  rect.SetWidth(std::max(aRequestedRect.Width(), 8));
   return rect;
 }
 
@@ -587,8 +587,8 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
       // changes to destBufferRect.
       IntPoint newRotation = mBufferRotation +
         (destBufferRect.TopLeft() - mBufferRect.TopLeft());
-      WrapRotationAxis(&newRotation.x, mBufferRect.width);
-      WrapRotationAxis(&newRotation.y, mBufferRect.height);
+      WrapRotationAxis(&newRotation.x, mBufferRect.Width());
+      WrapRotationAxis(&newRotation.y, mBufferRect.Height());
       NS_ASSERTION(gfx::IntRect(gfx::IntPoint(0,0), mBufferRect.Size()).Contains(newRotation),
                    "newRotation out of bounds");
       int32_t xBoundary = destBufferRect.XMost() - newRotation.x;
@@ -662,8 +662,8 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
                          &destDTBuffer, &destDTBufferOnWhite);
             if (!destDTBuffer ||
                 (!destDTBufferOnWhite && (bufferFlags & BUFFER_COMPONENT_ALPHA))) {
-              if (Factory::ReasonableSurfaceSize(IntSize(destBufferRect.width, destBufferRect.height))) {
-                gfxCriticalNote << "Failed 1 buffer db=" << hexa(destDTBuffer.get()) << " dw=" << hexa(destDTBufferOnWhite.get()) << " for " << destBufferRect.x << ", " << destBufferRect.y << ", " << destBufferRect.width << ", " << destBufferRect.height;
+              if (Factory::ReasonableSurfaceSize(IntSize(destBufferRect.Width(), destBufferRect.Height()))) {
+                gfxCriticalNote << "Failed 1 buffer db=" << hexa(destDTBuffer.get()) << " dw=" << hexa(destDTBufferOnWhite.get()) << " for " << destBufferRect.x << ", " << destBufferRect.y << ", " << destBufferRect.Width() << ", " << destBufferRect.Height();
               }
               return result;
             }
@@ -686,8 +686,8 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
                  &destDTBuffer, &destDTBufferOnWhite);
     if (!destDTBuffer ||
         (!destDTBufferOnWhite && (bufferFlags & BUFFER_COMPONENT_ALPHA))) {
-      if (Factory::ReasonableSurfaceSize(IntSize(destBufferRect.width, destBufferRect.height))) {
-        gfxCriticalNote << "Failed 2 buffer db=" << hexa(destDTBuffer.get()) << " dw=" << hexa(destDTBufferOnWhite.get()) << " for " << destBufferRect.x << ", " << destBufferRect.y << ", " << destBufferRect.width << ", " << destBufferRect.height;
+      if (Factory::ReasonableSurfaceSize(IntSize(destBufferRect.Width(), destBufferRect.Height()))) {
+        gfxCriticalNote << "Failed 2 buffer db=" << hexa(destDTBuffer.get()) << " dw=" << hexa(destDTBufferOnWhite.get()) << " for " << destBufferRect.x << ", " << destBufferRect.y << ", " << destBufferRect.Width() << ", " << destBufferRect.Height();
       }
       return result;
     }
@@ -788,9 +788,9 @@ RotatedContentBuffer::PrepareDrawTargetForPainting(CapturedPaintState* aState)
     }
     for (auto iter = aState->mRegionToDraw.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& rect = iter.Get();
-      target->FillRect(Rect(rect.x, rect.y, rect.width, rect.height),
+      target->FillRect(Rect(rect.x, rect.y, rect.Width(), rect.Height()),
                             ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-      whiteTarget->FillRect(Rect(rect.x, rect.y, rect.width, rect.height),
+      whiteTarget->FillRect(Rect(rect.x, rect.y, rect.Width(), rect.Height()),
                                  ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     }
   } else if (aState->mContentType == gfxContentType::COLOR_ALPHA &&
@@ -798,7 +798,7 @@ RotatedContentBuffer::PrepareDrawTargetForPainting(CapturedPaintState* aState)
     // HaveBuffer() => we have an existing buffer that we must clear
     for (auto iter = aState->mRegionToDraw.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& rect = iter.Get();
-      target->ClearRect(Rect(rect.x, rect.y, rect.width, rect.height));
+      target->ClearRect(Rect(rect.x, rect.y, rect.Width(), rect.Height()));
     }
   }
 

@@ -77,12 +77,12 @@ IsRectZoomedIn(const CSSRect& aRect, const CSSRect& aCompositedArea)
   // composition bounds (i.e. the overlapArea variable below) is approximately
   // the max area of the rect we can show.
   CSSRect overlap = aCompositedArea.Intersect(aRect);
-  float overlapArea = overlap.width * overlap.height;
-  float availHeight = std::min(aRect.width * aCompositedArea.height / aCompositedArea.width,
-                               aRect.height);
-  float showing = overlapArea / (aRect.width * availHeight);
-  float ratioW = aRect.width / aCompositedArea.width;
-  float ratioH = aRect.height / aCompositedArea.height;
+  float overlapArea = overlap.Width() * overlap.Height();
+  float availHeight = std::min(aRect.Width() * aCompositedArea.Height() / aCompositedArea.Width(),
+                               aRect.Height());
+  float showing = overlapArea / (aRect.Width() * availHeight);
+  float ratioW = aRect.Width() / aCompositedArea.Width();
+  float ratioH = aRect.Height() / aCompositedArea.Height();
 
   return showing > 0.9 && (ratioW > 0.9 || ratioH > 0.9);
 }
@@ -129,27 +129,27 @@ CalculateRectToZoomTo(const nsCOMPtr<nsIDocument>& aRootContentDocument,
   // the height of the |rect| so that it has the same aspect ratio as
   // the root frame.  The clipped |rect| is centered on the y value of
   // the touch point. This allows tall narrow elements to be zoomed.
-  if (!rect.IsEmpty() && compositedArea.width > 0.0f) {
-    const float widthRatio = rect.width / compositedArea.width;
-    float targetHeight = compositedArea.height * widthRatio;
-    if (widthRatio < 0.9 && targetHeight < rect.height) {
+  if (!rect.IsEmpty() && compositedArea.Width() > 0.0f) {
+    const float widthRatio = rect.Width() / compositedArea.Width();
+    float targetHeight = compositedArea.Height() * widthRatio;
+    if (widthRatio < 0.9 && targetHeight < rect.Height()) {
       const CSSPoint scrollPoint = CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
       float newY = aPoint.y + scrollPoint.y - (targetHeight * 0.5f);
-      if ((newY + targetHeight) > (rect.y + rect.height)) {
-        rect.y += rect.height - targetHeight;
+      if ((newY + targetHeight) > (rect.y + rect.Height())) {
+        rect.y += rect.Height() - targetHeight;
       } else if (newY > rect.y) {
         rect.y = newY;
       }
-      rect.height = targetHeight;
+      rect.SetHeight(targetHeight);
     }
   }
 
   rect = CSSRect(std::max(metrics.GetScrollableRect().x, rect.x - margin),
                  rect.y,
-                 rect.width + 2 * margin,
-                 rect.height);
+                 rect.Width() + 2 * margin,
+                 rect.Height());
   // Constrict the rect to the screen's right edge
-  rect.width = std::min(rect.width, metrics.GetScrollableRect().XMost() - rect.x);
+  rect.SetWidth(std::min(rect.Width(), metrics.GetScrollableRect().XMost() - rect.x));
 
   // If the rect is already taking up most of the visible area and is
   // stretching the width of the page, then we want to zoom out instead.
@@ -167,8 +167,8 @@ CalculateRectToZoomTo(const nsCOMPtr<nsIDocument>& aRootContentDocument,
   // to zoom in (bug 761721). The 1.2 multiplier is just a little fuzz to
   // compensate for 'rect' including horizontal margins but not vertical ones.
   CSSCoord cssTapY = metrics.GetScrollOffset().y + aPoint.y;
-  if ((rect.height > rounded.height) && (cssTapY > rounded.y + (rounded.height * 1.2))) {
-    rounded.y = cssTapY - (rounded.height / 2);
+  if ((rect.Height() > rounded.Height()) && (cssTapY > rounded.y + (rounded.Height() * 1.2))) {
+    rounded.y = cssTapY - (rounded.Height() / 2);
   }
 
   return rounded;

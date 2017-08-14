@@ -47,8 +47,8 @@ VRDisplayPresentation::CreateLayers()
     if (layer.mLeftBounds.Length() == 4) {
       leftBounds.x = layer.mLeftBounds[0];
       leftBounds.y = layer.mLeftBounds[1];
-      leftBounds.width = layer.mLeftBounds[2];
-      leftBounds.height = layer.mLeftBounds[3];
+      leftBounds.SetWidth(layer.mLeftBounds[2]);
+      leftBounds.SetHeight(layer.mLeftBounds[3]);
     } else if (layer.mLeftBounds.Length() != 0) {
       /**
        * We ignore layers with an incorrect number of values.
@@ -62,8 +62,8 @@ VRDisplayPresentation::CreateLayers()
     if (layer.mRightBounds.Length() == 4) {
       rightBounds.x = layer.mRightBounds[0];
       rightBounds.y = layer.mRightBounds[1];
-      rightBounds.width = layer.mRightBounds[2];
-      rightBounds.height = layer.mRightBounds[3];
+      rightBounds.SetWidth(layer.mRightBounds[2]);
+      rightBounds.SetHeight(layer.mRightBounds[3]);
     } else if (layer.mRightBounds.Length() != 0) {
       /**
        * We ignore layers with an incorrect number of values.
