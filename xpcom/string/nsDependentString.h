@@ -10,14 +10,7 @@
 #include "nsString.h"
 #include "nsDebug.h"
 
-// declare nsDependentString
-#include "string-template-def-unichar.h"
 #include "nsTDependentString.h"
-#include "string-template-undef.h"
 
-// declare nsDependentCString
-#include "string-template-def-char.h"
-#include "nsTDependentString.h"
-#include "string-template-undef.h"
 
 #endif /* !defined(nsDependentString_h___) */
