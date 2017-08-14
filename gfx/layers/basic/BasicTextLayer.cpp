@@ -54,7 +54,7 @@ public:
       return;
     }
 
-    Rect snapped(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+    Rect snapped(mBounds.x, mBounds.y, mBounds.Width(), mBounds.Height());
     MaybeSnapToDevicePixels(snapped, *aDT, true);
 
     // We don't currently support subpixel-AA in TextLayers since we
