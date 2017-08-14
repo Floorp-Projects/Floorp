@@ -34,7 +34,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLMapElement, Element)
 
 // QueryInterface implementation for HTMLMapElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLMapElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLMapElement, nsIDOMHTMLMapElement)
+  NS_INTERFACE_TABLE_INHERITED(HTMLMapElement, nsIDOMHTMLElement)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLMapElement)
@@ -54,17 +54,6 @@ HTMLMapElement::Areas()
 
   return mAreas;
 }
-
-NS_IMETHODIMP
-HTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
-{
-  NS_ENSURE_ARG_POINTER(aAreas);
-  NS_ADDREF(*aAreas = Areas());
-  return NS_OK;
-}
-
-
-NS_IMPL_STRING_ATTR(HTMLMapElement, Name, name)
 
 
 JSObject*

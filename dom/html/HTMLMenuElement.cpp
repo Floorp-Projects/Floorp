@@ -55,15 +55,9 @@ HTMLMenuElement::~HTMLMenuElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLMenuElement, nsGenericHTMLElement,
-                            nsIDOMHTMLMenuElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLMenuElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLMenuElement)
-
-NS_IMPL_BOOL_ATTR(HTMLMenuElement, Compact, compact)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMenuElement, Type, type,
-                                kMenuDefaultType->tag)
-NS_IMPL_STRING_ATTR(HTMLMenuElement, Label, label)
 
 
 void

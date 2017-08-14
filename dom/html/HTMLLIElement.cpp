@@ -22,13 +22,9 @@ HTMLLIElement::~HTMLLIElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLLIElement, nsGenericHTMLElement,
-                            nsIDOMHTMLLIElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLLIElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLLIElement)
-
-NS_IMPL_STRING_ATTR(HTMLLIElement, Type, type)
-NS_IMPL_INT_ATTR(HTMLLIElement, Value, value)
 
 // values that are handled case-insensitively
 static const nsAttrValue::EnumTable kUnorderedListItemTypeTable[] = {

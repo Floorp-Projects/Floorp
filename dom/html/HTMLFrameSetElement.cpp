@@ -26,44 +26,9 @@ HTMLFrameSetElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLFrameSetElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLFrameSetElement, nsGenericHTMLElement,
-                            nsIDOMHTMLFrameSetElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLFrameSetElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
-
-NS_IMETHODIMP
-HTMLFrameSetElement::SetCols(const nsAString& aCols)
-{
-  ErrorResult rv;
-  SetCols(aCols, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-HTMLFrameSetElement::GetCols(nsAString& aCols)
-{
-  DOMString cols;
-  GetCols(cols);
-  cols.ToString(aCols);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLFrameSetElement::SetRows(const nsAString& aRows)
-{
-  ErrorResult rv;
-  SetRows(aRows, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-HTMLFrameSetElement::GetRows(nsAString& aRows)
-{
-  DOMString rows;
-  GetRows(rows);
-  rows.ToString(aRows);
-  return NS_OK;
-}
 
 nsresult
 HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,

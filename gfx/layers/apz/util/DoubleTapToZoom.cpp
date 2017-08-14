@@ -12,8 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMHTMLLIElement.h"
-#include "nsIDOMHTMLQuoteElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
