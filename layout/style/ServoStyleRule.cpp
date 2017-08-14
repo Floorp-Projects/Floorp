@@ -12,6 +12,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/dom/CSSStyleRuleBinding.h"
+#include "nsCSSPseudoClasses.h"
 
 #include "mozAutoDocUpdate.h"
 
@@ -279,14 +280,21 @@ ServoStyleRule::SelectorMatchesElement(Element* aElement,
                                        const nsAString& aPseudo,
                                        bool* aMatches)
 {
-  nsCOMPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
-  const CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(pseudoElt,
-                                       CSSEnabledState::eIgnoreEnabledState);
-  *aMatches = Servo_StyleRule_SelectorMatchesElement(mRawRule,
-                                                     aElement,
-                                                     aSelectorIndex,
-                                                     pseudoType);
+  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
+  if (!aPseudo.IsEmpty()) {
+    nsCOMPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
+    pseudoType = nsCSSPseudoElements::GetPseudoType(
+        pseudoElt, CSSEnabledState::eIgnoreEnabledState);
+
+    if (pseudoType == CSSPseudoElementType::NotPseudo) {
+      *aMatches = false;
+      return NS_OK;
+    }
+  }
+
+  *aMatches = Servo_StyleRule_SelectorMatchesElement(mRawRule, aElement,
+                                                     aSelectorIndex, pseudoType);
+
   return NS_OK;
 }
 
