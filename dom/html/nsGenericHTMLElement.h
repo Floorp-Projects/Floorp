@@ -229,14 +229,14 @@ public:
     mozilla::CSSIntRect rcFrame;
     GetOffsetRect(rcFrame);
 
-    return rcFrame.width;
+    return rcFrame.Width();
   }
   int32_t OffsetHeight()
   {
     mozilla::CSSIntRect rcFrame;
     GetOffsetRect(rcFrame);
 
-    return rcFrame.height;
+    return rcFrame.Height();
   }
 
   // These methods are already implemented in nsIContent but we want something
