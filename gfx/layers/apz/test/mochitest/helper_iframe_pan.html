@@ -24,7 +24,16 @@ function scrollOuter() {
 
 function checkScroll() {
   var outerScroll = document.getElementById('outer').contentWindow.scrollY;
-  is(outerScroll, 50, "check that the iframe scrolled");
+  if (getPlatform() == "windows") {
+    // On windows, because we run this test with native event synthesization,
+    // Windows can end up eating the first touchmove which can result in the
+    // scroll amount being slightly smaller than 50px. See bug 1388955.
+    dump("iframe scrolled " + outerScroll + "px");
+    ok(outerScroll > 45, "iframe scrolled at least 45 px");
+    ok(outerScroll <= 50, "iframe scrolled at most 50 px");
+  } else {
+    is(outerScroll, 50, "check that the iframe scrolled");
+  }
   subtestDone();
 }
 
