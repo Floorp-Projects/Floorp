@@ -79,7 +79,7 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
       WrManager()->AddImageKeyForDiscard(mImageKey.value());
     }
     mImageKey = Some(GenerateImageKey());
-    WrBridge()->SendAddBlobImage(mImageKey.value(), imageSize, size.width * 4, dt->GetFormat(), bytes);
+    WrBridge()->SendAddBlobImage(mImageKey.value(), imageSize, 0, dt->GetFormat(), bytes);
     mImageBounds = visibleRegion.GetBounds();
   }
 
