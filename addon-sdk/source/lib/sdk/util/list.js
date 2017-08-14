@@ -37,19 +37,6 @@ const listOptions = {
   toString: function toString() {
     return 'List(' + listNS(this).keyValueMap + ')';
   },
-  /**
-   * Custom iterator providing `List`s enumeration behavior.
-   * We cant reuse `_iterator` that is defined by `Iterable` since it provides
-   * iteration in an arbitrary order.
-   * @see https://developer.mozilla.org/en/JavaScript/Reference/Statements/for...in
-   * @param {Boolean} onKeys
-   */
-  __iterator__: function __iterator__(onKeys, onKeyValue) {
-    let array = listNS(this).keyValueMap.slice(0),
-                i = -1;
-    for (let element of array)
-      yield onKeyValue ? [++i, element] : onKeys ? ++i : element;
-  },
 };
 listOptions[Symbol.iterator] = function iterator() {
     return listNS(this).keyValueMap.slice(0)[Symbol.iterator]();

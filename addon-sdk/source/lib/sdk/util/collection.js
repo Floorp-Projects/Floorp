@@ -57,7 +57,7 @@ function Collection(array) {
    * Provides iteration over the collection.  Items are yielded in the order
    * they were added.
    */
-  this.__iterator__ = function Collection___iterator__() {
+  this[Symbol.iterator] = function* Collection___iterator__() {
     let items = array.slice();
     for (let i = 0; i < items.length; i++)
       yield items[i];
