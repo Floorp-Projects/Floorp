@@ -55,9 +55,6 @@ public:
           const Maybe<ZoomConstraints>& aConstraints) override;
 
   void
-  CancelAnimation(const ScrollableLayerGuid &aGuid) override;
-
-  void
   SetDPI(float aDpiValue) override;
 
   void

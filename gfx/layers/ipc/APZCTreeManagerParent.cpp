@@ -242,19 +242,6 @@ APZCTreeManagerParent::RecvUpdateZoomConstraints(
 }
 
 mozilla::ipc::IPCResult
-APZCTreeManagerParent::RecvCancelAnimation(const ScrollableLayerGuid& aGuid)
-{
-  if (aGuid.mLayersId != mLayersId) {
-    // Guard against bad data from hijacked child processes
-    NS_ERROR("Unexpected layers id in RecvCancelAnimation; dropping message...");
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  mTreeManager->CancelAnimation(aGuid);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetDPI(const float& aDpiValue)
 {
   mTreeManager->SetDPI(aDpiValue);
