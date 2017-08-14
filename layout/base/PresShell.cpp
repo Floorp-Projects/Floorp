@@ -11045,8 +11045,7 @@ PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (rootFrame) {
-    aSizes.mLayoutFramePropertiesSize +=
-      rootFrame->SizeOfFramePropertiesForTree(mallocSizeOf);
+    rootFrame->AddSizeOfExcludingThisForTree(aSizes);
   }
 }
 

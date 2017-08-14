@@ -240,6 +240,7 @@ function search(aQuery, aAttribute, aSubquery, aSubAttribute) {
         element.hidden = true;
       }
     }
+    element.classList.remove("visually-hidden");
   }
 
   let keysets = mainPrefPane.getElementsByTagName("keyset");

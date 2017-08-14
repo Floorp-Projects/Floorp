@@ -24,34 +24,38 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
  */
 function runMinidumpAnalyzer(minidumpPath) {
   return new Promise((resolve, reject) => {
-    const binSuffix = AppConstants.platform === "win" ? ".exe" : "";
-    const exeName = "minidump-analyzer" + binSuffix;
+    try {
+      const binSuffix = AppConstants.platform === "win" ? ".exe" : "";
+      const exeName = "minidump-analyzer" + binSuffix;
 
-    let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+      let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
 
-    if (AppConstants.platform === "macosx") {
-        exe.append("crashreporter.app");
-        exe.append("Contents");
-        exe.append("MacOS");
-    }
-
-    exe.append(exeName);
-
-    let args = [ minidumpPath ];
-    let process = Cc["@mozilla.org/process/util;1"]
-                    .createInstance(Ci.nsIProcess);
-    process.init(exe);
-    process.startHidden = true;
-    process.runAsync(args, args.length, (subject, topic, data) => {
-      switch (topic) {
-        case "process-finished":
-          resolve();
-          break;
-        default:
-          reject(topic);
-          break;
+      if (AppConstants.platform === "macosx") {
+          exe.append("crashreporter.app");
+          exe.append("Contents");
+          exe.append("MacOS");
       }
-    });
+
+      exe.append(exeName);
+
+      let args = [ minidumpPath ];
+      let process = Cc["@mozilla.org/process/util;1"]
+                      .createInstance(Ci.nsIProcess);
+      process.init(exe);
+      process.startHidden = true;
+      process.runAsync(args, args.length, (subject, topic, data) => {
+        switch (topic) {
+          case "process-finished":
+            resolve();
+            break;
+          default:
+            reject(new Error("Unexpected topic received " + topic));
+            break;
+        }
+      });
+    } catch (e) {
+      Cu.reportError(e);
+    }
   });
 }
 
@@ -65,21 +69,26 @@ function runMinidumpAnalyzer(minidumpPath) {
  */
 function computeMinidumpHash(minidumpPath) {
   return (async function() {
-    let minidumpData = await OS.File.read(minidumpPath);
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-                   .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA256);
-    hasher.update(minidumpData, minidumpData.length);
+    try {
+      let minidumpData = await OS.File.read(minidumpPath);
+      let hasher = Cc["@mozilla.org/security/hash;1"]
+                     .createInstance(Ci.nsICryptoHash);
+      hasher.init(hasher.SHA256);
+      hasher.update(minidumpData, minidumpData.length);
 
-    let hashBin = hasher.finish(false);
-    let hash = "";
+      let hashBin = hasher.finish(false);
+      let hash = "";
 
-    for (let i = 0; i < hashBin.length; i++) {
-      // Every character in the hash string contains a byte of the hash data
-      hash += ("0" + hashBin.charCodeAt(i).toString(16)).slice(-2);
+      for (let i = 0; i < hashBin.length; i++) {
+        // Every character in the hash string contains a byte of the hash data
+        hash += ("0" + hashBin.charCodeAt(i).toString(16)).slice(-2);
+      }
+
+      return hash;
+    } catch (e) {
+      Cu.reportError(e);
+      return null;
     }
-
-    return hash;
   })();
 }
 
@@ -94,10 +103,15 @@ function computeMinidumpHash(minidumpPath) {
  */
 function processExtraFile(extraPath) {
   return (async function() {
-    let decoder = new TextDecoder();
-    let extraData = await OS.File.read(extraPath);
+    try {
+      let decoder = new TextDecoder();
+      let extraData = await OS.File.read(extraPath);
 
-    return parseKeyValuePairs(decoder.decode(extraData));
+      return parseKeyValuePairs(decoder.decode(extraData));
+    } catch (e) {
+      Cu.reportError(e);
+      return {};
+    }
   })();
 }
 
@@ -115,7 +129,7 @@ CrashService.prototype = Object.freeze({
     Ci.nsIObserver,
   ]),
 
-  addCrash(processType, crashType, id) {
+  async addCrash(processType, crashType, id) {
     switch (processType) {
     case Ci.nsICrashService.PROCESS_TYPE_MAIN:
       processType = Services.crashmanager.PROCESS_TYPE_MAIN;
@@ -147,30 +161,23 @@ CrashService.prototype = Object.freeze({
       throw new Error("Unrecognized CRASH_TYPE: " + crashType);
     }
 
-    let blocker = (async function() {
-      let metadata = {};
-      let hash = null;
+    let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
+               .getService(Components.interfaces.nsICrashReporter);
+    let minidumpPath = cr.getMinidumpForID(id).path;
+    let extraPath = cr.getExtraFileForID(id).path;
+    let metadata = {};
+    let hash = null;
 
-      try {
-        let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-                   .getService(Components.interfaces.nsICrashReporter);
-        let minidumpPath = cr.getMinidumpForID(id).path;
-        let extraPath = cr.getExtraFileForID(id).path;
+    await runMinidumpAnalyzer(minidumpPath);
+    metadata = await processExtraFile(extraPath);
+    hash = await computeMinidumpHash(minidumpPath);
 
-        await runMinidumpAnalyzer(minidumpPath);
-        metadata = await processExtraFile(extraPath);
-        hash = await computeMinidumpHash(minidumpPath);
-      } catch (e) {
-        Cu.reportError(e);
-      }
+    if (hash) {
+      metadata.MinidumpSha256Hash = hash;
+    }
 
-      if (hash) {
-        metadata.MinidumpSha256Hash = hash;
-      }
-
-      await Services.crashmanager.addCrash(processType, crashType, id,
-                                           new Date(), metadata);
-    })();
+    let blocker = Services.crashmanager.addCrash(processType, crashType, id,
+                                                 new Date(), metadata);
 
     AsyncShutdown.profileBeforeChange.addBlocker(
       "CrashService waiting for content crash ping to be sent", blocker
@@ -178,7 +185,7 @@ CrashService.prototype = Object.freeze({
 
     blocker.then(AsyncShutdown.profileBeforeChange.removeBlocker(blocker));
 
-    return blocker;
+    await blocker;
   },
 
   observe(subject, topic, data) {

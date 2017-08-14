@@ -3,7 +3,7 @@
  * This file contains tests for the Preferences search bar.
  */
 
-requestLongerTimeout(2);
+requestLongerTimeout(6);
 
 /**
  * Tests to see if search bar is being hidden when pref is turned off
@@ -49,8 +49,11 @@ add_task(async function() {
   is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
     "Search input should be focused when visiting preferences");
 
-  searchInput.value = "password";
-  searchInput.doCommand();
+  let query = "password";
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
 
   let categoriesList = gBrowser.contentDocument.getElementById("categories");
 
@@ -59,8 +62,13 @@ add_task(async function() {
     is(child.selected, false, "No other panel should be selected");
   }
   // Takes search off
-  searchInput.value = "";
-  searchInput.doCommand();
+  searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == "");
+  let count = query.length;
+  while (count--) {
+    EventUtils.sendKey("BACK_SPACE");
+  }
+  await searchCompletedPromise;
 
   // Checks if back to generalPane
   for (let i = 0; i < categoriesList.childElementCount; i++) {
@@ -87,8 +95,11 @@ add_task(async function() {
   is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
     "Search input should be focused when visiting preferences");
 
-  searchInput.value = "password";
-  searchInput.doCommand();
+  let query = "password";
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
 
   let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
 
@@ -106,8 +117,13 @@ add_task(async function() {
   }
 
   // Takes search off
-  searchInput.value = "";
-  searchInput.doCommand();
+  searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == "");
+  let count = query.length;
+  while (count--) {
+    EventUtils.sendKey("BACK_SPACE");
+  }
+  await searchCompletedPromise;
 
   // Checks if back to generalPane
   for (let i = 0; i < mainPrefTag.childElementCount; i++) {
@@ -155,14 +171,22 @@ add_task(async function() {
   is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
     "Search input should be focused when visiting preferences");
 
-  searchInput.value = "coach";
-  searchInput.doCommand();
+  let query = "coach";
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
 
   is_element_visible(noResultsEl, "Should be in search results");
 
   // Takes search off
-  searchInput.value = "";
-  searchInput.doCommand();
+  searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == "");
+  let count = query.length;
+  while (count--) {
+    EventUtils.sendKey("BACK_SPACE");
+  }
+  await searchCompletedPromise;
 
   is_element_hidden(noResultsEl, "Should not be in search results");
 
@@ -184,12 +208,20 @@ add_task(async function() {
   is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
     "Search input should be focused when visiting preferences");
 
-  searchInput.value = "password";
-  searchInput.doCommand();
+  let query = "password";
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
 
   // Takes search off
-  searchInput.value = "";
-  searchInput.doCommand();
+  searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == "");
+  let count = query.length;
+  while (count--) {
+    EventUtils.sendKey("BACK_SPACE");
+  }
+  await searchCompletedPromise;
 
   // Checks if back to normal
   is_element_visible(generalPane, "Should be in generalPane");
@@ -214,8 +246,11 @@ add_task(async function() {
   is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
     "Search input should be focused when visiting preferences");
 
-  searchInput.value = "site data";
-  searchInput.doCommand();
+  let query = "site data";
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
 
   let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
 
@@ -223,8 +258,13 @@ add_task(async function() {
   is_element_hidden(child, "Should be hidden in search results");
 
   // Takes search off
-  searchInput.value = "";
-  searchInput.doCommand();
+  searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == "");
+  let count = query.length;
+  while (count--) {
+    EventUtils.sendKey("BACK_SPACE");
+  }
+  await searchCompletedPromise;
 
   // Checks if back to normal
   is_element_visible(generalPane, "Should be in generalPane");
@@ -242,8 +282,11 @@ add_task(async function() {
   is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
     "Search input should be focused when visiting preferences");
 
-  searchInput.value = "password";
-  searchInput.doCommand();
+  let query = "password";
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+      gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
 
   let privacyCategory = gBrowser.contentDocument.getElementById("category-privacy");
   privacyCategory.click();

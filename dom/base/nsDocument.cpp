@@ -12434,26 +12434,25 @@ nsDocument::GetVisibilityState(nsAString& aState)
 }
 
 /* virtual */ void
-nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
+nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 {
-  aWindowSizes.mDOMOtherSize +=
-    nsINode::SizeOfExcludingThis(aWindowSizes.mState);
+  nsINode::AddSizeOfExcludingThis(aSizes.mState, aSizes.mStyleSizes,
+                                  &aSizes.mDOMOtherSize);
 
   if (mPresShell) {
-    mPresShell->AddSizeOfIncludingThis(aWindowSizes);
+    mPresShell->AddSizeOfIncludingThis(aSizes);
   }
 
-  aWindowSizes.mPropertyTablesSize +=
-    mPropertyTable.SizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
+  aSizes.mPropertyTablesSize +=
+    mPropertyTable.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
   for (uint32_t i = 0, count = mExtraPropertyTables.Length();
        i < count; ++i) {
-    aWindowSizes.mPropertyTablesSize +=
-      mExtraPropertyTables[i]->SizeOfIncludingThis(
-        aWindowSizes.mState.mMallocSizeOf);
+    aSizes.mPropertyTablesSize +=
+      mExtraPropertyTables[i]->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 
   if (EventListenerManager* elm = GetExistingListenerManager()) {
-    aWindowSizes.mDOMEventListenersCount += elm->ListenerCount();
+    aSizes.mDOMEventListenersCount += elm->ListenerCount();
   }
 
   // Measurement of the following members may be added later if DMD finds it
@@ -12484,10 +12483,12 @@ SizeOfOwnedSheetArrayExcludingThis(const nsTArray<RefPtr<StyleSheet>>& aSheets,
   return n;
 }
 
-size_t
-nsDocument::SizeOfExcludingThis(SizeOfState& aState) const
+void
+nsDocument::AddSizeOfExcludingThis(SizeOfState& aState,
+                                   nsStyleSizes& aSizes,
+                                   size_t* aNodeSize) const
 {
-  // This SizeOfExcludingThis() overrides the one from nsINode.  But
+  // This AddSizeOfExcludingThis() overrides the one from nsINode.  But
   // nsDocuments can only appear at the top of the DOM tree, and we use the
   // specialized DocAddSizeOfExcludingThis() in that case.  So this should never
   // be called.
@@ -12497,39 +12498,47 @@ nsDocument::SizeOfExcludingThis(SizeOfState& aState) const
 void
 nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
 {
-  nsIDocument::DocAddSizeOfExcludingThis(aWindowSizes);
-
   for (nsIContent* node = nsINode::GetFirstChild();
        node;
        node = node->GetNextNode(this))
   {
-    size_t nodeSize = node->SizeOfIncludingThis(aWindowSizes.mState);
-    size_t* p;
+    size_t nodeSize = 0;
+    node->AddSizeOfIncludingThis(aWindowSizes.mState, aWindowSizes.mStyleSizes,
+                                 &nodeSize);
 
+    // This is where we transfer the nodeSize obtained from
+    // nsINode::AddSizeOfIncludingThis() to a value in nsWindowSizes.
     switch (node->NodeType()) {
     case nsIDOMNode::ELEMENT_NODE:
-      p = &aWindowSizes.mDOMElementNodesSize;
+      aWindowSizes.mDOMElementNodesSize += nodeSize;
       break;
     case nsIDOMNode::TEXT_NODE:
-      p = &aWindowSizes.mDOMTextNodesSize;
+      aWindowSizes.mDOMTextNodesSize += nodeSize;
       break;
     case nsIDOMNode::CDATA_SECTION_NODE:
-      p = &aWindowSizes.mDOMCDATANodesSize;
+      aWindowSizes.mDOMCDATANodesSize += nodeSize;
       break;
     case nsIDOMNode::COMMENT_NODE:
-      p = &aWindowSizes.mDOMCommentNodesSize;
+      aWindowSizes.mDOMCommentNodesSize += nodeSize;
       break;
     default:
-      p = &aWindowSizes.mDOMOtherSize;
+      aWindowSizes.mDOMOtherSize += nodeSize;
       break;
     }
-
-    *p += nodeSize;
 
     if (EventListenerManager* elm = node->GetExistingListenerManager()) {
       aWindowSizes.mDOMEventListenersCount += elm->ListenerCount();
     }
   }
+
+  // IMPORTANT: for our ComputedValues measurements, we want to measure
+  // ComputedValues accessible from DOM elements before ComputedValues not
+  // accessible from DOM elements (i.e. accessible only from the frame tree).
+  //
+  // Therefore, the measurement of the nsIDocument superclass must happen after
+  // the measurement of DOM nodes (above), because nsIDocument contains the
+  // PresShell, which contains the frame tree.
+  nsIDocument::DocAddSizeOfExcludingThis(aWindowSizes);
 
   aWindowSizes.mStyleSheetsSize +=
     SizeOfOwnedSheetArrayExcludingThis(mStyleSheets,
