@@ -239,10 +239,6 @@ typedef struct NPObjectMemberPrivate {
     NPP   npp;
 } NPObjectMemberPrivate;
 
-static bool
-NPObjectMember_GetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                           JS::MutableHandleValue vp);
-
 static void
 NPObjectMember_Finalize(JSFreeOp *fop, JSObject *obj);
 
@@ -256,7 +252,7 @@ static bool
 NPObjectMember_toPrimitive(JSContext *cx, unsigned argc, JS::Value *vp);
 
 static const JSClassOps sNPObjectMemberClassOps = {
-  nullptr, nullptr, NPObjectMember_GetProperty, nullptr,
+  nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, nullptr,
   NPObjectMember_Finalize, NPObjectMember_Call,
   nullptr, nullptr, NPObjectMember_Trace
@@ -2057,7 +2053,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   // during initialization.
   memset(memberPrivate, 0, sizeof(NPObjectMemberPrivate));
 
-  JSObject *memobj = ::JS_NewObject(cx, &sNPObjectMemberClass);
+  JS::Rooted<JSObject*> memobj(cx, ::JS_NewObject(cx, &sNPObjectMemberClass));
   if (!memobj) {
     free(memberPrivate);
     return false;
@@ -2099,28 +2095,19 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   memberPrivate->methodName = id;
   memberPrivate->npp = npp;
 
-  return true;
-}
+  // Finally, define the Symbol.toPrimitive property on |memobj|.
 
-static bool
-NPObjectMember_GetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                           JS::MutableHandleValue vp)
-{
-  AUTO_PROFILER_LABEL("NPObjectMember_GetProperty", OTHER);
+  JS::Rooted<jsid> toPrimitiveId(cx);
+  toPrimitiveId = SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::toPrimitive));
 
-  if (JSID_IS_SYMBOL(id)) {
-    JS::RootedSymbol sym(cx, JSID_TO_SYMBOL(id));
-    if (JS::GetSymbolCode(sym) == JS::SymbolCode::toPrimitive) {
-      JS::RootedObject obj(cx, JS_GetFunctionObject(
-                                 JS_NewFunction(
-                                   cx, NPObjectMember_toPrimitive, 1, 0,
-                                   "Symbol.toPrimitive")));
-      if (!obj)
-        return false;
-      vp.setObject(*obj);
-      return true;
-    }
-  }
+  JSFunction* fun = JS_NewFunction(cx, NPObjectMember_toPrimitive, 1, 0,
+                                   "Symbol.toPrimitive");
+  if (!fun)
+    return false;
+
+  JS::Rooted<JSObject*> funObj(cx, JS_GetFunctionObject(fun));
+  if (!JS_DefinePropertyById(cx, memobj, toPrimitiveId, funObj, 0))
+    return false;
 
   return true;
 }

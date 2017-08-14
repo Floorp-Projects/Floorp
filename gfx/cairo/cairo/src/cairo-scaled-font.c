@@ -2988,3 +2988,23 @@ cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
     _cairo_font_options_init_copy (options, &scaled_font->options);
 }
 slim_hidden_def (cairo_scaled_font_get_font_options);
+
+/**
+ * cairo_scaled_font_get_hint_metrics:
+ * @scaled_font: a #cairo_scaled_font_t
+ *
+ * Mozilla extension since the required malloc/free to use
+ * cairo_scaled_font_get_font_options() above is too slow.
+ **/
+cairo_public cairo_hint_metrics_t
+cairo_scaled_font_get_hint_metrics (cairo_scaled_font_t		*scaled_font)
+{
+    cairo_font_options_t options;
+    if (scaled_font->status) {
+	_cairo_font_options_init_default (&options);
+    } else {
+	_cairo_font_options_init_copy (&options, &scaled_font->options);
+    }
+    return options.hint_metrics;
+}
+slim_hidden_def (cairo_scaled_font_get_hint_metrics);
