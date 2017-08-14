@@ -334,7 +334,7 @@ inline const Stmt *IgnoreTrivials(const Stmt *s) {
 }
 
 inline const Expr *IgnoreTrivials(const Expr *e) {
-  return cast<Expr>(IgnoreTrivials(static_cast<const Stmt *>(e)));
+  return cast_or_null<Expr>(IgnoreTrivials(static_cast<const Stmt *>(e)));
 }
 
 const FieldDecl *getBaseRefCntMember(QualType T);
