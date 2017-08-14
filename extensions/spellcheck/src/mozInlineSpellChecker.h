@@ -208,7 +208,7 @@ public:
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
-  bool ShouldSpellCheckNode(nsIEditor* aEditor, nsINode *aNode);
+  bool ShouldSpellCheckNode(mozilla::TextEditor* aTextEditor, nsINode *aNode);
 
   nsresult SpellCheckAfterChange(nsIDOMNode* aCursorNode, int32_t aCursorOffset,
                                  nsIDOMNode* aPreviousNode, int32_t aPreviousOffset,
@@ -262,8 +262,8 @@ protected:
   // track the number of pending spell checks and async operations that may lead
   // to spell checks, notifying observers accordingly
   void ChangeNumPendingSpellChecks(int32_t aDelta,
-                                   nsIEditor* aEditor = nullptr);
-  void NotifyObservers(const char* aTopic, nsIEditor* aEditor);
+                                   mozilla::TextEditor* aTextEditor = nullptr);
+  void NotifyObservers(const char* aTopic, mozilla::TextEditor* aTextEditor);
 };
 
 #endif /* __mozinlinespellchecker_h__ */
