@@ -1048,9 +1048,9 @@ public:
   {
     if ((!aWritingMode.IsVertical() && !aWritingMode.IsBidiLTR()) ||
         aWritingMode.IsVerticalRL()) {
-      nscoord oldWidth = mRect.width;
+      nscoord oldWidth = mRect.Width();
       SetSize(aSize.GetPhysicalSize(aWritingMode));
-      mRect.x -= mRect.width - oldWidth;
+      mRect.x -= mRect.Width() - oldWidth;
     } else {
       SetSize(aSize.GetPhysicalSize(aWritingMode));
     }
@@ -1324,7 +1324,7 @@ public:
    * (nsFieldSetFrame overrides this).
    */
   virtual nsRect VisualBorderRectRelativeToSelf() const {
-    return nsRect(0, 0, mRect.width, mRect.height);
+    return nsRect(0, 0, mRect.Width(), mRect.Height());
   }
 
   /**
@@ -4288,10 +4288,10 @@ private:
     // to cast away the unsigned-ness.
     return nsRect(-(int32_t)mOverflow.mVisualDeltas.mLeft,
                   -(int32_t)mOverflow.mVisualDeltas.mTop,
-                  mRect.width + mOverflow.mVisualDeltas.mRight +
-                                mOverflow.mVisualDeltas.mLeft,
-                  mRect.height + mOverflow.mVisualDeltas.mBottom +
-                                 mOverflow.mVisualDeltas.mTop);
+                  mRect.Width() + mOverflow.mVisualDeltas.mRight +
+                                  mOverflow.mVisualDeltas.mLeft,
+                  mRect.Height() + mOverflow.mVisualDeltas.mBottom +
+                                   mOverflow.mVisualDeltas.mTop);
   }
   /**
    * Returns true if any overflow changed.
