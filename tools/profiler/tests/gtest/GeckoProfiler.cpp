@@ -770,7 +770,7 @@ void DoSuspendAndSample(int aTid, nsIThread* aThread)
                                            /* sampleNative = */ true);
 
         ASSERT_TRUE(collector.mSetIsMainThread == 1);
-        ASSERT_TRUE(collector.mFrames > 5); // approximate; must be > 0
+        ASSERT_TRUE(collector.mFrames > 0);
       }),
     NS_DISPATCH_SYNC);
 }
