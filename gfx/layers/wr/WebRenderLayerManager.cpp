@@ -323,7 +323,7 @@ WebRenderLayerManager::CreateImageKey(nsDisplayItem* aItem,
     LayerRect rect = ViewAs<LayerPixel>(
       LayoutDeviceRect::FromAppUnits(bounds, appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
-    LayerRect scBounds(0, 0, rect.width, rect.height);
+    LayerRect scBounds(0, 0, rect.width, rect.Height());
     MaybeIntSize scaleToSize;
     if (!aContainer->GetScaleHint().IsEmpty()) {
       scaleToSize = Some(aContainer->GetScaleHint());
@@ -397,14 +397,14 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 
   if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
     aDT->SetTransform(Matrix());
-    aDT->FillRect(Rect(0, 0, aImageRect.width, aImageRect.height), ColorPattern(Color(1.0, 0.0, 0.0, 0.5)));
+    aDT->FillRect(Rect(0, 0, aImageRect.Width(), aImageRect.Height()), ColorPattern(Color(1.0, 0.0, 0.0, 0.5)));
   }
   if (aItem->Frame()->PresContext()->GetPaintFlashing()) {
     aDT->SetTransform(Matrix());
     float r = float(rand()) / RAND_MAX;
     float g = float(rand()) / RAND_MAX;
     float b = float(rand()) / RAND_MAX;
-    aDT->FillRect(Rect(0, 0, aImageRect.width, aImageRect.height), ColorPattern(Color(r, g, b, 0.5)));
+    aDT->FillRect(Rect(0, 0, aImageRect.Width(), aImageRect.Height()), ColorPattern(Color(r, g, b, 0.5)));
   }
 }
 
@@ -767,8 +767,8 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
   gfxUtils::WriteAsPNG(snapshot, filename);
   */
 
-  Rect dst(bounds.x, bounds.y, bounds.width, bounds.height);
-  Rect src(0, 0, bounds.width, bounds.height);
+  Rect dst(bounds.x, bounds.y, bounds.Width(), bounds.Height());
+  Rect src(0, 0, bounds.Width(), bounds.Height());
 
   // The data we get from webrender is upside down. So flip and translate up so the image is rightside up.
   // Webrender always does a full screen readback.

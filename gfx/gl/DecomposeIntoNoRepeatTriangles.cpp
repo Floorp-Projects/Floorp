@@ -110,8 +110,8 @@ DecomposeIntoNoRepeatTriangles(const gfx::IntRect& aTexCoordRect,
 
     NS_ASSERTION(!xwrap || xlen > 0.0f, "xlen isn't > 0, what's going on?");
     NS_ASSERTION(!ywrap || ylen > 0.0f, "ylen isn't > 0, what's going on?");
-    NS_ASSERTION(aTexCoordRect.width <= aTexSize.width &&
-                 aTexCoordRect.height <= aTexSize.height, "tex coord rect would cause tiling!");
+    NS_ASSERTION(aTexCoordRect.Width() <= aTexSize.width &&
+                 aTexCoordRect.Height() <= aTexSize.height, "tex coord rect would cause tiling!");
 
     if (!xwrap && !ywrap) {
         aRects.addRect(0.0f, 0.0f,

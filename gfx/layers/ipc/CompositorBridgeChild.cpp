@@ -430,7 +430,7 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
         // our OnPaint handler and forwarded over to the plugin process async.
         widget->Resize(aContentOffset.x + bounds.x,
                        aContentOffset.y + bounds.y,
-                       bounds.width, bounds.height, true);
+                       bounds.Width(), bounds.Height(), true);
       }
 
       widget->Enable(isVisible);
