@@ -118,6 +118,50 @@
           }
         ]
       }
+    ],
+    "events": [
+      {
+        "name": "onUpdated",
+        "type": "function",
+        "description": "Fired when a container is updated.",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "changeInfo",
+            "properties": {
+              "contextualIdentity": {"$ref": "ContextualIdentity", "description": "Contextual identity that has been updated"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "onCreated",
+        "type": "function",
+        "description": "Fired when a new container is created.",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "changeInfo",
+            "properties": {
+              "contextualIdentity": {"$ref": "ContextualIdentity", "description": "Contextual identity that has been created"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "onRemoved",
+        "type": "function",
+        "description": "Fired when a container is removed.",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "changeInfo",
+            "properties": {
+              "contextualIdentity": {"$ref": "ContextualIdentity", "description": "Contextual identity that has been removed"}
+            }
+          }
+        ]
+      }
     ]
   }
 ]
