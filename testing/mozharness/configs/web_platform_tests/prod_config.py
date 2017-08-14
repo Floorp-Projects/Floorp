@@ -17,7 +17,8 @@ config = {
     ],
 
     "exes": {
-        'virtualenv': '/tools/virtualenv/bin/virtualenv',
+        'python': '/tools/buildbot/bin/python',
+        'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
         'tooltool.py': "/tools/tooltool.py",
     },
 
