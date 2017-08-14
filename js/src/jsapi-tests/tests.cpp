@@ -87,7 +87,7 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals)
     options.creationOptions().setStreamsEnabled(true);
 #endif
     printf("enabled\n");
-    options.behaviors().setVersion(JSVERSION_LATEST);
+    options.behaviors().setVersion(JSVERSION_DEFAULT);
     newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals, JS::FireOnNewGlobalHook,
                                    options);
     if (!newGlobal)
