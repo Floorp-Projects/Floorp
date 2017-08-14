@@ -148,6 +148,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             "default": False,
             "help": "Run tests with Stylo enabled"
         }],
+        [["--enable-webrender"], {
+            "action": "store_true",
+            "dest": "enable_webrender",
+            "default": False,
+            "help": "Tries to enable the WebRender compositor.",
+        }],
     ] + testing_config_options + copy.deepcopy(blobupload_config_options) \
                                + copy.deepcopy(code_coverage_config_options)
 
@@ -563,11 +569,19 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         if self.obj_path is not None:
             env['MOZ_DEVELOPER_OBJ_DIR'] = self.obj_path
 
+        if self.config['enable_webrender']:
+            env['MOZ_WEBRENDER'] = '1'
+            env['MOZ_ACCELERATED'] = '1'
+
         if self.config['enable_stylo']:
             env['STYLO_FORCE_ENABLED'] = '1'
+
         # Remove once Talos is migrated away from buildbot
         if self.buildbot_config:
             platform = self.buildbot_config.get('properties', {}).get('platform', '')
+            if 'qr' in platform:
+                env['MOZ_WEBRENDER'] = '1'
+                env['MOZ_ACCELERATED'] = '1'
             if 'stylo' in platform:
                 env['STYLO_FORCE_ENABLED'] = '1'
 
