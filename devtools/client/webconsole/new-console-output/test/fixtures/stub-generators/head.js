@@ -289,18 +289,34 @@ function* generateConsoleApiStubs() {
   };
 
   let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
-  let {ui} = toolbox.getCurrentPanel().hud;
+  const hud = toolbox.getCurrentPanel().hud;
+  let {ui} = hud;
   ok(ui.jsterm, "jsterm exists");
   ok(ui.newConsoleOutput, "newConsoleOutput exists");
 
   for (let [key, {keys, code}] of consoleApi) {
     let received = new Promise(resolve => {
       let i = 0;
-      let listener = (type, res) => {
-        stubs.packets.push(formatPacket(keys[i], res));
-        stubs.preparedMessages.push(formatStub(keys[i], res));
+      let listener = async (type, res) => {
+        const callKey = keys[i];
+        stubs.packets.push(formatPacket(callKey, res));
+        stubs.preparedMessages.push(formatStub(callKey, res));
         if (++i === keys.length) {
           toolbox.target.client.removeListener("consoleAPICall", listener);
+
+          // If this is a console.dir call, we need to wait for the properties
+          // to be fetched so we don't have any server errors.
+          if (callKey === "console.dir({C, M, Y, K})") {
+            const dirMsg = await waitForMessage(hud, `cyan: "C"`);
+            const oi = dirMsg.querySelector(".tree");
+            // If there's only one node, it means that the object inspector
+            // is not expanded.
+            if (oi.querySelectorAll(".node").length === 1) {
+              await waitForNodeMutation(oi, {
+                childList: true
+              });
+            }
+          }
           resolve();
         }
       };
@@ -505,4 +521,45 @@ function* generatePageErrorStubs() {
 
   yield closeTabAndToolbox();
   return formatFile(stubs, "ConsoleMessage");
+}
+
+/**
+ * Wait for messages in the web console output, resolving once they are receieved.
+ *
+ * @param hud: the webconsole
+ * @param message: string. text match in .message-body
+ */
+function waitForMessage(hud, messageText) {
+  return new Promise(resolve => {
+    hud.ui.on("new-messages",
+      function messagesReceived(e, newMessages) {
+        for (let newMessage of newMessages) {
+          let messageBody = newMessage.node.querySelector(".message-body");
+          if (messageBody.textContent.includes(messageText)) {
+            info("Matched a message with text: " + messageText);
+            hud.ui.off("new-messages", messagesReceived);
+            resolve(newMessage.node);
+            break;
+          }
+        }
+      });
+  });
+}
+
+/**
+* Returns a promise that resolves when the node passed as an argument mutate
+* according to the passed configuration.
+*
+* @param {Node} node - The node to observe mutations on.
+* @param {Object} observeConfig - A configuration object for MutationObserver.observe.
+* @returns {Promise}
+*/
+function waitForNodeMutation(node, observeConfig = {}) {
+  return new Promise(resolve => {
+    const observer = new MutationObserver(mutations => {
+      resolve(mutations);
+      observer.disconnect();
+    });
+    observer.observe(node, observeConfig);
+  });
 }
