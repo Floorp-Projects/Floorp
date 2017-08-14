@@ -25,3 +25,4 @@
 #define nsTPromiseFlatString_CharT          nsPromiseFlatString
 #define TPromiseFlatString_CharT            PromiseFlatString
 #define nsTSubstringSplitter_CharT          nsSubstringSplitter
+#define TNullString_CharT                   NullString

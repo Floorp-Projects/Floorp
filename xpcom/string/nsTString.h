@@ -462,6 +462,15 @@ protected:
   {
   }
 
+  friend const nsTString_CharT& TNullString_CharT();
+
+  // Used by Null[C]String.
+  explicit nsTString_CharT(DataFlags aDataFlags)
+    : substring_type(char_traits::sEmptyBuffer, 0,
+                     aDataFlags | DataFlags::TERMINATED,
+                     ClassFlags::NULL_TERMINATED)
+  {}
+
   struct Segment {
     uint32_t mBegin, mLength;
     Segment(uint32_t aBegin, uint32_t aLength)
