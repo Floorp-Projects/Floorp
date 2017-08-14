@@ -347,7 +347,10 @@ imgRequest::Cancel(nsresult aStatus)
   if (NS_IsMainThread()) {
     ContinueCancel(aStatus);
   } else {
-    NS_DispatchToMainThread(new imgRequestMainThreadCancel(this, aStatus));
+    RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
+    nsCOMPtr<nsIEventTarget> eventTarget = progressTracker->GetEventTarget();
+    nsCOMPtr<nsIRunnable> ev = new imgRequestMainThreadCancel(this, aStatus);
+    eventTarget->Dispatch(ev.forget(), NS_DISPATCH_NORMAL);
   }
 }
 
