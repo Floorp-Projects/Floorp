@@ -189,8 +189,10 @@ AOMDecoder::ProcessDecode(MediaRawData* aSample)
   DecodedData results;
 
   while ((img = aom_codec_get_frame(&mCodec, &iter))) {
-    if (img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) {
-      // Downsample images with more than 8 bits per channel.
+    // Track whether the underlying buffer is 8 or 16 bits per channel.
+    bool highbd = bool(img->fmt & AOM_IMG_FMT_HIGHBITDEPTH);
+    if (img->bit_depth > 8) {
+      // Downsample images with more than 8 significant bits per channel.
       aom_img_fmt_t fmt8 = static_cast<aom_img_fmt_t>(img->fmt ^ AOM_IMG_FMT_HIGHBITDEPTH);
       img8.reset(aom_img_alloc(NULL, fmt8, img->d_w, img->d_h, 16));
       if (img8 == nullptr) {
@@ -213,10 +215,13 @@ AOMDecoder::ProcessDecode(MediaRawData* aSample)
       // Since img is assigned at the start of the while loop and img8 is held
       // outside that loop, the alias won't outlive the storage it points to.
       img = img8.get();
+      highbd = false;
     }
 
     NS_ASSERTION(img->fmt == AOM_IMG_FMT_I420 ||
-                 img->fmt == AOM_IMG_FMT_I444,
+                 img->fmt == AOM_IMG_FMT_I42016 ||
+                 img->fmt == AOM_IMG_FMT_I444 ||
+                 img->fmt == AOM_IMG_FMT_I44416,
                  "AV1 image format not I420 or I444");
 
     // Chroma shifts are rounded down as per the decoding examples in the SDK
@@ -225,17 +230,21 @@ AOMDecoder::ProcessDecode(MediaRawData* aSample)
     b.mPlanes[0].mStride = img->stride[0];
     b.mPlanes[0].mHeight = img->d_h;
     b.mPlanes[0].mWidth = img->d_w;
-    b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
+    b.mPlanes[0].mOffset = 0;
+    b.mPlanes[0].mSkip = highbd ? 1 : 0;
 
     b.mPlanes[1].mData = img->planes[1];
     b.mPlanes[1].mStride = img->stride[1];
-    b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
+    b.mPlanes[1].mOffset = 0;
+    b.mPlanes[1].mSkip = highbd ? 1 : 0;
 
     b.mPlanes[2].mData = img->planes[2];
     b.mPlanes[2].mStride = img->stride[2];
-    b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
+    b.mPlanes[2].mOffset = 0;
+    b.mPlanes[2].mSkip = highbd ? 1 : 0;
 
-    if (img->fmt == AOM_IMG_FMT_I420) {
+    if (img->fmt == AOM_IMG_FMT_I420 ||
+        img->fmt == AOM_IMG_FMT_I42016) {
       b.mPlanes[1].mHeight = (img->d_h + 1) >> img->y_chroma_shift;
       b.mPlanes[1].mWidth = (img->d_w + 1) >> img->x_chroma_shift;
 
