@@ -23,7 +23,6 @@ Components.manager.addBootstrappedManifestLocation(extensionDir);
 // ================================================
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/releases/v2.3.2/
-/* exported sinon */
 Cu.import("resource://gre/modules/Timer.jsm");
 const {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 const loader = new Loader.Loader({
@@ -38,5 +37,5 @@ const loader = new Loader.Loader({
   },
 });
 const require = Loader.Require(loader, {id: ""});
-this.sinon = require("sinon-2.3.2");
+const sinon = require("sinon-2.3.2");
 // ================================================
