@@ -242,8 +242,9 @@ public:
 
   // Must only be called from the paint thread. Notifies the CompositorBridge
   // that the paint thread has finished ALL async requests from a given
-  // ClientPaintedLayer's batch.
-  void NotifyFinishedAsyncPaintLayer();
+  // transaction. We can resume IPC transactions after ALL
+  // async paints are done.
+  void NotifyFinishedAsyncPaintTransaction();
 
 private:
   // Private destructor, to discourage deletion outside of Release():
