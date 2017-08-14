@@ -62,7 +62,7 @@ add_task(function* () {
   is(jsonView.textContent === L10N.getStr("jsonScopeName"), false,
     "The response json view doesn't have the intended visibility.");
   is(tabpanel.querySelector(".CodeMirror-code") === null, false,
-    "The response editor doesn't have the intended visibility.");
+    "The response editor has the intended visibility.");
   is(tabpanel.querySelector(".response-image-box") === null, true,
     "The response image box doesn't have the intended visibility.");
 
