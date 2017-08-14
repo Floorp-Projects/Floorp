@@ -42,12 +42,17 @@ namespace mozilla {
 namespace wmf {
 
 // If successful, loads all required WMF DLLs and calls the WMF MFStartup()
-// function.
+// function. This delegates the WMF MFStartup() call to the MTA thread if
+// the current thread is not MTA. This is to ensure we always interact with
+// WMF from threads with the same COM compartment model.
 HRESULT MFStartup();
 
 // Calls the WMF MFShutdown() function. Call this once for every time
 // wmf::MFStartup() succeeds. Note: does not unload the WMF DLLs loaded by
 // MFStartup(); leaves them in memory to save I/O at next MFStartup() call.
+// This delegates the WMF MFShutdown() call to the MTA thread if the current
+// thread is not MTA. This is to ensure we always interact with
+// WMF from threads with the same COM compartment model.
 HRESULT MFShutdown();
 
 // All functions below are wrappers around the corresponding WMF function,
