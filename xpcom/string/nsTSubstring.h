@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // IWYU pragma: private, include "nsString.h"
 
+#ifndef nsTSubstring_h
+#define nsTSubstring_h
+
 #include "mozilla/Casting.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/UniquePtr.h"
@@ -12,317 +15,14 @@
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Span.h"
 
+#include "nsTStringRepr.h"
+
 #ifndef MOZILLA_INTERNAL_API
 #error "Using XPCOM strings is limited to code linked into libxul."
 #endif
 
-/**
- * The base for string comparators
- */
-class nsTStringComparator_CharT
-{
-public:
-  typedef CharT char_type;
-
-  nsTStringComparator_CharT()
-  {
-  }
-
-  virtual int operator()(const char_type*, const char_type*,
-                         uint32_t, uint32_t) const = 0;
-};
-
-
-/**
- * The default string comparator (case-sensitive comparision)
- */
-class nsTDefaultStringComparator_CharT
-  : public nsTStringComparator_CharT
-{
-public:
-  typedef CharT char_type;
-
-  nsTDefaultStringComparator_CharT()
-  {
-  }
-
-  virtual int operator()(const char_type*, const char_type*,
-                         uint32_t, uint32_t) const override;
-};
-
-class nsTSubstringSplitter_CharT;
-
-namespace mozilla {
-namespace detail {
-
-/**
- * nsTStringRepr defines a string's memory layout and some accessor methods.
- * This class exists so that nsTLiteralString can avoid inheriting
- * nsTSubstring's destructor. All methods on this class must be const because
- * literal strings are not writable.
- *
- * This class is an implementation detail and should not be instantiated
- * directly, nor used in any way outside of the string code itself. It is
- * buried in a namespace to discourage its use in function parameters.
- * If you need to take a parameter, use [const] ns[C]Substring&.
- * If you need to instantiate a string, use ns[C]String or descendents.
- *
- * NAMES:
- *   nsStringRepr for wide characters
- *   nsCStringRepr for narrow characters
- *
- */
-class nsTStringRepr_CharT
-{
-public:
-  typedef mozilla::fallible_t                 fallible_t;
-
-  typedef CharT                               char_type;
-
-  typedef nsCharTraits<char_type>             char_traits;
-  typedef char_traits::incompatible_char_type incompatible_char_type;
-
-  typedef nsTStringRepr_CharT                 self_type;
-  typedef self_type                           base_string_type;
-
-  typedef nsTSubstring_CharT                  substring_type;
-  typedef nsTSubstringTuple_CharT             substring_tuple_type;
-  typedef nsTString_CharT                     string_type;
-
-  typedef nsReadingIterator<char_type>        const_iterator;
-  typedef nsWritingIterator<char_type>        iterator;
-
-  typedef nsTStringComparator_CharT           comparator_type;
-
-  typedef char_type*                          char_iterator;
-  typedef const char_type*                    const_char_iterator;
-
-  typedef uint32_t                            index_type;
-  typedef uint32_t                            size_type;
-
-  // These are only for internal use within the string classes:
-  typedef StringDataFlags                     DataFlags;
-  typedef StringClassFlags                    ClassFlags;
-
-  /**
-   * reading iterators
-   */
-
-  const_char_iterator BeginReading() const
-  {
-    return mData;
-  }
-  const_char_iterator EndReading() const
-  {
-    return mData + mLength;
-  }
-
-  /**
-   * deprecated reading iterators
-   */
-
-  const_iterator& BeginReading(const_iterator& aIter) const
-  {
-    aIter.mStart = mData;
-    aIter.mEnd = mData + mLength;
-    aIter.mPosition = aIter.mStart;
-    return aIter;
-  }
-
-  const_iterator& EndReading(const_iterator& aIter) const
-  {
-    aIter.mStart = mData;
-    aIter.mEnd = mData + mLength;
-    aIter.mPosition = aIter.mEnd;
-    return aIter;
-  }
-
-  const_char_iterator& BeginReading(const_char_iterator& aIter) const
-  {
-    return aIter = mData;
-  }
-
-  const_char_iterator& EndReading(const_char_iterator& aIter) const
-  {
-    return aIter = mData + mLength;
-  }
-
-  /**
-   * accessors
-   */
-
-  // returns pointer to string data (not necessarily null-terminated)
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  char16ptr_t Data() const
-#else
-  const char_type* Data() const
-#endif
-  {
-    return mData;
-  }
-
-  size_type Length() const
-  {
-    return mLength;
-  }
-
-  DataFlags GetDataFlags() const
-  {
-    return mDataFlags;
-  }
-
-  bool IsEmpty() const
-  {
-    return mLength == 0;
-  }
-
-  bool IsLiteral() const
-  {
-    return !!(mDataFlags & DataFlags::LITERAL);
-  }
-
-  bool IsVoid() const
-  {
-    return !!(mDataFlags & DataFlags::VOIDED);
-  }
-
-  bool IsTerminated() const
-  {
-    return !!(mDataFlags & DataFlags::TERMINATED);
-  }
-
-  char_type CharAt(index_type aIndex) const
-  {
-    NS_ASSERTION(aIndex < mLength, "index exceeds allowable range");
-    return mData[aIndex];
-  }
-
-  char_type operator[](index_type aIndex) const
-  {
-    return CharAt(aIndex);
-  }
-
-  char_type First() const;
-
-  char_type Last() const;
-
-  size_type NS_FASTCALL CountChar(char_type) const;
-  int32_t NS_FASTCALL FindChar(char_type, index_type aOffset = 0) const;
-
-  inline bool Contains(char_type aChar) const
-  {
-    return FindChar(aChar) != kNotFound;
-  }
-
-  /**
-   * equality
-   */
-
-  bool NS_FASTCALL Equals(const self_type&) const;
-  bool NS_FASTCALL Equals(const self_type&, const comparator_type&) const;
-
-  bool NS_FASTCALL Equals(const substring_tuple_type& aTuple) const;
-  bool NS_FASTCALL Equals(const substring_tuple_type& aTuple,
-                          const comparator_type& aComp) const;
-
-  bool NS_FASTCALL Equals(const char_type* aData) const;
-  bool NS_FASTCALL Equals(const char_type* aData,
-                          const comparator_type& aComp) const;
-
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  bool NS_FASTCALL Equals(char16ptr_t aData) const
-  {
-    return Equals(static_cast<const char16_t*>(aData));
-  }
-  bool NS_FASTCALL Equals(char16ptr_t aData, const comparator_type& aComp) const
-  {
-    return Equals(static_cast<const char16_t*>(aData), aComp);
-  }
-#endif
-
-  /**
-   * An efficient comparison with ASCII that can be used even
-   * for wide strings. Call this version when you know the
-   * length of 'data'.
-   */
-  bool NS_FASTCALL EqualsASCII(const char* aData, size_type aLen) const;
-  /**
-   * An efficient comparison with ASCII that can be used even
-   * for wide strings. Call this version when 'data' is
-   * null-terminated.
-   */
-  bool NS_FASTCALL EqualsASCII(const char* aData) const;
-
-  // EqualsLiteral must ONLY be applied to an actual literal string, or
-  // a char array *constant* declared without an explicit size.
-  // Do not attempt to use it with a regular char* pointer, or with a
-  // non-constant char array variable. Use EqualsASCII for them.
-  // The template trick to acquire the array length at compile time without
-  // using a macro is due to Corey Kosak, with much thanks.
-  template<int N>
-  inline bool EqualsLiteral(const char (&aStr)[N]) const
-  {
-    return EqualsASCII(aStr, N - 1);
-  }
-
-  // The LowerCaseEquals methods compare the ASCII-lowercase version of
-  // this string (lowercasing only ASCII uppercase characters) to some
-  // ASCII/Literal string. The ASCII string is *not* lowercased for
-  // you. If you compare to an ASCII or literal string that contains an
-  // uppercase character, it is guaranteed to return false. We will
-  // throw assertions too.
-  bool NS_FASTCALL LowerCaseEqualsASCII(const char* aData,
-                                        size_type aLen) const;
-  bool NS_FASTCALL LowerCaseEqualsASCII(const char* aData) const;
-
-  // LowerCaseEqualsLiteral must ONLY be applied to an actual
-  // literal string, or a char array *constant* declared without an
-  // explicit size.  Do not attempt to use it with a regular char*
-  // pointer, or with a non-constant char array variable. Use
-  // LowerCaseEqualsASCII for them.
-  template<int N>
-  inline bool LowerCaseEqualsLiteral(const char (&aStr)[N]) const
-  {
-    return LowerCaseEqualsASCII(aStr, N - 1);
-  }
-
-  /**
-   * returns true if this string overlaps with the given string fragment.
-   */
-  bool IsDependentOn(const char_type* aStart, const char_type* aEnd) const
-  {
-    /**
-     * if it _isn't_ the case that one fragment starts after the other ends,
-     * or ends before the other starts, then, they conflict:
-     *
-     *   !(f2.begin >= f1.aEnd || f2.aEnd <= f1.begin)
-     *
-     * Simplified, that gives us:
-     */
-    return (aStart < (mData + mLength) && aEnd > mData);
-  }
-
-protected:
-  nsTStringRepr_CharT() = delete; // Never instantiate directly
-
-  constexpr
-  nsTStringRepr_CharT(char_type* aData, size_type aLength,
-                      DataFlags aDataFlags, ClassFlags aClassFlags)
-    : mData(aData)
-    , mLength(aLength)
-    , mDataFlags(aDataFlags)
-    , mClassFlags(aClassFlags)
-  {
-  }
-
-  char_type* mData;
-  size_type mLength;
-  DataFlags mDataFlags;
-  ClassFlags const mClassFlags;
-};
-
-} // namespace detail
-} // namespace mozilla
+template <typename T> class nsTSubstringSplitter;
+template <typename T> class nsTString;
 
 /**
  * nsTSubstring is an abstract string class. From an API perspective, this
@@ -336,13 +36,45 @@ protected:
  *   nsACString for narrow characters
  *
  */
-class nsTSubstring_CharT : public mozilla::detail::nsTStringRepr_CharT
+template <typename T>
+class nsTSubstring : public mozilla::detail::nsTStringRepr<T>
 {
 public:
-  typedef nsTSubstring_CharT                  self_type;
+  typedef nsTSubstring<T> self_type;
+
+  typedef nsTString<T> string_type;
+
+  typedef typename mozilla::detail::nsTStringRepr<T> base_string_type;
+  typedef typename base_string_type::substring_type substring_type;
+
+  typedef typename base_string_type::fallible_t fallible_t;
+
+  typedef typename base_string_type::char_type char_type;
+  typedef typename base_string_type::char_traits char_traits;
+  typedef typename base_string_type::incompatible_char_type incompatible_char_type;
+
+  typedef typename base_string_type::substring_tuple_type substring_tuple_type;
+
+  typedef typename base_string_type::const_iterator const_iterator;
+  typedef typename base_string_type::iterator iterator;
+
+  typedef typename base_string_type::comparator_type comparator_type;
+
+  typedef typename base_string_type::char_iterator char_iterator;
+  typedef typename base_string_type::const_char_iterator const_char_iterator;
+
+  typedef typename base_string_type::index_type index_type;
+  typedef typename base_string_type::size_type size_type;
+
+  // These are only for internal use within the string classes:
+  typedef typename base_string_type::DataFlags DataFlags;
+  typedef typename base_string_type::ClassFlags ClassFlags;
+
+  using typename base_string_type::IsChar;
+  using typename base_string_type::IsChar16;
 
   // this acts like a virtual destructor
-  ~nsTSubstring_CharT()
+  ~nsTSubstring()
   {
     Finalize();
   }
@@ -354,29 +86,29 @@ public:
   char_iterator BeginWriting()
   {
     if (!EnsureMutable()) {
-      AllocFailed(mLength);
+      AllocFailed(base_string_type::mLength);
     }
 
-    return mData;
+    return base_string_type::mData;
   }
 
   char_iterator BeginWriting(const fallible_t&)
   {
-    return EnsureMutable() ? mData : char_iterator(0);
+    return EnsureMutable() ? base_string_type::mData : char_iterator(0);
   }
 
   char_iterator EndWriting()
   {
     if (!EnsureMutable()) {
-      AllocFailed(mLength);
+      AllocFailed(base_string_type::mLength);
     }
 
-    return mData + mLength;
+    return base_string_type::mData + base_string_type::mLength;
   }
 
   char_iterator EndWriting(const fallible_t&)
   {
-    return EnsureMutable() ? (mData + mLength) : char_iterator(0);
+    return EnsureMutable() ? (base_string_type::mData + base_string_type::mLength) : char_iterator(0);
   }
 
   char_iterator& BeginWriting(char_iterator& aIter)
@@ -407,7 +139,7 @@ public:
   {
     char_type* data = BeginWriting();
     aIter.mStart = data;
-    aIter.mEnd = data + mLength;
+    aIter.mEnd = data + base_string_type::mLength;
     aIter.mPosition = aIter.mStart;
     return aIter;
   }
@@ -416,7 +148,7 @@ public:
   {
     char_type* data = BeginWriting();
     aIter.mStart = data;
-    aIter.mEnd = data + mLength;
+    aIter.mEnd = data + base_string_type::mLength;
     aIter.mPosition = aIter.mEnd;
     return aIter;
   }
@@ -443,17 +175,20 @@ public:
   MOZ_MUST_USE bool NS_FASTCALL Assign(const substring_tuple_type&,
                                        const fallible_t&);
 
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+#if defined(MOZ_USE_CHAR16_WRAPPER)
+  template <typename EnableIfChar16 = IsChar16>
   void Assign(char16ptr_t aData)
   {
     Assign(static_cast<const char16_t*>(aData));
   }
 
+  template <typename EnableIfChar16 = IsChar16>
   void Assign(char16ptr_t aData, size_type aLength)
   {
     Assign(static_cast<const char16_t*>(aData), aLength);
   }
 
+  template <typename EnableIfChar16 = IsChar16>
   MOZ_MUST_USE bool Assign(char16ptr_t aData, size_type aLength,
                            const fallible_t& aFallible)
   {
@@ -490,13 +225,12 @@ public:
   {
     AssignLiteral(aStr, N - 1);
   }
-#ifdef CharT_is_PRUnichar
-  template<int N>
-  void AssignLiteral(const char (&aStr)[N])
+
+  template<int N, typename EnableIfChar16 = IsChar16>
+  void AssignLiteral(const incompatible_char_type (&aStr)[N])
   {
     AssignASCII(aStr, N - 1);
   }
-#endif
 
   self_type& operator=(char_type aChar)
   {
@@ -508,7 +242,8 @@ public:
     Assign(aData);
     return *this;
   }
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+#if defined(MOZ_USE_CHAR16_WRAPPER)
+  template <typename EnableIfChar16 = IsChar16>
   self_type& operator=(char16ptr_t aData)
   {
     Assign(aData);
@@ -587,23 +322,24 @@ public:
 
   void Append(char_type aChar)
   {
-    Replace(mLength, 0, aChar);
+    Replace(base_string_type::mLength, 0, aChar);
   }
   MOZ_MUST_USE bool Append(char_type aChar, const fallible_t& aFallible)
   {
-    return Replace(mLength, 0, aChar, aFallible);
+    return Replace(base_string_type::mLength, 0, aChar, aFallible);
   }
   void Append(const char_type* aData, size_type aLength = size_type(-1))
   {
-    Replace(mLength, 0, aData, aLength);
+    Replace(base_string_type::mLength, 0, aData, aLength);
   }
   MOZ_MUST_USE bool Append(const char_type* aData, size_type aLength,
                            const fallible_t& aFallible)
   {
-    return Replace(mLength, 0, aData, aLength, aFallible);
+    return Replace(base_string_type::mLength, 0, aData, aLength, aFallible);
   }
 
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+#if defined(MOZ_USE_CHAR16_WRAPPER)
+  template <typename EnableIfChar16 = IsChar16>
   void Append(char16ptr_t aData, size_type aLength = size_type(-1))
   {
     Append(static_cast<const char16_t*>(aData), aLength);
@@ -612,30 +348,30 @@ public:
 
   void Append(const self_type& aStr)
   {
-    Replace(mLength, 0, aStr);
+    Replace(base_string_type::mLength, 0, aStr);
   }
   MOZ_MUST_USE bool Append(const self_type& aStr, const fallible_t& aFallible)
   {
-    return Replace(mLength, 0, aStr, aFallible);
+    return Replace(base_string_type::mLength, 0, aStr, aFallible);
   }
   void Append(const substring_tuple_type& aTuple)
   {
-    Replace(mLength, 0, aTuple);
+    Replace(base_string_type::mLength, 0, aTuple);
   }
 
   void AppendASCII(const char* aData, size_type aLength = size_type(-1))
   {
-    ReplaceASCII(mLength, 0, aData, aLength);
+    ReplaceASCII(base_string_type::mLength, 0, aData, aLength);
   }
 
   MOZ_MUST_USE bool AppendASCII(const char* aData, const fallible_t& aFallible)
   {
-    return ReplaceASCII(mLength, 0, aData, size_type(-1), aFallible);
+    return ReplaceASCII(base_string_type::mLength, 0, aData, size_type(-1), aFallible);
   }
 
   MOZ_MUST_USE bool AppendASCII(const char* aData, size_type aLength, const fallible_t& aFallible)
   {
-    return ReplaceASCII(mLength, 0, aData, aLength, aFallible);
+    return ReplaceASCII(base_string_type::mLength, 0, aData, aLength, aFallible);
   }
 
   /**
@@ -704,21 +440,23 @@ public:
   template<int N>
   void AppendLiteral(const char_type (&aStr)[N])
   {
-    ReplaceLiteral(mLength, 0, aStr, N - 1);
+    ReplaceLiteral(base_string_type::mLength, 0, aStr, N - 1);
   }
-#ifdef CharT_is_PRUnichar
-  template<int N>
-  void AppendLiteral(const char (&aStr)[N])
+
+  // Only enable for T = char16_t
+  template<int N, typename EnableIfChar16 = IsChar16>
+  void AppendLiteral(const incompatible_char_type (&aStr)[N])
   {
     AppendASCII(aStr, N - 1);
   }
 
-  template<int N>
-  MOZ_MUST_USE bool AppendLiteral(const char (&aStr)[N], const fallible_t& aFallible)
+  // Only enable for T = char16_t
+  template<int N, typename EnableIfChar16 = IsChar16>
+  MOZ_MUST_USE bool
+  AppendLiteral(const incompatible_char_type (&aStr)[N], const fallible_t& aFallible)
   {
     return AppendASCII(aStr, N - 1, aFallible);
   }
-#endif
 
   self_type& operator+=(char_type aChar)
   {
@@ -730,7 +468,8 @@ public:
     Append(aData);
     return *this;
   }
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+#if defined(MOZ_USE_CHAR16_WRAPPER)
+  template <typename EnableIfChar16 = IsChar16>
   self_type& operator+=(char16ptr_t aData)
   {
     Append(aData);
@@ -757,7 +496,8 @@ public:
   {
     Replace(aPos, 0, aData, aLength);
   }
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+#if defined(MOZ_USE_CHAR16_WRAPPER)
+  template <typename EnableIfChar16 = IsChar16>
   void Insert(char16ptr_t aData, index_type aPos,
               size_type aLength = size_type(-1))
   {
@@ -787,7 +527,7 @@ public:
     Replace(aCutStart, aCutLength, char_traits::sEmptyBuffer, 0);
   }
 
-  nsTSubstringSplitter_CharT Split(const char_type aChar) const;
+  nsTSubstringSplitter<T> Split(const char_type aChar) const;
 
   /**
    * buffer sizing
@@ -810,7 +550,7 @@ public:
 
   void Truncate(size_type aNewLength = 0)
   {
-    NS_ASSERTION(aNewLength <= mLength, "Truncate cannot make string longer");
+    NS_ASSERTION(aNewLength <= base_string_type::mLength, "Truncate cannot make string longer");
     SetLength(aNewLength);
   }
 
@@ -828,8 +568,8 @@ public:
    */
   inline size_type GetData(const char_type** aData) const
   {
-    *aData = mData;
-    return mLength;
+    *aData = base_string_type::mData;
+    return base_string_type::mLength;
   }
 
   /**
@@ -845,11 +585,11 @@ public:
   size_type GetMutableData(char_type** aData, size_type aNewLen = size_type(-1))
   {
     if (!EnsureMutable(aNewLen)) {
-      AllocFailed(aNewLen == size_type(-1) ? mLength : aNewLen);
+      AllocFailed(aNewLen == size_type(-1) ? base_string_type::mLength : aNewLen);
     }
 
-    *aData = mData;
-    return mLength;
+    *aData = base_string_type::mData;
+    return base_string_type::mLength;
   }
 
   size_type GetMutableData(char_type** aData, size_type aNewLen, const fallible_t&)
@@ -859,16 +599,18 @@ public:
       return 0;
     }
 
-    *aData = mData;
-    return mLength;
+    *aData = base_string_type::mData;
+    return base_string_type::mLength;
   }
 
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+#if defined(MOZ_USE_CHAR16_WRAPPER)
+  template <typename EnableIfChar16 = IsChar16>
   size_type GetMutableData(wchar_t** aData, size_type aNewLen = size_type(-1))
   {
     return GetMutableData(reinterpret_cast<char16_t**>(aData), aNewLen);
   }
 
+  template <typename EnableIfChar16 = IsChar16>
   size_type GetMutableData(wchar_t** aData, size_type aNewLen,
                            const fallible_t& aFallible)
   {
@@ -883,12 +625,12 @@ public:
 
   operator mozilla::Span<char_type>()
   {
-    return mozilla::MakeSpan(BeginWriting(), Length());
+    return mozilla::MakeSpan(BeginWriting(), base_string_type::Length());
   }
 
   operator mozilla::Span<const char_type>() const
   {
-    return mozilla::MakeSpan(BeginReading(), Length());
+    return mozilla::MakeSpan(base_string_type::BeginReading(), base_string_type::Length());
   }
 
   void Append(mozilla::Span<const char_type> aSpan)
@@ -908,19 +650,21 @@ public:
     return Append(aSpan.Elements(), len, aFallible);
   }
 
-#if !defined(CharT_is_PRUnichar)
+  template <typename EnableIfChar = IsChar>
   operator mozilla::Span<uint8_t>()
   {
     return mozilla::MakeSpan(reinterpret_cast<uint8_t*>(BeginWriting()),
-                             Length());
+                             base_string_type::Length());
   }
 
+  template <typename EnableIfChar = IsChar>
   operator mozilla::Span<const uint8_t>() const
   {
-    return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(BeginReading()),
-                             Length());
+    return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(base_string_type::BeginReading()),
+                             base_string_type::Length());
   }
 
+  template <typename EnableIfChar = IsChar>
   void Append(mozilla::Span<const uint8_t> aSpan)
   {
     auto len = aSpan.Length();
@@ -928,6 +672,7 @@ public:
     Append(reinterpret_cast<const char*>(aSpan.Elements()), len);
   }
 
+  template <typename EnableIfChar = IsChar>
   MOZ_MUST_USE bool Append(mozilla::Span<const uint8_t> aSpan,
                            const fallible_t& aFallible)
   {
@@ -938,7 +683,6 @@ public:
     return Append(
       reinterpret_cast<const char*>(aSpan.Elements()), len, aFallible);
   }
-#endif
 
   /**
    * string data is never null, but can be marked void.  if true, the
@@ -995,7 +739,7 @@ public:
    */
   void ForgetSharedBuffer()
   {
-    if (mDataFlags & DataFlags::SHARED) {
+    if (base_string_type::mDataFlags & DataFlags::SHARED) {
       SetToEmptyBuffer();
     }
   }
@@ -1003,8 +747,8 @@ public:
 protected:
   void AssertValid()
   {
-    MOZ_ASSERT(!(mClassFlags & ClassFlags::NULL_TERMINATED) ||
-               (mDataFlags & DataFlags::TERMINATED),
+    MOZ_ASSERT(!(this->mClassFlags & ClassFlags::NULL_TERMINATED) ||
+               (this->mDataFlags & DataFlags::TERMINATED),
                "String classes whose static type guarantees a null-terminated "
                "buffer must not be assigned a non-null-terminated buffer.");
   }
@@ -1015,8 +759,8 @@ public:
    * this is public to support automatic conversion of tuple to string
    * base type, which helps avoid converting to nsTAString.
    */
-  MOZ_IMPLICIT nsTSubstring_CharT(const substring_tuple_type& aTuple)
-    : nsTStringRepr_CharT(nullptr, 0, DataFlags(0), ClassFlags(0))
+  MOZ_IMPLICIT nsTSubstring(const substring_tuple_type& aTuple)
+    : base_string_type(nullptr, 0, DataFlags(0), ClassFlags(0))
   {
     AssertValid();
     Assign(aTuple);
@@ -1038,11 +782,11 @@ public:
   size_t SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
 
-  template<class T>
+  template<class N>
   void NS_ABORT_OOM(T)
   {
     struct never {}; // a compiler-friendly way to do static_assert(false)
-    static_assert(mozilla::IsSame<T, never>::value,
+    static_assert(mozilla::IsSame<N, never>::value,
       "In string classes, use AllocFailed to account for sizeof(char_type). "
       "Use the global ::NS_ABORT_OOM if you really have a count of bytes.");
   }
@@ -1055,27 +799,27 @@ public:
 protected:
 
   // default initialization
-  nsTSubstring_CharT()
-    : nsTStringRepr_CharT(char_traits::sEmptyBuffer, 0, DataFlags::TERMINATED,
-                          ClassFlags(0))
+  nsTSubstring()
+    : base_string_type(char_traits::sEmptyBuffer, 0, DataFlags::TERMINATED,
+                       ClassFlags(0))
   {
     AssertValid();
   }
 
   // copy-constructor, constructs as dependent on given object
   // (NOTE: this is for internal use only)
-  nsTSubstring_CharT(const self_type& aStr)
-    : nsTStringRepr_CharT(aStr.mData, aStr.mLength,
-                          aStr.mDataFlags & (DataFlags::TERMINATED | DataFlags::VOIDED),
-                          ClassFlags(0))
+  nsTSubstring(const self_type& aStr)
+    : base_string_type(aStr.base_string_type::mData, aStr.base_string_type::mLength,
+                       aStr.base_string_type::mDataFlags & (DataFlags::TERMINATED | DataFlags::VOIDED),
+                       ClassFlags(0))
   {
     AssertValid();
   }
 
   // initialization with ClassFlags
-  explicit nsTSubstring_CharT(ClassFlags aClassFlags)
-    : nsTStringRepr_CharT(char_traits::sEmptyBuffer, 0, DataFlags::TERMINATED,
-                          aClassFlags)
+  explicit nsTSubstring(ClassFlags aClassFlags)
+    : base_string_type(char_traits::sEmptyBuffer, 0, DataFlags::TERMINATED,
+                       aClassFlags)
   {
     AssertValid();
   }
@@ -1083,15 +827,15 @@ protected:
  /**
    * allows for direct initialization of a nsTSubstring object.
    */
-  nsTSubstring_CharT(char_type* aData, size_type aLength,
-                     DataFlags aDataFlags, ClassFlags aClassFlags)
+  nsTSubstring(char_type* aData, size_type aLength,
+               DataFlags aDataFlags, ClassFlags aClassFlags)
 // XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
 #if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
 #define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
     ;
 #else
 #undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-    : nsTStringRepr_CharT(aData, aLength, aDataFlags, aClassFlags)
+    : base_string_type(aData, aLength, aDataFlags, aClassFlags)
   {
     AssertValid();
     MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
@@ -1100,17 +844,17 @@ protected:
 
   void SetToEmptyBuffer()
   {
-    mData = char_traits::sEmptyBuffer;
-    mLength = 0;
-    mDataFlags = DataFlags::TERMINATED;
+    base_string_type::mData = char_traits::sEmptyBuffer;
+    base_string_type::mLength = 0;
+    base_string_type::mDataFlags = DataFlags::TERMINATED;
     AssertValid();
   }
 
   void SetData(char_type* aData, size_type aLength, DataFlags aDataFlags)
   {
-    mData = aData;
-    mLength = aLength;
-    mDataFlags = aDataFlags;
+    base_string_type::mData = aData;
+    base_string_type::mLength = aLength;
+    base_string_type::mDataFlags = aDataFlags;
     AssertValid();
   }
 
@@ -1213,85 +957,27 @@ public:
   void NS_FASTCALL AssignLiteral(const char_type* aData, size_type aLength);
 };
 
-static_assert(sizeof(nsTSubstring_CharT) ==
-              sizeof(mozilla::detail::nsTStringRepr_CharT),
+extern template class nsTSubstring<char>;
+extern template class nsTSubstring<char16_t>;
+
+static_assert(sizeof(nsTSubstring<char>) ==
+              sizeof(mozilla::detail::nsTStringRepr<char>),
               "Don't add new data fields to nsTSubstring_CharT. "
-              "Add to nsTStringRepr_CharT instead.");
+              "Add to nsTStringRepr<T> instead.");
 
-int NS_FASTCALL
-Compare(const nsTSubstring_CharT::base_string_type& aLhs,
-        const nsTSubstring_CharT::base_string_type& aRhs,
-        const nsTStringComparator_CharT& = nsTDefaultStringComparator_CharT());
-
-
-inline bool
-operator!=(const nsTSubstring_CharT::base_string_type& aLhs,
-           const nsTSubstring_CharT::base_string_type& aRhs)
-{
-  return !aLhs.Equals(aRhs);
-}
-
-inline bool
-operator!=(const nsTSubstring_CharT::base_string_type& aLhs,
-           const nsTSubstring_CharT::char_type* aRhs)
-{
-  return !aLhs.Equals(aRhs);
-}
-
-inline bool
-operator<(const nsTSubstring_CharT::base_string_type& aLhs,
-          const nsTSubstring_CharT::base_string_type& aRhs)
-{
-  return Compare(aLhs, aRhs) < 0;
-}
-
-inline bool
-operator<=(const nsTSubstring_CharT::base_string_type& aLhs,
-           const nsTSubstring_CharT::base_string_type& aRhs)
-{
-  return Compare(aLhs, aRhs) <= 0;
-}
-
-inline bool
-operator==(const nsTSubstring_CharT::base_string_type& aLhs,
-           const nsTSubstring_CharT::base_string_type& aRhs)
-{
-  return aLhs.Equals(aRhs);
-}
-
-inline bool
-operator==(const nsTSubstring_CharT::base_string_type& aLhs,
-           const nsTSubstring_CharT::char_type* aRhs)
-{
-  return aLhs.Equals(aRhs);
-}
-
-
-inline bool
-operator>=(const nsTSubstring_CharT::base_string_type& aLhs,
-           const nsTSubstring_CharT::base_string_type& aRhs)
-{
-  return Compare(aLhs, aRhs) >= 0;
-}
-
-inline bool
-operator>(const nsTSubstring_CharT::base_string_type& aLhs,
-          const nsTSubstring_CharT::base_string_type& aRhs)
-{
-  return Compare(aLhs, aRhs) > 0;
-}
 
 // You should not need to instantiate this class directly.
 // Use nsTSubstring::Split instead.
-class nsTSubstringSplitter_CharT
+template <typename T>
+class nsTSubstringSplitter
 {
-  typedef nsTSubstring_CharT::size_type size_type;
-  typedef nsTSubstring_CharT::char_type char_type;
+  typedef typename nsTSubstring<T>::size_type size_type;
+  typedef typename nsTSubstring<T>::char_type char_type;
 
   class nsTSubstringSplit_Iter
   {
   public:
-    nsTSubstringSplit_Iter(const nsTSubstringSplitter_CharT& aObj,
+    nsTSubstringSplit_Iter(const nsTSubstringSplitter<T>& aObj,
                            size_type aPos)
       : mObj(aObj)
       , mPos(aPos)
@@ -1303,7 +989,7 @@ class nsTSubstringSplitter_CharT
       return mPos != other.mPos;
     }
 
-    const nsTDependentSubstring_CharT& operator*() const;
+    const nsTDependentSubstring<T>& operator*() const;
 
     const nsTSubstringSplit_Iter& operator++()
     {
@@ -1312,18 +998,18 @@ class nsTSubstringSplitter_CharT
     }
 
   private:
-    const nsTSubstringSplitter_CharT& mObj;
+    const nsTSubstringSplitter<T>& mObj;
     size_type mPos;
   };
 
 private:
-  const nsTSubstring_CharT* const mStr;
-  mozilla::UniquePtr<nsTDependentSubstring_CharT[]> mArray;
+  const nsTSubstring<T>* const mStr;
+  mozilla::UniquePtr<nsTDependentSubstring<T>[]> mArray;
   size_type mArraySize;
   const char_type mDelim;
 
 public:
-  nsTSubstringSplitter_CharT(const nsTSubstring_CharT* aStr, char_type aDelim);
+  nsTSubstringSplitter(const nsTSubstring<T>* aStr, char_type aDelim);
 
   nsTSubstringSplit_Iter begin() const
   {
@@ -1335,28 +1021,46 @@ public:
     return nsTSubstringSplit_Iter(*this, mArraySize);
   }
 
-  const nsTDependentSubstring_CharT& Get(const size_type index) const
+  const nsTDependentSubstring<T>& Get(const size_type index) const
   {
     MOZ_ASSERT(index < mArraySize);
     return mArray[index];
   }
 };
 
+extern template class nsTSubstringSplitter<char>;
+extern template class nsTSubstringSplitter<char16_t>;
+
 /**
  * Span integration
  */
 namespace mozilla {
 
-inline Span<CharT>
-MakeSpan(nsTSubstring_CharT& aString)
+inline Span<char>
+MakeSpan(nsTSubstring<char>& aString)
 {
   return aString;
 }
 
-inline Span<const CharT>
-MakeSpan(const nsTSubstring_CharT& aString)
+inline Span<const char>
+MakeSpan(const nsTSubstring<char>& aString)
 {
   return aString;
 }
+
+inline Span<char16_t>
+MakeSpan(nsTSubstring<char16_t>& aString)
+{
+  return aString;
+}
+
+inline Span<const char16_t>
+MakeSpan(const nsTSubstring<char16_t>& aString)
+{
+  return aString;
+}
+
 
 } // namespace mozilla
+
+#endif
