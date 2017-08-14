@@ -980,7 +980,7 @@ Element::ScrollHeight()
   nsIScrollableFrame* sf = GetScrollFrame();
   nscoord height;
   if (sf) {
-    height = sf->GetScrollRange().height + sf->GetScrollPortRect().height;
+    height = sf->GetScrollRange().Height() + sf->GetScrollPortRect().Height();
   } else {
     height = GetScrollRectSizeForOverflowVisibleFrame(GetStyledFrame()).height;
   }
@@ -997,7 +997,7 @@ Element::ScrollWidth()
   nsIScrollableFrame* sf = GetScrollFrame();
   nscoord width;
   if (sf) {
-    width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
+    width = sf->GetScrollRange().Width() + sf->GetScrollPortRect().Width();
   } else {
     width = GetScrollRectSizeForOverflowVisibleFrame(GetStyledFrame()).width;
   }
