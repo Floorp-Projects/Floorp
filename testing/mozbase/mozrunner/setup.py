@@ -41,9 +41,6 @@ setup(name=PACKAGE_NAME,
       url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL 2.0',
       packages=find_packages(),
-      package_data={'mozrunner': [
-          'resources/metrotestharness.exe'
-      ]},
       zip_safe=False,
       install_requires=deps,
       extras_require=EXTRAS_REQUIRE,

@@ -16,7 +16,6 @@ from shutil import copytree
 
 __all__ = ['Profile',
            'FirefoxProfile',
-           'MetroFirefoxProfile',
            'ThunderbirdProfile']
 
 
@@ -398,53 +397,6 @@ class FirefoxProfile(Profile):
         'focusmanager.testmode': True,
         # Enable test mode to not raise an OS level dialog for location sharing
         'geo.provider.testing': True,
-        # Suppress delay for main action in popup notifications
-        'security.notification_enable_delay': 0,
-        # Suppress automatic safe mode after crashes
-        'toolkit.startup.max_resumed_crashes': -1,
-        # Don't report telemetry information
-        'toolkit.telemetry.enabled': False,
-        # Don't send Telemetry reports to the production server. This is
-        # needed as Telemetry sends pings also if FHR upload is enabled.
-        'toolkit.telemetry.server': 'http://%(server)s/telemetry-dummy/',
-    }
-
-
-class MetroFirefoxProfile(Profile):
-    """Specialized Profile subclass for Firefox Metro"""
-
-    preferences = {  # Don't automatically update the application for desktop and metro build
-        'app.update.enabled': False,
-        'app.update.metro.enabled': False,
-        # Dismiss first run content overlay
-        'browser.firstrun-content.dismissed': True,
-        # Don't restore the last open set of tabs if the browser has crashed
-        'browser.sessionstore.resume_from_crash': False,
-        # Don't check for the default web browser during startup
-        'browser.shell.checkDefaultBrowser': False,
-        # Don't send Firefox health reports to the production server
-        'datareporting.healthreport.documentServerURI': 'http://%(server)s/healthreport/',
-        # Enable extensions
-        'extensions.defaultProviders.enabled': True,
-        # Only install add-ons from the profile and the application scope
-        # Also ensure that those are not getting disabled.
-        # see: https://developer.mozilla.org/en/Installing_extensions
-        'extensions.enabledScopes': 5,
-        'extensions.autoDisableScopes': 10,
-        # Don't send the list of installed addons to AMO
-        'extensions.getAddons.cache.enabled': False,
-        # Don't install distribution add-ons from the app folder
-        'extensions.installDistroAddons': False,
-        # Dont' run the add-on compatibility check during start-up
-        'extensions.showMismatchUI': False,
-        # Disable strict compatibility checks to allow add-ons enabled by default
-        'extensions.strictCompatibility': False,
-        # Don't automatically update add-ons
-        'extensions.update.enabled': False,
-        # Don't open a dialog to show available add-on updates
-        'extensions.update.notifyUser': False,
-        # Enable test mode to run multiple tests in parallel
-        'focusmanager.testmode': True,
         # Suppress delay for main action in popup notifications
         'security.notification_enable_delay': 0,
         # Suppress automatic safe mode after crashes
