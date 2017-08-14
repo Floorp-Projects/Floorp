@@ -3253,9 +3253,6 @@ SVGTextFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 void
 SVGTextFrame::ReflowSVGNonDisplayText()
 {
-  MOZ_ASSERT(nsSVGUtils::AnyOuterSVGIsCallingReflowSVG(this),
-             "only call ReflowSVGNonDisplayText when an outer SVG frame is "
-             "under ReflowSVG");
   MOZ_ASSERT(mState & NS_FRAME_IS_NONDISPLAY,
              "only call ReflowSVGNonDisplayText if the frame is "
              "NS_FRAME_IS_NONDISPLAY");
@@ -3765,9 +3762,6 @@ SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint)
 void
 SVGTextFrame::ReflowSVG()
 {
-  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
-               "This call is probaby a wasteful mistake");
-
   MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
              "ReflowSVG mechanism not designed for this");
 
@@ -4060,7 +4054,13 @@ SVGTextFrame::GetSubStringLength(nsIContent* aContent,
                                  uint32_t charnum, uint32_t nchars,
                                  float* aResult)
 {
-  UpdateGlyphPositioning();
+  // XXX perf: We only care about glyph advances here, so we really shouldn't
+  // be reflowing.
+  if (mState & NS_FRAME_IS_NONDISPLAY) {
+    ReflowSVGNonDisplayText();
+  } else {
+    ReflowSVG();
+  }
 
   // Convert charnum/nchars from addressable characters relative to
   // aContent to global character indices.
@@ -5251,8 +5251,6 @@ SVGTextFrame::MaybeReflowAnonymousBlockChild()
       // by nsSVGDisplayContainerFrame::ReflowSVG.)
       kid->AddStateBits(NS_FRAME_IS_DIRTY);
     }
-    MOZ_ASSERT(nsSVGUtils::AnyOuterSVGIsCallingReflowSVG(this),
-               "should be under ReflowSVG");
     nsPresContext::InterruptPreventer noInterrupts(PresContext());
     DoReflow();
   }
