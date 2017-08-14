@@ -6929,17 +6929,17 @@ nsIFrame* GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
 }
 
 static bool
-FlushAnimationsForHitTesting(nsIDocument *aDocument, void *aData)
+FlushThrottledStyles(nsIDocument *aDocument, void *aData)
 {
   nsIPresShell* shell = aDocument->GetShell();
   if (shell && shell->IsVisible()) {
     nsPresContext* presContext = shell->GetPresContext();
     if (presContext) {
-      presContext->RestyleManager()->UpdateAnimationStylesForHitTesting();
+      presContext->RestyleManager()->UpdateOnlyAnimationStyles();
     }
   }
 
-  aDocument->EnumerateSubDocuments(FlushAnimationsForHitTesting, nullptr);
+  aDocument->EnumerateSubDocuments(FlushThrottledStyles, nullptr);
   return true;
 }
 
@@ -7365,7 +7365,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       AutoWeakFrame weakFrame(frame);
       {  // scope for scriptBlocker.
         nsAutoScriptBlocker scriptBlocker;
-        FlushAnimationsForHitTesting(GetRootPresShell()->GetDocument(), nullptr);
+        FlushThrottledStyles(GetRootPresShell()->GetDocument(), nullptr);
       }
 
 
