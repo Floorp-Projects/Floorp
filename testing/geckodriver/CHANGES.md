@@ -5,6 +5,7 @@ All notable changes to this program is documented in this file.
 ## Unreleased
 
 ### Added
+- Added preference `dom.file.createInChild` set to true to allow file object creation in content processes.
 - New window `state` field on the window rect response object, returned from [`GetWindowRect`], [`SetWindowRect`], [`MinimizeWindow`], [`MaximizeWindow`], and [`FullscreenWindow`] commands
 
 [`FullscreenWindow`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.FullscreenWindow
