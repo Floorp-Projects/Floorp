@@ -318,6 +318,12 @@ public:
       NotifyObservers(chan, NS_HTTP_ON_USERAGENT_REQUEST_TOPIC);
     }
 
+    // Called by the channel before setting up the transaction
+    void OnBeforeConnect(nsIHttpChannel *chan)
+    {
+        NotifyObservers(chan, NS_HTTP_ON_BEFORE_CONNECT_TOPIC);
+    }
+
     // Called by the channel once headers are available
     void OnExamineResponse(nsIHttpChannel *chan)
     {
