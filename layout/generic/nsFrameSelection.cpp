@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 
 #include "nsCOMPtr.h"
@@ -82,8 +83,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "mozilla/Telemetry.h"
 #include "mozilla/layers/ScrollInputMethods.h"
 
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
 
@@ -1458,10 +1457,10 @@ nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
     bool editableCell = false;
     RefPtr<nsPresContext> context = mShell->GetPresContext();
     if (context) {
-      nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(nsContentUtils::GetHTMLEditor(context));
-      if (editor) {
+      RefPtr<HTMLEditor> htmlEditor = nsContentUtils::GetHTMLEditor(context);
+      if (htmlEditor) {
         nsINode* cellparent = GetCellParent(aNewFocus);
-        nsCOMPtr<nsINode> editorHostNode = editor->GetActiveEditingHost();
+        nsCOMPtr<nsINode> editorHostNode = htmlEditor->GetActiveEditingHost();
         editableCell = cellparent && editorHostNode &&
                    nsContentUtils::ContentIsDescendantOf(cellparent, editorHostNode);
         if (editableCell) {

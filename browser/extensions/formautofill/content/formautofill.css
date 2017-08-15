@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"],
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"] {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"],
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-insecureWarning"] {
   display: block;
   margin: 0;
   padding: 0;
@@ -19,13 +20,22 @@
   -moz-binding: url("chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem-footer");
 }
 
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-insecureWarning"] {
+  -moz-binding: url("chrome://formautofill/content/formautofill.xml#autocomplete-creditcard-insecure-field");
+}
+
 /* Treat @collpased="true" as display: none similar to how it is for XUL elements.
  * https://developer.mozilla.org/en-US/docs/Web/CSS/visibility#Values */
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"][collapsed="true"],
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"][collapsed="true"] {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"][collapsed="true"],
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-insecureWarning"][collapsed="true"] {
   display: none;
 }
 
 #PopupAutoComplete[firstresultstyle="autofill-profile"] {
   min-width: 150px !important;
+}
+
+#PopupAutoComplete[firstresultstyle="autofill-insecureWarning"] {
+  min-width: 200px !important;
 }

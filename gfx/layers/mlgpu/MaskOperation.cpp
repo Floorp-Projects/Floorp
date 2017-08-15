@@ -61,10 +61,10 @@ MaskTexture::operator <(const MaskTexture& aOther) const
     return mRect.y < aOther.mRect.y;
   }
   if (mRect.width != aOther.mRect.width) {
-    return mRect.width < aOther.mRect.width;
+    return mRect.Width() < aOther.mRect.Width();
   }
   if (mRect.height != aOther.mRect.height) {
-    return mRect.height < aOther.mRect.height;
+    return mRect.Height() < aOther.mRect.Height();
   }
   return mSource < aOther.mSource;
 }

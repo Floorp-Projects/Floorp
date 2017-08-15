@@ -657,9 +657,11 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
 
       LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(
           aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
+
+      SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
       aBuilder.PushImage(fill, clip,
                          wr::ToLayoutSize(destRect.Size()), wr::ToLayoutSize(gapSize),
-                         wr::ImageRendering::Auto, key.value());
+                         wr::ToImageRendering(samplingFilter), key.value());
       break;
     }
     default:

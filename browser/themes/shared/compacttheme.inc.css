@@ -12,6 +12,8 @@
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
   --toolbar-non-lwt-textcolor: var(--chrome-color);
   --toolbar-non-lwt-bgimage: none;
+
+  --tab-line-color: highlight;
 }
 
 :root:-moz-lwtheme-brighttext {

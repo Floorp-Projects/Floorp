@@ -137,8 +137,8 @@ nsScreen::GetRect(nsRect& aRect)
   aRect.x = NSToIntRound(screenTopLeftDesk.x);
   aRect.y = NSToIntRound(screenTopLeftDesk.y);
 
-  aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
-  aRect.width = nsPresContext::AppUnitsToIntCSSPixels(aRect.width);
+  aRect.SetHeight(nsPresContext::AppUnitsToIntCSSPixels(aRect.Height()));
+  aRect.SetWidth(nsPresContext::AppUnitsToIntCSSPixels(aRect.Width()));
 
   return NS_OK;
 }
@@ -172,8 +172,8 @@ nsScreen::GetAvailRect(nsRect& aRect)
   aRect.y = NSToIntRound(screenTopLeftDesk.y) +
             nsPresContext::AppUnitsToIntCSSPixels(aRect.y - r.y);
 
-  aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
-  aRect.width = nsPresContext::AppUnitsToIntCSSPixels(aRect.width);
+  aRect.SetHeight(nsPresContext::AppUnitsToIntCSSPixels(aRect.Height()));
+  aRect.SetWidth(nsPresContext::AppUnitsToIntCSSPixels(aRect.Width()));
 
   return NS_OK;
 }

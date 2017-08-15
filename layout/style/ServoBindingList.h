@@ -63,7 +63,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_Clear, void,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_RebuildCachedData, void,
                    RawServoStyleSetBorrowed set)
-SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, bool,
+SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, mozilla::OriginFlags,
                    RawServoStyleSetBorrowed set, bool* viewport_units_used)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_CompatModeChanged, void,

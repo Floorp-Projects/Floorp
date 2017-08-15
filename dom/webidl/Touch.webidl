@@ -38,8 +38,12 @@ interface Touch {
   readonly    attribute long         clientY;
   readonly    attribute long         pageX;
   readonly    attribute long         pageY;
+  [NeedsCallerType]
   readonly    attribute long         radiusX;
+  [NeedsCallerType]
   readonly    attribute long         radiusY;
+  [NeedsCallerType]
   readonly    attribute float        rotationAngle;
+  [NeedsCallerType]
   readonly    attribute float        force;
 };

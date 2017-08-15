@@ -137,7 +137,7 @@ ContentClientBasic::CreateBuffer(ContentType aType,
     gfxDevCrash(LogReason::AlphaWithBasicClient) << "Asking basic content client for component alpha";
   }
 
-  IntSize size(aRect.width, aRect.height);
+  IntSize size(aRect.Width(), aRect.Height());
 #ifdef XP_WIN
   if (mBackend == BackendType::CAIRO && 
       (aType == gfxContentType::COLOR || aType == gfxContentType::COLOR_ALPHA)) {
@@ -327,7 +327,7 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
   DestroyBuffers();
 
   mSurfaceFormat = aFormat;
-  mSize = IntSize(aRect.width, aRect.height);
+  mSize = IntSize(aRect.Width(), aRect.Height());
   mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
 
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
@@ -625,8 +625,8 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
                   this,
                   mFrontUpdatedRegion.GetBounds().x,
                   mFrontUpdatedRegion.GetBounds().y,
-                  mFrontUpdatedRegion.GetBounds().width,
-                  mFrontUpdatedRegion.GetBounds().height));
+                  mFrontUpdatedRegion.GetBounds().Width(),
+                  mFrontUpdatedRegion.GetBounds().Height()));
 
   mFrontAndBackBufferDiffer = false;
 

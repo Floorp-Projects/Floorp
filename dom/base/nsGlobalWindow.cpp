@@ -2632,7 +2632,7 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
     // Ensure that if someone plays with this document they will get
     // layout happening.
     nsRect r = shell->GetPresContext()->GetVisibleArea();
-    shell->Initialize(r.width, r.height);
+    shell->Initialize(r.Width(), r.Height());
   }
 }
 
@@ -5746,7 +5746,7 @@ nsGlobalWindow::SetInnerWidthOuter(int32_t aInnerWidth,
     presContext = presShell->GetPresContext();
 
     nsRect shellArea = presContext->GetVisibleArea();
-    height = shellArea.height;
+    height = shellArea.Height();
     SetCSSViewportWidthAndHeight(nsPresContext::CSSPixelsToAppUnits(aInnerWidth),
                                  height);
     return;
@@ -5840,7 +5840,7 @@ nsGlobalWindow::SetInnerHeightOuter(int32_t aInnerHeight,
 
     nsRect shellArea = presContext->GetVisibleArea();
     nscoord height = aInnerHeight;
-    nscoord width = shellArea.width;
+    nscoord width = shellArea.Width();
     CheckSecurityWidthAndHeight(nullptr, &height, aCallerType);
     SetCSSViewportWidthAndHeight(width,
                                  nsPresContext::CSSPixelsToAppUnits(height));
@@ -6460,8 +6460,8 @@ nsGlobalWindow::SetCSSViewportWidthAndHeight(nscoord aInnerWidth, nscoord aInner
   mDocShell->GetPresContext(getter_AddRefs(presContext));
 
   nsRect shellArea = presContext->GetVisibleArea();
-  shellArea.height = aInnerHeight;
-  shellArea.width = aInnerWidth;
+  shellArea.SetHeight(aInnerHeight);
+  shellArea.SetWidth(aInnerWidth);
 
   presContext->SetVisibleArea(shellArea);
 }

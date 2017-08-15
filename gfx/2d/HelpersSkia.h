@@ -274,27 +274,27 @@ static inline SkRect
 RectToSkRect(const Rect& aRect)
 {
   return SkRect::MakeXYWH(SkFloatToScalar(aRect.x), SkFloatToScalar(aRect.y),
-                          SkFloatToScalar(aRect.width), SkFloatToScalar(aRect.height));
+                          SkFloatToScalar(aRect.Width()), SkFloatToScalar(aRect.Height()));
 }
 
 static inline SkRect
 IntRectToSkRect(const IntRect& aRect)
 {
   return SkRect::MakeXYWH(SkIntToScalar(aRect.x), SkIntToScalar(aRect.y),
-                          SkIntToScalar(aRect.width), SkIntToScalar(aRect.height));
+                          SkIntToScalar(aRect.Width()), SkIntToScalar(aRect.Height()));
 }
 
 static inline SkIRect
 RectToSkIRect(const Rect& aRect)
 {
   return SkIRect::MakeXYWH(int32_t(aRect.x), int32_t(aRect.y),
-                           int32_t(aRect.width), int32_t(aRect.height));
+                           int32_t(aRect.Width()), int32_t(aRect.Height()));
 }
 
 static inline SkIRect
 IntRectToSkIRect(const IntRect& aRect)
 {
-  return SkIRect::MakeXYWH(aRect.x, aRect.y, aRect.width, aRect.height);
+  return SkIRect::MakeXYWH(aRect.x, aRect.y, aRect.Width(), aRect.Height());
 }
 
 static inline IntRect

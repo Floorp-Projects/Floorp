@@ -14,7 +14,7 @@
 <!ENTITY  popupExceptions.label                                 "Exceptions…">
 <!ENTITY  popupExceptions.accesskey                             "E">
 
-<!ENTITY  permissionSettingsButton.label                        "Settings">
+<!ENTITY  permissionSettingsButton2.label                       "Settings…">
 
 <!ENTITY  notificationPermissions.label                         "Notifications">
 <!ENTITY  notificationSettingsButton.accesskey                  "n">

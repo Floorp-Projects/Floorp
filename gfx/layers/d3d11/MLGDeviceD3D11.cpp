@@ -1407,8 +1407,8 @@ MLGDeviceD3D11::SetViewport(const gfx::IntRect& aViewport)
   vp.MinDepth = 0.0f;
   vp.TopLeftX = aViewport.x;
   vp.TopLeftY = aViewport.y;
-  vp.Width = aViewport.width;
-  vp.Height = aViewport.height;
+  vp.Width = aViewport.Width();
+  vp.Height = aViewport.Height();
   mCtx->RSSetViewports(1, &vp);
 }
 

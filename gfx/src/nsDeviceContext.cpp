@@ -454,8 +454,8 @@ nsDeviceContext::GetDeviceSurfaceDimensions(nscoord &aWidth, nscoord &aHeight)
     } else {
         nsRect area;
         ComputeFullAreaUsingScreen(&area);
-        aWidth = area.width;
-        aHeight = area.height;
+        aWidth = area.Width();
+        aHeight = area.Height();
     }
 
     return NS_OK;
@@ -467,8 +467,8 @@ nsDeviceContext::GetRect(nsRect &aRect)
     if (IsPrinterContext()) {
         aRect.x = 0;
         aRect.y = 0;
-        aRect.width = mWidth;
-        aRect.height = mHeight;
+        aRect.SetWidth(mWidth);
+        aRect.SetHeight(mHeight);
     } else
         ComputeFullAreaUsingScreen ( &aRect );
 
@@ -481,8 +481,8 @@ nsDeviceContext::GetClientRect(nsRect &aRect)
     if (IsPrinterContext()) {
         aRect.x = 0;
         aRect.y = 0;
-        aRect.width = mWidth;
-        aRect.height = mHeight;
+        aRect.SetWidth(mWidth);
+        aRect.SetHeight(mHeight);
     }
     else
         ComputeClientRectUsingScreen(&aRect);
@@ -623,8 +623,8 @@ nsDeviceContext::ComputeClientRectUsingScreen(nsRect* outRect)
         // convert to device units
         outRect->y = NSIntPixelsToAppUnits(y, AppUnitsPerDevPixel());
         outRect->x = NSIntPixelsToAppUnits(x, AppUnitsPerDevPixel());
-        outRect->width = NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel());
-        outRect->height = NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel());
+        outRect->SetWidth(NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel()));
+        outRect->SetHeight(NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel()));
     }
 }
 
@@ -644,11 +644,11 @@ nsDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect)
         // convert to device units
         outRect->y = NSIntPixelsToAppUnits(y, AppUnitsPerDevPixel());
         outRect->x = NSIntPixelsToAppUnits(x, AppUnitsPerDevPixel());
-        outRect->width = NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel());
-        outRect->height = NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel());
+        outRect->SetWidth(NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel()));
+        outRect->SetHeight(NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel()));
 
-        mWidth = outRect->width;
-        mHeight = outRect->height;
+        mWidth = outRect->Width();
+        mHeight = outRect->Height();
     }
 }
 

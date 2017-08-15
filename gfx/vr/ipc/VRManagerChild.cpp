@@ -403,10 +403,10 @@ VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
                               uint32_t aGroup)
 {
   PVRLayerChild* vrLayerChild = AllocPVRLayerChild(aDisplayID, aLeftEyeRect.x,
-                                                   aLeftEyeRect.y, aLeftEyeRect.width,
-                                                   aLeftEyeRect.height, aRightEyeRect.x,
-                                                   aRightEyeRect.y, aRightEyeRect.width,
-                                                   aRightEyeRect.height,
+                                                   aLeftEyeRect.y, aLeftEyeRect.Width(),
+                                                   aLeftEyeRect.Height(), aRightEyeRect.x,
+                                                   aRightEyeRect.y, aRightEyeRect.Width(),
+                                                   aRightEyeRect.Height(),
                                                    aGroup);
   // Do the DOM labeling.
   if (aTarget) {
@@ -414,10 +414,10 @@ VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
     MOZ_ASSERT(vrLayerChild->GetActorEventTarget());
   }
   return SendPVRLayerConstructor(vrLayerChild, aDisplayID, aLeftEyeRect.x,
-                                 aLeftEyeRect.y, aLeftEyeRect.width,
-                                 aLeftEyeRect.height, aRightEyeRect.x,
-                                 aRightEyeRect.y, aRightEyeRect.width,
-                                 aRightEyeRect.height,
+                                 aLeftEyeRect.y, aLeftEyeRect.Width(),
+                                 aLeftEyeRect.Height(), aRightEyeRect.x,
+                                 aRightEyeRect.y, aRightEyeRect.Width(),
+                                 aRightEyeRect.Height(),
                                  aGroup);
 }
 

@@ -1896,8 +1896,8 @@ nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
     nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
       bounds = sf->GetScrollRange();
-      bounds.width += sf->GetScrollPortRect().width;
-      bounds.height += sf->GetScrollPortRect().height;
+      bounds.SetWidth(bounds.Width() + sf->GetScrollPortRect().Width());
+      bounds.SetHeight(bounds.Height() + sf->GetScrollPortRect().Height());
     } else if (presShell->GetRootFrame()) {
       bounds = presShell->GetRootFrame()->GetRect();
     }
@@ -1907,8 +1907,8 @@ nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
   RefPtr<DOMRect> rect = new DOMRect(window);
   rect->SetRect(nsPresContext::AppUnitsToFloatCSSPixels(bounds.x),
                 nsPresContext::AppUnitsToFloatCSSPixels(bounds.y),
-                nsPresContext::AppUnitsToFloatCSSPixels(bounds.width),
-                nsPresContext::AppUnitsToFloatCSSPixels(bounds.height));
+                nsPresContext::AppUnitsToFloatCSSPixels(bounds.Width()),
+                nsPresContext::AppUnitsToFloatCSSPixels(bounds.Height()));
   rect.forget(aResult);
   return NS_OK;
 }
