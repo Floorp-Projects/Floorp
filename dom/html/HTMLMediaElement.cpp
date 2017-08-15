@@ -97,6 +97,7 @@
 #include "DecoderTraits.h"
 #include "MediaContainerType.h"
 #include "MP4Decoder.h"
+#include "FrameStatistics.h"
 
 #ifdef MOZ_ANDROID_HLS_SUPPORT
 #include "HLSDecoder.h"
