@@ -11,10 +11,9 @@ import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
 import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
 import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
-import org.mozilla.gecko.sync.repositories.PersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepository;
+import org.mozilla.gecko.sync.repositories.android.HistoryRepository;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -26,7 +25,7 @@ import java.net.URISyntaxException;
  *
  * @author grisha
  */
-public class AndroidBrowserRecentHistoryServerSyncStage extends AndroidBrowserHistoryServerSyncStage {
+public class RecentHistoryServerSyncStage extends HistoryServerSyncStage {
     protected static final String LOG_TAG = "RecentHistoryStage";
 
     // Bug 1316110 tracks follow up work to generalize this stage and make it more efficient.
@@ -78,7 +77,7 @@ public class AndroidBrowserRecentHistoryServerSyncStage extends AndroidBrowserHi
         return new BufferingMiddlewareRepository(
                 session.getSyncDeadline(),
                 new MemoryBufferStorage(),
-                new AndroidBrowserHistoryRepository()
+                new HistoryRepository()
         );
     }
 

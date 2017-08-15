@@ -28,8 +28,8 @@ import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksDataAccessor;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepository;
+import org.mozilla.gecko.sync.repositories.android.BookmarksDataAccessor;
+import org.mozilla.gecko.sync.repositories.android.BookmarksRepository;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
@@ -52,7 +52,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * Trivial test that pinned items will be skipped if present in the DB.
    */
   public void testPinnedItemsAreNotRetrieved() {
-    final AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
+    final BookmarksRepository repo = new BookmarksRepository();
 
     // Ensure that they exist.
     setUpFennecPinnedItemsRecord();
@@ -73,7 +73,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
   }
 
   public void testRetrieveFolderHasAccurateChildren() {
-    AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
+    BookmarksRepository repo = new BookmarksRepository();
 
     final long now = System.currentTimeMillis();
 
@@ -183,7 +183,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
   }
 
   public void testMergeFoldersPreservesSaneOrder() {
-    AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
+    BookmarksRepository repo = new BookmarksRepository();
 
     final long now = System.currentTimeMillis();
     final String folderGUID = "mobile";
@@ -275,7 +275,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * for reupload (i.e., that its modified time is *ahem* unmodified).
    */
   public void testNoReorderingMeansNoReupload() {
-    AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
+    BookmarksRepository repo = new BookmarksRepository();
 
     final long now = System.currentTimeMillis();
 
@@ -359,7 +359,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * if we simply deleted the records, so we move them first.
    */
   public void testFolderDeletionOrphansChildren() {
-    AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
+    BookmarksRepository repo = new BookmarksRepository();
 
     long now = System.currentTimeMillis();
 
@@ -471,7 +471,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * co-operate.
    */
   public void testInsertAndReplaceGuid() {
-    AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
+    BookmarksRepository repo = new BookmarksRepository();
     wipe();
 
     BookmarkRecord folder1 = BookmarkHelpers.createFolder1();
@@ -521,7 +521,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * replace and insert co-operate.
    */
   public void testInsertAndReplaceTitle() {
-    AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
+    BookmarksRepository repo = new BookmarksRepository();
     wipe();
 
     BookmarkRecord folder1 = BookmarkHelpers.createFolder1();
@@ -569,7 +569,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * Create and begin a new session, handing control to the delegate when started.
    * Returns when the delegate has notified.
    */
-  public void inBegunSession(final AndroidBrowserBookmarksRepository repo,
+  public void inBegunSession(final BookmarksRepository repo,
                              final RepositorySessionBeginDelegate beginDelegate) {
     Runnable go = new Runnable() {
       @Override
@@ -687,7 +687,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    * @param records
    * @param tracked
    */
-  public void storeRecordsInSession(AndroidBrowserBookmarksRepository repo,
+  public void storeRecordsInSession(BookmarksRepository repo,
                                     final BookmarkRecord[] records,
                                     final Collection<String> tracked) {
     SimpleSuccessBeginDelegate beginDelegate = new SimpleSuccessBeginDelegate() {
@@ -734,13 +734,13 @@ public class TestBookmarks extends AndroidSyncTestCase {
     inBegunSession(repo, beginDelegate);
   }
 
-  public ArrayList<String> fetchGUIDs(AndroidBrowserBookmarksRepository repo) {
+  public ArrayList<String> fetchGUIDs(BookmarksRepository repo) {
     SimpleFetchAllBeginDelegate beginDelegate = new SimpleFetchAllBeginDelegate();
     inBegunSession(repo, beginDelegate);
     return beginDelegate.fetchedGUIDs;
   }
 
-  public BookmarkRecord fetchGUID(AndroidBrowserBookmarksRepository repo,
+  public BookmarkRecord fetchGUID(BookmarksRepository repo,
                                   final String guid) {
     Logger.info(LOG_TAG, "Fetching for " + guid);
     SimpleFetchOneBeginDelegate beginDelegate = new SimpleFetchOneBeginDelegate(guid);
@@ -750,7 +750,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
     return (BookmarkRecord) beginDelegate.fetchedRecord;
   }
 
-  public JSONArray fetchChildrenForGUID(AndroidBrowserBookmarksRepository repo,
+  public JSONArray fetchChildrenForGUID(BookmarksRepository repo,
       final String guid) {
     return fetchGUID(repo, guid).children;
   }
@@ -919,10 +919,10 @@ public class TestBookmarks extends AndroidSyncTestCase {
     return c.getLong(0);
   }
 
-  protected AndroidBrowserBookmarksDataAccessor dataAccessor = null;
-  protected AndroidBrowserBookmarksDataAccessor getDataAccessor() {
+  protected BookmarksDataAccessor dataAccessor = null;
+  protected BookmarksDataAccessor getDataAccessor() {
     if (dataAccessor == null) {
-      dataAccessor = new AndroidBrowserBookmarksDataAccessor(getApplicationContext());
+      dataAccessor = new BookmarksDataAccessor(getApplicationContext());
     }
     return dataAccessor;
   }
@@ -932,7 +932,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
     getDataAccessor().wipe();
   }
 
-  protected void assertChildrenAreOrdered(AndroidBrowserBookmarksRepository repo, String guid, Record[] expected) {
+  protected void assertChildrenAreOrdered(BookmarksRepository repo, String guid, Record[] expected) {
     Logger.debug(getName(), "Fetching children...");
     JSONArray folderChildren = fetchChildrenForGUID(repo, guid);
 
@@ -944,7 +944,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
     }
   }
 
-  protected void assertChildrenAreUnordered(AndroidBrowserBookmarksRepository repo, String guid, Record[] expected) {
+  protected void assertChildrenAreUnordered(BookmarksRepository repo, String guid, Record[] expected) {
     Logger.debug(getName(), "Fetching children...");
     JSONArray folderChildren = fetchChildrenForGUID(repo, guid);
 
@@ -962,7 +962,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
   protected ArrayList<String> fetchChildrenDirect(long id) {
     Logger.debug(getName(), "Fetching children directly from DB...");
     final ArrayList<String> out = new ArrayList<String>();
-    final AndroidBrowserBookmarksDataAccessor accessor = new AndroidBrowserBookmarksDataAccessor(getApplicationContext());
+    final BookmarksDataAccessor accessor = new BookmarksDataAccessor(getApplicationContext());
     Cursor cur = null;
     try {
       cur = accessor.getChildren(id);
@@ -991,7 +991,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
    */
   protected void assertChildrenAreDirect(long id, String[] guids) {
     Logger.debug(getName(), "Fetching children directly from DB...");
-    AndroidBrowserBookmarksDataAccessor accessor = new AndroidBrowserBookmarksDataAccessor(getApplicationContext());
+    BookmarksDataAccessor accessor = new BookmarksDataAccessor(getApplicationContext());
     Cursor cur = null;
     try {
       cur = accessor.getChildren(id);

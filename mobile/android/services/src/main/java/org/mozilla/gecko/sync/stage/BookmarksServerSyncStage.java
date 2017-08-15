@@ -14,12 +14,12 @@ import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepository;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
+import org.mozilla.gecko.sync.repositories.android.BookmarksRepository;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecordFactory;
 import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
 
-public class AndroidBrowserBookmarksServerSyncStage extends VersionedServerSyncStage {
+public class BookmarksServerSyncStage extends VersionedServerSyncStage {
   protected static final String LOG_TAG = "BookmarksStage";
 
   // Eventually this kind of sync stage will be data-driven,
@@ -90,7 +90,7 @@ public class AndroidBrowserBookmarksServerSyncStage extends VersionedServerSyncS
     return new BufferingMiddlewareRepository(
             session.getSyncDeadline(),
             new MemoryBufferStorage(),
-            new AndroidBrowserBookmarksRepository()
+            new BookmarksRepository()
     );
   }
 

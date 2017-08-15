@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /* package-private */ class BookmarksSessionHelper extends SessionHelper implements BookmarksInsertionManager.BookmarkInserter {
     private static final String LOG_TAG = "BookmarksSessionHelper";
 
-    private final AndroidBrowserBookmarksDataAccessor dbAccessor;
+    private final BookmarksDataAccessor dbAccessor;
 
     // We are primarily concerned with thread safety guarantees of ConcurrentHashMap, and not its
     // synchronization details. Note that this isn't fully thought out, and is a marginal improvement
@@ -124,7 +124,7 @@ import java.util.concurrent.ConcurrentHashMap;
         SPECIAL_GUID_PARENTS = Collections.unmodifiableMap(m);
     }
 
-    /* package-private */ BookmarksSessionHelper(StoreTrackingRepositorySession session, AndroidBrowserBookmarksDataAccessor dbAccessor) {
+    /* package-private */ BookmarksSessionHelper(StoreTrackingRepositorySession session, BookmarksDataAccessor dbAccessor) {
         super(session, dbAccessor);
         this.dbAccessor = dbAccessor;
     }
@@ -188,7 +188,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
     @Override
     protected void storeRecordDeletion(RepositorySessionStoreDelegate storeDelegate, final Record record, final Record existingRecord) {
-        if (AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.containsKey(record.guid)) {
+        if (BookmarksRepositorySession.SPECIAL_GUIDS_MAP.containsKey(record.guid)) {
             Logger.debug(LOG_TAG, "Told to delete record " + record.guid + ". Ignoring.");
             return;
         }
@@ -202,7 +202,7 @@ import java.util.concurrent.ConcurrentHashMap;
     /**
      * Rename mobile folders to "mobile", both in and out. The other half of
      * this logic lives in {@link #computeParentFields(BookmarkRecord, String, String)}, where
-     * the parent name of a record is set from {@link AndroidBrowserBookmarksRepositorySession#SPECIAL_GUIDS_MAP} rather than
+     * the parent name of a record is set from {@link BookmarksRepositorySession#SPECIAL_GUIDS_MAP} rather than
      * from source data.
      *
      * Apply this approach generally for symmetry.
@@ -210,7 +210,7 @@ import java.util.concurrent.ConcurrentHashMap;
     @Override
     protected void fixupRecord(Record record) {
         final BookmarkRecord r = (BookmarkRecord) record;
-        final String parentName = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(r.parentID);
+        final String parentName = BookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(r.parentID);
         if (parentName == null) {
             return;
         }
@@ -611,7 +611,7 @@ import java.util.concurrent.ConcurrentHashMap;
         }
 
         // newRecord should already have suitable androidID and guid.
-        boolean didUpdate = ((AndroidBrowserBookmarksDataAccessor) dbHelper).updateAssertingLocalVersion(
+        boolean didUpdate = ((BookmarksDataAccessor) dbHelper).updateAssertingLocalVersion(
                 existingRecord.guid,
                 existingRecord.localVersion,
                 shouldIncrementLocalVersion,
@@ -840,8 +840,8 @@ import java.util.concurrent.ConcurrentHashMap;
         if (parentGUID == null) {
             return "";
         }
-        if (AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.containsKey(parentGUID)) {
-            return AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(parentGUID);
+        if (BookmarksRepositorySession.SPECIAL_GUIDS_MAP.containsKey(parentGUID)) {
+            return BookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(parentGUID);
         }
 
         // Get parent name from database.
@@ -984,7 +984,7 @@ import java.util.concurrent.ConcurrentHashMap;
         }
 
         // Always set the parent name for special folders back to default.
-        String parentName = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(realParent);
+        String parentName = BookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(realParent);
         if (parentName == null) {
             parentName = suggestedParentName;
         }
@@ -1171,7 +1171,7 @@ import java.util.concurrent.ConcurrentHashMap;
             }
 
             try {
-                Cursor cursor = ((AndroidBrowserBookmarksDataAccessor) dbHelper).fetchModified();
+                Cursor cursor = ((BookmarksDataAccessor) dbHelper).fetchModified();
                 this.fetchFromCursor(cursor, filter, end);
             } catch (NullCursorException e) {
                 delegate.onFetchFailed(e);

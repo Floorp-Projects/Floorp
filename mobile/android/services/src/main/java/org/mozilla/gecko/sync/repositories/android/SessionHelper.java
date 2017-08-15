@@ -16,7 +16,6 @@ import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
 import org.mozilla.gecko.sync.repositories.ProfileDatabaseException;
 import org.mozilla.gecko.sync.repositories.RecordFilter;
-import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
@@ -66,9 +65,9 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
      */
     private SparseArray<String> recordToGuid;
 
-    /* package-private */ final AndroidBrowserRepositoryDataAccessor dbHelper;
+    /* package-private */ final DataAccessor dbHelper;
 
-    /* package-private */ SessionHelper(StoreTrackingRepositorySession session, AndroidBrowserRepositoryDataAccessor dbHelper) {
+    /* package-private */ SessionHelper(StoreTrackingRepositorySession session, DataAccessor dbHelper) {
         this.session = session;
         this.dbHelper = dbHelper;
     }

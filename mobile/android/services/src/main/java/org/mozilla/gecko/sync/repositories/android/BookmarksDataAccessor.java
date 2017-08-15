@@ -23,7 +23,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
-public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositoryDataAccessor {
+public class BookmarksDataAccessor extends DataAccessor {
 
   private static final String LOG_TAG = "BookmarksDataAccessor";
 
@@ -42,11 +42,11 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
 
   private static final String EXCLUDE_SPECIAL_GUIDS_WHERE_CLAUSE;
   static {
-    if (AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS.length > 0) {
+    if (BookmarksRepositorySession.SPECIAL_GUIDS.length > 0) {
       StringBuilder b = new StringBuilder(BrowserContract.SyncColumns.GUID + " NOT IN (");
 
-      int remaining = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS.length - 1;
-      for (String specialGuid : AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS) {
+      int remaining = BookmarksRepositorySession.SPECIAL_GUIDS.length - 1;
+      for (String specialGuid : BookmarksRepositorySession.SPECIAL_GUIDS) {
         b.append('"');
         b.append(specialGuid);
         b.append('"');
@@ -66,7 +66,7 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
 
   private final RepoUtils.QueryHelper queryHelper;
 
-  public AndroidBrowserBookmarksDataAccessor(Context context) {
+  public BookmarksDataAccessor(Context context) {
     super(context);
     this.queryHelper = new RepoUtils.QueryHelper(context, getUri(), LOG_TAG);
   }
@@ -251,7 +251,7 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
    * Insert them if they aren't there.
    */
   public void checkAndBuildSpecialGuids() throws NullCursorException {
-    final String[] specialGUIDs = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS;
+    final String[] specialGUIDs = BookmarksRepositorySession.SPECIAL_GUIDS;
     Cursor cur = fetch(specialGUIDs);
     long placesRoot = 0;
 
@@ -304,7 +304,7 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
 
   private long insertSpecialFolder(String guid, long parentId) {
     BookmarkRecord record = new BookmarkRecord(guid);
-    record.title = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(guid);
+    record.title = BookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(guid);
     record.type = "folder";
     record.androidParentID = parentId;
     return ContentUris.parseId(insert(record));
