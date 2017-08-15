@@ -1513,14 +1513,13 @@ ContentParent::MarkAsDead()
 void
 ContentParent::OnChannelError()
 {
-  RefPtr<ContentParent> content(this);
   PContentParent::OnChannelError();
 }
 
 void
 ContentParent::OnChannelConnected(int32_t pid)
 {
-  SetOtherProcessId(pid);
+  MOZ_ASSERT(NS_IsMainThread());
 
 #if defined(ANDROID) || defined(LINUX)
   // Check nice preference
@@ -1544,6 +1543,11 @@ ContentParent::OnChannelConnected(int32_t pid)
       setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
     }
   }
+#endif
+
+#ifdef MOZ_CODE_COVERAGE
+  Unused << SendShareCodeCoverageMutex(
+              CodeCoverageHandler::Get()->GetMutexHandle(pid));
 #endif
 }
 
@@ -2038,22 +2042,14 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     extraArgs.push_back("-safeMode");
   }
 
-  if (!mSubprocess->LaunchAndWaitForProcessHandle(extraArgs)) {
+  if (!mSubprocess->Launch(extraArgs)) {
     MarkAsDead();
     return false;
   }
 
-  base::ProcessId procId = base::GetProcId(mSubprocess->GetChildProcessHandle());
+  OpenWithAsyncPid(mSubprocess->GetChannel());
 
-  Open(mSubprocess->GetChannel(), procId);
-
-#ifdef MOZ_CODE_COVERAGE
-  Unused << SendShareCodeCoverageMutex(CodeCoverageHandler::Get()->GetMutexHandle(procId));
-#endif
-
-  InitInternal(aInitialPriority,
-               true, /* Setup off-main thread compositing */
-               true  /* Send registered chrome */);
+  InitInternal(aInitialPriority);
 
   ContentProcessManager::GetSingleton()->AddContentProcess(this);
 
@@ -2123,7 +2119,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
   ChildPrivileges privs = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE)
                           ? base::PRIVILEGES_FILEREAD
                           : base::PRIVILEGES_DEFAULT;
-  mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, privs);
+  mSubprocess = new ContentProcessHost(this, privs);
 }
 
 ContentParent::~ContentParent()
@@ -2147,9 +2143,7 @@ ContentParent::~ContentParent()
 }
 
 void
-ContentParent::InitInternal(ProcessPriority aInitialPriority,
-                            bool aSetupOffMainThreadCompositing,
-                            bool aSendRegisteredChrome)
+ContentParent::InitInternal(ProcessPriority aPriority)
 {
   Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_TIME_MS,
                         static_cast<uint32_t>((TimeStamp::Now() - mLaunchTS)
@@ -2265,12 +2259,10 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 
   Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache);
 
-  if (aSendRegisteredChrome) {
-    nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
-    nsChromeRegistryChrome* chromeRegistry =
-      static_cast<nsChromeRegistryChrome*>(registrySvc.get());
-    chromeRegistry->SendRegisteredChrome(this);
-  }
+  nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
+  nsChromeRegistryChrome* chromeRegistry =
+    static_cast<nsChromeRegistryChrome*>(registrySvc.get());
+  chromeRegistry->SendRegisteredChrome(this);
 
   if (gAppData) {
     nsCString version(gAppData->version);
@@ -2301,45 +2293,43 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   //
   // This call can cause us to send IPC messages to the child process, so it
   // must come after the Open() call above.
-  ProcessPriorityManager::SetProcessPriority(this, aInitialPriority);
+  ProcessPriorityManager::SetProcessPriority(this, aPriority);
 
-  if (aSetupOffMainThreadCompositing) {
-    // NB: internally, this will send an IPC message to the child
-    // process to get it to create the CompositorBridgeChild.  This
-    // message goes through the regular IPC queue for this
-    // channel, so delivery will happen-before any other messages
-    // we send.  The CompositorBridgeChild must be created before any
-    // PBrowsers are created, because they rely on the Compositor
-    // already being around.  (Creation is async, so can't happen
-    // on demand.)
-    bool useOffMainThreadCompositing = !!CompositorThreadHolder::Loop();
-    if (useOffMainThreadCompositing) {
-      GPUProcessManager* gpm = GPUProcessManager::Get();
+  // NB: internally, this will send an IPC message to the child
+  // process to get it to create the CompositorBridgeChild.  This
+  // message goes through the regular IPC queue for this
+  // channel, so delivery will happen-before any other messages
+  // we send.  The CompositorBridgeChild must be created before any
+  // PBrowsers are created, because they rely on the Compositor
+  // already being around.  (Creation is async, so can't happen
+  // on demand.)
+  bool useOffMainThreadCompositing = !!CompositorThreadHolder::Loop();
+  if (useOffMainThreadCompositing) {
+    GPUProcessManager* gpm = GPUProcessManager::Get();
 
-      Endpoint<PCompositorManagerChild> compositor;
-      Endpoint<PImageBridgeChild> imageBridge;
-      Endpoint<PVRManagerChild> vrBridge;
-      Endpoint<PVideoDecoderManagerChild> videoManager;
-      AutoTArray<uint32_t, 3> namespaces;
+    Endpoint<PCompositorManagerChild> compositor;
+    Endpoint<PImageBridgeChild> imageBridge;
+    Endpoint<PVRManagerChild> vrBridge;
+    Endpoint<PVideoDecoderManagerChild> videoManager;
+    AutoTArray<uint32_t, 3> namespaces;
 
-      DebugOnly<bool> opened = gpm->CreateContentBridges(
-        OtherPid(),
-        &compositor,
-        &imageBridge,
-        &vrBridge,
-        &videoManager,
-        &namespaces);
-      MOZ_ASSERT(opened);
+    DebugOnly<bool> opened = gpm->CreateContentBridges(
+      OtherPid(),
+      &compositor,
+      &imageBridge,
+      &vrBridge,
+      &videoManager,
+      &namespaces);
+    MOZ_ASSERT(opened);
 
-      Unused << SendInitRendering(
-        Move(compositor),
-        Move(imageBridge),
-        Move(vrBridge),
-        Move(videoManager),
-        namespaces);
+    Unused << SendInitRendering(
+      Move(compositor),
+      Move(imageBridge),
+      Move(vrBridge),
+      Move(videoManager),
+      namespaces);
 
-      gpm->AddListener(this);
-    }
+    gpm->AddListener(this);
   }
 
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
