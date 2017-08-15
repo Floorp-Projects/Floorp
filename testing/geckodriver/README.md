@@ -120,7 +120,7 @@ geckodriver supports a number of
   <td>Indicates the type of proxy configuration.
    This value must be one of
    <code>pac</code>,
-   <code>direct</code>,
+   <code>noproxy</code>,
    <code>autodetect</code>,
    <code>system</code>,
    or <code>manual</code>.
