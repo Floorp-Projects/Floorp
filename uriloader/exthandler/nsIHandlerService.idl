@@ -11,6 +11,12 @@ interface nsISimpleEnumerator;
 interface nsIHandlerService : nsISupports
 {
   /**
+   * Asynchronously performs any IO that the nsIHandlerService needs to do
+   * before it can be of use.
+   */
+  void asyncInit();
+
+  /**
    * Retrieve a list of all handlers in the datastore.  This list is not
    * guaranteed to be in any particular order, and callers should not assume
    * it will remain in the same order in the future.
