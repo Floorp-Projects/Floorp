@@ -18,6 +18,36 @@ public class TestURIUtils {
 
     private final String BUGZILLA_URL = "https://bugzilla.mozilla.org/enter_bug.cgi?format=guided#h=dupes%7CData%20%26%20BI%20Services%20Team%7C";
 
+    @Test
+    public void testIsPathEmptyWithURINoPath() throws Exception {
+        final URI uri = new URI("https://google.com");
+        Assert.assertTrue(URIUtils.isPathEmpty(uri));
+    }
+
+    @Test
+    public void testIsPathEmptyWithURISlashPath() throws Exception {
+        final URI uri = new URI("http://google.com/");
+        Assert.assertTrue(URIUtils.isPathEmpty(uri));
+    }
+
+    @Test
+    public void testIsPathEmptyWithURIDoubleSlashPath() throws Exception {
+        final URI uri = new URI("http://google.com//");
+        Assert.assertTrue(URIUtils.isPathEmpty(uri));
+    }
+
+    @Test
+    public void testIsPathEmptyWithURIEncodedSpaceSlashPath() throws Exception {
+        final URI uri = new URI("http://google.com/%20/");
+        Assert.assertFalse(URIUtils.isPathEmpty(uri));
+    }
+
+    @Test
+    public void testIsPathEmptyWithURIPath() throws Exception {
+        final URI uri = new URI("http://google.com/search/whatever/");
+        Assert.assertFalse(URIUtils.isPathEmpty(uri));
+    }
+
     // --- getFormattedDomain, include PublicSuffix --- //
     @Test
     public void testGetFormattedDomainWithSuffix0Parts() {
