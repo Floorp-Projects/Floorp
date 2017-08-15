@@ -3777,6 +3777,10 @@ Selection::NotifySelectionListeners()
     frameSelection->SetDirty();
     return NS_OK;
   }
+  if (mSelectionListeners.IsEmpty()) {
+    // If there are no selection listeners, we're done!
+    return NS_OK;
+  }
   AutoTArray<nsCOMPtr<nsISelectionListener>, 8>
     selectionListeners(mSelectionListeners);
 
