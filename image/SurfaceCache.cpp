@@ -909,7 +909,8 @@ private:
     explicit SurfaceTracker(uint32_t aSurfaceCacheExpirationTimeMS)
       : ExpirationTrackerImpl<CachedSurface, 2,
                               StaticMutex, StaticMutexAutoLock>(
-          aSurfaceCacheExpirationTimeMS, "SurfaceTracker")
+          aSurfaceCacheExpirationTimeMS, "SurfaceTracker",
+          SystemGroup::EventTargetFor(TaskCategory::Other))
     { }
 
   protected:
