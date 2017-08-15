@@ -6,15 +6,14 @@
 #include "MediaSourceDecoder.h"
 
 #include "mozilla/Logging.h"
-#include "mozilla/dom/HTMLMediaElement.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
 #include "MediaSource.h"
+#include "MediaSourceDemuxer.h"
 #include "MediaSourceResource.h"
 #include "MediaSourceUtils.h"
-#include "VideoUtils.h"
-#include "MediaSourceDemuxer.h"
 #include "SourceBufferList.h"
+#include "VideoUtils.h"
 #include <algorithm>
 
 extern mozilla::LogModule* GetMediaSourceLog();
