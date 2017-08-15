@@ -589,8 +589,10 @@ IProtocol::GetActorEventTargetInternal(IProtocol* aActor)
 
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
  : IProtocol(aSide),
+   mMonitor("mozilla.ipc.IToplevelProtocol.mMonitor"),
    mProtocolId(aProtoId),
    mOtherPid(mozilla::ipc::kInvalidProcessId),
+   mOtherPidState(ProcessIdState::eUndefined),
    mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId),
    mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId),
    mEventTargetMutex("ProtocolEventTargetMutex")
@@ -608,13 +610,23 @@ IToplevelProtocol::~IToplevelProtocol()
 base::ProcessId
 IToplevelProtocol::OtherPid() const
 {
+  MonitorAutoLock lock(mMonitor);
+  while (mOtherPidState < ProcessIdState::eReady) {
+    lock.Wait();
+  }
+  MOZ_ASSERT(mOtherPidState == ProcessIdState::eReady);
+
   return mOtherPid;
 }
 
 void
-IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid)
+IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid,
+                                     ProcessIdState aState)
 {
+  MonitorAutoLock lock(mMonitor);
   mOtherPid = aOtherPid;
+  mOtherPidState = aState;
+  lock.NotifyAll();
 }
 
 bool
@@ -654,6 +666,15 @@ IToplevelProtocol::Open(MessageChannel* aChannel,
 {
   SetOtherProcessId(base::GetCurrentProcId());
   return GetIPCChannel()->Open(aChannel, aEventTarget, aSide);
+}
+
+bool
+IToplevelProtocol::OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
+                                    MessageLoop* aThread,
+                                    mozilla::ipc::Side aSide)
+{
+  SetOtherProcessId(0, ProcessIdState::ePending);
+  return GetIPCChannel()->Open(aTransport, aThread, aSide);
 }
 
 void
