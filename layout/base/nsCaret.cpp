@@ -240,7 +240,7 @@ void nsCaret::SetSelection(nsISelection *aDOMSel)
   MOZ_ASSERT(aDOMSel);
   mDomSelectionWeak = do_GetWeakReference(aDOMSel);   // weak reference to pres shell
   ResetBlinking();
-  SchedulePaint();
+  SchedulePaint(aDOMSel);
 }
 
 void nsCaret::SetVisible(bool inMakeVisible)
@@ -439,9 +439,14 @@ nsCaret::GetSelectionInternal()
   return domSelection ? domSelection->AsSelection() : nullptr;
 }
 
-void nsCaret::SchedulePaint()
+void nsCaret::SchedulePaint(nsISelection* aSelection)
 {
-  Selection* selection = GetSelectionInternal();
+  Selection* selection;
+  if (aSelection) {
+    selection = aSelection->AsSelection();
+  } else {
+    selection = GetSelectionInternal();
+  }
   nsINode* focusNode;
   if (mOverrideContent) {
     focusNode = mOverrideContent;
@@ -605,7 +610,7 @@ nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aDomSel,
     return NS_OK;
 
   ResetBlinking();
-  SchedulePaint();
+  SchedulePaint(aDomSel);
 
   return NS_OK;
 }

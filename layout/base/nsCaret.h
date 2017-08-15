@@ -136,7 +136,7 @@ class nsCaret final : public nsISelectionListener
      * Schedule a repaint for the frame where the caret would appear.
      * Does not check visibility etc.
      */
-    void SchedulePaint();
+    void SchedulePaint(nsISelection* aSelection = nullptr);
 
     /**
      * Returns a frame to paint in, and the bounds of the painted caret
