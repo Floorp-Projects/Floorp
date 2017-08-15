@@ -263,9 +263,17 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 /* ::::: bookmark buttons ::::: */
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
-  margin: 0;
-  padding: 2px 3px;
+  margin: 0 2px;
+  padding: 0 4px;
   -moz-appearance: none;
+}
+
+:root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
+  margin: 0 1px;
+}
+
+:root[uidensity=touch] toolbarbutton.bookmark-item:not(.subviewbutton) {
+  padding: 4px;
 }
 
 .bookmark-item > .toolbarbutton-icon,
