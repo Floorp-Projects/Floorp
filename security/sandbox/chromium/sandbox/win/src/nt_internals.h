@@ -309,7 +309,16 @@ typedef enum _PROCESSINFOCLASS {
   ProcessExecuteFlags = 0x22
 } PROCESSINFOCLASS;
 
-typedef PVOID PPEB;
+// Partial definition only.
+typedef struct _PEB {
+  BYTE InheritedAddressSpace;
+  BYTE ReadImageFileExecOptions;
+  BYTE BeingDebugged;
+  BYTE SpareBool;
+  PVOID Mutant;
+  PVOID ImageBaseAddress;
+} PEB, *PPEB;
+
 typedef LONG KPRIORITY;
 
 typedef struct _PROCESS_BASIC_INFORMATION {
