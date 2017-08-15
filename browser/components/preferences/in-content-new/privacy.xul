@@ -553,7 +553,7 @@
         <hbox pack="end">
           <button id="locationSettingsButton"
                   class="accessory-button"
-                  label="&permissionSettingsButton2.label;"
+                  label="&locationSettingsButton.label;"
                   accesskey="&locationSettingsButton.accesskey;"
                   searchkeywords="&removepermission2.label;
                                   &removeallpermissions2.label;
@@ -571,7 +571,7 @@
         <hbox pack="end">
           <button id="cameraSettingsButton"
                   class="accessory-button"
-                  label="&permissionSettingsButton2.label;"
+                  label="&cameraSettingsButton.label;"
                   accesskey="&cameraSettingsButton.accesskey;"
                   searchkeywords="&removepermission2.label;
                                   &removeallpermissions2.label;
@@ -589,7 +589,7 @@
         <hbox pack="end">
           <button id="microphoneSettingsButton"
                   class="accessory-button"
-                  label="&permissionSettingsButton2.label;"
+                  label="&microphoneSettingsButton.label;"
                   accesskey="&microphoneSettingsButton.accesskey;"
                   searchkeywords="&removepermission2.label;
                                   &removeallpermissions2.label;
@@ -609,7 +609,7 @@
         <hbox pack="end">
           <button id="notificationSettingsButton"
                   class="accessory-button"
-                  label="&permissionSettingsButton2.label;"
+                  label="&notificationSettingsButton.label;"
                   accesskey="&notificationSettingsButton.accesskey;"
                   searchkeywords="&removepermission2.label;
                                   &removeallpermissions2.label;
