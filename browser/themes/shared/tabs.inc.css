@@ -417,11 +417,6 @@
   opacity: 0.2;
 }
 
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab::before,
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab::after {
-  opacity: 0.4;
-}
-
 /* Also show separators beside the selected tab when dragging it. */
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
 .tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
