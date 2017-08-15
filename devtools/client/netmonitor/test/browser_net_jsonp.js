@@ -57,7 +57,8 @@ add_task(function* () {
       time: true
     });
 
-  wait = waitForDOM(document, "#response-panel");
+  info("Testing first request");
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
@@ -66,7 +67,9 @@ add_task(function* () {
 
   testResponseTab("$_0123Fun", "Hello JSONP!");
 
-  wait = waitForDOM(document, "#response-panel .tree-section");
+  info("Testing second request");
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
+
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
   yield wait;
@@ -83,13 +86,13 @@ add_task(function* () {
     is(tabpanel.querySelector(".tree-section .treeLabel").textContent,
       L10N.getFormatStr("jsonpScopeName", func),
       "The response json view has the intened visibility and correct title.");
-    is(tabpanel.querySelector(".CodeMirror-code") === null, true,
-      "The response editor doesn't have the intended visibility.");
+    is(tabpanel.querySelector(".CodeMirror-code") === null, false,
+      "The response editor has the intended visibility.");
     is(tabpanel.querySelector(".responseImageBox") === null, true,
       "The response image box doesn't have the intended visibility.");
 
-    is(tabpanel.querySelectorAll(".tree-section").length, 1,
-      "There should be 1 tree sections displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll(".tree-section").length, 2,
+      "There should be 2 tree sections displayed in this tabpanel.");
     is(tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length, 1,
       "There should be 1 json properties displayed in this tabpanel.");
     is(tabpanel.querySelectorAll(".empty-notice").length, 0,

@@ -9,6 +9,8 @@
 #include "base/task.h"
 #include "gfxPrefs.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/SyncObject.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SyncRunnable.h"
@@ -170,19 +172,15 @@ void
 PaintThread::FinishedLayerBatch()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<CompositorBridgeChild> cbc;
-  if (!gfxPrefs::LayersOMTPForceSync()) {
-    cbc = CompositorBridgeChild::Get();
-  }
 
   RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::EndAsyncPainting",
-  [self, cbc]() -> void
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::EndAsyncPaintingLayer",
+  [self]() -> void
   {
-    self->EndAsyncPainting(cbc);
+    self->EndAsyncPaintingLayer();
   });
 
-  if (cbc) {
+  if (!gfxPrefs::LayersOMTPForceSync()) {
     sThread->Dispatch(task.forget());
   } else {
     SyncRunnable::DispatchToThread(sThread, task);
@@ -190,7 +188,7 @@ PaintThread::FinishedLayerBatch()
 }
 
 void
-PaintThread::EndAsyncPainting(CompositorBridgeChild* aBridge)
+PaintThread::EndAsyncPaintingLayer()
 {
   MOZ_ASSERT(IsOnPaintThread());
   // Textureclient forces a flush once we "end paint", so
@@ -201,12 +199,47 @@ PaintThread::EndAsyncPainting(CompositorBridgeChild* aBridge)
   }
 
   mDrawTargetsToFlush.Clear();
+}
 
-  if (aBridge) {
-    aBridge->NotifyFinishedAsyncPaintLayer();
+void
+PaintThread::SynchronizePaintTextures(SyncObjectClient* aSyncObject)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSyncObject);
+
+  RefPtr<CompositorBridgeChild> cbc;
+  if (!gfxPrefs::LayersOMTPForceSync()) {
+    cbc = CompositorBridgeChild::Get();
+  }
+
+  RefPtr<SyncObjectClient> syncObject(aSyncObject);
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::SyncTextureData",
+    [self, cbc, syncObject]() -> void
+  {
+    self->SyncTextureData(cbc, syncObject);
+  });
+
+  if (cbc) {
+    sThread->Dispatch(task.forget());
+  } else {
+    SyncRunnable::DispatchToThread(sThread, task);
   }
 }
 
+void
+PaintThread::SyncTextureData(CompositorBridgeChild* aBridge,
+                             SyncObjectClient* aSyncObject)
+{
+  MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(aSyncObject);
+
+  aSyncObject->Synchronize();
+
+  if (aBridge) {
+    aBridge->NotifyFinishedAsyncPaintTransaction();
+  }
+}
 
 void
 PaintThread::PaintContents(CapturedPaintState* aState,

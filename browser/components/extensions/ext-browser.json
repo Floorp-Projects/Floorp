@@ -80,6 +80,10 @@
       ["history"]
     ]
   },
+  "identity": {
+    "schema": "chrome://extensions/content/schemas/identity.json",
+    "scopes": ["addon_parent"]
+  },
   "menusInternal": {
     "url": "chrome://browser/content/ext-menus.js",
     "schema": "chrome://browser/content/schemas/menus.json",

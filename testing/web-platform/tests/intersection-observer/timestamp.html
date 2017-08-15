@@ -18,28 +18,17 @@ pre, #log {
 <div id="trailing-space" class="spacer"></div>
 
 <script>
+// Pick this number to be comfortably greater than the length of two frames at 60Hz.
+var timeSkew = 40;
+
 var topWindowEntries = [];
 var iframeWindowEntries = [];
 var targetIframe;
-var topWindowTimeOnTestStart;
-var topWindowTimeBeforeCreatingIframe;
 var topWindowTimeBeforeNotification;
 var iframeWindowTimeBeforeNotification;
-var timeSkew;
-
-function waitFor(numFrames, callback) {
-  if (numFrames <= 0) {
-    callback();
-    return;
-  }
-  window.requestAnimationFrame(waitFor.bind(null, numFrames - 1, callback));
-}
 
 async_test(function(t) {
-  topWindowTimeOnTestStart = performance.now();
-  waitFor(3, function () {
-    topWindowTimeBeforeCreatingIframe = performance.now();
-    timeSkew = topWindowTimeBeforeCreatingIframe - topWindowTimeOnTestStart;
+  t.step_timeout(function() {
     targetIframe = document.createElement("iframe");
     assert_true(!!targetIframe, "iframe exists");
     targetIframe.src = "resources/timestamp-subframe.html";
@@ -66,7 +55,7 @@ async_test(function(t) {
       runTestCycle(step1, "First rAF after iframe is loaded.");
       t.done();
     };
-  });
+  }, timeSkew);
 }, "Check that timestamps correspond to the to execution context that created the observer.");
 
 function step1() {
@@ -84,16 +73,14 @@ function step2() {
   var topWindowTimeAfterNotification = performance.now();
   var iframeWindowTimeAfterNotification = targetIframe.contentWindow.performance.now();
 
-  // Test results are only significant if there's a gap between
-  // top window time and iframe window time.
-  assert_greater_than(topWindowTimeBeforeNotification, iframeWindowTimeAfterNotification,
-    "Time ranges for top and iframe windows are disjoint. Times: " +
-      [topWindowTimeOnTestStart, topWindowTimeBeforeCreatingIframe,
-       topWindowTimeBeforeNotification, topWindowTimeAfterNotification,
-       iframeWindowTimeBeforeNotification, iframeWindowTimeAfterNotification,
-       topWindowEntries[1].time - topWindowTimeBeforeNotification,
-       iframeWindowEntries[1].time - iframeWindowTimeBeforeNotification
-      ]);
+  assert_approx_equals(
+      topWindowEntries[1].time - topWindowTimeBeforeNotification,
+      iframeWindowEntries[1].time - iframeWindowTimeBeforeNotification,
+      // Since all intersections are computed in a tight loop between 2 frames,
+      // an epsilon of 16ms (the length of one frame at 60Hz) turned out to be
+      // reliable, even at slow frame rates.
+      16,
+      "Notification times are relative to the expected time origins");
 
   assert_equals(topWindowEntries.length, 2, "Top window observer has two notifications.");
   assert_between_inclusive(

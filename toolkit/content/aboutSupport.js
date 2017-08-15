@@ -450,6 +450,7 @@ var snapshotFormatters = {
     addRowFromKey("features", "webgl2Extensions");
     addRowFromKey("features", "supportsHardwareH264", "hardwareH264");
     addRowFromKey("features", "direct2DEnabled", "#Direct2D");
+    addRowFromKey("features", "offMainThreadPaintEnabled");
 
     if ("directWriteEnabled" in data) {
       let message = data.directWriteEnabled;

@@ -100,6 +100,7 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   , mTransactionIncomplete(false)
   , mCompositorMightResample(false)
   , mNeedsComposite(false)
+  , mTextureSyncOnPaintThread(false)
   , mPaintSequenceNumber(0)
   , mDeviceResetSequenceNumber(0)
   , mForwarder(new ShadowLayerForwarder(this))
@@ -358,6 +359,7 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   ClientLayer* root = ClientLayer::ToClientLayer(GetRoot());
 
   mTransactionIncomplete = false;
+  mTextureSyncOnPaintThread = false;
 
   // Apply pending tree updates before recomputing effective
   // properties.
@@ -725,11 +727,17 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   TimeStamp start = TimeStamp::Now();
 
   // Skip the synchronization for buffer since we also skip the painting during
-  // device-reset status.
+  // device-reset status. With OMTP, we have to wait for async paints
+  // before we synchronize and it's done on the paint thread.
   if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
     if (mForwarder->GetSyncObject() &&
         mForwarder->GetSyncObject()->IsSyncObjectValid()) {
-      mForwarder->GetSyncObject()->Synchronize();
+      if (mTextureSyncOnPaintThread) {
+        // We have to wait for all async paints to finish to do this
+        PaintThread::Get()->SynchronizePaintTextures(mForwarder->GetSyncObject());
+      } else {
+        mForwarder->GetSyncObject()->Synchronize();
+      }
     }
   }
 

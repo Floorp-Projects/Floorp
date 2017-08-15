@@ -463,9 +463,11 @@ CompositorBridgeParent::StopAndClearResources()
     });
     mWrBridge->Destroy();
     mWrBridge = nullptr;
-    mAsyncImageManager->Destroy();
-    // WebRenderAPI should be already destructed
-    mAsyncImageManager = nullptr;
+    if (mAsyncImageManager) {
+      mAsyncImageManager->Destroy();
+      // WebRenderAPI should be already destructed
+      mAsyncImageManager = nullptr;
+    }
   }
 
   if (mCompositor) {

@@ -27,8 +27,8 @@ add_task(function* () {
   checkResponsePanelDisplaysJSON();
 
   let tabpanel = document.querySelector("#response-panel");
-  is(tabpanel.querySelectorAll(".tree-section").length, 1,
-    "There should be 1 tree sections displayed in this tabpanel.");
+  is(tabpanel.querySelectorAll(".tree-section").length, 2,
+    "There should be 2 tree sections displayed in this tabpanel.");
   is(tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length, 1,
     "There should be 1 json properties displayed in this tabpanel.");
   is(tabpanel.querySelectorAll(".empty-notice").length, 0,
@@ -55,8 +55,8 @@ add_task(function* () {
     let jsonView = panel.querySelector(".tree-section .treeLabel") || {};
     is(jsonView.textContent === L10N.getStr("jsonScopeName"), true,
       "The response json view has the intended visibility.");
-    is(panel.querySelector(".CodeMirror-code") === null, true,
-      "The response editor doesn't have the intended visibility.");
+    is(panel.querySelector(".CodeMirror-code") === null, false,
+      "The response editor has the intended visibility.");
     is(panel.querySelector(".response-image-box") === null, true,
       "The response image box doesn't have the intended visibility.");
   }
@@ -66,7 +66,7 @@ add_task(function* () {
    * Returns a promise that will resolve when the response panel DOM element is available.
    */
   function openResponsePanel() {
-    let onReponsePanelReady = waitForDOM(document, "#response-panel");
+    let onReponsePanelReady = waitForDOM(document, "#response-panel .CodeMirror-code");
     EventUtils.sendMouseEvent({ type: "click" },
       document.querySelector(".network-details-panel-toggle"));
     EventUtils.sendMouseEvent({ type: "click" },
