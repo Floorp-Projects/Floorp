@@ -201,8 +201,13 @@ public:
                  nsILoadGroup* aLoadGroup = nullptr)
   {
     MOZ_ASSERT(aPrincipal);
-    MOZ_ASSERT_IF(nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(
-      aGlobalObject), win->IsInnerWindow());
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobalObject);
+    if (win) {
+      MOZ_ASSERT(win->IsInnerWindow());
+      if (win->GetExtantDoc()) {
+        mStyleBackend = win->GetExtantDoc()->GetStyleBackendType();
+      }
+    }
     mPrincipal = aPrincipal;
     BindToOwner(aGlobalObject);
     mBaseURI = aBaseURI;
@@ -743,6 +748,8 @@ protected:
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   State mState;
+
+  StyleBackendType mStyleBackend;
 
   bool mFlagSynchronous;
   bool mFlagAborted;
