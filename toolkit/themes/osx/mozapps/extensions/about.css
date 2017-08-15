@@ -26,11 +26,11 @@
 }
 
 #genericAbout[addontype="theme"] #extensionIcon {
-  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.svg");
 }
 
 #genericAbout[addontype="locale"] #extensionIcon {
-  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.svg");
 }
 
 #genericAbout[addontype="plugin"] #extensionIcon {
@@ -38,7 +38,7 @@
 }
 
 #genericAbout[addontype="dictionary"] #extensionIcon {
-  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.svg");
 }
 
 #extensionName {
