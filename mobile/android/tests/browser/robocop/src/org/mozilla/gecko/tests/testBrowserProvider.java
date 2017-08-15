@@ -11,12 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations.SyncStatus;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadata;
 import org.mozilla.gecko.db.URLImageDataTable;
+import org.mozilla.gecko.sync.Utils;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -26,6 +29,7 @@ import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 /*
@@ -111,9 +115,15 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private ContentValues createBookmark(String title, String url, long parentId,
+                                         int type, int position, String tags, String description, String keyword) throws Exception {
+        return createBookmark(Utils.generateGuid(), title, url, parentId, type, position, tags, description, keyword);
+    }
+
+    private ContentValues createBookmark(String guid, String title, String url, long parentId,
             int type, int position, String tags, String description, String keyword) throws Exception {
         ContentValues bookmark = new ContentValues();
 
+        bookmark.put(BrowserContract.Bookmarks.GUID, guid);
         bookmark.put(BrowserContract.Bookmarks.TITLE, title);
         bookmark.put(BrowserContract.Bookmarks.URL, url);
         bookmark.put(BrowserContract.Bookmarks.PARENT, parentId);
@@ -127,7 +137,11 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private ContentValues createOneBookmark() throws Exception {
-        return createBookmark("Example", "http://example.com", mMobileFolderId,
+        return createOneBookmark(Utils.generateGuid());
+    }
+
+    private ContentValues createOneBookmark(String guid) throws Exception {
+        return createBookmark(guid, "Example", "http://example.com", mMobileFolderId,
                 BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
     }
 
@@ -642,8 +656,18 @@ public class testBrowserProvider extends ContentProviderTest {
 
     private class TestDeleteBookmarks extends TestCase {
         private long insertOneBookmark() throws Exception {
-            ContentValues b = createOneBookmark();
-            long id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
+            return insertOneBookmark(Utils.generateGuid(), false);
+        }
+
+        private long insertOneBookmark(String guid, boolean fromSync) throws Exception {
+            ContentValues b = createOneBookmark(guid);
+            Uri insertUri = BrowserContract.Bookmarks.CONTENT_URI;
+            if (fromSync) {
+                insertUri = insertUri.buildUpon()
+                        .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "true")
+                        .build();
+            }
+            long id = ContentUris.parseId(mProvider.insert(insertUri, b));
 
             Cursor c = getBookmarkById(id);
             mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
@@ -654,6 +678,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
         @Override
         public void test() throws Exception {
+            // Test that unsynced bookmarks are dropped from the database.
             long id = insertOneBookmark();
 
             int changed = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
@@ -664,6 +689,21 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is((changed == 2), true, "Inserted bookmark was deleted");
 
             Cursor c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
+            mAsserter.is(c.moveToFirst(), false, "Unsynced deleted bookmark was dropped from the database");
+
+            // Test that synced bookmarks are only marked as deleted.
+            id = insertOneBookmark("test-guid", true);
+
+            // Bookmark has been inserted from sync. Let's delete it again, and test that it has not
+            // been dropped from the database.
+            changed = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
+                    BrowserContract.Bookmarks._ID + " = ?",
+                    new String[] { String.valueOf(id) });
+
+            // Deletions also affect parents of folders, and so that must be accounted for.
+            mAsserter.is((changed == 2), true, "Inserted bookmark was deleted");
+
+            c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
             mAsserter.is(c.moveToFirst(), true, "Deleted bookmark was only marked as deleted");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.TITLE)), null,
                     "Deleted bookmark title is null");
@@ -708,33 +748,6 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.moveToFirst(), false,
                          "Inserted bookmark can't be found after deletion using URI with ID");
             c.close();
-
-            if (Build.VERSION.SDK_INT < 16) {
-                ContentValues b = createBookmark("Folder", null, mMobileFolderId,
-                        BrowserContract.Bookmarks.TYPE_FOLDER, 0, "folderTags", "folderDescription", "folderKeyword");
-
-                long parentId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
-                c = getBookmarkById(parentId);
-                mAsserter.is(c.moveToFirst(), true, "Inserted bookmarks folder found");
-                c.close();
-
-                b = createBookmark("Example", "http://example.com", parentId,
-                        BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
-
-                id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
-                c = getBookmarkById(id);
-                mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
-                c.close();
-
-                changed = 0;
-                try {
-                    Uri uri = ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, parentId);
-                    changed = mProvider.delete(appendUriParam(uri, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
-                } catch(Exception e) {}
-
-                mAsserter.is((changed == 0), true,
-                             "Should not be able to delete folder that causes orphan bookmarks");
-            }
         }
     }
 
