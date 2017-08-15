@@ -5232,8 +5232,9 @@ nsBrowserAccess.prototype = {
     return browser;
   },
 
-  createContentWindow(aURI, aOpener, aWhere, aFlags) {
-    return this.getContentWindowOrOpenURI(null, aOpener, aWhere, aFlags);
+  createContentWindow(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
+    return this.getContentWindowOrOpenURI(null, aOpener, aWhere, aFlags,
+                                          aTriggeringPrincipal);
   },
 
   openURI(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
