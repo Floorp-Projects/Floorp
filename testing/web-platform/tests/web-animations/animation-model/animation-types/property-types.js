@@ -1540,6 +1540,18 @@ const textShadowListType = {
         [{ time: 500,  expected: 'rgb(150, 150, 150) 15px 15px 15px, '
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px' }]);
     }, property + ': mismatched list length (from shorter to longer)');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style.color = 'rgb(0, 255, 0)';
+      var animation =
+        target.animate({ [idlName]: [ 'currentcolor 0px 0px 0px',
+                                      'currentcolor 10px 10px 10px'] },
+                       { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,  expected: 'rgb(0, 255, 0) 5px 5px 5px' }]);
+    }, property + ': with currentcolor');
   },
 
   testAddition: function(property, setup) {
@@ -1649,6 +1661,18 @@ const boxShadowListType = {
         [{ time: 500,  expected: 'rgb(150, 150, 150) 15px 15px 15px 10px, '
                                + 'rgba(100, 100, 100, 0.5) 5px 5px 5px 0px' }]);
     }, property + ': mismatched list length (from longer to shorter)');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style.color = 'rgb(0, 255, 0)';
+      var animation =
+        target.animate({ [idlName]: [ 'currentcolor 0px 0px 0px 0px',
+                                      'currentcolor 10px 10px 10px 10px'] },
+                       { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,  expected: 'rgb(0, 255, 0) 5px 5px 5px 5px' }]);
+    }, property + ': with currentcolor');
   },
 
   testAddition: function(property, setup) {
