@@ -65,6 +65,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
@@ -137,7 +138,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDragService.h"
-#include "nsIEditor.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIFragmentContentSink.h"
@@ -7552,7 +7552,7 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
 }
 
 
-nsIEditor*
+HTMLEditor*
 nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
 {
   nsCOMPtr<nsIDocShell> docShell(aPresContext->GetDocShell());
@@ -7561,9 +7561,7 @@ nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
       NS_FAILED(docShell->GetEditable(&isEditable)) || !isEditable)
     return nullptr;
 
-  nsCOMPtr<nsIEditor> editor;
-  docShell->GetEditor(getter_AddRefs(editor));
-  return editor;
+  return docShell->GetHTMLEditor();
 }
 
 bool

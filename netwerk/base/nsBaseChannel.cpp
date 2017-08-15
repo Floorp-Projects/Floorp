@@ -12,7 +12,6 @@
 #include "nsIContentSniffer.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsMimeTypes.h"
-#include "nsIHttpEventSink.h"
 #include "nsIHttpChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIStreamConverterService.h"
@@ -131,9 +130,7 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
     }
   }
 
-  // Notify consumer, giving chance to cancel redirect.  For backwards compat,
-  // we support nsIHttpEventSink if we are an HTTP channel and if this is not
-  // an internal redirect.
+  // Notify consumer, giving chance to cancel redirect.
 
   RefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
       new nsAsyncRedirectVerifyHelper();
@@ -158,23 +155,6 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
 nsresult
 nsBaseChannel::ContinueRedirect()
 {
-  // Backwards compat for non-internal redirects from a HTTP channel.
-  // XXX Is our http channel implementation going to derive from nsBaseChannel?
-  //     If not, this code can be removed.
-  if (!(mRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface();
-    if (httpChannel) {
-      nsCOMPtr<nsIHttpEventSink> httpEventSink;
-      GetCallback(httpEventSink);
-      if (httpEventSink) {
-        nsresult rv = httpEventSink->OnRedirect(httpChannel, mRedirectChannel);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-      }
-    }
-  }
-
   // Make sure to do this _after_ making all the OnChannelRedirect calls
   mRedirectChannel->SetOriginalURI(OriginalURI());
 

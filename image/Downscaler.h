@@ -56,7 +56,7 @@ public:
 
   const nsIntSize& OriginalSize() const { return mOriginalSize; }
   const nsIntSize& TargetSize() const { return mTargetSize; }
-  const nsIntSize FrameSize() const { return nsIntSize(mFrameRect.width, mFrameRect.height); }
+  const nsIntSize FrameSize() const { return nsIntSize(mFrameRect.Width(), mFrameRect.Height()); }
   const gfxSize& Scale() const { return mScale; }
 
   /**

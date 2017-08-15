@@ -291,7 +291,7 @@ WebRenderImageHost::GetImageSize() const
 {
   const TimedImage* img = ChooseImage();
   if (img) {
-    return IntSize(img->mPictureRect.width, img->mPictureRect.height);
+    return IntSize(img->mPictureRect.Width(), img->mPictureRect.Height());
   }
   return IntSize();
 }

@@ -41,9 +41,9 @@
 // #define CULLING_LOG(...) printf_stderr("CULLING: " __VA_ARGS__)
 
 #define DUMP(...) do { if (gfxEnv::DumpDebug()) { printf_stderr(__VA_ARGS__); } } while(0)
-#define XYWH(k)  (k).x, (k).y, (k).width, (k).height
+#define XYWH(k)  (k).x, (k).y, (k).Width(), (k).Height()
 #define XY(k)    (k).x, (k).y
-#define WH(k)    (k).width, (k).height
+#define WH(k)    (k).Width(), (k).Height()
 
 namespace mozilla {
 namespace layers {
@@ -67,7 +67,7 @@ DrawLayerInfo(const RenderTargetIntRect& aClipRect,
 
   LayerIntRegion visibleRegion = aLayer->GetVisibleRegion();
 
-  uint32_t maxWidth = std::min<uint32_t>(visibleRegion.GetBounds().width, 500);
+  uint32_t maxWidth = std::min<uint32_t>(visibleRegion.GetBounds().Width(), 500);
 
   IntPoint topLeft = visibleRegion.ToUnknownRegion().GetBounds().TopLeft();
   aManager->GetTextRenderer()->RenderText(
@@ -86,8 +86,8 @@ PrintUniformityInfo(Layer* aLayer)
   }
 
   // Don't want to print a log for smaller layers
-  if (aLayer->GetLocalVisibleRegion().GetBounds().width < 300 ||
-      aLayer->GetLocalVisibleRegion().GetBounds().height < 300) {
+  if (aLayer->GetLocalVisibleRegion().GetBounds().Width() < 300 ||
+      aLayer->GetLocalVisibleRegion().GetBounds().Height() < 300) {
     return;
   }
 
@@ -433,7 +433,7 @@ RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
       gfx::IntRect clearRect = layerToRender->GetClearRect();
       if (!clearRect.IsEmpty()) {
         // Clear layer's visible rect on FrameBuffer with transparent pixels
-        gfx::Rect fbRect(clearRect.x, clearRect.y, clearRect.width, clearRect.height);
+        gfx::Rect fbRect(clearRect.x, clearRect.y, clearRect.Width(), clearRect.Height());
         compositor->ClearRect(fbRect);
         layerToRender->SetClearRect(gfx::IntRect(0, 0, 0, 0));
       }
@@ -533,7 +533,7 @@ CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
   gfx::IntRect visibleRect = aContainer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
   RefPtr<CompositingRenderTarget> previousTarget = compositor->GetCurrentRenderTarget();
   gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.x, visibleRect.y,
-                                          visibleRect.width, visibleRect.height);
+                                          visibleRect.Width(), visibleRect.Height());
 
   gfx::IntPoint sourcePoint = gfx::IntPoint(visibleRect.x, visibleRect.y);
 

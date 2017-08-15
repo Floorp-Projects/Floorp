@@ -502,13 +502,13 @@ AlphaBoxBlur::Init(const Rect& aRect,
     mSkipRect = IntRect(0, 0, 0, 0);
   }
 
-  CheckedInt<int32_t> stride = RoundUpToMultipleOf4(mRect.width);
+  CheckedInt<int32_t> stride = RoundUpToMultipleOf4(mRect.Width());
   if (stride.isValid()) {
     mStride = stride.value();
 
     // We need to leave room for an additional 3 bytes for a potential overrun
     // in our blurring code.
-    size_t size = BufferSizeFromStrideAndHeight(mStride, mRect.height, 3);
+    size_t size = BufferSizeFromStrideAndHeight(mStride, mRect.Height(), 3);
     if (size != 0) {
       mSurfaceAllocationSize = size;
     }
@@ -527,7 +527,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
 {
   IntRect intRect;
   if (aRect.ToIntRect(&intRect)) {
-    size_t minDataSize = BufferSizeFromStrideAndHeight(intRect.width, intRect.height);
+    size_t minDataSize = BufferSizeFromStrideAndHeight(intRect.Width(), intRect.Height());
     if (minDataSize != 0) {
       mSurfaceAllocationSize = minDataSize;
     }
@@ -542,7 +542,7 @@ AlphaBoxBlur::~AlphaBoxBlur()
 IntSize
 AlphaBoxBlur::GetSize()
 {
-  IntSize size(mRect.width, mRect.height);
+  IntSize size(mRect.Width(), mRect.Height());
   return size;
 }
 
