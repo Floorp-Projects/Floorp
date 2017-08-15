@@ -27,7 +27,7 @@
         android:layout_height="match_parent"
         android:scrollbars="none"/>
 
-    <org.mozilla.gecko.widget.AnimatedProgressBar
+    <ProgressBar
         android:id="@id/page_progress"
         style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
@@ -35,9 +35,7 @@
         android:layout_alignTop="@id/gecko_view"
         android:background="@drawable/url_bar_bg"
         android:progressDrawable="@drawable/progressbar"
-        app:shiftDuration="@integer/shift_duration_suggestion"
-        app:wrapShiftDrawable="true"
-        tools:progress="70" />
+        tools:progress="70"/>
 
     <View android:id="@+id/custom_tabs_doorhanger_overlay"
         android:layout_width="match_parent"

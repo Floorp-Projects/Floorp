@@ -34,8 +34,8 @@ import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.WindowUtil;
-import org.mozilla.gecko.widget.AnimatedProgressBar;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
+import org.mozilla.gecko.widget.themed.ThemedImageView;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 
 import android.content.Context;
@@ -118,7 +118,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     protected boolean isSwitchingTabs;
     protected final ThemedImageButton tabsButton;
 
-    private AnimatedProgressBar progressBar;
+    private ToolbarProgressView progressBar;
     protected final TabCounter tabsCounter;
     protected final View menuButton;
     private MenuPopup menuPopup;
@@ -354,7 +354,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         urlEditLayout.onParentFocus();
     }
 
-    public void setProgressBar(AnimatedProgressBar progressBar) {
+    public void setProgressBar(ToolbarProgressView progressBar) {
         this.progressBar = progressBar;
     }
 
@@ -363,6 +363,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     public void refresh() {
+        progressBar.setImageDrawable(getResources().getDrawable(R.drawable.progress));
         urlDisplayLayout.dismissSiteIdentityPopup();
         urlEditLayout.refresh();
     }
@@ -439,7 +440,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             switch (msg) {
                 case START:
                     updateProgressVisibility(tab, Tab.LOAD_PROGRESS_INIT);
-                    break;
+                    // Fall through.
                 case ADDED:
                 case LOCATION_CHANGE:
                 case LOAD_ERROR:
@@ -447,9 +448,8 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                 case STOP:
                     flags.add(UpdateFlags.PROGRESS);
                     if (progressBar.getVisibility() == View.VISIBLE) {
-                        progressBar.setProgress(tab.getLoadProgress());
+                        progressBar.animateProgress(tab.getLoadProgress());
                     }
-                    updateProgressVisibility();
                     break;
 
                 case SELECTED:
