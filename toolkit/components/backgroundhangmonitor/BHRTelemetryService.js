@@ -82,7 +82,12 @@ BHRTelemetryService.prototype = Object.freeze({
       return;
     }
 
-    if (this.payload.hangs.length >= 0) {
+    // NOTE: We check a separate bhrPing.enabled pref here. This pref is unset
+    // when running tests so that we run as much of BHR as possible (to catch
+    // errors) while avoiding timeouts caused by invoking `pingsender` during
+    // testing.
+    if (Services.prefs.getBoolPref("toolkit.telemetry.bhrPing.enabled", false) &&
+        this.payload.hangs.length > 0) {
       TelemetryController.submitExternalPing("bhr", this.payload, {
         addEnvironment: true,
       });
