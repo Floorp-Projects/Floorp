@@ -945,8 +945,8 @@ MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocK
     // very close to each other. In practice, the zone will probably be close
     // (within 32 bits) as well. If so, use relative offsets between them, to
     // avoid multiple 64-bit immediate loads.
-    auto nurseryPosAddr = intptr_t(zone->addressOfNurseryPosition());
-    auto nurseryEndAddr = intptr_t(zone->addressOfNurseryCurrentEnd());
+    auto nurseryPosAddr = intptr_t(zone->addressOfStringNurseryPosition());
+    auto nurseryEndAddr = intptr_t(zone->addressOfStringNurseryCurrentEnd());
     auto zoneAddr = intptr_t(zone);
 
     intptr_t maxOffset = std::max(std::abs(nurseryPosAddr - zoneAddr),
