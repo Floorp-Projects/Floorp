@@ -55,7 +55,6 @@ function TextEditor(container, node, type) {
       });
     },
     cssProperties: getCssProperties(this.markup.toolbox),
-    contextMenu: this.markup.inspector.onTextBoxContextMenu
   });
 
   this.update();
