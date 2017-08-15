@@ -4,14 +4,13 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCleanDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 
 import android.content.Context;
 
-public abstract class AndroidBrowserRepository extends Repository {
+public abstract class ThreadedRepository extends Repository {
 
   @Override
   public void createSession(RepositorySessionCreationDelegate delegate, Context context) {
@@ -43,14 +42,14 @@ public abstract class AndroidBrowserRepository extends Repository {
       try {
         getDataAccessor(context).purgeDeleted();
       } catch (Exception e) {
-        delegate.onCleanFailed(AndroidBrowserRepository.this, e);
+        delegate.onCleanFailed(ThreadedRepository.this, e);
         return;
       }
-      delegate.onCleaned(AndroidBrowserRepository.this);
+      delegate.onCleaned(ThreadedRepository.this);
     }
   }
 
-  protected abstract AndroidBrowserRepositoryDataAccessor getDataAccessor(Context context);
+  protected abstract DataAccessor getDataAccessor(Context context);
   protected abstract void sessionCreator(RepositorySessionCreationDelegate delegate, Context context);
 
   class CreateSessionThread extends Thread {

@@ -20,16 +20,16 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import android.content.Context;
 
-public class AndroidBrowserHistoryRepositorySession extends StoreTrackingRepositorySession {
+public class HistoryRepositorySession extends StoreTrackingRepositorySession {
   public static final String LOG_TAG = "ABHistoryRepoSess";
 
-  private final AndroidBrowserHistoryDataAccessor dbHelper;
+  private final HistoryDataAccessor dbHelper;
   private final HistorySessionHelper sessionHelper;
   private int storeCount = 0;
 
-  public AndroidBrowserHistoryRepositorySession(Repository repository, Context context) {
+  public HistoryRepositorySession(Repository repository, Context context) {
     super(repository);
-    dbHelper = new AndroidBrowserHistoryDataAccessor(context);
+    dbHelper = new HistoryDataAccessor(context);
     sessionHelper = new HistorySessionHelper(this, dbHelper);
   }
 

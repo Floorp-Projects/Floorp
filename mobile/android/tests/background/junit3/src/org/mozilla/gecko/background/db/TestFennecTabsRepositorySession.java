@@ -270,7 +270,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
       }
 
       final FennecTabsRepositorySession session = createAndBeginSession();
-      performWait(AndroidBrowserRepositoryTestCase.storeRunnable(session, tabsRecord));
+      performWait(ThreadedRepositoryTestCase.storeRunnable(session, tabsRecord));
 
       session.abort();
 

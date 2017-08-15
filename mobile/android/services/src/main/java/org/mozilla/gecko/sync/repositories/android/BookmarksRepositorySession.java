@@ -27,7 +27,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import android.content.Context;
 
-public class AndroidBrowserBookmarksRepositorySession extends StoreTrackingRepositorySession {
+public class BookmarksRepositorySession extends StoreTrackingRepositorySession {
 
   private static final String LOG_TAG = "AndroidBrowserBookmarksRepositorySession";
 
@@ -86,7 +86,7 @@ public class AndroidBrowserBookmarksRepositorySession extends StoreTrackingRepos
    * must bump their modification time so as to cause them to be uploaded on the next
    * stage of syncing. The same applies to simple reordering.
    */
-  private final AndroidBrowserBookmarksDataAccessor dataAccessor;
+  private final BookmarksDataAccessor dataAccessor;
 
   private final BookmarksSessionHelper sessionHelper;
 
@@ -96,12 +96,12 @@ public class AndroidBrowserBookmarksRepositorySession extends StoreTrackingRepos
    * An array of known-special GUIDs.
    */
   public static final String[] SPECIAL_GUIDS = new String[] {
-          // Mobile and desktop places roots have to come first.
-          "places",
-          "mobile",
-          "toolbar",
-          "menu",
-          "unfiled"
+    // Mobile and desktop places roots have to come first.
+    "places",
+    "mobile",
+    "toolbar",
+    "menu",
+    "unfiled"
   };
 
 
@@ -133,7 +133,7 @@ public class AndroidBrowserBookmarksRepositorySession extends StoreTrackingRepos
       SPECIAL_GUIDS_MAP = Collections.unmodifiableMap(m);
     }
 
-    dataAccessor = new AndroidBrowserBookmarksDataAccessor(context);
+    dataAccessor = new BookmarksDataAccessor(context);
     sessionHelper = new BookmarksSessionHelper(this, dataAccessor);
     versioningDelegateHelper = new VersioningDelegateHelper(context, BrowserContractHelpers.BOOKMARKS_CONTENT_URI);
   }

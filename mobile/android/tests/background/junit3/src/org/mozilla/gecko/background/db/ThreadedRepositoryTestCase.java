@@ -32,17 +32,17 @@ import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserRepositoryDataAccessor;
+import org.mozilla.gecko.sync.repositories.android.DataAccessor;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import android.content.ContentValues;
 import android.content.Context;
 
-public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCase {
+public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
   protected static String LOG_TAG = "BrowserRepositoryTest";
 
-  protected static void wipe(AndroidBrowserRepositoryDataAccessor helper) {
+  protected static void wipe(DataAccessor helper) {
     Logger.debug(LOG_TAG, "Wiping.");
     try {
       helper.wipe();
@@ -60,7 +60,7 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
 
   @Override
   public void setUp() {
-    AndroidBrowserRepositoryDataAccessor helper = getDataAccessor();
+    DataAccessor helper = getDataAccessor();
     wipe(helper);
     assertTrue(WaitHelper.getTestWaiter().isIdle());
     closeDataAccessor(helper);
@@ -227,7 +227,7 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
   }
 
   protected abstract Repository getRepository();
-  protected abstract AndroidBrowserRepositoryDataAccessor getDataAccessor();
+  protected abstract DataAccessor getDataAccessor();
 
   protected static void doStore(RepositorySession session, Record[] records) {
     performWait(storeManyRunnable(session, records));
@@ -264,7 +264,7 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
     RepositorySession session = createAndBeginSession();
     Logger.debug("rnewman", "Prepared.");
 
-    AndroidBrowserRepositoryDataAccessor helper = getDataAccessor();
+    DataAccessor helper = getDataAccessor();
     helper.dumpDB();
     performWait(storeManyRunnable(session, expected));
 
@@ -286,7 +286,7 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
     });
 
     // Force two records to appear deleted.
-    AndroidBrowserRepositoryDataAccessor db = getDataAccessor();
+    DataAccessor db = getDataAccessor();
     ContentValues cv = new ContentValues();
     cv.put(BrowserContract.SyncColumns.IS_DELETED, 1);
     db.updateByGuid(delete0.guid, cv);
@@ -734,6 +734,6 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
      }
    }
 
-   protected void closeDataAccessor(AndroidBrowserRepositoryDataAccessor dataAccessor) {
+   protected void closeDataAccessor(DataAccessor dataAccessor) {
    }
 }

@@ -48,7 +48,7 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDeleg
 public class BookmarksDeletionManager {
   private static final String LOG_TAG = "BookmarkDelete";
 
-  private final AndroidBrowserBookmarksDataAccessor dataAccessor;
+  private final BookmarksDataAccessor dataAccessor;
 
   private final int flushThreshold;
 
@@ -71,7 +71,7 @@ public class BookmarksDeletionManager {
    *        When this many non-folder records have been stored for deletion,
    *        an incremental flush occurs.
    */
-  public BookmarksDeletionManager(AndroidBrowserBookmarksDataAccessor dataAccessor, int flushThreshold) {
+  public BookmarksDeletionManager(BookmarksDataAccessor dataAccessor, int flushThreshold) {
     this.dataAccessor = dataAccessor;
     this.flushThreshold = flushThreshold;
   }
