@@ -6397,12 +6397,12 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                                 0.0f);
 }
 
-static void InvalidateRenderingObservers(nsIFrame* aFrame)
+static void InvalidateRenderingObservers(nsIFrame* aDisplayRoot, nsIFrame* aFrame)
 {
+  MOZ_ASSERT(aDisplayRoot == nsLayoutUtils::GetDisplayRootFrame(aFrame));
   nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
-  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
   nsIFrame* parent = aFrame;
-  while (parent != displayRoot &&
+  while (parent != aDisplayRoot &&
          (parent = nsLayoutUtils::GetCrossDocParentFrame(parent)) &&
          !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
     nsSVGEffects::InvalidateDirectRenderingObservers(parent);
@@ -6410,10 +6410,11 @@ static void InvalidateRenderingObservers(nsIFrame* aFrame)
 }
 
 void
-SchedulePaintInternal(nsIFrame* aFrame, nsIFrame::PaintType aType = nsIFrame::PAINT_DEFAULT)
+SchedulePaintInternal(nsIFrame* aDisplayRoot, nsIFrame* aFrame,
+                      nsIFrame::PaintType aType = nsIFrame::PAINT_DEFAULT)
 {
-  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
-  nsPresContext* pres = displayRoot->PresContext()->GetRootPresContext();
+  MOZ_ASSERT(aDisplayRoot == nsLayoutUtils::GetDisplayRootFrame(aFrame));
+  nsPresContext* pres = aDisplayRoot->PresContext()->GetRootPresContext();
 
   // No need to schedule a paint for an external document since they aren't
   // painted directly.
@@ -6434,7 +6435,7 @@ SchedulePaintInternal(nsIFrame* aFrame, nsIFrame::PaintType aType = nsIFrame::PA
   }
 
   if (aType == nsIFrame::PAINT_DEFAULT) {
-    displayRoot->AddStateBits(NS_FRAME_UPDATE_LAYER_TREE);
+    aDisplayRoot->AddStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
 }
 
@@ -6472,7 +6473,8 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
     return;
   }
   if (needsSchedulePaint) {
-    SchedulePaintInternal(aFrame);
+    nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
+    SchedulePaintInternal(displayRoot, aFrame);
   }
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
     aFrame->DeleteProperty(nsIFrame::InvalidationRect());
@@ -6672,8 +6674,9 @@ nsIFrame::IsInvalid(nsRect& aRect)
 void
 nsIFrame::SchedulePaint(PaintType aType)
 {
-  InvalidateRenderingObservers(this);
-  SchedulePaintInternal(this, aType);
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
+  InvalidateRenderingObservers(displayRoot, this);
+  SchedulePaintInternal(displayRoot, this, aType);
 }
 
 Layer*
@@ -6686,7 +6689,8 @@ nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
 
   Layer* layer = FrameLayerBuilder::GetDedicatedLayer(this, aDisplayItemKey);
 
-  InvalidateRenderingObservers(this);
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
+  InvalidateRenderingObservers(displayRoot, this);
 
   // If the layer is being updated asynchronously, and it's being forwarded
   // to a compositor, then we don't need to invalidate.
@@ -6732,7 +6736,7 @@ nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
     layer->SetInvalidRectToVisibleRegion();
   }
 
-  SchedulePaintInternal(this, PAINT_COMPOSITE_ONLY);
+  SchedulePaintInternal(displayRoot, this, PAINT_COMPOSITE_ONLY);
   return layer;
 }
 
