@@ -505,7 +505,7 @@ ParentLayerCoord AxisX::GetPointOffset(const ParentLayerPoint& aPoint) const
 
 ParentLayerCoord AxisX::GetRectLength(const ParentLayerRect& aRect) const
 {
-  return aRect.width;
+  return aRect.Width();
 }
 
 ParentLayerCoord AxisX::GetRectOffset(const ParentLayerRect& aRect) const
@@ -541,7 +541,7 @@ ParentLayerCoord AxisY::GetPointOffset(const ParentLayerPoint& aPoint) const
 
 ParentLayerCoord AxisY::GetRectLength(const ParentLayerRect& aRect) const
 {
-  return aRect.height;
+  return aRect.Height();
 }
 
 ParentLayerCoord AxisY::GetRectOffset(const ParentLayerRect& aRect) const

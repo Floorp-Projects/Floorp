@@ -258,9 +258,9 @@ BasicCompositor::GetTextureFactoryIdentifier()
 already_AddRefed<CompositingRenderTarget>
 BasicCompositor::CreateRenderTarget(const IntRect& aRect, SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(aRect.width != 0 && aRect.height != 0, "Trying to create a render target of invalid size");
+  MOZ_ASSERT(aRect.Width() != 0 && aRect.Height() != 0, "Trying to create a render target of invalid size");
 
-  if (aRect.width * aRect.height == 0) {
+  if (aRect.Width() * aRect.Height() == 0) {
     return nullptr;
   }
 
@@ -288,9 +288,9 @@ already_AddRefed<CompositingRenderTarget>
 BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, const LayoutDeviceIntRect& aClearRect, BufferMode aBufferMode)
 {
   MOZ_ASSERT(mDrawTarget);
-  MOZ_ASSERT(aRect.width != 0 && aRect.height != 0, "Trying to create a render target of invalid size");
+  MOZ_ASSERT(aRect.Width() != 0 && aRect.Height() != 0, "Trying to create a render target of invalid size");
 
-  if (aRect.width * aRect.height == 0) {
+  if (aRect.Width() * aRect.Height() == 0) {
     return nullptr;
   }
 
@@ -461,8 +461,8 @@ DrawSurfaceWithTextureCoords(gfx::DrawTarget* aDest,
   // Convert aTextureCoords into aSource's coordinate space
   gfxRect sourceRect(aTextureCoords.x * aSource->GetSize().width,
                      aTextureCoords.y * aSource->GetSize().height,
-                     aTextureCoords.width * aSource->GetSize().width,
-                     aTextureCoords.height * aSource->GetSize().height);
+                     aTextureCoords.Width() * aSource->GetSize().width,
+                     aTextureCoords.Height() * aSource->GetSize().height);
 
   // Floating point error can accumulate above and we know our visible region
   // is integer-aligned, so round it out.
@@ -558,10 +558,10 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
 
     ssse3_scale_data((uint32_t*)mapSrc.GetData(), srcSource->GetSize().width, srcSource->GetSize().height,
                      mapSrc.GetStride()/4,
-                     ((uint32_t*)dstData) + fillRect.x + (dstStride / 4) * fillRect.y, dstRect.width, dstRect.height,
+                     ((uint32_t*)dstData) + fillRect.x + (dstStride / 4) * fillRect.y, dstRect.Width(), dstRect.Height(),
                      dstStride / 4,
                      offset.x, offset.y,
-                     fillRect.width, fillRect.height);
+                     fillRect.Width(), fillRect.Height());
 
     aDest->ReleaseBits(dstData);
     return true;
@@ -842,7 +842,7 @@ BasicCompositor::DrawGeometry(const Geometry& aGeometry,
 
     if (sourceMask) {
       RefPtr<DrawTarget> transformDT =
-        dest->CreateSimilarDrawTarget(IntSize::Truncate(transformBounds.width, transformBounds.height),
+        dest->CreateSimilarDrawTarget(IntSize::Truncate(transformBounds.Width(), transformBounds.Height()),
                                       SurfaceFormat::B8G8R8A8);
       new3DTransform.PostTranslate(-transformBounds.x, -transformBounds.y, 0);
       if (transformDT &&
@@ -901,7 +901,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   LayoutDeviceIntRect intRect(LayoutDeviceIntPoint(), mWidget->GetClientSize());
-  IntRect rect = IntRect(0, 0, intRect.width, intRect.height);
+  IntRect rect = IntRect(0, 0, intRect.Width(), intRect.Height());
 
   LayoutDeviceIntRegion invalidRegionSafe;
   // Sometimes the invalid region is larger than we want to draw.
@@ -1053,7 +1053,7 @@ BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
     for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
       const LayoutDeviceIntRect& r = iter.Get();
       dest->CopySurface(source,
-                        IntRect(r.x, r.y, r.width, r.height) - mRenderTarget->GetOrigin(),
+                        IntRect(r.x, r.y, r.Width(), r.Height()) - mRenderTarget->GetOrigin(),
                         IntPoint(r.x, r.y) - offset);
     }
   }

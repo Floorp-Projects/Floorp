@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIHttpChannelAuthProvider.idl',
     'nsIHttpChannelChild.idl',
     'nsIHttpChannelInternal.idl',
-    'nsIHttpEventSink.idl',
     'nsIHttpHeaderVisitor.idl',
     'nsIHttpProtocolHandler.idl',
     'nsIRaceCacheWithNetwork.idl',

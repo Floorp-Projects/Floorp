@@ -327,7 +327,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   }
 
   if (aOutputSize.width <= 0 || aOutputSize.height <= 0 ||
-      aFrameRect.width <= 0 || aFrameRect.height <= 0) {
+      aFrameRect.Width() <= 0 || aFrameRect.Height() <= 0) {
     NS_WARNING("Trying to add frame with zero or negative size");
     return RawAccessFrameRef();
   }

@@ -5,7 +5,6 @@
 from __future__ import print_function, unicode_literals
 
 import os
-import subprocess
 import sys
 from argparse import REMAINDER, ArgumentParser
 
@@ -111,6 +110,11 @@ class MozlintParser(ArgumentParser):
         if args.edit and not os.environ.get('EDITOR'):
             self.error("must set the $EDITOR environment variable to use --edit")
 
+        if args.paths:
+            invalid = [p for p in args.paths if not os.path.exists(p)]
+            if invalid:
+                self.error("the following paths do not exist:\n{}".format("\n".join(invalid)))
+
 
 def find_linters(linters=None):
     lints = []
@@ -137,6 +141,7 @@ def find_linters(linters=None):
 
 def run(paths, linters, fmt, outgoing, workdir, edit, list_linters=None, **lintargs):
     from mozlint import LintRoller, formatters
+    from mozlint.editor import edit_results
 
     if list_linters:
         lint_paths = find_linters(linters)
@@ -144,23 +149,16 @@ def run(paths, linters, fmt, outgoing, workdir, edit, list_linters=None, **linta
             [os.path.splitext(os.path.basename(l))[0] for l in lint_paths]
         ))
         return 0
+
     lint = LintRoller(**lintargs)
     lint.read(find_linters(linters))
-
-    # Check if the path that is entered is a valid one.
-    invalid_paths = [path for path in paths if not os.path.exists(path)]
-    if invalid_paths:
-        print("Error: The following paths do not exist:\n{}".format("\n".join(invalid_paths)))
-        return 1
 
     # run all linters
     results = lint.roll(paths, outgoing=outgoing, workdir=workdir)
 
-    if edit:
-        editor = os.environ['EDITOR']
-        for path in results:
-            subprocess.call([editor, path])
-        return 1 if lint.failed else 0
+    if edit and results:
+        edit_results(results)
+        results = lint.roll(results.keys())
 
     formatter = formatters.get(fmt)
 

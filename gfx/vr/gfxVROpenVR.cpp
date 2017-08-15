@@ -305,8 +305,8 @@ VRDisplayOpenVR::SubmitFrame(void* aTextureHandle,
   ::vr::VRTextureBounds_t bounds;
   bounds.uMin = aLeftEyeRect.x;
   bounds.vMin = 1.0 - aLeftEyeRect.y;
-  bounds.uMax = aLeftEyeRect.x + aLeftEyeRect.width;
-  bounds.vMax = 1.0 - aLeftEyeRect.y - aLeftEyeRect.height;
+  bounds.uMax = aLeftEyeRect.x + aLeftEyeRect.Width();
+  bounds.vMax = 1.0 - aLeftEyeRect.y - aLeftEyeRect.Height();
 
   ::vr::EVRCompositorError err;
   err = mVRCompositor->Submit(::vr::EVREye::Eye_Left, &tex, &bounds);
@@ -316,8 +316,8 @@ VRDisplayOpenVR::SubmitFrame(void* aTextureHandle,
 
   bounds.uMin = aRightEyeRect.x;
   bounds.vMin = 1.0 - aRightEyeRect.y;
-  bounds.uMax = aRightEyeRect.x + aRightEyeRect.width;
-  bounds.vMax = 1.0 - aRightEyeRect.y - aRightEyeRect.height;
+  bounds.uMax = aRightEyeRect.x + aRightEyeRect.Width();
+  bounds.vMax = 1.0 - aRightEyeRect.y - aRightEyeRect.Height();
 
   err = mVRCompositor->Submit(::vr::EVREye::Eye_Right, &tex, &bounds);
   if (err != ::vr::EVRCompositorError::VRCompositorError_None) {

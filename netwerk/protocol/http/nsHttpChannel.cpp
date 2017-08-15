@@ -76,7 +76,6 @@
 #include "nsICancelable.h"
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsIHttpEventSink.h"
 #include "nsIPrompt.h"
 #include "nsInputStreamPump.h"
 #include "nsURLHelper.h"
@@ -3014,18 +3013,6 @@ nsHttpChannel::OpenRedirectChannel(nsresult rv)
     // i.e. after all sinks had been notified
     mRedirectChannel->SetOriginalURI(mOriginalURI);
 
-    // And now, notify observers the deprecated way
-    nsCOMPtr<nsIHttpEventSink> httpEventSink;
-    GetCallback(httpEventSink);
-    if (httpEventSink) {
-        // NOTE: nsIHttpEventSink is only used for compatibility with pre-1.8
-        // versions.
-        rv = httpEventSink->OnRedirect(this, mRedirectChannel);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-    }
-
     // open new channel
     if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
         MOZ_ASSERT(!mListenerContext, "mListenerContext should be null!");
@@ -5793,16 +5780,6 @@ nsHttpChannel::ContinueProcessRedirection(nsresult rv)
     // i.e. after all sinks had been notified
     mRedirectChannel->SetOriginalURI(mOriginalURI);
 
-    // And now, the deprecated way
-    nsCOMPtr<nsIHttpEventSink> httpEventSink;
-    GetCallback(httpEventSink);
-    if (httpEventSink) {
-        // NOTE: nsIHttpEventSink is only used for compatibility with pre-1.8
-        // versions.
-        rv = httpEventSink->OnRedirect(this, mRedirectChannel);
-        if (NS_FAILED(rv))
-            return rv;
-    }
     // XXX we used to talk directly with the script security manager, but that
     // should really be handled by the event sink implementation.
 

@@ -102,7 +102,7 @@ TexturedLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
     mTexture = source;
   }
 
-  mPictureRect = IntRect(0, 0, info.img->mPictureRect.width, info.img->mPictureRect.height);
+  mPictureRect = IntRect(0, 0, info.img->mPictureRect.Width(), info.img->mPictureRect.Height());
 
   mHost->FinishRendering(info);
   return true;

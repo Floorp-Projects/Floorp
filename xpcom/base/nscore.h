@@ -134,17 +134,6 @@
 #define NS_IMETHODIMP       NS_IMETHODIMP_(nsresult)
 
 /**
- * Deprecated declarations.
- */
-#ifdef __GNUC__
-# define MOZ_DEPRECATED __attribute__((deprecated))
-#elif defined(_MSC_VER)
-# define MOZ_DEPRECATED __declspec(deprecated)
-#else
-# define MOZ_DEPRECATED
-#endif
-
-/**
  * Import/Export macros for XPCOM APIs
  */
 

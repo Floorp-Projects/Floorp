@@ -192,8 +192,8 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
     samplingBounds = D2D1::RectF(0, 0, Float(aSurface->GetSize().width), Float(aSurface->GetSize().height));
   }
 
-  Float xScale = aDest.width / aSource.width;
-  Float yScale = aDest.height / aSource.height;
+  Float xScale = aDest.Width() / aSource.Width();
+  Float yScale = aDest.Height() / aSource.Height();
 
   RefPtr<ID2D1ImageBrush> brush;
 
@@ -425,8 +425,8 @@ DrawTargetD2D1::MaskSurface(const Pattern &aSource,
     // we have to fixup our sizes here.
     size.width = bitmap->GetSize().width;
     size.height = bitmap->GetSize().height;
-    dest.width = size.width;
-    dest.height = size.height;
+    dest.SetWidth(size.width);
+    dest.SetHeight(size.height);
   }
 
   // FillOpacityMask only works if the antialias mode is MODE_ALIASED
@@ -488,10 +488,10 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
   }
 
   Rect srcRect(Float(sourceRect.x), Float(sourceRect.y),
-               Float(aSourceRect.width), Float(aSourceRect.height));
+               Float(aSourceRect.Width()), Float(aSourceRect.Height()));
 
   Rect dstRect(Float(aDestination.x), Float(aDestination.y),
-               Float(aSourceRect.width), Float(aSourceRect.height));
+               Float(aSourceRect.Width()), Float(aSourceRect.Height()));
 
   if (SUCCEEDED(hr) && bitmap) {
     mDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_COPY);
@@ -1881,7 +1881,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       mat.PreTranslate(pat->mSamplingRect.x, pat->mSamplingRect.y);
     } else {
       // We will do a partial upload of the sampling restricted area from GetImageForSurface.
-      samplingBounds = D2D1::RectF(0, 0, pat->mSamplingRect.width, pat->mSamplingRect.height);
+      samplingBounds = D2D1::RectF(0, 0, pat->mSamplingRect.Width(), pat->mSamplingRect.Height());
     }
 
     D2D1_EXTEND_MODE xRepeat = D2DExtend(pat->mExtendMode, Axis::X_AXIS);

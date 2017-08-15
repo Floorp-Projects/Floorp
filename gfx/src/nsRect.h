@@ -74,28 +74,28 @@ struct nsRect :
 #else
     nsRect result;
     result.x = std::min(aRect.x, x);
-    int64_t w = std::max(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
+    int64_t w = std::max(int64_t(aRect.x) + aRect.Width(), int64_t(x) + width) - result.x;
     if (MOZ_UNLIKELY(w > nscoord_MAX)) {
       // Clamp huge negative x to nscoord_MIN / 2 and try again.
       result.x = std::max(result.x, nscoord_MIN / 2);
-      w = std::max(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
+      w = std::max(int64_t(aRect.x) + aRect.Width(), int64_t(x) + width) - result.x;
       if (MOZ_UNLIKELY(w > nscoord_MAX)) {
         w = nscoord_MAX;
       }
     }
-    result.width = nscoord(w);
+    result.SetWidth(nscoord(w));
 
     result.y = std::min(aRect.y, y);
-    int64_t h = std::max(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
+    int64_t h = std::max(int64_t(aRect.y) + aRect.Height(), int64_t(y) + height) - result.y;
     if (MOZ_UNLIKELY(h > nscoord_MAX)) {
       // Clamp huge negative y to nscoord_MIN / 2 and try again.
       result.y = std::max(result.y, nscoord_MIN / 2);
-      h = std::max(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
+      h = std::max(int64_t(aRect.y) + aRect.Height(), int64_t(y) + height) - result.y;
       if (MOZ_UNLIKELY(h > nscoord_MAX)) {
         h = nscoord_MAX;
       }
     }
-    result.height = nscoord(h);
+    result.SetHeight(nscoord(h));
     return result;
 #endif
   }
@@ -194,8 +194,8 @@ nsRect::ScaleToOtherAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const
   nscoord bottom = NSToCoordCeil(NSCoordScale(YMost(), aFromAPP, aToAPP));
   rect.x = NSToCoordFloor(NSCoordScale(x, aFromAPP, aToAPP));
   rect.y = NSToCoordFloor(NSCoordScale(y, aFromAPP, aToAPP));
-  rect.width = (right - rect.x);
-  rect.height = (bottom - rect.y);
+  rect.SetWidth(right - rect.x);
+  rect.SetHeight(bottom - rect.y);
 
   return rect;
 }
@@ -212,8 +212,8 @@ nsRect::ScaleToOtherAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const
   nscoord bottom = NSToCoordFloor(NSCoordScale(YMost(), aFromAPP, aToAPP));
   rect.x = NSToCoordCeil(NSCoordScale(x, aFromAPP, aToAPP));
   rect.y = NSToCoordCeil(NSCoordScale(y, aFromAPP, aToAPP));
-  rect.width = (right - rect.x);
-  rect.height = (bottom - rect.y);
+  rect.SetWidth(right - rect.x);
+  rect.SetHeight(bottom - rect.y);
 
   return rect;
 }
@@ -227,10 +227,10 @@ nsRect::ScaleToNearestPixels(float aXScale, float aYScale,
   rect.x = NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel) * aXScale);
   rect.y = NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel) * aYScale);
   // Avoid negative widths and heights due to overflow
-  rect.width  = std::max(0, NSToIntRoundUp(NSAppUnitsToDoublePixels(XMost(),
-                               aAppUnitsPerPixel) * aXScale) - rect.x);
-  rect.height = std::max(0, NSToIntRoundUp(NSAppUnitsToDoublePixels(YMost(),
-                               aAppUnitsPerPixel) * aYScale) - rect.y);
+  rect.SetWidth(std::max(0, NSToIntRoundUp(NSAppUnitsToDoublePixels(XMost(),
+                               aAppUnitsPerPixel) * aXScale) - rect.x));
+  rect.SetHeight(std::max(0, NSToIntRoundUp(NSAppUnitsToDoublePixels(YMost(),
+                                aAppUnitsPerPixel) * aYScale) - rect.y));
   return rect;
 }
 
@@ -243,10 +243,10 @@ nsRect::ScaleToOutsidePixels(float aXScale, float aYScale,
   rect.x = NSToIntFloor(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)) * aXScale);
   rect.y = NSToIntFloor(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)) * aYScale);
   // Avoid negative widths and heights due to overflow
-  rect.width  = std::max(0, NSToIntCeil(NSAppUnitsToFloatPixels(XMost(),
-                            float(aAppUnitsPerPixel)) * aXScale) - rect.x);
-  rect.height = std::max(0, NSToIntCeil(NSAppUnitsToFloatPixels(YMost(),
-                            float(aAppUnitsPerPixel)) * aYScale) - rect.y);
+  rect.SetWidth(std::max(0, NSToIntCeil(NSAppUnitsToFloatPixels(XMost(),
+                            float(aAppUnitsPerPixel)) * aXScale) - rect.x));
+  rect.SetHeight(std::max(0, NSToIntCeil(NSAppUnitsToFloatPixels(YMost(),
+                             float(aAppUnitsPerPixel)) * aYScale) - rect.y));
   return rect;
 }
 
@@ -259,10 +259,10 @@ nsRect::ScaleToInsidePixels(float aXScale, float aYScale,
   rect.x = NSToIntCeil(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)) * aXScale);
   rect.y = NSToIntCeil(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)) * aYScale);
   // Avoid negative widths and heights due to overflow
-  rect.width  = std::max(0, NSToIntFloor(NSAppUnitsToFloatPixels(XMost(),
-                             float(aAppUnitsPerPixel)) * aXScale) - rect.x);
-  rect.height = std::max(0, NSToIntFloor(NSAppUnitsToFloatPixels(YMost(),
-                             float(aAppUnitsPerPixel)) * aYScale) - rect.y);
+  rect.SetWidth(std::max(0, NSToIntFloor(NSAppUnitsToFloatPixels(XMost(),
+                            float(aAppUnitsPerPixel)) * aXScale) - rect.x));
+  rect.SetHeight(std::max(0, NSToIntFloor(NSAppUnitsToFloatPixels(YMost(),
+                             float(aAppUnitsPerPixel)) * aYScale) - rect.y));
   return rect;
 }
 
@@ -294,10 +294,11 @@ nsRect::RemoveResolution(const float aResolution) const
   // A 1x1 rect indicates we are just hit testing a point, so pass down a 1x1
   // rect as well instead of possibly rounding the width or height to zero.
   if (width == 1 && height == 1) {
-    rect.width = rect.height = 1;
+    rect.SetWidth(1);
+    rect.SetHeight(1);
   } else {
-    rect.width = NSToCoordCeil(NSCoordToFloat(width) / aResolution);
-    rect.height = NSToCoordCeil(NSCoordToFloat(height) / aResolution);
+    rect.SetWidth(NSToCoordCeil(NSCoordToFloat(width) / aResolution));
+    rect.SetHeight(NSToCoordCeil(NSCoordToFloat(height) / aResolution));
   }
 
   return rect;
@@ -312,8 +313,8 @@ ToAppUnits(const mozilla::gfx::IntRectTyped<units>& aRect, nscoord aAppUnitsPerP
 {
   return nsRect(NSIntPixelsToAppUnits(aRect.x, aAppUnitsPerPixel),
                 NSIntPixelsToAppUnits(aRect.y, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(aRect.width, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(aRect.height, aAppUnitsPerPixel));
+                NSIntPixelsToAppUnits(aRect.Width(), aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(aRect.Height(), aAppUnitsPerPixel));
 }
 
 #ifdef DEBUG
