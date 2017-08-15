@@ -3031,18 +3031,25 @@ GLContext::MakeCurrent(bool aForce) const
     if (MOZ_UNLIKELY( IsDestroyed() ))
         return false;
 
-    if (mUseTLSIsCurrent && !aForce && sCurrentContext.get() == this) {
-        MOZ_ASSERT(IsCurrent());
-        return true;
+    if (MOZ_LIKELY( !aForce )) {
+        bool isCurrent;
+        if (mUseTLSIsCurrent) {
+            isCurrent = (sCurrentContext.get() == this);
+        } else {
+            isCurrent = IsCurrentImpl();
+        }
+        if (MOZ_LIKELY( isCurrent )) {
+            MOZ_ASSERT(IsCurrentImpl());
+            return true;
+        }
     }
 
-    if (!MakeCurrentImpl(aForce))
+    if (!MakeCurrentImpl())
         return false;
 
     if (mUseTLSIsCurrent) {
         sCurrentContext.set(this);
     }
-
     return true;
 }
 
