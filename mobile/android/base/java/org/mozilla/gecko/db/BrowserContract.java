@@ -151,6 +151,12 @@ public class BrowserContract {
     }
 
     @RobocopTarget
+    public interface VersionColumns {
+        String LOCAL_VERSION = "localVersion";
+        String SYNC_VERSION = "syncVersion";
+    }
+
+    @RobocopTarget
     public interface SyncColumns extends DateSyncColumns {
         public static final String GUID = "guid";
         public static final String IS_DELETED = "deleted";
@@ -235,7 +241,7 @@ public class BrowserContract {
     }
 
     @RobocopTarget
-    public static final class Bookmarks implements CommonColumns, URLColumns, FaviconColumns, SyncColumns {
+    public static final class Bookmarks implements CommonColumns, URLColumns, FaviconColumns, SyncColumns, VersionColumns {
         private Bookmarks() {}
 
         public static final String TABLE_NAME = "bookmarks";
