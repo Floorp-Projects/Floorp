@@ -7,3 +7,4 @@ https://hg.mozilla.org/mozilla-central/rev/c70d06fa5302
 https://hg.mozilla.org/mozilla-central/rev/d24db55deb85
 https://hg.mozilla.org/mozilla-central/rev/0e6bf137521e
 https://hg.mozilla.org/mozilla-central/rev/1755a454e2de
+https://bugzilla.mozilla.org/show_bug.cgi?id=1385928 bug1385928.patch
