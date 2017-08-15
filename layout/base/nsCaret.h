@@ -77,7 +77,7 @@ class nsCaret final : public nsISelectionListener
      *  It does not take account of blinking or the caret being hidden
      *  because we're in non-editable/disabled content.
      */
-    bool IsVisible();
+    bool IsVisible(nsISelection* aSelection = nullptr);
     /**
      * AddForceHide() increases mHideCount and hide the caret even if
      * SetVisible(true) has been or will be called.  This is useful when the

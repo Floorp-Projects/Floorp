@@ -252,19 +252,20 @@ void nsCaret::SetVisible(bool inMakeVisible)
   SchedulePaint();
 }
 
-bool nsCaret::IsVisible()
+bool nsCaret::IsVisible(nsISelection* aSelection)
 {
   if (!mVisible || mHideCount) {
     return false;
   }
 
   if (!mShowDuringSelection) {
-    Selection* selection = GetSelectionInternal();
-    if (!selection) {
-      return false;
+    mozilla::dom::Selection* selection;
+    if (aSelection) {
+      selection = aSelection->AsSelection();
+    } else {
+      selection = GetSelectionInternal();
     }
-    bool isCollapsed;
-    if (NS_FAILED(selection->GetIsCollapsed(&isCollapsed)) || !isCollapsed) {
+    if (!selection || !selection->IsCollapsed()) {
       return false;
     }
   }
@@ -609,7 +610,11 @@ NS_IMETHODIMP
 nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aDomSel,
                                 int16_t aReason)
 {
-  if ((aReason & nsISelectionListener::MOUSEUP_REASON) || !IsVisible())//this wont do
+  // Note that aDomSel, per the comment below may not be the same as our
+  // selection, but that's OK since if that is the case, it wouldn't have
+  // mattered what IsVisible() returns here, so we just opt for checking
+  // the selection later down below.
+  if ((aReason & nsISelectionListener::MOUSEUP_REASON) || !IsVisible(aDomSel))//this wont do
     return NS_OK;
 
   nsCOMPtr<nsISelection> domSel(do_QueryReferent(mDomSelectionWeak));
