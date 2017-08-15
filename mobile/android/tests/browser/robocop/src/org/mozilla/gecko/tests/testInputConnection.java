@@ -30,6 +30,12 @@ public class testInputConnection extends JavascriptBridgeTest {
     public void testInputConnection() throws InterruptedException {
         GeckoHelper.blockForReady();
 
+        // Spatial navigation interferes with design-mode key event tests.
+        mActions.setPref("snav.enabled", false, /* flush */ false);
+        // Enable "selectionchange" events for input/textarea.
+        mActions.setPref("dom.select_events.enabled", true, /* flush */ false);
+        mActions.setPref("dom.select_events.textcontrols.enabled", true, /* flush */ false);
+
         final String url = mStringHelper.ROBOCOP_INPUT_URL;
         NavigationHelper.enterAndLoadUrl(url);
         mToolbar.assertTitle(url);
