@@ -63,7 +63,6 @@
   skin/classic/mozapps/extensions/blocklist.css              (../../windows/mozapps/extensions/blocklist.css)
   skin/classic/mozapps/extensions/update.css                 (../../windows/mozapps/extensions/update.css)
   skin/classic/mozapps/extensions/discover-logo.png          (../../windows/mozapps/extensions/discover-logo.png)
-  skin/classic/mozapps/extensions/experimentGeneric.png      (../../windows/mozapps/extensions/experimentGeneric.png)
   skin/classic/mozapps/extensions/rating-won.png             (../../windows/mozapps/extensions/rating-won.png)
   skin/classic/mozapps/extensions/rating-not-won.png         (../../windows/mozapps/extensions/rating-not-won.png)
   skin/classic/mozapps/extensions/cancel.png                 (../../windows/mozapps/extensions/cancel.png)
@@ -82,11 +81,6 @@
 #endif
 % override chrome://global/skin/arrow/arrow-lft-hov.gif           chrome://global/skin/arrow/arrow-lft.gif
 % override chrome://global/skin/arrow/arrow-rit-hov.gif           chrome://global/skin/arrow/arrow-rit.gif
-% override chrome://mozapps/skin/extensions/category-dictionaries.png     chrome://mozapps/skin/extensions/dictionaryGeneric.png
-% override chrome://mozapps/skin/extensions/category-experiments.png      chrome://mozapps/skin/extensions/experimentGeneric.png
-% override chrome://mozapps/skin/extensions/category-extensions.svg       chrome://mozapps/skin/extensions/extensionGeneric.svg
-% override chrome://mozapps/skin/extensions/category-languages.png        chrome://mozapps/skin/extensions/localeGeneric.png
-% override chrome://mozapps/skin/extensions/category-themes.png           chrome://mozapps/skin/extensions/themeGeneric.png
 % override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/pluginGeneric-16.png
 % override chrome://mozapps/skin/plugins/notifyPluginGeneric.png          chrome://mozapps/skin/plugins/pluginGeneric-16.png
-% override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.png
+% override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.svg

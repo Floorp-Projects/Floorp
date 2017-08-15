@@ -85,11 +85,11 @@ installitem {
 }
 
 installitem[type="theme"] .xpinstallItemIcon {
-  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.svg");
 }
 
 installitem[type="locale"] .xpinstallItemIcon {
-  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.svg");
 }
 
 installitem[type="plugin"] .xpinstallItemIcon {
@@ -97,5 +97,5 @@ installitem[type="plugin"] .xpinstallItemIcon {
 }
 
 installitem[type="dictionary"] .xpinstallItemIcon {
-  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.svg");
 }

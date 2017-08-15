@@ -7,19 +7,7 @@ toolkit.jar:
   skin/classic/mozapps/downloads/buttons.png                      (downloads/buttons.png)
   skin/classic/mozapps/downloads/downloadIcon.png                 (downloads/downloadIcon.png)
   skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
-  skin/classic/mozapps/extensions/category-search.png             (extensions/category-search.png)
-  skin/classic/mozapps/extensions/category-discover.png           (extensions/category-discover.png)
-  skin/classic/mozapps/extensions/category-plugins.png            (extensions/category-plugins.png)
-  skin/classic/mozapps/extensions/category-service.png            (extensions/category-service.png)
-  skin/classic/mozapps/extensions/category-dictionaries.png       (extensions/category-dictionaries.png)
-  skin/classic/mozapps/extensions/category-experiments.png        (extensions/category-experiments.png)
-  skin/classic/mozapps/extensions/category-recent.png             (extensions/category-recent.png)
-  skin/classic/mozapps/extensions/category-available.png          (extensions/category-available.png)
   skin/classic/mozapps/extensions/discover-logo.png               (extensions/discover-logo.png)
-  skin/classic/mozapps/extensions/themeGeneric.png                (extensions/themeGeneric.png)
-  skin/classic/mozapps/extensions/dictionaryGeneric.png           (extensions/dictionaryGeneric.png)
-  skin/classic/mozapps/extensions/experimentGeneric.png           (extensions/experimentGeneric.png)
-  skin/classic/mozapps/extensions/localeGeneric.png               (extensions/localeGeneric.png)
   skin/classic/mozapps/extensions/rating-won.png                  (extensions/rating-won.png)
   skin/classic/mozapps/extensions/rating-not-won.png              (extensions/rating-not-won.png)
   skin/classic/mozapps/extensions/cancel.png                      (extensions/cancel.png)
@@ -51,7 +39,4 @@ toolkit.jar:
 #elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
 [extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
-% override chrome://mozapps/skin/extensions/category-extensions.svg       chrome://mozapps/skin/extensions/extensionGeneric.svg
-% override chrome://mozapps/skin/extensions/category-languages.png        chrome://mozapps/skin/extensions/localeGeneric.png
-% override chrome://mozapps/skin/extensions/category-themes.png           chrome://mozapps/skin/extensions/themeGeneric.png
 % override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/notifyPluginGeneric.png
