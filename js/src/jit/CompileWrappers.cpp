@@ -183,9 +183,22 @@ CompileZone::addressOfNurseryPosition()
 }
 
 const void*
+CompileZone::addressOfStringNurseryPosition()
+{
+    // Objects and strings share a nursery, for now at least.
+    return zone()->runtimeFromAnyThread()->gc.addressOfNurseryPosition();
+}
+
+const void*
 CompileZone::addressOfNurseryCurrentEnd()
 {
     return zone()->runtimeFromAnyThread()->gc.addressOfNurseryCurrentEnd();
+}
+
+const void*
+CompileZone::addressOfStringNurseryCurrentEnd()
+{
+    return zone()->runtimeFromAnyThread()->gc.addressOfStringNurseryCurrentEnd();
 }
 
 bool
