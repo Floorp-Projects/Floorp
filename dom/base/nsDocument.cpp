@@ -13293,8 +13293,7 @@ nsIDocument::UpdateStyleBackendType()
       mStyleBackendType = StyleBackendType::Servo;
     } else if (!mDocumentContainer) {
       NS_WARNING("stylo: No docshell yet, assuming Gecko style system");
-    } else if ((IsHTMLOrXHTML() || IsSVGDocument()) &&
-               IsContentDocument()) {
+    } else if (!IsXULDocument() && IsContentDocument()) {
       // Disable stylo for about: pages other than about:blank, since
       // they tend to use unsupported selectors like XUL tree pseudos.
       bool isAbout = false;
@@ -13652,4 +13651,20 @@ nsIDocument::ClearStaleServoDataFromDocument()
     ServoRestyleManager::ClearServoDataFromSubtree(root);
   }
   mMightHaveStaleServoData = false;
+}
+
+Selection*
+nsIDocument::GetSelection(ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindowInner> window = GetInnerWindow();
+  if (!window) {
+    return nullptr;
+  }
+
+  NS_ASSERTION(window->IsInnerWindow(), "Should have inner window here!");
+  if (!window->IsCurrentInnerWindow()) {
+    return nullptr;
+  }
+
+  return nsGlobalWindow::Cast(window)->GetSelection(aRv);
 }

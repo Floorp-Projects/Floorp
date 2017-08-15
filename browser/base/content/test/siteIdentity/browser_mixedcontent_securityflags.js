@@ -36,7 +36,7 @@ add_task(async function blockMixedActiveContentTest() {
     is(docShell.hasMixedDisplayContentLoaded, true, "hasMixedDisplayContentLoaded flag has been set");
     is(docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
   });
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: true});
+  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: true});
 
   // Turn on mixed active and mixed display blocking and reload the page.
   Services.prefs.setBoolPref(PREF_DISPLAY, true);
@@ -51,7 +51,7 @@ add_task(async function blockMixedActiveContentTest() {
     is(docShell.hasMixedDisplayContentLoaded, false, "hasMixedDisplayContentLoaded flag has been set");
     is(docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
   });
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 });
 
 add_task(async function overrideMCB() {
@@ -66,5 +66,5 @@ add_task(async function overrideMCB() {
     is(docShell.hasMixedDisplayContentBlocked, false, "second hasMixedDisplayContentBlocked flag has been set");
     is(docShell.hasMixedActiveContentBlocked, false, "second hasMixedActiveContentBlocked flag has been set");
   });
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: true});
+  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: true});
 });

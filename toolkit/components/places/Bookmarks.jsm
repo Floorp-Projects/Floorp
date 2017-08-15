@@ -1710,25 +1710,21 @@ function fetchRecentBookmarks(numberOfItems) {
   );
 }
 
-function fetchBookmarksByParent(info) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByParent",
-    async function(db) {
+async function fetchBookmarksByParent(db, info) {
+  let rows = await db.executeCached(
+    `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+            b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
+            h.url AS url, b.id AS _id, b.parent AS _parentId,
+            (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
+            p.parent AS _grandParentId, b.syncStatus AS _syncStatus
+     FROM moz_bookmarks b
+     LEFT JOIN moz_bookmarks p ON p.id = b.parent
+     LEFT JOIN moz_places h ON h.id = b.fk
+     WHERE p.guid = :parentGuid
+     ORDER BY b.position ASC
+    `, { parentGuid: info.parentGuid });
 
-    let rows = await db.executeCached(
-      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
-              h.url AS url, b.id AS _id, b.parent AS _parentId,
-              (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
-              p.parent AS _grandParentId, b.syncStatus AS _syncStatus
-       FROM moz_bookmarks b
-       LEFT JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON h.id = b.fk
-       WHERE p.guid = :parentGuid
-       ORDER BY b.position ASC
-      `, { parentGuid: info.parentGuid });
-
-    return rowsToItemsArray(rows);
-  });
+  return rowsToItemsArray(rows);
 }
 
 // Remove implementation.
@@ -1803,10 +1799,10 @@ function removeBookmark(item, options) {
 // Reorder implementation.
 
 function reorderChildren(parent, orderedChildrenGuids, options) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: updateBookmark",
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: reorderChildren",
     db => db.executeTransaction(async function() {
       // Select all of the direct children for the given parent.
-      let children = await fetchBookmarksByParent({ parentGuid: parent.guid });
+      let children = await fetchBookmarksByParent(db, { parentGuid: parent.guid });
       if (!children.length) {
         return [];
       }

@@ -430,6 +430,12 @@ partial interface Document {
   void removeAnonymousContent(AnonymousContent aContent);
 };
 
+// http://w3c.github.io/selection-api/#extensions-to-document-interface
+partial interface Document {
+  [Throws]
+  Selection? getSelection();
+};
+
 // Extension to give chrome JS the ability to determine whether
 // the user has interacted with the document or not.
 partial interface Document {

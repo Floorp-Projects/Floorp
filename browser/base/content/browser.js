@@ -4933,9 +4933,6 @@ var CombinedStopReload = {
     this.stop = stop;
     this.stopReloadContainer = this.reload.parentNode;
     this.timeWhenSwitchedToStop = 0;
-
-    // Disable animations until the browser has fully loaded.
-    this.animate = false;
   },
 
   uninit() {

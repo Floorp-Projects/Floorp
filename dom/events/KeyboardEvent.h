@@ -72,6 +72,12 @@ public:
                  aShiftKey, aMetaKey, aKeyCode, aCharCode);
   }
 
+  void InitKeyboardEvent(const nsAString& aType,
+                         bool aCanBubble, bool aCancelable,
+                         nsGlobalWindow* aView, const nsAString& aKey,
+                         uint32_t aLocation, bool aCtrlKey, bool aAltKey,
+                         bool aShiftKey, bool aMetaKey, ErrorResult& aRv);
+
 protected:
   ~KeyboardEvent() {}
 

@@ -75,14 +75,9 @@ this.Feeds = {
     }
 
     if (aIsFeed) {
-      // re-create the principal as it may be a CPOW.
-      // once this can't be a CPOW anymore, we should just use aPrincipal instead
-      // of creating a new one.
-      let principalURI = BrowserUtils.makeURIFromCPOW(aPrincipal.URI);
-      let principalToCheck =
-        Services.scriptSecurityManager.createCodebasePrincipal(principalURI, aPrincipal.originAttributes);
       try {
-        BrowserUtils.urlSecurityCheck(aLink.href, principalToCheck,
+        let href = BrowserUtils.makeURI(aLink.href, aLink.ownerDocument.characterSet);
+        BrowserUtils.urlSecurityCheck(href, aPrincipal,
                                       Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
         return type || "application/rss+xml";
       } catch (ex) {

@@ -81,6 +81,11 @@ function shutdown(data, reason) { // eslint-disable-line no-unused-vars
     id: ADDON_ID,
     resourceURI: addonResourceURI
   });
+  // Immediately exit if Firefox is exiting, #3323
+  if (reason === APP_SHUTDOWN) {
+    stop(webExtension, reason);
+    return;
+  }
   // Because the prefObserver is unregistered above, this _should_ terminate the promise chain.
   appStartupPromise = appStartupPromise.then(() => { stop(webExtension, reason); });
 }

@@ -7,11 +7,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from .registry import register_callback_action
-from slugid import nice as slugid
 
-from .util import (create_task, find_decision_task)
+from .util import (create_tasks, find_decision_task)
 from taskgraph.util.taskcluster import get_artifact
-from taskgraph.util.parameterization import resolve_task_references
 from taskgraph.taskgraph import TaskGraph
 
 
@@ -42,17 +40,11 @@ def add_new_jobs_action(parameters, input, task_group_id, task_id, task):
     _, full_task_graph = TaskGraph.from_json(full_task_graph)
     label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
 
+    to_run = []
     for elem in input['tasks']:
         if elem in full_task_graph.tasks:
-            task = full_task_graph.tasks[elem]
-
-            # fix up the task's dependencies, similar to how optimization would
-            # have done in the decision
-            dependencies = {name: label_to_taskid[label]
-                            for name, label in task.dependencies.iteritems()}
-            task_def = resolve_task_references(task.label, task.task, dependencies)
-            task_def.setdefault('dependencies', []).extend(dependencies.itervalues())
-            # actually create the new task
-            create_task(slugid(), task_def, parameters['level'])
+            to_run.append(elem)
         else:
             raise Exception('{} was not found in the task-graph'.format(elem))
+
+    create_tasks(to_run, full_task_graph, label_to_taskid, parameters, decision_task_id)

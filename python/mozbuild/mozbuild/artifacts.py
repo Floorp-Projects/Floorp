@@ -976,12 +976,15 @@ class Artifacts(object):
         if self._git:
             return self._get_hg_revisions_from_git()
 
-        return subprocess.check_output([
+        # Mercurial updated the ordering of "last" in 4.3. We use revision
+        # numbers to order here to accommodate multiple versions of hg.
+        last_revs = subprocess.check_output([
             self._hg, 'log',
-            '--template', '{node}\n',
+            '--template', '{rev}:{node}\n',
             '-r', 'last(public() and ::., {num})'.format(
                 num=NUM_REVISIONS_TO_QUERY)
         ], cwd=self._topsrcdir).splitlines()
+        return [i.split(':')[-1] for i in sorted(last_revs, reverse=True)]
 
     def _find_pushheads(self):
         """Returns an iterator of recent pushhead revisions, starting with the
