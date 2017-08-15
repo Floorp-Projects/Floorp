@@ -15,6 +15,7 @@
 
 var {BrowserActions} = SpecialPowers.Cu.import("resource://gre/modules/BrowserActions.jsm", {});
 var {PageActions} = SpecialPowers.Cu.import("resource://gre/modules/PageActions.jsm", {});
+var {Services} = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {});
 
 function pageLoadedContentScript() {
   browser.test.sendMessage("page-loaded", window.location.href);
@@ -198,6 +199,138 @@ add_task(async function test_activeTab_browserAction() {
   BrowserActions.synthesizeClick(uuid);
 
   await extension.awaitFinish("browser_action.activeTab.done");
+
+  await extension.unload();
+});
+
+add_task(async function test_activeTab_pageAction_popup() {
+  async function background() {
+    await browser.tabs.create({url: "http://example.com#test_activeTab_pageAction_popup"});
+    const tabs = await browser.tabs.query({active: true});
+    await browser.pageAction.show(tabs[0].id);
+
+    browser.test.log(`pageAction shown on tab ${tabs[0].id}`);
+
+    browser.test.sendMessage("background_page.ready", {activeTabId: tabs[0].id});
+  }
+
+  async function popupScript() {
+    function contentScriptCode() {
+      browser.test.log("content script executed");
+
+      return "tabs.executeScript result";
+    }
+
+    const tabs = await browser.tabs.query({active: true});
+    const tab = tabs[0];
+
+    browser.test.log(`extension popup tab opened loaded for activeTab ${tab.id}`);
+
+    browser.test.sendMessage("extension_popup.activeTab", tab.id);
+
+    const [result] = await browser.tabs.executeScript(tab.id, {
+      code: `(${contentScriptCode})()`,
+    }).catch(error => {
+      // Make the test to fail fast if something goes wrong.
+      browser.test.fail(`Unexpected exception on tabs.executeScript: ${error}`);
+      browser.test.notifyFail("page_action_popup.activeTab.done");
+      throw error;
+    });
+
+    browser.test.assertEq("tabs.executeScript result", result,
+                          "Got the expected result from tabs.executeScript");
+
+    browser.test.notifyPass("page_action_popup.activeTab.done");
+  }
+
+  let popupHtml = `<!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+      </head>
+      <body>
+        <h1>Extension Popup</h1>
+        <script src="popup.js"><\/script>
+      </body>
+    </html>
+  `;
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": "PageAction Extension",
+      "page_action": {
+        "default_title": "Page Action",
+        "default_icon": {
+          "18": "extension.png",
+        },
+        "default_popup": "popup.html",
+      },
+      "content_scripts": [
+        {
+          "js": ["page_loaded.js"],
+          "matches": ["http://example.com/*"],
+          "run_at": "document_end",
+        },
+      ],
+      "permissions": ["activeTab"],
+    },
+    files: {
+      "extension.png": TEST_ICON_ARRAYBUFFER,
+      "page_loaded.js": pageLoadedContentScript,
+      "popup.html": popupHtml,
+      "popup.js": popupScript,
+    },
+  });
+
+  await extension.startup();
+
+  const {activeTabId} = await extension.awaitMessage("background_page.ready");
+
+  const uuid = `{${extension.uuid}}`;
+
+  ok(PageActions.isShown(uuid), "page action is shown");
+
+  info("Wait the new tab to be loaded");
+  const loadedURL = await extension.awaitMessage("page-loaded");
+
+  is(loadedURL, "http://example.com/#test_activeTab_pageAction_popup",
+     "The expected URL has been loaded in a new tab");
+
+  PageActions.synthesizeClick(uuid);
+
+  const popupActiveTabId = await extension.awaitMessage("extension_popup.activeTab");
+
+  // Check that while the extension popup tab is selected the active tab is still the tab
+  // from which the user has opened the extension popup.
+  is(popupActiveTabId, activeTabId,
+     "Got the expected tabId while the extension popup tab was selected");
+
+  await extension.awaitFinish("page_action_popup.activeTab.done");
+
+  const chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  const BrowserApp = chromeWin.BrowserApp;
+
+  const popupTab = BrowserApp.selectedTab;
+  const popupTabId = popupTab.id;
+
+  let onceTabClosed = new Promise(resolve => {
+    BrowserApp.deck.addEventListener("TabClose", resolve, {once: true});
+  });
+
+  // Switch to the parent tab of the popup tab.
+  // (which should make the extension popup tab to be closed automatically)
+  BrowserApp.selectTab(BrowserApp.getTabForId(popupTab.parentId));
+
+  info("Wait for the extension popup tab to be closed once the parent tab has been selected");
+
+  await onceTabClosed;
+
+  is(BrowserApp.getTabForId(popupTabId), null,
+     "The extension popup tab should have been closed");
+
+  // Close the tab that opened the extension popup before exiting the test.
+  BrowserApp.closeTab(BrowserApp.selectedTab);
 
   await extension.unload();
 });

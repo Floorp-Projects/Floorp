@@ -50,11 +50,7 @@ class PageAction extends EventEmitter {
 
         let popup = this.tabContext.get(tab.id).popup || this.defaults.popup;
         if (popup) {
-          let win = Services.wm.getMostRecentWindow("navigator:browser");
-          win.BrowserApp.addTab(popup, {
-            selected: true,
-            parentId: win.BrowserApp.selectedTab.id,
-          });
+          tabTracker.openExtensionPopupTab(popup);
         } else {
           this.emit("click", tab);
         }
