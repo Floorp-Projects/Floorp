@@ -26,6 +26,7 @@
 #include "nsPluginTags.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashKeys.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
 #include "nsIDOMGeoPositionCallback.h"
@@ -109,6 +110,7 @@ class ContentParent final : public PContentParent
                           , public nsIObserver
                           , public nsIDOMGeoPositionCallback
                           , public nsIDOMGeoPositionErrorCallback
+                          , public nsIInterfaceRequestor
                           , public gfx::gfxVarReceiver
                           , public mozilla::LinkedListElement<ContentParent>
                           , public gfx::GPUProcessListener
@@ -197,6 +199,12 @@ public:
   static void GetAllEvenIfDead(nsTArray<ContentParent*>& aArray);
 
   const nsAString& GetRemoteType() const;
+
+  virtual nsresult DoGetRemoteType(nsAString& aRemoteType) const override
+  {
+    aRemoteType = GetRemoteType();
+    return NS_OK;
+  }
 
   enum CPIteratorPolicy {
     eLive,
@@ -310,6 +318,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMGEOPOSITIONCALLBACK
   NS_DECL_NSIDOMGEOPOSITIONERRORCALLBACK
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   /**
    * MessageManagerCallback methods that we override.

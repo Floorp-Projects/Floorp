@@ -171,7 +171,7 @@ gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeeds
     return nullptr;
 }
 
-class gfxOTSContext : public ots::OTSContext {
+class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
 public:
     explicit gfxOTSContext(gfxUserFontEntry* aUserFontEntry)
         : mUserFontEntry(aUserFontEntry)

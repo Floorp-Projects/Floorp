@@ -7,8 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: IndexedDB")
 
-TEST_DIRS += ['test/extensions']
-
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

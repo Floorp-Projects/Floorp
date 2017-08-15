@@ -2670,6 +2670,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ContentParent)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionErrorCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END
 
@@ -2849,6 +2850,20 @@ ContentParent::Observe(nsISupports* aSubject,
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentParent::GetInterface(const nsIID& aIID, void** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (aIID.Equals(NS_GET_IID(nsIMessageSender))) {
+    nsCOMPtr<nsIMessageSender> mm = GetMessageManager();
+    mm.forget(aResult);
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
 }
 
 mozilla::ipc::IPCResult

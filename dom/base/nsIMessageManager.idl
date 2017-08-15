@@ -294,6 +294,12 @@ interface nsIMessageSender : nsIMessageListenerManager
   * is null.
   */
   readonly attribute nsIMessageSender processMessageManager;
+
+ /**
+  * For remote browsers, this contains the remoteType of the content child.
+  * Otherwise, it is empty.
+  */
+  readonly attribute AString remoteType;
 };
 
 /**
