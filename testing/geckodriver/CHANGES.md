@@ -4,6 +4,9 @@ All notable changes to this program is documented in this file.
 
 ## Unreleased
 
+### Added
+- Added preference `dom.file.createInChild` set to true to allow file object creation in content processes.
+
 ### Changed
 - `/moz/addon/install` command accepts an `addon` parameter, in lieu of `path`, containing an add-on as a base64 string.
 
