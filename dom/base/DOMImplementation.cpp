@@ -123,7 +123,8 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
                          mDocumentURI, mBaseURI,
                          mOwner->NodePrincipal(),
                          true, scriptHandlingObject,
-                         DocumentFlavorLegacyGuess);
+                         DocumentFlavorLegacyGuess,
+                         mOwner->GetStyleBackendType());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // When DOMImplementation's createDocument method is invoked with
@@ -202,7 +203,8 @@ DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
                          doctype, mDocumentURI, mBaseURI,
                          mOwner->NodePrincipal(),
                          true, scriptHandlingObject,
-                         DocumentFlavorLegacyGuess);
+                         DocumentFlavorLegacyGuess,
+                         mOwner->GetStyleBackendType());
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
 

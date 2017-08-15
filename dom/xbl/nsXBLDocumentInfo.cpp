@@ -226,17 +226,14 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
   nsContentUtils::GetSecurityManager()->
     GetSystemPrincipal(getter_AddRefs(principal));
 
+  auto styleBackend = aBoundDocument ? aBoundDocument->GetStyleBackendType()
+                                     : StyleBackendType::Gecko;
   nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = NS_NewXBLDocument(getter_AddRefs(domdoc), aURI, nullptr, principal);
+  rv = NS_NewXBLDocument(getter_AddRefs(domdoc), aURI, nullptr, principal, styleBackend);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
   NS_ASSERTION(doc, "Must have a document!");
-
-  // Set the style backend type immediately after creating the XBL document.
-  // Assume gecko if there's no bound document.
-  doc->SetStyleBackendType(aBoundDocument ? aBoundDocument->GetStyleBackendType()
-                                          : StyleBackendType::Gecko);
 
   RefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(doc);
 
