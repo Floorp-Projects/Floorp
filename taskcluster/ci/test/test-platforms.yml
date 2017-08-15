@@ -188,7 +188,7 @@ windows7-32-nightly/opt:
         - windows-tests
 
 windows7-32-devedition/opt:
-    build-platform: win32-devedition/opt
+    build-platform: win32-devedition-nightly/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
@@ -224,7 +224,7 @@ windows10-64-nightly/opt:
         - windows-tests
 
 windows10-64-devedition/opt:
-    build-platform: win64-devedition/opt
+    build-platform: win64-devedition-nightly/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
@@ -253,7 +253,7 @@ windows8-64-nightly/opt:
     test-sets:
         - windows8-tests
 windows8-64-devedition/opt:
-    build-platform: win64-devedition/opt
+    build-platform: win64-devedition-nightly/opt
     test-sets:
         - windows8-tests
 
