@@ -54,4 +54,6 @@ fails == background-position-important.html background-position-ref.html # This 
 == stop-animation-on-discarded-pseudo-element.html about:blank
 
 == updating-animation-on-pseudo-element.html updating-animation-on-pseudo-element-ref.html
+== content-on-pseudo-element-at-beginning.html content-on-pseudo-element-ref.html
+== content-on-pseudo-element-at-half.html content-on-pseudo-element-ref.html
 == reframe-and-animation-starts-at-the-same-time.html reframe-and-animation-starts-at-the-same-time-ref.html
