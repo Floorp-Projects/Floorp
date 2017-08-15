@@ -253,12 +253,14 @@ public:
     return mSurfaces.Put(aSurface->GetSurfaceKey(), aSurface, fallible);
   }
 
-  void Remove(NotNull<CachedSurface*> aSurface)
+  already_AddRefed<CachedSurface> Remove(NotNull<CachedSurface*> aSurface)
   {
     MOZ_ASSERT(mSurfaces.GetWeak(aSurface->GetSurfaceKey()),
         "Should not be removing a surface we don't have");
 
-    mSurfaces.Remove(aSurface->GetSurfaceKey());
+    RefPtr<CachedSurface> surface;
+    mSurfaces.Remove(aSurface->GetSurfaceKey(), getter_AddRefs(surface));
+    return surface.forget();
   }
 
   already_AddRefed<CachedSurface> Lookup(const SurfaceKey& aSurfaceKey)
@@ -515,10 +517,14 @@ public:
     }
 
     StopTracking(aSurface, aAutoLock);
-    cache->Remove(aSurface);
 
-    // Remove the per-image cache if it's unneeded now. (Keep it if the image is
-    // locked, since the per-image cache is where we store that state.)
+    // Individual surfaces must be freed outside the lock.
+    mCachedSurfacesDiscard.AppendElement(cache->Remove(aSurface));
+
+    // Remove the per-image cache if it's unneeded now. Keep it if the image is
+    // locked, since the per-image cache is where we store that state. Note that
+    // we don't push it into mImageCachesDiscard because all of its surfaces
+    // have been removed, so it is safe to free while holding the lock.
     if (cache->IsEmpty() && !cache->IsLocked()) {
       mImageCaches.Remove(imageKey);
     }
@@ -728,11 +734,12 @@ public:
       /* aStaticOnly = */ !gfxPrefs::ImageMemAnimatedDiscardable(), aAutoLock);
   }
 
-  void RemoveImage(const ImageKey aImageKey, const StaticMutexAutoLock& aAutoLock)
+  already_AddRefed<ImageSurfaceCache>
+  RemoveImage(const ImageKey aImageKey, const StaticMutexAutoLock& aAutoLock)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
-      return;  // No cached surfaces for this image, so nothing to do.
+      return nullptr;  // No cached surfaces for this image, so nothing to do.
     }
 
     // Discard all of the cached surfaces for this image.
@@ -747,6 +754,10 @@ public:
     // The per-image cache isn't needed anymore, so remove it as well.
     // This implicitly unlocks the image if it was locked.
     mImageCaches.Remove(aImageKey);
+
+    // Since we did not actually remove any of the surfaces from the cache
+    // itself, only stopped tracking them, we should free it outside the lock.
+    return cache.forget();
   }
 
   void DiscardAll(const StaticMutexAutoLock& aAutoLock)
@@ -783,6 +794,13 @@ public:
       MOZ_ASSERT(!mCosts.IsEmpty(), "Removed everything and still not done");
       Remove(mCosts.LastElement().Surface(), aAutoLock);
     }
+  }
+
+  void TakeDiscard(nsTArray<RefPtr<CachedSurface>>& aDiscard,
+                   const StaticMutexAutoLock& aAutoLock)
+  {
+    MOZ_ASSERT(aDiscard.IsEmpty());
+    aDiscard = Move(mCachedSurfacesDiscard);
   }
 
   void LockSurface(NotNull<CachedSurface*> aSurface,
@@ -908,10 +926,12 @@ private:
     Remove(WrapNotNull(surface), aAutoLock);
   }
 
-  struct SurfaceTracker : public ExpirationTrackerImpl<CachedSurface, 2,
-                                                       StaticMutex,
-                                                       StaticMutexAutoLock>
+  class SurfaceTracker final :
+    public ExpirationTrackerImpl<CachedSurface, 2,
+                                 StaticMutex,
+                                 StaticMutexAutoLock>
   {
+  public:
     explicit SurfaceTracker(uint32_t aSurfaceCacheExpirationTimeMS)
       : ExpirationTrackerImpl<CachedSurface, 2,
                               StaticMutex, StaticMutexAutoLock>(
@@ -926,23 +946,40 @@ private:
       sInstance->Remove(WrapNotNull(aSurface), aAutoLock);
     }
 
+    void NotifyHandlerEndLocked(const StaticMutexAutoLock& aAutoLock) override
+    {
+      sInstance->TakeDiscard(mDiscard, aAutoLock);
+    }
+
+    void NotifyHandlerEnd() override
+    {
+      nsTArray<RefPtr<CachedSurface>> discard(Move(mDiscard));
+    }
+
     StaticMutex& GetMutex() override
     {
       return sInstanceMutex;
     }
+
+    nsTArray<RefPtr<CachedSurface>> mDiscard;
   };
 
-  struct MemoryPressureObserver : public nsIObserver
+  class MemoryPressureObserver final : public nsIObserver
   {
+  public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD Observe(nsISupports*,
                        const char* aTopic,
                        const char16_t*) override
     {
-      StaticMutexAutoLock lock(sInstanceMutex);
-      if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
-        sInstance->DiscardForMemoryPressure(lock);
+      nsTArray<RefPtr<CachedSurface>> discard;
+      {
+        StaticMutexAutoLock lock(sInstanceMutex);
+        if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
+          sInstance->DiscardForMemoryPressure(lock);
+          sInstance->TakeDiscard(discard, lock);
+        }
       }
       return NS_OK;
     }
@@ -954,6 +991,7 @@ private:
   nsTArray<CostEntry>                     mCosts;
   nsRefPtrHashtable<nsPtrHashKey<Image>,
     ImageSurfaceCache> mImageCaches;
+  nsTArray<RefPtr<CachedSurface>>         mCachedSurfacesDiscard;
   SurfaceTracker                          mExpirationTracker;
   RefPtr<MemoryPressureObserver>        mMemoryPressureObserver;
   const uint32_t                          mDiscardFactor;
@@ -1029,45 +1067,72 @@ SurfaceCache::Initialize()
 /* static */ void
 SurfaceCache::Shutdown()
 {
-  StaticMutexAutoLock lock(sInstanceMutex);
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sInstance, "No singleton - was Shutdown() called twice?");
-  sInstance = nullptr;
+  RefPtr<SurfaceCacheImpl> cache;
+  {
+    StaticMutexAutoLock lock(sInstanceMutex);
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(sInstance, "No singleton - was Shutdown() called twice?");
+    cache = sInstance.forget();
+  }
 }
 
 /* static */ LookupResult
 SurfaceCache::Lookup(const ImageKey         aImageKey,
                      const SurfaceKey&      aSurfaceKey)
 {
-  StaticMutexAutoLock lock(sInstanceMutex);
-  if (!sInstance) {
-    return LookupResult(MatchType::NOT_FOUND);
+  nsTArray<RefPtr<CachedSurface>> discard;
+  LookupResult rv(MatchType::NOT_FOUND);
+
+  {
+    StaticMutexAutoLock lock(sInstanceMutex);
+    if (!sInstance) {
+      return rv;
+    }
+
+    rv = sInstance->Lookup(aImageKey, aSurfaceKey, lock);
+    sInstance->TakeDiscard(discard, lock);
   }
 
-  return sInstance->Lookup(aImageKey, aSurfaceKey, lock);
+  return rv;
 }
 
 /* static */ LookupResult
 SurfaceCache::LookupBestMatch(const ImageKey         aImageKey,
                               const SurfaceKey&      aSurfaceKey)
 {
-  StaticMutexAutoLock lock(sInstanceMutex);
-  if (!sInstance) {
-    return LookupResult(MatchType::NOT_FOUND);
+  nsTArray<RefPtr<CachedSurface>> discard;
+  LookupResult rv(MatchType::NOT_FOUND);
+
+  {
+    StaticMutexAutoLock lock(sInstanceMutex);
+    if (!sInstance) {
+      return rv;
+    }
+
+    rv = sInstance->LookupBestMatch(aImageKey, aSurfaceKey, lock);
+    sInstance->TakeDiscard(discard, lock);
   }
 
-  return sInstance->LookupBestMatch(aImageKey, aSurfaceKey, lock);
+  return rv;
 }
 
 /* static */ InsertOutcome
 SurfaceCache::Insert(NotNull<ISurfaceProvider*> aProvider)
 {
-  StaticMutexAutoLock lock(sInstanceMutex);
-  if (!sInstance) {
-    return InsertOutcome::FAILURE;
+  nsTArray<RefPtr<CachedSurface>> discard;
+  InsertOutcome rv(InsertOutcome::FAILURE);
+
+  {
+    StaticMutexAutoLock lock(sInstanceMutex);
+    if (!sInstance) {
+      return rv;
+    }
+
+    rv = sInstance->Insert(aProvider, /* aSetAvailable = */ false, lock);
+    sInstance->TakeDiscard(discard, lock);
   }
 
-  return sInstance->Insert(aProvider, /* aSetAvailable = */ false, lock);
+  return rv;
 }
 
 /* static */ bool
@@ -1134,18 +1199,25 @@ SurfaceCache::UnlockEntries(const ImageKey aImageKey)
 /* static */ void
 SurfaceCache::RemoveImage(const ImageKey aImageKey)
 {
-  StaticMutexAutoLock lock(sInstanceMutex);
-  if (sInstance) {
-    sInstance->RemoveImage(aImageKey, lock);
+  RefPtr<ImageSurfaceCache> discard;
+  {
+    StaticMutexAutoLock lock(sInstanceMutex);
+    if (sInstance) {
+      discard = sInstance->RemoveImage(aImageKey, lock);
+    }
   }
 }
 
 /* static */ void
 SurfaceCache::DiscardAll()
 {
-  StaticMutexAutoLock lock(sInstanceMutex);
-  if (sInstance) {
-    sInstance->DiscardAll(lock);
+  nsTArray<RefPtr<CachedSurface>> discard;
+  {
+    StaticMutexAutoLock lock(sInstanceMutex);
+    if (sInstance) {
+      sInstance->DiscardAll(lock);
+      sInstance->TakeDiscard(discard, lock);
+    }
   }
 }
 
