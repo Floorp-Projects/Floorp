@@ -17,6 +17,7 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase, MozbuildObject
+import mozversioncontrol
 
 
 @CommandProvider
@@ -261,7 +262,7 @@ class FormatProvider(MachCommandBase):
         # Note that this will potentially miss a lot things
         from subprocess import Popen, PIPE
 
-        if os.path.exists(".hg"):
+        if isinstance(self.repository, mozversioncontrol.HgRepository):
             diff_process = Popen(["hg", "diff", "-U0", "-r", ".^",
                                   "--include", "glob:**.c", "--include", "glob:**.cpp",
                                   "--include", "glob:**.h",
@@ -323,7 +324,7 @@ class FormatProvider(MachCommandBase):
         cf_process = Popen(args)
         if show:
             # show the diff
-            if os.path.exists(".hg"):
+            if isinstance(self.repository, mozversioncontrol.HgRepository):
                 cf_process = Popen(["hg", "diff"] + path_list)
             else:
                 cf_process = Popen(["git", "diff"] + path_list)
