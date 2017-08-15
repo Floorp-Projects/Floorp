@@ -20,6 +20,7 @@ struct StylePrefs
   static bool sMozGradientsEnabled;
   static bool sControlCharVisibility;
   static bool sFramesTimingFunctionEnabled;
+  static bool sUnprefixedFullscreenApiEnabled;
 
   static void Init();
 };

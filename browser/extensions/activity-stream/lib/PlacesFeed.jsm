@@ -207,7 +207,7 @@ class PlacesFeed {
         NewTabUtils.activityStreamLinks.blockURL({url: action.data});
         break;
       case at.BOOKMARK_URL:
-        NewTabUtils.activityStreamLinks.addBookmark(action.data);
+        NewTabUtils.activityStreamLinks.addBookmark(action.data, action._target.browser);
         break;
       case at.DELETE_BOOKMARK_BY_ID:
         NewTabUtils.activityStreamLinks.deleteBookmark(action.data);

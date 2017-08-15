@@ -5,6 +5,8 @@
 <script>
 "use strict";
 
+const isGecko = !isStyledByServo();
+
 // Tests that we correctly extract the underlying value when the animation
 // type is 'discrete'.
 const discreteTests = [
@@ -23,27 +25,31 @@ const discreteTests = [
     stylesheet: {
       "@keyframes keyframes": "from { align-content: flex-start; }"
     },
-    // The value of 100% should be 'stretch',
-    // but we are not supporting underlying value.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
     expectedKeyframes: [
       { computedOffset: 0, alignContent: "flex-start" },
-      { computedOffset: 1, alignContent: "unset" }
+      { computedOffset: 1, alignContent: "normal" }
     ],
-    explanation: "Test for 0% keyframe only"
+    explanation: "Test for 0% keyframe only",
+    // The value of 100% should be 'normal',
+    // but we are not supporting underlying value for Gecko.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
+    // So, we skip this test case.
+    skip: isGecko
   },
   {
     stylesheet: {
       "@keyframes keyframes": "to { align-content: flex-end; }"
     },
-    // The value of 0% should be 'stretch',
-    // but we are not supporting underlying value.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
     expectedKeyframes: [
-      { computedOffset: 0, alignContent: "unset" },
+      { computedOffset: 0, alignContent: "normal" },
       { computedOffset: 1, alignContent: "flex-end" }
     ],
-    explanation: "Test for 100% keyframe only"
+    explanation: "Test for 100% keyframe only",
+    // The value of 0% should be 'normal',
+    // but we are not supporting underlying value for Gecko.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
+    // So, we skip this test case.
+    skip: isGecko
   },
   {
     stylesheet: {
@@ -78,16 +84,18 @@ const discreteTests = [
       "@keyframes keyframes": "50% { align-content: center; }",
       "#target": "align-content: inherit;"
     },
-    // The value of 0%/100% should be 'stretch',
-    // but we are not supporting underlying value.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
     expectedKeyframes: [
-      { computedOffset: 0, alignContent: "inherit" },
+      { computedOffset: 0, alignContent: "normal" },
       { computedOffset: 0.5, alignContent: "center" },
-      { computedOffset: 1, alignContent: "inherit" }
+      { computedOffset: 1, alignContent: "normal" }
     ],
     explanation: "Test for no 0%/100% keyframes " +
-                 "and 'inherit' specified on target element"
+                 "and 'inherit' specified on target element",
+    // The value of 0%/100% should be 'normal',
+    // but we are not supporting underlying value for Gecko.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
+    // So, we skip this test case.
+    skip: isGecko
   },
   {
     stylesheet: {
@@ -160,6 +168,9 @@ const discreteTests = [
 
 discreteTests.forEach(testcase => {
   test(t => {
+    if (testcase.skip) {
+      return;
+    }
     addStyle(t, testcase.stylesheet);
 
     const div = addDiv(t, { "id": "target" });

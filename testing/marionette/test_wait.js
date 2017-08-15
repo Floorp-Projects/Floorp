@@ -6,16 +6,16 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/wait.js");
 
-add_task(function* test_until_types() {
+add_task(async function test_until_types() {
   for (let typ of [true, false, "foo", 42, [], {}]) {
-    strictEqual(typ, yield wait.until(resolve => resolve(typ)));
+    strictEqual(typ, await wait.until(resolve => resolve(typ)));
   }
 });
 
-add_task(function* test_until_timeoutElapse() {
+add_task(async function test_until_timeoutElapse() {
   let nevals = 0;
   let start = new Date().getTime();
-  yield wait.until((resolve, reject) => {
+  await wait.until((resolve, reject) => {
     ++nevals;
     reject();
   });
@@ -24,11 +24,11 @@ add_task(function* test_until_timeoutElapse() {
   greaterOrEqual(nevals, 15);
 });
 
-add_task(function* test_until_rethrowError() {
+add_task(async function test_until_rethrowError() {
   let nevals = 0;
   let err;
   try {
-    yield wait.until(() => {
+    await wait.until(() => {
       ++nevals;
       throw new Error();
     });
@@ -39,11 +39,11 @@ add_task(function* test_until_rethrowError() {
   ok(err instanceof Error);
 });
 
-add_task(function* test_until_noTimeout() {
+add_task(async function test_until_noTimeout() {
   // run at least once when timeout is 0
   let nevals = 0;
   let start = new Date().getTime();
-  yield wait.until((resolve, reject) => {
+  await wait.until((resolve, reject) => {
     ++nevals;
     reject();
   }, 0);
@@ -52,10 +52,10 @@ add_task(function* test_until_noTimeout() {
   less((end - start), 2000);
 });
 
-add_task(function* test_until_timeout() {
+add_task(async function test_until_timeout() {
   let nevals = 0;
   let start = new Date().getTime();
-  yield wait.until((resolve, reject) => {
+  await wait.until((resolve, reject) => {
     ++nevals;
     reject();
   }, 100);
@@ -64,9 +64,9 @@ add_task(function* test_until_timeout() {
   greaterOrEqual((end - start), 100);
 });
 
-add_task(function* test_until_interval() {
+add_task(async function test_until_interval() {
   let nevals = 0;
-  yield wait.until((resolve, reject) => {
+  await wait.until((resolve, reject) => {
     ++nevals;
     reject();
   }, 100, 100);

@@ -6,11 +6,13 @@ package org.mozilla.gecko.util;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
+import android.text.TextUtils;
 import android.util.Log;
-import ch.boye.httpclientandroidlib.util.TextUtils;
+import ch.boye.httpclientandroidlib.conn.util.InetAddressUtils;
 import org.mozilla.gecko.util.publicsuffix.PublicSuffix;
 
 import java.lang.ref.WeakReference;
@@ -34,62 +36,87 @@ public class URIUtils {
     }
 
     /**
-     * Returns the second level domain (SLD) of a url. It removes any subdomain/TLD.
-     * e.g. https://m.foo.com/bar/baz?noo=abc#123  => foo
+     * Returns the domain for the given URI, formatted by the other available parameters.
      *
-     * The return value may still contain a public suffix (e.g. .com) if the suffix does not match any of our
-     * known values. If a host cannot be determined from the given url String, the empty String will be returned.
+     * A public suffix is a top-level domain. For the input, "https://github.com", you can specify
+     * {@code shouldIncludePublicSuffix}:
+     * - true: "github.com"
+     * - false: "github"
      *
-     * This implementation is taken from Firefox for iOS:
-     *   https://github.com/mozilla-mobile/firefox-ios/blob/deb9736c905cdf06822ecc4a20152df7b342925d/Shared/Extensions/NSURLExtensions.swift#L152
+     * The subdomain count is the number of subdomains you want to include; the domain will always be included. For
+     * the input, "https://m.blog.github.io/", excluding the public suffix and the subdomain count:
+     * - 0: "github"
+     * - 1: "blog.github.com"
+     * - 2: "m.blog.github.com"
      *
-     * @param uriString A url from which to extract the second level domain.
-     * @return The second level domain of the url or the empty String when the host cannot be determined.
+     * ipv4 & ipv6 urls will return the address directly.
+     *
+     * This implementation is influenced by Firefox iOS and can be used in place of some URI formatting functions:
+     * - hostSLD [1]: exclude publicSuffix, 0 subdomains
+     * - baseDomain [2]: include publicSuffix, 0 subdomains
+     *
+     * Expressing the method this way (instead of separate baseDomain & hostSLD methods) is more flexible if we want to
+     * change the subdomain count and works well with our {@link GetFormattedDomainAsyncTask}, which can take the
+     * same parameters we pass in here, rather than creating a new Task for each method.
+     *
+     * [1]: https://github.com/mozilla-mobile/firefox-ios/blob/deb9736c905cdf06822ecc4a20152df7b342925d/Shared/Extensions/NSURLExtensions.swift#L152
+     * [2]: https://github.com/mozilla-mobile/firefox-ios/blob/deb9736c905cdf06822ecc4a20152df7b342925d/Shared/Extensions/NSURLExtensions.swift#L205
+     *
+     * @param context the Activity context.
+     * @param uri the URI whose host we should format.
+     * @param shouldIncludePublicSuffix true if the public suffix should be included, false otherwise.
+     * @param subdomainCount The number of subdomains to include.
+     *
+     * @return the formatted domain, or the empty String if the host cannot be found.
      */
-    @WorkerThread // PublicSuffix methods can touch the disk.
-    public static String getHostSecondLevelDomain(@NonNull final Context context, @NonNull final String uriString)
-            throws URISyntaxException {
+    @NonNull
+    @WorkerThread // calls PublicSuffix methods.
+    public static String getFormattedDomain(@NonNull final Context context, @NonNull final URI uri,
+            final boolean shouldIncludePublicSuffix, @IntRange(from = 0) final int subdomainCount) {
         if (context == null) { throw new NullPointerException("Expected non-null Context argument"); }
-        if (uriString == null) { throw new NullPointerException("Expected non-null uri argument"); }
+        if (uri == null) { throw new NullPointerException("Expected non-null uri argument"); }
+        if (subdomainCount < 0) { throw new IllegalArgumentException("Expected subdomainCount >= 0."); }
 
-        final URI uri = new URI(uriString);
-        final String baseDomain = getBaseDomain(context, uri);
-        if (baseDomain == null) {
-            final String normalizedHost = StringUtils.stripCommonSubdomains(uri.getHost());
-            return !TextUtils.isEmpty(normalizedHost) ? normalizedHost : "";
-        }
-
-        return PublicSuffix.stripPublicSuffix(context, baseDomain);
-    }
-
-    /**
-     * Returns the base domain from a given hostname. The base domain name is defined as the public domain suffix
-     * with the base private domain attached to the front. For example, for the URL www.bbc.co.uk, the base domain
-     * would be bbc.co.uk. The base domain includes the public suffix (co.uk) + one level down (bbc).
-     *
-     * IPv4 & IPv6 urls are not supported and will return null.
-     *
-     * This implementation is taken from Firefox for iOS:
-     *   https://github.com/mozilla-mobile/firefox-ios/blob/deb9736c905cdf06822ecc4a20152df7b342925d/Shared/Extensions/NSURLExtensions.swift#L205
-     *
-     * @param uri The uri to find the base domain of
-     * @return The base domain string for the given host name, or null if not applicable.
-     */
-    @Nullable
-    @WorkerThread // PublicSuffix methods can touch the disk.
-    public static String getBaseDomain(@NonNull final Context context, final URI uri) {
         final String host = uri.getHost();
-        if (isIPv6(uri) || TextUtils.isEmpty(host)) {
-            return null;
+        if (TextUtils.isEmpty(host)) {
+            return ""; // There's no host so there's no domain to retrieve.
         }
 
-        // If this is just a hostname and not a FQDN, use the entire hostname.
-        if (!host.contains(".")) {
+        if (InetAddressUtils.isIPv4Address(host) ||
+                isIPv6(uri) ||
+                !host.contains(".")) { // If this is just a hostname and not a FQDN, use the entire hostname.
             return host;
         }
 
-        final String publicSuffixWithDomain = PublicSuffix.getPublicSuffix(context, host, 1);
-        return !TextUtils.isEmpty(publicSuffixWithDomain) ? publicSuffixWithDomain : null;
+        final String domainStr = PublicSuffix.getPublicSuffix(context, host, subdomainCount + 1);
+        if (TextUtils.isEmpty(domainStr)) {
+            // There is no public suffix found so we assume the whole host is a domain.
+            return stripSubdomains(host, subdomainCount);
+        }
+
+        if (!shouldIncludePublicSuffix) {
+            // We could be slightly more efficient if we wrote a new algorithm rather than using PublicSuffix twice
+            // but I don't think it's worth the time and it'd complicate the code with more independent branches.
+            return PublicSuffix.stripPublicSuffix(context, domainStr);
+        }
+        return domainStr;
+    }
+
+    /** Strips any subdomains from the host over the given limit. */
+    private static String stripSubdomains(String host, final int desiredSubdomainCount) {
+        int includedSubdomainCount = 0;
+        for (int i = host.length() - 1; i >= 0; --i) {
+            if (host.charAt(i) == '.') {
+                if (includedSubdomainCount >= desiredSubdomainCount) {
+                    return host.substring(i + 1, host.length());
+                }
+
+                includedSubdomainCount += 1;
+            }
+        }
+
+        // There are fewer subdomains than the total we'll accept so return them all!
+        return host;
     }
 
     // impl via FFiOS: https://github.com/mozilla-mobile/firefox-ios/blob/deb9736c905cdf06822ecc4a20152df7b342925d/Shared/Extensions/NSURLExtensions.swift#L292
@@ -100,32 +127,32 @@ public class URIUtils {
 
     /**
      * An async task that will take a URI formatted as a String and will retrieve
-     * {@link #getHostSecondLevelDomain(Context, String)}. To use this, extend the class and override
-     * {@link #onPostExecute(Object)}, where the secondLevelDomain, or the empty String if the host cannot determined,
+     * {@link #getFormattedDomain(Context, URI, boolean, int)}. To use this, extend the class and override
+     * {@link #onPostExecute(Object)}, where the formatted domain, or the empty String if the host cannot determined,
      * will be returned.
      */
-    public static abstract class GetHostSecondLevelDomainAsyncTask extends AsyncTask<Void, Void, String> {
+    public static abstract class GetFormattedDomainAsyncTask extends AsyncTask<Void, Void, String> {
         protected final WeakReference<Context> contextWeakReference;
-        protected final String uriString;
+        protected final URI uri;
+        protected final boolean shouldIncludePublicSuffix;
+        protected final int subdomainCount;
 
-        public GetHostSecondLevelDomainAsyncTask(final Context contextWeakReference, final String uriString) {
-            this.contextWeakReference = new WeakReference<>(contextWeakReference);
-            this.uriString = uriString;
+        public GetFormattedDomainAsyncTask(final Context context, final URI uri, final boolean shouldIncludePublicSuffix,
+                final int subdomainCount) {
+            this.contextWeakReference = new WeakReference<>(context);
+            this.uri = uri;
+            this.shouldIncludePublicSuffix = shouldIncludePublicSuffix;
+            this.subdomainCount = subdomainCount;
         }
 
         @Override
         protected String doInBackground(final Void... params) {
             final Context context = contextWeakReference.get();
             if (context == null) {
-                return null;
+                return "";
             }
 
-            try {
-                return URIUtils.getHostSecondLevelDomain(context, uriString);
-            } catch (final URISyntaxException e) {
-                Log.w(LOGTAG, "Unable to fetch second level domain."); // Don't log exception to avoid logging pii/urls.
-                return null;
-            }
+            return URIUtils.getFormattedDomain(context, uri, shouldIncludePublicSuffix, subdomainCount);
         }
     }
 }

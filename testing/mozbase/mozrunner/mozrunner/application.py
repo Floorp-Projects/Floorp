@@ -12,7 +12,6 @@ from mozdevice import DeviceManagerADB, DMError, DroidADB
 from mozprofile import (
     Profile,
     FirefoxProfile,
-    MetroFirefoxProfile,
     ThunderbirdProfile
 )
 
@@ -24,7 +23,6 @@ def get_app_context(appname):
                    'b2g': B2GContext,
                    'firefox': FirefoxContext,
                    'thunderbird': ThunderbirdContext,
-                   'metro': MetroContext,
                    'fennec': FennecContext}
     if appname not in context_map:
         raise KeyError("Application '%s' not supported!" % appname)
@@ -249,17 +247,3 @@ class FirefoxContext(object):
 
 class ThunderbirdContext(object):
     profile_class = ThunderbirdProfile
-
-
-class MetroContext(object):
-    profile_class = MetroFirefoxProfile
-
-    def __init__(self, binary=None):
-        self.binary = binary or os.environ.get('BROWSER_PATH', None)
-
-    def wrap_command(self, command):
-        immersive_helper_path = os.path.join(os.path.dirname(here),
-                                             'resources',
-                                             'metrotestharness.exe')
-        command[:0] = [immersive_helper_path, '-firefoxpath']
-        return command

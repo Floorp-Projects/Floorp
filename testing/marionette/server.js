@@ -16,7 +16,6 @@ const ServerSocket = CC(
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
@@ -493,58 +492,67 @@ server.TCPConnection = class {
 
     // execute new command
     } else if (msg instanceof Command) {
-      this.lastID = msg.id;
-      this.execute(msg);
+      (async () => {
+        await this.execute(msg);
+      })();
     }
   }
 
   /**
-   * Executes a WebDriver command and sends back a response when it has
-   * finished executing.
-   *
-   * Commands implemented in GeckoDriver and registered in its
-   * {@code GeckoDriver.commands} attribute.  The return values from
-   * commands are expected to be Promises.  If the resolved value of said
-   * promise is not an object, the response body will be wrapped in
-   * an object under a "value" field.
+   * Executes a Marionette command and sends back a response when it
+   * has finished executing.
    *
    * If the command implementation sends the response itself by calling
-   * {@code resp.send()}, the response is guaranteed to not be sent twice.
+   * <code>resp.send()</code>, the response is guaranteed to not be
+   * sent twice.
    *
    * Errors thrown in commands are marshaled and sent back, and if they
-   * are not WebDriverError instances, they are additionally propagated
-   * and reported to {@code Components.utils.reportError}.
+   * are not {@link WebDriverError} instances, they are additionally
+   * propagated and reported to {@link Components.utils.reportError}.
    *
    * @param {Command} cmd
-   *     The requested command to execute.
+   *     Command to execute.
    */
-  execute(cmd) {
+  async execute(cmd) {
     let resp = this.createResponse(cmd.id);
     let sendResponse = () => resp.sendConditionally(resp => !resp.sent);
     let sendError = resp.sendError.bind(resp);
 
-    let req = Task.spawn(function* () {
-      let fn = this.driver.commands[cmd.name];
-      if (typeof fn == "undefined") {
-        throw new UnknownCommandError(cmd.name);
+    await this.despatch(cmd, resp)
+        .then(sendResponse, sendError).catch(error.report);
+  }
+
+  /**
+   * Despatches command to appropriate Marionette service.
+   *
+   * @param {Command} cmd
+   *     Command to run.
+   * @param {Response} resp
+   *     Mutable response where the command's return value will be
+   *     assigned.
+   *
+   * @throws {Error}
+   *     A command's implementation may throw at any time.
+   */
+  async despatch(cmd, resp) {
+    let fn = this.driver.commands[cmd.name];
+    if (typeof fn == "undefined") {
+      throw new UnknownCommandError(cmd.name);
+    }
+
+    if (!["newSession", "WebDriver:NewSession"].includes(cmd.name)) {
+      assert.session(this.driver);
+    }
+
+    let rv = await fn.bind(this.driver)(cmd, resp);
+
+    if (typeof rv != "undefined") {
+      if (typeof rv != "object") {
+        resp.body = {value: rv};
+      } else {
+        resp.body = rv;
       }
-
-      if (cmd.name !== "newSession") {
-        assert.session(this.driver);
-      }
-
-      let rv = yield fn.bind(this.driver)(cmd, resp);
-
-      if (typeof rv != "undefined") {
-        if (typeof rv != "object") {
-          resp.body = {value: rv};
-        } else {
-          resp.body = rv;
-        }
-      }
-    }.bind(this));
-
-    req.then(sendResponse, sendError).catch(error.report);
+    }
   }
 
   /**

@@ -230,6 +230,15 @@ var SidebarUI = {
   },
 
   /**
+   * Fire a "SidebarShown" event on the sidebar to give any interested parties
+   * a chance to update the button or whatever.
+   */
+  _fireShowEvent() {
+    let event = new CustomEvent("SidebarShown", {bubbles: true});
+    this._switcherTarget.dispatchEvent(event);
+  },
+
+  /**
    * Fire a "SidebarFocused" event on the sidebar's |window| to give the sidebar
    * a chance to adjust focus as needed. An additional event is needed, because
    * we don't want to focus the sidebar when it's opened on startup or in a new
@@ -372,11 +381,17 @@ var SidebarUI = {
           sidebarOnLoad(event);
 
           resolve();
+
+          // Now that the currentId is updated, fire a show event.
+          this._fireShowEvent();
         }, {capture: true, once: true});
       } else {
         // Older code handled this case, so we do it too.
         this._fireFocusedEvent();
         resolve();
+
+        // Now that the currentId is updated, fire a show event.
+        this._fireShowEvent();
       }
 
       let selBrowser = gBrowser.selectedBrowser;

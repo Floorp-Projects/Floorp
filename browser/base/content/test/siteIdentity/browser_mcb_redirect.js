@@ -87,8 +87,8 @@ function test1() {
   BrowserTestUtils.browserLoaded(gTestBrowser).then(checkUIForTest1);
 }
 
-function checkUIForTest1() {
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
+async function checkUIForTest1() {
+  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "script blocked";
@@ -106,8 +106,8 @@ function test2() {
   BrowserTestUtils.browserLoaded(gTestBrowser).then(checkUIForTest2);
 }
 
-function checkUIForTest2() {
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
+async function checkUIForTest2() {
+  await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
 
   ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "script executed";

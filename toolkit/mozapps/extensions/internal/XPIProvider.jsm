@@ -4364,13 +4364,17 @@ this.XPIProvider = {
       }
 
       if (aAddon.hasEmbeddedWebExtension) {
+        let reason = Object.keys(BOOTSTRAP_REASONS).find(
+          key => BOOTSTRAP_REASONS[key] == aReason
+        );
+
         if (aMethod == "startup") {
           const webExtension = LegacyExtensionsUtils.getEmbeddedExtensionFor(params);
           params.webExtension = {
-            startup: () => webExtension.startup(),
+            startup: () => webExtension.startup(reason),
           };
         } else if (aMethod == "shutdown") {
-          LegacyExtensionsUtils.getEmbeddedExtensionFor(params).shutdown();
+          LegacyExtensionsUtils.getEmbeddedExtensionFor(params).shutdown(reason);
         }
       }
 
