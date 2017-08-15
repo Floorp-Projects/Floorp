@@ -244,11 +244,16 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY bookmarksCmd.commandkey "b">
 
 <!ENTITY bookmarksMenuButton.label          "Bookmarks">
-<!ENTITY bookmarksMenuButton.other.label "Other Bookmarks">
-<!ENTITY bookmarksMenuButton.mobile.label "Mobile Bookmarks">
+<!ENTITY bookmarksMenuButton.other.label    "Other Bookmarks">
+<!ENTITY bookmarksMenuButton.mobile.label   "Mobile Bookmarks">
 <!ENTITY viewBookmarksSidebar2.label        "View Bookmarks Sidebar">
+<!ENTITY hideBookmarksSidebar.label         "Hide Bookmarks Sidebar">
 <!ENTITY viewBookmarksToolbar.label         "View Bookmarks Toolbar">
+<!ENTITY hideBookmarksToolbar.label         "Hide Bookmarks Toolbar">
 <!ENTITY searchBookmarks.label              "Search Bookmarks">
+<!ENTITY bookmarkingTools.label             "Bookmarking Tools">
+<!ENTITY addBookmarksMenu.label             "Add Bookmarks Menu to Toolbar">
+<!ENTITY removeBookmarksMenu.label          "Remove Bookmarks Menu from Toolbar">
 
 <!ENTITY containersMenu.label "Containers">
 
