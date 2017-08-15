@@ -7,7 +7,6 @@
 const { addons, createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
 const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));
 const FontList = createFactory(require("./FontList"));
@@ -25,24 +24,9 @@ const App = createClass({
     fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired,
     onPreviewFonts: PropTypes.func.isRequired,
     onShowAllFont: PropTypes.func.isRequired,
-    onTextBoxContextMenu: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
-
-  componentDidMount() {
-    let { onTextBoxContextMenu } = this.props;
-
-    let searchInput = findDOMNode(this).querySelector(".devtools-textinput");
-    searchInput.addEventListener("contextmenu", onTextBoxContextMenu);
-  },
-
-  componentWillUnmount() {
-    let { onTextBoxContextMenu } = this.props;
-
-    let searchInput = findDOMNode(this).querySelector(".devtools-textinput");
-    searchInput.removeEventListener("contextmenu", onTextBoxContextMenu);
-  },
 
   render() {
     let {
