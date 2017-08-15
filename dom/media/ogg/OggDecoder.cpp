@@ -13,20 +13,6 @@
 
 namespace mozilla {
 
-MediaDecoderStateMachine* OggDecoder::CreateStateMachine()
-{
-  RefPtr<OggDemuxer> demuxer = new OggDemuxer(mResource);
-  MediaFormatReaderInit init;
-  init.mVideoFrameContainer = GetVideoFrameContainer();
-  init.mKnowsCompositor = GetCompositor();
-  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
-  init.mFrameStats = mFrameStats;
-  mReader = new MediaFormatReader(init, demuxer);
-  demuxer->SetChainingEvents(&mReader->TimedMetadataProducer(),
-                             &mReader->MediaNotSeekableProducer());
-  return new MediaDecoderStateMachine(this, mReader);
-}
-
 /* static */
 bool
 OggDecoder::IsSupportedType(const MediaContainerType& aContainerType)
