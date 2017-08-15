@@ -104,6 +104,7 @@ const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "weave:service:sync:error",
                          "weave:service:sync:start",
                          "weave:service:resyncs-finished",
+                         "places-browser-init-complete",
                         ];
 
 var TPS = {
@@ -132,6 +133,7 @@ var TPS = {
   shouldValidatePasswords: false,
   shouldValidateForms: false,
   _windowsUpDeferred: PromiseUtils.defer(),
+  _placesInitDeferred: PromiseUtils.defer(),
 
   _init: function TPS__init() {
     this.delayAutoSync();
@@ -180,6 +182,10 @@ var TPS = {
 
         case "sessionstore-windows-restored":
           this._windowsUpDeferred.resolve();
+          break;
+
+        case "places-browser-init-complete":
+          this._placesInitDeferred.resolve();
           break;
 
         case "weave:service:setup-complete":
@@ -505,7 +511,9 @@ var TPS = {
                    " on addons");
   },
 
-  HandleBookmarks(bookmarks, action) {
+  async HandleBookmarks(bookmarks, action) {
+    // wait for default bookmarks to be created.
+    await this._placesInitDeferred.promise;
     this.shouldValidateBookmarks = true;
     try {
       let items = [];
@@ -518,7 +526,7 @@ var TPS = {
 
           if (last_item_pos != -1)
             bookmark.last_item_pos = last_item_pos;
-          let item_id = -1;
+          let itemGuid = null;
 
           if (action != ACTION_MODIFY && action != ACTION_DELETE)
             Logger.logInfo("executing action " + action.toUpperCase() +
@@ -534,18 +542,18 @@ var TPS = {
             placesItem = new Separator(bookmark);
 
           if (action == ACTION_ADD) {
-            item_id = placesItem.Create();
+            itemGuid = await placesItem.Create();
           } else {
-            item_id = placesItem.Find();
+            itemGuid = await placesItem.Find();
             if (action == ACTION_VERIFY_NOT) {
-              Logger.AssertTrue(item_id == -1,
+              Logger.AssertTrue(itemGuid == null,
                 "places item exists but it shouldn't: " +
                 JSON.stringify(bookmark));
             } else
-              Logger.AssertTrue(item_id != -1, "places item not found", true);
+              Logger.AssertTrue(itemGuid, "places item not found", true);
           }
 
-          last_item_pos = placesItem.GetItemIndex();
+          last_item_pos = await placesItem.GetItemIndex();
           items.push(placesItem);
         }
       }
@@ -556,11 +564,11 @@ var TPS = {
                          " on bookmark " + JSON.stringify(item));
           switch (action) {
             case ACTION_DELETE:
-              item.Remove();
+              await item.Remove();
               break;
             case ACTION_MODIFY:
               if (item.updateProps != null)
-                item.Update();
+                await item.Update();
               break;
           }
         }
@@ -569,7 +577,7 @@ var TPS = {
       Logger.logPass("executing action " + action.toUpperCase() +
         " on bookmarks");
     } catch (e) {
-      DumpBookmarks();
+      await DumpBookmarks();
       throw (e);
     }
   },
@@ -1223,20 +1231,20 @@ var Addons = {
 };
 
 var Bookmarks = {
-  add: function Bookmarks__add(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_ADD);
+  async add(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_ADD);
   },
-  modify: function Bookmarks__modify(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_MODIFY);
+  async modify(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_MODIFY);
   },
-  delete: function Bookmarks__delete(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_DELETE);
+  async delete(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_DELETE);
   },
-  verify: function Bookmarks__verify(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_VERIFY);
+  async verify(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_VERIFY);
   },
-  verifyNot: function Bookmarks__verifyNot(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_VERIFY_NOT);
+  async verifyNot(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_VERIFY_NOT);
   },
   skipValidation() {
     TPS.shouldValidateBookmarks = false;
