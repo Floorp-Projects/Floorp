@@ -503,16 +503,18 @@ tail =
         Assert that self.x.runTests with manifest=self.manifest
         returns |expected|.
         """
+        kwargs = {}
+        kwargs['xpcshell'] = xpcshellBin
+        kwargs['symbolsPath'] = self.symbols_path
+        kwargs['manifest'] = self.manifest
+        kwargs['mozInfo'] = mozinfo.info
+        kwargs['shuffle'] = shuffle
+        kwargs['verbose'] = verbose
+        kwargs['sequential'] = True
+        kwargs['testingModulesDir'] = os.path.join(objdir, '_tests', 'modules')
+        kwargs['utility_path'] = self.utility_path
         self.assertEquals(expected,
-                          self.x.runTests(xpcshellBin,
-                                          symbolsPath=self.symbols_path,
-                                          manifest=self.manifest,
-                                          mozInfo=mozinfo.info,
-                                          shuffle=shuffle,
-                                          verbose=verbose,
-                                          sequential=True,
-                                          testingModulesDir=os.path.join(objdir, '_tests', 'modules'),
-                                          utility_path=self.utility_path),
+                          self.x.runTests(kwargs),
                           msg="""Tests should have %s, log:
 ========
 %s
