@@ -565,6 +565,11 @@ pref("apz.overscroll.enabled", true);
 pref("apz.touch_move_tolerance", "0.03");
 pref("apz.touch_start_tolerance", "0.06");
 
+#ifdef NIGHTLY_BUILD
+// Temporary fix of Bug 1390145 for Fennec Nightly
+pref("apz.frame_delay.enabled", false);
+#endif
+
 pref("layers.progressive-paint", true);
 pref("layers.low-precision-buffer", true);
 pref("layers.low-precision-resolution", "0.25");

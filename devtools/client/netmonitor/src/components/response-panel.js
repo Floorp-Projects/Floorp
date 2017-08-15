@@ -156,16 +156,15 @@ const ResponsePanel = createClass({
         sectionName = JSON_SCOPE_NAME;
       }
       object[sectionName] = json;
-    } else {
-      sectionName = RESPONSE_PAYLOAD;
-
-      object[sectionName] = {
-        EDITOR_CONFIG: {
-          text,
-          mode: mimeType.replace(/;.+/, ""),
-        },
-      };
     }
+
+    // Others like text/html, text/plain, application/javascript
+    object[RESPONSE_PAYLOAD] = {
+      EDITOR_CONFIG: {
+        text,
+        mode: json ? "application/json" : mimeType.replace(/;.+/, ""),
+      },
+    };
 
     return (
       div({ className: "panel-container" },
@@ -175,7 +174,7 @@ const ResponsePanel = createClass({
         PropertiesView({
           object,
           filterPlaceHolder: JSON_FILTER_TEXT,
-          sectionNames: [sectionName],
+          sectionNames: Object.keys(object),
         }),
       )
     );

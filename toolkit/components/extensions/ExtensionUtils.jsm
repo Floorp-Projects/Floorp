@@ -236,25 +236,38 @@ class EventEmitter {
 
 
   /**
-   * Triggers all listeners for the given event, and returns a promise
-   * which resolves when all listeners have been called, and any
-   * promises they have returned have likewise resolved.
+   * Triggers all listeners for the given event. If any listeners return
+   * a value, returns a promise which resolves when all returned
+   * promises have resolved. Otherwise, returns undefined.
    *
    * @param {string} event
    *       The name of the event to emit.
    * @param {any} args
    *        Arbitrary arguments to pass to the listener functions, after
    *        the event name.
-   * @returns {Promise}
+   * @returns {Promise?}
    */
   emit(event, ...args) {
-    let listeners = this[LISTENERS].get(event) || new Set();
+    let listeners = this[LISTENERS].get(event);
 
-    let promises = Array.from(listeners, listener => {
-      return runSafeSyncWithoutClone(listener, event, ...args);
-    });
+    if (listeners) {
+      let promises = [];
 
-    return Promise.all(promises);
+      for (let listener of listeners) {
+        try {
+          let result = listener(event, ...args);
+          if (result !== undefined) {
+            promises.push(result);
+          }
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+
+      if (promises.length) {
+        return Promise.all(promises);
+      }
+    }
   }
 }
 

@@ -4213,7 +4213,6 @@ this.XPIProvider = {
     if (!aFile.exists()) {
       activeAddon.bootstrapScope =
         new Cu.Sandbox(principal, { sandboxName: aFile.path,
-                                    wantGlobalProperties: ["indexedDB"],
                                     addonId: aId,
                                     metadata: { addonID: aId } });
       logger.error("Attempted to load bootstrap scope from missing directory " + aFile.path);
@@ -4231,7 +4230,6 @@ this.XPIProvider = {
 
       activeAddon.bootstrapScope =
         new Cu.Sandbox(principal, { sandboxName: uri,
-                                    wantGlobalProperties: ["indexedDB"],
                                     addonId: aId,
                                     metadata: { addonID: aId, URI: uri } });
 

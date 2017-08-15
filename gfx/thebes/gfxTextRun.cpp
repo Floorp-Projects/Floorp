@@ -561,7 +561,7 @@ HasNonOpaqueNonTransparentColor(gfxContext *aContext, Color& aCurrentColorOut)
 }
 
 // helper class for double-buffering drawing with non-opaque color
-struct BufferAlphaColor {
+struct MOZ_STACK_CLASS BufferAlphaColor {
     explicit BufferAlphaColor(gfxContext *aContext)
         : mContext(aContext)
     {
