@@ -307,7 +307,7 @@ public:
 
   // The |aNodeSize| outparam on this function is where the actual node size
   // value is put. It gets added to the appropriate value within |aSizes| by
-  // nsDocument::DocAddSizeOfExcludingThis().
+  // AddSizeOfNodeTree().
   //
   // Among the sub-classes that inherit (directly or indirectly) from nsINode,
   // measurement of the following members may be added later if DMD finds it is
