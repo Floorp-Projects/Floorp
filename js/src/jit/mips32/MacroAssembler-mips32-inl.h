@@ -314,8 +314,9 @@ MacroAssembler::neg64(Register64 reg)
 void
 MacroAssembler::mulBy3(Register src, Register dest)
 {
-    as_addu(dest, src, src);
-    as_addu(dest, dest, src);
+    MOZ_ASSERT(src != ScratchRegister);
+    as_addu(ScratchRegister, src, src);
+    as_addu(dest, ScratchRegister, src);
 }
 
 void
