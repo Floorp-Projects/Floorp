@@ -13,6 +13,7 @@ from distutils.spawn import find_executable
 from mozboot.util import get_state_dir
 
 from ..tasks import generate_tasks
+from ..templates import TemplateParser
 from ..vcs import VCSHelper
 
 try:
@@ -78,6 +79,35 @@ fzf_header_shortcuts = {
     'accept': 'enter',
     'cancel': 'ctrl-c',
 }
+
+
+class FuzzyParser(TemplateParser):
+    arguments = [
+        [['-q', '--query'],
+         {'metavar': 'STR',
+          'help': "Use the given query instead of entering the selection "
+                  "interface. Equivalent to typing <query><ctrl-a><enter> "
+                  "from the interface.",
+          }],
+        [['-u', '--update'],
+         {'action': 'store_true',
+          'default': False,
+          'help': "Update fzf before running.",
+          }],
+        [['--full'],
+         {'action': 'store_true',
+          'default': False,
+          'help': "Use the full set of tasks as input to fzf (instead of "
+                  "target tasks).",
+          }],
+        [['-p', '--parameters'],
+         {'default': None,
+          'help': "Use the given parameters.yml to generate tasks, "
+                  "defaults to latest parameters.yml from mozilla-central",
+          }],
+    ]
+
+    templates = ['artifact']
 
 
 def run(cmd, cwd=None):
@@ -166,7 +196,7 @@ def format_header():
     return FZF_HEADER.format(shortcuts=', '.join(shortcuts), t=terminal)
 
 
-def run_fuzzy_try(update=False, query=None, full=False, parameters=None):
+def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None, **kwargs):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -199,4 +229,5 @@ def run_fuzzy_try(update=False, query=None, full=False, parameters=None):
         print("no tasks selected")
         return
 
-    return vcs.push_to_try("Pushed via 'mach try fuzzy', see diff for scheduled tasks", selected)
+    msg = "Pushed via 'mach try fuzzy', see diff for scheduled tasks"
+    return vcs.push_to_try(msg, selected, templates)

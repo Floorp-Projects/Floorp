@@ -76,10 +76,14 @@ class VCSHelper(object):
             print(e.output)
             raise
 
-    def write_task_config(self, labels):
+    def write_task_config(self, labels, templates=None):
         config = os.path.join(self.root, 'try_task_config.json')
         with open(config, 'w') as fh:
-            json.dump(sorted(labels), fh, indent=2)
+            try_task_config = {'tasks': sorted(labels)}
+            if templates:
+                try_task_config['templates'] = templates
+
+            json.dump(try_task_config, fh, indent=2)
         return config
 
     def check_working_directory(self):
@@ -102,11 +106,11 @@ class VCSHelper(object):
 
 class HgHelper(VCSHelper):
 
-    def push_to_try(self, msg, labels=None):
+    def push_to_try(self, msg, labels=None, templates=None):
         self.check_working_directory()
 
         if labels:
-            config = self.write_task_config(labels)
+            config = self.write_task_config(labels, templates)
             self.run(['hg', 'add', config])
 
         try:
@@ -136,7 +140,7 @@ class HgHelper(VCSHelper):
 
 class GitHelper(VCSHelper):
 
-    def push_to_try(self, msg, labels=None):
+    def push_to_try(self, msg, labels=None, templates=None):
         self.check_working_directory()
 
         try:
@@ -146,7 +150,7 @@ class GitHelper(VCSHelper):
             return 1
 
         if labels:
-            config = self.write_task_config(labels)
+            config = self.write_task_config(labels, templates)
             self.run(['git', 'add', config])
 
         subprocess.check_call(['git', 'commit', '--allow-empty', '-m', msg])
