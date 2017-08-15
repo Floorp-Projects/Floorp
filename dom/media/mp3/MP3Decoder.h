@@ -12,22 +12,13 @@ namespace mozilla {
 
 class MediaContainerType;
 
-class MP3Decoder : public ChannelMediaDecoder
+class MP3Decoder
 {
 public:
-  // MediaDecoder interface.
-  explicit MP3Decoder(MediaDecoderInit& aInit)
-    : ChannelMediaDecoder(aInit)
-  {
-  }
-
   // Returns true if the MP3 backend is preffed on, and we're running on a
   // platform that is likely to have decoders for the format.
   static bool IsEnabled();
   static bool IsSupportedType(const MediaContainerType& aContainerType);
-
-private:
-  ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) override;
 };
 
 } // namespace mozilla
