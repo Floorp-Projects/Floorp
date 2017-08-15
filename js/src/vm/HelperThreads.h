@@ -146,10 +146,14 @@ class GlobalHelperThreadState
 #endif
 
     enum CondVar {
-        // For notifying threads waiting for work that they may be able to make progress.
+        // For notifying threads waiting for work that they may be able to make
+        // progress, ie, a work item has been completed by a helper thread and
+        // the thread that created the work item can now consume it.
         CONSUMER,
 
-        // For notifying threads doing work that they may be able to make progress.
+        // For notifying helper threads doing the work that they may be able to
+        // make progress, ie, a work item has been enqueued and an idle helper
+        // thread may pick up up the work item and perform it.
         PRODUCER,
 
         // For notifying threads doing work which are paused that they may be
@@ -235,10 +239,14 @@ class GlobalHelperThreadState
 
     // Used by a major GC to signal processing enqueued compression tasks.
     void startHandlingCompressionTasks(const AutoLockHelperThreadState&);
+
+  private:
     void scheduleCompressionTasks(const AutoLockHelperThreadState&);
 
-    // Unlike the methods above, the value returned by this method can change
-    // over time, even if the helper thread state lock is held throughout.
+  public:
+    // Unlike the public methods above, the value returned by this method can
+    // change over time, even if the helper thread state lock is held
+    // throughout.
     bool pendingIonCompileHasSufficientPriority(const AutoLockHelperThreadState& lock);
 
     jit::IonBuilder* highestPriorityPendingIonCompile(const AutoLockHelperThreadState& lock,
@@ -310,7 +318,7 @@ class GlobalHelperThreadState
     void waitForAllThreads();
 
     template <typename T>
-    bool checkTaskThreadLimit(size_t maxThreads) const;
+    bool checkTaskThreadLimit(size_t maxThreads, bool isMaster = false) const;
 
   private:
 

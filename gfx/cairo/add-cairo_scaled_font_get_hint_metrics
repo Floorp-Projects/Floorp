@@ -1,0 +1,169 @@
+# HG changeset patch
+# User Mats Palmgren <mats@mozilla.com>
+# Parent  f3483af8ecf997453064201c49c48a682c7f3c29
+Bug 1377257 part 1 - Add cairo_scaled_font_get_hint_metrics to avoid malloc/free that is required to use cairo_scaled_font_get_font_options.  r=jfkthame
+
+diff --git a/gfx/cairo/add-cairo_scaled_font_get_hint_metrics b/gfx/cairo/add-cairo_scaled_font_get_hint_metrics
+new file mode 100644
+--- /dev/null
++++ b/gfx/cairo/add-cairo_scaled_font_get_hint_metrics
+@@ -0,0 +1,82 @@
++# HG changeset patch
++# User Mats Palmgren <mats@mozilla.com>
++# Parent  f3483af8ecf997453064201c49c48a682c7f3c29
++Bug 1377257 part 1 - Add cairo_scaled_font_get_hint_metrics to avoid malloc/free that is required to use cairo_scaled_font_get_font_options.  r=jfkthame
++
++diff --git a/gfx/cairo/cairo/src/cairo-rename.h b/gfx/cairo/cairo/src/cairo-rename.h
++--- a/gfx/cairo/cairo/src/cairo-rename.h
+++++ b/gfx/cairo/cairo/src/cairo-rename.h
++@@ -262,16 +262,17 @@
++ #define cairo_scale _moz_cairo_scale
++ #define cairo_scaled_font_create _moz_cairo_scaled_font_create
++ #define cairo_scaled_font_destroy _moz_cairo_scaled_font_destroy
++ #define cairo_scaled_font_extents _moz_cairo_scaled_font_extents
++ #define cairo_scaled_font_get_ctm _moz_cairo_scaled_font_get_ctm
++ #define cairo_scaled_font_get_font_face _moz_cairo_scaled_font_get_font_face
++ #define cairo_scaled_font_get_font_matrix _moz_cairo_scaled_font_get_font_matrix
++ #define cairo_scaled_font_get_font_options _moz_cairo_scaled_font_get_font_options
+++#define cairo_scaled_font_get_hint_metrics _moz_cairo_scaled_font_get_hint_metrics
++ #define cairo_scaled_font_get_reference_count _moz_cairo_scaled_font_get_reference_count
++ #define cairo_scaled_font_get_scale_matrix _moz_cairo_scaled_font_get_scale_matrix
++ #define cairo_scaled_font_get_type _moz_cairo_scaled_font_get_type
++ #define cairo_scaled_font_get_user_data _moz_cairo_scaled_font_get_user_data
++ #define cairo_scaled_font_glyph_extents _moz_cairo_scaled_font_glyph_extents
++ #define cairo_scaled_font_reference _moz_cairo_scaled_font_reference
++ #define cairo_scaled_font_set_user_data _moz_cairo_scaled_font_set_user_data
++ #define cairo_scaled_font_status _moz_cairo_scaled_font_status
++diff --git a/gfx/cairo/cairo/src/cairo-scaled-font.c b/gfx/cairo/cairo/src/cairo-scaled-font.c
++--- a/gfx/cairo/cairo/src/cairo-scaled-font.c
+++++ b/gfx/cairo/cairo/src/cairo-scaled-font.c
++@@ -2983,8 +2983,28 @@ cairo_scaled_font_get_font_options (cair
++     if (scaled_font->status) {
++ 	_cairo_font_options_init_default (options);
++ 	return;
++     }
++ 
++     _cairo_font_options_init_copy (options, &scaled_font->options);
++ }
++ slim_hidden_def (cairo_scaled_font_get_font_options);
+++
+++/**
+++ * cairo_scaled_font_get_hint_metrics:
+++ * @scaled_font: a #cairo_scaled_font_t
+++ *
+++ * Mozilla extension since the required malloc/free to use
+++ * cairo_scaled_font_get_font_options() above is too slow.
+++ **/
+++cairo_public cairo_hint_metrics_t
+++cairo_scaled_font_get_hint_metrics (cairo_scaled_font_t		*scaled_font)
+++{
+++    cairo_font_options_t options;
+++    if (scaled_font->status) {
+++	_cairo_font_options_init_default (&options);
+++    } else {
+++	_cairo_font_options_init_copy (&options, &scaled_font->options);
+++    }
+++    return options.hint_metrics;
+++}
+++slim_hidden_def (cairo_scaled_font_get_hint_metrics);
++diff --git a/gfx/cairo/cairo/src/cairo.h b/gfx/cairo/cairo/src/cairo.h
++--- a/gfx/cairo/cairo/src/cairo.h
+++++ b/gfx/cairo/cairo/src/cairo.h
++@@ -1493,16 +1493,21 @@ cairo_scaled_font_get_ctm (cairo_scaled_
++ cairo_public void
++ cairo_scaled_font_get_scale_matrix (cairo_scaled_font_t	*scaled_font,
++ 				    cairo_matrix_t	*scale_matrix);
++ 
++ cairo_public void
++ cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
++ 				    cairo_font_options_t	*options);
++ 
+++/* mozilla extension, see https://bugzilla.mozilla.org/show_bug.cgi?id=1377257 */
+++cairo_public cairo_hint_metrics_t
+++cairo_scaled_font_get_hint_metrics (cairo_scaled_font_t		*scaled_font);
+++
+++
++ 
++ /* Toy fonts */
++ 
++ cairo_public cairo_font_face_t *
++ cairo_toy_font_face_create (const char           *family,
++ 			    cairo_font_slant_t    slant,
++ 			    cairo_font_weight_t   weight);
++ 
+diff --git a/gfx/cairo/cairo/src/cairo-rename.h b/gfx/cairo/cairo/src/cairo-rename.h
+--- a/gfx/cairo/cairo/src/cairo-rename.h
++++ b/gfx/cairo/cairo/src/cairo-rename.h
+@@ -262,16 +262,17 @@
+ #define cairo_scale _moz_cairo_scale
+ #define cairo_scaled_font_create _moz_cairo_scaled_font_create
+ #define cairo_scaled_font_destroy _moz_cairo_scaled_font_destroy
+ #define cairo_scaled_font_extents _moz_cairo_scaled_font_extents
+ #define cairo_scaled_font_get_ctm _moz_cairo_scaled_font_get_ctm
+ #define cairo_scaled_font_get_font_face _moz_cairo_scaled_font_get_font_face
+ #define cairo_scaled_font_get_font_matrix _moz_cairo_scaled_font_get_font_matrix
+ #define cairo_scaled_font_get_font_options _moz_cairo_scaled_font_get_font_options
++#define cairo_scaled_font_get_hint_metrics _moz_cairo_scaled_font_get_hint_metrics
+ #define cairo_scaled_font_get_reference_count _moz_cairo_scaled_font_get_reference_count
+ #define cairo_scaled_font_get_scale_matrix _moz_cairo_scaled_font_get_scale_matrix
+ #define cairo_scaled_font_get_type _moz_cairo_scaled_font_get_type
+ #define cairo_scaled_font_get_user_data _moz_cairo_scaled_font_get_user_data
+ #define cairo_scaled_font_glyph_extents _moz_cairo_scaled_font_glyph_extents
+ #define cairo_scaled_font_reference _moz_cairo_scaled_font_reference
+ #define cairo_scaled_font_set_user_data _moz_cairo_scaled_font_set_user_data
+ #define cairo_scaled_font_status _moz_cairo_scaled_font_status
+diff --git a/gfx/cairo/cairo/src/cairo-scaled-font.c b/gfx/cairo/cairo/src/cairo-scaled-font.c
+--- a/gfx/cairo/cairo/src/cairo-scaled-font.c
++++ b/gfx/cairo/cairo/src/cairo-scaled-font.c
+@@ -2983,8 +2983,28 @@ cairo_scaled_font_get_font_options (cair
+     if (scaled_font->status) {
+ 	_cairo_font_options_init_default (options);
+ 	return;
+     }
+ 
+     _cairo_font_options_init_copy (options, &scaled_font->options);
+ }
+ slim_hidden_def (cairo_scaled_font_get_font_options);
++
++/**
++ * cairo_scaled_font_get_hint_metrics:
++ * @scaled_font: a #cairo_scaled_font_t
++ *
++ * Mozilla extension since the required malloc/free to use
++ * cairo_scaled_font_get_font_options() above is too slow.
++ **/
++cairo_public cairo_hint_metrics_t
++cairo_scaled_font_get_hint_metrics (cairo_scaled_font_t		*scaled_font)
++{
++    cairo_font_options_t options;
++    if (scaled_font->status) {
++	_cairo_font_options_init_default (&options);
++    } else {
++	_cairo_font_options_init_copy (&options, &scaled_font->options);
++    }
++    return options.hint_metrics;
++}
++slim_hidden_def (cairo_scaled_font_get_hint_metrics);
+diff --git a/gfx/cairo/cairo/src/cairo.h b/gfx/cairo/cairo/src/cairo.h
+--- a/gfx/cairo/cairo/src/cairo.h
++++ b/gfx/cairo/cairo/src/cairo.h
+@@ -1493,16 +1493,19 @@ cairo_scaled_font_get_ctm (cairo_scaled_
+ cairo_public void
+ cairo_scaled_font_get_scale_matrix (cairo_scaled_font_t	*scaled_font,
+ 				    cairo_matrix_t	*scale_matrix);
+ 
+ cairo_public void
+ cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
+ 				    cairo_font_options_t	*options);
+ 
++cairo_public cairo_hint_metrics_t
++cairo_scaled_font_get_hint_metrics (cairo_scaled_font_t		*scaled_font);
++
+ 
+ /* Toy fonts */
+ 
+ cairo_public cairo_font_face_t *
+ cairo_toy_font_face_create (const char           *family,
+ 			    cairo_font_slant_t    slant,
+ 			    cairo_font_weight_t   weight);
+ 

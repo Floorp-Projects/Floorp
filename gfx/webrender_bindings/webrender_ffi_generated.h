@@ -943,6 +943,7 @@ void wr_dp_push_stacking_context(WrState *aState,
                                  const float *aOpacity,
                                  const LayoutTransform *aTransform,
                                  TransformStyle aTransformStyle,
+                                 const LayoutTransform *aPerspective,
                                  MixBlendMode aMixBlendMode,
                                  const WrFilterOp *aFilters,
                                  size_t aFilterCount)
