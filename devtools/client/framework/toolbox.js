@@ -67,6 +67,8 @@ loader.lazyRequireGetter(this, "HUDService",
   "devtools/client/webconsole/hudservice", true);
 loader.lazyRequireGetter(this, "viewSource",
   "devtools/client/shared/view-source");
+loader.lazyRequireGetter(this, "StyleSheetsFront",
+  "devtools/shared/fronts/stylesheets", true);
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -104,6 +106,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
 
   this._initInspector = null;
   this._inspector = null;
+  this._styleSheets = null;
 
   // Map of frames (id => frame-info) and currently selected frame id.
   this.frameMap = new Map();
@@ -619,18 +622,17 @@ Toolbox.prototype = {
 
   /**
    * Clients wishing to use source maps but that want the toolbox to
-   * track the source actor mapping can use this source map service.
-   * This is a higher-level service than the one returned by
-   * |sourceMapService|, in that it automatically tracks source actor
-   * IDs.
+   * track the source and style sheet actor mapping can use this
+   * source map service.  This is a higher-level service than the one
+   * returned by |sourceMapService|, in that it automatically tracks
+   * source and style sheet actor IDs.
    */
   get sourceMapURLService() {
     if (this._sourceMapURLService) {
       return this._sourceMapURLService;
     }
     let sourceMaps = this._createSourceMapService();
-    this._sourceMapURLService = new SourceMapURLService(this._target, this.threadClient,
-                                                        sourceMaps);
+    this._sourceMapURLService = new SourceMapURLService(this, sourceMaps);
     return this._sourceMapURLService;
   },
 
@@ -2546,6 +2548,12 @@ Toolbox.prototype = {
     // Destroy the preference front
     outstanding.push(this.destroyPreference());
 
+    // Destroy the style sheet front.
+    if (this._styleSheets) {
+      this._styleSheets.destroy();
+      this._styleSheets = null;
+    }
+
     // Detach the thread
     detachThread(this._threadClient);
     this._threadClient = null;
@@ -2715,6 +2723,17 @@ Toolbox.prototype = {
     yield this.performance.destroy();
     this._performance = null;
   }),
+
+  /**
+   * Return the style sheets front, creating it if necessary.  If the
+   * style sheets front is not supported by the target, returns null.
+   */
+  initStyleSheetsFront: function () {
+    if (!this._styleSheets && this.target.hasActor("styleSheets")) {
+      this._styleSheets = StyleSheetsFront(this.target.client, this.target.form);
+    }
+    return this._styleSheets;
+  },
 
   /**
    * Destroy the preferences actor when the toolbox is unloaded.
