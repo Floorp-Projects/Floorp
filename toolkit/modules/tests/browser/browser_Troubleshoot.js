@@ -333,6 +333,9 @@ const SNAPSHOT_SCHEMA = {
         directWriteVersion: {
           type: "string",
         },
+        offMainThreadPaintEnabled: {
+          type: "boolean",
+        },
         clearTypeParameters: {
           type: "string",
         },
