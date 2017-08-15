@@ -146,8 +146,8 @@ class AsyncGeneratorObject : public NativeObject
         return &getFixedSlot(Slot_QueueOrRequest).toObject().as<AsyncGeneratorRequest>();
     }
 
-    ArrayObject* queue() const {
-        return &getFixedSlot(Slot_QueueOrRequest).toObject().as<ArrayObject>();
+    NativeObject* queue() const {
+        return &getFixedSlot(Slot_QueueOrRequest).toObject().as<NativeObject>();
     }
     void setQueue(JSObject* queue_) {
         setFixedSlot(Slot_QueueOrRequest, ObjectValue(*queue_));
@@ -217,7 +217,7 @@ class AsyncGeneratorObject : public NativeObject
     bool isQueueEmpty() const {
         if (isSingleQueue())
             return isSingleQueueEmpty();
-        return queue()->length() == 0;
+        return queue()->getDenseInitializedLength() == 0;
     }
 };
 
