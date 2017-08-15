@@ -3787,7 +3787,8 @@ Selection::NotifySelectionListeners()
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsIPresShell* ps = GetPresShell();
   if (ps) {
-    domdoc = do_QueryInterface(ps->GetDocument());
+    // Avoid using QueryInterface() here because it can be expensive.
+    domdoc = static_cast<nsIDOMDocument*>(ps->GetDocument()->AsDOMNode());
   }
 
   short reason = frameSelection->PopReason();
