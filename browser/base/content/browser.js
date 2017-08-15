@@ -5481,9 +5481,11 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 }
 
 function onViewToolbarCommand(aEvent) {
-  var toolbarId = aEvent.originalTarget.getAttribute("toolbarId");
-  var isVisible = aEvent.originalTarget.getAttribute("checked") == "true";
+  let node = aEvent.originalTarget;
+  let toolbarId = node.getAttribute("toolbarId");
+  let isVisible = node.getAttribute("checked") == "true";
   CustomizableUI.setToolbarVisibility(toolbarId, isVisible);
+  updateToggleControlLabel(node);
 }
 
 function setToolbarVisibility(toolbar, isVisible, persist = true) {
@@ -5513,6 +5515,18 @@ function setToolbarVisibility(toolbar, isVisible, persist = true) {
 
   PlacesToolbarHelper.init();
   BookmarkingUI.onToolbarVisibilityChange();
+}
+
+function updateToggleControlLabel(control) {
+  if (!control.hasAttribute("label-checked")) {
+    return;
+  }
+
+  if (!control.hasAttribute("label-unchecked")) {
+    control.setAttribute("label-unchecked", control.getAttribute("label"));
+  }
+  let prefix = (control.getAttribute("checked") == "true") ? "" : "un";
+  control.setAttribute("label", control.getAttribute(`label-${prefix}checked`));
 }
 
 var TabletModeUpdater = {
