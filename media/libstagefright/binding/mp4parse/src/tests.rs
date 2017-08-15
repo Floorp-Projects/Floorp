@@ -975,6 +975,23 @@ fn read_esds_one_byte_extension_descriptor() {
 }
 
 #[test]
+fn read_esds_byte_extension_descriptor() {
+    let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
+        s.B32(0) // reserved
+         .B16(0x0003)
+         .B16(0x8181)   // extension byte length 0x81
+         .append_repeated(0, 0x81)
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+
+    match super::read_esds(&mut stream) {
+        Ok(_) => (),
+        _ => panic!("fail to parse descriptor extension byte length"),
+    }
+}
+
+#[test]
 fn read_f4v_stsd() {
     let mut stream = make_box(BoxSize::Auto, b".mp3", |s| {
         s.append_repeated(0, 6)
