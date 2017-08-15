@@ -251,16 +251,23 @@ bool CompartmentPrivate::TryParseLocationURI(CompartmentPrivate::LocationHint aL
         return false;
 
     // Handle Sandbox location strings.
-    // A sandbox string looks like this:
+    // A sandbox string looks like this, for anonymous sandboxes, and builds
+    // where Sandbox location tagging is enabled:
+    //
     // <sandboxName> (from: <js-stack-frame-filename>:<lineno>)
+    //
     // where <sandboxName> is user-provided via Cu.Sandbox()
     // and <js-stack-frame-filename> and <lineno> is the stack frame location
     // from where Cu.Sandbox was called.
+    //
+    // Otherwise, it is simply the caller-provided name, which is usually a URI.
+    //
     // <js-stack-frame-filename> furthermore is "free form", often using a
     // "uri -> uri -> ..." chain. The following code will and must handle this
     // common case.
+    //
     // It should be noted that other parts of the code may already rely on the
-    // "format" of these strings, such as the add-on SDK.
+    // "format" of these strings.
 
     static const nsDependentCString from("(from: ");
     static const nsDependentCString arrow(" -> ");

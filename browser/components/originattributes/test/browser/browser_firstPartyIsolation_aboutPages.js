@@ -157,7 +157,7 @@ add_task(async function test_aboutURL() {
       if ((flags & Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT) &&
           !(flags & Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT) &&
           networkURLs.indexOf(aboutType) == -1 &&
-          // Exclude about:newtab see Bug 1021667
+          // handle about:newtab in browser_firstPartyIsolation_about_newtab.js
           aboutType !== "newtab") {
         aboutURLs.push(aboutType);
       }

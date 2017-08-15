@@ -170,7 +170,7 @@ add_task(function* () {
         box != "json",
         "The response json view doesn't display");
       is(tabpanel.querySelector(".CodeMirror-code") === null,
-        box != "textarea",
+        (box !== "textarea" && box !== "json"),
         "The response editor doesn't display");
       is(tabpanel.querySelector(".response-image-box") === null,
         box != "image",
@@ -208,8 +208,8 @@ add_task(function* () {
       case "json": {
         checkVisibility("json");
 
-        is(tabpanel.querySelectorAll(".tree-section").length, 1,
-          "There should be 1 tree sections displayed in this tabpanel.");
+        is(tabpanel.querySelectorAll(".tree-section").length, 2,
+          "There should be 2 tree sections displayed in this tabpanel.");
         is(tabpanel.querySelectorAll(".empty-notice").length, 0,
           "The empty notice should not be displayed in this tabpanel.");
 

@@ -244,22 +244,26 @@ CompositorManagerChild::ProcessingError(Result aCode, const char* aReason)
 already_AddRefed<nsIEventTarget>
 CompositorManagerChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
-  if (aMsg.type() != PCompositorBridge::Msg_DidComposite__ID) {
-    return nullptr;
+  if (aMsg.type() == PCompositorBridge::Msg_DidComposite__ID) {
+    uint64_t layersId;
+    PickleIterator iter(aMsg);
+    if (!IPC::ReadParam(&aMsg, &iter, &layersId)) {
+      return nullptr;
+    }
+
+    TabChild* tabChild = TabChild::GetFrom(layersId);
+    if (!tabChild) {
+      return nullptr;
+    }
+
+    return do_AddRef(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
   }
 
-  uint64_t layersId;
-  PickleIterator iter(aMsg);
-  if (!IPC::ReadParam(&aMsg, &iter, &layersId)) {
-    return nullptr;
+  if (aMsg.type() == PCompositorBridge::Msg_ParentAsyncMessages__ID) {
+    return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
   }
 
-  TabChild* tabChild = TabChild::GetFrom(layersId);
-  if (!tabChild) {
-    return nullptr;
-  }
-
-  return do_AddRef(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
+  return nullptr;
 }
 
 void
