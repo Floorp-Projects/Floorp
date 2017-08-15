@@ -144,6 +144,7 @@ class nsHtml5SpeculativeLoad {
     inline void InitStyle(nsHtml5String aUrl,
                           nsHtml5String aCharset,
                           nsHtml5String aCrossOrigin,
+                          nsHtml5String aReferrerPolicy,
                           nsHtml5String aIntegrity)
     {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
@@ -152,6 +153,7 @@ class nsHtml5SpeculativeLoad {
       aUrl.ToString(mUrl);
       aCharset.ToString(mCharset);
       aCrossOrigin.ToString(mCrossOrigin);
+      aReferrerPolicy.ToString(mReferrerPolicy);
       aIntegrity.ToString(mIntegrity);
     }
 
