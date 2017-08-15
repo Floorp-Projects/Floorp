@@ -117,6 +117,11 @@ ContentHandlerService::~ContentHandlerService()
 {
 }
 
+NS_IMETHODIMP ContentHandlerService::AsyncInit()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP ContentHandlerService::Enumerate(nsISimpleEnumerator * *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
