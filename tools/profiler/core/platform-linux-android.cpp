@@ -257,17 +257,12 @@ Sampler::Sampler(PSLockRef aLock)
 {
 #if defined(USE_EHABI_STACKWALK)
   mozilla::EHABIStackWalkInit();
-#elif defined(USE_LUL_STACKWALK)
-  bool createdLUL = false;
-  lul::LUL* lul = CorePS::Lul(aLock);
-  if (!lul) {
-    CorePS::SetLul(aLock, MakeUnique<lul::LUL>(logging_sink_for_LUL));
-    // Read all the unwind info currently available.
-    lul = CorePS::Lul(aLock);
-    read_procmaps(lul);
-    createdLUL = true;
-  }
 #endif
+
+  // NOTE: We don't initialize LUL here, instead initializing it in
+  // SamplerThread's constructor. This is because with the
+  // profiler_suspend_and_sample_thread entry point, we want to be able to
+  // sample without waiting for LUL to be initialized.
 
   // Request profiling signals.
   struct sigaction sa;
@@ -277,21 +272,6 @@ Sampler::Sampler(PSLockRef aLock)
   if (sigaction(SIGPROF, &sa, &mOldSigprofHandler) != 0) {
     MOZ_CRASH("Error installing SIGPROF handler in the profiler");
   }
-
-#if defined(USE_LUL_STACKWALK)
-  if (createdLUL) {
-    // Switch into unwind mode. After this point, we can't add or remove any
-    // unwind info to/from this LUL instance. The only thing we can do with
-    // it is Unwind() calls.
-    lul->EnableUnwinding();
-
-    // Has a test been requested?
-    if (PR_GetEnv("MOZ_PROFILER_LUL_TEST")) {
-      int nTests = 0, nTestsPassed = 0;
-      RunLulUnitTests(&nTests, &nTestsPassed, lul);
-    }
-  }
-#endif
 }
 
 void
@@ -413,6 +393,27 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
   , mIntervalMicroseconds(
       std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
 {
+#if defined(USE_LUL_STACKWALK)
+  lul::LUL* lul = CorePS::Lul(aLock);
+  if (!lul) {
+    CorePS::SetLul(aLock, MakeUnique<lul::LUL>(logging_sink_for_LUL));
+    // Read all the unwind info currently available.
+    lul = CorePS::Lul(aLock);
+    read_procmaps(lul);
+
+    // Switch into unwind mode. After this point, we can't add or remove any
+    // unwind info to/from this LUL instance. The only thing we can do with
+    // it is Unwind() calls.
+    lul->EnableUnwinding();
+
+    // Has a test been requested?
+    if (PR_GetEnv("MOZ_PROFILER_LUL_TEST")) {
+      int nTests = 0, nTestsPassed = 0;
+      RunLulUnitTests(&nTests, &nTestsPassed, lul);
+    }
+  }
+#endif
+
   // Start the sampling thread. It repeatedly sends a SIGPROF signal. Sending
   // the signal ourselves instead of relying on itimer provides much better
   // accuracy.

@@ -430,11 +430,22 @@ nsRange::UnregisterCommonAncestor(nsINode* aNode)
   MOZ_ASSERT(ranges);
   NS_ASSERTION(ranges->GetEntry(this), "unknown range");
 
+  bool isNativeAnon = aNode->IsInNativeAnonymousSubtree();
+  bool removed = false;
+
   if (ranges->Count() == 1) {
     aNode->ClearCommonAncestorForRangeInSelection();
-    aNode->GetCommonAncestorRangesPtr().reset();
+    if (!isNativeAnon) {
+      // For nodes which are in native anonymous subtrees, we optimize away the
+      // cost of deallocating the hashtable here because we may need to create
+      // it again shortly afterward.  We don't do this for all nodes in order
+      // to avoid the additional memory usage unconditionally.
+      aNode->GetCommonAncestorRangesPtr().reset();
+      removed = true;
+    }
     UnmarkDescendants(aNode);
-  } else {
+  }
+  if (!removed) {
     ranges->RemoveEntry(this);
   }
 }

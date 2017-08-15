@@ -105,16 +105,12 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
-                                  "resource://gre/modules/ExtensionUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "MessageManagerProxy",
-                            () => ExtensionUtils.MessageManagerProxy);
+const {
+  MessageManagerProxy,
+} = ExtensionUtils;
 
 /**
  * Handles the mapping and dispatching of messages to their registered
@@ -538,7 +534,11 @@ this.MessageChannel = {
       return Promise.resolve();  // Not expecting any reply.
     }
 
-    let deferred = PromiseUtils.defer();
+    let deferred = {};
+    deferred.promise = new Promise((resolve, reject) => {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+    });
     deferred.sender = recipient;
     deferred.messageManager = target;
     deferred.channelId = channelId;

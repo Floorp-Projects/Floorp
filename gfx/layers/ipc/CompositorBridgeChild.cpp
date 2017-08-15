@@ -1189,15 +1189,18 @@ CompositorBridgeChild::NotifyFinishedAsyncPaint(CapturedPaintState* aState)
 }
 
 void
-CompositorBridgeChild::NotifyFinishedAsyncPaintLayer()
+CompositorBridgeChild::NotifyFinishedAsyncPaintTransaction()
 {
   MOZ_ASSERT(PaintThread::IsOnPaintThread());
   MonitorAutoLock lock(mPaintLock);
+  // Since this should happen after ALL paints are done and
+  // at the end of a transaction, this should always be true.
+  MOZ_RELEASE_ASSERT(mOutstandingAsyncPaints == 0);
 
   // It's possible that we painted so fast that the main thread never reached
   // the code that starts delaying messages. If so, mIsWaitingForPaint will be
   // false, and we can safely return.
-  if (mIsWaitingForPaint && mOutstandingAsyncPaints == 0) {
+  if (mIsWaitingForPaint) {
     ResumeIPCAfterAsyncPaint();
 
     // Notify the main thread in case it's blocking. We do this unconditionally

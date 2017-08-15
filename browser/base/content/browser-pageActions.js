@@ -457,8 +457,8 @@ var BrowserPageActions = {
       // like how #star-button is contained in #star-button-box, the latter
       // being the bookmark action's node.  Look up the ancestor chain.
       for (let n = node.parentNode; n && !action; n = n.parentNode) {
-        if (n.id == "urlbar-icons" || n.localName == "panelview") {
-          // We reached the urlbar icons container or the panelview container.
+        if (n.id == "page-action-buttons" || n.localName == "panelview") {
+          // We reached the page-action-buttons or panelview container.
           // Stop looking; no acton was found.
           break;
         }

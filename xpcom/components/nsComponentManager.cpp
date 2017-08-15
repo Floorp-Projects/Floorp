@@ -1316,7 +1316,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID& aClass,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsresult rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
+  nsresult rv = NS_OK;
   nsFactoryEntry* entry;
 
   {
@@ -1328,6 +1328,8 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID& aClass,
     nsCOMPtr<nsISupports> service;
     rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
     *aResult = (service != nullptr);
+  } else {
+    *aResult = false;
   }
 
   return rv;
@@ -1356,7 +1358,7 @@ nsComponentManagerImpl::IsServiceInstantiatedByContractID(
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsresult rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
+  nsresult rv = NS_OK;
   nsFactoryEntry* entry;
   {
     SafeMutexAutoLock lock(mLock);
@@ -1367,6 +1369,8 @@ nsComponentManagerImpl::IsServiceInstantiatedByContractID(
     nsCOMPtr<nsISupports> service;
     rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
     *aResult = (service != nullptr);
+  } else {
+    *aResult = false;
   }
   return rv;
 }
