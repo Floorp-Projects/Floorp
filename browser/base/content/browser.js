@@ -5004,8 +5004,9 @@ var CombinedStopReload = {
 
   onTabSwitch() {
     // Reset the time in the event of a tabswitch since the stored time
-    // would have been associated with the previous tab.
-    this.timeWhenSwitchedToStop = 0;
+    // would have been associated with the previous tab, so the animation will
+    // still run if the page has been loading until long after the tab switch.
+    this.timeWhenSwitchedToStop = window.performance.now();
   },
 
   switchToStop(aRequest, aWebProgress) {
@@ -5016,11 +5017,11 @@ var CombinedStopReload = {
     // Store the time that we switched to the stop button only if a request
     // is active. Requests are null if the switch is related to a tabswitch.
     // This is used to determine if we should show the stop->reload animation.
-    if (aRequest) {
+    if (aRequest instanceof Ci.nsIRequest) {
       this.timeWhenSwitchedToStop = window.performance.now();
     }
 
-    let shouldAnimate = aRequest &&
+    let shouldAnimate = aRequest instanceof Ci.nsIRequest &&
                         aWebProgress.isTopLevel &&
                         aWebProgress.isLoadingDocument &&
                         !gBrowser.tabAnimationsInProgress &&
@@ -5043,7 +5044,7 @@ var CombinedStopReload = {
       return;
     }
 
-    let shouldAnimate = aRequest &&
+    let shouldAnimate = aRequest instanceof Ci.nsIRequest &&
                         aWebProgress.isTopLevel &&
                         !aWebProgress.isLoadingDocument &&
                         !gBrowser.tabAnimationsInProgress &&
@@ -5084,10 +5085,10 @@ var CombinedStopReload = {
   _loadTimeExceedsMinimumForAnimation() {
     // If the time between switching to the stop button then switching to
     // the reload button exceeds 150ms, then we will show the animation.
-    // If we don't know when we switched to stop (a tabswitch occured while
-    // the page was loading), then we will not prevent the animation from
-    // occuring.
-    return !this.timeWhenSwitchedToStop ||
+    // If we don't know when we switched to stop (switchToStop is called
+    // after init but before switchToReload), then we will prevent the
+    // animation from occuring.
+    return this.timeWhenSwitchedToStop &&
            window.performance.now() - this.timeWhenSwitchedToStop > 150;
   },
 
