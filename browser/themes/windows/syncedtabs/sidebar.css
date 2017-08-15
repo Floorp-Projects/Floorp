@@ -36,7 +36,9 @@ html {
   height: 16px;
   background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
-  display: block;
+  background-position: center;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .textbox-search-icon:-moz-locale-dir(rtl) {
@@ -62,13 +64,11 @@ html {
   cursor: text;
 }
 
-.textbox-search-clear:not([disabled]):hover ,
-.textbox-search-icon:not([disabled]):hover {
+.textbox-search-clear:not([disabled]):hover {
   background-position: -16px 0;
 }
 
-.textbox-search-clear:not([disabled]):hover:active ,
-.textbox-search-icon:not([disabled]):hover:active {
+.textbox-search-clear:not([disabled]):hover:active {
   background-position: -32px 0;
 }
 
