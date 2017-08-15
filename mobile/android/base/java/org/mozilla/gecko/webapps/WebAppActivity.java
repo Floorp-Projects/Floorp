@@ -182,29 +182,6 @@ public class WebAppActivity extends AppCompatActivity
         setRequestedOrientation(activityOrientation);
     }
 
-    private void updateDisplayMode(JSONObject manifest) {
-        String displayMode = manifest.optString("display");
-
-        GeckoViewSettings.DisplayMode mode;
-        switch (displayMode) {
-            case "standalone":
-                mode = GeckoViewSettings.DisplayMode.STANDALONE;
-                break;
-            case "fullscreen":
-                mode = GeckoViewSettings.DisplayMode.FULLSCREEN;
-                break;
-            case "minimal-ui":
-                mode = GeckoViewSettings.DisplayMode.MINIMAL_UI;
-                break;
-            case "browser":
-            default:
-                mode = GeckoViewSettings.DisplayMode.BROWSER;
-                break;
-        }
-
-        mGeckoView.getSettings().setInt(GeckoViewSettings.USE_DISPLAY_MODE, mode.value());
-    }
-
     private Integer readColorFromManifest(JSONObject manifest) {
         final String colorStr = manifest.optString("theme_color", null);
         if (colorStr != null) {
