@@ -183,6 +183,9 @@ const RECOMMENDED_PREFS = new Map([
   // Disable popup-blocker
   ["dom.disable_open_during_load", false],
 
+  // Enabling the support for File object creation in the content process
+  ["dom.file.createInChild", true],
+
   // Disable the ProcessHangMonitor
   ["dom.ipc.reportProcessHangs", false],
 
