@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <style>
+  @keyframes anim {
+    from { content: 'content'; }
+    to { content: ''; }
+  }
+  #target::before {
+    content: 'initial';
+    animation: anim 100s paused;
+  }
+  </style>
+  <div id='target'></div>
+</html>
