@@ -246,11 +246,11 @@ public:
 
   bool IsEmpty() const { return mSurfaces.Count() == 0; }
 
-  void Insert(NotNull<CachedSurface*> aSurface)
+  MOZ_MUST_USE bool Insert(NotNull<CachedSurface*> aSurface)
   {
     MOZ_ASSERT(!mLocked || aSurface->IsPlaceholder() || aSurface->IsLocked(),
                "Inserting an unlocked surface for a locked image");
-    mSurfaces.Put(aSurface->GetSurfaceKey(), aSurface);
+    return mSurfaces.Put(aSurface->GetSurfaceKey(), aSurface, fallible);
   }
 
   void Remove(NotNull<CachedSurface*> aSurface)
@@ -480,7 +480,8 @@ public:
     // We require that locking succeed if the image is locked and we're not
     // inserting a placeholder; the caller may need to know this to handle
     // errors correctly.
-    if (cache->IsLocked() && !surface->IsPlaceholder()) {
+    bool mustLock = cache->IsLocked() && !surface->IsPlaceholder();
+    if (mustLock) {
       surface->SetLocked(true);
       if (!surface->IsLocked()) {
         return InsertOutcome::FAILURE;
@@ -489,9 +490,14 @@ public:
 
     // Insert.
     MOZ_ASSERT(cost <= mAvailableCost, "Inserting despite too large a cost");
-    cache->Insert(surface);
-    StartTracking(surface, aAutoLock);
+    if (!cache->Insert(surface)) {
+      if (mustLock) {
+        surface->SetLocked(false);
+      }
+      return InsertOutcome::FAILURE;
+    }
 
+    StartTracking(surface, aAutoLock);
     return InsertOutcome::SUCCESS;
   }
 
