@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
+%filter substitution
+%define horizontalTabPadding 9px
 
 :root {
   --tab-toolbar-navbar-overlap: 1px;
@@ -52,7 +54,7 @@
 }
 
 .tab-content {
-  padding: 0 9px;
+  padding: 0 @horizontalTabPadding@;
 }
 
 .tab-content[pinned] {
@@ -198,9 +200,13 @@
 }
 
 .tab-close-button {
-  margin-inline-start: 1px;
   margin-inline-end: -2px;
   padding: 0;
+}
+
+:root[uidensity=touch] .tab-close-button {
+  margin-inline-end: -@horizontalTabPadding@;
+  padding: 10px calc(@horizontalTabPadding@ - 2px);
 }
 
 .tab-icon-sound {
