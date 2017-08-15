@@ -156,9 +156,8 @@ ThreadLocal<T>::get() const
   return mValue;
 #else
   MOZ_ASSERT(initialized());
-  void* h;
-  h = pthread_getspecific(mKey);
-  return static_cast<T>(reinterpret_cast<typename Helper<T>::Type>(h));
+  void* h = pthread_getspecific(mKey);
+  return static_cast<T>((typename Helper<T>::Type)h);
 #endif
 }
 
@@ -170,9 +169,9 @@ ThreadLocal<T>::set(const T aValue)
   mValue = aValue;
 #else
   MOZ_ASSERT(initialized());
-  void* h = reinterpret_cast<void*>(static_cast<typename Helper<T>::Type>(aValue));
+  void* h = (void*)(static_cast<typename Helper<T>::Type>(aValue));
   bool succeeded = !pthread_setspecific(mKey, h);
-  if (!succeeded) {
+  if (MOZ_UNLIKELY( !succeeded )) {
     MOZ_CRASH();
   }
 #endif
