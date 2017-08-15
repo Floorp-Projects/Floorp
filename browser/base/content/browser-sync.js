@@ -90,8 +90,7 @@ var gSync = {
   },
 
   init() {
-    // Bail out if we're already initialized or for pop-up windows.
-    if (this._initialized || !window.toolbar.visible) {
+    if (this._initialized) {
       return;
     }
 
