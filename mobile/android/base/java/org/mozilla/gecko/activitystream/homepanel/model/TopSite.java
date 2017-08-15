@@ -6,6 +6,7 @@
 package org.mozilla.gecko.activitystream.homepanel.model;
 
 import android.database.Cursor;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.db.BrowserContract;
@@ -74,7 +75,9 @@ public class TopSite implements Item {
         return isPinned;
     }
 
-    public Metadata getMetadata() {
+    @Override
+    @NonNull
+    public Metadata getMetadataSlow() {
         return metadata;
     }
 

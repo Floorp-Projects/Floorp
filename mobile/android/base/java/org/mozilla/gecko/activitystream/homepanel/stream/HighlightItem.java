@@ -81,6 +81,7 @@ public class HighlightItem extends StreamItem {
                         extras,
                         ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
                         highlight,
+                        /* shouldOverrideWithImageProvider */ true, // we use image providers in pageIconLayout.
                         onUrlOpenListener, onUrlOpenInBackgroundListener,
                         pageIconLayout.getWidth(), pageIconLayout.getHeight());
 
