@@ -125,6 +125,14 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     private void loadManifest(String manifestPath) {
+        if (AppConstants.Versions.feature21Plus) {
+            loadManifestV21(manifestPath);
+        }
+    }
+
+    // The customisations defined in the manifest only work on Android API 21+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void loadManifestV21(String manifestPath) {
         if (TextUtils.isEmpty(manifestPath)) {
             Log.e(LOGTAG, "Missing manifest");
             return;
@@ -134,30 +142,21 @@ public class WebAppActivity extends AppCompatActivity
             final File manifestFile = new File(manifestPath);
             final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
             final JSONObject manifestField = manifest.getJSONObject("manifest");
+            final Integer color = readColorFromManifest(manifestField);
+            final String name = readNameFromManifest(manifestField);
+            final Bitmap icon = readIconFromManifest(manifest);
+            mScope = readScopeFromManifest(manifest, manifestPath);
+            final ActivityManager.TaskDescription taskDescription = (color == null)
+                    ? new ActivityManager.TaskDescription(name, icon)
+                    : new ActivityManager.TaskDescription(name, icon, color);
 
-            if (AppConstants.Versions.feature21Plus) {
-                loadManifestV21(manifest, manifestField);
-            }
+            updateStatusBarColorV21(color);
+            setTaskDescription(taskDescription);
 
             updateScreenOrientation(manifestField);
         } catch (IOException | JSONException e) {
             Log.e(LOGTAG, "Failed to read manifest", e);
         }
-    }
-
-    // The customisations defined in the manifest only work on Android API 21+
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void loadManifestV21(JSONObject manifest, JSONObject manifestField) {
-        final Integer color = readColorFromManifest(manifestField);
-        final String name = readNameFromManifest(manifestField);
-        final Bitmap icon = readIconFromManifest(manifest);
-        mScope = readScopeFromManifest(manifest);
-        final ActivityManager.TaskDescription taskDescription = (color == null)
-            ? new ActivityManager.TaskDescription(name, icon)
-            : new ActivityManager.TaskDescription(name, icon, color);
-
-        updateStatusBarColorV21(color);
-        setTaskDescription(taskDescription);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -214,7 +213,7 @@ public class WebAppActivity extends AppCompatActivity
         return loadIconResult.getBestBitmap(GeckoAppShell.getPreferredIconSize());
     }
 
-    private Uri readScopeFromManifest(JSONObject manifest) {
+    private Uri readScopeFromManifest(JSONObject manifest, String manifestPath) {
         final String scopeStr = manifest.optString("scope", null);
         if (scopeStr == null) {
             return null;
