@@ -11,16 +11,10 @@
 
 namespace mozilla {
 
-ChannelMediaDecoder*
-WaveDecoder::CloneImpl(MediaDecoderInit& aInit)
-{
-  return new WaveDecoder(aInit);
-}
-
 /* static */ bool
 WaveDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
-  if (!IsWaveEnabled()) {
+  if (!MediaDecoder::IsWaveEnabled()) {
     return false;
   }
   if (aContainerType.Type() == MEDIAMIMETYPE("audio/wave")
