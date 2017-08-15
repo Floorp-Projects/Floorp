@@ -146,15 +146,9 @@ public:
    */
   nsresult AddObjectLocked(T* aObj, const AutoLock& aAutoLock)
   {
-    if (NS_WARN_IF(!aObj)) {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Invalid object to add");
-      return NS_ERROR_UNEXPECTED;
-    }
     nsExpirationState* state = aObj->GetExpirationState();
-    if (NS_WARN_IF(state->IsTracked())) {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Tried to add an object that's already tracked");
-      return NS_ERROR_UNEXPECTED;
-    }
+    MOZ_ASSERT(!state->IsTracked(),
+               "Tried to add an object that's already tracked");
     nsTArray<T*>& generation = mGenerations[mNewestGeneration];
     uint32_t index = generation.Length();
     if (index > nsExpirationState::MAX_INDEX_IN_GENERATION) {
@@ -181,15 +175,8 @@ public:
    */
   void RemoveObjectLocked(T* aObj, const AutoLock& aAutoLock)
   {
-    if (NS_WARN_IF(!aObj)) {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Invalid object to remove");
-      return;
-    }
     nsExpirationState* state = aObj->GetExpirationState();
-    if (NS_WARN_IF(!state->IsTracked())) {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Tried to remove an object that's not tracked");
-      return;
-    }
+    MOZ_ASSERT(state->IsTracked(), "Tried to remove an object that's not tracked");
     nsTArray<T*>& generation = mGenerations[state->mGeneration];
     uint32_t index = state->mIndexInGeneration;
     MOZ_ASSERT(generation.Length() > index &&
@@ -476,13 +463,11 @@ class nsExpirationTracker : protected ::detail::SingleThreadedExpirationTracker<
   Lock mLock;
 
   AutoLock FakeLock() {
-    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     return AutoLock(mLock);
   }
 
   Lock& GetMutex() override
   {
-    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     return mLock;
   }
 
