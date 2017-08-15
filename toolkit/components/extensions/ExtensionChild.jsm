@@ -499,7 +499,7 @@ class BrowserExtensionContent extends EventEmitter {
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
     defineLazyGetter(this, "scripts", () => {
-      return data.content_scripts.map(scriptData => new ExtensionContent.Script(this, scriptData));
+      return data.contentScripts.map(scriptData => new ExtensionContent.Script(this, scriptData));
     });
 
     this.webAccessibleResources = data.webAccessibleResources.map(res => new MatchGlob(res));

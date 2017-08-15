@@ -111,6 +111,27 @@
 # define USE_LUL_STACKWALK
 # include "lul/LulMain.h"
 # include "lul/platform-linux-lul.h"
+
+// On linux we use LUL for periodic samples and synchronous samples, but we use
+// FramePointerStackWalk for backtrace samples when MOZ_PROFILING is enabled.
+// (See the comment at the top of the file for a definition of
+// periodic/synchronous/backtrace.).
+//
+// FramePointerStackWalk can produce incomplete stacks when the current entry is
+// in a shared library without framepointers, however LUL can take a long time
+// to initialize, which is undesirable for consumers of
+// profiler_suspend_and_sample_thread like the Background Hang Reporter.
+# if defined(MOZ_PROFILING)
+#  define USE_FRAME_POINTER_STACK_WALK
+# endif
+#endif
+
+// We can only stackwalk without expensive initialization on platforms which
+// support FramePointerStackWalk or MozStackWalk. LUL Stackwalking requires
+// initializing LUL, and EHABIStackWalk requires initializing EHABI, both of
+// which can be expensive.
+#if defined(USE_FRAME_POINTER_STACK_WALK) || defined(USE_MOZ_STACK_WALK)
+# define HAVE_FASTINIT_NATIVE_UNWIND
 #endif
 
 #ifdef MOZ_VALGRIND
@@ -1020,45 +1041,62 @@ StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
   nativeStack->mPCs[nativeStack->mCount] = aPC;
   nativeStack->mCount++;
 }
+#endif
 
+#if defined(USE_FRAME_POINTER_STACK_WALK)
 static void
-DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
-                  const Registers& aRegs, NativeStack& aNativeStack)
+DoFramePointerBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
+                        const Registers& aRegs, NativeStack& aNativeStack)
 {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
 
   // Start with the current function. We use 0 as the frame number here because
-  // the FramePointerStackWalk() and MozStackWalkThread() calls below will use
-  // 1..N. This is a bit weird but it doesn't matter because
-  // StackWalkCallback() doesn't use the frame number argument.
+  // the FramePointerStackWalk() call below will use 1..N. This is a bit weird
+  // but it doesn't matter because StackWalkCallback() doesn't use the frame
+  // number argument.
   StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
 
   uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount);
 
-#if defined(USE_FRAME_POINTER_STACK_WALK)
   void* stackEnd = aThreadInfo.StackTop();
   if (aRegs.mFP >= aRegs.mSP && aRegs.mFP <= stackEnd) {
     FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
                           &aNativeStack, reinterpret_cast<void**>(aRegs.mFP),
                           stackEnd);
   }
-#elif defined(USE_MOZ_STACK_WALK)
+}
+#endif
+
+#if defined(USE_MOZ_STACK_WALK)
+static void
+DoMozStackWalkBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
+                        const Registers& aRegs, NativeStack& aNativeStack)
+{
+  // WARNING: this function runs within the profiler's "critical section".
+  // WARNING: this function might be called while the profiler is inactive, and
+  //          cannot rely on ActivePS.
+
+  // Start with the current function. We use 0 as the frame number here because
+  // the MozStackWalkThread() call below will use 1..N. This is a bit weird but
+  // it doesn't matter because StackWalkCallback() doesn't use the frame number
+  // argument.
+  StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
+
+  uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount);
+
   HANDLE thread = GetThreadHandle(aThreadInfo.GetPlatformData());
   MOZ_ASSERT(thread);
   MozStackWalkThread(StackWalkCallback, /* skipFrames */ 0, maxFrames,
                      &aNativeStack, thread, /* context */ nullptr);
-#else
-# error "bad configuration"
-#endif
 }
 #endif
 
 #ifdef USE_EHABI_STACKWALK
 static void
-DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
-                  const Registers& aRegs, NativeStack& aNativeStack)
+DoEHABIBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
+                 const Registers& aRegs, NativeStack& aNativeStack)
 {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
@@ -1138,8 +1176,8 @@ ASAN_memcpy(void* aDst, const void* aSrc, size_t aLen)
 #endif
 
 static void
-DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
-                  const Registers& aRegs, NativeStack& aNativeStack)
+DoLULBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
+               const Registers& aRegs, NativeStack& aNativeStack)
 {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
@@ -1261,6 +1299,30 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
   lul->mStats.mFP      += framePointerFramesAcquired;
 }
 
+#endif
+
+#ifdef HAVE_NATIVE_UNWIND
+static void
+DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
+                  const Registers& aRegs, NativeStack& aNativeStack)
+{
+  // This method determines which stackwalker is used for periodic and
+  // synchronous samples. (Backtrace samples are treated differently, see
+  // profiler_suspend_and_sample_thread() for details). The only part of the
+  // ordering that matters is that LUL must precede FRAME_POINTER, because on
+  // Linux they can both be present.
+#if defined(USE_LUL_STACKWALK)
+  DoLULBacktrace(aLock, aThreadInfo, aRegs, aNativeStack);
+#elif defined(USE_EHABI_STACKWALK)
+  DoEHABIBacktrace(aLock, aThreadInfo, aRegs, aNativeStack);
+#elif defined(USE_FRAME_POINTER_STACK_WALK)
+  DoFramePointerBacktrace(aLock, aThreadInfo, aRegs, aNativeStack);
+#elif defined(USE_MOZ_STACK_WALK)
+  DoMozStackWalkBacktrace(aLock, aThreadInfo, aRegs, aNativeStack);
+#else
+  #error "Invalid configuration"
+#endif
+}
 #endif
 
 // Writes some components shared by periodic and synchronous profiles to
@@ -3367,9 +3429,18 @@ profiler_suspend_and_sample_thread(
                                               [&](const Registers& aRegs) {
         // The target thread is now suspended. Collect a native backtrace, and
         // call the callback.
-#if defined(HAVE_NATIVE_UNWIND)
+#if defined(HAVE_FASTINIT_NATIVE_UNWIND)
         if (aSampleNative) {
-          DoNativeBacktrace(lock, *info, aRegs, nativeStack);
+          // We can only use FramePointerStackWalk or MozStackWalk from
+          // suspend_and_sample_thread as other stackwalking methods may not be
+          // initialized.
+# if defined(USE_FRAME_POINTER_STACK_WALK)
+          DoFramePointerBacktrace(lock, *info, aRegs, nativeStack);
+# elif defined(USE_MOZ_STACK_WALK)
+          DoMozStackWalkBacktrace(lock, *info, aRegs, nativeStack);
+# else
+#  error "Invalid configuration"
+# endif
         }
 #endif
         aCallback(nativeStack.mPCs, nativeStack.mCount, info->IsMainThread());
@@ -3414,9 +3485,18 @@ profiler_suspend_and_sample_thread(int aThreadId,
         // The target thread is now suspended. Collect a native backtrace, and
         // call the callback.
         bool isSynchronous = false;
-#if defined(HAVE_NATIVE_UNWIND)
+#if defined(HAVE_FASTINIT_NATIVE_UNWIND)
         if (aSampleNative) {
-          DoNativeBacktrace(lock, *info, aRegs, nativeStack);
+          // We can only use FramePointerStackWalk or MozStackWalk from
+          // suspend_and_sample_thread as other stackwalking methods may not be
+          // initialized.
+# if defined(USE_FRAME_POINTER_STACK_WALK)
+          DoFramePointerBacktrace(lock, *info, aRegs, nativeStack);
+# elif defined(USE_MOZ_STACK_WALK)
+          DoMozStackWalkBacktrace(lock, *info, aRegs, nativeStack);
+# else
+#  error "Invalid configuration"
+# endif
 
           MergeStacks(aFeatures, isSynchronous, *info, aRegs, nativeStack,
                       aCollector);

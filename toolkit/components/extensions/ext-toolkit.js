@@ -78,12 +78,3 @@ global.isValidCookieStoreId = function(storeId) {
          isPrivateCookieStoreId(storeId) ||
          isContainerCookieStoreId(storeId);
 };
-
-if (AppConstants.MOZ_BUILD_APP === "browser") {
-  extensions.registerModules({
-    identity: {
-      schema: "chrome://extensions/content/schemas/identity.json",
-      scopes: ["addon_parent"],
-    },
-  });
-}

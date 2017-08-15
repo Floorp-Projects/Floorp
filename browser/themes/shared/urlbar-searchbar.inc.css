@@ -121,7 +121,7 @@
 
 /* Page action urlbar buttons */
 
-#urlbar-icons {
+#page-action-buttons {
   -moz-box-align: center;
   /* Add more space between the last icon and the urlbar's edge. */
   margin-inline-end: 3px;

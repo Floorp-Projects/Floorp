@@ -92,6 +92,16 @@ public:
     return nullptr;
   }
 
+  virtual nsresult DoGetRemoteType(nsAString& aRemoteType) const
+  {
+    aRemoteType.Truncate();
+    nsIMessageSender* parent = GetProcessMessageManager();
+    if (parent) {
+      return parent->GetRemoteType(aRemoteType);
+    }
+    return NS_OK;
+  }
+
 protected:
   bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
                                        StructuredCloneData& aData,

@@ -37,14 +37,46 @@ public:
   void StoreRange(nsRange* aRange);
   already_AddRefed<nsRange> GetRange();
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RangeItem)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(RangeItem)
+  NS_INLINE_DECL_REFCOUNTING(RangeItem)
+
+  void Unlink();
+  void Traverse(nsCycleCollectionTraversalCallback& aCallback, uint32_t aFlags);
 
   nsCOMPtr<nsINode> mStartContainer;
   int32_t mStartOffset;
   nsCOMPtr<nsINode> mEndContainer;
   int32_t mEndOffset;
 };
+
+inline void
+ImplCycleCollectionUnlink(RangeItem& aItem)
+{
+  aItem.Unlink();
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            RangeItem& aItem,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aItem.Traverse(aCallback, aFlags);
+}
+
+inline void
+ImplCycleCollectionUnlink(RefPtr<RangeItem>& aItem)
+{
+  aItem->Unlink();
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            RefPtr<RangeItem>& aItem,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aItem->Traverse(aCallback, aFlags);
+}
 
 /**
  * mozilla::SelectionState
