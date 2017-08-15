@@ -146,7 +146,7 @@ linux64-cctools-port:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/cctools.tar.xz
     toolchains:
-        - linux64-clang
+        - linux64-clang-3.9
 
 linux64-hfsplus:
     description: "hfsplus toolchain build"
@@ -167,7 +167,7 @@ linux64-hfsplus:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
     toolchains:
-        - linux64-clang
+        - linux64-clang-3.9
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
@@ -205,4 +205,4 @@ linux64-sccache:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/sccache2.tar.xz
     toolchains:
-        - linux64-clang
+        - linux64-clang-3.9
