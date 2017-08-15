@@ -28,7 +28,6 @@ class GeckoViewSettings extends GeckoViewModule {
   init() {
     this._isSafeBrowsingInit = false;
     this._useTrackingProtection = false;
-    this._displayMode = Ci.nsIDocShell.DISPLAY_MODE_BROWSER;
 
     // We only allow to set this setting during initialization, further updates
     // will be ignored.
@@ -39,7 +38,6 @@ class GeckoViewSettings extends GeckoViewModule {
     debug("onSettingsUpdate: " + JSON.stringify(this.settings));
 
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
-    this.useDisplayMode = this.settings.useDisplayMode;
   }
 
   get useTrackingProtection() {
@@ -52,8 +50,8 @@ class GeckoViewSettings extends GeckoViewModule {
       this._isSafeBrowsingInit = true;
     }
     if (aUse != this._useTrackingProtection) {
-      this.messageManager.loadFrameScript('data:,' +
-        `docShell.useTrackingProtection = ${aUse}`,
+      this.messageManager.loadFrameScript("data:," +
+        "docShell.useTrackingProtection = " + aUse,
         true
       );
       this._useTrackingProtection = aUse;
@@ -77,27 +75,5 @@ class GeckoViewSettings extends GeckoViewModule {
       this.browser.removeAttribute("remote");
     }
     parentNode.appendChild(this.browser);
-
-    // Re-set the display mode, as we probably need to set it on
-    // a different docshell now
-    this.useDisplayMode = this.useDisplayMode;
-  }
-
-  get useDisplayMode() {
-    return this._displayMode;
-  }
-
-  set useDisplayMode(aMode) {
-    if (!this.useMultiprocess) {
-      this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDocShell)
-                   .displayMode = aMode;
-    } else {
-      this.messageManager.loadFrameScript('data:,' +
-        `docShell.displayMode = ${aMode}`,
-        true
-      );
-    }
-    this._displayMode = aMode;
   }
 }
