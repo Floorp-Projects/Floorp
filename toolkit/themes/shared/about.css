@@ -4,9 +4,9 @@
 
 html {
   background: -moz-Dialog;
-  line-height: 1.6em;
   padding: 0 1em;
   font: message-box;
+  line-height: 1.6em;
 }
 
 body {
