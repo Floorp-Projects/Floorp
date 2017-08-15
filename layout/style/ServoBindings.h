@@ -395,10 +395,13 @@ void Gecko_NoteAnimationOnlyDirtyElement(RawGeckoElementBorrowed element);
 nsStyleContext* Gecko_GetStyleContext(RawGeckoElementBorrowed element,
                                       nsIAtom* aPseudoTagOrNull);
 mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
-nsChangeHint Gecko_CalcStyleDifference(ServoStyleContextBorrowed old_style,
-                                       ServoStyleContextBorrowed new_style,
-                                       uint64_t old_style_bits,
-                                       bool* any_style_changed);
+// We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't
+// work as return values with the Linux 32-bit ABI at the moment because
+// they wrap the value in a struct.
+uint32_t Gecko_CalcStyleDifference(ServoStyleContextBorrowed old_style,
+                                   ServoStyleContextBorrowed new_style,
+                                   uint64_t old_style_bits,
+                                   bool* any_style_changed);
 nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);
 
 // Get an element snapshot for a given element from the table.
