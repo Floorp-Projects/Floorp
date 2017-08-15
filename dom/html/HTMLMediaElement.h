@@ -9,6 +9,8 @@
 #include "nsAutoPtr.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsGenericHTMLElement.h"
+#include "MediaEventSource.h"
+#include "SeekTarget.h"
 #include "MediaDecoderOwner.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
@@ -18,7 +20,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TextTrackManager.h"
 #include "mozilla/WeakPtr.h"
-#include "MediaDecoder.h"
 #include "mozilla/dom/MediaKeys.h"
 #include "mozilla/StateWatching.h"
 #include "nsGkAtoms.h"
@@ -49,6 +50,9 @@ class DOMMediaStream;
 class ErrorResult;
 class MediaResource;
 class MediaDecoder;
+class MediaInputPort;
+class MediaStream;
+class MediaStreamGraph;
 class VideoFrameContainer;
 namespace dom {
 class MediaKeys;
@@ -808,13 +812,7 @@ protected:
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
 
-  void SetDecoder(MediaDecoder* aDecoder) {
-    MOZ_ASSERT(aDecoder); // Use ShutdownDecoder() to clear.
-    if (mDecoder) {
-      ShutdownDecoder();
-    }
-    mDecoder = aDecoder;
-  }
+  void SetDecoder(MediaDecoder* aDecoder);
 
   class WakeLockBoolWrapper {
   public:
