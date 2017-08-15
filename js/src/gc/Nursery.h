@@ -328,6 +328,7 @@ class Nursery
 
     void* addressOfCurrentEnd() const { return (void*)&currentEnd_; }
     void* addressOfPosition() const { return (void*)&position_; }
+    void* addressOfCurrentStringEnd() const { return (void*)&currentStringEnd_; }
 
     void requestMinorGC(JS::gcreason::Reason reason) const;
 
@@ -363,6 +364,12 @@ class Nursery
 
     /* Pointer to the last byte of space in the current chunk. */
     uintptr_t currentEnd_;
+
+    /*
+     * Pointer to the last byte of space in the current chunk, or nullptr if we
+     * are not allocating strings in the nursery.
+     */
+    uintptr_t currentStringEnd_;
 
     /* The index of the chunk that is currently being allocated from. */
     unsigned currentChunk_;
