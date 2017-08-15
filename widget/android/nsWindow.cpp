@@ -1781,12 +1781,6 @@ nsWindow::SetZIndex(int32_t aZIndex)
 void
 nsWindow::SetSizeMode(nsSizeMode aMode)
 {
-    if (aMode == mSizeMode) {
-        return;
-    }
-
-    nsBaseWidget::SetSizeMode(aMode);
-
     switch (aMode) {
         case nsSizeMode_Minimized:
             GeckoAppShell::MoveTaskToBack();
@@ -1936,8 +1930,6 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
 
     nsIWidgetListener* listener = GetWidgetListener();
     if (listener) {
-        mSizeMode = mIsFullScreen ? nsSizeMode_Fullscreen : nsSizeMode_Normal;
-        listener->SizeModeChanged(mSizeMode);
         listener->FullscreenChanged(mIsFullScreen);
     }
     return NS_OK;
