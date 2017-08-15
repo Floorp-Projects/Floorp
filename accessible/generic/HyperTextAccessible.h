@@ -17,6 +17,7 @@
 
 class nsFrameSelection;
 class nsRange;
+class nsIEditor;
 class nsIWidget;
 
 namespace mozilla {

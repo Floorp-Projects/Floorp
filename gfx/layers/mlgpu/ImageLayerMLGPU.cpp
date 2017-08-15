@@ -48,9 +48,8 @@ ImageLayerMLGPU::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
       mScaleToSize.width != 0.0 &&
       mScaleToSize.height != 0.0)
   {
-    Size scale(
-      sourceRect.width / mScaleToSize.width,
-      sourceRect.height / mScaleToSize.height);
+    Size scale(sourceRect.Width() / mScaleToSize.width,
+               sourceRect.Height() / mScaleToSize.height);
     mScale = Some(scale);
   }
 
@@ -66,7 +65,7 @@ ImageLayerMLGPU::GetSamplingFilter()
 bool
 ImageLayerMLGPU::IsContentOpaque()
 {
-  if (mPictureRect.width == 0 || mPictureRect.height == 0) {
+  if (mPictureRect.Width() == 0 || mPictureRect.Height() == 0) {
     return false;
   }
   if (mScaleMode == ScaleMode::STRETCH) {

@@ -1120,12 +1120,12 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
   layer.Fov[1] = mFOVPort[1];
   layer.Viewport[0].Pos.x = aSize.width * aLeftEyeRect.x;
   layer.Viewport[0].Pos.y = aSize.height * aLeftEyeRect.y;
-  layer.Viewport[0].Size.w = aSize.width * aLeftEyeRect.width;
-  layer.Viewport[0].Size.h = aSize.height * aLeftEyeRect.height;
+  layer.Viewport[0].Size.w = aSize.width * aLeftEyeRect.Width();
+  layer.Viewport[0].Size.h = aSize.height * aLeftEyeRect.Height();
   layer.Viewport[1].Pos.x = aSize.width * aRightEyeRect.x;
   layer.Viewport[1].Pos.y = aSize.height * aRightEyeRect.y;
-  layer.Viewport[1].Size.w = aSize.width * aRightEyeRect.width;
-  layer.Viewport[1].Size.h = aSize.height * aRightEyeRect.height;
+  layer.Viewport[1].Size.w = aSize.width * aRightEyeRect.Width();
+  layer.Viewport[1].Size.h = aSize.height * aRightEyeRect.Height();
 
   const Point3D& l = mDisplayInfo.mEyeTranslation[0];
   const Point3D& r = mDisplayInfo.mEyeTranslation[1];

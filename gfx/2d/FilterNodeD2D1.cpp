@@ -812,7 +812,7 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntRect &aValue)
     MOZ_ASSERT(aIndex == ATT_TURBULENCE_RECT);
 
     mEffect->SetValue(D2D1_TURBULENCE_PROP_OFFSET, D2D1::Vector2F(Float(aValue.x), Float(aValue.y)));
-    mEffect->SetValue(D2D1_TURBULENCE_PROP_SIZE, D2D1::Vector2F(Float(aValue.width), Float(aValue.height)));
+    mEffect->SetValue(D2D1_TURBULENCE_PROP_SIZE, D2D1::Vector2F(Float(aValue.Width()), Float(aValue.Height())));
     return;
   }
 

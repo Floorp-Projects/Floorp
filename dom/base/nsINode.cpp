@@ -62,7 +62,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMNodeList.h"
-#include "nsIEditor.h"
 #include "nsILinkHandler.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/NodeInfoInlines.h"
@@ -225,14 +224,6 @@ nsINode::IsEditableInternal() const
   return doc && doc->HasFlag(NODE_IS_EDITABLE);
 }
 
-static nsIContent* GetEditorRootContent(nsIEditor* aEditor)
-{
-  nsCOMPtr<nsIDOMElement> rootElement;
-  aEditor->GetRootElement(getter_AddRefs(rootElement));
-  nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElement));
-  return rootContent;
-}
-
 nsIContent*
 nsINode::GetTextEditorRootContent(TextEditor** aTextEditor)
 {
@@ -366,13 +357,13 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
 
   nsPresContext* presContext = aPresShell->GetPresContext();
   if (presContext) {
-    nsIEditor* editor = nsContentUtils::GetHTMLEditor(presContext);
-    if (editor) {
+    HTMLEditor* htmlEditor = nsContentUtils::GetHTMLEditor(presContext);
+    if (htmlEditor) {
       // This node is in HTML editor.
       nsIDocument* doc = GetComposedDoc();
       if (!doc || doc->HasFlag(NODE_IS_EDITABLE) ||
           !HasFlag(NODE_IS_EDITABLE)) {
-        nsIContent* editorRoot = GetEditorRootContent(editor);
+        nsIContent* editorRoot = htmlEditor->GetRoot();
         NS_ENSURE_TRUE(editorRoot, nullptr);
         return nsContentUtils::IsInSameAnonymousTree(this, editorRoot) ?
                  editorRoot :

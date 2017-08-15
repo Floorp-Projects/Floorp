@@ -286,8 +286,6 @@ loadListener.prototype = {
     Ci.nsIStreamListener,
     Ci.nsIChannelEventSink,
     Ci.nsIInterfaceRequestor,
-    // See FIXME comment below.
-    Ci.nsIHttpEventSink,
     Ci.nsIProgressEventSink
   ]),
 
@@ -338,9 +336,6 @@ loadListener.prototype = {
     return this.QueryInterface(aIID);
   },
 
-  // FIXME: bug 253127
-  // nsIHttpEventSink
-  onRedirect(aChannel, aNewChannel) {},
   // nsIProgressEventSink
   onProgress(aRequest, aContext, aProgress, aProgressMax) {},
   onStatus(aRequest, aContext, aStatus, aStatusArg) {}

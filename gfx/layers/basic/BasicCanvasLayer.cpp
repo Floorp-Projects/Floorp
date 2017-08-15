@@ -58,12 +58,12 @@ BasicCanvasLayer::Paint(DrawTarget* aDT,
   if (canvasRenderer->NeedsYFlip()) {
     oldTM = aDT->GetTransform();
     aDT->SetTransform(Matrix(oldTM).
-                        PreTranslate(0.0f, mBounds.height).
+                      PreTranslate(0.0f, mBounds.Height()).
                         PreScale(1.0f, -1.0f));
   }
 
   FillRectWithMask(aDT, aDeviceOffset,
-                   Rect(0, 0, mBounds.width, mBounds.height),
+                   Rect(0, 0, mBounds.Width(), mBounds.Height()),
                    surface, mSamplingFilter,
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                    aMaskLayer);

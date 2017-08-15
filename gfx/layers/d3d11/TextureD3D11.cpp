@@ -1382,7 +1382,7 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
 
         void* data = map.mData + map.mStride * rect.y + BytesPerPixel(aSurface->GetFormat()) * rect.x;
 
-        context->UpdateSubresource(mTexture, 0, &box, data, map.mStride, map.mStride * rect.height);
+        context->UpdateSubresource(mTexture, 0, &box, data, map.mStride, map.mStride * rect.Height());
       }
     } else {
       context->UpdateSubresource(mTexture, 0, nullptr, aSurface->GetData(),
@@ -1402,8 +1402,8 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
     for (uint32_t i = 0; i < tileCount; i++) {
       IntRect tileRect = GetTileRect(i);
 
-      desc.Width = tileRect.width;
-      desc.Height = tileRect.height;
+      desc.Width = tileRect.Width();
+      desc.Height = tileRect.Height();
       desc.Usage = D3D11_USAGE_IMMUTABLE;
 
       D3D11_SUBRESOURCE_DATA initData;
@@ -1480,7 +1480,7 @@ IntRect
 DataTextureSourceD3D11::GetTileRect()
 {
   IntRect rect = GetTileRect(mCurrentTile);
-  return IntRect(rect.x, rect.y, rect.width, rect.height);
+  return IntRect(rect.x, rect.y, rect.Width(), rect.Height());
 }
 
 CompositingRenderTargetD3D11::CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture,

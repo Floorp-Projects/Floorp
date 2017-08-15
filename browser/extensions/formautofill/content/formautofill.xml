@@ -58,6 +58,10 @@
         <body></body>
       </method>
 
+      <method name="handleOverUnderflow">
+        <body></body>
+      </method>
+
       <method name="_adjustAutofillItemLayout">
         <body>
         <![CDATA[
@@ -273,6 +277,45 @@
         ]]>
         </body>
       </method>
+    </implementation>
+  </binding>
+
+  <binding id="autocomplete-creditcard-insecure-field" extends="chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem-base">
+    <xbl:content xmlns="http://www.w3.org/1999/xhtml">
+      <div anonid="autofill-item-box" class="autofill-insecure-item">
+      </div>
+    </xbl:content>
+
+    <implementation implements="nsIDOMXULSelectControlItemElement">
+      <constructor>
+      <![CDATA[
+        this._itemBox = document.getAnonymousElementByAttribute(
+          this, "anonid", "autofill-item-box"
+        );
+
+        this._adjustAcItem();
+      ]]>
+      </constructor>
+
+      <property name="selected" onget="return this.getAttribute('selected') == 'true';">
+        <setter><![CDATA[
+          // Make this item unselectable since we see this item as a pure message.
+          return false;
+        ]]></setter>
+      </property>
+
+      <method name="_adjustAcItem">
+        <body>
+        <![CDATA[
+          this._adjustAutofillItemLayout();
+          this.setAttribute("formautofillattached", "true");
+
+          let value = this.getAttribute("ac-value");
+          this._itemBox.textContent = value;
+        ]]>
+        </body>
+      </method>
+
     </implementation>
   </binding>
 

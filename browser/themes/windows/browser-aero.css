@@ -7,9 +7,11 @@
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
-@media not all and (-moz-windows-classic) {
-  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
-    margin-top: 1px;
+@media (-moz-os-version: windows-win7) {
+  @media not all and (-moz-windows-classic) {
+    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
+      margin-top: 1px;
+    }
   }
 }
 
@@ -81,14 +83,9 @@
       .titlebar-button {
         border: none;
         margin: 0 !important;
-        padding: 10px 17px;
+        padding: 8px 17px;
         -moz-context-properties: stroke;
         stroke: var(--titlebar-text-color);
-      }
-
-      :root[sizemode=maximized] .titlebar-button {
-        padding-top: 8px;
-        padding-bottom: 8px;
       }
 
       .titlebar-button > .toolbarbutton-icon {

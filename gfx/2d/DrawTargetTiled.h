@@ -43,7 +43,7 @@ public:
   virtual already_AddRefed<SourceSurface> Snapshot() override;
   virtual void DetachAllSnapshots() override;
   virtual IntSize GetSize() override {
-    MOZ_ASSERT(mRect.width > 0 && mRect.height > 0);
+    MOZ_ASSERT(mRect.Width() > 0 && mRect.Height() > 0);
     return IntSize(mRect.XMost(), mRect.YMost());
   }
 
@@ -186,7 +186,7 @@ public:
 
   virtual SurfaceType GetType() const { return SurfaceType::TILED; }
   virtual IntSize GetSize() const {
-    MOZ_ASSERT(mRect.width > 0 && mRect.height > 0);
+    MOZ_ASSERT(mRect.Width() > 0 && mRect.Height() > 0);
     return IntSize(mRect.XMost(), mRect.YMost());
   }
   virtual SurfaceFormat GetFormat() const { return mSnapshots[0]->GetFormat(); }

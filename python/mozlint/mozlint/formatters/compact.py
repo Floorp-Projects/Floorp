@@ -13,6 +13,7 @@ class CompactFormatter(object):
     This formatter prints one error per line, mimicking the
     eslint 'compact' formatter.
     """
+    # If modifying this format, please also update the vim errorformats in editor.py
     fmt = "{path}: line {lineno}{column}, {level} - {message} ({rule})"
 
     def __init__(self, summary=True):

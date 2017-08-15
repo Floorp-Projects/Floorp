@@ -118,25 +118,25 @@ struct IntRectTyped :
       auto tmp(aRect);
       tmp.RoundIn();
       return IntRectTyped(int32_t(tmp.x), int32_t(tmp.y),
-                          int32_t(tmp.width), int32_t(tmp.height));
+                          int32_t(tmp.Width()), int32_t(tmp.Height()));
     }
 
     static IntRectTyped<units> RoundOut(const RectTyped<units, float>& aRect) {
       auto tmp(aRect);
       tmp.RoundOut();
       return IntRectTyped(int32_t(tmp.x), int32_t(tmp.y),
-                          int32_t(tmp.width), int32_t(tmp.height));
+                          int32_t(tmp.Width()), int32_t(tmp.Height()));
     }
 
     static IntRectTyped<units> Round(const RectTyped<units, float>& aRect) {
       auto tmp(aRect);
       tmp.Round();
       return IntRectTyped(int32_t(tmp.x), int32_t(tmp.y),
-                          int32_t(tmp.width), int32_t(tmp.height));
+                          int32_t(tmp.Width()), int32_t(tmp.Height()));
     }
 
     static IntRectTyped<units> Truncate(const RectTyped<units, float>& aRect) {
-      return IntRectTyped::Truncate(aRect.x, aRect.y, aRect.width, aRect.height);
+      return IntRectTyped::Truncate(aRect.x, aRect.y, aRect.Width(), aRect.Height());
     }
 
     // Rounding isn't meaningful on an integer rectangle.
@@ -148,18 +148,18 @@ struct IntRectTyped :
     // to and from unknown types should be removed.
 
     static IntRectTyped<units> FromUnknownRect(const IntRectTyped<UnknownUnits>& rect) {
-        return IntRectTyped<units>(rect.x, rect.y, rect.width, rect.height);
+      return IntRectTyped<units>(rect.x, rect.y, rect.Width(), rect.Height());
     }
 
     IntRectTyped<UnknownUnits> ToUnknownRect() const {
-        return IntRectTyped<UnknownUnits>(this->x, this->y, this->width, this->height);
+      return IntRectTyped<UnknownUnits>(this->x, this->y, this->Width(), this->Height());
     }
 
     bool Overflows() const {
       CheckedInt<int32_t> xMost = this->x;
-      xMost += this->width;
+      xMost += this->Width();
       CheckedInt<int32_t> yMost = this->y;
-      yMost += this->height;
+      yMost += this->Height();
       return !xMost.isValid() || !yMost.isValid();
     }
 
@@ -218,8 +218,8 @@ struct IntRectTyped :
       xMost = mozilla::RoundUpToMultiple(xMost, aTileSize.width);
       yMost = mozilla::RoundUpToMultiple(yMost, aTileSize.height);
 
-      this->width = xMost - this->x;
-      this->height = yMost - this->y;
+      this->SetWidth(xMost - this->x);
+      this->SetHeight(yMost - this->y);
     }
 
 };
@@ -241,7 +241,7 @@ struct RectTyped :
         Super(_x, _y, _width, _height) {}
     explicit RectTyped(const IntRectTyped<units>& rect) :
         Super(F(rect.x), F(rect.y),
-              F(rect.width), F(rect.height)) {}
+              F(rect.Width()), F(rect.Height())) {}
 
     void NudgeToIntegers()
     {
@@ -256,7 +256,7 @@ struct RectTyped :
       *aOut = IntRectTyped<units>(int32_t(this->X()), int32_t(this->Y()),
                                   int32_t(this->Width()), int32_t(this->Height()));
       return RectTyped<units, F>(F(aOut->x), F(aOut->y),
-                                 F(aOut->width), F(aOut->height))
+                                 F(aOut->Width()), F(aOut->Height()))
              .IsEqualEdges(*this);
     }
 
@@ -264,11 +264,11 @@ struct RectTyped :
     // unknown types should be removed.
 
     static RectTyped<units, F> FromUnknownRect(const RectTyped<UnknownUnits, F>& rect) {
-        return RectTyped<units, F>(rect.x, rect.y, rect.width, rect.height);
+      return RectTyped<units, F>(rect.x, rect.y, rect.Width(), rect.Height());
     }
 
     RectTyped<UnknownUnits, F> ToUnknownRect() const {
-        return RectTyped<UnknownUnits, F>(this->x, this->y, this->width, this->height);
+      return RectTyped<UnknownUnits, F>(this->x, this->y, this->Width(), this->Height());
     }
 
     // This is here only to keep IPDL-generated code happy. DO NOT USE.
@@ -287,8 +287,8 @@ IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect)
   copy.Round();
   return IntRectTyped<units>(int32_t(copy.x),
                              int32_t(copy.y),
-                             int32_t(copy.width),
-                             int32_t(copy.height));
+                             int32_t(copy.Width()),
+                             int32_t(copy.Height()));
 }
 
 template<class units>
@@ -311,7 +311,7 @@ IntRectTyped<units> TruncatedToInt(const RectTyped<units>& aRect) {
 template<class units>
 RectTyped<units> IntRectToRect(const IntRectTyped<units>& aRect)
 {
-  return RectTyped<units>(aRect.x, aRect.y, aRect.width, aRect.height);
+  return RectTyped<units>(aRect.x, aRect.y, aRect.Width(), aRect.Height());
 }
 
 // Convenience function for intersecting two rectangles wrapped in Maybes.

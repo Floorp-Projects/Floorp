@@ -261,7 +261,7 @@ public:
 
   nsIntRect ImageRect() const
   {
-    if (mImageRect.width < 0 || mImageRect.height < 0) {
+    if (mImageRect.Width() < 0 || mImageRect.Height() < 0) {
       return nsIntRect(0, 0, mImage.width, mImage.height);
     }
     return mImageRect;
@@ -290,8 +290,8 @@ public:
     nsIntRect imageRect = ImageRect();
     imageRect.x = (imageRect.x * aWidth) / mImage.width;
     imageRect.y = (imageRect.y * aHeight) / mImage.height;
-    imageRect.width = (aWidth * imageRect.width) / mImage.width;
-    imageRect.height = (aHeight * imageRect.height) / mImage.height;
+    imageRect.SetWidth((aWidth * imageRect.Width()) / mImage.width);
+    imageRect.SetHeight((aHeight * imageRect.Height()) / mImage.height);
     return imageRect;
   }
 

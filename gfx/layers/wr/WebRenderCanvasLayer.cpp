@@ -46,13 +46,13 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
   Maybe<gfx::Matrix4x4> transform;
   if (canvasRenderer->NeedsYFlip()) {
-    transform = Some(GetTransform().PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1));
+    transform = Some(GetTransform().PreTranslate(0, mBounds.Height(), 0).PreScale(1, -1, 1));
   }
 
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this, transform);
 
-  LayerRect rect(0, 0, mBounds.width, mBounds.height);
+  LayerRect rect(0, 0, mBounds.Width(), mBounds.Height());
   DumpLayerInfo("CanvasLayer", rect);
 
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);

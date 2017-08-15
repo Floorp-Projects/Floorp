@@ -634,8 +634,8 @@ ClientLayerManager::MakeSnapshotIfRequired()
           RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(outSnapshot);
           DrawTarget* dt = mShadowTarget->GetDrawTarget();
 
-          Rect dstRect(bounds.x, bounds.y, bounds.width, bounds.height);
-          Rect srcRect(0, 0, bounds.width, bounds.height);
+          Rect dstRect(bounds.x, bounds.y, bounds.Width(), bounds.Height());
+          Rect srcRect(0, 0, bounds.Width(), bounds.Height());
 
           gfx::Matrix rotate =
             ComputeTransformForUnRotation(outerBounds.ToUnknownRect(),
