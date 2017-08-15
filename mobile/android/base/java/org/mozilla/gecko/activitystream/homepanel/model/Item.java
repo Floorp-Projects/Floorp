@@ -1,5 +1,6 @@
 package org.mozilla.gecko.activitystream.homepanel.model;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
@@ -9,6 +10,15 @@ public interface Item {
     String getTitle();
 
     String getUrl();
+
+    /**
+     * Returns the metadata associated with this stream item.
+     *
+     * This operation could be slow in some implementations (see {@link Highlight#getMetadataSlow()}), hence the name.
+     * imo, it is better to expose this possibility in the interface for all implementations rather than hide this fact.
+     */
+    @NonNull
+    Metadata getMetadataSlow();
 
     /**
      * @return True if the item is bookmarked, false otherwise. Might return 'null' if the bookmark
