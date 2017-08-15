@@ -118,7 +118,7 @@ let apiManager = new class extends SchemaAPIManager {
 
       // Load order matters here. The base manifest defines types which are
       // extended by other schemas, so needs to be loaded first.
-      return Schemas.load(BASE_SCHEMA).then(() => {
+      return Schemas.load(BASE_SCHEMA, AppConstants.DEBUG).then(() => {
         let promises = [];
         for (let [/* name */, url] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
           promises.push(Schemas.load(url));
