@@ -33,16 +33,6 @@ elif [ -f /etc/centos-release ]; then
         if [ -f /usr/bin/pip2.7 ]; then
             PIP_PATH=/usr/bin/pip2.7
         else
-            # The following RPM is "linked" against Python 2.6, which doesn't
-            # support TLS 1.2. Given the security implications of an insecure
-            # version control tool, we choose to prefer a Mercurial built using
-            # Python 2.7 that supports TLS 1.2. Before you uncomment the code
-            # below, think long and hard about the implications of limiting
-            # Mercurial to TLS 1.0.
-            #HG_RPM=1
-            #HG_DIGEST=c64e00c74402cd9c4ef9792177354fa6ff9c8103f41358f0eab2b15dba900d47d04ea582c6c6ebb80cf52495a28433987ffb67a5f39cd843b6638e3fa46921c8
-            #HG_SIZE=4437360
-            #HG_FILENAME=mercurial-4.1.2.x86_64.rpm
             echo "We currently require Python 2.7 and /usr/bin/pip2.7 to run Mercurial"
             exit 1
         fi
