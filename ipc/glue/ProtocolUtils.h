@@ -24,7 +24,6 @@
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NotNull.h"
@@ -262,12 +261,6 @@ class IToplevelProtocol : public IProtocol
 {
     template<class PFooSide> friend class Endpoint;
 
-    enum ProcessIdState {
-        eUndefined,
-        ePending,
-        eReady
-    };
-
 protected:
     explicit IToplevelProtocol(ProtocolId aProtoId, Side aSide);
     ~IToplevelProtocol();
@@ -283,8 +276,7 @@ public:
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
     base::ProcessId OtherPid() const;
-    void SetOtherProcessId(base::ProcessId aOtherPid,
-                           ProcessIdState aState = ProcessIdState::eReady);
+    void SetOtherProcessId(base::ProcessId aOtherPid);
 
     bool TakeMinidump(nsIFile** aDump, uint32_t* aSequence);
 
@@ -305,10 +297,6 @@ public:
     bool Open(MessageChannel* aChannel,
               nsIEventTarget* aEventTarget,
               mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
-
-    bool OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
-                          MessageLoop* aThread = nullptr,
-                          mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
     void Close();
 
@@ -426,14 +414,10 @@ protected:
     virtual already_AddRefed<nsIEventTarget>
     GetActorEventTargetInternal(IProtocol* aActor);
 
-    // This monitor protects mOtherPid and mOtherPidState. All other fields
-    // should only be accessed on the worker thread.
-    mutable mozilla::Monitor mMonitor;
   private:
     ProtocolId mProtocolId;
     UniquePtr<Transport> mTrans;
     base::ProcessId mOtherPid;
-    ProcessIdState mOtherPidState;
     IDMap<IProtocol*> mActorMap;
     int32_t mLastRouteId;
     IDMap<Shmem::SharedMemory*> mShmemMap;
