@@ -7,49 +7,82 @@
 #include "nsUTF8Utils.h"
 #include "nsHtml5TreeBuilder.h"
 
-void
-nsHtml5String::ToString(nsAString& aString)
+nsHtml5String::nsHtml5String(already_AddRefed<nsStringBuffer> aBuffer,
+                             uint32_t aLength)
+  : mBuffer(aBuffer.take())
+  , mLength(aLength)
 {
-  switch (GetKind()) {
-    case eStringBuffer:
-      return AsStringBuffer()->ToString(Length(), aString);
-    case eAtom:
-      return AsAtom()->ToString(aString);
-    case eEmpty:
-      aString.Truncate();
-      return;
-    default:
-      aString.Truncate();
-      aString.SetIsVoid(true);
-      return;
+  if (mBuffer) {
+    MOZ_ASSERT(aLength);
+  } else {
+    MOZ_ASSERT(!aLength || aLength == UINT32_MAX);
   }
 }
 
 void
-nsHtml5String::CopyToBuffer(char16_t* aBuffer) const
+nsHtml5String::ToString(nsAString& aString)
 {
-  memcpy(aBuffer, AsPtr(), Length() * sizeof(char16_t));
+  if (mBuffer) {
+    mBuffer->ToString(mLength, aString);
+  } else {
+    aString.Truncate();
+    if (mLength) {
+      aString.SetIsVoid(true);
+    }
+  }
+}
+
+void
+nsHtml5String::CopyToBuffer(char16_t* aBuffer)
+{
+  if (mBuffer) {
+    memcpy(aBuffer, mBuffer->Data(), mLength * sizeof(char16_t));
+  }
 }
 
 bool
-nsHtml5String::LowerCaseEqualsASCII(const char* aLowerCaseLiteral) const
+nsHtml5String::LowerCaseEqualsASCII(const char* aLowerCaseLiteral)
 {
+  if (!mBuffer) {
+    if (mLength) {
+      // This string is null
+      return false;
+    }
+    // this string is empty
+    return !(*aLowerCaseLiteral);
+  }
   return !nsCharTraits<char16_t>::compareLowerCaseToASCIINullTerminated(
-    AsPtr(), Length(), aLowerCaseLiteral);
+    reinterpret_cast<char16_t*>(mBuffer->Data()), Length(), aLowerCaseLiteral);
 }
 
 bool
-nsHtml5String::EqualsASCII(const char* aLiteral) const
+nsHtml5String::EqualsASCII(const char* aLiteral)
 {
+  if (!mBuffer) {
+    if (mLength) {
+      // This string is null
+      return false;
+    }
+    // this string is empty
+    return !(*aLiteral);
+  }
   return !nsCharTraits<char16_t>::compareASCIINullTerminated(
-    AsPtr(), Length(), aLiteral);
+    reinterpret_cast<char16_t*>(mBuffer->Data()), Length(), aLiteral);
 }
 
 bool
-nsHtml5String::LowerCaseStartsWithASCII(const char* aLowerCaseLiteral) const
+nsHtml5String::LowerCaseStartsWithASCII(const char* aLowerCaseLiteral)
 {
+  if (!mBuffer) {
+    if (mLength) {
+      // This string is null
+      return false;
+    }
+    // this string is empty
+    return !(*aLowerCaseLiteral);
+  }
   const char* litPtr = aLowerCaseLiteral;
-  const char16_t* strPtr = AsPtr();
+  const char16_t* strPtr = reinterpret_cast<char16_t*>(mBuffer->Data());
   const char16_t* end = strPtr + Length();
   char16_t litChar;
   while ((litChar = *litPtr) && (strPtr != end)) {
@@ -69,47 +102,37 @@ nsHtml5String::LowerCaseStartsWithASCII(const char* aLowerCaseLiteral) const
 }
 
 bool
-nsHtml5String::Equals(nsHtml5String aOther) const
+nsHtml5String::Equals(nsHtml5String aOther)
 {
   MOZ_ASSERT(operator bool());
   MOZ_ASSERT(aOther);
-  if (Length() != aOther.Length()) {
+  if (mLength != aOther.mLength) {
     return false;
   }
+  if (!mBuffer) {
+    return true;
+  }
+  MOZ_ASSERT(aOther.mBuffer);
   return !memcmp(
-    AsPtr(), aOther.AsPtr(), Length() * sizeof(char16_t));
+    mBuffer->Data(), aOther.mBuffer->Data(), Length() * sizeof(char16_t));
 }
 
 nsHtml5String
 nsHtml5String::Clone()
 {
-  switch (GetKind()) {
-    case eStringBuffer:
-      AsStringBuffer()->AddRef();
-      break;
-    case eAtom:
-      AsAtom()->AddRef();
-      break;
-    default:
-      break;
-  }
-  return nsHtml5String(mBits);
+  MOZ_ASSERT(operator bool());
+  RefPtr<nsStringBuffer> ref(mBuffer);
+  return nsHtml5String(ref.forget(), mLength);
 }
 
 void
 nsHtml5String::Release()
 {
-  switch (GetKind()) {
-    case eStringBuffer:
-      AsStringBuffer()->Release();
-      break;
-    case eAtom:
-      AsAtom()->Release();
-      break;
-    default:
-      break;
+  if (mBuffer) {
+    mBuffer->Release();
+    mBuffer = nullptr;
   }
-  mBits = eNull;
+  mLength = UINT32_MAX;
 }
 
 // static
@@ -119,7 +142,7 @@ nsHtml5String::FromBuffer(char16_t* aBuffer,
                           nsHtml5TreeBuilder* aTreeBuilder)
 {
   if (!aLength) {
-    return nsHtml5String(eEmpty);
+    return nsHtml5String(nullptr, 0U);
   }
   // Work with nsStringBuffer directly to make sure that storage is actually
   // nsStringBuffer and to make sure the allocation strategy matches
@@ -140,12 +163,12 @@ nsHtml5String::FromBuffer(char16_t* aBuffer,
     char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
     data[0] = 0xFFFD;
     data[1] = 0;
-    return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+    return nsHtml5String(buffer.forget(), 1);
   }
   char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
   memcpy(data, aBuffer, aLength * sizeof(char16_t));
   data[aLength] = 0;
-  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+  return nsHtml5String(buffer.forget(), aLength);
 }
 
 // static
@@ -154,7 +177,7 @@ nsHtml5String::FromLiteral(const char* aLiteral)
 {
   size_t length = std::strlen(aLiteral);
   if (!length) {
-    return nsHtml5String(eEmpty);
+    return nsHtml5String(nullptr, 0U);
   }
   // Work with nsStringBuffer directly to make sure that storage is actually
   // nsStringBuffer and to make sure the allocation strategy matches
@@ -169,7 +192,7 @@ nsHtml5String::FromLiteral(const char* aLiteral)
   LossyConvertEncoding8to16 converter(data);
   converter.write(aLiteral, length);
   data[length] = 0;
-  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+  return nsHtml5String(buffer.forget(), length);
 }
 
 // static
@@ -178,11 +201,11 @@ nsHtml5String::FromString(const nsAString& aString)
 {
   auto length = aString.Length();
   if (!length) {
-    return nsHtml5String(eEmpty);
+    return nsHtml5String(nullptr, 0U);
   }
   RefPtr<nsStringBuffer> buffer = nsStringBuffer::FromString(aString);
-  if (buffer && (length == buffer->StorageSize()/sizeof(char16_t) - 1)) {
-    return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+  if (buffer) {
+    return nsHtml5String(buffer.forget(), length);
   }
   buffer = nsStringBuffer::Alloc((length + 1) * sizeof(char16_t));
   if (!buffer) {
@@ -191,19 +214,12 @@ nsHtml5String::FromString(const nsAString& aString)
   char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
   memcpy(data, aString.BeginReading(), length * sizeof(char16_t));
   data[length] = 0;
-  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
-}
-
-// static
-nsHtml5String
-nsHtml5String::FromAtom(already_AddRefed<nsIAtom> aAtom)
-{
-  return nsHtml5String(reinterpret_cast<uintptr_t>(aAtom.take()) | eAtom);
+  return nsHtml5String(buffer.forget(), length);
 }
 
 // static
 nsHtml5String
 nsHtml5String::EmptyString()
 {
-  return nsHtml5String(eEmpty);
+  return nsHtml5String(nullptr, 0U);
 }
