@@ -13,7 +13,6 @@ const {Task} = require("devtools/shared/task");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
-const {listenOnce} = require("devtools/shared/async-utils");
 const {originalSourceSpec, mediaRuleSpec, styleSheetSpec,
        styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
 const {SourceMapConsumer} = require("source-map");
@@ -248,7 +247,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   },
 
   destroy: function () {
-    if (this._transitionTimeout) {
+    if (this._transitionTimeout && this.window) {
       this.window.clearTimeout(this._transitionTimeout);
       removePseudoClassLock(
                    this.document.documentElement, TRANSITION_PSEUDO_CLASS);
@@ -796,6 +795,64 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.parentActor = tabActor;
+
+    this._onNewStyleSheetActor = this._onNewStyleSheetActor.bind(this);
+    this._onSheetAdded = this._onSheetAdded.bind(this);
+    this._onWindowReady = this._onWindowReady.bind(this);
+
+    this.parentActor.on("stylesheet-added", this._onNewStyleSheetActor);
+    this.parentActor.on("window-ready", this._onWindowReady);
+
+    // We listen for StyleSheetApplicableStateChanged rather than
+    // StyleSheetAdded, because the latter will be sent before the
+    // rules are ready.  Using the former (with a check to ensure that
+    // the sheet is enabled) ensures that the sheet is ready before we
+    // try to make an actor for it.
+    this.parentActor.chromeEventHandler
+      .addEventListener("StyleSheetApplicableStateChanged", this._onSheetAdded, true);
+
+    // This is used when creating a new style sheet, so that we can
+    // pass the correct flag when emitting our stylesheet-added event.
+    // See addStyleSheet and _onNewStyleSheetActor for more details.
+    this._nextStyleSheetIsNew = false;
+  },
+
+  destroy: function () {
+    for (let win of this.parentActor.windows) {
+      // This flag only exists for devtools, so we are free to clear
+      // it when we're done.
+      win.document.styleSheetChangeEventsEnabled = false;
+    }
+
+    this.parentActor.off("stylesheet-added", this._onNewStyleSheetActor);
+    this.parentActor.off("window-ready", this._onWindowReady);
+
+    this.parentActor.chromeEventHandler.removeEventListener("StyleSheetAdded",
+                                                            this._onSheetAdded, true);
+
+    protocol.Actor.prototype.destroy.call(this);
+  },
+
+  /**
+   * Event handler that is called when a the tab actor emits window-ready.
+   *
+   * @param {Event} evt
+   *        The triggering event.
+   */
+  _onWindowReady: function (evt) {
+    this._addStyleSheets(evt.window);
+  },
+
+  /**
+   * Event handler that is called when a the tab actor emits stylesheet-added.
+   *
+   * @param {StyleSheetActor} actor
+   *        The new style sheet actor.
+   */
+  _onNewStyleSheetActor: function (actor) {
+    // Forward it to the client side.
+    this.emit("stylesheet-added", actor, this._nextStyleSheetIsNew);
+    this._nextStyleSheetIsNew = false;
   },
 
   /**
@@ -803,23 +860,11 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * all the style sheets in this document.
    */
   getStyleSheets: Task.async(function* () {
-    // Iframe document can change during load (bug 1171919). Track their windows
-    // instead.
-    let windows = [this.window];
     let actors = [];
 
-    for (let win of windows) {
+    for (let win of this.parentActor.windows) {
       let sheets = yield this._addStyleSheets(win);
       actors = actors.concat(sheets);
-
-      // Recursively handle style sheets of the documents in iframes.
-      for (let iframe of win.document.querySelectorAll("iframe, browser, frame")) {
-        if (iframe.contentDocument && iframe.contentWindow) {
-          // Sometimes, iframes don't have any document, like the
-          // one that are over deeply nested (bug 285395)
-          windows.push(iframe.contentWindow);
-        }
-      }
     }
     return actors;
   }),
@@ -827,15 +872,13 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   /**
    * Check if we should be showing this stylesheet.
    *
-   * @param {Document} doc
-   *        Document for which we're checking
    * @param {DOMCSSStyleSheet} sheet
    *        Stylesheet we're interested in
    *
    * @return boolean
    *         Whether the stylesheet should be listed.
    */
-  _shouldListSheet: function (doc, sheet) {
+  _shouldListSheet: function (sheet) {
     // Special case about:PreferenceStyleSheet, as it is generated on the
     // fly and the URI is not registered with the about: handler.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
@@ -844,6 +887,22 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     }
 
     return true;
+  },
+
+  /**
+   * Event handler that is called when a new style sheet is added to
+   * a document.  In particular,  StyleSheetApplicableStateChanged is
+   * listened for, because StyleSheetAdded is sent too early, before
+   * the rules are ready.
+   *
+   * @param {Event} evt
+   *        The triggering event.
+   */
+  _onSheetAdded: function (evt) {
+    let sheet = evt.stylesheet;
+    if (this._shouldListSheet(sheet) && !this._haveAncestorWithSameURL(sheet)) {
+      this.parentActor.createStyleSheetActor(sheet);
+    }
   },
 
   /**
@@ -859,24 +918,16 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   _addStyleSheets: function (win) {
     return Task.spawn(function* () {
       let doc = win.document;
-      // readyState can be uninitialized if an iframe has just been created but
-      // it has not started to load yet.
-      if (doc.readyState === "loading" || doc.readyState === "uninitialized") {
-        // Wait for the document to load first.
-        yield listenOnce(win, "DOMContentLoaded", true);
-
-        // Make sure we have the actual document for this window. If the
-        // readyState was initially uninitialized, the initial dummy document
-        // was replaced with the actual document (bug 1171919).
-        doc = win.document;
-      }
+      // We have to set this flag in order to get the
+      // StyleSheetApplicableStateChanged events.  See Document.webidl.
+      doc.styleSheetChangeEventsEnabled = true;
 
       let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
       let styleSheets = isChrome ? DOMUtils.getAllStyleSheets(doc) : doc.styleSheets;
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
         let sheet = styleSheets[i];
-        if (!this._shouldListSheet(doc, sheet)) {
+        if (!this._shouldListSheet(sheet)) {
           continue;
         }
 
@@ -916,7 +967,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
           // same URL to avoid cycles.
           let sheet = rule.styleSheet;
           if (!sheet || this._haveAncestorWithSameURL(sheet) ||
-              !this._shouldListSheet(doc, sheet)) {
+              !this._shouldListSheet(sheet)) {
             continue;
           }
           let actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
@@ -962,6 +1013,13 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *         Object with 'styelSheet' property for form on new actor.
    */
   addStyleSheet: function (text) {
+    // This is a bit convoluted.  The style sheet actor may be created
+    // by a notification from platform.  In this case, we can't easily
+    // pass the "new" flag through to createStyleSheetActor, so we set
+    // a flag locally and check it before sending an event to the
+    // client.  See |_onNewStyleSheetActor|.
+    this._nextStyleSheetIsNew = true;
+
     let parent = this.document.documentElement;
     let style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
     style.setAttribute("type", "text/css");
