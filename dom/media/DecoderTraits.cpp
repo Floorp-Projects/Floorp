@@ -324,6 +324,30 @@ DecoderTraits::CreateReader(const MediaContainerType& aType,
 }
 
 /* static */
+bool
+DecoderTraits::IsSupportedType(const MediaContainerType& aType)
+{
+  typedef bool (*IsSupportedFunction)(const MediaContainerType& aType);
+  static const IsSupportedFunction funcs[] = {
+    &ADTSDecoder::IsSupportedType,
+    &FlacDecoder::IsSupportedType,
+    &MP3Decoder::IsSupportedType,
+#ifdef MOZ_FMP4
+    &MP4Decoder::IsSupportedTypeWithoutDiagnostics,
+#endif
+    &OggDecoder::IsSupportedType,
+    &WaveDecoder::IsSupportedType,
+    &WebMDecoder::IsSupportedType,
+  };
+  for (IsSupportedFunction func : funcs) {
+    if (func(aType)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/* static */
 bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 {
   // Forbid playing media in video documents if the user has opted
