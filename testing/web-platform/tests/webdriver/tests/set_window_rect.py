@@ -120,12 +120,16 @@ def test_set_window_fullscreen(session):
 def test_set_window_rect_window_minimized(session):
     # step 11
     session.window.minimize()
-    assert session.execute_script("return document.hidden")
+    assert session.window.state == "minimized"
+
     result = session.transport.send("POST",
                                     "session/%s/window/rect" % session.session_id,
                                     {"width": 400, "height": 400})
     assert not session.execute_script("return document.hidden")
-    assert_success(result, {"width": 400, "height": 400})
+    rect = assert_success(result)
+    assert rect["width"] == 400
+    assert rect["height"] == 400
+    assert rect["state"] == "normal"
 
 
 def test_set_window_height_width(session):
