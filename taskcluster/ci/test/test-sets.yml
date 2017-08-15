@@ -87,6 +87,7 @@ stylo-tests:
     - web-platform-tests
     - web-platform-tests-reftests
     - mochitest
+    - mochitest-a11y
     - mochitest-browser-screenshots
     - mochitest-chrome
     - mochitest-clipboard
