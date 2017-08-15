@@ -1474,6 +1474,13 @@ GfxInfoBase::GetWebRenderEnabled(bool* aWebRenderEnabled)
 }
 
 NS_IMETHODIMP
+GfxInfoBase::GetOffMainThreadPaintEnabled(bool* aOffMainThreadPaintEnabled)
+{
+  *aOffMainThreadPaintEnabled = gfxConfig::IsEnabled(Feature::OMTP);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GfxInfoBase::GetIsHeadless(bool* aIsHeadless)
 {
   *aIsHeadless = gfxPlatform::IsHeadless();
