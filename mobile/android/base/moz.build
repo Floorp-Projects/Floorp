@@ -944,7 +944,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'toolbar/ToolbarEditLayout.java',
     'toolbar/ToolbarEditText.java',
     'toolbar/ToolbarPrefs.java',
-    'toolbar/ToolbarProgressView.java',
     'trackingprotection/TrackingProtectionPrompt.java',
     'updater/PostUpdateHandler.java',
     'updater/UpdateService.java',
