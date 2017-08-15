@@ -684,6 +684,10 @@
 #endif
       />
     </hbox>
+    <!-- Additional radio button added to support CloudStorage - Bug 1357171 -->
+    <radio id="saveToCloud"
+          value="true"
+          hidden="true"/>
     <radio id="alwaysAsk"
           value="false"
           label="&alwaysAskWhere.label;"
