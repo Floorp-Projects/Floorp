@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:layout_marginBottom="@dimen/activity_stream_base_margin">
 
+    <!-- centerInside will center smaller favicons and draw a colored border around them. -->
     <org.mozilla.gecko.widget.FaviconView
         android:id="@+id/favicon"
         android:layout_width="match_parent"
