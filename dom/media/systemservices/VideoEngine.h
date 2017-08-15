@@ -29,7 +29,7 @@ private:
   // Base cache expiration period
   // Note because cameras use HW plug event detection, this
   // only applies to screen based modes.
-  static const int64_t kCacheExpiryPeriodMs = 1000;
+  static const int64_t kCacheExpiryPeriodMs = 2000;
 
 public:
   VideoEngine (){};
