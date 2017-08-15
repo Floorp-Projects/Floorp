@@ -12,11 +12,11 @@ import org.mozilla.gecko.sync.repositories.PersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepository;
+import org.mozilla.gecko.sync.repositories.android.HistoryRepository;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecordFactory;
 import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
 
-public class AndroidBrowserHistoryServerSyncStage extends ServerSyncStage {
+public class HistoryServerSyncStage extends ServerSyncStage {
   protected static final String LOG_TAG = "HistoryStage";
 
   // Eventually this kind of sync stage will be data-driven,
@@ -41,7 +41,7 @@ public class AndroidBrowserHistoryServerSyncStage extends ServerSyncStage {
 
   @Override
   protected Repository getLocalRepository() {
-    return new AndroidBrowserHistoryRepository();
+    return new HistoryRepository();
   }
 
   /**

@@ -41,7 +41,7 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
-import org.mozilla.gecko.sync.stage.AndroidBrowserBookmarksServerSyncStage;
+import org.mozilla.gecko.sync.stage.BookmarksServerSyncStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 import org.mozilla.gecko.sync.stage.NoSuchStageException;
@@ -86,7 +86,7 @@ public class TestGlobalSession {
                                                  new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY),
                                                  callback, /* context */ null, null);
 
-    assertTrue(s.getSyncStageByName(Stage.syncBookmarks) instanceof AndroidBrowserBookmarksServerSyncStage);
+    assertTrue(s.getSyncStageByName(Stage.syncBookmarks) instanceof BookmarksServerSyncStage);
 
     final Set<String> empty = new HashSet<String>();
 

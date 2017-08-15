@@ -5,16 +5,11 @@
 package org.mozilla.gecko.sync;
 
 import android.content.Context;
-import android.net.Uri;
-import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
@@ -32,10 +27,9 @@ import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
-import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
-import org.mozilla.gecko.sync.stage.AndroidBrowserBookmarksServerSyncStage;
-import org.mozilla.gecko.sync.stage.AndroidBrowserHistoryServerSyncStage;
-import org.mozilla.gecko.sync.stage.AndroidBrowserRecentHistoryServerSyncStage;
+import org.mozilla.gecko.sync.stage.BookmarksServerSyncStage;
+import org.mozilla.gecko.sync.stage.HistoryServerSyncStage;
+import org.mozilla.gecko.sync.stage.RecentHistoryServerSyncStage;
 import org.mozilla.gecko.sync.stage.CheckPreconditionsStage;
 import org.mozilla.gecko.sync.stage.CompletedStage;
 import org.mozilla.gecko.sync.stage.EnsureCrypto5KeysStage;
@@ -210,11 +204,11 @@ public class GlobalSession implements HttpResponseObserver {
 
     // Will only run if syncFullHistory stage never completed.
     // Bug 1316110 tracks follow up work to improve efficiency of this stage.
-    stages.put(Stage.syncRecentHistory,       new AndroidBrowserRecentHistoryServerSyncStage());
+    stages.put(Stage.syncRecentHistory,       new RecentHistoryServerSyncStage());
 
-    stages.put(Stage.syncBookmarks,           new AndroidBrowserBookmarksServerSyncStage());
+    stages.put(Stage.syncBookmarks,           new BookmarksServerSyncStage());
     stages.put(Stage.syncFormHistory,         new FormHistoryServerSyncStage());
-    stages.put(Stage.syncFullHistory,         new AndroidBrowserHistoryServerSyncStage());
+    stages.put(Stage.syncFullHistory,         new HistoryServerSyncStage());
 
     stages.put(Stage.uploadMetaGlobal,        new UploadMetaGlobalStage());
     stages.put(Stage.completed,               new CompletedStage());

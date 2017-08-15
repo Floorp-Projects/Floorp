@@ -19,10 +19,10 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 
-public class AndroidBrowserHistoryDataAccessor extends
-    AndroidBrowserRepositoryDataAccessor {
+public class HistoryDataAccessor extends
+        DataAccessor {
 
-  public AndroidBrowserHistoryDataAccessor(Context context) {
+  public HistoryDataAccessor(Context context) {
     super(context);
   }
 

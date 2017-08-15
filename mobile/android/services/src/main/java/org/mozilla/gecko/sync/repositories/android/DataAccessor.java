@@ -17,14 +17,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
-public abstract class AndroidBrowserRepositoryDataAccessor {
+public abstract class DataAccessor {
 
   private static final String[] GUID_COLUMNS = new String[] { BrowserContract.SyncColumns.GUID };
   protected Context context;
   protected static final String LOG_TAG = "BrowserDataAccessor";
   protected final RepoUtils.QueryHelper queryHelper;
 
-  public AndroidBrowserRepositoryDataAccessor(Context context) {
+  public DataAccessor(Context context) {
     this.context = context;
     this.queryHelper = new RepoUtils.QueryHelper(context, getUri(), LOG_TAG);
   }

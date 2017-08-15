@@ -16,11 +16,11 @@ import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksDataAccessor;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepository;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepositorySession;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserRepository;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserRepositoryDataAccessor;
+import org.mozilla.gecko.sync.repositories.android.BookmarksDataAccessor;
+import org.mozilla.gecko.sync.repositories.android.BookmarksRepository;
+import org.mozilla.gecko.sync.repositories.android.BookmarksRepositorySession;
+import org.mozilla.gecko.sync.repositories.android.ThreadedRepository;
+import org.mozilla.gecko.sync.repositories.android.DataAccessor;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
@@ -31,20 +31,20 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
-public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserRepositoryTestCase {
+public class TestAndroidBrowserBookmarksRepository extends ThreadedRepositoryTestCase {
 
   @Override
-  protected AndroidBrowserRepository getRepository() {
+  protected ThreadedRepository getRepository() {
 
     /**
      * Override this chain in order to avoid our test code having to create two
      * sessions all the time.
      */
-    return new AndroidBrowserBookmarksRepository() {
+    return new BookmarksRepository() {
       @Override
       protected void sessionCreator(RepositorySessionCreationDelegate delegate, Context context) {
-        AndroidBrowserBookmarksRepositorySession session;
-        session = new AndroidBrowserBookmarksRepositorySession(this, context) {
+        BookmarksRepositorySession session;
+        session = new BookmarksRepositorySession(this, context) {
           @Override
           protected synchronized void trackGUID(String guid) {
             System.out.println("Ignoring trackGUID call: this is a test!");
@@ -56,8 +56,8 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
   }
 
   @Override
-  protected AndroidBrowserRepositoryDataAccessor getDataAccessor() {
-    return new AndroidBrowserBookmarksDataAccessor(getApplicationContext());
+  protected DataAccessor getDataAccessor() {
+    return new BookmarksDataAccessor(getApplicationContext());
   }
 
   /**
@@ -66,7 +66,7 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
   @Override
   public ExpectFetchDelegate preparedExpectFetchDelegate(Record[] expected) {
     ExpectFetchDelegate delegate = new ExpectFetchDelegate(expected);
-    delegate.ignore.addAll(AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.keySet());
+    delegate.ignore.addAll(BookmarksRepositorySession.SPECIAL_GUIDS_MAP.keySet());
     return delegate;
   }
 
@@ -75,7 +75,7 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
    */
   public ExpectFetchSinceDelegate preparedExpectFetchSinceDelegate(long timestamp, String[] expected) {
     ExpectFetchSinceDelegate delegate = new ExpectFetchSinceDelegate(timestamp, expected);
-    delegate.ignore.addAll(AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.keySet());
+    delegate.ignore.addAll(BookmarksRepositorySession.SPECIAL_GUIDS_MAP.keySet());
     return delegate;
   }
 
@@ -97,7 +97,7 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
     Record[] records = new Record[] { folder, bookmark1, bookmark2 };
     performWait(storeManyRunnable(session, records));
 
-    AndroidBrowserRepositoryDataAccessor helper = getDataAccessor();
+    DataAccessor helper = getDataAccessor();
     helper.dumpDB();
     closeDataAccessor(helper);
 
@@ -291,7 +291,7 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
     ExpectFetchDelegate timestampDelegate = preparedExpectFetchDelegate(new Record[] { rec0 });
     performWait(fetchRunnable(session, new String[] { record0.guid }, timestampDelegate));
 
-    AndroidBrowserRepositoryDataAccessor helper = getDataAccessor();
+    DataAccessor helper = getDataAccessor();
     helper.dumpDB();
     closeDataAccessor(helper);
 
@@ -407,7 +407,7 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
   public void testSqlInjectPurgeDeleteAndUpdateByGuid() {
     // Some setup.
     RepositorySession session = createAndBeginSession();
-    AndroidBrowserRepositoryDataAccessor db = getDataAccessor();
+    DataAccessor db = getDataAccessor();
 
     ContentValues cv = new ContentValues();
     cv.put(BrowserContract.SyncColumns.IS_DELETED, 1);
@@ -488,7 +488,7 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
   public void testSqlInjectFetch() {
     // Some setup.
     RepositorySession session = createAndBeginSession();
-    AndroidBrowserRepositoryDataAccessor db = getDataAccessor();
+    DataAccessor db = getDataAccessor();
 
     // Create and insert 4 bookmarks, last one is evil (attempts injection).
     BookmarkRecord bmk1 = BookmarkHelpers.createBookmark1();
@@ -536,7 +536,7 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
   public void testSqlInjectDelete() {
     // Some setup.
     RepositorySession session = createAndBeginSession();
-    AndroidBrowserRepositoryDataAccessor db = getDataAccessor();
+    DataAccessor db = getDataAccessor();
 
     // Create and insert 2 bookmarks, 2nd one is evil (attempts injection).
     BookmarkRecord bmk1 = BookmarkHelpers.createBookmark1();
@@ -580,7 +580,7 @@ public class TestAndroidBrowserBookmarksRepository extends AndroidBrowserReposit
    */
   public void testBulkInsert() throws NullCursorException {
     RepositorySession session = createAndBeginSession();
-    AndroidBrowserRepositoryDataAccessor db = getDataAccessor();
+    DataAccessor db = getDataAccessor();
 
     // Have to set androidID of parent manually.
     Cursor cur = db.fetch(new String[] { "mobile" } );

@@ -12,11 +12,11 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryDataAccessor;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepository;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepositorySession;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserRepository;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserRepositoryDataAccessor;
+import org.mozilla.gecko.sync.repositories.android.HistoryDataAccessor;
+import org.mozilla.gecko.sync.repositories.android.HistoryRepository;
+import org.mozilla.gecko.sync.repositories.android.HistoryRepositorySession;
+import org.mozilla.gecko.sync.repositories.android.ThreadedRepository;
+import org.mozilla.gecko.sync.repositories.android.DataAccessor;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
@@ -28,20 +28,20 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
-public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositoryTestCase {
+public class TestAndroidBrowserHistoryRepository extends ThreadedRepositoryTestCase {
 
   @Override
-  protected AndroidBrowserRepository getRepository() {
+  protected ThreadedRepository getRepository() {
 
     /**
      * Override this chain in order to avoid our test code having to create two
      * sessions all the time.
      */
-    return new AndroidBrowserHistoryRepository() {
+    return new HistoryRepository() {
       @Override
       protected void sessionCreator(RepositorySessionCreationDelegate delegate, Context context) {
-        AndroidBrowserHistoryRepositorySession session;
-        session = new AndroidBrowserHistoryRepositorySession(this, context) {
+        HistoryRepositorySession session;
+        session = new HistoryRepositorySession(this, context) {
           @Override
           protected synchronized void trackGUID(String guid) {
             System.out.println("Ignoring trackGUID call: this is a test!");
@@ -53,8 +53,8 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
   }
 
   @Override
-  protected AndroidBrowserRepositoryDataAccessor getDataAccessor() {
-    return new AndroidBrowserHistoryDataAccessor(getApplicationContext());
+  protected DataAccessor getDataAccessor() {
+    return new HistoryDataAccessor(getApplicationContext());
   }
 
   @Override
@@ -215,7 +215,7 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
     long newVisitTime = System.currentTimeMillis();
     cv.put(BrowserContract.History.VISITS, visits);
     cv.put(BrowserContract.History.DATE_LAST_VISITED, newVisitTime);
-    final AndroidBrowserRepositoryDataAccessor dataAccessor = getDataAccessor();
+    final DataAccessor dataAccessor = getDataAccessor();
     dataAccessor.updateByGuid(record0.guid, cv);
 
     // Add expected visit to record for verification.
@@ -242,7 +242,7 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
     long newVisitTime = System.currentTimeMillis();
     cv.put(BrowserContract.History.VISITS, visits);
     cv.put(BrowserContract.History.DATE_LAST_VISITED, newVisitTime);
-    final AndroidBrowserRepositoryDataAccessor dataAccessor = getDataAccessor();
+    final DataAccessor dataAccessor = getDataAccessor();
     dataAccessor.updateByGuid(record0.guid, cv);
 
     // Now shift to microsecond timing for visits.
@@ -271,8 +271,8 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
   }
 
   public void testInvalidHistoryItemIsSkipped() throws NullCursorException {
-    final AndroidBrowserHistoryRepositorySession session = (AndroidBrowserHistoryRepositorySession) createAndBeginSession();
-    final AndroidBrowserRepositoryDataAccessor dbHelper = new AndroidBrowserHistoryDataAccessor(getApplicationContext());
+    final HistoryRepositorySession session = (HistoryRepositorySession) createAndBeginSession();
+    final DataAccessor dbHelper = new HistoryDataAccessor(getApplicationContext());
 
     final long now = System.currentTimeMillis();
     final HistoryRecord emptyURL = new HistoryRecord(Utils.generateGuid(), "history", now, false);
@@ -315,7 +315,7 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
   public void testSqlInjectPurgeDelete() {
     // Some setup.
     RepositorySession session = createAndBeginSession();
-    final AndroidBrowserRepositoryDataAccessor db = getDataAccessor();
+    final DataAccessor db = getDataAccessor();
 
     try {
       ContentValues cv = new ContentValues();
@@ -398,8 +398,8 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
   }
 
   public void testDataAccessorBulkInsert() throws NullCursorException {
-    final AndroidBrowserHistoryRepositorySession session = (AndroidBrowserHistoryRepositorySession) createAndBeginSession();
-    final AndroidBrowserHistoryDataAccessor db = new AndroidBrowserHistoryDataAccessor(getApplicationContext());
+    final HistoryRepositorySession session = (HistoryRepositorySession) createAndBeginSession();
+    final HistoryDataAccessor db = new HistoryDataAccessor(getApplicationContext());
 
     ArrayList<HistoryRecord> records = new ArrayList<HistoryRecord>();
     records.add(HistoryHelpers.createHistory1());

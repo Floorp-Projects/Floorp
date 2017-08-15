@@ -33,7 +33,7 @@ import java.util.ArrayList;
     private final Object recordsBufferMonitor = new Object();
     private ArrayList<HistoryRecord> recordsBuffer = new ArrayList<HistoryRecord>();
 
-    /* package-private */ HistorySessionHelper(StoreTrackingRepositorySession session, AndroidBrowserRepositoryDataAccessor dbHelper) {
+    /* package-private */ HistorySessionHelper(StoreTrackingRepositorySession session, DataAccessor dbHelper) {
         super(session, dbHelper);
     }
 
@@ -238,7 +238,7 @@ import java.util.ArrayList;
         final ArrayList<HistoryRecord> outgoing = recordsBuffer;
         recordsBuffer = new ArrayList<HistoryRecord>();
         Logger.debug(LOG_TAG, "Flushing " + outgoing.size() + " records to database.");
-        boolean transactionSuccess = ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing);
+        boolean transactionSuccess = ((HistoryDataAccessor) dbHelper).bulkInsert(outgoing);
         if (!transactionSuccess) {
             for (HistoryRecord failed : outgoing) {
                 delegate.onRecordStoreFailed(new RuntimeException("Failed to insert history item with guid " + failed.guid + "."), failed.guid);

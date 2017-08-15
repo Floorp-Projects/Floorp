@@ -4,22 +4,21 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import org.mozilla.gecko.sync.repositories.BookmarksRepository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 
 import android.content.Context;
 
-public class AndroidBrowserBookmarksRepository extends AndroidBrowserRepository implements BookmarksRepository {
+public class BookmarksRepository extends ThreadedRepository implements org.mozilla.gecko.sync.repositories.BookmarksRepository {
 
   @Override
   protected void sessionCreator(RepositorySessionCreationDelegate delegate, Context context) {
-    AndroidBrowserBookmarksRepositorySession session = new AndroidBrowserBookmarksRepositorySession(AndroidBrowserBookmarksRepository.this, context);
+    BookmarksRepositorySession session = new BookmarksRepositorySession(BookmarksRepository.this, context);
     final RepositorySessionCreationDelegate deferredCreationDelegate = delegate.deferredCreationDelegate();
     deferredCreationDelegate.onSessionCreated(session);
   }
 
   @Override
-  protected AndroidBrowserRepositoryDataAccessor getDataAccessor(Context context) {
-    return new AndroidBrowserBookmarksDataAccessor(context);
+  protected DataAccessor getDataAccessor(Context context) {
+    return new BookmarksDataAccessor(context);
   }
 }

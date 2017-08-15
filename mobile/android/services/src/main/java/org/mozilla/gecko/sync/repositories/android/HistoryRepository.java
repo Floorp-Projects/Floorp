@@ -4,22 +4,21 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import org.mozilla.gecko.sync.repositories.HistoryRepository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 
 import android.content.Context;
 
-public class AndroidBrowserHistoryRepository extends AndroidBrowserRepository implements HistoryRepository {
+public class HistoryRepository extends ThreadedRepository implements org.mozilla.gecko.sync.repositories.HistoryRepository {
 
   @Override
   protected void sessionCreator(RepositorySessionCreationDelegate delegate, Context context) {
-    AndroidBrowserHistoryRepositorySession session = new AndroidBrowserHistoryRepositorySession(AndroidBrowserHistoryRepository.this, context);
+    HistoryRepositorySession session = new HistoryRepositorySession(HistoryRepository.this, context);
     delegate.onSessionCreated(session);
   }
 
   @Override
-  protected AndroidBrowserRepositoryDataAccessor getDataAccessor(Context context) {
-    return new AndroidBrowserHistoryDataAccessor(context);
+  protected DataAccessor getDataAccessor(Context context) {
+    return new HistoryDataAccessor(context);
   }
 
 }
