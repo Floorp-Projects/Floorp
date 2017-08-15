@@ -173,7 +173,8 @@ gfxFontCache::Shutdown()
 }
 
 gfxFontCache::gfxFontCache(nsIEventTarget* aEventTarget)
-    : gfxFontCacheExpirationTracker(aEventTarget)
+    : nsExpirationTracker<gfxFont,3>(FONT_TIMEOUT_SECONDS * 1000,
+                                     "gfxFontCache", aEventTarget)
 {
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     if (obs) {
@@ -285,7 +286,7 @@ gfxFontCache::NotifyReleased(gfxFont *aFont)
 }
 
 void
-gfxFontCache::NotifyExpired(gfxFont* aFont)
+gfxFontCache::NotifyExpired(gfxFont *aFont)
 {
     aFont->ClearCachedWords();
     RemoveObject(aFont);

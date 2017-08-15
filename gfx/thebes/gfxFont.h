@@ -33,7 +33,6 @@
 #include "harfbuzz/hb.h"
 #include "mozilla/gfx/2D.h"
 #include "nsColor.h"
-#include "mozilla/ServoUtils.h"
 
 typedef struct _cairo cairo_t;
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
@@ -256,41 +255,12 @@ struct FontCacheSizes {
     size_t mShapedWords; // memory used by the per-font shapedWord caches
 };
 
-class gfxFontCacheExpirationTracker
-    : public ExpirationTrackerImpl<gfxFont, 3,
-                                   ::detail::PlaceholderLock,
-                                   ::detail::PlaceholderAutoLock>
-{
-protected:
-    typedef ::detail::PlaceholderLock Lock;
-    typedef ::detail::PlaceholderAutoLock AutoLock;
-
-    Lock mLock;
-
-    AutoLock FakeLock()
-    {
-        return AutoLock(mLock);
-    }
-
-    Lock& GetMutex() override
-    {
-        mozilla::AssertIsMainThreadOrServoFontMetricsLocked();
-        return mLock;
-    }
-
+class gfxFontCache final : public nsExpirationTracker<gfxFont,3> {
 public:
-    enum { FONT_TIMEOUT_SECONDS = 10 };
-
-    gfxFontCacheExpirationTracker(nsIEventTarget* aEventTarget)
-        : ExpirationTrackerImpl<gfxFont, 3, Lock, AutoLock>(
-            FONT_TIMEOUT_SECONDS * 1000, "gfxFontCache", aEventTarget)
-    {
-    }
-};
-
-class gfxFontCache final : private gfxFontCacheExpirationTracker {
-public:
-    enum { SHAPED_WORD_TIMEOUT_SECONDS = 60 };
+    enum {
+        FONT_TIMEOUT_SECONDS = 10,
+        SHAPED_WORD_TIMEOUT_SECONDS = 60
+    };
 
     explicit gfxFontCache(nsIEventTarget* aEventTarget);
     ~gfxFontCache();
@@ -324,6 +294,10 @@ public:
     // amount of time.
     void NotifyReleased(gfxFont *aFont);
 
+    // This gets called when the timeout has expired on a zero-refcount
+    // font; we just delete it.
+    virtual void NotifyExpired(gfxFont *aFont) override;
+
     // Cleans out the hashtable and removes expired fonts waiting for cleanup.
     // Other gfxFont objects may be still in use but they will be pushed
     // into the expiration queues and removed.
@@ -339,16 +313,6 @@ public:
                                 FontCacheSizes* aSizes) const;
     void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes* aSizes) const;
-
-    void AgeAllGenerations()
-    {
-        AgeAllGenerationsLocked(FakeLock());
-    }
-
-    void RemoveObject(gfxFont* aFont)
-    {
-        RemoveObjectLocked(aFont, FakeLock());
-    }
 
 protected:
     class MemoryReporter final : public nsIMemoryReporter
@@ -368,20 +332,6 @@ protected:
         NS_DECL_ISUPPORTS
         NS_DECL_NSIOBSERVER
     };
-
-    nsresult AddObject(gfxFont* aFont)
-    {
-        return AddObjectLocked(aFont, FakeLock());
-    }
-
-    // This gets called when the timeout has expired on a zero-refcount
-    // font; we just delete it.
-    virtual void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&) override
-    {
-        NotifyExpired(aFont);
-    }
-
-    void NotifyExpired(gfxFont* aFont);
 
     void DestroyFont(gfxFont *aFont);
 
