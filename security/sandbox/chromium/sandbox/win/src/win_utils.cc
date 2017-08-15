@@ -109,45 +109,6 @@ void RemoveImpliedDevice(base::string16* path) {
     *path = path->substr(kNTDotPrefixLen);
 }
 
-// Get the native path to the process.
-bool GetProcessPath(HANDLE process, base::string16* path) {
-  wchar_t process_name[MAX_PATH];
-  DWORD size = MAX_PATH;
-  if (::QueryFullProcessImageNameW(process, PROCESS_NAME_NATIVE, process_name,
-                                   &size)) {
-    *path = process_name;
-    return true;
-  }
-  // Process name is potentially greater than MAX_PATH, try larger max size.
-  std::vector<wchar_t> process_name_buffer(SHRT_MAX);
-  size = SHRT_MAX;
-  if (::QueryFullProcessImageNameW(process, PROCESS_NAME_NATIVE,
-                                   &process_name_buffer[0], &size)) {
-    *path = &process_name_buffer[0];
-    return true;
-  }
-  return false;
-}
-
-// Get the native path for a mapped file.
-bool GetImageFilePath(HANDLE process,
-                      void* base_address,
-                      base::string16* path) {
-  wchar_t mapped_path[MAX_PATH];
-  if (::GetMappedFileNameW(process, base_address, mapped_path, MAX_PATH)) {
-    *path = mapped_path;
-    return true;
-  }
-  // Image name is potentially greater than MAX_PATH, try larger max size.
-  std::vector<wchar_t> mapped_path_buffer(SHRT_MAX);
-  if (::GetMappedFileNameW(process, base_address, &mapped_path_buffer[0],
-                           SHRT_MAX)) {
-    *path = &mapped_path_buffer[0];
-    return true;
-  }
-  return false;
-}
-
 }  // namespace
 
 namespace sandbox {
@@ -463,45 +424,40 @@ DWORD GetLastErrorFromNtStatus(NTSTATUS status) {
   return NtStatusToDosError(status);
 }
 
-// This function walks the virtual memory map using VirtualQueryEx to find
-// the main executable's image section. We attempt to find the first image
-// section which matches the path returned for the process.  This shouldn't
-// be a major performance problem because a new process has a very limited
-// amount of memory allocated so the majority of the valid range should be
-// skipped immediately. However if it turns out to be the case it could be
-// optimized in the specific case of the process being the same as the
-// current process, which due to ASLR rules the image load address will almost
-// always match the current process's load address.
+// This function uses the undocumented PEB ImageBaseAddress field to extract
+// the base address of the new process.
 void* GetProcessBaseAddress(HANDLE process) {
-  MEMORY_BASIC_INFORMATION mem_info = {};
-  // Start 64KiB above zero page.
-  void* current = reinterpret_cast<void*>(0x10000);
-  base::string16 process_path;
-
-  if (!GetProcessPath(process, &process_path))
+  NtQueryInformationProcessFunction query_information_process = NULL;
+  ResolveNTFunctionPtr("NtQueryInformationProcess", &query_information_process);
+  if (!query_information_process)
+    return nullptr;
+  PROCESS_BASIC_INFORMATION process_basic_info = {};
+  NTSTATUS status = query_information_process(
+      process, ProcessBasicInformation, &process_basic_info,
+      sizeof(process_basic_info), nullptr);
+  if (STATUS_SUCCESS != status)
     return nullptr;
 
-  // Walk the virtual memory mappings trying to find image sections.
-  // VirtualQueryEx will return false if it encounters a location outside of
-  // the user memory range.
-  while (::VirtualQueryEx(process, current, &mem_info, sizeof(mem_info))) {
-    base::string16 image_path;
-    if (mem_info.Type == MEM_IMAGE &&
-        GetImageFilePath(process, mem_info.BaseAddress, &image_path) &&
-        EqualPath(process_path, image_path)) {
-      return mem_info.BaseAddress;
-    }
-    // VirtualQueryEx should fail before overflow, but just in case we'll check
-    // to prevent an infinite loop.
-    base::CheckedNumeric<uintptr_t> next_base =
-        reinterpret_cast<uintptr_t>(mem_info.BaseAddress);
-    next_base += mem_info.RegionSize;
-    if (!next_base.IsValid())
-      return nullptr;
-    current = reinterpret_cast<void*>(next_base.ValueOrDie());
+  PEB peb = {};
+  SIZE_T bytes_read = 0;
+  if (!::ReadProcessMemory(process, process_basic_info.PebBaseAddress, &peb,
+                           sizeof(peb), &bytes_read) ||
+      (sizeof(peb) != bytes_read)) {
+    return nullptr;
   }
 
-  return nullptr;
+  void* base_address = peb.ImageBaseAddress;
+  char magic[2] = {};
+  if (!::ReadProcessMemory(process, base_address, magic, sizeof(magic),
+                           &bytes_read) ||
+      (sizeof(magic) != bytes_read)) {
+    return nullptr;
+  }
+
+  if (magic[0] != 'M' || magic[1] != 'Z')
+    return nullptr;
+
+  return base_address;
 }
 
 };  // namespace sandbox

@@ -113,11 +113,8 @@ bool IsPipe(const base::string16& path);
 DWORD GetLastErrorFromNtStatus(NTSTATUS status);
 
 // Returns the address of the main exe module in memory taking in account
-// address space layout randomization. While it will work on running processes
-// it's recommended to only call this for a suspended process. Ideally also
-// a process which has not been started. There's a slim chance that a process
-// could map its own executables file multiple times, but this is pretty
-// unlikely to occur in practice.
+// address space layout randomization. This uses the process' PEB to extract
+// the base address. This should only be called on new, suspended processes.
 void* GetProcessBaseAddress(HANDLE process);
 
 }  // namespace sandbox
