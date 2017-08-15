@@ -14,20 +14,19 @@
         android:layout_height="wrap_content"
         android:padding="10dp">
 
-        <org.mozilla.gecko.widget.FaviconView
-            android:id="@+id/icon"
-            android:layout_width="@dimen/favicon_bg"
-            android:layout_height="@dimen/favicon_bg"
-            android:layout_gravity="center"
-            gecko:enableRoundCorners="false"
-            tools:background="@drawable/favicon_globe"/>
+        <org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout
+                android:id="@+id/page_icon_layout"
+                android:layout_width="@dimen/favicon_bg"
+                android:layout_height="@dimen/favicon_bg"
+                android:layout_gravity="center"
+                tools:background="@drawable/favicon_globe"/>
 
         <TextView
             android:id="@+id/url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/icon"
-            android:layout_toRightOf="@id/icon"
+            android:layout_toEndOf="@id/page_icon_layout"
+            android:layout_toRightOf="@id/page_icon_layout"
             android:paddingLeft="@dimen/activity_stream_base_margin"
             android:paddingStart="@dimen/activity_stream_base_margin"
             android:textColor="@color/activity_stream_subtitle"
@@ -39,8 +38,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/url"
-            android:layout_toEndOf="@id/icon"
-            android:layout_toRightOf="@id/icon"
+            android:layout_toEndOf="@id/page_icon_layout"
+            android:layout_toRightOf="@id/page_icon_layout"
             android:ellipsize="end"
             android:maxLines="3"
             android:paddingLeft="@dimen/activity_stream_base_margin"
