@@ -25,8 +25,8 @@ struct RoundedRect {
         // deflate the internal rect
         rect.x += aLeftWidth;
         rect.y += aTopWidth;
-        rect.width = std::max(0., rect.width - aLeftWidth - aRightWidth);
-        rect.height = std::max(0., rect.height - aTopWidth - aBottomWidth);
+        rect.SetWidth(std::max(0., rect.Width() - aLeftWidth - aRightWidth));
+        rect.SetHeight(std::max(0., rect.Height() - aTopWidth - aBottomWidth));
 
         corners.radii[mozilla::eCornerTopLeft].width =
             std::max(0., corners.radii[mozilla::eCornerTopLeft].width - aLeftWidth);

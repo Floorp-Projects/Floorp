@@ -22,7 +22,6 @@
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
-class nsIEditor;
 class nsIURI;
 class nsIDocShell;
 class nsICachingChannel;
@@ -105,7 +104,7 @@ public:
   virtual void AddedForm() override;
   virtual void RemovedForm() override;
   virtual int32_t GetNumFormsSynchronous() override;
-  virtual void TearingDownEditor(nsIEditor *aEditor) override;
+  virtual void TearingDownEditor() override;
   virtual void SetIsXHTML(bool aXHTML) override
   {
     mType = (aXHTML ? eXHTML : eHTML);

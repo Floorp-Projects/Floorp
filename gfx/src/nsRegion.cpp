@@ -555,7 +555,7 @@ uint64_t nsRegion::Area () const
   uint64_t area = 0;
   for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
     const nsRect& rect = iter.Get();
-    area += uint64_t(rect.width) * rect.height;
+    area += uint64_t(rect.Width()) * rect.Height();
   }
   return area;
 }
@@ -610,7 +610,7 @@ TransformRect(const mozilla::gfx::IntRect& aRect, const mozilla::gfx::Matrix4x4&
         return mozilla::gfx::IntRect();
     }
 
-    mozilla::gfx::RectDouble rect(aRect.x, aRect.y, aRect.width, aRect.height);
+    mozilla::gfx::RectDouble rect(aRect.x, aRect.y, aRect.Width(), aRect.Height());
     rect = aTransform.TransformAndClipBounds(rect, mozilla::gfx::RectDouble::MaxIntRect());
     rect.RoundOut();
 

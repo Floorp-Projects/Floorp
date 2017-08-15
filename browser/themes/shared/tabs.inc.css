@@ -6,6 +6,7 @@
 
 :root {
   --tab-toolbar-navbar-overlap: 1px;
+  --tab-line-color: highlight;
   --tab-min-height: 33px;
 }
 
@@ -15,6 +16,10 @@
 
 :root[uidensity=touch] {
   --tab-min-height: 41px;
+}
+
+:root:-moz-lwtheme {
+  --tab-line-color: var(--lwt-accent-color);
 }
 
 #tabbrowser-tabs,
@@ -305,6 +310,10 @@
   border-left-style: solid;
   border-right-style: solid;
   border-color: var(--tabs-border);
+  border-image: linear-gradient(var(--tabs-border),
+                                var(--tabs-border) calc(100% - 1px - var(--tab-toolbar-navbar-overlap)),
+                                transparent calc(100% - 1px - var(--tab-toolbar-navbar-overlap)));
+  border-image-slice: 1;
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   background-repeat: repeat-x;
@@ -315,7 +324,7 @@
 }
 
 .tab-line[selected=true] {
-  background-color: Highlight;
+  background-color: var(--tab-line-color);
 }
 
 /*

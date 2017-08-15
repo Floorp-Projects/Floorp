@@ -53,8 +53,8 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
     ScopedGLState scopedBlendState(gl, LOCAL_GL_BLEND, false);
 
     // 2.0 means scale up by two
-    float blitScaleX = float(aDstRect.width) / float(aSrcRect.width);
-    float blitScaleY = float(aDstRect.height) / float(aSrcRect.height);
+    float blitScaleX = float(aDstRect.Width()) / float(aSrcRect.Width());
+    float blitScaleY = float(aDstRect.Height()) / float(aSrcRect.Height());
 
     // We start iterating over all destination tiles
     aDst->BeginBigImageIteration();
@@ -116,8 +116,8 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
 
             float dx0 = 2.0f * float(srcSubInDstRect.x) / float(dstSize.width) - 1.0f;
             float dy0 = 2.0f * float(srcSubInDstRect.y) / float(dstSize.height) - 1.0f;
-            float dx1 = 2.0f * float(srcSubInDstRect.x + srcSubInDstRect.width) / float(dstSize.width) - 1.0f;
-            float dy1 = 2.0f * float(srcSubInDstRect.y + srcSubInDstRect.height) / float(dstSize.height) - 1.0f;
+            float dx1 = 2.0f * float(srcSubInDstRect.x + srcSubInDstRect.Width()) / float(dstSize.width) - 1.0f;
+            float dy1 = 2.0f * float(srcSubInDstRect.y + srcSubInDstRect.Height()) / float(dstSize.height) - 1.0f;
             ScopedViewportRect autoViewportRect(gl, 0, 0, dstSize.width, dstSize.height);
 
             RectTriangles rects;

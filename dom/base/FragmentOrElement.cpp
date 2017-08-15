@@ -23,6 +23,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/URLExtraData.h"
@@ -271,12 +272,12 @@ nsIContent::GetDesiredIMEState()
   if (!pc) {
     return IMEState(IMEState::DISABLED);
   }
-  nsIEditor* editor = nsContentUtils::GetHTMLEditor(pc);
-  if (!editor) {
+  HTMLEditor* htmlEditor = nsContentUtils::GetHTMLEditor(pc);
+  if (!htmlEditor) {
     return IMEState(IMEState::DISABLED);
   }
   IMEState state;
-  editor->GetPreferredIMEState(&state);
+  htmlEditor->GetPreferredIMEState(&state);
   return state;
 }
 

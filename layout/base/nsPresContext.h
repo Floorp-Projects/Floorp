@@ -702,8 +702,8 @@ public:
   gfxRect AppUnitsToGfxUnits(const nsRect& aAppRect) const
   { return gfxRect(AppUnitsToGfxUnits(aAppRect.x),
                    AppUnitsToGfxUnits(aAppRect.y),
-                   AppUnitsToGfxUnits(aAppRect.width),
-                   AppUnitsToGfxUnits(aAppRect.height)); }
+                   AppUnitsToGfxUnits(aAppRect.Width()),
+                   AppUnitsToGfxUnits(aAppRect.Height())); }
 
   static nscoord CSSTwipsToAppUnits(float aTwips)
   { return NSToCoordRoundWithClamp(

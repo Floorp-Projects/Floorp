@@ -494,14 +494,14 @@ TiledContentHost::RenderTile(TileHost& aTile,
 
   for (auto iter = aScreenRegion.RectIter(); !iter.Done(); iter.Next()) {
     const IntRect& rect = iter.Get();
-    Rect graphicsRect(rect.x, rect.y, rect.width, rect.height);
+    Rect graphicsRect(rect.x, rect.y, rect.Width(), rect.Height());
     Rect textureRect(rect.x - aTextureOffset.x, rect.y - aTextureOffset.y,
-                     rect.width, rect.height);
+                     rect.Width(), rect.Height());
 
     effect->mTextureCoords = Rect(textureRect.x / aTextureBounds.width,
                                   textureRect.y / aTextureBounds.height,
-                                  textureRect.width / aTextureBounds.width,
-                                  textureRect.height / aTextureBounds.height);
+                                  textureRect.Width() / aTextureBounds.width,
+                                  textureRect.Height() / aTextureBounds.height);
 
     aCompositor->DrawGeometry(graphicsRect, aClipRect, aEffectChain, opacity,
                               aTransform, aVisibleRect, aGeometry);
@@ -576,7 +576,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     effect.mPrimaryEffect = new EffectSolidColor(*aBackgroundColor);
     for (auto iter = backgroundRegion.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& rect = iter.Get();
-      Rect graphicsRect(rect.x, rect.y, rect.width, rect.height);
+      Rect graphicsRect(rect.x, rect.y, rect.Width(), rect.Height());
       aCompositor->DrawGeometry(graphicsRect, aClipRect, effect,
                                 1.0, aTransform, aGeometry);
     }
@@ -605,7 +605,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                aTransform, aSamplingFilter, aClipRect, tileDrawRegion,
                tileOffset * resolution, aLayerBuffer.GetTileSize(),
                gfx::Rect(visibleRect.x, visibleRect.y,
-                         visibleRect.width, visibleRect.height),
+                         visibleRect.Width(), visibleRect.Height()),
                aGeometry);
 
     if (tile.mTextureHostOnWhite) {
@@ -614,7 +614,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   }
 
   gfx::Rect rect(visibleRect.x, visibleRect.y,
-                 visibleRect.width, visibleRect.height);
+                 visibleRect.Width(), visibleRect.Height());
   aCompositor->DrawDiagnostics(DiagnosticFlags::CONTENT | componentAlphaDiagnostic,
                                rect, aClipRect, aTransform, mFlashCounter);
 }

@@ -24,9 +24,7 @@ struct CachedOffsetForFrame;
 class nsAutoScrollTimer;
 class nsIContentIterator;
 class nsIDocument;
-class nsIEditor;
 class nsIFrame;
-class nsIHTMLEditor;
 class nsFrameSelection;
 class nsPIDOMWindowOuter;
 struct SelectionDetails;
@@ -36,6 +34,7 @@ class nsHTMLCopyEncoder;
 
 namespace mozilla {
 class ErrorResult;
+class HTMLEditor;
 struct AutoPrepareFocusRange;
 } // namespace mozilla
 
@@ -393,7 +392,7 @@ private:
 
   nsIDocument* GetDocument() const;
   nsPIDOMWindowOuter* GetWindow() const;
-  nsIEditor* GetEditor() const;
+  HTMLEditor* GetHTMLEditor() const;
 
   /**
    * GetCommonEditingHostForAllRanges() returns common editing host of all
