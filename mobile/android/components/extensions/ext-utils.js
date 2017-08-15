@@ -250,6 +250,13 @@ global.WindowEventManager = class extends EventManager {
 };
 
 class TabTracker extends TabTrackerBase {
+  constructor() {
+    super();
+
+    // Keep track of the extension popup tab.
+    this._extensionPopupTabWeak = null;
+  }
+
   init() {
     if (this.initialized) {
       return;
@@ -258,6 +265,59 @@ class TabTracker extends TabTrackerBase {
 
     windowTracker.addListener("TabClose", this);
     windowTracker.addListener("TabOpen", this);
+
+    // Register a listener for the Tab:Selected global event,
+    // so that we can close the popup when a popup tab has been
+    // unselected.
+    GlobalEventDispatcher.registerListener(this, [
+      "Tab:Selected",
+    ]);
+  }
+
+  /**
+   * Returns the currently opened popup tab if any
+   */
+  get extensionPopupTab() {
+    if (this._extensionPopupTabWeak) {
+      const tab = this._extensionPopupTabWeak.get();
+
+      // Return the native tab only if the tab has not been removed in the meantime.
+      if (tab.browser) {
+        return tab;
+      }
+
+      // Clear the tracked popup tab if it has been closed in the meantime.
+      this._extensionPopupTabWeak = null;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Open a pageAction/browserAction popup url in a tab and keep track of
+   * its weak reference (to be able to customize the activedTab using the tab parentId,
+   * to skip it in the tabs.query and to set the parent tab as active when the popup
+   * tab is currently selected).
+   *
+   * @param {string} popup
+   *   The popup url to open in a tab.
+   */
+  openExtensionPopupTab(popup) {
+    let win = windowTracker.topWindow;
+    if (!win) {
+      throw new ExtensionError(`Unable to open a popup without an active window`);
+    }
+
+    if (this.extensionPopupTab) {
+      win.BrowserApp.closeTab(this.extensionPopupTab);
+    }
+
+    this.init();
+
+    this._extensionPopupTabWeak = Cu.getWeakReference(win.BrowserApp.addTab(popup, {
+      selected: true,
+      parentId: win.BrowserApp.selectedTab.id,
+    }));
   }
 
   getId(nativeTab) {
@@ -288,7 +348,7 @@ class TabTracker extends TabTrackerBase {
    */
   handleEvent(event) {
     const {BrowserApp} = event.target.ownerGlobal;
-    let nativeTab = BrowserApp.getTabForBrowser(event.target);
+    const nativeTab = BrowserApp.getTabForBrowser(event.target);
 
     switch (event.type) {
       case "TabOpen":
@@ -298,6 +358,31 @@ class TabTracker extends TabTrackerBase {
       case "TabClose":
         this.emitRemoved(nativeTab, false);
         break;
+    }
+  }
+
+  /**
+   * Required by the GlobalEventDispatcher module. This event will get
+   * called whenever one of the registered listeners fires.
+   * @param {string} event The event which fired.
+   * @param {object} data Information about the event which fired.
+   */
+  onEvent(event, data) {
+    const {BrowserApp} = windowTracker.topWindow;
+
+    switch (event) {
+      case "Tab:Selected": {
+        // If a new tab has been selected while an extension popup tab is still open,
+        // close it immediately.
+        const nativeTab = BrowserApp.getTabForId(data.id);
+
+        const popupTab = tabTracker.extensionPopupTab;
+        if (popupTab && popupTab !== nativeTab) {
+          BrowserApp.closeTab(popupTab);
+        }
+
+        break;
+      }
     }
   }
 
@@ -326,6 +411,17 @@ class TabTracker extends TabTrackerBase {
     let windowId = windowTracker.getId(nativeTab.browser.ownerGlobal);
     let tabId = this.getId(nativeTab);
 
+    if (this.extensionPopupTab && this.extensionPopupTab === nativeTab) {
+      this._extensionPopupTabWeak = null;
+
+      // Select the parent tab when the closed tab was an extension popup tab.
+      const {BrowserApp} = windowTracker.topWindow;
+      const popupParentTab = BrowserApp.getTabForId(nativeTab.parentId);
+      if (popupParentTab) {
+        BrowserApp.selectTab(popupParentTab);
+      }
+    }
+
     Services.tm.dispatchToMainThread(() => {
       this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
     });
@@ -351,10 +447,19 @@ class TabTracker extends TabTrackerBase {
   }
 
   get activeTab() {
-    let window = windowTracker.topWindow;
-    if (window && window.BrowserApp) {
-      return window.BrowserApp.selectedTab;
+    let win = windowTracker.topWindow;
+    if (win && win.BrowserApp) {
+      const selectedTab = win.BrowserApp.selectedTab;
+
+      // If the current tab is an extension popup tab, we use the parentId to retrieve
+      // and return the tab that was selected when the popup tab has been opened.
+      if (selectedTab === this.extensionPopupTab) {
+        return win.BrowserApp.getTabForId(selectedTab.parentId);
+      }
+
+      return selectedTab;
     }
+
     return null;
   }
 }
@@ -406,6 +511,23 @@ class Tab extends TabBase {
   }
 
   get active() {
+    // If there is an extension popup tab and it is active,
+    // then the parent tab of the extension popup tab is active
+    // (while the extension popup tab will not be included in the
+    // tabs.query results).
+    if (tabTracker.extensionPopupTab) {
+      if (tabTracker.extensionPopupTab.getActive() &&
+          this.nativeTab.id === tabTracker.extensionPopupTab.parentId) {
+        return true;
+      }
+
+      // Never return true for an active extension popup, e.g. so that
+      // the popup tab will not be part of the results of querying
+      // all the active tabs.
+      if (tabTracker.extensionPopupTab === this.nativeTab) {
+        return false;
+      }
+    }
     return this.nativeTab.getActive();
   }
 
