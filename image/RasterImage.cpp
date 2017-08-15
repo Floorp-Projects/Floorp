@@ -456,12 +456,20 @@ RasterImage::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey)
   bool animatedFramesDiscarded =
     mAnimationState && aSurfaceKey.Playback() == PlaybackType::eAnimated;
 
+  nsCOMPtr<nsIEventTarget> eventTarget;
+  if (mProgressTracker) {
+    eventTarget = mProgressTracker->GetEventTarget();
+  } else {
+    eventTarget = do_GetMainThread();
+  }
+
   RefPtr<RasterImage> image = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
+  nsCOMPtr<nsIRunnable> ev = NS_NewRunnableFunction(
                             "RasterImage::OnSurfaceDiscarded",
                             [=]() -> void {
     image->OnSurfaceDiscardedInternal(animatedFramesDiscarded);
-  }));
+  });
+  eventTarget->Dispatch(ev.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
