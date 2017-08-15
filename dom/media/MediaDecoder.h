@@ -108,10 +108,6 @@ public:
   // Safe to call from any thread.
   const MediaContainerType& ContainerType() const { return mContainerType; }
 
-  // Create a new state machine to run this decoder.
-  // Subclasses must implement this.
-  virtual MediaDecoderStateMachine* CreateStateMachine() = 0;
-
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.
   virtual void Shutdown();
