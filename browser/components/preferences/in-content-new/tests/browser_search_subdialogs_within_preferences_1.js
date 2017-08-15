@@ -12,7 +12,7 @@ add_task(async function() {
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("Set Home Page", "startupGroup");
+  await evaluateSearchResults("Set Home Page", "homepageGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
