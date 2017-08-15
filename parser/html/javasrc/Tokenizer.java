@@ -897,7 +897,7 @@ public class Tokenizer implements Locator {
      */
     protected String strBufToString() {
         String str = Portability.newStringFromBuffer(strBuf, 0, strBufLen
-            // CPPONLY: , tokenHandler, !newAttributesEachTime && attributeName == AttributeName.CLASS
+            // CPPONLY: , tokenHandler
         );
         clearStrBufAfterUse();
         return str;
