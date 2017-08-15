@@ -33,7 +33,6 @@
 #include "nsTextFragment.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/dom/Selection.h"
 #include "nsIBidiKeyboard.h"
 #include "nsContentUtils.h"
 
@@ -250,31 +249,6 @@ void nsCaret::SetVisible(bool inMakeVisible)
   mIgnoreUserModify = mVisible;
   ResetBlinking();
   SchedulePaint();
-}
-
-bool nsCaret::IsVisible(nsISelection* aSelection)
-{
-  if (!mVisible || mHideCount) {
-    return false;
-  }
-
-  if (!mShowDuringSelection) {
-    mozilla::dom::Selection* selection;
-    if (aSelection) {
-      selection = aSelection->AsSelection();
-    } else {
-      selection = GetSelectionInternal();
-    }
-    if (!selection || !selection->IsCollapsed()) {
-      return false;
-    }
-  }
-
-  if (IsMenuPopupHidingCaret()) {
-    return false;
-  }
-
-  return true;
 }
 
 void nsCaret::AddForceHide()
