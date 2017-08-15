@@ -89,7 +89,6 @@
     <style name="TextAppearance.PrivateTab.Title" parent="TextAppearance.Large">
         <item name="android:textSize">26sp</item>
         <item name="android:maxWidth">300dp</item>
-        <item name="android:layout_marginTop">21dp</item>
         <item name="android:layout_marginBottom">16dp</item>
     </style>
 
