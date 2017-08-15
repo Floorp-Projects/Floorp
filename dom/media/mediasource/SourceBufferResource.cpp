@@ -6,10 +6,6 @@
 
 #include "SourceBufferResource.h"
 
-#include <algorithm>
-
-#include "nsISeekableStream.h"
-#include "nsISupports.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TaskQueue.h"
 #include "MediaData.h"
