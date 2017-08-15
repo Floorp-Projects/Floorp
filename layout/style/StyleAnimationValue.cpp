@@ -1345,27 +1345,39 @@ ComputeTransformDistance(nsCSSValue::Array* aArray1,
       Point3D vector1(a1->Item(1).GetFloatValue(),
                       a1->Item(2).GetFloatValue(),
                       a1->Item(3).GetFloatValue());
-      vector1.Normalize();
+      double angle1 = a1->Item(4).GetAngleValueInRadians();
+
       Point3D vector2(a2->Item(1).GetFloatValue(),
                       a2->Item(2).GetFloatValue(),
                       a2->Item(3).GetFloatValue());
-      vector2.Normalize();
+      double angle2 = a2->Item(4).GetAngleValueInRadians();
+
+      auto normalizeVector = [](Point3D& vector, double& angle) {
+        if (vector.Length() > 0) {
+          vector.Normalize();
+        } else {
+          vector.x = 0.0;
+          vector.y = 0.0;
+          vector.z = 1.0;
+          angle = 0.0;
+        }
+      };
+      normalizeVector(vector1, angle1);
+      normalizeVector(vector2, angle2);
 
       if (vector1 == vector2) {
         // Handle rotate3d with matched (normalized) vectors.
-        nsCSSValue angle;
-        AddCSSValueAngle(1.0, a2->Item(4), -1.0, a1->Item(4), angle);
-        distance = angle.GetAngleValueInRadians() *
-                   angle.GetAngleValueInRadians();
+        distance = EnsureNotNan(angle2 - angle1);
       } else {
         // Use quaternion vectors to get the angle difference. Both q1 and q2
         // are unit vectors, so we can get their angle difference by
         // cos(theta/2) = (q1 dot q2) / (|q1| * |q2|) = q1 dot q2.
-        gfxQuaternion q1(vector1, a1->Item(4).GetAngleValueInRadians());
-        gfxQuaternion q2(vector2, a2->Item(4).GetAngleValueInRadians());
-        distance = 2.0 * acos(clamped(q1.DotProduct(q2), -1.0, 1.0));
-        distance = distance * distance;
+        gfxQuaternion q1(vector1, angle1);
+        gfxQuaternion q2(vector2, angle2);
+        distance =
+          EnsureNotNan(2.0 * acos(clamped(q1.DotProduct(q2), -1.0, 1.0)));
       }
+      distance = distance * distance;
       break;
     }
     case eCSSKeyword_perspective: {
