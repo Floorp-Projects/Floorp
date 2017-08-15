@@ -45,7 +45,7 @@ public:
     NSOpenGLContext* GetNSOpenGLContext() const { return mContext; }
     CGLContextObj GetCGLContext() const;
 
-    virtual bool MakeCurrentImpl(bool aForce) const override;
+    virtual bool MakeCurrentImpl() const override;
 
     virtual bool IsCurrentImpl() const override;
 

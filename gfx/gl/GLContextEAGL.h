@@ -43,7 +43,7 @@ public:
 
     EAGLContext* GetEAGLContext() const { return mContext; }
 
-    virtual bool MakeCurrentImpl(bool aForce) const override;
+    virtual bool MakeCurrentImpl() const override;
 
     virtual bool IsCurrentImpl() const override;
 

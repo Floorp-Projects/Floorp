@@ -356,35 +356,27 @@ GLContextEGL::SetEGLSurfaceOverride(EGLSurface surf) {
 }
 
 bool
-GLContextEGL::MakeCurrentImpl(bool aForce) const
+GLContextEGL::MakeCurrentImpl() const
 {
-    bool succeeded = true;
+    const EGLSurface surface = (mSurfaceOverride != EGL_NO_SURFACE) ? mSurfaceOverride
+                                                                    : mSurface;
+    if (surface == EGL_NO_SURFACE) {
+        MOZ_CRASH("EGL_NO_SURFACE");
+        return false;
+    }
 
-    // Assume that EGL has the same problem as WGL does,
-    // where MakeCurrent with an already-current context is
-    // still expensive.
-    bool needsMakeCurrent = (aForce || sEGLLibrary.fGetCurrentContext() != mContext);
-    if (needsMakeCurrent) {
-        EGLSurface surface = mSurfaceOverride != EGL_NO_SURFACE
-                              ? mSurfaceOverride
-                              : mSurface;
-        if (surface == EGL_NO_SURFACE) {
-            return false;
-        }
-        succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
-                                              surface, surface,
-                                              mContext);
-        if (!succeeded) {
-            int eglError = sEGLLibrary.fGetError();
-            if (eglError == LOCAL_EGL_CONTEXT_LOST) {
-                mContextLost = true;
-                NS_WARNING("EGL context has been lost.");
-            } else {
-                NS_WARNING("Failed to make GL context current!");
+    const bool succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), surface, surface,
+                                                    mContext);
+    if (!succeeded) {
+        const auto eglError = sEGLLibrary.fGetError();
+        if (eglError == LOCAL_EGL_CONTEXT_LOST) {
+            mContextLost = true;
+            NS_WARNING("EGL context has been lost.");
+        } else {
+            NS_WARNING("Failed to make GL context current!");
 #ifdef DEBUG
-                printf_stderr("EGL Error: 0x%04x\n", eglError);
+            printf_stderr("EGL Error: 0x%04x\n", eglError);
 #endif
-            }
         }
     }
 
