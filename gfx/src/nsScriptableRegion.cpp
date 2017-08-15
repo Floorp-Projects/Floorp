@@ -103,8 +103,8 @@ NS_IMETHODIMP nsScriptableRegion::GetBoundingBox(int32_t *aX, int32_t *aY, int32
   mozilla::gfx::IntRect boundRect = mRegion.GetBounds();
   *aX = boundRect.x;
   *aY = boundRect.y;
-  *aWidth = boundRect.width;
-  *aHeight = boundRect.height;
+  *aWidth = boundRect.Width();
+  *aHeight = boundRect.Height();
   return NS_OK;
 }
 
@@ -148,8 +148,8 @@ NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::MutableHandle<JS:
     const mozilla::gfx::IntRect& rect = iter.Get();
     if (!JS_DefineElement(aCx, destArray, n, rect.x, JSPROP_ENUMERATE) ||
         !JS_DefineElement(aCx, destArray, n + 1, rect.y, JSPROP_ENUMERATE) ||
-        !JS_DefineElement(aCx, destArray, n + 2, rect.width, JSPROP_ENUMERATE) ||
-        !JS_DefineElement(aCx, destArray, n + 3, rect.height, JSPROP_ENUMERATE)) {
+        !JS_DefineElement(aCx, destArray, n + 2, rect.Width(), JSPROP_ENUMERATE) ||
+        !JS_DefineElement(aCx, destArray, n + 3, rect.Height(), JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
     n += 4;

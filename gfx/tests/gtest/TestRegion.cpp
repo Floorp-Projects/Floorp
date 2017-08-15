@@ -65,7 +65,7 @@ public:
       EXPECT_TRUE(r2.IsComplex()) << "nsRegion code got unexpectedly smarter!";
 
       nsRect largest = r2.GetLargestRectangle();
-      EXPECT_TRUE(largest.width * largest.height == tests[i].expectedArea) <<
+      EXPECT_TRUE(largest.Width() * largest.Height() == tests[i].expectedArea) <<
         "Did not successfully find largest rectangle in non-rectangular region on iteration " << i;
     }
 
@@ -91,7 +91,7 @@ public:
       EXPECT_TRUE(r2.IsComplex()) << "nsRegion code got unexpectedly smarter!";
 
       nsRect largest = r2.GetLargestRectangle();
-      EXPECT_TRUE(largest.width * largest.height == tests[i].expectedArea) <<
+      EXPECT_TRUE(largest.Width() * largest.Height() == tests[i].expectedArea) <<
         "Did not successfully find largest rectangle in two-rect-subtract region on iteration " << i;
     }
   }

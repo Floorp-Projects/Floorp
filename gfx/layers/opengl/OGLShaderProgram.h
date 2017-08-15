@@ -379,10 +379,10 @@ public:
   }
 
   void SetLayerRects(const gfx::Rect* aRects) {
-    float vals[16] = { aRects[0].x, aRects[0].y, aRects[0].width, aRects[0].height,
-                       aRects[1].x, aRects[1].y, aRects[1].width, aRects[1].height,
-                       aRects[2].x, aRects[2].y, aRects[2].width, aRects[2].height,
-                       aRects[3].x, aRects[3].y, aRects[3].width, aRects[3].height };
+    float vals[16] = { aRects[0].x, aRects[0].y, aRects[0].Width(), aRects[0].Height(),
+                       aRects[1].x, aRects[1].y, aRects[1].Width(), aRects[1].Height(),
+                       aRects[2].x, aRects[2].y, aRects[2].Width(), aRects[2].Height(),
+                       aRects[3].x, aRects[3].y, aRects[3].Width(), aRects[3].Height() };
     SetUniform(KnownUniform::LayerRects, 16, vals);
   }
 
@@ -396,10 +396,10 @@ public:
   }
 
   void SetTextureRects(const gfx::Rect* aRects) {
-    float vals[16] = { aRects[0].x, aRects[0].y, aRects[0].width, aRects[0].height,
-                       aRects[1].x, aRects[1].y, aRects[1].width, aRects[1].height,
-                       aRects[2].x, aRects[2].y, aRects[2].width, aRects[2].height,
-                       aRects[3].x, aRects[3].y, aRects[3].width, aRects[3].height };
+    float vals[16] = { aRects[0].x, aRects[0].y, aRects[0].Width(), aRects[0].Height(),
+                       aRects[1].x, aRects[1].y, aRects[1].Width(), aRects[1].Height(),
+                       aRects[2].x, aRects[2].y, aRects[2].Width(), aRects[2].Height(),
+                       aRects[3].x, aRects[3].y, aRects[3].Width(), aRects[3].Height() }; 
     SetUniform(KnownUniform::TextureRects, 16, vals);
   }
 

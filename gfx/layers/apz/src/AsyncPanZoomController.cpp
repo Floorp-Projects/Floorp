@@ -1403,9 +1403,9 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     CSSToParentLayerScale realMinZoom = mZoomConstraints.mMinZoom;
     CSSToParentLayerScale realMaxZoom = mZoomConstraints.mMaxZoom;
     realMinZoom.scale = std::max(realMinZoom.scale,
-                                 mFrameMetrics.GetCompositionBounds().width / mFrameMetrics.GetScrollableRect().width);
+                                 mFrameMetrics.GetCompositionBounds().Width() / mFrameMetrics.GetScrollableRect().Width());
     realMinZoom.scale = std::max(realMinZoom.scale,
-                                 mFrameMetrics.GetCompositionBounds().height / mFrameMetrics.GetScrollableRect().height);
+                                 mFrameMetrics.GetCompositionBounds().Height() / mFrameMetrics.GetScrollableRect().Height());
     if (realMaxZoom < realMinZoom) {
       realMaxZoom = realMinZoom;
     }
@@ -3064,12 +3064,12 @@ RedistributeDisplayPortExcess(CSSSize& aDisplayPortSize,
 {
   // As aDisplayPortSize.height * aDisplayPortSize.width does not change,
   // we are just scaling by the ratio and its inverse.
-  if (aDisplayPortSize.height > aScrollableRect.height) {
-    aDisplayPortSize.width *= (aDisplayPortSize.height / aScrollableRect.height);
-    aDisplayPortSize.height = aScrollableRect.height;
-  } else if (aDisplayPortSize.width > aScrollableRect.width) {
-    aDisplayPortSize.height *= (aDisplayPortSize.width / aScrollableRect.width);
-    aDisplayPortSize.width = aScrollableRect.width;
+  if (aDisplayPortSize.height > aScrollableRect.Height()) {
+    aDisplayPortSize.width *= (aDisplayPortSize.height / aScrollableRect.Height());
+    aDisplayPortSize.height = aScrollableRect.Height();
+  } else if (aDisplayPortSize.width > aScrollableRect.Width()) {
+    aDisplayPortSize.height *= (aDisplayPortSize.width / aScrollableRect.Width());
+    aDisplayPortSize.width = aScrollableRect.Width();
   }
 }
 
@@ -3119,14 +3119,14 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
 
   APZC_LOG_FM(aFrameMetrics,
     "Calculated displayport as (%f %f %f %f) from velocity %s paint time %f metrics",
-    displayPort.x, displayPort.y, displayPort.width, displayPort.height,
+    displayPort.x, displayPort.y, displayPort.Width(), displayPort.Height(),
     ToString(aVelocity).c_str(), paintFactor);
 
   CSSMargin cssMargins;
   cssMargins.left = -displayPort.x;
   cssMargins.top = -displayPort.y;
-  cssMargins.right = displayPort.width - compositionSize.width - cssMargins.left;
-  cssMargins.bottom = displayPort.height - compositionSize.height - cssMargins.top;
+  cssMargins.right = displayPort.Width() - compositionSize.width - cssMargins.left;
+  cssMargins.bottom = displayPort.Height() - compositionSize.height - cssMargins.top;
 
   return cssMargins * aFrameMetrics.DisplayportPixelsPerCSSPixel();
 }
@@ -3266,10 +3266,10 @@ AsyncPanZoomController::RequestContentRepaint(const FrameMetrics& aFrameMetrics,
             aFrameMetrics.GetScrollOffset().y) < EPSILON &&
       aFrameMetrics.GetPresShellResolution() == mLastPaintRequestMetrics.GetPresShellResolution() &&
       aFrameMetrics.GetZoom() == mLastPaintRequestMetrics.GetZoom() &&
-      fabsf(aFrameMetrics.GetViewport().width -
-            mLastPaintRequestMetrics.GetViewport().width) < EPSILON &&
-      fabsf(aFrameMetrics.GetViewport().height -
-            mLastPaintRequestMetrics.GetViewport().height) < EPSILON &&
+      fabsf(aFrameMetrics.GetViewport().Width() -
+            mLastPaintRequestMetrics.GetViewport().Width()) < EPSILON &&
+      fabsf(aFrameMetrics.GetViewport().Height() -
+            mLastPaintRequestMetrics.GetViewport().Height()) < EPSILON &&
       aFrameMetrics.GetScrollGeneration() ==
             mLastPaintRequestMetrics.GetScrollGeneration() &&
       aFrameMetrics.GetScrollUpdateType() ==
@@ -3710,12 +3710,12 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
 
   bool needContentRepaint = false;
   bool viewportUpdated = false;
-  if (FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().width, mFrameMetrics.GetCompositionBounds().width) &&
-      FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().height, mFrameMetrics.GetCompositionBounds().height)) {
+  if (FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Width(), mFrameMetrics.GetCompositionBounds().Width()) &&
+      FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Height(), mFrameMetrics.GetCompositionBounds().Height())) {
     // Remote content has sync'd up to the composition geometry
     // change, so we can accept the viewport it's calculated.
-    if (mFrameMetrics.GetViewport().width != aLayerMetrics.GetViewport().width ||
-        mFrameMetrics.GetViewport().height != aLayerMetrics.GetViewport().height) {
+    if (mFrameMetrics.GetViewport().Width() != aLayerMetrics.GetViewport().Width() ||
+        mFrameMetrics.GetViewport().Height() != aLayerMetrics.GetViewport().Height()) {
       needContentRepaint = true;
       viewportUpdated = true;
     }
@@ -3776,7 +3776,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     // in some things into our local mFrameMetrics because these things are
     // determined by Gecko and our copy in mFrameMetrics may be stale.
 
-    if (FuzzyEqualsAdditive(mFrameMetrics.GetCompositionBounds().width, aLayerMetrics.GetCompositionBounds().width) &&
+    if (FuzzyEqualsAdditive(mFrameMetrics.GetCompositionBounds().Width(), aLayerMetrics.GetCompositionBounds().Width()) &&
         mFrameMetrics.GetDevPixelsPerCSSPixel() == aLayerMetrics.GetDevPixelsPerCSSPixel() &&
         !viewportUpdated) {
       // Any change to the pres shell resolution was requested by APZ and is
@@ -3937,15 +3937,15 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     // composition bounds. If this happens, we can't fill the target composited
     // area with this frame.
     CSSToParentLayerScale localMinZoom(std::max(mZoomConstraints.mMinZoom.scale,
-                                       std::max(compositionBounds.width / cssPageRect.width,
-                                                compositionBounds.height / cssPageRect.height)));
+                                                std::max(compositionBounds.Width() / cssPageRect.Width(),
+                                                         compositionBounds.Height() / cssPageRect.Height())));
     CSSToParentLayerScale localMaxZoom = mZoomConstraints.mMaxZoom;
 
     if (!aRect.IsEmpty()) {
       // Intersect the zoom-to-rect to the CSS rect to make sure it fits.
       aRect = aRect.Intersect(cssPageRect);
-      targetZoom = CSSToParentLayerScale(std::min(compositionBounds.width / aRect.width,
-                                                  compositionBounds.height / aRect.height));
+      targetZoom = CSSToParentLayerScale(std::min(compositionBounds.Width() / aRect.Width(),
+                                                  compositionBounds.Height() / aRect.Height()));
     }
 
     // 1. If the rect is empty, the content-side logic for handling a double-tap
@@ -3966,16 +3966,16 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
       CSSSize compositedSize = mFrameMetrics.CalculateCompositedSizeInCssPixels();
       float y = scrollOffset.y;
       float newHeight =
-        cssPageRect.width * (compositedSize.height / compositedSize.width);
+        cssPageRect.Width() * (compositedSize.height / compositedSize.width);
       float dh = compositedSize.height - newHeight;
 
       aRect = CSSRect(0.0f,
                       y + dh/2,
-                      cssPageRect.width,
+                      cssPageRect.Width(),
                       newHeight);
       aRect = aRect.Intersect(cssPageRect);
-      targetZoom = CSSToParentLayerScale(std::min(compositionBounds.width / aRect.width,
-                                                  compositionBounds.height / aRect.height));
+      targetZoom = CSSToParentLayerScale(std::min(compositionBounds.Width() / aRect.Width(),
+                                                  compositionBounds.Height() / aRect.Height()));
     }
 
     targetZoom.scale = clamped(targetZoom.scale, localMinZoom.scale, localMaxZoom.scale);
@@ -4000,8 +4000,8 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     CSSSize sizeAfterZoom = endZoomToMetrics.CalculateCompositedSizeInCssPixels();
 
     // Vertically center the zoomed element in the screen.
-    if (!zoomOut && (sizeAfterZoom.height > aRect.height)) {
-      aRect.y -= (sizeAfterZoom.height - aRect.height) * 0.5f;
+    if (!zoomOut && (sizeAfterZoom.height > aRect.Height())) {
+      aRect.y -= (sizeAfterZoom.height - aRect.Height()) * 0.5f;
       if (aRect.y < 0.0f) {
         aRect.y = 0.0f;
       }
@@ -4009,12 +4009,12 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
 
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
-    if (aRect.y + sizeAfterZoom.height > cssPageRect.height) {
-      aRect.y = cssPageRect.height - sizeAfterZoom.height;
+    if (aRect.y + sizeAfterZoom.height > cssPageRect.Height()) {
+      aRect.y = cssPageRect.Height() - sizeAfterZoom.height;
       aRect.y = aRect.y > 0 ? aRect.y : 0;
     }
-    if (aRect.x + sizeAfterZoom.width > cssPageRect.width) {
-      aRect.x = cssPageRect.width - sizeAfterZoom.width;
+    if (aRect.x + sizeAfterZoom.width > cssPageRect.Width()) {
+      aRect.x = cssPageRect.Width() - sizeAfterZoom.width;
       aRect.x = aRect.x > 0 ? aRect.x : 0;
     }
 

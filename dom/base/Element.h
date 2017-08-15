@@ -1062,11 +1062,11 @@ public:
   }
   int32_t ClientWidth()
   {
-    return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().width);
+    return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().Width());
   }
   int32_t ClientHeight()
   {
-    return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().height);
+    return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().Height());
   }
   int32_t ScrollTopMin()
   {

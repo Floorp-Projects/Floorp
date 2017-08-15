@@ -236,8 +236,8 @@ static inline wr::LayoutRect ToLayoutRect(const gfx::RectTyped<T>& rect)
   wr::LayoutRect r;
   r.origin.x = rect.x;
   r.origin.y = rect.y;
-  r.size.width = rect.width;
-  r.size.height = rect.height;
+  r.size.width = rect.Width();
+  r.size.height = rect.Height();
   return r;
 }
 
@@ -246,8 +246,8 @@ static inline wr::LayoutRect ToLayoutRect(const gfxRect rect)
   wr::LayoutRect r;
   r.origin.x = rect.x;
   r.origin.y = rect.y;
-  r.size.width = rect.width;
-  r.size.height = rect.height;
+  r.size.width = rect.Width();
+  r.size.height = rect.Height();
   return r;
 }
 

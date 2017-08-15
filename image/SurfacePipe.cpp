@@ -143,7 +143,7 @@ PalettedSurfaceSink::Configure(const PalettedSurfaceConfig& aConfig)
 
   MOZ_ASSERT(mImageData);
   MOZ_ASSERT(mImageDataLength ==
-               uint32_t(mFrameRect.width * mFrameRect.height * sizeof(uint8_t)));
+             uint32_t(mFrameRect.Width() * mFrameRect.Height() * sizeof(uint8_t)));
 
   ConfigureFilter(surfaceSize, sizeof(uint8_t));
   return NS_OK;
