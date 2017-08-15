@@ -87,7 +87,8 @@ nsParserUtils::Sanitize(const nsAString& aFromStr,
                                   principal,
                                   true,
                                   nullptr,
-                                  DocumentFlavorHTML);
+                                  DocumentFlavorHTML,
+                                  mozilla::StyleBackendType::None);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
