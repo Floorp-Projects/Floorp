@@ -46,11 +46,13 @@ html {
 }
 
 .textbox-search-icon {
-  background-image: url(chrome://global/skin/icons/search-textbox.svg);
-  background-repeat: no-repeat;
   width: 16px;
   height: 16px;
-  display: block;
+  background-image: url(chrome://global/skin/icons/search-textbox.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .textbox-search-icon[searchbutton]:not([disabled]) ,
