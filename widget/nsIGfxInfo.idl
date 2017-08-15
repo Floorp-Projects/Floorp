@@ -25,6 +25,7 @@ interface nsIGfxInfo : nsISupports
   readonly attribute DOMString ContentBackend;
   readonly attribute boolean WebRenderEnabled;
   readonly attribute boolean isHeadless;
+  readonly attribute boolean OffMainThreadPaintEnabled;
 
   // XXX: Switch to a list of devices, rather than explicitly numbering them.
 
