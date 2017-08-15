@@ -19,9 +19,9 @@ add_task(async function() {
       ["security.mixed_content.block_display_content", false]
     ]});
 
-  await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
     isSecurityState(browser, "insecure");
-    assertMixedContentBlockingState(browser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
+    await assertMixedContentBlockingState(browser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
   });
 });
 

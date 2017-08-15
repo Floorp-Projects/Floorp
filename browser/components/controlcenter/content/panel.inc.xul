@@ -83,7 +83,8 @@
       </hbox>
 
       <!-- Permissions Section -->
-      <hbox class="identity-popup-section">
+      <hbox class="identity-popup-section"
+            when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension">
         <vbox id="identity-popup-permissions-content" flex="1">
           <label id="identity-popup-permissions-headline"
                  class="identity-popup-headline"

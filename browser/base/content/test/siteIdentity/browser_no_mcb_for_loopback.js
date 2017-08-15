@@ -56,7 +56,7 @@ add_task(async function allowLoopbackMixedContent() {
     Assert.ok(cachedImg.complete, "loopback image loaded from cache");
   });
 
-  assertMixedContentBlockingState(browser, {
+  await assertMixedContentBlockingState(browser, {
     activeBlocked: false,
     activeLoaded: false,
     passiveLoaded: false,

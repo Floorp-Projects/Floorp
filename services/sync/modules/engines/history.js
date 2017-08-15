@@ -158,7 +158,11 @@ HistoryStore.prototype = {
   },
 
   async changeItemID(oldID, newID) {
-    this.setGUID(await PlacesSyncUtils.history.fetchURLInfoForGuid(oldID).url, newID);
+    let info = await PlacesSyncUtils.history.fetchURLInfoForGuid(oldID);
+    if (!info) {
+      throw new Error(`Can't change ID for nonexistent history entry ${oldID}`);
+    }
+    this.setGUID(info.url, newID);
   },
 
   async getAllIDs() {

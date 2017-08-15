@@ -11,7 +11,7 @@ import logging
 
 from slugid import nice as slugid
 
-from .util import (find_decision_task, create_task)
+from .util import (find_decision_task, create_task_from_def)
 from .registry import register_callback_action
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.parameterization import resolve_task_references
@@ -140,4 +140,4 @@ def mochitest_retrigger_action(parameters, input, task_group_id, task_id, task):
 
     # actually create the new task
     new_task_id = slugid()
-    create_task(new_task_id, new_task_definition, parameters['level'])
+    create_task_from_def(new_task_id, new_task_definition, parameters['level'])

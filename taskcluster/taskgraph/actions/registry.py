@@ -13,9 +13,9 @@ import re
 from mozbuild.util import memoize
 from types import FunctionType
 from collections import namedtuple
+from taskgraph import create
 from taskgraph.util.docker import docker_image
 from taskgraph.parameters import Parameters
-from . import util
 
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
@@ -309,7 +309,7 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
             callback, get_callbacks().keys()))
 
     if test:
-        util.testing = True
+        create.testing = True
 
     cb(Parameters(**parameters), input, task_group_id, task_id, task)
 

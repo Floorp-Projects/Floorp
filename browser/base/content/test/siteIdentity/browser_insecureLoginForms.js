@@ -38,7 +38,9 @@ add_task(async function test_simple() {
 
     let { gIdentityHandler } = gBrowser.ownerGlobal;
     gIdentityHandler._identityBox.click();
+    let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
     document.getElementById("identity-popup-security-expander").click();
+    await promiseViewShown;
 
     if (expectWarning) {
       ok(is_visible(document.getElementById("connection-icon")), "Connection icon should be visible");
@@ -72,7 +74,13 @@ add_task(async function test_simple() {
        expectWarning,
        "The relevant messages should be visible or hidden.");
 
-    gIdentityHandler._identityPopup.hidden = true;
+    if (gIdentityHandler._identityPopup.state != "closed") {
+      let hideEvent = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
+      info("hiding popup");
+      gIdentityHandler._identityPopup.hidePopup();
+      await hideEvent;
+    }
+
     gBrowser.removeTab(tab);
   }
 });
@@ -97,9 +105,9 @@ add_task(async function test_mixedcontent() {
     waitForInsecureLoginFormsStateChange(browser, 3),
   ]);
 
-  assertMixedContentBlockingState(browser, { activeLoaded: true,
-                                             activeBlocked: false,
-                                             passiveLoaded: false });
+  await assertMixedContentBlockingState(browser, { activeLoaded: true,
+                                                   activeBlocked: false,
+                                                   passiveLoaded: false });
 
   gBrowser.removeTab(tab);
 });
@@ -126,7 +134,9 @@ add_task(async function test_ignoring_window_opener() {
     // Open the identity popup.
     let { gIdentityHandler } = gBrowser.ownerGlobal;
     gIdentityHandler._identityBox.click();
+    let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
     document.getElementById("identity-popup-security-expander").click();
+    await promiseViewShown;
 
     ok(is_visible(document.getElementById("connection-icon")),
        "Connection icon is visible");
@@ -155,7 +165,12 @@ add_task(async function test_ignoring_window_opener() {
                    element => is_hidden(element)),
        "All messages should be hidden.");
 
-    gIdentityHandler._identityPopup.hidden = true;
+    if (gIdentityHandler._identityPopup.state != "closed") {
+      info("hiding popup");
+      let hideEvent = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
+      gIdentityHandler._identityPopup.hidePopup();
+      await hideEvent;
+    }
 
     await BrowserTestUtils.removeTab(tab);
   });

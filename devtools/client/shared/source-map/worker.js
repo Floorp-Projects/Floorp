@@ -491,35 +491,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	function networkRequest(url, opts) {
-	  return new Promise((resolve, reject) => {
-	    try {
-	      const req = new XMLHttpRequest();
-
-	      req.addEventListener("readystatechange", () => {
-	        if (req.readyState === XMLHttpRequest.DONE) {
-	          if (req.status === 200) {
-	            resolve({ content: req.responseText });
-	          } else {
-	            let text = req.statusText || "invalid URL";
-	            reject(text);
-	          }
-	        }
-	      });
-
-	      // Not working yet.
-	      // if (!opts.loadFromCache) {
-	      //   req.channel.loadFlags = (
-	      //     Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE |
-	      //       Components.interfaces.nsIRequest.INHIBIT_CACHING |
-	      //       Components.interfaces.nsIRequest.LOAD_ANONYMOUS
-	      //   );
-	      // }
-
-	      req.open("GET", url);
-	      req.send();
-	    } catch (e) {
-	      reject(e.toString());
+	  return fetch(url, {
+	    cache: opts.loadFromCache ? "default" : "no-cache"
+	  }).then(res => {
+	    if (res.status >= 200 && res.status < 300) {
+	      return res.text().then(text => ({ content: text }));
 	    }
+	    return Promise.reject(`request failed with status ${res.status}`);
 	  });
 	}
 
@@ -529,7 +507,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 8 */
 /***/ function(module, exports) {
 
-	
+	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 	function WorkerDispatcher() {
 	  this.msgId = 1;
@@ -596,9 +574,62 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 
+	function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+	  let streamingWorker = (() => {
+	    var _ref = _asyncToGenerator(function* (id, tasks) {
+	      let isWorking = true;
+
+	      const intervalId = setTimeout(function () {
+	        isWorking = false;
+	      }, timeout);
+
+	      const results = [];
+	      while (tasks.length !== 0 && isWorking) {
+	        const { callback, context, args } = tasks.shift();
+	        const result = yield callback.call(context, args);
+	        results.push(result);
+	      }
+	      worker.postMessage({ id, status: "pending", data: results });
+	      clearInterval(intervalId);
+
+	      if (tasks.length !== 0) {
+	        yield streamingWorker(id, tasks);
+	      }
+	    });
+
+	    return function streamingWorker(_x, _x2) {
+	      return _ref.apply(this, arguments);
+	    };
+	  })();
+
+	  return (() => {
+	    var _ref2 = _asyncToGenerator(function* (msg) {
+	      const { id, method, args } = msg.data;
+	      const workerMethod = publicInterface[method];
+	      if (!workerMethod) {
+	        console.error(`Could not find ${method} defined in worker.`);
+	      }
+	      worker.postMessage({ id, status: "start" });
+
+	      try {
+	        const tasks = workerMethod(args);
+	        yield streamingWorker(id, tasks);
+	        worker.postMessage({ id, status: "done" });
+	      } catch (error) {
+	        worker.postMessage({ id, status: "error", error });
+	      }
+	    });
+
+	    return function (_x3) {
+	      return _ref2.apply(this, arguments);
+	    };
+	  })();
+	}
+
 	module.exports = {
 	  WorkerDispatcher,
-	  workerHandler
+	  workerHandler,
+	  streamingWorkerHandler
 	};
 
 /***/ },
