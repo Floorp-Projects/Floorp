@@ -52,7 +52,7 @@ class GeckoViewSettings extends GeckoViewModule {
       this._isSafeBrowsingInit = true;
     }
     if (aUse != this._useTrackingProtection) {
-      this.messageManager.loadFrameScript("data:," +
+      this.messageManager.loadFrameScript('data:,' +
         `docShell.useTrackingProtection = ${aUse}`,
         true
       );
@@ -93,7 +93,7 @@ class GeckoViewSettings extends GeckoViewModule {
                    .getInterface(Ci.nsIDocShell)
                    .displayMode = aMode;
     } else {
-      this.messageManager.loadFrameScript("data:," +
+      this.messageManager.loadFrameScript('data:,' +
         `docShell.displayMode = ${aMode}`,
         true
       );
