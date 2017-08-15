@@ -278,6 +278,7 @@ AsyncImagePipelineManager::ApplyAsyncImages()
                                   &opacity,
                                   pipeline->mScTransform.IsIdentity() ? nullptr : &pipeline->mScTransform,
                                   wr::TransformStyle::Flat,
+                                  nullptr,
                                   pipeline->mMixBlendMode,
                                   nsTArray<wr::WrFilterOp>());
 

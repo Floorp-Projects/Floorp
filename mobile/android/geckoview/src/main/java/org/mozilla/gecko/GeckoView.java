@@ -128,7 +128,10 @@ public class GeckoView extends LayerView {
     private final GeckoViewHandler<NavigationListener> mNavigationHandler =
         new GeckoViewHandler<NavigationListener>(
             "GeckoViewNavigation", this,
-            new String[]{ "GeckoView:LocationChange" }
+            new String[]{
+                "GeckoView:LocationChange",
+                "GeckoView:OnLoadUri"
+            }
         ) {
             @Override
             public void handleMessage(final NavigationListener listener,
@@ -142,8 +145,13 @@ public class GeckoView extends LayerView {
                                          message.getBoolean("canGoBack"));
                     listener.onCanGoForward(GeckoView.this,
                                             message.getBoolean("canGoForward"));
+                } else if ("GeckoView:OnLoadUri".equals(event)) {
+                    final String uri = message.getString("uri");
+                    final NavigationListener.TargetWindow where =
+                        NavigationListener.TargetWindow.get(
+                            message.getInt("where"));
+                    listener.onLoadUri(GeckoView.this, uri, where);
                 }
-
             }
         };
 
@@ -1379,6 +1387,44 @@ public class GeckoView extends LayerView {
         * @param canGoForward The new value for the ability.
         */
         void onCanGoForward(GeckoView view, boolean canGoForward);
+
+        enum TargetWindow {
+            DEFAULT(0),
+            CURRENT(1),
+            NEW(2),
+            NEWTAB(3),
+            SWITCHTAB(4);
+
+            private static final TargetWindow[] sValues = TargetWindow.values();
+            private int mValue;
+
+            private TargetWindow(int value) {
+                mValue = value;
+            }
+
+            public static TargetWindow get(int value) {
+                return sValues[value];
+            }
+        }
+
+        enum LoadUriResult {
+            HANDLED(0),
+            LOAD_IN_FRAME(1);
+
+            private int mValue;
+
+            private LoadUriResult(int value) {
+                mValue = value;
+            }
+        }
+
+        /**
+        * A request to open an URI.
+        * @param view The GeckoView that initiated the callback.
+        * @param uri The URI to be loaded.
+        * @param where The target window.
+        */
+        void onLoadUri(GeckoView view, String uri, TargetWindow where);
     }
 
     /**
