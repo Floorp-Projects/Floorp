@@ -299,6 +299,9 @@ public:
 
     virtual GLContextType GetContextType() const = 0;
 
+    virtual bool IsCurrentImpl() const = 0;
+    virtual bool MakeCurrentImpl() const = 0;
+
     bool IsCurrent() const {
         if (mImplicitMakeCurrent)
             return MakeCurrent();
@@ -306,7 +309,7 @@ public:
         return IsCurrentImpl();
     }
 
-    virtual bool IsCurrentImpl() const = 0;
+    bool MakeCurrent(bool aForce = false) const;
 
     /**
      * Get the default framebuffer for this context.
@@ -681,7 +684,7 @@ private:
 
 #define BEFORE_GL_CALL \
         ANDROID_ONLY_PROFILER_LABEL \
-        if (BeforeGLCall(MOZ_FUNCTION_NAME)) { \
+        if (MOZ_LIKELY( BeforeGLCall(MOZ_FUNCTION_NAME) )) { \
             do { } while (0)
 
 #define AFTER_GL_CALL \
@@ -700,7 +703,7 @@ private:
                 return false;
             }
         }
-        MOZ_ASSERT(IsCurrent());
+        MOZ_ASSERT(IsCurrentImpl());
 
         if (mDebugFlags) {
             BeforeGLCall_Debug(funcName);
@@ -3301,11 +3304,7 @@ public:
 protected:
     typedef gfx::SurfaceFormat SurfaceFormat;
 
-    virtual bool MakeCurrentImpl(bool aForce) const = 0;
-
 public:
-    bool MakeCurrent(bool aForce = false) const;
-
     virtual bool Init() = 0;
 
     virtual bool SetupLookupFunction() = 0;
