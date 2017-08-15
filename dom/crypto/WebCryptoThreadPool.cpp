@@ -76,7 +76,14 @@ WebCryptoThreadPool::DispatchInternal(nsIRunnable* aRunnable)
     pool.swap(mPool);
   }
 
-  return mPool->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+  // Use NS_DISPATCH_AT_END instead of NS_DISPATCH_NORMAL.
+  // NS_DISPATCH_NORMAL causes the thread pool to try hard to service the event
+  // immediately, and if all threads are currently busy, it will spin up a new
+  // thread. But we don't want any extra threads to be created.
+  // NS_DISPATCH_AT_END gives the behavior you'd expect of a thread pool: the
+  // event is simply queued at the end and serviced by the first available
+  // thread.
+  return mPool->Dispatch(aRunnable, NS_DISPATCH_AT_END);
 }
 
 void
