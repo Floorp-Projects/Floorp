@@ -18,6 +18,7 @@
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/List-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
@@ -325,25 +326,24 @@ AsyncGeneratorObject::enqueueRequest(JSContext* cx, Handle<AsyncGeneratorObject*
             return true;
         }
 
-        RootedArrayObject queue(cx, NewDenseEmptyArray(cx));
+        RootedNativeObject queue(cx, NewList(cx));
         if (!queue)
             return false;
 
-        if (!NewbornArrayPush(cx, queue, ObjectValue(*asyncGenObj->singleQueueRequest())))
+        RootedValue requestVal(cx, ObjectValue(*asyncGenObj->singleQueueRequest()));
+        if (!AppendToList(cx, queue, requestVal))
             return false;
-        if (!NewbornArrayPush(cx, queue, ObjectValue(*request)))
+        requestVal = ObjectValue(*request);
+        if (!AppendToList(cx, queue, requestVal))
             return false;
 
         asyncGenObj->setQueue(queue);
         return true;
     }
 
-    RootedArrayObject queue(cx, asyncGenObj->queue());
-
-    FixedInvokeArgs<1> args(cx);
-    args[0].setObject(*request);
-    args.setThis(ObjectValue(*queue));
-    return CallJSNative(cx, array_push, args);
+    RootedNativeObject queue(cx, asyncGenObj->queue());
+    RootedValue requestVal(cx, ObjectValue(*request));
+    return AppendToList(cx, queue, requestVal);
 }
 
 /* static */ AsyncGeneratorRequest*
@@ -355,14 +355,8 @@ AsyncGeneratorObject::dequeueRequest(JSContext* cx, Handle<AsyncGeneratorObject*
         return request;
     }
 
-    RootedArrayObject queue(cx, asyncGenObj->queue());
-
-    FixedInvokeArgs<0> args(cx);
-    args.setThis(ObjectValue(*queue));
-    if (!CallJSNative(cx, array_shift, args))
-        return nullptr;
-
-    return &args.rval().toObject().as<AsyncGeneratorRequest>();
+    RootedNativeObject queue(cx, asyncGenObj->queue());
+    return ShiftFromList<AsyncGeneratorRequest>(cx, queue);
 }
 
 /* static */ AsyncGeneratorRequest*
@@ -371,13 +365,7 @@ AsyncGeneratorObject::peekRequest(JSContext* cx, Handle<AsyncGeneratorObject*> a
     if (asyncGenObj->isSingleQueue())
         return asyncGenObj->singleQueueRequest();
 
-    RootedArrayObject queue(cx, asyncGenObj->queue());
-
-    RootedValue requestVal(cx);
-    if (!GetElement(cx, queue, queue, 0, &requestVal))
-        return nullptr;
-
-    return &requestVal.toObject().as<AsyncGeneratorRequest>();
+    return PeekList<AsyncGeneratorRequest>(asyncGenObj->queue());
 }
 
 const Class AsyncGeneratorRequest::class_ = {
