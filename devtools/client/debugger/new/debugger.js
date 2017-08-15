@@ -21839,8 +21839,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function (name, props) {
 	  // eslint-disable-line
 	  if (!svg[name]) {
-	    throw new Error("Unknown SVG: " + name);
+	    console.warn("Unknown SVG: " + name);
+        return null;
 	  }
+
 	  var className = name;
 	  if (props && props.className) {
 	    className = `${name} ${props.className}`;
