@@ -13,13 +13,13 @@ if [ -f /etc/lsb-release ]; then
 
     if [ "${DISTRIB_ID}" = "Ubuntu" -a "${DISTRIB_RELEASE}" = "16.04" ]; then
         HG_DEB=1
-        HG_DIGEST=e891b46d8e97cb1c6b0c714e037ea78ae3043f49d27655332c615c861ebb94654a064298c7363d318edd7750c45574cc434848ae758adbcd2a41c6c390006053
-        HG_SIZE=159870
-        HG_FILENAME=mercurial_4.1.2_amd64.deb
+        HG_DIGEST=dd4dd7759fe73985b6a0424b34a3036d130c26defdd866a9fdd7302e40c7417433b93f020497ceb40593eaead8e86be55e48340887015645202b47ff7b0d7ac6
+        HG_SIZE=181722
+        HG_FILENAME=mercurial_4.3.1_amd64.deb
 
-        HG_COMMON_DIGEST=112fab48805f267343c5757af5633ef51e4a8fcc7029b83afb7790ba9600ec185d4857dd1925c9aa724bc191f5f37039a59900b99f95e3427bf5d82c85447b69
-        HG_COMMON_SIZE=1919078
-        HG_COMMON_FILENAME=mercurial-common_4.1.2_all.deb
+        HG_COMMON_DIGEST=045f7e07f1e2e0fef767b2f50a7e9ab37d5da0bfead5ddf473ae044b61a4566aed2d6f2706f52d227947d713ef8e89eb9a269288f08e52924e4de88a39cd7ac0
+        HG_COMMON_SIZE=2017628
+        HG_COMMON_FILENAME=mercurial-common_4.3.1_all.deb
     elif [ "${DISTRIB_ID}" = "Ubuntu" -a "${DISTRIB_RELEASE}" = "12.04" ]; then
         HG_DEB=1
         HG_DIGEST=67823aa455c59dbdc24ec1f044b0afdb5c03520ef3601509cb5466dc0ac332846caf96176f07de501c568236f6909e55dfc8f4b02f8c69fa593a4abca9abfeb8
@@ -96,16 +96,15 @@ elif [ -n "${PIP_PATH}" ]; then
 tooltool_fetch <<EOF
 [
   {
-    "size": 5133417,
-    "visibility": "public",
-    "digest": "32b59d23d6b911b7a7e9c9c7659457daf2eba771d5170ad5a44a068d7941939e1d68c72c847e488bf26c14392e5d7ee25e5f660e0330250d0685acce40552745",
+    "size": 5475042,
+    "digest": "4c42d06b7f111a3e825dd927704a30f88f0b2225cf87ab8954bf53a7fbc0edf561374dd49b13d9c10140d98ff5853a64acb5a744349727abae81d32da401922b",
     "algorithm": "sha512",
-    "filename": "mercurial-4.1.2.tar.gz"
+    "filename": "mercurial-4.3.1.tar.gz"
   }
 ]
 EOF
 
-   ${PIP_PATH} install mercurial-4.1.2.tar.gz
+   ${PIP_PATH} install mercurial-4.3.1.tar.gz
 else
     echo "Do not know how to install Mercurial on this OS"
     exit 1
@@ -140,9 +139,7 @@ minimumprotocol = tls1.2
 
 # Settings to make 1-click loaners more useful.
 [extensions]
-color =
 histedit =
-pager =
 rebase =
 
 [diff]
@@ -151,12 +148,6 @@ showfunc = 1
 
 [pager]
 pager = LESS=FRSXQ less
-
-attend-help = true
-attend-incoming = true
-attend-log = true
-attend-outgoing = true
-attend-status = true
 EOF
 
 chmod 644 /etc/mercurial/hgrc
