@@ -3424,9 +3424,22 @@ nsBrowserAccess.prototype = {
     return browser;
   },
 
-  openURI: function browser_openURI(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
-    let browser = this._getBrowser(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal);
-    return browser ? browser.contentWindow : null;
+  openURI: function browser_openURI(aURI, aOpener, aWhere, aFlags,
+                                    aTriggeringPrincipal) {
+    if (!aURI) {
+      throw "Can't open an empty uri";
+    }
+    let browser = this._getBrowser(aURI, aOpener, aWhere, aFlags,
+                                   aTriggeringPrincipal);
+    return browser && browser.contentWindow;
+  },
+
+  createContentWindow: function browser_createContentWindow(
+                                aURI, aOpener, aWhere, aFlags,
+                                aTriggeringPrincipal) {
+    let browser = this._getBrowser(null, aOpener, aWhere, aFlags,
+                                   aTriggeringPrincipal);
+    return browser && browser.contentWindow;
   },
 
   openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aFlags,

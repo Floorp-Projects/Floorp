@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1484867614757" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1483471392954" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -941,10 +941,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i453" id="/^brasilescape.*\@facebook\.com$/">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="i485" id="/^brasilescape.*\@facebook\.com$//">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1753,6 +1749,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="5df16afc-c804-43c9-9de5-f1835403e5fb" id="@H99KV4DO-UCCF-9PFO-9ZLK-8RRP4FVOKD9O">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i764" id="prositez@prz.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1814,6 +1814,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i472" id="linksicle@linksicle.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="0a47a2f7-f07c-489b-bd39-88122a2dfe6a" id="@DA3566E2-F709-11E5-8E87-A604BC8E7F8B">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
@@ -2094,6 +2098,10 @@
     <emItem blockID="i1493" id="{de71f09a-3342-48c5-95c1-4b0f17567554}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="1.3.9" severity="3"/>
+    </emItem>
+    <emItem blockID="i453" id="/^brasilescape.*\@facebook\.com$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
   </emItems>
   <pluginItems>
@@ -4122,6 +4130,9 @@
     <certItem issuerName="MIGQMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxOzA5BgNVBAMTMkFyaXN0b3RsZSBVbml2ZXJzaXR5IG9mIFRoZXNzYWxvbmlraSBDZW50cmFsIENBIFI0">
       <serialNumber>EqthLKdUgwI=</serialNumber>
     </certItem>
+    <certItem issuerName="MIHKMQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOjA4BgNVBAsTMShjKSAyMDA2IFZlcmlTaWduLCBJbmMuIC0gRm9yIGF1dGhvcml6ZWQgdXNlIG9ubHkxRTBDBgNVBAMTPFZlcmlTaWduIENsYXNzIDMgUHVibGljIFByaW1hcnkgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgLSBHNQ==">
+      <serialNumber>Xmo3AIW2VHeeJoR0o09RGQ==</serialNumber>
+    </certItem>
     <certItem issuerName="MF8xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMRQwEgYDVQQLEwtQYXJ0bmVycyBDQTEfMB0GA1UEAxMWR2xvYmFsU2lnbiBQYXJ0bmVycyBDQQ==">
       <serialNumber>BAAAAAABCFiEp9s=</serialNumber>
     </certItem>
@@ -4371,6 +4382,9 @@
     <certItem issuerName="MFcxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMRAwDgYDVQQLEwdSb290IENBMRswGQYDVQQDExJHbG9iYWxTaWduIFJvb3QgQ0E=">
       <serialNumber>BAAAAAABFUtaxac=</serialNumber>
     </certItem>
+    <certItem issuerName="MEUxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxHzAdBgNVBAMTFlN3aXNzU2lnbiBHb2xkIENBIC0gRzI=">
+      <serialNumber>SeEzbpTltqUtqW7UiuJ2</serialNumber>
+    </certItem>
     <certItem issuerName="MGMxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEmMCQGA1UEAwwdQ2VydGlub21pcyAtIEF1dG9yaXTDqSBSYWNpbmU=">
       <serialNumber>Eg==</serialNumber>
     </certItem>
@@ -4575,6 +4589,9 @@
     <certItem issuerName="MFcxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMRAwDgYDVQQLEwdSb290IENBMRswGQYDVQQDExJHbG9iYWxTaWduIFJvb3QgQ0E=">
       <serialNumber>BAAAAAABL07hSVI=</serialNumber>
     </certItem>
+    <certItem issuerName="MIGFMQswCQYDVQQGEwJVUzEgMB4GA1UECgwXV2VsbHMgRmFyZ28gV2VsbHNTZWN1cmUxHDAaBgNVBAsME1dlbGxzIEZhcmdvIEJhbmsgTkExNjA0BgNVBAMMLVdlbGxzU2VjdXJlIFB1YmxpYyBSb290IENlcnRpZmljYXRlIEF1dGhvcml0eQ==">
+      <serialNumber>ATk=</serialNumber>
+    </certItem>
     <certItem issuerName="MIGVMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxQDA+BgNVBAMTN0hlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgUm9vdENBIDIwMTE=">
       <serialNumber>GN2Hrh9LtnA=</serialNumber>
     </certItem>
@@ -4682,6 +4699,9 @@
     </certItem>
     <certItem issuerName="MEUxCzAJBgNVBAYTAkJNMRkwFwYDVQQKExBRdW9WYWRpcyBMaW1pdGVkMRswGQYDVQQDExJRdW9WYWRpcyBSb290IENBIDM=">
       <serialNumber>BwImeaRkSZQLYwFREwKo3R1Jn+8=</serialNumber>
+    </certItem>
+    <certItem issuerName="MIG9MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOjA4BgNVBAsTMShjKSAyMDA4IFZlcmlTaWduLCBJbmMuIC0gRm9yIGF1dGhvcml6ZWQgdXNlIG9ubHkxODA2BgNVBAMTL1ZlcmlTaWduIFVuaXZlcnNhbCBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5">
+      <serialNumber>QOu0a5Z9rCkw6Nk7Rg1/AQ==</serialNumber>
     </certItem>
     <certItem issuerName="MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q=">
       <serialNumber>Bydvrw==</serialNumber>
@@ -4796,6 +4816,9 @@
     </certItem>
     <certItem issuerName="MFwxCzAJBgNVBAYTAkJFMRUwEwYDVQQLEwxUcnVzdGVkIFJvb3QxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExGzAZBgNVBAMTElRydXN0ZWQgUm9vdCBDQSBHMg==">
       <serialNumber>LAVIFm0MWZYH+Sv8Vf+IqkM=</serialNumber>
+    </certItem>
+    <certItem issuerName="MIGFMQswCQYDVQQGEwJVUzEgMB4GA1UECgwXV2VsbHMgRmFyZ28gV2VsbHNTZWN1cmUxHDAaBgNVBAsME1dlbGxzIEZhcmdvIEJhbmsgTkExNjA0BgNVBAMMLVdlbGxzU2VjdXJlIFB1YmxpYyBSb290IENlcnRpZmljYXRlIEF1dGhvcml0eQ==">
+      <serialNumber>ANU=</serialNumber>
     </certItem>
     <certItem issuerName="MIGVMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxQDA+BgNVBAMTN0hlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgUm9vdENBIDIwMTE=">
       <serialNumber>GN2Hrh9LtnM=</serialNumber>

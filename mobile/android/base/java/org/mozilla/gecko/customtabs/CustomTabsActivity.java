@@ -530,6 +530,20 @@ public class CustomTabsActivity extends AppCompatActivity
         updateMenuItemForward();
     }
 
+    @Override
+    public void onLoadUri(final GeckoView view, final String uriStr,
+                          final TargetWindow where) {
+        final Uri uri = Uri.parse(uriStr);
+        if (!TextUtils.isEmpty(mCurrentUrl) &&
+            Uri.parse(mCurrentUrl).getHost().equals(uri.getHost())) {
+            view.loadUri(uri);
+        } else {
+            final Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(uri);
+            startActivity(intent);
+        }
+    }
+
     /* GeckoView.ProgressListener */
     @Override
     public void onPageStart(GeckoView view, String url) {
