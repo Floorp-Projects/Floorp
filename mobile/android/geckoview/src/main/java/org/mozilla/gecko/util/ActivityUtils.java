@@ -22,30 +22,41 @@ public class ActivityUtils {
         // Hide/show the system notification bar
         Window window = activity.getWindow();
 
-        int newVis;
-        if (fullscreen) {
-            newVis = View.SYSTEM_UI_FLAG_FULLSCREEN;
-            if (Build.VERSION.SDK_INT >= 19) {
-                newVis |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        if (Build.VERSION.SDK_INT >= 16) {
+            int newVis;
+            if (fullscreen) {
+                newVis = View.SYSTEM_UI_FLAG_FULLSCREEN;
+                if (Build.VERSION.SDK_INT >= 19) {
+                    newVis |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+                } else {
+                    newVis |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
+                }
             } else {
-                newVis |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
+                newVis = View.SYSTEM_UI_FLAG_VISIBLE;
             }
-        } else {
-            newVis = View.SYSTEM_UI_FLAG_VISIBLE;
-        }
 
-        window.getDecorView().setSystemUiVisibility(newVis);
+            window.getDecorView().setSystemUiVisibility(newVis);
+        } else {
+            window.setFlags(fullscreen ?
+                            WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
+                            WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
     }
 
     public static boolean isFullScreen(final Activity activity) {
         final Window window = activity.getWindow();
 
-        final int vis = window.getDecorView().getSystemUiVisibility();
-        return (vis & View.SYSTEM_UI_FLAG_FULLSCREEN) != 0;
+        if (Build.VERSION.SDK_INT >= 16) {
+            final int vis = window.getDecorView().getSystemUiVisibility();
+            return (vis & View.SYSTEM_UI_FLAG_FULLSCREEN) != 0;
+        }
+
+        final int flags = window.getAttributes().flags;
+        return ((flags & WindowManager.LayoutParams.FLAG_FULLSCREEN) != 0);
     }
 
     /**
