@@ -22,6 +22,8 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
@@ -72,6 +74,8 @@ const CLOUD_PROVIDERS_URI = "resource://cloudstorage/providers.json";
 /**
  *
  * Internal cloud services prefs
+ *
+ * cloud.services.api.enabled - set to true to initialize and use Cloud Storage module
  *
  * cloud.services.storage.key - set to string with preferred provider key
  *
@@ -172,7 +176,7 @@ this.CloudStorage = {
   },
 
   /**
-   * Get provider opted-in by user to store downloaded files
+   * Get key of provider opted-in by user to store downloaded files
    *
    * @return {String}
    * Storage provider key from provider metadata. Return empty string
@@ -180,6 +184,30 @@ this.CloudStorage = {
    */
   getPreferredProvider() {
     return CloudStorageInternal.preferredProviderKey;
+  },
+
+  /**
+   * Get metadata of provider opted-in by user to store downloaded files.
+   * Return preferred provider metadata without scanning by doing simple lookup
+   * inside storage providers metadata using preferred provider key
+   *
+   * @return {Object}
+   * Object with preferred provider metadata. Return null
+   * if user has not selected a preferred provider.
+   */
+  getPreferredProviderMetaData() {
+    return CloudStorageInternal.getPreferredProviderMetaData();
+  },
+
+  /**
+   * Get display name of a provider actively in use to store downloaded files
+   *
+   * @return {String}
+   * String with provider display name. Returns null if a provider
+   * is not in use.
+   */
+  getProviderIfInUse() {
+    return CloudStorageInternal.getProviderIfInUse();
   },
 
   /**
@@ -225,12 +253,49 @@ var CloudStorageInternal = {
   },
 
   /**
+   * Reset 'browser.download.folderList' cloud storage value '3' back
+   * to '2' or '1' depending on custom path or system default Downloads path
+   * in pref 'browser.download.dir'.
+   */
+  async resetFolderListPref() {
+    let folderListValue = Services.prefs.getIntPref("browser.download.folderList", 0);
+    if (folderListValue !== 3) {
+      return;
+    }
+
+    let downloadDirPath = Services.prefs.getComplexValue("browser.download.dir",
+                                                         Ci.nsIFile).path;
+    if (!downloadDirPath ||
+        (downloadDirPath === Services.dirsvc.get("Desk", Ci.nsIFile).path)) {
+      // if downloadDirPath is the Desktop path or is unspecified
+      folderListValue = 0;
+    } else if (downloadDirPath === await Downloads.getSystemDownloadsDirectory()) {
+      // if downloadDirPath is the Downloads folder path
+      folderListValue = 1;
+    } else {
+      // otherwise
+      folderListValue = 2;
+    }
+    Services.prefs.setIntPref("browser.download.folderList", folderListValue);
+  },
+
+  /**
    * Loads storage providers metadata asynchronously from providers.json.
    *
    * @returns {Promise} with resolved boolean value true if providers
    * metadata is successfully initialized
    */
   async initProviders() {
+    // Cloud Storage API should continue initialization and load providers metadata
+    // only if a consumer add-on using API sets pref 'cloud.services.api.enabled' to true
+    // If API is not enabled, check and reset cloud storage value in folderList pref.
+    if (!this.isAPIEnabled) {
+      this.resetFolderListPref().catch((err) => {
+        Cu.reportError("CloudStorage: Failed to reset folderList pref " + err);
+      });
+      return false;
+    }
+
     let response = await this._downloadJSON(CLOUD_PROVIDERS_URI);
     this.providersMetaData = await this._parseProvidersJSON(response);
 
@@ -563,6 +628,36 @@ var CloudStorageInternal = {
     Services.prefs.setCharPref(CLOUD_SERVICES_PREF + "storage.key", key);
     Services.prefs.setIntPref("browser.download.folderList", 3);
   },
+
+  /**
+   * get access to preferred provider metadata by using preferred provider key
+   *
+   * @return {Object}
+   * Object with preferred provider metadata. Returns null if preferred provider is not set
+   */
+  getPreferredProviderMetaData() {
+    // Use preferred provider key to retrieve metadata from ProvidersMetaData
+    return this.providersMetaData.hasOwnProperty(this.preferredProviderKey) ?
+      this.providersMetaData[this.preferredProviderKey] : null;
+  },
+
+  /**
+   * Get provider display name if cloud storage API is used by an add-on
+   * and user has set preferred provider and a valid download directory
+   * path exists on user desktop.
+   *
+   * @return {String}
+   * String with preferred provider display name. Returns null if provider is not in use.
+   */
+  async getProviderIfInUse() {
+    // Check if consumer add-on is present and user has set preferred provider key
+    // and a valid download path exist on user desktop
+    if (this.isAPIEnabled && this.preferredProviderKey && await this.getDownloadFolder()) {
+      let provider = this.getPreferredProviderMetaData();
+      return provider.displayName || null;
+    }
+    return null;
+  },
 };
 
 /**
@@ -588,5 +683,12 @@ XPCOMUtils.defineLazyPreferenceGetter(CloudStorageInternal, "lastPromptTime",
  */
 XPCOMUtils.defineLazyPreferenceGetter(CloudStorageInternal, "promptInterval",
   CLOUD_SERVICES_PREF + "interval.prompt", 0 /* 0 days */);
+
+/**
+ * generic pref that shows if cloud storage API is in use, by default set to false.
+ * Re-run CloudStorage init evertytime pref is set.
+ */
+XPCOMUtils.defineLazyPreferenceGetter(CloudStorageInternal, "isAPIEnabled",
+  CLOUD_SERVICES_PREF + "api.enabled", false, () => CloudStorage.init());
 
 CloudStorageInternal.promiseInit = CloudStorage.init();
