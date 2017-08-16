@@ -64,8 +64,10 @@ public:
   const ScrollMetadata& GetScrollMetadata(const WebRenderScrollData& aOwner,
                                           size_t aIndex) const;
 
+  void SetTransform(const gfx::Matrix4x4& aTransform) { mTransform = aTransform; }
   gfx::Matrix4x4 GetTransform() const { return mTransform; }
   CSSTransformMatrix GetTransformTyped() const;
+  void SetTransformIsPerspective(bool aTransformIsPerspective) { mTransformIsPerspective = aTransformIsPerspective; }
   bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
   EventRegions GetEventRegions() const { return mEventRegions; }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
