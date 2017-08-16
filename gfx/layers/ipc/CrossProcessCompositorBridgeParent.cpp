@@ -19,6 +19,7 @@
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZThreadUtils.h"  // for APZCTreeManager
 #include "mozilla/layers/AsyncCompositionManager.h"
+#include "mozilla/layers/CompositorManagerParent.h" // for CompositorManagerParent
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerManagerComposite.h"
@@ -519,6 +520,7 @@ CrossProcessCompositorBridgeParent::GetCompositionManager(LayerTransactionParent
 void
 CrossProcessCompositorBridgeParent::DeferredDestroy()
 {
+  mCompositorManager = nullptr;
   mSelfRef = nullptr;
 }
 
