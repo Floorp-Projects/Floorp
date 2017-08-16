@@ -14,16 +14,6 @@
 using namespace js;
 using namespace js::jit;
 
-JitFrameIterator::JitFrameIterator()
-  : current_(nullptr),
-    type_(JitFrame_Exit),
-    returnAddressToFp_(nullptr),
-    frameSize_(0),
-    cachedSafepointIndex_(nullptr),
-    activation_(nullptr)
-{
-}
-
 JitFrameIterator::JitFrameIterator(const JitActivation* activation)
   : current_(activation->exitFP()),
     type_(JitFrame_Exit),
@@ -41,11 +31,6 @@ JitFrameIterator::JitFrameIterator(const JitActivation* activation)
 
 JitFrameIterator::JitFrameIterator(JSContext* cx)
   : JitFrameIterator(cx->activation()->asJit())
-{
-}
-
-JitFrameIterator::JitFrameIterator(const ActivationIterator& activations)
-  : JitFrameIterator(activations->asJit())
 {
 }
 
@@ -164,7 +149,7 @@ JitFrameIterator::prevFp() const
     return current_ + current()->prevFrameLocalSize() + current()->headerSize();
 }
 
-JitFrameIterator&
+void
 JitFrameIterator::operator++()
 {
     MOZ_ASSERT(type_ != JitFrame_Entry);
@@ -176,14 +161,12 @@ JitFrameIterator::operator++()
     // since the entry and first frames overlap.
     if (current()->prevType() == JitFrame_Entry) {
         type_ = JitFrame_Entry;
-        return *this;
+        return;
     }
 
     type_ = current()->prevType();
     returnAddressToFp_ = current()->returnAddress();
     current_ = prevFp();
-
-    return *this;
 }
 
 uintptr_t*

@@ -7402,8 +7402,8 @@ GetScriptedCallerActivationFast(JSContext* cx, Activation** activation)
     *activation = activationIter.activation();
 
     if (activationIter->isJit()) {
-        for (jit::JitFrameIterator iter(activationIter); !iter.done(); ++iter) {
-            if (iter.isScripted() && !iter.script()->selfHosted())
+        for (OnlyJSJitFrameIter iter(activationIter); !iter.done(); ++iter) {
+            if (iter.frame().isScripted() && !iter.frame().script()->selfHosted())
                 return true;
         }
     } else if (activationIter->isInterpreter()) {
