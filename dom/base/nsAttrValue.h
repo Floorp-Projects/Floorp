@@ -21,6 +21,7 @@
 #include "nsCaseTreatment.h"
 #include "nsMargin.h"
 #include "nsCOMPtr.h"
+#include "nsStringFwd.h"
 #include "SVGAttrValueWrapper.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsIAtom.h"
@@ -31,7 +32,6 @@
 // Undefine LoadImage to prevent naming conflict with Windows.
 #undef LoadImage
 
-class nsAString;
 class nsIDocument;
 class nsStyledElement;
 struct MiscContainer;

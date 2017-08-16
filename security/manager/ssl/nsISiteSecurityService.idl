@@ -11,8 +11,8 @@ interface nsISSLStatus;
 interface nsISimpleEnumerator;
 
 %{C++
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
-class nsCString;
 namespace mozilla
 {
   namespace pkix

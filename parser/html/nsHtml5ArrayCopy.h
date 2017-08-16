@@ -23,8 +23,8 @@
 #ifndef nsHtml5ArrayCopy_h
 #define nsHtml5ArrayCopy_h
 
+#include "nsStringFwd.h"
 
-class nsString;
 class nsHtml5StackNode;
 class nsHtml5AttributeName;
 

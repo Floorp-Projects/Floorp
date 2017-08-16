@@ -5,8 +5,8 @@
 #include "nsISupports.idl"
 
 %{C++
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
-class nsCString;
 %}
 [ref] native StringArrayRef(nsTArray<nsCString>);
 

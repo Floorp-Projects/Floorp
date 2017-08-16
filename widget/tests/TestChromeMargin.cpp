@@ -17,26 +17,12 @@
 #include "TestHarness.h"
 
 #ifndef MOZILLA_INTERNAL_API
-// some of the includes make use of internal string types
-#define nsAString_h___
-#define nsString_h___
-#define nsStringFwd_h___
-#define nsReadableUtils_h___
-class nsACString;
-class nsAString;
-class nsString;
-class nsCString;
-template<class T> class nsReadingIterator;
+#error This test needs MOZILLA_INTERNAL_API (see bug 652123)
 #endif
 
 #include "nscore.h"
 #include "nsContentUtils.h"
-
-#ifndef MOZILLA_INTERNAL_API
-#undef nsString_h___
-#undef nsAString_h___
-#undef nsReadableUtils_h___
-#endif
+#include "nsString.h"
 
 struct DATA {
   bool shouldfail;

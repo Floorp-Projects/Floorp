@@ -28,8 +28,7 @@
 #include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
 #include "nsISupports.h"
-
-class nsCString;
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace net {

@@ -9,8 +9,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
+#include "nsStringFwd.h"
 
-class nsCString;
 class nsIRequest;
 
 namespace mozilla {
