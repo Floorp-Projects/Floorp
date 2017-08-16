@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Копіювати адресу зображення</string>
   <string name="contextmenu_image_save">Зберегти зображення</string>
   <string name="contextmenu_image_warning"><![CDATA["Збережені та поширені зображення "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1074;&#1080;&#1076;&#1072;&#1083;&#1103;&#1102;&#1090;&#1100;&#1089;&#1103;</b>" при стиранні історії %1$s."]]></string>
-  <string name="firstrun_tracking_title">Переглядайте без думки, що за вами хтось спостерігає</string>
-  <string name="firstrun_tracking_text">Автоматично блокуйте стеження онлайн. Потім видаляйте відвідані сторінки та куки, торкнувшись піктограми смітника в програмі, або в панелі сповіщень.</string>
   <string name="firstrun_defaultbrowser_title">Прокачайте вашу приватність</string>
-  <string name="firstrun_defaultbrowser_text">Встановіть %1$s своїм типовим браузером та отримайте переваги приватного перегляду при переході в Інтернет з інших програм Android.</string>
-  <string name="firstrun_breaking_title">Швидко виправте, якщо\nблокування пошкодило сторінку</string>
-  <string name="firstrun_breaking_text">Якщо блокування стеження пошкодило веб-сторінку, вимкніть його, торкнувшись до меню.</string>
   <string name="firstrun_close_button">Гаразд, зрозуміло!</string>
   <string name="firstrun_skip_button">Пропустити</string>
   <string name="firstrun_next_button">Далі</string>

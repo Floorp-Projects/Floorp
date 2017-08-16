@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Kopiraj naslov slike</string>
   <string name="contextmenu_image_save">Shrani sliko</string>
   <string name="contextmenu_image_warning"><![CDATA["Ob izbrisu zgodovine %1$sa shranjene in deljene slike "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne bodo izbrisane</b>.]]></string>
-  <string name="firstrun_tracking_title">Brskajte, kot da vas nihče ne gleda</string>
-  <string name="firstrun_tracking_text">Samodejno zavračajte spletne sledilce, medtem ko brskate. Nato odstranite zgodovino strani in piškotke z dotikom ikone koša v aplikaciji ali med obvestili.</string>
   <string name="firstrun_defaultbrowser_title">Okrepite svojo zasebnost</string>
-  <string name="firstrun_defaultbrowser_text">Nastavite %1$s kot privzet brskalnik in uživajte prednosti zasebnega brskanja, ko odprete povezave v drugih aplikacijah Androida.</string>
-  <string name="firstrun_breaking_title">Hitra rešitev, kadar\nzavračanje kaj pokvari</string>
-  <string name="firstrun_breaking_text">Kadar zavračanje spletnih sledilcev pokvari prikaz spletne strani, izklopite zavračanje v meniju z orodji.</string>
   <string name="firstrun_close_button">V redu, razumem!</string>
   <string name="firstrun_skip_button">Preskoči</string>
   <string name="firstrun_next_button">Naprej</string>

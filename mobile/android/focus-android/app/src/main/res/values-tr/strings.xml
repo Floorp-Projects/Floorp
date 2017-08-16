@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Resmin adresini kopyala</string>
   <string name="contextmenu_image_save">Resmi kaydet</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s geçmişini sildiğinizde, kaydettiğiniz ve paylaştığınız resimler "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinmeyecektir</b>.]]></string>
-  <string name="firstrun_tracking_title">Hiç kimse izlemiyormuş gibi gez</string>
-  <string name="firstrun_tracking_text">Siz internette gezinirken çevrimiçi takipçiler otomatik olarak engellenecek. İşiniz bitince uygulamadaki veya bildirimlerinizdeki çöp kutusuna dokunarak gezdiğiniz sayfaları ve çerezleri silebilirsiniz.</string>
   <string name="firstrun_defaultbrowser_title">Gizliliğini güçlendir</string>
-  <string name="firstrun_defaultbrowser_text">%1$s tarayıcınızı varsayılan tarayıcı yapın, diğer Android uygulamalarından web sayfalarına geçtiğinizde de gizli gezintiden yararlanın.</string>
-  <string name="firstrun_breaking_title">Engelleme yüzünden \nsayfalar bozulursa</string>
-  <string name="firstrun_breaking_text">Çevrimiçi takipçileri engellediğinizde bazı web sayfaları bozuk görünebilir. Bu durumda araçlar menüsünden engellemeyi kapatabilirsiniz.</string>
   <string name="firstrun_close_button">Anladım!</string>
   <string name="firstrun_skip_button">Geç</string>
   <string name="firstrun_next_button">İleri</string>

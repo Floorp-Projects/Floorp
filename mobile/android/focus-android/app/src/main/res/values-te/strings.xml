@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">చిత్ర చిరునామాను కాపీచేయి</string>
   <string name="contextmenu_image_save">చిత్రాన్ని భద్రపరచు</string>
   <string name="contextmenu_image_warning"><![CDATA["మీరు %1$s చరిత్రను తీసివేసినప్పుడు సేవ్ చేయబడిన మరియు పంచిన చిత్రాలు "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#3108;&#3146;&#3122;&#3095;&#3135;&#3074;&#3098;&#3116;&#3105;&#3125;&#3137; "</b>.]]></string>
-  <string name="firstrun_tracking_title">ఎవరూ చూడనట్టుగా విహరణ చెయ్యుము</string>
-  <string name="firstrun_tracking_text">మీరు బ్రౌజ్ చేస్తున్నప్పుడు ఆన్లైన్ ట్రాకింగ్ను స్వయంచాలకంగా బ్లాక్ చేయండి. అప్పుడు సందర్శించే పేజీలను మరియు కుక్కీలను ఒక ట్రాష్ చిహ్నపు టచ్తో అనువర్తనం లేదా మీ నోటిఫికేషన్లలోనివి తొలగించండి.</string>
   <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
-  <string name="firstrun_defaultbrowser_text">%1$sని మీ అప్రమేయ బ్రౌజరుగా ఎంచుకోండి మరియు ఇతర ఆండ్రాయిడ్ యాప్స్ నుండి మీరు అంతర్జాలానికి అనుసంధానించినపుడు వ్యక్తిగత విహరణ ప్రయోజనాలు పొందండి.</string>
-  <string name="firstrun_breaking_title">ఒక శీఘ్ర పరిష్కారము ఉన్నప్పుడు\nనిరోధించడం = విరమణ</string>
-  <string name="firstrun_breaking_text">ఆన్లైన్ ట్రాకర్లను బ్లాక్ చేయడమే విచ్ఛిన్నం అనిపిస్తున్న ఒక సైట్, టూల్ మెనూకు ఒక ట్యాప్ తో నిరోధించడం ఆపివేయండి.</string>
   <string name="firstrun_close_button">సరే, అర్థమయ్యింది!</string>
   <string name="firstrun_skip_button">దాటు</string>
   <string name="firstrun_next_button">తరువాత</string>

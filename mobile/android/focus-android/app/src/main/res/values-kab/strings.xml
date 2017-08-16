@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Nγel tansa n tugna</string>
   <string name="contextmenu_image_save">Sekles tugna</string>
   <string name="contextmenu_image_warning"><![CDATA[Tugniwin ittwaskelsen akked ittwabḍan<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"ur ttwaksent ara "</b>" m\'ara ad tekseḍ %1$samazray."]]></string>
-  <string name="firstrun_tracking_title">Inig am akken ulac win i k-id-ittmuqqulen</string>
-  <string name="firstrun_tracking_text">Sewḥel asfuγel s wudem awurman ma tettinigeḍ. Sakin kkes isebtar i γer terziḍ akked inagan n tuqna s usenned γef tignit deg usnas neγ deg ilγa inek.</string>
   <string name="firstrun_defaultbrowser_title">Rmed tabaḍnit inek</string>
-  <string name="firstrun_defaultbrowser_text">Sbadu %1$s d iminig inek amezwar u sakin fareṣ timinigin tusligt m\'ara ad teqneḍ γer Web seg isnasen nniḍen n Android.</string>
-  <string name="firstrun_breaking_title">Aseγti arurad ma\nasewḥel= azgu</string>
-  <string name="firstrun_breaking_text">M\'ara ad k-d-iban d akken asmel i twaḥleḍ d asmel ittwarẓen, sens asewḥel s usened γef umuγ n ifecka.</string>
   <string name="firstrun_close_button">IH, Awi-t-id!</string>
   <string name="firstrun_skip_button">Suref</string>
   <string name="firstrun_next_button">Γer zdat</string>

@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Kopírovať adresu obrázku</string>
   <string name="contextmenu_image_save">Uložiť obrázok</string>
   <string name="contextmenu_image_warning"><![CDATA["Uložené a zdieľané obrázky "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebud&#250; vymazan&#233;</b>" pri vymazaní histórie aplikácie %1$s."]]></string>
-  <string name="firstrun_tracking_title">Prehliadajte, akoby sa nikto nepozeral</string>
-  <string name="firstrun_tracking_text">Automaticky pri prehliadaní blokujte online sledovacie prvky. Potom odstráňte zoznam navštívených stránok a cookies jedným ťuknutím na ikonu koša v aplikácii alebo vo vašich upozorneniach.</string>
   <string name="firstrun_defaultbrowser_title">Posuňte svoje súkromie na vyššiu úroveň</string>
-  <string name="firstrun_defaultbrowser_text">Nastavte si %1$s ako svoj predvolený prehliadač a získajte výhody súkromného prehliadania vždy, keď vás ostatné aplikácie presmerujú na web.</string>
-  <string name="firstrun_breaking_title">Oprava stránky rozbitej blokovaním\nsledovacích prvkov nie je žiadny problém</string>
-  <string name="firstrun_breaking_text">Keď sa z blokovania sledovacích prvkov stane príťaž a rozbije stránku, môžete ho vypnúť jednoduchým ťuknutím v ponuke nástrojov.</string>
   <string name="firstrun_close_button">Ok, rozumiem!</string>
   <string name="firstrun_skip_button">Preskočiť</string>
   <string name="firstrun_next_button">Ďalej</string>

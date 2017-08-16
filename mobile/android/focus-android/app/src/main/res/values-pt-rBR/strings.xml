@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Copiar endereço da imagem</string>
   <string name="contextmenu_image_save">Salvar imagem</string>
   <string name="contextmenu_image_warning"><![CDATA["As imagens salvas e compartilhadas "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">n&#227;o ser&#227;o exclu&#237;das</b>" ao apagar o histórico do %1$s."]]></string>
-  <string name="firstrun_tracking_title">Navegue como se ninguém estivesse olhando</string>
-  <string name="firstrun_tracking_text">Bloqueie automaticamente o rastreamento on-line enquanto navega. Em seguida, remova as páginas visitadas e os cookies com um toque no ícone da lixeira no aplicativo ou em suas notificações.</string>
   <string name="firstrun_defaultbrowser_title">Potencialize sua privacidade</string>
-  <string name="firstrun_defaultbrowser_text">Defina o %1$s como seu navegador padrão e obtenha os benefícios da navegação privativa ao se conectar à Web a partir de outros aplicativos Android.</string>
-  <string name="firstrun_breaking_title">Uma correção rápida quando \nbloqueio quebra</string>
-  <string name="firstrun_breaking_text">Quando a desvantagem de bloquear rastreadores on-line é um site que parece quebrado, desligue o bloqueio com um toque no menu de ferramentas.</string>
   <string name="firstrun_close_button">Ok, entendi!</string>
   <string name="firstrun_skip_button">Pular</string>
   <string name="firstrun_next_button">Próximo</string>

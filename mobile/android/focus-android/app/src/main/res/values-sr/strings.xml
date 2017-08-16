@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Копирај адресу слике</string>
   <string name="contextmenu_image_save">Сачувај слику</string>
   <string name="contextmenu_image_warning"><![CDATA["Сачуване и дељене слике "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077;&#1115;&#1077; &#1073;&#1080;&#1090;&#1080; &#1086;&#1073;&#1088;&#1080;&#1089;&#1072;&#1085;&#1077;</b>" када обришете %1$s историјат."]]></string>
-  <string name="firstrun_tracking_title">Сурфујте као да нико не гледа</string>
-  <string name="firstrun_tracking_text">Аутоматски блокирајте трагаче док сурфујете интернетом. Затим обришите посећене странице и колачиће притиском на иконицу канте у апликацији или у вашим нотификацијама.</string>
   <string name="firstrun_defaultbrowser_title">Ојачајте вашу приватност</string>
-  <string name="firstrun_defaultbrowser_text">Поставите %1$s као подразумевани прегледач и искусите погодности приватног прегледања када се повежете на веб са неке Android апликације.</string>
-  <string name="firstrun_breaking_title">Брзо решење када је\nблокирање = рушење</string>
-  <string name="firstrun_breaking_text">Када се сајт сруши или не ради лепо због блокирања трагача, искључите га у поставкама.</string>
   <string name="firstrun_close_button">У реду, разумем!</string>
   <string name="firstrun_skip_button">Прескочи</string>
   <string name="firstrun_next_button">Следеће</string>

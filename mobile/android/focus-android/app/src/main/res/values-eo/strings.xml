@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Kopii adreson de bildo</string>
   <string name="contextmenu_image_save">Konservi bildon</string>
   <string name="contextmenu_image_warning"><![CDATA["Konservitaj kaj dividitaj bildoj "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne estos forigitaj</b>" kiam vi viŝas la historion de %1$s."]]></string>
-  <string name="firstrun_tracking_title">Retumi kvazaŭ neniu vin vidus</string>
-  <string name="firstrun_tracking_text">Aŭtomate bloki enretajn spurilojn dum retumo. Poste forigi vizititajn paĝojn kaj kuketojn per tuŝeto sur la rubuja emblemo en la programo aŭ en viaj sciigoj.</string>
   <string name="firstrun_defaultbrowser_title">Plibonigi vian privatecon</string>
-  <string name="firstrun_defaultbrowser_text">Agordu %1$s kiel via norma retumilo kaj havu la avantaĝojn de privata retumo kiam vi iras al la reto el aliaj programoj de Android.</string>
-  <string name="firstrun_breaking_title">Se pro blokado io malfunkcias</string>
-  <string name="firstrun_breaking_text">Kiam pro blokado de enretaj spuriloj iu retpaĝo aspektas difektite, malaktivigu blokadon per tuŝeto sur la ila menuo.</string>
   <string name="firstrun_close_button">Bone, mi komprenas!</string>
   <string name="firstrun_skip_button">Ignori</string>
   <string name="firstrun_next_button">Sekva</string>

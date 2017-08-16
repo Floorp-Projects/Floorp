@@ -91,12 +91,7 @@
   <string name="contextmenu_image_copy">चित्र के पते की प्रतिलिपि लें</string>
   <string name="contextmenu_image_save">छवि सहेजें</string>
   <string name="contextmenu_image_warning"><![CDATA["सहेजे गए और साझा की गई छवियाँ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2361;&#2335;&#2366;&#2312; &#2344;&#2361;&#2368;&#2306; &#2332;&#2366;&#2319;&#2305;&#2327;&#2368;</b>" जब आप %1$s इतिहास को मिटाएँगे."]]></string>
-  <string name="firstrun_tracking_title">ऐसे ब्राउज़ करें जैसे कोई नहीं देख रहा है</string>
-  <string name="firstrun_tracking_text">ब्राउज़ करते समय स्वचालित रूप से ऑनलाइन ट्रैकिंग को अवरोधित करें. फिर ऐप में या आपके नोटिफिकेशन में कूड़ेदान चिह्न पर एक स्पर्श के साथ देखे गए पृष्ठों और कुकीज़ को हटाएँ.</string>
   <string name="firstrun_defaultbrowser_title">अपनी गोपनीयता को बढ़ाएँ</string>
-  <string name="firstrun_defaultbrowser_text">%1$s को अपने तयशुदा ब्राउज़र के रूप में सेट करें और जब आप अन्य एंड्रॉइड ऐप्स से वेब को लिंक करते हैं तब निजी ब्राउज़िंग के फायदे प्राप्त करें.</string>
-  <string name="firstrun_breaking_title">एक त्वरित ठीक जब\nअवरुद्ध = टूटना</string>
-  <string name="firstrun_breaking_text">जब ऑनलाइन ट्रैकर्स अवरुद्ध करने का नकारात्मक पक्ष एक साइट है जो ख़राब लगता है, तो टूल मेनू पर टैप के साथ अवरुद्ध करना बंद करें.</string>
   <string name="firstrun_close_button">ठीक है, समझ गया!</string>
   <string name="firstrun_skip_button">छोड़ें</string>
   <string name="firstrun_next_button">अगला</string>

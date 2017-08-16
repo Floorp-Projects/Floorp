@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Kopiuj adres obrazu</string>
   <string name="contextmenu_image_save">Zapisz obraz</string>
   <string name="contextmenu_image_warning"><![CDATA["Zapisane i udostępnione obrazy "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nie zostan&#261; usuni&#281;te</b>" po wyczyszczeniu historii programu %1$s."]]></string>
-  <string name="firstrun_tracking_title">Przeglądaj, jak gdyby\nnikt nie patrzył</string>
-  <string name="firstrun_tracking_text">Automatycznie blokuj śledzące elementy podczas przeglądania stron. Usuwaj odwiedzone strony i ciasteczka jednym dotknięciem ikony kosza w aplikacji lub w powiadomieniu.</string>
   <string name="firstrun_defaultbrowser_title">Nowy poziom prywatności</string>
-  <string name="firstrun_defaultbrowser_text">Ustaw %1$s jako domyślną przeglądarkę i korzystaj z zalet przeglądania prywatnego podczas łączenia się z Internetem z innych aplikacji na Androida.</string>
-  <string name="firstrun_breaking_title">Jeśli blokowanie coś psuje</string>
-  <string name="firstrun_breaking_text">Kiedy blokowanie elementów śledzących powoduje błędne wyświetlanie strony, wyłącz blokowanie w menu narzędziowym.</string>
   <string name="firstrun_close_button">OK!</string>
   <string name="firstrun_skip_button">Pomiń</string>
   <string name="firstrun_next_button">Dalej</string>

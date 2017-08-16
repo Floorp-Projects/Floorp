@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Kopiatu irudiaren helbidea</string>
   <string name="contextmenu_image_save">Gorde irudia</string>
   <string name="contextmenu_image_warning"><![CDATA["Deskargatutako eta partekatutako irudiak "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ez dira ezabatuko</b>" %1$s(r)en historia ezabatzean."]]></string>
-  <string name="firstrun_tracking_title">Nabigatu inor begira ez balego bezala</string>
-  <string name="firstrun_tracking_text">Automatikoki blokeatu jarraipena nabigatu ahala. Ondoren ezabatu bisitatutako orriak eta cookieak zakarrontziaren ikonoan sakatuz aplikazioan edo jakinarazpenetan.</string>
   <string name="firstrun_defaultbrowser_title">Indartu zure pribatutasuna</string>
-  <string name="firstrun_defaultbrowser_text">Ezarri %1$s zure nabigatzaile lehenetsi gisa eta eskuratu nabigatze pribatuaren onurak beste Android aplikazioetatik webeko loturak irekitzean.</string>
-  <string name="firstrun_breaking_title">Konponbide azkar bat\nblokeatzeak arazoak dakartzanean</string>
-  <string name="firstrun_breaking_text">Jarraipena blokeatzearen eraginez gune batek apurtuta egotea badirudi, desgaitu blokeoa tresnen menuan sakatuz.</string>
   <string name="firstrun_close_button">Ulertuta!</string>
   <string name="firstrun_skip_button">Saltatu</string>
   <string name="firstrun_next_button">Hurrengoa</string>

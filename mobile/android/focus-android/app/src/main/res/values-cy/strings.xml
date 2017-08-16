@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Copïo cyfeiriad delwedd</string>
   <string name="contextmenu_image_save">Cadw delwedd</string>
   <string name="contextmenu_image_warning"><![CDATA["Ni fydd delweddau sydd wedi eu cadw a\'u rhannu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yn cael eu dileu</b>" pan fyddwch yn dileu hanes %1$s."]]></string>
-  <string name="firstrun_tracking_title">Pori fel petai neb yn eich gwylio</string>
-  <string name="firstrun_tracking_text">Rhwystrwch dracio ar-lein yn awtomatig wrth i chi bori. Yna tynnwch dudalennau ymwelwyd â nhw a\'u cwcis gyda chyffyrddiad o\'r eicon sbwriel yn yr ap neu eich hysbysiadau.</string>
   <string name="firstrun_defaultbrowser_title">Cryfhewch eich preifatrwydd</string>
-  <string name="firstrun_defaultbrowser_text">Gosodwch %1$s fel eich porwr rhagosodedig a derbyn buddiannau pori preifat wrth gysylltu â\'r We o apiau Android eraill.</string>
-  <string name="firstrun_breaking_title">Cywiro cyflym\nrhwystro = torri</string>
-  <string name="firstrun_breaking_text">Os fydd rhwystro tracwyr ar-lein yn achosi i wefan dorri, diffoddwch y rhwystro gyda chyffyrddiad i\'r ddewislen offer.</string>
   <string name="firstrun_close_button">Iawn!</string>
   <string name="firstrun_skip_button">Hepgor</string>
   <string name="firstrun_next_button">Nesaf</string>

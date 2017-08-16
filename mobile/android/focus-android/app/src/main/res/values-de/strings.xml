@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Grafikadresse kopieren</string>
   <string name="contextmenu_image_save">Grafik speichern</string>
   <string name="contextmenu_image_warning"><![CDATA["Gespeicherte und geteilte Grafiken "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">werden nicht gel&#246;scht</b>, wenn Sie die Chronik von %1$s löschen.]]></string>
-  <string name="firstrun_tracking_title">Surfen Sie, als würde niemand zusehen</string>
-  <string name="firstrun_tracking_text">Blockieren Sie während des Surfens automatisch Online-Verfolger. Entfernen Sie dann mit einem Tippen auf das Müll-Symbol in der App oder Ihren Benachrichtigungen besuchte Seiten und Cookies.</string>
   <string name="firstrun_defaultbrowser_title">Stärken Sie Ihre Privatsphäre</string>
-  <string name="firstrun_defaultbrowser_text">Verwenden Sie %1$s als Standardbrowser und nutzen Sie die Vorteile des privaten Surfens, wenn Sie von anderen Android-Apps das Internet nutzen.</string>
-  <string name="firstrun_breaking_title">Eine schnelle Korrektur wenn\nBlockieren Störungen verursacht</string>
-  <string name="firstrun_breaking_text">Wenn das Blockieren von Online-Verfolgern eine Website stört, deaktivieren Sie es durch ein Tippen im Werkzeugmenü.</string>
   <string name="firstrun_close_button">Ok, verstanden!</string>
   <string name="firstrun_skip_button">Überspringen</string>
   <string name="firstrun_next_button">Weiter</string>

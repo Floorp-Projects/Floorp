@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Wobrazowu adresu kopěrować</string>
   <string name="contextmenu_image_save">Wobraz składować</string>
   <string name="contextmenu_image_warning"><![CDATA["Składowane a dźělene wobrazy "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">so njezha&#353;eja</b>, hdyž historiju %1$s zhašeće.]]></string>
-  <string name="firstrun_tracking_title">Přehladujće bjez toho, zo njeby nichtó wobkedźbował</string>
-  <string name="firstrun_tracking_text">Blokujće awtomatisce slědowanje online, mjeztym zo přehladujeće. Wotstrońće potom wopytane strony a placki z jednym dótkom na čaporowy symbol w nałoženju abo w swojich zdźělenkach.</string>
   <string name="firstrun_defaultbrowser_title">Zesylńće swoju priwatnosć</string>
-  <string name="firstrun_defaultbrowser_text">Nastajće %1$s jako swój standardny wobhladowak a zwužitkujće priwatny modus, hdyž so z webom z druhich nałoženjow Android zwjazujeće.</string>
-  <string name="firstrun_breaking_title">Spěšne rozrisanje, hdyž\nblokowanje = łamanje</string>
-  <string name="firstrun_breaking_text">Jeli blokowanje přesćěhowakow online ma njelěpšinu, zo so sydło zda skóncowane być, znjemóžńće blokowanje z podótkom na meni Nastroje.</string>
   <string name="firstrun_close_button">W porjadku, sym zrozumił!</string>
   <string name="firstrun_skip_button">Přeskočić</string>
   <string name="firstrun_next_button">Dale</string>

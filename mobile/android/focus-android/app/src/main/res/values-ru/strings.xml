@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Копировать адрес изображения</string>
   <string name="contextmenu_image_save">Сохранить изображение</string>
   <string name="contextmenu_image_warning"><![CDATA["Сохранённые и отправленные фотографии "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1073;&#1091;&#1076;&#1091;&#1090; &#1091;&#1076;&#1072;&#1083;&#1077;&#1085;&#1099;</b>, когда вы сотрёте историю %1$s.]]></string>
-  <string name="firstrun_tracking_title">Сёрфите Интернет не опасаясь слежки</string>
-  <string name="firstrun_tracking_text">Автоматически блокируйте онлайн-трекеры при веб-сёрфинге. Затем стирайте историю посещения страниц и куки одним касанием значка корзины в приложении или ваших уведомлениях.</string>
   <string name="firstrun_defaultbrowser_title">Усильте свою приватность</string>
-  <string name="firstrun_defaultbrowser_text">Установите %1$s в качестве браузера по умолчанию и получите преимущества приватного веб-сёрфинга, когда вы заходите в Интернет из других Android приложений.</string>
-  <string name="firstrun_breaking_title">Быстрая починка, когда\nблокировка трекеров = поломка сайта</string>
-  <string name="firstrun_breaking_text">Когда из-за блокировки онлайн-трекеров сайт ломается, отключите блокировку одним касанием меню.</string>
   <string name="firstrun_close_button">ОК, понятно!</string>
   <string name="firstrun_skip_button">Пропустить</string>
   <string name="firstrun_next_button">Далее</string>

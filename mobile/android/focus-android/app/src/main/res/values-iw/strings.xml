@@ -84,12 +84,7 @@
   <string name="contextmenu_image_copy">העתקת כתובת תמונה</string>
   <string name="contextmenu_image_save">שמירת תמונה</string>
   <string name="contextmenu_image_warning"><![CDATA["תמונות שמורות ומשותפות "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1500;&#1488; &#1497;&#1497;&#1502;&#1495;&#1511;&#1493;</b>" בעת מחיקת ההיסטוריה של %1$s."]]></string>
-  <string name="firstrun_tracking_title">גילשו כאילו אף אחד לא מסתכל</string>
-  <string name="firstrun_tracking_text">חסימה אוטומטית של רכיבי מעקב מקוונים בעת הגלישה. לאחר מכן ניתן להסיר את העמודים שביקרת בהם לרבות העוגיות על ידי נגיעה בסמל האשפה ביישומון או בהתרעות שלך.</string>
   <string name="firstrun_defaultbrowser_title">חיזוק הפרטיות שלך</string>
-  <string name="firstrun_defaultbrowser_text">ניתן להגדיר את %1$s כדפדפן בררת המחדל שלך כדי לקבל את כל ההטבות של גלישה פרטית בעת קישור לאתרי אינטרנט מיישומוני Android אחרים.</string>
-  <string name="firstrun_breaking_title">תיקון מהיר למצב שבו\nחסימה = שיבוש</string>
-  <string name="firstrun_breaking_text">כאשר חסימת רכיבי מעקב מקוונים מהווה מטרד בצורת שיבוש אתרים, ניתן לכבות את החסימה בנגיעה אחת בסרגל הכלים.</string>
   <string name="firstrun_close_button">בסדר, הבנתי!</string>
   <string name="firstrun_skip_button">דילוג</string>
   <string name="firstrun_next_button">הבא</string>

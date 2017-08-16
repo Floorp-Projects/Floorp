@@ -92,12 +92,7 @@
   <string name="contextmenu_image_copy">نقش کا پتہ نقل کریں</string>
   <string name="contextmenu_image_save">نقش محفوظ کریں</string>
   <string name="contextmenu_image_warning"><![CDATA["محفوظ اور شیئر کردہ تصاویر "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1581;&#1592;&#1601; &#1606;&#1729;&#1740;&#1722; &#1705;&#1740; &#1580;&#1575;&#1574;&#1746;&#1711;&#1740;</b>" جب آپ اپنی %1$s تاریخ مٹاتے ہے۔"]]></string>
-  <string name="firstrun_tracking_title">اس طرح براؤز کریں جیسے کوئی نہیں دیکھ رہا</string>
-  <string name="firstrun_tracking_text">آنلائن ٹریکنگ خود بخود طریکہ سے بلاک کرے جب بھی اپ براؤزنگ کرے۔ فر کوڑے دان آئیکن پر ٹچ کرکے یا اپنے نوٹیفکیشن سے ہٹائے دورہ کردہ صفحات اور کوکس۔</string>
   <string name="firstrun_defaultbrowser_title">آپ کی نجی نوعیت کو پاور اپ کرے</string>
-  <string name="firstrun_defaultbrowser_text">%1$s کو اپنا طے شدہ براؤزر سیٹ کرے اور نجی براؤزنگ کا فائدہ حاصل کرے جب بھی آپ دیگر اینڈرائڈ ایپ سے ویب پر لنک ہو۔</string>
-  <string name="firstrun_breaking_title">ایک فوری درستگی جب blocking = breaking</string>
-  <string name="firstrun_breaking_text">ٹول مینو سے ٹیپ کر کے بلاکنگ بند کرے، جب بھی آنلائن ٹریکر بلاک کرنے سے آپ کی سائٹ ٹھیک سے نظر نہیں ہو رہی ہو۔</string>
   <string name="firstrun_close_button">ٹھیک ہے، مجھے سمجھ آگئی ہے!</string>
   <string name="firstrun_skip_button">چھوڈیں</string>
   <string name="firstrun_next_button">آگے</string>

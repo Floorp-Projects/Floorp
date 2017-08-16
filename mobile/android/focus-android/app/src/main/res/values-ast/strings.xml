@@ -9,6 +9,7 @@
   <string name="menu_share">Compartir…</string>
   <string name="menu_open_with_default_browser">Abrir con %1$s</string>
   <string name="menu_open_with_a_browser">Abrir con…</string>
+  <string name="menu_add_to_home_screen">Amestar a la pantalla d\'aniciu</string>
   <string name="menu_settings">Axustes</string>
   <string name="menu_about">Tocante a</string>
   <string name="menu_help">Ayuda</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">Compartir per</string>
   <string name="notification_erase_text">Desaniciar historial de restolar</string>
   <string name="notification_action_open">Abrir</string>
+  <string name="notification_action_erase_and_open">Desaniciar y abrir</string>
   <string name="shortcut_erase_short_label">Desaniciar</string>
   <string name="shortcut_erase_long_label">Desaniciar historial de restolar</string>
   <string name="text_selection_search_action">Guetar de mou priváu</string>
@@ -74,14 +76,12 @@
   <string name="contextmenu_image_share">Compartir imaxe</string>
   <string name="contextmenu_image_copy">Copiar direición d\'imaxe</string>
   <string name="contextmenu_image_save">Guardar imaxe</string>
-  <string name="firstrun_tracking_title">Restola ensin que naide te mire</string>
-  <string name="firstrun_tracking_text">Bloquia automáticamente los rastrexadores en llinia entrín restoles. Dempués desanicia les páxines visitaes y les cookies con un toque nel iconu de la papelera dientro l\'aplicación o nos tos avisos.</string>
   <string name="firstrun_defaultbrowser_title">Potencia la to privacidá</string>
-  <string name="firstrun_defaultbrowser_text">Afita %1$s como\'l to restolador por defeutu y consigui los beneficios de restolar en privao cuando te coneutes a la web con otres aplicaciones d\'Android.</string>
-  <string name="firstrun_breaking_title">"Una igua rápida cuando\nbloquies =  ruempas"</string>
-  <string name="firstrun_breaking_text">La parte mala de bloquiar rastrexadores en llinia ye qu\'un sitiu pue romper, desactiva\'l bloquéu con un toque nel menú de ferramientes.</string>
   <string name="firstrun_close_button">¡Val, coyílo!</string>
   <string name="firstrun_skip_button">Saltar</string>
   <string name="firstrun_next_button">Siguiente</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Amestar a la pantalla d\'aniciu</string>
+  <string name="dialog_addtohomescreen_action_add">Amestar</string>
+  <string name="dialog_addtohomescreen_action_cancel">Encaboxar</string>
 </resources>

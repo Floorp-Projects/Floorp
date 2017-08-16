@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">複製圖片網址</string>
   <string name="contextmenu_image_save">儲存圖片</string>
   <string name="contextmenu_image_warning"><![CDATA[清除 %1$s 瀏覽紀錄時，已儲存並分享的圖片將<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#26371;&#34987;&#21034;&#38500;</b>。]]></string>
-  <string name="firstrun_tracking_title">上網時，彷彿沒有人看著你。</string>
-  <string name="firstrun_tracking_text">上網時自動封鎖網路追蹤器。然後只要點擊程式或通知列中的垃圾桶圖示，即可移除造訪過的網站記錄和 Cookie。</string>
   <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
-  <string name="firstrun_defaultbrowser_text">將 %1$s 設為您的預設瀏覽器，讓您在其他 Android 程式開啟網頁時，也能受隱私瀏覽功能的保護。</string>
-  <string name="firstrun_breaking_title">快速修正\n封鎖時的問題</string>
-  <string name="firstrun_breaking_text">若封鎖線上追蹤器，造成某些網站無法正常使用，您可以點擊工具選單暫時關閉封鎖功能。</string>
   <string name="firstrun_close_button">好，知道了！</string>
   <string name="firstrun_skip_button">略過</string>
   <string name="firstrun_next_button">下一步</string>

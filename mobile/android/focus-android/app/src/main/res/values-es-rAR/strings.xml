@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Copiar dirección de la imagen</string>
   <string name="contextmenu_image_save">Guardar imagen</string>
   <string name="contextmenu_image_warning"><![CDATA["La imágenes que guardaste y compartiste "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no ser&#225;n borradas</b>" cuando borres el historial de %1$s."]]></string>
-  <string name="firstrun_tracking_title">Navegá como si nadie mirara</string>
-  <string name="firstrun_tracking_text">Bloqueá a los rastreadores automáticamente mientras navegás. Después borrá las páginas visitadas y las cookies con sólo tocar el ícono del tacho de basura o en las notificaciones.</string>
   <string name="firstrun_defaultbrowser_title">Potenciá tu privacidad</string>
-  <string name="firstrun_defaultbrowser_text">Elegí %1$s como tu navegador predeterminado y obtené los beneficios de navegar privadamente cuando sigas un enlace a la Web desde otras aplicaciones.</string>
-  <string name="firstrun_breaking_title">Una rápida solución cuando\nbloquear = romper</string>
-  <string name="firstrun_breaking_text">Cuando el lado negativo de bloquear a los rastreadores sea un sitio que parece roto, deshabilitá el bloqueo con un toque en el menú de herramientas.</string>
   <string name="firstrun_close_button">Genial, ¡lo tengo!</string>
   <string name="firstrun_skip_button">Saltar</string>
   <string name="firstrun_next_button">Siguiente</string>

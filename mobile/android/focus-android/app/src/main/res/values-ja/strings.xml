@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">画像アドレスをコピー</string>
   <string name="contextmenu_image_save">画像を保存</string>
   <string name="contextmenu_image_warning"><![CDATA["保存、共有された画像は %1$s の履歴を消去しても "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#21066;&#38500;&#12373;&#12428;&#12414;&#12379;&#12435;</b>。]]></string>
-  <string name="firstrun_tracking_title">誰にも監視されないブラウジング</string>
-  <string name="firstrun_tracking_text">ブラウジング中のオンライン追跡を自動的にブロック。後から、アプリ内あるいは通知内のゴミ箱アイコンをタップするだけで、訪れたページや Cookie を削除できます。</string>
   <string name="firstrun_defaultbrowser_title">プライバシーを強化</string>
-  <string name="firstrun_defaultbrowser_text">%1$s を既定のブラウザーに設定して、他の Android アプリからウェブへのリンクを辿ったときに、プライベートブラウジングの恩恵を受けましょう。</string>
-  <string name="firstrun_breaking_title">ブロックによって正常に表示\nされない場合は素早く修正</string>
-  <string name="firstrun_breaking_text">オンライン追跡のブロックによってサイトが正常に動作していないと思われる場合には、ツールメニューをタップしてブロックを無効化できます。</string>
   <string name="firstrun_close_button">了解</string>
   <string name="firstrun_skip_button">スキップ</string>
   <string name="firstrun_next_button">次へ</string>

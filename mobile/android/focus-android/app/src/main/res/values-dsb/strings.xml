@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Wobrazowu adresu kopěrowaś</string>
   <string name="contextmenu_image_save">Wobraz składowaś</string>
   <string name="contextmenu_image_warning"><![CDATA["Skłaźone a źělone wobraze "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">se njewula&#353;uju</b>, gaž historiju %1$s lašujośo.]]></string>
-  <string name="firstrun_tracking_title">Pśeglědujśo mimo aby něchten wobglědował</string>
-  <string name="firstrun_tracking_text">Blokěrujśo awtomatiski slědowanje online, mjaztym až pśeglědujośo. Wótwónoźćo pótom woglědane boki a cookieje z jadnym dotyknjenim na cajkowy symbol w nałoženju abo w swójich powěźeńkach.</string>
   <string name="firstrun_defaultbrowser_title">Zmocniśo swóju priwatnosć</string>
-  <string name="firstrun_defaultbrowser_text">Nastajśo %1$s ako swój standardny wobglědowak a mějśo wužytk z priwatnego modusa, gaž se z webom z drugich nałoženjow Android zwězujośo.</string>
-  <string name="firstrun_breaking_title">Spěšne rozwězanje, gaž\nblokěrowanje = łamanje</string>
-  <string name="firstrun_breaking_text">Jolic blokěrowanje pśeslědowakow online ma njelěpšynu, až se sedło zda skóńcowane byś, znjemóžniśo blokěrowanje z pótusnjenim na meni Rědy.</string>
   <string name="firstrun_close_button">W pórěźe, som zrozměł!</string>
   <string name="firstrun_skip_button">Pśeskócyś</string>
   <string name="firstrun_next_button">Dalej</string>

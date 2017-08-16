@@ -84,12 +84,7 @@
   <string name="contextmenu_image_copy">Copiază adresa imaginii</string>
   <string name="contextmenu_image_save">Salvează imaginea</string>
   <string name="contextmenu_image_warning"><![CDATA["Imaginile salvate și partajate "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nu vor fi &#238;ndep&#259;rtate</b>" când ștergi istoricul %1$s."]]></string>
-  <string name="firstrun_tracking_title">Navighează fără grija de a fi urmărit</string>
-  <string name="firstrun_tracking_text">Blochează automat urmărirea online în timp ce navighezi. Elimină apoi paginile vizitate și cookie-urile cu o atingere pe pictograma coș de gunoi din aplicație sau din notificări.</string>
   <string name="firstrun_defaultbrowser_title">Consolidează-ți confidențialitatea</string>
-  <string name="firstrun_defaultbrowser_text">Setează %1$s ca browser implicit și beneficiază de avantajele navigării private atunci când deschizi linkuri din alte aplicații Android.</string>
-  <string name="firstrun_breaking_title">O soluție rapidă atunci când\nblocarea „defectează” o pagină</string>
-  <string name="firstrun_breaking_text">Dacă un site nu funcționează corect atunci când blocarea urmăritorilor este activată, oprește blocarea cu o atingere din meniul de unelte.</string>
   <string name="firstrun_close_button">Ok, am înțeles!</string>
   <string name="firstrun_skip_button">Omite</string>
   <string name="firstrun_next_button">Următorul</string>

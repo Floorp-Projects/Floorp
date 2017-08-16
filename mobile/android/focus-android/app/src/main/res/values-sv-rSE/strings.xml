@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Kopiera bildadress</string>
   <string name="contextmenu_image_save">Spara bild</string>
   <string name="contextmenu_image_warning"><![CDATA["Sparade och delade bilder "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">kommer inte att raderas</b>" när du raderar %1$s historik."]]></string>
-  <string name="firstrun_tracking_title">Surfa utan att känna dig övervakad</string>
-  <string name="firstrun_tracking_text">Blockera automatiskt spårning online medan du surfar. Ta sedan bort besökta sidor och kakor med ett tryck på papperskorgen i appen eller i dina aviseringar.</string>
   <string name="firstrun_defaultbrowser_title">Stärk din integritet</string>
-  <string name="firstrun_defaultbrowser_text">Ange %1$s som standardwebbläsare och dra nytta av privat surfning när du länkar till webben från andra Android-appar.</string>
-  <string name="firstrun_breaking_title">En snabb lösning när \nblockering = avbrott</string>
-  <string name="firstrun_breaking_text">Nackdelen med att blockera online-trackers är att en webbplats kan verka trasig, stäng av blockering med ett tryck på verktygsmenyn.</string>
   <string name="firstrun_close_button">OK, jag förstår!</string>
   <string name="firstrun_skip_button">Hoppa över</string>
   <string name="firstrun_next_button">Nästa</string>

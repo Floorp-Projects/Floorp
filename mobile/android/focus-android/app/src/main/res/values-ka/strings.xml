@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">სურათის მისამართის დაკოპირება</string>
   <string name="contextmenu_image_save">სურათის შენახვა</string>
   <string name="contextmenu_image_warning"><![CDATA["შენახული და გაზიარებული სურათები "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#4304;&#4320; &#4332;&#4304;&#4312;&#4328;&#4314;&#4308;&#4305;&#4304;</b>" %1$s-ის ისტორიის გასუფთავებისას."]]></string>
-  <string name="firstrun_tracking_title">იმოგზაურეთ ინტერნეტში მეთვალყურეების გარეშე</string>
-  <string name="firstrun_tracking_text">გვერდების მონახულებისას, თვალყურის დევნებისგან ავტომატური დაცვა. მონახულებული გვერდების ისტორია და ფუნთუშები, შეგიძლიათ, სანაგვე ურნის ხატულაზე შეხებით წაშალოთ, პროგრამაშივე, ან შეტყობინებებში.</string>
   <string name="firstrun_defaultbrowser_title">გააძლიერეთ პირადი მონაცემების დაცვა</string>
-  <string name="firstrun_defaultbrowser_text">დააყენეთ %1$s ნაგულისხმევ ბრაუზერად და დაიცავით პირადი მონაცემების უსაფრთხოება, სხვა Android პროგრამებიდან ინტერნეტ ბმულზე გადასვლის დროსაც.</string>
-  <string name="firstrun_breaking_title">სწრაფი გამართვა, როცა\nგვერდზე ელემენტების შეზღუდვა, საიტს აფერხებს</string>
-  <string name="firstrun_breaking_text">როცა, მეთვალყურე ელემენტების შეზღუდვის გამო, საიტი გამართულად ვერ მუშაობს, შეზღუდვის გამორთვა შესაძლებელია ხელსაწყოების მენიუზე შეხებით.</string>
   <string name="firstrun_close_button">კარგი, გასაგებია!</string>
   <string name="firstrun_skip_button">გამოტოვება</string>
   <string name="firstrun_next_button">შემდეგი</string>

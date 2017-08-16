@@ -84,12 +84,7 @@
   <string name="contextmenu_image_copy">ရုပ်ပုံလိပ်စာကို ကူးပါ</string>
   <string name="contextmenu_image_save">ရုပ်ပုံကို သိမ်းရန်</string>
   <string name="contextmenu_image_warning"><![CDATA["သင် %1$s မှတ်တမ်းကို ရှင်းလင်းသည့်အခါ သိမ်းထားသော သို့မဟုတ် မျှဝေထားသော ရုပ်ပုံများကို "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#4121;&#4118;&#4155;&#4096;&#4154;&#4117;&#4139;</b>။]]></string>
-  <string name="firstrun_tracking_title">မည်သူမျှစောင့်ကြည့်မနေသကဲ့သို့ အသုံးပြုပါ</string>
-  <string name="firstrun_tracking_text">ကြည့်ရှုနေစဉ် အွန်လိုင်းနောက်ယောင်ခံများကို အလိုအလျောက် တားဆီးသည်။ ထို့နောက် ကြည့်ရှုခဲ့သော ဝဘ်စာမျက်နှာများနှင့် ကွတ်ကီးများကို အက်ပ်ရှိ သို့မဟုတ် အသိပေးချက်များထဲရှိ အမှိုက်ပုံးပုံငယ်ကို တို့ထိပြီး ရှင်းလင်းပါ။</string>
   <string name="firstrun_defaultbrowser_title">ကိုယ်ရေးကာကွယ်မှုကို တိုးမြှင့်ပါ</string>
-  <string name="firstrun_defaultbrowser_text">%1$s ကို မူသေအသုံးပြု ဘရောင်ဇာအဖြစ် သတ်မှတ်ပါ။ ထို့ပြင် အခြား Android အက်ပ်များထံမှ လင့်ခ်များကို ကြည့်ရှုရာတွင် ကိုယ်ရေးအချက်အလက်ကာကွယ်ပြီး ကြည့်ရှုခြင်း၏ အကျိုးကျေးဇူးများနှင့်အတူ အသုံးပြုပါ။</string>
-  <string name="firstrun_breaking_title">အောက်ပါထဲမှ တစ်ခုခု ဖြစ်လျှင် အမြန်ပြင်ဆင်မှု\nပိတ်ပင်ထားခြင်း = ပျက်ဆီးခြင်း</string>
-  <string name="firstrun_breaking_text">အွန်လိုင်းနောက်ယောင်ခံများကို တားဆီးခြင်းသည် ဝဘ်ဆိုက်ကို ကောင်းမွန်စွာ မဆောင်ရွက်နိုင်စေပါက ကိရိယာမီနူးတွင် တို့ထိပြီး နောက်ယောင်ခံတားဆီးမှုကို ပိတ်နိုင်သည်။</string>
   <string name="firstrun_close_button">ကောင်းပြီ၊ ရပါပြီ။</string>
   <string name="firstrun_skip_button">ကျော်ရန်</string>
   <string name="firstrun_next_button">ရှေ့သို့</string>

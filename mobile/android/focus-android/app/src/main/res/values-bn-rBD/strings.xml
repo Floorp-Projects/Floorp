@@ -9,6 +9,7 @@
   <string name="menu_share">শেয়ার…</string>
   <string name="menu_open_with_default_browser">%1$s ব্যবহার করে খোলা হবে</string>
   <string name="menu_open_with_a_browser">%1$s ব্যবহার করে খোলা হবে…</string>
+  <string name="menu_add_to_home_screen">হোমস্ক্রিনে যোগ</string>
   <string name="menu_settings">সেটিং</string>
   <string name="menu_about">পরিচিতি</string>
   <string name="menu_help">সহায়তা</string>
@@ -62,6 +63,10 @@
   <string name="external_app_prompt_no_app_title">একটি অ্যাপ অনুসন্ধান করো যা লিংখটি খুলতে পারবে</string>
   <string name="external_app_prompt_no_app">আপনার ডিভাইসের কোন অ্যাপই এই লিঙ্কটি খুলতে সক্ষম হয়নি। %2$s অনুসন্ধান করে একটি অ্যাপ বের করার জন্যে আপনি %1$s কে দ্বায়িত্ব দিতে পারেন।</string>
   <string name="external_multiple_apps_matched_exit">আপনি কি ব্যক্তিগত ব্রাউজিং বন্ধ করবেন?</string>
+  <string name="download_snackbar_open">খুলুন</string>
+  <string name="download_dialog_title">ফাইল ডাউনলোড করুন</string>
+  <string name="download_dialog_action_cancel">বাতিল</string>
+  <string name="download_dialog_action_download">ডাউনলোড</string>
   <string name="errorpage_title">পাতা লোডিং এ সমস্যা</string>
   <string name="errorpage_refresh">আবার চেষ্টা করুন</string>
   <string name="error_connectionfailure_title">সংযোগ করতে ব্যর্থ</string>
@@ -84,9 +89,12 @@
   <string name="contextmenu_image_share">ছবি শেয়ার</string>
   <string name="contextmenu_image_copy">ছবির ঠিকানা অনুলিপি করুন</string>
   <string name="contextmenu_image_save">ছবি সংরক্ষণ</string>
-  <string name="firstrun_tracking_title">এমনভাবে ব্রাউজ করুন যেন কেউ না দেখে</string>
   <string name="firstrun_defaultbrowser_title">আপনার গোপনীয়তা কঠোর করুন</string>
   <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>
   <string name="firstrun_skip_button">উপেক্ষা</string>
   <string name="firstrun_next_button">পরবর্তী</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">হোমস্ক্রিনে যোগ</string>
+  <string name="dialog_addtohomescreen_action_add">যোগ</string>
+  <string name="dialog_addtohomescreen_action_cancel">বাতিল</string>
 </resources>

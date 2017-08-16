@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Copier l’adresse de l’image</string>
   <string name="contextmenu_image_save">Enregistrer l’image</string>
   <string name="contextmenu_image_warning"><![CDATA["Les images partagées ou enregistrées "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne seront pas supprim&#233;es</b>" lorsque vous effacez l’historique de %1$s."]]></string>
-  <string name="firstrun_tracking_title">Naviguez comme si personne ne vous regardait</string>
-  <string name="firstrun_tracking_text">Bloquez automatiquement les traqueurs lorsque vous naviguez. Supprimez ensuite les pages visitées et les cookies en appuyant sur l’icône de corbeille dans l’application ou depuis les notifications.</string>
   <string name="firstrun_defaultbrowser_title">Renforcez votre vie privée</string>
-  <string name="firstrun_defaultbrowser_text">Définissez %1$s en tant que navigateur par défaut et bénéficiez des avantages de la navigation privée lorsque vous ouvrez des liens depuis d’autres applications Android.</string>
-  <string name="firstrun_breaking_title">Une solution rapide lorsque\nle blocage « casse » une page</string>
-  <string name="firstrun_breaking_text">Si une page ne vous semble pas fonctionner correctement lorsque le blocage de traqueurs est activé, désactivez le blocage d’un simple appui depuis le menu outils.</string>
   <string name="firstrun_close_button">OK</string>
   <string name="firstrun_skip_button">Ignorer</string>
   <string name="firstrun_next_button">Suivant</string>

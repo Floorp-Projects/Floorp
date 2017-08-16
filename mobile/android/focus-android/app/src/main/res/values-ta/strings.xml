@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">முகவரியை நகலெடு</string>
   <string name="contextmenu_image_save">சேமி</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s வரலாற்றை அகற்றும் போது சேமித்த பகிர்ந்த படங்கள் "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2949;&#2996;&#3007;&#2965;&#3021;&#2965;&#2986;&#3021;&#2986;&#2975;&#3006;&#2980;&#3009;</b>.]]></string>
-  <string name="firstrun_tracking_title">யாருக்கும் தெரியாம உலாவுங்கள்</string>
-  <string name="firstrun_tracking_text">நீங்கள் உலாவும்போது தடமறிகளைத் தானாகத் தடுங்கள். பிறகு பலகத்தில் (அ) செயலினுள் உள்ள குப்பை சின்னத்தைத் தட்டி சமீபத்தில் பார்த்த பக்கங்கள் (அ) நினைவிகளை நீக்குங்கள்.</string>
   <string name="firstrun_defaultbrowser_title">தனியுரிமையைத் துரிதப்படுத்துங்கள்</string>
-  <string name="firstrun_defaultbrowser_text">%1$s உலாவியை முன்னிருப்பாக அமைப்பதன் மூலம் பிற செயலிகளிலிருந்து வலைத்தளங்களைத் திறக்கும்போது அந்தரங்க உலாவலின் நன்மையைப் பெறலாம்.</string>
-  <string name="firstrun_breaking_title">தடுப்பு= முறிவு\nஏற்படும்போது ஒரு விரைவு தீர்வு</string>
-  <string name="firstrun_breaking_text">தடமறிகளைத் தடுக்கும்பொருட்டு தள முறிவு ஏற்படடால், கருவிப் பட்டியைத் தட்டி தடுப்பதை நிறுத்தவும்.</string>
   <string name="firstrun_close_button">சரி, புரிந்தது!</string>
   <string name="firstrun_skip_button">தாவு</string>
   <string name="firstrun_next_button">அடுத்தது</string>

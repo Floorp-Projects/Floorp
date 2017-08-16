@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Copia l\'adreça de la imatge</string>
   <string name="contextmenu_image_save">Desa la imatge</string>
   <string name="contextmenu_image_warning"><![CDATA["Les imatges que deseu i compartiu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no s\'eliminaran</b>" quan esborreu l\'historial del %1$s."]]></string>
-  <string name="firstrun_tracking_title">Navegueu sense sentir-vos observat</string>
-  <string name="firstrun_tracking_text">Bloqueu automàticament els elements que us fan el seguiment mentre navegueu. Elimineu les pàgines visitades i les galetes tocant la icona de paperera a l\'aplicació o a les notificacions.</string>
   <string name="firstrun_defaultbrowser_title">Potencieu la privadesa</string>
-  <string name="firstrun_defaultbrowser_text">Definiu el %1$s com a navegador per defecte i gaudiu d\'una navegació privada quan obriu enllaços web des d\'altres aplicacions de l\'Android.</string>
-  <string name="firstrun_breaking_title">Una solució ràpida si el\nbloqueig causa problemes</string>
-  <string name="firstrun_breaking_text">Si us sembla que un lloc no funciona bé per haver blocat els elements de seguiment, desactiveu el bloqueig amb un sol toc al menú d\'eines.</string>
   <string name="firstrun_close_button">Entesos</string>
   <string name="firstrun_skip_button">Omet</string>
   <string name="firstrun_next_button">Següent</string>

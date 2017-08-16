@@ -94,12 +94,7 @@
   <string name="contextmenu_image_copy">Kopier bildeadresse</string>
   <string name="contextmenu_image_save">Lagre bilde</string>
   <string name="contextmenu_image_warning"><![CDATA["Lagra og delte bilde "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikkje bli fjerna</b>" når du slettar %1$s-historikken."]]></string>
-  <string name="firstrun_tracking_title">Surf som om ingen ser på</string>
-  <string name="firstrun_tracking_text">Automatisk blokker online-sporing når du surfar. Fjern så besøkte sider og infokapslar med ei lita berøring av søppelikonet i appen eller i varslingar.</string>
   <string name="firstrun_defaultbrowser_title">Styrk personvernet ditt</string>
-  <string name="firstrun_defaultbrowser_text">Vel %1$s som standardnettlesar og få fordelane med privat nettlesing når du linkar til nettet frå andre Android-appar.</string>
-  <string name="firstrun_breaking_title">Ei rask løysning når\nblokkering = øydelegging</string>
-  <string name="firstrun_breaking_text">Når ulempa med å blokkere online-sporarar er ei nettside som ser øydelagd ut, slå av blokkering med eit tastetrykk i verktøymenyen.</string>
   <string name="firstrun_close_button">OK, eg forstår det!</string>
   <string name="firstrun_skip_button">Hopp over</string>
   <string name="firstrun_next_button">Neste</string>

@@ -91,12 +91,7 @@
   <string name="contextmenu_image_copy">이미지 주소 복사</string>
   <string name="contextmenu_image_save">이미지 저장</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s 기록을 지울 때 "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#51200;&#51109; &#48143; &#44277;&#50976;&#46108; &#51060;&#48120;&#51648;</b>는 삭제되지 않습니다.]]></string>
-  <string name="firstrun_tracking_title">누구에게도 보이지 않는 웹 이용</string>
-  <string name="firstrun_tracking_text">탐색하는 동안 자동으로 온라인 추적을 차단합니다. 그런 다음 앱이나 알림의 휴지통 아이콘을 터치하여 방문한 페이지와 쿠키를 삭제합니다.</string>
   <string name="firstrun_defaultbrowser_title">개인정보 보호 강화하기</string>
-  <string name="firstrun_defaultbrowser_text">%1$s를 기본 브라우저로 설정하고 다른 Android 앱에서 웹으로 연결될 때 개인정보 보호 탐색의 장점을 누리세요.</string>
-  <string name="firstrun_breaking_title">차단 = 깨짐\n일 때 빨리 복구하기</string>
-  <string name="firstrun_breaking_text">온라인 추적 차단의 문제로 사이트가 깨져보인다면, 도구 메뉴를 탭하여 차단을 해제하세요.</string>
   <string name="firstrun_close_button">알겠습니다!</string>
   <string name="firstrun_skip_button">건너뛰기</string>
   <string name="firstrun_next_button">다음</string>
