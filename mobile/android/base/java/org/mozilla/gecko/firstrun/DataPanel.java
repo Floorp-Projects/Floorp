@@ -29,7 +29,7 @@ public class DataPanel extends FirstrunPanel {
             public void onClick(View view) {
                 // Set new state.
                 isEnabled = !isEnabled;
-                int newResource = isEnabled ? R.drawable.firstrun_data_on : R.drawable.firstrun_data_off;
+                int newResource = isEnabled ? R.drawable.firstrun_data : R.drawable.firstrun_data;
                 ((ImageView) view).setImageResource(newResource);
                 if (isEnabled) {
                     // Always block images.

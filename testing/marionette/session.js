@@ -130,6 +130,14 @@ session.Proxy = class {
    */
   init() {
     switch (this.proxyType) {
+      case "autodetect":
+        Preferences.set("network.proxy.type", 4);
+        return true;
+
+      case "direct":
+        Preferences.set("network.proxy.type", 0);
+        return true;
+
       case "manual":
         Preferences.set("network.proxy.type", 1);
         if (this.httpProxy && this.httpProxyPort) {
@@ -159,16 +167,8 @@ session.Proxy = class {
             "network.proxy.autoconfig_url", this.proxyAutoconfigUrl);
         return true;
 
-      case "autodetect":
-        Preferences.set("network.proxy.type", 4);
-        return true;
-
       case "system":
         Preferences.set("network.proxy.type", 5);
-        return true;
-
-      case "noproxy":
-        Preferences.set("network.proxy.type", 0);
         return true;
 
       default:

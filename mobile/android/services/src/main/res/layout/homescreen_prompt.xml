@@ -90,7 +90,7 @@
             android:layout_marginStart="100dp"
             android:layout_marginRight="30dp"
             android:layout_marginEnd="30dp"
-            android:background="@drawable/button_background_action_orange_round"
+            android:background="@drawable/button_background_action_photon_round"
             android:paddingLeft="16dp"
             android:paddingStart="16dp"
             android:paddingRight="16dp"
