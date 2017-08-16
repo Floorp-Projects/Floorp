@@ -159,10 +159,22 @@ AudioBufferMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
 AudioBuffer::AudioBuffer(nsPIDOMWindowInner* aWindow,
                          uint32_t aNumberOfChannels,
                          uint32_t aLength,
-                         float aSampleRate)
+                         float aSampleRate,
+                         ErrorResult& aRv)
   : mOwnerWindow(do_GetWeakReference(aWindow)),
     mSampleRate(aSampleRate)
 {
+  // Note that a buffer with zero channels is permitted here for the sake of
+  // AudioProcessingEvent, where channel counts must match parameters passed
+  // to createScriptProcessor(), one of which may be zero.
+  if (aSampleRate < WebAudioUtils::MinSampleRate ||
+      aSampleRate > WebAudioUtils::MaxSampleRate ||
+      aNumberOfChannels > WebAudioUtils::MaxChannelCount ||
+      !aLength || aLength > INT32_MAX) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
   mSharedChannels.mDuration = aLength;
   mJSChannels.SetLength(aNumberOfChannels);
   mozilla::HoldJSObjects(this);
@@ -222,20 +234,11 @@ AudioBuffer::Create(nsPIDOMWindowInner* aWindow, uint32_t aNumberOfChannels,
                     ErrorResult& aRv)
 {
   RefPtr<ThreadSharedFloatArrayBufferList> initialContents = aInitialContents;
-
-  // Note that a buffer with zero channels is permitted here for the sake of
-  // AudioProcessingEvent, where channel counts must match parameters passed
-  // to createScriptProcessor(), one of which may be zero.
-  if (aSampleRate < WebAudioUtils::MinSampleRate ||
-      aSampleRate > WebAudioUtils::MaxSampleRate ||
-      aNumberOfChannels > WebAudioUtils::MaxChannelCount ||
-      !aLength || aLength > INT32_MAX) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+  RefPtr<AudioBuffer> buffer =
+    new AudioBuffer(aWindow, aNumberOfChannels, aLength, aSampleRate, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
-
-  RefPtr<AudioBuffer> buffer =
-    new AudioBuffer(aWindow, aNumberOfChannels, aLength, aSampleRate);
 
   if (initialContents) {
     MOZ_ASSERT(initialContents->GetChannels() == aNumberOfChannels);
