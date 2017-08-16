@@ -1135,6 +1135,20 @@ CompositorBridgeChild::GetNextPipelineId()
 }
 
 void
+CompositorBridgeChild::FlushAsyncPaints()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MonitorAutoLock lock(mPaintLock);
+  while (mIsWaitingForPaint) {
+    lock.Wait();
+  }
+
+  // It's now safe to free any TextureClients that were used during painting.
+  mTextureClientsForAsyncPaint.Clear();
+}
+
+void
 CompositorBridgeChild::NotifyBeginAsyncPaint(CapturedPaintState* aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1225,23 +1239,6 @@ CompositorBridgeChild::NotifyFinishedAsyncEndLayerTransaction()
 }
 
 void
-CompositorBridgeChild::PostponeMessagesIfAsyncPainting()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MonitorAutoLock lock(mPaintLock);
-
-  MOZ_ASSERT(!mIsWaitingForPaint);
-
-  // We need to wait for async paints and the async end transaction as
-  // it will do texture synchronization
-  if (mOutstandingAsyncPaints > 0 || mOutstandingAsyncEndTransaction) {
-    mIsWaitingForPaint = true;
-    GetIPCChannel()->BeginPostponingSends();
-  }
-}
-
-void
 CompositorBridgeChild::ResumeIPCAfterAsyncPaint()
 {
   // Note: the caller is responsible for holding the lock.
@@ -1261,17 +1258,20 @@ CompositorBridgeChild::ResumeIPCAfterAsyncPaint()
 }
 
 void
-CompositorBridgeChild::FlushAsyncPaints()
+CompositorBridgeChild::PostponeMessagesIfAsyncPainting()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   MonitorAutoLock lock(mPaintLock);
-  while (mIsWaitingForPaint) {
-    lock.Wait();
-  }
 
-  // It's now safe to free any TextureClients that were used during painting.
-  mTextureClientsForAsyncPaint.Clear();
+  MOZ_ASSERT(!mIsWaitingForPaint);
+
+  // We need to wait for async paints and the async end transaction as
+  // it will do texture synchronization
+  if (mOutstandingAsyncPaints > 0 || mOutstandingAsyncEndTransaction) {
+    mIsWaitingForPaint = true;
+    GetIPCChannel()->BeginPostponingSends();
+  }
 }
 
 } // namespace layers

@@ -222,19 +222,14 @@ public:
 
   wr::PipelineId GetNextPipelineId();
 
-  // Must only be called from the main thread. Notifies the CompositorBridge
-  // that the paint thread is going to begin painting asynchronously.
-  void NotifyBeginAsyncPaint(CapturedPaintState* aState);
-
-  // Must only be called from the main thread. Notifies the CompoistorBridge
-  // that a transaction is about to be sent, and if the paint thread is
-  // currently painting, to begin delaying IPC messages.
-  void PostponeMessagesIfAsyncPainting();
-
   // Must only be called from the main thread. Ensures that any paints from
   // previous frames have been flushed. The main thread blocks until the
   // operation completes.
   void FlushAsyncPaints();
+
+  // Must only be called from the main thread. Notifies the CompositorBridge
+  // that the paint thread is going to begin painting asynchronously.
+  void NotifyBeginAsyncPaint(CapturedPaintState* aState);
 
   // Must only be called from the paint thread. Notifies the CompositorBridge
   // that the paint thread has finished an asynchronous paint request.
@@ -250,6 +245,11 @@ public:
   // that the paint thread has finished all async paints and texture syncs from
   // a given transaction and may resume sending messages.
   void NotifyFinishedAsyncEndLayerTransaction();
+
+  // Must only be called from the main thread. Notifies the CompoistorBridge
+  // that a transaction is about to be sent, and if the paint thread is
+  // currently painting, to begin delaying IPC messages.
+  void PostponeMessagesIfAsyncPainting();
 
 private:
   // Private destructor, to discourage deletion outside of Release():
