@@ -2,113 +2,106 @@
   {
     "title": "aliexpress",
     "url": "https://www.aliexpress.com/",
-    "image_url": "aliexpress-com.png",
-    "background_color": "#f6050a",
-    "domain": "aliexpress.com"
+    "image_url": "aliexpress-com@2x.png"
   },
   {
     "title": "allegro",
     "url": "https://www.allegro.pl/",
-    "image_url": "allegro-pl.png",
-    "background_color": "#ff4900",
-    "domain": "allegro.pl"
+    "image_url": "allegro-pl@2x.png"
   },
   {
     "title": "amazon",
-    "urls": ["https://www.amazon.com/", "https://www.amazon.ca/", "https://www.amazon.de/", "https://www.amazon.co.uk/", "https://www.amazon.fr/"],
-    "image_url": "amazon-com.png",
-    "background_color": "#FFF",
-    "domain": "amazon.com"
+    "url": "https://www.amazon.ca/",
+    "image_url": "amazon-ca@2x.png"
+  },
+  {
+    "title": "amazon",
+    "url": "https://www.amazon.co.uk/",
+    "image_url": "amazon-uk@2x.png"
+  },
+  {
+    "title": "amazon",
+    "url": "https://www.amazon.com/",
+    "image_url": "amazon-com@2x.png"
+  },
+  {
+    "title": "amazon",
+    "url": "https://www.amazon.de/",
+    "image_url": "amazon-de@2x.png"
+  },
+  {
+    "title": "amazon",
+    "url": "https://www.amazon.fr/",
+    "image_url": "amazon-fr@2x.png"
   },
   {
     "title": "avito",
     "url": "https://www.avito.ru/",
-    "image_url": "avito-ru.png",
-    "background_color": "#FFFFFF",
-    "domain": "avito.ru"
+    "image_url": "avito@2x.png"
   },
   {
     "title": "bbc",
-    "urls": ["http://www.bbc.com/", "https://www.bbc.co.uk/"],
-    "image_url": "bbc-com.png",
-    "background_color": "#000000",
-    "domain": "bbc.com"
+    "url": "https://www.bbc.co.uk/",
+    "image_url": "bbc-uk@2x.png"
   },
   {
     "title": "ebay",
-    "urls": ["https://www.ebay.com", "https://ebay.de", "https://www.ebay.co.uk/"],
-    "image_url": "ebay-com.png",
-    "background_color": "#ededed",
-    "domain": "ebay.com"
+    "urls": ["https://www.ebay.com", "https://www.ebay.co.uk/"],
+    "image_url": "ebay@2x.png"
+  },
+  {
+    "title": "ebay",
+    "url": "https://ebay.de",
+    "image_url": "ebay-de@2x.png"
   },
   {
     "title": "facebook",
     "url": "https://www.facebook.com/",
-    "image_url": "facebook-com.png",
-    "background_color": "#3b5998",
-    "domain": "facebook.com"
+    "image_url": "facebook-com@2x.png"
   },
   {
     "title": "leboncoin",
     "url": "http://www.leboncoin.fr/",
-    "image_url": "leboncoin-fr.png",
-    "background_color": "#ff6000",
-    "domain": "leboncoin.fr"
+    "image_url": "leboncoin@2x.png"
   },
   {
     "title": "ok",
     "url": "https://www.ok.ru/",
-    "image_url": "ok-ru.png",
-    "background_color": "#fb7b00",
-    "domain": "ok.ru"
+    "image_url": "ok@2x.png"
   },
   {
     "title": "olx",
     "url": "https://www.olx.pl/",
-    "image_url": "olx-pl.png",
-    "background_color": "#b7c200",
-    "domain": "olx.pl"
+    "image_url": "olx-pl@2x.png"
   },
   {
     "title": "reddit",
     "url": "https://www.reddit.com/",
-    "image_url": "reddit-com.png",
-    "background_color": "#cee3f8",
-    "domain": "reddit.com"
+    "image_url": "reddit-com@2x.png"
   },
   {
     "title": "twitter",
     "url": "https://twitter.com/",
-    "image_url": "twitter-com.png",
-    "background_color": "#049ff5",
-    "domain": "twitter.com"
+    "image_url": "twitter-com@2x.png"
   },
   {
     "title": "vk",
     "url": "https://vk.com/",
-    "image_url": "vk-com.png",
-    "background_color": "#4483be",
-    "domain": "vk.com"
-  },
-  {
-    "title": "youtube",
-    "url": "https://www.youtube.com/",
-    "image_url": "youtube-com.png",
-    "background_color": "#db4338",
-    "domain": "youtube.com"
+    "image_url": "vk-com@2x.png"
   },
   {
     "title": "wikipedia",
     "url": "https://www.wikipedia.org/",
-    "image_url": "wikipedia-org.png",
-    "background_color": "#fff",
-    "domain": "wikipedia.org"
+    "image_url": "wikipedia-com@2x.png"
   },
   {
     "title": "wykop",
     "url": "https://www.wykop.pl/",
-    "image_url": "wykop-pl.png",
-    "background_color": "#157ead",
-    "domain": "wykop.pl"
+    "image_url": "wykop@2x.png"
+  },
+  {
+    "title": "youtube",
+    "url": "https://www.youtube.com/",
+    "image_url": "youtube-com@2x.png"
   }
 ]
