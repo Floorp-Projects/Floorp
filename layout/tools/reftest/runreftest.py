@@ -310,6 +310,11 @@ class RefTest(object):
                 sandbox_whitelist_paths.append(options.workPath)
         except AttributeError:
             pass
+        try:
+            if options.objPath:
+                sandbox_whitelist_paths.append(options.objPath)
+        except AttributeError:
+            pass
         if (platform.system() == "Linux" or
             platform.system() in ("Windows", "Microsoft")):
             # Trailing slashes are needed to indicate directories on Linux and Windows

@@ -244,7 +244,12 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
         self.add_argument("--work-path",
                           action="store",
                           dest="workPath",
-                          help="Path to the base dir of all test files.")
+                          help="Path to the base dir of all source files.")
+
+        self.add_argument("--obj-path",
+                          action="store",
+                          dest="objPath",
+                          help="Path to the base dir of all object files.")
 
         mozlog.commandline.add_logging_group(self)
 
