@@ -44,7 +44,7 @@
   <!-- Bookmarks and history tooltip -->
   <tooltip id="bhTooltip"/>
 
-  <hbox id="sidebar-search-container" align="center">
+  <hbox id="sidebar-search-container">
     <textbox id="search-box" flex="1" type="search"
              placeholder="&search.placeholder;"
              aria-controls="historyTree"

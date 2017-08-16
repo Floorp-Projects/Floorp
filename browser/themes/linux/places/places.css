@@ -3,8 +3,46 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Sidebars */
+
+#sidebar-search-container {
+  padding: 4px;
+}
+
+#search-box {
+  margin: 0;
+}
+
+#viewButton {
+  -moz-appearance: none;
+  border-radius: 4px;
+  margin: 1px 0;
+  margin-inline-start: 4px;
+  padding: 2px 4px;
+  color: inherit;
+}
+
+#viewButton:-moz-focusring:not(:hover):not([open]) {
+  outline: 1px dotted -moz-DialogText;
+}
+
+#viewButton:hover {
+  background: hsla(240, 5%, 5%, 0.1);
+}
+
+#viewButton[open] {
+  background: hsla(240, 5%, 5%, 0.15);
+}
+
 .sidebar-placesTree {
   margin: 0;
+  color: inherit;
+  -moz-appearance: none;
+  border: 0;
+  background: transparent;
+}
+
+.sidebar-placesTreechildren::-moz-tree-row {
+  min-height: 24px;
 }
 
 .sidebar-placesTreechildren::-moz-tree-cell(leaf) ,

@@ -145,7 +145,7 @@ class Marionette(MachCommandBase):
             ["jsdoc", "-c", ".jsdoc.js"] + srcs, cwd=self.srcdir)
         proc.wait()
 
-        if http:
+        if http and proc.returncode == 0:
             import SimpleHTTPServer
             import SocketServer
 
@@ -159,3 +159,5 @@ class Marionette(MachCommandBase):
             print "serving at %s:%s" % (host, port)
             os.chdir(os.path.join(self.srcdir, "doc"))
             httpd.serve_forever()
+
+        return proc.returncode

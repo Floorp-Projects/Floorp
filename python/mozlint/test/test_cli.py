@@ -5,6 +5,7 @@
 import os
 import sys
 
+import py
 import pytest
 
 from mozlint import cli
@@ -38,6 +39,7 @@ def test_cli_run_with_fix(run, capfd):
     assert out.endswith('{}\n')
 
 
+@pytest.mark.skipif(not py.path.local.sysfind("echo"), reason="No `echo` executable found.")
 def test_cli_run_with_edit(run, parser, capfd):
     os.environ['EDITOR'] = 'echo'
 

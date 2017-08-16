@@ -229,10 +229,6 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
   list-style-image: url("chrome://browser/skin/feed.svg");
 }
 
-#social-share-button {
-  list-style-image: url("chrome://browser/skin/share.svg");
-}
-
 #characterencoding-button {
   list-style-image: url("chrome://browser/skin/characterEncoding.svg");
 }

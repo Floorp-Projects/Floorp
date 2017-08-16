@@ -124,7 +124,7 @@
   padding-inline-start: 5px;
   padding-inline-end: 0px;
   margin: 0;
-  margin-inline-end: 4px;
+  margin-inline-start: 4px;
   min-width: 0px;
   min-height: 0px;
   border: 1px solid #a2a9b1;
@@ -159,7 +159,11 @@
 }
 
 #sidebar-search-container {
-  margin: 0 4px;
+  padding: 4px;
+}
+
+#search-box {
+  margin: 0;
 }
 
 /* Trees */

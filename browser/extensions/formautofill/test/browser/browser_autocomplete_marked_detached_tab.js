@@ -27,6 +27,7 @@ add_task(async function test_detach_tab_marked() {
     // Check the page after the initial load
     await openPopupOn(browser, "#street-address");
     checkPopup(autoCompletePopup);
+    await closePopup(browser);
 
     // Detach the tab to a new window
     let newWin = gBrowser.replaceTabWithWindow(gBrowser.getTabForBrowser(browser));

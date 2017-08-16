@@ -59,8 +59,6 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_GetOrigin,
                    mozilla::OriginFlags,
                    RawServoStyleSheetContentsBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSet*, RawGeckoPresContextOwned pres_context)
-SERVO_BINDING_FUNC(Servo_StyleSet_Clear, void,
-                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_RebuildCachedData, void,
                    RawServoStyleSetBorrowed set)
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't

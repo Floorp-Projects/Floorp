@@ -406,24 +406,10 @@
       {
         "name": "openPopup",
         "type": "function",
-        "description": "Opens the extension popup window in the active window but does not grant tab permissions.",
-        "unsupported": true,
-        "async": "callback",
-        "parameters": [
-          {
-            "type": "function",
-            "name": "callback",
-            "parameters": [
-              {
-                "name": "popupView",
-                "type": "object",
-                "optional": true,
-                "description": "JavaScript 'window' object for the popup window if it was succesfully opened.",
-                "additionalProperties": { "type": "any" }
-              }
-            ]
-          }
-        ]
+        "requireUserInput": true,
+        "description": "Opens the extension popup window in the active window.",
+        "async": true,
+        "parameters": []
       }
     ],
     "events": [

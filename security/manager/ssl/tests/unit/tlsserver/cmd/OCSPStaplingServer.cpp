@@ -102,7 +102,7 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
 
   // response is contained by the arena - freeing the arena will free it
   SECItemArray *response = GetOCSPResponseForType(host->mORT, cert, arena,
-                                                  host->mAdditionalCertName);
+                                                  host->mAdditionalCertName, 0);
   if (!response) {
     return SSL_SNI_SEND_ALERT;
   }

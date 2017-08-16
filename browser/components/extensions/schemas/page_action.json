@@ -215,6 +215,14 @@
             ]
           }
         ]
+      },
+      {
+        "name": "openPopup",
+        "type": "function",
+        "requireUserInput": true,
+        "description": "Opens the extension page action in the active window.",
+        "async": true,
+        "parameters": []
       }
     ],
     "events": [
