@@ -90,16 +90,22 @@ public:
   // Removes all entries from the hash table
   void  Clear();
 
-protected:
-  LinkedList<UndisplayedNode>* GetListFor(nsIContent* aParentContent);
-  LinkedList<UndisplayedNode>* GetOrCreateListFor(nsIContent* aParentContent);
-  void AppendNodeFor(UndisplayedNode* aNode, nsIContent* aParentContent);
   /**
    * Get the applicable parent for the map lookup. This is almost always the
    * provided argument, except if it's a <xbl:children> element, in which case
    * it's the parent of the children element.
+   *
+   * All functions that are entry points into code that handles "parent"
+   * objects (used as the hash table keys) must ensure that the parent objects
+   * that they act on (and pass to other code) have been normalized by calling
+   * this method.
    */
-  nsIContent* GetApplicableParent(nsIContent* aParent);
+  static nsIContent* GetApplicableParent(nsIContent* aParent);
+
+protected:
+  LinkedList<UndisplayedNode>* GetListFor(nsIContent* aParentContent);
+  LinkedList<UndisplayedNode>* GetOrCreateListFor(nsIContent* aParentContent);
+  void AppendNodeFor(UndisplayedNode* aNode, nsIContent* aParentContent);
 };
 
 //----------------------------------------------------------------------
@@ -132,13 +138,16 @@ nsFrameManager::Destroy()
 
 //----------------------------------------------------------------------
 
-static nsIContent*
-ParentForUndisplayedMap(const nsIContent* aContent)
+/* static */ nsIContent*
+nsFrameManager::ParentForUndisplayedMap(const nsIContent* aContent)
 {
   MOZ_ASSERT(aContent);
 
   nsIContent* parent = aContent->GetParentElementCrossingShadowRoot();
   MOZ_ASSERT(parent || !aContent->GetParent(), "no non-elements");
+
+  // Normalize the parent:
+  parent = UndisplayedMap::GetApplicableParent(parent);
 
   return parent;
 }
@@ -158,7 +167,13 @@ nsFrameManager::GetUndisplayedNodeInMapFor(UndisplayedMap* aMap,
   if (!aContent) {
     return nullptr;
   }
+
+  // This function is an entry point into UndisplayedMap handling code, so the
+  // parent that we act on must be normalized by GetApplicableParent (as per
+  // that function's documentation).  We rely on ParentForUndisplayedMap to
+  // have done that for us.
   nsIContent* parent = ParentForUndisplayedMap(aContent);
+
   for (UndisplayedNode* node = aMap->GetFirstNode(parent);
        node; node = node->getNext()) {
     if (node->mContent == aContent)
@@ -198,7 +213,12 @@ nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
   MOZ_ASSERT(!GetStyleContextInMap(aMap, aContent),
              "Already have an entry for aContent");
 
+  // This function is an entry point into UndisplayedMap handling code, so the
+  // parent that we act on must be normalized by GetApplicableParent (as per
+  // that function's documentation).  We rely on ParentForUndisplayedMap to
+  // have done that for us.
   nsIContent* parent = ParentForUndisplayedMap(aContent);
+
 #ifdef DEBUG
   nsIPresShell* shell = aStyleContext->PresContext()->PresShell();
   NS_ASSERTION(parent || (shell && shell->GetDocument() &&
@@ -206,6 +226,16 @@ nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
                "undisplayed content must have a parent, unless it's the root "
                "element");
 #endif
+
+  // We set this bit as an optimization so that we can can know when a content
+  // node may have |display:none| or |display:contents| children.  This allows
+  // other parts of the code to avoid checking for such children in
+  // mDisplayNoneMap and mDisplayContentsMap if the bit isn't present on a node
+  // that it's handling.
+  if (parent) {
+    parent->SetMayHaveChildrenWithLayoutBoxesDisabled();
+  }
+
   aMap->AddNodeFor(parent, aContent, aStyleContext);
 }
 
@@ -231,7 +261,13 @@ nsFrameManager::ChangeStyleContextInMap(UndisplayedMap* aMap,
    printf("ChangeStyleContextInMap(%d): p=%p \n", i++, (void *)aContent);
 #endif
 
-  for (UndisplayedNode* node = aMap->GetFirstNode(aContent->GetParent());
+  // This function is an entry point into UndisplayedMap handling code, so the
+  // parent that we act on must be normalized by GetApplicableParent (as per
+  // that function's documentation).  We rely on ParentForUndisplayedMap to
+  // have done that for us.
+  nsIContent* parent = ParentForUndisplayedMap(aContent);
+
+  for (UndisplayedNode* node = aMap->GetFirstNode(parent);
        node; node = node->getNext()) {
     if (node->mContent == aContent) {
       node->mStyle = aStyleContext;
@@ -255,8 +291,23 @@ nsFrameManager::UnregisterDisplayNoneStyleFor(nsIContent* aContent,
     return;
   }
 
-  for (UndisplayedNode* node = mDisplayNoneMap->GetFirstNode(aParentContent);
-       node; node = node->getNext()) {
+  // This function is an entry point into UndisplayedMap handling code, so we
+  // must call GetApplicableParent so the parent we pass around is correct.
+  aParentContent = UndisplayedMap::GetApplicableParent(aParentContent);
+
+  if (aParentContent &&
+      !aParentContent->MayHaveChildrenWithLayoutBoxesDisabled()) {
+    MOZ_ASSERT(!mDisplayNoneMap->GetFirstNode(aParentContent),
+               "MayHaveChildrenWithLayoutBoxesDisabled bit out of sync - "
+               "may fail to remove node from mDisplayNoneMap");
+    return;
+  }
+
+  UndisplayedNode* node = mDisplayNoneMap->GetFirstNode(aParentContent);
+
+  const bool haveOneDisplayNoneChild = node && !node->getNext();
+
+  for (; node; node = node->getNext()) {
     if (node->mContent == aContent) {
       mDisplayNoneMap->RemoveNodeFor(aParentContent, node);
 
@@ -266,6 +317,22 @@ nsFrameManager::UnregisterDisplayNoneStyleFor(nsIContent* aContent,
       // make sure that there are no more entries for the same content
       MOZ_ASSERT(!GetDisplayNoneStyleFor(aContent),
                  "Found more undisplayed content data after removal");
+
+      if (haveOneDisplayNoneChild) {
+        // There are no more children of aParentContent in mDisplayNoneMap.
+        MOZ_ASSERT(!mDisplayNoneMap->GetFirstNode(aParentContent),
+                   "Bad UnsetMayHaveChildrenWithLayoutBoxesDisabled call");
+        // If we also know that none of its children are in mDisplayContentsMap
+        // then we can call UnsetMayHaveChildrenWithLayoutBoxesDisabled.  We
+        // don't want to check mDisplayContentsMap though since that involves a
+        // hash table lookup in relatively hot code.  Still, we know there are
+        // no children in mDisplayContentsMap if the map is empty, so we do
+        // check for that.
+        if (aParentContent && !mDisplayContentsMap) {
+          aParentContent->UnsetMayHaveChildrenWithLayoutBoxesDisabled();
+        }
+      }
+
       return;
     }
   }
@@ -283,19 +350,37 @@ nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
   printf("ClearAllMapsFor(%d): parent=%p \n", i++, aParentContent);
 #endif
 
-  if (mDisplayNoneMap) {
-    mDisplayNoneMap->RemoveNodesFor(aParentContent);
-  }
-  if (mDisplayContentsMap) {
-    nsAutoPtr<LinkedList<UndisplayedNode>> list =
-      mDisplayContentsMap->UnlinkNodesFor(aParentContent);
-    if (list) {
-      while (UndisplayedNode* node = list->popFirst()) {
-        ClearAllMapsFor(node->mContent);
-        delete node;
+  if (!aParentContent ||
+      aParentContent->MayHaveChildrenWithLayoutBoxesDisabled()) {
+    if (mDisplayNoneMap) {
+      mDisplayNoneMap->RemoveNodesFor(aParentContent);
+    }
+    if (mDisplayContentsMap) {
+      nsAutoPtr<LinkedList<UndisplayedNode>> list =
+        mDisplayContentsMap->UnlinkNodesFor(aParentContent);
+      if (list) {
+        while (UndisplayedNode* node = list->popFirst()) {
+          ClearAllMapsFor(node->mContent);
+          delete node;
+        }
       }
     }
+    if (aParentContent) {
+      aParentContent->UnsetMayHaveChildrenWithLayoutBoxesDisabled();
+    }
   }
+#ifdef DEBUG
+  else {
+    if (mDisplayNoneMap) {
+      MOZ_ASSERT(!mDisplayNoneMap->GetFirstNode(aParentContent),
+                 "We failed to remove a node from mDisplayNoneMap");
+    }
+    if (mDisplayContentsMap) {
+      MOZ_ASSERT(!mDisplayContentsMap->GetFirstNode(aParentContent),
+                 "We failed to remove a node from mDisplayContentsMap");
+    }
+  }
+#endif
 
   // Need to look at aParentContent's content list due to XBL insertions.
   // Nodes in aParentContent's content list do not have aParentContent as a
@@ -342,8 +427,23 @@ nsFrameManager::UnregisterDisplayContentsStyleFor(nsIContent* aContent,
     return;
   }
 
-  for (UndisplayedNode* node = mDisplayContentsMap->GetFirstNode(aParentContent);
-       node; node = node->getNext()) {
+  // This function is an entry point into UndisplayedMap handling code, so we
+  // must call GetApplicableParent so the parent we pass around is correct.
+  aParentContent = UndisplayedMap::GetApplicableParent(aParentContent);
+
+  if (aParentContent &&
+      !aParentContent->MayHaveChildrenWithLayoutBoxesDisabled()) {
+    MOZ_ASSERT(!mDisplayContentsMap->GetFirstNode(aParentContent),
+               "MayHaveChildrenWithLayoutBoxesDisabled bit out of sync - "
+               "may fail to remove node from mDisplayContentsMap");
+    return;
+  }
+
+  UndisplayedNode* node = mDisplayContentsMap->GetFirstNode(aParentContent);
+
+  const bool haveOneDisplayContentsChild = node && !node->getNext();
+
+  for (; node; node = node->getNext()) {
     if (node->mContent == aContent) {
       mDisplayContentsMap->RemoveNodeFor(aParentContent, node);
 
@@ -354,6 +454,22 @@ nsFrameManager::UnregisterDisplayContentsStyleFor(nsIContent* aContent,
       MOZ_ASSERT(!GetDisplayContentsStyleFor(aContent),
                  "Found more entries for aContent after removal");
       ClearAllMapsFor(aContent);
+
+      if (haveOneDisplayContentsChild) {
+        // There are no more children of aParentContent in mDisplayContentsMap.
+        MOZ_ASSERT(!mDisplayContentsMap->GetFirstNode(aParentContent),
+                   "Bad UnsetMayHaveChildrenWithLayoutBoxesDisabled call");
+        // If we also know that none of its children are in mDisplayNoneMap
+        // then we can call UnsetMayHaveChildrenWithLayoutBoxesDisabled.  We
+        // don't want to check mDisplayNoneMap though since that involves a
+        // hash table lookup in relatively hot code.  Still, we know there are
+        // no children in mDisplayNoneMap if the map is empty, so we do
+        // check for that.
+        if (aParentContent && !mDisplayNoneMap) {
+          aParentContent->UnsetMayHaveChildrenWithLayoutBoxesDisabled();
+        }
+      }
+
       return;
     }
   }
@@ -618,7 +734,8 @@ nsFrameManagerBase::UndisplayedMap::GetApplicableParent(nsIContent* aParent)
 LinkedList<UndisplayedNode>*
 nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent* aParent)
 {
-  aParent = GetApplicableParent(aParent);
+  MOZ_ASSERT(aParent == GetApplicableParent(aParent),
+             "The parent that we use as the hash key must have been normalized");
 
   LinkedList<UndisplayedNode>* list;
   if (Get(aParent, &list)) {
@@ -631,7 +748,9 @@ nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent* aParent)
 LinkedList<UndisplayedNode>*
 nsFrameManagerBase::UndisplayedMap::GetOrCreateListFor(nsIContent* aParent)
 {
-  aParent = GetApplicableParent(aParent);
+  MOZ_ASSERT(aParent == GetApplicableParent(aParent),
+             "The parent that we use as the hash key must have been normalized");
+
   return LookupOrAdd(aParent);
 }
 

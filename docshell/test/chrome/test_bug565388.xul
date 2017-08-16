@@ -17,6 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565388
   /** Test for Bug 565388 **/
   SimpleTest.waitForExplicitFinish();
 
+function test() {
   var Ci = Components.interfaces;
   var Cc = Components.classes;
 
@@ -71,6 +72,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565388
   });
 
   win.location = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window/>";
+}
+
+addLoadEvent(function onLoad() {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.unique_opaque_origin", false]]}, test);
+});
 
   ]]>
   </script>
