@@ -14,5 +14,8 @@ import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItem;
  * (I don't understand why) so it's here instead.
  */
 public interface StreamHighlightItemContextMenuListener {
-    void openContextMenu(HighlightItem highlightItem, int actualPosition, @NonNull final String interactionExtra);
+    /**
+     * @param position position of item in RecyclerView
+     */
+    void openContextMenu(HighlightItem highlightItem, int position, @NonNull final String interactionExtra);
 }
