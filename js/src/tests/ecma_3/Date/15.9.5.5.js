@@ -1,4 +1,4 @@
-// |reftest| random-if(xulRuntime.OS=="Linux")
+// |reftest| random-if(xulRuntime.OS=="Linux") skip-if(xulRuntime.OS=="WINNT")
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

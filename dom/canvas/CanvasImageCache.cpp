@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 
@@ -260,7 +261,8 @@ public:
 };
 
 ImageCache::ImageCache()
-  : nsExpirationTracker<ImageCacheEntryData,4>(GENERATION_MS, "ImageCache")
+  : nsExpirationTracker<ImageCacheEntryData,4>(
+      GENERATION_MS, "ImageCache", SystemGroup::EventTargetFor(TaskCategory::Other))
   , mTotal(0)
 {
   if (!sPrefsInitialized) {

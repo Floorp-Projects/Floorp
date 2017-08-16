@@ -12,7 +12,6 @@
 #define DOM_BASE_SCRIPTABLE_FLAGS                                          \
   (XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY |                             \
    XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY |                             \
-   XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY |                             \
    XPC_SCRIPTABLE_ALLOW_PROP_MODS_TO_PROTOTYPE |                           \
    XPC_SCRIPTABLE_DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                       \
    XPC_SCRIPTABLE_DONT_REFLECT_INTERFACE_NAMES)

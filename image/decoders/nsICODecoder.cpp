@@ -194,7 +194,12 @@ nsICODecoder::IterateUnsizedDirEntry()
     // The first time we are here, there is no entry selected. We must prepare a
     // new iterator for the contained decoder to advance as it wills. Cloning at
     // this point ensures it will begin at the end of the dir entries.
-    mReturnIterator.emplace(mLexer.Clone(*mIterator, SIZE_MAX));
+    mReturnIterator = Move(mLexer.Clone(*mIterator, SIZE_MAX));
+    if (mReturnIterator.isNothing()) {
+      // If we cannot read further than this point, then there is no resource
+      // data to read.
+      return Transition::TerminateFailure();
+    }
   } else {
     // We have already selected an entry which means a metadata decoder has
     // finished. Verify the size is valid and if so, add to the discovered
@@ -209,8 +214,11 @@ nsICODecoder::IterateUnsizedDirEntry()
 
     // Our iterator is at an unknown point, so reset it to the point that we
     // saved.
-    mIterator.reset();
-    mIterator.emplace(mLexer.Clone(*mReturnIterator, SIZE_MAX));
+    mIterator = Move(mLexer.Clone(*mReturnIterator, SIZE_MAX));
+    if (mIterator.isNothing()) {
+      MOZ_ASSERT_UNREACHABLE("Cannot re-clone return iterator");
+      return Transition::TerminateFailure();
+    }
   }
 
   // There are no more unsized entries, so we can finally decide which entry to
@@ -344,8 +352,11 @@ nsICODecoder::SniffResource(const char* aData)
 
     // Prepare a new iterator for the contained decoder to advance as it wills.
     // Cloning at the point ensures it will begin at the resource offset.
-    SourceBufferIterator containedIterator
+    Maybe<SourceBufferIterator> containedIterator
       = mLexer.Clone(*mIterator, mDirEntry->mBytesInRes);
+    if (containedIterator.isNothing()) {
+      return Transition::TerminateFailure();
+    }
 
     // Create a PNG decoder which will do the rest of the work for us.
     bool metadataDecode = mReturnIterator.isSome();
@@ -353,7 +364,7 @@ nsICODecoder::SniffResource(const char* aData)
                                                  : Some(mDirEntry->mSize);
     mContainedDecoder =
       DecoderFactory::CreateDecoderForICOResource(DecoderType::PNG,
-                                                  Move(containedIterator),
+                                                  Move(containedIterator.ref()),
                                                   WrapNotNull(this),
                                                   metadataDecode,
                                                   expectedSize);
@@ -411,8 +422,11 @@ nsICODecoder::ReadBIH(const char* aData)
 
   // Prepare a new iterator for the contained decoder to advance as it wills.
   // Cloning at the point ensures it will begin at the resource offset.
-  SourceBufferIterator containedIterator
+  Maybe<SourceBufferIterator> containedIterator
     = mLexer.Clone(*mIterator, mDirEntry->mBytesInRes);
+  if (containedIterator.isNothing()) {
+    return Transition::TerminateFailure();
+  }
 
   // Create a BMP decoder which will do most of the work for us; the exception
   // is the AND mask, which isn't present in standalone BMPs.
@@ -421,7 +435,7 @@ nsICODecoder::ReadBIH(const char* aData)
                                                : Some(mDirEntry->mSize);
   mContainedDecoder =
     DecoderFactory::CreateDecoderForICOResource(DecoderType::BMP,
-                                                Move(containedIterator),
+                                                Move(containedIterator.ref()),
                                                 WrapNotNull(this),
                                                 metadataDecode,
                                                 expectedSize,

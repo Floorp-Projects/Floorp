@@ -33,7 +33,6 @@ NS_IMPL_RELEASE(BackstagePass)
                        XPC_SCRIPTABLE_WANT_PRECREATE | \
                        XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY |  \
                        XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY |  \
-                       XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY |  \
                        XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE |  \
                        XPC_SCRIPTABLE_IS_GLOBAL_OBJECT |  \
                        XPC_SCRIPTABLE_DONT_REFLECT_INTERFACE_NAMES)

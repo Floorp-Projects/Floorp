@@ -53,11 +53,7 @@ function done() {
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
-addLoadEvent(function() {
-  SpecialPowers.pushPrefEnv({"set": [
-    ["browser.newtab.preload", false]
-  ]}, doTest);
-});
+addLoadEvent(doTest);
 
 
 </script>

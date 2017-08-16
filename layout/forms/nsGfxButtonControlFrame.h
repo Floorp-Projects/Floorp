@@ -49,9 +49,9 @@ public:
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 
 protected:
-  nsresult GetDefaultLabel(nsXPIDLString& aLabel) const;
+  nsresult GetDefaultLabel(nsAString& aLabel) const;
 
-  nsresult GetLabel(nsXPIDLString& aLabel);
+  nsresult GetLabel(nsString& aLabel);
 
   virtual bool IsInput() override { return true; }
 private:

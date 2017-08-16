@@ -38,7 +38,7 @@ using namespace mozilla;
 namespace WebCore {
 
 // Empirical gain calibration tested across many impulse responses to ensure perceived volume is same as dry (unprocessed) signal
-const float GainCalibration = -58;
+const float GainCalibration = 0.00125f;
 const float GainCalibrationSampleRate = 44100;
 
 // A minimum power value to when normalizing a silent (or very quiet) impulse response
@@ -64,7 +64,7 @@ static float calculateNormalizationScale(ThreadSharedFloatArrayBufferList* respo
 
     float scale = 1 / power;
 
-    scale *= powf(10, GainCalibration * 0.05f); // calibrate to make perceived volume same as unprocessed
+    scale *= GainCalibration; // calibrate to make perceived volume same as unprocessed
 
     // Scale depends on sample-rate.
     if (sampleRate)

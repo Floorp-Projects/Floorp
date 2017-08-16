@@ -1980,7 +1980,7 @@ add_task(async function test_schedulerNothingDue() {
 
 add_task(async function test_pingExtendedStats() {
   const EXTENDED_PAYLOAD_FIELDS = [
-    "chromeHangs", "threadHangStats", "log", "slowSQL", "fileIOReports", "lateWrites",
+    "chromeHangs", "log", "slowSQL", "fileIOReports", "lateWrites",
     "addonDetails", "webrtc"
   ];
 

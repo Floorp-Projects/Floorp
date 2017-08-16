@@ -462,6 +462,15 @@ protected:
   {
   }
 
+  friend const nsTString_CharT& TNullString_CharT();
+
+  // Used by Null[C]String.
+  explicit nsTString_CharT(DataFlags aDataFlags)
+    : substring_type(char_traits::sEmptyBuffer, 0,
+                     aDataFlags | DataFlags::TERMINATED,
+                     ClassFlags::NULL_TERMINATED)
+  {}
+
   struct Segment {
     uint32_t mBegin, mLength;
     Segment(uint32_t aBegin, uint32_t aLength)
@@ -697,8 +706,8 @@ public:
  *       moz_xmalloc, such as "out string" parameters in XPIDL.
  *
  * NAMES:
- *   nsXPIDLString for wide characters
- *   nsXPIDLCString for narrow characters
+ *   nsXPIDLString for wide characters (no longer available)
+ *   nsXPIDLCString for narrow characters (deprecated)
  */
 class nsTXPIDLString_CharT : public nsTString_CharT
 {
