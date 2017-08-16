@@ -1322,12 +1322,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {
-        nsXPIDLCString httpVersion;
+        nsCString httpVersion;
         prefs->GetCharPref(HTTP_PREF("version"), getter_Copies(httpVersion));
-        if (httpVersion) {
-            if (!PL_strcmp(httpVersion, "1.1"))
+        if (!httpVersion.IsVoid()) {
+            if (httpVersion.EqualsLiteral("1.1"))
                 mHttpVersion = NS_HTTP_VERSION_1_1;
-            else if (!PL_strcmp(httpVersion, "0.9"))
+            else if (httpVersion.EqualsLiteral("0.9"))
                 mHttpVersion = NS_HTTP_VERSION_0_9;
             else
                 mHttpVersion = NS_HTTP_VERSION_1_0;
@@ -1335,10 +1335,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("proxy.version"))) {
-        nsXPIDLCString httpVersion;
+        nsCString httpVersion;
         prefs->GetCharPref(HTTP_PREF("proxy.version"), getter_Copies(httpVersion));
-        if (httpVersion) {
-            if (!PL_strcmp(httpVersion, "1.1"))
+        if (!httpVersion.IsVoid()) {
+            if (httpVersion.EqualsLiteral("1.1"))
                 mProxyHttpVersion = NS_HTTP_VERSION_1_1;
             else
                 mProxyHttpVersion = NS_HTTP_VERSION_1_0;
