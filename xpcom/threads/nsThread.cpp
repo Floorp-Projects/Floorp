@@ -1561,9 +1561,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
         memcpy(sMainThreadRunnableName.begin(), name.BeginReading(), length);
         sMainThreadRunnableName[length] = '\0';
       }
-
-      AUTO_PROFILER_LABEL_DYNAMIC("nsThread::ProcessNextEvent", EVENTS,
-                                  name.get());
 #endif
       Maybe<AutoTimeDurationHelper> timeDurationHelper;
       if (priority == nsIRunnablePriority::PRIORITY_INPUT) {
