@@ -207,7 +207,6 @@ body[dir="rtl"] .histogram {
 
 .keyed-histogram {
   white-space: nowrap;
-  padding: 15px;
   position: relative; /* required for position:absolute of the contained .copy-node */
   overflow: hidden;
 }
@@ -215,7 +214,7 @@ body[dir="rtl"] .histogram {
 .keyed-histogram-title {
   text-overflow: ellipsis;
   width: 100%;
-  margin: 10px;
+  margin: 12px 0;
   font-weight: bold;
   font-size: 120%;
   white-space: nowrap;
@@ -274,10 +273,9 @@ body[dir="rtl"] th {
 }
 
 caption {
-  font-weight: bold;
-  white-space: nowrap;
   text-align: left;
-  font-size: large;
+  font-size: xx-large;
+  margin: 1em 0 0.5em 0;
 }
 
 body[dir="rtl"] caption {
@@ -301,9 +299,4 @@ body[dir="rtl"] .copy-node {
 
 #raw-ping-data {
   font-size: 15px;
-}
-
-caption {
-  font-size: larger;
-  margin: 5px 0;
 }

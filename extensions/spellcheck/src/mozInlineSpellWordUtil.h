@@ -17,6 +17,10 @@
 class nsRange;
 class nsINode;
 
+namespace mozilla {
+class TextEditor;
+} // namespace mozilla
+
 /**
  *    This class extracts text from the DOM and builds it into a single string.
  *    The string includes whitespace breaks whereever non-inline elements begin
@@ -61,7 +65,7 @@ public:
       mSoftBegin(nullptr, 0), mSoftEnd(nullptr, 0),
       mNextWordIndex(-1), mSoftTextValid(false) {}
 
-  nsresult Init(const nsWeakPtr& aWeakEditor);
+  nsresult Init(mozilla::TextEditor* aTextEditor);
 
   nsresult SetEnd(nsINode* aEndNode, int32_t aEndOffset);
 

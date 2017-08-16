@@ -1568,8 +1568,9 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
       editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
 
     // Disable the selection if necessary.
-    if (editorFlags & nsIPlaintextEditor::eEditorDisabledMask)
+    if (newTextEditor->IsDisabled()) {
       mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+    }
 
     newTextEditor->SetFlags(editorFlags);
   }
@@ -2572,7 +2573,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
         mValueBeingSet = aValue;
         mIsCommittingComposition = true;
         RefPtr<TextEditor> textEditor = mTextEditor;
-        nsresult rv = textEditor->ForceCompositionEnd();
+        nsresult rv = textEditor->CommitComposition();
         if (!self.get()) {
           return true;
         }

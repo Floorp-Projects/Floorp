@@ -493,6 +493,7 @@
         <hbox>
           <button id="trackingProtectionExceptions"
                   class="accessory-button"
+                  flex="1"
                   hidden="true"
                   label="&trackingProtectionExceptions.label;"
                   accesskey="&trackingProtectionExceptions.accesskey;"
@@ -506,6 +507,7 @@
         <hbox>
           <button id="changeBlockList"
                   class="accessory-button"
+                  flex="1"
                   label="&changeBlockList2.label;"
                   accesskey="&changeBlockList2.accesskey;"
                   preference="pref.privacy.disable_button.change_blocklist"

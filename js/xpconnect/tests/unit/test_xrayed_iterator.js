@@ -3,18 +3,18 @@ function run_test() {
 
   var toEval = [
     "var customIterator = {",
-    "  _array: [6, 7, 8, 9],",
-    "  __iterator__: function() {",
+    "  _array: [6, 7, 8, 9]",
+    "};",
+    "customIterator[Symbol.iterator] = function* () {",
     "    for (var i = 0; i < this._array.length; ++i)",
     "      yield this._array[i];",
-    "  }",
-    "}"
+    "};"
   ].join('\n');
 
   function checkIterator(iterator) {
     var control = [6, 7, 8, 9];
     var i = 0;
-    for (var item in iterator) {
+    for (var item of iterator) {
       do_check_eq(item, control[i]);
       ++i;
     }

@@ -451,7 +451,7 @@ XPCShellEnvironment::Init()
 
     JS::CompartmentOptions options;
     options.creationOptions().setSystemZone();
-    options.behaviors().setVersion(JSVERSION_LATEST);
+    options.behaviors().setVersion(JSVERSION_DEFAULT);
     if (xpc::SharedMemoryEnabled())
         options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
 
