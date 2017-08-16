@@ -45,7 +45,6 @@ class SandboxBrokerClient final : private SandboxBrokerCommon {
 
   int DoCall(const Request* aReq,
              const char* aPath,
-             const char* aPath2,
              void *aReponseBuff,
              bool expectFd);
 };
