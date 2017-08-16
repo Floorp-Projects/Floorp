@@ -19,6 +19,7 @@
 #include "mozilla/gfx/PatternHelpers.h"
 #include "mozilla/Likely.h"
 #include "nsAlgorithm.h"
+#include "nsBidiPresUtils.h"
 #include "nsBlockFrame.h"
 #include "nsCaret.h"
 #include "nsContentUtils.h"
@@ -5230,6 +5231,20 @@ SVGTextFrame::UpdateGlyphPositioning()
 
   if (mState & NS_STATE_SVG_POSITIONING_DIRTY) {
     DoGlyphPositioning();
+  }
+}
+
+void
+SVGTextFrame::MaybeResolveBidiForAnonymousBlockChild()
+{
+  nsIFrame* kid = PrincipalChildList().FirstChild();
+
+  if (kid &&
+      kid->GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION &&
+      PresContext()->BidiEnabled()) {
+    MOZ_ASSERT(static_cast<nsBlockFrame*>(do_QueryFrame(kid)),
+               "Expect anonymous child to be an nsBlockFrame");
+    nsBidiPresUtils::Resolve(static_cast<nsBlockFrame*>(kid));
   }
 }
 
