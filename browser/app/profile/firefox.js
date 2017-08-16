@@ -1313,11 +1313,6 @@ pref("image.mem.max_decoded_image_kb", 256000);
 // Is the sidebar positioned ahead of the content browser
 pref("sidebar.position_start", true);
 
-// Activation from inside of share panel is possible if activationPanelEnabled
-// is true. Pref'd off for release while usage testing is done through beta.
-pref("social.share.activationPanelEnabled", true);
-pref("social.shareDirectory", "https://activations.cdn.mozilla.net/sharePanel.html");
-
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 

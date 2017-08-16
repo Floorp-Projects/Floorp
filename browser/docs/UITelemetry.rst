@@ -128,7 +128,6 @@ divide the following different context menu situations:
 - ``canvas`` if the user opened the context menu on a canvas (that isn't a link);
 - ``media`` if the user opened the context menu on an HTML video or audio element;
 - ``input`` if the user opened the context menu on a text input element;
-- ``social`` if the user opened the context menu inside a social frame;
 - ``other`` for all other openings of the content menu;
 
 Each of these objects (if they exist) then gets a "withcustom" and/or a "withoutcustom" property
