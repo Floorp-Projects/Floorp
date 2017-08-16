@@ -28,10 +28,6 @@ overrider.set({
   fetch() {},
   Preferences: FakePrefs,
   Services: {
-    telemetry: {
-      canRecordBase: true,
-      canRecordExtended: true
-    },
     locale: {
       getAppLocalesAsLangTags() {},
       getRequestedLocale() {},
