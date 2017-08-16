@@ -93,7 +93,7 @@ var PocketPageAction = {
     if (!this.pageAction) {
       this.pageAction = PageActions.addAction(new PageActions.Action({
         id,
-        title: gPocketBundle.GetStringFromName("pocket-button.label"),
+        title: gPocketBundle.GetStringFromName("saveToPocketCmd.label"),
         shownInUrlbar: true,
         wantsIframe: true,
         urlbarIDOverride: "pocket-button-box",

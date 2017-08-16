@@ -973,5 +973,5 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY pageAction.addToUrlbar.label "Add to Address Bar">
 <!ENTITY pageAction.removeFromUrlbar.label "Remove from Address Bar">
 
-<!ENTITY sendToDevice.label2 "Send to Device">
+<!ENTITY sendToDevice.label3 "Send Page to Device">
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
