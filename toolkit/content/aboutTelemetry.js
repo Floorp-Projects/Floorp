@@ -946,7 +946,7 @@ var StackRenderer = {
   },
   renderStacks: function StackRenderer_renderStacks(aPrefix, aStacks,
                                                     aMemoryMap, aRenderHeader) {
-    let div = document.getElementById(aPrefix + "-data");
+    let div = document.getElementById(aPrefix);
     removeAllChildNodes(div);
 
     let fetchE = document.getElementById(aPrefix + "-fetch-symbols");
@@ -980,7 +980,7 @@ var StackRenderer = {
    * @param aFormatArgs formating args to be passed to formatStringFromName.
    */
   renderHeader: function StackRenderer_renderHeader(aPrefix, aFormatArgs) {
-    let div = document.getElementById(aPrefix + "-data");
+    let div = document.getElementById(aPrefix);
 
     let titleElement = document.createElement("span");
     titleElement.className = "stack-title";
@@ -1032,7 +1032,7 @@ function SymbolicationRequest_handleSymbolResponse() {
   fetchElement.hidden = true;
   let hideElement = document.getElementById(this.prefix + "-hide-symbols");
   hideElement.hidden = false;
-  let div = document.getElementById(this.prefix + "-data");
+  let div = document.getElementById(this.prefix);
   removeAllChildNodes(div);
   let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
 
@@ -1343,12 +1343,17 @@ var Search = {
 
   filterElements(elements, filterText) {
     let [isPassFunc, filter] = this.chooseFilter(filterText);
+    let allElementHidden = true;
 
     let needLowerCase = (isPassFunc === this.isPassText);
     for (let element of elements) {
       let subject = needLowerCase ? element.id.toLowerCase() : element.id;
       element.hidden = !isPassFunc(subject, filter);
+      if (allElementHidden && !element.hidden) {
+        allElementHidden = false;
+      }
     }
+    return allElementHidden;
   },
 
   filterKeyedElements(keyedElements, filterText) {
@@ -1405,10 +1410,21 @@ var Search = {
         keyedElements.push({key, datas});
       }
       this.filterKeyedElements(keyedElements, text);
+    } else if (selectedSection.id === "thread-hang-stats-section") {
+      let keyedElements = [];
+      let threads = selectedSection.children[0].children;
+      for (let key of threads) {
+        let datas = key.getElementsByClassName("histogram");
+        keyedElements.push({key, datas});
+      }
+      this.filterKeyedElements(keyedElements, text);
     } else {
       let tables = selectedSection.querySelectorAll("table");
       for (let table of tables) {
-        this.filterElements(table.rows, text);
+        let allElementsHidden = this.filterElements(table.rows, text);
+        if (table.caption) {
+          table.caption.hidden = allElementsHidden;
+        }
       }
     }
   },
@@ -1833,12 +1849,23 @@ function show(selected) {
 
   let current_button = document.querySelector(".category.selected");
   current_button.classList.remove("selected");
+  if (current_button.classList.contains("has-subsection")) {
+    for (let subsection of current_button.children) {
+      subsection.classList.remove("selected");
+    }
+  }
   selected.classList.add("selected");
   // Hack because subsection text appear selected. See Bug 1375114.
   document.getSelection().empty();
 
   let current_section = document.querySelector("section.active");
   let selected_section = document.getElementById(selectedValue);
+  let subsections = current_section.querySelectorAll(".sub-section");
+  if (subsections) {
+    for (let subsection of subsections) {
+      subsection.hidden = false;
+    }
+  }
   if (current_section == selected_section)
     return;
   current_section.classList.remove("active");

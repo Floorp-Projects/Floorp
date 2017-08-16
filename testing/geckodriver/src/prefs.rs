@@ -1,7 +1,7 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 79] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 80] = [
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -123,6 +123,9 @@ lazy_static! {
 
         // Disable popup-blocker
         ("dom.disable_open_during_load", Pref::new(false)),
+
+        // Enabling the support for File object creation in the content process
+        ("dom.file.createInChild", Pref::new(true)),
 
         // Disable the ProcessHangMonitor
         ("dom.ipc.reportProcessHangs", Pref::new(false)),

@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const DEFAULT_TAB_COLOR = "#909090";
 const SAVE_DELAY_MS = 1500;
+const CONTEXTUAL_IDENTITY_ENABLED_PREF = "privacy.userContext.enabled";
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
@@ -114,6 +115,18 @@ _ContextualIdentityService.prototype = {
 
   init(path) {
     this._path = path;
+
+    Services.prefs.addObserver(CONTEXTUAL_IDENTITY_ENABLED_PREF, this);
+  },
+
+  // observe() is only used to listen to container enabling pref
+  async observe() {
+    const contextualIdentitiesEnabled = Services.prefs.getBoolPref(CONTEXTUAL_IDENTITY_ENABLED_PREF);
+    if (!contextualIdentitiesEnabled) {
+      await this.closeContainerTabs();
+      this.notifyAllContainersCleared();
+      this.resetDefault();
+    }
   },
 
   load() {
@@ -147,8 +160,13 @@ _ContextualIdentityService.prototype = {
   },
 
   resetDefault() {
-    this._identities = this._defaultIdentities;
+    this._identities = [];
+    // Clone the array
     this._lastUserContextId = this._defaultIdentities.length;
+    for (let i = 0; i < this._lastUserContextId; i++) {
+      this._identities.push(Object.assign({}, this._defaultIdentities[i]));
+    }
+    this._openedIdentities = new Set();
 
     this._dataReady = true;
 

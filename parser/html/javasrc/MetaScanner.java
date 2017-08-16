@@ -797,13 +797,13 @@ public abstract class MetaScanner {
         }
         if (contentIndex == CONTENT.length && content == null) {
             content = Portability.newStringFromBuffer(strBuf, 0, strBufLen
-                 // CPPONLY: , treeBuilder
+                 // CPPONLY: , treeBuilder, false
             );
             return;
         }
         if (charsetIndex == CHARSET.length && charset == null) {
             charset = Portability.newStringFromBuffer(strBuf, 0, strBufLen
-                 // CPPONLY: , treeBuilder
+                 // CPPONLY: , treeBuilder, false
             );
             return;
         }

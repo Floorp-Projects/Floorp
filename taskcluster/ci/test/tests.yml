@@ -493,6 +493,10 @@ mochitest-a11y:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux64-stylo/debug: ['try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     mozharness:
         script: desktop_unittest.py
@@ -510,6 +514,11 @@ mochitest-a11y:
                     - remove_executables.py
         extra-options:
             - --mochitest-suite=a11y
+    tier:
+        by-test-platform:
+            .*-stylo.*: 2
+            linux64-stylo/debug: 3
+            default: default
 
 mochitest-browser-chrome:
     description: "Mochitest browser-chrome run"
@@ -1233,6 +1242,7 @@ talos-chrome:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1260,6 +1270,7 @@ talos-dromaeojs:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1287,6 +1298,7 @@ talos-g1:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 7200
@@ -1315,6 +1327,7 @@ talos-g2:
     max-run-time: 7200
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
@@ -1341,6 +1354,7 @@ talos-g3:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1368,6 +1382,7 @@ talos-g4:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1395,6 +1410,7 @@ talos-g5:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1423,6 +1439,7 @@ talos-other:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1450,6 +1467,7 @@ talos-perf-reftest:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1473,6 +1491,7 @@ talos-perf-reftest-singletons:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1498,6 +1517,7 @@ talos-svgr:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
@@ -1525,6 +1545,7 @@ talos-tp5o:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
             .*-stylo.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
