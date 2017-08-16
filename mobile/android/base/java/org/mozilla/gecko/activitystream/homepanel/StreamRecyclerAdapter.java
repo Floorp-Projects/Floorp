@@ -27,16 +27,25 @@ import org.mozilla.gecko.activitystream.homepanel.stream.WelcomePanel;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
-import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * The adapter for the Activity Stream panel.
+ *
+ * Every item is in a single adapter: Top Sites, Welcome panel, Highlights.
+ */
 public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> implements RecyclerViewClickSupport.OnItemClickListener,
         RecyclerViewClickSupport.OnItemLongClickListener, StreamHighlightItemContextMenuListener {
 
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + StreamRecyclerAdapter.class.getSimpleName(), 0, 23);
 
     private Cursor topSitesCursor;
+    private List<RowItem> recyclerViewModel; // List of item types backing this RecyclerView.
+
+    private final RowItemType[] FIXED_ROWS = {RowItemType.TOP_PANEL, RowItemType.WELCOME, RowItemType.HIGHLIGHTS_TITLE};
+    private static final int HIGHLIGHTS_OFFSET = 3; // Topsites, Welcome, Highlights Title
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
     private HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
@@ -44,12 +53,42 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     private int tiles;
     private int tilesSize;
 
-    private List<Highlight> highlights;
+    public interface RowItem {
+        RowItemType getRowItemType();
+    }
+
+    public enum RowItemType {
+        TOP_PANEL (-2), // RecyclerView.NO_ID is -1, so start hard-coded stableIds at -2.
+        WELCOME (-3),
+        HIGHLIGHTS_TITLE (-4),
+        HIGHLIGHT_ITEM (-1); // There can be multiple Highlight Items so caller should handle as a special case.
+
+        public final int stableId;
+
+        RowItemType(int stableId) {
+            this.stableId = stableId;
+        }
+
+        int getViewType() {
+            return this.ordinal();
+        }
+    }
+
+    private static RowItem makeRowItemFromType(final RowItemType type) {
+        return new RowItem() {
+            @Override
+            public RowItemType getRowItemType() {
+                return type;
+            }
+        };
+    }
 
     public StreamRecyclerAdapter() {
         setHasStableIds(true);
-
-        highlights = Collections.emptyList();
+        recyclerViewModel = new LinkedList<>();
+        for (RowItemType type : FIXED_ROWS) {
+            recyclerViewModel.add(makeRowItemFromType(type));
+        }
     }
 
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
@@ -66,56 +105,40 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0) {
-            return TopPanel.LAYOUT_ID;
-        } else if (position == 1) {
-            return WelcomePanel.LAYOUT_ID;
-        } else if (position == 2) {
-            return HighlightsTitle.LAYOUT_ID;
-        } else if (position < getItemCount()) {
-            return HighlightItem.LAYOUT_ID;
-        } else {
+        if (position >= recyclerViewModel.size()) {
             throw new IllegalArgumentException("Requested position does not exist");
         }
+        return recyclerViewModel.get(position).getRowItemType().getViewType();
     }
 
     @Override
     public StreamItem onCreateViewHolder(ViewGroup parent, final int type) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
-        if (type == TopPanel.LAYOUT_ID) {
-            return new TopPanel(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
-        } else if (type == WelcomePanel.LAYOUT_ID) {
-            return new WelcomePanel(inflater.inflate(type, parent, false), this);
-        } else if (type == HighlightItem.LAYOUT_ID) {
-            return new HighlightItem(inflater.inflate(type, parent, false), this);
-        } else if (type == HighlightsTitle.LAYOUT_ID) {
-            return new HighlightsTitle(inflater.inflate(type, parent, false));
+        if (type == RowItemType.TOP_PANEL.getViewType()) {
+            return new TopPanel(inflater.inflate(TopPanel.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
+        } else if (type == RowItemType.WELCOME.getViewType()) {
+            return new WelcomePanel(inflater.inflate(WelcomePanel.LAYOUT_ID, parent, false), this);
+        } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
+            return new HighlightItem(inflater.inflate(HighlightItem.LAYOUT_ID, parent, false), this);
+        } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
+            return new HighlightsTitle(inflater.inflate(HighlightsTitle.LAYOUT_ID, parent, false));
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }
     }
 
-    private int translatePositionToCursor(int position) {
-        if (getItemViewType(position) != HighlightItem.LAYOUT_ID) {
-            throw new IllegalArgumentException("Requested cursor position for invalid item");
-        }
-
-        // We have three blank panels at the top, hence remove that to obtain the cursor position
-        return position - 3;
+    private int getHighlightsOffsetFromRVPosition(int position) {
+        return position - HIGHLIGHTS_OFFSET;
     }
 
     @Override
     public void onBindViewHolder(StreamItem holder, int position) {
         int type = getItemViewType(position);
-
-        if (type == HighlightItem.LAYOUT_ID) {
-            final int actualPosition = translatePositionToCursor(position);
-
-            final Highlight highlight = highlights.get(actualPosition);
-
-            ((HighlightItem) holder).bind(highlight, actualPosition, tilesSize);
-        } else if (type == TopPanel.LAYOUT_ID) {
+        if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
+            final Highlight highlight = (Highlight) recyclerViewModel.get(position);
+            ((HighlightItem) holder).bind(highlight, position, tilesSize);
+        } else if (type == RowItemType.TOP_PANEL.getViewType()) {
             ((TopPanel) holder).bind(topSitesCursor, tiles, tilesSize);
         }
     }
@@ -126,14 +149,13 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             return;
         }
 
-        final int actualPosition = translatePositionToCursor(position);
-        final Highlight highlight = highlights.get(actualPosition);
+        final Highlight highlight = (Highlight) recyclerViewModel.get(position);
 
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
                 .forHighlightSource(highlight.getSource())
                 .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
-                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actualPosition)
-                .set(ActivityStreamTelemetry.Contract.COUNT, highlights.size());
+                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, getHighlightsOffsetFromRVPosition(position))
+                .set(ActivityStreamTelemetry.Contract.COUNT, recyclerViewModel.size() - FIXED_ROWS.length);
 
         Telemetry.sendUIEvent(
                 TelemetryContract.Event.LOAD_URL,
@@ -154,13 +176,12 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         }
 
         final HighlightItem highlightItem = (HighlightItem) recyclerView.getChildViewHolder(v);
-        final int actualPosition = translatePositionToCursor(position);
-        openContextMenu(highlightItem, actualPosition, ActivityStreamTelemetry.Contract.INTERACTION_LONG_CLICK);
+        openContextMenu(highlightItem, position, ActivityStreamTelemetry.Contract.INTERACTION_LONG_CLICK);
         return true;
     }
 
     private boolean onItemClickIsValidHighlightItem(final int position) {
-        if (getItemViewType(position) != HighlightItem.LAYOUT_ID) {
+        if (getItemViewType(position) != RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             // Headers (containing topsites and/or the highlights title) do their own click handling as needed
             return false;
         }
@@ -184,12 +205,12 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     }
 
     @Override
-    public void openContextMenu(final HighlightItem highlightItem, final int actualPosition, @NonNull final String interactionExtra) {
-        final Highlight highlight = highlights.get(actualPosition);
+    public void openContextMenu(final HighlightItem highlightItem, final int position, @NonNull final String interactionExtra) {
+        final Highlight highlight = (Highlight) recyclerViewModel.get(position);
 
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
                 .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
-                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actualPosition)
+                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, position - HIGHLIGHTS_OFFSET)
                 .set(ActivityStreamTelemetry.Contract.INTERACTION, interactionExtra)
                 .forHighlightSource(highlight.getSource());
 
@@ -211,42 +232,30 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
     @Override
     public int getItemCount() {
-        // Number of highlights + Top Sites Panel + Welcome Panel + Highlights Title
-        return highlights.size() + 3;
+        return recyclerViewModel.size();
     }
 
     public void swapHighlights(List<Highlight> highlights) {
-        this.highlights = highlights;
-
+        recyclerViewModel = recyclerViewModel.subList(0, HIGHLIGHTS_OFFSET);
+        recyclerViewModel.addAll(highlights);
         notifyDataSetChanged();
     }
 
     public void swapTopSitesCursor(Cursor cursor) {
         this.topSitesCursor = cursor;
-
         notifyItemChanged(0);
     }
 
     @Override
     public long getItemId(int position) {
-        final int type = getItemViewType(position);
-
-        // RecyclerView.NO_ID is -1, so start our hard-coded IDs at -2.
-        switch (type) {
-            case TopPanel.LAYOUT_ID:
-                return -2;
-            case WelcomePanel.LAYOUT_ID:
-                return -3;
-            case HighlightsTitle.LAYOUT_ID:
-                return -4;
-            case HighlightItem.LAYOUT_ID:
-                final Highlight highlight = highlights.get(translatePositionToCursor(position));
-
-                // Highlights are always picked from recent history - So using the history id should
-                // give us a unique (positive) id.
-                return highlight.getHistoryId();
-            default:
-                throw new IllegalArgumentException("StreamItem with LAYOUT_ID=" + type + " not handled in getItemId()");
+        final int viewType = getItemViewType(position);
+        if (viewType == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
+            // Highlights are always picked from recent history - So using the history id should
+            // give us a unique (positive) id.
+            final Highlight highlight = (Highlight) recyclerViewModel.get(position);
+            return highlight.getHistoryId();
+        } else {
+            return recyclerViewModel.get(position).getRowItemType().stableId;
         }
     }
 }
