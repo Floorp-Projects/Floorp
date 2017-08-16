@@ -173,15 +173,15 @@ function nodeWithIntlProp(node) {
   return React.cloneElement(node, {intl});
 }
 
-function shallowWithIntl(node) {
-  return shallow(nodeWithIntlProp(node), {context: {intl}});
+function shallowWithIntl(node, options = {}) {
+  return shallow(nodeWithIntlProp(node), Object.assign({}, options, {context: {intl}}));
 }
 
-function mountWithIntl(node) {
-  return mount(nodeWithIntlProp(node), {
+function mountWithIntl(node, options = {}) {
+  return mount(nodeWithIntlProp(node), Object.assign({}, options, {
     context: {intl},
     childContextTypes: {intl: intlShape}
-  });
+  }));
 }
 
 module.exports = {
