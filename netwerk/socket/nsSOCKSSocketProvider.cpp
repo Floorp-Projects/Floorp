@@ -50,6 +50,7 @@ nsSOCKSSocketProvider::NewSocket(int32_t family,
                                  nsIProxyInfo *proxy,
                                  const OriginAttributes &originAttributes,
                                  uint32_t flags,
+                                 uint32_t tlsFlags,
                                  PRFileDesc **result,
                                  nsISupports **socksInfo)
 {
@@ -75,6 +76,7 @@ nsSOCKSSocketProvider::NewSocket(int32_t family,
                                             proxy,
                                             mVersion,
                                             flags,
+                                            tlsFlags,
                                             sock,
                                             socksInfo);
     if (NS_SUCCEEDED(rv)) {
@@ -92,6 +94,7 @@ nsSOCKSSocketProvider::AddToSocket(int32_t family,
                                    nsIProxyInfo *proxy,
                                    const OriginAttributes &originAttributes,
                                    uint32_t flags,
+                                   uint32_t tlsFlags,
                                    PRFileDesc *sock,
                                    nsISupports **socksInfo)
 {
@@ -101,6 +104,7 @@ nsSOCKSSocketProvider::AddToSocket(int32_t family,
                                             proxy,
                                             mVersion,
                                             flags,
+                                            tlsFlags,
                                             sock,
                                             socksInfo);
 
