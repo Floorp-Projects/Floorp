@@ -3,6 +3,7 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <window title="Testing composition, text and query content events"
+  onload="setTimeout(onLoad, 0);"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript"
@@ -20,9 +21,17 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.open("window_mouse_scroll_win.html", "_blank",
-            "chrome,width=600,height=600");
+function onLoad()
+{
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.unique_opaque_origin", false]]}, runTest);
+}
 
+function runTest()
+{
+  window.open("window_mouse_scroll_win.html", "_blank",
+              "chrome,width=600,height=600");
+}
 ]]>
 </script>
 </window>

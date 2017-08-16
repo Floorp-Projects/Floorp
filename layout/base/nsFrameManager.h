@@ -209,6 +209,8 @@ public:
   void RestoreFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState);
 
 protected:
+  static nsIContent* ParentForUndisplayedMap(const nsIContent* aContent);
+
   void ClearAllMapsFor(nsIContent* aParentContent);
 
   static nsStyleContext* GetStyleContextInMap(UndisplayedMap* aMap,

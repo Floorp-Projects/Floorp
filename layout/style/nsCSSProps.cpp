@@ -1147,11 +1147,11 @@ const KTableEntry nsCSSProps::kColorKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kContentKTable[] = {
-  { eCSSKeyword_open_quote, NS_STYLE_CONTENT_OPEN_QUOTE },
-  { eCSSKeyword_close_quote, NS_STYLE_CONTENT_CLOSE_QUOTE },
-  { eCSSKeyword_no_open_quote, NS_STYLE_CONTENT_NO_OPEN_QUOTE },
-  { eCSSKeyword_no_close_quote, NS_STYLE_CONTENT_NO_CLOSE_QUOTE },
-  { eCSSKeyword__moz_alt_content, NS_STYLE_CONTENT_ALT_CONTENT },
+  { eCSSKeyword_open_quote, uint8_t(StyleContent::OpenQuote) },
+  { eCSSKeyword_close_quote, uint8_t(StyleContent::CloseQuote) },
+  { eCSSKeyword_no_open_quote, uint8_t(StyleContent::NoOpenQuote) },
+  { eCSSKeyword_no_close_quote, uint8_t(StyleContent::NoCloseQuote) },
+  { eCSSKeyword__moz_alt_content, uint8_t(StyleContent::AltContent) },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

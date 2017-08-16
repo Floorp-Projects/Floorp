@@ -3493,7 +3493,7 @@ nsSocketTransport::CloseSocket(PRFileDesc *aFd, nsSocketTransportService *aSTS)
             int err = WSAGetLastError();
             SOCKET_LOG(("nsSocketTransport::CloseSocket - "
                         "GetOverlappedResult err=%x\n", err));
-            if (err != ERROR_IO_PENDING) {
+            if (err != ERROR_IO_INCOMPLETE) {
                 canClose = true;
             }
         }
