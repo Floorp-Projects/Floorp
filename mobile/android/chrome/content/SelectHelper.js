@@ -142,11 +142,9 @@ var SelectHelper = {
 
   fireOnChange: function(element) {
     let win = element.ownerGlobal;
-    let event = element.ownerDocument.createEvent("Events");
-    event.initEvent("change", true, true, element.defaultView, 0,
-        false, false, false, false, null);
     win.setTimeout(function() {
-      element.dispatchEvent(event);
+      element.dispatchEvent(new win.Event("input", { bubbles: true }));
+      element.dispatchEvent(new win.Event("change", { bubbles: true }));
     }, 0);
   },
 
