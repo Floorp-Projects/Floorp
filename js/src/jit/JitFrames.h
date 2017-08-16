@@ -12,7 +12,7 @@
 #include "jscntxt.h"
 #include "jsfun.h"
 
-#include "jit/JitFrameIterator.h"
+#include "jit/JSJitFrameIter.h"
 #include "jit/Safepoints.h"
 
 namespace js {
@@ -311,7 +311,7 @@ MakeFrameDescriptor(uint32_t frameSize, FrameType type, uint32_t headerSize)
 inline JSScript*
 GetTopJitJSScript(JSContext* cx)
 {
-    JitFrameIterator frame(cx);
+    JSJitFrameIter frame(cx);
     MOZ_ASSERT(frame.type() == JitFrame_Exit);
     ++frame;
 

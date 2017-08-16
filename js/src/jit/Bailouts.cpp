@@ -17,7 +17,7 @@
 #include "jit/Snapshots.h"
 #include "vm/TraceLogging.h"
 
-#include "jit/JitFrameIterator-inl.h"
+#include "jit/JSJitFrameIter-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 
@@ -41,7 +41,7 @@ jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
 
     JitActivationIterator jitActivations(cx);
     BailoutFrameInfo bailoutData(jitActivations, sp);
-    JitFrameIterator frame(jitActivations->asJit());
+    JSJitFrameIter frame(jitActivations->asJit());
     MOZ_ASSERT(!frame.ionScript()->invalidated());
     CommonFrameLayout* currentFramePtr = frame.current();
 
@@ -113,7 +113,7 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
 
     JitActivationIterator jitActivations(cx);
     BailoutFrameInfo bailoutData(jitActivations, sp);
-    JitFrameIterator frame(jitActivations->asJit());
+    JSJitFrameIter frame(jitActivations->asJit());
     CommonFrameLayout* currentFramePtr = frame.current();
 
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
@@ -171,7 +171,7 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
 }
 
 BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
-                                   const JitFrameIterator& frame)
+                                   const JSJitFrameIter& frame)
   : machine_(frame.machineState())
 {
     framePointer_ = (uint8_t*) frame.fp();
@@ -203,7 +203,7 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
 
     JitActivationIterator jitActivations(cx);
     BailoutFrameInfo bailoutData(jitActivations, frame.frame());
-    JitFrameIterator frameView(jitActivations->asJit());
+    JSJitFrameIter frameView(jitActivations->asJit());
     CommonFrameLayout* currentFramePtr = frameView.current();
 
     BaselineBailoutInfo* bailoutInfo = nullptr;

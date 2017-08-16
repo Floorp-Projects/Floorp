@@ -591,7 +591,7 @@ jit::LazyLinkTopActivation()
 {
     // First frame should be an exit frame.
     JSContext* cx = TlsContext.get();
-    JitFrameIterator frame(cx);
+    JSJitFrameIter frame(cx);
     LazyLinkExitFrameLayout* ll = frame.exitFrame()->as<LazyLinkExitFrameLayout>();
     RootedScript calleeScript(cx, ScriptFromCalleeToken(ll->jsFrame()->calleeToken()));
 
@@ -2972,7 +2972,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
     size_t frameno = 1;
 
     for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter, ++frameno) {
-        const JitFrameIterator& frame = iter.frame();
+        const JSJitFrameIter& frame = iter.frame();
         MOZ_ASSERT_IF(frameno == 1, frame.isExitFrame() || frame.type() == JitFrame_Bailout);
 
 #ifdef JS_JITSPEW

@@ -665,7 +665,7 @@ SharedStubInfo::outerScript(JSContext* cx)
 {
     if (!outerScript_) {
         js::jit::JitActivationIterator actIter(cx);
-        JitFrameIterator it(actIter->asJit());
+        JSJitFrameIter it(actIter->asJit());
         MOZ_ASSERT(it.isExitFrame());
         ++it;
         MOZ_ASSERT(it.isIonJS());

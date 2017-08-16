@@ -19,10 +19,10 @@
 #include "jsutil.h"
 
 #include "gc/Rooting.h"
-#include "jit/JitFrameIterator.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
 #include "jit/Registers.h" // for RegisterDump
 #endif
+#include "jit/JSJitFrameIter.h"
 #include "js/RootingAPI.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/SavedFrame.h"
@@ -1519,7 +1519,7 @@ class JitActivation : public Activation
 
     // If we are bailing out from Ion, then this field should be a non-null
     // pointer which references the BailoutFrameInfo used to walk the inner
-    // frames. This field is used for all newly constructed JitFrameIterators to
+    // frames. This field is used for all newly constructed JSJitFrameIters to
     // read the innermost frame information from this bailout data instead of
     // reading it from the stack.
     BailoutFrameInfo* bailoutData_;
@@ -1596,7 +1596,7 @@ class JitActivation : public Activation
     // provided, as values need to be read out of snapshots.
     //
     // The inlineDepth must be within bounds of the frame pointed to by iter.
-    RematerializedFrame* getRematerializedFrame(JSContext* cx, const JitFrameIterator& iter,
+    RematerializedFrame* getRematerializedFrame(JSContext* cx, const JSJitFrameIter& iter,
                                                 size_t inlineDepth = 0);
 
     // Look up a rematerialized frame by the fp. If inlineDepth is out of
@@ -1781,7 +1781,7 @@ class WasmActivation : public Activation
 // - code generated for wasm is referred to as Wasm.
 // Also, Jit refers to any one of them.
 //
-// JitFrameIter uses JitFrameIterator to iterate over JSJit code or a
+// JitFrameIter uses JSJitFrameIter to iterate over JSJit code or a
 // WasmFrameIter to iterate over wasm code; only one of them is active at the
 // time. When a sub-iterator is done, the JitFrameIter knows how to stop, move
 // onto the next activation or move onto another kind of Jit code.
@@ -1799,7 +1799,7 @@ class WasmActivation : public Activation
 class JitFrameIter
 {
   protected:
-    mozilla::MaybeOneOf<jit::JitFrameIterator, wasm::WasmFrameIter> iter_;
+    mozilla::MaybeOneOf<jit::JSJitFrameIter, wasm::WasmFrameIter> iter_;
 
   public:
     JitFrameIter() : iter_() {}
@@ -1811,9 +1811,9 @@ class JitFrameIter
     bool isSome() const { return !iter_.empty(); }
     void reset() { MOZ_ASSERT(isSome()); iter_.destroy(); }
 
-    bool isJSJit() const { return isSome() && iter_.constructed<jit::JitFrameIterator>(); }
-    jit::JitFrameIterator& asJSJit() { return iter_.ref<jit::JitFrameIterator>(); }
-    const jit::JitFrameIterator& asJSJit() const { return iter_.ref<jit::JitFrameIterator>(); }
+    bool isJSJit() const { return isSome() && iter_.constructed<jit::JSJitFrameIter>(); }
+    jit::JSJitFrameIter& asJSJit() { return iter_.ref<jit::JSJitFrameIter>(); }
+    const jit::JSJitFrameIter& asJSJit() const { return iter_.ref<jit::JSJitFrameIter>(); }
 
     bool isWasm() const { return isSome() && iter_.constructed<wasm::WasmFrameIter>(); }
     wasm::WasmFrameIter& asWasm() { return iter_.ref<wasm::WasmFrameIter>(); }
@@ -1847,7 +1847,7 @@ class OnlyJSJitFrameIter : public JitFrameIter
         settle();
     }
 
-    const jit::JitFrameIterator& frame() const {
+    const jit::JSJitFrameIter& frame() const {
         return asJSJit();
     }
 };
@@ -2048,10 +2048,10 @@ class FrameIter
     Data data_;
     jit::InlineFrameIterator ionInlineFrames_;
 
-    const jit::JitFrameIterator& jsJitFrame() const { return data_.jitFrames_.asJSJit(); }
+    const jit::JSJitFrameIter& jsJitFrame() const { return data_.jitFrames_.asJSJit(); }
     const wasm::WasmFrameIter& wasmFrame() const { return data_.jitFrames_.asWasm(); }
 
-    jit::JitFrameIterator& jsJitFrame() { return data_.jitFrames_.asJSJit(); }
+    jit::JSJitFrameIter& jsJitFrame() { return data_.jitFrames_.asJSJit(); }
     wasm::WasmFrameIter& wasmFrame() { return data_.jitFrames_.asWasm(); }
 
     bool isIonScripted() const { return isJSJit() && jsJitFrame().isIonScripted(); }
