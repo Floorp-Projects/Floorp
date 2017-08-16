@@ -106,6 +106,7 @@ add_task(async function test_contextualIdentity_events() {
 add_task(async function test_contextualIdentity_with_permissions() {
   const CONTAINERS_PREF = "privacy.userContext.enabled";
   const initial = Services.prefs.getBoolPref(CONTAINERS_PREF);
+
   async function background(ver) {
     let ci;
     await browser.test.assertRejects(browser.contextualIdentities.get("foobar"), "Invalid contextual identitiy: foobar", "API should reject here");
@@ -213,12 +214,41 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
     });
   }
 
+  function waitForPrefChange(pref) {
+    return new Promise(resolve => {
+      function observeChange() {
+        Services.prefs.removeObserver(pref, observeChange);
+        resolve();
+      }
+
+      Services.prefs.addObserver(pref, observeChange);
+    });
+  }
+
   let extension = makeExtension("containers-test@mozilla.org");
   await extension.startup();
   await extension.awaitFinish("contextualIdentities");
   equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
+  const prefChange = waitForPrefChange(CONTAINERS_PREF);
   await extension.unload();
+  // If pref was false we should wait for the pref to change back here.
+  if (initial === false) {
+    await prefChange;
+  }
   equal(Services.prefs.getBoolPref(CONTAINERS_PREF), initial, "Pref should now be initial state");
+
+  // Lets set containers explicitly to be off and test we keep it that way after removal
+  Services.prefs.setBoolPref(CONTAINERS_PREF, false);
+  let extension1 = makeExtension("containers-test-1@mozilla.org");
+  await extension1.startup();
+  await extension1.awaitFinish("contextualIdentities");
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
+  const prefChange1 = waitForPrefChange(CONTAINERS_PREF);
+  await extension1.unload();
+  // We explicitly have a pref that was set off, extensions turned it on
+  // Lets wait until the pref flips back to the user set value of off
+  await prefChange1;
+  equal(Services.prefs.getBoolPref(CONTAINERS_PREF), false, "Pref should now be disabled, whatever it's initial state");
 
   // Lets set containers explicitly to be on and test we keep it that way after removal
   Services.prefs.setBoolPref(CONTAINERS_PREF, true);
