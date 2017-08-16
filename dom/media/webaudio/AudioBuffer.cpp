@@ -248,6 +248,23 @@ AudioBuffer::Create(nsPIDOMWindowInner* aWindow, uint32_t aNumberOfChannels,
   return buffer.forget();
 }
 
+/* static */ already_AddRefed<AudioBuffer>
+AudioBuffer::Create(nsPIDOMWindowInner* aWindow, float aSampleRate,
+                    AudioChunk&& aInitialContents)
+{
+  AudioChunk initialContents = aInitialContents;
+  ErrorResult rv;
+  RefPtr<AudioBuffer> buffer =
+    new AudioBuffer(aWindow, initialContents.ChannelCount(),
+                    initialContents.mDuration, aSampleRate, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+  buffer->mSharedChannels = Move(aInitialContents);
+
+  return buffer.forget();
+}
+
 JSObject*
 AudioBuffer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
