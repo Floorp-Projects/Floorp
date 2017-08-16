@@ -43,50 +43,44 @@
         android:layout_gravity="center_vertical"
         android:layout_marginBottom="8dp"
         android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginTop="8dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:padding="4dp"
         android:contentDescription="@string/content_description_forward"
         android:src="@drawable/ic_forward" />
 
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
+    <ImageView
+        android:id="@+id/lock"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_gravity="center_vertical"
-        android:gravity="center"
-        android:animateLayoutChanges="true">
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="10dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_lock"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:contentDescription="@string/content_description_lock" />
 
-        <ImageView
-            android:id="@+id/lock"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="10dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_lock"
-            android:visibility="gone"
-            android:contentDescription="@string/content_description_lock" />
-
-        <!-- lint: We need to use singleLine=true for the fading edge to work (which is officially deprecated,
-             but still needed), hence we ignore deprecated warnings here.. -->
-        <TextView
-            tools:ignore="Deprecated"
-            android:id="@+id/display_url"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:ellipsize="none"
-            android:requiresFadingEdge="horizontal"
-            android:gravity="center_vertical"
-            android:lines="1"
-            android:maxLines="1"
-            android:singleLine="true"
-            android:textColor="#ffffff"
-            android:textSize="15sp" />
-
-    </LinearLayout>
+    <!-- lint: We need to use singleLine=true for the fading edge to work (which is officially deprecated,
+         but still needed), hence we ignore deprecated warnings here.. -->
+    <TextView
+        tools:ignore="Deprecated"
+        android:id="@+id/display_url"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:ellipsize="none"
+        android:requiresFadingEdge="horizontal"
+        android:gravity="center_vertical"
+        android:lines="1"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:textColor="#ffffff"
+        android:textSize="15sp"
+        tools:text="https://wwww.mozilla.org"/>
 
     <!-- This button only exists in the tablet layout, hence the Ignore="InconsistentLayout" -->
     <ImageButton
