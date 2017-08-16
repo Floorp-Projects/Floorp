@@ -129,6 +129,13 @@ ServiceWorkerRegistrationInfo::GetScriptSpec(nsAString& aScriptSpec)
 }
 
 NS_IMETHODIMP
+ServiceWorkerRegistrationInfo::GetUpdateViaCache(uint16_t* aUpdateViaCache)
+{
+    *aUpdateViaCache = static_cast<uint16_t>(GetUpdateViaCache());
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetLastUpdateTime(PRTime* _retval)
 {
   AssertIsOnMainThread();

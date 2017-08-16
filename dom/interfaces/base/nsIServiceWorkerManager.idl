@@ -74,6 +74,7 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
 
   readonly attribute DOMString scope;
   readonly attribute DOMString scriptSpec;
+  readonly attribute unsigned short updateViaCache;
 
   readonly attribute PRTime lastUpdateTime;
 
