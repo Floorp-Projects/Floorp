@@ -377,6 +377,10 @@ class Tab extends TabBase {
     return this.nativeTab.browser;
   }
 
+  get discarded() {
+    return this.browser.getAttribute("pending") === "true";
+  }
+
   get cookieStoreId() {
     return getCookieStoreIdForTab(this, this.nativeTab);
   }
