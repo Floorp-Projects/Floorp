@@ -58,12 +58,15 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_SizeOfIncludingThis, size_t,
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetOrigin,
                    mozilla::OriginFlags,
                    RawServoStyleSheetContentsBorrowed sheet)
-SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSetOwned, RawGeckoPresContextOwned pres_context)
+SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSet*, RawGeckoPresContextOwned pres_context)
 SERVO_BINDING_FUNC(Servo_StyleSet_Clear, void,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_RebuildCachedData, void,
                    RawServoStyleSetBorrowed set)
-SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, mozilla::OriginFlags,
+// We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
+// work as return values with the Linux 32-bit ABI at the moment because
+// they wrap the value in a struct.
+SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, uint8_t,
                    RawServoStyleSetBorrowed set, bool* viewport_units_used)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_CompatModeChanged, void,
@@ -517,8 +520,11 @@ SERVO_BINDING_FUNC(Servo_Shutdown, void)
 // Restyle and change hints.
 SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed element,
                    nsRestyleHint restyle_hint, nsChangeHint change_hint)
+// We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't
+// work as return values with the Linux 32-bit ABI at the moment because
+// they wrap the value in a struct.
 SERVO_BINDING_FUNC(Servo_TakeChangeHint,
-                   nsChangeHint,
+                   uint32_t,
                    RawGeckoElementBorrowed element,
                    bool* was_restyled)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoStyleContextStrong,

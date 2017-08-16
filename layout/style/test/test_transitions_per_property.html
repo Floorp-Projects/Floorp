@@ -63,14 +63,6 @@ const isServo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 
 // The following properties will be skipped while using Servo backend.
 var skippedProperties = {
-    "background-position": true,    // Bug 1387946
-    "background-position-x": true,  // Bug 1387946
-    "background-position-y": true,  // Bug 1387946
-    "background-size": true,        // Bug 1387946
-    "mask-position": true,          // Bug 1387946
-    "mask-position-x": true,        // Bug 1387946
-    "mask-position-y": true,        // Bug 1387946
-    "mask-size": true,              // Bug 1387946
     "box-shadow": true,             // Bug 1387973
     "stroke-dasharray": true,       // Bug 1387986
     "stroke-dashoffset": true,      // Bug 1369614
@@ -960,12 +952,10 @@ var filterTests = [
     expected: ["drop-shadow", "rgb(66, 96, 0) 5px 5px 2px"] },
   { start: "blur(25px) drop-shadow(8px 8px)",
     end: "blur(75px)",
-    expected: ["blur", 37.5, "drop-shadow", "rgb(0, 0, 0) 6px 6px 0px"],
-    skipped: isServo }, // Bug 1387982
+    expected: ["blur", 37.5, "drop-shadow", "rgb(0, 0, 0) 6px 6px 0px"] },
   { start: "blur(75px)",
     end: "blur(25px) drop-shadow(8px 8px)",
-    expected: ["blur", 62.5, "drop-shadow", "rgb(0, 0, 0) 2px 2px 0px"],
-    skipped: isServo }, // Bug 1387982
+    expected: ["blur", 62.5, "drop-shadow", "rgb(0, 0, 0) 2px 2px 0px"] },
   { start: "drop-shadow(2px 2px blue)",
     end: "none",
     expected: ["drop-shadow", "rgba(0, 0, 255, 0.75) 1.5px 1.5px 0px"] },
@@ -1637,10 +1627,6 @@ function test_filter_transition(prop) {
   }
   for (var i in filterTests) {
     var test = filterTests[i];
-    // Bug 1387982: remove this after we pass all filter tests.
-    if (!!test.skipped) {
-      continue;
-    }
     div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, test.start, "");
     cs.getPropertyValue(prop);
@@ -2338,36 +2324,47 @@ function test_background_position_coord_transition(prop) {
                        "calc(-5px + 80%)",
                        "calc(40px + 20%)");
 
+  div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "10px, 50px, 30px", "");
   is(cs.getPropertyValue(prop), "10px, 50px, 30px",
      "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "50px, 70px, 30px", "");
   is(cs.getPropertyValue(prop), "20px, 55px, 30px",
      "property " + prop + ": interpolation of lists of lengths");
   check_distance(prop, "10px, 50px, 30px",
                        "20px, 55px, 30px",
                        "50px, 70px, 30px");
+
+  div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "10px, 50%, 30%, 5px", "");
   is(cs.getPropertyValue(prop), "10px, 50%, 30%, 5px",
      "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "50px, 70%, 30%, 25px", "");
   is(cs.getPropertyValue(prop), "20px, 55%, 30%, 10px",
      "property " + prop + ": interpolation of lists of lengths and percents");
   check_distance(prop, "10px, 50%, 30%, 5px",
                        "20px, 55%, 30%, 10px",
                        "50px, 70%, 30%, 25px");
+
+  div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "20%, 8px", "");
   is(cs.getPropertyValue(prop), "20%, 8px",
      "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "12px, 40%", "");
   is(cs.getPropertyValue(prop), "calc(3px + 15%), calc(6px + 10%)",
      "property " + prop + ": interpolation that computes to calc()");
   check_distance(prop, "20%, 8px",
                        "calc(3px + 15%), calc(6px + 10%)",
                        "12px, 40%");
+
+  div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "calc(20% + 40px), 8px, calc(20px + 12%)", "");
   is(cs.getPropertyValue(prop), "calc(40px + 20%), 8px, calc(20px + 12%)",
      "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "12px, calc(20%), calc(8px + 20%)", "");
   is(cs.getPropertyValue(prop), "calc(33px + 15%), calc(6px + 5%), calc(17px + 14%)",
      "property " + prop + ": interpolation that computes to calc()");
@@ -2472,9 +2469,11 @@ function test_background_position_size_common(prop, doesPropTakeListValues,
 
   // Test list values, if appropriate
   if (doesPropTakeListValues) {
+    div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, "10px 40px, 50px 50px, 30px 20px", "");
     is(cs.getPropertyValue(prop), "10px 40px, 50px 50px, 30px 20px",
        "property " + prop + ": computed value before transition");
+    div.style.setProperty("transition-property", prop, "");
     div.style.setProperty(prop, "50px 20px, 70px 50px, 30px 40px", "");
     is(cs.getPropertyValue(prop), "20px 35px, 55px 50px, 30px 25px",
        "property " + prop + ": interpolation of lists of lengths");
@@ -2483,9 +2482,11 @@ function test_background_position_size_common(prop, doesPropTakeListValues,
                            "20px 35px, 55px 50px, 30px 25px",
                            "50px 20px, 70px 50px, 30px 40px");
     }
+    div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, "10px 40%, 50% 50px, 30% 20%, 5px 10px", "");
     is(cs.getPropertyValue(prop), "10px 40%, 50% 50px, 30% 20%, 5px 10px",
        "property " + prop + ": computed value before transition");
+    div.style.setProperty("transition-property", prop, "");
     div.style.setProperty(prop, "50px 20%, 70% 50px, 30% 40%, 25px 50px", "");
     is(cs.getPropertyValue(prop), "20px 35%, 55% 50px, 30% 25%, 10px 20px",
        "property " + prop + ": interpolation of lists of lengths and percents");
@@ -2494,9 +2495,11 @@ function test_background_position_size_common(prop, doesPropTakeListValues,
                            "20px 35%, 55% 50px, 30% 25%, 10px 20px",
                            "50px 20%, 70% 50px, 30% 40%, 25px 50px");
     }
+    div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, "20% 40%, 8px 12px", "");
     is(cs.getPropertyValue(prop), "20% 40%, 8px 12px",
        "property " + prop + ": computed value before transition");
+    div.style.setProperty("transition-property", prop, "");
     div.style.setProperty(prop, "12px 20px, 40% 16%", "");
     is(cs.getPropertyValue(prop), "calc(3px + 15%) calc(5px + 30%), calc(6px + 10%) calc(9px + 4%)",
        "property " + prop + ": interpolation that computes to calc()");
@@ -2505,9 +2508,11 @@ function test_background_position_size_common(prop, doesPropTakeListValues,
                            "calc(3px + 15%) calc(5px + 30%), calc(6px + 10%) calc(9px + 4%)",
                            "12px 20px, 40% 16%");
     }
+    div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, "calc(20% + 40px) calc(40px + 40%), 8px 12%, calc(20px + 12%) calc(24px + 8%)", "");
     is(cs.getPropertyValue(prop), "calc(40px + 20%) calc(40px + 40%), 8px 12%, calc(20px + 12%) calc(24px + 8%)",
        "property " + prop + ": computed value before transition");
+    div.style.setProperty("transition-property", prop, "");
     div.style.setProperty(prop, "12px 20%, calc(20%) calc(16px + 60%), calc(8px + 20%) calc(40px + 16%)", "");
     is(cs.getPropertyValue(prop), "calc(33px + 15%) calc(30px + 35%), calc(6px + 5%) calc(4px + 24%), calc(17px + 14%) calc(28px + 10%)",
        "property " + prop + ": interpolation that computes to calc()");

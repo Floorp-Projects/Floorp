@@ -492,12 +492,6 @@ class Onboarding {
         this.gotoPage(tourId);
         this._removeTourFromNotificationQueue(tourId);
         break;
-      // These tours are tagged completed instantly upon showing.
-      case "onboarding-tour-default-browser":
-      case "onboarding-tour-sync":
-      case "onboarding-tour-performance":
-        this.setToursCompleted([ evt.target.id ]);
-        break;
     }
     let classList = evt.target.classList;
     if (classList.contains("onboarding-tour-item")) {
@@ -556,6 +550,15 @@ class Onboarding {
       } else {
         li.classList.remove("onboarding-active");
       }
+    }
+
+    switch (tourId) {
+      // These tours should tagged completed instantly upon showing.
+      case "onboarding-tour-default-browser":
+      case "onboarding-tour-sync":
+      case "onboarding-tour-performance":
+        this.setToursCompleted([tourId]);
+        break;
     }
   }
 
@@ -827,7 +830,7 @@ class Onboarding {
   _renderOverlayButton() {
     let button = this._window.document.createElement("button");
     let tooltipStringId = this._tourType === "new" ?
-      "onboarding.overlay-icon-tooltip" : "onboarding.overlay-icon-tooltip-updated";
+      "onboarding.overlay-icon-tooltip2" : "onboarding.overlay-icon-tooltip-updated2";
     let tooltip = this._bundle.formatStringFromName(tooltipStringId, [BRAND_SHORT_NAME], 1);
     button.setAttribute("aria-label", tooltip);
     button.id = "onboarding-overlay-button";

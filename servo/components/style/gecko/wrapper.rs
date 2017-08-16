@@ -61,6 +61,7 @@ use gecko_bindings::structs::ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SE
 use gecko_bindings::structs::ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO;
 use gecko_bindings::structs::ELEMENT_HAS_SNAPSHOT;
 use gecko_bindings::structs::EffectCompositor_CascadeLevel as CascadeLevel;
+use gecko_bindings::structs::NODE_DESCENDANTS_NEED_FRAMES;
 use gecko_bindings::structs::NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE;
 use gecko_bindings::structs::NODE_IS_NATIVE_ANONYMOUS;
 use gecko_bindings::structs::nsChangeHint;
@@ -728,6 +729,12 @@ impl<'le> GeckoElement<'le> {
             debug!("(Element not styled, discarding hints)");
         }
     }
+
+    /// This logic is duplicated in Gecko's nsIContent::IsRootOfAnonymousSubtree.
+    fn is_root_of_anonymous_subtree(&self) -> bool {
+        use gecko_bindings::structs::NODE_IS_ANONYMOUS_ROOT;
+        self.flags() & (NODE_IS_ANONYMOUS_ROOT as u32) != 0
+    }
 }
 
 /// Converts flags from the layout used by rust-selectors to the layout used
@@ -1050,6 +1057,12 @@ impl<'le> TElement for GeckoElement<'le> {
 
     unsafe fn unset_animation_only_dirty_descendants(&self) {
         self.unset_flags(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO as u32)
+    }
+
+    unsafe fn clear_descendants_bits(&self) {
+        self.unset_flags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO as u32 |
+                         ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO as u32 |
+                         NODE_DESCENDANTS_NEED_FRAMES as u32)
     }
 
     fn is_visited_link(&self) -> bool {
@@ -1963,9 +1976,12 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         node.owner_doc().mType == structs::root::nsIDocument_Type::eHTML
     }
 
+    fn ignores_nth_child_selectors(&self) -> bool {
+        self.is_root_of_anonymous_subtree()
+    }
+
     fn blocks_ancestor_combinators(&self) -> bool {
-        use gecko_bindings::structs::NODE_IS_ANONYMOUS_ROOT;
-        if self.flags() & (NODE_IS_ANONYMOUS_ROOT as u32) == 0 {
+        if !self.is_root_of_anonymous_subtree() {
             return false
         }
 

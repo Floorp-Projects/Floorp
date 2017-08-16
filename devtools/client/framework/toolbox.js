@@ -442,6 +442,13 @@ Toolbox.prototype = {
         this.doc.getElementById("toolbox-textbox-context-popup");
       this.textBoxContextMenuPopup.addEventListener("popupshowing",
         this._updateTextBoxMenuItems, true);
+      this.doc.addEventListener("contextmenu", (e) => {
+        if (e.originalTarget.closest("input") || e.originalTarget.closest("textarea")) {
+          e.stopPropagation();
+          e.preventDefault();
+          this.openTextBoxContextMenu(e.screenX, e.screenY);
+        }
+      }, true);
 
       this.shortcuts = new KeyShortcuts({
         window: this.doc.defaultView

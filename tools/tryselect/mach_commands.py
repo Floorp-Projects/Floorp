@@ -76,6 +76,12 @@ class TrySelect(MachCommandBase):
                           "from the interface.")
     @CommandArgument('-u', '--update', action='store_true', default=False,
                      help="Update fzf before running.")
+    @CommandArgument('--full', action='store_true', default=False,
+                     help="Use the full set of tasks as input to fzf (instead of "
+                          "target tasks).")
+    @CommandArgument('-p', '--parameters', default=None,
+                     help="Use the given parameters.yml to generate tasks, "
+                          "defaults to latest parameters.yml from mozilla-central")
     def try_fuzzy(self, *args, **kwargs):
         """Select which tasks to use with fzf.
 

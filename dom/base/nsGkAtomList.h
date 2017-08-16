@@ -2231,7 +2231,6 @@ GK_ATOM(DisplayPortMargins, "_displayportmargins")
 GK_ATOM(DisplayPortBase, "_displayportbase")
 GK_ATOM(AsyncScrollLayerCreationFailed, "_asyncscrolllayercreationfailed")
 GK_ATOM(forcemessagemanager, "forcemessagemanager")
-GK_ATOM(isPreloadBrowser, "isPreloadBrowser")
 
 // Names for system metrics
 GK_ATOM(color_picker_available, "color-picker-available")

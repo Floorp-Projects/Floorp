@@ -232,16 +232,9 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     bool isReadOnly;
     nsresult rvRO = aParams->GetBooleanValue(STATE_ATTRIBUTE, &isReadOnly);
     NS_ENSURE_SUCCESS(rvRO, rvRO);
-
-    uint32_t flags;
-    textEditor->GetFlags(&flags);
-    if (isReadOnly) {
-      flags |= nsIPlaintextEditor::eEditorReadonlyMask;
-    } else {
-      flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
-    }
-
-    return textEditor->SetFlags(flags);
+    return isReadOnly ?
+      textEditor->AddFlags(nsIPlaintextEditor::eEditorReadonlyMask) :
+      textEditor->RemoveFlags(nsIPlaintextEditor::eEditorReadonlyMask);
   }
 
   if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS")) {

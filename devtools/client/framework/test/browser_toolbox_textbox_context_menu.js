@@ -3,10 +3,20 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const URL = "data:text/html;charset=utf8,test for textbox context menu";
+// HTML inputs don't automatically get the 'edit' context menu, so we have
+// a helper on the toolbox to do so. Make sure that shows menu items in the
+// right state, and that it works for an input inside of a panel.
 
-add_task(function* () {
-  let toolbox = yield openNewTabAndToolbox(URL, "inspector");
+const URL = "data:text/html;charset=utf8,test for textbox context menu";
+const textboxToolId = "test-tool-1";
+
+registerCleanupFunction(() => {
+  gDevTools.unregisterTool(textboxToolId);
+});
+
+add_task(async function checkMenuEntryStates() {
+  info("Checking the state of edit menuitems with an empty clipboard");
+  let toolbox = await openNewTabAndToolbox(URL, "inspector");
   let textboxContextMenu = toolbox.textBoxContextMenuPopup;
 
   emptyClipboard();
@@ -15,7 +25,7 @@ add_task(function* () {
   let inspector = toolbox.getPanel("inspector");
   let onFocus = once(inspector.searchBox, "focus");
   inspector.searchBox.focus();
-  yield onFocus;
+  await onFocus;
 
   ok(textboxContextMenu, "The textbox context menu is loaded in the toolbox");
 
@@ -30,7 +40,7 @@ add_task(function* () {
 
   let onContextMenuPopup = once(textboxContextMenu, "popupshowing");
   textboxContextMenu.openPopupAtScreen(0, 0, true);
-  yield onContextMenuPopup;
+  await onContextMenuPopup;
 
   is(cmdUndo.getAttribute("disabled"), "true", "cmdUndo is disabled");
   is(cmdDelete.getAttribute("disabled"), "true", "cmdDelete is disabled");
@@ -41,11 +51,41 @@ add_task(function* () {
   is(cmdCut.getAttribute("disabled"), "", "cmdCut is enabled");
   is(cmdCopy.getAttribute("disabled"), "", "cmdCopy is enabled");
   is(cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
-
-  yield cleanup(toolbox);
 });
 
-function* cleanup(toolbox) {
-  yield toolbox.destroy();
-  gBrowser.removeCurrentTab();
+add_task(async function automaticallyBindTexbox() {
+  info("Registering a tool with an input field and making sure the context menu works");
+  gDevTools.registerTool({
+    id: textboxToolId,
+    isTargetSupported: () => true,
+    url: "data:text/html;charset=utf8,<input />",
+    label: "Context menu works without tool intervention",
+    build: function (iframeWindow, toolbox) {
+      this.panel = createTestPanel(iframeWindow, toolbox);
+      return this.panel.open();
+    },
+  });
+
+  let toolbox = await openNewTabAndToolbox(URL, textboxToolId);
+  is(toolbox.currentToolId, textboxToolId, "The custom tool has been opened");
+  await checkTextBox(toolbox.getCurrentPanel().document.querySelector("input"), toolbox);
+});
+
+async function checkTextBox(textBox, {textBoxContextMenuPopup}) {
+  is(textBoxContextMenuPopup.state, "closed", "The menu is closed");
+
+  info("Simulating context click on the textbox and expecting the menu to open");
+  let onContextMenu = once(textBoxContextMenuPopup, "popupshown");
+  EventUtils.synthesizeMouse(textBox, 2, 2, {type: "contextmenu", button: 2},
+                             textBox.ownerDocument.defaultView);
+  await onContextMenu;
+
+  is(textBoxContextMenuPopup.state, "open", "The menu is now visible");
+
+  info("Closing the menu");
+  let onContextMenuHidden = once(textBoxContextMenuPopup, "popuphidden");
+  textBoxContextMenuPopup.hidePopup();
+  await onContextMenuHidden;
+
+  is(textBoxContextMenuPopup.state, "closed", "The menu is closed again");
 }

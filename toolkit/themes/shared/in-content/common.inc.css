@@ -85,10 +85,7 @@ xul|caption > xul|label {
 }
 
 *|*.main-content {
-  padding-top: 40px;
-  padding-inline-end: 44px; /* compensate the 4px margin of child elements */
-  padding-bottom: 48px;
-  padding-inline-start: 48px;
+  padding: 40px 28px;
   overflow: auto;
 }
 
@@ -101,10 +98,13 @@ xul|prefpane > xul|*.content-box {
 xul|groupbox {
   -moz-appearance: none;
   border: none;
-  margin: 15px 0 0;
-  padding-inline-start: 0;
-  padding-inline-end: 0;
+  margin: 0;
+  padding: 0;
   font-size: 1.25rem;
+}
+
+xul|groupbox > xul|caption {
+  padding: 4px 0;
 }
 
 xul|groupbox xul|label:not(.menu-accel):not(.menu-text):not(.indent):not(.learnMore),
@@ -190,6 +190,7 @@ xul|menulist {
   -moz-border-left-colors: none !important;
   border-radius: 2px;
   background-color: var(--in-content-page-background);
+  margin: 0 8px;
 }
 
 html|select:not([size]):not([multiple]) {
@@ -540,8 +541,9 @@ html|a:hover:active,
 /* Checkboxes and radio buttons */
 
 xul|checkbox {
-  margin-inline-start: 0;
   -moz-appearance: none;
+  height: 30px;
+  margin: 2px 0;
 }
 
 xul|*.checkbox-check,
@@ -626,7 +628,7 @@ xul|radio[disabled="true"] > xul|*.radio-check {
 
 xul|*.radio-label-box {
   margin-inline-start: -1px; /* negative margin for the transparent border */
-  margin-inline-end: 10px;
+  margin-inline-end: 8px;
   padding-inline-start: 0;
 }
 
@@ -634,19 +636,19 @@ xul|*.radio-label-box {
 
 *|*#categories {
   -moz-appearance: none;
-  background-color: var(--in-content-category-background);
-  padding-top: 39px;
+  background-color: var(--in-content-page-background);
+  padding-top: 70px;
   margin: 0;
   border-width: 0;
 }
 
 *|*.category {
+  width: 240px;
+  min-height: 48px;
   -moz-appearance: none;
   color: var(--in-content-category-text);
-  border-inline-end-width: 0;
-  padding-inline-start: 40px;
-  padding-inline-end: 21px;
-  min-height: 40px;
+  padding-inline-start: 44px;
+  padding-inline-end: 10px;
   transition: background-color 150ms;
 }
 
@@ -678,6 +680,24 @@ xul|*.radio-label-box {
   fill-opacity: 0.8;
 }
 
+*|*.category[selected] > *|*.category-icon {
+  fill-opacity: 1;
+}
+
+@media (max-width: 960px) {
+  #categories {
+    width: 118px;
+  }
+
+  .category-icon ~ .category-name {
+    display: none;
+  }
+
+  .help-button {
+    font-size: 0 !important;
+  }
+}
+
 /* header */
 
 *|*.header {
@@ -689,9 +709,9 @@ xul|*.radio-label-box {
 }
 
 *|*.header-name {
-  font-size: 2.5rem;
-  font-weight: normal;
-  line-height: 40px;
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 30px;
   margin: 0;
   -moz-user-select: none;
 }

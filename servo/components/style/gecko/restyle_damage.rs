@@ -59,7 +59,7 @@ impl GeckoRestyleDamage {
                                                 &mut any_style_changed)
         };
         let change = if any_style_changed { StyleChange::Changed } else { StyleChange::Unchanged };
-        StyleDifference::new(GeckoRestyleDamage(hint), change)
+        StyleDifference::new(GeckoRestyleDamage(nsChangeHint(hint)), change)
     }
 
     /// Computes the `StyleDifference` between the two `ComputedValues` objects
@@ -84,7 +84,7 @@ impl GeckoRestyleDamage {
         };
 
         // Only pay attention to a reconstruct change hint.
-        let damage = GeckoRestyleDamage(hint) & Self::reconstruct();
+        let damage = GeckoRestyleDamage(nsChangeHint(hint)) & Self::reconstruct();
 
         let change = if damage.is_empty() { StyleChange::Changed } else { StyleChange::Unchanged };
         StyleDifference::new(damage, change)
@@ -99,15 +99,6 @@ impl GeckoRestyleDamage {
     /// other damage.
     pub fn reconstruct() -> Self {
         GeckoRestyleDamage(structs::nsChangeHint_nsChangeHint_ReconstructFrame)
-    }
-
-    /// Assuming |self| is applied to an element, returns the set of damage that
-    /// would be superfluous to apply for descendants.
-    pub fn handled_for_descendants(self) -> Self {
-        let hint = unsafe {
-            bindings::Gecko_HintsHandledForDescendants(self.0)
-        };
-        GeckoRestyleDamage(hint)
     }
 }
 
