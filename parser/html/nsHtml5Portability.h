@@ -61,7 +61,8 @@ class nsHtml5Portability
     static nsHtml5String newStringFromBuffer(char16_t* buf,
                                              int32_t offset,
                                              int32_t length,
-                                             nsHtml5TreeBuilder* treeBuilder);
+                                             nsHtml5TreeBuilder* treeBuilder,
+                                             bool maybeAtomize);
     static nsHtml5String newEmptyString();
     static nsHtml5String newStringFromLiteral(const char* literal);
     static nsHtml5String newStringFromString(nsHtml5String string);

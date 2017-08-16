@@ -40,7 +40,7 @@ public final class Portability {
     }
 
     public static String newStringFromBuffer(@NoLength char[] buf, int offset, int length
-        // CPPONLY: , TreeBuilder treeBuilder
+        // CPPONLY: , TreeBuilder treeBuilder, boolean maybeAtomize
     ) {
         return new String(buf, offset, length);
     }

@@ -8,6 +8,17 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
 XPCOMUtils.defineLazyPreferenceGetter(this, "containersEnabled",
                                       "privacy.userContext.enabled");
 
+Cu.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
+
+const CONTAINER_PREF_INSTALL_DEFAULTS = {
+  "privacy.userContext.enabled": true,
+  "privacy.userContext.longPressBehavior": 2,
+  "privacy.userContext.ui.enabled": true,
+  "privacy.usercontext.about_newtab_segregation.enabled": true,
+};
+
+const CONTAINERS_ENABLED_SETTING_NAME = "privacy.containers";
+
 const convertIdentity = identity => {
   let result = {
     name: ContextualIdentityService.getUserContextLabel(identity.userContextId),
@@ -31,15 +42,35 @@ const convertIdentityFromObserver = wrappedIdentity => {
   return result;
 };
 
+ExtensionPreferencesManager.addSetting(CONTAINERS_ENABLED_SETTING_NAME, {
+  prefNames: Object.keys(CONTAINER_PREF_INSTALL_DEFAULTS),
+
+  setCallback(value) {
+    if (value === true) {
+      return CONTAINER_PREF_INSTALL_DEFAULTS;
+    }
+
+    let prefs = {};
+    for (let pref of this.prefNames) {
+      prefs[pref] = undefined;
+    }
+    return prefs;
+  },
+});
+
 this.contextualIdentities = class extends ExtensionAPI {
+  onStartup() {
+    let {extension} = this;
+
+    if (extension.hasPermission("contextualIdentities")) {
+      ExtensionPreferencesManager.setSetting(extension, CONTAINERS_ENABLED_SETTING_NAME, true);
+    }
+  }
+
   getAPI(context) {
     let self = {
       contextualIdentities: {
         get(cookieStoreId) {
-          if (!containersEnabled) {
-            return Promise.resolve(false);
-          }
-
           let containerId = getContainerForCookieStoreId(cookieStoreId);
           if (!containerId) {
             return Promise.resolve(null);
@@ -50,10 +81,6 @@ this.contextualIdentities = class extends ExtensionAPI {
         },
 
         query(details) {
-          if (!containersEnabled) {
-            return Promise.resolve(false);
-          }
-
           let identities = [];
           ContextualIdentityService.getPublicIdentities().forEach(identity => {
             if (details.name &&
@@ -68,10 +95,6 @@ this.contextualIdentities = class extends ExtensionAPI {
         },
 
         create(details) {
-          if (!containersEnabled) {
-            return Promise.resolve(false);
-          }
-
           let identity = ContextualIdentityService.create(details.name,
                                                           details.icon,
                                                           details.color);
@@ -79,10 +102,6 @@ this.contextualIdentities = class extends ExtensionAPI {
         },
 
         update(cookieStoreId, details) {
-          if (!containersEnabled) {
-            return Promise.resolve(false);
-          }
-
           let containerId = getContainerForCookieStoreId(cookieStoreId);
           if (!containerId) {
             return Promise.resolve(null);
@@ -115,10 +134,6 @@ this.contextualIdentities = class extends ExtensionAPI {
         },
 
         remove(cookieStoreId) {
-          if (!containersEnabled) {
-            return Promise.resolve(false);
-          }
-
           let containerId = getContainerForCookieStoreId(cookieStoreId);
           if (!containerId) {
             return Promise.resolve(null);

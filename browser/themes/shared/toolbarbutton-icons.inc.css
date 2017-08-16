@@ -206,7 +206,7 @@ toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menub
 }
 
 #add-ons-button {
-  list-style-image: url("chrome://browser/skin/addons.svg");
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.svg");
 }
 
 #open-file-button {

@@ -288,10 +288,12 @@ var SidebarUI = {
    * with a different commandID, then the sidebar will be opened using the
    * specified commandID. Otherwise the sidebar will be hidden.
    *
-   * @param {string} commandID ID of the xul:broadcaster element to use.
+   * @param  {string}  commandID     ID of the xul:broadcaster element to use.
+   * @param  {DOMNode} [triggerNode] Node, usually a button, that triggered the
+   *                                 visibility toggling of the sidebar.
    * @return {Promise}
    */
-  toggle(commandID = this.lastOpenedId) {
+  toggle(commandID = this.lastOpenedId, triggerNode) {
     // First priority for a default value is this.lastOpenedId which is set during show()
     // and not reset in hide(), unlike currentID. If show() hasn't been called or the command
     // doesn't exist anymore, then fallback to a default sidebar.
@@ -300,10 +302,10 @@ var SidebarUI = {
     }
 
     if (this.isOpen && commandID == this.currentID) {
-      this.hide();
+      this.hide(triggerNode);
       return Promise.resolve();
     }
-    return this.show(commandID);
+    return this.show(commandID, triggerNode);
   },
 
   /**
@@ -312,10 +314,15 @@ var SidebarUI = {
    *
    * This wraps the internal method, including a ping to telemetry.
    *
-   * @param {string} commandID ID of the xul:broadcaster element to use.
+   * @param {string}  commandID     ID of the xul:broadcaster element to use.
+   * @param {DOMNode} [triggerNode] Node, usually a button, that triggered the
+   *                                showing of the sidebar.
    */
-  show(commandID) {
+  show(commandID, triggerNode) {
     return this._show(commandID).then(() => {
+      if (triggerNode) {
+        updateToggleControlLabel(triggerNode);
+      }
       BrowserUITelemetry.countSidebarEvent(commandID, "show");
     });
   },
@@ -403,8 +410,11 @@ var SidebarUI = {
 
   /**
    * Hide the sidebar.
+   *
+   * @param {DOMNode} [triggerNode] Node, usually a button, that triggered the
+   *                                hiding of the sidebar.
    */
-  hide() {
+  hide(triggerNode) {
     if (!this.isOpen) {
       return;
     }
@@ -437,6 +447,9 @@ var SidebarUI = {
     selBrowser.messageManager.sendAsyncMessage("Sidebar:VisibilityChange",
       {commandID, isOpen: false}
     );
+    if (triggerNode) {
+      updateToggleControlLabel(triggerNode);
+    }
     BrowserUITelemetry.countSidebarEvent(commandID, "hide");
   },
 };

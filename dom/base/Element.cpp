@@ -2406,11 +2406,44 @@ Element::OnlyNotifySameValueSet(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
+Element::SetSingleClassFromParser(nsIAtom* aSingleClassName)
+{
+  // Keep this in sync with SetAttr and SetParsedAttr below.
+
+  if (!mAttrsAndChildren.CanFitMoreAttrs()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAttrValue value(aSingleClassName);
+
+  nsIDocument* document = GetComposedDoc();
+  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, false);
+
+  // In principle, BeforeSetAttr should be called here if a node type
+  // existed that wanted to do something special for class, but there
+  // is no such node type, so calling SetMayHaveClass() directly.
+  SetMayHaveClass();
+
+  return SetAttrAndNotify(kNameSpaceID_None,
+                          nsGkAtoms::_class,
+                          nullptr, // prefix
+                          nullptr, // old value
+                          value,
+                          static_cast<uint8_t>(nsIDOMMutationEvent::ADDITION),
+                          false, // hasListeners
+                          false, // notify
+                          kCallAfterSetAttr,
+                          document,
+                          updateBatch);
+}
+
+nsresult
 Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
                  nsIAtom* aPrefix, const nsAString& aValue,
                  bool aNotify)
 {
-  // Keep this in sync with SetParsedAttr below
+  // Keep this in sync with SetParsedAttr below and SetSingleClassFromParser
+  // above.
 
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
@@ -2475,7 +2508,7 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsIAtom* aName,
                        nsIAtom* aPrefix, nsAttrValue& aParsedValue,
                        bool aNotify)
 {
-  // Keep this in sync with SetAttr above
+  // Keep this in sync with SetAttr and SetSingleClassFromParser above
 
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
@@ -2709,6 +2742,10 @@ Element::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
         // If it is ever made to be exact, we probably need to handle this
         // similarly to how ids are handled in PreIdMaybeChange and
         // PostIdMaybeChange.
+        // Note that SetSingleClassFromParser inlines BeforeSetAttr and
+        // calls SetMayHaveClass directly. Making a subclass take action
+        // on the class attribute in a BeforeSetAttr override would
+        // require revising SetSingleClassFromParser.
         SetMayHaveClass();
       }
     }

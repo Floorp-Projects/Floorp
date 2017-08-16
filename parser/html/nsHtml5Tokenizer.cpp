@@ -231,8 +231,13 @@ nsHtml5Tokenizer::emitOrAppendCharRefBuf(int32_t returnState)
 nsHtml5String
 nsHtml5Tokenizer::strBufToString()
 {
-  nsHtml5String str =
-    nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen, tokenHandler);
+  nsHtml5String str = nsHtml5Portability::newStringFromBuffer(
+    strBuf,
+    0,
+    strBufLen,
+    tokenHandler,
+    !newAttributesEachTime &&
+      attributeName == nsHtml5AttributeName::ATTR_CLASS);
   clearStrBufAfterUse();
   return str;
 }

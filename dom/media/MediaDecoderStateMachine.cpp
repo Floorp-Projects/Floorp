@@ -2462,17 +2462,15 @@ DecodingState::MaybeStartBuffering()
     return;
   }
 
-  bool shouldBuffer;
-  if (Reader()->UseBufferingHeuristics()) {
-    shouldBuffer = IsExpectingMoreData()
-                   && mMaster->HasLowDecodedData()
-                   && mMaster->HasLowBufferedData();
-  } else {
-    shouldBuffer =
-      (mMaster->OutOfDecodedAudio() && mMaster->IsWaitingAudioData())
-      || (mMaster->OutOfDecodedVideo() && mMaster->IsWaitingVideoData());
+  // Note we could have a wait promise pending when playing non-MSE EME.
+  if ((mMaster->OutOfDecodedAudio() && mMaster->IsWaitingAudioData()) ||
+      (mMaster->OutOfDecodedVideo() && mMaster->IsWaitingVideoData())) {
+    SetState<BufferingState>();
+    return;
   }
-  if (shouldBuffer) {
+
+  if (Reader()->UseBufferingHeuristics() && mMaster->HasLowDecodedData() &&
+      mMaster->HasLowBufferedData() && !mMaster->mCanPlayThrough) {
     SetState<BufferingState>();
   }
 }
@@ -2547,17 +2545,24 @@ BufferingState::Step()
   TimeStamp now = TimeStamp::Now();
   MOZ_ASSERT(!mBufferingStart.IsNull(), "Must know buffering start time.");
 
-  // With buffering heuristics we will remain in the buffering state if
-  // we've not decoded enough data to begin playback, or if we've not
-  // downloaded a reasonable amount of data inside our buffering time.
   if (Reader()->UseBufferingHeuristics()) {
+    if (mMaster->IsWaitingAudioData() || mMaster->IsWaitingVideoData()) {
+      // Can't exit buffering when we are still waiting for data.
+      // Note we don't schedule next loop for we will do that when the wait
+      // promise is resolved.
+      return;
+    }
+    // With buffering heuristics, we exit buffering state when we:
+    // 1. can play through or
+    // 2. time out (specified by mBufferingWait) or
+    // 3. have enough buffered data.
     TimeDuration elapsed = now - mBufferingStart;
-    bool isLiveStream = Resource()->IsLiveStream();
-    if ((isLiveStream || !mMaster->mCanPlayThrough)
-        && elapsed
-           < TimeDuration::FromSeconds(mBufferingWait * mMaster->mPlaybackRate)
-        && mMaster->HasLowBufferedData(TimeUnit::FromSeconds(mBufferingWait))
-        && IsExpectingMoreData()) {
+    TimeDuration timeout =
+      TimeDuration::FromSeconds(mBufferingWait * mMaster->mPlaybackRate);
+    bool stopBuffering =
+      mMaster->mCanPlayThrough || elapsed >= timeout ||
+      !mMaster->HasLowBufferedData(TimeUnit::FromSeconds(mBufferingWait));
+    if (!stopBuffering) {
       SLOG("Buffering: wait %ds, timeout in %.3lfs",
            mBufferingWait, mBufferingWait - elapsed.ToSeconds());
       mMaster->ScheduleStateMachineIn(TimeUnit::FromMicroseconds(USECS_PER_S));

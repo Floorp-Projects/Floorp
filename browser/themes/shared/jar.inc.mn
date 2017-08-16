@@ -102,7 +102,6 @@
   skin/classic/browser/fxa/ios@2x.png                          (../shared/fxa/ios@2x.png)
 
 
-  skin/classic/browser/addons.svg                     (../shared/icons/addons.svg)
   skin/classic/browser/arrow-dropdown-12.svg          (../shared/icons/arrow-dropdown-12.svg)
   skin/classic/browser/arrow-dropdown-16.svg          (../shared/icons/arrow-dropdown-16.svg)
   skin/classic/browser/arrow-left.svg                 (../shared/icons/arrow-left.svg)
@@ -158,6 +157,7 @@
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
   skin/classic/browser/synced-tabs.svg                (../shared/icons/synced-tabs.svg)
+  skin/classic/browser/toolbar.svg                    (../shared/icons/toolbar.svg)
   skin/classic/browser/webIDE.svg                     (../shared/icons/webIDE.svg)
   skin/classic/browser/zoom-in.svg                    (../shared/icons/zoom-in.svg)
   skin/classic/browser/zoom-out.svg                   (../shared/icons/zoom-out.svg)

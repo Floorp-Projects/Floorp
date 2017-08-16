@@ -14,9 +14,10 @@ async function expectWarningText(browser, expectedText) {
 }
 
 add_task(async function setup_storage() {
-  await saveAddress(TEST_ADDRESS_1);
   await saveAddress(TEST_ADDRESS_2);
   await saveAddress(TEST_ADDRESS_3);
+  await saveAddress(TEST_ADDRESS_4);
+  await saveAddress(TEST_ADDRESS_5);
 });
 
 add_task(async function test_click_on_footer() {
@@ -54,21 +55,32 @@ add_task(async function test_press_enter_on_footer() {
   });
 });
 
-add_task(async function test_phishing_warning() {
+add_task(async function test_phishing_warning_single_category() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
     const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
 
-    await openPopupOn(browser, "#street-address");
+    await openPopupOn(browser, "#tel");
     const warningBox = itemsBox.querySelector(".autocomplete-richlistitem:last-child")._warningTextBox;
     ok(warningBox, "Got phishing warning box");
-    await expectWarningText(browser, "Also autofills company, phone, email");
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await expectWarningText(browser, "Also autofills company, phone, email");
+
+    await expectWarningText(browser, "Autofills phone");
+
+    await closePopup(browser);
+  });
+});
+
+add_task(async function test_phishing_warning_complex_categories() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
+    await openPopupOn(browser, "#street-address");
+
+    await expectWarningText(browser, "Also autofills company, email");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await expectWarningText(browser, "Autofills address");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await expectWarningText(browser, "Also autofills company, phone, email");
+    await expectWarningText(browser, "Also autofills company, email");
+    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+    await expectWarningText(browser, "Also autofills company, email");
 
     await closePopup(browser);
   });

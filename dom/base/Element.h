@@ -706,6 +706,13 @@ public:
                               uint8_t* aModType, bool* aHasListeners,
                               bool* aOldValueSet);
 
+  /**
+   * Sets the class attribute to a value that contains no whitespace.
+   * Assumes that we are not notifying and that the attribute hasn't been
+   * set previously.
+   */
+  nsresult SetSingleClassFromParser(nsIAtom* aSingleClassName);
+
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, bool aNotify) override;
   // aParsedValue receives the old value of the attribute. That's useful if

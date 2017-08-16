@@ -6,24 +6,61 @@
 #define nsHtml5String_h
 
 #include "nsString.h"
+#include "nsIAtom.h"
 
 class nsHtml5TreeBuilder;
 
 /**
- * A pass-by-value type that combines an unsafe `nsStringBuffer*` with its
- * logical length (`uint32_t`). (`nsStringBuffer` knows its capacity but not
- * its logical length, i.e. how much of the capacity is in use.)
+ * A pass-by-value type that can represent 
+ *  * nullptr
+ *  * empty string
+ *  * Non-empty string as exactly-sized (capacity is length) `nsStringBuffer*`
+ *  * Non-empty string as an nsIAtom*
  *
  * Holding or passing this type is as unsafe as holding or passing
- * `nsStringBuffer*`.
- *
- * Empty strings and null strings are distinct. Since an empty nsString does
- * not have a an `nsStringBuffer`, both empty and null `nsHtml5String` have
- * `nullptr` as `mBuffer`. If `mBuffer` is `nullptr`, the empty case is marked
- * with `mLength` being zero and the null case with `mLength` being non-zero.
+ * `nsStringBuffer*`/`nsIAtom*`.
  */
 class nsHtml5String final
 {
+private:
+
+  static const uintptr_t kKindMask = uintptr_t(3);
+
+  static const uintptr_t kPtrMask = ~kKindMask;
+
+  enum Kind : uintptr_t {
+    eNull = 0,
+    eEmpty = 1,
+    eStringBuffer = 2,
+    eAtom = 3,
+  };
+
+  inline Kind GetKind() const { return (Kind)(mBits & kKindMask); }
+
+  inline nsStringBuffer* AsStringBuffer() const
+  {
+    MOZ_ASSERT(GetKind() == eStringBuffer);
+    return reinterpret_cast<nsStringBuffer*>(mBits & kPtrMask);
+  }
+
+  inline nsIAtom* AsAtom() const
+  {
+    MOZ_ASSERT(GetKind() == eAtom);
+    return reinterpret_cast<nsIAtom*>(mBits & kPtrMask);
+  }
+
+  inline const char16_t* AsPtr() const
+  {
+    switch (GetKind()) {
+      case eStringBuffer:
+        return reinterpret_cast<char16_t*>(AsStringBuffer()->Data());
+      case eAtom:
+        return AsAtom()->GetUTF16String();
+      default:
+        return nullptr;
+    }
+  }
+
 public:
   /**
    * Default constructor.
@@ -37,29 +74,50 @@ public:
    * Constructor from nullptr.
    */
   inline MOZ_IMPLICIT nsHtml5String(decltype(nullptr))
-    : mBuffer(nullptr)
-    , mLength(UINT32_MAX)
+    : mBits(eNull)
   {
   }
 
-  inline uint32_t Length() const { return mBuffer ? mLength : 0; }
+  inline uint32_t Length() const
+  {
+    switch (GetKind()) {
+      case eStringBuffer:
+        return (AsStringBuffer()->StorageSize()/sizeof(char16_t) - 1);
+      case eAtom:
+        return AsAtom()->GetLength();
+      default:
+        return 0;
+    }
+  }
 
   /**
    * False iff the string is logically null
    */
-  inline MOZ_IMPLICIT operator bool() const { return !(!mBuffer && mLength); }
+  inline MOZ_IMPLICIT operator bool() const { return mBits; }
+
+  /**
+   * Get the underlying nsIAtom* or nullptr if this nsHtml5String
+   * does not hold an atom.
+   */
+  inline nsIAtom* MaybeAsAtom()
+  {
+    if (GetKind() == eAtom) {
+      return AsAtom();
+    }
+    return nullptr;
+  }
 
   void ToString(nsAString& aString);
 
-  void CopyToBuffer(char16_t* aBuffer);
+  void CopyToBuffer(char16_t* aBuffer) const;
 
-  bool LowerCaseEqualsASCII(const char* aLowerCaseLiteral);
+  bool LowerCaseEqualsASCII(const char* aLowerCaseLiteral) const;
 
-  bool EqualsASCII(const char* aLiteral);
+  bool EqualsASCII(const char* aLiteral) const;
 
-  bool LowerCaseStartsWithASCII(const char* aLowerCaseLiteral);
+  bool LowerCaseStartsWithASCII(const char* aLowerCaseLiteral) const;
 
-  bool Equals(nsHtml5String aOther);
+  bool Equals(nsHtml5String aOther) const;
 
   nsHtml5String Clone();
 
@@ -73,23 +131,23 @@ public:
 
   static nsHtml5String FromString(const nsAString& aString);
 
+  static nsHtml5String FromAtom(already_AddRefed<nsIAtom> aAtom);
+
   static nsHtml5String EmptyString();
 
 private:
-  /**
-   * Constructor from raw parts.
-   */
-  nsHtml5String(already_AddRefed<nsStringBuffer> aBuffer, uint32_t aLength);
 
   /**
-   * nullptr if the string is logically null or logically empty
+   * Constructor from raw bits.
    */
-  nsStringBuffer* mBuffer;
+  explicit nsHtml5String(uintptr_t aBits) : mBits(aBits) {};
 
   /**
-   * The length of the string. non-zero if the string is logically null.
+   * Zero if null, one if empty, otherwise tagged pointer
+   * to either nsIAtom or nsStringBuffer. The two least-significant
+   * bits are tag bits.
    */
-  uint32_t mLength;
+  uintptr_t mBits;
 };
 
 #endif // nsHtml5String_h
