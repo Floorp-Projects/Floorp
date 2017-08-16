@@ -13,7 +13,6 @@
 #include "mozilla/TimeStamp.h"
 
 class nsILoadContextInfo;
-class nsACString;
 
 namespace mozilla {
 namespace net {

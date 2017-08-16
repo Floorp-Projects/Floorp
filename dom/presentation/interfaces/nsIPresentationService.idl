@@ -20,9 +20,9 @@ interface nsIPrincipal;
 #define PRESENTATION_SERVICE_CONTRACTID \
   "@mozilla.org/presentation/presentationservice;1"
 
+#include "nsStringFwd.h"
 #include "nsTArray.h"
 
-class nsString;
 %}
 
 [ref] native URLArrayRef(const nsTArray<nsString>);

@@ -7,7 +7,7 @@
 
 %{C++
 #include "nsTArrayForwardDeclare.h"
-class nsCString;
+#include "nsStringFwd.h"
 %}
 
 [ref] native nsCString(const nsCString);

@@ -10,9 +10,9 @@
 #include "nspr.h"
 #include "nsError.h"
 #include "nsICache.h"
+#include "nsStringFwd.h"
 
 class nsIFile;
-class nsCString;
 class nsCacheEntry;
 class nsICacheVisitor;
 class nsIInputStream;

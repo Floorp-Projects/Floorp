@@ -12,11 +12,10 @@
 #include "nsIAtom.h"
 #include "nsIDocument.h"
 #include "nsIObserver.h"
+#include "nsStringFwd.h"
 #include "nsTArray.h"
 
 #include "mozilla/StaticPtr.h"
-
-class nsAString;
 
 /**
  * The Name Space Manager tracks the association between a NameSpace
