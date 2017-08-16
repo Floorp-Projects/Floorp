@@ -157,12 +157,10 @@
       tabs, adding a new tab or erasing the browsing history. -->
     <string name="content_description_fab_expand">Expand</string>
 
-    <!-- Content description (not visible, for screen readers etc.): "Plus" button for adding a new
-    temporary tab. -->
+    <!-- Description of the "+" button used to open a new temporary tab ("open" is a verb), not displayed and read only by screenreaders. -->
     <string name="content_description_open_tab">Open tab</string>
 
-    <!-- Content description (not visible, for screen readers etc.): "X" button for closing the
-     screen to enter a URL for a new tab to be opened. -->
+    <!-- Description of the "X" button used to close a new temporary tab ("close" is a verb), not displayed and read only by screenreaders. -->
     <string name="content_description_close_tab">Close tab</string>
 
     <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
@@ -324,7 +322,7 @@ be temporary, and you can try again later.</li>
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Your search, your way</string>
     <!-- First run tour (Search): Text -->
-    <string name="firstrun_search_text">Search for something different? Choose another default search engine in Settings.</string>
+    <string name="firstrun_search_text">Searching for something different? Choose another default search engine in Settings.</string>
 
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Add shortcuts to your home screen</string>
