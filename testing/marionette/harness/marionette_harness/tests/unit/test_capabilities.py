@@ -130,6 +130,14 @@ class TestCapabilityMatching(MarionetteTestCase):
         with self.assertRaises(SessionNotCreatedException):
             self.marionette.start_session({"proxy": {"proxyType": None}})
 
+    def test_proxy_type_pac_invalid_url(self):
+        with self.assertRaises(SessionNotCreatedException):
+            self.marionette.start_session({"proxy": {"proxyType": "pac"}})
+
+        with self.assertRaises(SessionNotCreatedException):
+            self.marionette.start_session({"proxy": {"proxyType": "pac",
+                                                     "proxyAutoconfigUrl": None}})
+
     def test_proxy_type_direct(self):
         self.marionette.start_session({"proxy": {"proxyType": "direct"}})
         self.assertIn("proxy", self.marionette.session_capabilities)
