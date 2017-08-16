@@ -172,7 +172,7 @@ window.onload = async function () {
 
   const wrapper = new NewConsoleOutputWrapper(
     document.getElementById("output"),
-    {hud: EventEmitter.decorate({proxy: {}})},
+    {hud: EventEmitter.decorate({proxy: {}}), focus: () => {}},
     {},
     null,
     document,
