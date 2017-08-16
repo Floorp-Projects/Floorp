@@ -2544,19 +2544,19 @@ AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
                                        aHandle);
 }
 
-class AsyncTaskRunnable final : public Runnable
+class JSDispatchableRunnable final : public Runnable
 {
-  ~AsyncTaskRunnable()
+  ~JSDispatchableRunnable()
   {
-    MOZ_ASSERT(!mTask);
+    MOZ_ASSERT(!mDispatchable);
   }
 
 public:
-  explicit AsyncTaskRunnable(JS::AsyncTask* aTask)
-    : mozilla::Runnable("AsyncTaskRunnable")
-    , mTask(aTask)
+  explicit JSDispatchableRunnable(JS::Dispatchable* aDispatchable)
+    : mozilla::Runnable("JSDispatchableRunnable")
+    , mDispatchable(aDispatchable)
   {
-    MOZ_ASSERT(mTask);
+    MOZ_ASSERT(mDispatchable);
   }
 
 protected:
@@ -2566,33 +2566,36 @@ protected:
 
     AutoJSAPI jsapi;
     jsapi.Init();
-    mTask->finish(jsapi.cx());
-    mTask = nullptr;  // mTask may delete itself
+
+    JS::Dispatchable::MaybeShuttingDown maybeShuttingDown =
+      sShuttingDown ? JS::Dispatchable::ShuttingDown : JS::Dispatchable::NotShuttingDown;
+
+    mDispatchable->run(jsapi.cx(), maybeShuttingDown);
+    mDispatchable = nullptr;  // mDispatchable may delete itself
 
     return NS_OK;
   }
 
 private:
-  JS::AsyncTask* mTask;
+  JS::Dispatchable* mDispatchable;
 };
 
 static bool
-StartAsyncTaskCallback(JSContext* aCx, JS::AsyncTask* aTask)
+DispatchToEventLoop(void* closure, JS::Dispatchable* aDispatchable)
 {
-  return true;
-}
+  MOZ_ASSERT(!closure);
 
-static bool
-FinishAsyncTaskCallback(JS::AsyncTask* aTask)
-{
-  // AsyncTasks can finish during shutdown so cannot simply
-  // NS_DispatchToMainThread.
+  // This callback may execute either on the main thread or a random JS-internal
+  // helper thread. This callback can be called during shutdown so we cannot
+  // simply NS_DispatchToMainThread. Failure during shutdown is expected and
+  // properly handled by the JS engine.
+
   nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
   if (!mainTarget) {
     return false;
   }
 
-  RefPtr<AsyncTaskRunnable> r = new AsyncTaskRunnable(aTask);
+  RefPtr<JSDispatchableRunnable> r = new JSDispatchableRunnable(aDispatchable);
   MOZ_ALWAYS_SUCCEEDS(mainTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL));
   return true;
 }
@@ -2624,7 +2627,7 @@ nsJSContext::EnsureStatics()
   };
   JS::SetAsmJSCacheOps(jsapi.cx(), &asmJSCacheOps);
 
-  JS::SetAsyncTaskCallbacks(jsapi.cx(), StartAsyncTaskCallback, FinishAsyncTaskCallback);
+  JS::InitDispatchToEventLoop(jsapi.cx(), DispatchToEventLoop, nullptr);
 
   // Set these global xpconnect options...
   Preferences::RegisterCallbackAndCall(SetMemoryHighWaterMarkPrefChangedCallback,
