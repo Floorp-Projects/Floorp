@@ -633,6 +633,16 @@ public:
     return false;
   }
 
+  bool ContainsWithStrictEnd(const ElemType& aInterval) const
+  {
+    for (const auto& interval : mIntervals) {
+      if (interval.ContainsWithStrictEnd(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Shift all values by aOffset.
   SelfType& Shift(const T& aOffset)
   {
