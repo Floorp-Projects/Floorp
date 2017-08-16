@@ -69,6 +69,23 @@ public class Experiments {
     public static final String ENABLE_PROCESSING_BACKGROUND_TELEMETRY = "process-background-telemetry";
 
     /**
+     * Returns if a user is in certain local experiment.
+     * @param experiment Name of experiment to look up
+     * @return returns value for experiment or false if experiment does not exist.
+     */
+    public static boolean isInExperimentLocal(Context context, String experiment) {
+        if (SwitchBoard.isInBucket(context, 0, 20)) {
+            return Experiments.ONBOARDING3_A.equals(experiment);
+        } else if (SwitchBoard.isInBucket(context, 20, 60)) {
+            return Experiments.ONBOARDING3_B.equals(experiment);
+        } else if (SwitchBoard.isInBucket(context, 60, 100)) {
+            return Experiments.ONBOARDING3_C.equals(experiment);
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Returns list of all active experiments, remote and local.
      * @return List of experiment names Strings
      */

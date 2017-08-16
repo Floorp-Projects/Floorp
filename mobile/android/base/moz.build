@@ -648,7 +648,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'firstrun/FirstrunPager.java',
     'firstrun/FirstrunPagerConfig.java',
     'firstrun/FirstrunPanel.java',
-    'firstrun/LastPanel.java',
     'firstrun/RestrictedWelcomePanel.java',
     'firstrun/SyncPanel.java',
     'firstrun/TabQueuePanel.java',
