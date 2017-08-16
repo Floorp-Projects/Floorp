@@ -10,7 +10,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
-#include "jit/JitFrameIterator.h"
+#include "jit/JSJitFrameIter.h"
 
 #include "vm/Debugger.h"
 
@@ -82,7 +82,7 @@ class DebugModeOSRVolatileStub
 };
 
 //
-// A JitFrameIter that updates internal JitFrameIterator in case of
+// A JitFrameIter that updates internal JSJitFrameIter in case of
 // recompilation of an on-stack baseline script.
 //
 

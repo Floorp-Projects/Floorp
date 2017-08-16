@@ -2631,7 +2631,7 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
                 continue;
 
             for (OnlyJSJitFrameIter iter(actIter); !iter.done(); ++iter) {
-                const jit::JitFrameIterator& frame = iter.frame();
+                const jit::JSJitFrameIter& frame = iter.frame();
                 switch (frame.type()) {
                   case JitFrame_BaselineJS:
                     MarkBaselineScriptActiveIfObservable(frame.script(), obs);

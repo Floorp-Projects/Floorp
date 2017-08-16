@@ -1230,7 +1230,7 @@ static void
 MarkActiveBaselineScripts(JSContext* cx, const JitActivationIterator& activation)
 {
     for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
-        const JitFrameIterator& frame = iter.frame();
+        const JSJitFrameIter& frame = iter.frame();
         switch (frame.type()) {
           case JitFrame_BaselineJS:
             frame.script()->baselineScript()->setActive();

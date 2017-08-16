@@ -18,7 +18,7 @@
 #include "vm/Debugger.h"
 #include "vm/Opcodes.h"
 
-#include "jit/JitFrameIterator-inl.h"
+#include "jit/JSJitFrameIter-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"
@@ -506,7 +506,7 @@ JitFrameIter::operator=(const JitFrameIter& another)
         return *this;
 
     if (another.isJSJit()) {
-        iter_.construct<jit::JitFrameIterator>(another.asJSJit());
+        iter_.construct<jit::JSJitFrameIter>(another.asJSJit());
     } else {
         MOZ_ASSERT(another.isWasm());
         iter_.construct<wasm::WasmFrameIter>(another.asWasm());
@@ -519,7 +519,7 @@ JitFrameIter::JitFrameIter(Activation* act)
 {
     MOZ_ASSERT(act->isJit() || act->isWasm());
     if (act->isJit()) {
-        iter_.construct<jit::JitFrameIterator>(act->asJit());
+        iter_.construct<jit::JSJitFrameIter>(act->asJit());
     } else {
         MOZ_ASSERT(act->isWasm());
         iter_.construct<wasm::WasmFrameIter>(act->asWasm());
@@ -531,7 +531,7 @@ JitFrameIter::skipNonScriptedJSFrames()
 {
     if (isJSJit()) {
         // Stop at the first scripted frame.
-        jit::JitFrameIterator& frames = asJSJit();
+        jit::JSJitFrameIter& frames = asJSJit();
         while (!frames.isScripted() && !frames.done())
             ++frames;
     }
@@ -704,7 +704,7 @@ FrameIter::Data::Data(const FrameIter::Data& other)
 FrameIter::FrameIter(JSContext* cx, const CooperatingContext& target,
                      DebuggerEvalOption debuggerEvalOption)
   : data_(cx, target, debuggerEvalOption),
-    ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
+    ionInlineFrames_(cx, (js::jit::JSJitFrameIter*) nullptr)
 {
     // settleOnActivation can only GC if principals are given.
     JS::AutoSuppressGCAnalysis nogc;
@@ -713,7 +713,7 @@ FrameIter::FrameIter(JSContext* cx, const CooperatingContext& target,
 
 FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption)
   : data_(cx, debuggerEvalOption, nullptr),
-    ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
+    ionInlineFrames_(cx, (js::jit::JSJitFrameIter*) nullptr)
 {
     // settleOnActivation can only GC if principals are given.
     JS::AutoSuppressGCAnalysis nogc;
@@ -723,7 +723,7 @@ FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption)
 FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
                      JSPrincipals* principals)
   : data_(cx, debuggerEvalOption, principals),
-    ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
+    ionInlineFrames_(cx, (js::jit::JSJitFrameIter*) nullptr)
 {
     settleOnActivation();
 }
@@ -1588,7 +1588,7 @@ jit::JitActivation::clearRematerializedFrames()
 }
 
 jit::RematerializedFrame*
-jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator& iter,
+jit::JitActivation::getRematerializedFrame(JSContext* cx, const JSJitFrameIter& iter,
                                            size_t inlineDepth)
 {
     MOZ_ASSERT(iter.activation() == this);

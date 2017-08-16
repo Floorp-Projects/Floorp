@@ -89,7 +89,7 @@ CodeOffsetJump::fixup(MacroAssembler* masm)
 void*
 jit::GetReturnAddressToIonCode(JSContext* cx)
 {
-    JitFrameIterator frame(cx);
+    JSJitFrameIter frame(cx);
     MOZ_ASSERT(frame.type() == JitFrame_Exit,
                "An exit frame is expected as update functions are called with a VMFunction.");
 

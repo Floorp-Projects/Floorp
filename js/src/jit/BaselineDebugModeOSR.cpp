@@ -189,7 +189,7 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
     ICStub* prevFrameStubPtr = nullptr;
     bool needsRecompileHandler = false;
     for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
-        const JitFrameIterator& frame = iter.frame();
+        const JSJitFrameIter& frame = iter.frame();
         switch (frame.type()) {
           case JitFrame_BaselineJS: {
             JSScript* script = frame.script();
@@ -385,7 +385,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const CooperatingContext& target,
     size_t entryIndex = *start;
 
     for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
-        const JitFrameIterator& frame = iter.frame();
+        const JSJitFrameIter& frame = iter.frame();
         switch (frame.type()) {
           case JitFrame_BaselineJS: {
             // If the script wasn't recompiled or is not observed, there's
@@ -578,7 +578,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const CooperatingContext& target,
           }
 
           case JitFrame_BaselineStub: {
-            JitFrameIterator prev(iter.frame());
+            JSJitFrameIter prev(iter.frame());
             ++prev;
             BaselineFrame* prevFrame = prev.baselineFrame();
             if (!obs.shouldRecompileOrInvalidate(prevFrame->script()))
