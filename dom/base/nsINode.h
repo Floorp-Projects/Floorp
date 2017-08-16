@@ -1586,6 +1586,9 @@ private:
     // Set if the element might have any kind of anonymous content children,
     // which would not be found through the element's children list.
     ElementMayHaveAnonymousChildren,
+    // Set if this node has at some point (and may still have)
+    // display:none or display:contents children.
+    NodeMayHaveChildrenWithLayoutBoxesDisabled,
     // Guard value
     BooleanFlagCount
   };
@@ -1727,6 +1730,19 @@ public:
 
   void SetMayHaveAnonymousChildren() { SetBoolFlag(ElementMayHaveAnonymousChildren); }
   bool MayHaveAnonymousChildren() const { return GetBoolFlag(ElementMayHaveAnonymousChildren); }
+
+  void SetMayHaveChildrenWithLayoutBoxesDisabled()
+  {
+    SetBoolFlag(NodeMayHaveChildrenWithLayoutBoxesDisabled);
+  }
+  void UnsetMayHaveChildrenWithLayoutBoxesDisabled()
+  {
+    ClearBoolFlag(NodeMayHaveChildrenWithLayoutBoxesDisabled);
+  }
+  bool MayHaveChildrenWithLayoutBoxesDisabled() const
+  {
+    return GetBoolFlag(NodeMayHaveChildrenWithLayoutBoxesDisabled);
+  }
 
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }

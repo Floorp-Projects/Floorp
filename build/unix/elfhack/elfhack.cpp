@@ -763,6 +763,11 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         }
     }
 
+    if (!first_executable) {
+        fprintf(stderr, "Couldn't find executable section. Skipping\n");
+        return -1;
+    }
+
     unsigned int old_exec = first_executable->getOffset();
 
     relhack->insertBefore(section);

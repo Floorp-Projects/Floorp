@@ -146,9 +146,15 @@ public:
    */
   nsresult AddObjectLocked(T* aObj, const AutoLock& aAutoLock)
   {
+    if (NS_WARN_IF(!aObj)) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Invalid object to add");
+      return NS_ERROR_UNEXPECTED;
+    }
     nsExpirationState* state = aObj->GetExpirationState();
-    MOZ_ASSERT(!state->IsTracked(),
-               "Tried to add an object that's already tracked");
+    if (NS_WARN_IF(state->IsTracked())) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Tried to add an object that's already tracked");
+      return NS_ERROR_UNEXPECTED;
+    }
     nsTArray<T*>& generation = mGenerations[mNewestGeneration];
     uint32_t index = generation.Length();
     if (index > nsExpirationState::MAX_INDEX_IN_GENERATION) {
@@ -175,8 +181,15 @@ public:
    */
   void RemoveObjectLocked(T* aObj, const AutoLock& aAutoLock)
   {
+    if (NS_WARN_IF(!aObj)) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Invalid object to remove");
+      return;
+    }
     nsExpirationState* state = aObj->GetExpirationState();
-    MOZ_ASSERT(state->IsTracked(), "Tried to remove an object that's not tracked");
+    if (NS_WARN_IF(!state->IsTracked())) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Tried to remove an object that's not tracked");
+      return;
+    }
     nsTArray<T*>& generation = mGenerations[state->mGeneration];
     uint32_t index = state->mIndexInGeneration;
     MOZ_ASSERT(generation.Length() > index &&
@@ -342,6 +355,20 @@ protected:
    */
   virtual void NotifyExpiredLocked(T*, const AutoLock&) = 0;
 
+  /**
+   * This may be overridden to perform any post-aging work that needs to be
+   * done while still holding the lock. It will be called once after each timer
+   * event, and each low memory event has been handled.
+   */
+  virtual void NotifyHandlerEndLocked(const AutoLock&) { };
+
+  /**
+   * This may be overridden to perform any post-aging work that needs to be
+   * done outside the lock. It will be called once after each
+   * NotifyEndTransactionLocked call.
+   */
+  virtual void NotifyHandlerEnd() { };
+
   virtual Mutex& GetMutex() = 0;
 
 private:
@@ -385,18 +412,26 @@ private:
   };
 
   void HandleLowMemory() {
-    AutoLock lock(GetMutex());
-    AgeAllGenerationsLocked(lock);
+    {
+      AutoLock lock(GetMutex());
+      AgeAllGenerationsLocked(lock);
+      NotifyHandlerEndLocked(lock);
+    }
+    NotifyHandlerEnd();
   }
 
   void HandleTimeout() {
-    AutoLock lock(GetMutex());
-    AgeOneGenerationLocked(lock);
-    // Cancel the timer if we have no objects to track
-    if (IsEmptyLocked(lock)) {
-      mTimer->Cancel();
-      mTimer = nullptr;
+    {
+      AutoLock lock(GetMutex());
+      AgeOneGenerationLocked(lock);
+      // Cancel the timer if we have no objects to track
+      if (IsEmptyLocked(lock)) {
+        mTimer->Cancel();
+        mTimer = nullptr;
+      }
+      NotifyHandlerEndLocked(lock);
     }
+    NotifyHandlerEnd();
   }
 
   static void TimerCallback(nsITimer* aTimer, void* aThis)
@@ -463,11 +498,13 @@ class nsExpirationTracker : protected ::detail::SingleThreadedExpirationTracker<
   Lock mLock;
 
   AutoLock FakeLock() {
+    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     return AutoLock(mLock);
   }
 
   Lock& GetMutex() override
   {
+    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     return mLock;
   }
 
@@ -475,6 +512,14 @@ class nsExpirationTracker : protected ::detail::SingleThreadedExpirationTracker<
   {
     NotifyExpired(aObject);
   }
+
+  /**
+   * Since there are no users of these callbacks in the single threaded case,
+   * we mark them as final with the hope that the compiler can optimize the
+   * method calls out entirely.
+   */
+  void NotifyHandlerEndLocked(const AutoLock&) final override { }
+  void NotifyHandlerEnd() final override { }
 
 protected:
   virtual void NotifyExpired(T* aObj) = 0;

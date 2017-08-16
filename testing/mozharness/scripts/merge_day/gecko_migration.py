@@ -39,8 +39,7 @@ VALID_MIGRATION_BEHAVIORS = (
 
 # GeckoMigration {{{1
 class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
-                     SelfServeMixin, BuildbotMixin,
-                     MercurialRepoManipulationMixin):
+                     BuildbotMixin, MercurialRepoManipulationMixin):
     config_options = [
         [['--hg-user', ], {
             "action": "store",
@@ -89,7 +88,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                 'bump_second_digit',
                 'commit-changes',
                 'push',
-                'trigger-builders',
             ],
             default_actions=[
                 'clean-repos',
@@ -498,31 +496,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         getattr(self, self.config['migration_behavior'])(end_tag=end_tag)
         self.info("Verify the diff, and apply any manual changes, such as disabling features, and --commit-changes")
 
-    def trigger_builders(self):
-        """Triggers builders that should be run directly after a merge.
-        There are two different types of things we trigger:
-        1) Nightly builds ("post_merge_nightly_branches" in the config).
-           These are triggered with buildapi's nightly build endpoint to avoid
-           duplicating all of the nightly builder names into the gecko
-           migration mozharness configs. (Which would surely get out of date
-           very quickly).
-        2) Arbitrary builders ("post_merge_builders"). These are additional
-           builders to trigger that aren't part of the nightly builder set.
-           Previous example: hg bundle generation builders.
-        """
-        dirs = self.query_abs_dirs()
-        branch = self.config["to_repo_url"].rstrip("/").split("/")[-1]
-        revision = self.query_to_revision()
-        # Horrible hack because our internal buildapi interface doesn't let us
-        # actually do anything. Need to use the public one w/ auth.
-        username = raw_input("LDAP Username: ")
-        password = getpass(prompt="LDAP Password: ")
-        auth = (username, password)
-        for builder in self.config["post_merge_builders"]:
-            self.trigger_arbitrary_job(builder, branch, revision, auth)
-        for nightly_branch in self.config["post_merge_nightly_branches"]:
-            nightly_revision = self.query_hg_revision(os.path.join(dirs["abs_work_dir"], nightly_branch))
-            self.trigger_nightly_builds(nightly_branch, nightly_revision, auth)
 
 # __main__ {{{1
 if __name__ == '__main__':

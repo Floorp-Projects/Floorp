@@ -1738,7 +1738,7 @@ nsSocketTransportService::CheckOverlappedPendingSocketsAreDone()
                 int err = WSAGetLastError();
                 SOCKET_LOG(("STS CheckOverlappedPendingSocketsAreDone "
                             "GetOverlappedResult failed error=%x \n", err));
-                if (err != ERROR_IO_PENDING) {
+                if (err != ERROR_IO_INCOMPLETE) {
                     canClose = true;
                 }
             }
