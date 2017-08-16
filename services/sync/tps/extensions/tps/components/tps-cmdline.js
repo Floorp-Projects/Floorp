@@ -21,7 +21,6 @@ const nsIWindowWatcher               = Components.interfaces.nsIWindowWatcher;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/osfile.jsm");
 
 function TPSCmdLineHandler() {}
 
@@ -58,7 +57,7 @@ TPSCmdLineHandler.prototype = {
 
     options.ignoreUnusedEngines = cmdLine.handleFlag("ignore-unused-engines",
                                                      false);
-    let uri = cmdLine.resolveURI(OS.Path.normalize(uristr)).spec;
+    let uri = cmdLine.resolveURI(uristr).spec;
 
     const onStartupFinished = () => {
       Services.obs.removeObserver(onStartupFinished, "browser-delayed-startup-finished");
@@ -69,7 +68,7 @@ TPSCmdLineHandler.prototype = {
       ios.offline = false;
       Components.utils.import("resource://tps/tps.jsm");
       Components.utils.import("resource://tps/quit.js", TPS);
-      TPS.RunTestPhase(uri, phase, logfile, options).catch(err => TPS.DumpError("TestPhase failed", err));
+      TPS.RunTestPhase(uri, phase, logfile, options);
     };
     Services.obs.addObserver(onStartupFinished, "browser-delayed-startup-finished");
   },
