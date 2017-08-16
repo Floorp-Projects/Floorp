@@ -114,7 +114,7 @@ module.exports = createClass({
       ),
       dom.div(
         {
-          className: "boxmodel-properties-wrapper",
+          className: "boxmodel-properties-wrapper devtools-monospace",
           hidden: !this.state.isOpen,
           tabIndex: 0,
         },
