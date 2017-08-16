@@ -87,7 +87,6 @@ var gPrivacyPane = {
 
     let count = ContextualIdentityService.countContainerTabs();
     if (count == 0) {
-      ContextualIdentityService.notifyAllContainersCleared();
       Services.prefs.setBoolPref("privacy.userContext.enabled", false);
       return;
     }
@@ -108,9 +107,6 @@ var gPrivacyPane = {
                                        okButton, cancelButton, null, null, {});
     if (rv == 0) {
       Services.prefs.setBoolPref("privacy.userContext.enabled", false);
-      ContextualIdentityService.closeContainerTabs().then(() => {
-        ContextualIdentityService.notifyAllContainersCleared();
-      });
       return;
     }
 

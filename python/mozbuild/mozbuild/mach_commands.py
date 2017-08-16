@@ -1917,7 +1917,7 @@ class PackageFrontend(MachCommandBase):
                          'Expected a list of files of the form path@task-id')
                 return 1
             name, task_id = f.rsplit('@', 1)
-            records[name] = DownloadRecord(
+            records[os.path.basename(name)] = DownloadRecord(
                 get_artifact_url(task_id, name), os.path.basename(name),
                 None, None, None, unpack=True)
 

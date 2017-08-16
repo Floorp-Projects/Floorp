@@ -30,7 +30,12 @@ const BUF_SIZE_LIMIT: usize = 1024 * 1024;
 
 // Max table length. Calculating in worth case for one week long video, one
 // frame per table entry in 30 fps.
+#[cfg(target_pointer_width = "64")]
 const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24 * 7;
+
+// Reduce max table length if it is in 32 arch for memory problem.
+#[cfg(target_pointer_width = "32")]
+const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24;
 
 static DEBUG_MODE: std::sync::atomic::AtomicBool = std::sync::atomic::ATOMIC_BOOL_INIT;
 
@@ -1333,13 +1338,12 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
         let tag = des.read_u8()?;
 
         let mut end = 0;
-        // Extension descriptor could be variable size from 0x80 to
-        // 0x80 0x80 0x80, the descriptor length is the byte after that,
-        // so it loops four times.
+        // MSB of extend_or_len indicates more bytes, up to 4 bytes.
         for _ in 0..4 {
             let extend_or_len = des.read_u8()?;
-            if extend_or_len < 0x80 {
-                end = extend_or_len + des.position() as u8;
+            end = (end << 7) + (extend_or_len & 0x7F);
+            if (extend_or_len & 0x80) == 0 {
+                end += des.position() as u8;
                 break;
             }
         };
