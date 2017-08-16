@@ -37,6 +37,10 @@ const whitelist = [
     file: "chrome://browser/skin/page-action.svg",
     platforms: ["linux", "win", "macosx"],
   },
+  {
+    file: "chrome://pocket-shared/skin/pocket.svg",
+    platforms: ["linux", "win", "macosx"],
+  },
 
   // Shared entries
   {
