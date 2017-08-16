@@ -36,21 +36,27 @@ public class FirstrunPagerAdapter extends PagerAdapter {
     private View.OnClickListener listener;
 
     public FirstrunPagerAdapter(Context context, View.OnClickListener listener) {
+        final String appName = context.getString(R.string.app_name);
+
         this.context = context;
         this.listener = listener;
         this.pages = new FirstrunPage[] {
                 new FirstrunPage(
-                        context.getString(R.string.firstrun_tracking_title),
-                        context.getString(R.string.firstrun_tracking_text),
+                        context.getString(R.string.firstrun_defaultbrowser_title),
+                        context.getString(R.string.firstrun_defaultbrowser_text2),
                         R.drawable.onboarding_img1),
                 new FirstrunPage(
-                        context.getString(R.string.firstrun_defaultbrowser_title),
-                        context.getString(R.string.firstrun_defaultbrowser_text, context.getString(R.string.app_name)),
-                        R.drawable.onboarding_img2),
+                        context.getString(R.string.firstrun_search_title),
+                        context.getString(R.string.firstrun_search_text),
+                        R.drawable.onboarding_img4),
                 new FirstrunPage(
-                        context.getString(R.string.firstrun_breaking_title),
-                        context.getString(R.string.firstrun_breaking_text),
+                        context.getString(R.string.firstrun_shortcut_title),
+                        context.getString(R.string.firstrun_shortcut_text, appName),
                         R.drawable.onboarding_img3),
+                new FirstrunPage(
+                        context.getString(R.string.firstrun_privacy_title),
+                        context.getString(R.string.firstrun_privacy_text, appName),
+                        R.drawable.onboarding_img2)
         };
     }
 
