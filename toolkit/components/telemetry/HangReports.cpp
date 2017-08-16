@@ -14,21 +14,16 @@ using namespace HangMonitor;
 // This utility function generates a string key that is used to index the annotations
 // in a hash map from |HangReports::AddHang|.
 nsresult
-ComputeAnnotationsKey(const HangAnnotationsPtr& aAnnotations, nsAString& aKeyOut)
+ComputeAnnotationsKey(const HangAnnotations& aAnnotations, nsAString& aKeyOut)
 {
-  UniquePtr<HangAnnotations::Enumerator> annotationsEnum = aAnnotations->GetEnumerator();
-  if (!annotationsEnum) {
+  if (aAnnotations.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
-  // Append all the attributes to the key, to uniquely identify this annotation.
-  nsAutoString  key;
-  nsAutoString  value;
-  while (annotationsEnum->Next(key, value)) {
-    aKeyOut.Append(key);
-    aKeyOut.Append(value);
+  for (auto& annotation : aAnnotations) {
+    aKeyOut.Append(annotation.mName);
+    aKeyOut.Append(annotation.mValue);
   }
-
   return NS_OK;
 }
 
@@ -41,7 +36,7 @@ HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
                      uint32_t aDuration,
                      int32_t aSystemUptime,
                      int32_t aFirefoxUptime,
-                     HangAnnotationsPtr aAnnotations) {
+                     HangAnnotations&& aAnnotations) {
   // Append the new stack to the stack's circular queue.
   size_t hangIndex = mStacks.AddStack(aStack);
   // Append the hang info at the same index, in mHangInfo.
@@ -53,10 +48,6 @@ HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
     // Remove any reference to the stack overwritten in the circular queue
     // from the annotations.
     PruneStackReferences(hangIndex);
-  }
-
-  if (!aAnnotations) {
-    return;
   }
 
   nsAutoString annotationsKey;
@@ -122,7 +113,8 @@ HangReports::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
   n += mAnnotationInfo.Count() * sizeof(AnnotationInfo);
   for (auto iter = mAnnotationInfo.ConstIter(); !iter.Done(); iter.Next()) {
     n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    n += iter.Data()->mAnnotations->SizeOfIncludingThis(aMallocSizeOf);
+    auto& annotations = iter.Data()->mAnnotations;
+    n += annotations.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
   return n;
 }

@@ -4650,6 +4650,11 @@ pref("gl.multithreaded", true);
 pref("gl.ignore-dx-interop2-blacklist", false);
 pref("gl.use-tls-is-current", 0);
 
+#ifdef XP_MACOSX
+pref("webgl.1.allow-core-profiles", true);
+#else
+pref("webgl.1.allow-core-profiles", false);
+#endif
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);
 pref("webgl.disable-angle", false);

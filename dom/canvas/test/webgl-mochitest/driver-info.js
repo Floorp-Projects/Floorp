@@ -2,34 +2,15 @@ DriverInfo = (function() {
   // ---------------------------------------------------------------------------
   // Debug info handling
 
-  function defaultInfoFunc(str) {
-    console.log('Info: ' + str);
-  }
-
-  var gInfoFunc = defaultInfoFunc;
-  function setInfoFunc(func) {
-    gInfoFunc = func;
-  }
-
   function info(str) {
-    gInfoFunc(str);
+    window.console.log('Info: ' + str);
   }
 
   // ---------------------------------------------------------------------------
   // OS and driver identification
   //   Stolen from dom/canvas/test/webgl/test_webgl_conformance_test_suite.html
   function detectDriverInfo() {
-    try {
-      var cc = SpecialPowers.Cc;
-    } catch (e) {
-      throw 'No SpecialPowers!';
-    }
-
-    const Cc = SpecialPowers.Cc;
-    const Ci = SpecialPowers.Ci;
-    var doc = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser).parseFromString("<html/>", "text/html");
-
-    var canvas = doc.createElement("canvas");
+    var canvas = document.createElement("canvas");
     canvas.width = 1;
     canvas.height = 1;
 
@@ -45,34 +26,21 @@ DriverInfo = (function() {
     }
 
     var ext = gl.getExtension("WEBGL_debug_renderer_info");
-    // this extension is unconditionally available to chrome. No need to check.
+    if (!ext)
+      throw 'WEBGL_debug_renderer_info not available';
 
     var webglRenderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
-    var webglVendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
-    return [webglVendor, webglRenderer];
+    return webglRenderer;
   }
 
   function detectOSInfo() {
-    try {
-      var cc = SpecialPowers.Cc;
-    } catch (e) {
-      throw 'No SpecialPowers!';
-    }
-
-    const Cc = SpecialPowers.Cc;
-    const Ci = SpecialPowers.Ci;
-
-    // From reftest.js:
-    var runtime = Cc['@mozilla.org/xre/app-info;1'].getService(Ci.nsIXULRuntime);
-
     var os = null;
     var version = null;
     if (navigator.platform.indexOf('Win') == 0) {
       os = OS.WINDOWS;
 
-      // code borrowed from browser/modules/test/browser_taskbar_preview.js
-      version = SpecialPowers.Services.sysinfo.getProperty('version');
-      version = parseFloat(version);
+      var versionMatch = /Windows NT (\d+.\d+)/.exec(navigator.userAgent);
+      version = versionMatch ? parseFloat(versionMatch[1]) : null;
       // Version 6.0 is Vista, 6.1 is 7.
 
     } else if (navigator.platform.indexOf('Mac') == 0) {
@@ -81,13 +49,15 @@ DriverInfo = (function() {
       var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
       version = versionMatch ? parseFloat(versionMatch[1]) : null;
 
-    } else if (runtime.widgetToolkit == 'gonk') {
-      os = OS.B2G;
-
     } else if (navigator.appVersion.indexOf('Android') != -1) {
       os = OS.ANDROID;
-      // From layout/tools/reftest/reftest.js:
-      version = SpecialPowers.Services.sysinfo.getProperty('version');
+
+      try {
+        // From layout/tools/reftest/reftest.js:
+        version = SpecialPowers.Services.sysinfo.getProperty('version');
+      } catch (e) {
+        info('No SpecialPowers: can\'t query android version');
+      }
 
     } else if (navigator.platform.indexOf('Linux') == 0) {
       // Must be checked after android, as android also has a 'Linux' platform string.
@@ -102,10 +72,10 @@ DriverInfo = (function() {
     MAC: 'mac',
     LINUX: 'linux',
     ANDROID: 'android',
-    B2G: 'b2g',
   };
 
   var DRIVER = {
+    INTEL: 'intel',
     MESA: 'mesa',
     NVIDIA: 'nvidia',
     ANDROID_X86_EMULATOR: 'android x86 emulator',
@@ -114,6 +84,7 @@ DriverInfo = (function() {
 
   var kOS = null;
   var kOSVersion = null;
+  var kRawDriver = null;
   var kDriver = null;
 
   try {
@@ -123,46 +94,42 @@ DriverInfo = (function() {
   }
 
   try {
-    var glVendor, glRenderer;
-    [glVendor, glRenderer] = detectDriverInfo();
-    info('GL vendor: ' + glVendor);
-    info('GL renderer: ' + glRenderer);
+    kRawDriver = detectDriverInfo();
 
-    if (glRenderer.includes('llvmpipe')) {
+    if (kRawDriver.includes('llvmpipe')) {
       kDriver = DRIVER.MESA;
-    } else if (glRenderer.includes('Android Emulator')) {
+    } else if (kRawDriver.includes('Android Emulator')) {
       kDriver = DRIVER.ANDROID_X86_EMULATOR;
-    } else if (glRenderer.includes('ANGLE')) {
+    } else if (kRawDriver.includes('ANGLE')) {
       kDriver = DRIVER.ANGLE;
-    } else if (glVendor.includes('NVIDIA')) {
+    } else if (kRawDriver.includes('NVIDIA')) {
       kDriver = DRIVER.NVIDIA;
+    } else if (kRawDriver.includes('Intel')) {
+      kDriver = DRIVER.INTEL;
     }
   } catch (e) {
     // detectDriverInfo is fallible where WebGL fails.
   }
 
-  if (kOS) {
-    info('OS detected as: ' + kOS);
-    info('  Version: ' + kOSVersion);
-  } else {
-    info('OS not detected.');
-    info('  `platform`:   ' + navigator.platform);
-    info('  `appVersion`: ' + navigator.appVersion);
-    info('  `userAgent`:  ' + navigator.userAgent);
+  function dump(line_out_func) {
+    let lines = [
+      '[DriverInfo] userAgent: ' + navigator.userAgent,
+      '[DriverInfo] kRawDriver: ' + kRawDriver,
+      '[DriverInfo] kDriver: ' + kDriver,
+      '[DriverInfo] kOS: ' + kOS,
+      '[DriverInfo] kOSVersion: ' + kOSVersion,
+    ];
+    lines.forEach(line_out_func);
   }
-  if (kDriver) {
-    info('GL driver detected as: ' + kDriver);
-  } else {
-    info('GL driver not detected.');
-  }
+
+  dump(x => console.log(x));
 
   return {
-    setInfoFunc: setInfoFunc,
-
-    OS: OS,
     DRIVER: DRIVER,
-    getOS: function() { return kOS; },
+    OS: OS,
+    dump: dump,
     getDriver: function() { return kDriver; },
+    getOS: function() { return kOS; },
     getOSVersion: function() { return kOSVersion; },
   };
 })();

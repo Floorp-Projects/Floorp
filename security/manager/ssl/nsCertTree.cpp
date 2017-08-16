@@ -59,6 +59,7 @@ CompareCacheHashEntry::CompareCacheHashEntry()
 {
   for (int i = 0; i < max_criterions; ++i) {
     mCritInit[i] = false;
+    mCrit[i].SetIsVoid(true);
   }
 }
 
@@ -1281,7 +1282,7 @@ nsCertTree::CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
   NS_ENSURE_TRUE(cert && entry, RETURN_NOTHING);
 
   entry->mCritInit[level] = true;
-  nsXPIDLString &str = entry->mCrit[level];
+  nsString& str = entry->mCrit[level];
 
   switch (crit) {
     case sort_IssuerOrg:
@@ -1343,14 +1344,14 @@ nsCertTree::CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace,
     CmpInitCriterion(b, bce, crit, level);
   }
 
-  nsXPIDLString &str_a = ace->mCrit[level];
-  nsXPIDLString &str_b = bce->mCrit[level];
+  nsString& str_a = ace->mCrit[level];
+  nsString& str_b = bce->mCrit[level];
 
   int32_t result;
-  if (str_a && str_b)
+  if (!str_a.IsVoid() && !str_b.IsVoid())
     result = Compare(str_a, str_b, nsCaseInsensitiveStringComparator());
   else
-    result = !str_a ? (!str_b ? 0 : -1) : 1;
+    result = str_a.IsVoid() ? (str_b.IsVoid() ? 0 : -1) : 1;
 
   if (sort_IssuedDateDescending == crit)
     result *= -1; // reverse compare order

@@ -211,7 +211,7 @@ ThreadMain(void*)
   Telemetry::ProcessedStack stack;
   int32_t systemUptime = -1;
   int32_t firefoxUptime = -1;
-  UniquePtr<HangAnnotations> annotations;
+  HangAnnotations annotations;
 #endif
 
   while (true) {
