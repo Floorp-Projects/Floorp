@@ -16,6 +16,7 @@ namespace mozilla {
 namespace a11y {
 
 typedef mozilla::mscom::COMPtrHolder<IAccessible, IID_IAccessible> IAccessibleHolder;
+typedef mozilla::mscom::COMPtrHolder<IDispatch, IID_IDispatch> IDispatchHolder;
 
 class Accessible;
 
