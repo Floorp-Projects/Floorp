@@ -16,12 +16,30 @@ nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_
   return interner->GetAtom(nsDependentSubstring(buf, buf + length));
 }
 
+static bool
+ContainsWhiteSpace(mozilla::Span<char16_t> aSpan)
+{
+  for (char16_t c : aSpan) {
+    if (nsContentUtils::IsHTMLWhitespace(c)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsHtml5String
 nsHtml5Portability::newStringFromBuffer(char16_t* buf,
                                         int32_t offset,
                                         int32_t length,
-                                        nsHtml5TreeBuilder* treeBuilder)
+                                        nsHtml5TreeBuilder* treeBuilder,
+                                        bool maybeAtomize)
 {
+  if (!length) {
+    return nsHtml5String::EmptyString();
+  }
+  if (maybeAtomize && !ContainsWhiteSpace(mozilla::MakeSpan(buf + offset, length))) {
+    return nsHtml5String::FromAtom(NS_AtomizeMainThread(nsDependentSubstring(buf + offset, length)));
+  }
   return nsHtml5String::FromBuffer(buf + offset, length, treeBuilder);
 }
 

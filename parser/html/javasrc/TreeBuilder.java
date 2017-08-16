@@ -3293,7 +3293,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             }
             charset = Portability.newStringFromBuffer(buffer, start, end
                     - start
-                // CPPONLY: , tb
+                // CPPONLY: , tb, false
             );
         }
         return charset;

@@ -145,6 +145,7 @@ linux64-qr/opt:
     build-platform: linux64/opt
     test-sets:
         - qr-tests
+        - qr-talos
 linux64-qr/debug:
     build-platform: linux64/debug
     test-sets:

@@ -727,18 +727,18 @@
 
     <style name="TextAppearance.FirstrunLight.Main">
         <item name="android:textSize">20sp</item>
-        <item name="android:textColor">@color/text_and_tabs_tray_grey</item>
+        <item name="android:textColor">@color/ob_title</item>
     </style>
 
     <style name="TextAppearance.FirstrunRegular.Body">
         <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/placeholder_grey</item>
+        <item name="android:textColor">@color/ob_subtitle</item>
         <item name="android:lineSpacingMultiplier">1.25</item>
     </style>
 
     <style name="TextAppearance.FirstrunRegular.Link">
         <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/link_blue</item>
+        <item name="android:textColor">@color/ob_click</item>
     </style>
 
     <!-- Remote Tabs home panel -->

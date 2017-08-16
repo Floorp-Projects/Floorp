@@ -20,6 +20,7 @@ import com.booking.rtlviewpager.RtlViewPager;
 
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.home.HomePager.Decor;
 import org.mozilla.gecko.home.TabMenuStrip;
 import org.mozilla.gecko.restrictions.Restrictions;
@@ -67,6 +68,8 @@ public class FirstrunPager extends RtlViewPager {
 
         if (Restrictions.isRestrictedProfile(context)) {
             panels = FirstrunPagerConfig.getRestricted();
+        } else if (FirefoxAccounts.firefoxAccountsExist(context)) {
+            panels = FirstrunPagerConfig.forFxAUser(appContext);
         } else {
             panels = FirstrunPagerConfig.getDefault(appContext);
         }
