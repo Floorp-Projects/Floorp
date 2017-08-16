@@ -85,17 +85,17 @@ NS_INTERFACE_MAP_END
 
 #define XPC_MAP_CLASSNAME         AsyncStatementJSHelper
 #define XPC_MAP_QUOTED_CLASSNAME "AsyncStatementJSHelper"
-#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_GETPROPERTY | \
+#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_RESOLVE | \
                        XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)
 #include "xpc_map_end.h"
 
 NS_IMETHODIMP
-AsyncStatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
-                                    JSContext *aCtx,
-                                    JSObject *aScopeObj,
-                                    jsid aId,
-                                    JS::Value *_result,
-                                    bool *_retval)
+AsyncStatementJSHelper::Resolve(nsIXPConnectWrappedNative *aWrapper,
+                                JSContext *aCtx,
+                                JSObject *aScopeObj,
+                                jsid aId,
+                                bool *resolvedp,
+                                bool *_retval)
 {
   if (!JSID_IS_STRING(aId))
     return NS_OK;
@@ -115,8 +115,14 @@ AsyncStatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
   }
 #endif
 
-  if (::JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "params"))
-    return getParams(stmt, aCtx, scope, _result);
+  if (::JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "params")) {
+    JS::RootedValue val(aCtx);
+    nsresult rv = getParams(stmt, aCtx, scope, val.address());
+    NS_ENSURE_SUCCESS(rv, rv);
+    *_retval = ::JS_DefinePropertyById(aCtx, scope, id, val, JSPROP_RESOLVING);
+    *resolvedp = true;
+    return NS_OK;
+  }
 
   return NS_OK;
 }

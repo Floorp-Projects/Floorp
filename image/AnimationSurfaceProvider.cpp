@@ -43,14 +43,9 @@ AnimationSurfaceProvider::DropImageReference()
     return;  // Nothing to do.
   }
 
-  // RasterImage objects need to be destroyed on the main thread. We also need
-  // to destroy them asynchronously, because if our surface cache entry is
-  // destroyed and we were the only thing keeping |mImage| alive, RasterImage's
-  // destructor may call into the surface cache while whatever code caused us to
-  // get evicted is holding the surface cache lock, causing deadlock.
-  RefPtr<RasterImage> image = mImage;
-  mImage = nullptr;
-  NS_ReleaseOnMainThreadSystemGroup(image.forget(), /* aAlwaysProxy = */ true);
+  // RasterImage objects need to be destroyed on the main thread.
+  NS_ReleaseOnMainThreadSystemGroup("AnimationSurfaceProvider::mImage",
+                                    mImage.forget());
 }
 
 DrawableFrameRef

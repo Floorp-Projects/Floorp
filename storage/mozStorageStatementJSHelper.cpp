@@ -184,18 +184,15 @@ NS_INTERFACE_MAP_END
 
 #define XPC_MAP_CLASSNAME         StatementJSHelper
 #define XPC_MAP_QUOTED_CLASSNAME "StatementJSHelper"
-#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_GETPROPERTY | \
-                       XPC_SCRIPTABLE_WANT_RESOLVE | \
+#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_RESOLVE | \
                        XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)
 #include "xpc_map_end.h"
 
 NS_IMETHODIMP
-StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
-                               JSContext *aCtx,
-                               JSObject *aScopeObj,
-                               jsid aId,
-                               JS::Value *_result,
-                               bool *_retval)
+StatementJSHelper::Resolve(nsIXPConnectWrappedNative *aWrapper,
+                           JSContext *aCtx, JSObject *aScopeObj,
+                           jsid aId, bool *aResolvedp,
+                           bool *_retval)
 {
   if (!JSID_IS_STRING(aId))
     return NS_OK;
@@ -215,33 +212,32 @@ StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
     static_cast<mozIStorageStatement *>(aWrapper->Native())
   );
 
-  JSFlatString *str = JSID_TO_FLAT_STRING(id);
-  if (::JS_FlatStringEqualsAscii(str, "row"))
-    return getRow(stmt, aCtx, scope, _result);
-
-  if (::JS_FlatStringEqualsAscii(str, "params"))
-    return getParams(stmt, aCtx, scope, _result);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-StatementJSHelper::Resolve(nsIXPConnectWrappedNative *aWrapper,
-                           JSContext *aCtx, JSObject *aScopeObj,
-                           jsid aId, bool *aResolvedp,
-                           bool *_retval)
-{
-  if (!JSID_IS_STRING(aId))
-    return NS_OK;
-
-  JS::RootedObject scope(aCtx, aScopeObj);
-  if (::JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(aId), "step")) {
+  JSFlatString* str = JSID_TO_FLAT_STRING(id);
+  if (::JS_FlatStringEqualsAscii(str, "step")) {
     *_retval = ::JS_DefineFunction(aCtx, scope, "step", stepFunc,
                                    0, JSPROP_RESOLVING) != nullptr;
     *aResolvedp = true;
     return NS_OK;
   }
+
+  JS::RootedValue val(aCtx);
+
+  if (::JS_FlatStringEqualsAscii(str, "row")) {
+    nsresult rv = getRow(stmt, aCtx, scope, val.address());
+    NS_ENSURE_SUCCESS(rv, rv);
+    *_retval = ::JS_DefinePropertyById(aCtx, scope, id, val, JSPROP_RESOLVING);
+    *aResolvedp = true;
+    return NS_OK;
+  }
+
+  if (::JS_FlatStringEqualsAscii(str, "params")) {
+    nsresult rv = getParams(stmt, aCtx, scope, val.address());
+    NS_ENSURE_SUCCESS(rv, rv);
+    *_retval = ::JS_DefinePropertyById(aCtx, scope, id, val, JSPROP_RESOLVING);
+    *aResolvedp = true;
+    return NS_OK;
+  }
+
   return NS_OK;
 }
 

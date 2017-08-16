@@ -59,7 +59,6 @@ public:
   bool mDestroyPending;
 
   static NPObject* GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj);
-  static bool HasOwnProperty(NPObject* npobj, NPIdentifier npid);
 
   void trace(JSTracer* trc) {
       JS::TraceEdge(trc, &mJSObj, "nsJSObjWrapper");

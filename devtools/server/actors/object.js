@@ -319,6 +319,11 @@ ObjectActor.prototype = {
     let obj = this.obj;
     let level = 0, i = 0;
 
+    // Do not search safe getters in proxy objects.
+    if (obj.isProxy) {
+      return safeGetterValues;
+    }
+
     // Most objects don't have any safe getters but inherit some from their
     // prototype. Avoid calling getOwnPropertyNames on objects that may have
     // many properties like Array, strings or js objects. That to avoid
@@ -329,7 +334,8 @@ ObjectActor.prototype = {
       level++;
     }
 
-    while (obj) {
+    // Stop iterating when the prototype chain ends or a proxy is found.
+    while (obj && !obj.isProxy) {
       let getters = this._findSafeGetters(obj);
       for (let name of getters) {
         // Avoid overwriting properties from prototypes closer to this.obj. Also
