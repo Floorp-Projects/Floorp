@@ -463,11 +463,11 @@ nsDirectoryService::RegisterCategoryProviders()
     nsAutoCString entry;
     strings->GetNext(entry);
 
-    nsXPIDLCString contractID;
+    nsCString contractID;
     catman->GetCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY, entry.get(),
                              getter_Copies(contractID));
 
-    if (contractID) {
+    if (!contractID.IsVoid()) {
       nsCOMPtr<nsIDirectoryServiceProvider> provider = do_GetService(contractID.get());
       if (provider) {
         RegisterProvider(provider);
