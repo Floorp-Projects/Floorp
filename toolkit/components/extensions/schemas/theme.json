@@ -176,10 +176,6 @@
                 "$ref": "ExtensionURL",
                 "optional": true
               },
-              "share_page": {
-                "$ref": "ExtensionURL",
-                "optional": true
-              },
               "subscribe": {
                 "$ref": "ExtensionURL",
                 "optional": true

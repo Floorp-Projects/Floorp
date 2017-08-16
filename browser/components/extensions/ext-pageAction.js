@@ -338,6 +338,11 @@ this.pageAction = class extends ExtensionAPI {
           let popup = pageAction.getProperty(tab, "popup");
           return Promise.resolve(popup);
         },
+
+        openPopup: function() {
+          let window = windowTracker.topWindow;
+          pageAction.triggerAction(window);
+        },
       },
     };
   }

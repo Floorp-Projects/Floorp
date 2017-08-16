@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <item android:state_enabled="true"
+          android:state_pressed="true"
+          gecko:state_private="true">
+        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
+               android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetRight="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
+            <shape>
+                <solid android:color="@color/action_bar_item_bg_color_private_pressed"/>
+                <corners android:radius="@dimen/browser_toolbar_menu_radius"/>
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_focused="true"
+          android:state_pressed="false"
+          gecko:state_private="true">
+        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
+               android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetRight="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
+            <shape>
+                <solid android:color="@color/action_bar_item_bg_color_private_pressed"/>
+                <corners android:radius="@dimen/browser_toolbar_menu_radius"/>
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_enabled="true"
+          android:state_pressed="true">
+        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
+               android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetRight="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
+            <shape>
+                <solid android:color="@color/action_bar_item_bg_color_pressed"/>
+                <corners android:radius="@dimen/browser_toolbar_menu_radius"/>
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_focused="true"
+          android:state_pressed="false">
+        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
+               android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetRight="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
+            <shape>
+                <solid android:color="@color/action_bar_item_bg_color_pressed"/>
+                <corners android:radius="@dimen/browser_toolbar_menu_radius"/>
+            </shape>
+        </inset>
+    </item>
+
+    <item android:drawable="@android:color/transparent"/>
+</selector>

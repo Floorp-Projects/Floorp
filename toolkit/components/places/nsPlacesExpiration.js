@@ -978,7 +978,7 @@ nsPlacesExpiration.prototype = {
 
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(this, interval * 1000,
-                           Ci.nsITimer.TYPE_REPEATING_SLACK);
+                           Ci.nsITimer.TYPE_REPEATING_SLACK_LOW_PRIORITY);
     if (this._testingMode) {
       Services.obs.notifyObservers(null, TOPIC_TEST_INTERVAL_CHANGED,
                                    interval);

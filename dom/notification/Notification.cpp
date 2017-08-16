@@ -669,7 +669,7 @@ NotificationPermissionRequest::GetTypes(nsIArray** aTypes)
                                                          aTypes);
 }
 
-NS_IMPL_ISUPPORTS(NotificationTelemetryService, nsISupports)
+NS_IMPL_ISUPPORTS(NotificationTelemetryService, nsIObserver)
 
 NotificationTelemetryService::NotificationTelemetryService()
   : mDNDRecorded(false)
@@ -797,6 +797,14 @@ NotificationTelemetryService::RecordDNDSupported()
 
   Telemetry::Accumulate(
     Telemetry::ALERTS_SERVICE_DND_SUPPORTED_FLAG, true);
+}
+
+NS_IMETHODIMP
+NotificationTelemetryService::Observe(nsISupports* aSubject,
+                                      const char* aTopic,
+                                      const char16_t* aData)
+{
+  return NS_OK;
 }
 
 // Observer that the alert service calls to do common tasks and/or dispatch to the

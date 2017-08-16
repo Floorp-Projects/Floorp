@@ -48,7 +48,6 @@ let contextMenuItems = {
   "inspect-separator": "hidden",
   "context-inspect": "hidden",
   "context-bookmarkpage": "hidden",
-  "context-sharepage": "hidden",
 };
 
 add_task(async function pageaction_popup_contextmenu() {

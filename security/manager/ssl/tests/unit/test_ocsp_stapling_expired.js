@@ -32,11 +32,11 @@ do_get_profile();
 Services.prefs.setBoolPref("security.ssl.enable_ocsp_stapling", true);
 Services.prefs.setIntPref("security.OCSP.enabled", 1);
 Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 4);
-var args = [["good", "default-ee", "unused"],
-             ["expiredresponse", "default-ee", "unused"],
-             ["oldvalidperiod", "default-ee", "unused"],
-             ["revoked", "default-ee", "unused"],
-             ["unknown", "default-ee", "unused"],
+var args = [["good", "default-ee", "unused", 0],
+             ["expiredresponse", "default-ee", "unused", 0],
+             ["oldvalidperiod", "default-ee", "unused", 0],
+             ["revoked", "default-ee", "unused", 0],
+             ["unknown", "default-ee", "unused", 0],
             ];
 var ocspResponses = generateOCSPResponses(args, "ocsp_certs");
 // Fresh response, certificate is good.

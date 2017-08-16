@@ -670,6 +670,11 @@ this.browserAction = class extends ExtensionAPI {
           let color = browserAction.getProperty(tab, "badgeBackgroundColor");
           return Promise.resolve(color || [0xd9, 0, 0, 255]);
         },
+
+        openPopup: function() {
+          let window = windowTracker.topWindow;
+          browserAction.triggerAction(window);
+        },
       },
     };
   }

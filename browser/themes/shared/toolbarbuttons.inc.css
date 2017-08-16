@@ -66,16 +66,7 @@ toolbar[brighttext] {
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: none;
-  padding: 0;
-  min-width: 26px;
-  border: 1px solid transparent;
-  border-bottom-style: none;
-  border-radius: var(--toolbarbutton-border-radius) var(--toolbarbutton-border-radius) 0 0;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up,
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  border-radius: 0;
+  padding: 0 var(--toolbarbutton-inner-padding);
 }
 
 #navigator-toolbox:not(:hover) > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-down:not([highlight]) {
@@ -263,9 +254,17 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 /* ::::: bookmark buttons ::::: */
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
-  margin: 0;
-  padding: 2px 3px;
+  margin: 0 2px;
+  padding: 0 4px;
   -moz-appearance: none;
+}
+
+:root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
+  margin: 0 1px;
+}
+
+:root[uidensity=touch] toolbarbutton.bookmark-item:not(.subviewbutton) {
+  padding: 4px;
 }
 
 .bookmark-item > .toolbarbutton-icon,

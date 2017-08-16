@@ -51,12 +51,20 @@
 
 /* Default button vert. margins are 1px/2px, and this can cause misalignment */
 #viewButton {
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin: 0;
+  margin-inline-start: 4px;
 }
 
 #viewButton > .button-box > .button-menu-dropmarker {
   height: auto;
   width: auto;
   margin-inline-end: -3px;
+}
+
+#sidebar-search-container {
+  padding: 4px;
+}
+
+#search-box {
+  margin: 0;
 }

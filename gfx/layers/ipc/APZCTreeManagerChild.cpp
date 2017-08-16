@@ -180,12 +180,6 @@ APZCTreeManagerChild::UpdateZoomConstraints(
 }
 
 void
-APZCTreeManagerChild::CancelAnimation(const ScrollableLayerGuid &aGuid)
-{
-  SendCancelAnimation(aGuid);
-}
-
-void
 APZCTreeManagerChild::SetDPI(float aDpiValue)
 {
   SendSetDPI(aDpiValue);

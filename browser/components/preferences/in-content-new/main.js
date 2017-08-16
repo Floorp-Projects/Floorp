@@ -141,6 +141,8 @@ var gMainPane = {
   _ioSvc: Cc["@mozilla.org/network/io-service;1"].
           getService(Ci.nsIIOService),
 
+  _backoffIndex: 0,
+
   /**
    * Initialization of this.
    */
@@ -152,32 +154,30 @@ var gMainPane = {
 
     if (AppConstants.HAVE_SHELL_SERVICE) {
       this.updateSetDefaultBrowser();
-      if (AppConstants.platform == "win") {
-        // In Windows 8 we launch the control panel since it's the only
-        // way to get all file type association prefs. So we don't know
-        // when the user will select the default.  We refresh here periodically
-        // in case the default changes. On other Windows OS's defaults can also
-        // be set while the prefs are open.
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
 
-        let pollForDefaultBrowser = () => {
-          let uri = win.gBrowser.currentURI.spec;
+      // Exponential backoff mechanism will delay the polling times if user doesn't
+      // trigger SetDefaultBrowser for a long time.
+      let backoffTimes = [1000, 1000, 1000, 1000, 2000, 2000, 2000, 5000, 5000, 10000];
 
-          if ((uri == "about:preferences" || uri == "about:preferences#general") &&
-              document.visibilityState == "visible") {
-            this.updateSetDefaultBrowser();
-          }
+      let pollForDefaultBrowser = () => {
+        let uri = win.gBrowser.currentURI.spec;
 
-          // approximately a "requestIdleInterval"
-          window.setTimeout(() => {
-            window.requestIdleCallback(pollForDefaultBrowser);
-          }, 1000);
-        };
+        if ((uri == "about:preferences" || uri == "about:preferences#general") &&
+            document.visibilityState == "visible") {
+          this.updateSetDefaultBrowser();
+        }
 
+        // approximately a "requestIdleInterval"
         window.setTimeout(() => {
           window.requestIdleCallback(pollForDefaultBrowser);
-        }, 1000);
-      }
+        }, backoffTimes[this._backoffIndex + 1 < backoffTimes.length ?
+                        this._backoffIndex++ : backoffTimes.length - 1]);
+      };
+
+      window.setTimeout(() => {
+        window.requestIdleCallback(pollForDefaultBrowser);
+      }, backoffTimes[this._backoffIndex]);
     }
 
     this.initBrowserContainers();
@@ -860,6 +860,9 @@ var gMainPane = {
     if (AppConstants.HAVE_SHELL_SERVICE) {
       let alwaysCheckPref = document.getElementById("browser.shell.checkDefaultBrowser");
       alwaysCheckPref.value = true;
+
+      // Reset exponential backoff delay time in order to do visual update in pollForDefaultBrowser.
+      this._backoffIndex = 0;
 
       let shellSvc = getShellService();
       if (!shellSvc)
