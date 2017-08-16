@@ -443,7 +443,11 @@ Toolbox.prototype = {
       this.textBoxContextMenuPopup.addEventListener("popupshowing",
         this._updateTextBoxMenuItems, true);
       this.doc.addEventListener("contextmenu", (e) => {
-        if (e.originalTarget.closest("input") || e.originalTarget.closest("textarea")) {
+        if (e.originalTarget.closest("input[type=text]") ||
+            e.originalTarget.closest("input[type=search]") ||
+            e.originalTarget.closest("input:not([type])") ||
+            e.originalTarget.closest("textarea")
+        ) {
           e.stopPropagation();
           e.preventDefault();
           this.openTextBoxContextMenu(e.screenX, e.screenY);
