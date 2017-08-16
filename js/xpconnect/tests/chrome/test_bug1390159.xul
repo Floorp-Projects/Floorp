@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1390159
+-->
+<window title="Mozilla Bug 1390159"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    function test() {
+      var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
+                           .getService(Components.interfaces.nsIXULRuntime);
+
+      // Make sure it has an inSafeMode property. This is just an arbitrary
+      // readonly property.
+      var oldValue = xulRuntime.inSafeMode;
+      is(typeof oldValue, "boolean", "Expected an inSafeMode property");
+
+      // Changing a readonly property doesn't throw, but shouldn't change
+      // the value.
+      xulRuntime.inSafeMode = !oldValue;
+      is(xulRuntime.inSafeMode, oldValue, "Should not have modified prop");
+
+      // Adding a new property should throw.
+      ex = null;
+      try {
+        xulRuntime.foobar = 1;
+      } catch (e) {
+        ex = e;
+      }
+      is(ex.toString().includes("Cannot modify"), true, "Expected an error");
+      is(xulRuntime.foobar, undefined, "Property not defined");
+    }
+    test();
+  ]]></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+</window>
