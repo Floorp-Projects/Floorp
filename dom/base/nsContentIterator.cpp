@@ -345,7 +345,7 @@ nsContentIterator::Init(nsINode* aStartContainer, uint32_t aStartOffset,
 // XXX Argument names will be replaced in the following patch.
 nsresult
 nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
-                                nsINode* aEndContainer, uint32_t endIndx)
+                                nsINode* aEndContainer, uint32_t aEndOffset)
 {
   // get common content parent
   mCommonParent =
@@ -365,7 +365,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
     //      we always want to be able to iterate text nodes at the end points
     //      of a range.
 
-    if (!startIsData && aStartOffset == endIndx) {
+    if (!startIsData && aStartOffset == aEndOffset) {
       MakeEmpty();
       return NS_OK;
     }
@@ -421,7 +421,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
         if (mFirst &&
             NS_WARN_IF(!NodeIsInTraversalRange(mFirst, mPre,
                                                aStartContainer, aStartOffset,
-                                               aEndContainer, endIndx))) {
+                                               aEndContainer, aEndOffset))) {
           mFirst = nullptr;
         }
       } else {
@@ -449,7 +449,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
 
       if (mFirst &&
           !NodeIsInTraversalRange(mFirst, mPre, aStartContainer, aStartOffset,
-                                  aEndContainer, endIndx)) {
+                                  aEndContainer, aEndOffset)) {
         mFirst = nullptr;
       }
     }
@@ -460,7 +460,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
 
   bool endIsData = aEndContainer->IsNodeOfType(nsINode::eDATA_NODE);
 
-  if (endIsData || !aEndContainer->HasChildren() || endIndx == 0) {
+  if (endIsData || !aEndContainer->HasChildren() || !aEndOffset) {
     if (mPre) {
       if (NS_WARN_IF(!aEndContainer->IsContent())) {
         // Not much else to do here...
@@ -476,13 +476,13 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
             ps->IsContainer(ps->HTMLAtomTagToId(name), endIsContainer);
           }
         }
-        if (!endIsData && !endIsContainer && !endIndx) {
+        if (!endIsData && !endIsContainer && !aEndOffset) {
           mLast = PrevNode(aEndContainer);
           NS_WARNING_ASSERTION(mLast, "PrevNode returned null");
           if (mLast && mLast != mFirst &&
               NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
                                                  mFirst, 0,
-                                                 aEndContainer, endIndx))) {
+                                                 aEndContainer, aEndOffset))) {
             mLast = nullptr;
           }
         } else {
@@ -501,7 +501,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
 
         if (!NodeIsInTraversalRange(mLast, mPre,
                                     aStartContainer, aStartOffset,
-                                    aEndContainer, endIndx)) {
+                                    aEndContainer, aEndOffset)) {
           mLast = nullptr;
         }
       } else {
@@ -509,7 +509,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
       }
     }
   } else {
-    int32_t indx = endIndx;
+    int32_t indx = aEndOffset;
 
     cChild = aEndContainer->GetChildAt(--indx);
 
@@ -525,7 +525,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
 
       if (NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
                                              aStartContainer, aStartOffset,
-                                             aEndContainer, endIndx))) {
+                                             aEndContainer, aEndOffset))) {
         mLast = nullptr;
       }
     } else {
