@@ -33,7 +33,7 @@ function* testInitialFocus(inspector, view) {
   boxmodel.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  is(boxmodel.getAttribute("activedescendant"), "boxmodel-main",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-main devtools-monospace",
     "Should be set to the position layout.");
 }
 
@@ -74,7 +74,7 @@ function* testChangingLevels(inspector, view) {
     "Should be set to the margin layout.");
 
   EventUtils.synthesizeKey("VK_UP", {});
-  is(boxmodel.getAttribute("activedescendant"), "boxmodel-main",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-main devtools-monospace",
     "Should be set to the position layout.");
 }
 
@@ -85,7 +85,7 @@ function* testTabbingWrapAround(inspector, view) {
   boxmodel.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  let editLevel = boxmodel.getAttribute("activedescendant");
+  let editLevel = boxmodel.getAttribute("activedescendant").split(" ")[0];
   let dataLevel = viewdoc.querySelector(`.${editLevel}`).getAttribute("data-box");
   let editBoxes = [...viewdoc.querySelectorAll(
     `[data-box="${dataLevel}"].boxmodel-editable`)];
