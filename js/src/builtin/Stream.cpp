@@ -13,8 +13,7 @@
 #include "gc/Heap.h"
 #include "vm/SelfHosting.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/List-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
@@ -318,51 +317,11 @@ RejectNonGenericMethod(JSContext* cx, const CallArgs& args,
 inline static MOZ_MUST_USE NativeObject*
 SetNewList(JSContext* cx, HandleNativeObject container, uint32_t slot)
 {
-    NativeObject* list = NewObjectWithNullTaggedProto<PlainObject>(cx);
+    NativeObject* list = NewList(cx);
     if (!list)
         return nullptr;
     container->setFixedSlot(slot, ObjectValue(*list));
     return list;
-}
-
-inline static MOZ_MUST_USE bool
-AppendToList(JSContext* cx, HandleNativeObject list, HandleValue value)
-{
-    uint32_t length = list->getDenseInitializedLength();
-
-    if (!list->ensureElements(cx, length + 1))
-        return false;
-
-    list->ensureDenseInitializedLength(cx, length, 1);
-    list->setDenseElement(length, value);
-
-    return true;
-}
-
-template<class T>
-inline static MOZ_MUST_USE T*
-PeekList(NativeObject* list)
-{
-    MOZ_ASSERT(list->getDenseInitializedLength() > 0);
-    return &list->getDenseElement(0).toObject().as<T>();
-}
-
-template<class T>
-inline static MOZ_MUST_USE T*
-ShiftFromList(JSContext* cx, HandleNativeObject list)
-{
-    uint32_t length = list->getDenseInitializedLength();
-    MOZ_ASSERT(length > 0);
-
-    Rooted<T*> entry(cx, &list->getDenseElement(0).toObject().as<T>());
-    if (!list->tryShiftDenseElements(1)) {
-        list->moveDenseElements(0, 1, length - 1);
-        list->shrinkElements(cx, length - 1);
-    }
-
-    list->setDenseInitializedLength(length - 1);
-
-    return entry;
 }
 
 class ByteStreamChunk : public NativeObject

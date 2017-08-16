@@ -47,8 +47,6 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/action.js");
@@ -195,6 +193,7 @@ var loadListener = {
     if (waitForUnloaded) {
       addEventListener("hashchange", this, false);
       addEventListener("pagehide", this, false);
+      addEventListener("popstate", this, false);
 
       // The events can only be received when the event listeners are
       // added to the currently selected frame.
@@ -241,6 +240,7 @@ var loadListener = {
 
     removeEventListener("hashchange", this);
     removeEventListener("pagehide", this);
+    removeEventListener("popstate", this);
     removeEventListener("DOMContentLoaded", this);
     removeEventListener("pageshow", this);
 
@@ -290,6 +290,7 @@ var loadListener = {
 
         removeEventListener("hashchange", this);
         removeEventListener("pagehide", this);
+        removeEventListener("popstate", this);
 
         // Now wait until the target page has been loaded
         addEventListener("DOMContentLoaded", this, false);
@@ -297,6 +298,7 @@ var loadListener = {
         break;
 
       case "hashchange":
+      case "popstate":
         this.stop();
         sendOk(this.command_id);
         break;
@@ -384,7 +386,7 @@ var loadListener = {
         if (this.seenBeforeUnload) {
           this.seenBeforeUnload = null;
           this.timerPageUnload.initWithCallback(
-              this, 5000, Ci.nsITimer.TYPE_ONE_SHOT)
+              this, 5000, Ci.nsITimer.TYPE_ONE_SHOT);
 
         // If no page unload has been detected, ensure to properly stop
         // the load listener, and return from the currently active command.
@@ -472,10 +474,10 @@ var loadListener = {
       this.start(command_id, timeout, startTime, true);
     }
 
-    return Task.spawn(function* () {
-      yield trigger();
+    return (async () => {
+      await trigger();
 
-    }).then(val => {
+    })().then(val => {
       if (!loadEventExpected) {
         sendOk(command_id);
         return;
@@ -495,10 +497,9 @@ var loadListener = {
       }
 
       sendError(err, command_id);
-
     });
   },
-}
+};
 
 /**
  * Called when listener is first started up.  The listener sends its
@@ -536,12 +537,12 @@ function dispatch(fn) {
   return function(msg) {
     let id = msg.json.command_id;
 
-    let req = Task.spawn(function* () {
+    let req = (async () => {
       if (typeof msg.json == "undefined" || msg.json instanceof Array) {
-        return yield fn.apply(null, msg.json);
+        return fn.apply(null, msg.json);
       }
-      return yield fn(msg.json);
-    });
+      return fn(msg.json);
+    })();
 
     let okOrValueResponse = rv => {
       if (typeof rv == "undefined") {
@@ -827,26 +828,25 @@ function checkForInterrupted() {
   }
 }
 
-function* execute(script, args, timeout, opts) {
+async function execute(script, args, timeout, opts) {
   opts.timeout = timeout;
 
   let sb = sandbox.createMutable(curContainer.frame);
   let wargs = evaluate.fromJSON(
       args, seenEls, curContainer.frame, curContainer.shadowRoot);
-  let res = yield evaluate.sandbox(sb, script, wargs, opts);
+  let res = await evaluate.sandbox(sb, script, wargs, opts);
 
   return evaluate.toJSON(res, seenEls);
 }
 
-function* executeInSandbox(script, args, timeout, opts) {
+async function executeInSandbox(script, args, timeout, opts) {
   opts.timeout = timeout;
 
   let sb = sandboxes.get(opts.sandboxName, opts.newSandbox);
   let wargs = evaluate.fromJSON(
       args, seenEls, curContainer.frame, curContainer.shadowRoot);
-  let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
-  let res = yield evaluatePromise;
+  let res = await evaluate.sandbox(sb, script, wargs, opts);
   return evaluate.toJSON(res, seenEls);
 }
 
@@ -908,7 +908,7 @@ function emitTouchEvent(type, touch) {
 /**
  * Function that perform a single tap
  */
-function singleTap(id, corx, cory) {
+async function singleTap(id, corx, cory) {
   let el = seenEls.get(id, curContainer);
   // after this block, the element will be scrolled into view
   let visible = element.isVisible(el, corx, cory);
@@ -918,21 +918,20 @@ function singleTap(id, corx, cory) {
   }
 
   let a11y = accessibility.get(capabilities.get("moz:accessibilityChecks"));
-  return a11y.getAccessible(el, true).then(acc => {
-    a11y.assertVisible(acc, el, visible);
-    a11y.assertActionable(acc, el);
-    if (!curContainer.frame.document.createTouch) {
-      legacyactions.mouseEventsOnly = true;
-    }
-    let c = element.coordinates(el, corx, cory);
-    if (!legacyactions.mouseEventsOnly) {
-      let touchId = legacyactions.nextTouchId++;
-      let touch = createATouch(el, c.x, c.y, touchId);
-      emitTouchEvent("touchstart", touch);
-      emitTouchEvent("touchend", touch);
-    }
-    legacyactions.mouseTap(el.ownerDocument, c.x, c.y);
-  });
+  let acc = await a11y.getAccessible(el, true);
+  a11y.assertVisible(acc, el, visible);
+  a11y.assertActionable(acc, el);
+  if (!curContainer.frame.document.createTouch) {
+    legacyactions.mouseEventsOnly = true;
+  }
+  let c = element.coordinates(el, corx, cory);
+  if (!legacyactions.mouseEventsOnly) {
+    let touchId = legacyactions.nextTouchId++;
+    let touch = createATouch(el, c.x, c.y, touchId);
+    emitTouchEvent("touchstart", touch);
+    emitTouchEvent("touchend", touch);
+  }
+  legacyactions.mouseTap(el.ownerDocument, c.x, c.y);
 }
 
 /**
@@ -964,19 +963,19 @@ function createATouch(el, corx, cory, touchId) {
  *      Object with an |actions| attribute that is an Array of objects
  *      each of which represents an action sequence.
  */
-function* performActions(msg) {
+async function performActions(msg) {
   let chain = action.Chain.fromJson(msg.actions);
-  yield action.dispatch(chain, seenEls, curContainer);
+  await action.dispatch(chain, seenEls, curContainer);
 }
 
 /**
- * The Release Actions command is used to release all the keys and pointer
+ * The release actions command is used to release all the keys and pointer
  * buttons that are currently depressed. This causes events to be fired
  * as if the state was released by an explicit series of actions. It also
  * clears all the internal state of the virtual devices.
  */
-function* releaseActions() {
-  yield action.dispatchTickActions(
+async function releaseActions() {
+  await action.dispatchTickActions(
       action.inputsToCancel.reverse(), 0, seenEls, curContainer);
   action.inputsToCancel.length = 0;
   action.inputStateMap.clear();
@@ -1016,14 +1015,14 @@ function emitMultiEvents(type, touch, touches) {
   // Create the event object
   let event = doc.createEvent("TouchEvent");
   event.initTouchEvent(type,
-                       true,
-                       true,
-                       win,
-                       0,
-                       false, false, false, false,
-                       documentTouches,
-                       targetTouches,
-                       changedTouches);
+      true,
+      true,
+      win,
+      0,
+      false, false, false, false,
+      documentTouches,
+      targetTouches,
+      changedTouches);
   target.dispatchEvent(event);
 }
 
@@ -1326,7 +1325,7 @@ function getPageSource() {
  * Find an element in the current browsing context's document using the
  * given search strategy.
  */
-function* findElementContent(strategy, selector, opts = {}) {
+async function findElementContent(strategy, selector, opts = {}) {
   if (!SUPPORTED_STRATEGIES.has(strategy)) {
     throw new InvalidSelectorError("Strategy not supported: " + strategy);
   }
@@ -1336,7 +1335,7 @@ function* findElementContent(strategy, selector, opts = {}) {
     opts.startNode = seenEls.get(opts.startNode, curContainer);
   }
 
-  let el = yield element.find(curContainer, strategy, selector, opts);
+  let el = await element.find(curContainer, strategy, selector, opts);
   let elRef = seenEls.add(el);
   let webEl = element.makeWebElement(elRef);
   return webEl;
@@ -1346,7 +1345,7 @@ function* findElementContent(strategy, selector, opts = {}) {
  * Find elements in the current browsing context's document using the
  * given search strategy.
  */
-function* findElementsContent(strategy, selector, opts = {}) {
+async function findElementsContent(strategy, selector, opts = {}) {
   if (!SUPPORTED_STRATEGIES.has(strategy)) {
     throw new InvalidSelectorError("Strategy not supported: " + strategy);
   }
@@ -1356,7 +1355,7 @@ function* findElementsContent(strategy, selector, opts = {}) {
     opts.startNode = seenEls.get(opts.startNode, curContainer);
   }
 
-  let els = yield element.find(curContainer, strategy, selector, opts);
+  let els = await element.find(curContainer, strategy, selector, opts);
   let elRefs = seenEls.addAll(els);
   let webEls = elRefs.map(element.makeWebElement);
   return webEls;
@@ -1394,9 +1393,9 @@ function clickElement(msg) {
 
     loadListener.navigate(() => {
       return interaction.clickElement(
-        seenEls.get(id, curContainer),
-        capabilities.get("moz:accessibilityChecks"),
-        capabilities.get("specificationLevel") >= 1
+          seenEls.get(id, curContainer),
+          capabilities.get("moz:accessibilityChecks"),
+          capabilities.get("specificationLevel") >= 1
       );
     }, command_id, pageTimeout, loadEventExpected, true);
 
@@ -1526,22 +1525,20 @@ function isElementSelected(id) {
       el, capabilities.get("moz:accessibilityChecks"));
 }
 
-function* sendKeysToElement(id, val) {
+async function sendKeysToElement(id, val) {
   let el = seenEls.get(id, curContainer);
   if (el.type == "file") {
-    yield interaction.uploadFile(el, val);
+    await interaction.uploadFile(el, val);
   } else if ((el.type == "date" || el.type == "time") &amp;&amp;
       Preferences.get("dom.forms.datetime")) {
-    yield interaction.setFormControlValue(el, val);
+    interaction.setFormControlValue(el, val);
   } else {
-    yield interaction.sendKeysToElement(
+    await interaction.sendKeysToElement(
         el, val, false, capabilities.get("moz:accessibilityChecks"));
   }
 }
 
-/**
- * Clear the text of an element.
- */
+/** Clear the text of an element. */
 function clearElement(id) {
   try {
     let el = seenEls.get(id, curContainer);
@@ -1866,7 +1863,7 @@ function flushRendering() {
   return windowUtils.isMozAfterPaintPending;
 }
 
-function* reftestWait(url, remote) {
+async function reftestWait(url, remote) {
   let win = curContainer.frame;
   let document = curContainer.frame.document;
 
@@ -1878,8 +1875,8 @@ function* reftestWait(url, remote) {
 
   if (document.location.href !== url || document.readyState != "complete") {
     logger.debug(`Waiting for page load of ${url}`);
-    yield new Promise(resolve => {
-      let maybeResolve = (event) => {
+    await new Promise(resolve => {
+      let maybeResolve = event => {
         if (event.target === curContainer.frame.document &amp;&amp;
             event.target.location.href === url) {
           win = curContainer.frame;
@@ -1895,7 +1892,7 @@ function* reftestWait(url, remote) {
     // Ensure that the event loop has spun at least once since load,
     // so that setTimeout(fn, 0) in the load event has run
     reftestWait = document.documentElement.classList.contains("reftest-wait");
-    yield new Promise(resolve => win.setTimeout(resolve, 0));
+    await new Promise(resolve => win.setTimeout(resolve, 0));
   }
 
   let root = document.documentElement;
@@ -1903,7 +1900,7 @@ function* reftestWait(url, remote) {
     // Check again in case reftest-wait was removed since the load event
     if (root.classList.contains("reftest-wait")) {
       logger.debug("Waiting for reftest-wait removal");
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         let observer = new win.MutationObserver(() => {
           if (!root.classList.contains("reftest-wait")) {
             observer.disconnect();
@@ -1917,7 +1914,7 @@ function* reftestWait(url, remote) {
 
     logger.debug("Waiting for rendering");
 
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       let maybeResolve = () => {
         if (flushRendering()) {
           win.addEventListener("MozAfterPaint", maybeResolve, {once: true});
@@ -1948,13 +1945,13 @@ registerSelf();
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#WindowState">WindowState</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Tue Aug 15 2017 19:56:03 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>

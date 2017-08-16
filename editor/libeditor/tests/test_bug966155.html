@@ -19,11 +19,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=966155
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.unique_opaque_origin", false]]}, nextTest);
+});
+
+function nextTest() {
   var win = window.open("data:text/html,<input><iframe onload=\"contentDocument.designMode = 'on';\">", "", "test-966155");
   win.addEventListener("load", function() {
     runTest(win);
   }, {once: true});
-});
+}
 
 function runTest(win) {
   SimpleTest.waitForFocus(function() {
