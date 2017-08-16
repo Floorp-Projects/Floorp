@@ -34,6 +34,26 @@ public:
 
 #define MOZ_ALIGNOF(T) mozilla::AlignmentFinder<T>::alignment
 
+namespace detail {
+template<typename T>
+struct AlignasHelper
+{
+  T mT;
+};
+} // namespace detail
+
+/*
+ * Use this instead of alignof to align struct field as if it is inside
+ * a struct. On some platforms, there exist types which have different
+ * alignment between when it is used on its own and when it is used on
+ * a struct field.
+ *
+ * Known examples are 64bit types (uint64_t, double) on 32bit Linux,
+ * where they have 8byte alignment on their own, and 4byte alignment
+ * when in struct.
+ */
+#define MOZ_ALIGNAS_IN_STRUCT(T) alignas(mozilla::detail::AlignasHelper<T>)
+
 /*
  * Declare the MOZ_ALIGNED_DECL macro for declaring aligned types.
  *
