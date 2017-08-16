@@ -15,6 +15,10 @@ kind-dependencies:
   - build-signing
 
 only-for-build-platforms:
+  - linux-nightly/opt
+  - linux-devedition-nightly/opt
+  - linux64-nightly/opt
+  - linux64-devedition-nightly/opt
   - macosx64-nightly/opt
   - macosx64-devedition-nightly/opt
   - win32-nightly/opt
