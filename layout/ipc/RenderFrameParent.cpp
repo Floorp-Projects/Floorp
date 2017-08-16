@@ -390,9 +390,11 @@ nsDisplayRemote::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
 {
   MOZ_ASSERT(aManager->IsLayersFreeTransaction());
 
+  mOffset = mozilla::layout::GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
+
   mozilla::LayoutDeviceRect visible = mozilla::LayoutDeviceRect::FromAppUnits(
       GetVisibleRect(), mFrame->PresContext()->AppUnitsPerDevPixel());
-  visible += mozilla::layout::GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
+  visible += mOffset;
 
   aBuilder.PushIFrame(aSc.ToRelativeLayoutRect(visible),
       mozilla::wr::AsPipelineId(GetRemoteLayersId()));
@@ -406,6 +408,7 @@ nsDisplayRemote::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
 {
   if (aLayerData) {
     aLayerData->SetReferentId(GetRemoteLayersId());
+    aLayerData->SetTransform(mozilla::gfx::Matrix4x4::Translation(mOffset.x, mOffset.y, 0.0));
   }
   return true;
 }
