@@ -35,8 +35,8 @@ import java.net.URISyntaxException;
 
     private final NavigationView navigationView;
 
-    final View content;
-    final View activityView;
+    private final View content;
+    private final View activityView;
 
     public BottomSheetContextMenu(final Context context,
                                   final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
