@@ -13913,15 +13913,15 @@ CSSParserImpl::ParseContent()
   // We need to divide the 'content' keywords into two classes for
   // ParseVariant's sake, so we can't just use nsCSSProps::kContentKTable.
   static const KTableEntry kContentListKWs[] = {
-    { eCSSKeyword_open_quote, NS_STYLE_CONTENT_OPEN_QUOTE },
-    { eCSSKeyword_close_quote, NS_STYLE_CONTENT_CLOSE_QUOTE },
-    { eCSSKeyword_no_open_quote, NS_STYLE_CONTENT_NO_OPEN_QUOTE },
-    { eCSSKeyword_no_close_quote, NS_STYLE_CONTENT_NO_CLOSE_QUOTE },
+    { eCSSKeyword_open_quote, uint8_t(StyleContent::OpenQuote) },
+    { eCSSKeyword_close_quote, uint8_t(StyleContent::CloseQuote) },
+    { eCSSKeyword_no_open_quote, uint8_t(StyleContent::NoOpenQuote) },
+    { eCSSKeyword_no_close_quote, uint8_t(StyleContent::NoCloseQuote) },
     { eCSSKeyword_UNKNOWN, -1 }
   };
 
   static const KTableEntry kContentSolitaryKWs[] = {
-    { eCSSKeyword__moz_alt_content, NS_STYLE_CONTENT_ALT_CONTENT },
+    { eCSSKeyword__moz_alt_content, uint8_t(StyleContent::AltContent) },
     { eCSSKeyword_UNKNOWN, -1 }
   };
 

@@ -11367,8 +11367,13 @@ IonBuilder::getPropAddCache(MDefinition* obj, PropertyName* name,
         MOZ_TRY(resumeAfter(load));
 
     MIRType rvalType = types->getKnownMIRType();
-    if (barrier != BarrierKind::NoBarrier || IsNullOrUndefined(rvalType))
+    if (barrier != BarrierKind::NoBarrier) {
         rvalType = MIRType::Value;
+    } else {
+        load->setResultTypeSet(types);
+        if (IsNullOrUndefined(rvalType))
+            rvalType = MIRType::Value;
+    }
     load->setResultType(rvalType);
 
     if (*pc != JSOP_CALLPROP || !IsNullOrUndefined(obj->type())) {

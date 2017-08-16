@@ -1541,6 +1541,7 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleBoxPack, Start, Justify)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
   DEFINE_ENUM_CLASS_SETTER(StyleClear, None, Both)
+  DEFINE_ENUM_CLASS_SETTER(StyleContent, OpenQuote, AltContent)
   DEFINE_ENUM_CLASS_SETTER(StyleFillRule, Nonzero, Evenodd)
   DEFINE_ENUM_CLASS_SETTER(StyleFloat, None, InlineEnd)
   DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
@@ -8971,7 +8972,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
     break;
 
   case eCSSUnit_Enumerated: {
-    MOZ_ASSERT(contentValue->GetIntValue() == NS_STYLE_CONTENT_ALT_CONTENT,
+    MOZ_ASSERT(contentValue->GetIntValue() == int32_t(StyleContent::AltContent),
                "unrecognized solitary content keyword");
     content->AllocateContents(1);
     content->ContentAt(0).SetKeyword(eStyleContentType_AltContent);
@@ -9036,16 +9037,16 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
         }
         case eCSSUnit_Enumerated:
           switch (value.GetIntValue()) {
-            case NS_STYLE_CONTENT_OPEN_QUOTE:
+		  case uint8_t(StyleContent::OpenQuote):
               data.SetKeyword(eStyleContentType_OpenQuote);
               break;
-            case NS_STYLE_CONTENT_CLOSE_QUOTE:
+		  case uint8_t(StyleContent::CloseQuote):
               data.SetKeyword(eStyleContentType_CloseQuote);
               break;
-            case NS_STYLE_CONTENT_NO_OPEN_QUOTE:
+		  case uint8_t(StyleContent::NoOpenQuote):
               data.SetKeyword(eStyleContentType_NoOpenQuote);
               break;
-            case NS_STYLE_CONTENT_NO_CLOSE_QUOTE:
+		  case uint8_t(StyleContent::NoCloseQuote):
               data.SetKeyword(eStyleContentType_NoCloseQuote);
               break;
             default:

@@ -41,10 +41,6 @@ skip-if(!Array.prototype.values) script test262/built-ins/Array/prototype/Symbol
 skip-if(!Array.prototype.values) include test262/built-ins/Array/prototype/values/jstests.list
 skip-if(!String.prototype.normalize) include test262/built-ins/String/prototype/normalize/jstests.list
 
-# Async generator is non-release-or-beta only.
-skip-if(release_or_beta) include test262/language/expressions/async-generators/jstests.list
-skip-if(release_or_beta) include test262/language/statements/async-generator/jstests.list
-
 # Requires ICU to detect Final_Sigma case mapping context
 skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js
 skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/toLowerCase/special_casing_conditional.js

@@ -13,7 +13,10 @@
     <script>
       add_task(async function() {
         // Push the correct preferences for the test
-        await SpecialPowers.pushPrefEnv({'set': [['dom.select_events.enabled', true]]});
+        await SpecialPowers.pushPrefEnv({'set': [
+                                          ['dom.select_events.enabled', true],
+                                          ['dom.select_events.textcontrols.enabled', true],
+                                        ]});
 
         // Start the actual test
         await new Promise((done) => {

@@ -2254,38 +2254,3 @@ NPObjectMember_toPrimitive(JSContext *cx, unsigned argc, JS::Value *vp)
   }
   return true;
 }
-
-// static
-bool
-nsJSObjWrapper::HasOwnProperty(NPObject *npobj, NPIdentifier npid)
-{
-  NPP npp = NPPStack::Peek();
-  nsIGlobalObject* globalObject = GetGlobalObject(npp);
-  if (NS_WARN_IF(!globalObject)) {
-    return false;
-  }
-
-  dom::AutoEntryScript aes(globalObject, "NPAPI HasOwnProperty");
-  JSContext *cx = aes.cx();
-
-  if (!npobj) {
-    ThrowJSExceptionASCII(cx,
-                          "Null npobj in nsJSObjWrapper::NP_HasOwnProperty!");
-
-    return false;
-  }
-
-  nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
-  bool found, ok = false;
-
-  AutoJSExceptionSuppressor suppressor(aes, npjsobj);
-  JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
-  JSAutoCompartment ac(cx, jsobj);
-  MarkCrossZoneNPIdentifier(cx, npid);
-
-  NS_ASSERTION(NPIdentifierIsInt(npid) || NPIdentifierIsString(npid),
-               "id must be either string or int!\n");
-  JS::Rooted<jsid> id(cx, NPIdentifierToJSId(npid));
-  ok = ::JS_AlreadyHasOwnPropertyById(cx, jsobj, id, &found);
-  return ok && found;
-}
