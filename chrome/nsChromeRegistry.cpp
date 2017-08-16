@@ -656,7 +656,7 @@ nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale)
     return false;
   }
 
-  nsXPIDLCString dir;
+  nsCString dir;
   prefBranch->GetCharPref(prefString.get(), getter_Copies(dir));
   if (dir.IsEmpty()) {
     int32_t hyphen = prefString.FindChar('-');

@@ -627,7 +627,7 @@ nsMultiStateCommand::DoCommandParams(const char *aCommandName,
 
   nsAutoString tString;
   if (aParams) {
-    nsXPIDLCString s;
+    nsCString s;
     nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
     if (NS_SUCCEEDED(rv))
       CopyASCIItoUTF16(s, tString);
@@ -1508,7 +1508,7 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
   }
 
   // do we have an href to use for creating link?
-  nsXPIDLCString s;
+  nsCString s;
   nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
   NS_ENSURE_SUCCESS(rv, rv);
   nsAutoString attrib;
