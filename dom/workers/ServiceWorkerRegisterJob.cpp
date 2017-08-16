@@ -12,13 +12,14 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal,
-                                                   const nsACString& aScope,
-                                                   const nsACString& aScriptSpec,
-                                                   nsILoadGroup* aLoadGroup,
-                                                   nsLoadFlags aLoadFlags)
+ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(
+    nsIPrincipal* aPrincipal,
+    const nsACString& aScope,
+    const nsACString& aScriptSpec,
+    nsILoadGroup* aLoadGroup,
+    ServiceWorkerUpdateViaCache aUpdateViaCache)
   : ServiceWorkerUpdateJob(Type::Register, aPrincipal, aScope, aScriptSpec,
-                           aLoadGroup, aLoadFlags)
+                           aLoadGroup, aUpdateViaCache)
 {
 }
 
@@ -37,8 +38,8 @@ ServiceWorkerRegisterJob::AsyncExecute()
     swm->GetRegistration(mPrincipal, mScope);
 
   if (registration) {
-    bool isSameLoadFlags = registration->GetLoadFlags() == GetLoadFlags();
-    registration->SetLoadFlags(GetLoadFlags());
+    bool sameUVC = GetUpdateViaCache() == registration->GetUpdateViaCache();
+    registration->SetUpdateViaCache(GetUpdateViaCache());
 
     // If we are resurrecting an uninstalling registration, then persist
     // it to disk again.  We preemptively removed it earlier during
@@ -49,14 +50,14 @@ ServiceWorkerRegisterJob::AsyncExecute()
     }
     registration->mPendingUninstall = false;
     RefPtr<ServiceWorkerInfo> newest = registration->Newest();
-    if (newest && mScriptSpec.Equals(newest->ScriptSpec()) && isSameLoadFlags) {
+    if (newest && mScriptSpec.Equals(newest->ScriptSpec()) && sameUVC) {
       SetRegistration(registration);
       Finish(NS_OK);
       return;
     }
   } else {
     registration = swm->CreateNewRegistration(mScope, mPrincipal,
-                                              GetLoadFlags());
+                                              GetUpdateViaCache());
     if (!registration) {
       FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
       return;

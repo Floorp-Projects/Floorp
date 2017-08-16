@@ -77,15 +77,16 @@ ServiceWorkerRegistrationInfo::Clear()
   NotifyChromeRegistrationListeners();
 }
 
-ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& aScope,
-                                                             nsIPrincipal* aPrincipal,
-                                                             nsLoadFlags aLoadFlags)
+ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
+    const nsACString& aScope,
+    nsIPrincipal* aPrincipal,
+    ServiceWorkerUpdateViaCache aUpdateViaCache)
   : mControlledDocumentsCounter(0)
   , mUpdateState(NoUpdate)
   , mCreationTime(PR_Now())
   , mCreationTimeStamp(TimeStamp::Now())
   , mLastUpdateTime(0)
-  , mLoadFlags(aLoadFlags)
+  , mUpdateViaCache(aUpdateViaCache)
   , mScope(aScope)
   , mPrincipal(aPrincipal)
   , mPendingUninstall(false)
@@ -637,16 +638,17 @@ ServiceWorkerRegistrationInfo::IsIdle() const
   return !mActiveWorker || mActiveWorker->WorkerPrivate()->IsIdle();
 }
 
-nsLoadFlags
-ServiceWorkerRegistrationInfo::GetLoadFlags() const
+ServiceWorkerUpdateViaCache
+ServiceWorkerRegistrationInfo::GetUpdateViaCache() const
 {
-  return mLoadFlags;
+  return mUpdateViaCache;
 }
 
 void
-ServiceWorkerRegistrationInfo::SetLoadFlags(nsLoadFlags aLoadFlags)
+ServiceWorkerRegistrationInfo::SetUpdateViaCache(
+    ServiceWorkerUpdateViaCache aUpdateViaCache)
 {
-  mLoadFlags = aLoadFlags;
+  mUpdateViaCache = aUpdateViaCache;
 }
 
 int64_t

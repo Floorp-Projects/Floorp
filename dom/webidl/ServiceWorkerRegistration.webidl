@@ -28,6 +28,12 @@ interface ServiceWorkerRegistration : EventTarget {
   attribute EventHandler onupdatefound;
 };
 
+enum ServiceWorkerUpdateViaCache {
+  "imports",
+  "all",
+  "none"
+};
+
 // https://w3c.github.io/push-api/
 partial interface ServiceWorkerRegistration {
   [Throws, Exposed=(Window,Worker), Func="nsContentUtils::PushEnabled"]
