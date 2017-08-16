@@ -56,6 +56,7 @@ SECItemArray*
 GetOCSPResponseForType(OCSPResponseType aORT,
                        const mozilla::UniqueCERTCertificate& aCert,
                        const mozilla::UniquePLArenaPool& aArena,
-                       const char* aAdditionalCertName);
+                       const char* aAdditionalCertName,
+                       time_t aThisUpdateSkew);
 
 #endif // OCSPCommon_h
