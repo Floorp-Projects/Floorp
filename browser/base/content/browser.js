@@ -55,7 +55,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   SimpleServiceDiscovery: "resource://gre/modules/SimpleServiceDiscovery.jsm",
   SitePermissions: "resource:///modules/SitePermissions.jsm",
-  Social: "resource:///modules/Social.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   Translation: "resource:///modules/translation/Translation.jsm",
@@ -100,10 +99,6 @@ XPCOMUtils.defineLazyScriptGetter(this, ["gGestureSupport", "gHistorySwipeAnimat
                                   "chrome://browser/content/browser-gestureSupport.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gSafeBrowsing",
                                   "chrome://browser/content/browser-safebrowsing.js");
-XPCOMUtils.defineLazyScriptGetter(this, ["SocialUI",
-                                         "SocialShare",
-                                         "SocialActivationListener"],
-                                  "chrome://browser/content/browser-social.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gSync",
                                   "chrome://browser/content/browser-sync.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gBrowserThumbnails",
@@ -1653,7 +1648,6 @@ var gBrowserInit = {
       RestoreLastSessionObserver.init();
 
       SidebarUI.startDelayedLoad();
-      SocialUI.init();
 
       PanicButtonNotifier.init();
     });
@@ -1830,7 +1824,6 @@ var gBrowserInit = {
 
       gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
       ctrlTab.uninit();
-      SocialUI.uninit();
       gBrowserThumbnails.uninit();
       FullZoom.destroy();
 
@@ -4502,9 +4495,7 @@ var XULBrowserWindow = {
 
   // Called before links are navigated to to allow us to retarget them if needed.
   onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
-    let target = BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
-    SocialUI.closeSocialPanelForLinkTraversal(target, linkNode);
-    return target;
+    return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
   },
 
   // Check whether this URI should load in the current process
@@ -4685,8 +4676,6 @@ var XULBrowserWindow = {
       BookmarkingUI.onLocationChange();
 
       gIdentityHandler.onLocationChange();
-
-      SocialUI.updateState();
 
       gTabletModePageCounter.inc();
 

@@ -1143,8 +1143,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1,
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-.share-provider-button {
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-appearance: none;
   padding: 0 6px;
   background-color: transparent;
@@ -1155,8 +1154,7 @@ panelview .toolbarbutton-1,
 
 panelview .toolbarbutton-1,
 .subviewbutton,
-.widget-overflow-list .toolbarbutton-1,
-.share-provider-button {
+.widget-overflow-list .toolbarbutton-1 {
   border-width: 1px;
 }
 
@@ -1370,7 +1368,6 @@ panelview .toolbarbutton-1@buttonStateHover@,
 toolbarbutton.subviewbutton@buttonStateHover@,
 menu.subviewbutton@menuStateHover@,
 menuitem.subviewbutton@menuStateHover@,
-.share-provider-button@buttonStateHover@:not([checked="true"]),
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
   background-color: var(--arrowpanel-dimmed);
@@ -1385,7 +1382,6 @@ panelview .toolbarbutton-1:-moz-any(@buttonStateActive@,[checked=true]),
 toolbarbutton.subviewbutton@buttonStateActive@,
 menu.subviewbutton@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
-.share-provider-button:-moz-any(@buttonStateActive@,[checked=true]),
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
   background-color: var(--arrowpanel-dimmed-further);
