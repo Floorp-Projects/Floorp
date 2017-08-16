@@ -175,6 +175,7 @@ public:
 
 private:
   RenderFrameParent* mRemoteFrame;
+  mozilla::LayoutDeviceIntPoint mOffset;
   mozilla::layers::EventRegionsOverride mEventRegionsOverride;
 };
 
