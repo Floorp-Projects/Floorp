@@ -344,7 +344,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
         return NS_OK;                                                         \
       }                                                                       \
     }                                                                         \
-    nsresult rv;
+    nsresult rv = NS_ERROR_FAILURE;
 
 #define NS_CYCLE_COLLECTION_UPCAST(obj, clazz)                                \
   NS_CYCLE_COLLECTION_CLASSNAME(clazz)::Upcast(obj)
