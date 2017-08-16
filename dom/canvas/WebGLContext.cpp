@@ -718,7 +718,7 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
 
     if (IsWebGL2()) {
         flags |= gl::CreateContextFlags::PREFER_ES3;
-    } else {
+    } else if (!gfxPrefs::WebGL1AllowCoreProfile()) {
         flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
     }
 

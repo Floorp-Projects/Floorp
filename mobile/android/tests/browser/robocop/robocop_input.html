@@ -26,11 +26,6 @@
         setTimeout(function() { designMode.contentDocument.designMode = "on" }, 0);
       }
 
-      // Spatial navigation interferes with design-mode key event tests.
-      SpecialPowers.setBoolPref("snav.enabled", false);
-      // Enable "selectionchange" events for input/textarea.
-      SpecialPowers.setBoolPref("dom.select_events.textcontrols.enabled", true);
-
       // An input that resets the editor on every input by resetting the value property.
       let resetting_input = document.getElementById("resetting-input");
       resetting_input.addEventListener("input", function() {

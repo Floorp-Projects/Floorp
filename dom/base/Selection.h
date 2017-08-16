@@ -174,7 +174,22 @@ public:
   nsINode*     GetFocusNode();
   uint32_t     FocusOffset();
 
-  bool IsCollapsed() const;
+  /*
+   * IsCollapsed -- is the whole selection just one point, or unset?
+   */
+  bool IsCollapsed() const
+  {
+    uint32_t cnt = mRanges.Length();
+    if (cnt == 0) {
+      return true;
+    }
+
+    if (cnt != 1) {
+      return false;
+    }
+
+    return mRanges[0].mRange->Collapsed();
+  }
 
   // *JS() methods are mapped to Selection.*().
   // They may move focus only when the range represents normal selection.

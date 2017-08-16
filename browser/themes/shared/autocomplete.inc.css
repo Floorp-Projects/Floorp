@@ -30,7 +30,7 @@
 /* Login form autocompletion */
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
   display: initial;
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#login);
+  list-style-image: url(chrome://browser/skin/notification-icons/login.svg);
   -moz-context-properties: fill;
   fill: GrayText;
 }

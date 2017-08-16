@@ -1404,23 +1404,9 @@ PuppetWidget::HasPendingInputEvent()
 
   mTabChild->GetIPCChannel()->PeekMessages(
     [&ret](const IPC::Message& aMsg) -> bool {
-      if ((aMsg.type() & mozilla::dom::PBrowser::PBrowserStart)
-          == mozilla::dom::PBrowser::PBrowserStart) {
-        switch (aMsg.type()) {
-          case mozilla::dom::PBrowser::Msg_RealMouseMoveEvent__ID:
-          case mozilla::dom::PBrowser::Msg_RealMouseButtonEvent__ID:
-          case mozilla::dom::PBrowser::Msg_RealKeyEvent__ID:
-          case mozilla::dom::PBrowser::Msg_MouseWheelEvent__ID:
-          case mozilla::dom::PBrowser::Msg_RealTouchEvent__ID:
-          case mozilla::dom::PBrowser::Msg_RealTouchMoveEvent__ID:
-          case mozilla::dom::PBrowser::Msg_RealDragEvent__ID:
-          case mozilla::dom::PBrowser::Msg_UpdateDimensions__ID:
-          case mozilla::dom::PBrowser::Msg_MouseEvent__ID:
-          case mozilla::dom::PBrowser::Msg_KeyEvent__ID:
-          case mozilla::dom::PBrowser::Msg_SetDocShellIsActive__ID:
-            ret = true;
-            return false;  // Stop peeking.
-        }
+      if (nsContentUtils::IsMessageInputEvent(aMsg)) {
+        ret = true;
+        return false; // Stop peeking.
       }
       return true;
     }

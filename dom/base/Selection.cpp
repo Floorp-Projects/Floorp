@@ -2675,24 +2675,6 @@ Selection::CollapseToEnd(ErrorResult& aRv)
   Collapse(*container, lastRange->EndOffset(), aRv);
 }
 
-/*
- * IsCollapsed -- is the whole selection just one point, or unset?
- */
-bool
-Selection::IsCollapsed() const
-{
-  uint32_t cnt = mRanges.Length();
-  if (cnt == 0) {
-    return true;
-  }
-
-  if (cnt != 1) {
-    return false;
-  }
-
-  return mRanges[0].mRange->Collapsed();
-}
-
 /* virtual */
 bool
 Selection::Collapsed()
@@ -3777,13 +3759,18 @@ Selection::NotifySelectionListeners()
     frameSelection->SetDirty();
     return NS_OK;
   }
+  if (mSelectionListeners.IsEmpty()) {
+    // If there are no selection listeners, we're done!
+    return NS_OK;
+  }
   AutoTArray<nsCOMPtr<nsISelectionListener>, 8>
     selectionListeners(mSelectionListeners);
 
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsIPresShell* ps = GetPresShell();
   if (ps) {
-    domdoc = do_QueryInterface(ps->GetDocument());
+    // Avoid using QueryInterface() here because it can be expensive.
+    domdoc = static_cast<nsIDOMDocument*>(ps->GetDocument()->AsDOMNode());
   }
 
   short reason = frameSelection->PopReason();

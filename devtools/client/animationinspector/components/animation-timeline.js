@@ -170,7 +170,7 @@ AnimationsTimeline.prototype = {
       parent: animationTimelineEl,
       nodeType: "ul",
       attributes: {
-        "class": "animations"
+        "class": "animations devtools-monospace"
       }
     });
   },
