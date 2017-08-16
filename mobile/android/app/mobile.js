@@ -632,7 +632,9 @@ pref("media.mediadrm-widevinecdm.visible", true);
 pref("media.eme.enabled", true);
 #endif
 
+#ifdef NIGHTLY_BUILD
 pref("media.hls.enabled", true);
+#endif
 
 // Whether to suspend decoding of videos in background tabs.
 pref("media.suspend-bkgnd-video.enabled", true);
