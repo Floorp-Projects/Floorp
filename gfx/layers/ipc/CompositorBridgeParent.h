@@ -168,6 +168,7 @@ protected:
 
   bool mCanSend;
 
+private:
   RefPtr<CompositorManagerParent> mCompositorManager;
 };
 
