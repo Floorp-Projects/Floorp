@@ -8,3 +8,5 @@ https://hg.mozilla.org/mozilla-central/rev/d24db55deb85
 https://hg.mozilla.org/mozilla-central/rev/0e6bf137521e
 https://hg.mozilla.org/mozilla-central/rev/1755a454e2de
 https://bugzilla.mozilla.org/show_bug.cgi?id=1385928 bug1385928.patch
+https://chromium.googlesource.com/chromium/src/+/0cb5dadc2b1f84fbbd9c6f75056e38d05a5b07d3
+https://chromium.googlesource.com/chromium/src/+/db4c64b63d6098294ed255e962700fd2d465575e
