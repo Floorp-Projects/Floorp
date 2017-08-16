@@ -212,8 +212,10 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
                   aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
                 nsHtml5String integrity =
                   aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
+                nsHtml5String referrerPolicy =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_REFERRERPOLICY);
                 mSpeculativeLoadQueue.AppendElement()->InitStyle(
-                  url, charset, crossOrigin, integrity);
+                  url, charset, crossOrigin, referrerPolicy, integrity);
               }
             } else if (rel.LowerCaseEqualsASCII("preconnect")) {
               nsHtml5String url =
@@ -311,8 +313,10 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
               aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
             nsHtml5String integrity =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
+            nsHtml5String referrerPolicy =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_REFERRERPOLICY);
             mSpeculativeLoadQueue.AppendElement()->InitStyle(
-              url, nullptr, crossOrigin, integrity);
+              url, nullptr, crossOrigin, referrerPolicy, integrity);
           }
         }
         break;

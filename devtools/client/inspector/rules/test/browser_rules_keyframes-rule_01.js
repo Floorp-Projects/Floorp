@@ -90,7 +90,7 @@ function* assertKeyframeRules(selector, inspector, view, expected) {
 }
 
 function assertGutters(view, expected) {
-  let gutters = view.element.querySelectorAll(".theme-gutter");
+  let gutters = view.element.querySelectorAll(".ruleview-header");
 
   is(gutters.length, expected.guttersNbs,
     "There are " + gutters.length + " gutter headings");

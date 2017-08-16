@@ -82,13 +82,18 @@ add_task(async function test_BHRObserver() {
 
     // hang.stack
     ok(Array.isArray(hang.stack));
+    ok(hang.stack.length > 0);
     hang.stack.forEach(entry => {
-      // XXX: Once we get merged stacks, we might get pseudostack or js frames
-      // in here too.
-      ok(Array.isArray(entry));
-      equal(entry.length, 2);
-      equal(typeof entry[0], "number");
-      equal(typeof entry[1], "string");
+      // Each stack frame entry is either a native or pseudostack entry. A
+      // native stack entry is an array with module index (number), and offset
+      // (hex string), while the pseudostack entry is a bare string.
+      if (Array.isArray(entry)) {
+        equal(entry.length, 2);
+        equal(typeof entry[0], "number");
+        equal(typeof entry[1], "string");
+      } else {
+        equal(typeof entry, "string");
+      }
     });
 
     // hang.modules
@@ -106,13 +111,6 @@ add_task(async function test_BHRObserver() {
       equal(typeof hang.annotations[key], "string");
     });
 
-    // hang.pseudoStack
-    // XXX: This will go away once we get merged stacks
-    ok(Array.isArray(hang.pseudoStack));
-    ok(hang.pseudoStack.length > 0);
-    hang.pseudoStack.forEach(entry => {
-      equal(typeof entry, "string");
-    });
   });
 
   do_send_remote_message("bhr_hangs_detected");

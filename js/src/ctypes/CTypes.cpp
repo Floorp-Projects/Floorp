@@ -295,9 +295,10 @@ namespace ArrayType {
   bool ElementTypeGetter(JSContext* cx, const JS::CallArgs& args);
   bool LengthGetter(JSContext* cx, const JS::CallArgs& args);
 
-  static bool Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
-  static bool Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp,
-                     ObjectOpResult& result);
+  static bool Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp,
+                     bool *handled);
+  static bool Setter(JSContext* cx, HandleObject obj, HandleId idval, HandleValue v,
+                     ObjectOpResult& result, bool* handled);
   static bool AddressOfElement(JSContext* cx, unsigned argc, Value* vp);
 } // namespace ArrayType
 
@@ -580,7 +581,7 @@ static const JSClass sCTypeClass = {
 };
 
 static const JSClassOps sCDataClassOps = {
-  nullptr, nullptr, ArrayType::Getter, ArrayType::Setter,
+  nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, nullptr,
   CData::Finalize, FunctionType::Call, nullptr, FunctionType::Call
 };
@@ -879,6 +880,58 @@ static const JSFunctionSpec sModuleFunctions[] = {
   JS_FS_END
 };
 
+// Wrapper for arrays, to intercept indexed gets/sets.
+class CDataArrayProxyHandler : public ForwardingProxyHandler
+{
+  public:
+    static const CDataArrayProxyHandler singleton;
+    static const char family;
+
+    constexpr CDataArrayProxyHandler() : ForwardingProxyHandler(&family) {}
+
+    bool get(JSContext* cx, HandleObject proxy, HandleValue receiver,
+             HandleId id, MutableHandleValue vp) const override;
+    bool set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+             HandleValue receiver, ObjectOpResult& result) const override;
+};
+
+const CDataArrayProxyHandler CDataArrayProxyHandler::singleton;
+const char CDataArrayProxyHandler::family = 0;
+
+bool
+CDataArrayProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
+                            HandleId id, MutableHandleValue vp) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    bool handled = false;
+    if (!ArrayType::Getter(cx, target, id, vp, &handled))
+        return false;
+    if (handled)
+        return true;
+    return ForwardingProxyHandler::get(cx, proxy, receiver, id, vp);
+}
+
+bool
+CDataArrayProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+                            HandleValue receiver, ObjectOpResult& result) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    bool handled = false;
+    if (!ArrayType::Setter(cx, target, id, v, result, &handled))
+        return false;
+    if (handled)
+        return true;
+    return ForwardingProxyHandler::set(cx, proxy, id, v, receiver, result);
+}
+
+static JSObject*
+MaybeUnwrapArrayWrapper(JSObject* obj)
+{
+    if (IsProxy(obj) && obj->as<ProxyObject>().handler() == &CDataArrayProxyHandler::singleton)
+        return obj->as<ProxyObject>().target();
+    return obj;
+}
+
 static MOZ_ALWAYS_INLINE JSString*
 NewUCString(JSContext* cx, const AutoString& from)
 {
@@ -934,10 +987,13 @@ EncodeLatin1(JSContext* cx, AutoString& str, JSAutoByteString& bytes)
 static const char*
 CTypesToSourceForError(JSContext* cx, HandleValue val, JSAutoByteString& bytes)
 {
-  if (val.isObject() &&
-      (CType::IsCType(&val.toObject()) || CData::IsCData(&val.toObject()))) {
-    RootedString str(cx, JS_ValueToSource(cx, val));
-    return bytes.encodeLatin1(cx, str);
+  if (val.isObject()) {
+      RootedObject obj(cx, &val.toObject());
+      if (CType::IsCType(obj) || CData::IsCDataMaybeUnwrap(&obj)) {
+          RootedValue v(cx, ObjectValue(*obj));
+          RootedString str(cx, JS_ValueToSource(cx, v));
+          return bytes.encodeLatin1(cx, str);
+      }
   }
   return ValueToSourceForError(cx, val, bytes);
 }
@@ -2710,8 +2766,8 @@ jsvalToInteger(JSContext* cx, HandleValue val, IntegerType* result)
     return ConvertExact(d, result);
   }
   if (val.isObject()) {
-    JSObject* obj = &val.toObject();
-    if (CData::IsCData(obj)) {
+    RootedObject obj(cx, &val.toObject());
+    if (CData::IsCDataMaybeUnwrap(&obj)) {
       JSObject* typeObj = CData::GetCType(obj);
       void* data = CData::GetData(obj);
 
@@ -2800,8 +2856,8 @@ jsvalToFloat(JSContext* cx, HandleValue val, FloatType* result)
     return true;
   }
   if (val.isObject()) {
-    JSObject* obj = &val.toObject();
-    if (CData::IsCData(obj)) {
+    RootedObject obj(cx, &val.toObject());
+    if (CData::IsCDataMaybeUnwrap(&obj)) {
       JSObject* typeObj = CData::GetCType(obj);
       void* data = CData::GetData(obj);
 
@@ -3353,7 +3409,7 @@ ImplicitConvert(JSContext* cx,
   RootedObject valObj(cx, nullptr);
   if (val.isObject()) {
     valObj = &val.toObject();
-    if (CData::IsCData(valObj)) {
+    if (CData::IsCDataMaybeUnwrap(&valObj)) {
       sourceData = valObj;
       sourceType = CData::GetCType(sourceData);
 
@@ -5232,7 +5288,7 @@ PointerType::IsPointer(HandleValue v)
 {
   if (!v.isObject())
     return false;
-  JSObject* obj = &v.toObject();
+  JSObject* obj = MaybeUnwrapArrayWrapper(&v.toObject());
   return CData::IsCData(obj) && CType::GetTypeCode(CData::GetCType(obj)) == TYPE_pointer;
 }
 
@@ -5249,10 +5305,10 @@ bool
 PointerType::IsNull(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
-  if (!CData::IsCData(obj)) {
+  if (!CData::IsCDataMaybeUnwrap(&obj)) {
     return IncompatibleThisProto(cx, "PointerType.prototype.isNull",
                                  args.thisv());
   }
@@ -5275,7 +5331,7 @@ PointerType::OffsetBy(JSContext* cx, const CallArgs& args, int offset)
   RootedObject obj(cx, JS_THIS_OBJECT(cx, args.base()));
   if (!obj)
     return false;
-  if (!CData::IsCData(obj)) {
+  if (!CData::IsCDataMaybeUnwrap(&obj)) {
     if (offset == 1) {
       return IncompatibleThisProto(cx, "PointerType.prototype.increment",
                                    args.thisv());
@@ -5673,7 +5729,7 @@ ArrayType::IsArrayOrArrayType(HandleValue v)
 {
   if (!v.isObject())
     return false;
-  JSObject* obj = &v.toObject();
+  JSObject* obj = MaybeUnwrapArrayWrapper(&v.toObject());
 
    // Allow both CTypes and CDatas of the ArrayType persuasion by extracting the
    // CType if we're dealing with a CData.
@@ -5695,11 +5751,11 @@ ArrayType::ElementTypeGetter(JSContext* cx, const JS::CallArgs& args)
 bool
 ArrayType::LengthGetter(JSContext* cx, const JS::CallArgs& args)
 {
-  JSObject* obj = &args.thisv().toObject();
+  RootedObject obj(cx, &args.thisv().toObject());
 
   // This getter exists for both CTypes and CDatas of the ArrayType persuasion.
   // If we're dealing with a CData, get the CType from it.
-  if (CData::IsCData(obj))
+  if (CData::IsCDataMaybeUnwrap(&obj))
     obj = CData::GetCType(obj);
 
   args.rval().set(JS_GetReservedSlot(obj, SLOT_LENGTH));
@@ -5708,8 +5764,11 @@ ArrayType::LengthGetter(JSContext* cx, const JS::CallArgs& args)
 }
 
 bool
-ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp,
+                  bool* handled)
 {
+  *handled = false;
+
   // This should never happen, but we'll check to be safe.
   if (!CData::IsCData(obj)) {
     RootedValue objVal(cx, ObjectValue(*obj));
@@ -5743,6 +5802,8 @@ ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
     return InvalidIndexRangeError(cx, index, length);
   }
 
+  *handled = true;
+
   RootedObject baseType(cx, GetBaseType(typeObj));
   size_t elementSize = CType::GetSize(baseType);
   char* data = static_cast<char*>(CData::GetData(obj)) + elementSize * index;
@@ -5750,9 +5811,11 @@ ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
 }
 
 bool
-ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp,
-                  ObjectOpResult& result)
+ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, HandleValue vp,
+                  ObjectOpResult& result, bool* handled)
 {
+  *handled = false;
+
   // This should never happen, but we'll check to be safe.
   if (!CData::IsCData(obj)) {
     RootedValue objVal(cx, ObjectValue(*obj));
@@ -5786,6 +5849,8 @@ ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
     return InvalidIndexRangeError(cx, index, length);
   }
 
+  *handled = true;
+
   RootedObject baseType(cx, GetBaseType(typeObj));
   size_t elementSize = CType::GetSize(baseType);
   char* data = static_cast<char*>(CData::GetData(obj)) + elementSize * index;
@@ -5802,7 +5867,7 @@ ArrayType::AddressOfElement(JSContext* cx, unsigned argc, Value* vp)
   RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
-  if (!CData::IsCData(obj)) {
+  if (!CData::IsCDataMaybeUnwrap(&obj)) {
     return IncompatibleThisProto(cx, "ArrayType.prototype.addressOfElement",
                                  args.thisv());
   }
@@ -6430,7 +6495,7 @@ StructType::FieldGetter(JSContext* cx, unsigned argc, Value* vp)
   }
 
   RootedObject obj(cx, &args.thisv().toObject());
-  if (!CData::IsCData(obj)) {
+  if (!CData::IsCDataMaybeUnwrap(&obj)) {
     return IncompatibleThisProto(cx, "StructType property getter", args.thisv());
   }
 
@@ -6464,7 +6529,7 @@ StructType::FieldSetter(JSContext* cx, unsigned argc, Value* vp)
   }
 
   RootedObject obj(cx, &args.thisv().toObject());
-  if (!CData::IsCData(obj)) {
+  if (!CData::IsCDataMaybeUnwrap(&obj)) {
     return IncompatibleThisProto(cx, "StructType property setter", args.thisv());
   }
 
@@ -6497,7 +6562,7 @@ StructType::AddressOfField(JSContext* cx, unsigned argc, Value* vp)
   RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
- if (!CData::IsCData(obj)) {
+ if (!CData::IsCDataMaybeUnwrap(&obj)) {
     return IncompatibleThisProto(cx, "StructType.prototype.addressOfField",
                                  args.thisv());
   }
@@ -7030,7 +7095,7 @@ FunctionType::Call(JSContext* cx,
   CallArgs args = CallArgsFromVp(argc, vp);
   // get the callee object...
   RootedObject obj(cx, &args.callee());
-  if (!CData::IsCData(obj)) {
+  if (!CData::IsCDataMaybeUnwrap(&obj)) {
     return IncompatibleThisProto(cx, "FunctionType.prototype.call",
                                  args.calleev());
   }
@@ -7087,10 +7152,11 @@ FunctionType::Call(JSContext* cx,
 
     RootedObject obj(cx);  // Could reuse obj instead of declaring a second
     RootedObject type(cx); // RootedObject, but readability would suffer.
+    RootedValue arg(cx);
 
     for (uint32_t i = argcFixed; i < args.length(); ++i) {
-      if (args[i].isPrimitive() ||
-          !CData::IsCData(obj = &args[i].toObject())) {
+      obj = args[i].isObject() ? &args[i].toObject() : nullptr;
+      if (!obj || !CData::IsCDataMaybeUnwrap(&obj)) {
         // Since we know nothing about the CTypes of the ... arguments,
         // they absolutely must be CData objects already.
         return VariadicArgumentTypeError(cx, i, args[i]);
@@ -7107,7 +7173,8 @@ FunctionType::Call(JSContext* cx,
       }
       // Relying on ImplicitConvert only for the limited purpose of
       // converting one CType to another (e.g., T[] to T*).
-      if (!ConvertArgument(cx, obj, i, args[i], type, &values[i], &strings)) {
+      arg = ObjectValue(*obj);
+      if (!ConvertArgument(cx, obj, i, arg, type, &values[i], &strings)) {
         return false;
       }
       fninfo->mFFITypes[i] = CType::GetFFIType(cx, type);
@@ -7633,7 +7700,16 @@ CData::Create(JSContext* cx,
   *buffer = data;
   JS_SetReservedSlot(dataObj, SLOT_DATA, PrivateValue(buffer));
 
-  return dataObj;
+  // If this is an array, wrap it in a proxy so we can intercept element
+  // gets/sets.
+
+  if (CType::GetTypeCode(typeObj) != TYPE_array)
+      return dataObj;
+
+  RootedValue priv(cx, ObjectValue(*dataObj));
+  ProxyOptions options;
+  options.setLazyProto(true);
+  return NewProxyObject(cx, &CDataArrayProxyHandler::singleton, priv, nullptr, options);
 }
 
 void
@@ -7659,6 +7735,7 @@ CData::Finalize(JSFreeOp* fop, JSObject* obj)
 JSObject*
 CData::GetCType(JSObject* dataObj)
 {
+  dataObj = MaybeUnwrapArrayWrapper(dataObj);
   MOZ_ASSERT(CData::IsCData(dataObj));
 
   Value slot = JS_GetReservedSlot(dataObj, SLOT_CTYPE);
@@ -7670,6 +7747,7 @@ CData::GetCType(JSObject* dataObj)
 void*
 CData::GetData(JSObject* dataObj)
 {
+  dataObj = MaybeUnwrapArrayWrapper(dataObj);
   MOZ_ASSERT(CData::IsCData(dataObj));
 
   Value slot = JS_GetReservedSlot(dataObj, SLOT_DATA);
@@ -7683,13 +7761,23 @@ CData::GetData(JSObject* dataObj)
 bool
 CData::IsCData(JSObject* obj)
 {
+  // Assert we don't have an array wrapper.
+  MOZ_ASSERT(MaybeUnwrapArrayWrapper(obj) == obj);
+
   return JS_GetClass(obj) == &sCDataClass;
+}
+
+bool
+CData::IsCDataMaybeUnwrap(MutableHandleObject obj)
+{
+  obj.set(MaybeUnwrapArrayWrapper(obj));
+  return IsCData(obj);
 }
 
 bool
 CData::IsCData(HandleValue v)
 {
-  return v.isObject() && CData::IsCData(&v.toObject());
+  return v.isObject() && CData::IsCData(MaybeUnwrapArrayWrapper(&v.toObject()));
 }
 
 bool
@@ -7728,7 +7816,7 @@ CData::Address(JSContext* cx, unsigned argc, Value* vp)
   RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
-  if (!IsCData(obj)) {
+  if (!IsCDataMaybeUnwrap(&obj)) {
     return IncompatibleThisProto(cx, "CData.prototype.address", args.thisv());
   }
 
@@ -7758,10 +7846,14 @@ CData::Cast(JSContext* cx, unsigned argc, Value* vp)
     return ArgumentLengthError(cx, "ctypes.cast", "two", "s");
   }
 
-  if (args[0].isPrimitive() || !CData::IsCData(&args[0].toObject())) {
+  RootedObject sourceData(cx);
+  if (args[0].isObject()) {
+    sourceData = &args[0].toObject();
+  }
+
+  if (!sourceData || !CData::IsCDataMaybeUnwrap(&sourceData)) {
     return ArgumentTypeMismatch(cx, "first ", "ctypes.cast", "a CData");
   }
-  RootedObject sourceData(cx, &args[0].toObject());
   RootedObject sourceType(cx, CData::GetCType(sourceData));
 
   if (args[1].isPrimitive() || !CType::IsCType(&args[1].toObject())) {
@@ -7833,7 +7925,7 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc,
   if (!obj) {
     return IncompatibleThisProto(cx, funName, args.thisv());
   }
-  if (!CData::IsCData(obj)) {
+  if (!CData::IsCDataMaybeUnwrap(&obj)) {
       if (!CDataFinalizer::IsCDataFinalizer(obj)) {
           return IncompatibleThisProto(cx, funName, args.thisv());
       }
@@ -7854,7 +7946,7 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc,
       }
 
       obj = dataVal.toObjectOrNull();
-      if (!obj || !CData::IsCData(obj)) {
+      if (!obj || !CData::IsCDataMaybeUnwrap(&obj)) {
           return IncompatibleThisProto(cx, funName, args.thisv());
       }
   }
@@ -7978,10 +8070,10 @@ CData::ToSource(JSContext* cx, unsigned argc, Value* vp)
     return ArgumentLengthError(cx, "CData.prototype.toSource", "no", "s");
   }
 
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
-  if (!CData::IsCData(obj) && !CData::IsCDataProto(obj)) {
+  if (!CData::IsCDataMaybeUnwrap(&obj) && !CData::IsCDataProto(obj)) {
     return IncompatibleThisProto(cx, "CData.prototype.toSource",
                                  InformalValueTypeName(args.thisv()));
   }
@@ -8191,13 +8283,13 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, Value* vp)
     return TypeError(cx, "_a CData object_ of a function pointer type",
                      valCodePtr);
   }
-  JSObject* objCodePtr = &valCodePtr.toObject();
+  RootedObject objCodePtr(cx, &valCodePtr.toObject());
 
   //Note: Using a custom argument formatter here would be awkward (requires
   //a destructor just to uninstall the formatter).
 
   // 2. Extract argument type of |objCodePtr|
-  if (!CData::IsCData(objCodePtr)) {
+  if (!CData::IsCDataMaybeUnwrap(&objCodePtr)) {
     return TypeError(cx, "a _CData_ object of a function pointer type",
                      valCodePtr);
   }
@@ -8286,8 +8378,8 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, Value* vp)
   // of the function, which may be less precise.
   JSObject* objBestArgType = objArgType;
   if (valData.isObject()) {
-    JSObject* objData = &valData.toObject();
-    if (CData::IsCData(objData)) {
+    RootedObject objData(cx, &valData.toObject());
+    if (CData::IsCDataMaybeUnwrap(&objData)) {
       objBestArgType = CData::GetCType(objData);
       size_t sizeBestArg;
       if (!CType::GetSafeSize(objBestArgType, &sizeBestArg)) {
@@ -8732,11 +8824,11 @@ bool
 Int64::ToString(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
   if (!Int64::IsInt64(obj)) {
-    if (!CData::IsCData(obj)) {
+    if (!CData::IsCDataMaybeUnwrap(&obj)) {
       return IncompatibleThisProto(cx, "Int64.prototype.toString",
                                    InformalValueTypeName(args.thisv()));
     }
@@ -8751,11 +8843,11 @@ bool
 Int64::ToSource(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
   if (!Int64::IsInt64(obj)) {
-    if (!CData::IsCData(obj)) {
+    if (!CData::IsCDataMaybeUnwrap(&obj)) {
       return IncompatibleThisProto(cx, "Int64.prototype.toSource",
                                    InformalValueTypeName(args.thisv()));
     }
@@ -8916,11 +9008,11 @@ bool
 UInt64::ToString(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
   if (!UInt64::IsUInt64(obj)) {
-    if (!CData::IsCData(obj)) {
+    if (!CData::IsCDataMaybeUnwrap(&obj)) {
       return IncompatibleThisProto(cx, "UInt64.prototype.toString",
                                    InformalValueTypeName(args.thisv()));
     }
@@ -8935,11 +9027,11 @@ bool
 UInt64::ToSource(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return false;
   if (!UInt64::IsUInt64(obj)) {
-    if (!CData::IsCData(obj)) {
+    if (!CData::IsCDataMaybeUnwrap(&obj)) {
       return IncompatibleThisProto(cx, "UInt64.prototype.toSource",
                                    InformalValueTypeName(args.thisv()));
     }

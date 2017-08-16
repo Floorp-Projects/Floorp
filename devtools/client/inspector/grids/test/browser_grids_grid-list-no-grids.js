@@ -22,7 +22,7 @@ add_task(function* () {
   let { highlighters } = inspector;
 
   yield selectNode("#grid", inspector);
-  let noGridList = doc.querySelector(".layout-no-grids");
+  let noGridList = doc.querySelector(".grid-pane .devtools-sidepanel-no-result");
   let gridList = doc.getElementById("grid-list");
 
   info("Checking the initial state of the Grid Inspector.");
