@@ -109,11 +109,17 @@ namespace sandbox {
 SANDBOX_INTERCEPT IntegrityLevel g_shared_delayed_integrity_level;
 SANDBOX_INTERCEPT MitigationFlags g_shared_delayed_mitigations;
 
-// Initializes static members.
-HWINSTA PolicyBase::alternate_winstation_handle_ = NULL;
-HDESK PolicyBase::alternate_desktop_handle_ = NULL;
+// Initializes static members. alternate_desktop_handle_ is a desktop on
+// alternate_winstation_handle_, alternate_desktop_local_winstation_handle_ is a
+// desktop on the same winstation as the parent process.
+HWINSTA PolicyBase::alternate_winstation_handle_ = nullptr;
+HDESK PolicyBase::alternate_desktop_handle_ = nullptr;
+HDESK PolicyBase::alternate_desktop_local_winstation_handle_ = nullptr;
 IntegrityLevel PolicyBase::alternate_desktop_integrity_level_label_ =
     INTEGRITY_LEVEL_SYSTEM;
+IntegrityLevel
+    PolicyBase::alternate_desktop_local_winstation_integrity_level_label_ =
+        INTEGRITY_LEVEL_SYSTEM;
 
 PolicyBase::PolicyBase()
     : ref_count(1),
@@ -220,27 +226,26 @@ base::string16 PolicyBase::GetAlternateDesktop() const {
     return base::string16();
   }
 
-  // The desktop and winstation should have been created by now.
-  // If we hit this scenario, it means that the user ignored the failure
-  // during SetAlternateDesktop, so we ignore it here too.
-  if (use_alternate_desktop_ && !alternate_desktop_handle_) {
-    return base::string16();
+  if (use_alternate_winstation_) {
+    // The desktop and winstation should have been created by now.
+    // If we hit this scenario, it means that the user ignored the failure
+    // during SetAlternateDesktop, so we ignore it here too.
+    if (!alternate_desktop_handle_ || !alternate_winstation_handle_) {
+      return base::string16();
+    }
+    return GetFullDesktopName(alternate_winstation_handle_,
+                              alternate_desktop_handle_);
+  } else {
+    if (!alternate_desktop_local_winstation_handle_) {
+      return base::string16();
+    }
+    return GetFullDesktopName(nullptr,
+                              alternate_desktop_local_winstation_handle_);
   }
-  if (use_alternate_winstation_ && (!alternate_desktop_handle_ ||
-                                    !alternate_winstation_handle_)) {
-    return base::string16();
-  }
-
-  return GetFullDesktopName(alternate_winstation_handle_,
-                            alternate_desktop_handle_);
 }
 
 ResultCode PolicyBase::CreateAlternateDesktop(bool alternate_winstation) {
   if (alternate_winstation) {
-    // Previously called with alternate_winstation = false?
-    if (!alternate_winstation_handle_ && alternate_desktop_handle_)
-      return SBOX_ERROR_UNSUPPORTED;
-
     // Check if it's already created.
     if (alternate_winstation_handle_ && alternate_desktop_handle_)
       return SBOX_ALL_OK;
@@ -267,22 +272,19 @@ ResultCode PolicyBase::CreateAlternateDesktop(bool alternate_winstation) {
         GetWindowObjectName(alternate_desktop_handle_).empty())
       return SBOX_ERROR_CANNOT_CREATE_DESKTOP;
   } else {
-    // Previously called with alternate_winstation = true?
-    if (alternate_winstation_handle_)
-      return SBOX_ERROR_UNSUPPORTED;
-
     // Check if it already exists.
-    if (alternate_desktop_handle_)
+    if (alternate_desktop_local_winstation_handle_)
       return SBOX_ALL_OK;
 
     // Create the destkop.
-    ResultCode result = CreateAltDesktop(NULL, &alternate_desktop_handle_);
+    ResultCode result =
+        CreateAltDesktop(nullptr, &alternate_desktop_local_winstation_handle_);
     if (SBOX_ALL_OK != result)
       return result;
 
     // Verify that everything is fine.
-    if (!alternate_desktop_handle_ ||
-        GetWindowObjectName(alternate_desktop_handle_).empty())
+    if (!alternate_desktop_local_winstation_handle_ ||
+        GetWindowObjectName(alternate_desktop_local_winstation_handle_).empty())
       return SBOX_ERROR_CANNOT_CREATE_DESKTOP;
   }
 
@@ -290,14 +292,21 @@ ResultCode PolicyBase::CreateAlternateDesktop(bool alternate_winstation) {
 }
 
 void PolicyBase::DestroyAlternateDesktop() {
-  if (alternate_desktop_handle_) {
-    ::CloseDesktop(alternate_desktop_handle_);
-    alternate_desktop_handle_ = NULL;
-  }
+  if (use_alternate_winstation_) {
+    if (alternate_desktop_handle_) {
+      ::CloseDesktop(alternate_desktop_handle_);
+      alternate_desktop_handle_ = nullptr;
+    }
 
-  if (alternate_winstation_handle_) {
-    ::CloseWindowStation(alternate_winstation_handle_);
-    alternate_winstation_handle_ = NULL;
+    if (alternate_winstation_handle_) {
+      ::CloseWindowStation(alternate_winstation_handle_);
+      alternate_winstation_handle_ = nullptr;
+    }
+  } else {
+    if (alternate_desktop_local_winstation_handle_) {
+      ::CloseDesktop(alternate_desktop_local_winstation_handle_);
+      alternate_desktop_local_winstation_handle_ = nullptr;
+    }
   }
 }
 
@@ -450,20 +459,35 @@ ResultCode PolicyBase::MakeTokens(base::win::ScopedHandle* initial,
   // integrity label on the object is no higher than the sandboxed process's
   // integrity level. So, we lower the label on the desktop process if it's
   // not already low enough for our process.
-  if (alternate_desktop_handle_ && use_alternate_desktop_ &&
-      integrity_level_ != INTEGRITY_LEVEL_LAST &&
-      alternate_desktop_integrity_level_label_ < integrity_level_) {
+  if (use_alternate_desktop_ && integrity_level_ != INTEGRITY_LEVEL_LAST) {
     // Integrity label enum is reversed (higher level is a lower value).
     static_assert(INTEGRITY_LEVEL_SYSTEM < INTEGRITY_LEVEL_UNTRUSTED,
                   "Integrity level ordering reversed.");
-    result = SetObjectIntegrityLabel(alternate_desktop_handle_,
-                                     SE_WINDOW_OBJECT,
-                                     L"",
-                                     GetIntegrityLevelString(integrity_level_));
-    if (ERROR_SUCCESS != result)
-      return SBOX_ERROR_GENERIC;
+    HDESK desktop_handle = nullptr;
+    IntegrityLevel desktop_integrity_level_label;
+    if (use_alternate_winstation_) {
+      desktop_handle = alternate_desktop_handle_;
+      desktop_integrity_level_label = alternate_desktop_integrity_level_label_;
+    } else {
+      desktop_handle = alternate_desktop_local_winstation_handle_;
+      desktop_integrity_level_label =
+          alternate_desktop_local_winstation_integrity_level_label_;
+    }
+    // If the desktop_handle hasn't been created for any reason, skip this.
+    if (desktop_handle && desktop_integrity_level_label < integrity_level_) {
+      result =
+          SetObjectIntegrityLabel(desktop_handle, SE_WINDOW_OBJECT, L"",
+                                  GetIntegrityLevelString(integrity_level_));
+      if (ERROR_SUCCESS != result)
+        return SBOX_ERROR_GENERIC;
 
-    alternate_desktop_integrity_level_label_ = integrity_level_;
+      if (use_alternate_winstation_) {
+        alternate_desktop_integrity_level_label_ = integrity_level_;
+      } else {
+        alternate_desktop_local_winstation_integrity_level_label_ =
+            integrity_level_;
+      }
+    }
   }
 
   if (lowbox_sid_) {
