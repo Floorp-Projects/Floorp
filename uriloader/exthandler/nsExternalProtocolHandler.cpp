@@ -71,6 +71,7 @@ private:
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsILoadGroup> mLoadGroup;
     nsCOMPtr<nsILoadInfo> mLoadInfo;
+    nsCOMPtr<nsIStreamListener> mListener;
 };
 
 NS_IMPL_ADDREF(nsExtProtocolChannel)
@@ -175,11 +176,19 @@ nsresult nsExtProtocolChannel::OpenURL()
     }
                                                 
     rv = extProtService->LoadURI(mUrl, aggCallbacks);
-    if (NS_SUCCEEDED(rv)) {
-        // despite success, we need to abort this channel, at the very least 
-        // to make it clear to the caller that no on{Start,Stop}Request
-        // should be expected.
-        rv = NS_ERROR_NO_CONTENT;
+
+    if (NS_SUCCEEDED(rv) && mListener) {
+      RefPtr<nsExtProtocolChannel> self = this;
+      MessageLoop::current()->PostTask(
+        NS_NewRunnableFunction(
+          "nsExtProtocolChannel::OpenURL",
+          [self]() {
+            self->mListener->OnStartRequest(self, nullptr);
+            self->mListener->OnStopRequest(self, nullptr, self->mStatus);
+            self->mListener = nullptr;
+          }));
+    } else {
+      mListener = nullptr;
     }
   }
 
@@ -218,6 +227,7 @@ NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen(nsIStreamListener *listener, nsISu
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
   mWasOpened = true;
+  mListener = listener;
 
   return OpenURL();
 }
