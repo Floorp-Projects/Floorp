@@ -75,10 +75,6 @@ body {
   border-color: var(--theme-splitter-color);
 }
 
-.theme-separator {
-  border-color: var(--theme-splitter-color);
-}
-
 .theme-fg-color1,
 .cm-s-mozilla .cm-number,
 .variable-or-property .token-number,

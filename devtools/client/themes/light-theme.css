@@ -73,10 +73,6 @@ body {
   border-color: var(--theme-splitter-color);
 }
 
-.theme-separator { /* grey */
-  border-color: #cddae5;
-}
-
 .cm-s-mozilla .cm-unused-line {
   text-decoration: line-through;
   text-decoration-color: var(--theme-highlight-bluegrey);
