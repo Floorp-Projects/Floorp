@@ -67,9 +67,6 @@
     <color name="photon_toolbar_bg">#F7FAFC</color>
     <color name="photon_toolbar_bg_private">#38383D</color>
 
-    <color name="photon_tabs_counter_fg">#272727</color>
-    <color name="photon_tabs_counter_fg_private">#FFFFFF</color>
-
     <color name="photon_two_line_page_row_bg">#FFFFFF</color>
     <color name="photon_two_line_page_row_bg_private">#414146</color>
 
