@@ -4,12 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "OggDecoder.h"
 #include "MediaPrefs.h"
 #include "MediaContainerType.h"
-#include "MediaDecoderStateMachine.h"
-#include "MediaFormatReader.h"
-#include "OggDemuxer.h"
-#include "OggDecoder.h"
+#include "MediaDecoder.h"
 
 namespace mozilla {
 
