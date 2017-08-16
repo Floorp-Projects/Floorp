@@ -59,7 +59,6 @@ const App = createClass({
     return dom.div(
       {
         id: "layout-container",
-        className: "devtools-monospace",
       },
       LayoutPromoteBar({
         onPromoteLearnMoreClick,

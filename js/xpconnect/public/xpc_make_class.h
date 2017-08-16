@@ -36,14 +36,6 @@ bool
 XPC_WN_Helper_SetProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                           JS::MutableHandleValue vp,
                           JS::ObjectOpResult& result);
-bool
-XPC_WN_MaybeResolvingSetPropertyStub(JSContext* cx, JS::HandleObject obj,
-                                     JS::HandleId id, JS::MutableHandleValue vp,
-                                     JS::ObjectOpResult& result);
-bool
-XPC_WN_CannotModifySetPropertyStub(JSContext* cx, JS::HandleObject obj,
-                                   JS::HandleId id, JS::MutableHandleValue vp,
-                                   JS::ObjectOpResult& result);
 
 bool
 XPC_WN_Helper_Enumerate(JSContext* cx, JS::HandleObject obj);
@@ -101,11 +93,7 @@ extern const js::ClassExtension XPC_WN_JSClassExtension;
     /* setProperty */ \
     ((_flags) & XPC_SCRIPTABLE_WANT_SETPROPERTY) \
     ? XPC_WN_Helper_SetProperty \
-    : ((_flags) & XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY) \
-      ? nullptr \
-      : ((_flags) & XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE) \
-        ? XPC_WN_MaybeResolvingSetPropertyStub \
-        : XPC_WN_CannotModifySetPropertyStub, \
+    : nullptr, \
     \
     /* enumerate */ \
     ((_flags) & XPC_SCRIPTABLE_WANT_NEWENUMERATE) \

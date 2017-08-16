@@ -143,8 +143,7 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     case WebGLExtensionID::WEBGL_compressed_texture_s3tc:
         return WebGLExtensionCompressedTextureS3TC::IsSupported(this);
     case WebGLExtensionID::WEBGL_compressed_texture_s3tc_srgb:
-        return WebGLExtensionCompressedTextureS3TC::IsSupported(this) &&
-               gl->IsExtensionSupported(gl::GLContext::EXT_texture_sRGB);
+        return WebGLExtensionCompressedTextureS3TC_SRGB::IsSupported(this);
     case WebGLExtensionID::WEBGL_debug_renderer_info:
         return Preferences::GetBool("webgl.enable-debug-renderer-info", false);
     case WebGLExtensionID::WEBGL_debug_shaders:

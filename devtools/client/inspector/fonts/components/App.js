@@ -37,7 +37,7 @@ const App = createClass({
 
     return dom.div(
       {
-        className: "devtools-monospace theme-sidebar inspector-tabpanel",
+        className: "theme-sidebar inspector-tabpanel",
         id: "sidebar-panel-fontinspector"
       },
       dom.div(
