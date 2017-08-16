@@ -202,18 +202,20 @@
         </label>
       </caption>
       <hbox id="fxaDeviceName">
-        <textbox id="fxaSyncComputerName" flex="1" disabled="true"/>
-        <button id="fxaChangeDeviceName"
-                label="&changeSyncDeviceName2.label;"
-                accesskey="&changeSyncDeviceName2.accesskey;"/>
-        <button id="fxaCancelChangeDeviceName"
-                label="&cancelChangeSyncDeviceName.label;"
-                accesskey="&cancelChangeSyncDeviceName.accesskey;"
-                hidden="true"/>
-        <button id="fxaSaveChangeDeviceName"
-                label="&saveChangeSyncDeviceName.label;"
-                accesskey="&saveChangeSyncDeviceName.accesskey;"
-                hidden="true"/>
+        <textbox id="fxaSyncComputerName" disabled="true"/>
+        <hbox>
+          <button id="fxaChangeDeviceName"
+                  label="&changeSyncDeviceName2.label;"
+                  accesskey="&changeSyncDeviceName2.accesskey;"/>
+          <button id="fxaCancelChangeDeviceName"
+                  label="&cancelChangeSyncDeviceName.label;"
+                  accesskey="&cancelChangeSyncDeviceName.accesskey;"
+                  hidden="true"/>
+          <button id="fxaSaveChangeDeviceName"
+                  label="&saveChangeSyncDeviceName.label;"
+                  accesskey="&saveChangeSyncDeviceName.accesskey;"
+                  hidden="true"/>
+        </hbox>
       </hbox>
     </groupbox>
     <label class="fxaMobilePromo">
