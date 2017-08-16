@@ -1232,7 +1232,7 @@ InterpretDollar(JSLinearString* matched, JSLinearString* string, size_t position
         return false;
 
     /* ES 2016 draft Mar 25, 2016 Table 46. */
-    CharT c = currentDollar[1];
+    char16_t c = currentDollar[1];
     if (JS7_ISDEC(c)) {
         /* $n, $nn */
         unsigned num = JS7_UNDEC(c);
