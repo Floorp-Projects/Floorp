@@ -465,10 +465,7 @@ WebRenderBridgeChild::RecvWrUpdated(const wr::IdNamespace& aNewIdNamespace)
   // Update mIdNamespace to identify obsolete keys and messages by WebRenderBridgeParent.
   // Since usage of invalid keys could cause crash in webrender.
   mIdNamespace = aNewIdNamespace;
-  // Remove all FontKeys since they are removed by WebRenderBridgeParent
-  for (auto iter = mFontKeys.Iter(); !iter.Done(); iter.Next()) {
-    SendDeleteFont(iter.Data());
-  }
+  // Just clear FontKeys, they are removed during WebRenderAPI destruction.
   mFontKeys.Clear();
   GetCompositorBridgeChild()->RecvInvalidateLayers(wr::AsUint64(mPipelineId));
   return IPC_OK();
