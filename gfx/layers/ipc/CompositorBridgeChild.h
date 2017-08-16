@@ -244,12 +244,12 @@ public:
   // that the paint thread is going to perform texture synchronization at the
   // end of async painting, and should postpone messages if needed until
   // finished.
-  void NotifyBeginAsyncPaintEndTransaction();
+  void NotifyBeginAsyncEndLayerTransaction();
 
   // Must only be called from the paint thread. Notifies the CompositorBridge
   // that the paint thread has finished all async paints and texture syncs from
   // a given transaction and may resume sending messages.
-  void NotifyFinishedAsyncPaintEndTransaction();
+  void NotifyFinishedAsyncEndLayerTransaction();
 
 private:
   // Private destructor, to discourage deletion outside of Release():

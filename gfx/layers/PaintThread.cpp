@@ -145,7 +145,7 @@ PaintThread::IsOnPaintThread()
 }
 
 void
-PaintThread::PaintContentsAsync(CompositorBridgeChild* aBridge,
+PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
                                 CapturedPaintState* aState,
                                 PrepDrawTargetForPaintingCallback aCallback)
 {
@@ -169,15 +169,15 @@ PaintThread::PaintContentsAsync(CompositorBridgeChild* aBridge,
 }
 
 void
-PaintThread::FinishedLayerBatch()
+PaintThread::EndLayer()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::EndAsyncPaintingLayer",
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncEndLayer",
   [self]() -> void
   {
-    self->EndAsyncPaintingLayer();
+    self->AsyncEndLayer();
   });
 
   if (!gfxPrefs::LayersOMTPForceSync()) {
@@ -188,7 +188,7 @@ PaintThread::FinishedLayerBatch()
 }
 
 void
-PaintThread::EndAsyncPaintingLayer()
+PaintThread::AsyncEndLayer()
 {
   MOZ_ASSERT(IsOnPaintThread());
   // Textureclient forces a flush once we "end paint", so
@@ -202,22 +202,22 @@ PaintThread::EndAsyncPaintingLayer()
 }
 
 void
-PaintThread::FinishedLayerTransaction(SyncObjectClient* aSyncObject)
+PaintThread::EndLayerTransaction(SyncObjectClient* aSyncObject)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<CompositorBridgeChild> cbc;
   if (!gfxPrefs::LayersOMTPForceSync()) {
     cbc = CompositorBridgeChild::Get();
-    cbc->NotifyBeginAsyncPaintEndTransaction();
+    cbc->NotifyBeginAsyncEndLayerTransaction();
   }
 
   RefPtr<SyncObjectClient> syncObject(aSyncObject);
   RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::EndAsyncLayerTransaction",
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncEndLayerTransaction",
     [self, cbc, syncObject]() -> void
   {
-    self->EndAsyncLayerTransaction(cbc, syncObject);
+    self->AsyncEndLayerTransaction(cbc, syncObject);
   });
 
   if (cbc) {
@@ -228,7 +228,7 @@ PaintThread::FinishedLayerTransaction(SyncObjectClient* aSyncObject)
 }
 
 void
-PaintThread::EndAsyncLayerTransaction(CompositorBridgeChild* aBridge,
+PaintThread::AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
                                       SyncObjectClient* aSyncObject)
 {
   MOZ_ASSERT(IsOnPaintThread());
@@ -238,7 +238,7 @@ PaintThread::EndAsyncLayerTransaction(CompositorBridgeChild* aBridge,
   }
 
   if (aBridge) {
-    aBridge->NotifyFinishedAsyncPaintEndTransaction();
+    aBridge->NotifyFinishedAsyncEndLayerTransaction();
   }
 }
 
@@ -264,7 +264,7 @@ PaintThread::PaintContents(CapturedPaintState* aState,
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
     [self, cbc, capture, state, aCallback]() -> void
   {
-    self->PaintContentsAsync(cbc,
+    self->AsyncPaintContents(cbc,
                              state,
                              aCallback);
   });
