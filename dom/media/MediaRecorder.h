@@ -28,6 +28,7 @@ class GlobalObject;
 namespace dom {
 
 class AudioNode;
+class DOMException;
 
 /**
  * Implementation of https://dvcs.w3.org/hg/dap/raw-file/default/media-stream-capture/MediaRecorder.html
@@ -133,6 +134,12 @@ protected:
   void RemoveSession(Session* aSession);
   // Functions for Session to query input source info.
   MediaStream* GetSourceMediaStream();
+  // Create DOMExceptions capturing the JS stack for async errors. These are
+  // created ahead of time rather than on demand when firing an error as the JS
+  // stack of the operation that started the async behavior will not be
+  // available at the time the error event is fired. Note, depending on when
+  // this is called there may not be a JS stack to capture.
+  void InitializeDomExceptions();
   // DOM wrapper for source media stream. Will be null when input is audio node.
   RefPtr<DOMMediaStream> mDOMStream;
   // Source audio node. Will be null when input is a media stream.
@@ -158,6 +165,12 @@ protected:
   uint32_t mAudioBitsPerSecond;
   uint32_t mVideoBitsPerSecond;
   uint32_t mBitsPerSecond;
+
+  // DOMExceptions that are created early and possibly thrown in NotifyError.
+  // Creating them early allows us to capture the JS stack for which cannot be
+  // done at the time the error event is fired.
+  RefPtr<DOMException> mSecurityDomException;
+  RefPtr<DOMException> mUnknownDomException;
 
 private:
   // Register MediaRecorder into Document to listen the activity changes.

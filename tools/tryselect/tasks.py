@@ -29,9 +29,12 @@ def invalidate(cache):
         os.remove(cache)
 
 
-def generate_target(params='project=mozilla-central'):
+def generate_tasks(params=None, full=False):
+    params = params or "project=mozilla-central"
+
     cache_dir = os.path.join(get_state_dir()[0], 'cache', 'taskgraph')
-    cache = os.path.join(cache_dir, 'target_task_set')
+    attr = 'full_task_set' if full else 'target_task_set'
+    cache = os.path.join(cache_dir, attr)
 
     invalidate(cache)
     if os.path.isfile(cache):
@@ -41,12 +44,12 @@ def generate_target(params='project=mozilla-central'):
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
 
-    print("Task configuration changed, generating target tasks")
+    print("Task configuration changed, generating {}".format(attr.replace('_', ' ')))
     params = load_parameters_file(params)
     params.check()
 
     root = os.path.join(build.topsrcdir, 'taskcluster', 'ci')
-    tg = TaskGraphGenerator(root_dir=root, parameters=params).target_task_set
+    tg = getattr(TaskGraphGenerator(root_dir=root, parameters=params), attr)
     labels = [label for label in tg.graph.visit_postorder()]
 
     with open(cache, 'w') as fh:

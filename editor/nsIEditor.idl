@@ -265,8 +265,6 @@ interface nsIEditor  : nsISupports
     */
   void endTransaction();
 
-  void beginPlaceHolderTransaction(in nsIAtom name);
-  void endPlaceHolderTransaction();
   boolean shouldTxnSetSelection();
 
   /** Set the flag that prevents insertElementTxn from changing the selection

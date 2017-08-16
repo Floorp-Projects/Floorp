@@ -906,7 +906,7 @@ HTMLEditor::SetFinalSize(int32_t aX,
   y = top - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderTop+mResizedObjectMarginTop : 0);
 
   // we want one transaction only from a user's point of view
-  AutoEditBatch batchIt(this);
+  AutoPlaceholderBatch batchIt(this);
 
   if (mResizedObjectIsAbsolutelyPositioned) {
     if (setHeight) {

@@ -12,7 +12,7 @@ from distutils.spawn import find_executable
 
 from mozboot.util import get_state_dir
 
-from ..tasks import generate_target
+from ..tasks import generate_tasks
 from ..vcs import VCSHelper
 
 try:
@@ -166,7 +166,7 @@ def format_header():
     return FZF_HEADER.format(shortcuts=', '.join(shortcuts), t=terminal)
 
 
-def run_fuzzy_try(update=False, query=None):
+def run_fuzzy_try(update=False, query=None, full=False, parameters=None):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -176,7 +176,7 @@ def run_fuzzy_try(update=False, query=None):
     vcs = VCSHelper.create()
     vcs.check_working_directory()
 
-    all_tasks = generate_target()
+    all_tasks = generate_tasks(parameters, full)
 
     key_shortcuts = [k + ':' + v for k, v in fzf_shortcuts.iteritems()]
     cmd = [

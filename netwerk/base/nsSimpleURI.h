@@ -100,6 +100,8 @@ protected:
                                    const nsACString &newRef,
                                    nsIURI** clone);
 
+    nsresult SetPathQueryRefEscaped(const nsACString &aPath, bool aNeedsEscape);
+
     nsCString mScheme;
     nsCString mPath; // NOTE: mPath does not include ref, as an optimization
     nsCString mRef;  // so that URIs with different refs can share string data.

@@ -703,7 +703,8 @@ ServoRestyleManager::ProcessPostTraversal(
 
   // Grab the change hint from Servo.
   bool wasRestyled;
-  nsChangeHint changeHint = Servo_TakeChangeHint(aElement, &wasRestyled);
+  nsChangeHint changeHint =
+    static_cast<nsChangeHint>(Servo_TakeChangeHint(aElement, &wasRestyled));
 
   // We should really fix the weird primary frame mapping for image maps
   // (bug 135040)...

@@ -118,18 +118,6 @@ AssertIsMainThreadOrServoLangFontPrefsCacheLocked()
   MOZ_ASSERT(NS_IsMainThread() || sServoLangFontPrefsLock->LockedForWritingByCurrentThread());
 }
 
-uint32_t
-Gecko_ChildrenCount(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->GetChildCount();
-}
-
-bool
-Gecko_NodeIsElement(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->IsElement();
-}
-
 bool
 Gecko_IsInDocument(RawGeckoNodeBorrowed aNode)
 {
@@ -300,17 +288,6 @@ Gecko_DestroyStyleChildrenIterator(
   aIterator->~StyleChildrenIterator();
 }
 
-nsIContent*
-Gecko_ElementBindingAnonymousContent(RawGeckoElementBorrowed aElement)
-{
-  MOZ_ASSERT(aElement->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR));
-  nsBindingManager* manager = aElement->OwnerDoc()->BindingManager();
-  if (nsXBLBinding* binding = manager->GetBindingWithContent(aElement)) {
-    return binding->GetAnonymousContent();
-  }
-  return nullptr;
-}
-
 RawGeckoNodeBorrowed
 Gecko_GetNextStyleChild(RawGeckoStyleChildrenIteratorBorrowedMut aIterator)
 {
@@ -347,12 +324,6 @@ Gecko_DocumentState(const nsIDocument* aDocument)
 }
 
 bool
-Gecko_IsTextNode(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->NodeInfo()->NodeType() == nsIDOMNode::TEXT_NODE;
-}
-
-bool
 Gecko_IsRootElement(RawGeckoElementBorrowed aElement)
 {
   return aElement->OwnerDoc()->GetRootElement() == aElement;
@@ -366,38 +337,13 @@ Gecko_MatchesElement(CSSPseudoClassType aType,
 }
 
 nsIAtom*
-Gecko_LocalName(RawGeckoElementBorrowed aElement)
-{
-  return aElement->NodeInfo()->NameAtom();
-}
-
-nsIAtom*
 Gecko_Namespace(RawGeckoElementBorrowed aElement)
 {
   int32_t id = aElement->NodeInfo()->NamespaceID();
   return nsContentUtils::NameSpaceManager()->NameSpaceURIAtomForServo(id);
 }
 
-nsIAtom*
-Gecko_GetElementId(RawGeckoElementBorrowed aElement)
-{
-  const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::id);
-  if (attr && attr->Type() == nsAttrValue::eAtom) {
-    return attr->GetAtomValue();
-  }
-  // The only case in which we should have a non-atom value here is if it's the
-  // empty string value.
-  MOZ_ASSERT(!attr || attr->IsEmptyString());
-  return nullptr;
-}
-
 // Dirtiness tracking.
-uint32_t
-Gecko_GetNodeFlags(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->GetFlags();
-}
-
 void
 Gecko_SetNodeFlags(RawGeckoNodeBorrowed aNode, uint32_t aFlags)
 {
@@ -454,7 +400,7 @@ Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
   return aElement->GetPseudoElementType();
 }
 
-nsChangeHint
+uint32_t
 Gecko_CalcStyleDifference(ServoStyleContextBorrowed aOldStyle,
                           ServoStyleContextBorrowed aNewStyle,
                           uint64_t aOldStyleBits,
@@ -475,12 +421,6 @@ Gecko_CalcStyleDifference(ServoStyleContextBorrowed aOldStyle,
       relevantStructs);
   *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
   return result;
-}
-
-nsChangeHint
-Gecko_HintsHandledForDescendants(nsChangeHint aHint)
-{
-  return aHint & ~NS_HintsNotHandledForDescendantsIn(aHint);
 }
 
 const ServoElementSnapshot*

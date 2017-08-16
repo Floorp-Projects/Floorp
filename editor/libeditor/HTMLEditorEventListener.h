@@ -12,7 +12,6 @@
 namespace mozilla {
 
 class EditorBase;
-class HTMLEditor;
 
 class HTMLEditorEventListener final : public EditorEventListener
 {

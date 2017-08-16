@@ -123,7 +123,6 @@ function Inspector(toolbox) {
   this.onSidebarHidden = this.onSidebarHidden.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onSidebarShown = this.onSidebarShown.bind(this);
-  this.onTextBoxContextMenu = this.onTextBoxContextMenu.bind(this);
 
   this._target.on("will-navigate", this._onBeforeNavigate);
   this._detectingActorFeatures = this._detectActorFeatures();
@@ -1060,17 +1059,6 @@ Inspector.prototype = {
       screenY: e.screenY,
       target: e.target,
     });
-  },
-
-  /**
-   * This is meant to be called by all the search, filter, inplace text boxes in the
-   * inspector, and just calls through to the toolbox openTextBoxContextMenu helper.
-   * @param {DOMEvent} e
-   */
-  onTextBoxContextMenu: function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    this.toolbox.openTextBoxContextMenu(e.screenX, e.screenY);
   },
 
   _openMenu: function ({ target, screenX = 0, screenY = 0 } = { }) {

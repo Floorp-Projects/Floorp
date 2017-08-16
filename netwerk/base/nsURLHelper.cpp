@@ -19,6 +19,7 @@
 #include "mozilla/Preferences.h"
 #include "prnetdb.h"
 #include "mozilla/Tokenizer.h"
+#include "nsEscape.h"
 
 using namespace mozilla;
 
@@ -628,6 +629,26 @@ net_FilterURIString(const nsACString& input, nsACString& result)
     }
 }
 
+nsresult
+net_FilterAndEscapeURI(const nsACString& aInput, uint32_t aFlags, nsACString& aResult)
+{
+    aResult.Truncate();
+
+    auto start = aInput.BeginReading();
+    auto end = aInput.EndReading();
+
+    // Trim off leading and trailing invalid chars.
+    auto charFilter = [](char c) { return static_cast<uint8_t>(c) > 0x20; };
+    auto newStart = std::find_if(start, end, charFilter);
+    auto newEnd = std::find_if(
+        std::reverse_iterator<decltype(end)>(end),
+        std::reverse_iterator<decltype(newStart)>(newStart),
+        charFilter).base();
+
+    const ASCIIMaskArray& mask = ASCIIMask::MaskCRLFTab();
+    return NS_EscapeAndFilterURL(Substring(newStart, newEnd), aFlags,
+                                 &mask, aResult, fallible);
+}
 
 #if defined(XP_WIN)
 bool

@@ -339,6 +339,19 @@ add_task(async function test_privacy_other_prefs() {
       "network.http.sendRefererHeader": 2,
     });
 
+  await testSetting("websites.trackingProtectionMode", "always", {
+    "privacy.trackingprotection.enabled": true,
+    "privacy.trackingprotection.pbmode.enabled": true,
+  });
+  await testSetting("websites.trackingProtectionMode", "never", {
+    "privacy.trackingprotection.enabled": false,
+    "privacy.trackingprotection.pbmode.enabled": false,
+  });
+  await testSetting("websites.trackingProtectionMode", "private_browsing", {
+    "privacy.trackingprotection.enabled": false,
+    "privacy.trackingprotection.pbmode.enabled": true,
+  });
+
   await testSetting("services.passwordSavingEnabled", false,
     {
       "signon.rememberSignons": false,

@@ -237,7 +237,7 @@ JSObject* newDelegate()
 
     /* Create the global object. */
     JS::CompartmentOptions options;
-    options.behaviors().setVersion(JSVERSION_LATEST);
+    options.behaviors().setVersion(JSVERSION_DEFAULT);
 
     JS::RootedObject global(cx, JS_NewGlobalObject(cx, Jsvalify(&delegateClass), nullptr,
                                                    JS::FireOnNewGlobalHook, options));

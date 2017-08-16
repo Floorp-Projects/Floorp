@@ -69,7 +69,6 @@ function ElementEditor(container, node) {
       trigger: "dblclick",
       stopOnReturn: true,
       done: this.onTagEdit.bind(this),
-      contextMenu: this.markup.inspector.onTextBoxContextMenu,
       cssProperties: this._cssProperties
     });
   }
@@ -97,7 +96,6 @@ function ElementEditor(container, node) {
         undoMods.apply();
       });
     },
-    contextMenu: this.markup.inspector.onTextBoxContextMenu,
     cssProperties: this._cssProperties
   });
 
@@ -402,7 +400,6 @@ ElementEditor.prototype = {
           undoMods.apply();
         });
       },
-      contextMenu: this.markup.inspector.onTextBoxContextMenu,
       cssProperties: this._cssProperties
     });
 

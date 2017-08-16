@@ -39,17 +39,17 @@ class EitherParser
     struct TokenStreamMatcher
     {
         template<class Parser>
-        TokenStreamAnyChars& match(Parser* parser) {
+        TokenStream& match(Parser* parser) {
             return parser->tokenStream;
         }
     };
 
   public:
-    TokenStreamAnyChars& tokenStream() {
+    TokenStream& tokenStream() {
         return parser.match(TokenStreamMatcher());
     }
 
-    const TokenStreamAnyChars& tokenStream() const {
+    const TokenStream& tokenStream() const {
         return parser.match(TokenStreamMatcher());
     }
 
@@ -224,62 +224,6 @@ class EitherParser
     template<typename... Args>
     MOZ_MUST_USE bool reportNoOffset(Args&&... args) {
         return parser.match(ParserBaseMatcher()).reportNoOffset(mozilla::Forward<Args>(args)...);
-    }
-
-  private:
-    template<typename... StoredArgs>
-    struct ReportExtraWarningMatcher
-    {
-        mozilla::Tuple<StoredArgs...> args;
-
-        template<typename... Args>
-        explicit ReportExtraWarningMatcher(Args&&... actualArgs)
-          : args { mozilla::Forward<Args>(actualArgs)... }
-        {}
-
-        template<class Parser>
-        MOZ_MUST_USE bool match(Parser* parser) {
-            return CallGenericFunction(&TokenStream::reportExtraWarningErrorNumberVA,
-                                       &parser->tokenStream,
-                                       args,
-                                       typename mozilla::IndexSequenceFor<StoredArgs...>::Type());
-        }
-    };
-
-  public:
-    template<typename... Args>
-    MOZ_MUST_USE bool reportExtraWarningErrorNumberVA(Args&&... args) {
-        ReportExtraWarningMatcher<typename mozilla::Decay<Args>::Type...>
-            matcher { mozilla::Forward<Args>(args)... };
-        return parser.match(mozilla::Move(matcher));
-    }
-
-  private:
-    template<typename... StoredArgs>
-    struct ReportStrictModeErrorMatcher
-    {
-        mozilla::Tuple<StoredArgs...> args;
-
-        template<typename... Args>
-        explicit ReportStrictModeErrorMatcher(Args&&... actualArgs)
-          : args { mozilla::Forward<Args>(actualArgs)... }
-        {}
-
-        template<class Parser>
-        MOZ_MUST_USE bool match(Parser* parser) {
-            return CallGenericFunction(&TokenStream::reportStrictModeErrorNumberVA,
-                                       &parser->tokenStream,
-                                       args,
-                                       typename mozilla::IndexSequenceFor<StoredArgs...>::Type());
-        }
-    };
-
-  public:
-    template<typename... Args>
-    MOZ_MUST_USE bool reportStrictModeErrorNumberVA(Args&&... args) {
-        ReportStrictModeErrorMatcher<typename mozilla::Decay<Args>::Type...>
-            matcher { mozilla::Forward<Args>(args)... };
-        return parser.match(mozilla::Move(matcher));
     }
 };
 

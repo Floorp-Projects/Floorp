@@ -31,7 +31,7 @@ function getWindows() {
  * @return A generator that yields XUL windows exposing the
  *         nsIDOMWindow interface.
  */
-function windowIterator() {
+function* windowIterator() {
   // Bug 752631: We only pass already loaded window in order to avoid
   // breaking XUL windows DOM. DOM is broken when some JS code try
   // to access DOM during "uninitialized" state of the related document.
@@ -48,7 +48,7 @@ exports.windowIterator = windowIterator;
  *    A generator that yields browser windows exposing the `nsIDOMWindow`
  *    interface.
  */
-function browserWindowIterator() {
+function* browserWindowIterator() {
   for (let window of windowIterator()) {
     if (isBrowser(window))
       yield window;

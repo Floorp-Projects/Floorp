@@ -63,6 +63,14 @@
     "namespace": "privacy.websites",
     "description": "Use the <code>browser.privacy</code> API to control usage of the features in the browser that can affect a user's privacy.",
     "permissions": ["privacy"],
+    "types": [
+      {
+        "id": "TrackingProtectionModeOption",
+        "type": "string",
+        "enum": ["always", "never", "private_browsing"],
+        "description": "The mode for tracking protection."
+      }
+    ],
     "properties": {
       "thirdPartyCookiesAllowed": {
         "$ref": "types.Setting",
@@ -81,6 +89,10 @@
         "$ref": "types.Setting",
         "description": "<strong>Available on Windows and ChromeOS only</strong>: If enabled, the browser provides a unique ID to plugins in order to run protected content. The value of this preference is of type boolean, and the default value is <code>true</code>.",
         "unsupported": true
+      },
+      "trackingProtectionMode": {
+        "$ref": "types.Setting",
+        "description": "Allow users to specify the mode for tracking protection. This setting's value is of type TrackingProtectionModeOption, defaulting to <code>private_browsing_only</code>."
       }
     }
   }

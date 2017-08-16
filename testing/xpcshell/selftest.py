@@ -159,7 +159,7 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
 
-add_task(function test_task() {
+add_task(function* test_task() {
   yield Promise.resolve(true);
   yield Promise.resolve(false);
 });
@@ -170,11 +170,11 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
 
-add_task(function test_task() {
+add_task(function* test_task() {
   yield Promise.resolve(true);
 });
 
-add_task(function test_2() {
+add_task(function* test_2() {
   yield Promise.resolve(true);
 });
 '''
@@ -184,7 +184,7 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
 
-add_task(function test_failing() {
+add_task(function* test_failing() {
   yield Promise.reject(new Error("I fail."));
 });
 '''
@@ -194,7 +194,7 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
 
-add_task(function test() {
+add_task(function* test() {
   let result = yield Promise.resolve(false);
 
   do_check_true(result);
@@ -217,19 +217,6 @@ Components.utils.import("resource://gre/modules/Promise.jsm", this);
 function run_test() { run_next_test(); }
 
 add_task(function* this_test_will_fail() {
-  for (let i = 0; i < 10; ++i) {
-    yield Promise.resolve();
-  }
-  Assert.ok(false);
-});
-'''
-
-ADD_TASK_STACK_TRACE_WITHOUT_STAR = '''
-Components.utils.import("resource://gre/modules/Promise.jsm", this);
-
-function run_test() { run_next_test(); }
-
-add_task(function this_test_will_fail() {
   for (let i = 0; i < 10; ++i) {
     yield Promise.resolve();
   }
@@ -330,8 +317,7 @@ function run_test(
 # A test for failure to load a test due to an error other than a syntax error
 LOAD_ERROR_OTHER_ERROR = '''
 function run_test() {
-    yield "foo";
-    return "foo"; // can't use return in a generator!
+    1 = "foo"; // invalid assignment left-hand side
 };
 '''
 
@@ -436,11 +422,11 @@ add_task(function no_run_test_add_task_fail() {
 NO_RUN_TEST_ADD_TASK_MULTIPLE = '''
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
-add_task(function test_task() {
+add_task(function* test_task() {
   yield Promise.resolve(true);
 });
 
-add_task(function test_2() {
+add_task(function* test_2() {
   yield Promise.resolve(true);
 });
 '''
@@ -1066,22 +1052,6 @@ add_test({
         self.assertInLog("run_test")
         self.assertNotInLog("Task.jsm")
 
-    def testAddTaskStackTraceWithoutStar(self):
-        """
-        Ensuring that calling Assert.ok(false) from inside add_task()
-        results in a human-readable stack trace. This variant uses deprecated
-        `function()` syntax instead of now standard `function*()`.
-        """
-        self.writeFile("test_add_task_stack_trace_without_star.js",
-            ADD_TASK_STACK_TRACE)
-        self.writeManifest(["test_add_task_stack_trace_without_star.js"])
-
-        self.assertTestResult(False)
-        self.assertInLog("this_test_will_fail")
-        self.assertInLog("run_next_test")
-        self.assertInLog("run_test")
-        self.assertNotInLog("Task.jsm")
-
     def testAddTaskSkip(self):
         self.writeFile("test_tasks_skip.js", ADD_TASK_SKIP)
         self.writeManifest(["test_tasks_skip.js"])
@@ -1216,8 +1186,8 @@ add_test({
 
         self.assertTestResult(False)
         self.assertInLog(TEST_FAIL_STRING)
-        self.assertInLog("TypeError: generator function can't return a value at")
-        self.assertInLog("test_error.js:4")
+        self.assertInLog("ReferenceError: invalid assignment left-hand side at")
+        self.assertInLog("test_error.js:3")
         self.assertNotInLog(TEST_PASS_STRING)
 
     def testDoPrintWhenVerboseNotExplicit(self):

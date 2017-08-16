@@ -324,7 +324,6 @@ BoxModel.prototype = {
           this.store.dispatch(updateLayout(layout));
         }, e => console.error(e));
       },
-      contextMenu: this.inspector.onTextBoxContextMenu,
       cssProperties: getCssProperties(this.inspector.toolbox)
     }, event);
   },

@@ -12,6 +12,7 @@
 #include "mozilla/EventListenerManager.h" // for EventListenerManager
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/TextEditor.h"         // for TextEditor
 #include "mozilla/TextEvents.h"         // for WidgetCompositionEvent
 #include "mozilla/dom/Element.h"        // for Element
 #include "mozilla/dom/Event.h"          // for Event
@@ -36,11 +37,8 @@
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsIDocument.h"                // for nsIDocument
-#include "nsIEditor.h"                  // for EditorBase::GetSelection, etc.
-#include "nsIEditorMailSupport.h"       // for nsIEditorMailSupport
 #include "nsIFocusManager.h"            // for nsIFocusManager
 #include "nsIFormControl.h"             // for nsIFormControl, etc.
-#include "nsIHTMLEditor.h"              // for nsIHTMLEditor
 #include "nsINode.h"                    // for nsINode, ::NODE_IS_EDITABLE, etc.
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc.
 #include "nsIPresShell.h"               // for nsIPresShell
@@ -366,7 +364,7 @@ EditorEventListener::EnsureCommitCompoisition()
 {
   MOZ_ASSERT(!DetachedFromEditor());
   RefPtr<EditorBase> editorBase(mEditorBase);
-  editorBase->ForceCompositionEnd();
+  editorBase->CommitComposition();
   return !DetachedFromEditor();
 }
 
@@ -711,17 +709,12 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
     return NS_ERROR_NULL_POINTER;
   }
 
-  RefPtr<EditorBase> editorBase(mEditorBase);
-  RefPtr<Selection> selection = editorBase->GetSelection();
+  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
+  MOZ_ASSERT(textEditor);
+
+  RefPtr<Selection> selection = textEditor->GetSelection();
   if (selection) {
     selection->Collapse(parent, offset);
-  }
-
-  // If the ctrl key is pressed, we'll do paste as quotation.
-  // Would've used the alt key, but the kde wmgr treats alt-middle specially.
-  nsCOMPtr<nsIEditorMailSupport> mailEditor;
-  if (clickEvent->IsControl()) {
-    mailEditor = do_QueryObject(editorBase);
   }
 
   nsresult rv;
@@ -736,10 +729,12 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
     }
   }
 
-  if (mailEditor) {
-    mailEditor->PasteAsQuotation(clipboard);
+  // If the ctrl key is pressed, we'll do paste as quotation.
+  // Would've used the alt key, but the kde wmgr treats alt-middle specially.
+  if (clickEvent->IsControl()) {
+    textEditor->PasteAsQuotation(clipboard);
   } else {
-    editorBase->Paste(clipboard);
+    textEditor->Paste(clipboard);
   }
 
   // Prevent the event from propagating up to be possibly handled
@@ -1191,11 +1186,8 @@ EditorEventListener::SpellCheckIfNeeded()
   // If the spell check skip flag is still enabled from creation time,
   // disable it because focused editors are allowed to spell check.
   RefPtr<EditorBase> editorBase(mEditorBase);
-  uint32_t currentFlags = 0;
-  editorBase->GetFlags(&currentFlags);
-  if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) {
-    currentFlags ^= nsIPlaintextEditor::eEditorSkipSpellCheck;
-    editorBase->SetFlags(currentFlags);
+  if(editorBase->ShouldSkipSpellCheck()) {
+    editorBase->RemoveFlags(nsIPlaintextEditor::eEditorSkipSpellCheck);
   }
 }
 
