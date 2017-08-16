@@ -39,14 +39,6 @@ groupbox + groupbox {
   margin-top: 16px;
 }
 
-groupbox + groupbox > .groupbox-body {
-  margin-top: 4px;
-}
-
-.groupbox-title {
-  margin-top: 16px;
-}
-
 input,
 description.indent,
 .indent > description {
@@ -99,6 +91,14 @@ separator.thin:not([orient="vertical"]) {
 .accessory-button {
   min-width: 145px;
   margin: 2px 0;
+}
+
+.groupbox-title {
+  margin-top: 16px;
+}
+
+.groupbox-body {
+  margin-top: 4px;
 }
 
 /* Subcategory title */
@@ -379,10 +379,6 @@ separator.thin:not([orient="vertical"]) {
   margin-inline-start: 0;
 }
 
-#weavePrefsDeck > vbox > groupbox {
-  margin-top: 16px;
-}
-
 #tabsElement {
   margin-inline-end: 4px; /* add the 4px end-margin of other elements */
 }
@@ -484,11 +480,19 @@ separator.thin:not([orient="vertical"]) {
  */
 
 #fxaProfileImage {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/fxa-avatar.svg");
+  margin-inline-end: 15px;
+  image-rendering: auto;
+  border: 1px solid transparent;
+  -moz-user-focus: normal;
+}
+
+#fxaLoginStatus[hasName] #fxaProfileImage {
   width: 80px;
   height: 80px;
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/fxa-avatar.svg");
-  margin-inline-end: 24px;
-  -moz-user-focus: normal;
 }
 
 #fxaProfileImage.actionable {
@@ -503,19 +507,41 @@ separator.thin:not([orient="vertical"]) {
   border-color: #ff9500;
 }
 
+#noFxaAccount {
+  padding-top: 15px;
+}
+
+#fxaContentWrapper {
+  -moz-box-flex: 1;
+}
+
 #useFirefoxSync  {
   font-size: 90%;
   margin-inline-end: 8px !important;
 }
 
-#fxaNoLoginStatus {
-  margin-top: 46px;
-  margin-bottom: 64px;
+#noFxaGroup {
+  -moz-box-flex: 1;
+  margin: 0;
+}
+
+#fxaContentWrapper {
+  padding-right: 15px;
+}
+
+#noFxaGroup > vbox,
+#fxaGroup {
+  -moz-box-align: start;
+}
+
+#fxaSyncEngines > vbox:first-child {
+  margin-right: 80px;
 }
 
 #fxaSyncComputerName {
   margin-top: 3px;
-  margin-inline-start: 0;
+  margin-inline-start: -4px;
+  margin-inline-end: 0;
   margin-bottom: 0;
 }
 
@@ -524,41 +550,62 @@ separator.thin:not([orient="vertical"]) {
 }
 
 #noFxaCaption {
-  font-weight: bold;
-  line-height: 30px;
-  margin-top: 0;
-  margin-bottom: 4px;
+  margin-bottom: 11px;
 }
 
 .fxaSyncIllustration {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/sync-devices.svg");
-  width: 312px;
-  height: 136px;
+  margin-top: 35px;
+  width: 231px;
+  -moz-context-properties: fill;
+  fill: #bfcbd3;
+}
+
+#syncOptions caption {
+  margin-bottom: 11px;
+}
+
+#fxaDeviceName {
+  margin-bottom: 27.5px;
 }
 
 #noFxaDescription {
-  padding-inline-end: 52px;
+  margin-bottom: 20px !important;
 }
 
 .separator {
   border-bottom: 1px solid var(--in-content-header-border-color);
 }
 
-#fxaGroup {
-  margin-top: 16px;
-  margin-bottom: 32px;
+.fxaAccountBox {
+  border: 1px solid #D1D2D3;
+  border-radius: 5px;
+  padding: 14px 20px 14px 14px;
 }
 
-#signedOutAccountBoxTitle {
-  font-weight: bold;
+.fxaAccountBoxButtons {
+  margin-bottom: 0 !important;
+  margin-top: 11px;
+  display: flex;
+  align-items: center;
 }
 
-.openLink {
-  line-height: 30px;
-  cursor: pointer;
+.fxaAccountBoxButtons > * {
+  -moz-box-flex: 1;
 }
 
-.openLink:visited {
+.fxaAccountBoxButtons > button {
+  text-align: center;
+  padding-left: 11px;
+  padding-right: 11px;
+  margin: 0;
+  min-width: 0;
+}
+
+.fxaAccountBoxButtons > button:first-child {
+  margin-inline-end: 14px !important;
+}
+
+#verifiedManage:visited {
   color: var(--in-content-link-color);
 }
 
@@ -574,9 +621,15 @@ separator.thin:not([orient="vertical"]) {
 
 .fxaFirefoxLogo {
   list-style-image: url("chrome://browser/skin/preferences/in-content-new/fxa-avatar.svg");
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   margin-inline-end: 14px;
+}
+
+.fxaMobilePromo {
+  line-height: 28px;
+  margin-bottom: 20px;
+  margin-top: 25px;
 }
 
 #fxaLoginRejectedWarning {
@@ -585,12 +638,8 @@ separator.thin:not([orient="vertical"]) {
   margin: 4px 8px 0px 0px;
 }
 
-#fxaSyncEngines > checkbox {
-  max-width: 224px;
-}
-
-.fxaMobilePromo {
-  margin: 2px 0 32px 0 !important;
+#syncOptions {
+  margin-bottom: 27.5px;
 }
 
 .androidLink {
@@ -603,11 +652,14 @@ separator.thin:not([orient="vertical"]) {
 
 .androidLink,
 .iOSLink {
-  margin-inline-start: 2px;
-  margin-inline-end: 4px;
   width: 20px;
   height: 20px;
   vertical-align: text-bottom;
+}
+
+#tosPP-small {
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 #updateDeck > hbox > label {
