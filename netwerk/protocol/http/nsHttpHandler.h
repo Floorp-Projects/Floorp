@@ -95,7 +95,7 @@ public:
     PRIntervalTime ResponseTimeoutEnabled()  { return mResponseTimeoutEnabled; }
     uint32_t       NetworkChangedTimeout()   { return mNetworkChangedTimeout; }
     uint16_t       MaxRequestAttempts()      { return mMaxRequestAttempts; }
-    const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
+    const char    *DefaultSocketType()       { return mDefaultSocketType.IsVoid() ? nullptr : mDefaultSocketType.get(); }
     uint32_t       PhishyUserPassLength()    { return mPhishyUserPassLength; }
     uint8_t        GetQoSBits()              { return mQoSBits; }
     uint16_t       GetIdleSynTimeout()       { return mIdleSynTimeout; }
@@ -482,7 +482,7 @@ private:
     nsCString mHttpAcceptEncodings;
     nsCString mHttpsAcceptEncodings;
 
-    nsXPIDLCString mDefaultSocketType;
+    nsCString mDefaultSocketType;
 
     // cache support
     uint32_t                  mLastUniqueID;
@@ -495,17 +495,17 @@ private:
     nsCString      mOscpu;
     nsCString      mMisc;
     nsCString      mProduct;
-    nsXPIDLCString mProductSub;
-    nsXPIDLCString mAppName;
-    nsXPIDLCString mAppVersion;
+    nsCString      mProductSub;
+    nsCString      mAppName;
+    nsCString      mAppVersion;
     nsCString      mCompatFirefox;
     bool           mCompatFirefoxEnabled;
-    nsXPIDLCString mCompatDevice;
+    nsCString      mCompatDevice;
     nsCString      mDeviceModelId;
 
     nsCString      mUserAgent;
     nsCString      mSpoofedUserAgent;
-    nsXPIDLCString mUserAgentOverride;
+    nsCString      mUserAgentOverride;
     bool           mUserAgentIsDirty; // true if mUserAgent should be rebuilt
     bool           mAcceptLanguagesIsDirty;
 
