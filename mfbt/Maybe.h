@@ -85,7 +85,7 @@ struct Nothing { };
 template<class T>
 class MOZ_NON_PARAM MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
 {
-  alignas(T) unsigned char mStorage[sizeof(T)];
+  MOZ_ALIGNAS_IN_STRUCT(T) unsigned char mStorage[sizeof(T)];
   char mIsSome; // not bool -- guarantees minimal space consumption
 
   // GCC fails due to -Werror=strict-aliasing if |mStorage| is directly cast to
