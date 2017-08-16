@@ -34,6 +34,7 @@ public final class CodecProxy {
     private CallbacksForwarder mCallbacks;
     private String mRemoteDrmStubId;
     private Queue<Sample> mSurfaceOutputs = new ConcurrentLinkedQueue<>();
+    private boolean mFlushed = true;
 
     public interface Callbacks {
         void onInputStatus(long timestamp, boolean processed);
@@ -220,6 +221,7 @@ public final class CodecProxy {
             mRemote.queueInput(sample);
             if (sample != null) {
                 sample.dispose();
+                mFlushed = false;
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "fail to queue input:" + sample, e);
@@ -231,6 +233,9 @@ public final class CodecProxy {
 
     @WrapForJNI
     public synchronized boolean flush() {
+        if (mFlushed) {
+            return true;
+        }
         if (mRemote == null) {
             Log.e(LOGTAG, "cannot flush an ended codec");
             return false;
@@ -238,6 +243,7 @@ public final class CodecProxy {
         try {
             if (DEBUG) { Log.d(LOGTAG, "flush " + this); }
             mRemote.flush();
+            mFlushed = true;
         } catch (DeadObjectException e) {
             return false;
         } catch (RemoteException e) {
