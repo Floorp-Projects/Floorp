@@ -154,6 +154,7 @@ class RemoteReftest(RefTest):
         self.remoteProfile = options.remoteProfile
         self.remoteTestRoot = options.remoteTestRoot
         self.remoteLogFile = options.remoteLogFile
+        self.remoteCache = os.path.join(options.remoteTestRoot, "cache/")
         self.localLogName = options.localLogName
         self.pidFile = options.pidFile
         if self.automation.IS_DEBUG_BUILD:
@@ -162,6 +163,7 @@ class RemoteReftest(RefTest):
             self.SERVER_STARTUP_TIMEOUT = 90
         self.automation.deleteANRs()
         self.automation.deleteTombstones()
+        self._devicemanager.removeDir(self.remoteCache)
 
         self._populate_logger(options)
         outputHandler = OutputHandler(self.log, options.utilityPath, options.symbolsPath)
@@ -252,6 +254,8 @@ class RemoteReftest(RefTest):
         prefs["browser.firstrun.show.localepicker"] = False
         prefs["reftest.remote"] = True
         prefs["datareporting.policy.dataSubmissionPolicyBypassAcceptance"] = True
+        # move necko cache to a location that can be cleaned up
+        prefs["browser.cache.disk.parent_directory"] = self.remoteCache
 
         prefs["layout.css.devPixelsPerPx"] = "1.0"
         # Because Fennec is a little wacky (see bug 1156817) we need to load the
@@ -332,6 +336,7 @@ class RemoteReftest(RefTest):
             print "WARNING: Unable to retrieve log file (%s) from remote " \
                 "device" % self.remoteLogFile
         self._devicemanager.removeDir(self.remoteProfile)
+        self._devicemanager.removeDir(self.remoteCache)
         self._devicemanager.removeDir(self.remoteTestRoot)
         RefTest.cleanup(self, profileDir)
         if (self.pidFile != ""):
