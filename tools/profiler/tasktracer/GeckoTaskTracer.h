@@ -13,6 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
 /**
@@ -30,7 +31,6 @@
  */
 
 class nsIRunnable;
-class nsCString;
 
 namespace mozilla {
 

@@ -20,8 +20,6 @@
 #include "nsReadableUtils.h"
 #include "nsISupportsImpl.h"
 
-class nsString;
-
 // XXX should this normalize the code to keep a \u0000 at the end?
 
 // XXX nsTextFragmentPool?

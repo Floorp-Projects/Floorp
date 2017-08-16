@@ -10,12 +10,11 @@
 #include "base/message_pump.h"
 #include "base/time.h"
 #include "mozilla/UniquePtr.h"
+#include "nsStringFwd.h"
 
 // Declare structs we need from libevent.h rather than including it
 struct event_base;
 struct event;
-
-class nsDependentCSubstring;
 
 namespace base {
 

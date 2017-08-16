@@ -8,13 +8,13 @@
 #define nsIHTMLCollection_h___
 
 #include "nsIDOMHTMLCollection.h"
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 #include "js/GCAPI.h"
 #include "js/TypeDecls.h"
 
 class nsINode;
-class nsString;
 
 namespace mozilla {
 namespace dom {

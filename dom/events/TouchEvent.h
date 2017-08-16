@@ -13,9 +13,8 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TouchEvents.h"
 #include "nsJSEnvironment.h"
+#include "nsStringFwd.h"
 #include "nsWrapperCache.h"
-
-class nsAString;
 
 namespace mozilla {
 namespace dom {
