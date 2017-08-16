@@ -123,6 +123,13 @@ class TestCapabilityMatching(MarionetteTestCase):
         self.marionette.start_session()
         self.assertNotIn("proxy", self.marionette.session_capabilities)
 
+    def test_invalid_proxy_type(self):
+        with self.assertRaises(SessionNotCreatedException):
+            self.marionette.start_session({"proxy": {"proxyAutoconfigUrl": None}})
+
+        with self.assertRaises(SessionNotCreatedException):
+            self.marionette.start_session({"proxy": {"proxyType": None}})
+
     def test_proxy_type_direct(self):
         self.marionette.start_session({"proxy": {"proxyType": "direct"}})
         self.assertIn("proxy", self.marionette.session_capabilities)
