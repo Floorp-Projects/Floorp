@@ -439,7 +439,7 @@ module.exports = createClass({
 
     return dom.div(
       {
-        className: "boxmodel-main",
+        className: "boxmodel-main devtools-monospace",
         "data-box": "position",
         ref: div => {
           this.positionLayout = div;
