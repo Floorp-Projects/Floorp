@@ -344,7 +344,7 @@ nsContentIterator::Init(nsINode* aStartContainer, uint32_t aStartOffset,
 
 // XXX Argument names will be replaced in the following patch.
 nsresult
-nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
+nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
                                 nsINode* aEndContainer, uint32_t endIndx)
 {
   // get common content parent
@@ -365,7 +365,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
     //      we always want to be able to iterate text nodes at the end points
     //      of a range.
 
-    if (!startIsData && startIndx == endIndx) {
+    if (!startIsData && aStartOffset == endIndx) {
       MakeEmpty();
       return NS_OK;
     }
@@ -386,10 +386,10 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
 
   nsIContent* cChild = nullptr;
 
-  // Valid start indices are 0 <= startIndx <= childCount. That means if start
-  // node has no children, only offset 0 is valid.
-  if (!startIsData && uint32_t(startIndx) < aStartContainer->GetChildCount()) {
-    cChild = aStartContainer->GetChildAt(startIndx);
+  // Valid start indices are 0 <= aStartOffset <= childCount. That means if
+  // start node has no children, only offset 0 is valid.
+  if (!startIsData && aStartOffset < aStartContainer->GetChildCount()) {
+    cChild = aStartContainer->GetChildAt(aStartOffset);
     NS_WARNING_ASSERTION(cChild, "GetChildAt returned null");
   }
 
@@ -402,9 +402,9 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
       //      the next sibling?
 
       // Normally we would skip the start node because the start node is outside
-      // of the range in pre mode. However, if startIndx == 0, and the node is a
-      // non-container node (e.g. <br>), we don't skip the node in this case in
-      // order to address bug 1215798.
+      // of the range in pre mode. However, if aStartOffset == 0, and the node
+      // is a non-container node (e.g. <br>), we don't skip the node in this
+      // case in order to address bug 1215798.
       bool startIsContainer = true;
       if (aStartContainer->IsHTMLElement()) {
         if (nsIParserService* ps = nsContentUtils::GetParserService()) {
@@ -412,7 +412,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
           ps->IsContainer(ps->HTMLAtomTagToId(name), startIsContainer);
         }
       }
-      if (!startIsData && (startIsContainer || startIndx)) {
+      if (!startIsData && (startIsContainer || aStartOffset)) {
         mFirst = GetNextSibling(aStartContainer);
         NS_WARNING_ASSERTION(mFirst, "GetNextSibling returned null");
 
@@ -420,7 +420,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
         // 'degenerate', i.e., not collapsed but still contain no content.
         if (mFirst &&
             NS_WARN_IF(!NodeIsInTraversalRange(mFirst, mPre,
-                                               aStartContainer, startIndx,
+                                               aStartContainer, aStartOffset,
                                                aEndContainer, endIndx))) {
           mFirst = nullptr;
         }
@@ -448,7 +448,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
       // 'degenerate', i.e., not collapsed but still contain no content.
 
       if (mFirst &&
-          !NodeIsInTraversalRange(mFirst, mPre, aStartContainer, startIndx,
+          !NodeIsInTraversalRange(mFirst, mPre, aStartContainer, aStartOffset,
                                   aEndContainer, endIndx)) {
         mFirst = nullptr;
       }
@@ -500,7 +500,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
         NS_WARNING_ASSERTION(mLast, "GetPrevSibling returned null");
 
         if (!NodeIsInTraversalRange(mLast, mPre,
-                                    aStartContainer, startIndx,
+                                    aStartContainer, aStartOffset,
                                     aEndContainer, endIndx)) {
           mLast = nullptr;
         }
@@ -524,7 +524,7 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t startIndx,
       NS_WARNING_ASSERTION(mLast, "GetDeepLastChild returned null");
 
       if (NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
-                                             aStartContainer, startIndx,
+                                             aStartContainer, aStartOffset,
                                              aEndContainer, endIndx))) {
         mLast = nullptr;
       }
