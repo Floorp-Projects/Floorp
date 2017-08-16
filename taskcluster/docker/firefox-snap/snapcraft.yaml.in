@@ -7,7 +7,7 @@ confinement: strict
 apps:
   firefox:
     command: desktop-launch firefox
-    desktop: distribution/firefox.desktop
+    desktop: opt/firefox/distribution/firefox.desktop
     plugs:
       - unity7
       - network
