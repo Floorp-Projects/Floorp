@@ -7,6 +7,9 @@
 #include "ProfileBuffer.h"
 
 #include "ProfilerMarker.h"
+#include "jsfriendapi.h"
+#include "nsScriptSecurityManager.h"
+#include "nsJSPrincipals.h"
 
 using namespace mozilla;
 
@@ -62,18 +65,6 @@ ProfileBuffer::AddStoredMarker(ProfilerMarker *aStoredMarker)
 {
   aStoredMarker->SetGeneration(mGeneration);
   mStoredMarkers.insert(aStoredMarker);
-}
-
-void
-ProfileBuffer::CollectNativeLeafAddr(void* aAddr)
-{
-  AddEntry(ProfileBufferEntry::NativeLeafAddr(aAddr));
-}
-
-void
-ProfileBuffer::CollectJitReturnAddr(void* aAddr)
-{
-  AddEntry(ProfileBufferEntry::JitReturnAddr(aAddr));
 }
 
 void
@@ -142,3 +133,95 @@ ProfileBuffer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+/* ProfileBufferCollector */
+
+static bool
+IsChromeJSScript(JSScript* aScript)
+{
+  // WARNING: this function runs within the profiler's "critical section".
+
+  nsIScriptSecurityManager* const secman =
+    nsScriptSecurityManager::GetScriptSecurityManager();
+  NS_ENSURE_TRUE(secman, false);
+
+  JSPrincipals* const principals = JS_GetScriptPrincipals(aScript);
+  return secman->IsSystemPrincipal(nsJSPrincipals::get(principals));
+}
+
+Maybe<uint32_t>
+ProfileBufferCollector::Generation()
+{
+  return Some(mBuf.mGeneration);
+}
+
+void
+ProfileBufferCollector::CollectNativeLeafAddr(void* aAddr)
+{
+  mBuf.AddEntry(ProfileBufferEntry::NativeLeafAddr(aAddr));
+}
+
+void
+ProfileBufferCollector::CollectJitReturnAddr(void* aAddr)
+{
+  mBuf.AddEntry(ProfileBufferEntry::JitReturnAddr(aAddr));
+}
+
+void
+ProfileBufferCollector::CollectWasmFrame(const char* aLabel)
+{
+  mBuf.CollectCodeLocation("", aLabel, -1, Nothing());
+}
+
+void
+ProfileBufferCollector::CollectPseudoEntry(const js::ProfileEntry& aEntry)
+{
+  // WARNING: this function runs within the profiler's "critical section".
+
+  MOZ_ASSERT(aEntry.kind() == js::ProfileEntry::Kind::CPP_NORMAL ||
+             aEntry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
+
+  const char* label = aEntry.label();
+  const char* dynamicString = aEntry.dynamicString();
+  bool isChromeJSEntry = false;
+  int lineno = -1;
+
+  if (aEntry.isJs()) {
+    // There are two kinds of JS frames that get pushed onto the PseudoStack.
+    //
+    // - label = "", dynamic string = <something>
+    // - label = "js::RunScript", dynamic string = nullptr
+    //
+    // The line number is only interesting in the first case.
+
+    if (label[0] == '\0') {
+      MOZ_ASSERT(dynamicString);
+
+      // We call aEntry.script() repeatedly -- rather than storing the result in
+      // a local variable in order -- to avoid rooting hazards.
+      if (aEntry.script()) {
+        isChromeJSEntry = IsChromeJSScript(aEntry.script());
+        if (aEntry.pc()) {
+          lineno = JS_PCToLineNumber(aEntry.script(), aEntry.pc());
+        }
+      }
+
+    } else {
+      MOZ_ASSERT(strcmp(label, "js::RunScript") == 0 && !dynamicString);
+    }
+  } else {
+    MOZ_ASSERT(aEntry.isCpp());
+    lineno = aEntry.line();
+  }
+
+  if (dynamicString) {
+    // Adjust the dynamic string as necessary.
+    if (ProfilerFeature::HasPrivacy(mFeatures) && !isChromeJSEntry) {
+      dynamicString = "(private)";
+    } else if (strlen(dynamicString) >= ProfileBuffer::kMaxFrameKeyLength) {
+      dynamicString = "(too long)";
+    }
+  }
+
+  mBuf.CollectCodeLocation(label, dynamicString, lineno,
+                           Some(aEntry.category()));
+}

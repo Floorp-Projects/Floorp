@@ -36,6 +36,7 @@ class MochiRemote(MochitestDesktop):
         self.environment = self._automation.environment
         self.remoteProfile = os.path.join(options.remoteTestRoot, "profile/")
         self.remoteModulesDir = os.path.join(options.remoteTestRoot, "modules/")
+        self.remoteCache = os.path.join(options.remoteTestRoot, "cache/")
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
         self.localLog = options.logFile
@@ -51,6 +52,9 @@ class MochiRemote(MochitestDesktop):
         self._dm.removeDir(self.remoteChromeTestDir)
         self._dm.mkDir(self.remoteChromeTestDir)
         self._dm.removeDir(self.remoteProfile)
+        self._dm.removeDir(self.remoteCache)
+        # move necko cache to a location that can be cleaned up
+        options.extraPrefs += ["browser.cache.disk.parent_directory=%s" % self.remoteCache]
 
     def cleanup(self, options):
         if self._dm.fileExists(self.remoteLog):
@@ -60,8 +64,9 @@ class MochiRemote(MochitestDesktop):
             self.log.warning(
                 "Unable to retrieve log file (%s) from remote device" %
                 self.remoteLog)
-        self._dm.removeDir(self.remoteProfile)
         self._dm.removeDir(self.remoteChromeTestDir)
+        self._dm.removeDir(self.remoteProfile)
+        self._dm.removeDir(self.remoteCache)
         blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
         if blobberUploadDir:
             self._dm.getDirectory(self.remoteMozLog, blobberUploadDir)

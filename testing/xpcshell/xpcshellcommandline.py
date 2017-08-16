@@ -119,6 +119,13 @@ def add_common_arguments(parser):
                              "in automation")
     parser.add_argument("testPaths", nargs="*", default=None,
                         help="Paths of tests to run.")
+    parser.add_argument("--verify",
+                        action="store_true", default=False,
+                        help="Verify test(s) by running multiple times.")
+    parser.add_argument("--verify-max-time",
+                        dest="verifyMaxTime",
+                        type=int, default=3600,
+                        help="Maximum time, in seconds, to run in --verify mode.")
 
 def add_remote_arguments(parser):
     parser.add_argument("--deviceIP", action="store", type=str, dest="deviceIP",

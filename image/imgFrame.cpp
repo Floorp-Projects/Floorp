@@ -83,6 +83,19 @@ AllocateBufferForImage(const IntSize& size,
                        SurfaceFormat format,
                        bool aIsAnimated = false)
 {
+#ifdef ANDROID
+  if (aIsAnimated) {
+    // For as long as an animated image is retained, its frames will never be
+    // released to let the OS purge volatile buffers. On Android, a volatile
+    // buffer actually keeps a file handle active, which we would like to avoid
+    // since many images and frames could easily exhaust the pool. As such, we
+    // use the heap. On the other platforms we do not have the file handle
+    // problem, and additionally we may avoid a superfluous memset since the
+    // volatile memory starts out as zero-filled.
+    return Factory::CreateDataSourceSurface(size, format, false);
+  }
+#endif
+
   int32_t stride = VolatileSurfaceStride(size, format);
   if (!aIsAnimated && gfxPrefs::ImageMemShared()) {
     RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
