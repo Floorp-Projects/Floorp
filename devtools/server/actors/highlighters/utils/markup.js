@@ -7,7 +7,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { getCurrentZoom, getWindowDimensions, getViewportDimensions,
   getRootBindingParent, loadSheet } = require("devtools/shared/layout/utils");
-const { on, emit } = require("sdk/event/core");
+const { on, emit } = require("devtools/shared/event-emitter");
 
 const lazyContainer = {};
 

@@ -16,7 +16,7 @@ const {
 } = require("devtools/shared/specs/stylesheets");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 
 /**
  * The client-side counterpart for an OriginalSourceActor.
