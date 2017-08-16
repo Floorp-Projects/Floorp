@@ -2089,6 +2089,7 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
 
   LayoutDeviceIntRegion updatedTitlebarRegion;
   updatedTitlebarRegion.And(mUpdatedTitlebarRegion, mTitlebarRect);
+  updatedTitlebarRegion.MoveBy(-mTitlebarRect.TopLeft());
   mUpdatedTitlebarRegion.SetEmpty();
 
   if (mTitlebarCGContext) {
@@ -2347,6 +2348,8 @@ nsChildView::UpdateTitlebarCGContext()
 
   CGContextSaveGState(ctx);
 
+  CGContextTranslateCTM(ctx, -mTitlebarRect.x, -mTitlebarRect.y);
+
   double scale = BackingScaleFactor();
   CGContextScaleCTM(ctx, scale, scale);
 
@@ -2458,6 +2461,7 @@ nsChildView::MaybeDrawTitlebar(GLManager* aManager)
 
   LayoutDeviceIntRegion updatedTitlebarRegion;
   updatedTitlebarRegion.And(mUpdatedTitlebarRegion, mTitlebarRect);
+  updatedTitlebarRegion.MoveBy(-mTitlebarRect.TopLeft());
   mUpdatedTitlebarRegion.SetEmpty();
 
   if (!mTitlebarImage) {
