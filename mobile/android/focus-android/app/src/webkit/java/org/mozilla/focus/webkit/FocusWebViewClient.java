@@ -5,6 +5,7 @@
 package org.mozilla.focus.webkit;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -290,7 +291,8 @@ import java.util.Map;
 
         String aboutVersion = "";
         try {
-            aboutVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+            final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            aboutVersion = String.format("%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode);
         } catch (PackageManager.NameNotFoundException e) {
             // Nothing to do if we can't find the package name.
         }
