@@ -6,7 +6,7 @@
 const {Ci} = require("chrome");
 const Services = require("Services");
 
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 
 /**
  * Handles adding an observer for the creation of content document globals,

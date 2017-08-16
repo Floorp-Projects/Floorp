@@ -8,7 +8,7 @@ var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var {Class} = require("sdk/core/heritage");
 var {EventTarget} = require("sdk/event/target");
-var events = require("sdk/event/core");
+var events = require("devtools/shared/event-emitter");
 var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
 var {settleAll} = require("devtools/shared/DevToolsUtils");
 
