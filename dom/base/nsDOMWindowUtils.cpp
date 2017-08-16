@@ -28,9 +28,6 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "ClientLayerManager.h"
 #include "nsQueryObject.h"
-#ifdef MOZ_FMP4
-#include "MP4Decoder.h"
-#endif
 #include "CubebUtils.h"
 
 #include "nsIScrollableFrame.h"
