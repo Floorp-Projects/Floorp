@@ -6,20 +6,9 @@
 
 #include "MP4Decoder.h"
 #include "MediaContainerType.h"
-#include "MediaFormatReader.h"
 #include "MP4Demuxer.h"
-#include "mozilla/Preferences.h"
-#include "nsCharSeparatedTokenizer.h"
-#include "mozilla/CDMProxy.h"
-#include "mozilla/Logging.h"
-#include "mozilla/SharedThreadPool.h"
 #include "nsMimeTypes.h"
 #include "VideoUtils.h"
-
-#ifdef MOZ_WIDGET_ANDROID
-#include "nsIGfxInfo.h"
-#endif
-#include "mozilla/layers/LayersTypes.h"
 
 #include "PDMFactory.h"
 

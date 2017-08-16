@@ -7,8 +7,6 @@
 #ifndef FLAC_DECODER_H_
 #define FLAC_DECODER_H_
 
-#include "ChannelMediaDecoder.h"
-
 namespace mozilla {
 
 class MediaContainerType;
