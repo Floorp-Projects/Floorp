@@ -139,9 +139,9 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
   if (cacheFile) {
     // remember the file name
     if (!mCacheFileName) {
-      nsXPIDLCString fName;
+      nsCString fName;
       cacheFile->GetNativeLeafName(fName);
-      mCacheFileName = strdup(fName);
+      mCacheFileName = strdup(fName.get());
     }
 
     // write out the contents of the clipboard
