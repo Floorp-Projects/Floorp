@@ -25,7 +25,7 @@ add_task(function* () {
 });
 
 function* elementStyleInherit(inspector, view) {
-  let gutters = view.element.querySelectorAll(".theme-gutter");
+  let gutters = view.element.querySelectorAll(".ruleview-header");
   is(gutters.length, 2,
     "Gutters should contains 2 sections");
   ok(gutters[0].textContent, "Inherited from div");

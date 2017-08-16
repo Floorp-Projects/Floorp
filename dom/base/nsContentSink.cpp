@@ -458,6 +458,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
   nsAutoString media;
   nsAutoString anchor;
   nsAutoString crossOrigin;
+  nsAutoString referrerPolicy;
   nsAutoString as;
 
   crossOrigin.SetIsVoid(true);
@@ -646,6 +647,15 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
               as = value;
               as.CompressWhitespace();
             }
+          } else if (attr.LowerCaseEqualsLiteral("referrerpolicy")) {
+            // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#referrer-policy-attribute
+            // Specs says referrer policy attribute is an enumerated attribute,
+            // case insensitive and includes the empty string
+            // We will parse the value with AttributeReferrerPolicyFromString
+            // later, which will handle parsing it as an enumerated attribute.
+            if (referrerPolicy.IsEmpty()) {
+              referrerPolicy = value;
+            }
           }
         }
       }
@@ -659,7 +669,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
         rv = ProcessLink(anchor, href, rel,
                          // prefer RFC 5987 variant over non-I18zed version
                          titleStar.IsEmpty() ? title : titleStar,
-                         type, media, crossOrigin, as);
+                         type, media, crossOrigin, referrerPolicy, as);
       }
 
       href.Truncate();
@@ -668,6 +678,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
       type.Truncate();
       media.Truncate();
       anchor.Truncate();
+      referrerPolicy.Truncate();
       crossOrigin.SetIsVoid(true);
 
       seenParameters = false;
@@ -681,7 +692,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
     rv = ProcessLink(anchor, href, rel,
                      // prefer RFC 5987 variant over non-I18zed version
                      titleStar.IsEmpty() ? title : titleStar,
-                     type, media, crossOrigin, as);
+                     type, media, crossOrigin, referrerPolicy, as);
   }
 
   return rv;
@@ -693,6 +704,7 @@ nsContentSink::ProcessLink(const nsAString& aAnchor, const nsAString& aHref,
                            const nsAString& aRel, const nsAString& aTitle,
                            const nsAString& aType, const nsAString& aMedia,
                            const nsAString& aCrossOrigin,
+                           const nsAString& aReferrerPolicy,
                            const nsAString& aAs)
 {
   uint32_t linkTypes =
@@ -740,7 +752,7 @@ nsContentSink::ProcessLink(const nsAString& aAnchor, const nsAString& aHref,
 
   bool isAlternate = linkTypes & nsStyleLinkElement::eALTERNATE;
   return ProcessStyleLink(nullptr, aHref, isAlternate, aTitle, aType,
-                          aMedia);
+                          aMedia, aReferrerPolicy);
 }
 
 nsresult
@@ -749,7 +761,8 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
                                 bool aAlternate,
                                 const nsAString& aTitle,
                                 const nsAString& aType,
-                                const nsAString& aMedia)
+                                const nsAString& aMedia,
+                                const nsAString& aReferrerPolicy)
 {
   if (aAlternate && aTitle.IsEmpty()) {
     // alternates must have title return without error, for now
@@ -789,11 +802,16 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
              NS_ConvertUTF16toUTF8(integrity).get()));
   }
 
+  mozilla::net::ReferrerPolicy referrerPolicy =
+    mozilla::net::AttributeReferrerPolicyFromString(aReferrerPolicy);
+  if (referrerPolicy == net::RP_Unset) {
+    referrerPolicy = mDocument->GetReferrerPolicy();
+  }
   // If this is a fragment parser, we don't want to observe.
   // We don't support CORS for processing instructions
   bool isAlternate;
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
-                                 CORS_NONE, mDocument->GetReferrerPolicy(),
+                                 CORS_NONE, referrerPolicy,
                                  integrity, mRunsToCompletion ? nullptr : this,
                                  &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);

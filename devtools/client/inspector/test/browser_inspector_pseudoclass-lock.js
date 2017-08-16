@@ -116,8 +116,7 @@ function* assertPseudoAddedToNode(inspector, testActor, ruleview, selector) {
   ok(hasLock, "pseudo-class lock has been applied");
 
   info("Check that the ruleview contains the pseudo-class rule");
-  let rules = ruleview.element.querySelectorAll(
-    ".ruleview-rule.theme-separator");
+  let rules = ruleview.element.querySelectorAll(".ruleview-rule");
   is(rules.length, 3,
      "rule view is showing 3 rules for pseudo-class locked div");
   is(rules[1]._ruleEditor.rule.selectorText, "div:hover",
@@ -147,8 +146,7 @@ function* assertPseudoRemovedFromNode(testActor, selector) {
 
 function* assertPseudoRemovedFromView(inspector, testActor, ruleview, selector) {
   info("Check that the ruleview no longer contains the pseudo-class rule");
-  let rules = ruleview.element.querySelectorAll(
-    ".ruleview-rule.theme-separator");
+  let rules = ruleview.element.querySelectorAll(".ruleview-rule");
   is(rules.length, 2, "rule view is showing 2 rules after removing lock");
 
   yield showPickerOn(selector, inspector);

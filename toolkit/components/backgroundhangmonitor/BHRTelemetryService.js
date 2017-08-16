@@ -33,7 +33,7 @@ BHRTelemetryService.prototype = Object.freeze({
   },
 
   recordHang({duration, thread, runnableName, process, stack,
-              modules, annotations, pseudoStack}) {
+              modules, annotations}) {
     if (!Services.telemetry.canRecordExtended) {
       return;
     }
@@ -66,7 +66,6 @@ BHRTelemetryService.prototype = Object.freeze({
       runnableName,
       process,
       annotations,
-      pseudoStack,
       stack,
     });
 

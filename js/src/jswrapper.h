@@ -42,31 +42,12 @@ class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
     mozilla::Maybe<JS::RootedObject> proto_;
 };
 
-/*
- * A wrapper is a proxy with a target object to which it generally forwards
- * operations, but may restrict access to certain operations or augment those
- * operations in various ways.
- *
- * A wrapper can be "unwrapped" in C++, exposing the underlying object.
- * Callers should be careful to avoid unwrapping security wrappers in the wrong
- * context.
- *
- * Important: If you add a method implementation here, you probably also need
- * to add an override in CrossCompartmentWrapper. If you don't, you risk
- * compartment mismatches. See bug 945826 comment 0.
- */
-class JS_FRIEND_API(Wrapper) : public BaseProxyHandler
+// Base class for proxy handlers that want to forward all operations to an
+// object stored in the proxy's private slot.
+class JS_FRIEND_API(ForwardingProxyHandler) : public BaseProxyHandler
 {
-    unsigned mFlags;
-
   public:
-    explicit constexpr Wrapper(unsigned aFlags, bool aHasPrototype = false,
-                                   bool aHasSecurityPolicy = false)
-      : BaseProxyHandler(&family, aHasPrototype, aHasSecurityPolicy),
-        mFlags(aFlags)
-    { }
-
-    virtual bool finalizeInBackground(const Value& priv) const override;
+    using BaseProxyHandler::BaseProxyHandler;
 
     /* Standard internal methods. */
     virtual bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
@@ -121,9 +102,35 @@ class JS_FRIEND_API(Wrapper) : public BaseProxyHandler
                                   MutableHandleValue vp) const override;
     virtual bool isCallable(JSObject* obj) const override;
     virtual bool isConstructor(JSObject* obj) const override;
-    virtual JSObject* weakmapKeyDelegate(JSObject* proxy) const override;
+};
+
+/*
+ * A wrapper is a proxy with a target object to which it generally forwards
+ * operations, but may restrict access to certain operations or augment those
+ * operations in various ways.
+ *
+ * A wrapper can be "unwrapped" in C++, exposing the underlying object.
+ * Callers should be careful to avoid unwrapping security wrappers in the wrong
+ * context.
+ *
+ * Important: If you add a method implementation here, you probably also need
+ * to add an override in CrossCompartmentWrapper. If you don't, you risk
+ * compartment mismatches. See bug 945826 comment 0.
+ */
+class JS_FRIEND_API(Wrapper) : public ForwardingProxyHandler
+{
+    unsigned mFlags;
 
   public:
+    explicit constexpr Wrapper(unsigned aFlags, bool aHasPrototype = false,
+                               bool aHasSecurityPolicy = false)
+      : ForwardingProxyHandler(&family, aHasPrototype, aHasSecurityPolicy),
+        mFlags(aFlags)
+    { }
+
+    virtual bool finalizeInBackground(const Value& priv) const override;
+    virtual JSObject* weakmapKeyDelegate(JSObject* proxy) const override;
+
     using BaseProxyHandler::Action;
 
     enum Flags {

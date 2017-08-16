@@ -1,5 +1,3 @@
-load(libdir + 'nightly-only.js');
-
 var g = newGlobal();
 var dbg = new Debugger;
 var gDO = dbg.addDebuggee(g);
@@ -22,8 +20,6 @@ function check(expr, expected) {
 check('(function g(){})', true);
 check('(function* h() {})', true);
 check('(async function j() {})', true);
-nightlyOnly(g.SyntaxError, () => {
-  check('(async function* k() {})', true);
-});
+check('(async function* k() {})', true);
 check('({})', false);
 check('Math.atan2', false);

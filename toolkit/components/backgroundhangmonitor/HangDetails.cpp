@@ -37,76 +37,6 @@ nsHangDetails::GetProcess(nsACString& aName)
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandleValue aVal)
-{
-  size_t length = mDetails.mStack.GetStackSize();
-  JS::RootedObject retObj(aCx, JS_NewArrayObject(aCx, length));
-  if (!retObj) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  for (size_t i = 0; i < length; ++i) {
-    auto& frame = mDetails.mStack.GetFrame(i);
-    JS::RootedObject jsFrame(aCx, JS_NewArrayObject(aCx, 2));
-    if (!jsFrame) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (!JS_DefineElement(aCx, jsFrame, 0, frame.mModIndex, JSPROP_ENUMERATE)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsPrintfCString hexString("%" PRIxPTR, frame.mOffset);
-    JS::RootedString hex(aCx, JS_NewStringCopyZ(aCx, hexString.get()));
-    if (!hex || !JS_DefineElement(aCx, jsFrame, 1, hex, JSPROP_ENUMERATE)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (!JS_DefineElement(aCx, retObj, i, jsFrame, JSPROP_ENUMERATE)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  aVal.setObject(*retObj);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal)
-{
-  size_t length = mDetails.mStack.GetNumModules();
-  JS::RootedObject retObj(aCx, JS_NewArrayObject(aCx, length));
-  if (!retObj) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  for (size_t i = 0; i < length; ++i) {
-    auto& module = mDetails.mStack.GetModule(i);
-    JS::RootedObject jsModule(aCx, JS_NewArrayObject(aCx, 2));
-    if (!jsModule) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    JS::RootedString name(aCx, JS_NewUCStringCopyZ(aCx, module.mName.get()));
-    if (!name || !JS_DefineElement(aCx, jsModule, 0, name, JSPROP_ENUMERATE)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    JS::RootedString id(aCx, JS_NewStringCopyZ(aCx, module.mBreakpadId.c_str()));
-    if (!id || !JS_DefineElement(aCx, jsModule, 1, id, JSPROP_ENUMERATE)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (!JS_DefineElement(aCx, retObj, i, jsModule, JSPROP_ENUMERATE)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  aVal.setObject(*retObj);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal)
 {
   // We create an object with { "key" : "value" } string pairs for each item in
@@ -134,27 +64,116 @@ nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal)
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetPseudoStack(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
+nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
 {
-  JS::RootedObject ret(aCx, JS_NewArrayObject(aCx, mDetails.mPseudoStack.length()));
+  JS::RootedObject ret(aCx, JS_NewArrayObject(aCx, mDetails.mStack.length()));
   if (!ret) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  for (size_t i = 0; i < mDetails.mPseudoStack.length(); ++i) {
-    JSString* jsString = JS_NewStringCopyZ(aCx, mDetails.mPseudoStack[i]);
-    if (!jsString) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    JS::RootedString string(aCx, jsString);
-    if (!string) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    if (!JS_DefineElement(aCx, ret, i, string, JSPROP_ENUMERATE)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+  for (size_t i = 0; i < mDetails.mStack.length(); ++i) {
+    const HangStack::Frame& frame = mDetails.mStack[i];
+    switch (frame.GetKind()) {
+      case HangStack::Frame::Kind::STRING: {
+        JSString* jsString = JS_NewStringCopyZ(aCx, frame.AsString());
+        if (!jsString) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        JS::RootedString string(aCx, jsString);
+        if (!string) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        if (!JS_DefineElement(aCx, ret, i, string, JSPROP_ENUMERATE)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        break;
+      }
+
+      case HangStack::Frame::Kind::MODOFFSET: {
+        JS::RootedObject jsFrame(aCx, JS_NewArrayObject(aCx, 2));
+        if (!jsFrame) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (!JS_DefineElement(aCx, jsFrame, 0, frame.AsModOffset().mModule, JSPROP_ENUMERATE)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        nsPrintfCString hexString("%" PRIxPTR, (uintptr_t)frame.AsModOffset().mOffset);
+        JS::RootedString hex(aCx, JS_NewStringCopyZ(aCx, hexString.get()));
+        if (!hex || !JS_DefineElement(aCx, jsFrame, 1, hex, JSPROP_ENUMERATE)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (!JS_DefineElement(aCx, ret, i, jsFrame, JSPROP_ENUMERATE)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        break;
+      }
+
+      case HangStack::Frame::Kind::PC: {
+        JS::RootedObject jsFrame(aCx, JS_NewArrayObject(aCx, 2));
+        if (!jsFrame) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (!JS_DefineElement(aCx, jsFrame, 0, -1, JSPROP_ENUMERATE)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        nsPrintfCString hexString("%" PRIxPTR, frame.AsPC());
+        JS::RootedString hex(aCx, JS_NewStringCopyZ(aCx, hexString.get()));
+        if (!hex || !JS_DefineElement(aCx, jsFrame, 1, hex, JSPROP_ENUMERATE)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (!JS_DefineElement(aCx, ret, i, jsFrame, JSPROP_ENUMERATE)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        break;
+      }
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid variant");
+        break;
     }
   }
 
   aVal.setObject(*ret);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal)
+{
+  auto& modules = mDetails.mStack.GetModules();
+  size_t length = modules.Length();
+  JS::RootedObject retObj(aCx, JS_NewArrayObject(aCx, length));
+  if (!retObj) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (size_t i = 0; i < length; ++i) {
+    const HangStack::Module& module = modules[i];
+    JS::RootedObject jsModule(aCx, JS_NewArrayObject(aCx, 2));
+    if (!jsModule) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    JS::RootedString name(aCx, JS_NewUCStringCopyN(aCx, module.mName.BeginReading(), module.mName.Length()));
+    if (!JS_DefineElement(aCx, jsModule, 0, name, JSPROP_ENUMERATE)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    JS::RootedString breakpadId(aCx, JS_NewStringCopyN(aCx, module.mBreakpadId.BeginReading(), module.mBreakpadId.Length()));
+    if (!JS_DefineElement(aCx, jsModule, 1, breakpadId, JSPROP_ENUMERATE)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (!JS_DefineElement(aCx, retObj, i, jsModule, JSPROP_ENUMERATE)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  aVal.setObject(*retObj);
   return NS_OK;
 }
 
@@ -214,9 +233,9 @@ NS_IMPL_ISUPPORTS(nsHangDetails, nsIHangDetails)
 NS_IMETHODIMP
 ProcessHangStackRunnable::Run()
 {
-  // NOTE: This is an expensive operation on some platforms, so we do it off of
-  // any other critical path, moving it onto the StreamTransportService.
-  mHangDetails.mStack = Telemetry::GetStackAndModules(mNativeStack);
+  // NOTE: Reading module information can take a long time, which is why we do
+  // it off-main-thread.
+  mHangDetails.mStack.ReadModuleInformation();
 
   RefPtr<nsHangDetails> hangDetails = new nsHangDetails(Move(mHangDetails));
   hangDetails->Submit();
@@ -239,34 +258,8 @@ ParamTraits<mozilla::HangDetails>::Write(Message* aMsg, const mozilla::HangDetai
   WriteParam(aMsg, aParam.mProcess);
   WriteParam(aMsg, aParam.mThreadName);
   WriteParam(aMsg, aParam.mRunnableName);
-  WriteParam(aMsg, aParam.mPseudoStack);
-
+  WriteParam(aMsg, aParam.mStack);
   WriteParam(aMsg, aParam.mAnnotations);
-
-  // NOTE: ProcessedStack will stop being used for BHR in bug 1367406, so this
-  // inline serialization will survive until then.
-
-  // Write out the native stack module information
-  {
-    size_t length = aParam.mStack.GetNumModules();
-    WriteParam(aMsg, length);
-    for (size_t i = 0; i < length; ++i) {
-      auto& module = aParam.mStack.GetModule(i);
-      WriteParam(aMsg, module.mName);
-      WriteParam(aMsg, module.mBreakpadId);
-    }
-  }
-
-  // Native stack frame information
-  {
-    size_t length = aParam.mStack.GetStackSize();
-    WriteParam(aMsg, length);
-    for (size_t i = 0; i < length; ++i) {
-      auto& frame = aParam.mStack.GetFrame(i);
-      WriteParam(aMsg, frame.mOffset);
-      WriteParam(aMsg, frame.mModIndex);
-    }
-  }
 }
 
 bool
@@ -286,54 +279,11 @@ ParamTraits<mozilla::HangDetails>::Read(const Message* aMsg,
   if (!ReadParam(aMsg, aIter, &aResult->mRunnableName)) {
     return false;
   }
-  if (!ReadParam(aMsg, aIter, &aResult->mPseudoStack)) {
+  if (!ReadParam(aMsg, aIter, &aResult->mStack)) {
     return false;
   }
-
-  // Annotation information
   if (!ReadParam(aMsg, aIter, &aResult->mAnnotations)) {
     return false;
-  }
-
-  // NOTE: ProcessedStack will stop being used for BHR in bug 1367406, so this
-  // inline serialization will survive until then.
-
-  // Native Stack Module Information
-  {
-    size_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
-      return false;
-    }
-
-    for (size_t i = 0; i < length; ++i) {
-      mozilla::Telemetry::ProcessedStack::Module module;
-      if (!ReadParam(aMsg, aIter, &module.mName)) {
-        return false;
-      }
-      if (!ReadParam(aMsg, aIter, &module.mBreakpadId)) {
-        return false;
-      }
-      aResult->mStack.AddModule(module);
-    }
-  }
-
-  // Native stack frame information
-  {
-    size_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
-      return false;
-    }
-
-    for (size_t i = 0; i < length; ++i) {
-      mozilla::Telemetry::ProcessedStack::Frame frame;
-      if (!ReadParam(aMsg, aIter, &frame.mOffset)) {
-        return false;
-      }
-      if (!ReadParam(aMsg, aIter, &frame.mModIndex)) {
-        return false;
-      }
-      aResult->mStack.AddFrame(frame);
-    }
   }
 
   return true;

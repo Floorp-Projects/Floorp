@@ -488,6 +488,7 @@ const CREDIT_CARD_COMPUTE_TESTCASES = [
   {
     description: "Empty credit card",
     creditCard: {
+      "cc-number": "1234123412341234", // cc-number won't be verified
     },
     expectedResult: {
     },
@@ -498,6 +499,7 @@ const CREDIT_CARD_COMPUTE_TESTCASES = [
     description: "Has \"cc-name\"",
     creditCard: {
       "cc-name": "Timothy John Berners-Lee",
+      "cc-number": "1234123412341234", // cc-number won't be verified
     },
     expectedResult: {
       "cc-name": "Timothy John Berners-Lee",
@@ -511,8 +513,9 @@ const CREDIT_CARD_COMPUTE_TESTCASES = [
 const CREDIT_CARD_NORMALIZE_TESTCASES = [
   // Empty
   {
-    description: "Empty credit card",
+    description: "No normalizable field",
     creditCard: {
+      "cc-number": "1234123412341234", // cc-number won't be verified
     },
     expectedResult: {
     },
@@ -525,6 +528,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
       "cc-name": "Timothy John Berners-Lee",
       "cc-given-name": "John",
       "cc-family-name": "Doe",
+      "cc-number": "1234123412341234", // cc-number won't be verified
     },
     expectedResult: {
       "cc-name": "Timothy John Berners-Lee",
@@ -535,9 +539,19 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     creditCard: {
       "cc-given-name": "John",
       "cc-family-name": "Doe",
+      "cc-number": "1234123412341234", // cc-number won't be verified
     },
     expectedResult: {
       "cc-name": "John Doe",
+    },
+  },
+  {
+    description: "Number should be encrypted and masked",
+    creditCard: {
+      "cc-number": "1234123412341234",
+    },
+    expectedResult: {
+      "cc-number": "************1234",
     },
   },
 ];
@@ -594,7 +608,11 @@ add_task(async function test_computeCreditCardFields() {
   let profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  CREDIT_CARD_COMPUTE_TESTCASES.forEach(testcase => profileStorage.creditCards.add(testcase.creditCard));
+  for (let testcase of CREDIT_CARD_COMPUTE_TESTCASES) {
+    let encryptedCC = Object.assign({}, testcase.creditCard);
+    await profileStorage.creditCards.normalizeCCNumberFields(encryptedCC);
+    profileStorage.creditCards.add(encryptedCC);
+  }
   await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
@@ -614,7 +632,11 @@ add_task(async function test_normalizeCreditCardFields() {
   let profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  CREDIT_CARD_NORMALIZE_TESTCASES.forEach(testcase => profileStorage.creditCards.add(testcase.creditCard));
+  for (let testcase of CREDIT_CARD_NORMALIZE_TESTCASES) {
+    let encryptedCC = Object.assign({}, testcase.creditCard);
+    await profileStorage.creditCards.normalizeCCNumberFields(encryptedCC);
+    profileStorage.creditCards.add(encryptedCC);
+  }
   await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);

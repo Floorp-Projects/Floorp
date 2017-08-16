@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/SystemGroup.h"
 #include "nsCookie.h"
 #include "nsCookieService.h"
 #include "nsContentUtils.h"
@@ -69,8 +70,13 @@ CookieServiceChild::CookieServiceChild()
   // This corresponds to Release() in DeallocPCookieService.
   NS_ADDREF_THIS();
 
-  // Create a child PCookieService actor.
   NeckoChild::InitNeckoChild();
+
+  gNeckoChild->SetEventTargetForActor(
+    this,
+    SystemGroup::EventTargetFor(TaskCategory::Other));
+
+  // Create a child PCookieService actor.
   gNeckoChild->SendPCookieServiceConstructor(this);
 
   mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);

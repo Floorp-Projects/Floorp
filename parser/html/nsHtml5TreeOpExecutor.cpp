@@ -966,14 +966,23 @@ void
 nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
                                     const nsAString& aCharset,
                                     const nsAString& aCrossOrigin,
+                                    const nsAString& aReferrerPolicy,
                                     const nsAString& aIntegrity)
 {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {
     return;
   }
-  mDocument->PreloadStyle(uri, aCharset, aCrossOrigin,
-                          mSpeculationReferrerPolicy, aIntegrity);
+
+  mozilla::net::ReferrerPolicy referrerPolicy = mSpeculationReferrerPolicy;
+  mozilla::net::ReferrerPolicy styleReferrerPolicy =
+    mozilla::net::AttributeReferrerPolicyFromString(aReferrerPolicy);
+  if (styleReferrerPolicy != mozilla::net::RP_Unset) {
+    referrerPolicy = styleReferrerPolicy;
+  }
+
+  mDocument->PreloadStyle(uri, aCharset, aCrossOrigin, referrerPolicy,
+                          aIntegrity);
 }
 
 void

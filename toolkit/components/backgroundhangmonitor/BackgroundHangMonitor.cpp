@@ -187,8 +187,6 @@ public:
   ThreadStackHelper mStackHelper;
   // Stack of current hang
   HangStack mHangStack;
-  // Native stack of current hang
-  NativeHangStack mNativeHangStack;
   // Annotations for the current hang
   HangMonitor::HangAnnotations mAnnotations;
   // Annotators registered for this thread
@@ -344,18 +342,11 @@ BackgroundHangManager::RunMonitorThread()
 
       if (MOZ_LIKELY(!currentThread->mHanging)) {
         if (MOZ_UNLIKELY(hangTime >= currentThread->mTimeout)) {
-          // A hang started
-#ifdef NIGHTLY_BUILD
-          // NOTE: In nightly builds of firefox we want to collect native stacks
-          // for all hangs, not just permahangs.
-          currentThread->mStackHelper.GetPseudoAndNativeStack(
+          // A hang started, collect a stack
+          currentThread->mStackHelper.GetStack(
             currentThread->mHangStack,
-            currentThread->mNativeHangStack,
-            currentThread->mRunnableName);
-#else
-          currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack,
-                                                     currentThread->mRunnableName);
-#endif
+            currentThread->mRunnableName,
+            true);
           currentThread->mHangStart = interval;
           currentThread->mHanging = true;
           currentThread->mAnnotations =
@@ -447,30 +438,6 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
   // Recovered from a hang; called on the monitor thread
   // mManager->mLock IS locked
 
-  // Remove unwanted "js::RunScript" frame from the stack
-  for (size_t i = 0; i < mHangStack.length(); ) {
-    const char** f = mHangStack.begin() + i;
-    if (!mHangStack.IsInBuffer(*f) && !strcmp(*f, "js::RunScript")) {
-      mHangStack.erase(f);
-    } else {
-      i++;
-    }
-  }
-
-  // Collapse duplicated "(chrome script)" and "(content script)" entries in the stack.
-  auto it = std::unique(mHangStack.begin(), mHangStack.end(), StackScriptEntriesCollapser);
-  mHangStack.erase(it, mHangStack.end());
-
-  // Limit the depth of the reported stack if greater than our limit. Only keep its
-  // last entries, since the most recent frames are at the end of the vector.
-  if (mHangStack.length() > kMaxThreadHangStackDepth) {
-    const int elementsToRemove = mHangStack.length() - kMaxThreadHangStackDepth;
-    // Replace the oldest frame with a known label so that we can tell this stack
-    // was limited.
-    mHangStack[0] = "(reduced stack)";
-    mHangStack.erase(mHangStack.begin() + 1, mHangStack.begin() + elementsToRemove);
-  }
-
   HangDetails hangDetails(aHangTime,
                           XRE_GetProcessType(),
                           mThreadName,
@@ -482,7 +449,7 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
   // we just report without one.
   if (mManager->mSTS) {
     nsCOMPtr<nsIRunnable> processHangStackRunnable =
-      new ProcessHangStackRunnable(Move(hangDetails), Move(mNativeHangStack));
+      new ProcessHangStackRunnable(Move(hangDetails));
     mManager->mSTS->Dispatch(processHangStackRunnable.forget());
   } else {
     NS_WARNING("Unable to report native stack without a StreamTransportService");

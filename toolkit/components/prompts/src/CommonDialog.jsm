@@ -91,6 +91,10 @@ CommonDialog.prototype = {
             throw "unknown dialog type";
         }
 
+        if (xulDialog) {
+            xulDialog.setAttribute("windowtype", "prompt:" + this.args.promptType);
+        }
+
         // set the document title
         let title = this.args.title;
         // OS X doesn't have a title on modal dialogs, this is hidden on other platforms.

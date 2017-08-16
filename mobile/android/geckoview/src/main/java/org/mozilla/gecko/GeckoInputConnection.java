@@ -31,6 +31,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
 import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.method.KeyListener;
 import android.text.method.TextKeyListener;
 import android.util.DisplayMetrics;
@@ -933,6 +934,27 @@ class GeckoInputConnection
             case NOTIFY_IME_OPEN_VKB:
                 showSoftInput();
                 break;
+
+            case GeckoEditableListener.NOTIFY_IME_TO_COMMIT_COMPOSITION: {
+                // Gecko already committed its composition. However, Android keyboards
+                // have trouble dealing with us removing the composition manually on the
+                // Java side. Therefore, we keep the composition intact on the Java side.
+                // The text content should still be in-sync on both sides.
+                //
+                // Nevertheless, if we somehow lost the composition, we must force the
+                // keyboard to reset.
+                final Editable editable = getEditable();
+                final Object[] spans = editable.getSpans(0, editable.length(), Object.class);
+                for (final Object span : spans) {
+                    if ((editable.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                        // Still have composition; no need to reset.
+                        return;
+                    }
+                }
+                // No longer have composition; perform reset.
+                restartInput();
+                break;
+            }
 
             default:
                 if (DEBUG) {
