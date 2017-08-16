@@ -144,6 +144,21 @@ CreateClientInfo()
   return c;
 }
 
+static bool
+IsAllowedOnCurrentPlatform(uint32_t aThreatType)
+{
+  PlatformType platform = GetPlatformType();
+
+  switch (aThreatType) {
+  case POTENTIALLY_HARMFUL_APPLICATION:
+    // Bug 1388582 - Google server would respond 404 error if the request
+    // contains PHA on non-mobile platform.
+    return ANDROID_PLATFORM == platform;
+  default:
+    return true;
+  }
+}
+
 } // end of namespace safebrowsing.
 } // end of namespace mozilla.
 
@@ -345,6 +360,13 @@ nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
     if (NS_FAILED(rv)) {
       continue; // Unknown list name.
     }
+    if (!IsAllowedOnCurrentPlatform(threatType)) {
+      NS_WARNING(nsPrintfCString("Threat type %d (%s) is unsupported on current platform: %d",
+                                 threatType,
+                                 aListNames[i],
+                                 GetPlatformType()).get());
+      continue; // Some threat types are not available on some platforms.
+    }
     auto lur = r.mutable_list_update_requests()->Add();
     InitListUpdateRequest(static_cast<ThreatType>(threatType), aStatesBase64[i], lur);
   }
@@ -378,24 +400,31 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
 
   nsresult rv;
 
-  // Set up FindFullHashesRequest.client_states.
-  for (uint32_t i = 0; i < aListCount; i++) {
-    nsCString stateBinary;
-    rv = Base64Decode(nsDependentCString(aListStatesBase64[i]), stateBinary);
-    NS_ENSURE_SUCCESS(rv, rv);
-    r.add_client_states(stateBinary.get(), stateBinary.Length());
-  }
-
   //-------------------------------------------------------------------
   // Set up FindFullHashesRequest.threat_info.
   auto threatInfo = r.mutable_threat_info();
 
   // 1) Set threat types.
   for (uint32_t i = 0; i < aListCount; i++) {
+    // Add threat types.
     uint32_t threatType;
     rv = ConvertListNameToThreatType(nsDependentCString(aListNames[i]), &threatType);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (!IsAllowedOnCurrentPlatform(threatType)) {
+      NS_WARNING(nsPrintfCString("Threat type %d (%s) is unsupported on current platform: %d",
+                                 threatType,
+                                 aListNames[i],
+                                 GetPlatformType()).get());
+      continue;
+    }
     threatInfo->add_threat_types((ThreatType)threatType);
+
+    // Add client states for index 'i' only when the threat type is available
+    // on current platform.
+    nsCString stateBinary;
+    rv = Base64Decode(nsDependentCString(aListStatesBase64[i]), stateBinary);
+    NS_ENSURE_SUCCESS(rv, rv);
+    r.add_client_states(stateBinary.get(), stateBinary.Length());
   }
 
   // 2) Set platform type.
