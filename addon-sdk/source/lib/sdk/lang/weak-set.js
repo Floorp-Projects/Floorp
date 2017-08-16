@@ -54,7 +54,7 @@ function clear(target) {
 }
 exports.clear = clear;
 
-function iterator(target) {
+function* iterator(target) {
   let refs = getRefsFor(target);
 
   for (let ref of refs) {
@@ -72,4 +72,4 @@ function iterator(target) {
       refs.delete(ref);
   }
 }
-exports.iterator = iterator;
+exports[Symbol.iterator] = iterator;

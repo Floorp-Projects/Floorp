@@ -30,7 +30,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
         //fires again, so set it to null to avoid failures
         mediaRecorder.ondataavailable = null;
         SimpleTest.finish();
-      }
+      };
       mediaRecorder.ondataavailable = function(evt) {
         ondataavailableFired = true;
         ok(evt instanceof BlobEvent,
@@ -43,16 +43,21 @@ SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
            'Blob data received should have type = ' + expectedMimeType);
         is(evt.target.mimeType, expectedMimeType,
            'Mime type in ondataavailable = ' + expectedMimeType);
-      }
+      };
       mediaRecorder.onerror = function(evt) {
-        ok(evt instanceof RecordErrorEvent,
-          'Events fired from onerror should be RecordErrorEvent');
+        ok(evt instanceof MediaRecorderErrorEvent,
+          'Events fired from onerror should be MediaRecorderErrorEvent');
         is(evt.type, 'error',
-           'Event type should onerror');
-        is(evt.name, 'GenericError',
-           'Event name is GenericError');
+           'Event type is error');
+        ok(evt.error instanceof DOMException,
+          'Events fired from onerror should have a DOMException in their error member');
+        is(evt.error.name, 'UnknownError', 'Error name should be UnknownError.');
+        is(evt.error.message, 'The operation failed for an unknown transient reason');
+        ok(evt.error.stack.includes('test_mediarecorder_getencodeddata.html'),
+          'Events fired from onerror should include an error with a stack trace indicating ' +
+          'an error in this test');
         onErrorFired = true;
-      }
+      };
       mediaRecorder.start(0);
       is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
       is(mediaRecorder.stream, stream,

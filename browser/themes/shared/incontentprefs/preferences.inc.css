@@ -5,9 +5,16 @@
 %endif
 @namespace html "http://www.w3.org/1999/xhtml";
 
+* {
+  -moz-user-select: text;
+}
+
+:root {
+  --in-content-category-background: #fafafc;
+}
+
 .main-content {
   padding-top: 0;
-  background-color: #fafafc;
 }
 
 .pane-container {
@@ -28,6 +35,10 @@
   font-size: 1.36rem;
 }
 
+groupbox + groupbox {
+  margin-top: 16px;
+}
+
 input,
 description.indent,
 .indent > description {
@@ -39,10 +50,6 @@ description.indent,
   color: #737373;
 }
 
-* {
-  -moz-user-select: text;
-}
-
 button,
 treecol,
 html|option {
@@ -50,34 +57,29 @@ html|option {
   -moz-user-select: none;
 }
 
-caption > label {
-  font-size: 1.55rem;
-  font-weight: 600;
+description,
+label {
+  line-height: 30px;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
-#engineList treechildren::-moz-tree-image(engineShown, checked),
-#blocklistsTree treechildren::-moz-tree-image(selectionCol, checked) {
-  list-style-image: url("chrome://global/skin/in-content/check.svg");
-  -moz-context-properties: fill, stroke;
-  fill: #2292d0;
-  stroke: none;
-  width: 21px;
-  height: 21px;
+description > checkbox {
+  vertical-align: bottom;
 }
 
-#engineList treechildren::-moz-tree-image(engineShown, checked, selected),
-#blocklistsTree treechildren::-moz-tree-image(selectionCol, checked, selected) {
-  fill: white;
-  stroke: #0095dd;
+.indent {
+  margin-inline-start: 28px !important;
 }
 
-#engineList treechildren::-moz-tree-row,
-#blocklistsTree treechildren::-moz-tree-row {
-  min-height: 36px;
+separator.thin:not([orient="vertical"]) {
+  height: 8px;
 }
 
-#selectionCol {
-  min-width: 26px;
+.checkbox-check {
+  margin-inline-end: 8px;
+  width: 20px;
+  height: 20px;
 }
 
 .learnMore {
@@ -88,6 +90,15 @@ caption > label {
 
 .accessory-button {
   min-width: 145px;
+  margin: 2px 0;
+}
+
+.groupbox-title {
+  margin-top: 16px;
+}
+
+.groupbox-body {
+  margin-top: 4px;
 }
 
 /* Subcategory title */
@@ -109,24 +120,6 @@ caption > label {
 
 /* Category List */
 
-#categories {
-  max-height: 100vh;
-}
-
-#categories > scrollbox {
-  overflow-x: hidden !important;
-}
-
-/**
- * We want the last category to always have non-0 getBoundingClientRect().bottom
- * so we can use the value to figure out the max-height of the list in
- * preferences.js, so use collapse instead of display: none; if it's hidden
- */
-#categories > .category[hidden="true"] {
-  display: -moz-box;
-  visibility: collapse;
-}
-
 #category-general > .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content-new/general.svg");
 }
@@ -143,15 +136,6 @@ caption > label {
   list-style-image: url("chrome://browser/skin/preferences/in-content-new/sync.svg");
 }
 
-@media (max-width: 800px) {
-  .category-name {
-    display: none;
-  }
-  .help-button {
-    font-size: 0 !important;
-  }
-}
-
 /* header */
 .header {
   display: flex;
@@ -165,7 +149,12 @@ caption > label {
 
 /* General Pane */
 
+#startupGroup {
+  margin-top: 0px !important;
+}
+
 #startupTable {
+  margin-top: 32px;
   border-collapse: collapse;
 }
 
@@ -173,13 +162,21 @@ caption > label {
   padding: 0; /* remove the padding from html.css */
 }
 
-#startupTable > tr:not(:first-child) > td {
-  padding-top: 0.5em; /* add a spacing between the rows */
+#startupTable > .tableGroup > td {
+  padding-top: 32px;
+}
+
+#startupTable > .tableSubGroup > td {
+  padding-top: 8px;
 }
 
 #startupTable > tr > .label-cell {
   text-align: end;
   width: 0; /* make the column as small as possible */
+}
+
+#startupTable > tr > .content-cell:not(:first-child) {
+  padding-inline-start: 8px;
 }
 
 #startupTable > tr > .label-cell > label {
@@ -202,9 +199,8 @@ caption > label {
   flex-grow: 1;
 }
 
-#useFirefoxSync  {
-  font-size: 90%;
-  margin-inline-end: 8px !important;
+.content-cell-item {
+  margin: 0 4px;
 }
 
 #getStarted {
@@ -225,15 +221,34 @@ caption > label {
   direction: rtl;
 }
 
-#defaultFontSizeLabel {
-  /* !important needed to override common !important rule */
-  margin-inline-start: 4px !important;
+#updateApp > .groupbox-body > label {
+  margin: 0 0 4px 0;
+  line-height: 30px;
 }
 
-/* Applications Pane Styles */
+#updateApp > .groupbox-body > description {
+  line-height: 30px;
+  margin: 0;
+}
+
+#updateBox {
+  margin-top: 8px;
+  margin-bottom: 32px;
+}
+
+#updateBox button {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#updateRadioGroup radio {
+  height: 30px;
+  margin: 2px 0;
+}
 
 #filter {
   margin-inline-start: 0;
+  margin-bottom: 8px;
 }
 
 #handlersView {
@@ -266,7 +281,51 @@ caption > label {
   margin-inline-end: 8px !important;
 }
 
-/* Privacy pane */
+/* Search Pane */
+
+#defaultEngine {
+  margin-top: 2px;
+  margin-bottom: 6px;
+}
+
+#engineList {
+  margin: 2px 0 5px 0;
+}
+
+#engineList > treechildren::-moz-tree-image(engineShown, checked),
+#blocklistsTree > treechildren::-moz-tree-image(selectionCol, checked) {
+  list-style-image: url("chrome://global/skin/in-content/check.svg");
+  -moz-context-properties: fill, stroke;
+  fill: #2292d0;
+  stroke: none;
+  width: 21px;
+  height: 21px;
+}
+
+#engineList > treechildren::-moz-tree-image(engineShown, checked, selected),
+#blocklistsTree > treechildren::-moz-tree-image(selectionCol, checked, selected) {
+  fill: white;
+  stroke: #0095dd;
+}
+
+#engineList > treechildren::-moz-tree-row,
+#blocklistsTree > treechildren::-moz-tree-row {
+  min-height: 36px;
+}
+
+#selectionCol {
+  min-width: 26px;
+}
+
+#addEnginesBox {
+  margin: 4px 0 0 0;
+}
+
+/* Privacy Pane */
+
+#formAutofillGroup {
+  margin-top: 28px;
+}
 
 .doNotTrackLearnMore {
   margin-inline-start: calc(1em + 30px);
@@ -279,12 +338,26 @@ caption > label {
   margin-left: 0;
 }
 
+#locationBarGroup > .text-link {
+  margin-top: 6px;
+  line-height: 30px;
+}
+
+#allowSmartSize {
+  margin-top: 0;
+  margin-bottom: 4px;
+}
+
 #doNotTrackLearnMoreBox {
-  margin-top: 30px
+  margin-top: 32px;
 }
 
 #trackingProtectionAdvancedSettings {
   margin-inline-start: 15px;
+}
+
+#historyPane {
+  margin-top: 4px;
 }
 
 /* Collapse the non-active vboxes in decks to use only the height the
@@ -297,16 +370,6 @@ caption > label {
   visibility: collapse;
 }
 
-/* XXX This style is for bug 740213 and should be removed once that
-   bug has a solution. */
-description > html|a {
-  cursor: pointer;
-}
-
-description > checkbox {
-  vertical-align: middle;
-}
-
 #weavePrefsDeck > vbox > label,
 #weavePrefsDeck > vbox > groupbox,
 #weavePrefsDeck > vbox > description,
@@ -316,19 +379,8 @@ description > checkbox {
   margin-inline-start: 0;
 }
 
-groupbox {
-  /* Give more available space for displaying tooltip on scrollable groupbox */
-  margin-top: 15px !important;
-}
-
 #tabsElement {
   margin-inline-end: 4px; /* add the 4px end-margin of other elements */
-}
-
-.indent {
-  /* !important needed to override margin-inline-start:0 !important; rule
-     define in common.css for labels */
-  margin-inline-start: 33px !important;
 }
 
 .text-link {
@@ -374,6 +426,7 @@ groupbox {
 }
 
 .dialogBox > .groupbox-title {
+  margin-top: 0;
   padding: 3.5px 0;
   background-color: #F1F1F1;
   border-bottom: 1px solid #C1C1C1;
@@ -462,6 +515,11 @@ groupbox {
   -moz-box-flex: 1;
 }
 
+#useFirefoxSync  {
+  font-size: 90%;
+  margin-inline-end: 8px !important;
+}
+
 #noFxaGroup {
   -moz-box-flex: 1;
   margin: 0;
@@ -481,8 +539,10 @@ groupbox {
 }
 
 #fxaSyncComputerName {
-  margin-inline-start: 0px;
-  -moz-box-flex: 1;
+  margin-top: 3px;
+  margin-inline-start: -4px;
+  margin-inline-end: 0;
+  margin-bottom: 0;
 }
 
 #tosPP-small-ToS {
@@ -622,24 +682,24 @@ groupbox {
 .help-button {
   position: fixed;
   left: 0;
-  /* Needs to have enough gap from the bottom to not
-     get behind the status panel (bug 1357841). */
-  bottom: 2rem;
+  bottom: 36px;
   background-image: url("chrome://browser/skin/preferences/in-content-new/help.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.8;
   font-size: 13px;
   line-height: 16px;
-  background-position: 15px;
-  padding-inline-start: 35px;
+  height: 16px;
+  background-position: 8px;
+  padding-inline-start: 38px;
+  margin-inline-start: 44px;
   white-space: nowrap;
 }
 
 .help-button:-moz-locale-dir(rtl) {
+  background-position: right 8px top 0;
   left: auto;
   right: 0;
-  background-position: right 15px top 0;
 }
 
 .help-button:hover {
@@ -677,7 +737,7 @@ groupbox {
 
 #searchInput {
   width: 250px;
-  margin: 20px 0;
+  margin: 20px 0 30px 0;
 }
 
 #searchInput .textbox-search-icons:not([selectedIndex="1"]) {

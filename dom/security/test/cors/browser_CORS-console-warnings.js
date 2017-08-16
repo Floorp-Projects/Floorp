@@ -27,7 +27,7 @@ function on_new_message(event, new_messages) {
   }
 }
 
-function do_cleanup() {
+function* do_cleanup() {
   if (webconsole) {
     webconsole.ui.off("new-messages", on_new_message);
   }

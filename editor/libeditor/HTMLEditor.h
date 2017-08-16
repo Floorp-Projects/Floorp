@@ -46,7 +46,7 @@ class nsIDOMRange;
 class nsRange;
 
 namespace mozilla {
-
+class AutoSelectionSetterAfterTableEdit;
 class HTMLEditorEventListener;
 class HTMLEditRules;
 class TextEditRules;
@@ -836,6 +836,30 @@ protected:
 
   void SetElementPosition(Element& aElement, int32_t aX, int32_t aY);
 
+  /**
+   * Reset a selected cell or collapsed selection (the caret) after table
+   * editing.
+   *
+   * @param aTable      A table in the document.
+   * @param aRow        The row ...
+   * @param aCol        ... and column defining the cell where we will try to
+   *                    place the caret.
+   * @param aSelected   If true, we select the whole cell instead of setting
+   *                    caret.
+   * @param aDirection  If cell at (aCol, aRow) is not found, search for
+   *                    previous cell in the same column (aPreviousColumn) or
+   *                    row (ePreviousRow) or don't search for another cell
+   *                    (aNoSearch).  If no cell is found, caret is place just
+   *                    before table; and if that fails, at beginning of
+   *                    document.  Thus we generally don't worry about the
+   *                    return value and can use the
+   *                    AutoSelectionSetterAfterTableEdit stack-based object to
+   *                    insure we reset the caret in a table-editing method.
+   */
+  void SetSelectionAfterTableEdit(nsIDOMElement* aTable,
+                                  int32_t aRow, int32_t aCol,
+                                  int32_t aDirection, bool aSelected);
+
 protected:
   nsTArray<OwningNonNull<nsIContentFilter>> mContentFilters;
 
@@ -1022,6 +1046,7 @@ protected:
   ParagraphSeparator mDefaultParagraphSeparator;
 
 public:
+  friend class AutoSelectionSetterAfterTableEdit;
   friend class HTMLEditorEventListener;
   friend class HTMLEditRules;
   friend class TextEditRules;

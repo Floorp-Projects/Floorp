@@ -203,6 +203,7 @@ function DevToolPanel(iframeWindow, toolbox) {
   EventEmitter.decorate(this);
 
   this._toolbox = toolbox;
+  this._window = iframeWindow;
 }
 
 DevToolPanel.prototype = {
@@ -216,6 +217,10 @@ DevToolPanel.prototype = {
     });
 
     return deferred.promise;
+  },
+
+  get document() {
+    return this._window.document;
   },
 
   get target() {
