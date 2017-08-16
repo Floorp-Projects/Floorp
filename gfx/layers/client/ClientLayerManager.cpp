@@ -743,7 +743,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // thread if it is waiting before doing a new layer transaction.
   if (mTextureSyncOnPaintThread) {
     MOZ_ASSERT(PaintThread::Get());
-    PaintThread::Get()->FinishedLayerTransaction(syncObject);
+    PaintThread::Get()->EndLayerTransaction(syncObject);
   } else if (syncObject) {
     syncObject->Synchronize();
   }

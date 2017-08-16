@@ -1190,7 +1190,7 @@ CompositorBridgeChild::NotifyFinishedAsyncPaint(CapturedPaintState* aState)
 }
 
 void
-CompositorBridgeChild::NotifyBeginAsyncPaintEndTransaction()
+CompositorBridgeChild::NotifyBeginAsyncEndLayerTransaction()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MonitorAutoLock lock(mPaintLock);
@@ -1200,7 +1200,7 @@ CompositorBridgeChild::NotifyBeginAsyncPaintEndTransaction()
 }
 
 void
-CompositorBridgeChild::NotifyFinishedAsyncPaintEndTransaction()
+CompositorBridgeChild::NotifyFinishedAsyncEndLayerTransaction()
 {
   MOZ_ASSERT(PaintThread::IsOnPaintThread());
   MonitorAutoLock lock(mPaintLock);

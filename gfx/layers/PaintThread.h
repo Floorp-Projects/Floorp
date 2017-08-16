@@ -70,10 +70,10 @@ public:
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
 
-  // To be called on the main thread. Signifies that the current
+  // Must be called on the main thread. Signifies that the current
   // batch of CapturedPaintStates* for PaintContents have been recorded
   // and the main thread is finished recording this layer.
-  void FinishedLayerBatch();
+  void EndLayer();
 
   // Must be called on the main thread. Signifies that the current
   // layer tree transaction has been finished and any async paints
@@ -81,7 +81,7 @@ public:
   // at the end of a layer transaction as it will be used to do an optional
   // texture sync and then unblock the main thread if it is waiting to paint
   // a new frame.
-  void FinishedLayerTransaction(SyncObjectClient* aSyncObject);
+  void EndLayerTransaction(SyncObjectClient* aSyncObject);
 
   // Sync Runnables need threads to be ref counted,
   // But this thread lives through the whole process.
@@ -97,11 +97,11 @@ private:
   bool Init();
   void ShutdownOnPaintThread();
   void InitOnPaintThread();
-  void PaintContentsAsync(CompositorBridgeChild* aBridge,
+  void AsyncPaintContents(CompositorBridgeChild* aBridge,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
-  void EndAsyncPaintingLayer();
-  void EndAsyncLayerTransaction(CompositorBridgeChild* aBridge,
+  void AsyncEndLayer();
+  void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
                                 SyncObjectClient* aSyncObject);
 
   static StaticAutoPtr<PaintThread> sSingleton;
