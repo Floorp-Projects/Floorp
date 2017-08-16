@@ -152,6 +152,19 @@
      history and go back to the home screen. -->
     <string name="content_description_erase">Erase browsing history</string>
 
+    <!-- Content description (not visible, for screen readers etc.): A floating action button that
+      is shown on top of the web content. Clicking the button shows (expands) the menu for switching
+      tabs, adding a new tab or erasing the browsing history. -->
+    <string name="content_description_fab_expand">Expand</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Plus" button for adding a new
+    temporary tab. -->
+    <string name="content_description_open_tab">Open tab</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "X" button for closing the
+     screen to enter a URL for a new tab to be opened. -->
+    <string name="content_description_close_tab">Close tab</string>
+
     <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
      https pages.. -->
     <string name="content_description_lock">Secure connection</string>
@@ -297,24 +310,31 @@ be temporary, and you can try again later.</li>
     <string name="contextmenu_image_copy">Copy image address</string>
     <!-- Label used in the contextmenu shown when long-pressing on an image -->
     <string name="contextmenu_image_save">Save image</string>
+    <!-- Label used in the contextmenu shown when long-pressing on a link -->
+    <string name="contextmenu_open_in_new_tab">Open link in new tab</string>
 
     <!-- This is a warning shown in the browser's context menu (when long pressing an image). %1$s will be replaced with the long name of the app (e.g. Firefox Focus). -->
     <string name="contextmenu_image_warning"><![CDATA[Saved and shared images <b>will not be deleted</b> when you erase %1$s history.]]></string>
 
-    <!-- First run tour (page 1): Title -->
-    <string name="firstrun_tracking_title">Browse like no one’s watching</string>
-    <!-- First run tour (page 1): Text -->
-    <string name="firstrun_tracking_text">Automatically block online tracking while you browse. Then remove visited pages and cookies with a touch to the trash icon in the app or in your notifications.</string>
-
-    <!-- First run tour (page 2): Title -->
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Power up your privacy</string>
-    <!-- First run tour (page 2): Text, %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="firstrun_defaultbrowser_text">Set %1$s as your default browser and get the benefits of private browsing when you link to the Web from other Android apps.</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Take private browsing to the next level. Block ads and other content that can track you across sites and bog down page load times.</string>
 
-    <!-- First run tour (page 3): Title -->
-    <string name="firstrun_breaking_title">A quick fix when\nblocking = breaking</string>
-    <!-- First run tour (page 3): Text -->
-    <string name="firstrun_breaking_text">When the downside of blocking online trackers is a site that seems broken, turn off blocking with a tap to the tool menu.</string>
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Your search, your way</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Search for something different? Choose another default search engine in Settings.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Add shortcuts to your home screen</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Return to your favorite sites in %1$s quickly. Just select \"Add to Home screen\" from the %1$s menu.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Make privacy a habit</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Set %1$s as your default browser and get the benefits of private browsing when you open webpages from other apps.</string>
 
     <string name="firstrun_close_button">OK, got it!</string>
     <string name="firstrun_skip_button">Skip</string>
@@ -331,4 +351,14 @@ be temporary, and you can try again later.</li>
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Cancel</string>
+
+    <!-- When the limit of concurrent tabs is reached and the user wants to open another tab then we show a dialog to select a tab
+         that will be overridden with the new link. This is the title of the dialog where the user selects a tab to replace with the
+         new URL. -->
+    <string name="dialog_opentab_title">Open link in selected tab</string>
+
+    <!-- When the limit of concurrent tabs is reached and the user wants to open another tab then we show a dialog to select a tab
+         that will be overridden with the new link. This is the label of the action/button to open the new link in the selected
+          existing tab. -->
+    <string name="dialog_opentab_action_open">Open</string>
 </resources>
