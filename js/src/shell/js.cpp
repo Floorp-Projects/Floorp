@@ -3424,6 +3424,7 @@ struct WorkerInput
 };
 
 static void SetWorkerContextOptions(JSContext* cx);
+static bool ShellBuildId(JS::BuildIdCharVector* buildId);
 
 static void
 WorkerMain(void* arg)
@@ -3455,6 +3456,7 @@ WorkerMain(void* arg)
         sc->isWorker = true;
     JS_SetContextPrivate(cx, sc.get());
     SetWorkerContextOptions(cx);
+    JS::SetBuildIdOp(cx, ShellBuildId);
 
     Maybe<EnvironmentPreparer> environmentPreparer;
     if (input->parentRuntime) {
