@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // HTML inputs don't automatically get the 'edit' context menu, so we have
 // a helper on the toolbox to do so. Make sure that shows menu items in the
 // right state, and that it works for an input inside of a panel.
@@ -58,7 +60,8 @@ add_task(async function automaticallyBindTexbox() {
   gDevTools.registerTool({
     id: textboxToolId,
     isTargetSupported: () => true,
-    url: "data:text/html;charset=utf8,<input />",
+    url: `data:text/html;charset=utf8,<input /><input type='text' />
+            <input type='search' /><textarea></textarea><input type='radio' />`,
     label: "Context menu works without tool intervention",
     build: function (iframeWindow, toolbox) {
       this.panel = createTestPanel(iframeWindow, toolbox);
@@ -68,8 +71,28 @@ add_task(async function automaticallyBindTexbox() {
 
   let toolbox = await openNewTabAndToolbox(URL, textboxToolId);
   is(toolbox.currentToolId, textboxToolId, "The custom tool has been opened");
-  await checkTextBox(toolbox.getCurrentPanel().document.querySelector("input"), toolbox);
+
+  const doc = toolbox.getCurrentPanel().document;
+  await checkTextBox(doc.querySelector("input[type=text]"), toolbox);
+  await checkTextBox(doc.querySelector("textarea"), toolbox);
+  await checkTextBox(doc.querySelector("input[type=search]"), toolbox);
+  await checkTextBox(doc.querySelector("input:not([type])"), toolbox);
+  await checkNonTextInput(doc.querySelector("input[type=radio]"), toolbox);
 });
+
+async function checkNonTextInput(input, {textBoxContextMenuPopup}) {
+  is(textBoxContextMenuPopup.state, "closed", "The menu is closed");
+
+  info("Simulating context click on the non text input and expecting no menu to open");
+  let eventBubbledUp = new Promise(resolve => {
+    input.ownerDocument.addEventListener("contextmenu", resolve, { once: true });
+  });
+  EventUtils.synthesizeMouse(input, 2, 2, {type: "contextmenu", button: 2},
+                             input.ownerDocument.defaultView);
+  info("Waiting for event");
+  await eventBubbledUp;
+  is(textBoxContextMenuPopup.state, "closed", "The menu is still closed");
+}
 
 async function checkTextBox(textBox, {textBoxContextMenuPopup}) {
   is(textBoxContextMenuPopup.state, "closed", "The menu is closed");
