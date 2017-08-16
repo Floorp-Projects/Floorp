@@ -82,24 +82,25 @@ class DebugModeOSRVolatileStub
 };
 
 //
-// A JitFrameIterator that updates itself in case of recompilation of an
-// on-stack baseline script.
+// A JitFrameIter that updates internal JitFrameIterator in case of
+// recompilation of an on-stack baseline script.
 //
-class DebugModeOSRVolatileJitFrameIterator : public JitFrameIterator
+
+class DebugModeOSRVolatileJitFrameIter : public JitFrameIter
 {
-    DebugModeOSRVolatileJitFrameIterator** stack;
-    DebugModeOSRVolatileJitFrameIterator* prev;
+    DebugModeOSRVolatileJitFrameIter** stack;
+    DebugModeOSRVolatileJitFrameIter* prev;
 
   public:
-    explicit DebugModeOSRVolatileJitFrameIterator(JSContext* cx)
-      : JitFrameIterator(cx)
+    explicit DebugModeOSRVolatileJitFrameIter(JSContext* cx)
+      : JitFrameIter(cx->activation())
     {
-        stack = &cx->liveVolatileJitFrameIterators_.ref();
+        stack = &cx->liveVolatileJitFrameIter_.ref();
         prev = *stack;
         *stack = this;
     }
 
-    ~DebugModeOSRVolatileJitFrameIterator() {
+    ~DebugModeOSRVolatileJitFrameIter() {
         MOZ_ASSERT(*stack == this);
         *stack = prev;
     }

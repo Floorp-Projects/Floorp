@@ -1330,7 +1330,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     throwing(false),
     overRecursed_(false),
     propagatingForcedReturn_(false),
-    liveVolatileJitFrameIterators_(nullptr),
+    liveVolatileJitFrameIter_(nullptr),
     reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
     resolvingList(nullptr),
 #ifdef DEBUG

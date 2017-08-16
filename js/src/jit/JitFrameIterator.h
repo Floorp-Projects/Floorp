@@ -17,10 +17,6 @@
 #include "js/ProfilingFrameIterator.h"
 
 namespace js {
-    class ActivationIterator;
-} // namespace js
-
-namespace js {
 namespace jit {
 
 typedef void * CalleeToken;
@@ -83,7 +79,16 @@ class JitActivation;
 // Iterate over the JIT stack to assert that all invariants are respected.
 //  - Check that all entry frames are aligned on JitStackAlignment.
 //  - Check that all rectifier frames keep the JitStackAlignment.
+
 void AssertJitStackInvariants(JSContext* cx);
+
+// A JitFrameIterator can iterate over a linear frame group of JS jit frames
+// only. It will stop at the first frame that is not of the same kind, or at
+// the end of an activation.
+//
+// If you want to handle every kind of frames (including wasm frames), use
+// JitFrameIter. If you want to skip interleaved frames of other kinds, use
+// OnlyJSJitFrameIter.
 
 class JitFrameIterator
 {
@@ -99,12 +104,16 @@ class JitFrameIterator
 
     void dumpBaseline() const;
 
-    explicit JitFrameIterator(const JitActivation* activation);
-
   public:
-    explicit JitFrameIterator();
+    // See comment above the class.
+    explicit JitFrameIterator(const JitActivation* activation);
     explicit JitFrameIterator(JSContext* cx);
-    explicit JitFrameIterator(const ActivationIterator& activations);
+
+    // Used only by DebugModeOSRVolatileJSJitFrameIter.
+    void exchangeReturnAddressIfMatch(uint8_t* oldAddr, uint8_t* newAddr) {
+        if (returnAddressToFp_ == oldAddr)
+            returnAddressToFp_ = newAddr;
+    }
 
     // Current frame information.
     FrameType type() const {
@@ -199,10 +208,10 @@ class JitFrameIterator
 
     // Functions used to iterate on frames. When prevType is JitFrame_Entry,
     // the current frame is the last frame.
-    inline bool done() const {
+    bool done() const {
         return type_ == JitFrame_Entry;
     }
-    JitFrameIterator& operator++();
+    void operator++();
 
     // Returns the IonScript associated with this JS frame.
     IonScript* ionScript() const;
@@ -260,7 +269,7 @@ class JitFrameIterator
 #ifdef DEBUG
     bool verifyReturnAddressUsingNativeToBytecodeMap();
 #else
-    inline bool verifyReturnAddressUsingNativeToBytecodeMap() { return true; }
+    bool verifyReturnAddressUsingNativeToBytecodeMap() { return true; }
 #endif
 };
 

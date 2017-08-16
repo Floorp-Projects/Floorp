@@ -31,7 +31,6 @@
 #include "irregexp/RegExpParser.h"
 #endif
 #include "jit/InlinableNatives.h"
-#include "jit/JitFrameIterator.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
 #include "js/StructuredClone.h"
