@@ -238,6 +238,13 @@ interface nsISocketTransport : nsITransport
     const unsigned long BE_CONSERVATIVE = (1 << 7);
 
     /**
+     * An opaque flags for non-standard behavior of the TLS system.
+     * It is unlikely this will need to be set outside of telemetry studies
+     * relating to the TLS implementation.
+     */
+    attribute unsigned long tlsFlags;
+
+    /**
      * Socket QoS/ToS markings. Valid values are IPTOS_DSCP_AFxx or
      * IPTOS_CLASS_CSx (or IPTOS_DSCP_EF, but currently no supported
      * services require expedited-forwarding).
