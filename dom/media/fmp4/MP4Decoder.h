@@ -6,13 +6,14 @@
 #if !defined(MP4Decoder_h_)
 #define MP4Decoder_h_
 
-#include "ChannelMediaDecoder.h"
+class nsACString;
 #include "mozilla/dom/Promise.h"
 #include "mozilla/layers/KnowsCompositor.h"
 
 namespace mozilla {
 
 class MediaContainerType;
+class DecoderDoctorDiagnostics;
 
 // Decoder that uses a bundled MP4 demuxer and platform decoders to play MP4.
 class MP4Decoder
