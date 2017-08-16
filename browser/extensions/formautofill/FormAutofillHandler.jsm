@@ -115,16 +115,13 @@ FormAutofillHandler.prototype = {
 
   /**
    * Set fieldDetails from the form about fields that can be autofilled.
-   *
-   * @param {boolean} allowDuplicates
-   *        true to remain any duplicated field details otherwise to remove the
-   *        duplicated ones.
+
    * @returns {Array} The valid address and credit card details.
    */
-  collectFormFields(allowDuplicates = false) {
+  collectFormFields() {
     this._cacheValue.allFieldNames = null;
     this._formFieldCount = this.form.elements.length;
-    let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form, allowDuplicates);
+    let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form);
     this.fieldDetails = fieldDetails ? fieldDetails : [];
     log.debug("Collected details on", this.fieldDetails.length, "fields");
 
