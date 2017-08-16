@@ -3649,7 +3649,7 @@ js::DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start)
             return;
         }
     } else {
-        while (!i.done() && !i.isJit() && i.interpFrame() != start)
+        while (!i.done() && !i.isJSJit() && i.interpFrame() != start)
             ++i;
 
         if (i.done()) {
@@ -3660,7 +3660,7 @@ js::DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start)
     }
 
     for (; !i.done(); ++i) {
-        if (i.isJit())
+        if (i.isJSJit())
             fprintf(fp, "JIT frame\n");
         else
             fprintf(fp, "InterpreterFrame at %p\n", (void*) i.interpFrame());
@@ -3686,7 +3686,7 @@ js::DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start)
         }
         if (i.isFunctionFrame())
             MaybeDumpValue("this", i.thisArgument(cx), fp);
-        if (!i.isJit()) {
+        if (!i.isJSJit()) {
             fprintf(fp, "  rval: ");
             dumpValue(i.interpFrame()->returnValue(), fp);
             fputc('\n', fp);
@@ -3695,7 +3695,7 @@ js::DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start)
         fprintf(fp, "  flags:");
         if (i.isConstructing())
             fprintf(fp, " constructing");
-        if (!i.isJit() && i.interpFrame()->isDebuggerEvalFrame())
+        if (!i.isJSJit() && i.interpFrame()->isDebuggerEvalFrame())
             fprintf(fp, " debugger eval");
         if (i.isEvalFrame())
             fprintf(fp, " eval");
