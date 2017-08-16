@@ -26,25 +26,20 @@ public class FirstrunPagerConfig {
 
    public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
+       panels.add(SimplePanelConfigs.welcomePanelConfig);
+       panels.add(SimplePanelConfigs.privatePanelConfig);
+       panels.add(SimplePanelConfigs.customizePanelConfig);
+       panels.add(SimplePanelConfigs.syncPanelConfig);
 
-        if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_B)) {
-            panels.add(SimplePanelConfigs.urlbarPanelConfig);
-            panels.add(SimplePanelConfigs.bookmarksPanelConfig);
-            panels.add(SimplePanelConfigs.dataPanelConfig);
-            panels.add(SimplePanelConfigs.syncPanelConfig);
-            panels.add(SimplePanelConfigs.signInPanelConfig);
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_B);
-            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_B).apply();
-        } else if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_C)) {
-            panels.add(SimplePanelConfigs.tabqueuePanelConfig);
-            panels.add(SimplePanelConfigs.readerviewPanelConfig);
-            panels.add(SimplePanelConfigs.accountPanelConfig);
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_C);
-            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_C).apply();
-        } else {
-            Log.e(LOGTAG, "Not in an experiment!");
-            panels.add(SimplePanelConfigs.signInPanelConfig);
-        }
+        return panels;
+    }
+
+    public static List<FirstrunPanelConfig> forFxAUser(Context context) {
+        final List<FirstrunPanelConfig> panels = new LinkedList<>();
+        panels.add(SimplePanelConfigs.welcomePanelConfig);
+        panels.add(SimplePanelConfigs.privatePanelConfig);
+        panels.add(SimplePanelConfigs.customizeLastPanelConfig);
+
         return panels;
     }
 
@@ -94,14 +89,12 @@ public class FirstrunPagerConfig {
     }
 
     private static class SimplePanelConfigs {
-        public static final FirstrunPanelConfig urlbarPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_welcome, R.drawable.firstrun_urlbar, R.string.firstrun_urlbar_message, R.string.firstrun_urlbar_subtext);
-        public static final FirstrunPanelConfig bookmarksPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_bookmarks_title, R.drawable.firstrun_bookmarks, R.string.firstrun_bookmarks_message, R.string.firstrun_bookmarks_subtext);
-        public static final FirstrunPanelConfig dataPanelConfig = new FirstrunPanelConfig(DataPanel.class.getName(), R.string.firstrun_data_title, R.drawable.firstrun_data_off, R.string.firstrun_data_message, R.string.firstrun_data_subtext);
-        public static final FirstrunPanelConfig syncPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_sync_title, R.drawable.firstrun_sync, R.string.firstrun_sync_message, R.string.firstrun_sync_subtext);
-        public static final FirstrunPanelConfig signInPanelConfig = new FirstrunPanelConfig(SyncPanel.class.getName(), R.string.pref_sync, R.drawable.firstrun_signin, R.string.firstrun_signin_message, R.string.firstrun_welcome_button_browser);
+        public static final FirstrunPanelConfig welcomePanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_welcome, R.drawable.firstrun_welcome, R.string.firstrun_urlbar_message, R.string.firstrun_urlbar_subtext);
+        public static final FirstrunPanelConfig privatePanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_privacy, R.drawable.firstrun_private, R.string.firstrun_privacy_message, R.string.firstrun_privacy_subtext);
+        public static final FirstrunPanelConfig customizePanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_customize, R.drawable.firstrun_data, R.string.firstrun_customize_message, R.string.firstrun_customize_subtext);
+        public static final FirstrunPanelConfig customizeLastPanelConfig = new FirstrunPanelConfig(LastPanel.class.getName(), R.string.firstrun_panel_title_customize, R.drawable.firstrun_data, R.string.firstrun_customize_message, R.string.firstrun_customize_subtext);
 
-        public static final FirstrunPanelConfig tabqueuePanelConfig = new FirstrunPanelConfig(TabQueuePanel.class.getName(), R.string.firstrun_tabqueue_title, R.drawable.firstrun_tabqueue_off, R.string.firstrun_tabqueue_message_off, R.string.firstrun_tabqueue_subtext_off);
-        public static final FirstrunPanelConfig readerviewPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_readerview_title, R.drawable.firstrun_readerview, R.string.firstrun_readerview_message, R.string.firstrun_readerview_subtext);
-        public static final FirstrunPanelConfig accountPanelConfig = new FirstrunPanelConfig(SyncPanel.class.getName(), R.string.firstrun_account_title, R.drawable.firstrun_account, R.string.firstrun_account_message, R.string.firstrun_button_notnow);
+        public static final FirstrunPanelConfig syncPanelConfig = new FirstrunPanelConfig(SyncPanel.class.getName(), R.string.firstrun_sync_title, R.drawable.firstrun_sync, R.string.firstrun_sync_message, R.string.firstrun_sync_subtext);
+
     }
 }

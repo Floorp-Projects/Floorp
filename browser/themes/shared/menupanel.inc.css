@@ -23,7 +23,7 @@
 }
 
 #appMenu-addons-button {
-  list-style-image: url(chrome://browser/skin/addons.svg);
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
 }
 
 #appMenu-preferences-button {
@@ -98,6 +98,14 @@
   list-style-image: url("chrome://browser/skin/sidebars.svg");
 }
 
+#panelMenu_bookmarkingTools {
+  list-style-image: url("chrome://browser/skin/developer.svg");
+}
+
+#panelMenu_viewBookmarksToolbar {
+  list-style-image: url("chrome://browser/skin/toolbar.svg");
+}
+
 #appMenu-library-bookmarks-button,
 #panelMenuBookmarkThisPage {
   list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
@@ -108,7 +116,8 @@
 }
 
 #bookmarks-menu-button[cui-areatype="menu-panel"],
-toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
+toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
+#panelMenu_toggleBookmarksMenu {
   list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
 }
 

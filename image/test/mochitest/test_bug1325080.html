@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1325080
+-->
+<head>
+  <title>Test for Bug 1325080</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1325080">Mozilla Bug 1325080</a>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 1325080 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function createImage() {
+  // This function's code comes from the Acid3 test #72
+  document.open();
+  document.write('<!DOCTYPE html><head><style>img { height: 10px; }</style></head><body><img src="data:image/gif;base64,R0lGODlhAQABAID%2FAMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw%3D%3D" alt="alt-text"></body>');
+  document.close();
+}
+
+window.onload = function() {
+  createImage();
+  SimpleTest.executeSoon(() => {
+    ok(document.images[0].height == 10, "Style should set height of image.");
+    SimpleTest.finish();
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>

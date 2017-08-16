@@ -703,6 +703,12 @@ this.PanelMultiView = class {
         return;
       }
 
+      // If this instance was destructed in the meantime, there's no point in
+      // trying to show anything here.
+      if (!this.node) {
+        return;
+      }
+
       this._currentSubView = viewNode;
       viewNode.setAttribute("current", true);
 

@@ -56,6 +56,7 @@
                 android:layout_gravity="center"
                 android:layout_marginBottom="20dp"
                 android:background="@drawable/button_background_action_blue_round"
+                android:textAllCaps="true"
                 android:text="@string/firstrun_welcome_button_browser" />
 
             <TextView

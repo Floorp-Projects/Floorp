@@ -215,10 +215,14 @@ def setup_nightly_dependency(config, jobs):
             yield job
             continue  # do not add a dep unless we're a nightly
         job['dependencies'] = {'unsigned-build': job['dependent-task'].label}
-        if job['attributes']['build_platform'].startswith('win'):
+        if job['attributes']['build_platform'].startswith('win') or \
+                job['attributes']['build_platform'].startswith('linux'):
             # Weave these in and just assume they will be there in the resulting graph
             job['dependencies'].update({
                 'signed-build': 'build-signing-{}'.format(job['name']),
+            })
+        if job['attributes']['build_platform'].startswith('win'):
+            job['dependencies'].update({
                 'repackage-signed': 'repackage-signing-{}'.format(job['name'])
             })
         yield job
