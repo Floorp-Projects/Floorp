@@ -79,6 +79,9 @@ public:
 protected:
   ~ChromiumCDMChild();
 
+  bool OnResolveNewSessionPromiseInternal(uint32_t aPromiseId,
+                                          const nsCString& aSessionId);
+
   bool IsOnMessageLoopThread();
 
   ipc::IPCResult RecvGiveBuffer(ipc::Shmem&& aShmem) override;
@@ -118,6 +121,12 @@ protected:
   void ReturnOutput(WidevineVideoFrame& aFrame);
   bool HasShmemOfSize(size_t aSize) const;
 
+  template <typename MethodType, typename... ParamType>
+  void CallMethod(MethodType, ParamType&&...);
+
+  template<typename MethodType, typename... ParamType>
+  void CallOnMessageLoopThread(const char* const, MethodType, ParamType&&...);
+
   GMPContentChild* mPlugin = nullptr;
   cdm::ContentDecryptionModule_8* mCDM = nullptr;
 
@@ -130,6 +139,7 @@ protected:
 
   bool mDecoderInitialized = false;
   bool mPersistentStateAllowed = false;
+  bool mDestroyed = false;
 };
 
 } // namespace gmp
