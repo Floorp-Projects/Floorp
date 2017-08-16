@@ -117,9 +117,6 @@
                          onmouseout="DownloadsView.onDownloadMouseOut(event);"
                          oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
                          ondragstart="DownloadsView.onDownloadDragStart(event);"/>
-            <description id="emptyDownloads"
-                         mousethrough="always"
-                         value="&downloadsPanelEmpty.label;"/>
           </vbox>
           <vbox id="downloadsFooter"
                 class="downloadsPanelFooter">
