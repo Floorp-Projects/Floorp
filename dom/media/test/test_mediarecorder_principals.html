@@ -89,12 +89,17 @@ function testPrincipals(resource) {
       hasStopped = new Promise(resolve => rec.onstop = resolve);
       video.play();
     })
-    .then(() => ok(true, msgNoThrow), e => is(e.name, null, msgNoThrow))
+    .then(() => ok(true, msgNoThrow), e => is(e.error.name, null, msgNoThrow))
     .then(() => Promise.race([
-      new Promise((_, reject) => rec.onerror = e => reject(new DOMException("", e.name))),
+      new Promise((_, reject) => rec.onerror = e => reject(e.error)),
       hasEnded
     ]))
-    .then(() => ok(false, msgSecErr), e => is(e.name, "SecurityError", msgSecErr))
+    .then(() => ok(false, msgSecErr), e => {
+      is(e.name, "SecurityError", msgSecErr);
+      ok(e.stack.includes('test_mediarecorder_principals.html'),
+      'Events fired from onerror should include an error with a stack trace indicating ' +
+      'an error in this test');
+    })
     .then(() => Promise.race([hasStopped, hasEnded.then(() => Promise.reject())]))
     .then(() => ok(true, msgOnStop), e => ok(false, msgOnStop))
     .then(() => clearInterval(interval));

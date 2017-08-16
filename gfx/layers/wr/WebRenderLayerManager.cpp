@@ -437,9 +437,8 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
     return nullptr;
   }
 
-  nsPoint shift = clippedBounds.TopLeft() - itemBounds.TopLeft();
   aOffset = ViewAs<LayerPixel>(
-      LayoutDevicePoint::FromAppUnits(aItem->ToReferenceFrame() + shift, appUnitsPerDevPixel),
+      LayoutDevicePoint::FromAppUnits(clippedBounds.TopLeft(), appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
 
   nsRegion invalidRegion;

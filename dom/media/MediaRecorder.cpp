@@ -17,7 +17,7 @@
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/BlobEvent.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/RecordErrorEvent.h"
+#include "mozilla/dom/MediaRecorderErrorEvent.h"
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
@@ -109,6 +109,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaRecorder,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSecurityDomException)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUnknownDomException)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -116,6 +118,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaRecorder,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSecurityDomException)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mUnknownDomException)
   tmp->UnRegisterActivityObserver();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -1055,6 +1059,9 @@ void
 MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
 {
   LOG(LogLevel::Debug, ("MediaRecorder.Start %p", this));
+
+  InitializeDomExceptions();
+
   if (mState != RecordingState::Inactive) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -1396,25 +1403,34 @@ MediaRecorder::NotifyError(nsresult aRv)
   if (NS_FAILED(rv)) {
     return;
   }
-  nsString errorMsg;
-  switch (aRv) {
-  case NS_ERROR_DOM_SECURITY_ERR:
-    errorMsg = NS_LITERAL_STRING("SecurityError");
-    break;
-  case NS_ERROR_OUT_OF_MEMORY:
-    errorMsg = NS_LITERAL_STRING("OutOfMemoryError");
-    break;
-  default:
-    errorMsg = NS_LITERAL_STRING("GenericError");
-  }
-
-  RecordErrorEventInit init;
+  MediaRecorderErrorEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mName = errorMsg;
+  // These DOMExceptions have been created earlier so they can contain stack
+  // traces. We attach the appropriate one here to be fired. We should have
+  // exceptions here, but defensively check.
+  switch (aRv) {
+    case NS_ERROR_DOM_SECURITY_ERR:
+      if (!mSecurityDomException) {
+        LOG(LogLevel::Debug, ("MediaRecorder.NotifyError: "
+          "mSecurityDomException was not initialized"));
+        mSecurityDomException = DOMException::Create(NS_ERROR_DOM_SECURITY_ERR);
+      }
+      init.mError = mSecurityDomException.forget();
+      break;
+    default:
+      if (!mUnknownDomException) {
+        LOG(LogLevel::Debug, ("MediaRecorder.NotifyError: "
+          "mUnknownDomException was not initialized"));
+        mUnknownDomException = DOMException::Create(NS_ERROR_DOM_UNKNOWN_ERR);
+      }
+      LOG(LogLevel::Debug, ("MediaRecorder.NotifyError: "
+        "mUnknownDomException being fired for aRv: %X", uint32_t(aRv)));
+      init.mError = mUnknownDomException.forget();
+  }
 
-  RefPtr<RecordErrorEvent> event =
-    RecordErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
+  RefPtr<MediaRecorderErrorEvent> event = MediaRecorderErrorEvent::Constructor(
+    this, NS_LITERAL_STRING("error"), init);
   event->SetTrusted(true);
 
   bool dummy;
@@ -1457,6 +1473,13 @@ MediaRecorder::GetSourceMediaStream()
   }
   MOZ_ASSERT(mAudioNode != nullptr);
   return mPipeStream ? mPipeStream.get() : mAudioNode->GetStream();
+}
+
+void
+MediaRecorder::InitializeDomExceptions()
+{
+  mSecurityDomException = DOMException::Create(NS_ERROR_DOM_SECURITY_ERR);
+  mUnknownDomException = DOMException::Create(NS_ERROR_DOM_UNKNOWN_ERR);
 }
 
 size_t

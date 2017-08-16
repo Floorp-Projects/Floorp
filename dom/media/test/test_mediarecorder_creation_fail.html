@@ -21,7 +21,10 @@ function startTest() {
 
   mediaRecorder.onerror = function (e) {
     is(callbackStep, 0, 'should fired onstop callback');
-    is(e.name, 'GenericError', 'error name should be GenericError');
+    is(e.error.name, 'UnknownError', 'error name should be UnknownError');
+    ok(e.error.stack.includes('test_mediarecorder_creation_fail.html'),
+      'Events fired from onerror should include an error with a stack trace indicating ' +
+      'an error in this test');
     is(mediaRecorder.mimeType, '', 'mimetype should be empty');
     is(mediaRecorder.state, 'recording', 'state is recording');
     info('onerror callback fired');

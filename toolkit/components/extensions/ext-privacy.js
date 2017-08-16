@@ -138,6 +138,36 @@ ExtensionPreferencesManager.addSetting("websites.referrersEnabled", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("websites.trackingProtectionMode", {
+  prefNames: [
+    "privacy.trackingprotection.enabled",
+    "privacy.trackingprotection.pbmode.enabled",
+  ],
+
+  setCallback(value) {
+    // Default to private browsing.
+    let prefs = {
+      "privacy.trackingprotection.enabled": false,
+      "privacy.trackingprotection.pbmode.enabled": true,
+    };
+
+    switch (value) {
+      case "private_browsing":
+        break;
+
+      case "always":
+        prefs["privacy.trackingprotection.enabled"] = true;
+        break;
+
+      case "never":
+        prefs["privacy.trackingprotection.pbmode.enabled"] = false;
+        break;
+    }
+
+    return prefs;
+  },
+});
+
 this.privacy = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
@@ -196,6 +226,18 @@ this.privacy = class extends ExtensionAPI {
             () => {
               return Preferences.get("network.http.sendRefererHeader") !== 0;
             }),
+          trackingProtectionMode: getPrivacyAPI(extension,
+            "websites.trackingProtectionMode",
+            () => {
+              if (Preferences.get("privacy.trackingprotection.enabled")) {
+                return "always";
+              } else if (
+                  Preferences.get("privacy.trackingprotection.pbmode.enabled")) {
+                return "private_browsing";
+              }
+              return "never";
+            }),
+
         },
       },
     };

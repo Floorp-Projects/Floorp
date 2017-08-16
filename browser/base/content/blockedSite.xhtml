@@ -134,8 +134,12 @@
           el.remove();
         }
 
-        // Set sitename
-        document.getElementById(error + "_sitename").textContent = getHostString();
+        // Set sitename if necessary.
+        let sitenameElem = document.getElementById(error + "_sitename");
+        if (sitenameElem) {
+          sitenameElem.textContent = getHostString();
+        }
+
         document.title = document.getElementById("errorTitleText_" + error)
                                  .innerHTML;
 

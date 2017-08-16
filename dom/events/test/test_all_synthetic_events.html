@@ -185,6 +185,11 @@ const kEventConstructors = {
                                                          return new MediaQueryListEvent(aName, aProps);
                                                        },
                                              },
+  MediaRecorderErrorEvent:                   { create: function (aName, aProps) {
+                                                         aProps.error = new DOMException();
+                                                         return new MediaRecorderErrorEvent(aName, aProps);
+                                                       },
+                                             },
   MediaStreamEvent:                          { create: function (aName, aProps) {
                                                          return new MediaStreamEvent(aName, aProps);
                                                        },
@@ -285,10 +290,6 @@ const kEventConstructors = {
                                              },
   ProgressEvent:                             { create: function (aName, aProps) {
                                                          return new ProgressEvent(aName, aProps);
-                                                       },
-                                             },
-  RecordErrorEvent:                          { create: function (aName, aProps) {
-                                                         return new RecordErrorEvent(aName, aProps);
                                                        },
                                              },
   RTCDataChannelEvent:                       { create: function (aName, aProps) {

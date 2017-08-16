@@ -123,7 +123,7 @@ TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable,
       // Sanitize possible carriage returns in the string to be inserted
       nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
 
-      AutoEditBatch beginBatching(this);
+      AutoPlaceholderBatch beginBatching(this);
       rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
     }
   }
@@ -153,7 +153,7 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
     data->GetAsAString(insertText);
     nsContentUtils::PlatformToDOMLineBreaks(insertText);
 
-    AutoEditBatch beginBatching(this);
+    AutoPlaceholderBatch beginBatching(this);
     return InsertTextAt(insertText, aDestinationNode, aDestOffset, aDoDeleteSelection);
   }
 
@@ -163,7 +163,7 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
 nsresult
 TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 {
-  ForceCompositionEnd();
+  CommitComposition();
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aDropEvent));
   NS_ENSURE_TRUE(dragEvent, NS_ERROR_FAILURE);
@@ -206,7 +206,7 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   }
 
   // Combine any deletion and drop insertion into one transaction
-  AutoEditBatch beginBatching(this);
+  AutoPlaceholderBatch beginBatching(this);
 
   bool deleteSelection = false;
 
