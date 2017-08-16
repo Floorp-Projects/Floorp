@@ -296,7 +296,7 @@ MediaSourceDecoder::NextFrameBufferedStatus()
   TimeInterval interval(
     currentPosition,
     currentPosition + DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED);
-  return buffered.ContainsStrict(ClampIntervalToEnd(interval))
+  return buffered.ContainsWithStrictEnd(ClampIntervalToEnd(interval))
          ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
          : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 }
@@ -331,7 +331,7 @@ MediaSourceDecoder::CanPlayThroughImpl()
   TimeUnit timeAhead =
     std::min(duration, currentPosition + TimeUnit::FromSeconds(10));
   TimeInterval interval(currentPosition, timeAhead);
-  return buffered.ContainsStrict(ClampIntervalToEnd(interval));
+  return buffered.ContainsWithStrictEnd(ClampIntervalToEnd(interval));
 }
 
 TimeInterval
