@@ -185,10 +185,9 @@
   position: absolute;
   overflow: hidden;
   top: calc(50% - 16.5px); /* 16.5px is half the height of the sprite */
-  /* .urlbar-icon has width 22px. Each frame is 33px wide. Set margin-inline-start
-     to be half the difference, -5.5px, plus the 6px margin-inline-start of
-     .urlbar-icon, 6px. */
-  margin-inline-start: 0.5px;
+  /* .urlbar-icon has width 28px. Each frame is 33px wide. Set margin-inline-start
+     to be half the difference, -2.5px. */
+  margin-inline-start: -2.5px;
   /* Set the height to equal the height of each frame of the SVG. Must use
      min- and max- width and height due to bug 1379332. */
   min-width: 33px;
