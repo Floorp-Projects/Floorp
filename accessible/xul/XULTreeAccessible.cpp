@@ -710,12 +710,9 @@ XULTreeItemAccessibleBase::~XULTreeItemAccessibleBase()
 NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessibleBase, Accessible,
                                    mTree)
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessibleBase)
-  NS_INTERFACE_TABLE_INHERITED(XULTreeItemAccessibleBase,
-                               XULTreeItemAccessibleBase)
-NS_INTERFACE_TABLE_TAIL_INHERITING(Accessible)
-NS_IMPL_ADDREF_INHERITED(XULTreeItemAccessibleBase, Accessible)
-NS_IMPL_RELEASE_INHERITED(XULTreeItemAccessibleBase, Accessible)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessibleBase,
+                                             Accessible,
+                                             XULTreeItemAccessibleBase)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessibleBase: Accessible
