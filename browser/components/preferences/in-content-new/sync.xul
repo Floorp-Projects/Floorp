@@ -42,32 +42,37 @@
 </hbox>
 
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true">
-  <vbox id="noFxaAccount">
+  <groupbox id="noFxaAccount">
     <hbox>
-      <vbox id="fxaContentWrapper">
-        <groupbox id="noFxaGroup">
-          <vbox>
-            <caption>
-              <label id="noFxaCaption">&signedOut.caption;</label>
-            </caption>
-            <description id="noFxaDescription" flex="1">&signedOut.description;</description>
-            <hbox class="fxaAccountBox">
-              <vbox>
-                <image class="fxaFirefoxLogo"/>
-              </vbox>
-              <vbox flex="1">
-                <label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label>
-                <hbox class="fxaAccountBoxButtons">
-                  <button id="noFxaSignUp" label="&signedOut.accountBox.create;" accesskey="&signedOut.accountBox.create.accesskey;"></button>
-                  <button id="noFxaSignIn" label="&signedOut.accountBox.signin;" accesskey="&signedOut.accountBox.signin.accesskey;"></button>
-                </hbox>
-              </vbox>
-            </hbox>
-          </vbox>
-        </groupbox>
+      <vbox flex="1">
+        <label id="noFxaCaption">&signedOut.caption;</label>
+        <description id="noFxaDescription" flex="1">&signedOut.description;</description>
       </vbox>
       <vbox>
-        <html:img class="fxaSyncIllustration" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
+        <image class="fxaSyncIllustration"/>
+      </vbox>
+    </hbox>
+    <hbox id="fxaNoLoginStatus" align="center" flex="1">
+      <vbox>
+        <image id="fxaProfileImage"/>
+      </vbox>
+      <vbox flex="1">
+        <hbox align="center" flex="1">
+          <hbox align="center" flex="1">
+            <label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label>
+          </hbox>
+          <button id="noFxaSignIn"
+                  class="accessory-button"
+                  label="&signedOut.accountBox.signin2;"
+                  accesskey="&signedOut.accountBox.signin2.accesskey;"/>
+        </hbox>
+        <hbox align="center" flex="1">
+          <html:a id="noFxaSignUp"
+                  class="openLink"
+                  accesskey="&signedOut.accountBox.create2.accesskey;"
+                  onclick="gSyncPane.signUp();"
+                  onkeypress="gSyncPane.signUp();">&signedOut.accountBox.create2;</html:a>
+        </hbox>
       </vbox>
     </hbox>
     <label class="fxaMobilePromo">
@@ -81,39 +86,42 @@
         -->&mobilePromo3.iOSLink;</label><!--
         -->&mobilePromo3.end;
     </label>
-  </vbox>
+  </groupbox>
 
   <vbox id="hasFxaAccount">
     <hbox>
-      <vbox id="fxaContentWrapper">
+      <vbox id="fxaContentWrapper" flex="1">
         <groupbox id="fxaGroup">
-          <caption><label>&syncBrand.fxAccount.label;</label></caption>
-          <deck id="fxaLoginStatus">
+          <deck id="fxaLoginStatus" flex="1">
 
             <!-- logged in and verified and all is good -->
-            <hbox id="fxaLoginVerified" class="fxaAccountBox">
-              <vbox align="center" pack="center">
-                <image id="fxaProfileImage" class="actionable"
-                    role="button"
-                    onclick="gSyncPane.openChangeProfileImage(event);"
-                    onkeypress="gSyncPane.openChangeProfileImage(event);"
-                    tooltiptext="&profilePicture.tooltip;"/>
-              </vbox>
+            <hbox id="fxaLoginVerified" align="center" flex="1">
+              <image id="fxaProfileImage" class="actionable"
+                     role="button"
+                     onclick="gSyncPane.openChangeProfileImage(event);"
+                     onkeypress="gSyncPane.openChangeProfileImage(event);"
+                     tooltiptext="&profilePicture.tooltip;"/>
               <vbox flex="1" pack="center">
-                <label id="fxaDisplayName" hidden="true"/>
-                <label id="fxaEmailAddress1"/>
-                <hbox class="fxaAccountBoxButtons">
-                  <button id="fxaUnlinkButton" label="&disconnect3.label;" accesskey="&disconnect3.accesskey;"/>
-                  <html:a id="verifiedManage" target="_blank"
-                         accesskey="&verifiedManage.accesskey;"
-                         onkeypress="gSyncPane.openManageFirefoxAccount(event);"><!--
-                  -->&verifiedManage.label;</html:a>
+                <hbox flex="1">
+                  <hbox flex="1" align="center">
+                    <label id="fxaDisplayName" hidden="true"/>
+                    <label id="fxaEmailAddress1"/>
+                  </hbox>
+                  <button id="fxaUnlinkButton"
+                          class="accessory-button"
+                          label="&disconnect3.label;"
+                          accesskey="&disconnect3.accesskey;"/>
+                </hbox>
+                <hbox>
+                  <html:a id="verifiedManage" class="openLink" target="_blank"
+                          accesskey="&verifiedManage.accesskey;"
+                          onkeypress="gSyncPane.openManageFirefoxAccount(event);">&verifiedManage.label;</html:a>
                 </hbox>
               </vbox>
             </hbox>
 
             <!-- logged in to an unverified account -->
-            <hbox id="fxaLoginUnverified" class="fxaAccountBox">
+            <hbox id="fxaLoginUnverified">
               <vbox>
                 <image id="fxaProfileImage"/>
               </vbox>
@@ -134,7 +142,7 @@
             </hbox>
 
             <!-- logged in locally but server rejected credentials -->
-            <hbox id="fxaLoginRejected" class="fxaAccountBox">
+            <hbox id="fxaLoginRejected">
               <vbox>
                 <image id="fxaProfileImage"/>
               </vbox>
@@ -190,9 +198,6 @@
             <spacer/>
           </hbox>
         </groupbox>
-      </vbox>
-      <vbox>
-        <html:img  class="fxaSyncIllustration" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
       </vbox>
     </hbox>
     <groupbox>
