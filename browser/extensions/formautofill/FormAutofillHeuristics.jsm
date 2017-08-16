@@ -123,10 +123,6 @@ class FieldScanner {
       elementWeakRef: Cu.getWeakReference(element),
     };
 
-    if (info._reason) {
-      fieldInfo._reason = info._reason;
-    }
-
     // Store the association between the field metadata and the element.
     if (this.findSameField(info) != -1) {
       // A field with the same identifier already exists.
@@ -208,7 +204,7 @@ this.FormAutofillHeuristics = {
       let ruleStart = i;
       for (; i < GRAMMARS.length && GRAMMARS[i][0] && fieldScanner.elementExisting(detailStart); i++, detailStart++) {
         let detail = fieldScanner.getFieldDetailByIndex(detailStart);
-        if (!detail || GRAMMARS[i][0] != detail.fieldName || detail._reason == "autocomplete") {
+        if (!detail || GRAMMARS[i][0] != detail.fieldName) {
           break;
         }
         let element = detail.elementWeakRef.get();
@@ -292,23 +288,7 @@ this.FormAutofillHeuristics = {
     return parsedFields;
   },
 
-  /**
-   * This function should provide all field details of a form. The details
-   * contain the autocomplete info (e.g. fieldName, section, etc).
-   *
-   * `allowDuplicates` is used for the xpcshell-test purpose currently because
-   * the heuristics should be verified that some duplicated elements still can
-   * be predicted correctly.
-   *
-   * @param {HTMLFormElement} form
-   *        the elements in this form to be predicted the field info.
-   * @param {boolean} allowDuplicates
-   *        true to remain any duplicated field details otherwise to remove the
-   *        duplicated ones.
-   * @returns {Array<Object>}
-   *        all field details in the form.
-   */
-  getFormInfo(form, allowDuplicates = false) {
+  getFormInfo(form) {
     if (form.autocomplete == "off" || form.elements.length <= 0) {
       return [];
     }
@@ -324,11 +304,7 @@ this.FormAutofillHeuristics = {
         fieldScanner.parsingIndex++;
       }
     }
-    if (allowDuplicates) {
-      return fieldScanner.fieldDetails;
-    } else {
-      return fieldScanner.trimmedFieldDetail;
-    }
+    return fieldScanner.trimmedFieldDetail;
   },
 
   getInfo(element) {
@@ -340,7 +316,6 @@ this.FormAutofillHeuristics = {
     // An input[autocomplete="on"] will not be early return here since it stll
     // needs to find the field name.
     if (info && info.fieldName && info.fieldName != "on") {
-      info._reason = "autocomplete";
       return info;
     }
 
