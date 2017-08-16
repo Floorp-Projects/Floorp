@@ -511,7 +511,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
     }
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLString htmlEscSpec;
+    nsString htmlEscSpec;
     htmlEscSpec.Adopt(nsEscapeHTML2(unEscapeSpec.get(),
                                     unEscapeSpec.Length()));
 

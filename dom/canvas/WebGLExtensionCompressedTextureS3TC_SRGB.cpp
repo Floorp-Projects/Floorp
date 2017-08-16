@@ -42,6 +42,19 @@ WebGLExtensionCompressedTextureS3TC_SRGB::~WebGLExtensionCompressedTextureS3TC_S
 {
 }
 
+bool
+WebGLExtensionCompressedTextureS3TC_SRGB::IsSupported(const WebGLContext* webgl)
+{
+    gl::GLContext* gl = webgl->GL();
+    if (gl->IsGLES())
+        return gl->IsExtensionSupported(gl::GLContext::EXT_texture_compression_s3tc_srgb);
+
+    // Desktop GL is more complicated: It's EXT_texture_sRGB, when
+    // EXT_texture_compression_s3tc is supported, that enables srgb+s3tc.
+    return gl->IsExtensionSupported(gl::GLContext::EXT_texture_sRGB) &&
+           gl->IsExtensionSupported(gl::GLContext::EXT_texture_compression_s3tc);
+}
+
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureS3TC_SRGB, WEBGL_compressed_texture_s3tc_srgb)
 
 } // namespace mozilla

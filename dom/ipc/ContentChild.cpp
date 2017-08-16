@@ -491,6 +491,29 @@ private:
   }
 };
 
+#ifdef NIGHTLY_BUILD
+/**
+ * The singleton of this class is registered with the HangMonitor as an
+ * annotator, so that the hang monitor can record whether or not there were
+ * pending input events when the thread hung.
+ */
+class PendingInputEventHangAnnotator final
+  : public HangMonitor::Annotator
+{
+public:
+  virtual void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations)
+  {
+    int32_t pending = ContentChild::GetSingleton()->GetPendingInputEvents();
+    if (pending > 0) {
+      aAnnotations.AddAnnotation(NS_LITERAL_STRING("PendingInput"), pending);
+    }
+  }
+
+  static PendingInputEventHangAnnotator sSingleton;
+};
+PendingInputEventHangAnnotator PendingInputEventHangAnnotator::sSingleton;
+#endif
+
 NS_IMPL_ISUPPORTS(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
 
 ContentChild* ContentChild::sSingleton;
@@ -637,6 +660,10 @@ ContentChild::Init(MessageLoop* aIOLoop,
   mIsForBrowser = aIsForBrowser;
 
   SetProcessName(NS_LITERAL_STRING("Web Content"));
+
+#ifdef NIGHTLY_BUILD
+  HangMonitor::RegisterAnnotator(PendingInputEventHangAnnotator::sSingleton);
+#endif
 
   return true;
 }
@@ -2930,6 +2957,10 @@ ContentChild::RecvShutdown()
 
   mShuttingDown = true;
 
+#ifdef NIGHTLY_BUILD
+  HangMonitor::UnregisterAnnotator(PendingInputEventHangAnnotator::sSingleton);
+#endif
+
   if (mPolicy) {
     mPolicy->Deactivate();
     mPolicy = nullptr;
@@ -3579,6 +3610,33 @@ ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
 
   return nullptr;
 }
+
+#ifdef NIGHTLY_BUILD
+void
+ContentChild::OnChannelReceivedMessage(const Message& aMsg)
+{
+  if (nsContentUtils::IsMessageInputEvent(aMsg)) {
+    mPendingInputEvents++;
+  }
+}
+
+PContentChild::Result
+ContentChild::OnMessageReceived(const Message& aMsg)
+{
+  if (nsContentUtils::IsMessageInputEvent(aMsg)) {
+    DebugOnly<uint32_t> prevEvts = mPendingInputEvents--;
+    MOZ_ASSERT(prevEvts > 0);
+  }
+
+  return PContentChild::OnMessageReceived(aMsg);
+}
+
+PContentChild::Result
+ContentChild::OnMessageReceived(const Message& aMsg, Message*& aReply)
+{
+  return PContentChild::OnMessageReceived(aMsg, aReply);
+}
+#endif
 
 } // namespace dom
 

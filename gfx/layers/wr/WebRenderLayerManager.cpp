@@ -98,8 +98,10 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
   LayerManager::Destroy();
 
   if (WrBridge()) {
-    DiscardImages();
-    DiscardCompositorAnimations();
+    // Just clear ImageKeys, they are deleted during WebRenderAPI destruction.
+    mImageKeysToDelete.clear();
+    // CompositorAnimations are cleared by WebRenderBridgeParent.
+    mDiscardedCompositorAnimationsIds.Clear();
     WrBridge()->Destroy(aIsSync);
   }
 

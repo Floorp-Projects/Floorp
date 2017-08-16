@@ -401,8 +401,8 @@ public:
    * of the cloned iterator will be at the beginning of buffered data; this
    * should match the perspective of the caller.
    */
-  SourceBufferIterator Clone(SourceBufferIterator& aIterator,
-                             size_t aReadLimit) const
+  Maybe<SourceBufferIterator> Clone(SourceBufferIterator& aIterator,
+                                    size_t aReadLimit) const
   {
     // In order to advance to the current position of the iterator from the
     // perspective of the caller, we need to take into account if we are
@@ -425,18 +425,26 @@ public:
     // know that the state can only be READY or COMPLETE. That does not mean
     // everything is stored in a single chunk, and may require multiple Advance
     // calls to get where we want to be.
-    DebugOnly<SourceBufferIterator::State> state;
+    SourceBufferIterator::State state;
     do {
       state = other.Advance(pos);
-      MOZ_ASSERT(state != SourceBufferIterator::WAITING);
+      if (state != SourceBufferIterator::READY) {
+        MOZ_ASSERT_UNREACHABLE("Cannot advance to existing position");
+        return Nothing();
+      }
       MOZ_ASSERT(pos >= other.Length());
       pos -= other.Length();
     } while (pos > 0);
 
     // Force the data pointer to be where we expect it to be.
     state = other.Advance(0);
-    MOZ_ASSERT(state != SourceBufferIterator::WAITING);
-    return other;
+    if (state != SourceBufferIterator::READY) {
+      // The current position could be the end of the buffer, in which case
+      // there is no point cloning with no more data to read.
+      MOZ_ASSERT(state == SourceBufferIterator::COMPLETE);
+      return Nothing();
+    }
+    return Some(Move(other));
   }
 
   template <typename Func>
