@@ -113,7 +113,7 @@ public:
 
 protected:
   AudioBuffer(nsPIDOMWindowInner* aWindow, uint32_t aNumberOfChannels,
-              uint32_t aLength, float aSampleRate);
+              uint32_t aLength, float aSampleRate, ErrorResult& aRv);
   ~AudioBuffer();
 
   void
