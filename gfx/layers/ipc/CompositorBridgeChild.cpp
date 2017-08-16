@@ -92,6 +92,7 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild *aManager)
   , mSectionAllocator(nullptr)
   , mPaintLock("CompositorBridgeChild.mPaintLock")
   , mOutstandingAsyncPaints(0)
+  , mOutstandingAsyncEndTransaction(false)
   , mIsWaitingForPaint(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1189,13 +1190,27 @@ CompositorBridgeChild::NotifyFinishedAsyncPaint(CapturedPaintState* aState)
 }
 
 void
-CompositorBridgeChild::NotifyFinishedAsyncPaintTransaction()
+CompositorBridgeChild::NotifyBeginAsyncPaintEndTransaction()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MonitorAutoLock lock(mPaintLock);
+
+  MOZ_ASSERT(!mOutstandingAsyncEndTransaction);
+  mOutstandingAsyncEndTransaction = true;
+}
+
+void
+CompositorBridgeChild::NotifyFinishedAsyncPaintEndTransaction()
 {
   MOZ_ASSERT(PaintThread::IsOnPaintThread());
   MonitorAutoLock lock(mPaintLock);
+
   // Since this should happen after ALL paints are done and
   // at the end of a transaction, this should always be true.
   MOZ_RELEASE_ASSERT(mOutstandingAsyncPaints == 0);
+  MOZ_ASSERT(mOutstandingAsyncEndTransaction);
+
+  mOutstandingAsyncEndTransaction = false;
 
   // It's possible that we painted so fast that the main thread never reached
   // the code that starts delaying messages. If so, mIsWaitingForPaint will be
@@ -1218,7 +1233,9 @@ CompositorBridgeChild::PostponeMessagesIfAsyncPainting()
 
   MOZ_ASSERT(!mIsWaitingForPaint);
 
-  if (mOutstandingAsyncPaints > 0) {
+  // We need to wait for async paints and the async end transaction as
+  // it will do texture synchronization
+  if (mOutstandingAsyncPaints > 0 || mOutstandingAsyncEndTransaction) {
     mIsWaitingForPaint = true;
     GetIPCChannel()->BeginPostponingSends();
   }

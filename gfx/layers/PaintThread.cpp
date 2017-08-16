@@ -209,6 +209,7 @@ PaintThread::FinishedLayerTransaction(SyncObjectClient* aSyncObject)
   RefPtr<CompositorBridgeChild> cbc;
   if (!gfxPrefs::LayersOMTPForceSync()) {
     cbc = CompositorBridgeChild::Get();
+    cbc->NotifyBeginAsyncPaintEndTransaction();
   }
 
   RefPtr<SyncObjectClient> syncObject(aSyncObject);
@@ -237,7 +238,7 @@ PaintThread::EndAsyncLayerTransaction(CompositorBridgeChild* aBridge,
   }
 
   if (aBridge) {
-    aBridge->NotifyFinishedAsyncPaintTransaction();
+    aBridge->NotifyFinishedAsyncPaintEndTransaction();
   }
 }
 
