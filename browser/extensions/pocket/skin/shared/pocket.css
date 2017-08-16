@@ -35,7 +35,7 @@
   }
 }
 
-#pocket-button-box > #pocket-animatable-box,
+#pocket-button-box[animate="true"] > #pocket-animatable-box,
 #pocket-button > .toolbarbutton-animatable-box {
   position: absolute;
   overflow: hidden;
@@ -53,13 +53,13 @@
   max-height: 16px;
 }
 
-#pocket-button-box > #pocket-animatable-box {
+#pocket-button-box[animate="true"] > #pocket-animatable-box {
   /* .urlbar-icon has width 28px. Each frame is 20px wide. Set margin-inline-start
      to be half the difference, 4px. */
   margin-inline-start: 4px;
 }
 
-#pocket-button-box > #pocket-animatable-box > #pocket-animatable-image,
+#pocket-button-box[animate="true"] > #pocket-animatable-box > #pocket-animatable-image,
 #pocket-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
 }
