@@ -15,8 +15,8 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
-#include "jit/JitFrameIterator.h"
 #include "jit/JitFrames.h"
+#include "jit/JSJitFrameIter.h"
 #include "vm/StringBuffer.h"
 
 #include "jsgcinlines.h"

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_JitFrameIterator_inl_h
-#define jit_JitFrameIterator_inl_h
+#ifndef jit_JSJitFrameIter_inl_h
+#define jit_JSJitFrameIter_inl_h
 
-#include "jit/JitFrameIterator.h"
+#include "jit/JSJitFrameIter.h"
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
@@ -17,28 +17,28 @@ namespace js {
 namespace jit {
 
 inline uint8_t*
-JitFrameIterator::returnAddress() const
+JSJitFrameIter::returnAddress() const
 {
     CommonFrameLayout* current = (CommonFrameLayout*) current_;
     return current->returnAddress();
 }
 
 inline FrameType
-JitFrameIterator::prevType() const
+JSJitFrameIter::prevType() const
 {
     CommonFrameLayout* current = (CommonFrameLayout*) current_;
     return current->prevType();
 }
 
 inline ExitFrameLayout*
-JitFrameIterator::exitFrame() const
+JSJitFrameIter::exitFrame() const
 {
     MOZ_ASSERT(isExitFrame());
     return (ExitFrameLayout*) fp();
 }
 
 inline size_t
-JitFrameIterator::prevFrameLocalSize() const
+JSJitFrameIter::prevFrameLocalSize() const
 {
     CommonFrameLayout* current = (CommonFrameLayout*) current_;
     return current->prevFrameLocalSize();
@@ -58,7 +58,7 @@ JitProfilingFrameIterator::frameScript()
 }
 
 inline BaselineFrame*
-JitFrameIterator::baselineFrame() const
+JSJitFrameIter::baselineFrame() const
 {
     MOZ_ASSERT(isBaselineJS());
     return (BaselineFrame*)(fp() - BaselineFrame::FramePointerOffset - BaselineFrame::Size());
@@ -66,7 +66,7 @@ JitFrameIterator::baselineFrame() const
 
 template <typename T>
 bool
-JitFrameIterator::isExitFrameLayout() const
+JSJitFrameIter::isExitFrameLayout() const
 {
     if (!isExitFrame())
         return false;
@@ -76,4 +76,4 @@ JitFrameIterator::isExitFrameLayout() const
 } // namespace jit
 } // namespace js
 
-#endif /* jit_JitFrameIterator_inl_h */
+#endif /* jit_JSJitFrameIter_inl_h */

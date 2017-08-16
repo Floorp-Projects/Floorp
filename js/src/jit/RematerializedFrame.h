@@ -11,8 +11,8 @@
 
 #include "jsfun.h"
 
-#include "jit/JitFrameIterator.h"
 #include "jit/JitFrames.h"
+#include "jit/JSJitFrameIter.h"
 
 #include "vm/EnvironmentObject.h"
 #include "vm/Stack.h"

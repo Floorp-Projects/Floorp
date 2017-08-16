@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_JitFrameIterator_h
-#define jit_JitFrameIterator_h
+#ifndef jit_JSJitFrameIter_h
+#define jit_JSJitFrameIter_h
 
 #include "jsfun.h"
 #include "jsscript.h"
@@ -82,7 +82,7 @@ class JitActivation;
 
 void AssertJitStackInvariants(JSContext* cx);
 
-// A JitFrameIterator can iterate over a linear frame group of JS jit frames
+// A JSJitFrameIter can iterate over a linear frame group of JS jit frames
 // only. It will stop at the first frame that is not of the same kind, or at
 // the end of an activation.
 //
@@ -90,7 +90,7 @@ void AssertJitStackInvariants(JSContext* cx);
 // JitFrameIter. If you want to skip interleaved frames of other kinds, use
 // OnlyJSJitFrameIter.
 
-class JitFrameIterator
+class JSJitFrameIter
 {
   protected:
     uint8_t* current_;
@@ -106,10 +106,10 @@ class JitFrameIterator
 
   public:
     // See comment above the class.
-    explicit JitFrameIterator(const JitActivation* activation);
-    explicit JitFrameIterator(JSContext* cx);
+    explicit JSJitFrameIter(const JitActivation* activation);
+    explicit JSJitFrameIter(JSContext* cx);
 
-    // Used only by DebugModeOSRVolatileJSJitFrameIter.
+    // Used only by DebugModeOSRVolatileJitFrameIter.
     void exchangeReturnAddressIfMatch(uint8_t* oldAddr, uint8_t* newAddr) {
         if (returnAddressToFp_ == oldAddr)
             returnAddressToFp_ = newAddr;
@@ -354,7 +354,7 @@ struct MaybeReadFallback
 
     JSContext* maybeCx;
     JitActivation* activation;
-    const JitFrameIterator* frame;
+    const JSJitFrameIter* frame;
     const NoGCValue unreadablePlaceholder_;
     const FallbackConsequence consequence;
 
@@ -367,7 +367,7 @@ struct MaybeReadFallback
     {
     }
 
-    MaybeReadFallback(JSContext* cx, JitActivation* activation, const JitFrameIterator* frame,
+    MaybeReadFallback(JSContext* cx, JitActivation* activation, const JSJitFrameIter* frame,
                       FallbackConsequence consequence = Fallback_Invalidate)
       : maybeCx(cx),
         activation(activation),
@@ -544,7 +544,7 @@ class SnapshotIterator
     // Connect all informations about the current script in order to recover the
     // content of baseline frames.
 
-    SnapshotIterator(const JitFrameIterator& iter, const MachineState* machineState);
+    SnapshotIterator(const JSJitFrameIter& iter, const MachineState* machineState);
     SnapshotIterator();
 
     Value read() {
@@ -624,7 +624,7 @@ class SnapshotIterator
 // outermost frame).
 class InlineFrameIterator
 {
-    const JitFrameIterator* frame_;
+    const JSJitFrameIter* frame_;
     SnapshotIterator start_;
     SnapshotIterator si_;
     uint32_t framesRead_;
@@ -662,7 +662,7 @@ class InlineFrameIterator
                                       bool* hasInitialEnv = nullptr) const;
 
   public:
-    InlineFrameIterator(JSContext* cx, const JitFrameIterator* iter);
+    InlineFrameIterator(JSContext* cx, const JSJitFrameIter* iter);
     InlineFrameIterator(JSContext* cx, const InlineFrameIterator* iter);
 
     bool more() const {
@@ -845,9 +845,9 @@ class InlineFrameIterator
 
     void dump() const;
 
-    void resetOn(const JitFrameIterator* iter);
+    void resetOn(const JSJitFrameIter* iter);
 
-    const JitFrameIterator& frame() const {
+    const JSJitFrameIter& frame() const {
         return *frame_;
     }
 
@@ -868,4 +868,4 @@ class InlineFrameIterator
 } // namespace jit
 } // namespace js
 
-#endif /* jit_JitFrameIterator_h */
+#endif /* jit_JSJitFrameIter_h */

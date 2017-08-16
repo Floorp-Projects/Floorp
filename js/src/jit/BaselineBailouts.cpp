@@ -85,7 +85,7 @@ class BufferPointer
  */
 struct BaselineStackBuilder
 {
-    const JitFrameIterator& iter_;
+    const JSJitFrameIter& iter_;
     JitFrameLayout* frame_;
 
     static size_t HeaderSize() {
@@ -99,7 +99,7 @@ struct BaselineStackBuilder
 
     size_t framePushed_;
 
-    BaselineStackBuilder(const JitFrameIterator& iter, size_t initialSize)
+    BaselineStackBuilder(const JSJitFrameIter& iter, size_t initialSize)
       : iter_(iter),
         frame_(static_cast<JitFrameLayout*>(iter.current())),
         bufferTotal_(initialSize),
@@ -428,10 +428,10 @@ struct BaselineStackBuilder
 class SnapshotIteratorForBailout : public SnapshotIterator
 {
     JitActivation* activation_;
-    const JitFrameIterator& iter_;
+    const JSJitFrameIter& iter_;
 
   public:
-    SnapshotIteratorForBailout(JitActivation* activation, const JitFrameIterator& iter)
+    SnapshotIteratorForBailout(JitActivation* activation, const JSJitFrameIter& iter)
       : SnapshotIterator(iter, activation->bailoutData()->machineState()),
         activation_(activation),
         iter_(iter)
@@ -1494,7 +1494,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
 
 uint32_t
 jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
-                          const JitFrameIterator& iter, bool invalidate,
+                          const JSJitFrameIter& iter, bool invalidate,
                           BaselineBailoutInfo** bailoutInfo,
                           const ExceptionBailoutInfo* excInfo)
 {
@@ -1880,7 +1880,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     RootedScript outerScript(cx, nullptr);
 
     MOZ_ASSERT(cx->currentlyRunningInJit());
-    JitFrameIterator iter(cx);
+    JSJitFrameIter iter(cx);
     uint8_t* outerFp = nullptr;
 
     // Iter currently points at the exit frame.  Get the previous frame
@@ -1942,7 +1942,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     // on.
     JitActivation* act = cx->activation()->asJit();
     if (act->hasRematerializedFrame(outerFp)) {
-        JitFrameIterator iter(cx);
+        JSJitFrameIter iter(cx);
         size_t inlineDepth = numFrames;
         bool ok = true;
         while (inlineDepth > 0) {
