@@ -17,7 +17,7 @@ public class StreamItemAnimator extends DefaultItemAnimator {
 
     @Override
     public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
-        if (viewHolder.getItemViewType() == TopPanel.LAYOUT_ID) {
+        if (viewHolder.getItemViewType() == StreamRecyclerAdapter.RowItemType.TOP_PANEL.getViewType()) {
             // The top panel doesn't ever change in size. We really don't want to reload it
             // because it has its own state (i.e. the ViewPager state gets lost, and we
             // also flicker when creating a new ViewHolder). Therefore we should try to
