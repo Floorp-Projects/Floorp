@@ -526,56 +526,6 @@ InterpolateForGecko(const ValueWrapper* aStartWrapper,
   return NS_ERROR_FAILURE;
 }
 
-static bool
-IsPropertyDiscretelyAnimatable(nsCSSPropertyID aProperty)
-{
-  // For shorthands, Servo_Property_IsDiscreteAnimatable will always return
-  // false. That makes sense for shorthands like 'font' which have smoothly
-  // interpolable longhand components. However, for shorthands where all the
-  // components are discretely animatable, like 'font-variant', we should
-  // treat the shorthand as discretely animatable so that we apply SMIL's
-  // special discrete handling to it and all its longhand components.
-  if (nsCSSProps::IsShorthand(aProperty)) {
-    // We could iterate over all the longhand components and call
-    // Servo_Property_IsDiscreteAnimatable on each of them, but that's a lot of
-    // FFI calls do be doing each time we interpolate. Instead, since there are
-    // only about six shorthands in the set of properties that can be animated
-    // by SMIL, we just hard code the discrete ones below then add a debug-mode
-    // check that this list matches what the result would be if we performed
-    // all the FFI calls.
-    bool result;
-    switch (aProperty) {
-      case eCSSProperty_font_variant:
-      case eCSSProperty_marker:
-      case eCSSProperty_overflow:
-        result = true;
-        break;
-      default:
-        result = false;
-        break;
-    }
-
-#ifdef DEBUG
-    bool resultAccordingToServo = true;
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
-                                         CSSEnabledState::eForAllContent) {
-      // If the shorthand has one or more non-discrete components, it should not
-      // be treated as discrete.
-      if (!Servo_Property_IsDiscreteAnimatable(*p)) {
-        resultAccordingToServo = false;
-      }
-    }
-    MOZ_ASSERT(result == resultAccordingToServo,
-               "Gecko and Servo should agree on which shorthands should be"
-               " treated as discretely animatable");
-#endif
-
-    return result;
-  }
-
-  return Servo_Property_IsDiscreteAnimatable(aProperty);
-}
-
 static nsresult
 InterpolateForServo(const ValueWrapper* aStartWrapper,
                     const ValueWrapper& aEndWrapper,
@@ -588,7 +538,12 @@ InterpolateForServo(const ValueWrapper* aStartWrapper,
   // when keyTimes are specified, but we won't run that unless that this method
   // returns a failure to indicate that the property cannot be smoothly
   // interpolated, i.e. that we need to use a discrete calcMode.
-  if (IsPropertyDiscretelyAnimatable(aEndWrapper.mPropID)) {
+  //
+  // For shorthands, Servo_Property_IsDiscreteAnimatable will always return
+  // false. That's fine since most shorthands (like 'font' and
+  // 'text-decoration') include non-discrete components. If authors want to
+  // treat all components as discrete then they should use calcMode="discrete".
+  if (Servo_Property_IsDiscreteAnimatable(aEndWrapper.mPropID)) {
     return NS_ERROR_FAILURE;
   }
 

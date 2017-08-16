@@ -36,7 +36,7 @@ function waitForPort(url, createTab = true) {
   });
 }
 
-function waitForPage(pages) {
+function waitForPage(pages, url = TEST_URL) {
   return new Promise((resolve) => {
     function listener({ target }) {
       pages.removeMessageListener("RemotePage:Init", listener);
@@ -45,7 +45,7 @@ function waitForPage(pages) {
     }
 
     pages.addMessageListener("RemotePage:Init", listener);
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   });
 }
 
@@ -359,7 +359,7 @@ add_task(async function check_port_properties() {
 });
 
 // Test sending messages to all remote pages works
-add_task(async function remote_pages_multiple() {
+add_task(async function remote_pages_multiple_pages() {
   let pages = new RemotePages(TEST_URL);
   let port1 = await waitForPage(pages);
   let port2 = await waitForPage(pages);
@@ -391,6 +391,45 @@ add_task(async function remote_pages_multiple() {
 
   gBrowser.removeTab(gBrowser.getTabForBrowser(port1.browser));
   gBrowser.removeTab(gBrowser.getTabForBrowser(port2.browser));
+});
+
+// Test that RemotePages with multiple urls works
+add_task(async function remote_pages_multiple_urls() {
+  const TEST_URLS = [TEST_URL, TEST_URL.replace(".html", "2.html")];
+  const pages = new RemotePages(TEST_URLS);
+
+  const ports = [];
+  // Load two pages for each url
+  for (const [i, url] of TEST_URLS.entries()) {
+    const port = await waitForPage(pages, url);
+    is(port.browser, gBrowser.selectedBrowser, `port${i} is for the correct browser`);
+    ports.push(port);
+    ports.push(await waitForPage(pages, url));
+  }
+
+  let unloadPromise = waitForMessage(pages, "RemotePage:Unload", ports.pop());
+  gBrowser.removeCurrentTab();
+  await unloadPromise;
+
+  const pongPorts = new Set();
+  await new Promise(resolve => {
+    function listener({ name, target, data }) {
+      is(name, "Pong", "Should have seen the right response.");
+      is(data.str, "FAKE_DATA", "String should pass through");
+      is(data.counter, 1235, "Counter should be incremented");
+      pongPorts.add(target);
+      if (pongPorts.size === ports.length)
+        resolve();
+    }
+
+    pages.addMessageListener("Pong", listener);
+    pages.sendAsyncMessage("Ping", {str: "FAKE_DATA", counter: 1234});
+  });
+
+  ports.forEach(port => ok(pongPorts.has(port)));
+
+  pages.destroy();
+  ports.forEach(port => gBrowser.removeTab(gBrowser.getTabForBrowser(port.browser)));
 });
 
 // Test sending various types of data across the boundary

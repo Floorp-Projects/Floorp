@@ -64,9 +64,6 @@ with Files("test/referrer/**"):
 with Files("test/siteIdentity/**"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
-with Files("test/social/**"):
-    BUG_COMPONENT = ("Firefox", "SocialAPI")
-
 with Files("test/static/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
@@ -88,14 +85,8 @@ with Files("test/webextensions/**"):
 with Files("test/webrtc/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
-with Files("aboutProviderDirectory.xhtml"):
-    BUG_COMPONENT = ("Firefox", "SocialAPI")
-
 with Files("aboutNetError.xhtml"):
     BUG_COMPONENT = ("Firefox", "Security")
-
-with Files("aboutSocialError.xhtml"):
-    BUG_COMPONENT = ("Firefox", "SocialAPI")
 
 with Files("blockedSite.xhtml"):
     BUG_COMPONENT = ("Toolkit", "Safe Browsing")
@@ -132,9 +123,6 @@ with Files("browser-plugins.js"):
 
 with Files("browser-safebrowsing.js"):
     BUG_COMPONENT = ("Toolkit", "Safe Browsing")
-
-with Files("*social*"):
-    BUG_COMPONENT = ("Firefox", "SocialAPI")
 
 with Files("browser-sync.js"):
     BUG_COMPONENT = ("Firefox", "Sync")

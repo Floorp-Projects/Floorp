@@ -72,7 +72,6 @@ var initTable = {
   cache2: ["@mozilla.org/netwerk/cache-storage-service;1", "nsICacheStorageService"],
   cpmm: ["@mozilla.org/childprocessmessagemanager;1", "nsIMessageSender"],
   console: ["@mozilla.org/consoleservice;1", "nsIConsoleService"],
-  contentPrefs: ["@mozilla.org/content-pref/service;1", "nsIContentPrefService"],
   cookies: ["@mozilla.org/cookiemanager;1", "nsICookieManager2"],
   downloads: ["@mozilla.org/download-manager;1", "nsIDownloadManager"],
   droppedLinkHandler: ["@mozilla.org/content/dropped-link-handler;1", "nsIDroppedLinkHandler"],

@@ -37,8 +37,6 @@
 #include <ucontext.h>
 #endif
 
-static const char* gProgname = "huh?";
-
 // Note: some tests manipulate this value.
 unsigned int _gdb_sleep_duration = 300;
 
@@ -59,6 +57,8 @@ unsigned int _gdb_sleep_duration = 300;
 #include <unistd.h>
 #include "nsISupportsUtils.h"
 #include "mozilla/StackWalk.h"
+
+static const char* gProgname = "huh?";
 
 // NB: keep me up to date with the same variable in
 // ipc/chromium/chrome/common/ipc_channel_posix.cc
@@ -228,10 +228,12 @@ static void fpehandler(int signum, siginfo_t *si, void *context)
 
 void InstallSignalHandlers(const char *aProgname)
 {
+#if defined(CRAWL_STACK_ON_SIGSEGV)
   const char* tmp = PL_strdup(aProgname);
   if (tmp) {
     gProgname = tmp;
   }
+#endif // CRAWL_STACK_ON_SIGSEGV
 
   const char *gdbSleep = PR_GetEnv("MOZ_GDB_SLEEP");
   if (gdbSleep && *gdbSleep)

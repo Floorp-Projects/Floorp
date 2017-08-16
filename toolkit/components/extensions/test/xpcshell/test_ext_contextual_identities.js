@@ -107,8 +107,10 @@ add_task(async function test_contextualIdentity_with_permissions() {
   const CONTAINERS_PREF = "privacy.userContext.enabled";
   const initial = Services.prefs.getBoolPref(CONTAINERS_PREF);
   async function background(ver) {
-    let ci = await browser.contextualIdentities.get("foobar");
-    browser.test.assertEq(null, ci, "No identity should be returned here");
+    let ci;
+    await browser.test.assertRejects(browser.contextualIdentities.get("foobar"), "Invalid contextual identitiy: foobar", "API should reject here");
+    await browser.test.assertRejects(browser.contextualIdentities.update("foobar", {name: "testing"}), "Invalid contextual identitiy: foobar", "API should reject for unknown updates");
+    await browser.test.assertRejects(browser.contextualIdentities.remove("foobar"), "Invalid contextual identitiy: foobar", "API should reject for removing unknown containers");
 
     ci = await browser.contextualIdentities.get("firefox-container-1");
     browser.test.assertTrue(!!ci, "We have an identity");

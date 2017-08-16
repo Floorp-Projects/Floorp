@@ -619,8 +619,6 @@ Tester.prototype = {
             sidebar.setAttribute("src", "data:text/html;charset=utf-8,");
             sidebar.docShell.createAboutBlankContentViewer(null);
             sidebar.setAttribute("src", "about:blank");
-
-            SocialShare.uninit();
           }
 
           // Destroy BackgroundPageThumbs resources.

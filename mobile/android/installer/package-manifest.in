@@ -333,8 +333,8 @@
 @BINPATH@/components/nsURLFormatter.js
 @BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
-@BINPATH@/components/nsContentPrefService.manifest
-@BINPATH@/components/nsContentPrefService.js
+@BINPATH@/components/ContentPrefService2.manifest
+@BINPATH@/components/ContentPrefService2.js
 @BINPATH@/components/nsHandlerService-json.manifest
 @BINPATH@/components/nsHandlerService-json.js
 @BINPATH@/components/nsHandlerService.manifest

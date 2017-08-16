@@ -284,11 +284,9 @@ public:
       const Maybe<ZoomConstraints>& aConstraints) override;
 
   /**
-   * Cancels any currently running animation. Note that all this does is set the
-   * state of the AsyncPanZoomController back to NOTHING, but it is the
-   * animation's responsibility to check this before advancing.
+   * Cancels any currently running animation.
    */
-  void CancelAnimation(const ScrollableLayerGuid &aGuid) override;
+  void CancelAnimation(const ScrollableLayerGuid &aGuid);
 
   /**
    * Adjusts the root APZC to compensate for a shift in the surface. See the

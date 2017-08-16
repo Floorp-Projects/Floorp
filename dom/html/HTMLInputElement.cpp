@@ -86,7 +86,7 @@
 #include "mozilla/dom/FileList.h"
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIContentPrefService.h"
+#include "nsIContentPrefService2.h"
 #include "nsIMIMEService.h"
 #include "nsIObserverService.h"
 #include "nsIPopupWindowManager.h"

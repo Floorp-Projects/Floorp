@@ -42,7 +42,7 @@ CreateTestKeyPairFromCert(const UniqueCERTCertificate& cert)
 SECItemArray*
 GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert,
                        const UniquePLArenaPool& aArena,
-                       const char* aAdditionalCertName)
+                       const char* aAdditionalCertName, time_t aThisUpdateSkew)
 {
   MOZ_ASSERT(aArena);
   MOZ_ASSERT(aCert);
@@ -64,7 +64,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert
     return arr;
   }
 
-  time_t now = time(nullptr);
+  time_t now = time(nullptr) + aThisUpdateSkew;
   time_t oldNow = now - (8 * Time::ONE_DAY_IN_SECONDS);
 
   mozilla::UniqueCERTCertificate cert(CERT_DupCertificate(aCert.get()));

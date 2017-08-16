@@ -2,35 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This file is an XPCOM component that implements nsIContentPrefService2.
-// Although it's a JSM, it's not intended to be imported by consumers like JSMs
-// are usually imported.  It's only a JSM so that nsContentPrefService.js can
-// easily use it.  Consumers should access this component with the usual XPCOM
-// rigmarole:
-//
-//   Cc["@mozilla.org/content-pref/service;1"].
-//   getService(Ci.nsIContentPrefService2);
-//
-// That contract ID actually belongs to nsContentPrefService.js, which, when
-// QI'ed to nsIContentPrefService2, returns an instance of this component.
-//
-// The plan is to eventually remove nsIContentPrefService and its
-// implementation, nsContentPrefService.js.  At such time this file can stop
-// being a JSM, and the "_cps" parts that ContentPrefService2 relies on and
-// NSGetFactory and all the other XPCOM initialization goop in
-// nsContentPrefService.js can be moved here.
-//
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=699859
-
-var EXPORTED_SYMBOLS = [
-  "ContentPrefService2",
-];
-
 const { interfaces: Ci, classes: Cc, results: Cr, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ContentPrefUtils.jsm");
 Cu.import("resource://gre/modules/ContentPrefStore.jsm");
+
+const CACHE_MAX_GROUP_ENTRIES = 100;
 
 const GROUP_CLAUSE = `
   SELECT id
@@ -39,13 +18,97 @@ const GROUP_CLAUSE = `
         (:includeSubdomains AND name LIKE :pattern ESCAPE '/')
 `;
 
-function ContentPrefService2(cps) {
-  this._cps = cps;
-  this._cache = cps._cache;
-  this._pbStore = cps._privModeStorage;
+function ContentPrefService2() {
+  if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
+    return Cu.import("resource://gre/modules/ContentPrefServiceChild.jsm")
+             .ContentPrefServiceChild;
+  }
+
+  // If this throws an exception, it causes the getService call to fail,
+  // but the next time a consumer tries to retrieve the service, we'll try
+  // to initialize the database again, which might work if the failure
+  // was due to a temporary condition (like being out of disk space).
+  this._dbInit();
+
+  this._observerSvc.addObserver(this, "last-pb-context-exited");
+
+  // Observe shutdown so we can shut down the database connection.
+  this._observerSvc.addObserver(this, "xpcom-shutdown");
 }
 
+const cache = new ContentPrefStore();
+cache.set = function CPS_cache_set(group, name, val) {
+  Object.getPrototypeOf(this).set.apply(this, arguments);
+  let groupCount = this._groups.size;
+  if (groupCount >= CACHE_MAX_GROUP_ENTRIES) {
+    // Clean half of the entries
+    for (let [group, name, ] of this) {
+      this.remove(group, name);
+      groupCount--;
+      if (groupCount < CACHE_MAX_GROUP_ENTRIES / 2)
+        break;
+    }
+  }
+};
+
+const privModeStorage = new ContentPrefStore();
+
 ContentPrefService2.prototype = {
+  // XPCOM Plumbing
+
+  classID: Components.ID("{e3f772f3-023f-4b32-b074-36cf0fd5d414}"),
+
+  // Convenience Getters
+
+  // Observer Service
+  __observerSvc: null,
+  get _observerSvc() {
+    if (!this.__observerSvc)
+      this.__observerSvc = Cc["@mozilla.org/observer-service;1"].
+                           getService(Ci.nsIObserverService);
+    return this.__observerSvc;
+  },
+
+  // Preferences Service
+  __prefSvc: null,
+  get _prefSvc() {
+    if (!this.__prefSvc)
+      this.__prefSvc = Cc["@mozilla.org/preferences-service;1"].
+                       getService(Ci.nsIPrefBranch);
+    return this.__prefSvc;
+  },
+
+
+  // Destruction
+
+  _destroy: function ContentPrefService__destroy() {
+    this._observerSvc.removeObserver(this, "xpcom-shutdown");
+    this._observerSvc.removeObserver(this, "last-pb-context-exited");
+
+    this.destroy();
+
+    this._dbConnection.asyncClose(() => {
+      Services.obs.notifyObservers(null, "content-prefs-db-closed");
+    });
+
+    // Delete references to XPCOM components to make sure we don't leak them
+    // (although we haven't observed leakage in tests).  Also delete references
+    // in _observers and _genericObservers to avoid cycles with those that
+    // refer to us and don't remove themselves from those observer pools.
+    delete this._observers;
+    delete this._genericObservers;
+    delete this.__grouper;
+    delete this.__observerSvc;
+    delete this.__prefSvc;
+  },
+
+
+  // in-memory cache and private-browsing stores
+
+  _cache: cache,
+  _pbStore: privModeStorage,
+
+  // nsIContentPrefService
 
   getByName: function CPS2_getByName(name, context, callback) {
     checkNameArg(name);
@@ -254,7 +317,7 @@ ContentPrefService2.prototype = {
       this._pbStore.set(group, name, value);
       this._schedule(function() {
         cbHandleCompletion(callback, Ci.nsIContentPrefCallback2.COMPLETE_OK);
-        this._cps._notifyPrefSet(group, name, value, context.usePrivateBrowsing);
+        this._notifyPrefSet(group, name, value, context.usePrivateBrowsing);
       });
       return;
     }
@@ -326,7 +389,7 @@ ContentPrefService2.prototype = {
           this._cache.setWithCast(group, name, value);
         cbHandleCompletion(callback, reason);
         if (ok)
-          this._cps._notifyPrefSet(group, name, value, context && context.usePrivateBrowsing);
+          this._notifyPrefSet(group, name, value, context && context.usePrivateBrowsing);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
@@ -406,7 +469,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, , ] of prefs) {
-            this._cps._notifyPrefRemoved(sgroup, name, isPrivate);
+            this._notifyPrefRemoved(sgroup, name, isPrivate);
           }
         }
       },
@@ -519,7 +582,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, sname, ] of prefs) {
-            this._cps._notifyPrefRemoved(sgroup, sname, isPrivate);
+            this._notifyPrefRemoved(sgroup, sname, isPrivate);
           }
         }
       },
@@ -585,7 +648,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, sname, ] of prefs) {
-            this._cps._notifyPrefRemoved(sgroup, sname, isPrivate);
+            this._notifyPrefRemoved(sgroup, sname, isPrivate);
           }
         }
       },
@@ -674,7 +737,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, , ] of prefs) {
-            this._cps._notifyPrefRemoved(sgroup, name, isPrivate);
+            this._notifyPrefRemoved(sgroup, name, isPrivate);
           }
         }
       },
@@ -704,7 +767,7 @@ ContentPrefService2.prototype = {
     if (!this._statements)
       this._statements = {};
     if (!this._statements[sql])
-      this._statements[sql] = this._cps._dbConnection.createAsyncStatement(sql);
+      this._statements[sql] = this._dbConnection.createAsyncStatement(sql);
     return this._statements[sql];
   },
 
@@ -728,7 +791,7 @@ ContentPrefService2.prototype = {
   _execStmts: function CPS2__execStmts(stmts, callbacks) {
     let self = this;
     let gotRow = false;
-    this._cps._dbConnection.executeAsync(stmts, stmts.length, {
+    this._dbConnection.executeAsync(stmts, stmts.length, {
       handleResult: function handleResult(results) {
         try {
           let row = null;
@@ -763,6 +826,14 @@ ContentPrefService2.prototype = {
     });
   },
 
+  __grouper: null,
+  get _grouper() {
+    if (!this.__grouper)
+      this.__grouper = Cc["@mozilla.org/content-pref/hostname-grouper;1"].
+                       getService(Ci.nsIContentURIGrouper);
+    return this.__grouper;
+  },
+
   /**
    * Parses the domain (the "group", to use the database's term) from the given
    * string.
@@ -780,19 +851,86 @@ ContentPrefService2.prototype = {
     } catch (err) {
       return groupStr;
     }
-    return this._cps._grouper.group(groupURI);
+    return this._grouper.group(groupURI);
   },
 
   _schedule: function CPS2__schedule(fn) {
     Services.tm.dispatchToMainThread(fn.bind(this));
   },
 
-  addObserverForName: function CPS2_addObserverForName(name, observer) {
-    this._cps._addObserver(name, observer);
+  // A hash of arrays of observers, indexed by setting name.
+  _observers: {},
+
+  // An array of generic observers, which observe all settings.
+  _genericObservers: [],
+
+  addObserverForName: function CPS2_addObserverForName(aName, aObserver) {
+    var observers;
+    if (aName) {
+      if (!this._observers[aName])
+        this._observers[aName] = [];
+      observers = this._observers[aName];
+    } else
+      observers = this._genericObservers;
+
+    if (observers.indexOf(aObserver) == -1)
+      observers.push(aObserver);
   },
 
-  removeObserverForName: function CPS2_removeObserverForName(name, observer) {
-    this._cps._removeObserver(name, observer);
+  removeObserverForName: function CPS2_removeObserverForName(aName, aObserver) {
+    var observers;
+    if (aName) {
+      if (!this._observers[aName])
+        return;
+      observers = this._observers[aName];
+    } else
+      observers = this._genericObservers;
+
+    if (observers.indexOf(aObserver) != -1)
+      observers.splice(observers.indexOf(aObserver), 1);
+  },
+
+  /**
+   * Construct a list of observers to notify about a change to some setting,
+   * putting setting-specific observers before before generic ones, so observers
+   * that initialize individual settings (like the page style controller)
+   * execute before observers that display multiple settings and depend on them
+   * being initialized first (like the content prefs sidebar).
+   */
+  _getObservers: function ContentPrefService__getObservers(aName) {
+    var observers = [];
+
+    if (aName && this._observers[aName])
+      observers = observers.concat(this._observers[aName]);
+    observers = observers.concat(this._genericObservers);
+
+    return observers;
+  },
+
+  /**
+   * Notify all observers about the removal of a preference.
+   */
+  _notifyPrefRemoved: function ContentPrefService__notifyPrefRemoved(aGroup, aName, aIsPrivate) {
+    for (var observer of this._getObservers(aName)) {
+      try {
+        observer.onContentPrefRemoved(aGroup, aName, aIsPrivate);
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }
+  },
+
+  /**
+   * Notify all observers about a preference change.
+   */
+  _notifyPrefSet: function ContentPrefService__notifyPrefSet(aGroup, aName, aValue, aIsPrivate) {
+    for (var observer of this._getObservers(aName)) {
+      try {
+        observer.onContentPrefSet(aGroup, aName, aValue, aIsPrivate);
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }
   },
 
   extractDomain: function CPS2_extractDomain(str) {
@@ -808,13 +946,19 @@ ContentPrefService2.prototype = {
    */
   observe: function CPS2_observe(subj, topic, data) {
     switch (topic) {
+    case "xpcom-shutdown":
+      this._destroy();
+      break;
+    case "last-pb-context-exited":
+      this._pbStore.removeAll();
+      break;
     case "test:reset":
       let fn = subj.QueryInterface(Ci.xpcIJSWeakReference).get();
       this._reset(fn);
       break;
     case "test:db":
       let obj = subj.QueryInterface(Ci.xpcIJSWeakReference).get();
-      obj.value = this._cps._dbConnection;
+      obj.value = this._dbConnection;
       break;
     }
   },
@@ -828,9 +972,8 @@ ContentPrefService2.prototype = {
     this._pbStore.removeAll();
     this._cache.removeAll();
 
-    let cps = this._cps;
-    cps._observers = {};
-    cps._genericObservers = [];
+    this._observers = {};
+    this._genericObservers = [];
 
     let tables = ["prefs", "groups", "settings"];
     let stmts = tables.map(t => this._stmt(`DELETE FROM ${t}`));
@@ -845,9 +988,230 @@ ContentPrefService2.prototype = {
     ];
     if (supportedIIDs.some(i => iid.equals(i)))
       return this;
-    if (iid.equals(Ci.nsIContentPrefService))
-      return this._cps;
     throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+
+  // Database Creation & Access
+
+  _dbVersion: 4,
+
+  _dbSchema: {
+    tables: {
+      groups:     "id           INTEGER PRIMARY KEY, \
+                   name         TEXT NOT NULL",
+
+      settings:   "id           INTEGER PRIMARY KEY, \
+                   name         TEXT NOT NULL",
+
+      prefs:      "id           INTEGER PRIMARY KEY, \
+                   groupID      INTEGER REFERENCES groups(id), \
+                   settingID    INTEGER NOT NULL REFERENCES settings(id), \
+                   value        BLOB, \
+                   timestamp    INTEGER NOT NULL DEFAULT 0" // Storage in seconds, API in ms. 0 for migrated values.
+    },
+    indices: {
+      groups_idx: {
+        table: "groups",
+        columns: ["name"]
+      },
+      settings_idx: {
+        table: "settings",
+        columns: ["name"]
+      },
+      prefs_idx: {
+        table: "prefs",
+        columns: ["timestamp", "groupID", "settingID"]
+      }
+    }
+  },
+
+  _dbConnection: null,
+
+  // _dbInit and the methods it calls (_dbCreate, _dbMigrate, and version-
+  // specific migration methods) must be careful not to call any method
+  // of the service that assumes the database connection has already been
+  // initialized, since it won't be initialized until at the end of _dbInit.
+
+  _dbInit: function ContentPrefService__dbInit() {
+    var dirService = Cc["@mozilla.org/file/directory_service;1"].
+                     getService(Ci.nsIProperties);
+    var dbFile = dirService.get("ProfD", Ci.nsIFile);
+    dbFile.append("content-prefs.sqlite");
+
+    var dbService = Cc["@mozilla.org/storage/service;1"].
+                    getService(Ci.mozIStorageService);
+
+    var dbConnection;
+
+    if (!dbFile.exists())
+      dbConnection = this._dbCreate(dbService, dbFile);
+    else {
+      try {
+        dbConnection = dbService.openDatabase(dbFile);
+      } catch (e) {
+        // If the connection isn't ready after we open the database, that means
+        // the database has been corrupted, so we back it up and then recreate it.
+        if (e.result != Cr.NS_ERROR_FILE_CORRUPTED)
+          throw e;
+        dbConnection = this._dbBackUpAndRecreate(dbService, dbFile,
+                                                 dbConnection);
+      }
+
+      // Get the version of the schema in the file.
+      var version = dbConnection.schemaVersion;
+
+      // Try to migrate the schema in the database to the current schema used by
+      // the service.  If migration fails, back up the database and recreate it.
+      if (version != this._dbVersion) {
+        try {
+          this._dbMigrate(dbConnection, version, this._dbVersion);
+        } catch (ex) {
+          Cu.reportError("error migrating DB: " + ex + "; backing up and recreating");
+          dbConnection = this._dbBackUpAndRecreate(dbService, dbFile, dbConnection);
+        }
+      }
+    }
+
+    // Turn off disk synchronization checking to reduce disk churn and speed up
+    // operations when prefs are changed rapidly (such as when a user repeatedly
+    // changes the value of the browser zoom setting for a site).
+    //
+    // Note: this could cause database corruption if the OS crashes or machine
+    // loses power before the data gets written to disk, but this is considered
+    // a reasonable risk for the not-so-critical data stored in this database.
+    //
+    // If you really don't want to take this risk, however, just set the
+    // toolkit.storage.synchronous pref to 1 (NORMAL synchronization) or 2
+    // (FULL synchronization), in which case mozStorageConnection::Initialize
+    // will use that value, and we won't override it here.
+    if (!this._prefSvc.prefHasUserValue("toolkit.storage.synchronous"))
+      dbConnection.executeSimpleSQL("PRAGMA synchronous = OFF");
+
+    this._dbConnection = dbConnection;
+  },
+
+  _dbCreate: function ContentPrefService__dbCreate(aDBService, aDBFile) {
+    var dbConnection = aDBService.openDatabase(aDBFile);
+
+    try {
+      this._dbCreateSchema(dbConnection);
+      dbConnection.schemaVersion = this._dbVersion;
+    } catch (ex) {
+      // If we failed to create the database (perhaps because the disk ran out
+      // of space), then remove the database file so we don't leave it in some
+      // half-created state from which we won't know how to recover.
+      dbConnection.close();
+      aDBFile.remove(false);
+      throw ex;
+    }
+
+    return dbConnection;
+  },
+
+  _dbCreateSchema: function ContentPrefService__dbCreateSchema(aDBConnection) {
+    this._dbCreateTables(aDBConnection);
+    this._dbCreateIndices(aDBConnection);
+  },
+
+  _dbCreateTables: function ContentPrefService__dbCreateTables(aDBConnection) {
+    for (let name in this._dbSchema.tables)
+      aDBConnection.createTable(name, this._dbSchema.tables[name]);
+  },
+
+  _dbCreateIndices: function ContentPrefService__dbCreateIndices(aDBConnection) {
+    for (let name in this._dbSchema.indices) {
+      let index = this._dbSchema.indices[name];
+      let statement = `
+        CREATE INDEX IF NOT EXISTS ${name} ON ${index.table}
+        (${index.columns.join(", ")})
+      `;
+      aDBConnection.executeSimpleSQL(statement);
+    }
+  },
+
+  _dbBackUpAndRecreate: function ContentPrefService__dbBackUpAndRecreate(aDBService,
+                                                                         aDBFile,
+                                                                         aDBConnection) {
+    aDBService.backupDatabaseFile(aDBFile, "content-prefs.sqlite.corrupt");
+
+    // Close the database, ignoring the "already closed" exception, if any.
+    // It'll be open if we're here because of a migration failure but closed
+    // if we're here because of database corruption.
+    try { aDBConnection.close() } catch (ex) {}
+
+    aDBFile.remove(false);
+
+    let dbConnection = this._dbCreate(aDBService, aDBFile);
+
+    return dbConnection;
+  },
+
+  _dbMigrate: function ContentPrefService__dbMigrate(aDBConnection, aOldVersion, aNewVersion) {
+    /**
+     * Migrations should follow the template rules in bug 1074817 comment 3 which are:
+     * 1. Migration should be incremental and non-breaking.
+     * 2. It should be idempotent because one can downgrade an upgrade again.
+     * On downgrade:
+     * 1. Decrement schema version so that upgrade runs the migrations again.
+     */
+    aDBConnection.beginTransaction();
+
+    try {
+       /**
+       * If the schema version is 0, that means it was never set, which means
+       * the database was somehow created without the schema being applied, perhaps
+       * because the system ran out of disk space (although we check for this
+       * in _createDB) or because some other code created the database file without
+       * applying the schema.  In any case, recover by simply reapplying the schema.
+       */
+      if (aOldVersion == 0) {
+        this._dbCreateSchema(aDBConnection);
+      } else {
+        for (let i = aOldVersion; i < aNewVersion; i++) {
+          let migrationName = "_dbMigrate" + i + "To" + (i + 1);
+          if (typeof this[migrationName] != "function") {
+            throw ("no migrator function from version " + aOldVersion + " to version " + aNewVersion);
+          }
+          this[migrationName](aDBConnection);
+        }
+      }
+      aDBConnection.schemaVersion = aNewVersion;
+      aDBConnection.commitTransaction();
+    } catch (ex) {
+      aDBConnection.rollbackTransaction();
+      throw ex;
+    }
+  },
+
+  _dbMigrate1To2: function ContentPrefService___dbMigrate1To2(aDBConnection) {
+    aDBConnection.executeSimpleSQL("ALTER TABLE groups RENAME TO groupsOld");
+    aDBConnection.createTable("groups", this._dbSchema.tables.groups);
+    aDBConnection.executeSimpleSQL(`
+      INSERT INTO groups (id, name)
+      SELECT id, name FROM groupsOld
+    `);
+
+    aDBConnection.executeSimpleSQL("DROP TABLE groupers");
+    aDBConnection.executeSimpleSQL("DROP TABLE groupsOld");
+  },
+
+  _dbMigrate2To3: function ContentPrefService__dbMigrate2To3(aDBConnection) {
+    this._dbCreateIndices(aDBConnection);
+  },
+
+  _dbMigrate3To4: function ContentPrefService__dbMigrate3To4(aDBConnection) {
+    // Add timestamp column if it does not exist yet. This operation is idempotent.
+    try {
+      let stmt = aDBConnection.createStatement("SELECT timestamp FROM prefs");
+      stmt.finalize();
+    } catch (e) {
+      aDBConnection.executeSimpleSQL("ALTER TABLE prefs ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0");
+    }
+
+    // To modify prefs_idx drop it and create again.
+    aDBConnection.executeSimpleSQL("DROP INDEX IF EXISTS prefs_idx");
+    this._dbCreateIndices(aDBConnection);
   },
 };
 
@@ -876,3 +1240,56 @@ function checkCallbackArg(callback, required) {
 function invalidArg(msg) {
   return Components.Exception(msg, Cr.NS_ERROR_INVALID_ARG);
 }
+
+
+function HostnameGrouper() {}
+
+HostnameGrouper.prototype = {
+  // XPCOM Plumbing
+
+  classID:          Components.ID("{8df290ae-dcaa-4c11-98a5-2429a4dc97bb}"),
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentURIGrouper]),
+
+  // nsIContentURIGrouper
+
+  group: function HostnameGrouper_group(aURI) {
+    var group;
+
+    try {
+      // Accessing the host property of the URI will throw an exception
+      // if the URI is of a type that doesn't have a host property.
+      // Otherwise, we manually throw an exception if the host is empty,
+      // since the effect is the same (we can't derive a group from it).
+
+      group = aURI.host;
+      if (!group)
+        throw ("can't derive group from host; no host in URI");
+    } catch (ex) {
+      // If we don't have a host, then use the entire URI (minus the query,
+      // reference, and hash, if possible) as the group.  This means that URIs
+      // like about:mozilla and about:blank will be considered separate groups,
+      // but at least they'll be grouped somehow.
+
+      // This also means that each individual file: URL will be considered
+      // its own group.  This seems suboptimal, but so does treating the entire
+      // file: URL space as a single group (especially if folks start setting
+      // group-specific capabilities prefs).
+
+      // XXX Is there something better we can do here?
+
+      try {
+        var url = aURI.QueryInterface(Ci.nsIURL);
+        group = aURI.prePath + url.filePath;
+      } catch (ex) {
+        group = aURI.spec;
+      }
+    }
+
+    return group;
+  }
+};
+
+// XPCOM Plumbing
+
+var components = [ContentPrefService2, HostnameGrouper];
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

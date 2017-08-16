@@ -22,12 +22,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:src="@drawable/private_illustration_android"/>
-
             <TextView
                 style="@style/TextAppearance.PrivateTab.Title"
                 android:layout_width="wrap_content"
@@ -45,7 +39,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="16dp"
                 android:gravity="center_horizontal"
-                android:lineSpacingMultiplier="1.4"
+                android:lineSpacingMultiplier="1.3"
                 android:text="@string/private_tab_panel_description"
                 android:textColor="@color/photon_text_secondary"/>
 
@@ -56,7 +50,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="36dp"
                 android:gravity="center_horizontal"
-                android:lineSpacingMultiplier="1.4"
+                android:lineSpacingMultiplier="1.3"
                 android:text="@string/private_tab_panel_description2"
                 android:textColor="@color/photon_text_secondary"/>
 

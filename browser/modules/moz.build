@@ -94,9 +94,6 @@ with Files("Sanitizer.jsm"):
 with Files("SitePermissions.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
-with Files("Social*"):
-    BUG_COMPONENT = ("Firefox", "SocialAPI")
-
 with Files("TransientPrefs.jsm"):
     BUG_COMPONENT = ("Firefox", "Preferences")
 
@@ -123,10 +120,7 @@ with Files("ZoomUI.jsm"):
 
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += [
-    'test/unit/social/xpcshell.ini',
-    'test/unit/xpcshell.ini',
-]
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 EXTRA_JS_MODULES += [
     'AboutHome.jsm',
@@ -158,8 +152,6 @@ EXTRA_JS_MODULES += [
     'RemotePrompt.jsm',
     'Sanitizer.jsm',
     'SitePermissions.jsm',
-    'Social.jsm',
-    'SocialService.jsm',
     'TransientPrefs.jsm',
     'UpdateTopLevelContentWindowIDHelper.jsm',
     'webrtcUI.jsm',

@@ -447,7 +447,7 @@ protected:
   void SetReferrerPolicy(uint32_t aReferrerPolicy);
 
   // Session History
-  bool ShouldAddToSessionHistory(nsIURI* aURI);
+  bool ShouldAddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel);
   // Either aChannel or aOwner must be null. If aChannel is
   // present, the owner should be gotten from it.
   // If aCloneChildren is true, then our current session history's

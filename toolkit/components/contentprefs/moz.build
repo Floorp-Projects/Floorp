@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPCSHELL_TESTS_MANIFESTS += [
-    'tests/unit/xpcshell.ini',
     'tests/unit_cps2/xpcshell.ini',
 ]
 
@@ -14,13 +13,11 @@ MOCHITEST_MANIFESTS += [
 ]
 
 EXTRA_COMPONENTS += [
-    'nsContentPrefService.js',
-    'nsContentPrefService.manifest',
+    'ContentPrefService2.js',
+    'ContentPrefService2.manifest',
 ]
 
 EXTRA_JS_MODULES += [
-    'ContentPrefInstance.jsm',
-    'ContentPrefService2.jsm',
     'ContentPrefServiceChild.jsm',
     'ContentPrefServiceParent.jsm',
     'ContentPrefStore.jsm',
