@@ -8,7 +8,6 @@
 #include "EMEVideoDecoder.h"
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
-#include "MP4Decoder.h"
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "PDMFactory.h"
