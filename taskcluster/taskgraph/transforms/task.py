@@ -1021,7 +1021,10 @@ def build_task(config, tasks):
                 DEFAULT_BRANCH_PRIORITY)
 
         tags = task.get('tags', {})
-        tags.update({'createdForUser': config.params['owner']})
+        tags.update({
+            'createdForUser': config.params['owner'],
+            'kind': config.kind,
+        })
 
         task_def = {
             'provisionerId': provisioner_id,
