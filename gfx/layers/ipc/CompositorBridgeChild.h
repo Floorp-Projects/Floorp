@@ -240,11 +240,16 @@ public:
   // that the paint thread has finished an asynchronous paint request.
   void NotifyFinishedAsyncPaint(CapturedPaintState* aState);
 
+  // Must only be called from the main thread. Notifies the CompositorBridge
+  // that the paint thread is going to perform texture synchronization at the
+  // end of async painting, and should postpone messages if needed until
+  // finished.
+  void NotifyBeginAsyncPaintEndTransaction();
+
   // Must only be called from the paint thread. Notifies the CompositorBridge
-  // that the paint thread has finished ALL async requests from a given
-  // transaction. We can resume IPC transactions after ALL
-  // async paints are done.
-  void NotifyFinishedAsyncPaintTransaction();
+  // that the paint thread has finished all async paints and texture syncs from
+  // a given transaction and may resume sending messages.
+  void NotifyFinishedAsyncPaintEndTransaction();
 
 private:
   // Private destructor, to discourage deletion outside of Release():
@@ -372,6 +377,9 @@ private:
   // PLayerTransaction on this bridge. This is R/W on both the main and paint
   // threads, and must be accessed within the paint lock.
   size_t mOutstandingAsyncPaints;
+
+  // Whether we are waiting for an async paint end transaction
+  bool mOutstandingAsyncEndTransaction;
 
   // True if this CompositorBridge is currently delaying its messages until the
   // paint thread completes. This is R/W on both the main and paint threads, and
