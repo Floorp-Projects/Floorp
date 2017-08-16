@@ -1149,7 +1149,7 @@ this.UITour = {
       let highlightHeight = targetRect.height;
       let highlightWidth = targetRect.width;
 
-      if (this.targetIsInAppMenu(aTarget)) {
+      if (this.targetIsInAppMenu(aTarget) || this.targetIsInPageActionPanel(aTarget)) {
         highlighter.classList.remove("rounded-highlight");
       } else {
         highlighter.classList.add("rounded-highlight");
