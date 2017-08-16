@@ -66,11 +66,15 @@ PaintThread::AddRef()
 {
 }
 
-void
-PaintThread::InitOnPaintThread()
+/* static */ void
+PaintThread::Start()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-  sThreadId = PlatformThread::CurrentId();
+  PaintThread::sSingleton = new PaintThread();
+
+  if (!PaintThread::sSingleton->Init()) {
+    gfxCriticalNote << "Unable to start paint thread";
+    PaintThread::sSingleton = nullptr;
+  }
 }
 
 bool
@@ -92,22 +96,11 @@ PaintThread::Init()
   return true;
 }
 
-/* static */ void
-PaintThread::Start()
+void
+PaintThread::InitOnPaintThread()
 {
-  PaintThread::sSingleton = new PaintThread();
-
-  if (!PaintThread::sSingleton->Init()) {
-    gfxCriticalNote << "Unable to start paint thread";
-    PaintThread::sSingleton = nullptr;
-  }
-}
-
-/* static */ PaintThread*
-PaintThread::Get()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return PaintThread::sSingleton.get();
+  MOZ_ASSERT(!NS_IsMainThread());
+  sThreadId = PlatformThread::CurrentId();
 }
 
 void
@@ -138,10 +131,51 @@ PaintThread::ShutdownOnPaintThread()
   MOZ_ASSERT(IsOnPaintThread());
 }
 
+/* static */ PaintThread*
+PaintThread::Get()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return PaintThread::sSingleton.get();
+}
+
 /* static */ bool
 PaintThread::IsOnPaintThread()
 {
   return sThreadId == PlatformThread::CurrentId();
+}
+
+void
+PaintThread::PaintContents(CapturedPaintState* aState,
+                           PrepDrawTargetForPaintingCallback aCallback)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aState);
+
+  // If painting asynchronously, we need to acquire the compositor bridge which
+  // owns the underlying MessageChannel. Otherwise we leave it null and use
+  // synchronous dispatch.
+  RefPtr<CompositorBridgeChild> cbc;
+  if (!gfxPrefs::LayersOMTPForceSync()) {
+    cbc = CompositorBridgeChild::Get();
+    cbc->NotifyBeginAsyncPaint(aState);
+  }
+  RefPtr<CapturedPaintState> state(aState);
+  RefPtr<DrawTargetCapture> capture(aState->mCapture);
+
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
+    [self, cbc, capture, state, aCallback]() -> void
+  {
+    self->AsyncPaintContents(cbc,
+                             state,
+                             aCallback);
+  });
+
+  if (cbc) {
+    sThread->Dispatch(task.forget());
+  } else {
+    SyncRunnable::DispatchToThread(sThread, task);
+  }
 }
 
 void
@@ -239,40 +273,6 @@ PaintThread::AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
 
   if (aBridge) {
     aBridge->NotifyFinishedAsyncEndLayerTransaction();
-  }
-}
-
-void
-PaintThread::PaintContents(CapturedPaintState* aState,
-                           PrepDrawTargetForPaintingCallback aCallback)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aState);
-
-  // If painting asynchronously, we need to acquire the compositor bridge which
-  // owns the underlying MessageChannel. Otherwise we leave it null and use
-  // synchronous dispatch.
-  RefPtr<CompositorBridgeChild> cbc;
-  if (!gfxPrefs::LayersOMTPForceSync()) {
-    cbc = CompositorBridgeChild::Get();
-    cbc->NotifyBeginAsyncPaint(aState);
-  }
-  RefPtr<CapturedPaintState> state(aState);
-  RefPtr<DrawTargetCapture> capture(aState->mCapture);
-
-  RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
-    [self, cbc, capture, state, aCallback]() -> void
-  {
-    self->AsyncPaintContents(cbc,
-                             state,
-                             aCallback);
-  });
-
-  if (cbc) {
-    sThread->Dispatch(task.forget());
-  } else {
-    SyncRunnable::DispatchToThread(sThread, task);
   }
 }
 
