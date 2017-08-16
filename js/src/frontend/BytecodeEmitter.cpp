@@ -3661,7 +3661,10 @@ BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
 
-    bool result = parser.reportExtraWarningErrorNumberVA(nullptr, pos.begin, errorNumber, args);
+    // FIXME: parser.tokenStream() should be a TokenStreamAnyChars for bug 1351107,
+    // but caused problems, cf. bug 1363116.
+    bool result = parser.tokenStream()
+                        .reportExtraWarningErrorNumberVA(nullptr, pos.begin, errorNumber, args);
 
     va_end(args);
     return result;
@@ -3674,7 +3677,10 @@ BytecodeEmitter::reportStrictModeError(ParseNode* pn, unsigned errorNumber, ...)
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = parser.reportStrictModeErrorNumberVA(nullptr, pos.begin, sc->strict(),
+    // FIXME: parser.tokenStream() should be a TokenStreamAnyChars for bug 1351107,
+    // but caused problems, cf. bug 1363116.
+    bool result = parser.tokenStream()
+                        .reportStrictModeErrorNumberVA(nullptr, pos.begin, sc->strict(),
                                                        errorNumber, args);
     va_end(args);
     return result;

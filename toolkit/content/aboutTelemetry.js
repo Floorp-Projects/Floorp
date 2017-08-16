@@ -1899,6 +1899,13 @@ function adjustSearchState() {
   }
 }
 
+function adjustSection() {
+  let selectedCategory = document.querySelector(".category.selected");
+  if (!selectedCategory.classList.contains("has-data")) {
+    PingPicker._showStructuredPingData();
+  }
+}
+
 /**
  * Change the url according to the current section displayed
  * e.g about:telemetry#general-data
@@ -2360,11 +2367,12 @@ function displayPingData(ping, updatePayloadList = false) {
   try {
     PingPicker.render();
     displayRichPingData(ping, updatePayloadList);
+    adjustSearchState();
+    adjustSection();
   } catch (err) {
     console.log(err);
     PingPicker._showRawPingData();
   }
-  adjustSearchState();
 }
 
 function displayRichPingData(ping, updatePayloadList) {

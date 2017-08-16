@@ -71,11 +71,39 @@ InsertSortedList(InlineForwardList<T> &list, T* value)
 // LiveRange
 /////////////////////////////////////////////////////////////////////
 
+inline void
+LiveRange::noteAddedUse(UsePosition* use)
+{
+    LUse::Policy policy = use->usePolicy();
+    usesSpillWeight_ += BacktrackingAllocator::SpillWeightFromUsePolicy(policy);
+    if (policy == LUse::FIXED)
+        ++numFixedUses_;
+}
+
+inline void
+LiveRange::noteRemovedUse(UsePosition* use)
+{
+    LUse::Policy policy = use->usePolicy();
+    usesSpillWeight_ -= BacktrackingAllocator::SpillWeightFromUsePolicy(policy);
+    if (policy == LUse::FIXED)
+        --numFixedUses_;
+    MOZ_ASSERT_IF(!hasUses(), !usesSpillWeight_ && !numFixedUses_);
+}
+
 void
 LiveRange::addUse(UsePosition* use)
 {
     MOZ_ASSERT(covers(use->pos));
     InsertSortedList(uses_, use);
+    noteAddedUse(use);
+}
+
+UsePosition*
+LiveRange::popUse()
+{
+    UsePosition* ret = uses_.popFront();
+    noteRemovedUse(ret);
+    return ret;
 }
 
 void
@@ -89,6 +117,7 @@ LiveRange::distributeUses(LiveRange* other)
         UsePosition* use = *iter;
         if (other->covers(use->pos)) {
             uses_.removeAndIncrement(iter);
+            noteRemovedUse(use);
             other->addUse(use);
         } else {
             iter++;
@@ -2546,27 +2575,9 @@ BacktrackingAllocator::computeSpillWeight(LiveBundle* bundle)
             }
         }
 
-        for (UsePositionIterator iter = range->usesBegin(); iter; iter++) {
-            switch (iter->usePolicy()) {
-              case LUse::ANY:
-                usesTotal += 1000;
-                break;
-
-              case LUse::FIXED:
-                fixed = true;
-                MOZ_FALLTHROUGH;
-              case LUse::REGISTER:
-                usesTotal += 2000;
-                break;
-
-              case LUse::KEEPALIVE:
-                break;
-
-              default:
-                // Note: RECOVERED_INPUT will not appear in UsePositionIterator.
-                MOZ_CRASH("Bad use");
-            }
-        }
+        usesTotal += range->usesSpillWeight();
+        if (range->numFixedUses() > 0)
+            fixed = true;
     }
 
     // Bundles with fixed uses are given a higher spill weight, since they must

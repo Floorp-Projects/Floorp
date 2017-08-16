@@ -11,6 +11,7 @@
 #include "nsTArray.h"
 #include "nsCRT.h"
 #include "plstr.h"
+#include "nsASCIIMask.h"
 
 static const char hexCharsUpper[] = "0123456789ABCDEF";
 static const char hexCharsUpperLower[] = "0123456789ABCDEFabcdef";
@@ -382,7 +383,8 @@ static uint16_t dontNeedEscape(uint16_t aChar, uint32_t aFlags)
 template<class T>
 static nsresult
 T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
-            uint32_t aFlags, T& aResult, bool& aDidAppend)
+            uint32_t aFlags, const ASCIIMaskArray* aFilterMask,
+            T& aResult, bool& aDidAppend)
 {
   typedef nsCharTraits<typename T::char_type> traits;
   typedef typename traits::unsigned_char_type unsigned_char_type;
@@ -408,6 +410,19 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
   bool previousIsNonASCII = false;
   for (size_t i = 0; i < aPartLen; ++i) {
     unsigned_char_type c = *src++;
+
+    // If there is a filter, we wish to skip any characters which match it.
+    // This is needed so we don't perform an extra pass just to extract the
+    // filtered characters.
+    if (aFilterMask && ASCIIMask::IsMasked(*aFilterMask, c)) {
+      if (!writing) {
+        if (!aResult.Append(aPart, i, fallible)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        writing = true;
+      }
+      continue;
+    }
 
     // if the char has not to be escaped or whatever follows % is
     // a valid escaped string, just copy the char.
@@ -474,7 +489,7 @@ NS_EscapeURL(const char* aPart, int32_t aPartLen, uint32_t aFlags,
   }
 
   bool result = false;
-  nsresult rv = T_EscapeURL(aPart, aPartLen, aFlags, aResult, result);
+  nsresult rv = T_EscapeURL(aPart, aPartLen, aFlags, nullptr, aResult, result);
   if (NS_FAILED(rv)) {
     ::NS_ABORT_OOM(aResult.Length() * sizeof(nsACString::char_type));
   }
@@ -487,7 +502,26 @@ NS_EscapeURL(const nsACString& aStr, uint32_t aFlags, nsACString& aResult,
              const mozilla::fallible_t&)
 {
   bool appended = false;
-  nsresult rv = T_EscapeURL(aStr.Data(), aStr.Length(), aFlags, aResult, appended);
+  nsresult rv = T_EscapeURL(aStr.Data(), aStr.Length(), aFlags, nullptr, aResult, appended);
+  if (NS_FAILED(rv)) {
+    aResult.Truncate();
+    return rv;
+  }
+
+  if (!appended) {
+    aResult = aStr;
+  }
+
+  return rv;
+}
+
+nsresult
+NS_EscapeAndFilterURL(const nsACString& aStr, uint32_t aFlags,
+                      const ASCIIMaskArray* aFilterMask,
+                      nsACString& aResult, const mozilla::fallible_t&)
+{
+  bool appended = false;
+  nsresult rv = T_EscapeURL(aStr.Data(), aStr.Length(), aFlags, aFilterMask, aResult, appended);
   if (NS_FAILED(rv)) {
     aResult.Truncate();
     return rv;
@@ -504,7 +538,7 @@ const nsAString&
 NS_EscapeURL(const nsAString& aStr, uint32_t aFlags, nsAString& aResult)
 {
   bool result = false;
-  nsresult rv = T_EscapeURL<nsAString>(aStr.Data(), aStr.Length(), aFlags, aResult, result);
+  nsresult rv = T_EscapeURL<nsAString>(aStr.Data(), aStr.Length(), aFlags, nullptr, aResult, result);
 
   if (NS_FAILED(rv)) {
     ::NS_ABORT_OOM(aResult.Length() * sizeof(nsAString::char_type));

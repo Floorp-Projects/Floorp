@@ -14,7 +14,7 @@
   </body>
 
   <!-- test code goes here -->
-  <script type="application/x-javascript;version=1.8"><![CDATA[
+  <script type="application/javascript"><![CDATA[
     function init() {
       var f = new Function("let test = 'let is ok'; return test;");
       is(f(), 'let is ok', 'let should be ok');

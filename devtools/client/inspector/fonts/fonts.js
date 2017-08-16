@@ -47,7 +47,6 @@ FontInspector.prototype = {
     let app = App({
       onPreviewFonts: this.onPreviewFonts,
       onShowAllFont: this.onShowAllFont,
-      onTextBoxContextMenu: this.inspector.onTextBoxContextMenu
     });
 
     let provider = createElement(Provider, {

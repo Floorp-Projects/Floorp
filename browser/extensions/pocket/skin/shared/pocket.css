@@ -23,7 +23,7 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
 }
 
 #pocket-button-box[open="true"] > #pocket-button {
-  fill: rgb(213,32,20);
+  fill: #ef4056;
   fill-opacity: 1;
 }
 
@@ -99,7 +99,7 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
   animation-timing-function: steps(12);
   animation-duration: 200ms;
   background-image: url("chrome://pocket-shared/skin/pocket-animation.svg");
-  fill: rgb(213,32,20);
+  fill: #ef4056;
   -moz-context-properties: fill;
   width: 260px;
 }
@@ -122,11 +122,11 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
     fill: inherit;
   }
   50% {
-    fill: rgb(213,32,20);
+    fill: #ef4056;
   }
   to {
     transform: translateX(-1056px);
-    fill: rgb(213,32,20);
+    fill: #ef4056;
   }
 }
 
@@ -139,11 +139,11 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
     fill: inherit;
   }
   50% {
-    fill: rgb(213,32,20);
+    fill: #ef4056;
   }
   to {
     transform: scaleX(-1) translateX(-1056px);
-    fill: rgb(213,32,20);
+    fill: #ef4056;
   }
 }
 
@@ -162,7 +162,7 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
    then no transition will occur and thus no transitionend event. */
 @keyframes library-pocket-fade {
   from {
-    fill: rgb(213,32,20);
+    fill: #ef4056;
   }
   to {
     fill: inherit;
@@ -218,7 +218,7 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
 }
 
 #pocket-button[cui-areatype="toolbar"][open] {
-  fill: rgb(213,32,20);
+  fill: #ef4056;
 }
 
 @media not all and (min-resolution: 1.1dppx) {
