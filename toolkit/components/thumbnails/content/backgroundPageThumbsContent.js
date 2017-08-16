@@ -161,19 +161,25 @@ const backgroundPageThumbsContent = {
   },
 
   _captureCurrentPage() {
-    let capture = this._currentCapture;
-    capture.finalURL = this._webNav.currentURI.spec;
-    capture.pageLoadTime = new Date() - capture.pageLoadStartDate;
+    let win = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindow);
+    win.requestIdleCallback(() => {
+      let capture = this._currentCapture;
+      capture.finalURL = this._webNav.currentURI.spec;
+      capture.pageLoadTime = new Date() - capture.pageLoadStartDate;
 
-    let canvasDrawDate = new Date();
+      let canvasDrawDate = new Date();
 
-    let finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
-    capture.canvasDrawTime = new Date() - canvasDrawDate;
+      docShell.isActive = true;
+      let finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
+      docShell.isActive = false;
+      capture.canvasDrawTime = new Date() - canvasDrawDate;
 
-    finalCanvas.toBlob(blob => {
-      capture.imageBlob = new Blob([blob]);
-      // Load about:blank to finish the capture and wait for onStateChange.
-      this._loadAboutBlank();
+      finalCanvas.toBlob(blob => {
+        capture.imageBlob = new Blob([blob]);
+        // Load about:blank to finish the capture and wait for onStateChange.
+        this._loadAboutBlank();
+      });
     });
   },
 
