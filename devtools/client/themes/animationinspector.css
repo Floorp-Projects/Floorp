@@ -157,8 +157,6 @@ body {
 /* The error message, shown when an invalid/unanimated element is selected */
 
 #error-message {
-  padding-top: 10%;
-  text-align: center;
   flex: 1;
   overflow: auto;
 

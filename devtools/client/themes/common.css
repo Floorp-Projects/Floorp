@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 @import url("resource://devtools/client/themes/splitters.css");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
@@ -686,4 +685,14 @@ checkbox:-moz-focusring {
   background-image: url("chrome://devtools/skin/images/dropmarker.svg");
   background-repeat: no-repeat;
   background-position: center;
+}
+
+/* No result message styles */
+
+.devtools-sidepanel-no-result {
+  font-style: italic;
+  text-align: center;
+  padding: 0.5em;
+  -moz-user-select: none;
+  font-size: 12px;
 }

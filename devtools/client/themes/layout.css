@@ -174,16 +174,6 @@
 }
 
 /**
- * Container when no grids are present
- */
-
-.layout-no-grids {
-  font-style: italic;
-  text-align: center;
-  padding: 0.5em;
-}
-
-/**
  * Grid Item
  */
 
