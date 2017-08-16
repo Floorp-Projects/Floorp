@@ -10,6 +10,7 @@
 #define nsCaret_h__
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/Selection.h"
 #include "nsCoord.h"
 #include "nsISelectionListener.h"
 #include "nsIWeakReferenceUtils.h"
@@ -27,9 +28,6 @@ class nsIPresShell;
 class nsITimer;
 
 namespace mozilla {
-namespace dom {
-class Selection;
-} // namespace dom
 namespace gfx {
 class DrawTarget;
 } // namespace gfx
@@ -77,7 +75,30 @@ class nsCaret final : public nsISelectionListener
      *  It does not take account of blinking or the caret being hidden
      *  because we're in non-editable/disabled content.
      */
-    bool IsVisible();
+    bool IsVisible(nsISelection* aSelection = nullptr)
+    {
+      if (!mVisible || mHideCount) {
+        return false;
+      }
+
+      if (!mShowDuringSelection) {
+        mozilla::dom::Selection* selection;
+        if (aSelection) {
+          selection = static_cast<mozilla::dom::Selection*>(aSelection);
+        } else {
+          selection = GetSelectionInternal();
+        }
+        if (!selection || !selection->IsCollapsed()) {
+          return false;
+        }
+      }
+
+      if (IsMenuPopupHidingCaret()) {
+        return false;
+      }
+
+      return true;
+    }
     /**
      * AddForceHide() increases mHideCount and hide the caret even if
      * SetVisible(true) has been or will be called.  This is useful when the
@@ -115,7 +136,7 @@ class nsCaret final : public nsISelectionListener
      * Schedule a repaint for the frame where the caret would appear.
      * Does not check visibility etc.
      */
-    void SchedulePaint();
+    void SchedulePaint(nsISelection* aSelection = nullptr);
 
     /**
      * Returns a frame to paint in, and the bounds of the painted caret

@@ -1,0 +1,51 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# NOTE: These config options must match the ones in both android/'s and
+# browser/'s package-manifest.in.
+
+# BHR disabled outside of Nightly builds due to expected high ping frequency.
+# BHR disabled for Release builds because of bug 965392.
+# BHR disabled for debug builds because of bug 979069.
+# BHR disabled for TSan builds because of bug 1121216.
+if CONFIG['NIGHTLY_BUILD'] and \
+   not CONFIG['MOZ_DEBUG'] and \
+   not CONFIG['MOZ_TSAN']:
+    DEFINES['MOZ_ENABLE_BACKGROUND_HANG_MONITOR'] = 1
+
+    EXTRA_COMPONENTS += [
+        'BHRTelemetryService.js',
+        'BHRTelemetryService.manifest',
+    ]
+
+    XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+
+XPIDL_SOURCES += [
+    'nsIHangDetails.idl',
+]
+
+XPIDL_MODULE = 'backgroundhangmonitor'
+
+EXPORTS.mozilla += [
+    'BackgroundHangMonitor.h',
+    'HangDetails.h',
+    'HangStack.h',
+]
+
+UNIFIED_SOURCES += [
+    'BackgroundHangMonitor.cpp',
+    'HangDetails.cpp',
+    'HangStack.cpp',
+    'ThreadStackHelper.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/caps', # For nsScriptSecurityManager.h
+]
+
+FINAL_LIBRARY = 'xul'
+
+include('/ipc/chromium/chromium-config.mozbuild')

@@ -1303,17 +1303,10 @@ WebRenderBridgeParent::ClearResources()
   mApi->ClearRootDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
-  // XXX webrender does not hava a way to delete a group of resources/keys,
-  // then delete keys one by one.
-  for (std::unordered_set<uint64_t>::iterator iter = mFontKeys.begin(); iter != mFontKeys.end(); iter++) {
-    mApi->DeleteFont(wr::AsFontKey(*iter));
-  }
+  // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
   mFontKeys.clear();
-  for (std::unordered_set<uint64_t>::iterator iter = mActiveImageKeys.begin(); iter != mActiveImageKeys.end(); iter++) {
-    mKeysToDelete.push_back(wr::AsImageKey(*iter));
-  }
   mActiveImageKeys.clear();
-  DeleteOldImages();
+  mKeysToDelete.clear();
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->ClearWrBridge();
   }

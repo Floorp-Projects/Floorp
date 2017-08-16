@@ -2118,10 +2118,6 @@
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             }
 
-            if (aParams.isPreloadBrowser) {
-              b.setAttribute("isPreloadBrowser", "true");
-            }
-
             if (this.hasAttribute("selectmenulist"))
               b.setAttribute("selectmenulist", this.getAttribute("selectmenulist"));
 

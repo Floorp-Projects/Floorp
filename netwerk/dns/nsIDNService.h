@@ -179,7 +179,7 @@ private:
   mozilla::Mutex mLock;
 
   // guarded by mLock
-  nsXPIDLString mIDNBlacklist;
+  nsString mIDNBlacklist;
 
   /**
    * Flag set by the pref network.IDN_show_punycode. When it is true,

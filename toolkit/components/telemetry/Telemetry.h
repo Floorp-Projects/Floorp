@@ -326,8 +326,7 @@ void RecordChromeHang(uint32_t aDuration,
                       ProcessedStack &aStack,
                       int32_t aSystemUptime,
                       int32_t aFirefoxUptime,
-                      mozilla::UniquePtr<mozilla::HangMonitor::HangAnnotations>
-                              aAnnotations);
+                      mozilla::HangMonitor::HangAnnotations&& aAnnotations);
 
 /**
  * Record the current thread's call stack on demand. Note that, the stack is
@@ -340,20 +339,6 @@ void RecordChromeHang(uint32_t aDuration,
  */
 void CaptureStack(const nsCString& aKey);
 #endif
-
-class ThreadHangStats;
-
-/**
- * Move a ThreadHangStats to Telemetry storage. Normally Telemetry queries
- * for active ThreadHangStats through BackgroundHangMonitor, but once a
- * thread exits, the thread's copy of ThreadHangStats needs to be moved to
- * inside Telemetry using this function.
- *
- * @param aStats ThreadHangStats to save; the data inside aStats
- *               will be moved and aStats should be treated as
- *               invalid after this function returns
- */
-void RecordThreadHangStats(ThreadHangStats&& aStats);
 
 /**
  * Record a failed attempt at locking the user's profile.
