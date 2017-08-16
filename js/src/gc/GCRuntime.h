@@ -140,21 +140,22 @@ class BackgroundDecommitTask : public GCParallelTask
 class GCSchedulingTunables
 {
     /*
-     * Soft limit on the number of bytes we are allowed to allocate in the GC
-     * heap. Attempts to allocate gcthings over this limit will return null and
-     * subsequently invoke the standard OOM machinery, independent of available
-     * physical memory.
+     * JSGC_MAX_BYTES
+     *
+     * Maximum nominal heap before last ditch GC.
      */
     UnprotectedData<size_t> gcMaxBytes_;
 
     /*
+     * JSGC_MAX_NURSERY_BYTES
+     *
      * Maximum nursery size for each zone group.
-     * Initially DefaultNurseryBytes and can be set by
-     * javascript.options.mem.nursery.max_kb
      */
     ActiveThreadData<size_t> gcMaxNurseryBytes_;
 
     /*
+     * JSGC_ALLOCATION_THRESHOLD
+     *
      * The base value used to compute zone->threshold.gcTriggerBytes(). When
      * usage.gcBytes() surpasses threshold.gcTriggerBytes() for a zone, the
      * zone may be scheduled for a GC, depending on the exact circumstances.
@@ -169,22 +170,33 @@ class GCSchedulingTunables
     /*
      * Number of bytes to allocate between incremental slices in GCs triggered
      * by the zone allocation threshold.
+     *
+     * This value does not have a JSGCParamKey parameter yet.
      */
     UnprotectedData<size_t> zoneAllocDelayBytes_;
 
     /*
+     * JSGC_DYNAMIC_HEAP_GROWTH
+     *
      * Totally disables |highFrequencyGC|, the HeapGrowthFactor, and other
      * tunables that make GC non-deterministic.
      */
     ActiveThreadData<bool> dynamicHeapGrowthEnabled_;
 
     /*
+     * JSGC_HIGH_FREQUENCY_TIME_LIMIT
+     *
      * We enter high-frequency mode if we GC a twice within this many
      * microseconds. This value is stored directly in microseconds.
      */
     ActiveThreadData<uint64_t> highFrequencyThresholdUsec_;
 
     /*
+     * JSGC_HIGH_FREQUENCY_LOW_LIMIT
+     * JSGC_HIGH_FREQUENCY_HIGH_LIMIT
+     * JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX
+     * JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN
+     *
      * When in the |highFrequencyGC| mode, these parameterize the per-zone
      * "HeapGrowthFactor" computation.
      */
@@ -194,22 +206,31 @@ class GCSchedulingTunables
     ActiveThreadData<double> highFrequencyHeapGrowthMin_;
 
     /*
+     * JSGC_LOW_FREQUENCY_HEAP_GROWTH
+     *
      * When not in |highFrequencyGC| mode, this is the global (stored per-zone)
      * "HeapGrowthFactor".
      */
     ActiveThreadData<double> lowFrequencyHeapGrowth_;
 
     /*
+     * JSGC_DYNAMIC_MARK_SLICE
+     *
      * Doubles the length of IGC slices when in the |highFrequencyGC| mode.
      */
     ActiveThreadData<bool> dynamicMarkSliceEnabled_;
 
     /*
+     * JSGC_REFRESH_FRAME_SLICES_ENABLED
+     *
      * Controls whether painting can trigger IGC slices.
      */
     ActiveThreadData<bool> refreshFrameSlicesEnabled_;
 
     /*
+     * JSGC_MIN_EMPTY_CHUNK_COUNT
+     * JSGC_MAX_EMPTY_CHUNK_COUNT
+     *
      * Controls the number of empty chunks reserved for future allocation.
      */
     UnprotectedData<uint32_t> minEmptyChunkCount_;
@@ -1151,6 +1172,11 @@ class GCRuntime
     UnprotectedData<bool> chunkAllocationSinceLastGC;
     ActiveThreadData<int64_t> lastGCTime;
 
+    /*
+     * JSGC_MODE
+     * prefs: javascript.options.mem.gc_per_zone and
+     *   javascript.options.mem.gc_incremental.
+     */
     ActiveThreadData<JSGCMode> mode;
 
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> numActiveZoneIters;
@@ -1285,7 +1311,12 @@ class GCRuntime
      */
     ActiveThreadData<bool> interFrameGC;
 
-    /* Default budget for incremental GC slice. See js/SliceBudget.h. */
+    /*
+     * Default budget for incremental GC slice. See js/SliceBudget.h.
+     *
+     * JSGC_SLICE_TIME_BUDGET
+     * pref: javascript.options.mem.gc_incremental_slice_ms,
+     */
     ActiveThreadData<int64_t> defaultTimeBudget_;
 
     /*
@@ -1296,6 +1327,9 @@ class GCRuntime
 
     /*
      * Whether compacting GC can is enabled globally.
+     *
+     * JSGC_COMPACTING_ENABLED
+     * pref: javascript.options.mem.gc_compacting
      */
     ActiveThreadData<bool> compactingEnabled;
 

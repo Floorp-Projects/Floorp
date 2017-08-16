@@ -1793,13 +1793,33 @@ extern JS_PUBLIC_API(void)
 JS_UpdateWeakPointerAfterGCUnbarriered(JSObject** objp);
 
 typedef enum JSGCParamKey {
-    /** Maximum nominal heap before last ditch GC. */
+    /**
+     * Maximum nominal heap before last ditch GC.
+     *
+     * Soft limit on the number of bytes we are allowed to allocate in the GC
+     * heap. Attempts to allocate gcthings over this limit will return null and
+     * subsequently invoke the standard OOM machinery, independent of available
+     * physical memory.
+     *
+     * Pref: javascript.options.mem.max
+     * Default: 0xffffffff
+     */
     JSGC_MAX_BYTES          = 0,
 
-    /** Number of JS_malloc bytes before last ditch GC. */
+    /**
+     * Number of JS_malloc bytes before last ditch GC.
+     *
+     * Pref; javascript.options.mem.high_water_mark
+     * Default: 0xffffffff
+     */
     JSGC_MAX_MALLOC_BYTES   = 1,
 
-    /** Maximum size of the generational GC nurseries. */
+    /**
+     * Maximum size of the generational GC nurseries.
+     *
+     * Pref: javascript.options.mem.nursery.max_kb
+     * Default: JS::DefaultNurseryBytes
+     */
     JSGC_MAX_NURSERY_BYTES  = 2,
 
     /** Amount of bytes allocated by the GC. */
@@ -1808,7 +1828,14 @@ typedef enum JSGCParamKey {
     /** Number of times GC has been invoked. Includes both major and minor GC. */
     JSGC_NUMBER = 4,
 
-    /** Select GC mode. */
+    /**
+     * Select GC mode.
+     *
+     * See: JSGCMode in GCAPI.h
+     * prefs: javascript.options.mem.gc_per_zone and
+     *   javascript.options.mem.gc_incremental.
+     * Default: JSGC_MODE_INCREMENTAL
+     */
     JSGC_MODE = 6,
 
     /** Number of cached empty GC chunks. */
@@ -1817,58 +1844,134 @@ typedef enum JSGCParamKey {
     /** Total number of allocated GC chunks. */
     JSGC_TOTAL_CHUNKS = 8,
 
-    /** Max milliseconds to spend in an incremental GC slice. */
+    /**
+     * Max milliseconds to spend in an incremental GC slice.
+     *
+     * Pref: javascript.options.mem.gc_incremental_slice_ms
+     * Default: DefaultTimeBudget.
+     */
     JSGC_SLICE_TIME_BUDGET = 9,
 
-    /** Maximum size the GC mark stack can grow to. */
+    /**
+     * Maximum size the GC mark stack can grow to.
+     *
+     * Pref: none
+     * Default: MarkStack::DefaultCapacity
+     */
     JSGC_MARK_STACK_LIMIT = 10,
 
     /**
-     * GCs less than this far apart in time will be considered 'high-frequency GCs'.
+     * GCs less than this far apart in time will be considered 'high-frequency
+     * GCs'.
+     *
      * See setGCLastBytes in jsgc.cpp.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_time_limit_ms
+     * Default: HighFrequencyThresholdUsec
      */
     JSGC_HIGH_FREQUENCY_TIME_LIMIT = 11,
 
-    /** Start of dynamic heap growth. */
+    /**
+     * Start of dynamic heap growth.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_low_limit_mb
+     * Default: HighFrequencyLowLimitBytes
+     */
     JSGC_HIGH_FREQUENCY_LOW_LIMIT = 12,
 
-    /** End of dynamic heap growth. */
+    /**
+     * End of dynamic heap growth.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_high_limit_mb
+     * Default: HighFrequencyHighLimitBytes
+     */
     JSGC_HIGH_FREQUENCY_HIGH_LIMIT = 13,
 
-    /** Upper bound of heap growth. */
+    /**
+     * Upper bound of heap growth.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_heap_growth_max
+     * Default: HighFrequencyHeapGrowthMax
+     */
     JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX = 14,
 
-    /** Lower bound of heap growth. */
+    /**
+     * Lower bound of heap growth.
+     *
+     * Pref: javascript.options.mem.gc_high_frequency_heap_growth_min
+     * Default: HighFrequencyHeapGrowthMin
+     */
     JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN = 15,
 
-    /** Heap growth for low frequency GCs. */
+    /**
+     * Heap growth for low frequency GCs.
+     *
+     * Pref: javascript.options.mem.gc_low_frequency_heap_growth
+     * Default: LowFrequencyHeapGrowth
+     */
     JSGC_LOW_FREQUENCY_HEAP_GROWTH = 16,
 
     /**
      * If false, the heap growth factor is fixed at 3. If true, it is determined
      * based on whether GCs are high- or low- frequency.
+     *
+     * Pref: javascript.options.mem.gc_dynamic_heap_growth
+     * Default: DynamicHeapGrowthEnabled
      */
     JSGC_DYNAMIC_HEAP_GROWTH = 17,
 
-    /** If true, high-frequency GCs will use a longer mark slice. */
+    /**
+     * If true, high-frequency GCs will use a longer mark slice.
+     *
+     * Pref: javascript.options.mem.gc_dynamic_mark_slice
+     * Default: DynamicMarkSliceEnabled
+     */
     JSGC_DYNAMIC_MARK_SLICE = 18,
 
-    /** Lower limit after which we limit the heap growth. */
+    /**
+     * Lower limit after which we limit the heap growth.
+     *
+     * The base value used to compute zone->threshold.gcTriggerBytes(). When
+     * usage.gcBytes() surpasses threshold.gcTriggerBytes() for a zone, the
+     * zone may be scheduled for a GC, depending on the exact circumstances.
+     *
+     * Pref: javascript.options.mem.gc_allocation_threshold_mb
+     * Default GCZoneAllocThresholdBase
+     */
     JSGC_ALLOCATION_THRESHOLD = 19,
 
     /**
      * We try to keep at least this many unused chunks in the free chunk pool at
      * all times, even after a shrinking GC.
+     *
+     * Pref: javascript.options.mem.gc_min_empty_chunk_count
+     * Default: MinEmptyChunkCount
      */
     JSGC_MIN_EMPTY_CHUNK_COUNT = 21,
 
-    /** We never keep more than this many unused chunks in the free chunk pool. */
+    /**
+     * We never keep more than this many unused chunks in the free chunk
+     * pool.
+     *
+     * Pref: javascript.options.mem.gc_min_empty_chunk_count
+     * Default: MinEmptyChunkCount
+     */
     JSGC_MAX_EMPTY_CHUNK_COUNT = 22,
 
-    /** Whether compacting GC is enabled. */
+    /**
+     * Whether compacting GC is enabled.
+     *
+     * Pref: javascript.options.mem.gc_compacting
+     * Default: CompactingEnabled
+     */
     JSGC_COMPACTING_ENABLED = 23,
 
-    /** If true, painting can trigger IGC slices. */
+    /**
+     * If true, painting can trigger IGC slices.
+     *
+     * Pref: javascript.options.mem.gc_refresh_frame_slices_enabled
+     * Default: RefreshFrameSlicesEnabled
+     */
     JSGC_REFRESH_FRAME_SLICES_ENABLED = 24,
 } JSGCParamKey;
 
