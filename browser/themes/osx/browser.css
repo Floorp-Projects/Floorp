@@ -674,55 +674,6 @@ html|span.ac-emphasize-text-url {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
-/* social share panel */
-.social-share-frame {
-  border-top: 1px solid #f8f8f8;
-  min-width: 756px;
-  height: 150px;
-  /* we resize our panels dynamically, make it look nice */
-}
-
-#share-container {
-  min-width: 756px;
-  background-repeat: no-repeat;
-  background-position: center center;
-}
-#share-container[loading] {
-  background-image: url(chrome://browser/skin/tabbrowser/pendingpaint.png);
-}
-#share-container > browser {
-  transition: opacity 150ms ease-in-out;
-  opacity: 1;
-}
-#share-container[loading] > browser {
-  opacity: 0;
-}
-
-.social-share-toolbar {
-  border-bottom: 1px solid #dedede;
-  padding: 2px;
-}
-
-#social-share-provider-buttons {
-  padding: 0;
-  margin: 0;
-}
-
-.share-provider-button {
-  padding: 5px;
-  margin: 2px;
-}
-
-.share-provider-button > .toolbarbutton-text {
-  display: none;
-}
-
-.share-provider-button > .toolbarbutton-icon {
-  width: 16px;
-  min-height: 16px;
-  max-height: 16px;
-}
-
 /* BOOKMARKING PANEL */
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
@@ -1418,33 +1369,6 @@ html|*.addon-webext-perm-list {
   text-shadow: none;
   background-image: linear-gradient(#B4211B, #8A1915);
   border-radius: 1px;
-}
-
-/* Share */
-%include ../shared/social/social.inc.css
-
-#social-share-panel {
-  min-height: 100px;
-  min-width: 300px;
-  transition: height .3s ease-in-out, width .3s ease-in-out;
-}
-
-#share-container,
-.social-share-frame {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: inherit;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: inherit;
-}
-
-#social-share-panel > .social-share-toolbar {
-  border-top-left-radius: inherit;
-  border-top-right-radius: inherit;
-}
-
-#social-share-provider-buttons {
-  border-top-left-radius: inherit;
-  border-top-right-radius: inherit;
 }
 
 /* Customization mode */

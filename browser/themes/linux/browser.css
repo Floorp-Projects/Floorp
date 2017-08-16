@@ -624,56 +624,6 @@ html|span.ac-emphasize-text-url {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
-/* social share panel */
-%include ../shared/social/social.inc.css
-
-.social-share-frame {
-  border-top: 1px solid #f8f8f8;
-  width: 756px;
-  height: 150px;
-}
-
-#share-container {
-  min-width: 756px;
-  background-color: white;
-  background-repeat: no-repeat;
-  background-position: center center;
-}
-#share-container[loading] {
-  background-image: url(chrome://browser/skin/tabbrowser/pendingpaint.png);
-}
-#share-container > browser {
-  transition: opacity 150ms ease-in-out;
-  opacity: 1;
-}
-#share-container[loading] > browser {
-  opacity: 0;
-}
-
-.social-share-toolbar {
-  border-bottom: 1px solid #dedede;
-  padding: 2px;
-}
-
-#social-share-provider-buttons {
-  padding: 0;
-  margin: 0;
-}
-
-.share-provider-button {
-  padding: 5px;
-  margin: 2px;
-}
-
-.share-provider-button > .toolbarbutton-text {
-  display: none;
-}
-.share-provider-button > .toolbarbutton-icon {
-  width: 16px;
-  min-height: 16px;
-  max-height: 16px;
-}
-
 /* Bookmarking panel */
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
