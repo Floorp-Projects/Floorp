@@ -17,7 +17,7 @@ function test() {
   CustomizableUIInternal.saveState();
   CustomizableUIInternal.loadSavedState();
 
-  CustomizableUIInternal._introduceNewBuiltinWidgets();
+  CustomizableUIInternal._updateForNewVersion();
   is(gFuturePlacements.size, 0,
      "No change to future placements initially.");
 
@@ -44,7 +44,7 @@ function test() {
 
   let savedPlacements = CustomizableUIBSPass.gSavedState.placements[CustomizableUI.AREA_NAVBAR];
   // Then call the re-init routine so we re-add the builtin widgets
-  CustomizableUIInternal._introduceNewBuiltinWidgets();
+  CustomizableUIInternal._updateForNewVersion();
   is(gFuturePlacements.size, 1,
      "Should have 1 more future placement");
   let futureNavbarPlacements = gFuturePlacements.get(CustomizableUI.AREA_NAVBAR);
