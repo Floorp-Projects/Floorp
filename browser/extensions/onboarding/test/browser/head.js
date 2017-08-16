@@ -7,23 +7,14 @@ const ABOUT_HOME_URL = "about:home";
 const ABOUT_NEWTAB_URL = "about:newtab";
 const URLs = [ABOUT_HOME_URL, ABOUT_NEWTAB_URL];
 const TOUR_IDs = [
-  "onboarding-tour-performance",
   "onboarding-tour-private-browsing",
-  // TODO: should enable in bug 1371538
-  // "onboarding-tour-screenshots",
   "onboarding-tour-addons",
   "onboarding-tour-customize",
+  "onboarding-tour-search",
   "onboarding-tour-default-browser",
-];
-const UPDATE_TOUR_IDs = [
-  "onboarding-tour-performance",
-  "onboarding-tour-library",
-  // TODO: should enable in bug 1371538
-  // "onboarding-tour-screenshots",
-  "onboarding-tour-singlesearch",
-  "onboarding-tour-customize",
   "onboarding-tour-sync",
 ];
+const UPDATE_TOUR_IDs = [];
 
 registerCleanupFunction(resetOnboardingDefaultState);
 
@@ -40,7 +31,6 @@ function resetOnboardingDefaultState() {
   Preferences.reset("browser.onboarding.notification.prompt-count");
   Preferences.reset("browser.onboarding.notification.tour-ids-queue");
   TOUR_IDs.forEach(id => Preferences.reset(`browser.onboarding.tour.${id}.completed`));
-  UPDATE_TOUR_IDs.forEach(id => Preferences.reset(`browser.onboarding.tour.${id}.completed`));
 }
 
 function setTourCompletedState(tourId, state) {

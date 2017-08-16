@@ -48,6 +48,9 @@ document.getElementById("onboarding-overlay")
     case "onboarding-tour-private-browsing-button":
       Mozilla.UITour.showHighlight("privateWindow");
       break;
+    case "onboarding-tour-search-button":
+      Mozilla.UITour.openSearchPanel(() => {});
+      break;
     case "onboarding-tour-singlesearch-button":
       Mozilla.UITour.showMenu("urlbar");
       break;
