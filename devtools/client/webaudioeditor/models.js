@@ -5,7 +5,7 @@
 
 // Import as different name `coreEmit`, so we don't conflict
 // with the global `window` listener itself.
-const { emit: coreEmit } = require("sdk/event/core");
+const { emit: coreEmit } = require("devtools/shared/event-emitter");
 
 /**
  * Representational wrapper around AudioNodeActors. Adding and destroying

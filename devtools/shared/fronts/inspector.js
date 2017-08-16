@@ -23,7 +23,7 @@ const {
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const nodeConstants = require("devtools/shared/dom-node-constants.js");
 loader.lazyRequireGetter(this, "CommandUtils",
   "devtools/client/shared/developer-toolbar", true);

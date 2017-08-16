@@ -18,7 +18,7 @@ Bug 1137527 - Test receiving GC events from the memory actor.
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  let event = require("sdk/event/core");
+  let event = require("devtools/shared/event-emitter");
 
   Task.spawn(function* () {
     let { memory, client } = yield startServerAndGetSelectedTabMemory();

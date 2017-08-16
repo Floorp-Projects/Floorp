@@ -14,7 +14,7 @@ const {Ci} = require("chrome");
 const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {Actor, ActorClassWithSpec} = require("devtools/shared/protocol");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const {eventLoopLagSpec} = require("devtools/shared/specs/eventlooplag");
 
 exports.EventLoopLagActor = ActorClassWithSpec(eventLoopLagSpec, {
