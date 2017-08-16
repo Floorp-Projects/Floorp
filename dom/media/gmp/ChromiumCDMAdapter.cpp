@@ -27,9 +27,9 @@ extern const GMPPlatformAPI* sPlatform;
 
 namespace mozilla {
 
-ChromiumCDMAdapter::ChromiumCDMAdapter(nsTArray<nsCString>&& aHostFilePaths)
+ChromiumCDMAdapter::ChromiumCDMAdapter(nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs)
 {
-  PopulateHostFiles(Move(aHostFilePaths));
+  PopulateHostFiles(Move(aHostPathPairs));
 }
 
 void
@@ -220,12 +220,12 @@ HostFile::TakePlatformFile()
 }
 
 void
-ChromiumCDMAdapter::PopulateHostFiles(nsTArray<nsCString>&& aHostFilePaths)
+ChromiumCDMAdapter::PopulateHostFiles(nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs)
 {
-  for (const nsCString& path : aHostFilePaths) {
+  for (const auto& pair : aHostPathPairs) {
     mHostFiles.AppendElement(
-      HostFileData(mozilla::HostFile(path),
-                   mozilla::HostFile(path + NS_LITERAL_CSTRING(".sig"))));
+      HostFileData(mozilla::HostFile(pair.first()),
+                   mozilla::HostFile(pair.second())));
   }
 }
 
