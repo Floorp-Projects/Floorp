@@ -687,7 +687,7 @@ nsHTTPIndex::GetDataSource(nsIRDFDataSource** _result)
 // the uri.
 //
 // Do NOT try to get the destination of a uri in any other way
-void nsHTTPIndex::GetDestination(nsIRDFResource* r, nsXPIDLCString& dest) {
+void nsHTTPIndex::GetDestination(nsIRDFResource* r, nsACString& dest) {
   // First try the URL attribute
   nsCOMPtr<nsIRDFNode> node;
 
@@ -737,9 +737,9 @@ nsHTTPIndex::isWellknownContainerURI(nsIRDFResource *r)
       return isContainerFlag;
   }
 
-  nsXPIDLCString uri;
+  nsCString uri;
   GetDestination(r, uri);
-  return uri.get() && !strncmp(uri, kFTPProtocol, sizeof(kFTPProtocol) - 1) &&
+  return StringBeginsWith(uri, nsDependentCString(kFTPProtocol)) &&
          (uri.Last() == '/');
 }
 
@@ -932,12 +932,12 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
           do_QueryElementAt(httpIndex->mConnectionList, 0);
       httpIndex->mConnectionList->RemoveElementAt(0);
 
-      nsXPIDLCString uri;
+      nsCString uri = NullCString();
       if (source) {
         httpIndex->GetDestination(source, uri);
       }
 
-      if (!uri) {
+      if (uri.IsVoid()) {
         NS_ERROR("Could not reconstruct uri");
         return;
       }
