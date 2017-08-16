@@ -1,12 +1,13 @@
 /* global Services */
 
 const injector = require("inject!lib/TelemetryFeed.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
+const {GlobalOverrider, FakePrefs} = require("test/unit/utils");
 const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
 const {
   BasePing,
   UndesiredPing,
   UserEventPing,
+  ImpressionStatsPing,
   PerfPing,
   SessionPing
 } = require("test/schemas/pings");
@@ -17,11 +18,13 @@ const FAKE_UUID = "{foo-123-foo}";
 describe("TelemetryFeed", () => {
   let globals;
   let sandbox;
+  let expectedUserPrefs;
   let store = {
     dispatch() {},
     getState() { return {App: {version: "1.0.0", locale: "en-US"}}; }
   };
   let instance;
+  let clock;
   class TelemetrySender {sendPing() {} uninit() {}}
   class PerfService {
     getMostRecentAbsMarkStartByName() { return 1234; }
@@ -29,7 +32,14 @@ describe("TelemetryFeed", () => {
     absNow() { return 123; }
   }
   const perfService = new PerfService();
-  const {TelemetryFeed} = injector({
+  const {
+    TelemetryFeed,
+    USER_PREFS_ENCODING,
+    IMPRESSION_STATS_RESET_TIME,
+    PREF_IMPRESSION_STATS_CLICKED,
+    PREF_IMPRESSION_STATS_BLOCKED,
+    PREF_IMPRESSION_STATS_POCKETED
+  } = injector({
     "lib/TelemetrySender.jsm": {TelemetrySender},
     "common/PerfService.jsm": {perfService}
   });
@@ -37,13 +47,16 @@ describe("TelemetryFeed", () => {
   beforeEach(() => {
     globals = new GlobalOverrider();
     sandbox = globals.sandbox;
+    clock = sinon.useFakeTimers();
     globals.set("ClientID", {getClientID: sandbox.spy(async () => FAKE_TELEMETRY_ID)});
     globals.set("gUUIDGenerator", {generateUUID: () => FAKE_UUID});
     instance = new TelemetryFeed();
     instance.store = store;
   });
   afterEach(() => {
+    clock.restore();
     globals.restore();
+    FakePrefs.prototype.prefs = {};
   });
   describe("#init", () => {
     it("should add .telemetrySender, a TelemetrySender instance", () => {
@@ -142,7 +155,14 @@ describe("TelemetryFeed", () => {
     });
   });
   describe("ping creators", () => {
-    beforeEach(() => instance.init());
+    beforeEach(() => {
+      FakePrefs.prototype.prefs = {};
+      for (const pref of Object.keys(USER_PREFS_ENCODING)) {
+        FakePrefs.prototype.prefs[pref] = true;
+        expectedUserPrefs |= USER_PREFS_ENCODING[pref];
+      }
+      instance.init();
+    });
     describe("#createPing", () => {
       it("should create a valid base ping without a session if no portID is supplied", async () => {
         const ping = await instance.createPing();
@@ -169,6 +189,11 @@ describe("TelemetryFeed", () => {
         assert.validate(ping, BasePing);
         assert.propertyVal(ping, "page", "about:newtab");
         assert.propertyVal(instance.sessions.get("foo").perf, "load_trigger_type", "unexpected");
+      });
+      it("should create a base ping with user_prefs", async () => {
+        const ping = await instance.createPing("foo");
+        assert.validate(ping, BasePing);
+        assert.propertyVal(ping, "user_prefs", expectedUserPrefs);
       });
     });
     describe("#createUserEvent", () => {
@@ -259,6 +284,57 @@ describe("TelemetryFeed", () => {
       });
     });
   });
+  describe("#createImpressionStats", () => {
+    it("should create a valid impression stats ping", async () => {
+      const tiles = [{id: 10001}, {id: 10002}, {id: 10003}];
+      const action = ac.ImpressionStats({source: "POCKET", tiles});
+      const ping = await instance.createImpressionStats(action);
+
+      assert.validate(ping, ImpressionStatsPing);
+      assert.propertyVal(ping, "source", "POCKET");
+      assert.propertyVal(ping, "tiles", tiles);
+    });
+    it("should empty all the user specific IDs in the ping", async () => {
+      const tiles = [{id: 10001, pos: 2}];
+      const incognito = true;
+      const action = ac.ImpressionStats({source: "POCKET", incognito, tiles, click: 0});
+      const ping = await instance.createImpressionStats(action);
+
+      assert.validate(ping, ImpressionStatsPing);
+      assert.propertyVal(ping, "click", 0);
+      assert.propertyVal(ping, "tiles", tiles);
+      assert.propertyVal(ping, "client_id", "n/a");
+      assert.propertyVal(ping, "session_id", "n/a");
+      assert.isUndefined(ping.incognito);
+    });
+    it("should create a valid click ping", async () => {
+      const tiles = [{id: 10001, pos: 2}];
+      const action = ac.ImpressionStats({source: "POCKET", tiles, click: 0});
+      const ping = await instance.createImpressionStats(action);
+
+      assert.validate(ping, ImpressionStatsPing);
+      assert.propertyVal(ping, "click", 0);
+      assert.propertyVal(ping, "tiles", tiles);
+    });
+    it("should create a valid block ping", async () => {
+      const tiles = [{id: 10001, pos: 2}];
+      const action = ac.ImpressionStats({source: "POCKET", tiles, block: 0});
+      const ping = await instance.createImpressionStats(action);
+
+      assert.validate(ping, ImpressionStatsPing);
+      assert.propertyVal(ping, "block", 0);
+      assert.propertyVal(ping, "tiles", tiles);
+    });
+    it("should create a valid pocket ping", async () => {
+      const tiles = [{id: 10001, pos: 2}];
+      const action = ac.ImpressionStats({source: "POCKET", tiles, pocket: 0});
+      const ping = await instance.createImpressionStats(action);
+
+      assert.validate(ping, ImpressionStatsPing);
+      assert.propertyVal(ping, "pocket", 0);
+      assert.propertyVal(ping, "tiles", tiles);
+    });
+  });
   describe("#sendEvent", () => {
     it("should call telemetrySender", async () => {
       sandbox.stub(instance.telemetrySender, "sendPing");
@@ -303,7 +379,29 @@ describe("TelemetryFeed", () => {
 
       assert.include(instance.sessions.get("port123").perf, data);
     });
+
+    it("should call setLoadTriggerInfo if data has visibility_event_rcvd_ts", () => {
+      sandbox.stub(instance, "setLoadTriggerInfo");
+      instance.addSession("port123");
+      const data = {visibility_event_rcvd_ts: 444455};
+
+      instance.saveSessionPerfData("port123", data);
+
+      assert.calledOnce(instance.setLoadTriggerInfo);
+      assert.calledWithExactly(instance.setLoadTriggerInfo, "port123");
+      assert.include(instance.sessions.get("port123").perf, data);
+    });
+
+    it("shouldn't call setLoadTriggerInfo if data has no visibility_event_rcvd_ts", () => {
+      sandbox.stub(instance, "setLoadTriggerInfo");
+      instance.addSession("port123");
+
+      instance.saveSessionPerfData("port123", {monkeys_ts: 444455});
+
+      assert.notCalled(instance.setLoadTriggerInfo);
+    });
   });
+
   describe("#uninit", () => {
     it("should call .telemetrySender.uninit", () => {
       const stub = sandbox.stub(instance.telemetrySender, "uninit");
@@ -322,7 +420,31 @@ describe("TelemetryFeed", () => {
         instance.browserOpenNewtabStart, "browser-open-newtab-start");
     });
   });
+  describe("#resetImpressionStats", () => {
+    beforeEach(() => {
+      FakePrefs.prototype.prefs = {};
+      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_CLICKED] = "[10000]";
+      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_BLOCKED] = "[10001]";
+      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_POCKETED] = "[10002]";
+    });
+    it("should reset all the GUID sets for impression stats", () => {
+      const lastResetTime = instance._impressionStatsLastReset;
+      // Haven't restored the clock yet, we have to manually tick the clock.
+      clock.tick(IMPRESSION_STATS_RESET_TIME);
+      instance.resetImpressionStats();
+      for (const key of Object.keys(instance._impressionStats)) {
+        assert.equal(instance._impressionStats[key].size, 0);
+      }
+      assert.isAbove(instance._impressionStatsLastReset, lastResetTime);
+    });
+  });
   describe("#onAction", () => {
+    beforeEach(() => {
+      FakePrefs.prototype.prefs = {};
+      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_CLICKED] = "[]";
+      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_BLOCKED] = "[]";
+      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_POCKETED] = "[]";
+    });
     it("should call .init() on an INIT action", () => {
       const stub = sandbox.stub(instance, "init");
       instance.onAction({type: at.INIT});
@@ -331,17 +453,6 @@ describe("TelemetryFeed", () => {
     it("should call .addSession() on a NEW_TAB_INIT action", () => {
       const stub = sandbox.stub(instance, "addSession");
       sandbox.stub(instance, "setLoadTriggerInfo");
-
-      instance.onAction(ac.SendToMain({
-        type: at.NEW_TAB_INIT,
-        data: {}
-      }, "port123"));
-
-      assert.calledOnce(stub);
-      assert.calledWith(stub, "port123");
-    });
-    it("should call .setLoadTriggerInfo() on NEW_TAB_INIT action", () => {
-      const stub = sandbox.stub(instance, "setLoadTriggerInfo");
 
       instance.onAction(ac.SendToMain({
         type: at.NEW_TAB_INIT,
@@ -365,7 +476,7 @@ describe("TelemetryFeed", () => {
 
       assert.calledWith(stub, "port123", data);
     });
-    it("should send an event on an TELEMETRY_UNDESIRED_EVENT action", () => {
+    it("should send an event on a TELEMETRY_UNDESIRED_EVENT action", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createUndesiredEvent");
       const action = {type: at.TELEMETRY_UNDESIRED_EVENT};
@@ -373,7 +484,7 @@ describe("TelemetryFeed", () => {
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
-    it("should send an event on an TELEMETRY_USER_EVENT action", () => {
+    it("should send an event on a TELEMETRY_USER_EVENT action", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createUserEvent");
       const action = {type: at.TELEMETRY_USER_EVENT};
@@ -381,13 +492,132 @@ describe("TelemetryFeed", () => {
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
-    it("should send an event on an TELEMETRY_PERFORMANCE_EVENT action", () => {
+    it("should send an event on a TELEMETRY_PERFORMANCE_EVENT action", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createPerformanceEvent");
       const action = {type: at.TELEMETRY_PERFORMANCE_EVENT};
       instance.onAction(action);
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
+    });
+    it("should send an event on a TELEMETRY_IMPRESSION_STATS action", () => {
+      const sendEvent = sandbox.stub(instance, "sendEvent");
+      const eventCreator = sandbox.stub(instance, "createImpressionStats");
+      const action = {type: at.TELEMETRY_IMPRESSION_STATS, data: {}};
+      instance.onAction(action);
+      assert.calledWith(eventCreator, action);
+      assert.calledWith(sendEvent, eventCreator.returnValue);
+    });
+    it("should call .resetImpressionStats on a SYSTEM_TICK action", () => {
+      const resetImpressionStats = sandbox.stub(instance, "resetImpressionStats");
+
+      instance.onAction({type: at.SYSTEM_TICK});
+      assert.notCalled(resetImpressionStats);
+
+      clock.tick(IMPRESSION_STATS_RESET_TIME);
+      instance.onAction({type: at.SYSTEM_TICK});
+      assert.calledOnce(resetImpressionStats);
+    });
+    it("should not send two click pings for the same article", async () => {
+      const sendEvent = sandbox.stub(instance, "sendEvent");
+      const tiles = [{id: 10001, pos: 2}];
+      const data = {tiles, click: 0};
+      const action = {type: at.TELEMETRY_IMPRESSION_STATS, data};
+
+      instance.onAction(action);
+      instance.onAction(action);
+      assert.calledOnce(sendEvent);
+    });
+    it("should not send two block pings for the same article", async () => {
+      const sendEvent = sandbox.stub(instance, "sendEvent");
+      const tiles = [{id: 10001, pos: 2}];
+      const data = {tiles, block: 0};
+      const action = {type: at.TELEMETRY_IMPRESSION_STATS, data};
+
+      instance.onAction(action);
+      instance.onAction(action);
+      assert.calledOnce(sendEvent);
+    });
+    it("should not send two save to pocket pings for the same article", async () => {
+      const sendEvent = sandbox.stub(instance, "sendEvent");
+      const tiles = [{id: 10001, pos: 2}];
+      const data = {tiles, pocket: 0};
+      const action = {type: at.TELEMETRY_IMPRESSION_STATS, data};
+
+      instance.onAction(action);
+      instance.onAction(action);
+      assert.calledOnce(sendEvent);
+    });
+  });
+});
+
+describe("PersistentGuidSet", () => {
+  const {PersistentGuidSet} = injector({});
+
+  afterEach(() => {
+    FakePrefs.prototype.prefs = {};
+  });
+  describe("#init", () => {
+    it("should initialized empty", () => {
+      let guidSet;
+
+      guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
+      assert.equal(guidSet.size, 0);
+      assert.deepEqual(guidSet.items(), []);
+    });
+    it("should initialized from pref", () => {
+      let guidSet;
+
+      FakePrefs.prototype.prefs = {"test.guidSet": JSON.stringify([10000])};
+      guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
+      assert.equal(guidSet.size, 1);
+      assert.isTrue(guidSet.has(10000));
+      assert.deepEqual(guidSet.items(), [10000]);
+    });
+    it("should initialized empty with invalid pref", () => {
+      let guidSet;
+
+      FakePrefs.prototype.prefs = {"test.guidSet": 10000};
+      guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
+      assert.equal(guidSet.size, 0);
+      assert.deepEqual(guidSet.items(), []);
+    });
+  });
+  describe("#save", () => {
+    it("should save the new GUID", () => {
+      let guidSet;
+      let prefs = new FakePrefs();
+
+      guidSet = new PersistentGuidSet(prefs, "test.guidSet");
+      guidSet.save("10000");
+      guidSet.save("10001");
+      assert.equal(guidSet.size, 2);
+      assert.deepEqual(guidSet.items(), ["10000", "10001"]);
+      assert.equal(prefs.get("test.guidSet"), "[\"10000\",\"10001\"]");
+    });
+    it("should not save the same GUID twice", () => {
+      let guidSet;
+      let prefs = new FakePrefs();
+
+      guidSet = new PersistentGuidSet(prefs, "test.guidSet");
+      guidSet.save("10000");
+      assert.isFalse(guidSet.save("10000"));
+      assert.equal(guidSet.size, 1);
+      assert.deepEqual(guidSet.items(), ["10000"]);
+      assert.equal(prefs.get("test.guidSet"), "[\"10000\"]");
+    });
+  });
+  describe("#clear", () => {
+    it("should clear the GUID set", () => {
+      let guidSet;
+
+      guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
+      guidSet.save("10000");
+      guidSet.save("10001");
+      assert.equal(guidSet.size, 2);
+      guidSet.clear();
+      assert.equal(guidSet.size, 0);
+      assert.deepEqual(guidSet.items(), []);
     });
   });
 });

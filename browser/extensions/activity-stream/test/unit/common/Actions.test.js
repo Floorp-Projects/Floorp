@@ -129,7 +129,7 @@ describe("ActionCreators", () => {
     it("should wrap with SendToMain if in UI code", () => {
       assert.isTrue(au.isSendToMain(ac.UndesiredEvent({action: "foo"})), "isSendToMain");
     });
-    it("should not wrap with SendToMain if in UI code", () => {
+    it("should not wrap with SendToMain if not in UI code", () => {
       const action = ac.UndesiredEvent({action: "foo"}, BACKGROUND_PROCESS);
       assert.isFalse(au.isSendToMain(action), "isSendToMain");
     });
@@ -142,8 +142,21 @@ describe("ActionCreators", () => {
     it("should wrap with SendToMain if in UI code", () => {
       assert.isTrue(au.isSendToMain(ac.PerfEvent({action: "foo"})), "isSendToMain");
     });
-    it("should not wrap with SendToMain if in UI code", () => {
+    it("should not wrap with SendToMain if not in UI code", () => {
       const action = ac.PerfEvent({action: "foo"}, BACKGROUND_PROCESS);
+      assert.isFalse(au.isSendToMain(action), "isSendToMain");
+    });
+  });
+  describe("ImpressionStats", () => {
+    it("should include the right data", () => {
+      const data = {action: "foo"};
+      assert.equal(ac.ImpressionStats(data).data, data);
+    });
+    it("should wrap with SendToMain if in UI code", () => {
+      assert.isTrue(au.isSendToMain(ac.ImpressionStats({action: "foo"})), "isSendToMain");
+    });
+    it("should not wrap with SendToMain if not in UI code", () => {
+      const action = ac.ImpressionStats({action: "foo"}, BACKGROUND_PROCESS);
       assert.isFalse(au.isSendToMain(action), "isSendToMain");
     });
   });
