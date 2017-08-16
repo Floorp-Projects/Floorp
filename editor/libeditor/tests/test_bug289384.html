@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=289384
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-  var win = window.open("data:text/html,<a href=\"data:text/html,<body contenteditable onload='opener.continueTest(window);'>foo bar</body>\">link</a>", "", "test-289384");
+  var win = window.open("file_bug289384-1.html", "", "test-289384");
   win.addEventListener("load", function() {
     win.document.querySelector("a").click();
   }, {once: true});
