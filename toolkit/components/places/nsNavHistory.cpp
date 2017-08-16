@@ -3684,6 +3684,12 @@ nsNavHistory::MakeGuid(nsACString& aGuid) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavHistory::HashURL(const nsACString& aSpec, const nsACString& aMode,
+                      uint64_t* _hash) {
+  return places::HashURL(aSpec, aMode, _hash);
+}
+
 // nsNavHistory::CheckIsRecentEvent
 //
 //    Sees if this URL happened "recently."
