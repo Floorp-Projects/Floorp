@@ -4781,57 +4781,55 @@ extern JS_PUBLIC_API(JSObject*)
 GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises);
 
 /**
- * An AsyncTask represents a SpiderMonkey-internal operation that starts on a
- * JSContext's owner thread, possibly executes on other threads, completes, and
- * then needs to be scheduled to run again on the JSContext's owner thread. The
- * embedding provides for this final dispatch back to the JSContext's owner
- * thread by calling methods on this interface when requested.
+ * The Dispatchable interface allows the embedding to call SpiderMonkey
+ * on a JSContext thread when requested via DispatchToEventLoopCallback.
  */
-struct JS_PUBLIC_API(AsyncTask)
+class JS_PUBLIC_API(Dispatchable)
 {
-    AsyncTask() : user(nullptr) {}
-    virtual ~AsyncTask() {}
+  protected:
+    // Dispatchables are created and destroyed by SpiderMonkey.
+    Dispatchable() = default;
+    virtual ~Dispatchable()  = default;
 
-    /**
-     * After the FinishAsyncTaskCallback is called and succeeds, one of these
-     * two functions will be called on the original JSContext's owner thread.
-     */
-    virtual void finish(JSContext* cx) = 0;
-    virtual void cancel(JSContext* cx) = 0;
+  public:
+    // ShuttingDown indicates that SpiderMonkey should abort async tasks to
+    // expedite shutdown.
+    enum MaybeShuttingDown { NotShuttingDown, ShuttingDown };
 
-    /* The embedding may use this field to attach arbitrary data to a task. */
-    void* user;
+    // Called by the embedding after DispatchToEventLoopCallback succeeds.
+    virtual void run(JSContext* cx, MaybeShuttingDown maybeShuttingDown) = 0;
 };
 
 /**
- * A new AsyncTask object, created inside SpiderMonkey on the JSContext's owner
- * thread, will be passed to the StartAsyncTaskCallback before it is dispatched
- * to another thread. The embedding may use the AsyncTask::user field to attach
- * additional task state.
- *
- * If this function succeeds, SpiderMonkey will call the FinishAsyncTaskCallback
- * at some point in the future. Otherwise, FinishAsyncTaskCallback will *not*
- * be called. SpiderMonkey assumes that, if StartAsyncTaskCallback fails, it is
- * because the JSContext is being shut down.
+ * DispatchToEventLoopCallback may be called from any thread, being passed the
+ * same 'closure' passed to InitDispatchToEventLoop() and Dispatchable from the
+ * same JSRuntime. If the embedding returns 'true', the embedding must call
+ * Dispatchable::run() on an active JSContext thread for the same JSRuntime on
+ * which 'closure' was registered. If DispatchToEventLoopCallback returns
+ * 'false', SpiderMonkey will assume a shutdown of the JSRuntime is in progress.
+ * This contract implies that, by the time the final JSContext is destroyed in
+ * the JSRuntime, the embedding must have (1) run all Dispatchables for which
+ * DispatchToEventLoopCallback returned true, (2) already started returning
+ * false from calls to DispatchToEventLoopCallback.
  */
-typedef bool
-(*StartAsyncTaskCallback)(JSContext* cx, AsyncTask* task);
 
-/**
- * The FinishAsyncTaskCallback may be called from any thread and will only be
- * passed AsyncTasks that have already been started via StartAsyncTaskCallback.
- * If the embedding returns 'true', indicating success, the embedding must call
- * either task->finish() or task->cancel() on the JSContext's owner thread at
- * some point in the future.
- */
 typedef bool
-(*FinishAsyncTaskCallback)(AsyncTask* task);
+(*DispatchToEventLoopCallback)(void* closure, Dispatchable* dispatchable);
 
-/**
- * Set the above callbacks for the given context.
- */
 extern JS_PUBLIC_API(void)
-SetAsyncTaskCallbacks(JSContext* cx, StartAsyncTaskCallback start, FinishAsyncTaskCallback finish);
+InitDispatchToEventLoop(JSContext* cx, DispatchToEventLoopCallback callback, void* closure);
+
+/**
+ * When a JSRuntime is destroyed it implicitly cancels all async tasks in
+ * progress, releasing any roots held by the task. However, this is not soon
+ * enough for cycle collection, which needs to have roots dropped earlier so
+ * that the cycle collector can transitively remove roots for a future GC. For
+ * these and other cases, the set of pending async tasks can be canceled
+ * with this call earlier than JSRuntime destruction.
+ */
+
+extern JS_PUBLIC_API(void)
+ShutdownAsyncTasks(JSContext* cx);
 
 /**
  * This class can be used to store a pointer to the youngest frame of a saved
