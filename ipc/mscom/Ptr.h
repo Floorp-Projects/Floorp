@@ -310,6 +310,12 @@ ToPreservedStreamPtr(RefPtr<IStream>&& aStream)
   return PreservedStreamPtr(aStream.forget().take());
 }
 
+inline PreservedStreamPtr
+ToPreservedStreamPtr(already_AddRefed<IStream>& aStream)
+{
+  return PreservedStreamPtr(aStream.take());
+}
+
 template <typename T, typename Deleter>
 inline detail::UniquePtrGetterAddRefs<T, Deleter>
 getter_AddRefs(UniquePtr<T, Deleter>& aSmartPtr)
