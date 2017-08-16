@@ -1042,7 +1042,7 @@ findFunction(nsIAtom* aName, int32_t aNamespaceID,
         rv = txNamespaceManager::getNamespaceURI(aNamespaceID, namespaceURI);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsXPIDLCString contractID;
+        nsCString contractID;
         rv = catman->GetCategoryEntry("XSLT-extension-functions",
                                       NS_ConvertUTF16toUTF8(namespaceURI).get(),
                                       getter_Copies(contractID));

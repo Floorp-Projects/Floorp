@@ -102,7 +102,7 @@ static PRFuncPtr KLCacheHasValidTicketsPtr;
 static nsresult
 gssInit()
 {
-    nsXPIDLCString libPath;
+    nsCString libPath;
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
         prefs->GetCharPref(kNegotiateAuthGssLib, getter_Copies(libPath));
