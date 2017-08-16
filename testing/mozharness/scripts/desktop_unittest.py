@@ -18,6 +18,8 @@ import shutil
 import glob
 import imp
 
+from datetime import datetime, timedelta
+
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
@@ -39,6 +41,7 @@ from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_opt
 
 SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill']
 SUITE_DEFAULT_E10S = ['mochitest', 'reftest']
+SUITE_NO_E10S = ['xpcshell']
 
 
 # DesktopUnittest {{{1
@@ -388,10 +391,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             if self.symbols_path:
                 str_format_values['symbols_path'] = self.symbols_path
 
-            if suite_category in SUITE_DEFAULT_E10S and not c['e10s']:
-                base_cmd.append('--disable-e10s')
-            elif suite_category not in SUITE_DEFAULT_E10S and c['e10s']:
-                base_cmd.append('--e10s')
+            if suite_category not in SUITE_NO_E10S:
+                if suite_category in SUITE_DEFAULT_E10S and not c['e10s']:
+                    base_cmd.append('--disable-e10s')
+                elif suite_category not in SUITE_DEFAULT_E10S and c['e10s']:
+                    base_cmd.append('--e10s')
 
             if c.get('total_chunks') and c.get('this_chunk'):
                 base_cmd.extend(['--total-chunks', c['total_chunks'],
@@ -467,6 +471,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         else:
             if c.get('run_all_suites'):  # needed if you dont specify any suites
                 suites = all_suites
+            else:
+                suites = self.query_verify_category_suites(category, all_suites)
 
         return suites
 
@@ -655,6 +661,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_app_dir = self.query_abs_app_dir()
         abs_res_dir = self.query_abs_res_dir()
 
+        max_verify_time = timedelta(minutes=60)
+        start_time = datetime.now()
+
         if suites:
             self.info('#### Running %s suites' % suite_category)
             for suite in suites:
@@ -728,33 +737,47 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)
-                return_code = self.run_command(cmd, cwd=dirs['abs_work_dir'],
-                                               output_timeout=cmd_timeout,
-                                               output_parser=parser,
-                                               env=env)
 
-                # mochitest, reftest, and xpcshell suites do not return
-                # appropriate return codes. Therefore, we must parse the output
-                # to determine what the tbpl_status and worst_log_level must
-                # be. We do this by:
-                # 1) checking to see if our mozharness script ran into any
-                #    errors itself with 'num_errors' <- OutputParser
-                # 2) if num_errors is 0 then we look in the subclassed 'parser'
-                #    findings for harness/suite errors <- DesktopUnittestOutputParser
-                # 3) checking to see if the return code is in success_codes
+                for verify_args in self.query_verify_args(suite):
+                    if (datetime.now() - start_time) > max_verify_time:
+                        # Verification has run out of time. That is okay! Stop running
+                        # tests so that a task timeout is not triggered, and so that
+                        # (partial) results are made available in a timely manner.
+                        self.info("TinderboxPrint: Verification too long: Not all tests were verified.<br/>")
+                        break
+                    final_cmd = copy.copy(cmd)
+                    final_cmd.extend(verify_args)
+                    return_code = self.run_command(final_cmd, cwd=dirs['abs_work_dir'],
+                                                   output_timeout=cmd_timeout,
+                                                   output_parser=parser,
+                                                   env=env)
 
-                success_codes = None
-                if self._is_windows() and suite_category != 'gtest':
-                    # bug 1120644
-                    success_codes = [0, 1]
+                    # mochitest, reftest, and xpcshell suites do not return
+                    # appropriate return codes. Therefore, we must parse the output
+                    # to determine what the tbpl_status and worst_log_level must
+                    # be. We do this by:
+                    # 1) checking to see if our mozharness script ran into any
+                    #    errors itself with 'num_errors' <- OutputParser
+                    # 2) if num_errors is 0 then we look in the subclassed 'parser'
+                    #    findings for harness/suite errors <- DesktopUnittestOutputParser
+                    # 3) checking to see if the return code is in success_codes
 
-                tbpl_status, log_level = parser.evaluate_parser(return_code,
-                                                                success_codes=success_codes)
-                parser.append_tinderboxprint_line(suite_name)
+                    success_codes = None
+                    if self._is_windows() and suite_category != 'gtest':
+                        # bug 1120644
+                        success_codes = [0, 1]
 
-                self.buildbot_status(tbpl_status, level=log_level)
-                self.log("The %s suite: %s ran with return status: %s" %
-                         (suite_category, suite, tbpl_status), level=log_level)
+                    tbpl_status, log_level = parser.evaluate_parser(return_code,
+                                                                    success_codes=success_codes)
+                    parser.append_tinderboxprint_line(suite_name)
+
+                    self.buildbot_status(tbpl_status, level=log_level)
+                    if len(verify_args) > 0:
+                        self.log("TinderboxPrint: verification of %s in %s<br/>: %s" %
+                                 (verify_args[-1], suite, tbpl_status), level=log_level)
+                    else:
+                        self.log("The %s suite: %s ran with return status: %s" %
+                                 (suite_category, suite, tbpl_status), level=log_level)
         else:
             self.debug('There were no suites to run for %s' % suite_category)
 
