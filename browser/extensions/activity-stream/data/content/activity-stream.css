@@ -306,7 +306,7 @@ main {
       border-radius: 6px;
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
       background-position: center center;
-      background-size: 80px;
+      background-size: 96px;
       background-repeat: no-repeat; }
     .top-sites-list .top-site-outer .title {
       height: 30px;
@@ -363,9 +363,8 @@ main {
     line-height: 120%;
     width: 320px;
     right: 0;
-    top: 34px;
-    margin-top: -4px;
-    margin-right: -4px;
+    top: 23px;
+    margin-right: -1px;
     padding: 24px;
     -moz-user-select: none; }
   .sections-list .section-top-bar .info-option-header {
