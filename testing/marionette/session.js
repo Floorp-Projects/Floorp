@@ -211,7 +211,7 @@ session.Proxy = class {
     assert.object(json);
 
     assert.in("proxyType", json);
-    p.proxyType = json.proxyType;
+    p.proxyType = assert.string(json.proxyType);
 
     if (json.proxyType == "manual") {
       if (typeof json.httpProxy != "undefined") {
