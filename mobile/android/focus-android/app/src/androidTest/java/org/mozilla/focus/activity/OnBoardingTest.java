@@ -53,6 +53,9 @@ public class OnBoardingTest {
         TestHelper.secondSlide.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.secondSlide.exists());
         TestHelper.nextBtn.click();
+        TestHelper.thirdSlide.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.thirdSlide.exists());
+        TestHelper.nextBtn.click();
         TestHelper.lastSlide.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.lastSlide.exists());
         TestHelper.finishBtn.click();

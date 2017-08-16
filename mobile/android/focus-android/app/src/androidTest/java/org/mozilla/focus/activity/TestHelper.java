@@ -41,15 +41,18 @@ public final class TestHelper {
     static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 4;
 
     /********* First View Locators ***********/
+
     static UiObject firstSlide = mDevice.findObject(new UiSelector()
-            .text("Browse like no one’s watching")
-            .enabled(true));
-    static UiObject secondSlide = mDevice.findObject(new UiSelector()
             .text("Power up your privacy")
             .enabled(true));
+    static UiObject secondSlide = mDevice.findObject(new UiSelector()
+            .text("Your search, your way")
+            .enabled(true));
+    static UiObject thirdSlide = mDevice.findObject(new UiSelector()
+            .text("Add shortcuts to your home screen")
+            .enabled(true));
     static UiObject lastSlide = mDevice.findObject(new UiSelector()
-            .text("A quick fix when\n" +
-                    "blocking = breaking")
+            .text("Make privacy a habit")
             .enabled(true));
     static UiObject nextBtn = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/next")
