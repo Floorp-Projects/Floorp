@@ -233,6 +233,18 @@ struct AudioChunk {
       (&mChannelData);
   }
 
+  /**
+   * ChannelFloatsForWrite() should be used only when mBuffer is owned solely
+   * by the calling thread.
+   */
+  template<typename T>
+  T* ChannelDataForWrite(size_t aChannel)
+  {
+    MOZ_ASSERT(AudioSampleTypeToFormat<T>::Format == mBufferFormat);
+    MOZ_ASSERT(!mBuffer->IsShared());
+    return static_cast<T*>(const_cast<void*>(mChannelData[aChannel]));
+  }
+
   PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
 
   StreamTime mDuration; // in frames within the buffer
