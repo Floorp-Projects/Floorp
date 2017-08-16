@@ -338,17 +338,10 @@ var pktUI = (function() {
      */
     function resizePanel(options) {
         var iframe = getPanelFrame();
-        var subview = getSubview();
 
-        if (subview) {
-          // Use the subview's size
-          iframe.style.width = "100%";
-          iframe.style.height = subview.parentNode.clientHeight + "px";
-        } else {
-          // Set an explicit size, panel will adapt.
-          iframe.style.width  = options.width + "px";
-          iframe.style.height = options.height + "px";
-        }
+        // Set an explicit size, panel will adapt.
+        iframe.style.width  = options.width + "px";
+        iframe.style.height = options.height + "px";
     }
 
     /**
@@ -577,39 +570,11 @@ var pktUI = (function() {
     }
 
     function getPanelFrame() {
-        if (photonPageActionPanelFrame) {
-            return photonPageActionPanelFrame;
-        }
-
-        var frame = document.getElementById("pocket-panel-iframe");
-        if (!frame) {
-            var frameParent = document.getElementById("PanelUI-pocketView").firstChild;
-            frame = document.createElement("iframe");
-            frame.id = "pocket-panel-iframe";
-            frame.setAttribute("type", "content");
-            frameParent.appendChild(frame);
-        }
-        return frame;
-    }
-
-    function getSubview() {
-        if (photonPageActionPanelFrame) {
-            return null;
-        }
-
-        var view = document.getElementById("PanelUI-pocketView");
-        if (view && view.getAttribute("current") == "true" && !view.getAttribute("mainview"))
-            return view;
-        return null;
+        return photonPageActionPanelFrame;
     }
 
     function isInOverflowMenu() {
-        if (photonPageActionPanelFrame) {
-            return false;
-        }
-
-        var subview = getSubview();
-        return !!subview;
+        return false;
     }
 
     function getFirefoxAccountSignedInUser(callback) {
