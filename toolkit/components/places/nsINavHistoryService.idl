@@ -1436,6 +1436,16 @@ interface nsINavHistoryService : nsISupports
    * Returns null if the generation of the guid failed.
    */
   ACString makeGuid();
+
+  /**
+   * Returns a 48-bit hash for a URI spec.
+   *
+   * @param aSpec
+   *        The URI spec to hash.
+   * @param aMode
+   *        The hash mode: `""` (default), `"prefix_lo"`, or `"prefix_hi"`.
+   */
+  unsigned long long hashURL(in ACString aSpec, [optional] in ACString aMode);
 };
 
 /**
