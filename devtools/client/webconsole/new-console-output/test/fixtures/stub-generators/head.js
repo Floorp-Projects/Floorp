@@ -86,19 +86,24 @@ function getCleanedPacket(key, packet) {
       }
 
       if (Array.isArray(res.message.arguments)) {
-        res.message.arguments.forEach((argument, i) => {
-          let existingArgument = existingPacket.message.arguments[i];
+        res.message.arguments = res.message.arguments.map((argument, i) => {
+          if (!argument || typeof argument !== "object") {
+            return argument;
+          }
 
+          let newArgument = Object.assign({}, argument);
+          let existingArgument = existingPacket.message.arguments[i];
           // Clean actor ids on each message.arguments item.
-          if (argument && argument.actor) {
-            argument.actor = existingArgument.actor;
+          if (newArgument.actor) {
+            newArgument.actor = existingArgument.actor;
           }
 
           // `window`'s properties count can vary from OS to OS, so we
           // clean the `ownPropertyLength` property from the grip.
-          if (argument && argument.class === "Window") {
-            argument.ownPropertyLength = existingArgument.ownPropertyLength;
+          if (newArgument.class === "Window") {
+            newArgument.ownPropertyLength = existingArgument.ownPropertyLength;
           }
+          return newArgument;
         });
       }
     }
@@ -303,20 +308,6 @@ function* generateConsoleApiStubs() {
         stubs.preparedMessages.push(formatStub(callKey, res));
         if (++i === keys.length) {
           toolbox.target.client.removeListener("consoleAPICall", listener);
-
-          // If this is a console.dir call, we need to wait for the properties
-          // to be fetched so we don't have any server errors.
-          if (callKey === "console.dir({C, M, Y, K})") {
-            const dirMsg = await waitForMessage(hud, `cyan: "C"`);
-            const oi = dirMsg.querySelector(".tree");
-            // If there's only one node, it means that the object inspector
-            // is not expanded.
-            if (oi.querySelectorAll(".node").length === 1) {
-              await waitForNodeMutation(oi, {
-                childList: true
-              });
-            }
-          }
           resolve();
         }
       };
@@ -521,45 +512,4 @@ function* generatePageErrorStubs() {
 
   yield closeTabAndToolbox();
   return formatFile(stubs, "ConsoleMessage");
-}
-
-/**
- * Wait for messages in the web console output, resolving once they are receieved.
- *
- * @param hud: the webconsole
- * @param message: string. text match in .message-body
- */
-function waitForMessage(hud, messageText) {
-  return new Promise(resolve => {
-    hud.ui.on("new-messages",
-      function messagesReceived(e, newMessages) {
-        for (let newMessage of newMessages) {
-          let messageBody = newMessage.node.querySelector(".message-body");
-          if (messageBody.textContent.includes(messageText)) {
-            info("Matched a message with text: " + messageText);
-            hud.ui.off("new-messages", messagesReceived);
-            resolve(newMessage.node);
-            break;
-          }
-        }
-      });
-  });
-}
-
-/**
-* Returns a promise that resolves when the node passed as an argument mutate
-* according to the passed configuration.
-*
-* @param {Node} node - The node to observe mutations on.
-* @param {Object} observeConfig - A configuration object for MutationObserver.observe.
-* @returns {Promise}
-*/
-function waitForNodeMutation(node, observeConfig = {}) {
-  return new Promise(resolve => {
-    const observer = new MutationObserver(mutations => {
-      resolve(mutations);
-      observer.disconnect();
-    });
-    observer.observe(node, observeConfig);
-  });
 }
