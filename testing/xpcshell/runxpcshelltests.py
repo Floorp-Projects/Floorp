@@ -22,6 +22,7 @@ import traceback
 
 from argparse import ArgumentParser, Namespace
 from collections import defaultdict, deque, namedtuple
+from datetime import datetime, timedelta
 from distutils import dir_util
 from functools import partial
 from multiprocessing import cpu_count
@@ -846,7 +847,7 @@ class XPCShellTests(object):
 
         return test_object
 
-    def buildTestList(self, test_tags=None, test_paths=None):
+    def buildTestList(self, test_tags=None, test_paths=None, verify=False):
         """
           read the xpcshell.ini manifest and set self.alltests to be
           an array of test objects.
@@ -857,7 +858,7 @@ class XPCShellTests(object):
         if test_paths is None:
             test_paths = []
 
-        if len(test_paths) == 1 and test_paths[0].endswith(".js"):
+        if len(test_paths) == 1 and test_paths[0].endswith(".js") and not verify:
             self.singleFile = os.path.basename(test_paths[0])
         else:
             self.singleFile = None
@@ -1145,6 +1146,9 @@ class XPCShellTests(object):
 
         global gotSIGINT
 
+        # Number of times to repeat test(s) in --verify mode
+        VERIFY_REPEAT = 20
+
         if isinstance(options, Namespace):
             options = vars(options)
 
@@ -1250,7 +1254,7 @@ class XPCShellTests(object):
 
         pStdout, pStderr = self.getPipes()
 
-        self.buildTestList(options.get('test_tags'), options.get('testPaths'))
+        self.buildTestList(options.get('test_tags'), options.get('testPaths'), options.get('verify'))
         if self.singleFile:
             self.sequential = True
 
@@ -1326,29 +1330,99 @@ class XPCShellTests(object):
         tests_queue = deque()
         # also a list for the tests that need to be run sequentially
         sequential_tests = []
-        for test_object in self.alltests:
-            # Test identifiers are provided for the convenience of logging. These
-            # start as path names but are rewritten in case tests from the same path
-            # are re-run.
+        status = None
+        if not options.get('verify'):
+            for test_object in self.alltests:
+                # Test identifiers are provided for the convenience of logging. These
+                # start as path names but are rewritten in case tests from the same path
+                # are re-run.
 
-            path = test_object['path']
+                path = test_object['path']
 
-            if self.singleFile and not path.endswith(self.singleFile):
-                continue
+                if self.singleFile and not path.endswith(self.singleFile):
+                    continue
 
-            self.testCount += 1
+                self.testCount += 1
 
-            test = testClass(test_object,
-                    verbose=self.verbose or test_object.get("verbose") == "true",
-                    usingTSan=usingTSan,
-                    mobileArgs=mobileArgs, **kwargs)
-            if 'run-sequentially' in test_object or self.sequential:
-                sequential_tests.append(test)
-            else:
-                tests_queue.append(test)
+                test = testClass(test_object,
+                        verbose=self.verbose or test_object.get("verbose") == "true",
+                        usingTSan=usingTSan,
+                        mobileArgs=mobileArgs, **kwargs)
+                if 'run-sequentially' in test_object or self.sequential:
+                    sequential_tests.append(test)
+                else:
+                    tests_queue.append(test)
 
-        status = self.runTestList(tests_queue, sequential_tests, testClass,
-            mobileArgs, **kwargs)
+            status = self.runTestList(tests_queue, sequential_tests, testClass,
+                mobileArgs, **kwargs)
+        else:
+            #
+            # Test verification: Run each test many times, in various configurations,
+            # in hopes of finding intermittent failures.
+            #
+
+            def step1():
+                # Run tests sequentially. Parallel mode would also work, except that
+                # the logging system gets confused when 2 or more tests with the same
+                # name run at the same time.
+                sequential_tests = []
+                for i in xrange(VERIFY_REPEAT):
+                    self.testCount += 1
+                    test = testClass(test_object, retry=False,
+                        mobileArgs=mobileArgs, **kwargs)
+                    sequential_tests.append(test)
+                status = self.runTestList(tests_queue, sequential_tests,
+                    testClass, mobileArgs, **kwargs)
+                return status
+
+            def step2():
+                # Run tests sequentially, with MOZ_CHAOSMODE enabled.
+                sequential_tests = []
+                self.env["MOZ_CHAOSMODE"] = ""
+                for i in xrange(VERIFY_REPEAT):
+                    self.testCount += 1
+                    test = testClass(test_object, retry=False,
+                        mobileArgs=mobileArgs, **kwargs)
+                    sequential_tests.append(test)
+                status = self.runTestList(tests_queue, sequential_tests,
+                    testClass, mobileArgs, **kwargs)
+                return status
+
+            steps = [
+                ("1. Run each test %d times, sequentially." % VERIFY_REPEAT,
+                 step1),
+                ("2. Run each test %d times, sequentially, in chaos mode." % VERIFY_REPEAT,
+                 step2),
+            ]
+            startTime = datetime.now()
+            maxTime = timedelta(seconds=options['verifyMaxTime'])
+            for test_object in self.alltests:
+                stepResults = {}
+                for (descr, step) in steps:
+                    stepResults[descr] = "not run / incomplete"
+                finalResult = "PASSED"
+                for (descr, step) in steps:
+                    if (datetime.now() - startTime) > maxTime:
+                        self.log.info("::: Test verification is taking too long: Giving up!")
+                        self.log.info("::: So far, all checks passed, but not all checks were run.")
+                        break
+                    self.log.info(':::')
+                    self.log.info('::: Running test verification step "%s"...' % descr)
+                    self.log.info(':::')
+                    status = step()
+                    if status != True:
+                        stepResults[descr] = "FAIL"
+                        finalResult = "FAILED!"
+                        break
+                    stepResults[descr] = "Pass"
+                self.log.info(':::')
+                self.log.info('::: Test verification summary for: %s' % test_object['path'])
+                self.log.info(':::')
+                for descr in sorted(stepResults.keys()):
+                    self.log.info('::: %s : %s' % (descr, stepResults[descr]))
+                self.log.info(':::')
+                self.log.info('::: Test verification %s' % finalResult)
+                self.log.info(':::')
 
         return status
 
