@@ -1111,6 +1111,33 @@ class XPCShellTests(object):
         self.failCount += test.failCount
         self.todoCount += test.todoCount
 
+    def updateMozinfo(self):
+        # Handle filenames in mozInfo
+        if not isinstance(self.mozInfo, dict):
+            mozInfoFile = self.mozInfo
+            if not os.path.isfile(mozInfoFile):
+                self.log.error("Error: couldn't find mozinfo.json at '%s'. Perhaps you need to use --build-info-json?" % mozInfoFile)
+                return False
+            self.mozInfo = json.load(open(mozInfoFile))
+
+        # mozinfo.info is used as kwargs.  Some builds are done with
+        # an older Python that can't handle Unicode keys in kwargs.
+        # All of the keys in question should be ASCII.
+        fixedInfo = {}
+        for k, v in self.mozInfo.items():
+            if isinstance(k, unicode):
+                k = k.encode('ascii')
+            fixedInfo[k] = v
+        self.mozInfo = fixedInfo
+
+        mozinfo.update(self.mozInfo)
+
+        # Add a flag to mozinfo to indicate that code coverage is enabled.
+        if self.jscovdir:
+            mozinfo.update({"coverage": True})
+
+        return True
+
     def runTests(self, options, testClass=XPCShellTestThread, mobileArgs=None):
         """
           Run xpcshell tests.
@@ -1199,29 +1226,8 @@ class XPCShellTests(object):
 
         self.event = Event()
 
-        # Handle filenames in mozInfo
-        if not isinstance(self.mozInfo, dict):
-            mozInfoFile = self.mozInfo
-            if not os.path.isfile(mozInfoFile):
-                self.log.error("Error: couldn't find mozinfo.json at '%s'. Perhaps you need to use --build-info-json?" % mozInfoFile)
-                return False
-            self.mozInfo = json.load(open(mozInfoFile))
-
-        # mozinfo.info is used as kwargs.  Some builds are done with
-        # an older Python that can't handle Unicode keys in kwargs.
-        # All of the keys in question should be ASCII.
-        fixedInfo = {}
-        for k, v in self.mozInfo.items():
-            if isinstance(k, unicode):
-                k = k.encode('ascii')
-            fixedInfo[k] = v
-        self.mozInfo = fixedInfo
-
-        mozinfo.update(self.mozInfo)
-
-        # Add a flag to mozinfo to indicate that code coverage is enabled.
-        if self.jscovdir:
-            mozinfo.update({"coverage": True})
+        if not self.updateMozinfo():
+            return False
 
         self.stack_fixer_function = None
         if self.utility_path and os.path.exists(self.utility_path):
@@ -1252,7 +1258,6 @@ class XPCShellTests(object):
             random.shuffle(self.alltests)
 
         self.cleanup_dir_list = []
-        self.try_again_list = []
 
         kwargs = {
             'appPath': self.appPath,
@@ -1342,6 +1347,14 @@ class XPCShellTests(object):
             else:
                 tests_queue.append(test)
 
+        status = self.runTestList(tests_queue, sequential_tests, testClass,
+            mobileArgs, **kwargs)
+
+        return status
+
+    def runTestList(self, tests_queue, sequential_tests, testClass,
+            mobileArgs, **kwargs):
+
         if self.sequential:
             self.log.info("Running tests sequentially.")
         else:
@@ -1353,6 +1366,7 @@ class XPCShellTests(object):
         keep_going = True
         exceptions = []
         tracebacks = []
+        self.try_again_list = []
 
         tests_by_manifest = defaultdict(list)
         for test in self.alltests:
