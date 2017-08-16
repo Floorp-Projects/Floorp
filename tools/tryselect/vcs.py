@@ -53,7 +53,7 @@ class VCSHelper(object):
 
         for cmd in commands:
             try:
-                output = subprocess.check_output(cmd).strip()
+                output = subprocess.check_output(cmd, stderr=open(os.devnull, 'w')).strip()
             except (subprocess.CalledProcessError, OSError):
                 continue
 
