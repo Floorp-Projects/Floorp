@@ -31,9 +31,18 @@ private:
   const nsCString mScope;
   const nsCString mScriptSpec;
   const nsString mCacheName;
-  const nsLoadFlags mLoadFlags;
   ServiceWorkerState mState;
   OriginAttributes mOriginAttributes;
+
+  // This LoadFlags is only applied to imported scripts, since the main script
+  // has already been downloaded when performing the bytecheck. This LoadFlag is
+  // composed of three parts:
+  //   1. nsIChannel::LOAD_BYPASS_SERVICE_WORKER
+  //   2. (Optional) nsIRequest::VALIDATE_ALWAYS
+  //      depends on ServiceWorkerUpdateViaCache of its registration.
+  //   3. (optional) nsIRequest::LOAD_BYPASS_CACHE
+  //      depends on whether the update timer is expired.
+  const nsLoadFlags mImportsLoadFlags;
 
   // This id is shared with WorkerPrivate to match requests issued by service
   // workers to their corresponding serviceWorkerInfo.
@@ -137,9 +146,9 @@ public:
   }
 
   nsLoadFlags
-  GetLoadFlags() const
+  GetImportsLoadFlags() const
   {
-    return mLoadFlags;
+    return mImportsLoadFlags;
   }
 
   uint64_t
