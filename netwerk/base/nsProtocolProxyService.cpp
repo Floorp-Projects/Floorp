@@ -428,7 +428,7 @@ proxy_GetStringPref(nsIPrefBranch *aPrefBranch,
                     const char    *aPref,
                     nsCString     &aResult)
 {
-    nsXPIDLCString temp;
+    nsCString temp;
     nsresult rv = aPrefBranch->GetCharPref(aPref, getter_Copies(temp));
     if (NS_FAILED(rv))
         aResult.Truncate();
@@ -561,7 +561,7 @@ nsProtocolProxyService::ReloadNetworkPAC()
     }
 
     if (type == PROXYCONFIG_PAC) {
-        nsXPIDLCString pacSpec;
+        nsCString pacSpec;
         prefs->GetCharPref(PROXY_PREF("autoconfig_url"),
                            getter_Copies(pacSpec));
         if (!pacSpec.IsEmpty()) {
@@ -693,7 +693,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
 {
     nsresult rv = NS_OK;
     bool reloadPAC = false;
-    nsXPIDLCString tempString;
+    nsCString tempString;
 
     if (!pref || !strcmp(pref, PROXY_PREF("type"))) {
         int32_t type = -1;
@@ -1247,7 +1247,7 @@ nsProtocolProxyService::ReloadPAC()
     if (NS_FAILED(rv))
         return NS_OK;
 
-    nsXPIDLCString pacSpec;
+    nsCString pacSpec;
     if (type == PROXYCONFIG_PAC)
         prefs->GetCharPref(PROXY_PREF("autoconfig_url"), getter_Copies(pacSpec));
     else if (type == PROXYCONFIG_WPAD)

@@ -628,7 +628,7 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
   rv = imgUrl->GetFileExtension(extension);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString mimeType;
+  nsCString mimeType;
   rv = aImgRequest->GetMimeType(getter_Copies(mimeType));
   NS_ENSURE_SUCCESS(rv, rv);
 

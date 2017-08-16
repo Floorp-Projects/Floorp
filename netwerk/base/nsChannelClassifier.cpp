@@ -744,7 +744,7 @@ nsChannelClassifier::HasBeenClassified(nsIChannel *aChannel)
         return false;
     }
 
-    nsXPIDLCString tag;
+    nsCString tag;
     cacheEntry->GetMetaDataElement("necko:classified", getter_Copies(tag));
     return tag.EqualsLiteral("1");
 }

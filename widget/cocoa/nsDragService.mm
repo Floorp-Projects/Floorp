@@ -599,7 +599,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
         nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, j);
         if (!currentFlavor)
           continue;
-        nsXPIDLCString flavorStr;
+        nsCString flavorStr;
         currentFlavor->ToString(getter_Copies(flavorStr));
         if (dataFlavor.Equals(flavorStr)) {
           *_retval = true;
