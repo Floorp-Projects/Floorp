@@ -47,7 +47,7 @@ interface nsIXPConnectWrappedNative;
     #define XPC_SCRIPTABLE_WANT_HASINSTANCE                 (1 <<  9)
     #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY       (1 << 10)
     #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY       (1 << 11)
-    #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY       (1 << 12)
+    // (1 << 12) is unused
     #define XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE        (1 << 13)
     #define XPC_SCRIPTABLE_DONT_ASK_INSTANCE_FOR_SCRIPTABLE (1 << 14)
     #define XPC_SCRIPTABLE_CLASSINFO_INTERFACES_ONLY        (1 << 15)
@@ -128,7 +128,6 @@ interface nsIXPCScriptable : nsISupports
     GET_IT(WantHasInstance,              WANT_HASINSTANCE)
     GET_IT(UseJSStubForAddProperty,      USE_JSSTUB_FOR_ADDPROPERTY)
     GET_IT(UseJSStubForDelProperty,      USE_JSSTUB_FOR_DELPROPERTY)
-    GET_IT(UseJSStubForSetProperty,      USE_JSSTUB_FOR_SETPROPERTY)
     GET_IT(DontEnumQueryInterface,       DONT_ENUM_QUERY_INTERFACE)
     GET_IT(DontAskInstanceForScriptable, DONT_ASK_INSTANCE_FOR_SCRIPTABLE)
     GET_IT(ClassInfoInterfacesOnly,      CLASSINFO_INTERFACES_ONLY)
