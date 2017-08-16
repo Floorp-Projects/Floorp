@@ -1,16 +1,6 @@
-/* Bug 1164419 - increase Pocket panel size to accomidate wider Russian text. */
-panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-viewstack > .panel-mainview:not([panelid="PanelUI-popup"]) {
-  max-width: 33em; /* standaloneSubviewWidth + 3 */
-}
-
-.cui-widget-panel[viewId="PanelUI-pocketView"] > .panel-arrowcontainer > .panel-arrowcontent {
+#pageActionActivatedActionPanel[actionID="pocket"] > .panel-arrowcontainer > .panel-arrowcontent {
   padding-top: 0;
   padding-bottom: 0;
-}
-
-#PanelUI-pocketView > .panel-subview-body,
-#PanelUI-pocketView {
-  overflow: visible;
 }
 
 #pocket-button {

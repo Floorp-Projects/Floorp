@@ -32,6 +32,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+  "resource:///modules/PageActions.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
@@ -151,7 +153,6 @@ this.UITour = {
     ["pocket", {
       allowAdd: true,
       query: "#pocket-button",
-      widgetName: "pocket-button",
     }],
     ["privateWindow", {query: "#appMenu-private-window-button"}],
     ["quit",        {query: "#appMenu-quit-button"}],
@@ -1416,44 +1417,12 @@ this.UITour = {
       }
       aWindow.document.getElementById("identity-box").click();
     } else if (aMenuName == "pocket") {
-      this.getTarget(aWindow, "pocket").then(async function onPocketTarget(target) {
-        let widgetGroupWrapper = CustomizableUI.getWidget(target.widgetName);
-        if (widgetGroupWrapper.type != "view" || !widgetGroupWrapper.viewId) {
-          log.error("Can't open the pocket menu without a view");
-          return;
-        }
-        let placement = CustomizableUI.getPlacementOfWidget(target.widgetName);
-        if (!placement || !placement.area) {
-          log.error("Can't open the pocket menu without a placement");
-          return;
-        }
-
-        if (placement.area == CustomizableUI.AREA_PANEL) {
-          // Open the appMenu and wait for it if it's not already opened or showing a subview.
-          await new Promise((resolve, reject) => {
-            if (aWindow.PanelUI.panel.state != "closed") {
-              if (aWindow.PanelUI.multiView.showingSubView) {
-                reject("A subview is already showing");
-                return;
-              }
-
-              resolve();
-              return;
-            }
-
-            aWindow.PanelUI.panel.addEventListener("popupshown", function() {
-              resolve();
-            }, {once: true});
-
-            aWindow.PanelUI.show();
-          });
-        }
-
-        let widgetWrapper = widgetGroupWrapper.forWindow(aWindow);
-        aWindow.PanelUI.showSubView(widgetGroupWrapper.viewId,
-                                    widgetWrapper.anchor,
-                                    placement.area);
-      }).catch(log.error);
+      let pageAction = PageActions.actionForID("pocket");
+      if (!pageAction) {
+        log.error("Can't open the pocket menu without a page action");
+        return;
+      }
+      pageAction.doCommand(aWindow);
     } else if (aMenuName == "urlbar") {
       this.getTarget(aWindow, "urlbar").then(target => {
         let urlbar = target.node;
