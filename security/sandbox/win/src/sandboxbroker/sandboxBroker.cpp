@@ -399,7 +399,7 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                      "SetDelayedIntegrityLevel should never fail, what happened?");
 
   if (aSandboxLevel > 3) {
-    result = mPolicy->SetAlternateDesktop(true);
+    result = mPolicy->SetAlternateDesktop(false);
     MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                        "Failed to create alternate desktop for sandbox.");
   }
