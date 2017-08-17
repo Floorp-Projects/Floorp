@@ -136,7 +136,7 @@ TextEditRules::Init(TextEditor* aTextEditor)
   rv = selection->GetRangeCount(&rangeCount);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!rangeCount) {
-    rv = mTextEditor->EndOfDocument();
+    rv = mTextEditor->CollapseSelectionToEnd(selection);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -482,7 +482,7 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
   // This is usually performed in TextEditRules::Init(), however, if the
   // editor is reframed, this may be called by AfterEdit().
   if (!aSelection->RangeCount()) {
-    mTextEditor->EndOfDocument();
+    mTextEditor->CollapseSelectionToEnd(aSelection);
   }
 
   // if we are at the end of the textarea, we need to set the
