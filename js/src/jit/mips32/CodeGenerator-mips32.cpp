@@ -176,16 +176,10 @@ CodeGeneratorMIPS::visitBox(LBox* box)
 void
 CodeGeneratorMIPS::visitBoxFloatingPoint(LBoxFloatingPoint* box)
 {
-    const LDefinition* payload = box->getDef(PAYLOAD_INDEX);
-    const LDefinition* type = box->getDef(TYPE_INDEX);
-    const LAllocation* in = box->getOperand(0);
+    const AnyRegister in = ToAnyRegister(box->getOperand(0));
+    const ValueOperand out = ToOutValue(box);
 
-    FloatRegister reg = ToFloatRegister(in);
-    if (box->type() == MIRType::Float32) {
-        masm.convertFloat32ToDouble(reg, ScratchDoubleReg);
-        reg = ScratchDoubleReg;
-    }
-    masm.ma_mv(reg, ValueOperand(ToRegister(type), ToRegister(payload)));
+    masm.moveValue(TypedOrValueRegister(box->type(), in), out);
 }
 
 void
