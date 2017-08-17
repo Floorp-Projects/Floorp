@@ -278,4 +278,12 @@ MP4Decoder::IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlo
   return promise.forget();
 }
 
+void
+MP4Decoder::GetMozDebugReaderData(nsACString& aString)
+{
+  if (mReader) {
+    mReader->GetMozDebugReaderData(aString);
+  }
+}
+
 } // namespace mozilla
