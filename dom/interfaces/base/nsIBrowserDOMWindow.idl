@@ -18,6 +18,10 @@ interface nsIOpenURIInFrameParams : nsISupports
   readonly attribute boolean isPrivate;
   attribute nsIPrincipal triggeringPrincipal;
 
+  // The browser or frame element in the parent process which holds the
+  // opener window in the content process. May be null.
+  readonly attribute nsIFrameLoaderOwner openerBrowser;
+
   [implicit_jscontext]
   readonly attribute jsval openerOriginAttributes;
 };

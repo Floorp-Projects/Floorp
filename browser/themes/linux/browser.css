@@ -255,9 +255,6 @@ menuitem.bookmark-item {
 .urlbar-input-box {
   margin: 0;
 }
-.urlbar-history-dropmarker {
-  -moz-appearance: toolbarbutton-dropdown;
-}
 
 /* ::::: URL Bar Zoom Reset Button ::::: */
 @keyframes urlbar-zoom-reset-pulse {

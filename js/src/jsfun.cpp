@@ -37,7 +37,6 @@
 #include "gc/Policy.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
-#include "jit/JitFrameIterator.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Proxy.h"
 #include "vm/AsyncFunction.h"

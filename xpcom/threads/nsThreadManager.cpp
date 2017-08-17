@@ -11,9 +11,12 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/EventQueue.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SystemGroup.h"
+#include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThreadLocal.h"
+#include "PrioritizedEventQueue.h"
 #ifdef MOZ_CANARY
 #include <fcntl.h>
 #include <unistd.h>
@@ -96,18 +99,30 @@ nsThreadManager::Init()
                    0;
 #endif
 
+  using MainThreadQueueT = PrioritizedEventQueue<EventQueue>;
+
+  nsCOMPtr<nsIIdlePeriod> idlePeriod = new MainThreadIdlePeriod();
+  auto prioritized = MakeUnique<MainThreadQueueT>(MakeUnique<EventQueue>(),
+                                                  MakeUnique<EventQueue>(),
+                                                  MakeUnique<EventQueue>(),
+                                                  MakeUnique<EventQueue>(),
+                                                  idlePeriod.forget());
+
+  // Save a reference temporarily so we can set some state on it.
+  MainThreadQueueT* prioritizedRef = prioritized.get();
+  RefPtr<ThreadEventQueue<MainThreadQueueT>> queue =
+    new ThreadEventQueue<MainThreadQueueT>(Move(prioritized));
+
   // Setup "main" thread
-  mMainThread = new nsThread(nsThread::MAIN_THREAD, 0);
+  mMainThread = new nsThread(WrapNotNull(queue), nsThread::MAIN_THREAD, 0);
+
+  prioritizedRef->SetMutexRef(queue->MutexRef());
+  prioritizedRef->SetNextIdleDeadlineRef(mMainThread->NextIdleDeadlineRef());
 
   nsresult rv = mMainThread->InitCurrentThread();
   if (NS_FAILED(rv)) {
     mMainThread = nullptr;
     return rv;
-  }
-
-  {
-    nsCOMPtr<nsIIdlePeriod> idlePeriod = new MainThreadIdlePeriod();
-    mMainThread->RegisterIdlePeriod(idlePeriod.forget());
   }
 
   // We need to keep a pointer to the current thread, so we can satisfy
@@ -244,7 +259,9 @@ nsThreadManager::GetCurrentThread()
   }
 
   // OK, that's fine.  We'll dynamically create one :-)
-  RefPtr<nsThread> thread = new nsThread(nsThread::NOT_MAIN_THREAD, 0);
+  RefPtr<ThreadEventQueue<EventQueue>> queue =
+    new ThreadEventQueue<EventQueue>(MakeUnique<EventQueue>());
+  RefPtr<nsThread> thread = new nsThread(WrapNotNull(queue), nsThread::NOT_MAIN_THREAD, 0);
   if (!thread || NS_FAILED(thread->InitCurrentThread())) {
     return nullptr;
   }
@@ -272,7 +289,9 @@ nsThreadManager::NewNamedThread(const nsACString& aName,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  RefPtr<nsThread> thr = new nsThread(nsThread::NOT_MAIN_THREAD, aStackSize);
+  RefPtr<ThreadEventQueue<EventQueue>> queue =
+    new ThreadEventQueue<EventQueue>(MakeUnique<EventQueue>());
+  RefPtr<nsThread> thr = new nsThread(WrapNotNull(queue), nsThread::NOT_MAIN_THREAD, aStackSize);
   nsresult rv = thr->Init(aName);  // Note: blocks until the new thread has been set up
   if (NS_FAILED(rv)) {
     return rv;
@@ -428,7 +447,7 @@ nsThreadManager::EnableMainThreadEventPrioritization()
     return;
   }
   InputEventStatistics::Get().SetEnable(true);
-  mMainThread->EnableEventPrioritization();
+  mMainThread->EnableInputEventPrioritization();
 }
 
 NS_IMETHODIMP

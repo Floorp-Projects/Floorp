@@ -14,6 +14,8 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Move.h"
+#include "mozilla/Mutex.h"
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracerImpl.h"
 using namespace mozilla::tasktracer;
@@ -30,6 +32,8 @@ using namespace mozilla::tasktracer;
 
 using mozilla::Atomic;
 using mozilla::LogLevel;
+using mozilla::Move;
+using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
@@ -153,7 +157,7 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
   mMutex("nsTimerImpl::mMutex")
 {
   // XXXbsmedberg: shouldn't this be in Init()?
-  mEventTarget = GetCurrentThreadEventTarget();
+  mEventTarget = mozilla::GetCurrentThreadEventTarget();
 }
 
 //static
@@ -443,7 +447,7 @@ nsTimerImpl::SetTarget(nsIEventTarget* aTarget)
   if (aTarget) {
     mEventTarget = aTarget;
   } else {
-    mEventTarget = GetCurrentThreadEventTarget();
+    mEventTarget = mozilla::GetCurrentThreadEventTarget();
   }
   return NS_OK;
 }

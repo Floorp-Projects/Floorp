@@ -136,7 +136,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.thirdPartyFlags(), a.resumeAt(), a.startPos(),
                        a.entityID(), a.chooseApplicationCache(),
                        a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(), a.beConservative(),
-                       a.loadInfo(), a.synthesizedResponseHead(),
+                       a.tlsFlags(), a.loadInfo(), a.synthesizedResponseHead(),
                        a.synthesizedSecurityInfoSerialization(),
                        a.cacheKey(), a.requestContextID(), a.preflightArgs(),
                        a.initialRwin(), a.blockAuthPrompt(),
@@ -457,6 +457,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const bool&                allowSpdy,
                                  const bool&                allowAltSvc,
                                  const bool&                beConservative,
+                                 const uint32_t&            tlsFlags,
                                  const OptionalLoadInfoArgs& aLoadInfoArgs,
                                  const OptionalHttpResponseHead& aSynthesizedResponseHead,
                                  const nsCString&           aSecurityInfoSerialization,
@@ -683,6 +684,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   httpChannel->SetAllowSpdy(allowSpdy);
   httpChannel->SetAllowAltSvc(allowAltSvc);
   httpChannel->SetBeConservative(beConservative);
+  httpChannel->SetTlsFlags(tlsFlags);
   httpChannel->SetInitialRwin(aInitialRwin);
   httpChannel->SetBlockAuthPrompt(aBlockAuthPrompt);
 
