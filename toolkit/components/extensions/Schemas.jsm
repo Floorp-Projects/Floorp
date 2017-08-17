@@ -128,7 +128,7 @@ async function readJSONAndBlobbify(url) {
  *        value.
  */
 function exportLazyGetter(object, prop, getter) {
-  object = Cu.waiveXrays(object);
+  object = ChromeUtils.waiveXrays(object);
 
   let redefine = value => {
     if (value === undefined) {
@@ -182,7 +182,7 @@ function exportLazyGetter(object, prop, getter) {
  *        undefined, which will cause the property to be deleted.
  */
 function exportLazyProperty(object, prop, getter) {
-  object = Cu.waiveXrays(object);
+  object = ChromeUtils.waiveXrays(object);
 
   let redefine = obj => {
     let desc = getter.call(obj);
@@ -244,21 +244,26 @@ function parsePattern(pattern) {
 }
 
 function getValueBaseType(value) {
-  let t = typeof(value);
-  if (t == "object") {
-    if (value === null) {
-      return "null";
-    } else if (Array.isArray(value)) {
-      return "array";
-    } else if (Object.prototype.toString.call(value) == "[object ArrayBuffer]") {
-      return "binary";
-    }
-  } else if (t == "number") {
-    if (value % 1 == 0) {
-      return "integer";
-    }
+  let type = typeof value;
+  switch (type) {
+    case "object":
+      if (value === null) {
+        return "null";
+      }
+      switch (ChromeUtils.getClassName(value, true)) {
+        case "Array":
+          return "array";
+        case "ArrayBuffer":
+          return "binary";
+      }
+      break;
+
+    case "number":
+      if (value % 1 === 0) {
+        return "integer";
+      }
   }
-  return t;
+  return type;
 }
 
 // Methods of Context that are used by Schemas.normalize. These methods can be
@@ -603,7 +608,7 @@ class InjectionEntry {
       }
 
       try {
-        let unwrapped = Cu.waiveXrays(this.parentObj);
+        let unwrapped = ChromeUtils.waiveXrays(this.parentObj);
         delete unwrapped[this.name];
       } catch (e) {
         Cu.reportError(e);
@@ -1528,7 +1533,7 @@ class ObjectType extends Type {
     // Proxy). Then we copy the properties out of it into a normal
     // object using a waiver wrapper.
 
-    let klass = Cu.getClassName(value, true);
+    let klass = ChromeUtils.getClassName(value, true);
     if (klass != "Object") {
       throw context.error(`Expected a plain JavaScript object, got a ${klass}`,
                           `be a plain JavaScript object`);
@@ -1536,7 +1541,7 @@ class ObjectType extends Type {
 
     let properties = Object.create(null);
 
-    let waived = Cu.waiveXrays(value);
+    let waived = ChromeUtils.waiveXrays(value);
     for (let prop of Object.getOwnPropertyNames(waived)) {
       let desc = Object.getOwnPropertyDescriptor(waived, prop);
       if (desc.get || desc.set) {
@@ -1545,7 +1550,7 @@ class ObjectType extends Type {
       }
       // Chrome ignores non-enumerable properties.
       if (desc.enumerable) {
-        properties[prop] = Cu.unwaiveXrays(desc.value);
+        properties[prop] = ChromeUtils.unwaiveXrays(desc.value);
       }
     }
 
@@ -2036,7 +2041,7 @@ class SubModuleProperty extends Entry {
     return {
       descriptor: {value: obj},
       revoke() {
-        let unwrapped = Cu.waiveXrays(obj);
+        let unwrapped = ChromeUtils.waiveXrays(obj);
         for (let fun of functions) {
           try {
             delete unwrapped[fun.name];
@@ -2328,7 +2333,7 @@ Event = class Event extends CallEntry { // eslint-disable-line no-native-reassig
         apiImpl.revoke();
         apiImpl = null;
 
-        let unwrapped = Cu.waiveXrays(obj);
+        let unwrapped = ChromeUtils.waiveXrays(obj);
         delete unwrapped.addListener;
         delete unwrapped.removeListener;
         delete unwrapped.hasListener;
