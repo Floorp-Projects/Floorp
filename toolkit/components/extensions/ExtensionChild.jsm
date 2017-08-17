@@ -338,6 +338,7 @@ class Messenger {
           return Promise.reject({message: error.message});
         }
       });
+    holder = null;
 
     return this.context.wrapPromise(promise, responseCallback);
   }
@@ -374,12 +375,16 @@ class Messenger {
           });
 
           let message = holder.deserialize(this.context.cloneScope);
+          holder = null;
+
           sender = Cu.cloneInto(sender, this.context.cloneScope);
           sendResponse = Cu.exportFunction(sendResponse, this.context.cloneScope);
 
           // Note: We intentionally do not use runSafe here so that any
           // errors are propagated to the message sender.
           let result = fire.raw(message, sender, sendResponse);
+          message = null;
+
           if (result instanceof this.context.cloneScope.Promise) {
             return result;
           } else if (result === true) {
