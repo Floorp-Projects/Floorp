@@ -427,7 +427,7 @@
     <vbox flex="1">
       <description flex="1">
         <label id="totalSiteDataSize"></label>
-        <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
+        <label id="siteDataLearnMoreLink" class="learnMore text-link">&siteDataLearnMoreLink.label;</label>
       </description>
     </vbox>
     <vbox align="end">
