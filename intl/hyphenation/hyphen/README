@@ -48,6 +48,7 @@ tbhyphext.tex: hyphenation exception log from TugBoat archive
 
 INSTALLATION
 
+autoreconf -fvi
 ./configure
 make
 make install
@@ -69,6 +70,12 @@ NOTE: In the case of Unicode encoded input, convert your words
 to lowercase before hyphenation (under UTF-8 console environment):
 
 cat mywords.txt | awk '{print tolower($0)}' >mywordslow.txt
+
+BUILD DLL USING CROSS-COMPILATION
+
+./configure --host i586-mingw32 --prefix=/tmp/hyphen-dll
+make
+make install
 
 DEVELOPMENT
 
