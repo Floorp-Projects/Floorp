@@ -552,6 +552,10 @@ mochitest-browser-chrome:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
+            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux64-stylo/debug: ['try']
+            macosx64-stylo/.*: ['mozilla-central', 'try']
+            windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -583,6 +587,11 @@ mochitest-browser-chrome:
             linux64-jsdcov/opt: xlarge
             default: legacy
     allow-software-gl-layers: false
+    tier:
+        by-test-platform:
+            .*-stylo.*: 2
+            linux64-stylo/debug: 3
+            default: default
 
 mochitest-browser-screenshots:
     description: "Mochitest Browser Screenshots"

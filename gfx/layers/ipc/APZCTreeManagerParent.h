@@ -111,9 +111,6 @@ public:
           const MaybeZoomConstraints& aConstraints) override;
 
   mozilla::ipc::IPCResult
-  RecvCancelAnimation(const ScrollableLayerGuid& aGuid) override;
-
-  mozilla::ipc::IPCResult
   RecvSetDPI(const float& aDpiValue) override;
 
   mozilla::ipc::IPCResult

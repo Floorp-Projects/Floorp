@@ -24,7 +24,7 @@ function respondWithSHA1OCSP(request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "application/ocsp-response");
 
-  let args = [ ["good-delegated", "default-ee", "delegatedSHA1Signer" ] ];
+  let args = [ ["good-delegated", "default-ee", "delegatedSHA1Signer", 0 ] ];
   let responses = generateOCSPResponses(args, "ocsp_certs");
   response.write(responses[0]);
 }
@@ -37,7 +37,7 @@ function respondWithError(request, response) {
 }
 
 function generateGoodOCSPResponse() {
-  let args = [ ["good", "default-ee", "unused" ] ];
+  let args = [ ["good", "default-ee", "unused", 0 ] ];
   let responses = generateOCSPResponses(args, "ocsp_certs");
   return responses[0];
 }
