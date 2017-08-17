@@ -3,6 +3,12 @@
 
 "use strict";
 
+
+const kSearchEngineURL = "https://example.com/?search={searchTerms}";
+const kSearchSuggestURL = "http://example.com/?suggest={searchTerms}";
+const kSearchTerm = "foo";
+const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
+
 add_task(async function test_extension_adding_engine() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -10,7 +16,8 @@ add_task(async function test_extension_adding_engine() {
         "search_provider": {
              "name": "MozSearch",
              "keyword": "MozSearch",
-             "search_url": "https://example.com/?q={searchTerms}",
+             "search_url": kSearchEngineURL,
+             "suggest_url": kSearchSuggestURL,
         },
       },
     },
@@ -21,6 +28,10 @@ add_task(async function test_extension_adding_engine() {
 
   let engine = Services.search.getEngineByName("MozSearch");
   ok(engine, "Engine should exist.");
+
+  let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
+  let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
+  is(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
 
   await ext1.unload();
 
