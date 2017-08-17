@@ -265,7 +265,7 @@ public class RecordsChannel implements
   }
 
   @Override
-  public void onRecordStoreReconciled(String guid) {
+  public void onRecordStoreReconciled(String guid, Integer newVersion) {
     Logger.trace(LOG_TAG, "Reconciled record with guid " + guid);
     storeReconciledCount.incrementAndGet();
   }

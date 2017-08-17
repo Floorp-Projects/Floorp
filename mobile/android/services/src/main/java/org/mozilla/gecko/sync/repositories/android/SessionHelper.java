@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.sync.repositories.android;
 
 import android.database.Cursor;
@@ -43,7 +47,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
  *
  */
 /* package-private */ abstract class SessionHelper {
-    private final static String LOG_TAG = "FetchingSessionHelper";
+    private final static String LOG_TAG = "SessionHelper";
 
     protected final StoreTrackingRepositorySession session;
 
@@ -155,6 +159,11 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
         putRecordToGuidMap(buildRecordString(record), record.guid);
     }
 
+    abstract boolean doReplaceRecord(Record toStore, Record existingRecord, RepositorySessionStoreDelegate delegate)
+            throws NoGuidForIdException, NullCursorException, ParentNotFoundException;
+
+    abstract boolean isLocallyModified(Record record);
+
     void checkDatabase() throws ProfileDatabaseException, NullCursorException {
         Logger.debug(LOG_TAG, "BEGIN: checking database.");
         try {
@@ -206,110 +215,127 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
                 }
 
 
-                // TODO: lift these into the session.
-                // Temporary: this matches prior syncing semantics, in which only
-                // the relationship between the local and remote record is considered.
-                // In the future we'll track these two timestamps and use them to
-                // determine which records have changed, and thus process incoming
-                // records more efficiently.
+                // Temporary (written some 5 years ago, nothing is so permanent as the temporary):
+                // - this matches prior syncing semantics, in which only
+                // - the relationship between the local and remote record is considered.
+                // In the future we should be performing a three-way merge of record sets.
                 long lastLocalRetrieval  = 0;      // lastSyncTimestamp?
                 long lastRemoteRetrieval = 0;      // TODO: adjust for clock skew.
                 boolean remotelyModified = record.lastModified > lastRemoteRetrieval;
 
                 Record existingRecord;
                 try {
-                    // GUID matching only: deleted records don't have a payload with which to search.
-                    existingRecord = retrieveByGUIDDuringStore(record.guid);
-                    if (record.deleted) {
+                    // For versioned records, we may attempt this process multiple times.
+                    // This happens because when we merge records and perform an actual database update,
+                    // we do so while also asserting that the record we're trying to overwrite did not change
+                    // since we computed its merged version. If it's determined that there was a race and record
+                    // did change, we attempt this whole process again: record might have been changed in any way,
+                    // and so we check for deletions, re-compute merged version, etc.
+                    // To stay on the safe side, we set a maximum number of attempts, and declare failure once
+                    // we get exhaust our options.
+                    // It is expected that this while loop will only execute once most of the time.
+                    final int maxReconcileAttempts = 10;
+                    int reconcileAttempt = 1;
+                    do {
+                        // GUID matching only: deleted records don't have a payload with which to search.
+                        existingRecord = retrieveByGUIDDuringStore(record.guid);
+                        if (record.deleted) {
+                            if (existingRecord == null) {
+                                // We're done. Don't bother with a callback. That can change later
+                                // if we want it to.
+                                trace("Incoming record " + record.guid + " is deleted, and no local version. Bye!");
+                                break;
+                            }
+
+                            if (existingRecord.deleted) {
+                                trace("Local record already deleted. Bye!");
+                                break;
+                            }
+
+                            // Which one wins?
+                            if (!remotelyModified) {
+                                trace("Ignoring deleted record from the past.");
+                                break;
+                            }
+
+                            if (!isLocallyModified(existingRecord)) {
+                                trace("Remote modified, local not. Deleting.");
+                                storeRecordDeletion(storeDelegate, record, existingRecord);
+                                break;
+                            }
+
+                            trace("Both local and remote records have been modified.");
+                            if (record.lastModified > existingRecord.lastModified) {
+                                trace("Remote is newer, and deleted. Deleting local.");
+                                storeRecordDeletion(storeDelegate, record, existingRecord);
+                                break;
+                            }
+
+                            trace("Remote is older, local is not deleted. Ignoring.");
+                            break;
+                        }
+                        // End deletion logic.
+
+                        // Now we're processing a non-deleted incoming record.
+                        // Apply any changes we need in order to correctly find existing records.
+                        fixupRecord(record);
+
                         if (existingRecord == null) {
-                            // We're done. Don't bother with a callback. That can change later
-                            // if we want it to.
-                            trace("Incoming record " + record.guid + " is deleted, and no local version. Bye!");
-                            return;
+                            trace("Looking up match for record " + record.guid);
+                            existingRecord = findExistingRecord(record);
                         }
 
-                        if (existingRecord.deleted) {
-                            trace("Local record already deleted. Bye!");
-                            return;
+                        if (existingRecord == null) {
+                            // The record is new.
+                            trace("No match. Inserting.");
+                            insert(storeDelegate, processBeforeInsertion(record));
+                            break;
                         }
 
-                        // Which one wins?
-                        if (!remotelyModified) {
-                            trace("Ignoring deleted record from the past.");
-                            return;
+                        // We found a local dupe.
+                        trace("Incoming record " + record.guid + " dupes to local record " + existingRecord.guid);
+
+                        // Populate more expensive fields prior to reconciling.
+                        existingRecord = transformRecord(existingRecord);
+
+                        // Implementation is expected to decide if it's necessary to "track" the record.
+                        Record toStore = reconcileRecords(record, existingRecord, lastRemoteRetrieval, lastLocalRetrieval);
+
+                        if (toStore == null) {
+                            Logger.debug(LOG_TAG, "Reconciling returned null. Not inserting a record.");
+                            break;
                         }
 
-                        boolean locallyModified = existingRecord.lastModified > lastLocalRetrieval;
-                        if (!locallyModified) {
-                            trace("Remote modified, local not. Deleting.");
-                            storeRecordDeletion(storeDelegate, record, existingRecord);
-                            return;
+                        Logger.debug(LOG_TAG, "Reconcile attempt #" + reconcileAttempt);
+
+                        // This section of code will only run if the incoming record is not
+                        // marked as deleted, so we never want to just drop ours from the database:
+                        // we need to upload it later.
+                        // Implementations are expected to ensure this happens.
+                        boolean replaceSuccessful = doReplaceRecord(toStore, existingRecord, storeDelegate);
+
+                        // Note that, clumsily, delegate success callbacks are called in doReplaceRecord.
+                        if (replaceSuccessful) {
+                            Logger.debug(LOG_TAG, "Successfully reconciled record on attempt #" + reconcileAttempt);
+                            break;
                         }
 
-                        trace("Both local and remote records have been modified.");
-                        if (record.lastModified > existingRecord.lastModified) {
-                            trace("Remote is newer, and deleted. Deleting local.");
-                            // Note that while this counts as "reconciliation", we're probably over-counting.
-                            // Currently, locallyModified above is _always_ true if a record exists locally,
-                            // and so we'll consider any deletions of already present records as reconciliations.
-                            storeDelegate.onRecordStoreReconciled(record.guid);
-                            storeRecordDeletion(storeDelegate, record, existingRecord);
-                            return;
-                        }
+                        // Let's try again if we failed.
+                        reconcileAttempt += 1;
 
-                        trace("Remote is older, local is not deleted. Ignoring.");
-                        return;
+                    } while (reconcileAttempt <= maxReconcileAttempts);
+
+                    // Nothing else to do but let our delegate know and log if we reached maximum
+                    // reconcile attempts.
+                    if (reconcileAttempt > maxReconcileAttempts) {
+                        Logger.error(LOG_TAG, "Failed to store record within maximum number of allowed attempts: " + record.guid);
+                        storeDelegate.onRecordStoreFailed(
+                                new IllegalStateException("Reached maximum storage attempts for a record"),
+                                record.guid
+                        );
+                    } else {
+                        Logger.info(LOG_TAG, "Stored after reconcile attempt #" + reconcileAttempt);
                     }
-                    // End deletion logic.
-
-                    // Now we're processing a non-deleted incoming record.
-                    // Apply any changes we need in order to correctly find existing records.
-                    fixupRecord(record);
-
-                    if (existingRecord == null) {
-                        trace("Looking up match for record " + record.guid);
-                        existingRecord = findExistingRecord(record);
-                    }
-
-                    if (existingRecord == null) {
-                        // The record is new.
-                        trace("No match. Inserting.");
-                        insert(storeDelegate, processBeforeInsertion(record));
-                        return;
-                    }
-
-                    // We found a local dupe.
-                    trace("Incoming record " + record.guid + " dupes to local record " + existingRecord.guid);
-
-                    // Populate more expensive fields prior to reconciling.
-                    existingRecord = transformRecord(existingRecord);
-                    Record toStore = reconcileRecords(record, existingRecord, lastRemoteRetrieval, lastLocalRetrieval);
-
-                    if (toStore == null) {
-                        Logger.debug(LOG_TAG, "Reconciling returned null. Not inserting a record.");
-                        return;
-                    }
-
-                    // TODO: pass in timestamps?
-
-                    // This section of code will only run if the incoming record is not
-                    // marked as deleted, so we never want to just drop ours from the database:
-                    // we need to upload it later.
-                    // Allowing deleted items to propagate through `replace` allows normal
-                    // logging and side-effects to occur, and is no more expensive than simply
-                    // bumping the modified time.
-                    Logger.debug(LOG_TAG, "Replacing existing " + existingRecord.guid +
-                            (toStore.deleted ? " with deleted record " : " with record ") +
-                            toStore.guid);
-                    Record replaced = replace(toStore, existingRecord);
-
-                    // Note that we don't track records here; deciding that is the job
-                    // of reconcileRecords.
-                    Logger.debug(LOG_TAG, "Calling delegate callback with guid " + replaced.guid +
-                            "(" + replaced.androidID + ")");
-                    storeDelegate.onRecordStoreReconciled(replaced.guid);
-                    storeDelegate.onRecordStoreSucceeded(replaced.guid);
-
                 } catch (MultipleRecordsForGuidException e) {
                     Logger.error(LOG_TAG, "Multiple records returned for given guid: " + record.guid);
                     storeDelegate.onRecordStoreFailed(e, record.guid);
@@ -322,16 +348,6 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
                 }
             }
         };
-    }
-
-    private Record replace(Record newRecord, Record existingRecord) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
-        Record toStore = prepareRecord(newRecord);
-
-        // newRecord should already have suitable androidID and guid.
-        dbHelper.update(existingRecord.guid, toStore);
-        updateBookkeeping(toStore);
-        Logger.debug(LOG_TAG, "replace() returning record " + toStore.guid);
-        return toStore;
     }
 
     /**

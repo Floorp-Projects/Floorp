@@ -5,6 +5,8 @@
 package org.mozilla.gecko.sync;
 
 import android.content.Context;
+import android.net.Uri;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,6 +14,7 @@ import android.support.annotation.VisibleForTesting;
 
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
@@ -29,6 +32,7 @@ import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.stage.AndroidBrowserBookmarksServerSyncStage;
 import org.mozilla.gecko.sync.stage.AndroidBrowserHistoryServerSyncStage;
 import org.mozilla.gecko.sync.stage.AndroidBrowserRecentHistoryServerSyncStage;
@@ -1002,7 +1006,7 @@ public class GlobalSession implements HttpResponseObserver {
     this.resetStagesByEnum(Stage.getNamedStages());
   }
 
-  public void resetStages(Collection<GlobalSyncStage> stages) {
+  private void resetStages(Collection<GlobalSyncStage> stages) {
     for (GlobalSyncStage stage : stages) {
       try {
         Logger.info(LOG_TAG, "Resetting " + stage);

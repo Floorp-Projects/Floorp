@@ -9,6 +9,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.background.common.log.Logger;
@@ -23,6 +24,7 @@ import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabase;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 
@@ -97,6 +99,26 @@ public class FxAccountDeletedService extends IntentService {
     Logger.info(LOG_TAG, "Deleting the entire Fennec clients database and non-local tabs");
     FennecTabsRepository.deleteNonLocalClientsAndTabs(context);
 
+    // For data types which support versioning, we need to reset versions to ensure
+    // that all records are be processed whenever sync is connected in the future.
+    // See BrowserProvider's call method implementation for details.
+    final Uri authorityWithSync = BrowserContract.AUTHORITY_URI
+            .buildUpon()
+            .appendQueryParameter(BrowserContractHelpers.PARAM_IS_SYNC, "true")
+            .appendQueryParameter(BrowserContractHelpers.PARAM_RESET_VERSIONS_FOR_ALL_TYPES, "true")
+            .build();
+    final Bundle result = context.getContentResolver().call(
+            authorityWithSync,
+            BrowserContract.METHOD_RESET_RECORD_VERSIONS,
+            authorityWithSync.toString(),
+            null
+    );
+    if (result == null) {
+      Logger.error(LOG_TAG, "Failed to get a result bundle while resetting record versions.");
+    } else {
+      final int recordsChanged = (int) result.getSerializable(BrowserContract.METHOD_RESULT);
+      Logger.info(LOG_TAG, "Reset versions for records: " + recordsChanged);
+    }
 
     // Clear Firefox Sync client tables.
     try {

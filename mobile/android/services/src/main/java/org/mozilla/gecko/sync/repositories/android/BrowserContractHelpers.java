@@ -78,6 +78,8 @@ public class BrowserContractHelpers extends BrowserContract {
     SyncColumns.DATE_CREATED,
     SyncColumns.DATE_MODIFIED,
     SyncColumns.IS_DELETED,
+    VersionColumns.LOCAL_VERSION,
+    VersionColumns.SYNC_VERSION,
     Bookmarks.TITLE,
     Bookmarks.URL,
     Bookmarks.TYPE,

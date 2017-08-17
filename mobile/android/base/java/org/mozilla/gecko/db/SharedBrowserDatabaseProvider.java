@@ -113,7 +113,7 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
             cursor.close();
         }
 
-        int deletedExpired = db.delete(tableName, inClause, null);
+        final int deletedExpired = db.delete(tableName, inClause, null);
         Log.d(LOGTAG, "Dropped old deleted records: " + deletedExpired);
 
         // Only bookmarks currently support sync versioning. See Bug 1364644.
@@ -122,12 +122,12 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
         }
 
         // For data types which support sync versioning, we can safely drop all deleted records
-        // that were never uploaded. Other clients don't know about them, and don't need to know
-        // that we deleted them locally.
-        int deletedNew = db.delete(tableName,
+        // that were never uploaded as far as our current Sync constellation is concerned.
+        // Other clients don't know about them, and don't need to know that we deleted them locally.
+        final int deletedNew = db.delete(tableName,
                 SyncColumns.IS_DELETED + " = 1 " +
-                " AND " +
-                VersionColumns.SYNC_VERSION + " = 0",
+                        " AND " +
+                        VersionColumns.SYNC_VERSION + " = 0",
                 null
         );
         Log.d(LOGTAG, "Dropped non-synced deleted records: " + deletedNew);
