@@ -86,7 +86,7 @@ public:
   CSS_PROP(name_, id_, method_, flags_, pref_, X, X, X, X, X)
 #include "nsCSSPropList.h"
 
-#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)  \
+#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_)  \
   CSS_PROP(X, propid_, aliasmethod_, X, pref_, X, X, X, X, X)
 #include "nsCSSPropAliasList.h"
 #undef CSS_PROP_ALIAS

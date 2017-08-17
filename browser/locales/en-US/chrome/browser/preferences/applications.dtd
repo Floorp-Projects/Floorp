@@ -11,7 +11,4 @@
 <!ENTITY  actionColumn2.label     "Action">
 <!ENTITY  actionColumn2.accesskey "A">
 
-<!ENTITY  focusSearch1.key        "f">
-<!ENTITY  focusSearch2.key        "k">
-
 <!ENTITY  filter2.emptytext        "Search file types or applications">

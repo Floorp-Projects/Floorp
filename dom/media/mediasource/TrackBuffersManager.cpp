@@ -10,11 +10,10 @@
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StateMirroring.h"
-#include "SourceBufferResource.h"
 #include "SourceBuffer.h"
-#include "WebMDemuxer.h"
+#include "SourceBufferResource.h"
 #include "SourceBufferTask.h"
+#include "WebMDemuxer.h"
 
 #ifdef MOZ_FMP4
 #include "MP4Demuxer.h"

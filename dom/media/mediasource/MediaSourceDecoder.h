@@ -7,27 +7,17 @@
 #ifndef MOZILLA_MEDIASOURCEDECODER_H_
 #define MOZILLA_MEDIASOURCEDECODER_H_
 
-#include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
-#include "nsCOMPtr.h"
-#include "nsError.h"
 #include "MediaDecoder.h"
-#include "MediaFormatReader.h"
-
-class nsIStreamListener;
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 
 class MediaDecoderStateMachine;
-class SourceBufferDecoder;
-class TrackBuffer;
-enum MSRangeRemovalAction : uint8_t;
 class MediaSourceDemuxer;
 class MediaSourceResource;
 
 namespace dom {
 
-class HTMLMediaElement;
 class MediaSource;
 
 } // namespace dom

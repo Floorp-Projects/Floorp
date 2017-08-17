@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
+%filter substitution
+%define identityPopupExpanderWidth 38px
 
 /* Hide all conditional elements by default. */
 :-moz-any([when-connection],[when-mixedcontent],[when-ciphers],[when-loginforms]) {
@@ -126,7 +128,7 @@
   margin: 0;
   padding: 4px 0;
   min-width: auto;
-  width: var(--identity-popup-expander-width);
+  width: @identityPopupExpanderWidth@;
   border-style: none;
   -moz-appearance: none;
   background: url("chrome://browser/skin/arrow-left.svg") center no-repeat;
@@ -194,7 +196,7 @@
   word-wrap: break-word;
   /* 1em + 2em + 24px is #identity-popup-security-content padding
    * 30em is .panel-mainview:not([panelid="PanelUI-popup"]) width */
-  max-width: calc(30rem - 3rem - 24px - var(--identity-popup-expander-width))
+  max-width: calc(30rem - 3rem - 24px - @identityPopupExpanderWidth@);
 }
 
 .identity-popup-warning-gray {

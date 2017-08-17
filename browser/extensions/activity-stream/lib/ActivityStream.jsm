@@ -81,6 +81,18 @@ const PREFS_CONFIG = new Map([
     title: "Show the Top Sites section on the New Tab page",
     value: true
   }],
+  ["impressionStats.clicked", {
+    title: "GUIDs of clicked Top stories items",
+    value: "[]"
+  }],
+  ["impressionStats.blocked", {
+    title: "GUIDs of blocked Top stories items",
+    value: "[]"
+  }],
+  ["impressionStats.pocketed", {
+    title: "GUIDs of pocketed Top stories items",
+    value: "[]"
+  }],
   ["telemetry", {
     title: "Enable system error and usage data collection",
     value: true,

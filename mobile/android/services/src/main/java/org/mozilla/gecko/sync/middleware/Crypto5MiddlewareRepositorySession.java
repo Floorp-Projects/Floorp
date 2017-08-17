@@ -135,9 +135,8 @@ public class Crypto5MiddlewareRepositorySession extends MiddlewareRepositorySess
   }
 
   @Override
-  public void fetchSince(long timestamp,
-                         RepositorySessionFetchRecordsDelegate delegate) {
-    inner.fetchSince(timestamp, makeUnwrappingDelegate(delegate));
+  public void fetchModified(RepositorySessionFetchRecordsDelegate delegate) {
+    inner.fetchModified(makeUnwrappingDelegate(delegate));
   }
 
   @Override

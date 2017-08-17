@@ -1266,7 +1266,7 @@ nsComputedDOMStyle::DoGetColumnGap()
 
   const nsStyleColumn* column = StyleColumn();
   if (column->mColumnGap.GetUnit() == eStyleUnit_Normal) {
-    val->SetAppUnits(StyleFont()->mFont.size);
+    val->SetIdent(eCSSKeyword_normal);
   } else {
     SetValueToCoord(val, StyleColumn()->mColumnGap, true);
   }

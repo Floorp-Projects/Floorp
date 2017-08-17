@@ -172,10 +172,7 @@
     </richlistbox>
 
     <keyset>
-      <!-- Disable the findbar because it doesn't work properly.
-           Remove this keyset once bug 1094240 ("disablefastfind" attribute
-           broken in e10s mode) is fixed. -->
-      <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand=";"/>
+      <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
     </keyset>
 
     <html:a class="help-button" target="_blank" aria-label="&helpButton2.label;">&helpButton2.label;</html:a>

@@ -1836,6 +1836,32 @@ class PackageFrontend(MachCommandBase):
                     return True
                 return super(DownloadRecord, self).validate()
 
+        class ArtifactRecord(DownloadRecord):
+            def __init__(self, task_id, artifact_name):
+                cot = cache._download_manager.session.get(
+                    get_artifact_url(task_id, 'public/chainOfTrust.json.asc'))
+                digest = algorithm = None
+                if cot.status_code == 200:
+                    # The file is GPG-signed, but we don't care about validating
+                    # that. Instead of parsing the PGP signature, we just take
+                    # the one line we're interested in, which starts with a `{`.
+                    data = {}
+                    for l in cot.content.splitlines():
+                        if l.startswith('{'):
+                            try:
+                                data = json.loads(l)
+                                break
+                            except Exception:
+                                pass
+                for algorithm, digest in (data.get('artifacts', {})
+                                              .get(artifact_name, {}).items()):
+                    pass
+
+                name = os.path.basename(artifact_name)
+                super(ArtifactRecord, self).__init__(
+                    get_artifact_url(task_id, artifact_name), name,
+                    None, digest, algorithm, unpack=True)
+
         records = OrderedDict()
         downloaded = []
 
@@ -1904,10 +1930,8 @@ class PackageFrontend(MachCommandBase):
                              'named `{build}`')
                     return 1
 
-                name = os.path.basename(artifact_name)
-                records[name] = DownloadRecord(
-                    get_artifact_url(task_id, artifact_name),
-                    name, None, None, None, unpack=True)
+                record = ArtifactRecord(task_id, artifact_name)
+                records[record.filename] = record
 
         # Handle the list of files of the form path@task-id on the command
         # line. Each of those give a path to an artifact to download.
@@ -1917,9 +1941,8 @@ class PackageFrontend(MachCommandBase):
                          'Expected a list of files of the form path@task-id')
                 return 1
             name, task_id = f.rsplit('@', 1)
-            records[os.path.basename(name)] = DownloadRecord(
-                get_artifact_url(task_id, name), os.path.basename(name),
-                None, None, None, unpack=True)
+            record = ArtifactRecord(task_id, name)
+            records[record.filename] = record
 
         for record in records.itervalues():
             self.log(logging.INFO, 'artifact', {'name': record.basename},

@@ -154,7 +154,7 @@ public class BatchingUploaderTest {
         }
 
         @Override
-        public void onRecordStoreReconciled(String guid) {
+        public void onRecordStoreReconciled(String guid, Integer newVersion) {
         }
 
         @Override

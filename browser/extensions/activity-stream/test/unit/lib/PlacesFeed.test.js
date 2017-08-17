@@ -88,8 +88,10 @@ describe("PlacesFeed", () => {
       assert.calledWith(global.NewTabUtils.activityStreamLinks.blockURL, {url: "apple.com"});
     });
     it("should bookmark a url on BOOKMARK_URL", () => {
-      feed.onAction({type: at.BOOKMARK_URL, data: "pear.com"});
-      assert.calledWith(global.NewTabUtils.activityStreamLinks.addBookmark, "pear.com");
+      const data = {url: "pear.com", title: "A pear"};
+      const _target = {browser: {ownerGlobal() {}}};
+      feed.onAction({type: at.BOOKMARK_URL, data, _target});
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.addBookmark, data, _target.browser);
     });
     it("should delete a bookmark on DELETE_BOOKMARK_BY_ID", () => {
       feed.onAction({type: at.DELETE_BOOKMARK_BY_ID, data: "g123kd"});

@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.db;
 
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.GeckoProfile;
@@ -206,6 +208,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(Bookmarks.DATE_MODIFIED, Bookmarks.DATE_MODIFIED);
         map.put(Bookmarks.GUID, Bookmarks.GUID);
         map.put(Bookmarks.IS_DELETED, Bookmarks.IS_DELETED);
+        map.put(Bookmarks.LOCAL_VERSION, Bookmarks.LOCAL_VERSION);
+        map.put(Bookmarks.SYNC_VERSION, Bookmarks.SYNC_VERSION);
         BOOKMARKS_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // History
@@ -709,6 +713,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         int match = URI_MATCHER.match(uri);
         long id = -1;
 
+        if (values != null
+                && (values.containsKey(BrowserContract.VersionColumns.LOCAL_VERSION)
+                || values.containsKey(BrowserContract.VersionColumns.SYNC_VERSION))) {
+            throw new IllegalArgumentException("Can not manually set record versions.");
+        }
+
         switch (match) {
             case BOOKMARKS: {
                 trace("Insert on BOOKMARKS: " + uri);
@@ -787,9 +797,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     @SuppressWarnings("fallthrough")
     @Override
-    public int updateInTransaction(Uri uri, ContentValues values, String selection,
+    public int updateInTransaction(Uri uri, @Nullable ContentValues values, @Nullable String selection,
             String[] selectionArgs) {
         trace("Calling update in transaction on URI: " + uri);
+
+        if (values != null
+                && (values.containsKey(BrowserContract.VersionColumns.LOCAL_VERSION)
+                || values.containsKey(BrowserContract.VersionColumns.SYNC_VERSION))) {
+            throw new IllegalArgumentException("Can not manually update record versions.");
+        }
 
         int match = URI_MATCHER.match(uri);
         int updated = 0;
@@ -816,7 +832,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case BOOKMARKS_PARENT: {
                 debug("Update on BOOKMARKS_PARENT: " + uri);
                 beginWrite(db);
-                updated = updateBookmarkParents(db, values, selection, selectionArgs);
+                updated = updateBookmarkParents(db, uri, values, selection, selectionArgs);
                 break;
             }
 
@@ -1581,7 +1597,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
      * Construct an update expression that will modify the parents of any records
      * that match.
      */
-    private int updateBookmarkParents(SQLiteDatabase db, ContentValues values, String selection, String[] selectionArgs) {
+    private int updateBookmarkParents(SQLiteDatabase db, Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         if (selectionArgs != null) {
             trace("Updating bookmark parents of " + selection + " (" + selectionArgs[0] + ")");
         } else {
@@ -1592,7 +1608,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                        " SELECT DISTINCT " + Bookmarks.PARENT +
                        " FROM " + TABLE_BOOKMARKS +
                        " WHERE " + selection + " )";
-        return db.update(TABLE_BOOKMARKS, values, where, selectionArgs);
+
+        final int changed;
+        if (!isCallerSync(uri)) {
+            changed = updateAndIncrementLocalVersion(db, uri, TABLE_BOOKMARKS, values, where, selectionArgs);
+        } else {
+            changed = db.update(TABLE_BOOKMARKS, values, where, selectionArgs);
+        }
+
+        return changed;
     }
 
     private long insertBookmark(Uri uri, ContentValues values) {
@@ -1625,6 +1649,27 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         String url = values.getAsString(Bookmarks.URL);
 
+        // It's important that insertions from sync do not trigger another sync to start; we mark
+        // records inserted from sync as "synced", except if explicitly given a starting localVersion.
+        if (isCallerSync(uri)) {
+            // Sync might ask to insert record as modified if it modified incoming record and needs
+            // it to be re-uploaded.
+            if (values.containsKey(Bookmarks.PARAM_INSERT_FROM_SYNC_AS_MODIFIED)
+                    && values.getAsBoolean(Bookmarks.PARAM_INSERT_FROM_SYNC_AS_MODIFIED)) {
+                values.put(Bookmarks.LOCAL_VERSION, 2);
+            } else {
+                values.put(Bookmarks.LOCAL_VERSION, 1);
+            }
+            values.put(Bookmarks.SYNC_VERSION, 1);
+
+            values.remove(Bookmarks.PARAM_INSERT_FROM_SYNC_AS_MODIFIED);
+
+         // Insertions from Fennec are always set as (1,0) to trigger an upload of these records.
+        } else {
+            values.put(Bookmarks.LOCAL_VERSION, 1);
+            values.put(Bookmarks.SYNC_VERSION, 0);
+        }
+
         debug("Inserting bookmark in database with URL: " + url);
         final SQLiteDatabase db = getWritableDatabase(uri);
         beginWrite(db);
@@ -1648,14 +1693,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // The ContentValues should have parentId, or the insertion above would fail because of
         // database schema foreign key constraint.
         final long parentId = values.getAsLong(Bookmarks.PARENT);
-        db.update(TABLE_BOOKMARKS,
-                  parentValues,
-                  Bookmarks._ID + " = ?",
-                  new String[] { String.valueOf(parentId) });
+        final String parentSelection = Bookmarks._ID + " = ?";
+        final String[] parentSelectionArgs = new String[] { String.valueOf(parentId) };
+        updateAndIncrementLocalVersion(db, uri, TABLE_BOOKMARKS, parentValues, parentSelection, parentSelectionArgs);
 
         return insertedId;
     }
-
 
     private int updateOrInsertBookmark(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
@@ -1703,14 +1746,22 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         beginWrite(db);
 
-        int updated = db.update(TABLE_BOOKMARKS, values, inClause, null);
+        int updated;
+        // If the update is coming from Sync, check if it explicitly asked to increment localVersion.
+        if (!isCallerSync(uri) || shouldIncrementLocalVersionFromSync(uri)) {
+            updated = updateAndIncrementLocalVersion(db, uri, TABLE_BOOKMARKS, values, inClause, null);
+        } else {
+            updated = db.update(TABLE_BOOKMARKS, values, inClause, null);
+        }
+
         if (updated == 0) {
             trace("No update on URI: " + uri);
             return updated;
         }
 
+        // If the update is coming from Sync, we're done.
+        // Sync will handle timestamps of parent records on its own.
         if (isCallerSync(uri)) {
-            // Sync will handle timestamps on its own, so we don't perform the update here.
             return updated;
         }
 
@@ -1726,9 +1777,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         parentValues.put(Bookmarks.DATE_MODIFIED, lastModified);
 
         // Bump old/new parent's lastModified timestamps.
-        updated += db.update(TABLE_BOOKMARKS, parentValues,
-                  Bookmarks._ID + " in (?, ?)",
-                  new String[] { String.valueOf(oldParentId), String.valueOf(newParentId) });
+        final String parentSelection = Bookmarks._ID + " IN (?, ?)";
+        final String[] parentSelectionArgs = new String[] { String.valueOf(oldParentId), String.valueOf(newParentId) };
+        updated += updateAndIncrementLocalVersion(db, uri, TABLE_BOOKMARKS, parentValues, parentSelection, parentSelectionArgs);
 
         return updated;
     }
@@ -2253,14 +2304,16 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     }
 
     /**
-     * The maximum number of variables in one SQL statement is {@link DBUtils#SQLITE_MAX_VARIABLE_NUMBER},
-     * Base on {@link #bulkDeleteByHistoryGUID}, we chunk the list to prevent 'too many SQL variables' in one statement.
+     * Chunk our deletes around {@link DBUtils#SQLITE_MAX_VARIABLE_NUMBER} so that we don't stumble
+     * into 'too many SQL variables' error.
      */
-    private int bulkDeleteByBookmarkGUIDs(SQLiteDatabase db, List<String> bookmarkGUIDs, String table, String bookmarkGUIDColumn) {
-        // Due to SQLite's maximum variable limitation, we need to chunk our delete statements.
-        // For example, if there were 1200 GUIDs, this will perform 2 delete statements.
-        int deleted = 0;
+    private int bulkDeleteByBookmarkGUIDs(SQLiteDatabase db, Uri uri, List<String> bookmarkGUIDs) {
+        // Due to SQLite's maximum variable limitation, we need to chunk our update statements.
+        // For example, if there were 1200 GUIDs, this will perform 2 update statements.
+        int updated = 0;
 
+        // To be sync-friendly, we mark records as deleted while nulling-out actual values.
+        // In Desktop Sync parlance, this is akin to storing a tombstone.
         final ContentValues values = new ContentValues();
         values.put(Bookmarks.IS_DELETED, 1);
         values.put(Bookmarks.POSITION, 0);
@@ -2272,7 +2325,6 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         values.putNull(Bookmarks.TAGS);
         values.putNull(Bookmarks.FAVICON_ID);
 
-        // Bump the lastModified timestamp for sync to know to update bookmark records.
         values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
 
         // Leave space for variables in values.
@@ -2285,14 +2337,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 chunkEnd = bookmarkGUIDs.size();
             }
             final List<String> chunkGUIDs = bookmarkGUIDs.subList(chunkStart, chunkEnd);
-            deleted += db.update(table,
-                                 values,
-                                 DBUtils.computeSQLInClause(chunkGUIDs.size(), bookmarkGUIDColumn),
-                                 chunkGUIDs.toArray(new String[chunkGUIDs.size()])
-            );
+            final String selection = DBUtils.computeSQLInClause(chunkGUIDs.size(), Bookmarks.GUID);
+            final String[] selectionArgs = chunkGUIDs.toArray(new String[chunkGUIDs.size()]);
+            updated += updateAndIncrementLocalVersion(db, uri, TABLE_BOOKMARKS, values, selection, selectionArgs);
         }
 
-        return deleted;
+        return updated;
     }
 
     private int deleteVisits(Uri uri, String selection, String[] selectionArgs) {
@@ -2329,14 +2379,14 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // NB: this code allows for multi-parent bookmarks.
         final ContentValues parentValues = new ContentValues();
         parentValues.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
-        changed += updateBookmarkParents(db, parentValues, selection, selectionArgs);
+        changed += updateBookmarkParents(db, uri, parentValues, selection, selectionArgs);
 
-        // Finally, deleted everything that needs to be deleted all at once.
+        // Finally, delete everything that needs to be deleted all at once.
         // We need to compute list of all bookmarks and their descendants first.
         // We calculate our deletion tree based on 'selection', and so above queries do not null-out
         // any of the bookmark fields. This will be done in `bulkDeleteByBookmarkGUIDs`.
         final List<String> guids = getBookmarkDescendantGUIDs(db, selection, selectionArgs);
-        changed += bulkDeleteByBookmarkGUIDs(db, guids, TABLE_BOOKMARKS, Bookmarks.GUID);
+        changed += bulkDeleteByBookmarkGUIDs(db, uri, guids);
 
         try {
             cleanUpSomeDeletedRecords(uri, TABLE_BOOKMARKS);
@@ -2476,6 +2526,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                 // If anything went wrong during insertion, we know that changes were rolled back.
                 // Inform our caller that we have failed.
+                } catch (RuntimeException e) {
+                    throw e;
                 } catch (Exception e) {
                     Log.e(LOGTAG, "Unexpected error while bulk inserting history", e);
                     result.putSerializable(BrowserContract.METHOD_RESULT, e);
@@ -2489,8 +2541,50 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                     // If anything went wrong during insertion, we know that changes were rolled back.
                     // Inform our caller that we have failed.
+                } catch (RuntimeException e) {
+                    throw e;
                 } catch (Exception e) {
                     Log.e(LOGTAG, "Unexpected error while bulk inserting remote clients", e);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, e);
+                }
+                break;
+            case BrowserContract.METHOD_UPDATE_SYNC_VERSIONS:
+                try {
+                    final Uri uri = Uri.parse(uriArg);
+                    final SQLiteDatabase db = getWritableDatabase(uri);
+                    final int changed = bulkUpdateSyncVersions(db, uri, extras);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, changed);
+                    // If anything went wrong during bulk operation, let our caller know.
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Unexpected error while bulk updating sync versions", e);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, e);
+                }
+                break;
+            case BrowserContract.METHOD_UPDATE_BY_GUID_ASSERTING_LOCAL_VERSION:
+                try {
+                    final Uri uri = Uri.parse(uriArg);
+                    final SQLiteDatabase db = getWritableDatabase(uri);
+                    final boolean didUpdate = updateBookmarkByGuidAssertingLocalVersion(uri, db, extras);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, didUpdate);
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Unexpected error while resetting record versioning", e);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, e);
+                }
+                break;
+            case BrowserContract.METHOD_RESET_RECORD_VERSIONS:
+                try {
+                    final Uri uri = Uri.parse(uriArg);
+                    final SQLiteDatabase db = getWritableDatabase(uri);
+                    final int changed = bulkResetRecordVersions(uri, db);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, changed);
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Unexpected error while resetting record versioning", e);
                     result.putSerializable(BrowserContract.METHOD_RESULT, e);
                 }
                 break;
@@ -2499,6 +2593,190 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
 
         return result;
+    }
+
+    private int bulkResetRecordVersions(Uri uri, SQLiteDatabase db) {
+        // Whenever sync is disconnected, we need to reset our record versioning to ensure that
+        // upon connecting sync in the future, all versioned records will be processed correctly.
+
+        // We reset versions to a basic "sync needed and record doesn't exist elsewhere" state:
+        // - localVersion=1
+        // - syncVersion=0
+        // This allows Fennec to DELETE tombstones from the database whenever it runs cleanup logic.
+
+        // Whenever we encounter node-reassignment, or otherwise need to re-upload our records, records
+        // are reset to a "sync needed and record exists elsewhere" state:
+        // - localVersion=2
+        // - syncVersion=1
+
+        // syncVersion>0 indicates that a record was synced with the current Firefox Account at some point.
+        // This is important for tombstones: we don't want to DELETE them from the database if a record
+        // might exist elsewhere in the Sync constellation.
+        // It's not possible to sign into another Firefox Account without first explicitly signing out
+        // of the current one, and so when user changes accounts, we'll reset versions to (1,0), allowing
+        // tombstones to be dropped from the database.
+
+        // Our operational requirement for relationship between versions is:
+        // localVersion >= syncVersion && localVersion != 0
+
+        // We want to signify that this operation is very much tied to Sync. We force clients to
+        // explicitly call out that they're sync-related, and crash for any non-sync callers (i.e. Fennec proper).
+        if (!isCallerSync(uri)) {
+            throw new IllegalStateException("Attempted resetting sync versions outside of Sync context");
+        }
+
+        // Resetting versions is currently supported only either explicitly for bookmarks, or wild-card
+        // style for all record types, where what "all" means is defined by this method.
+        final int match = URI_MATCHER.match(uri);
+        if (match != BOOKMARKS
+                && TextUtils.isEmpty(uri.getQueryParameter(BrowserContract.PARAM_RESET_VERSIONS_FOR_ALL_TYPES))) {
+            throw new IllegalStateException("Attempting resetting sync versions for non-versioned record types");
+        }
+
+        final ContentValues resetVersionsValues = new ContentValues();
+
+        if (!TextUtils.isEmpty(uri.getQueryParameter(BrowserContract.PARAM_RESET_VERSIONS_TO_SYNCED))) {
+            resetVersionsValues.put(BrowserContract.VersionColumns.LOCAL_VERSION, 2);
+            resetVersionsValues.put(BrowserContract.VersionColumns.SYNC_VERSION, 1);
+        } else {
+            resetVersionsValues.put(BrowserContract.VersionColumns.LOCAL_VERSION, 1);
+            resetVersionsValues.put(BrowserContract.VersionColumns.SYNC_VERSION, 0);
+        }
+
+        // Reset versions for data types which support versioning. Currently that's just bookmarks.
+        // See Bug 1383894.
+        return db.update(TABLE_BOOKMARKS, resetVersionsValues, null, null);
+    }
+
+    private boolean updateBookmarkByGuidAssertingLocalVersion(Uri uri, SQLiteDatabase db, Bundle extras) {
+        final int match = URI_MATCHER.match(uri);
+        switch (match) {
+            case BOOKMARKS:
+                break;
+            default:
+                throw new IllegalStateException("Attempted to update sync versions for a non-versioned repository: " + uri);
+        }
+
+        final String table = TABLE_BOOKMARKS;
+        final String guid = extras.getString(BrowserContract.SyncColumns.GUID);
+        final int expectedLocalVersion = extras.getInt(BrowserContract.VersionColumns.LOCAL_VERSION, -1);
+
+        if (guid == null || expectedLocalVersion == -1) {
+            throw new IllegalArgumentException("Missing guid or expectedLocalVersion.");
+        }
+
+        final ContentValues values = extras.getParcelable(BrowserContract.METHOD_PARAM_DATA);
+        if (values == null) {
+            throw new IllegalArgumentException("Missing update values for a record in " + table);
+        }
+
+        // We want SQL's BEGIN IMMEDIATE, and to obtain a RESERVED lock and block others
+        // from writing.
+        // This guarantees that our record won't change between us reading its current version
+        // and making changes.
+        // We don't care if others are reading the database at the same time.
+        // We'll still implicitly acquire an EXCLUSIVE lock right when we'll be executing
+        // an UPDATE, but at least that time window will be less than if we acquired it
+        // for running SELECT as well.
+        // Note that SELECTs overlapping with UPDATES have undefined behaviour as far as
+        // data visibility goes across transactions on the same connection, and so this might lead
+        // to strange behaviour elsewhere in rare circumstances. Obtaining an EXCLUSIVE lock would
+        // prevent this at a cost of concurrency - overlapping queries will get SQL_BUSY; since
+        // we'll be running this query quite a bit during a sync that cost might be great, and so we
+        // prefer the "optimistic" approach.
+        db.beginTransactionNonExclusive();
+        try {
+            final Cursor c = db.query(table, new String[] {BrowserContract.VersionColumns.LOCAL_VERSION}, BrowserContract.SyncColumns.GUID + " = ?", new String[]{guid}, null, null, null);
+            final int localVersionCol = c.getColumnIndexOrThrow(BrowserContract.VersionColumns.LOCAL_VERSION);
+            try {
+                // Missing record. Let the caller know we failed to update!
+                if (!c.moveToFirst()) {
+                    return false;
+                }
+
+                if (c.isNull(localVersionCol)) {
+                    throw new IllegalArgumentException("Missing localVersion for a record in " + table);
+                }
+                final int localVersion = c.getInt(localVersionCol);
+                // Versions don't match, meaning that assertion fails and we can't proceed
+                // with an update. Let the caller know what the new localVersion is.
+                if (expectedLocalVersion != localVersion) {
+                    return false;
+                }
+
+                if (c.moveToNext()) {
+                    // Somehow we got more than one record, which is problematic when we're
+                    // trying to compare versions. Callers are supposed to be checking against this, so just throw.
+                    throw new IllegalArgumentException("Got more than 1 record matching provided guid in table " + table);
+                }
+            } finally {
+                c.close();
+            }
+
+            // Version assertion passed, we may proceed to update the record.
+            final int changed = updateBookmarks(uri, values, Bookmarks.GUID + " = ?", new String[] {guid});
+            if (changed != 1) {
+                // We expected only one record to be updated, and this is getting stranger still!
+                // This indicates that multiple records matched our selection criteria, but we should
+                // have checked against this above and thrown already.
+                // "This should never happen."
+                throw new IllegalStateException("Expected to modify 1, but modified " + changed + " records in " + table);
+            }
+            db.setTransactionSuccessful();
+            return true;
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    private int bulkUpdateSyncVersions(SQLiteDatabase db, Uri uri, Bundle data) {
+        if (!isCallerSync(uri)) {
+            throw new IllegalStateException("Attempted updating sync versions outside of Sync");
+        }
+
+        final int match = URI_MATCHER.match(uri);
+        switch (match) {
+            case BOOKMARKS:
+                break;
+            default:
+                throw new IllegalStateException("Attempted to update sync versions for a non-versioned repository: " + uri);
+        }
+
+        final String table = TABLE_BOOKMARKS;
+
+        // The fact that this is a ConcurrentHashMap is a by-product of how VersionedMiddlewareRepository
+        // works. We own both sides of this interface, and so it's not really worth the effort to
+        // re-wrap data in, say, a list of ContentValues.
+        final ConcurrentHashMap<String, Integer> syncVersionsForGuids = uncheckedCastSerializableToHashMap(
+                data.getSerializable(BrowserContract.METHOD_PARAM_DATA)
+        );
+
+        final String updateSqlStatement = "UPDATE " + table +
+                " SET " + BrowserContract.VersionColumns.SYNC_VERSION +
+                " = ?" +
+                " WHERE " + BrowserContract.SyncColumns.GUID + " = ?";
+        final SQLiteStatement compiledStatement = db.compileStatement(updateSqlStatement);
+
+        beginWrite(db);
+
+        int changed = 0;
+        try {
+            for (String guid : syncVersionsForGuids.keySet()) {
+                final int syncVersion = syncVersionsForGuids.get(guid);
+
+                compiledStatement.clearBindings();
+                compiledStatement.bindLong(1, syncVersion); // NB: 1-based index.
+                compiledStatement.bindString(2, guid);
+                changed += compiledStatement.executeUpdateDelete();
+            }
+
+            markWriteSuccessful(db);
+
+        } finally {
+            endWrite(db);
+        }
+
+        return changed;
     }
 
     private void bulkReplaceRemoteDevices(final Uri uri, @NonNull Bundle dataBundle) {
@@ -2730,6 +3008,11 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return totalInserted;
     }
 
+    @SuppressWarnings("unchecked")
+    private ConcurrentHashMap<String, Integer> uncheckedCastSerializableToHashMap(Serializable serializable) {
+        return (ConcurrentHashMap<String, Integer>) serializable;
+    }
+
     @Override
     public ContentProviderResult[] applyBatch (ArrayList<ContentProviderOperation> operations)
         throws OperationApplicationException {
@@ -2832,4 +3115,37 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         return null;
     }
+
+    /**
+     * A note on record version tracking, applicable to repositories that support it.
+     * (bookmarks as of Bug 1364644; same logic must apply to any record types in the future)
+     * - localVersion is always incremented by 1. No other change is allowed.
+     * - any modifications from Fennec increment localVersion.
+     * - modifications from Sync do not increment localVersion, unless an explicit flag is passed in.
+     * - syncVersion is updated "in bulk", and set to some value that's expected to be <= localVersion.
+     * - localVersion and syncVersion may jump backwards to (1,0) - always on reset, which happens
+     *   on sync disconnect, or to (2,1) - always on "reset to synced", when local repositories are
+     *   reset after node-reassignment, syncID change, etc.
+     */
+    private static int updateAndIncrementLocalVersion(SQLiteDatabase db, Uri uri, String table, ContentValues values, String selection, String[] selectionArgs) {
+        // Strongly assert that this operation is happening outside of Sync or was explicitly asked for.
+        // We prefer to crash rather than risk introducing sync loops.
+        if (isCallerSync(uri) && !shouldIncrementLocalVersionFromSync(uri)) {
+            throw new IllegalStateException("Attempted to increment change counter from within a Sync");
+        }
+
+        // Strongly assert that our caller isn't trying to set a localVersion themselves!
+        if (values.containsKey(BrowserContract.VersionColumns.LOCAL_VERSION)) {
+            throw new IllegalStateException("Attempted manually setting local version");
+        }
+
+        final ContentValues incrementLocalVersion = new ContentValues();
+        incrementLocalVersion.put(BrowserContract.VersionColumns.LOCAL_VERSION, BrowserContract.VersionColumns.LOCAL_VERSION + " + 1");
+
+        final ContentValues[] valuesAndVisits = { values,  incrementLocalVersion };
+        UpdateOperation[] ops = new UpdateOperation[]{ UpdateOperation.ASSIGN, UpdateOperation.EXPRESSION };
+
+        return DBUtils.updateArrays(db, table, valuesAndVisits, ops, selection, selectionArgs);
+    }
+
 }

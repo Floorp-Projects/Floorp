@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/main.js");
@@ -103,6 +104,7 @@ const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "weave:service:sync:error",
                          "weave:service:sync:start",
                          "weave:service:resyncs-finished",
+                         "places-browser-init-complete",
                         ];
 
 var TPS = {
@@ -131,6 +133,7 @@ var TPS = {
   shouldValidatePasswords: false,
   shouldValidateForms: false,
   _windowsUpDeferred: PromiseUtils.defer(),
+  _placesInitDeferred: PromiseUtils.defer(),
 
   _init: function TPS__init() {
     this.delayAutoSync();
@@ -181,6 +184,10 @@ var TPS = {
           this._windowsUpDeferred.resolve();
           break;
 
+        case "places-browser-init-complete":
+          this._placesInitDeferred.resolve();
+          break;
+
         case "weave:service:setup-complete":
           this._setupComplete = true;
 
@@ -200,7 +207,11 @@ var TPS = {
           if (this._syncErrors === 0) {
             Logger.logInfo("Sync error; retrying...");
             this._syncErrors++;
-            Utils.nextTick(this.RunNextTestAction, this);
+            Utils.nextTick(() => {
+              this.RunNextTestAction().catch(err => {
+                this.DumpError("RunNextTestActionFailed", err);
+              });
+            });
           } else {
             this._triggeredSync = false;
             this.DumpError("Sync error; aborting test");
@@ -277,7 +288,9 @@ var TPS = {
     if (!this.operations_pending) {
       this._currentAction++;
       Utils.nextTick(function() {
-        this.RunNextTestAction();
+        this.RunNextTestAction().catch(err => {
+          this.DumpError("RunNextTestActionFailed", err);
+        });
       }, this);
     }
   },
@@ -367,7 +380,7 @@ var TPS = {
     Logger.logPass("executing action " + action.toUpperCase() + " on pref");
   },
 
-  HandleForms(data, action) {
+  async HandleForms(data, action) {
     this.shouldValidateForms = true;
     for (let datum of data) {
       Logger.logInfo("executing action " + action.toUpperCase() +
@@ -375,17 +388,17 @@ var TPS = {
       let formdata = new FormData(datum, this._usSinceEpoch);
       switch (action) {
         case ACTION_ADD:
-          Async.promiseSpinningly(formdata.Create());
+          await formdata.Create();
           break;
         case ACTION_DELETE:
-          Async.promiseSpinningly(formdata.Remove());
+          await formdata.Remove();
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue(Async.promiseSpinningly(formdata.Find()),
+          Logger.AssertTrue(await formdata.Find(),
                             "form data not found");
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertTrue(!Async.promiseSpinningly(formdata.Find()),
+          Logger.AssertTrue(!await formdata.Find(),
                             "form data found, but it shouldn't be present");
           break;
         default:
@@ -396,7 +409,7 @@ var TPS = {
                    " on formdata");
   },
 
-  HandleHistory(entries, action) {
+  async HandleHistory(entries, action) {
     try {
       for (let entry of entries) {
         Logger.logInfo("executing action " + action.toUpperCase() +
@@ -498,7 +511,9 @@ var TPS = {
                    " on addons");
   },
 
-  HandleBookmarks(bookmarks, action) {
+  async HandleBookmarks(bookmarks, action) {
+    // wait for default bookmarks to be created.
+    await this._placesInitDeferred.promise;
     this.shouldValidateBookmarks = true;
     try {
       let items = [];
@@ -511,7 +526,7 @@ var TPS = {
 
           if (last_item_pos != -1)
             bookmark.last_item_pos = last_item_pos;
-          let item_id = -1;
+          let itemGuid = null;
 
           if (action != ACTION_MODIFY && action != ACTION_DELETE)
             Logger.logInfo("executing action " + action.toUpperCase() +
@@ -527,18 +542,18 @@ var TPS = {
             placesItem = new Separator(bookmark);
 
           if (action == ACTION_ADD) {
-            item_id = placesItem.Create();
+            itemGuid = await placesItem.Create();
           } else {
-            item_id = placesItem.Find();
+            itemGuid = await placesItem.Find();
             if (action == ACTION_VERIFY_NOT) {
-              Logger.AssertTrue(item_id == -1,
+              Logger.AssertTrue(itemGuid == null,
                 "places item exists but it shouldn't: " +
                 JSON.stringify(bookmark));
             } else
-              Logger.AssertTrue(item_id != -1, "places item not found", true);
+              Logger.AssertTrue(itemGuid, "places item not found", true);
           }
 
-          last_item_pos = placesItem.GetItemIndex();
+          last_item_pos = await placesItem.GetItemIndex();
           items.push(placesItem);
         }
       }
@@ -549,11 +564,11 @@ var TPS = {
                          " on bookmark " + JSON.stringify(item));
           switch (action) {
             case ACTION_DELETE:
-              item.Remove();
+              await item.Remove();
               break;
             case ACTION_MODIFY:
               if (item.updateProps != null)
-                item.Update();
+                await item.Update();
               break;
           }
         }
@@ -562,7 +577,7 @@ var TPS = {
       Logger.logPass("executing action " + action.toUpperCase() +
         " on bookmarks");
     } catch (e) {
-      DumpBookmarks();
+      await DumpBookmarks();
       throw (e);
     }
   },
@@ -584,22 +599,22 @@ var TPS = {
     Logger.logInfo("mozmill setTest: " + obj.name);
   },
 
-  Cleanup() {
+  async Cleanup() {
     try {
-      this.WipeServer();
+      await this.WipeServer();
     } catch (ex) {
       Logger.logError("Failed to wipe server: " + Log.exceptionStr(ex));
     }
     try {
-      if (Authentication.isLoggedIn) {
+      if (await Authentication.isLoggedIn()) {
         // signout and wait for Sync to completely reset itself.
         Logger.logInfo("signing out");
-        let waiter = this.createEventWaiter("weave:service:start-over:finish");
-        Authentication.signOut();
-        waiter();
+        let waiter = this.promiseObserver("weave:service:start-over:finish");
+        await Authentication.signOut();
+        await waiter;
         Logger.logInfo("signout complete");
       }
-      Authentication.deleteEmail(this.config.fx_account.username);
+      await Authentication.deleteEmail(this.config.fx_account.username);
     } catch (e) {
       Logger.logError("Failed to sign out: " + Log.exceptionStr(e));
     }
@@ -608,7 +623,7 @@ var TPS = {
   /**
    * Use Sync's bookmark validation code to see if we've corrupted the tree.
    */
-  ValidateBookmarks() {
+  async ValidateBookmarks() {
 
     let getServerBookmarkState = async () => {
       let bookmarkEngine = Weave.Service.engineManager.get("bookmarks");
@@ -628,15 +643,15 @@ var TPS = {
     let serverRecordDumpStr;
     try {
       Logger.logInfo("About to perform bookmark validation");
-      let clientTree = Async.promiseSpinningly(PlacesUtils.promiseBookmarksTree("", {
+      let clientTree = await (PlacesUtils.promiseBookmarksTree("", {
         includeItemIds: true
       }));
-      let serverRecords = Async.promiseSpinningly(getServerBookmarkState());
+      let serverRecords = await getServerBookmarkState();
       // We can't wait until catch to stringify this, since at that point it will have cycles.
       serverRecordDumpStr = JSON.stringify(serverRecords);
 
       let validator = new BookmarkValidator();
-      let {problemData} = Async.promiseSpinningly(validator.compareServerWithClient(serverRecords, clientTree));
+      let {problemData} = await validator.compareServerWithClient(serverRecords, clientTree);
 
       for (let {name, count} of problemData.getSummary()) {
         // Exclude mobile showing up on the server hackily so that we don't
@@ -663,15 +678,15 @@ var TPS = {
     Logger.logInfo("Bookmark validation finished");
   },
 
-  ValidateCollection(engineName, ValidatorType) {
+  async ValidateCollection(engineName, ValidatorType) {
     let serverRecordDumpStr;
     let clientRecordDumpStr;
     try {
       Logger.logInfo(`About to perform validation for "${engineName}"`);
       let engine = Weave.Service.engineManager.get(engineName);
       let validator = new ValidatorType(engine);
-      let serverRecords = Async.promiseSpinningly(validator.getServerItems(engine));
-      let clientRecords = Async.promiseSpinningly(validator.getClientItems());
+      let serverRecords = await validator.getServerItems(engine);
+      let clientRecords = await validator.getClientItems();
       try {
         // This substantially improves the logs for addons while not making a
         // substantial difference for the other two
@@ -690,7 +705,7 @@ var TPS = {
         // as above
         serverRecordDumpStr = "<Cyclic value>";
       }
-      let { problemData } = Async.promiseSpinningly(validator.compareClientWithServer(clientRecords, serverRecords));
+      let { problemData } = await validator.compareClientWithServer(clientRecords, serverRecords);
       for (let { name, count } of problemData.getSummary()) {
         if (count) {
           Logger.logInfo(`Validation problem: "${name}": ${JSON.stringify(problemData[name])}`);
@@ -723,22 +738,21 @@ var TPS = {
     return this.ValidateCollection("addons", AddonValidator);
   },
 
-  RunNextTestAction() {
+  async RunNextTestAction() {
     try {
-      if (this._currentAction >=
-          this._phaselist[this._currentPhase].length) {
+      if (this._currentAction >= this._phaselist[this._currentPhase].length) {
         // Run necessary validations and then finish up
         if (this.shouldValidateBookmarks) {
-          this.ValidateBookmarks();
+          await this.ValidateBookmarks();
         }
         if (this.shouldValidatePasswords) {
-          this.ValidatePasswords();
+          await this.ValidatePasswords();
         }
         if (this.shouldValidateForms) {
-          this.ValidateForms();
+          await this.ValidateForms();
         }
         if (this.shouldValidateAddons) {
-          this.ValidateAddons();
+          await this.ValidateAddons();
         }
         // Force this early so that we run the validation and detect missing pings
         // *before* we start shutting down, since if we do it after, the python
@@ -762,7 +776,7 @@ var TPS = {
       let phase = this._phaselist[this._currentPhase];
       let action = phase[this._currentAction];
       Logger.logInfo("starting action: " + action[0].name);
-      action[0].apply(this, action.slice(1));
+      await action[0].apply(this, action.slice(1));
 
       // if we're in an async operation, don't continue on to the next action
       if (this._operations_pending)
@@ -781,7 +795,7 @@ var TPS = {
       }
       return;
     }
-    this.RunNextTestAction();
+    await this.RunNextTestAction();
   },
 
   _getFileRelativeToSourceRoot(testFileURL, relativePath) {
@@ -793,7 +807,7 @@ var TPS = {
       .parent // <root>/services
       .parent // <root>
       ;
-    root.appendRelativePath(relativePath);
+    root.appendRelativePath(OS.Path.normalize(relativePath));
     return root;
   },
 
@@ -853,7 +867,7 @@ var TPS = {
    * @param  options
    *         Object defining addition run-time options.
    */
-  RunTestPhase(file, phase, logpath, options) {
+  async RunTestPhase(file, phase, logpath, options) {
     try {
       let settings = options || {};
 
@@ -881,7 +895,8 @@ var TPS = {
       // Always give Sync an extra tick to initialize. If we waited for the
       // service:ready event, this is required to ensure all handlers have
       // executed.
-      Utils.nextTick(this._executeTestPhase.bind(this, file, phase, settings));
+      await Async.promiseYield();
+      await this._executeTestPhase(file, phase, settings);
     } catch (e) {
       this.DumpError("RunTestPhase failed", e);
     }
@@ -892,7 +907,7 @@ var TPS = {
    *
    * This is called by RunTestPhase() after the environment is validated.
    */
-  _executeTestPhase: function _executeTestPhase(file, phase, settings) {
+  async _executeTestPhase(file, phase, settings) {
     try {
       this.config = JSON.parse(prefs.getCharPref("tps.config"));
       // parse the test file
@@ -942,9 +957,8 @@ var TPS = {
 
       // start processing the test actions
       this._currentAction = 0;
-      this._windowsUpDeferred.promise.then(() => {
-        this.RunNextTestAction();
-      });
+      await this._windowsUpDeferred.promise;
+      await this.RunNextTestAction();
     } catch (e) {
       this.DumpError("_executeTestPhase failed", e);
     }
@@ -1053,100 +1067,96 @@ var TPS = {
   },
 
   /**
-   * Return an object that when called, will block until the named event
-   * is observed. This is similar to waitForEvent, although is typically safer
-   * if you need to do some other work that may make the event fire.
+   * Returns a promise that resolves when a specific observer notification is
+   * resolved. This is similar to the various waitFor* functions, although is
+   * typically safer if you need to do some other work that may make the event
+   * fire.
    *
    * eg:
    *    doSomething(); // causes the event to be fired.
-   *    waitForEvent("something");
+   *    await promiseObserver("something");
    * is risky as the call to doSomething may trigger the event before the
-   * waitForEvent call is made. Contrast with:
+   * promiseObserver call is made. Contrast with:
    *
-   *   let waiter = createEventWaiter("something"); // does *not* block.
+   *   let waiter = promiseObserver("something");
    *   doSomething(); // causes the event to be fired.
-   *   waiter(); // will return as soon as the event fires, even if it fires
-   *             // before this function is called.
+   *   await waiter;  // will return as soon as the event fires, even if it fires
+   *                  // before this function is called.
    *
    * @param aEventName
    *        String event to wait for.
    */
-  createEventWaiter(aEventName) {
-    Logger.logInfo("Setting up wait for " + aEventName + "...");
-    let cb = Async.makeSpinningCallback();
-    Svc.Obs.add(aEventName, cb);
-    return function() {
-      try {
-        cb.wait();
-      } finally {
-        Svc.Obs.remove(aEventName, cb);
-        Logger.logInfo(aEventName + " observed!");
+  promiseObserver(aEventName) {
+    return new Promise(resolve => {
+      Logger.logInfo("Setting up wait for " + aEventName + "...");
+      let handler = () => {
+        Logger.logInfo("Observed " + aEventName);
+        Svc.Obs.remove(aEventName, handler);
+        resolve();
       }
-    }
+      Svc.Obs.add(aEventName, handler);
+    });
   },
 
 
   /**
-   * Synchronously wait for the named event to be observed.
+   * Wait for the named event to be observed.
    *
-   * When the event is observed, the function will wait an extra tick before
-   * returning.
-   *
-   * Note that in general, you should probably use createEventWaiter unless you
+   * Note that in general, you should probably use promiseObserver unless you
    * are 100% sure that the event being waited on can only be sent after this
    * call adds the listener.
    *
    * @param aEventName
    *        String event to wait for.
    */
-  waitForEvent: function waitForEvent(aEventName) {
-    this.createEventWaiter(aEventName)();
+  async waitForEvent(aEventName) {
+    await this.promiseObserver(aEventName);
   },
 
   /**
    * Waits for Sync to logged in before returning
    */
-  waitForSetupComplete: function waitForSetup() {
+  async waitForSetupComplete() {
     if (!this._setupComplete) {
-      this.waitForEvent("weave:service:setup-complete");
+      await this.waitForEvent("weave:service:setup-complete");
     }
   },
 
   /**
    * Waits for Sync to be finished before returning
    */
-  waitForSyncFinished: function TPS__waitForSyncFinished() {
+  async waitForSyncFinished() {
     if (this._syncActive) {
-      this.waitForEvent("weave:service:resyncs-finished");
+      await this.waitForEvent("weave:service:resyncs-finished");
     }
   },
 
   /**
    * Waits for Sync to start tracking before returning.
    */
-  waitForTracking: function waitForTracking() {
+  async waitForTracking() {
     if (!this._isTracking) {
-      this.waitForEvent("weave:engine:start-tracking");
+      await this.waitForEvent("weave:engine:start-tracking");
     }
   },
 
   /**
    * Login on the server
    */
-  Login: function Login(force) {
-    if (Authentication.isLoggedIn && !force) {
+  async Login(force) {
+    if ((await Authentication.isLoggedIn()) && !force) {
       return;
     }
 
     // This might come during Authentication.signIn
     this._triggeredSync = true;
     Logger.logInfo("Setting client credentials and login.");
-    Authentication.signIn(this.config.fx_account);
-    this.waitForSetupComplete();
+    await Authentication.signIn(this.config.fx_account);
+    await this.waitForSetupComplete();
     Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status OK");
-    this.waitForTracking();
+    await this.waitForTracking();
     // We might get an initial sync at login time - let that complete.
-    this.waitForSyncFinished();
+    await this.waitForSyncFinished();
   },
 
   /**
@@ -1156,10 +1166,10 @@ var TPS = {
    *        Type of wipe to perform (resetClient, wipeClient, wipeRemote)
    *
    */
-  Sync: function TPS__Sync(wipeAction) {
+  async Sync(wipeAction) {
     if (this._syncActive) {
       Logger.logInfo("WARNING: Sync currently active! Waiting, before triggering another");
-      this.waitForSyncFinished();
+      await this.waitForSyncFinished();
     }
     Logger.logInfo("Executing Sync" + (wipeAction ? ": " + wipeAction : ""));
 
@@ -1178,24 +1188,24 @@ var TPS = {
 
     this._triggeredSync = true;
     this.StartAsyncOperation();
-    Async.promiseSpinningly(Weave.Service.sync());
+    await Weave.Service.sync();
     Logger.logInfo("Sync is complete");
   },
 
-  WipeServer: function TPS__WipeServer() {
+  async WipeServer() {
     Logger.logInfo("Wiping data from server.");
 
-    this.Login(false);
-    Async.promiseSpinningly(Weave.Service.login());
-    Async.promiseSpinningly(Weave.Service.wipeServer());
+    await this.Login(false);
+    await Weave.Service.login();
+    await Weave.Service.wipeServer();
   },
 
   /**
    * Action which ensures changes are being tracked before returning.
    */
-  EnsureTracking: function EnsureTracking() {
-    this.Login(false);
-    this.waitForTracking();
+  async EnsureTracking() {
+    await this.Login(false);
+    await this.waitForTracking();
   }
 };
 
@@ -1221,20 +1231,20 @@ var Addons = {
 };
 
 var Bookmarks = {
-  add: function Bookmarks__add(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_ADD);
+  async add(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_ADD);
   },
-  modify: function Bookmarks__modify(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_MODIFY);
+  async modify(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_MODIFY);
   },
-  delete: function Bookmarks__delete(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_DELETE);
+  async delete(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_DELETE);
   },
-  verify: function Bookmarks__verify(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_VERIFY);
+  async verify(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_VERIFY);
   },
-  verifyNot: function Bookmarks__verifyNot(bookmarks) {
-    TPS.HandleBookmarks(bookmarks, ACTION_VERIFY_NOT);
+  async verifyNot(bookmarks) {
+    await TPS.HandleBookmarks(bookmarks, ACTION_VERIFY_NOT);
   },
   skipValidation() {
     TPS.shouldValidateBookmarks = false;

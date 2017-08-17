@@ -37,7 +37,7 @@ function is(a, b, msg) {
   </body>
 </html>
 */
-var iframeContents = "data:text/html;charset=utf-8,<html><body onload%3D'parent.SimpleTest.waitForFocus(function(){document.body.requestFullscreen();});'><iframe id%3D'inner-frame'><%2Fiframe><%2Fbody><%2Fhtml>";
+var iframeContents = "<html><body onload='parent.SimpleTest.waitForFocus(function(){document.body.requestFullscreen();});'><iframe id='inner-frame'></iframe></body></html>";
 
 var iframe = null;
 var outOfDocElement = null;
@@ -79,7 +79,7 @@ function exit1(event) {
   iframe.allowFullscreen = true;
   addFullscreenChangeContinuation("enter", enter2);
   document.body.appendChild(iframe);
-  iframe.src = iframeContents;
+  iframe.srcdoc = iframeContents;
 }
 
 function enter2(event) {

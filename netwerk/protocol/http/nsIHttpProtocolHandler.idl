@@ -93,6 +93,16 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_ON_MODIFY_REQUEST_TOPIC "http-on-modify-request"
 
 /**
+ * Before an HTTP connection to the server is created, this observer topic is
+ * notified.  This observer happens after HSTS upgrades, etc. are set, providing
+ * access to the full set of request headers. The observer of this topic can
+ * choose to set any additional headers for this request before the request is
+ * actually sent to the server. The "subject" of the notification is the
+ * nsIHttpChannel instance.
+ */
+#define NS_HTTP_ON_BEFORE_CONNECT_TOPIC "http-on-before-connect"
+
+/**
  * After an HTTP server response is received, this observer topic is notified.
  * The observer of this topic can interrogate the response.  The "subject" of
  * the notification is the nsIHttpChannel instance.

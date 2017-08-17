@@ -90,7 +90,8 @@ var gSync = {
   },
 
   init() {
-    if (this._initialized) {
+    // Bail out if we're already initialized or for hidden windows.
+    if (this._initialized || window.location.href != getBrowserURL()) {
       return;
     }
 

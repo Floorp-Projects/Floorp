@@ -1746,7 +1746,8 @@ VRSystemManagerOculus::StopVibrateHaptic(uint32_t aControllerIdx)
 {
   // The session is available after VRDisplay is created
   // at GetHMDs().
-  if (!mSession || !mSession->IsTrackingReady()) {
+  if (!mSession || !mSession->IsTrackingReady() ||
+      (aControllerIdx >= mOculusController.Length())) {
     return;
   }
 

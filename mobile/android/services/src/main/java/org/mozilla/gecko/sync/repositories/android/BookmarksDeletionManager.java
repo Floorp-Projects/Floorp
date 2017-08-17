@@ -48,8 +48,7 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDeleg
 public class BookmarksDeletionManager {
   private static final String LOG_TAG = "BookmarkDelete";
 
-  private final AndroidBrowserBookmarksDataAccessor dataAccessor;
-  private RepositorySessionStoreDelegate delegate;
+  private final BookmarksDataAccessor dataAccessor;
 
   private final int flushThreshold;
 
@@ -72,22 +71,12 @@ public class BookmarksDeletionManager {
    *        When this many non-folder records have been stored for deletion,
    *        an incremental flush occurs.
    */
-  public BookmarksDeletionManager(AndroidBrowserBookmarksDataAccessor dataAccessor, int flushThreshold) {
+  public BookmarksDeletionManager(BookmarksDataAccessor dataAccessor, int flushThreshold) {
     this.dataAccessor = dataAccessor;
     this.flushThreshold = flushThreshold;
   }
 
-  /**
-   * Set the delegate to use for callbacks.
-   * If not invoked, no callbacks will be submitted.
-   *
-   * @param delegate a delegate, which should already be a delayed delegate.
-   */
-  public void setDelegate(RepositorySessionStoreDelegate delegate) {
-    this.delegate = delegate;
-  }
-
-  public void deleteRecord(String guid, boolean isFolder, String parentGUID) {
+  public void deleteRecord(RepositorySessionStoreDelegate delegate, String guid, boolean isFolder, String parentGUID) {
     if (guid == null) {
       Logger.warn(LOG_TAG, "Cannot queue deletion of record with no GUID.");
       return;
@@ -113,7 +102,7 @@ public class BookmarksDeletionManager {
 
     if (nonFolders.add(guid)) {
       if (++nonFolderCount >= flushThreshold) {
-        deleteNonFolders();
+        deleteNonFolders(delegate);
       }
     }
   }
@@ -121,9 +110,9 @@ public class BookmarksDeletionManager {
   /**
    * Flush deletions that can be easily taken care of right now.
    */
-  public void incrementalFlush() {
+  public void incrementalFlush(RepositorySessionStoreDelegate delegate) {
     // Yes, this means we only bump when we finish, not during an incremental flush.
-    deleteNonFolders();
+    deleteNonFolders(delegate);
   }
 
   /**
@@ -135,9 +124,9 @@ public class BookmarksDeletionManager {
    * @throws NullCursorException
    * @return a set of IDs to untrack. Will not be null.
    */
-  public Set<String> flushAll(long orphanDestination, long now) throws NullCursorException {
+  public Set<String> flushAll(RepositorySessionStoreDelegate delegate, long orphanDestination, long now) throws NullCursorException {
     Logger.debug(LOG_TAG, "Doing complete flush of deleted items. Moving orphans to " + orphanDestination);
-    deleteNonFolders();
+    deleteNonFolders(delegate);
 
     // Find out which parents *won't* be deleted, and thus need to have their
     // modified times bumped.
@@ -196,7 +185,7 @@ public class BookmarksDeletionManager {
   /**
    * Flush non-folder deletions. This can be called at any time.
    */
-  private void deleteNonFolders() {
+  private void deleteNonFolders(RepositorySessionStoreDelegate delegate) {
     if (nonFolderCount == 0) {
       Logger.debug(LOG_TAG, "No non-folders to delete.");
       return;

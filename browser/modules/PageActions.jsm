@@ -392,43 +392,46 @@ this.PageActions = {
  *                An object of name-value pairs.  Each pair will be added as
  *                an attribute to DOM nodes created for this action.
  *         @param onBeforePlacedInWindow (function, optional)
- *                Called before the action is placed in the window. Passed the
- *                following arguments:
+ *                Called before the action is placed in the window:
+ *                onBeforePlacedInWindow(window)
  *                * window: The window that the action will be placed in.
  *         @param onCommand (function, optional)
  *                Called when the action is clicked, but only if it has neither
- *                a subview nor an iframe.  Passed the following arguments:
+ *                a subview nor an iframe:
+ *                onCommand(event, buttonNode)
  *                * event: The triggering event.
  *                * buttonNode: The button node that was clicked.
  *         @param onIframeHiding (function, optional)
- *                Called when the action's iframe is hiding. Passed the
- *                following arguments:
+ *                Called when the action's iframe is hiding:
+ *                onIframeHiding(iframeNode, parentPanelNode)
  *                * iframeNode: The iframe.
  *                * parentPanelNode: The panel node in which the iframe is
  *                  shown.
  *         @param onIframeHidden (function, optional)
- *                Called when the action's iframe is hidden. Passed the
- *                following arguments:
+ *                Called when the action's iframe is hidden:
+ *                onIframeHidden(iframeNode, parentPanelNode)
  *                * iframeNode: The iframe.
  *                * parentPanelNode: The panel node in which the iframe is
  *                  shown.
  *         @param onIframeShown (function, optional)
- *                Called when the action's iframe is shown to the user.  Passed
- *                the following arguments:
+ *                Called when the action's iframe is shown to the user:
+ *                onIframeShown(iframeNode, parentPanelNode)
  *                * iframeNode: The iframe.
  *                * parentPanelNode: The panel node in which the iframe is
  *                  shown.
  *         @param onPlacedInPanel (function, optional)
  *                Called when the action is added to the page action panel in
- *                a browser window.  Passed the following arguments:
+ *                a browser window:
+ *                onPlacedInPanel(buttonNode)
  *                * buttonNode: The action's node in the page action panel.
  *         @param onPlacedInUrlbar (function, optional)
  *                Called when the action is added to the urlbar in a browser
- *                window.  Passed the following arguments:
+ *                window:
+ *                onPlacedInUrlbar(buttonNode)
  *                * buttonNode: The action's node in the urlbar.
  *         @param onShowingInPanel (function, optional)
- *                Called when a browser window's page action panel is showing.
- *                Passed the following arguments:
+ *                Called when a browser window's page action panel is showing:
+ *                onShowingInPanel(buttonNode)
  *                * buttonNode: The action's node in the page action panel.
  *         @param shownInUrlbar (bool, optional)
  *                Pass true to show the action in the urlbar, false otherwise.
@@ -583,14 +586,26 @@ Action.prototype = {
   },
 
   /**
+   * Performs the command for an action.  If the action has an onCommand
+   * handler, then it's called.  If the action has a subview or iframe, then a
+   * panel is opened, displaying the subview or iframe.
+   *
+   * @param  browserWindow (DOM window, required)
+   *         The browser window in which to perform the action.
+   */
+  doCommand(browserWindow) {
+    browserPageActions(browserWindow).doCommandForAction(this);
+  },
+
+  /**
    * Call this when before placing the action in the window.
    *
-   * @param  window (DOM window, required)
-   *         The window the action will be placed in.
+   * @param  browserWindow (DOM window, required)
+   *         The browser window the action will be placed in.
    */
-  onBeforePlacedInWindow(window) {
+  onBeforePlacedInWindow(browserWindow) {
     if (this._onBeforePlacedInWindow) {
-      this._onBeforePlacedInWindow(window);
+      this._onBeforePlacedInWindow(browserWindow);
     }
   },
 
@@ -714,12 +729,13 @@ this.PageActions.Action = Action;
  *                information on these objects' properties.
  *         @param onPlaced (function, optional)
  *                Called when the subview is added to its parent panel in a
- *                browser window.  Passed the following arguments:
+ *                browser window:
+ *                onPlaced(panelViewNode)
  *                * panelViewNode: The panelview node represented by this
  *                  Subview.
  *         @param onShowing (function, optional)
- *                Called when the subview is showing in a browser window.
- *                Passed the following arguments:
+ *                Called when the subview is showing in a browser window:
+ *                onShowing(panelViewNode)
  *                * panelViewNode: The panelview node represented by this
  *                  Subview.
  */
@@ -785,8 +801,8 @@ this.PageActions.Subview = Subview;
  *         @param disabled (bool, required)
  *                Pass true to disable the button.
  *         @param onCommand (function, optional)
- *                Called when the button is clicked.  Passed the following
- *                arguments:
+ *                Called when the button is clicked:
+ *                onCommand(event, buttonNode)
  *                * event: The triggering event.
  *                * buttonNode: The node that was clicked.
  *         @param shortcut (string, optional)

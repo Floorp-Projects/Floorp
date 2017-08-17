@@ -17,6 +17,11 @@
 #include <float.h>
 
 namespace mozilla {
+  struct AudioChunk;
+}
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioChunk)
+
+namespace mozilla {
 
 template<typename T>
 class SharedChannelArrayBuffer : public ThreadSharedObject {
@@ -221,17 +226,19 @@ struct AudioChunk {
   }
 
   template<typename T>
-  const nsTArray<const T*>& ChannelData()
+  const nsTArray<const T*>& ChannelData() const
   {
     MOZ_ASSERT(AudioSampleTypeToFormat<T>::Format == mBufferFormat);
-    return *reinterpret_cast<nsTArray<const T*>*>(&mChannelData);
+    return *reinterpret_cast<const AutoTArray<const T*,GUESS_AUDIO_CHANNELS>*>
+      (&mChannelData);
   }
 
   PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
 
   StreamTime mDuration; // in frames within the buffer
   RefPtr<ThreadSharedObject> mBuffer; // the buffer object whose lifetime is managed; null means data is all zeroes
-  nsTArray<const void*> mChannelData; // one pointer per channel; empty if and only if mBuffer is null
+  // one pointer per channel; empty if and only if mBuffer is null
+  AutoTArray<const void*,GUESS_AUDIO_CHANNELS> mChannelData;
   float mVolume; // volume multiplier to apply (1.0f if mBuffer is nonnull)
   SampleFormat mBufferFormat; // format of frames in mBuffer (only meaningful if mBuffer is nonnull)
 #ifdef MOZILLA_INTERNAL_API

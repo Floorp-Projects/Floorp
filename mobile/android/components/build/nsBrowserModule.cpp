@@ -10,8 +10,6 @@
 #ifdef MOZ_ANDROID_HISTORY
 #include "nsDocShellCID.h"
 #include "nsAndroidHistory.h"
-#define NS_ANDROIDHISTORY_CID \
-  {0xCCAA4880, 0x44DD, 0x40A7, {0xA1, 0x3F, 0x61, 0x56, 0xFC, 0x88, 0x2C, 0x0B}}
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsShellService)
