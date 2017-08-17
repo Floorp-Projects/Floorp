@@ -12,8 +12,8 @@ from distutils.spawn import find_executable
 
 from mozboot.util import get_state_dir
 
+from ..cli import BaseTryParser
 from ..tasks import generate_tasks
-from ..templates import TemplateParser
 from ..vcs import VCSHelper
 
 try:
@@ -81,7 +81,8 @@ fzf_header_shortcuts = {
 }
 
 
-class FuzzyParser(TemplateParser):
+class FuzzyParser(BaseTryParser):
+    name = 'fuzzy'
     arguments = [
         [['-q', '--query'],
          {'metavar': 'STR',
@@ -106,7 +107,6 @@ class FuzzyParser(TemplateParser):
                   "defaults to latest parameters.yml from mozilla-central",
           }],
     ]
-
     templates = ['artifact']
 
 
