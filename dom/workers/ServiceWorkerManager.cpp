@@ -209,12 +209,8 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
       aRegistration->GetActive()->GetActivatedTime();
   }
 
-  // This is a workaround before we update SERVICEWORKERREGISTRAR_VERSION and
-  // the related implementation.
-  ServiceWorkerUpdateViaCache uvc = aRegistration->GetUpdateViaCache();
-  aData.loadFlags() =
-    uvc == ServiceWorkerUpdateViaCache::None ? nsIRequest::LOAD_NORMAL
-                                             : nsIRequest::VALIDATE_ALWAYS;
+  aData.updateViaCache() =
+    static_cast<uint32_t>(aRegistration->GetUpdateViaCache());
 
   aData.lastUpdateTime() = aRegistration->GetLastUpdateTime();
 
@@ -2053,17 +2049,15 @@ ServiceWorkerManager::LoadRegistration(
     return;
   }
 
-  // This is a workaround before we update SERVICEWORKERREGISTRAR_VERSION and
-  // the related implementation.
-  nsLoadFlags flags = aRegistration.loadFlags();
-  ServiceWorkerUpdateViaCache uvc =
-    flags == nsIRequest::VALIDATE_ALWAYS ? ServiceWorkerUpdateViaCache::Imports
-                                         : ServiceWorkerUpdateViaCache::All;
-
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(principal, aRegistration.scope());
   if (!registration) {
-    registration = CreateNewRegistration(aRegistration.scope(), principal, uvc);
+    registration =
+      CreateNewRegistration(
+        aRegistration.scope(),
+        principal,
+        static_cast<ServiceWorkerUpdateViaCache>(aRegistration.updateViaCache())
+      );
   } else {
     // If active worker script matches our expectations for a "current worker",
     // then we are done. Since scripts with the same URL might have different
@@ -2079,6 +2073,12 @@ ServiceWorkerManager::LoadRegistration(
 
   registration->SetLastUpdateTime(aRegistration.lastUpdateTime());
 
+  nsLoadFlags importsLoadFlags = nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+  importsLoadFlags |=
+    aRegistration.updateViaCache() == static_cast<uint16_t>(ServiceWorkerUpdateViaCache::None)
+      ? nsIRequest::LOAD_NORMAL
+      : nsIRequest::VALIDATE_ALWAYS;
+
   const nsCString& currentWorkerURL = aRegistration.currentWorkerURL();
   if (!currentWorkerURL.IsEmpty()) {
     registration->SetActive(
@@ -2086,7 +2086,7 @@ ServiceWorkerManager::LoadRegistration(
                             registration->mScope,
                             currentWorkerURL,
                             aRegistration.cacheName(),
-                            nsIChannel::LOAD_BYPASS_SERVICE_WORKER | flags));
+                            importsLoadFlags));
     registration->GetActive()->SetHandlesFetch(aRegistration.currentWorkerHandlesFetch());
     registration->GetActive()->SetInstalledTime(aRegistration.currentWorkerInstalledTime());
     registration->GetActive()->SetActivatedTime(aRegistration.currentWorkerActivatedTime());
