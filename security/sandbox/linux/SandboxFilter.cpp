@@ -446,27 +446,6 @@ private:
     return broker->Chmod(path, mode);
   }
 
-  static intptr_t LinkTrap(ArgsRef aArgs, void *aux) {
-    auto broker = static_cast<SandboxBrokerClient*>(aux);
-    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
-    auto path2 = reinterpret_cast<const char*>(aArgs.args[1]);
-    return broker->Link(path, path2);
-  }
-
-  static intptr_t SymlinkTrap(ArgsRef aArgs, void *aux) {
-    auto broker = static_cast<SandboxBrokerClient*>(aux);
-    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
-    auto path2 = reinterpret_cast<const char*>(aArgs.args[1]);
-    return broker->Symlink(path, path2);
-  }
-
-  static intptr_t RenameTrap(ArgsRef aArgs, void *aux) {
-    auto broker = static_cast<SandboxBrokerClient*>(aux);
-    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
-    auto path2 = reinterpret_cast<const char*>(aArgs.args[1]);
-    return broker->Rename(path, path2);
-  }
-
   static intptr_t MkdirTrap(ArgsRef aArgs, void* aux) {
     auto broker = static_cast<SandboxBrokerClient*>(aux);
     auto path = reinterpret_cast<const char*>(aArgs.args[0]);
@@ -615,14 +594,8 @@ public:
         return Trap(StatAtTrap, mBroker);
       case __NR_chmod:
         return Trap(ChmodTrap, mBroker);
-      case __NR_link:
-        return Trap(LinkTrap, mBroker);
       case __NR_mkdir:
         return Trap(MkdirTrap, mBroker);
-      case __NR_symlink:
-        return Trap(SymlinkTrap, mBroker);
-      case __NR_rename:
-        return Trap(RenameTrap, mBroker);
       case __NR_rmdir:
         return Trap(RmdirTrap, mBroker);
       case __NR_unlink:
@@ -641,10 +614,7 @@ public:
       CASES_FOR_lstat:
       CASES_FOR_fstatat:
       case __NR_chmod:
-      case __NR_link:
       case __NR_mkdir:
-      case __NR_symlink:
-      case __NR_rename:
       case __NR_rmdir:
       case __NR_unlink:
       case __NR_readlink:

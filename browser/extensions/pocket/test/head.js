@@ -12,19 +12,10 @@ function promisePocketEnabled() {
     enabledOnStartup = true;
     return Promise.resolve(true);
   }
-  info( "pocket is not enabled");
-  return new Promise((resolve, reject) => {
-    let listener = {
-      onWidgetAfterCreation(widgetid) {
-        if (widgetid == "pocket-button") {
-          info("pocket-button created");
-          CustomizableUI.removeListener(listener);
-          resolve(false);
-        }
-      }
-    }
-    CustomizableUI.addListener(listener);
-    Services.prefs.setBoolPref("extensions.pocket.enabled", true);
+  info("pocket is not enabled");
+  Services.prefs.setBoolPref("extensions.pocket.enabled", true);
+  return BrowserTestUtils.waitForCondition(() => {
+    return PageActions.actionForID("pocket");
   });
 }
 
@@ -34,26 +25,17 @@ function promisePocketDisabled() {
     info("pocket-button already disabled");
     return Promise.resolve(true);
   }
-  return new Promise((resolve, reject) => {
-    let listener = {
-      onWidgetDestroyed(widgetid) {
-        if (widgetid == "pocket-button") {
-          CustomizableUI.removeListener(listener);
-          info( "pocket-button destroyed");
-          // wait for a full unload of pocket
-          BrowserTestUtils.waitForCondition(() => {
-            return !window.hasOwnProperty("pktUI");
-          }, "pocket properties removed from window").then(() => {
-            resolve(false);
-          })
-        }
-      }
-    }
-    CustomizableUI.addListener(listener);
-    info("reset pocket enabled pref");
-    // testing/profiles/prefs_general.js uses user_pref to disable pocket, set
-    // back to false.
-    Services.prefs.setBoolPref("extensions.pocket.enabled", false);
+  info("reset pocket enabled pref");
+  // testing/profiles/prefs_general.js uses user_pref to disable pocket, set
+  // back to false.
+  Services.prefs.setBoolPref("extensions.pocket.enabled", false);
+  return BrowserTestUtils.waitForCondition(() => {
+    return !PageActions.actionForID("pocket");
+  }).then(() => {
+    // wait for a full unload of pocket
+    return BrowserTestUtils.waitForCondition(() => {
+      return !window.hasOwnProperty("pktUI");
+    });
   });
 }
 

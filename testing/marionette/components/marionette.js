@@ -195,30 +195,27 @@ MarionetteComponent.prototype.observe = function(subject, topic, data) {
   this.logger.debug(`Received observer notification "${topic}"`);
 
   switch (topic) {
+    case "profile-after-change":
+      Services.obs.addObserver(this, "command-line-startup");
+      Services.obs.addObserver(this, "sessionstore-windows-restored");
+
+      prefs.readFromEnvironment(ENV_PRESERVE_PREFS);
+      break;
+
+    // In safe mode the command line handlers are getting parsed after the
+    // safe mode dialog has been closed. To allow Marionette to start
+    // earlier, use the CLI startup observer notification for
+    // special-cased handlers, which gets fired before the dialog appears.
     case "command-line-startup":
       Services.obs.removeObserver(this, topic);
       this.handle(subject);
 
-    case "profile-after-change":
-      // Using sessionstore-windows-restored as the xpcom category doesn't
-      // seem to work, so we wait for that by adding an observer here.
-      Services.obs.addObserver(this, "sessionstore-windows-restored");
-
-      // In safe mode the command line handlers are getting parsed after the
-      // safe mode dialog has been closed. To allow Marionette to start
-      // earlier, register the CLI startup observer notification for
-      // special-cased handlers, which gets fired before the dialog appears.
-      Services.obs.addObserver(this, "command-line-startup");
-
-      prefs.readFromEnvironment(ENV_PRESERVE_PREFS);
-
-      if (this.enabled) {
-        // We want to suppress the modal dialog that's shown
-        // when starting up in safe-mode to enable testing.
-        if (Services.appinfo.inSafeMode) {
-          Services.obs.addObserver(this, "domwindowopened");
-        }
+      // We want to suppress the modal dialog that's shown
+      // when starting up in safe-mode to enable testing.
+      if (this.enabled && Services.appinfo.inSafeMode) {
+        Services.obs.addObserver(this, "domwindowopened");
       }
+
       break;
 
     case "domwindowclosed":

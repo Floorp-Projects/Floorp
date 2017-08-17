@@ -280,10 +280,16 @@
       />
     </hbox>
     <hbox>
+      <!-- Additional radio button added to support CloudStorage - Bug 1357171 -->
+      <radio id="saveToCloud"
+            value="true"
+            hidden="true"/>
+    </hbox>
+    <hbox>
       <radio id="alwaysAsk"
-             value="false"
-             label="&alwaysAskWhere.label;"
-             accesskey="&alwaysAskWhere.accesskey;"/>
+            value="false"
+            label="&alwaysAskWhere.label;"
+            accesskey="&alwaysAskWhere.accesskey;"/>
     </hbox>
   </radiogroup>
 </groupbox>

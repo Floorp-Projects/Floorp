@@ -26,12 +26,17 @@ const GDRIVE_KEY = "GDrive";
 var nsIDropboxFile, nsIGDriveFile;
 
 function run_test() {
+  initPrefs();
   registerFakePath("Home", do_get_file("cloud/"));
   registerFakePath("LocalAppData", do_get_file("cloud/"));
   do_register_cleanup(() => {
     cleanupPrefs();
   });
   run_next_test();
+}
+
+function initPrefs() {
+  Services.prefs.setBoolPref(CLOUD_SERVICES_PREF + "api.enabled", true);
 }
 
 /**
@@ -132,6 +137,7 @@ function cleanupPrefs() {
     Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "storage.key");
     Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "rejected.key");
     Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "interval.prompt");
+    Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "api.enabled");
     Services.prefs.setIntPref("browser.download.folderList", 2);
   } catch (e) {
     do_throw("Failed to cleanup prefs: " + e);

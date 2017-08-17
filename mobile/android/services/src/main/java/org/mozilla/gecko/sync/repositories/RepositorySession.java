@@ -14,7 +14,6 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -28,7 +27,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
  * <li>Populate with saved information by calling {@link #unbundle(RepositorySessionBundle)}.</li>
  * <li>Begin a sync by calling {@link #begin(RepositorySessionBeginDelegate)}. <code>begin()</code>
  *   is an appropriate place to initialize expensive resources.</li>
- * <li>Perform operations such as {@link #fetchSince(long, RepositorySessionFetchRecordsDelegate)} and
+ * <li>Perform operations such as {@link #fetchModified(RepositorySessionFetchRecordsDelegate)} and
  *   {@link #store(Record)}.</li>
  * <li>Finish by calling {@link #finish(RepositorySessionFinishDelegate)}, retrieving and storing
  *   the current bundle.</li>
@@ -49,9 +48,6 @@ public abstract class RepositorySession {
 
   private static final String LOG_TAG = "RepositorySession";
 
-  protected static void trace(String message) {
-    Logger.trace(LOG_TAG, message);
-  }
 
   private SessionStatus status = SessionStatus.UNSTARTED;
   protected Repository repository;
@@ -84,8 +80,12 @@ public abstract class RepositorySession {
     this.repository = repository;
   }
 
-  public abstract void guidsSince(long timestamp, RepositorySessionGuidsSinceDelegate delegate);
-  public abstract void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate);
+  /**
+   * Fetch modified records, letting repositories define what "modified" means to them.
+   *
+   * @param delegate
+   */
+  public abstract void fetchModified(RepositorySessionFetchRecordsDelegate delegate);
   public abstract void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException;
   public abstract void fetchAll(RepositorySessionFetchRecordsDelegate delegate);
 
@@ -337,7 +337,7 @@ public abstract class RepositorySession {
    * @return
    *        A Record instance to apply, or null to apply nothing.
    */
-  protected Record reconcileRecords(final Record remoteRecord,
+  public Record reconcileRecords(final Record remoteRecord,
                                     final Record localRecord,
                                     final long lastRemoteRetrieval,
                                     final long lastLocalRetrieval) {
@@ -357,6 +357,7 @@ public abstract class RepositorySession {
     // * Which of the two records is modified;
     // * Whether they are equal or congruent;
     // * The modified times of each record (interpreted through the lens of clock skew);
+    // * Whether localVersion==syncVersion or localVersion>syncVersion for localRecord
     // * ...
     boolean localIsMoreRecent = localRecord.lastModified > remoteRecord.lastModified;
     Logger.debug(LOG_TAG, "Local record is more recent? " + localIsMoreRecent);

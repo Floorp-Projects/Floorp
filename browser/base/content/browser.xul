@@ -434,7 +434,7 @@
            oncontextmenu="BrowserPageActions.onContextMenu(event);"
            copyURL-title="&copyURLCmd.label;"
            emailLink-title="&emailPageCmd.label;"
-           sendToDevice-title="&sendToDevice.label2;"
+           sendToDevice-title="&sendToDevice.label3;"
            sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;">
       <photonpanelmultiview id="pageActionPanelMultiView"
                             mainViewId="pageActionPanelMainView"

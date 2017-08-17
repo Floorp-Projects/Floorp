@@ -646,13 +646,6 @@
 </groupbox>
 
 <!-- Files and Applications -->
-<keyset data-category="paneGeneral">
-  <!-- Ctrl+f/k focus the search box in the Applications pane.
-       These <key>s have oncommand attributes because of bug 371900. -->
-  <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand=";"/>
-  <key key="&focusSearch2.key;" modifiers="accel" id="focusSearch2" oncommand=";"/>
-</keyset>
-
 <hbox id="filesAndApplicationsCategory"
       class="subcategory"
       hidden="true"
@@ -689,6 +682,10 @@
 #endif
       />
     </hbox>
+    <!-- Additional radio button added to support CloudStorage - Bug 1357171 -->
+    <radio id="saveToCloud"
+          value="true"
+          hidden="true"/>
     <radio id="alwaysAsk"
           value="false"
           label="&alwaysAskWhere.label;"

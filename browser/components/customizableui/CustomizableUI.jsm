@@ -65,7 +65,6 @@ var kVersion = 10;
  * version the button is removed in as the value.  e.g. "pocket-button": 5
  */
 var ObsoleteBuiltinButtons = {
-  "pocket-button": 6
 };
 
 /**
@@ -203,13 +202,6 @@ var CustomizableUIInternal = {
 
     if (AppConstants.MOZ_DEV_EDITION) {
       navbarPlacements.splice(2, 0, "developer-button");
-    }
-
-    // Place this last, when createWidget is called for pocket, it will
-    // append to the toolbar.
-    if (Services.prefs.getBoolPref("extensions.pocket.enabled", false) &&
-        Services.prefs.getBoolPref("extensions.pocket.disablePageAction", false)) {
-      navbarPlacements.push("pocket-button");
     }
 
     this.registerArea(CustomizableUI.AREA_NAVBAR, {

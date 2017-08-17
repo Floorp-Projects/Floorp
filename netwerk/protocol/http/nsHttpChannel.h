@@ -320,6 +320,8 @@ private:
     MOZ_MUST_USE nsresult BeginConnectContinue();
     MOZ_MUST_USE nsresult ContinueBeginConnectWithResult();
     void     ContinueBeginConnect();
+    MOZ_MUST_USE nsresult OnBeforeConnect();
+    void     OnBeforeConnectContinue();
     MOZ_MUST_USE nsresult Connect();
     void     SpeculativeConnect();
     MOZ_MUST_USE nsresult SetupTransaction();

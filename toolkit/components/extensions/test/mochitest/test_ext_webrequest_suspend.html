@@ -78,7 +78,7 @@ add_task(async function test_error_resume() {
 
     let observer = channel => {
       if (channel instanceof Ci.nsIHttpChannel && channel.URI.spec === "http://example.com/") {
-        Services.obs.removeObserver(observer, "http-on-modify-request");
+        Services.obs.removeObserver(observer, "http-on-before-connect");
 
         // Wait until the next tick to make sure this runs after WebRequest observers.
         Promise.resolve().then(() => {
@@ -87,7 +87,7 @@ add_task(async function test_error_resume() {
       }
     };
 
-    Services.obs.addObserver(observer, "http-on-modify-request");
+    Services.obs.addObserver(observer, "http-on-before-connect");
   });
 
   let extension = ExtensionTestUtils.loadExtension({

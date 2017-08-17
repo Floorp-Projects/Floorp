@@ -1046,6 +1046,7 @@ public class Tabs implements BundleEventListener {
      * Opens a new tab and loads either about:home or, if PREFS_HOMEPAGE_FOR_EVERY_NEW_TAB is set,
      * the user's homepage.
      */
+    @RobocopTarget
     public Tab addTab() {
         return loadUrl(getHomepageForNewTab(mAppContext), Tabs.LOADURL_NEW_TAB);
     }

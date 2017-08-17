@@ -6,6 +6,7 @@
 package org.mozilla.gecko.db;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -20,6 +21,7 @@ import org.json.simple.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.background.common.PrefsBranch;
 import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
@@ -34,15 +36,20 @@ import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
+import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 import org.mozilla.gecko.util.FileUtils;
 
 import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
 
+import android.accounts.Account;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
@@ -52,16 +59,17 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 
 // public for robocop testing
-public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
+public class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String LOGTAG = "GeckoBrowserDBHelper";
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 38; // Bug 1386052
+    public static final int DATABASE_VERSION = 39; // Bug 1364644
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -131,6 +139,11 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 Bookmarks.DATE_MODIFIED + " INTEGER," +
                 Bookmarks.GUID + " TEXT NOT NULL," +
                 Bookmarks.IS_DELETED + " INTEGER NOT NULL DEFAULT 0, " +
+
+                // Mark every new record as "needs to be synced" by default.
+                Bookmarks.LOCAL_VERSION + " INTEGER NOT NULL DEFAULT 1, " +
+                Bookmarks.SYNC_VERSION + " INTEGER NOT NULL DEFAULT 0, " +
+
                 "FOREIGN KEY (" + Bookmarks.PARENT + ") REFERENCES " +
                 TABLE_BOOKMARKS + "(" + Bookmarks._ID + ")" +
                 ");");
@@ -2119,6 +2132,122 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createV38CombinedView(db);
     }
 
+    private void upgradeDatabaseFrom38to39(final SQLiteDatabase db) {
+        updateBookmarksTableAddSyncTrackerFields(db);
+    }
+
+    private void updateBookmarksTableAddSyncTrackerFields(final SQLiteDatabase db) {
+        // Perform schema migration. Mark every record as "needs to be synced" by default.
+        db.execSQL("ALTER TABLE " + TABLE_BOOKMARKS +
+                " ADD COLUMN " + Bookmarks.LOCAL_VERSION + " INTEGER NOT NULL DEFAULT 1");
+        db.execSQL("ALTER TABLE " + TABLE_BOOKMARKS +
+                " ADD COLUMN " + Bookmarks.SYNC_VERSION + " INTEGER NOT NULL DEFAULT 0");
+
+        // Perform data migration.
+
+        // We're moving from timestamp-based change tracking for bookmarks to version-based tracking.
+        // As a result of this migration, each bookmark will be marked as either "synced", or
+        // "needs to be synced".
+        // "Synced" means that according to the timestamps present, we consider a record to be
+        // up-to-date, not requiring an upload.
+        // "Needs to be synced" means that the record was either never synced for the current account,
+        // or was modified since it was last synced, or missing modified timestamp, requiring an upload.
+
+        // The two states, "synced" and "needs to be synced", are indicated via local and sync version:
+        // "synced":
+        // - localVersion=1
+        // - syncVersion=1
+
+        // "needs to be synced":
+        // - localVersion=1
+        // - syncVersion=0
+
+        // By default, every record is marked as "needs to be synced" via the ALTER statements above.
+        // If sync isn't setup, or bookmark collection was never synced, we're done.
+        // Otherwise, we iterate through every bookmark record, and compare their 'created' and 'modified'
+        // timestamps to the "last sync of bookmarks" timestamp, to determine if record was neither
+        // created nor modified since the last sync.
+        // Once we build a list of all "synced" bookmarks, we UPDATE their sync versions.
+
+        // Here are the possible migration scenarios, for completeness:
+
+        // Trivial case: sync is not setup.
+        // Indicate that all records will need to be uploaded whenever sync is connected.
+
+        // Trivial case: sync is set up, but bookmarks were never synced.
+        // Indicate that all records will need to be uploaded whenever bookmarks are synced.
+
+        // Sync is present, and bookmarks were synced at some point.
+        // For each record, we need to figure out if it needs to be considered as changed.
+        // Even though we have both created and modified timestamp, timestamp-based sync looks only
+        // at modified timestamp - we do the same here, to stay consistent with prior semantics.
+
+        // - recordModified > lastBookmarkSync
+        // -> consider it changed since last sync
+
+        // - recordModified < lastBookmarkSync
+        // -> consider it not changed since last sync
+
+        // - recordModified = lastBookmarkSync
+        // -> consider it inserted during the last sync, and so "not changed"
+        // it's possible that a user inserted a bookmark at the exact moment that last sync finished
+        // but we consider it as a highly unlikely possibility. Otherwise we run a risk of re-uploading
+        // some amount of bookmarks unnecessarily.
+
+        // Since our default version values indicate that a record needs to be synced, the
+        // actual data migration is simple: it's only concerned with "synced" records.
+
+        // First, we need to find out if sync is set up.
+        final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+        if (account == null) {
+            Log.d(LOGTAG, "No Firefox account. Skipping bookmark version migration.");
+            return;
+        }
+
+        // Now, figure out when bookmarks were last synced.
+        final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
+        final SharedPreferences syncPrefs;
+        try {
+            syncPrefs = fxAccount.getSyncPrefs();
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Could not read sync SharedPreferences. Skipping bookmark version migration.", e);
+            return;
+        }
+
+        final SynchronizerConfiguration synchronizerConfiguration;
+        try {
+            synchronizerConfiguration = new SynchronizerConfiguration(new PrefsBranch(syncPrefs, "bookmarks."));
+        } catch (IOException | NonObjectJSONException e) {
+            Log.e(LOGTAG, "Could not process sync SharedPreferences. Skipping bookmark version migration.", e);
+            return;
+        }
+
+        final long lastSyncTimestamp = synchronizerConfiguration.localBundle.getTimestamp();
+        Log.d(LOGTAG, "Bookmarks last synced: " + lastSyncTimestamp);
+
+        performBookmarkTimestampToVersionMigration(db, lastSyncTimestamp);
+    }
+
+    @VisibleForTesting
+    static void performBookmarkTimestampToVersionMigration(final SQLiteDatabase db, final long lastSyncTimestamp) {
+        if (lastSyncTimestamp == -1) {
+            Log.d(LOGTAG, "Bookmarks were never synced. Skipping bookmark version migration.");
+            return;
+        }
+
+        final ContentValues syncedVersionValues = new ContentValues();
+        // NB: LOCAL_VERSION default value is 1, so we only need to change SYNC_VERSION.
+        syncedVersionValues.put(Bookmarks.SYNC_VERSION, 1);
+        final int modified = db.update(
+                TABLE_BOOKMARKS,
+                syncedVersionValues,
+                Bookmarks.DATE_MODIFIED + " IS NOT NULL AND " + Bookmarks.DATE_MODIFIED + " <= ?",
+                new String[] {String.valueOf(lastSyncTimestamp)}
+        );
+
+        Log.d(LOGTAG, "Marked bookmarks as 'not changed since last sync': " + modified);
+    }
+
     private void createV33CombinedView(final SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -2268,6 +2397,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 38:
                     upgradeDatabaseFrom37to38(db);
+                    break;
+
+                case 39:
+                    upgradeDatabaseFrom38to39(db);
                     break;
             }
         }

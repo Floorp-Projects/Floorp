@@ -28,7 +28,7 @@ require("../../themes/light-theme.css");
 require("../../shared/components/reps/reps.css");
 
 pref("devtools.debugger.remote-timeout", 10000);
-pref("devtools.hud.loglimit", 1000);
+pref("devtools.hud.loglimit", 10000);
 pref("devtools.webconsole.filter.error", true);
 pref("devtools.webconsole.filter.warn", true);
 pref("devtools.webconsole.filter.info", true);

@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = [
   "BrowserUsageTelemetry",
   "URLBAR_SELECTED_RESULT_TYPES",
   "URLBAR_SELECTED_RESULT_METHODS",
+  "MINIMUM_TAB_COUNT_INTERVAL_MS",
  ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
@@ -84,6 +85,10 @@ const URLBAR_SELECTED_RESULT_METHODS = {
   click: 2,
 };
 
+
+const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
+
+
 function getOpenTabsAndWinsCounts() {
   let tabCount = 0;
   let winCount = 0;
@@ -96,6 +101,10 @@ function getOpenTabsAndWinsCounts() {
   }
 
   return { tabCount, winCount };
+}
+
+function getTabCount() {
+  return getOpenTabsAndWinsCounts().tabCount;
 }
 
 function getSearchEngineId(engine) {
@@ -192,6 +201,9 @@ let URICountListener = {
 
     // Update the URI counts.
     Services.telemetry.scalarAdd(TOTAL_URI_COUNT_SCALAR_NAME, 1);
+
+    // Update tab count
+    BrowserUsageTelemetry._recordTabCount();
 
     // We only want to count the unique domains up to MAX_UNIQUE_VISITED_DOMAINS.
     if (this._domainSet.size == MAX_UNIQUE_VISITED_DOMAINS) {
@@ -310,6 +322,7 @@ let urlbarListener = {
 
 let BrowserUsageTelemetry = {
   init() {
+    this._lastRecordTabCount = 0;
     urlbarListener.init();
     this._setupAfterRestore();
   },
@@ -603,6 +616,8 @@ let BrowserUsageTelemetry = {
     // Update the "tab opened" count and its maximum.
     Services.telemetry.scalarAdd(TAB_OPEN_EVENT_COUNT_SCALAR_NAME, 1);
     Services.telemetry.scalarSetMaximum(MAX_TAB_COUNT_SCALAR_NAME, tabCount);
+
+    this._recordTabCount(tabCount);
   },
 
   /**
@@ -635,4 +650,15 @@ let BrowserUsageTelemetry = {
     };
     win.addEventListener("load", onLoad);
   },
+
+  _recordTabCount(tabCount) {
+    let currentTime = Date.now();
+    if (currentTime > this._lastRecordTabCount + MINIMUM_TAB_COUNT_INTERVAL_MS) {
+      if (tabCount === undefined) {
+        tabCount = getTabCount();
+      }
+      Services.telemetry.getHistogramById("TAB_COUNT").add(tabCount);
+      this._lastRecordTabCount = currentTime;
+    }
+  }
 };

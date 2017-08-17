@@ -63,11 +63,9 @@ const isServo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 
 // The following properties will be skipped while using Servo backend.
 var skippedProperties = {
-    "box-shadow": true,             // Bug 1387973
     "stroke-dasharray": true,       // Bug 1387986
     "stroke-dashoffset": true,      // Bug 1369614
     "stroke-width": true,           // Bug 1369614
-    "text-shadow": true,            // Bug 1387973
 };
 
 var supported_properties = {
@@ -1682,10 +1680,28 @@ function test_shadow_transition(prop) {
                          "8px 8px 8px 8px red inset");
   }
 
+  // Transition beween values with color and without color.
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty("color", "rgb(3, 0, 0)", "");
+  div.style.setProperty(prop, "2px 2px 2px", "");
+  is(cs.getPropertyValue(prop), "rgb(3, 0, 0) 2px 2px 2px" + spreadStr,
+     "shadow-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "8px 8px 8px red", "");
+  // Bug 726550 for gecko (can't transition), bug 1390697 for servo (doesn't
+  // work currentColor animation for {text,box}-shadow).
+  todo_is(cs.getPropertyValue(prop),
+          "rgb(66, 0, 0) 3.5px 3.5px 3.5px" + spreadStr,
+          "shadow-valued property " + prop +
+          ": interpolation values with/without color");
+
+  // Transition beween values without color.
   var defaultColor = cs.getPropertyValue("color") + " ";
+  div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "2px 2px 2px", "");
   is(cs.getPropertyValue(prop), defaultColor + "2px 2px 2px" + spreadStr,
-     "shadow-valued property " + prop + ": non-interpolable cases");
+     "shadow-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "6px 14px 10px", "");
   is(cs.getPropertyValue(prop), defaultColor + "3px 5px 4px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation without color");

@@ -2499,7 +2499,6 @@ function getPostDataStream(aPostDataString,
   let mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"]
                      .createInstance(Ci.nsIMIMEInputStream);
   mimeStream.addHeader("Content-Type", aType);
-  mimeStream.addContentLength = true;
   mimeStream.setData(dataStream);
   return mimeStream.QueryInterface(Ci.nsIInputStream);
 }

@@ -135,7 +135,7 @@ var BrowserPageActions = {
         return;
       }
       if (action.wantsIframe) {
-        this._toggleTempPanelForAction(action);
+        this._toggleActivatedActionPanelForAction(action);
         return;
       }
       this.panelNode.hidePopup();
@@ -172,17 +172,45 @@ var BrowserPageActions = {
     return panelViewNode;
   },
 
-  _toggleTempPanelForAction(action) {
-    let panelNodeID = this._tempPanelID;
-    let panelNode = document.getElementById(panelNodeID);
+  _toggleActivatedActionPanelForAction(action) {
+    let panelNode = this.activatedActionPanelNode;
     if (panelNode) {
       panelNode.hidePopup();
       return null;
     }
 
+    // Before creating the panel, find the best anchor node for it because we'll
+    // bail if there isn't one.  Try each of the following nodes in order, using
+    // the first that's visible.
+    let anchorNode = null;
+    let potentialAnchorNodeIDs = [
+      action.anchorIDOverride || null,
+      this._urlbarButtonNodeIDForActionID(action.id),
+      this.mainButtonNode.id,
+      "identity-icon",
+    ];
+    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+    for (let id of potentialAnchorNodeIDs) {
+      if (id) {
+        let node = document.getElementById(id);
+        if (node && !node.hidden) {
+          let bounds = dwu.getBoundsWithoutFlushing(node);
+          if (bounds.height > 0 && bounds.width > 0) {
+            anchorNode = node;
+            break;
+          }
+        }
+      }
+    }
+    if (!anchorNode) {
+      throw new Error(`PageActions: No anchor node for '${action.id}'`);
+    }
+
     panelNode = document.createElement("panel");
-    panelNode.id = panelNodeID;
+    panelNode.id = this._activatedActionPanelID;
     panelNode.classList.add("cui-widget-panel");
+    panelNode.setAttribute("actionID", action.id);
     panelNode.setAttribute("role", "group");
     panelNode.setAttribute("type", "arrow");
     panelNode.setAttribute("flip", "slide");
@@ -223,18 +251,9 @@ var BrowserPageActions = {
       action.subview.onShowing(panelViewNode);
     }
 
+    // Hide the main page action panel before showing the activated-action
+    // panel.
     this.panelNode.hidePopup();
-
-    let urlbarNodeID = this._urlbarButtonNodeIDForActionID(action.id);
-    let urlbarNode = document.getElementById(urlbarNodeID);
-    let anchorNode;
-    if (urlbarNode && !urlbarNode.hidden) {
-      anchorNode = action.anchorIDOverride ?
-        document.getElementById(action.anchorIDOverride) :
-        urlbarNode;
-    } else {
-      anchorNode = this.mainButtonNode;
-    }
     panelNode.openPopup(anchorNode, "bottomcenter topright");
 
     if (iframeNode) {
@@ -244,8 +263,12 @@ var BrowserPageActions = {
     return panelNode;
   },
 
-  get _tempPanelID() {
-    return "pageActionTempPanel";
+  get activatedActionPanelNode() {
+    return document.getElementById(this._activatedActionPanelID);
+  },
+
+  get _activatedActionPanelID() {
+    return "pageActionActivatedActionPanel";
   },
 
   /**
@@ -332,7 +355,7 @@ var BrowserPageActions = {
         return;
       }
       if (action.subview || action.wantsIframe) {
-        this._toggleTempPanelForAction(action);
+        this._toggleActivatedActionPanelForAction(action);
         return;
       }
       action.onCommand(event, buttonNode);
@@ -432,7 +455,7 @@ var BrowserPageActions = {
 
   doCommandForAction(action) {
     if (action.subview || action.wantsIframe) {
-      this._toggleTempPanelForAction(action);
+      this._toggleActivatedActionPanelForAction(action);
       return;
     }
     action.onCommand();
@@ -528,10 +551,11 @@ var BrowserPageActions = {
       return;
     }
 
-    // If the temp panel is open and anchored to the main button, close it.
-    let tempPanel = document.getElementById(this._tempPanelID);
-    if (tempPanel && tempPanel.anchorNode.id == this.mainButtonNode.id) {
-      tempPanel.hidePopup();
+    // If the activated-action panel is open and anchored to the main button,
+    // close it.
+    let panelNode = this.activatedActionPanelNode;
+    if (panelNode && panelNode.anchorNode.id == this.mainButtonNode.id) {
+      panelNode.hidePopup();
       return;
     }
 

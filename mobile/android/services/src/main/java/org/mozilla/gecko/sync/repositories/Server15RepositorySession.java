@@ -8,7 +8,6 @@ import android.net.Uri;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -47,24 +46,20 @@ public class Server15RepositorySession extends RepositorySession {
             serverRepository.authHeaderProvider);
   }
 
-  @Override
-  public void guidsSince(long timestamp,
-                         RepositorySessionGuidsSinceDelegate delegate) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void fetchSince(long sinceTimestamp,
-                         RepositorySessionFetchRecordsDelegate delegate) {
+  private void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate) {
     BatchingDownloaderController.resumeFetchSinceIfPossible(
             this.downloader,
             this.serverRepository.stateProvider,
             delegate,
-            sinceTimestamp,
+            timestamp,
             serverRepository.getBatchLimit(),
             serverRepository.getSortOrder()
     );
+  }
+
+  @Override
+  public void fetchModified(RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(getLastSyncTimestamp(), delegate);
   }
 
   @Override

@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+function getExtension(background) {
+  let manifest = {
+    "permissions": [
+      "tabs",
+      "webRequest",
+      "webRequestBlocking",
+      "<all_urls>",
+    ],
+  };
+  return ExtensionTestUtils.loadExtension({
+    manifest,
+    background,
+  });
+}
+
+// This test makes a request against a server that redirects with a 302.
+add_task(async function test_hsts_request() {
+  const testPath = "example.org/tests/toolkit/components/extensions/test/mochitest";
+
+  let expect;
+  let extension = getExtension(async function() {
+    let urls = ["*://example.org/tests/*"];
+    browser.webRequest.onBeforeRequest.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onBeforeRequest");
+    }, {urls}, ["blocking"]);
+    browser.webRequest.onBeforeSendHeaders.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onBeforeSendHeaders");
+    }, {urls}, ["blocking", "requestHeaders"]);
+    browser.webRequest.onSendHeaders.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onSendHeaders");
+    }, {urls}, ["requestHeaders"]);
+    browser.webRequest.onHeadersReceived.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onHeadersReceived");
+    }, {urls}, ["blocking", "responseHeaders"]);
+    browser.webRequest.onBeforeRedirect.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onBeforeRedirect");
+    }, {urls});
+    browser.webRequest.onResponseStarted.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onResponseStarted");
+    }, {urls});
+    browser.webRequest.onCompleted.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onCompleted");
+    }, {urls});
+    browser.webRequest.onErrorOccurred.addListener(details => {
+      browser.test.notifyFail(`onErrorOccurred ${JSON.stringify(details)}`);
+    }, {urls});
+
+    async function onUpdated(tabId, tabInfo, tab) {
+      if (tabInfo.status !== "complete") {
+        return;
+      }
+      browser.tabs.remove(tabId);
+      browser.tabs.onUpdated.removeListener(onUpdated);
+      browser.test.sendMessage("tabs-done", tab.url);
+    }
+    browser.test.onMessage.addListener((url, expected) => {
+      expect = expected;
+      browser.tabs.onUpdated.addListener(onUpdated);
+      browser.tabs.create({url});
+    });
+  });
+  await extension.startup();
+
+  // simple redirect
+  let sample = "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
+  extension.sendMessage(`https://${testPath}/redirect_auto.sjs?redirect_uri=${sample}`,
+    ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
+     "onHeadersReceived", "onBeforeRedirect", "onBeforeRequest",
+     "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
+     "onResponseStarted", "onCompleted"]);
+  // redirect_auto adds a query string
+  ok((await extension.awaitMessage("tabs-done")).startsWith(sample), "redirection ok");
+
+  // priming hsts
+  extension.sendMessage(`https://${testPath}/hsts.sjs`,
+    ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
+     "onHeadersReceived", "onResponseStarted", "onCompleted"]);
+  is(await extension.awaitMessage("tabs-done"),
+     "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs",
+     "hsts primed");
+
+  // test upgrade
+  extension.sendMessage(`http://${testPath}/hsts.sjs`,
+    ["onBeforeRequest", "onBeforeRedirect", "onBeforeRequest",
+     "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
+     "onResponseStarted", "onCompleted"]);
+  is(await extension.awaitMessage("tabs-done"),
+     "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs",
+     "hsts upgraded");
+
+  await extension.unload();
+});
+</script>
+</head>
+<body>
+
+</body>
+</html>
