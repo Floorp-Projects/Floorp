@@ -311,10 +311,7 @@ DecoderTraits::CreateReader(const MediaContainerType& aType,
     decoderReader = new MediaFormatReader(aInit, new FlacDemuxer(resource));
   } else
   if (OggDecoder::IsSupportedType(aType)) {
-    RefPtr<OggDemuxer> demuxer = new OggDemuxer(resource);
-    decoderReader = new MediaFormatReader(aInit, demuxer);
-    demuxer->SetChainingEvents(&decoderReader->TimedMetadataProducer(),
-                               &decoderReader->MediaNotSeekableProducer());
+    decoderReader = new MediaFormatReader(aInit, new OggDemuxer(resource));
   } else
   if (WebMDecoder::IsSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aInit, new WebMDemuxer(resource));

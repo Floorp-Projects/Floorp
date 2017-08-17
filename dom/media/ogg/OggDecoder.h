@@ -19,6 +19,8 @@ public:
     : ChannelMediaDecoder(aInit)
   {}
 
+  MediaDecoderStateMachine* CreateStateMachine() override;
+
   // Returns true if aContainerType is an Ogg type that we think we can render
   // with an enabled platform decoder backend.
   // If provided, codecs are checked for support.
