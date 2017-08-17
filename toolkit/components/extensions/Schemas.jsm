@@ -1556,22 +1556,7 @@ class ObjectType extends Type {
                           `be a plain JavaScript object`);
     }
 
-    let properties = Object.create(null);
-
-    let waived = ChromeUtils.waiveXrays(value);
-    for (let prop of Object.getOwnPropertyNames(waived)) {
-      let desc = Object.getOwnPropertyDescriptor(waived, prop);
-      if (desc.get || desc.set) {
-        throw context.error("Objects cannot have getters or setters on properties",
-                            "contain no getter or setter properties");
-      }
-      // Chrome ignores non-enumerable properties.
-      if (desc.enumerable) {
-        properties[prop] = ChromeUtils.unwaiveXrays(desc.value);
-      }
-    }
-
-    return properties;
+    return ChromeUtils.shallowClone(value);
   }
 
   checkProperty(context, prop, propType, result, properties, remainingProps) {
