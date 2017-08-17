@@ -193,6 +193,9 @@ var gUpdateMutexHandle = null;
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
   return getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
 });
@@ -2813,6 +2816,59 @@ Checker.prototype = {
    */
   _callback: null,
 
+  _getCanMigrate: function UC__getCanMigrate() {
+    if (AppConstants.platform != "win") {
+      return false;
+    }
+
+    // The first element of the array is whether the build target is 32 or 64
+    // bit and the third element of the array is whether the client's Windows OS
+    // system processor is 32 or 64 bit.
+    let aryABI = UpdateUtils.ABI.split("-");
+    if (aryABI[0] != "x86" || aryABI[2] != "x64") {
+      return false;
+    }
+
+    let wrk = Cc["@mozilla.org/windows-registry-key;1"].
+              createInstance(Ci.nsIWindowsRegKey);
+
+    let regPath = "SOFTWARE\\Mozilla\\" + Services.appinfo.name +
+                  "\\32to64DidMigrate";
+    let regValHKCU = WindowsRegistry.readRegKey(wrk.ROOT_KEY_CURRENT_USER,
+                                                regPath, "Never", wrk.WOW64_32);
+    let regValHKLM = WindowsRegistry.readRegKey(wrk.ROOT_KEY_LOCAL_MACHINE,
+                                                regPath, "Never", wrk.WOW64_32);
+    // The Never registry key value allows configuring a system to never migrate
+    // any of the installations.
+    if (regValHKCU === 1 || regValHKLM === 1) {
+      LOG("Checker:_getCanMigrate - all installations should not be migrated");
+      return false;
+    }
+
+    let appBaseDirPath = getAppBaseDir().path;
+    regValHKCU = WindowsRegistry.readRegKey(wrk.ROOT_KEY_CURRENT_USER, regPath,
+                                            appBaseDirPath, wrk.WOW64_32);
+    regValHKLM = WindowsRegistry.readRegKey(wrk.ROOT_KEY_LOCAL_MACHINE, regPath,
+                                            appBaseDirPath, wrk.WOW64_32);
+    // When the registry value is 1 for the installation directory path value
+    // name then the installation has already been migrated once or the system
+    // was configured to not migrate that installation.
+    if (regValHKCU === 1 || regValHKLM === 1) {
+      LOG("Checker:_getCanMigrate - this installation should not be migrated");
+      return false;
+    }
+
+    // When the registry value is 0 for the installation directory path value
+    // name then the installation has updated to Firefox 56 and can be migrated.
+    if (regValHKCU === 0 || regValHKLM === 0) {
+      LOG("Checker:_getCanMigrate - this installation can be migrated");
+      return true;
+    }
+
+    LOG("Checker:_getCanMigrate - no registry entries for this installation");
+    return false;
+  },
+
   /**
    * The URL of the update service XML file to connect to that contains details
    * about available updates.
@@ -2832,6 +2888,10 @@ Checker.prototype = {
 
     if (force) {
       url += (url.indexOf("?") != -1 ? "&" : "?") + "force=1";
+    }
+
+    if (this._getCanMigrate()) {
+      url += (url.indexOf("?") != -1 ? "&" : "?") + "mig64=1";
     }
 
     LOG("Checker:getUpdateURL - update URL: " + url);
