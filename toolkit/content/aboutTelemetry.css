@@ -10,12 +10,10 @@ html {
 
 body {
   display: flex;
-  align-items: stretch;
   height: 100%;
 }
 
 #categories {
-  min-width: 250px;
   padding-top: 0px;
   overflow-y: auto;
 }
@@ -24,10 +22,14 @@ body {
   display: none;
 }
 
+.main-content {
+  flex: 1;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
 #category-raw {
   background-color: var(--in-content-page-background);
-  box-sizing: border-box;
-  min-width: inherit;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -114,14 +116,6 @@ body {
 
 .category-name {
   pointer-events: none;
-}
-
-.main-content {
-  width: 100%;
-  font-size: 18px;
-  line-height:1.6;
-  z-index: 1;
-  position: relative;
 }
 
 section:not(.active) {
