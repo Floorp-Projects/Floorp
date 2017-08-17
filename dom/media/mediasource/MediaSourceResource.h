@@ -59,11 +59,6 @@ public:
 
   bool IsTransportSeekable() override { return true; }
 
-  bool IsLiveStream() override
-  {
-    MonitorAutoLock mon(mMonitor);
-    return !mEnded;
-  }
   void SetEnded(bool aEnded)
   {
     MonitorAutoLock mon(mMonitor);

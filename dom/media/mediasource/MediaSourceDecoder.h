@@ -68,6 +68,7 @@ private:
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
   bool CanPlayThroughImpl() override;
+  bool IsLiveStream() override final { return !mEnded; }
 
   RefPtr<MediaSourceResource> mResource;
 
