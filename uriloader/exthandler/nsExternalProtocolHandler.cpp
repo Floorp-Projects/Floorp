@@ -179,20 +179,21 @@ nsresult nsExtProtocolChannel::OpenURL()
 
     if (NS_SUCCEEDED(rv) && mListener) {
       RefPtr<nsExtProtocolChannel> self = this;
-      nsCOMPtr<nsIStreamListener> listener = mListener;
       MessageLoop::current()->PostTask(
         NS_NewRunnableFunction(
           "nsExtProtocolChannel::OpenURL",
-          [self, listener]() {
-            listener->OnStartRequest(self, nullptr);
-            listener->OnStopRequest(self, nullptr, self->mStatus);
+          [self]() {
+            self->mListener->OnStartRequest(self, nullptr);
+            self->mListener->OnStopRequest(self, nullptr, self->mStatus);
+            self->mListener = nullptr;
           }));
+    } else {
+      mListener = nullptr;
     }
   }
 
 finish:
   mCallbacks = nullptr;
-  mListener = nullptr;
   return rv;
 }
 
