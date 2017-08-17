@@ -684,7 +684,7 @@ MediaDecoder::CallSeek(const SeekTarget& aTarget)
   // Since we don't have a listener for changes in IsLiveStream, our best bet
   // is to ensure IsLiveStream is uptodate when seek begins. This value will be
   // checked when seek is completed.
-  mDecoderStateMachine->DispatchIsLiveStream(GetResource()->IsLiveStream());
+  mDecoderStateMachine->DispatchIsLiveStream(IsLiveStream());
 
   mDecoderStateMachine->InvokeSeek(aTarget)
   ->Then(mAbstractMainThread, __func__, this,
