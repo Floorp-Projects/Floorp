@@ -12,6 +12,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 
