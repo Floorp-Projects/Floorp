@@ -754,7 +754,7 @@ Preferences::Init()
     return NS_OK;
   }
 
-  nsXPIDLCString lockFileName;
+  nsCString lockFileName;
   /*
    * The following is a small hack which will allow us to only load the library
    * which supports the netscape.cfg file if the preference is defined. We

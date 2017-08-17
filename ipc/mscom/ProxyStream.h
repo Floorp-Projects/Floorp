@@ -34,7 +34,7 @@ public:
 
   inline bool IsValid() const
   {
-    return !(mStream && mUnmarshaledProxy);
+    return !(mUnmarshaledProxy && mStream);
   }
 
   bool GetInterface(void** aOutInterface);
@@ -56,7 +56,6 @@ private:
   HGLOBAL         mHGlobal;
   int             mBufSize;
   ProxyUniquePtr<IUnknown> mUnmarshaledProxy;
-  HRESULT         mUnmarshalResult;
 };
 
 } // namespace mscom

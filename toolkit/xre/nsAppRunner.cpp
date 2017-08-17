@@ -1797,7 +1797,7 @@ StartRemoteClient(const char* aDesktopStartupID,
   if (NS_FAILED(rv))
     return REMOTE_NOT_FOUND;
 
-  nsXPIDLCString response;
+  nsCString response;
   bool success = false;
   rv = client.SendCommandLine(program.get(), username, profile,
                               gArgc, gArgv, aDesktopStartupID,
@@ -4324,7 +4324,7 @@ XREMain::XRE_mainRun()
     rv = prefs->GetDefaultBranch(nullptr, getter_AddRefs(defaultPrefBranch));
 
     if (NS_SUCCEEDED(rv)) {
-      nsXPIDLCString sval;
+      nsCString sval;
       rv = defaultPrefBranch->GetCharPref("app.update.channel", getter_Copies(sval));
       if (NS_SUCCEEDED(rv)) {
         CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ReleaseChannel"),

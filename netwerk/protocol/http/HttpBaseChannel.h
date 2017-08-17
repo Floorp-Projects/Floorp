@@ -235,6 +235,8 @@ public:
   NS_IMETHOD SetAllowAltSvc(bool aAllowAltSvc) override;
   NS_IMETHOD GetBeConservative(bool *aBeConservative) override;
   NS_IMETHOD SetBeConservative(bool aBeConservative) override;
+  NS_IMETHOD GetTlsFlags(uint32_t *aTlsFlags) override;
+  NS_IMETHOD SetTlsFlags(uint32_t aTlsFlags) override;
   NS_IMETHOD GetApiRedirectToURI(nsIURI * *aApiRedirectToURI) override;
   virtual MOZ_MUST_USE nsresult AddSecurityMessage(const nsAString &aMessageTag, const nsAString &aMessageCategory);
   NS_IMETHOD TakeAllSecurityMessages(nsCOMArray<nsISecurityConsoleMessage> &aMessages) override;
@@ -540,6 +542,11 @@ protected:
   // If true, we behave as if the LOAD_FROM_CACHE flag has been set.
   // Used to enforce that flag's behavior but not expose it externally.
   uint32_t                          mAllowStaleCacheContent : 1;
+
+  // An opaque flags for non-standard behavior of the TLS system.
+  // It is unlikely this will need to be set outside of telemetry studies
+  // relating to the TLS implementation.
+  uint32_t                          mTlsFlags;
 
   // Current suspension depth for this channel object
   uint32_t                          mSuspendCount;

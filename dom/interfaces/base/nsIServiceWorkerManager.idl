@@ -65,10 +65,16 @@ interface nsIServiceWorkerRegistrationInfoListener : nsISupports
 [scriptable, builtinclass, uuid(ddbc1fd4-2f2e-4fca-a395-6e010bbedfe3)]
 interface nsIServiceWorkerRegistrationInfo : nsISupports
 {
+  // State values below should match the ServiceWorkerUpdateViaCache enumeration.
+  const unsigned short UPDATE_VIA_CACHE_IMPORTS = 0;
+  const unsigned short UPDATE_VIA_CACHE_ALL = 1;
+  const unsigned short UPDATE_VIA_CACHE_NONE = 2;
+
   readonly attribute nsIPrincipal principal;
 
   readonly attribute DOMString scope;
   readonly attribute DOMString scriptSpec;
+  readonly attribute unsigned short updateViaCache;
 
   readonly attribute PRTime lastUpdateTime;
 
@@ -110,7 +116,7 @@ interface nsIServiceWorkerManager : nsISupports
   nsISupports register(in mozIDOMWindow aWindow,
                        in nsIURI aScope,
                        in nsIURI aScriptURI,
-                       in nsLoadFlags aLoadFlags);
+                       in uint16_t aUpdateViaCache);
 
   /**
    * Unregister an existing ServiceWorker registration for `aScope`.

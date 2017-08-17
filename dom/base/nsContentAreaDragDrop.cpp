@@ -580,7 +580,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
             nsAutoCString extension;
             imgUrl->GetFileExtension(extension);
 
-            nsXPIDLCString mimeType;
+            nsCString mimeType;
             imgRequest->GetMimeType(getter_Copies(mimeType));
 
             nsCOMPtr<nsIMIMEInfo> mimeInfo;

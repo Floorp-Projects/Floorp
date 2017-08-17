@@ -275,7 +275,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
       return NS_ERROR_INVALID_ARG;
     }
 
-    nsXPIDLCString newValue;
+    nsCString newValue;
     nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE,
                                            getter_Copies(newValue));
     if (NS_WARN_IF(NS_FAILED(rv))) {

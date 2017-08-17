@@ -260,16 +260,16 @@ TraceLoggerThread::enable(JSContext* cx)
         int32_t engine = 0;
 
         if (act->isJit()) {
-            JitFrameIterator it(iter);
+            JSJitFrameIter frame(iter->asJit());
 
-            while (!it.isScripted() && !it.done())
-                ++it;
+            while (!frame.isScripted() && !frame.done())
+                ++frame;
 
-            MOZ_ASSERT(!it.done());
-            MOZ_ASSERT(it.isIonJS() || it.isBaselineJS());
+            MOZ_ASSERT(!frame.done());
+            MOZ_ASSERT(frame.isIonJS() || frame.isBaselineJS());
 
-            script = it.script();
-            engine = it.isIonJS() ? TraceLogger_IonMonkey : TraceLogger_Baseline;
+            script = frame.script();
+            engine = frame.isIonJS() ? TraceLogger_IonMonkey : TraceLogger_Baseline;
         } else if (act->isWasm()) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TRACELOGGER_ENABLE_FAIL,
                                       "not yet supported in wasm code");

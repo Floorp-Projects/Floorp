@@ -485,14 +485,6 @@ private:
         void       (GLAPIENTRY * fANGLEPlatformShutdown)();
     } mSymbols;
 
-public:
-    EGLContext CachedCurrentContext() {
-        return nullptr;
-    }
-    void UnsetCachedCurrentContext() {}
-    void SetCachedCurrentContext(EGLContext aCtx) { }
-    bool CachedCurrentContextMatches() { return true; }
-
 private:
     bool mInitialized;
     PRLibrary* mEGLLibrary;

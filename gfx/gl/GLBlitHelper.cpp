@@ -817,7 +817,11 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
     switch (srcImage->GetFormat()) {
     case ImageFormat::PLANAR_YCBCR:
         type = ConvertPlanarYCbCr;
+#if defined(MOZ_WIDGET_ANDROID)
+        srcOrigin = OriginPos::TopLeft;
+#else
         srcOrigin = OriginPos::BottomLeft;
+#endif // defined(MOZ_WIDGET_ANDROID)
         break;
 
 #ifdef MOZ_WIDGET_ANDROID
