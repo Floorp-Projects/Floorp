@@ -151,6 +151,7 @@ protected:
               const bool&                allowSpdy,
               const bool&                allowAltSvc,
               const bool&                beConservative,
+              const uint32_t&            tlsFlags,
               const OptionalLoadInfoArgs& aLoadInfoArgs,
               const OptionalHttpResponseHead& aSynthesizedResponseHead,
               const nsCString&           aSecurityInfoSerialization,

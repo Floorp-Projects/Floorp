@@ -131,7 +131,7 @@ CreateClientInfo()
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-  nsXPIDLCString clientId;
+  nsCString clientId;
   nsresult rv = prefBranch->GetCharPref("browser.safebrowsing.id",
                                         getter_Copies(clientId));
 
@@ -552,7 +552,7 @@ nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict)
     nsCString provider(entry->GetKey());
     nsPrintfCString owninListsPref("%s.lists", provider.get());
 
-    nsXPIDLCString owningLists;
+    nsCString owningLists;
     nsresult rv = prefBranch->GetCharPref(owninListsPref.get(),
                                           getter_Copies(owningLists));
     if (NS_FAILED(rv)) {

@@ -952,7 +952,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     // that we don't transparently authenticate as someone they're not
     // expecting to authenticate as.
     //
-    nsXPIDLCString result;
+    nsCString result;
     rv = GenCredsAndSetEntry(auth, proxyAuth, scheme.get(), host, port,
                              path.get(), realm.get(), challenge, *ident,
                              sessionStateGrip, getter_Copies(result));
@@ -1353,7 +1353,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthAvailable(nsISupports *aContext,
         return NS_OK;
     }
 
-    nsXPIDLCString creds;
+    nsCString creds;
     rv = GenCredsAndSetEntry(auth, mProxyAuth,
                              scheme.get(), host, port, path.get(),
                              realm.get(), mCurrentChallenge.get(), *ident,
@@ -1693,7 +1693,7 @@ nsHttpChannelAuthProvider::SetAuthorizationHeader(nsHttpAuthCache    *authCache,
         else
             identFromURI = true;
 
-        nsXPIDLCString temp;
+        nsCString temp;  // this must have the same lifetime as creds
         const char *creds     = entry->Creds();
         const char *challenge = entry->Challenge();
         // we can only send a preemptive Authorization header if we have either

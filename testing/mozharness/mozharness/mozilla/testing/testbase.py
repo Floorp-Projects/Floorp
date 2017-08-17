@@ -28,6 +28,7 @@ from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.taskcluster_helper import TaskClusterArtifactFinderMixin
 from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.try_tools import TryToolsMixin, try_config_options
+from mozharness.mozilla.testing.verify_tools import VerifyToolsMixin, verify_config_options
 from mozharness.mozilla.tooltool import TooltoolMixin
 
 from mozharness.lib.python.authentication import get_credentials
@@ -98,12 +99,15 @@ testing_config_options = [
      "choices": ['ondemand', 'true'],
      "help": "Download and extract crash reporter symbols.",
       }],
-] + copy.deepcopy(virtualenv_config_options) + copy.deepcopy(try_config_options)
+] + copy.deepcopy(virtualenv_config_options) \
+  + copy.deepcopy(try_config_options) \
+  + copy.deepcopy(verify_config_options)
 
 
 # TestingMixin {{{1
 class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
-                   TaskClusterArtifactFinderMixin, TooltoolMixin, TryToolsMixin):
+                   TaskClusterArtifactFinderMixin, TooltoolMixin, TryToolsMixin,
+                   VerifyToolsMixin):
     """
     The steps to identify + download the proper bits for [browser] unit
     tests and Talos.

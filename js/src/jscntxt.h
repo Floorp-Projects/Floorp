@@ -33,7 +33,7 @@ class AutoCompartment;
 
 namespace jit {
 class JitContext;
-class DebugModeOSRVolatileJitFrameIterator;
+class DebugModeOSRVolatileJitFrameIter;
 } // namespace jit
 
 typedef HashSet<Shape*> ShapeSet;
@@ -71,21 +71,6 @@ struct HelperThread;
 using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
 
 class AutoLockForExclusiveAccess;
-
-/*
- * Used for engine-internal handling of async tasks, as currently
- * enabled in the js shell and jsapi tests.
- */
-struct InternalAsyncTasks
-{
-    explicit InternalAsyncTasks()
-      : outstanding(0),
-        finished()
-    {}
-
-    size_t outstanding;
-    Vector<JS::AsyncTask*, 0, SystemAllocPolicy> finished;
-};
 
 void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
 
@@ -315,7 +300,7 @@ struct JSContext : public JS::RootingContext,
     }
 
     friend class JS::AutoSaveExceptionState;
-    friend class js::jit::DebugModeOSRVolatileJitFrameIterator;
+    friend class js::jit::DebugModeOSRVolatileJitFrameIter;
     friend void js::ReportOverRecursed(JSContext*, unsigned errorNumber);
 
     // Returns to the embedding to allow other cooperative threads to run. We
@@ -651,7 +636,8 @@ struct JSContext : public JS::RootingContext,
 
     // A stack of live iterators that need to be updated in case of debug mode
     // OSR.
-    js::ThreadLocalData<js::jit::DebugModeOSRVolatileJitFrameIterator*> liveVolatileJitFrameIterators_;
+    js::ThreadLocalData<js::jit::DebugModeOSRVolatileJitFrameIter*>
+        liveVolatileJitFrameIter_;
 
   public:
     js::ThreadLocalData<int32_t> reportGranularity;  /* see vm/Probes.h */
@@ -932,7 +918,6 @@ struct JSContext : public JS::RootingContext,
     js::ThreadLocalData<JS::PersistentRooted<js::JobQueue>*> jobQueue;
     js::ThreadLocalData<bool> drainingJobQueue;
     js::ThreadLocalData<bool> stopDrainingJobQueue;
-    js::ExclusiveData<js::InternalAsyncTasks> asyncTasks;
 
     js::ThreadLocalData<JSPromiseRejectionTrackerCallback> promiseRejectionTrackerCallback;
     js::ThreadLocalData<void*> promiseRejectionTrackerCallbackData;

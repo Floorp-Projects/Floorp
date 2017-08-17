@@ -40,10 +40,6 @@ browser.jar:
   skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
   skin/classic/browser/toolbarbutton-dropdown-arrow-win7.png
   skin/classic/browser/urlbar-popup-blocked.png
-  skin/classic/browser/urlbar-history-dropmarker.png
-  skin/classic/browser/urlbar-history-dropmarker@2x.png
-  skin/classic/browser/urlbar-history-dropmarker-win7.png
-  skin/classic/browser/urlbar-history-dropmarker-win7@2x.png
   skin/classic/browser/webRTC-indicator.css  (../shared/webRTC-indicator.css)
 * skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
   skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)
@@ -112,8 +108,6 @@ browser.jar:
 % override chrome://browser/skin/reload-stop-go.png                   chrome://browser/skin/reload-stop-go-win7.png                 os=WINNT osversion<=6.1
 % override chrome://browser/skin/reload-stop-go@2x.png                chrome://browser/skin/reload-stop-go-win7@2x.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-win7.png   os=WINNT osversion<=6.1
-% override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-win7.png      os=WINNT osversion<=6.1
-% override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-win7@2x.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/downloads/download-glow-menuPanel.png  chrome://browser/skin/downloads/download-glow-menuPanel-win7.png os=WINNT osversion<=6.1
 
 % override chrome://browser/skin/tabbrowser/tab-background-start.png     chrome://browser/skin/tabbrowser/tab-background-start-preWin10.png     os=WINNT osversion<=6.3

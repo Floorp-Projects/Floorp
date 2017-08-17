@@ -9,7 +9,6 @@
 #include "nsPISocketTransportService.h"
 #include "nsIThreadInternal.h"
 #include "nsIRunnable.h"
-#include "nsEventQueue.h"
 #include "nsCOMPtr.h"
 #include "prinrval.h"
 #include "mozilla/Logging.h"

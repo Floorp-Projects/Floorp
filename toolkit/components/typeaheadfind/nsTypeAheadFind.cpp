@@ -149,7 +149,7 @@ nsTypeAheadFind::PrefsReset()
   bool isSoundEnabled = true;
   prefBranch->GetBoolPref("accessibility.typeaheadfind.enablesound",
                            &isSoundEnabled);
-  nsXPIDLCString soundStr;
+  nsCString soundStr;
   if (isSoundEnabled)
     prefBranch->GetCharPref("accessibility.typeaheadfind.soundURL", getter_Copies(soundStr));
 

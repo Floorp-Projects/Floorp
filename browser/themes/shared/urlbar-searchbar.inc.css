@@ -107,7 +107,13 @@
   list-style-image: url("chrome://browser/skin/sync.svg");
 }
 
+/* URL bar and page action buttons */
+
 .urlbar-history-dropmarker {
+  -moz-appearance: none;
+  list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
   transition: opacity 0.15s ease;
 }
 
@@ -118,8 +124,6 @@
 #navigator-toolbox:not(:hover) > #nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
   opacity: 0;
 }
-
-/* Page action urlbar buttons */
 
 #page-action-buttons {
   -moz-box-align: center;

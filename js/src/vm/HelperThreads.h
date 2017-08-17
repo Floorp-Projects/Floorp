@@ -36,9 +36,9 @@ namespace js {
 class AutoLockHelperThreadState;
 class AutoUnlockHelperThreadState;
 class CompileError;
-class PromiseTask;
 struct HelperThread;
 struct ParseTask;
+struct PromiseHelperTask;
 namespace jit {
   class IonBuilder;
 } // namespace jit
@@ -76,7 +76,7 @@ class GlobalHelperThreadState
     typedef Vector<UniquePtr<SourceCompressionTask>, 0, SystemAllocPolicy> SourceCompressionTaskVector;
     typedef Vector<GCHelperState*, 0, SystemAllocPolicy> GCHelperStateVector;
     typedef Vector<GCParallelTask*, 0, SystemAllocPolicy> GCParallelTaskVector;
-    typedef Vector<PromiseTask*, 0, SystemAllocPolicy> PromiseTaskVector;
+    typedef Vector<PromiseHelperTask*, 0, SystemAllocPolicy> PromiseHelperTaskVector;
 
     // List of available threads, or null if the thread state has not been initialized.
     using HelperThreadVector = Vector<HelperThread, 0, SystemAllocPolicy>;
@@ -99,7 +99,7 @@ class GlobalHelperThreadState
   private:
     // Async tasks that, upon completion, are dispatched back to the JSContext's
     // owner thread via embedding callbacks instead of a finished list.
-    PromiseTaskVector promiseTasks_;
+    PromiseHelperTaskVector promiseHelperTasks_;
 
     // Script parsing/emitting worklist and finished jobs.
     ParseTaskVector parseWorklist_, parseFinishedList_;
@@ -194,8 +194,8 @@ class GlobalHelperThreadState
         return wasmFinishedList_;
     }
 
-    PromiseTaskVector& promiseTasks(const AutoLockHelperThreadState&) {
-        return promiseTasks_;
+    PromiseHelperTaskVector& promiseHelperTasks(const AutoLockHelperThreadState&) {
+        return promiseHelperTasks_;
     }
 
     ParseTaskVector& parseWorklist(const AutoLockHelperThreadState&) {
@@ -229,7 +229,7 @@ class GlobalHelperThreadState
     }
 
     bool canStartWasmCompile(const AutoLockHelperThreadState& lock);
-    bool canStartPromiseTask(const AutoLockHelperThreadState& lock);
+    bool canStartPromiseHelperTask(const AutoLockHelperThreadState& lock);
     bool canStartIonCompile(const AutoLockHelperThreadState& lock);
     bool canStartIonFreeTask(const AutoLockHelperThreadState& lock);
     bool canStartParseTask(const AutoLockHelperThreadState& lock);
@@ -354,7 +354,7 @@ HelperThreadState()
 
 typedef mozilla::Variant<jit::IonBuilder*,
                          wasm::CompileTask*,
-                         PromiseTask*,
+                         PromiseHelperTask*,
                          ParseTask*,
                          SourceCompressionTask*,
                          GCHelperState*,
@@ -430,7 +430,7 @@ struct HelperThread
     }
 
     void handleWasmWorkload(AutoLockHelperThreadState& locked);
-    void handlePromiseTaskWorkload(AutoLockHelperThreadState& locked);
+    void handlePromiseHelperTaskWorkload(AutoLockHelperThreadState& locked);
     void handleIonWorkload(AutoLockHelperThreadState& locked);
     void handleIonFreeWorkload(AutoLockHelperThreadState& locked);
     void handleParseWorkload(AutoLockHelperThreadState& locked);
@@ -479,13 +479,12 @@ CompileFunction(CompileTask* task, UniqueChars* error);
 }
 
 /*
- * If helper threads are available, start executing the given PromiseTask on a
- * helper thread, finishing back on the originating JSContext's owner thread. If
- * no helper threads are available, the PromiseTask is synchronously executed
- * and finished.
+ * If helper threads are available, call execute() then dispatchResolve() on the
+ * given task in a helper thread. If no helper threads are available, the given
+ * task is executed and resolved synchronously.
  */
 bool
-StartPromiseTask(JSContext* cx, UniquePtr<PromiseTask> task);
+StartOffThreadPromiseHelperTask(JSContext* cx, UniquePtr<PromiseHelperTask> task);
 
 /*
  * Schedule an Ion compilation for a script, given a builder which has been
@@ -788,6 +787,23 @@ class SourceCompressionTask
 
     void work();
     void complete();
+};
+
+// A PromiseHelperTask is an OffThreadPromiseTask that executes a single job on
+// a helper thread. Derived classes do their helper-thread work by implementing
+// execute().
+struct PromiseHelperTask : OffThreadPromiseTask
+{
+    PromiseHelperTask(JSContext* cx, Handle<PromiseObject*> promise)
+      : OffThreadPromiseTask(cx, promise)
+    {}
+
+    // To be called on a helper thread and implemented by the derived class.
+    virtual void execute() = 0;
+
+    // May be called in the absence of helper threads or off-thread promise
+    // support to synchronously execute and resolve a PromiseTask.
+    void executeAndResolve(JSContext* cx);
 };
 
 } /* namespace js */

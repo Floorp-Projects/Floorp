@@ -36,12 +36,10 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "nsIIdlePeriod.h"
-#include "nsIIdleRunnable.h"
 #include "nsThreadSyncDispatch.h"
-#include "LeakRefPtr.h"
 #include "GeckoProfiler.h"
 #include "InputEventStatistics.h"
+#include "ThreadEventTarget.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsServiceManagerUtils.h"
@@ -235,83 +233,6 @@ private:
 };
 //-----------------------------------------------------------------------------
 
-namespace {
-class DelayedRunnable : public Runnable,
-                        public nsITimerCallback
-{
-public:
-  DelayedRunnable(already_AddRefed<nsIThread> aTargetThread,
-                  already_AddRefed<nsIRunnable> aRunnable,
-                  uint32_t aDelay)
-    : mozilla::Runnable("DelayedRunnable")
-    , mTargetThread(aTargetThread)
-    , mWrappedRunnable(aRunnable)
-    , mDelayedFrom(TimeStamp::NowLoRes())
-    , mDelay(aDelay)
-  { }
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  nsresult Init()
-  {
-    nsresult rv;
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    MOZ_ASSERT(mTimer);
-    rv = mTimer->SetTarget(mTargetThread);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-    return mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
-  }
-
-  nsresult DoRun()
-  {
-    nsCOMPtr<nsIRunnable> r = mWrappedRunnable.forget();
-    return r->Run();
-  }
-
-  NS_IMETHOD Run() override
-  {
-    // Already ran?
-    if (!mWrappedRunnable) {
-      return NS_OK;
-    }
-
-    // Are we too early?
-    if ((TimeStamp::NowLoRes() - mDelayedFrom).ToMilliseconds() < mDelay) {
-      return NS_OK; // Let the nsITimer run us.
-    }
-
-    mTimer->Cancel();
-    return DoRun();
-  }
-
-  NS_IMETHOD Notify(nsITimer* aTimer) override
-  {
-    // If we already ran, the timer should have been canceled.
-    MOZ_ASSERT(mWrappedRunnable);
-    MOZ_ASSERT(aTimer == mTimer);
-
-    return DoRun();
-  }
-
-private:
-  ~DelayedRunnable() {}
-
-  nsCOMPtr<nsIThread> mTargetThread;
-  nsCOMPtr<nsIRunnable> mWrappedRunnable;
-  nsCOMPtr<nsITimer> mTimer;
-  TimeStamp mDelayedFrom;
-  uint32_t mDelay;
-};
-
-NS_IMPL_ISUPPORTS_INHERITED(DelayedRunnable, Runnable, nsITimerCallback)
-
-} // anonymous namespace
-
-//-----------------------------------------------------------------------------
-
 struct nsThreadShutdownContext
 {
   nsThreadShutdownContext(NotNull<nsThread*> aTerminatingThread,
@@ -465,6 +386,7 @@ nsThread::ThreadFunc(void* aArg)
 
   self->mThread = PR_GetCurrentThread();
   self->mVirtualThread = GetCurrentVirtualThread();
+  self->mEventTarget->SetCurrentThread();
   SetupCurrentThreadForChaosMode();
 
   if (!initData->name.IsEmpty()) {
@@ -484,14 +406,8 @@ nsThread::ThreadFunc(void* aArg)
   }
 
   // Wait for and process startup event
-  nsCOMPtr<nsIRunnable> event;
-  {
-    MutexAutoLock lock(self->mLock);
-    if (!self->mEvents->GetEvent(true, getter_AddRefs(event), nullptr, lock)) {
-      NS_WARNING("failed waiting for thread startup event");
-      return;
-    }
-  }
+  nsCOMPtr<nsIRunnable> event = self->mEvents->GetEvent(true, nullptr);
+  MOZ_ASSERT(event);
 
   initData = nullptr; // clear before unblocking nsThread::Init
 
@@ -521,16 +437,8 @@ nsThread::ThreadFunc(void* aArg)
       // Check and see if we're waiting on any threads.
       self->WaitForAllAsynchronousShutdowns();
 
-      {
-        MutexAutoLock lock(self->mLock);
-        if (!self->mEvents->HasPendingEvent(lock)) {
-          // No events in the queue, so we will stop now. Don't let any more
-          // events be added, since they won't be processed. It is critical
-          // that no PutEvent can occur between testing that the event queue is
-          // empty and setting mEventsAreDoomed!
-          self->mEventsAreDoomed = true;
-          break;
-        }
+      if (self->mEvents->ShutdownIfNoPendingEvents()) {
+        break;
       }
       NS_ProcessPendingEvents(self);
     }
@@ -633,24 +541,21 @@ nsThread::SaveMemoryReportNearOOM(ShouldSaveMemoryReport aShouldSave)
 int sCanaryOutputFD = -1;
 #endif
 
-nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
-  : mLock("nsThread.mLock")
+nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
+                   MainThreadFlag aMainThread,
+                   uint32_t aStackSize)
+  : mEvents(aQueue.get())
+  , mEventTarget(new ThreadEventTarget(mEvents.get(), aMainThread == MAIN_THREAD))
   , mScriptObserver(nullptr)
-  , mEvents(WrapNotNull(&mEventsRoot))
-  , mEventsRoot(mLock)
-  , mIdleEventsAvailable(mLock, "[nsThread.mEventsAvailable]")
-  , mIdleEvents(mIdleEventsAvailable, nsEventQueue::eNormalQueue)
   , mPriority(PRIORITY_NORMAL)
   , mThread(nullptr)
   , mNestedEventLoopDepth(0)
   , mStackSize(aStackSize)
   , mShutdownContext(nullptr)
   , mShutdownRequired(false)
-  , mEventsAreDoomed(false)
   , mIsMainThread(aMainThread)
   , mLastUnlabeledRunnable(TimeStamp::Now())
   , mCanInvokeJS(false)
-  , mHasPendingEventsPromisedIdleEvent(false)
 {
 }
 
@@ -679,8 +584,6 @@ nsThread::Init(const nsACString& aName)
 
   NS_ADDREF_THIS();
 
-  mIdlePeriod = new IdlePeriod();
-
   mShutdownRequired = true;
 
   ThreadInitData initData = { this, aName };
@@ -697,8 +600,7 @@ nsThread::Init(const nsACString& aName)
   // mThread.  By delaying insertion of this event into the queue, we ensure
   // that mThread is set properly.
   {
-    MutexAutoLock lock(mLock);
-    mEventsRoot.PutEvent(startup, lock); // retain a reference
+    mEvents->PutEvent(do_AddRef(startup), EventPriority::Normal); // retain a reference
   }
 
   // Wait for thread to call ThreadManager::SetupCurrentThread, which completes
@@ -714,248 +616,8 @@ nsThread::InitCurrentThread()
   mVirtualThread = GetCurrentVirtualThread();
   SetupCurrentThreadForChaosMode();
 
-  mIdlePeriod = new IdlePeriod();
-
   nsThreadManager::get().RegisterCurrentThread(*this);
   return NS_OK;
-}
-
-nsresult
-nsThread::PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget)
-{
-  nsCOMPtr<nsIRunnable> event(aEvent);
-  return PutEvent(event.forget(), aTarget);
-}
-
-nsresult
-nsThread::PutEvent(already_AddRefed<nsIRunnable> aEvent, nsNestedEventTarget* aTarget)
-{
-  // We want to leak the reference when we fail to dispatch it, so that
-  // we won't release the event in a wrong thread.
-  LeakRefPtr<nsIRunnable> event(Move(aEvent));
-  nsCOMPtr<nsIThreadObserver> obs;
-
-  {
-    MutexAutoLock lock(mLock);
-    nsChainedEventQueue* queue = aTarget ? aTarget->mQueue : &mEventsRoot;
-    if (!queue || (queue == &mEventsRoot && mEventsAreDoomed)) {
-      NS_WARNING("An event was posted to a thread that will never run it (rejected)");
-      return NS_ERROR_UNEXPECTED;
-    }
-    queue->PutEvent(event.take(), lock);
-
-    // Make sure to grab the observer before dropping the lock, otherwise the
-    // event that we just placed into the queue could run and eventually delete
-    // this nsThread before the calling thread is scheduled again. We would then
-    // crash while trying to access a dead nsThread.
-    obs = mObserver;
-  }
-
-  if (obs) {
-    obs->OnDispatchedEvent();
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsThread::DispatchInternal(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags,
-                           nsNestedEventTarget* aTarget)
-{
-  // We want to leak the reference when we fail to dispatch it, so that
-  // we won't release the event in a wrong thread.
-  LeakRefPtr<nsIRunnable> event(Move(aEvent));
-  if (NS_WARN_IF(!event)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (gXPCOMThreadsShutDown && MAIN_THREAD != mIsMainThread && !aTarget) {
-    NS_ASSERTION(false, "Failed Dispatch after xpcom-shutdown-threads");
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-  }
-
-#ifdef MOZ_TASK_TRACER
-  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(event.take());
-  (static_cast<TracedRunnable*>(tracedRunnable.get()))->DispatchTask();
-  // XXX tracedRunnable will always leaked when we fail to disptch.
-  event = tracedRunnable.forget();
-#endif
-
-  if (aFlags & DISPATCH_SYNC) {
-    nsThread* thread = nsThreadManager::get().GetCurrentThread();
-    if (NS_WARN_IF(!thread)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    // XXX we should be able to do something better here... we should
-    //     be able to monitor the slot occupied by this event and use
-    //     that to tell us when the event has been processed.
-
-    RefPtr<nsThreadSyncDispatch> wrapper =
-      new nsThreadSyncDispatch(thread, event.take());
-    nsresult rv = PutEvent(wrapper, aTarget); // hold a ref
-    // Don't wait for the event to finish if we didn't dispatch it...
-    if (NS_FAILED(rv)) {
-      // PutEvent leaked the wrapper runnable object on failure, so we
-      // explicitly release this object once for that. Note that this
-      // object will be released again soon because it exits the scope.
-      wrapper.get()->Release();
-      return rv;
-    }
-
-    // Allows waiting; ensure no locks are held that would deadlock us!
-    SpinEventLoopUntil([&, wrapper]() -> bool {
-        return !wrapper->IsPending();
-      }, thread);
-
-    return NS_OK;
-  }
-
-  NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL ||
-               aFlags == NS_DISPATCH_AT_END, "unexpected dispatch flags");
-  return PutEvent(event.take(), aTarget);
-}
-
-NS_IMPL_ISUPPORTS(nsThread::nsChainedEventQueue::EnablePrioritizationRunnable,
-                  nsIRunnable)
-
-void
-nsThread::nsChainedEventQueue::EnablePrioritization(MutexAutoLock& aProofOfLock)
-{
-  MOZ_ASSERT(!mIsInputPrioritizationEnabled);
-  // When enabling event prioritization, there may be some pending events with
-  // different priorities in the normal queue. Create an event in the normal
-  // queue to consume all pending events in the time order to make sure we won't
-  // preempt a pending event (e.g. input) in the normal queue by another newly
-  // created event with the same priority.
-  mNormalQueue->PutEvent(new EnablePrioritizationRunnable(this), aProofOfLock);
-  mInputHandlingStartTime = TimeStamp();
-  mIsInputPrioritizationEnabled = true;
-}
-
-bool
-nsThread::nsChainedEventQueue::
-GetNormalOrInputOrHighPriorityEvent(bool aMayWait, nsIRunnable** aEvent,
-                                    unsigned short* aPriority,
-                                    MutexAutoLock& aProofOfLock)
-{
-  bool retVal = false;
-  do {
-    // Use mProcessHighPriorityQueueRunnable to prevent the high priority events
-    // from consuming all cpu time and causing starvation.
-    if (mProcessHighPriorityQueueRunnable) {
-      MOZ_ASSERT(mHighQueue->HasPendingEvent(aProofOfLock));
-      retVal = mHighQueue->GetEvent(false, aEvent, aProofOfLock);
-      MOZ_ASSERT(*aEvent);
-      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_HIGH);
-      mInputHandlingStartTime = TimeStamp();
-      mProcessHighPriorityQueueRunnable = false;
-      return retVal;
-    }
-    mProcessHighPriorityQueueRunnable =
-      mHighQueue->HasPendingEvent(aProofOfLock);
-
-    uint32_t pendingInputCount = mInputQueue->Count(aProofOfLock);
-    if (pendingInputCount > 0) {
-      if (mInputHandlingStartTime.IsNull()) {
-        mInputHandlingStartTime =
-          InputEventStatistics::Get()
-            .GetInputHandlingStartTime(mInputQueue->Count(aProofOfLock));
-      }
-      if (TimeStamp::Now() > mInputHandlingStartTime) {
-        retVal = mInputQueue->GetEvent(false, aEvent, aProofOfLock);
-        MOZ_ASSERT(*aEvent);
-        SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_INPUT);
-        return retVal;
-      }
-    }
-
-    // We don't want to wait if there are some high priority events or input
-    // events in the queues.
-    bool reallyMayWait = aMayWait && !mProcessHighPriorityQueueRunnable &&
-                         pendingInputCount == 0;
-
-    retVal = mNormalQueue->GetEvent(reallyMayWait, aEvent, aProofOfLock);
-    if (*aEvent) {
-      // We got an event, return early.
-      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_NORMAL);
-      return retVal;
-    }
-    if (pendingInputCount > 0 && !mProcessHighPriorityQueueRunnable) {
-      // Handle input events if we have time for them.
-      MOZ_ASSERT(mInputQueue->HasPendingEvent(aProofOfLock));
-      retVal = mInputQueue->GetEvent(false, aEvent, aProofOfLock);
-      MOZ_ASSERT(*aEvent);
-      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_INPUT);
-      return retVal;
-    }
-  } while (aMayWait || mProcessHighPriorityQueueRunnable);
-  return retVal;
-}
-
-bool
-nsThread::nsChainedEventQueue::
-GetNormalOrHighPriorityEvent(bool aMayWait, nsIRunnable** aEvent,
-                             unsigned short* aPriority,
-                             MutexAutoLock& aProofOfLock)
-{
-  bool retVal = false;
-  do {
-    // Use mProcessHighPriorityQueueRunnable to prevent the high priority events
-    // from consuming all cpu time and causing starvation.
-    if (mProcessHighPriorityQueueRunnable) {
-      MOZ_ASSERT(mHighQueue->HasPendingEvent(aProofOfLock));
-      retVal = mHighQueue->GetEvent(false, aEvent, aProofOfLock);
-      MOZ_ASSERT(*aEvent);
-      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_HIGH);
-      mProcessHighPriorityQueueRunnable = false;
-      return retVal;
-    }
-    mProcessHighPriorityQueueRunnable =
-      mHighQueue->HasPendingEvent(aProofOfLock);
-
-    // We don't want to wait if there are some events in the high priority
-    // queue.
-    bool reallyMayWait = aMayWait && !mProcessHighPriorityQueueRunnable;
-
-    retVal = mNormalQueue->GetEvent(reallyMayWait, aEvent, aProofOfLock);
-    if (*aEvent) {
-      // We got an event, return early.
-      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_NORMAL);
-      return retVal;
-    }
-  } while (aMayWait || mProcessHighPriorityQueueRunnable);
-  return retVal;
-}
-
-void
-nsThread::nsChainedEventQueue::PutEvent(already_AddRefed<nsIRunnable> aEvent,
-                                        MutexAutoLock& aProofOfLock)
-{
-  RefPtr<nsIRunnable> event(aEvent);
-  nsCOMPtr<nsIRunnablePriority> runnablePrio(do_QueryInterface(event));
-  uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
-  if (runnablePrio) {
-    runnablePrio->GetPriority(&prio);
-  }
-  switch (prio) {
-  case nsIRunnablePriority::PRIORITY_NORMAL:
-    mNormalQueue->PutEvent(event.forget(), aProofOfLock);
-    break;
-  case nsIRunnablePriority::PRIORITY_INPUT:
-    if (mIsInputPrioritizationEnabled) {
-      mInputQueue->PutEvent(event.forget(), aProofOfLock);
-    } else {
-      mNormalQueue->PutEvent(event.forget(), aProofOfLock);
-    }
-    break;
-  case nsIRunnablePriority::PRIORITY_HIGH:
-    mHighQueue->PutEvent(event.forget(), aProofOfLock);
-    break;
-  default:
-    MOZ_ASSERT(false);
-    break;
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -965,7 +627,7 @@ NS_IMETHODIMP
 nsThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 {
   nsCOMPtr<nsIRunnable> event(aEvent);
-  return Dispatch(event.forget(), aFlags);
+  return mEventTarget->Dispatch(event.forget(), aFlags);
 }
 
 NS_IMETHODIMP
@@ -973,28 +635,19 @@ nsThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
   LOG(("THRD(%p) Dispatch [%p %x]\n", this, /* XXX aEvent */nullptr, aFlags));
 
-  return DispatchInternal(Move(aEvent), aFlags, nullptr);
+  return mEventTarget->Dispatch(Move(aEvent), aFlags);
 }
 
 NS_IMETHODIMP
 nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelayMs)
 {
-  NS_ENSURE_TRUE(!!aDelayMs, NS_ERROR_UNEXPECTED);
-
-  RefPtr<DelayedRunnable> r = new DelayedRunnable(Move(do_AddRef(this)),
-                                                  Move(aEvent),
-                                                  aDelayMs);
-  nsresult rv = r->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return DispatchInternal(r.forget(), 0, nullptr);
+  return mEventTarget->DelayedDispatch(Move(aEvent), aDelayMs);
 }
 
 NS_IMETHODIMP
 nsThread::IsOnCurrentThread(bool* aResult)
 {
-  *aResult = (PR_GetCurrentThread() == mThread);
-  return NS_OK;
+  return mEventTarget->IsOnCurrentThread(aResult);
 }
 
 NS_IMETHODIMP_(bool)
@@ -1053,12 +706,8 @@ nsThread::ShutdownInternal(bool aSync)
   }
 
   // Prevent multiple calls to this method
-  {
-    MutexAutoLock lock(mLock);
-    if (!mShutdownRequired) {
-      return nullptr;
-    }
-    mShutdownRequired = false;
+  if (!mShutdownRequired.compareExchange(true, false)) {
+    return nullptr;
   }
 
   NotNull<nsThread*> currentThread =
@@ -1073,7 +722,7 @@ nsThread::ShutdownInternal(bool aSync)
   nsCOMPtr<nsIRunnable> event =
     new nsThreadShutdownEvent(WrapNotNull(this), WrapNotNull(context.get()));
   // XXXroc What if posting the event fails due to OOM?
-  PutEvent(event.forget(), nullptr);
+  mEvents->PutEvent(event.forget(), EventPriority::Normal);
 
   // We could still end up with other events being added after the shutdown
   // task, but that's okay because we process pending events in ThreadFunc
@@ -1105,10 +754,8 @@ nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext)
   ClearObservers();
 
 #ifdef DEBUG
-  {
-    MutexAutoLock lock(mLock);
-    MOZ_ASSERT(!mObserver, "Should have been cleared at shutdown!");
-  }
+  nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserver();
+  MOZ_ASSERT(!obs, "Should have been cleared at shutdown!");
 #endif
 
   // Delete aContext.
@@ -1153,55 +800,6 @@ nsThread::Shutdown()
   return NS_OK;
 }
 
-TimeStamp
-nsThread::GetIdleDeadline()
-{
-  // If we are shutting down, we won't honor the idle period, and we will
-  // always process idle runnables.  This will ensure that the idle queue
-  // gets exhausted at shutdown time to prevent intermittently leaking
-  // some runnables inside that queue and even worse potentially leaving
-  // some important cleanup work unfinished.
-  // Note that we need to check both of these conditions since ShuttingDown()
-  // will never return true on the main thread, where gXPCOMThreadsShutDown
-  // performs a similar function.
-  if (gXPCOMThreadsShutDown || ShuttingDown()) {
-    return TimeStamp::Now();
-  }
-
-  TimeStamp idleDeadline;
-  {
-    // Releasing the lock temporarily since getting the idle period
-    // might need to lock the timer thread. Unlocking here might make
-    // us receive an event on the main queue, but we've committed to
-    // run an idle event anyhow.
-    MutexAutoUnlock unlock(mLock);
-    mIdlePeriod->GetIdlePeriodHint(&idleDeadline);
-  }
-
-  // If HasPendingEvents() has been called and it has returned true because of
-  // pending idle events, there is a risk that we may decide here that we aren't
-  // idle and return null, in which case HasPendingEvents() has effectively
-  // lied.  Since we can't go back and fix the past, we have to adjust what we
-  // do here and forcefully pick the idle queue task here.  Note that this means
-  // that we are choosing to run a task from the idle queue when we would
-  // normally decide that we aren't in an idle period, but this can only happen
-  // if we fall out of the idle period in between the call to HasPendingEvents()
-  // and here, which should hopefully be quite rare.  We are effectively
-  // choosing to prioritize the sanity of our API semantics over the optimal
-  // scheduling.
-  if (!mHasPendingEventsPromisedIdleEvent &&
-      (!idleDeadline || idleDeadline < TimeStamp::Now())) {
-    return TimeStamp();
-  }
-  if (mHasPendingEventsPromisedIdleEvent && !idleDeadline) {
-    // If HasPendingEvents() has been called and it has returned true, but we're no
-    // longer in the idle period, we must return a valid timestamp to pretend that
-    // we are still in the idle period.
-    return TimeStamp::Now();
-  }
-  return idleDeadline;
-}
-
 NS_IMETHODIMP
 nsThread::HasPendingEvents(bool* aResult)
 {
@@ -1209,36 +807,7 @@ nsThread::HasPendingEvents(bool* aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  {
-    MutexAutoLock lock(mLock);
-    mHasPendingEventsPromisedIdleEvent = false;
-    bool hasPendingEvent = mEvents->HasPendingEvent(lock);
-    bool hasPendingIdleEvent = false;
-    if (!hasPendingEvent) {
-      // Note that GetIdleDeadline() checks mHasPendingEventsPromisedIdleEvent,
-      // but that's OK since we set it to false in the beginning of this method!
-      TimeStamp idleDeadline = GetIdleDeadline();
-
-      // Only examine the idle queue if we are in an idle period.
-      if (idleDeadline) {
-        hasPendingIdleEvent = mIdleEvents.HasPendingEvent(lock);
-        mHasPendingEventsPromisedIdleEvent = hasPendingIdleEvent;
-      }
-    }
-    *aResult = hasPendingEvent || hasPendingIdleEvent;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThread::RegisterIdlePeriod(already_AddRefed<nsIIdlePeriod> aIdlePeriod)
-{
-  if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  MutexAutoLock lock(mLock);
-  mIdlePeriod = aIdlePeriod;
+  *aResult = mEvents->HasPendingEvent();
   return NS_OK;
 }
 
@@ -1251,37 +820,17 @@ nsThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent)
   // isn't mIdleEvents.
   MOZ_ASSERT(PR_GetCurrentThread() == mThread);
 
-  MutexAutoLock lock(mLock);
-  LeakRefPtr<nsIRunnable> event(Move(aEvent));
+  nsCOMPtr<nsIRunnable> event = aEvent;
 
   if (NS_WARN_IF(!event)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (mEventsAreDoomed) {
+  if (!mEvents->PutEvent(event.forget(), EventPriority::Idle)) {
     NS_WARNING("An idle event was posted to a thread that will never run it (rejected)");
     return NS_ERROR_UNEXPECTED;
   }
 
-  mIdleEvents.PutEvent(event.take(), lock);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThread::EnableEventPrioritization()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(mLock);
-  // Only support event prioritization for main event queue.
-  mEventsRoot.EnablePrioritization(lock);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThread::IsEventPrioritizationEnabled(bool* aResult)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  *aResult = mEventsRoot.IsPrioritizationEnabled();
   return NS_OK;
 }
 
@@ -1336,87 +885,6 @@ void canary_alarm_handler(int signum)
       }                                                                        \
     }                                                                          \
   } while(0)
-
-void
-nsThread::GetIdleEvent(nsIRunnable** aEvent, MutexAutoLock& aProofOfLock)
-{
-  MOZ_ASSERT(PR_GetCurrentThread() == mThread);
-  MOZ_ASSERT(aEvent);
-
-  if (!mIdleEvents.HasPendingEvent(aProofOfLock)) {
-    MOZ_ASSERT(!mHasPendingEventsPromisedIdleEvent);
-    aEvent = nullptr;
-    return;
-  }
-
-  TimeStamp idleDeadline = GetIdleDeadline();
-  if (!idleDeadline) {
-    aEvent = nullptr;
-    return;
-  }
-
-  mIdleEvents.GetEvent(false, aEvent, aProofOfLock);
-
-  if (*aEvent) {
-    nsCOMPtr<nsIIdleRunnable> idleEvent(do_QueryInterface(*aEvent));
-    if (idleEvent) {
-      idleEvent->SetDeadline(idleDeadline);
-    }
-
-#ifndef RELEASE_OR_BETA
-    // Store the next idle deadline to be able to determine budget use
-    // in ProcessNextEvent.
-    mNextIdleDeadline = idleDeadline;
-#endif
-  }
-}
-
-void
-nsThread::GetEvent(bool aWait, nsIRunnable** aEvent,
-                   unsigned short* aPriority,
-                   MutexAutoLock& aProofOfLock)
-{
-  MOZ_ASSERT(PR_GetCurrentThread() == mThread);
-  MOZ_ASSERT(aEvent);
-
-  MakeScopeExit([&] {
-    mHasPendingEventsPromisedIdleEvent = false;
-  });
-
-#ifndef RELEASE_OR_BETA
-  // Clear mNextIdleDeadline so that it is possible to determine that
-  // we're running an idle runnable in ProcessNextEvent.
-  mNextIdleDeadline = TimeStamp();
-#endif
-
-  // We'll try to get an event to execute in three stages.
-  // [1] First we just try to get it from the regular queue without waiting.
-  mEvents->GetEvent(false, aEvent, aPriority, aProofOfLock);
-
-  // [2] If we didn't get an event from the regular queue, try to
-  // get one from the idle queue
-  if (!*aEvent) {
-    // Since events in mEvents have higher priority than idle
-    // events, we will only consider idle events when there are no
-    // pending events in mEvents. We will for the same reason never
-    // wait for an idle event, since a higher priority event might
-    // appear at any time.
-    GetIdleEvent(aEvent, aProofOfLock);
-
-    if (*aEvent && aPriority) {
-      // Idle events count as normal priority.
-      *aPriority = nsIRunnablePriority::PRIORITY_NORMAL;
-    }
-  }
-
-  // [3] If we neither got an event from the regular queue nor the
-  // idle queue, then if we should wait for events we block on the
-  // main queue until an event is available.
-  // If we are shutting down, then do not wait for new events.
-  if (!*aEvent && aWait) {
-    mEvents->GetEvent(aWait, aEvent, aPriority, aProofOfLock);
-  }
-}
 
 #ifndef RELEASE_OR_BETA
 static bool
@@ -1477,7 +945,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     mScriptObserver->BeforeProcessTask(reallyWait);
   }
 
-  nsCOMPtr<nsIThreadObserver> obs = mObserver;
+  nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserverOnThread();
   if (obs) {
     obs->OnProcessNextEvent(this, reallyWait);
   }
@@ -1493,12 +961,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     // Scope for |event| to make sure that its destructor fires while
     // mNestedEventLoopDepth has been incremented, since that destructor can
     // also do work.
-    nsCOMPtr<nsIRunnable> event;
-    unsigned short priority;
-    {
-      MutexAutoLock lock(mLock);
-      GetEvent(reallyWait, getter_AddRefs(event), &priority, lock);
-    }
+    EventPriority priority;
+    nsCOMPtr<nsIRunnable> event = mEvents->GetEvent(reallyWait, &priority);
 
     *aResult = (event.get() != nullptr);
 
@@ -1522,7 +986,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
           // High-priority runnables are ignored here since they'll run right away
           // even with the cooperative scheduler.
-          if (!labeled && priority == nsIRunnablePriority::PRIORITY_NORMAL) {
+          if (!labeled && priority == EventPriority::Normal) {
             TimeStamp now = TimeStamp::Now();
             double diff = (now - mLastUnlabeledRunnable).ToMilliseconds();
             Telemetry::Accumulate(Telemetry::TIME_BETWEEN_UNLABELED_RUNNABLES_MS, diff);
@@ -1563,7 +1027,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
       }
 #endif
       Maybe<AutoTimeDurationHelper> timeDurationHelper;
-      if (priority == nsIRunnablePriority::PRIORITY_INPUT) {
+      if (priority == EventPriority::Input) {
         timeDurationHelper.emplace();
       }
       event->Run();
@@ -1648,8 +1112,8 @@ nsThread::AdjustPriority(int32_t aDelta)
 NS_IMETHODIMP
 nsThread::GetObserver(nsIThreadObserver** aObs)
 {
-  MutexAutoLock lock(mLock);
-  NS_IF_ADDREF(*aObs = mObserver);
+  nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserver();
+  obs.forget(aObs);
   return NS_OK;
 }
 
@@ -1660,8 +1124,7 @@ nsThread::SetObserver(nsIThreadObserver* aObs)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  MutexAutoLock lock(mLock);
-  mObserver = aObs;
+  mEvents->SetObserver(aObs);
   return NS_OK;
 }
 
@@ -1702,68 +1165,6 @@ nsThread::RemoveObserver(nsIThreadObserver* aObserver)
 
   if (aObserver && !mEventObservers.RemoveElement(aObserver)) {
     NS_WARNING("Removing an observer that was never added!");
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThread::PushEventQueue(nsIEventTarget** aResult)
-{
-  if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  NotNull<nsChainedEventQueue*> queue =
-    WrapNotNull(new nsChainedEventQueue(mLock));
-  queue->mEventTarget = new nsNestedEventTarget(WrapNotNull(this), queue);
-
-  {
-    MutexAutoLock lock(mLock);
-    queue->mNext = mEvents;
-    mEvents = queue;
-  }
-
-  NS_ADDREF(*aResult = queue->mEventTarget);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThread::PopEventQueue(nsIEventTarget* aInnermostTarget)
-{
-  if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  if (NS_WARN_IF(!aInnermostTarget)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Don't delete or release anything while holding the lock.
-  nsAutoPtr<nsChainedEventQueue> queue;
-  RefPtr<nsNestedEventTarget> target;
-
-  {
-    MutexAutoLock lock(mLock);
-
-    // Make sure we're popping the innermost event target.
-    if (NS_WARN_IF(mEvents->mEventTarget != aInnermostTarget)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    MOZ_ASSERT(mEvents != &mEventsRoot);
-
-    queue = mEvents;
-    mEvents = WrapNotNull(mEvents->mNext);
-
-    nsCOMPtr<nsIRunnable> event;
-    while (queue->GetEvent(false, getter_AddRefs(event), nullptr, lock)) {
-      mEvents->PutEvent(event.forget(), lock);
-    }
-
-    // Don't let the event target post any more events.
-    queue->mEventTarget.swap(target);
-    target->mQueue = nullptr;
   }
 
   return NS_OK;
@@ -1835,42 +1236,4 @@ nsISerialEventTarget*
 nsThread::SerialEventTarget()
 {
   return this;
-}
-
-//-----------------------------------------------------------------------------
-
-NS_IMPL_ISUPPORTS(nsThread::nsNestedEventTarget, nsIEventTarget)
-
-NS_IMETHODIMP
-nsThread::nsNestedEventTarget::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
-{
-  nsCOMPtr<nsIRunnable> event(aEvent);
-  return Dispatch(event.forget(), aFlags);
-}
-
-NS_IMETHODIMP
-nsThread::nsNestedEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
-{
-  LOG(("THRD(%p) Dispatch [%p %x] to nested loop %p\n", mThread.get().get(),
-       /*XXX aEvent*/ nullptr, aFlags, this));
-
-  return mThread->DispatchInternal(Move(aEvent), aFlags, this);
-}
-
-NS_IMETHODIMP
-nsThread::nsNestedEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThread::nsNestedEventTarget::IsOnCurrentThread(bool* aResult)
-{
-  return mThread->IsOnCurrentThread(aResult);
-}
-
-NS_IMETHODIMP_(bool)
-nsThread::nsNestedEventTarget::IsOnCurrentThreadInfallible()
-{
-  return mThread->IsOnCurrentThread();
 }

@@ -280,5 +280,5 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 }
 
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon[label]:not([label=""]) {
-  margin-inline-end: 5px;
+  margin-inline-end: 4px;
 }

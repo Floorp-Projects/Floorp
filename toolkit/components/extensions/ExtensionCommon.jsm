@@ -285,7 +285,9 @@ class BaseContext {
     }
 
     try {
-      ssm.checkLoadURIStrWithPrincipal(this.principal, url, flags);
+      ssm.checkLoadURIWithPrincipal(this.principal,
+                                    Services.io.newURI(url),
+                                    flags);
     } catch (e) {
       return false;
     }

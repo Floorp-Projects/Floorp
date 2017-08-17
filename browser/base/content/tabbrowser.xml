@@ -82,8 +82,8 @@
       <field name="mCurrentTab">
         null
       </field>
-      <field name="_lastRelatedTab">
-        null
+      <field name="_lastRelatedTabMap">
+        new WeakMap();
       </field>
       <field name="mCurrentBrowser">
         null
@@ -1124,11 +1124,12 @@
             if (!this._previewMode && !oldTab.selected)
               oldTab.owner = null;
 
-            if (this._lastRelatedTab) {
-              if (!this._lastRelatedTab.selected)
-                this._lastRelatedTab.owner = null;
-              this._lastRelatedTab = null;
+            let lastRelatedTab = this._lastRelatedTabMap.get(oldTab);
+            if (lastRelatedTab) {
+              if (!lastRelatedTab.selected)
+                lastRelatedTab.owner = null;
             }
+            this._lastRelatedTabMap = new WeakMap();
 
             var oldBrowser = this.mCurrentBrowser;
 
@@ -1613,6 +1614,7 @@
             var aSameProcessAsFrameLoader;
             var aOriginPrincipal;
             var aOpener;
+            var aOpenerBrowser;
             var aIsPrerendered;
             var aCreateLazyBrowser;
             var aNextTabParentId;
@@ -1640,6 +1642,7 @@
               aSameProcessAsFrameLoader = params.sameProcessAsFrameLoader;
               aOriginPrincipal          = params.originPrincipal;
               aOpener                   = params.opener;
+              aOpenerBrowser            = params.openerBrowser;
               aIsPrerendered            = params.isPrerendered;
               aCreateLazyBrowser        = params.createLazyBrowser;
               aNextTabParentId          = params.nextTabParentId;
@@ -1671,6 +1674,7 @@
                                   originPrincipal: aOriginPrincipal,
                                   sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
                                   opener: aOpener,
+                                  openerBrowser: aOpenerBrowser,
                                   isPrerendered: aIsPrerendered,
                                   nextTabParentId: aNextTabParentId,
                                   focusUrlBar: aFocusUrlBar,
@@ -2107,11 +2111,11 @@
               b.setAttribute("remote", "true");
             }
 
-            if (aParams.opener) {
+            if (aParams.openerWindow) {
               if (aParams.remoteType) {
                 throw new Error("Cannot set opener window on a remote browser!");
               }
-              b.QueryInterface(Ci.nsIFrameLoaderOwner).presetOpenerWindow(aParams.opener);
+              b.QueryInterface(Ci.nsIFrameLoaderOwner).presetOpenerWindow(aParams.openerWindow);
             }
 
             if (!aParams.isPreloadBrowser && this.hasAttribute("autocompletepopup")) {
@@ -2132,6 +2136,9 @@
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
             if (aParams.nextTabParentId) {
+              if (!aParams.remoteType) {
+                throw new Error("Cannot have nextTabParentId without a remoteType");
+              }
               // Gecko is going to read this attribute and use it.
               b.setAttribute("nextTabParentId", aParams.nextTabParentId.toString());
             }
@@ -2400,6 +2407,7 @@
             var aOriginPrincipal;
             var aDisallowInheritPrincipal;
             var aOpener;
+            var aOpenerBrowser;
             var aIsPrerendered;
             var aCreateLazyBrowser;
             var aSkipBackgroundNotify;
@@ -2431,6 +2439,7 @@
               aOriginPrincipal          = params.originPrincipal;
               aDisallowInheritPrincipal = params.disallowInheritPrincipal;
               aOpener                   = params.opener;
+              aOpenerBrowser            = params.openerBrowser;
               aIsPrerendered            = params.isPrerendered;
               aCreateLazyBrowser        = params.createLazyBrowser;
               aSkipBackgroundNotify     = params.skipBackgroundNotify;
@@ -2444,7 +2453,27 @@
             if (this.mCurrentTab.owner)
               this.mCurrentTab.owner = null;
 
+            // Find the tab that opened this one, if any. This is used for
+            // determining positioning, and inherited attributes such as the
+            // user context ID.
+            //
+            // If we have a browser opener (which is usually the browser
+            // element from a remote window.open() call), use that.
+            //
+            // Otherwise, if the tab is related to the current tab (e.g.,
+            // because it was opened by a link click), use the selected tab as
+            // the owner. If aReferrerURI is set, and we don't have an
+            // explicit relatedToCurrent arg, we assume that the tab is
+            // related to the current tab, since aReferrerURI is null or
+            // undefined if the tab is opened from an external application or
+            // bookmark (i.e. somewhere other than an existing tab).
+            let relatedToCurrent = aRelatedToCurrent == null ? !!aReferrerURI : aRelatedToCurrent;
+            let openerTab = ((aOpenerBrowser && this.getTabForBrowser(aOpenerBrowser)) ||
+                             (relatedToCurrent && this.selectedTab));
+
             var t = document.createElementNS(NS_XUL, "tab");
+
+            t.openerTab = openerTab;
 
             aURI = aURI || "about:blank";
             let aURIObject = null;
@@ -2475,9 +2504,8 @@
 
             // Related tab inherits current tab's user context unless a different
             // usercontextid is specified
-            if (aUserContextId == null &&
-                (aRelatedToCurrent == null ? aReferrerURI : aRelatedToCurrent)) {
-              aUserContextId = this.mCurrentTab.getAttribute("usercontextid") || 0;
+            if (aUserContextId == null && openerTab) {
+              aUserContextId = openerTab.getAttribute("usercontextid") || 0;
             }
 
             if (aUserContextId) {
@@ -2526,6 +2554,12 @@
 
             this.tabContainer.updateVisibility();
 
+            // If we don't have a preferred remote type, and we have a remote
+            // opener, use the opener's remote type.
+            if (!aPreferredRemoteType && aOpenerBrowser) {
+              aPreferredRemoteType = aOpenerBrowser.remoteType;
+            }
+
             // If URI is about:blank and we don't have a preferred remote type,
             // then we need to use the referrer, if we have one, to get the
             // correct remote type for the new tab.
@@ -2562,7 +2596,7 @@
                                         uriIsAboutBlank,
                                         userContextId: aUserContextId,
                                         sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
-                                        opener: aOpener,
+                                        openerWindow: aOpener,
                                         isPrerendered: aIsPrerendered,
                                         nextTabParentId: aNextTabParentId,
                                         name: aName });
@@ -2644,21 +2678,19 @@
               }
             }
 
-            // Check if we're opening a tab related to the current tab and
-            // move it to after the current tab.
-            // aReferrerURI is null or undefined if the tab is opened from
-            // an external application or bookmark, i.e. somewhere other
-            // than the current tab.
-            if ((aRelatedToCurrent == null ? aReferrerURI : aRelatedToCurrent) &&
+            // If we're opening a tab related to the an existing tab, move it
+            // to a position after that tab.
+            if (openerTab &&
                 Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
-              let newTabPos = (this._lastRelatedTab ||
-                               this.selectedTab)._tPos + 1;
-              if (this._lastRelatedTab)
-                this._lastRelatedTab.owner = null;
+
+              let lastRelatedTab = this._lastRelatedTabMap.get(openerTab);
+              let newTabPos = (lastRelatedTab || openerTab)._tPos + 1;
+              if (lastRelatedTab)
+                lastRelatedTab.owner = null;
               else
-                t.owner = this.selectedTab;
-              this.moveTabTo(t, newTabPos);
-              this._lastRelatedTab = t;
+                t.owner = openerTab;
+              this.moveTabTo(t, newTabPos, true);
+              this._lastRelatedTabMap.set(openerTab, t);
             }
 
             // This field is updated regardless if we actually animate
@@ -3055,7 +3087,7 @@
 
             this.tabAnimationsInProgress--;
 
-            this._lastRelatedTab = null;
+            this._lastRelatedTabMap = new WeakMap();
 
             // update the UI early for responsiveness
             aTab.collapsed = true;
@@ -3705,6 +3737,7 @@
       <method name="moveTabTo">
         <parameter name="aTab"/>
         <parameter name="aIndex"/>
+        <parameter name="aKeepRelatedTabs"/>
         <body>
         <![CDATA[
           var oldPosition = aTab._tPos;
@@ -3719,7 +3752,9 @@
           if (oldPosition == aIndex)
             return;
 
-          this._lastRelatedTab = null;
+          if (!aKeepRelatedTabs) {
+            this._lastRelatedTabMap = new WeakMap();
+          }
 
           let wasFocused = (document.activeElement == this.mCurrentTab);
 

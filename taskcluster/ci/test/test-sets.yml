@@ -38,6 +38,7 @@ common-tests:
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
+    - test-verify
     - xpcshell
 
 web-platform-tests:
@@ -291,7 +292,6 @@ android-x86-tests:
 
 windows8-tests:
     - mochitest-browser-chrome
-    - mochitest-devtools-chrome
     - mochitest-media
     - reftest
     - reftest-no-accel

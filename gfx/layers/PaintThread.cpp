@@ -66,11 +66,15 @@ PaintThread::AddRef()
 {
 }
 
-void
-PaintThread::InitOnPaintThread()
+/* static */ void
+PaintThread::Start()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-  sThreadId = PlatformThread::CurrentId();
+  PaintThread::sSingleton = new PaintThread();
+
+  if (!PaintThread::sSingleton->Init()) {
+    gfxCriticalNote << "Unable to start paint thread";
+    PaintThread::sSingleton = nullptr;
+  }
 }
 
 bool
@@ -92,22 +96,11 @@ PaintThread::Init()
   return true;
 }
 
-/* static */ void
-PaintThread::Start()
+void
+PaintThread::InitOnPaintThread()
 {
-  PaintThread::sSingleton = new PaintThread();
-
-  if (!PaintThread::sSingleton->Init()) {
-    gfxCriticalNote << "Unable to start paint thread";
-    PaintThread::sSingleton = nullptr;
-  }
-}
-
-/* static */ PaintThread*
-PaintThread::Get()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return PaintThread::sSingleton.get();
+  MOZ_ASSERT(!NS_IsMainThread());
+  sThreadId = PlatformThread::CurrentId();
 }
 
 void
@@ -138,107 +131,17 @@ PaintThread::ShutdownOnPaintThread()
   MOZ_ASSERT(IsOnPaintThread());
 }
 
+/* static */ PaintThread*
+PaintThread::Get()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return PaintThread::sSingleton.get();
+}
+
 /* static */ bool
 PaintThread::IsOnPaintThread()
 {
   return sThreadId == PlatformThread::CurrentId();
-}
-
-void
-PaintThread::PaintContentsAsync(CompositorBridgeChild* aBridge,
-                                CapturedPaintState* aState,
-                                PrepDrawTargetForPaintingCallback aCallback)
-{
-  MOZ_ASSERT(IsOnPaintThread());
-  MOZ_ASSERT(aState);
-
-  DrawTarget* target = aState->mTarget;
-  DrawTargetCapture* capture = aState->mCapture;
-
-  AutoCapturedPaintSetup setup(aState, aBridge);
-
-  if (!aCallback(aState)) {
-    return;
-  }
-
-  // Draw all the things into the actual dest target.
-  target->DrawCapturedDT(capture, Matrix());
-  if (!mDrawTargetsToFlush.Contains(target)) {
-    mDrawTargetsToFlush.AppendElement(target);
-  }
-}
-
-void
-PaintThread::FinishedLayerBatch()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::EndAsyncPaintingLayer",
-  [self]() -> void
-  {
-    self->EndAsyncPaintingLayer();
-  });
-
-  if (!gfxPrefs::LayersOMTPForceSync()) {
-    sThread->Dispatch(task.forget());
-  } else {
-    SyncRunnable::DispatchToThread(sThread, task);
-  }
-}
-
-void
-PaintThread::EndAsyncPaintingLayer()
-{
-  MOZ_ASSERT(IsOnPaintThread());
-  // Textureclient forces a flush once we "end paint", so
-  // users of this texture expect all the drawing to be complete.
-  // Force a flush now.
-  for (size_t i = 0; i < mDrawTargetsToFlush.Length(); i++) {
-    mDrawTargetsToFlush[i]->Flush();
-  }
-
-  mDrawTargetsToFlush.Clear();
-}
-
-void
-PaintThread::SynchronizePaintTextures(SyncObjectClient* aSyncObject)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aSyncObject);
-
-  RefPtr<CompositorBridgeChild> cbc;
-  if (!gfxPrefs::LayersOMTPForceSync()) {
-    cbc = CompositorBridgeChild::Get();
-  }
-
-  RefPtr<SyncObjectClient> syncObject(aSyncObject);
-  RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::SyncTextureData",
-    [self, cbc, syncObject]() -> void
-  {
-    self->SyncTextureData(cbc, syncObject);
-  });
-
-  if (cbc) {
-    sThread->Dispatch(task.forget());
-  } else {
-    SyncRunnable::DispatchToThread(sThread, task);
-  }
-}
-
-void
-PaintThread::SyncTextureData(CompositorBridgeChild* aBridge,
-                             SyncObjectClient* aSyncObject)
-{
-  MOZ_ASSERT(IsOnPaintThread());
-  MOZ_ASSERT(aSyncObject);
-
-  aSyncObject->Synchronize();
-
-  if (aBridge) {
-    aBridge->NotifyFinishedAsyncPaintTransaction();
-  }
 }
 
 void
@@ -263,7 +166,7 @@ PaintThread::PaintContents(CapturedPaintState* aState,
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
     [self, cbc, capture, state, aCallback]() -> void
   {
-    self->PaintContentsAsync(cbc,
+    self->AsyncPaintContents(cbc,
                              state,
                              aCallback);
   });
@@ -272,6 +175,104 @@ PaintThread::PaintContents(CapturedPaintState* aState,
     sThread->Dispatch(task.forget());
   } else {
     SyncRunnable::DispatchToThread(sThread, task);
+  }
+}
+
+void
+PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
+                                CapturedPaintState* aState,
+                                PrepDrawTargetForPaintingCallback aCallback)
+{
+  MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(aState);
+
+  DrawTarget* target = aState->mTarget;
+  DrawTargetCapture* capture = aState->mCapture;
+
+  AutoCapturedPaintSetup setup(aState, aBridge);
+
+  if (!aCallback(aState)) {
+    return;
+  }
+
+  // Draw all the things into the actual dest target.
+  target->DrawCapturedDT(capture, Matrix());
+  if (!mDrawTargetsToFlush.Contains(target)) {
+    mDrawTargetsToFlush.AppendElement(target);
+  }
+}
+
+void
+PaintThread::EndLayer()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncEndLayer",
+  [self]() -> void
+  {
+    self->AsyncEndLayer();
+  });
+
+  if (!gfxPrefs::LayersOMTPForceSync()) {
+    sThread->Dispatch(task.forget());
+  } else {
+    SyncRunnable::DispatchToThread(sThread, task);
+  }
+}
+
+void
+PaintThread::AsyncEndLayer()
+{
+  MOZ_ASSERT(IsOnPaintThread());
+  // Textureclient forces a flush once we "end paint", so
+  // users of this texture expect all the drawing to be complete.
+  // Force a flush now.
+  for (size_t i = 0; i < mDrawTargetsToFlush.Length(); i++) {
+    mDrawTargetsToFlush[i]->Flush();
+  }
+
+  mDrawTargetsToFlush.Clear();
+}
+
+void
+PaintThread::EndLayerTransaction(SyncObjectClient* aSyncObject)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<CompositorBridgeChild> cbc;
+  if (!gfxPrefs::LayersOMTPForceSync()) {
+    cbc = CompositorBridgeChild::Get();
+    cbc->NotifyBeginAsyncEndLayerTransaction();
+  }
+
+  RefPtr<SyncObjectClient> syncObject(aSyncObject);
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncEndLayerTransaction",
+    [self, cbc, syncObject]() -> void
+  {
+    self->AsyncEndLayerTransaction(cbc, syncObject);
+  });
+
+  if (cbc) {
+    sThread->Dispatch(task.forget());
+  } else {
+    SyncRunnable::DispatchToThread(sThread, task);
+  }
+}
+
+void
+PaintThread::AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
+                                      SyncObjectClient* aSyncObject)
+{
+  MOZ_ASSERT(IsOnPaintThread());
+
+  if (aSyncObject) {
+    aSyncObject->Synchronize();
+  }
+
+  if (aBridge) {
+    aBridge->NotifyFinishedAsyncEndLayerTransaction();
   }
 }
 

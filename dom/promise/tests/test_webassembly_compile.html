@@ -12,10 +12,14 @@
 <script>
 const wasmTextToBinary = SpecialPowers.unwrap(SpecialPowers.Cu.getJSTestingFunctions().wasmTextToBinary);
 const wasmIsSupported = SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported
-const fooModuleCode = wasmTextToBinary(`(module
-  (func $foo (result i32) (i32.const 42))
-  (export "foo" $foo)
-)`, 'new-format');
+
+var moduleStr = '(module\n';
+for (var i = 0; i < 50; i++)
+    moduleStr += ' (func (param i32 i32) (result i32) (i32.add (get_local 0) (get_local 1)))\n';
+moduleStr += ' (func (export "foo") (result i32) (i32.const 42))\n';
+moduleStr += ')';
+
+const fooModuleCode = wasmTextToBinary(moduleStr);
 
 function checkFooModule(m) {
   ok(m instanceof WebAssembly.Module, "got a module");

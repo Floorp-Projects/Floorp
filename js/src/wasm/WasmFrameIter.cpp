@@ -32,18 +32,6 @@ using mozilla::Swap;
 /*****************************************************************************/
 // WasmFrameIter implementation
 
-WasmFrameIter::WasmFrameIter()
-  : activation_(nullptr),
-    code_(nullptr),
-    callsite_(nullptr),
-    codeRange_(nullptr),
-    fp_(nullptr),
-    unwind_(Unwind::False),
-    unwoundAddressOfReturnAddress_(nullptr)
-{
-    MOZ_ASSERT(done());
-}
-
 WasmFrameIter::WasmFrameIter(WasmActivation* activation, Unwind unwind)
   : activation_(activation),
     code_(nullptr),
@@ -95,7 +83,7 @@ WasmFrameIter::operator++()
 {
     MOZ_ASSERT(!done());
 
-    // When the iterator is set to Unwind::True, each time the iterator pops a
+    // When the iterator is set to unwind, each time the iterator pops a
     // frame, the WasmActivation is updated so that the just-popped frame
     // is no longer visible. This is necessary since Debugger::onLeaveFrame is
     // called before popping each frame and, once onLeaveFrame is called for a
@@ -1002,17 +990,6 @@ ProfilingFrameIterator::label() const
     }
 
     MOZ_CRASH("bad code range kind");
-}
-
-void
-wasm::TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
-{
-    for (ActivationIterator iter(cx, target); !iter.done(); ++iter) {
-        if (iter.activation()->isWasm()) {
-            for (WasmFrameIter fi(iter.activation()->asWasm()); !fi.done(); ++fi)
-                fi.instance()->trace(trc);
-        }
-    }
 }
 
 Instance*

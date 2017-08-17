@@ -209,13 +209,13 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsACString& aScope,
                                      const nsACString& aScriptSpec,
                                      const nsAString& aCacheName,
-                                     nsLoadFlags aLoadFlags)
+                                     nsLoadFlags aImportsLoadFlags)
   : mPrincipal(aPrincipal)
   , mScope(aScope)
   , mScriptSpec(aScriptSpec)
   , mCacheName(aCacheName)
-  , mLoadFlags(aLoadFlags)
   , mState(ServiceWorkerState::EndGuard_)
+  , mImportsLoadFlags(aImportsLoadFlags)
   , mServiceWorkerID(GetNextID())
   , mCreationTime(PR_Now())
   , mCreationTimeStamp(TimeStamp::Now())
@@ -232,6 +232,11 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(!mScope.IsEmpty());
   MOZ_ASSERT(!mScriptSpec.IsEmpty());
   MOZ_ASSERT(!mCacheName.IsEmpty());
+
+  // Scripts of a service worker should always be loaded bypass service workers.
+  // Otherwise, we might not be able to update a service worker correctly, if
+  // there is a service worker generating the script.
+  MOZ_DIAGNOSTIC_ASSERT(mImportsLoadFlags & nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 }
 
 ServiceWorkerInfo::~ServiceWorkerInfo()

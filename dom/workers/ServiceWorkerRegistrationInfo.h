@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_serviceworkerregistrationinfo_h
 
 #include "mozilla/dom/workers/ServiceWorkerInfo.h"
+#include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -31,7 +32,7 @@ class ServiceWorkerRegistrationInfo final
   // The time of update is 0, if SWR've never been updated yet.
   PRTime mLastUpdateTime;
 
-  nsLoadFlags mLoadFlags;
+  ServiceWorkerUpdateViaCache mUpdateViaCache;
 
   RefPtr<ServiceWorkerInfo> mEvaluatingWorker;
   RefPtr<ServiceWorkerInfo> mActiveWorker;
@@ -57,7 +58,7 @@ public:
 
   ServiceWorkerRegistrationInfo(const nsACString& aScope,
                                 nsIPrincipal* aPrincipal,
-                                nsLoadFlags aLoadFlags);
+                                ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   already_AddRefed<ServiceWorkerInfo>
   Newest() const
@@ -183,11 +184,11 @@ public:
   bool
   IsIdle() const;
 
-  nsLoadFlags
-  GetLoadFlags() const;
+  ServiceWorkerUpdateViaCache
+  GetUpdateViaCache() const;
 
   void
-  SetLoadFlags(nsLoadFlags aLoadFlags);
+  SetUpdateViaCache(ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   int64_t
   GetLastUpdateTime() const;

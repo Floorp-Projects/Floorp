@@ -8,6 +8,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "EventQueue.h"
+#include "mozilla/ThreadEventQueue.h"
 #include "nsIThreadInternal.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
@@ -65,7 +67,10 @@ private:
 };
 
 WorkerThread::WorkerThread()
-  : nsThread(nsThread::NOT_MAIN_THREAD, kWorkerStackSize)
+  : nsThread(WrapNotNull(new ThreadEventQueue<mozilla::EventQueue>(
+                           MakeUnique<mozilla::EventQueue>())),
+             nsThread::NOT_MAIN_THREAD,
+             kWorkerStackSize)
   , mLock("WorkerThread::mLock")
   , mWorkerPrivateCondVar(mLock, "WorkerThread::mWorkerPrivateCondVar")
   , mWorkerPrivate(nullptr)

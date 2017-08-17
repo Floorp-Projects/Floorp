@@ -285,6 +285,20 @@ class TabTracker extends TabTrackerBase {
   }
 
   /**
+   * Sets the opener of `tab` to the ID `openerTab`. Both tabs must be in the
+   * same window, or this function will throw a type error.
+   *
+   * @param {Element} tab The tab for which to set the owner.
+   * @param {Element} openerTab The opener of <tab>.
+   */
+  setOpener(tab, openerTab) {
+    if (tab.ownerDocument !== openerTab.ownerDocument) {
+      throw new Error("Tab must be in the same window as its opener");
+    }
+    tab.openerTab = openerTab;
+  }
+
+  /**
    * @param {Event} event
    *        The DOM Event to handle.
    * @private
@@ -563,6 +577,14 @@ class Tab extends TabBase {
 
   get cookieStoreId() {
     return getCookieStoreIdForTab(this, this.nativeTab);
+  }
+
+  get openerTabId() {
+    let opener = this.nativeTab.openerTab;
+    if (opener && opener.parentNode && opener.ownerDocument == this.nativeTab.ownerDocument) {
+      return tabTracker.getId(opener);
+    }
+    return null;
   }
 
   get height() {

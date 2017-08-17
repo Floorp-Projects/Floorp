@@ -158,7 +158,7 @@ GetElements(JSContext* cx, HandleObject aobj, uint32_t length, js::Value* vp);
 /* Natives exposed for optimization by the interpreter and JITs. */
 
 extern bool
-array_sort(JSContext* cx, unsigned argc, js::Value* vp);
+intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern bool
 array_push(JSContext* cx, unsigned argc, js::Value* vp);

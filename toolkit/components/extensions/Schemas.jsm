@@ -346,8 +346,9 @@ class Context {
   checkLoadURL(url) {
     let ssm = Services.scriptSecurityManager;
     try {
-      ssm.checkLoadURIStrWithPrincipal(this.principal, url,
-                                       ssm.DISALLOW_INHERIT_PRINCIPAL);
+      ssm.checkLoadURIWithPrincipal(this.principal,
+                                    Services.io.newURI(url),
+                                    ssm.DISALLOW_INHERIT_PRINCIPAL);
     } catch (e) {
       return false;
     }

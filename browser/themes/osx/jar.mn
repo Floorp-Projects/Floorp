@@ -38,8 +38,6 @@ browser.jar:
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/toolbarbutton-dropmarker@2x.png
-  skin/classic/browser/urlbar-history-dropmarker.png
-  skin/classic/browser/urlbar-history-dropmarker@2x.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-popup-blocked@2x.png
   skin/classic/browser/webRTC-sharingDevice-menubar.png
