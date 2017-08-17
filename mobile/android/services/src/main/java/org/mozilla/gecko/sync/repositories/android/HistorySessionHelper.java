@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.sync.repositories.android;
 
 import android.content.ContentProviderClient;
@@ -9,7 +13,6 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.NoGuidForIdException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
-import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
@@ -53,8 +56,6 @@ import java.util.ArrayList;
      */
     @Override
     /* package-private */ void storeRecordDeletion(RepositorySessionStoreDelegate storeDelegate, Record record, Record existingRecord) {
-        // TODO: we ought to mark the record as deleted rather than purging it,
-        // in order to support syncing to multiple destinations. Bug 722607.
         dbHelper.purgeGuid(record.guid);
         storeDelegate.onRecordStoreSucceeded(record.guid);
     }
@@ -131,6 +132,32 @@ import java.util.ArrayList;
     @Override
     Runnable getStoreDoneRunnable(final RepositorySessionStoreDelegate delegate) {
         return getFlushRecordsRunnabler(delegate);
+    }
+
+    @Override
+    boolean doReplaceRecord(Record toStore, Record existingRecord, RepositorySessionStoreDelegate delegate) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+        Logger.debug(LOG_TAG, "Replacing existing " + existingRecord.guid +
+                (toStore.deleted ? " with deleted record " : " with record ") +
+                toStore.guid);
+
+        Record preparedToStore = prepareRecord(toStore);
+
+        // newRecord should already have suitable androidID and guid.
+        dbHelper.update(existingRecord.guid, preparedToStore);
+        updateBookkeeping(preparedToStore);
+        Logger.debug(LOG_TAG, "replace() returning record " + preparedToStore.guid);
+
+        Logger.debug(LOG_TAG, "Calling delegate callback with guid " + preparedToStore.guid +
+                "(" + preparedToStore.androidID + ")");
+        delegate.onRecordStoreReconciled(preparedToStore.guid, null);
+        delegate.onRecordStoreSucceeded(preparedToStore.guid);
+
+        return true;
+    }
+
+    @Override
+    boolean isLocallyModified(Record record) {
+        return record.lastModified > session.getLastSyncTimestamp();
     }
 
     Runnable getStoreIncompleteRunnable(final RepositorySessionStoreDelegate delegate) {

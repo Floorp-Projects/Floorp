@@ -293,7 +293,6 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestDeleteBookmarksFavicons());
         mTests.add(new TestUpdateBookmarks());
         mTests.add(new TestUpdateBookmarksFavicons());
-        mTests.add(new TestPositionBookmarks());
 
         mTests.add(new TestInsertHistory());
         mTests.add(new TestInsertHistoryFavicons());
@@ -896,101 +895,6 @@ public class testBrowserProvider extends ContentProviderTest {
 
             mAsserter.is(new String(c.getBlob(c.getColumnIndex(BrowserContract.Combined.FAVICON)), "UTF8"),
                          newFavicon, "Updated favicon has corresponding favicon image");
-            c.close();
-        }
-    }
-
-    /**
-     * Create a folder of one thousand and one bookmarks, then impose an order
-     * on them.
-     *
-     * Verify that the reordering worked by querying.
-     */
-    private class TestPositionBookmarks extends TestCase {
-
-        public String makeGUID(final long in) {
-            String part = String.valueOf(in);
-            return "aaaaaaaaaaaa".substring(0, (12 - part.length())) + part;
-        }
-
-        public void compareCursorToItems(final Cursor c, final String[] items, final int count) {
-            mAsserter.is(c.moveToFirst(), true, "Folder has children.");
-
-            int posColumn = c.getColumnIndex(BrowserContract.Bookmarks.POSITION);
-            int guidColumn = c.getColumnIndex(BrowserContract.Bookmarks.GUID);
-            int i = 0;
-
-            while (!c.isAfterLast()) {
-                String guid = c.getString(guidColumn);
-                long pos = c.getLong(posColumn);
-                if ((pos != i) || (guid == null) || (!guid.equals(items[i]))) {
-                    mAsserter.is(pos, (long) i, "Position matches sequence.");
-                    mAsserter.is(guid, items[i], "GUID matches sequence.");
-                }
-                ++i;
-                c.moveToNext();
-            }
-
-            mAsserter.is(i, count, "Folder has the right number of children.");
-            c.close();
-        }
-
-        public static final int NUMBER_OF_CHILDREN = 1001;
-        @Override
-        public void test() throws Exception {
-            // Create the containing folder.
-            ContentValues folder = createBookmark("FolderFolder", "", mMobileFolderId,
-                                                  BrowserContract.Bookmarks.TYPE_FOLDER, 0, "",
-                                                  "description", "keyword");
-            folder.put(BrowserContract.Bookmarks.GUID, "folderfolder");
-            long folderId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, folder));
-
-            mAsserter.dumpLog("TestPositionBookmarks: Folder inserted"); // Bug 968951 debug.
-
-            // Create the children.
-            String[] items = new String[NUMBER_OF_CHILDREN];
-
-            // Reuse the same ContentValues.
-            ContentValues item = createBookmark("Test Bookmark", "http://example.com", folderId,
-                                                BrowserContract.Bookmarks.TYPE_FOLDER, 0, "",
-                                                "description", "keyword");
-
-            for (int i = 0; i < NUMBER_OF_CHILDREN; ++i) {
-                String guid = makeGUID(i);
-                items[i] = guid;
-                item.put(BrowserContract.Bookmarks.GUID, guid);
-                item.put(BrowserContract.Bookmarks.POSITION, i);
-                item.put(BrowserContract.Bookmarks.URL, "http://example.com/" + guid);
-                item.put(BrowserContract.Bookmarks.TITLE, "Test Bookmark " + guid);
-                mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, item);
-            }
-
-            mAsserter.dumpLog("TestPositionBookmarks: Bookmarks inserted"); // Bug 968951 debug.
-
-            Cursor c;
-
-            // Verify insertion.
-            c = getBookmarksByParent(folderId);
-            mAsserter.dumpLog("TestPositionBookmarks: Got bookmarks by parent"); // Bug 968951 debug.
-            compareCursorToItems(c, items, NUMBER_OF_CHILDREN);
-            c.close();
-
-            // Now permute the items array.
-            Random rand = new Random();
-            for (int i = 0; i < NUMBER_OF_CHILDREN; ++i) {
-                final int newPosition = rand.nextInt(NUMBER_OF_CHILDREN);
-                final String switched = items[newPosition];
-                items[newPosition] = items[i];
-                items[i] = switched;
-            }
-
-            // Impose the positions.
-            long updated = mProvider.update(BrowserContract.Bookmarks.POSITIONS_CONTENT_URI, null, null, items);
-            mAsserter.is(updated, (long) NUMBER_OF_CHILDREN, "Updated " + NUMBER_OF_CHILDREN + " positions.");
-
-            // Verify that the database was updated.
-            c = getBookmarksByParent(folderId);
-            compareCursorToItems(c, items, NUMBER_OF_CHILDREN);
             c.close();
         }
     }

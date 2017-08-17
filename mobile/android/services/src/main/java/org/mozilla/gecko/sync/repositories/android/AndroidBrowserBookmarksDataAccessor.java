@@ -21,6 +21,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 
 public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositoryDataAccessor {
 
@@ -79,11 +80,10 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
    * Order bookmarks by type, ensuring that folders will be processed before other records during
    * an upload. This is in support of payload-size validation. See Bug 1343726.
    */
-  @Override
-  public Cursor fetchSince(long timestamp) throws NullCursorException {
-    return queryHelper.safeQuery(".fetchSince",
+  public Cursor fetchModified() throws NullCursorException {
+    return queryHelper.safeQuery(".fetchModified",
             getAllColumns(),
-            dateModifiedWhere(timestamp),
+            BrowserContract.VersionColumns.LOCAL_VERSION + " > " + BrowserContract.VersionColumns.SYNC_VERSION,
             null, BrowserContract.Bookmarks.TYPE + " ASC");
   }
 
@@ -107,6 +107,42 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     String where = BOOKMARK_IS_FOLDER + " AND " + GUID_SHOULD_TRACK;
     return queryHelper.safeQuery(".getGuidsIDsForFolders", GUID_AND_ID, where, null, null);
   }
+
+  /**
+   * Update a record identified by GUID to new values, but only if assertion passes that localVersion
+   * did not change. This is expected to be called during record reconciliation, and so we also request
+   * that localVersion is incremented in the process.
+   */
+  /* package-private */ boolean updateAssertingLocalVersion(String guid, int expectedLocalVersion, boolean shouldIncrementLocalVersion, Record newRecord) {
+    final ContentValues cv = getContentValues(newRecord);
+    final Bundle data = new Bundle();
+    data.putString(BrowserContract.SyncColumns.GUID, guid);
+    data.putInt(BrowserContract.VersionColumns.LOCAL_VERSION, expectedLocalVersion);
+    data.putParcelable(BrowserContract.METHOD_PARAM_DATA, cv);
+
+    final Uri callUri;
+    if (shouldIncrementLocalVersion) {
+      callUri = withLocalVersionIncrement(getUri());
+    } else {
+      callUri = getUri();
+    }
+
+    final Bundle result = context.getContentResolver().call(
+            callUri,
+            BrowserContract.METHOD_UPDATE_BY_GUID_ASSERTING_LOCAL_VERSION,
+            callUri.toString(),
+            data
+    );
+    if (result == null) {
+      throw new IllegalStateException("Unexpected null result after METHOD_UPDATE_BY_GUID_ASSERTING_LOCAL_VERSION");
+    }
+    return (boolean) result.getSerializable(BrowserContract.METHOD_RESULT);
+  }
+
+  private Uri withLocalVersionIncrement(Uri baseUri) {
+    return baseUri.buildUpon().appendQueryParameter(BrowserContractHelpers.PARAM_INCREMENT_LOCAL_VERSION_FROM_SYNC, "true").build();
+  }
+
 
   /**
    * Issue a request to the Content Provider to update the positions of the
@@ -139,7 +175,9 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     ContentValues values = new ContentValues();
     values.put(BrowserContract.Bookmarks.DATE_MODIFIED, modified);
 
-    return context.getContentResolver().update(getUri(), values, where, selectionArgs);
+    return context.getContentResolver().update(
+            withLocalVersionIncrement(getUri()),
+            values, where, selectionArgs);
   }
 
   /**
@@ -152,7 +190,9 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     ContentValues values = new ContentValues();
     values.put(BrowserContract.Bookmarks.DATE_MODIFIED, modified);
 
-    return context.getContentResolver().update(getUri(), values, where, selectionArgs);
+    return context.getContentResolver().update(
+            withLocalVersionIncrement(getUri()),
+            values, where, selectionArgs);
   }
 
   protected void updateParentAndPosition(String guid, long newParentId, long position) {
@@ -203,9 +243,9 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     cv.put(BrowserContract.Bookmarks.POSITION, pos);
 
     final String where = RepoUtils.computeSQLInClause(fromIDs.length, BrowserContract.Bookmarks.PARENT);
-    return context.getContentResolver().update(getUri(), cv, where, fromIDs);
+    return context.getContentResolver().update(withLocalVersionIncrement(getUri()), cv, where, fromIDs);
   }
-  
+
   /*
    * Verify that all special GUIDs are present and that they aren't marked as deleted.
    * Insert them if they aren't there.
@@ -300,6 +340,14 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     if (rec.tags == null) {
       rec.tags = new JSONArray();
     }
+
+    // We might want to indicate that this record is to be inserted as "modified". Incoming records
+    // might be modified as we're processing them for insertion, and so should be re-uploaded.
+    // Our data provider layer manages versions, so we don't pass in localVersion explicitly.
+    if (rec.insertFromSyncAsModified) {
+      cv.put(BrowserContract.Bookmarks.PARAM_INSERT_FROM_SYNC_AS_MODIFIED, true);
+    }
+
     cv.put(BrowserContract.Bookmarks.TAGS,        rec.tags.toJSONString());
     cv.put(BrowserContract.Bookmarks.KEYWORD,     rec.keyword);
     cv.put(BrowserContract.Bookmarks.PARENT,      rec.androidParentID);

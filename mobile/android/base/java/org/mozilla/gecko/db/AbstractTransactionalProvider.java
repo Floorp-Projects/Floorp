@@ -315,6 +315,11 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
         return !TextUtils.isEmpty(isSync);
     }
 
+    protected static boolean shouldIncrementLocalVersionFromSync(Uri uri) {
+        String shouldIncrement = uri.getQueryParameter(BrowserContract.PARAM_INCREMENT_LOCAL_VERSION_FROM_SYNC);
+        return !TextUtils.isEmpty(shouldIncrement);
+    }
+
     protected static void trace(String message) {
         if (logVerbose) {
             Log.v(LOGTAG, message);

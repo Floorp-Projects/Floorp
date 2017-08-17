@@ -4,20 +4,22 @@
 
 package org.mozilla.gecko.sync.stage;
 
+import android.net.Uri;
+
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
 import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
-import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepository;
+import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecordFactory;
 import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
 
-public class AndroidBrowserBookmarksServerSyncStage extends ServerSyncStage {
+public class AndroidBrowserBookmarksServerSyncStage extends VersionedServerSyncStage {
   protected static final String LOG_TAG = "BookmarksStage";
 
   // Eventually this kind of sync stage will be data-driven,
@@ -38,6 +40,11 @@ public class AndroidBrowserBookmarksServerSyncStage extends ServerSyncStage {
   @Override
   public Integer getStorageVersion() {
     return VersionConstants.BOOKMARKS_ENGINE_VERSION;
+  }
+
+  @Override
+  /* package-private */ Uri getLocalDataUri() {
+    return BrowserContractHelpers.BOOKMARKS_CONTENT_URI;
   }
 
   /**
