@@ -9,10 +9,6 @@
 [scriptable, uuid(51191434-1dd2-11b2-a17c-e49c4e99a4e3)]
 interface nsIPK11Token : nsISupports
 {
-  const long ASK_EVERY_TIME  = -1;
-  const long ASK_FIRST_TIME  =  0;
-  const long ASK_EXPIRE_TIME =  1;
-
   /*
    * The name of the token
    */
@@ -49,6 +45,10 @@ interface nsIPK11Token : nsISupports
   void logoutSimple();
   [must_use]
   void logoutAndDropAuthenticatedResources();
+  [must_use]
+  boolean needsLogin();
+  [must_use]
+  readonly attribute boolean needsUserInit;
 
   /*
    * Reset password
@@ -56,13 +56,6 @@ interface nsIPK11Token : nsISupports
   [must_use]
   void reset();
 
-  /*
-   * Password information
-   */
-  [must_use]
-  readonly attribute long minimumPasswordLength;
-  [must_use]
-  readonly attribute boolean needsUserInit;
   /**
    * Checks whether the given password is correct. Logs the token out if an
    * incorrect password is given.
@@ -76,12 +69,6 @@ interface nsIPK11Token : nsISupports
   void initPassword(in AUTF8String initialPassword);
   [must_use]
   void changePassword(in AUTF8String oldPassword, in AUTF8String newPassword);
-  [must_use]
-  long getAskPasswordTimes();
-  [must_use]
-  long getAskPasswordTimeout();
-  [must_use]
-  void setAskPasswordDefaults([const] in long askTimes, [const] in long timeout);
 
   /*
    * True if a password has been configured for this token, and false otherwise.
@@ -91,12 +78,4 @@ interface nsIPK11Token : nsISupports
    */
   [must_use]
   readonly attribute boolean hasPassword;
-
-  /*
-   * Other attributes
-   */
-  [must_use]
-  boolean isHardwareToken();
-  [must_use]
-  boolean needsLogin();
 };

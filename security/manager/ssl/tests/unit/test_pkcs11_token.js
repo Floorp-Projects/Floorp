@@ -54,15 +54,6 @@ function checkPasswordFeaturesAndResetPassword(token, initialPW) {
   ok(token.hasPassword,
      "Token should have a password after setting a password");
 
-  equal(token.minimumPasswordLength, 0,
-        "Actual and expected min password length should match");
-
-  token.setAskPasswordDefaults(10, 20);
-  equal(token.getAskPasswordTimes(), 10,
-        "Actual and expected ask password times should match");
-  equal(token.getAskPasswordTimeout(), 20,
-        "Actual and expected ask password timeout should match");
-
   ok(token.checkPassword(initialPW),
      "checkPassword() should succeed if the correct initial password is given");
   token.changePassword(initialPW, "newPW ÿ 一二三");
@@ -114,8 +105,6 @@ function run_test() {
   ok(!token.isLoggedIn(),
      "Token should be logged out after calling logoutSimple()");
 
-  ok(!token.isHardwareToken(),
-     "The internal token should not be considered a hardware token");
   ok(token.needsLogin(),
      "The internal token should always need authentication");
 }
