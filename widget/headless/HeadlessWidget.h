@@ -40,6 +40,7 @@ public:
 
   virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
+  virtual void Destroy() override;
   virtual void Show(bool aState) override;
   virtual bool IsVisible() const override;
   virtual void Move(double aX, double aY) override;
@@ -95,6 +96,7 @@ private:
   ~HeadlessWidget();
   bool mEnabled;
   bool mVisible;
+  bool mDestroyed;
   nsIWidget* mTopLevel;
   HeadlessCompositorWidget* mCompositorWidget;
   // The size mode before entering fullscreen mode.
@@ -109,7 +111,12 @@ private:
   // Similarly, we must track the active window ourselves in order
   // to dispatch (de)activation events properly.
   void RaiseWindow();
-  static HeadlessWidget* sActiveWindow;
+  // The top level widgets are tracked for window ordering. They are
+  // stored in order of activation where the last element is always the
+  // currently active widget.
+  static StaticAutoPtr<nsTArray<HeadlessWidget*>> sActiveWindows;
+  // Get the most recently activated widget or null if there are none.
+  static already_AddRefed<HeadlessWidget>GetActiveWindow();
 };
 
 } // namespace widget
