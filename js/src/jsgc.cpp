@@ -264,6 +264,42 @@ using mozilla::TimeStamp;
 
 using JS::AutoGCRooter;
 
+/*
+ * Default settings for tuning the GC.  Some of these can be set at runtime,
+ * This list is not complete, some tuning parameters are not listed here.
+ */
+namespace js {
+namespace gc {
+namespace TuningDefaults {
+
+    static const size_t GCZoneAllocThresholdBase = 30 * 1024 * 1024;
+    static const float ZoneAllocThresholdFactor = 0.9f;
+    static const float ZoneAllocThresholdFactorAvoidInterrupt = 0.9f;
+    static const size_t ZoneAllocDelayBytes = 1024 * 1024;
+    static const bool DynamicHeapGrowthEnabled = false;
+    static const uint64_t HighFrequencyThresholdUsec = 1000000;
+    static const uint64_t HighFrequencyLowLimitBytes = 100 * 1024 * 1024;
+    static const uint64_t HighFrequencyHighLimitBytes = 500 * 1024 * 1024;
+    static const double HighFrequencyHeapGrowthMax = 3.0;
+    static const double HighFrequencyHeapGrowthMin = 1.5;
+    static const double LowFrequencyHeapGrowth = 1.5;
+    static const bool DynamicMarkSliceEnabled = false;
+    static const bool RefreshFrameSlicesEnabled = true;
+    static const uint32_t MinEmptyChunkCount = 1;
+    static const uint32_t MaxEmptyChunkCount = 30;
+
+    /*
+     * JSGC_SLICE_TIME_BUDGET.
+     * javascript.options.mem.gc_incremental_slice_ms
+     */
+    static const int64_t DefaultTimeBudget =
+        SliceBudget::UnlimitedTimeBudget;
+
+    static const JSGCMode Mode = JSGC_MODE_INCREMENTAL;
+
+    static const bool CompactingEnabled = true;
+}}} // namespace js::gc::TuningDefaults
+
 /* Increase the IGC marking slice time if we are in highFrequencyGC mode. */
 static const int IGC_MARK_SLICE_MULTIPLIER = 2;
 
@@ -829,7 +865,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     verifyPreData(nullptr),
     chunkAllocationSinceLastGC(false),
     lastGCTime(PRMJ_Now()),
-    mode(JSGC_MODE_INCREMENTAL),
+    mode(TuningDefaults::Mode),
     numActiveZoneIters(0),
     cleanUpEverything(false),
     grayBufferState(GCRuntime::GrayBufferState::Unused),
@@ -857,9 +893,9 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     markingValidator(nullptr),
 #endif
     interFrameGC(false),
-    defaultTimeBudget_((int64_t) SliceBudget::UnlimitedTimeBudget),
+    defaultTimeBudget_(TuningDefaults::DefaultTimeBudget),
     incrementalAllowed(true),
-    compactingEnabled(true),
+    compactingEnabled(TuningDefaults::CompactingEnabled),
     rootsRemoved(false),
 #ifdef JS_GC_ZEAL
     zealModeBits(0),
@@ -1329,41 +1365,25 @@ GCSchedulingTunables::setMaxEmptyChunkCount(uint32_t value)
     MOZ_ASSERT(maxEmptyChunkCount_ >= minEmptyChunkCount_);
 }
 
-static const size_t GCZoneAllocThresholdBaseDefault = 30 * 1024 * 1024;
-static const float ZoneAllocThresholdFactorDefault = 0.9f;
-static const float ZoneAllocThresholdFactorAvoidInterruptDefault = 0.9f;
-static const size_t ZoneAllocDelayBytesDefault = 1024 * 1024;
-static const bool DynamicHeapGrowthEnabledDefault = false;
-static const uint64_t HighFrequencyThresholdUsecDefault = 1000000;
-static const uint64_t HighFrequencyLowLimitBytesDefault = 100 * 1024 * 1024;
-static const uint64_t HighFrequencyHighLimitBytesDefault = 500 * 1024 * 1024;
-static const double HighFrequencyHeapGrowthMaxDefault = 3.0;
-static const double HighFrequencyHeapGrowthMinDefault = 1.5;
-static const double LowFrequencyHeapGrowthDefault = 1.5;
-static const bool DynamicMarkSliceEnabledDefault = false;
-static const bool RefreshFrameSlicesEnabledDefault = true;
-static const uint32_t MinEmptyChunkCountDefault = 1;
-static const uint32_t MaxEmptyChunkCountDefault = 30;
-
 GCSchedulingTunables::GCSchedulingTunables()
   : gcMaxBytes_(0),
     gcMaxNurseryBytes_(0),
-    gcZoneAllocThresholdBase_(GCZoneAllocThresholdBaseDefault),
-    zoneAllocThresholdFactor_(ZoneAllocThresholdFactorDefault),
+    gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
+    zoneAllocThresholdFactor_(TuningDefaults::ZoneAllocThresholdFactor),
     zoneAllocThresholdFactorAvoidInterrupt_(
-        ZoneAllocThresholdFactorAvoidInterruptDefault),
-    zoneAllocDelayBytes_(ZoneAllocDelayBytesDefault),
-    dynamicHeapGrowthEnabled_(DynamicHeapGrowthEnabledDefault),
-    highFrequencyThresholdUsec_(HighFrequencyThresholdUsecDefault),
-    highFrequencyLowLimitBytes_(HighFrequencyLowLimitBytesDefault),
-    highFrequencyHighLimitBytes_(HighFrequencyHighLimitBytesDefault),
-    highFrequencyHeapGrowthMax_(HighFrequencyHeapGrowthMaxDefault),
-    highFrequencyHeapGrowthMin_(HighFrequencyHeapGrowthMinDefault),
-    lowFrequencyHeapGrowth_(LowFrequencyHeapGrowthDefault),
-    dynamicMarkSliceEnabled_(DynamicMarkSliceEnabledDefault),
-    refreshFrameSlicesEnabled_(RefreshFrameSlicesEnabledDefault),
-    minEmptyChunkCount_(MinEmptyChunkCountDefault),
-    maxEmptyChunkCount_(MaxEmptyChunkCountDefault)
+        TuningDefaults::ZoneAllocThresholdFactorAvoidInterrupt),
+    zoneAllocDelayBytes_(TuningDefaults::ZoneAllocDelayBytes),
+    dynamicHeapGrowthEnabled_(TuningDefaults::DynamicHeapGrowthEnabled),
+    highFrequencyThresholdUsec_(TuningDefaults::HighFrequencyThresholdUsec),
+    highFrequencyLowLimitBytes_(TuningDefaults::HighFrequencyLowLimitBytes),
+    highFrequencyHighLimitBytes_(TuningDefaults::HighFrequencyHighLimitBytes),
+    highFrequencyHeapGrowthMax_(TuningDefaults::HighFrequencyHeapGrowthMax),
+    highFrequencyHeapGrowthMin_(TuningDefaults::HighFrequencyHeapGrowthMin),
+    lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
+    dynamicMarkSliceEnabled_(TuningDefaults::DynamicMarkSliceEnabled),
+    refreshFrameSlicesEnabled_(TuningDefaults::RefreshFrameSlicesEnabled),
+    minEmptyChunkCount_(TuningDefaults::MinEmptyChunkCount),
+    maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount)
 {}
 
 void
@@ -1376,17 +1396,16 @@ GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock)
             zone->setGCMaxMallocBytes(maxMallocBytesAllocated() * 0.9);
         break;
       case JSGC_SLICE_TIME_BUDGET:
-        defaultTimeBudget_ =
-            static_cast<int64_t>(SliceBudget::UnlimitedTimeBudget);
+        defaultTimeBudget_ = TuningDefaults::DefaultTimeBudget;
         break;
       case JSGC_MARK_STACK_LIMIT:
-        setMarkStackLimit(size_t(-1), lock);
+        setMarkStackLimit(MarkStack::DefaultCapacity, lock);
         break;
       case JSGC_MODE:
-        mode = JSGC_MODE_INCREMENTAL;
+        mode = TuningDefaults::Mode;
         break;
       case JSGC_COMPACTING_ENABLED:
-        compactingEnabled = true;
+        compactingEnabled = TuningDefaults::CompactingEnabled;
         break;
       default:
         tunables.resetParameter(key, lock);
@@ -1408,43 +1427,46 @@ GCSchedulingTunables::resetParameter(JSGCParamKey key, const AutoLockGC& lock)
         gcMaxNurseryBytes_ = JS::DefaultNurseryBytes;
         break;
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        highFrequencyThresholdUsec_ = HighFrequencyThresholdUsecDefault;
+        highFrequencyThresholdUsec_ =
+            TuningDefaults::HighFrequencyThresholdUsec;
         break;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-        setHighFrequencyLowLimit(HighFrequencyLowLimitBytesDefault);
+        setHighFrequencyLowLimit(TuningDefaults::HighFrequencyLowLimitBytes);
         break;
       case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-        setHighFrequencyHighLimit(HighFrequencyHighLimitBytesDefault);
+        setHighFrequencyHighLimit(TuningDefaults::HighFrequencyHighLimitBytes);
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        highFrequencyHeapGrowthMax_ = HighFrequencyHeapGrowthMaxDefault;
+        highFrequencyHeapGrowthMax_ =
+            TuningDefaults::HighFrequencyHeapGrowthMax;
         MOZ_ASSERT(highFrequencyHeapGrowthMax_ / 0.85 > 1.0);
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        highFrequencyHeapGrowthMin_ = HighFrequencyHeapGrowthMinDefault;
+        highFrequencyHeapGrowthMin_ =
+            TuningDefaults::HighFrequencyHeapGrowthMin;
         MOZ_ASSERT(highFrequencyHeapGrowthMin_ / 0.85 > 1.0);
         break;
       case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        lowFrequencyHeapGrowth_ = LowFrequencyHeapGrowthDefault;
+        lowFrequencyHeapGrowth_ = TuningDefaults::LowFrequencyHeapGrowth;
         MOZ_ASSERT(lowFrequencyHeapGrowth_ / 0.9 > 1.0);
         break;
       case JSGC_DYNAMIC_HEAP_GROWTH:
-        dynamicHeapGrowthEnabled_ = DynamicHeapGrowthEnabledDefault;
+        dynamicHeapGrowthEnabled_ = TuningDefaults::DynamicHeapGrowthEnabled;
         break;
       case JSGC_DYNAMIC_MARK_SLICE:
-        dynamicMarkSliceEnabled_ = DynamicMarkSliceEnabledDefault;
+        dynamicMarkSliceEnabled_ = TuningDefaults::DynamicMarkSliceEnabled;
         break;
       case JSGC_ALLOCATION_THRESHOLD:
-        gcZoneAllocThresholdBase_ = GCZoneAllocThresholdBaseDefault;
+        gcZoneAllocThresholdBase_ = TuningDefaults::GCZoneAllocThresholdBase;
         break;
       case JSGC_MIN_EMPTY_CHUNK_COUNT:
-        setMinEmptyChunkCount(MinEmptyChunkCountDefault);
+        setMinEmptyChunkCount(TuningDefaults::MinEmptyChunkCount);
         break;
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
-        setMaxEmptyChunkCount(MaxEmptyChunkCountDefault);
+        setMaxEmptyChunkCount(TuningDefaults::MaxEmptyChunkCount);
         break;
       case JSGC_REFRESH_FRAME_SLICES_ENABLED:
-        refreshFrameSlicesEnabled_ = RefreshFrameSlicesEnabledDefault;
+        refreshFrameSlicesEnabled_ = TuningDefaults::RefreshFrameSlicesEnabled;
         break;
       default:
         MOZ_CRASH("Unknown GC parameter.");
