@@ -463,8 +463,12 @@ var RemotePageManagerInternal = {
 
   // Initialises all the needed listeners
   init() {
-    Services.ppmm.addMessageListener("RemotePage:InitListener", this.initListener.bind(this));
     Services.mm.addMessageListener("RemotePage:InitPort", this.initPort.bind(this));
+    this.updateProcessUrls();
+  },
+
+  updateProcessUrls() {
+    Services.ppmm.initialProcessData["RemotePageManager:urls"] = Array.from(this.pages.keys());
   },
 
   // Registers interest in a remote page. A callback is called with a port for
@@ -479,6 +483,7 @@ var RemotePageManagerInternal = {
     }
 
     this.pages.set(url, callback);
+    this.updateProcessUrls();
 
     // Notify all the frame scripts of the new registration
     Services.ppmm.broadcastAsyncMessage("RemotePage:Register", { urls: [url] });
@@ -496,11 +501,7 @@ var RemotePageManagerInternal = {
     // Notify all the frame scripts of the removed registration
     Services.ppmm.broadcastAsyncMessage("RemotePage:Unregister", { urls: [url] });
     this.pages.delete(url);
-  },
-
-  // A listener is requesting the list of currently registered urls
-  initListener({ target: messageManager }) {
-    messageManager.sendAsyncMessage("RemotePage:Register", { urls: Array.from(this.pages.keys()) })
+    this.updateProcessUrls();
   },
 
   // A remote page has been created and a port is ready in the content side
@@ -526,7 +527,7 @@ this.RemotePageManager = {
 };
 
 // Listen for pages in any process we're loaded in
-var registeredURLs = new Set();
+var registeredURLs = new Set(Services.cpmm.initialProcessData["RemotePageManager:urls"]);
 
 var observer = (window) => {
   // Strip the hash from the URL, because it's not part of the origin.
@@ -557,5 +558,3 @@ Services.cpmm.addMessageListener("RemotePage:Unregister", ({ data }) => {
   for (let url of data.urls)
     registeredURLs.delete(url);
 });
-
-Services.cpmm.sendAsyncMessage("RemotePage:InitListener");
