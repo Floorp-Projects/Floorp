@@ -111,8 +111,11 @@ toolbar[brighttext] .toolbarbutton-1 {
   background-color: var(--url-and-searchbar-background-color) !important;
   background-image: none !important;
   color: inherit !important;
-  border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
-  box-shadow: none !important;
+}
+
+#urlbar:not([focused="true"]),
+.searchbar-textbox:not([focused="true"]) {
+  border-color: var(--chrome-nav-bar-controls-border-color);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels:-moz-lwtheme-brighttext {
