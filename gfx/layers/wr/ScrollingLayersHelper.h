@@ -51,7 +51,7 @@ private:
   WebRenderLayer* mLayer;
   wr::DisplayListBuilder* mBuilder;
   bool mPushedLayerLocalClip;
-  int mClipsPushed;
+  std::vector<wr::ScrollOrClipId> mPushedClips;
 };
 
 } // namespace layers
