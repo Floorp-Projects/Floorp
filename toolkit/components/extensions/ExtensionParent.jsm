@@ -1292,7 +1292,7 @@ let IconDetails = {
           // relative paths. We currently accept absolute URLs as well,
           // which means we need to check that the extension is allowed
           // to load them. This will throw an error if it's not allowed.
-          this._checkURL(url, extension.principal);
+          this._checkURL(url, extension);
 
           result[size] = url;
         }
@@ -1303,8 +1303,8 @@ let IconDetails = {
           let lightURL = baseURI.resolve(light);
           let darkURL = baseURI.resolve(dark);
 
-          this._checkURL(lightURL, extension.principal);
-          this._checkURL(darkURL, extension.principal);
+          this._checkURL(lightURL, extension);
+          this._checkURL(darkURL, extension);
 
           let defaultURL = result[size];
           result[size] = {
@@ -1330,12 +1330,8 @@ let IconDetails = {
 
   // Checks if the extension is allowed to load the given URL with the specified principal.
   // This will throw an error if the URL is not allowed.
-  _checkURL(url, principal) {
-    try {
-      Services.scriptSecurityManager.checkLoadURIWithPrincipal(
-        principal, Services.io.newURI(url),
-        Services.scriptSecurityManager.DISALLOW_SCRIPT);
-    } catch (e) {
+  _checkURL(url, extension) {
+    if (!extension.checkLoadURL(url, {allowInheritsPrincipal: true})) {
       throw new ExtensionError(`Illegal URL ${url}`);
     }
   },
