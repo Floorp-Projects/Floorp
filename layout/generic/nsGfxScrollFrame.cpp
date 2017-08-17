@@ -2762,8 +2762,7 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   // 'scale' is our estimate of the scale factor that will be applied
   // when rendering the scrolled content to its own PaintedLayer.
-  float presShellResolution = mScrolledFrame->PresContext()->PresShell()->GetResolution();
-  gfxSize scale(presShellResolution, presShellResolution);
+  gfxSize scale = FrameLayerBuilder::GetPaintedLayerScaleForFrame(mScrolledFrame);
   nsPoint curPos = GetScrollPosition();
   nsPoint alignWithPos = mScrollPosForLayerPixelAlignment == nsPoint(-1,-1)
                          ? curPos : mScrollPosForLayerPixelAlignment;
@@ -5880,12 +5879,9 @@ ScrollFrameHelper::GetScrolledRect() const
   }
 
   // Now, snap the bottom right corner of both of these rects.
-  // We ignore the CSS transforms here because we don't have a cheap way of accessing layer resolution of
-  // the layer that this frame is going to be painted to. Using the presShell resolution is good enough
-  // for most situations and simpler.
+  // We snap to layer pixels, so we need to respect the layer's scale.
   nscoord appUnitsPerDevPixel = mScrolledFrame->PresContext()->AppUnitsPerDevPixel();
-  float presShellResolution = mScrolledFrame->PresContext()->PresShell()->GetResolution();
-  gfxSize scale(presShellResolution, presShellResolution);
+  gfxSize scale = FrameLayerBuilder::GetPaintedLayerScaleForFrame(mScrolledFrame);
   if (scale.IsEmpty()) {
     scale = gfxSize(1.0f, 1.0f);
   }
