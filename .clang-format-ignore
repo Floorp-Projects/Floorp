@@ -1,6 +1,8 @@
 ^build/clang-plugin/tests/.*
 ^config/gcc-stl-wrapper.template.h
 ^config/msvc-stl-wrapper.template.h
+^layout/style/nsCSSPropAliasList.h
+^layout/style/nsCSSPropList.h
 ^js/src/jsapi-tests/.*
 ^widget/android/GeneratedJNINatives.h
 ^widget/android/GeneratedJNIWrappers.cpp
