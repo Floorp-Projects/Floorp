@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+/* global SimpleTest SpecialPowers */
+
+let errorMessageMap = {};
+
+let testPromise = (resistFingerprinting, src, whitelist) => new Promise(resolve => {
+  let video = document.createElement("video");
+  video.src = src;
+  video.controls = "true";
+  video.onerror = () => {
+    let message = video.error.message;
+    if (!resistFingerprinting) {
+      SimpleTest.isnot(message, "", "Message should not be blank");
+      SimpleTest.info(src + ": " + message);
+      errorMessageMap[src] = message;
+    } else if (whitelist) {
+      SimpleTest.is(message, whitelist, "Error message in whitelist: " + whitelist);
+    } else {
+      SimpleTest.is(message, "", "Blank error message: " + errorMessageMap[src]);
+    }
+    resolve();
+  };
+  document.body.appendChild(video);
+});
+
+async function testBody(resistFingerprinting) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", resistFingerprinting]
+    ]
+  });
+  await testPromise(
+    resistFingerprinting,
+    "load_error.mp4",
+    "404: Not Found" // whitelist
+  );
+  await testPromise(
+    resistFingerprinting,
+    "decode_error.mp4",
+    false // whitelist
+  );
+}
+
+SimpleTest.waitForExplicitFinish();
+document.addEventListener("DOMContentLoaded", async () => {
+  await testBody(false);
+  await testBody(true);
+  SimpleTest.finish();
+});
+</script>
