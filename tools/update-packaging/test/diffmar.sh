@@ -30,19 +30,19 @@ cp "$2" "$todir"
 cd "$fromdir"
 mar -x "$1"
 rm "$1"
-mv updatev2.manifest updatev2.manifest.bz2
-bzip2 -d updatev2.manifest.bz2
-mv updatev3.manifest updatev3.manifest.bz2
-bzip2 -d updatev3.manifest.bz2
+mv updatev2.manifest updatev2.manifest.xz
+xz -d updatev2.manifest.xz
+mv updatev3.manifest updatev3.manifest.xz
+xz -d updatev3.manifest.xz
 ls $lsargs > files.txt
 
 cd "$todir"
 mar -x "$2"
 rm "$2"
-mv updatev2.manifest updatev2.manifest.bz2
-bzip2 -d updatev2.manifest.bz2
-mv updatev3.manifest updatev3.manifest.bz2
-bzip2 -d updatev3.manifest.bz2
+mv updatev2.manifest updatev2.manifest.xz
+xz -d updatev2.manifest.xz
+mv updatev3.manifest updatev3.manifest.xz
+xz -d updatev3.manifest.xz
 ls $lsargs > files.txt
 
 echo "diffing $fromdir and $todir"

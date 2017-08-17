@@ -9,6 +9,6 @@ mkdir -p "$workdir"
 cp "$1" "$workdir"
 cd "$workdir"
 mar -x "$1"
-mv updatev2.manifest updatev2.manifest.bz2
-bzip2 -d updatev2.manifest.bz2
+mv updatev2.manifest updatev2.manifest.xz
+xz -d updatev2.manifest.xz
 cat updatev2.manifest
