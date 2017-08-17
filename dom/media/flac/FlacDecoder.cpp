@@ -5,10 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FlacDecoder.h"
+#include "FlacDemuxer.h"
 #include "MediaContainerType.h"
 #include "MediaPrefs.h"
 
 namespace mozilla {
+
+ChannelMediaDecoder*
+FlacDecoder::CloneImpl(MediaDecoderInit& aInit)
+{
+  if (!IsEnabled()) {
+    return nullptr;
+  }
+
+  return new FlacDecoder(aInit);
+}
 
 /* static */ bool
 FlacDecoder::IsEnabled()
