@@ -56,29 +56,35 @@ MessageListener.prototype = {
 
 
 /**
- * Creates a RemotePages object which listens for new remote pages of a
- * particular URL. A "RemotePage:Init" message will be dispatched to this object
- * for every page loaded. Message listeners added to this object receive
- * messages from all loaded pages from the requested url.
+ * Creates a RemotePages object which listens for new remote pages of some
+ * particular URLs. A "RemotePage:Init" message will be dispatched to this
+ * object for every page loaded. Message listeners added to this object receive
+ * messages from all loaded pages from the requested urls.
  */
-this.RemotePages = function(url) {
-  this.url = url;
+this.RemotePages = function(urls) {
+  this.urls = Array.isArray(urls) ? urls : [urls];
   this.messagePorts = new Set();
   this.listener = new MessageListener();
   this.destroyed = false;
 
-  RemotePageManager.addRemotePageListener(url, this.portCreated.bind(this));
+  this.portCreated = this.portCreated.bind(this);
   this.portMessageReceived = this.portMessageReceived.bind(this);
+
+  for (const url of this.urls) {
+    RemotePageManager.addRemotePageListener(url, this.portCreated);
+  }
 }
 
 RemotePages.prototype = {
-  url: null,
+  urls: null,
   messagePorts: null,
   listener: null,
   destroyed: null,
 
   destroy() {
-    RemotePageManager.removeRemotePageListener(this.url);
+    for (const url of this.urls) {
+      RemotePageManager.removeRemotePageListener(url);
+    }
 
     for (let port of this.messagePorts.values()) {
       this.removeMessagePort(port);
@@ -89,7 +95,7 @@ RemotePages.prototype = {
     this.destroyed = true;
   },
 
-  // Called when a page matching the url has loaded in a frame.
+  // Called when a page matching one of the urls has loaded in a frame.
   portCreated(port) {
     this.messagePorts.add(port);
 
