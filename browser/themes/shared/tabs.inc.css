@@ -308,9 +308,11 @@
   background-clip: padding-box;
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab > .tab-stack > .tab-background {
   border-top-style: solid;
 }
+%endif
 
 .tab-background[selected=true] {
   border-left-style: solid;
