@@ -36,8 +36,8 @@ function respondWithError(request, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-function generateGoodOCSPResponse() {
-  let args = [ ["good", "default-ee", "unused", 0 ] ];
+function generateGoodOCSPResponse(thisUpdateSkew) {
+  let args = [ ["good", "default-ee", "unused", thisUpdateSkew ] ];
   let responses = generateOCSPResponses(args, "ocsp_certs");
   return responses[0];
 }
@@ -148,13 +148,7 @@ function add_tests() {
   // response will be seen as "not newer" and it won't replace the existing
   // entry.
   add_test(function() {
-    let duration = 1200;
-    do_print("Sleeping for " + duration + "ms");
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(run_next_test, duration, Ci.nsITimer.TYPE_ONE_SHOT);
-  });
-  add_test(function() {
-    gGoodOCSPResponse = generateGoodOCSPResponse();
+    gGoodOCSPResponse = generateGoodOCSPResponse(1200);
     run_next_test();
   });
   add_ocsp_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
