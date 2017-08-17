@@ -230,7 +230,7 @@ class PlacesFeed {
         if (action.data.referrer) {
           win.openLinkIn(action.data.url, where, {referrerURI: Services.io.newURI(action.data.referrer)});
         } else {
-          win.openLinkIn(action.data.url, where);
+          win.openLinkIn(action.data.url, where, {});
         }
         break;
       }
