@@ -20,6 +20,24 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
 this.Screenshots = {
+  /**
+   * Convert bytes to a string using extremely fast String.fromCharCode without
+   * exceeding the max number of arguments that can be provided to a function.
+   */
+  _bytesToString(bytes) {
+    // NB: This comes from js/src/vm/ArgumentsObject.h ARGS_LENGTH_MAX
+    const ARGS_LENGTH_MAX = 500 * 1000;
+    let i = 0;
+    let str = "";
+    let {length} = bytes;
+    while (i < length) {
+      const start = i;
+      i += ARGS_LENGTH_MAX;
+      str += String.fromCharCode.apply(null, bytes.slice(start, i));
+    }
+    return str;
+  },
+
   async getScreenshotForURL(url) {
     let screenshot = null;
     try {
@@ -34,7 +52,7 @@ this.Screenshots = {
 
       const contentType = MIMEService.getTypeFromFile(nsFile);
       const bytes = await file.read();
-      const encodedData = btoa(String.fromCharCode.apply(null, bytes));
+      const encodedData = btoa(this._bytesToString(bytes));
       file.close();
       screenshot = `data:${contentType};base64,${encodedData}`;
     } catch (err) {

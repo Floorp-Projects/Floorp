@@ -13,6 +13,7 @@ const {DefaultPrefs} = Cu.import("resource://activity-stream/lib/ActivityStreamP
 const {LocalizationFeed} = Cu.import("resource://activity-stream/lib/LocalizationFeed.jsm", {});
 const {ManualMigration} = Cu.import("resource://activity-stream/lib/ManualMigration.jsm", {});
 const {NewTabInit} = Cu.import("resource://activity-stream/lib/NewTabInit.jsm", {});
+const {SectionsFeed} = Cu.import("resource://activity-stream/lib/SectionsManager.jsm", {});
 const {PlacesFeed} = Cu.import("resource://activity-stream/lib/PlacesFeed.jsm", {});
 const {PrefsFeed} = Cu.import("resource://activity-stream/lib/PrefsFeed.jsm", {});
 const {Store} = Cu.import("resource://activity-stream/lib/Store.jsm", {});
@@ -139,6 +140,12 @@ const FEEDS_DATA = [
     name: "prefs",
     factory: () => new PrefsFeed(PREFS_CONFIG),
     title: "Preferences",
+    value: true
+  },
+  {
+    name: "sections",
+    factory: () => new SectionsFeed(),
+    title: "Manages sections",
     value: true
   },
   {
