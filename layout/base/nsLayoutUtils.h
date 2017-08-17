@@ -3134,21 +3134,4 @@ public:
   nsCOMPtr<nsIAtom> mAttrName;
 };
 
-// This class allows you to easily set any pointer variable and ensure it's
-// set to nullptr when leaving its scope.
-template<typename T>
-class MOZ_RAII SetAndNullOnExit
-{
-public:
-  SetAndNullOnExit(T* &aVariable, T* aValue) {
-    aVariable = aValue;
-    mVariable = &aVariable;
-  }
-  ~SetAndNullOnExit() {
-    *mVariable = nullptr;
-  }
-private:
-  T** mVariable;
-};
-
 #endif // nsLayoutUtils_h__
