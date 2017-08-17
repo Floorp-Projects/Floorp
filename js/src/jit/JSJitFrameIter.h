@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_JitFrameIterator_h
-#define jit_JitFrameIterator_h
+#ifndef jit_JSJitFrameIter_h
+#define jit_JSJitFrameIter_h
 
 #include "jsfun.h"
 #include "jsscript.h"
@@ -15,10 +15,6 @@
 #include "jit/Snapshots.h"
 
 #include "js/ProfilingFrameIterator.h"
-
-namespace js {
-    class ActivationIterator;
-} // namespace js
 
 namespace js {
 namespace jit {
@@ -83,9 +79,18 @@ class JitActivation;
 // Iterate over the JIT stack to assert that all invariants are respected.
 //  - Check that all entry frames are aligned on JitStackAlignment.
 //  - Check that all rectifier frames keep the JitStackAlignment.
+
 void AssertJitStackInvariants(JSContext* cx);
 
-class JitFrameIterator
+// A JSJitFrameIter can iterate over a linear frame group of JS jit frames
+// only. It will stop at the first frame that is not of the same kind, or at
+// the end of an activation.
+//
+// If you want to handle every kind of frames (including wasm frames), use
+// JitFrameIter. If you want to skip interleaved frames of other kinds, use
+// OnlyJSJitFrameIter.
+
+class JSJitFrameIter
 {
   protected:
     uint8_t* current_;
@@ -99,12 +104,16 @@ class JitFrameIterator
 
     void dumpBaseline() const;
 
-    explicit JitFrameIterator(const JitActivation* activation);
-
   public:
-    explicit JitFrameIterator();
-    explicit JitFrameIterator(JSContext* cx);
-    explicit JitFrameIterator(const ActivationIterator& activations);
+    // See comment above the class.
+    explicit JSJitFrameIter(const JitActivation* activation);
+    explicit JSJitFrameIter(JSContext* cx);
+
+    // Used only by DebugModeOSRVolatileJitFrameIter.
+    void exchangeReturnAddressIfMatch(uint8_t* oldAddr, uint8_t* newAddr) {
+        if (returnAddressToFp_ == oldAddr)
+            returnAddressToFp_ = newAddr;
+    }
 
     // Current frame information.
     FrameType type() const {
@@ -199,10 +208,10 @@ class JitFrameIterator
 
     // Functions used to iterate on frames. When prevType is JitFrame_Entry,
     // the current frame is the last frame.
-    inline bool done() const {
+    bool done() const {
         return type_ == JitFrame_Entry;
     }
-    JitFrameIterator& operator++();
+    void operator++();
 
     // Returns the IonScript associated with this JS frame.
     IonScript* ionScript() const;
@@ -260,7 +269,7 @@ class JitFrameIterator
 #ifdef DEBUG
     bool verifyReturnAddressUsingNativeToBytecodeMap();
 #else
-    inline bool verifyReturnAddressUsingNativeToBytecodeMap() { return true; }
+    bool verifyReturnAddressUsingNativeToBytecodeMap() { return true; }
 #endif
 };
 
@@ -345,7 +354,7 @@ struct MaybeReadFallback
 
     JSContext* maybeCx;
     JitActivation* activation;
-    const JitFrameIterator* frame;
+    const JSJitFrameIter* frame;
     const NoGCValue unreadablePlaceholder_;
     const FallbackConsequence consequence;
 
@@ -358,7 +367,7 @@ struct MaybeReadFallback
     {
     }
 
-    MaybeReadFallback(JSContext* cx, JitActivation* activation, const JitFrameIterator* frame,
+    MaybeReadFallback(JSContext* cx, JitActivation* activation, const JSJitFrameIter* frame,
                       FallbackConsequence consequence = Fallback_Invalidate)
       : maybeCx(cx),
         activation(activation),
@@ -535,7 +544,7 @@ class SnapshotIterator
     // Connect all informations about the current script in order to recover the
     // content of baseline frames.
 
-    SnapshotIterator(const JitFrameIterator& iter, const MachineState* machineState);
+    SnapshotIterator(const JSJitFrameIter& iter, const MachineState* machineState);
     SnapshotIterator();
 
     Value read() {
@@ -615,7 +624,7 @@ class SnapshotIterator
 // outermost frame).
 class InlineFrameIterator
 {
-    const JitFrameIterator* frame_;
+    const JSJitFrameIter* frame_;
     SnapshotIterator start_;
     SnapshotIterator si_;
     uint32_t framesRead_;
@@ -653,7 +662,7 @@ class InlineFrameIterator
                                       bool* hasInitialEnv = nullptr) const;
 
   public:
-    InlineFrameIterator(JSContext* cx, const JitFrameIterator* iter);
+    InlineFrameIterator(JSContext* cx, const JSJitFrameIter* iter);
     InlineFrameIterator(JSContext* cx, const InlineFrameIterator* iter);
 
     bool more() const {
@@ -836,9 +845,9 @@ class InlineFrameIterator
 
     void dump() const;
 
-    void resetOn(const JitFrameIterator* iter);
+    void resetOn(const JSJitFrameIter* iter);
 
-    const JitFrameIterator& frame() const {
+    const JSJitFrameIter& frame() const {
         return *frame_;
     }
 
@@ -859,4 +868,4 @@ class InlineFrameIterator
 } // namespace jit
 } // namespace js
 
-#endif /* jit_JitFrameIterator_h */
+#endif /* jit_JSJitFrameIter_h */

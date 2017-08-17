@@ -325,7 +325,7 @@ nsHTTPIndex::OnStopRequest(nsIRequest *request,
 
   nsresult rv;
 
-  nsXPIDLCString commentStr;
+  nsCString commentStr;
   mParser->GetComment(getter_Copies(commentStr));
 
   nsCOMPtr<nsIRDFLiteral> comment;
@@ -379,7 +379,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
   // we found the filename; construct a resource for its entry
   nsAutoCString entryuriC(baseStr);
 
-  nsXPIDLCString filename;
+  nsCString filename;
   nsresult rv = aIndex->GetLocation(getter_Copies(filename));
   if (NS_FAILED(rv)) return rv;
   entryuriC.Append(filename);

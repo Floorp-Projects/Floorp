@@ -201,7 +201,7 @@ public:
   already_AddRefed<ServiceWorkerRegistrationInfo>
   CreateNewRegistration(const nsCString& aScope,
                         nsIPrincipal* aPrincipal,
-                        nsLoadFlags aLoadFlags);
+                        ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   void
   RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);

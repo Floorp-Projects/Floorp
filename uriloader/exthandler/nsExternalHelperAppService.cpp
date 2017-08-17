@@ -2737,7 +2737,7 @@ nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt,
     nsAutoCString lowercaseFileExt(aFileExt);
     ToLowerCase(lowercaseFileExt);
     // Read the MIME type from the category entry, if available
-    nsXPIDLCString type;
+    nsCString type;
     nsresult rv = catMan->GetCategoryEntry("ext-to-type-mapping",
                                            lowercaseFileExt.get(),
                                            getter_Copies(type));

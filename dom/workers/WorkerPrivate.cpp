@@ -73,6 +73,7 @@
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/WorkerTimelineMarker.h"
@@ -5836,11 +5837,9 @@ WorkerPrivate::CreateNewSyncLoop(Status aFailStatus)
     }
   }
 
-  nsCOMPtr<nsIThreadInternal> thread = do_QueryInterface(NS_GetCurrentThread());
-  MOZ_ASSERT(thread);
-
-  nsCOMPtr<nsIEventTarget> realEventTarget;
-  MOZ_ALWAYS_SUCCEEDS(thread->PushEventQueue(getter_AddRefs(realEventTarget)));
+  auto queue = static_cast<ThreadEventQueue<EventQueue>*>(mThread->EventQueue());
+  nsCOMPtr<nsISerialEventTarget> realEventTarget = queue->PushEventQueue();
+  MOZ_ASSERT(realEventTarget);
 
   RefPtr<EventTarget> workerEventTarget =
     new EventTarget(this, realEventTarget);
@@ -5971,7 +5970,8 @@ WorkerPrivate::DestroySyncLoop(uint32_t aLoopIndex, nsIThreadInternal* aThread)
     mSyncLoopStack.RemoveElementAt(aLoopIndex);
   }
 
-  MOZ_ALWAYS_SUCCEEDS(aThread->PopEventQueue(nestedEventTarget));
+  auto queue = static_cast<ThreadEventQueue<EventQueue>*>(mThread->EventQueue());
+  queue->PopEventQueue(nestedEventTarget);
 
   if (mSyncLoopStack.IsEmpty() && mPendingEventQueueClearing) {
     mPendingEventQueueClearing = false;

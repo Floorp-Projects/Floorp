@@ -1512,7 +1512,7 @@ nsNSSCertificate::Read(nsIObjectInputStream* aStream)
     return rv;
   }
 
-  nsXPIDLCString str;
+  nsCString str;
   rv = aStream->ReadBytes(len, getter_Copies(str));
   if (NS_FAILED(rv)) {
     return rv;
