@@ -48,10 +48,6 @@ const whitelist = [
     platforms: ["linux", "win", "macosx"],
   },
   {
-    file: "chrome://browser/skin/arrow-dropdown-16.svg",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
     file: "chrome://browser/skin/tabbrowser/tab-overflow-indicator.png",
     platforms: ["linux", "win", "macosx"],
   },

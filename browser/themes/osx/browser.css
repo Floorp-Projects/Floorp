@@ -25,13 +25,6 @@
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
   --toolbarbutton-border-radius: 4px;
 
-  --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
-  --urlbar-dropmarker-region: rect(0, 11px, 14px, 0);
-  --urlbar-dropmarker-active-region: rect(0, 22px, 14px, 11px);
-  --urlbar-dropmarker-2x-url: url("chrome://browser/skin/urlbar-history-dropmarker@2x.png");
-  --urlbar-dropmarker-2x-region: rect(0, 22px, 28px, 0);
-  --urlbar-dropmarker-active-2x-region: rect(0, 44px, 28px, 22px);
-
   --panel-separator-color: hsla(210,4%,10%,.14);
   --arrowpanel-dimmed: hsla(210,4%,10%,.07);
   --arrowpanel-dimmed-further: hsla(210,4%,10%,.12);
@@ -419,32 +412,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 .urlbar-input-box {
   margin: 0;
   padding: 3px 0 2px;
-}
-.urlbar-history-dropmarker {
-  padding: 0 3px;
-  list-style-image: var(--urlbar-dropmarker-url);
-  -moz-image-region: var(--urlbar-dropmarker-region);
-}
-
-.urlbar-history-dropmarker[open="true"],
-.urlbar-history-dropmarker:hover:active {
-  -moz-image-region: var(--urlbar-dropmarker-active-region);
-}
-
-@media (min-resolution: 2dppx) {
-  .urlbar-history-dropmarker {
-    list-style-image: var(--urlbar-dropmarker-2x-url);
-    -moz-image-region: var(--urlbar-dropmarker-2x-region);
-  }
-
-  .urlbar-history-dropmarker[open="true"],
-  .urlbar-history-dropmarker:hover:active {
-    -moz-image-region: var(--urlbar-dropmarker-active-2x-region);
-  }
-
-  .urlbar-history-dropmarker > .dropmarker-icon {
-    width: 11px;
-  }
 }
 
 /* ::::: URL Bar Zoom Reset Button ::::: */
