@@ -1096,7 +1096,8 @@ nsHttpChannel::SetupTransactionRequestContext()
 nsresult
 nsHttpChannel::SetupTransaction()
 {
-    LOG(("nsHttpChannel::SetupTransaction [this=%p]\n", this));
+    LOG(("nsHttpChannel::SetupTransaction [this=%p, cos=%u, prio=%d]\n",
+         this, mClassOfService, mPriority));
 
     NS_ENSURE_TRUE(!mTransaction, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -6270,6 +6271,8 @@ nsHttpChannel::InitLocalBlockList(const InitLocalBlockListCallback& aCallback)
         return false;
     }
 
+    LOG(("nsHttpChannel::InitLocalBlockList this=%p", this));
+
     // Check to see if this principal exists on local blocklists.
     RefPtr<nsChannelClassifier> channelClassifier =
         GetOrCreateChannelClassifier();
@@ -6701,6 +6704,9 @@ nsHttpChannel::SetPriority(int32_t value)
     int16_t newValue = clamped<int32_t>(value, INT16_MIN, INT16_MAX);
     if (mPriority == newValue)
         return NS_OK;
+
+    LOG(("nsHttpChannel::SetPriority %p p=%d", this, newValue));
+
     mPriority = newValue;
     if (mTransaction) {
         nsresult rv = gHttpHandler->RescheduleTransaction(mTransaction, mPriority);
@@ -7393,6 +7399,8 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             MOZ_ASSERT(NS_FAILED(status), "should have a failure code here");
             // NOTE: since we have a failure status, we can ignore the return
             // value from onStartRequest.
+            LOG(("  calling mListener->OnStartRequest [this=%p, listener=%p]\n",
+                 this, mListener.get()));
             if (mListener) {
                 MOZ_ASSERT(!mOnStartRequestCalled,
                            "We should not call OnStartRequest twice.");
@@ -7531,7 +7539,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     }
 
     if (mListener) {
-        LOG(("  calling OnStopRequest\n"));
+        LOG(("nsHttpChannel %p calling OnStopRequest\n", this));
         MOZ_ASSERT(mOnStartRequestCalled,
                    "OnStartRequest should be called before OnStopRequest");
         MOZ_ASSERT(!mOnStopRequestCalled,
