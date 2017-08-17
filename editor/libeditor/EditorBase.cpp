@@ -1133,27 +1133,36 @@ EditorBase::BeginningOfDocument()
 NS_IMETHODIMP
 EditorBase::EndOfDocument()
 {
+  RefPtr<Selection> selection = GetSelection();
+  return CollapseSelectionToEnd(selection);
+}
+
+nsresult
+EditorBase::CollapseSelectionToEnd(Selection* aSelection)
+{
   // XXX Why doesn't this check if the document is alive?
   if (NS_WARN_IF(!IsInitialized())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // get selection
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aSelection)) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   // get the root element
   nsINode* node = GetRoot();
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  nsINode* child = node->GetLastChild();
+  if (NS_WARN_IF(!node)) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  while (child && IsContainer(child->AsDOMNode())) {
+  nsINode* child = node->GetLastChild();
+  while (child && IsContainer(child)) {
     node = child;
     child = node->GetLastChild();
   }
 
   uint32_t length = node->Length();
-  return selection->Collapse(node, int32_t(length));
+  return aSelection->Collapse(node, static_cast<int32_t>(length));
 }
 
 NS_IMETHODIMP
