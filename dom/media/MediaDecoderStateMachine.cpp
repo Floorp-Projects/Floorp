@@ -257,7 +257,6 @@ protected:
   using Master = MediaDecoderStateMachine;
   explicit StateObject(Master* aPtr) : mMaster(aPtr) { }
   TaskQueue* OwnerThread() const { return mMaster->mTaskQueue; }
-  MediaResource* Resource() const { return mMaster->mResource; }
   ReaderProxy* Reader() const { return mMaster->mReader; }
   const MediaInfo& Info() const { return mMaster->Info(); }
   MediaQueue<AudioData>& AudioQueue() const { return mMaster->mAudioQueue; }
@@ -2686,7 +2685,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVideoDecodeSuspended(false),
   mVideoDecodeSuspendTimer(mTaskQueue),
   mOutputStreamManager(new OutputStreamManager()),
-  mResource(aDecoder->GetResource()),
   mVideoDecodeMode(VideoDecodeMode::Normal),
   mIsMSE(aDecoder->IsMSE()),
   INIT_MIRROR(mBuffered, TimeIntervals()),
@@ -3454,10 +3452,8 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
 
   mMediaSink->Redraw(Info().mVideo);
 
-  LOG("Media duration %" PRId64 ", "
-      "transportSeekable=%d, mediaSeekable=%d",
-      Duration().ToMicroseconds(), mResource->IsTransportSeekable(),
-      mMediaSeekable);
+  LOG("Media duration %" PRId64 ", mediaSeekable=%d",
+      Duration().ToMicroseconds(), mMediaSeekable);
 
   // Get potentially updated metadata
   mReader->ReadUpdatedMetadata(mInfo.ptr());

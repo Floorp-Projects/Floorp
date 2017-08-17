@@ -230,12 +230,6 @@ public:
     OwnerThread()->DispatchStateChange(r.forget());
   }
 
-  // Drop reference to mResource. Only called during shutdown dance.
-  void BreakCycles() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mResource = nullptr;
-  }
-
   TimedMetadataEventSource& TimedMetadataEvent() {
     return mMetadataManager.TimedMetadataEvent();
   }
@@ -645,9 +639,6 @@ private:
 
   // Data about MediaStreams that are being fed by the decoder.
   const RefPtr<OutputStreamManager> mOutputStreamManager;
-
-  // Media data resource from the decoder.
-  RefPtr<MediaResource> mResource;
 
   // Track the current video decode mode.
   VideoDecodeMode mVideoDecodeMode;
