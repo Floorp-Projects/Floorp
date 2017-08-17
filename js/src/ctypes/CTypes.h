@@ -517,6 +517,7 @@ namespace CData {
   JSObject* GetCType(JSObject* dataObj);
   void* GetData(JSObject* dataObj);
   bool IsCData(JSObject* obj);
+  bool IsCDataMaybeUnwrap(MutableHandleObject obj);
   bool IsCData(HandleValue v);
   bool IsCDataProto(JSObject* obj);
 

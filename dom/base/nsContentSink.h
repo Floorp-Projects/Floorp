@@ -155,6 +155,7 @@ protected:
                        const nsAString& aHref, const nsAString& aRel,
                        const nsAString& aTitle, const nsAString& aType,
                        const nsAString& aMedia, const nsAString& aCrossOrigin,
+                       const nsAString& aReferrerPolicy,
                        const nsAString& aAs);
 
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
@@ -162,7 +163,8 @@ protected:
                                     bool aAlternate,
                                     const nsAString& aTitle,
                                     const nsAString& aType,
-                                    const nsAString& aMedia);
+                                    const nsAString& aMedia,
+                                    const nsAString& aReferrerPolicy);
 
   void PrefetchPreloadHref(const nsAString &aHref, nsINode *aSource,
                            uint32_t aLinkTypes, const nsAString& aAs,

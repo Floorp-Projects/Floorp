@@ -1,5 +1,4 @@
 load(libdir + 'array-compare.js');
-load(libdir + 'nightly-only.js');
 
 var g = newGlobal();
 var dbg = new Debugger;
@@ -30,6 +29,4 @@ check('(function (a, [b, c], {d, e:f}) { })',
 check('({a:1})', undefined);
 check('Math.atan2', [undefined, undefined]);
 check('(async function (a, b, c) {})', ["a", "b", "c"]);
-nightlyOnly(g.SyntaxError, () => {
-  check('(async function* (d, e, f) {})', ["d", "e", "f"]);
-});
+check('(async function* (d, e, f) {})', ["d", "e", "f"]);

@@ -176,7 +176,7 @@ FormAutofillParent.prototype = {
    * @param   {object} message.data The data of the message.
    * @param   {nsIFrameMessageManager} message.target Caller's message manager.
    */
-  receiveMessage({name, data, target}) {
+  async receiveMessage({name, data, target}) {
     switch (name) {
       case "FormAutofill:InitStorage": {
         this.profileStorage.initialize();
@@ -195,6 +195,7 @@ FormAutofillParent.prototype = {
         break;
       }
       case "FormAutofill:SaveCreditCard": {
+        await this.profileStorage.creditCards.normalizeCCNumberFields(data.creditcard);
         this.profileStorage.creditCards.add(data.creditcard);
         break;
       }

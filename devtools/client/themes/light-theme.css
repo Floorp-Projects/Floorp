@@ -67,16 +67,6 @@ body {
   color: var(--theme-comment);
 }
 
-.theme-gutter {
-  background-color: var(--theme-tab-toolbar-background);
-  color: var(--theme-content-color3);
-  border-color: var(--theme-splitter-color);
-}
-
-.theme-separator { /* grey */
-  border-color: #cddae5;
-}
-
 .cm-s-mozilla .cm-unused-line {
   text-decoration: line-through;
   text-decoration-color: var(--theme-highlight-bluegrey);

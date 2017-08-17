@@ -20,8 +20,9 @@ import tempfile
 import time
 import traceback
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from collections import defaultdict, deque, namedtuple
+from datetime import datetime, timedelta
 from distutils import dir_util
 from functools import partial
 from multiprocessing import cpu_count
@@ -109,16 +110,15 @@ def markGotSIGINT(signum, stackFrame):
     gotSIGINT = True
 
 class XPCShellTestThread(Thread):
-    def __init__(self, test_object, event, cleanup_dir_list, retry=True,
-            app_dir_key=None, interactive=False,
-            verbose=False, pStdout=None, pStderr=None, keep_going=False,
-            log=None, usingTSan=False, **kwargs):
+    def __init__(self, test_object, retry=True, verbose=False, usingTSan=False,
+            **kwargs):
         Thread.__init__(self)
         self.daemon = True
 
         self.test_object = test_object
-        self.cleanup_dir_list = cleanup_dir_list
         self.retry = retry
+        self.verbose = verbose
+        self.usingTSan = usingTSan
 
         self.appPath = kwargs.get('appPath')
         self.xrePath = kwargs.get('xrePath')
@@ -142,15 +142,13 @@ class XPCShellTestThread(Thread):
         self.jscovdir = kwargs.get('jscovdir')
         self.stack_fixer_function = kwargs.get('stack_fixer_function')
         self._rootTempDir = kwargs.get('tempDir')
-
-        self.app_dir_key = app_dir_key
-        self.interactive = interactive
-        self.verbose = verbose
-        self.pStdout = pStdout
-        self.pStderr = pStderr
-        self.keep_going = keep_going
-        self.log = log
-        self.usingTSan = usingTSan
+        self.cleanup_dir_list = kwargs.get('cleanup_dir_list')
+        self.pStdout = kwargs.get('pStdout')
+        self.pStderr = kwargs.get('pStderr')
+        self.keep_going = kwargs.get('keep_going')
+        self.log = kwargs.get('log')
+        self.app_dir_key = kwargs.get('app_dir_key')
+        self.interactive = kwargs.get('interactive')
 
         # only one of these will be set to 1. adding them to the totals in
         # the harness
@@ -168,7 +166,7 @@ class XPCShellTestThread(Thread):
         self.timedout = False
 
         # event from main thread to signal work done
-        self.event = event
+        self.event = kwargs.get('event')
         self.done = False # explicitly set flag so we don't rely on thread.isAlive
 
     def run(self):
@@ -849,7 +847,7 @@ class XPCShellTests(object):
 
         return test_object
 
-    def buildTestList(self, test_tags=None, test_paths=None):
+    def buildTestList(self, test_tags=None, test_paths=None, verify=False):
         """
           read the xpcshell.ini manifest and set self.alltests to be
           an array of test objects.
@@ -860,7 +858,7 @@ class XPCShellTests(object):
         if test_paths is None:
             test_paths = []
 
-        if len(test_paths) == 1 and test_paths[0].endswith(".js"):
+        if len(test_paths) == 1 and test_paths[0].endswith(".js") and not verify:
             self.singleFile = os.path.basename(test_paths[0])
         else:
             self.singleFile = None
@@ -1114,131 +1112,7 @@ class XPCShellTests(object):
         self.failCount += test.failCount
         self.todoCount += test.todoCount
 
-    def runTests(self, xpcshell=None, xrePath=None, appPath=None, symbolsPath=None,
-                 manifest=None, testPaths=None, mobileArgs=None, tempDir=None,
-                 interactive=False, verbose=False, keepGoing=False, logfiles=True,
-                 thisChunk=1, totalChunks=1, debugger=None,
-                 debuggerArgs=None, debuggerInteractive=False,
-                 profileName=None, mozInfo=None, sequential=False, shuffle=False,
-                 testingModulesDir=None, pluginsPath=None,
-                 testClass=XPCShellTestThread, failureManifest=None,
-                 log=None, stream=None, jsDebugger=False, jsDebuggerPort=0,
-                 test_tags=None, dump_tests=None, utility_path=None,
-                 rerun_failures=False, threadCount=NUM_THREADS,
-                 failure_manifest=None, jscovdir=None, **otherOptions):
-        """Run xpcshell tests.
-
-        |xpcshell|, is the xpcshell executable to use to run the tests.
-        |xrePath|, if provided, is the path to the XRE to use.
-        |appPath|, if provided, is the path to an application directory.
-        |symbolsPath|, if provided is the path to a directory containing
-          breakpad symbols for processing crashes in tests.
-        |manifest|, if provided, is a file containing a list of
-          test directories to run.
-        |testPaths|, if provided, is a list of paths to files or directories containing
-                     tests to run.
-        |pluginsPath|, if provided, custom plugins directory to be returned from
-          the xpcshell dir svc provider for NS_APP_PLUGINS_DIR_LIST.
-        |interactive|, if set to True, indicates to provide an xpcshell prompt
-          instead of automatically executing the test.
-        |verbose|, if set to True, will cause stdout/stderr from tests to
-          be printed always
-        |logfiles|, if set to False, indicates not to save output to log files.
-          Non-interactive only option.
-        |debugger|, if set, specifies the name of the debugger that will be used
-          to launch xpcshell.
-        |debuggerArgs|, if set, specifies arguments to use with the debugger.
-        |debuggerInteractive|, if set, allows the debugger to be run in interactive
-          mode.
-        |profileName|, if set, specifies the name of the application for the profile
-          directory if running only a subset of tests.
-        |mozInfo|, if set, specifies specifies build configuration information, either as a filename containing JSON, or a dict.
-        |shuffle|, if True, execute tests in random order.
-        |testingModulesDir|, if provided, specifies where JS modules reside.
-          xpcshell will register a resource handler mapping this path.
-        |tempDir|, if provided, specifies a temporary directory to use.
-        |otherOptions| may be present for the convenience of subclasses
-        """
-
-        global gotSIGINT
-
-        # Try to guess modules directory.
-        # This somewhat grotesque hack allows the buildbot machines to find the
-        # modules directory without having to configure the buildbot hosts. This
-        # code path should never be executed in local runs because the build system
-        # should always set this argument.
-        if not testingModulesDir:
-            possible = os.path.join(here, os.path.pardir, 'modules')
-
-            if os.path.isdir(possible):
-                testingModulesDir = possible
-
-        if rerun_failures:
-            if os.path.exists(failure_manifest):
-                rerun_manifest = os.path.join(os.path.dirname(failure_manifest), "rerun.ini")
-                shutil.copyfile(failure_manifest, rerun_manifest)
-                os.remove(failure_manifest)
-                manifest = rerun_manifest
-            else:
-                print >> sys.stderr, "No failures were found to re-run."
-                sys.exit(1)
-
-        if testingModulesDir:
-            # The resource loader expects native paths. Depending on how we were
-            # invoked, a UNIX style path may sneak in on Windows. We try to
-            # normalize that.
-            testingModulesDir = os.path.normpath(testingModulesDir)
-
-            if not os.path.isabs(testingModulesDir):
-                testingModulesDir = os.path.abspath(testingModulesDir)
-
-            if not testingModulesDir.endswith(os.path.sep):
-                testingModulesDir += os.path.sep
-
-        self.debuggerInfo = None
-
-        if debugger:
-            self.debuggerInfo = mozdebug.get_debugger_info(debugger, debuggerArgs, debuggerInteractive)
-
-        self.jsDebuggerInfo = None
-        if jsDebugger:
-            # A namedtuple let's us keep .port instead of ['port']
-            JSDebuggerInfo = namedtuple('JSDebuggerInfo', ['port'])
-            self.jsDebuggerInfo = JSDebuggerInfo(port=jsDebuggerPort)
-
-        self.xpcshell = xpcshell
-        self.xrePath = xrePath
-        self.utility_path = utility_path
-        self.appPath = appPath
-        self.symbolsPath = symbolsPath
-        self.tempDir = os.path.normpath(tempDir or tempfile.gettempdir())
-        self.manifest = manifest
-        self.dump_tests = dump_tests
-        self.interactive = interactive
-        self.verbose = verbose
-        self.keepGoing = keepGoing
-        self.logfiles = logfiles
-        self.totalChunks = totalChunks
-        self.thisChunk = thisChunk
-        self.profileName = profileName or "xpcshell"
-        self.mozInfo = mozInfo
-        self.testingModulesDir = testingModulesDir
-        self.pluginsPath = pluginsPath
-        self.sequential = sequential
-        self.failure_manifest = failure_manifest
-        self.threadCount = threadCount or NUM_THREADS
-        self.jscovdir = jscovdir
-
-        self.testCount = 0
-        self.passCount = 0
-        self.failCount = 0
-        self.todoCount = 0
-
-        self.setAbsPath()
-        self.buildXpcsRunArgs()
-
-        self.event = Event()
-
+    def updateMozinfo(self):
         # Handle filenames in mozInfo
         if not isinstance(self.mozInfo, dict):
             mozInfoFile = self.mozInfo
@@ -1263,6 +1137,102 @@ class XPCShellTests(object):
         if self.jscovdir:
             mozinfo.update({"coverage": True})
 
+        return True
+
+    def runTests(self, options, testClass=XPCShellTestThread, mobileArgs=None):
+        """
+          Run xpcshell tests.
+        """
+
+        global gotSIGINT
+
+        # Number of times to repeat test(s) in --verify mode
+        VERIFY_REPEAT = 20
+
+        if isinstance(options, Namespace):
+            options = vars(options)
+
+        # Try to guess modules directory.
+        # This somewhat grotesque hack allows the buildbot machines to find the
+        # modules directory without having to configure the buildbot hosts. This
+        # code path should never be executed in local runs because the build system
+        # should always set this argument.
+        if not options.get('testingModulesDir'):
+            possible = os.path.join(here, os.path.pardir, 'modules')
+
+            if os.path.isdir(possible):
+                testingModulesDir = possible
+
+        if options.get('rerun_failures'):
+            if os.path.exists(options.get('failure_manifest')):
+                rerun_manifest = os.path.join(os.path.dirname(options['failure_manifest']), "rerun.ini")
+                shutil.copyfile(options['failure_manifest'], rerun_manifest)
+                os.remove(options['failure_manifest'])
+                manifest = rerun_manifest
+            else:
+                print >> sys.stderr, "No failures were found to re-run."
+                sys.exit(1)
+
+        if options.get('testingModulesDir'):
+            # The resource loader expects native paths. Depending on how we were
+            # invoked, a UNIX style path may sneak in on Windows. We try to
+            # normalize that.
+            testingModulesDir = os.path.normpath(options['testingModulesDir'])
+
+            if not os.path.isabs(testingModulesDir):
+                testingModulesDir = os.path.abspath(testingModulesDir)
+
+            if not testingModulesDir.endswith(os.path.sep):
+                testingModulesDir += os.path.sep
+
+        self.debuggerInfo = None
+
+        if options.get('debugger'):
+            self.debuggerInfo = mozdebug.get_debugger_info(options.get('debugger'),
+                options.get('debuggerArgs'), options.get('debuggerInteractive'))
+
+        self.jsDebuggerInfo = None
+        if options.get('jsDebugger'):
+            # A namedtuple let's us keep .port instead of ['port']
+            JSDebuggerInfo = namedtuple('JSDebuggerInfo', ['port'])
+            self.jsDebuggerInfo = JSDebuggerInfo(port=options['jsDebuggerPort'])
+
+        self.xpcshell = options.get('xpcshell')
+        self.xrePath = options.get('xrePath')
+        self.utility_path = options.get('utility_path')
+        self.appPath = options.get('appPath')
+        self.symbolsPath = options.get('symbolsPath')
+        self.tempDir = os.path.normpath(options.get('tempDir') or tempfile.gettempdir())
+        self.manifest = options.get('manifest')
+        self.dump_tests = options.get('dump_tests')
+        self.interactive = options.get('interactive')
+        self.verbose = options.get('verbose')
+        self.keepGoing = options.get('keepGoing')
+        self.logfiles = options.get('logfiles')
+        self.totalChunks = options.get('totalChunks')
+        self.thisChunk = options.get('thisChunk')
+        self.profileName = options.get('profileName') or "xpcshell"
+        self.mozInfo = options.get('mozInfo')
+        self.testingModulesDir = testingModulesDir
+        self.pluginsPath = options.get('pluginsPath')
+        self.sequential = options.get('sequential')
+        self.failure_manifest = options.get('failure_manifest')
+        self.threadCount = options.get('threadCount') or NUM_THREADS
+        self.jscovdir = options.get('jscovdir')
+
+        self.testCount = 0
+        self.passCount = 0
+        self.failCount = 0
+        self.todoCount = 0
+
+        self.setAbsPath()
+        self.buildXpcsRunArgs()
+
+        self.event = Event()
+
+        if not self.updateMozinfo():
+            return False
+
         self.stack_fixer_function = None
         if self.utility_path and os.path.exists(self.utility_path):
             self.stack_fixer_function = get_stack_fixer_function(self.utility_path, self.symbolsPath)
@@ -1284,15 +1254,14 @@ class XPCShellTests(object):
 
         pStdout, pStderr = self.getPipes()
 
-        self.buildTestList(test_tags, testPaths)
+        self.buildTestList(options.get('test_tags'), options.get('testPaths'), options.get('verify'))
         if self.singleFile:
             self.sequential = True
 
-        if shuffle:
+        if options.get('shuffle'):
             random.shuffle(self.alltests)
 
         self.cleanup_dir_list = []
-        self.try_again_list = []
 
         kwargs = {
             'appPath': self.appPath,
@@ -1318,6 +1287,14 @@ class XPCShellTests(object):
             'jscovdir': self.jscovdir,
             'harness_timeout': self.harness_timeout,
             'stack_fixer_function': self.stack_fixer_function,
+            'event': self.event,
+            'cleanup_dir_list': self.cleanup_dir_list,
+            'pStdout': pStdout,
+            'pStderr': pStderr,
+            'keep_going': self.keepGoing,
+            'log': self.log,
+            'interactive': self.interactive,
+            'app_dir_key': appDirKey
         }
 
         if self.sequential:
@@ -1353,29 +1330,104 @@ class XPCShellTests(object):
         tests_queue = deque()
         # also a list for the tests that need to be run sequentially
         sequential_tests = []
-        for test_object in self.alltests:
-            # Test identifiers are provided for the convenience of logging. These
-            # start as path names but are rewritten in case tests from the same path
-            # are re-run.
+        status = None
+        if not options.get('verify'):
+            for test_object in self.alltests:
+                # Test identifiers are provided for the convenience of logging. These
+                # start as path names but are rewritten in case tests from the same path
+                # are re-run.
 
-            path = test_object['path']
+                path = test_object['path']
 
-            if self.singleFile and not path.endswith(self.singleFile):
-                continue
+                if self.singleFile and not path.endswith(self.singleFile):
+                    continue
 
-            self.testCount += 1
+                self.testCount += 1
 
-            test = testClass(test_object, self.event, self.cleanup_dir_list,
-                    app_dir_key=appDirKey,
-                    interactive=interactive,
-                    verbose=verbose or test_object.get("verbose") == "true",
-                    pStdout=pStdout, pStderr=pStderr,
-                    keep_going=keepGoing, log=self.log, usingTSan=usingTSan,
-                    mobileArgs=mobileArgs, **kwargs)
-            if 'run-sequentially' in test_object or self.sequential:
-                sequential_tests.append(test)
-            else:
-                tests_queue.append(test)
+                test = testClass(test_object,
+                        verbose=self.verbose or test_object.get("verbose") == "true",
+                        usingTSan=usingTSan,
+                        mobileArgs=mobileArgs, **kwargs)
+                if 'run-sequentially' in test_object or self.sequential:
+                    sequential_tests.append(test)
+                else:
+                    tests_queue.append(test)
+
+            status = self.runTestList(tests_queue, sequential_tests, testClass,
+                mobileArgs, **kwargs)
+        else:
+            #
+            # Test verification: Run each test many times, in various configurations,
+            # in hopes of finding intermittent failures.
+            #
+
+            def step1():
+                # Run tests sequentially. Parallel mode would also work, except that
+                # the logging system gets confused when 2 or more tests with the same
+                # name run at the same time.
+                sequential_tests = []
+                for i in xrange(VERIFY_REPEAT):
+                    self.testCount += 1
+                    test = testClass(test_object, retry=False,
+                        mobileArgs=mobileArgs, **kwargs)
+                    sequential_tests.append(test)
+                status = self.runTestList(tests_queue, sequential_tests,
+                    testClass, mobileArgs, **kwargs)
+                return status
+
+            def step2():
+                # Run tests sequentially, with MOZ_CHAOSMODE enabled.
+                sequential_tests = []
+                self.env["MOZ_CHAOSMODE"] = ""
+                for i in xrange(VERIFY_REPEAT):
+                    self.testCount += 1
+                    test = testClass(test_object, retry=False,
+                        mobileArgs=mobileArgs, **kwargs)
+                    sequential_tests.append(test)
+                status = self.runTestList(tests_queue, sequential_tests,
+                    testClass, mobileArgs, **kwargs)
+                return status
+
+            steps = [
+                ("1. Run each test %d times, sequentially." % VERIFY_REPEAT,
+                 step1),
+                ("2. Run each test %d times, sequentially, in chaos mode." % VERIFY_REPEAT,
+                 step2),
+            ]
+            startTime = datetime.now()
+            maxTime = timedelta(seconds=options['verifyMaxTime'])
+            for test_object in self.alltests:
+                stepResults = {}
+                for (descr, step) in steps:
+                    stepResults[descr] = "not run / incomplete"
+                finalResult = "PASSED"
+                for (descr, step) in steps:
+                    if (datetime.now() - startTime) > maxTime:
+                        self.log.info("::: Test verification is taking too long: Giving up!")
+                        self.log.info("::: So far, all checks passed, but not all checks were run.")
+                        break
+                    self.log.info(':::')
+                    self.log.info('::: Running test verification step "%s"...' % descr)
+                    self.log.info(':::')
+                    status = step()
+                    if status != True:
+                        stepResults[descr] = "FAIL"
+                        finalResult = "FAILED!"
+                        break
+                    stepResults[descr] = "Pass"
+                self.log.info(':::')
+                self.log.info('::: Test verification summary for: %s' % test_object['path'])
+                self.log.info(':::')
+                for descr in sorted(stepResults.keys()):
+                    self.log.info('::: %s : %s' % (descr, stepResults[descr]))
+                self.log.info(':::')
+                self.log.info('::: Test verification %s' % finalResult)
+                self.log.info(':::')
+
+        return status
+
+    def runTestList(self, tests_queue, sequential_tests, testClass,
+            mobileArgs, **kwargs):
 
         if self.sequential:
             self.log.info("Running tests sequentially.")
@@ -1388,6 +1440,7 @@ class XPCShellTests(object):
         keep_going = True
         exceptions = []
         tracebacks = []
+        self.try_again_list = []
 
         tests_by_manifest = defaultdict(list)
         for test in self.alltests:
@@ -1461,11 +1514,10 @@ class XPCShellTests(object):
         if self.try_again_list:
             self.log.info("Retrying tests that failed when run in parallel.")
         for test_object in self.try_again_list:
-            test = testClass(test_object, self.event, self.cleanup_dir_list,
+            test = testClass(test_object,
                     retry=False,
-                    app_dir_key=appDirKey, interactive=interactive,
-                    verbose=verbose, pStdout=pStdout, pStderr=pStderr,
-                    keep_going=keepGoing, log=self.log, mobileArgs=mobileArgs,
+                    verbose=self.verbose,
+                    mobileArgs=mobileArgs,
                     **kwargs)
             test.start()
             test.join()
@@ -1531,7 +1583,7 @@ def main():
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
         sys.exit(1)
 
-    if not xpcsh.runTests(**vars(options)):
+    if not xpcsh.runTests(options):
         sys.exit(1)
 
 if __name__ == '__main__':
