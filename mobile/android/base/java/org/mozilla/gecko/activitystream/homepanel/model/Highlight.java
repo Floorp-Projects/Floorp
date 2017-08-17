@@ -18,7 +18,7 @@ import org.mozilla.gecko.activitystream.ranking.HighlightsRanking;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Highlight implements Item, StreamRecyclerAdapter.RowItem {
+public class Highlight implements WebpageModel, RowModel {
 
     /**
      * A pattern matching a json object containing the key "image_url" and extracting the value. afaik, these urls
