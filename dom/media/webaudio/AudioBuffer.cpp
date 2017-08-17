@@ -271,6 +271,22 @@ AudioBuffer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return AudioBufferBinding::Wrap(aCx, this, aGivenProto);
 }
 
+static void
+CopyChannelDataToFloat(const AudioChunk& aChunk, uint32_t aChannel,
+                       uint32_t aSrcOffset, float* aOutput, uint32_t aLength)
+{
+  MOZ_ASSERT(aChunk.mVolume == 1.0f);
+  if (aChunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
+    mozilla::PodCopy(aOutput,
+                     aChunk.ChannelData<float>()[aChannel] + aSrcOffset,
+                     aLength);
+  } else {
+    MOZ_ASSERT(aChunk.mBufferFormat == AUDIO_FORMAT_S16);
+    ConvertAudioSamples(aChunk.ChannelData<int16_t>()[aChannel] + aSrcOffset,
+                        aOutput, aLength);
+  }
+}
+
 bool
 AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
 {
@@ -291,13 +307,11 @@ AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
     if (!mSharedChannels.IsNull()) {
       // "4. Attach ArrayBuffers containing copies of the data to the
       // AudioBuffer, to be returned by the next call to getChannelData."
-      MOZ_ASSERT(mSharedChannels.mVolume == 1.0f);
-      const float* data = mSharedChannels.ChannelData<float>()[i];
       JS::AutoCheckCannotGC nogc;
       bool isShared;
-      mozilla::PodCopy(JS_GetFloat32ArrayData(array, &isShared, nogc),
-                       data, Length());
+      float* jsData = JS_GetFloat32ArrayData(array, &isShared, nogc);
       MOZ_ASSERT(!isShared); // Was created as unshared above
+      CopyChannelDataToFloat(mSharedChannels, i, 0, jsData, Length());
     }
     mJSChannels[i] = array;
   }
@@ -325,7 +339,6 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
 
   JS::AutoCheckCannotGC nogc;
   JSObject* channelArray = mJSChannels[aChannelNumber];
-  const float* sourceData = nullptr;
   if (channelArray) {
     if (JS_GetTypedArrayLength(channelArray) != Length()) {
       // The array's buffer was detached.
@@ -334,20 +347,22 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
     }
 
     bool isShared = false;
-    sourceData = JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
+    const float* sourceData =
+      JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
     // The sourceData arrays should all have originated in
     // RestoreJSChannelData, where they are created unshared.
     MOZ_ASSERT(!isShared);
-  } else if (!mSharedChannels.IsNull()) {
-    MOZ_ASSERT(mSharedChannels.mVolume == 1.0f);
-    sourceData = mSharedChannels.ChannelData<float>()[aChannelNumber];
+    PodMove(aDestination.Data(), sourceData + aStartInChannel, length);
+    return;
   }
 
-  if (sourceData) {
-    PodMove(aDestination.Data(), sourceData + aStartInChannel, length);
-  } else {
-    PodZero(aDestination.Data(), length);
+  if (!mSharedChannels.IsNull()) {
+    CopyChannelDataToFloat(mSharedChannels, aChannelNumber, aStartInChannel,
+                           aDestination.Data(), length);
+    return;
   }
+
+  PodZero(aDestination.Data(), length);
 }
 
 void
