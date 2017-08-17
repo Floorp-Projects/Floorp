@@ -271,27 +271,13 @@ class BaseContext {
   }
 
   checkLoadURL(url, options = {}) {
-    let ssm = Services.scriptSecurityManager;
-
-    let flags = ssm.STANDARD;
-    if (!options.allowScript) {
-      flags |= ssm.DISALLOW_SCRIPT;
-    }
-    if (!options.allowInheritsPrincipal) {
-      flags |= ssm.DISALLOW_INHERIT_PRINCIPAL;
-    }
-    if (options.dontReportErrors) {
-      flags |= ssm.DONT_REPORT_ERRORS;
+    // As an optimization, f the URL starts with the extension's base URL,
+    // don't do any further checks. It's always allowed to load it.
+    if (url.startsWith(this.extension.baseURL)) {
+      return true;
     }
 
-    try {
-      ssm.checkLoadURIWithPrincipal(this.principal,
-                                    Services.io.newURI(url),
-                                    flags);
-    } catch (e) {
-      return false;
-    }
-    return true;
+    return ExtensionUtils.checkLoadURL(url, this.principal, options);
   }
 
   /**
