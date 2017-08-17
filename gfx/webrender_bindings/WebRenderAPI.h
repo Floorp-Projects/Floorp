@@ -193,8 +193,8 @@ public:
   wr::WrClipId DefineClip(const wr::LayoutRect& aClipRect,
                           const nsTArray<wr::WrComplexClipRegion>* aComplex = nullptr,
                           const wr::WrImageMask* aMask = nullptr);
-  void PushClip(const wr::WrClipId& aClipId);
-  void PopClip();
+  void PushClip(const wr::WrClipId& aClipId, bool aRecordInStack = true);
+  void PopClip(bool aRecordInStack = true);
 
   void PushBuiltDisplayList(wr::BuiltDisplayList &dl);
 

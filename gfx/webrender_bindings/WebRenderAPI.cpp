@@ -687,18 +687,22 @@ DisplayListBuilder::DefineClip(const wr::LayoutRect& aClipRect,
 }
 
 void
-DisplayListBuilder::PushClip(const wr::WrClipId& aClipId)
+DisplayListBuilder::PushClip(const wr::WrClipId& aClipId, bool aRecordInStack)
 {
   wr_dp_push_clip(mWrState, aClipId.id);
   WRDL_LOG("PushClip id=%" PRIu64 "\n", aClipId.id);
-  mClipIdStack.push_back(aClipId);
+  if (aRecordInStack) {
+    mClipIdStack.push_back(aClipId);
+  }
 }
 
 void
-DisplayListBuilder::PopClip()
+DisplayListBuilder::PopClip(bool aRecordInStack)
 {
   WRDL_LOG("PopClip id=%" PRIu64 "\n", mClipIdStack.back().id);
-  mClipIdStack.pop_back();
+  if (aRecordInStack) {
+    mClipIdStack.pop_back();
+  }
   wr_dp_pop_clip(mWrState);
 }
 
