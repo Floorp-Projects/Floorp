@@ -1,8 +1,14 @@
 add_task(async function setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
+  // activity-stream is only enabled in Nightly, and if activity-stream is not
+  // enabled, about:newtab is loaded without the flag
+  // nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT, so it will be loaded with
+  // System Principal.
+  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.enabled", true);
 
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
+    Services.prefs.clearUserPref("browser.newtabpage.activity-stream.enabled");
   });
 });
 

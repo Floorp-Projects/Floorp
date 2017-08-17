@@ -64,10 +64,6 @@ const whitelist = [
     file: "chrome://browser/skin/tracking-protection-16.svg#enabled",
     platforms: ["linux", "win", "macosx"],
   },
-  {
-    file: "chrome://global/skin/icons/autoscroll.png",
-    platforms: ["linux", "win", "macosx"],
-  },
 
   {
     file: "chrome://browser/skin/tabbrowser/tabDragIndicator.png",

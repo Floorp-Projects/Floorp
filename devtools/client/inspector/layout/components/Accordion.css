@@ -16,15 +16,18 @@
   background-color: var(--theme-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
   padding: 5px;
   transition: all 0.25s ease;
   width: 100%;
+  align-items: center;
+  display: flex;
+
   -moz-user-select: none;
 }
 
 .accordion ._header:hover {
-  background-color: var(--theme-toolbar-hover);
+  background-color: var(--theme-toolbar-background-hover);
 }
 
 .accordion ._header:hover svg {

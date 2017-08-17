@@ -134,7 +134,7 @@ class XPCShellRunner(MozbuildObject):
 
             filtered_args[k] = v
 
-        result = xpcshell.runTests(**filtered_args)
+        result = xpcshell.runTests(filtered_args)
 
         self.log_manager.disable_unstructured()
 
@@ -206,12 +206,10 @@ class AndroidXPCShellRunner(MozbuildObject):
         if not kwargs["sequential"]:
             kwargs["sequential"] = True
 
-        options = argparse.Namespace(**kwargs)
-        xpcshell = remotexpcshelltests.XPCShellRemote(dm, options, log)
+        xpcshell = remotexpcshelltests.XPCShellRemote(dm, kwargs, log)
 
-        result = xpcshell.runTests(testClass=remotexpcshelltests.RemoteXPCShellTestThread,
-                                   mobileArgs=xpcshell.mobileArgs,
-                                   **vars(options))
+        result = xpcshell.runTests(kwargs, testClass=remotexpcshelltests.RemoteXPCShellTestThread,
+                                   mobileArgs=xpcshell.mobileArgs)
 
         self.log_manager.disable_unstructured()
 

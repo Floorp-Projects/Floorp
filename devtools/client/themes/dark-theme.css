@@ -69,16 +69,6 @@ body {
   color: var(--theme-comment);
 }
 
-.theme-gutter {
-  background-color: var(--theme-tab-toolbar-background);
-  color: var(--theme-content-color3);
-  border-color: var(--theme-splitter-color);
-}
-
-.theme-separator {
-  border-color: var(--theme-splitter-color);
-}
-
 .theme-fg-color1,
 .cm-s-mozilla .cm-number,
 .variable-or-property .token-number,

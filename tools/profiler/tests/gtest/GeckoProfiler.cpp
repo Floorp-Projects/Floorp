@@ -750,9 +750,8 @@ public:
 
   virtual void CollectNativeLeafAddr(void* aAddr) { mFrames++; }
   virtual void CollectJitReturnAddr(void* aAddr) { mFrames++; }
-  virtual void CollectCodeLocation(
-    const char* aLabel, const char* aStr, int aLineNumber,
-    const mozilla::Maybe<js::ProfileEntry::Category>& aCategory) { mFrames++; }
+  virtual void CollectWasmFrame(const char* aLabel) { mFrames++; }
+  virtual void CollectPseudoEntry(const js::ProfileEntry& aEntry) { mFrames++; }
 
   int mSetIsMainThread;
   int mFrames;

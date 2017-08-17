@@ -146,10 +146,6 @@
   pointer-events: none;
 }
 
-.ruleview-expandable-container[hidden] {
-  display: none;
-}
-
 .ruleview-expandable-container {
   display: block;
 }
@@ -168,6 +164,7 @@
 }
 
 .ruleview-computedlist,
+.ruleview-expandable-container[hidden],
 .ruleview-overridden-items[hidden],
 .ruleview-overridden-rule-filter[hidden],
 .ruleview-warning[hidden],
@@ -222,20 +219,18 @@
 }
 
 .ruleview-header {
-  border-top-width: 1px;
-  border-bottom-width: 1px;
-  border-top-style: solid;
-  border-bottom-style: solid;
-  padding: 1px 4px;
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: 12px;
+  padding: 5px;
+  width: 100%;
+  align-items: center;
+  display: flex;
+
   -moz-user-select: none;
-  word-wrap: break-word;
-  vertical-align: middle;
-  min-height: 1.5em;
-  line-height: 1.5em;
-  margin-top: -1px;
 }
 
-.theme-firebug .theme-gutter.ruleview-header {
+.theme-firebug .ruleview-header {
   font-family: var(--proportional-font-family);
   font-weight: bold;
   color: inherit;
@@ -252,9 +247,14 @@
   margin-top: 4px;
 }
 
-.ruleview-header.ruleview-expandable-header {
+.ruleview-expandable-header {
   cursor: pointer;
 }
+
+.ruleview-expandable-header:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
 
 .ruleview-rule-pseudo-element {
   padding-left:20px;
@@ -262,7 +262,12 @@
 }
 
 .ruleview-rule {
+  border-bottom: 1px solid var(--theme-splitter-color);
   padding: 2px 4px;
+}
+
+#ruleview-container-focusable > .ruleview-rule:last-child {
+  border-bottom: none;
 }
 
 /**
@@ -327,13 +332,8 @@
   color: #CCCCCC;
 }
 
-.ruleview-rule + .ruleview-rule {
-  border-top-width: 1px;
-  border-top-style: dotted;
-}
-
 .theme-firebug .ruleview-rule + .ruleview-rule {
-  border-top: none;
+  border-bottom: none;
 }
 
 .ruleview-warning {

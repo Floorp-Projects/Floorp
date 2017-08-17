@@ -1013,7 +1013,6 @@ public class BrowserApp extends GeckoApp
 
             if (prefs.getBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED_OLD, true) &&
                 prefs.getBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, true)) {
-                showSplashScreen = false;
                 if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
                     // Check to see if a distribution has turned off the first run pager.
                     final Distribution distribution = Distribution.getInstance(BrowserApp.this);
@@ -1609,8 +1608,6 @@ public class BrowserApp extends GeckoApp
         NotificationHelper.destroy();
         IntentHelper.destroy();
         GeckoNetworkManager.destroy();
-
-        EventDispatcher.getInstance().dispatch("Browser:ZombifyTabs", null);
 
         super.onDestroy();
     }
@@ -2834,6 +2831,12 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showFirstrunPager() {
+        if (Experiments.isInExperimentLocal(this, Experiments.ONBOARDING3_A)) {
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
+            GeckoSharedPrefs.forProfile(this).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_A).apply();
+            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
+            return;
+        }
 
         if (mFirstrunAnimationContainer == null) {
             final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
