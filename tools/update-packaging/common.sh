@@ -14,6 +14,12 @@ MAR=${MAR:-mar}
 MBSDIFF=${MBSDIFF:-mbsdiff}
 if [[ -z "${MAR_OLD_FORMAT}" ]]; then
   XZ=${XZ:-xz}
+  $XZ --version > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "xz was not found on this system!"
+    echo "exiting"
+    exit 1
+  fi
 else
   MAR_OLD_FORMAT=1
   BZIP2=${BZIP2:-bzip2}
