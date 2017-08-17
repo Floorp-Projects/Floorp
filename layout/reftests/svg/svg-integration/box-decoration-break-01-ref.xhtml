@@ -1,0 +1,37 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    .clip {
+      clip-path:url(#path);
+    }
+    span {
+      font: 24px sans-serif;
+      line-height: 2;
+      color: lime;
+      background: lime;
+    }
+    br {
+      line-height: 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Box-Decoration-Break: Clone</h2>
+  <span class="clip">The</span><br />
+  <span class="clip">quick</span><br />
+  <span class="clip">orange fox</span>
+
+  <h2>Box-Decoration-Break: Slice</h2>
+  <span>The</span>
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="0">
+    <defs>
+      <clipPath id="path" clipPathUnits="objectBoundingBox">
+        <rect x="0" y="0" width="1" height="0.3"/>
+      </clipPath>
+    </defs>
+  </svg>
+
+</body>
+</html>
