@@ -222,6 +222,10 @@ var gSyncPane = {
       this._updateComputerNameValue(true);
       this._focusAfterComputerNameTextbox();
     });
+    setEventListener("noFxaSignUp", "command", function() {
+      gSyncPane.signUp();
+      return false;
+    });
     setEventListener("noFxaSignIn", "command", function() {
       gSyncPane.signIn();
       return false;
