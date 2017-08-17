@@ -58,5 +58,13 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
   return true;
 }
 
+void
+WebMDecoder::GetMozDebugReaderData(nsACString& aString)
+{
+  if (mReader) {
+    mReader->GetMozDebugReaderData(aString);
+  }
+}
+
 } // namespace mozilla
 
