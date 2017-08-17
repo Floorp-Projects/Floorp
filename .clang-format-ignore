@@ -23,6 +23,7 @@
 ^gfx/harfbuzz/.*
 ^gfx/ots/.*
 ^gfx/qcms/.*
+^gfx/sfntly/.*
 ^gfx/skia/.*
 ^gfx/vr/openvr/.*
 ^gfx/webrender.*
@@ -69,6 +70,7 @@
 ^modules/freetype2/.*
 ^modules/libbz2/.*
 ^modules/libmar/.*
+^modules/pdfium/.*
 ^modules/woff2/.*
 ^modules/zlib/.*
 ^netwerk/sctp/src/.*
@@ -80,7 +82,10 @@
 ^security/sandbox/chromium/.*
 ^testing/gtest/gmock/.*
 ^testing/gtest/gtest/.*
+^testing/talos/talos/tests/canvasmark/.*
 ^testing/talos/talos/tests/dromaeo/.*
+^testing/talos/talos/tests/kraken/.*
+^testing/talos/talos/tests/v8_7/.*
 ^third_party/aom/.*
 ^third_party/python/blessings/.*
 ^third_party/python/configobj/.*
@@ -99,6 +104,8 @@
 ^third_party/python/requests/.*
 ^third_party/python/rsa/.*
 ^third_party/python/which/.*
+^third_party/rust/.*
 ^toolkit/components/jsoncpp/.*
 ^toolkit/components/protobuf/.*
 ^toolkit/crashreporter/google-breakpad/.*
+^tools/fuzzing/libfuzzer.*
