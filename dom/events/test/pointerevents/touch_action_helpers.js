@@ -20,6 +20,18 @@ function tapComplete() {
   return button.click();
 }
 
+function waitForResetScrollLeft(aSelector = '#target0') {
+  var target = document.querySelector(aSelector);
+  return new Promise(resolve => {
+    target.addEventListener("scroll", function onScroll() {
+      if (target.scrollLeft == 0) {
+        target.removeEventListener("scroll", onScroll);
+        resolve();
+      }
+    });
+  });
+}
+
 // The main body functions to simulate the input events required for the named test
 
 function* pointerevent_touch_action_auto_css_touch_manual(testDriver) {
@@ -37,8 +49,12 @@ function* pointerevent_touch_action_button_test_touch_manual(testDriver) {
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
   yield touchScrollRight();
+  let resetScrollLeft = waitForResetScrollLeft();
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
+  // Wait for resetting target0's scrollLeft to avoid the reset break the
+  // following scroll behaviors.
+  yield resetScrollLeft.then(testDriver);
   yield touchScrollDown('#target0 > button');
   yield waitForApzFlushedRepaints(testDriver);
   yield touchScrollRight('#target0 > button');
@@ -159,8 +175,12 @@ function* pointerevent_touch_action_span_test_touch_manual(testDriver) {
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
   yield touchScrollRight();
+  let resetScrollLeft = waitForResetScrollLeft();
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
+  // Wait for resetting target0's scrollLeft to avoid the reset break the
+  // following scroll behaviors.
+  yield resetScrollLeft.then(testDriver);
   yield touchScrollDown('#testspan');
   yield waitForApzFlushedRepaints(testDriver);
   yield touchScrollRight('#testspan');
@@ -191,8 +211,12 @@ function* pointerevent_touch_action_table_test_touch_manual(testDriver) {
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
   yield touchScrollRight('#row1');
+  let resetScrollLeft = waitForResetScrollLeft();
   yield waitForApzFlushedRepaints(testDriver);
   yield setTimeout(testDriver, 2 * scrollReturnInterval);
+  // Wait for resetting target0's scrollLeft to avoid the reset break the
+  // following scroll behaviors.
+  yield resetScrollLeft.then(testDriver);
   yield touchScrollDown('#cell3');
   yield waitForApzFlushedRepaints(testDriver);
   yield touchScrollRight('#cell3');
