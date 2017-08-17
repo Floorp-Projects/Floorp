@@ -350,6 +350,13 @@ ChannelMediaDecoder::CanPlayThroughImpl()
   return GetStatistics().CanPlayThrough();
 }
 
+bool
+ChannelMediaDecoder::IsLiveStream()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mResource->IsLiveStream();
+}
+
 void
 ChannelMediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
 {
