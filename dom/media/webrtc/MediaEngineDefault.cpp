@@ -215,6 +215,7 @@ MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
 
   mState = kStopped;
   mImage = nullptr;
+  mImageContainer = nullptr;
   return NS_OK;
 }
 
