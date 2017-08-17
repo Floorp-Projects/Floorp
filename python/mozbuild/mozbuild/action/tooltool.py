@@ -141,7 +141,7 @@ class FileRecord(object):
             raise MissingFileException(filename=self.filename)
 
     def validate(self):
-        if self.validate_size():
+        if self.size is None or self.validate_size():
             if self.validate_digest():
                 return True
         return False
