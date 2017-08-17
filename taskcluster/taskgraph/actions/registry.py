@@ -10,6 +10,7 @@ import json
 import os
 import inspect
 import re
+from slugid import nice as slugid
 from mozbuild.util import memoize
 from types import FunctionType
 from collections import namedtuple
@@ -183,6 +184,8 @@ def register_callback_action(name, title, symbol, description, order=10000,
             repo_scope = 'assume:repo:{}/{}:*'.format(
                 match.group(1), match.group(2))
 
+            task_group_id = os.environ.get('TASK_ID', slugid())
+
             return {
                 'created': {'$fromNow': ''},
                 'deadline': {'$fromNow': '12 hours'},
@@ -197,6 +200,8 @@ def register_callback_action(name, title, symbol, description, order=10000,
                 },
                 'workerType': 'gecko-{}-decision'.format(parameters['level']),
                 'provisionerId': 'aws-provisioner-v1',
+                'taskGroupId': task_group_id,
+                'schedulerId': 'gecko-level-{}'.format(parameters['level']),
                 'scopes': [
                     repo_scope,
                 ],
@@ -217,7 +222,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                         'GECKO_HEAD_REF': parameters['head_ref'],
                         'GECKO_HEAD_REV': parameters['head_rev'],
                         'HG_STORE_PATH': '/home/worker/checkouts/hg-store',
-                        'ACTION_TASK_GROUP_ID': {'$eval': 'taskGroupId'},
+                        'ACTION_TASK_GROUP_ID': task_group_id,
                         'ACTION_TASK_ID': {'$json': {'$eval': 'taskId'}},
                         'ACTION_TASK': {'$json': {'$eval': 'task'}},
                         'ACTION_INPUT': {'$json': {'$eval': 'input'}},
