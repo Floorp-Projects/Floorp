@@ -426,7 +426,6 @@
            type="arrow"
            hidden="true"
            flip="slide"
-           photon="true"
            position="bottomcenter topright"
            tabspecific="true"
            noautofocus="true"
