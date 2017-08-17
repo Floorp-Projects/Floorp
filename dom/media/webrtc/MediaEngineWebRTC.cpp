@@ -341,7 +341,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
 
     int error = mAudioInput->GetRecordingDeviceName(i, deviceName, uniqueId);
     if (error) {
-      LOG((" VoEHardware:GetRecordingDeviceName: Failed %d", error));
+      LOG((" AudioInput::GetRecordingDeviceName: Failed %d", error));
       continue;
     }
 
