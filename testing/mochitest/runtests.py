@@ -1809,8 +1809,8 @@ toolbar#nav-bar {
         except AttributeError:
             pass
         try:
-            if options.topsrcdir:
-                sandbox_whitelist_paths.append(options.topsrcdir)
+            if options.objPath:
+                sandbox_whitelist_paths.append(options.objPath)
         except AttributeError:
             pass
         if (platform.system() == "Linux" or

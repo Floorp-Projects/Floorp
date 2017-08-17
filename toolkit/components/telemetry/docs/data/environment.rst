@@ -309,6 +309,10 @@ The object contains:
   [profile]/searchplugins/engine.xml
   [distribution]/searchplugins/common/engine.xml
   [other]/engine.xml
+  [other]/addEngineWithDetails
+  [other]/addEngineWithDetails:extensionID
+  [http/https]example.com/engine-name.xml
+  [http/https]example.com/engine-name.xml:extensionID
 
 - an ``origin`` property: the value will be ``default`` for engines that are built-in or from distribution partners, ``verified`` for user-installed engines with valid verification hashes, ``unverified`` for non-default engines without verification hash, and ``invalid`` for engines with broken verification hashes.
 

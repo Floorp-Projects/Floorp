@@ -49,11 +49,14 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         }
       }
       try {
-        Services.search.addEngineWithDetails(searchProvider.name.trim(),
-                                             searchProvider.favicon_url,
-                                             searchProvider.keyword, null,
-                                             "GET", searchProvider.search_url,
-                                             extension.id);
+        let params = {
+          template: searchProvider.search_url,
+          iconURL: searchProvider.favicon_url,
+          alias: searchProvider.keyword,
+          extensionID: extension.id,
+          suggestURL: searchProvider.suggest_url,
+        };
+        Services.search.addEngineWithDetails(searchProvider.name.trim(), params);
         if (extension.startupReason === "ADDON_UPGRADE") {
           let engine = Services.search.getEngineByName(searchProvider.name.trim());
           if (isCurrent) {

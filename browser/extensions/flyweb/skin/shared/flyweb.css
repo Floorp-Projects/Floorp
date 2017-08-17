@@ -14,41 +14,5 @@
 }
 
 #flyweb-button {
-  list-style-image: url("chrome://flyweb/skin/icon-16.png");
-}
-
-#flyweb-button[cui-areatype="menu-panel"],
-toolbarpaletteitem[place="palette"] > #flyweb-button {
-  list-style-image: url("chrome://flyweb/skin/icon-32.png");
-}
-
-#flyweb-button[cui-areatype="menu-panel"][panel-multiview-anchor="true"] {
-  list-style-image: url("chrome://flyweb/skin/icon-32-anchored.png");
-}
-
-#flyweb-items > toolbarbutton {
-  list-style-image: url("chrome://flyweb/skin/icon-16.png");
-}
-
-@media (min-resolution: 2dppx) {
-  #flyweb-button {
-    list-style-image: url("chrome://flyweb/skin/icon-32.png");
-  }
-
-  #flyweb-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #flyweb-button {
-    list-style-image: url("chrome://flyweb/skin/icon-64.png");
-  }
-
-  #flyweb-button[cui-areatype="menu-panel"][panel-multiview-anchor="true"] {
-    list-style-image: url("chrome://flyweb/skin/icon-64-anchored.png");
-  }
-
-  #flyweb-items > toolbarbutton {
-    list-style-image: url("chrome://flyweb/skin/icon-32.png");
-  }
-
-  #flyweb-items > toolbarbutton > .toolbarbutton-icon {
-    width: 16px;
-  }
+  list-style-image: url("chrome://flyweb-shared/skin/icon.svg");
 }
