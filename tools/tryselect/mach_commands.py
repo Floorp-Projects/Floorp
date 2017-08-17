@@ -9,7 +9,6 @@ import os
 import sys
 
 from mach.decorators import (
-    CommandArgument,
     CommandProvider,
     Command,
     SubCommand,
@@ -28,18 +27,8 @@ and try again.
 
 
 def syntax_parser():
-    from tryselect.selectors.syntax import arg_parser
-    parser = arg_parser()
-    # The --no-artifact flag is only interpreted locally by |mach try|; it's not
-    # like the --artifact flag, which is interpreted remotely by the try server.
-    #
-    # We need a tri-state where set is different than the default value, so we
-    # use a different variable than --artifact.
-    parser.add_argument('--no-artifact',
-                        dest='no_artifact',
-                        action='store_true',
-                        help='Force compiled (non-artifact) builds even when '
-                             '--enable-artifact-builds is set.')
+    from tryselect.selectors.syntax import SyntaxParser
+    parser = SyntaxParser()
     return parser
 
 
@@ -48,14 +37,21 @@ def fuzzy_parser():
     return FuzzyParser()
 
 
+def generic_parser():
+    from tryselect.cli import BaseTryParser
+    parser = BaseTryParser()
+    parser.add_argument('args', nargs=argparse.REMAINDER)
+    return parser
+
+
 @CommandProvider
 class TrySelect(MachCommandBase):
 
     @Command('try',
              category='ci',
-             description='Push selected tasks to the try server')
-    @CommandArgument('args', nargs=argparse.REMAINDER)
-    def try_default(self, args):
+             description='Push selected tasks to the try server',
+             parser=generic_parser)
+    def try_default(self, args, **kwargs):
         """Push selected tests to the try server.
 
         The |mach try| command is a frontend for scheduling tasks to
@@ -68,15 +64,16 @@ class TrySelect(MachCommandBase):
         scheduling with the `syntax` selector.
         """
         parser = syntax_parser()
-        kwargs = vars(parser.parse_args(args))
+        subargs = vars(parser.parse_args(args))
+        subargs.update(kwargs)
         return self._mach_context.commands.dispatch(
-            'try', subcommand='syntax', context=self._mach_context, **kwargs)
+            'try', subcommand='syntax', context=self._mach_context, **subargs)
 
     @SubCommand('try',
                 'fuzzy',
                 description='Select tasks on try using a fuzzy finder',
                 parser=fuzzy_parser)
-    def try_fuzzy(self, *args, **kwargs):
+    def try_fuzzy(self, **kwargs):
         """Select which tasks to use with fzf.
 
         This selector runs all task labels through a fuzzy finding interface.
@@ -120,7 +117,7 @@ class TrySelect(MachCommandBase):
           ^start 'exact | !ignore fuzzy end$
         """
         from tryselect.selectors.fuzzy import run_fuzzy_try
-        return run_fuzzy_try(*args, **kwargs)
+        return run_fuzzy_try(**kwargs)
 
     @SubCommand('try',
                 'syntax',
