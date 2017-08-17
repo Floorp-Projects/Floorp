@@ -51,6 +51,7 @@ ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData)
 #define STRINGIFY(s) _STRINGIFY(s)
 #define _STRINGIFY(s) #s
 
+#ifdef MOZILLA_OFFICIAL
 static cdm::HostFile
 TakeToCDMHostFile(HostFileData& aHostFileData)
 {
@@ -58,6 +59,7 @@ TakeToCDMHostFile(HostFileData& aHostFileData)
                        aHostFileData.mBinary.TakePlatformFile(),
                        aHostFileData.mSig.TakePlatformFile());
 }
+#endif
 
 GMPErr
 ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
@@ -68,6 +70,7 @@ ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
     return GMPGenericErr;
   }
 
+#ifdef MOZILLA_OFFICIAL
   // Note: we must call the VerifyCdmHost_0 function if it's present before
   // we call the initialize function.
   auto verify = reinterpret_cast<decltype(::VerifyCdmHost_0)*>(
@@ -80,6 +83,7 @@ ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
     bool result = verify(files.Elements(), files.Length());
     GMP_LOG("%s VerifyCdmHost_0 returned %d", __func__, result);
   }
+#endif
 
   auto init = reinterpret_cast<decltype(::INITIALIZE_CDM_MODULE)*>(
     PR_FindFunctionSymbol(mLib, STRINGIFY(INITIALIZE_CDM_MODULE)));

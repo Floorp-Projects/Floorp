@@ -63,10 +63,12 @@ void* CreateCdmInstance(int cdm_interface_version,
   }
 #endif
 
+#ifdef MOZILLA_OFFICIAL
   // Test that we're able to read the host files.
   if (!sCanReadHostVerificationFiles) {
     return nullptr;
   }
+#endif
 
   cdm::Host_8* host = static_cast<cdm::Host_8*>(
     get_cdm_host_func(cdm_interface_version, user_data));
