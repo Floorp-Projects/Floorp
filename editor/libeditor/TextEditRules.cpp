@@ -505,22 +505,20 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
     return NS_OK;
   }
 
-  int32_t parentOffset;
-  nsINode* parentNode =
-    EditorBase::GetNodeLocation(selNode, &parentOffset);
-
   NS_ENSURE_STATE(mTextEditor);
   nsINode* root = mTextEditor->GetRoot();
   if (NS_WARN_IF(!root)) {
     return NS_ERROR_NULL_POINTER;
   }
+  nsINode* parentNode = selNode->GetParentNode();
   if (parentNode != root) {
     return NS_OK;
   }
 
   nsINode* nextNode = selNode->GetNextSibling();
   if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
-    rv = aSelection->Collapse(parentNode, parentOffset + 1);
+    int32_t offsetInParent = EditorBase::GetChildOffset(selNode, parentNode);
+    rv = aSelection->Collapse(parentNode, offsetInParent + 1);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
