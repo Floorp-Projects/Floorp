@@ -2144,7 +2144,8 @@ public:
    */
   CharIterator(SVGTextFrame* aSVGTextFrame,
                CharacterFilter aFilter,
-               nsIContent* aSubtree = nullptr);
+               nsIContent* aSubtree,
+               bool aPostReflow = true);
 
   /**
    * Returns whether the iterator is finished.
@@ -2417,11 +2418,18 @@ private:
    * GetGlyphAdvance etc. to take into account textLength="".
    */
   float mLengthAdjustScaleFactor;
+
+  /**
+   * Whether the instance of this class is being used after reflow has occurred
+   * or not.
+   */
+  bool mPostReflow;
 };
 
 CharIterator::CharIterator(SVGTextFrame* aSVGTextFrame,
                            CharIterator::CharacterFilter aFilter,
-                           nsIContent* aSubtree)
+                           nsIContent* aSubtree,
+                           bool aPostReflow)
   : mFilter(aFilter),
     mFrameIterator(FrameIfAnonymousChildReflowed(aSVGTextFrame), aSubtree),
     mFrameForTrimCheck(nullptr),
@@ -2430,6 +2438,7 @@ CharIterator::CharIterator(SVGTextFrame* aSVGTextFrame,
     mTextElementCharIndex(0),
     mGlyphStartTextElementCharIndex(0),
     mLengthAdjustScaleFactor(aSVGTextFrame->mLengthAdjustScaleFactor)
+  , mPostReflow(aPostReflow)
 {
   if (!AtEnd()) {
     mSkipCharsIterator = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
@@ -2550,7 +2559,9 @@ CharIterator::IsOriginalCharTrimmed() const
     uint32_t length = mFrameForTrimCheck->GetContentLength();
     nsIContent* content = mFrameForTrimCheck->GetContent();
     nsTextFrame::TrimmedOffsets trim =
-      mFrameForTrimCheck->GetTrimmedOffsets(content->GetText(), true);
+      mFrameForTrimCheck->GetTrimmedOffsets(content->GetText(),
+                                            /* aTrimAfter */ true,
+                                            mPostReflow);
     TrimOffsets(offset, length, trim);
     mTrimmedOffset = offset;
     mTrimmedLength = length;
@@ -4527,7 +4538,7 @@ SVGTextFrame::ResolvePositions(nsTArray<gfxPoint>& aDeltas,
   NS_ASSERTION(mPositions.IsEmpty(), "expected mPositions to be empty");
   RemoveStateBits(NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES);
 
-  CharIterator it(this, CharIterator::eOriginal);
+  CharIterator it(this, CharIterator::eOriginal, /* aSubtree */ nullptr);
   if (it.AtEnd()) {
     return false;
   }
@@ -4727,7 +4738,7 @@ SVGTextFrame::AdjustChunksForLineBreaks()
 
   nsBlockFrame::LineIterator line = block->LinesBegin();
 
-  CharIterator it(this, CharIterator::eOriginal);
+  CharIterator it(this, CharIterator::eOriginal, /* aSubtree */ nullptr);
   while (!it.AtEnd() && line != block->LinesEnd()) {
     if (it.TextFrame() == line->mFirstChild) {
       mPositions[it.TextElementCharIndex()].mStartOfChunk = true;
@@ -4742,7 +4753,8 @@ SVGTextFrame::AdjustPositionsForClusters()
 {
   nsPresContext* presContext = PresContext();
 
-  CharIterator it(this, CharIterator::eClusterOrLigatureGroupMiddle);
+  CharIterator it(this, CharIterator::eClusterOrLigatureGroupMiddle,
+                  /* aSubtree */ nullptr);
   while (!it.AtEnd()) {
     // Find the start of the cluster/ligature group.
     uint32_t charIndex = it.TextElementCharIndex();
@@ -4893,7 +4905,8 @@ SVGTextFrame::DoTextPathLayout()
 {
   nsPresContext* context = PresContext();
 
-  CharIterator it(this, CharIterator::eClusterAndLigatureGroupStart);
+  CharIterator it(this, CharIterator::eClusterAndLigatureGroupStart,
+                  /* aSubtree */ nullptr);
   while (!it.AtEnd()) {
     nsIFrame* textPathFrame = it.TextPathFrame();
     if (!textPathFrame) {
@@ -4963,7 +4976,7 @@ SVGTextFrame::DoAnchoring()
 {
   nsPresContext* presContext = PresContext();
 
-  CharIterator it(this, CharIterator::eOriginal);
+  CharIterator it(this, CharIterator::eOriginal, /* aSubtree */ nullptr);
 
   // Don't need to worry about skipped or trimmed characters.
   while (!it.AtEnd() &&
