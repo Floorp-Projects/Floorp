@@ -90,6 +90,11 @@ public:
 
   virtual ~nsImageBoxFrame();
 
+  already_AddRefed<imgIContainer> GetImageContainerForPainting(const nsPoint& aPt,
+                                                               DrawResult& aDrawResult,
+                                                               Maybe<nsPoint>& aAnchorPoint,
+                                                               nsRect& aDest);
+
   DrawResult PaintImage(gfxContext& aRenderingContext,
                         const nsRect& aDirtyRect,
                         nsPoint aPt, uint32_t aFlags);
