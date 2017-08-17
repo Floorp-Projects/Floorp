@@ -85,9 +85,25 @@ public:
   }
 
   NS_IMETHODIMP
+  GetLaunchServiceWorkerStart(TimeStamp* aTimeStamp) override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(aTimeStamp);
+    *aTimeStamp = mLaunchServiceWorkerStart;
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP
   SetLaunchServiceWorkerEnd(TimeStamp aTimeStamp) override
   {
     mLaunchServiceWorkerEnd = aTimeStamp;
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP
+  GetLaunchServiceWorkerEnd(TimeStamp* aTimeStamp) override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(aTimeStamp);
+    *aTimeStamp = mLaunchServiceWorkerEnd;
     return NS_OK;
   }
 

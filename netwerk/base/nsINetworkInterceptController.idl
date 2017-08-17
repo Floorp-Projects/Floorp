@@ -107,8 +107,16 @@ interface nsIInterceptedChannel : nsISupports
     [noscript]
     void SetLaunchServiceWorkerStart(in TimeStamp aTimeStamp);
 
+    // A hack to get sw launch start time for telemetry.
+    [noscript]
+    void GetLaunchServiceWorkerStart(out TimeStamp aTimeStamp);
+
     [noscript]
     void SetLaunchServiceWorkerEnd(in TimeStamp aTimeStamp);
+
+    // A hack to get sw launch end time for telemetry.
+    [noscript]
+    void GetLaunchServiceWorkerEnd(out TimeStamp aTimeStamp);
 
     [noscript]
     void SetDispatchFetchEventStart(in TimeStamp aTimeStamp);

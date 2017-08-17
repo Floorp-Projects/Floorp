@@ -11048,6 +11048,17 @@
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "bug_numbers": [1058133]
   },
+  "SERVICE_WORKER_LAUNCH_TIME": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "bug_numbers": [1328398],
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 25,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["sw-telemetry@mozilla.com", "ttung@mozilla.com"],
+    "description": "Time (ms) for a service worker to start up."
+  },
   "SERVICE_WORKER_REGISTRATION_LOADING": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
