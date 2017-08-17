@@ -567,7 +567,6 @@ private:
         return err;
     }
 
-public:
     GLenum FlushErrors() const {
         GLenum err = RawGetErrorAndClear();
         if (!mTopError)
@@ -575,18 +574,10 @@ public:
         return err;
     }
 
-    // We smash all errors together, so you never have to loop on this. We
-    // guarantee that immediately after this call, there are no errors left.
-    GLenum fGetError() {
-        FlushErrors();
-
-        GLenum err = mTopError;
-        mTopError = LOCAL_GL_NO_ERROR;
-        return err;
-    }
-
     ////////////////////////////////////
     // Use this safer option.
+
+public:
     class LocalErrorScope;
 
 private:
@@ -783,6 +774,19 @@ public:
 // -----------------------------------------------------------------------------
 // GL official entry points
 public:
+    // We smash all errors together, so you never have to loop on this. We
+    // guarantee that immediately after this call, there are no errors left.
+    GLenum fGetError() {
+        GLenum err = LOCAL_GL_CONTEXT_LOST;
+        BEFORE_GL_CALL;
+
+        FlushErrors();
+        err = mTopError;
+        mTopError = LOCAL_GL_NO_ERROR;
+
+        AFTER_GL_CALL;
+        return err;
+    }
 
     void fActiveTexture(GLenum texture) {
         BEFORE_GL_CALL;
