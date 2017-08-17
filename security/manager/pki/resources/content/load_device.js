@@ -39,10 +39,11 @@ function onDialogAccept() {
   let bundle = document.getElementById("pipnss_bundle");
   let nameBox = document.getElementById("device_name");
   let pathBox = document.getElementById("device_path");
-  let pkcs11 = Cc["@mozilla.org/security/pkcs11;1"].getService(Ci.nsIPKCS11);
+  let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
+                         .getService(Ci.nsIPKCS11ModuleDB);
 
   try {
-    pkcs11.addModule(nameBox.value, pathBox.value, 0, 0);
+    pkcs11ModuleDB.addModule(nameBox.value, pathBox.value, 0, 0);
   } catch (e) {
     alertPromptService(null, bundle.getString("AddModuleFailure"));
     return false;
