@@ -96,7 +96,7 @@ protected:
 
     nsCOMPtr<nsIRDFDataSource> mDataSource;
     nsNameSpaceMap mNameSpaces;
-    nsXPIDLCString mBaseURLSpec;
+    nsCString mBaseURLSpec;
 
     // hash mapping resources to utf8-encoded QNames
     nsDataHashtable<nsISupportsHashKey, nsCString> mQNames;
