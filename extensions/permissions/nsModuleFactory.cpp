@@ -5,7 +5,7 @@
 #include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
 #include "nsContentBlocker.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 // Define the constructor function for the objects
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsContentBlocker, Init)

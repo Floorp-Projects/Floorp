@@ -21,7 +21,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"

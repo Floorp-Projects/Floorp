@@ -133,7 +133,7 @@
 #include "nsReadableUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCIDInternal.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsVersionComparator.h"
 

@@ -25,7 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIStringBundle.h"

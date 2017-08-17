@@ -5,7 +5,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsXPCOM.h"

@@ -11,7 +11,6 @@
 #include "nsIAtom.h"
 #include "nsIFile.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
 #include "prenv.h"
 #include "nsCRT.h"
