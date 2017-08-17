@@ -65,7 +65,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
     expectedResult: {
       "street-address": "line1\n\nline3",
       "address-line1": "line1",
-      "address-line2": "",
+      "address-line2": undefined,
       "address-line3": "line3",
     },
   },
@@ -89,7 +89,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
     expectedResult: {
       "street-address": "line1\n \nline3\n \nline5",
       "address-line1": "line1",
-      "address-line2": "",
+      "address-line2": undefined,
       "address-line3": "line3 line5",
     },
   },
@@ -131,10 +131,10 @@ const ADDRESS_COMPUTE_TESTCASES = [
       "tel": "+886212345678",
       "tel-country-code": "+886",
       "tel-national": "0212345678",
-      "tel-area-code": "",
-      "tel-local": "",
-      "tel-local-prefix": "",
-      "tel-local-suffix": "",
+      "tel-area-code": undefined,
+      "tel-local": undefined,
+      "tel-local-prefix": undefined,
+      "tel-local-suffix": undefined,
     },
   },
   {
@@ -162,10 +162,10 @@ const ADDRESS_COMPUTE_TESTCASES = [
       "tel": "+886212345678",
       "tel-country-code": "+886",
       "tel-national": "0212345678",
-      "tel-area-code": "",
-      "tel-local": "",
-      "tel-local-prefix": "",
-      "tel-local-suffix": "",
+      "tel-area-code": undefined,
+      "tel-local": undefined,
+      "tel-local-prefix": undefined,
+      "tel-local-suffix": undefined,
     },
   },
   {
@@ -175,12 +175,12 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
     expectedResult: {
       "tel": "12345",
-      "tel-country-code": "",
+      "tel-country-code": undefined,
       "tel-national": "12345",
-      "tel-area-code": "",
-      "tel-local": "",
-      "tel-local-prefix": "",
-      "tel-local-suffix": "",
+      "tel-area-code": undefined,
+      "tel-local": undefined,
+      "tel-local-prefix": undefined,
+      "tel-local-suffix": undefined,
     },
   },
 ];
@@ -336,7 +336,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
     expectedResult: {
       "country": undefined,
-      "country-name": "",
+      "country-name": undefined,
     },
   },
   {
@@ -346,7 +346,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
     expectedResult: {
       "country": undefined,
-      "country-name": "",
+      "country-name": undefined,
     },
   },
   {
@@ -368,7 +368,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
     expectedResult: {
       "country": undefined,
-      "country-name": "",
+      "country-name": undefined,
     },
   },
   {
@@ -378,7 +378,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
     expectedResult: {
       "country": undefined,
-      "country-name": "",
+      "country-name": undefined,
     },
   },
 
