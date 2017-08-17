@@ -397,7 +397,6 @@ var BrowserApp = {
     GlobalEventDispatcher.registerListener(this, [
       "Browser:LoadManifest",
       "Browser:Quit",
-      "Browser:ZombifyTabs",
       "Fonts:Reload",
       "FormHistory:Init",
       "FullScreen:Exit",
@@ -1678,13 +1677,6 @@ var BrowserApp = {
 
       case "Browser:Quit":
         this.quit(data);
-        break;
-
-      case "Browser:ZombifyTabs":
-        let tabs = this._tabs;
-        for (let i = 0; i < tabs.length; i++) {
-          tabs[i].zombify();
-        }
         break;
 
       case "Fonts:Reload":

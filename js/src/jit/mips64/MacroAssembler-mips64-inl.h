@@ -291,8 +291,9 @@ MacroAssembler::mul64(const Operand& src, const Register64& dest, const Register
 void
 MacroAssembler::mulBy3(Register src, Register dest)
 {
-    as_daddu(dest, src, src);
-    as_daddu(dest, dest, src);
+    MOZ_ASSERT(src != ScratchRegister);
+    as_daddu(ScratchRegister, src, src);
+    as_daddu(dest, ScratchRegister, src);
 }
 
 void

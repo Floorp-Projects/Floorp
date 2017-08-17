@@ -229,6 +229,7 @@ public:
    * @param aLineNumber the line number at which the stylesheet data started.
    * @param aTitle the title of the sheet.
    * @param aMedia the media string for the sheet.
+   * @param aReferrerPolicy the referrer policy for loading the sheet.
    * @param aObserver the observer to notify when the load completes.
    *        May be null.
    * @param [out] aCompleted whether parsing of the sheet completed.
@@ -240,6 +241,7 @@ public:
                            uint32_t aLineNumber,
                            const nsAString& aTitle,
                            const nsAString& aMedia,
+                           ReferrerPolicy aReferrerPolicy,
                            mozilla::dom::Element* aScopeElement,
                            nsICSSLoaderObserver* aObserver,
                            bool* aCompleted,

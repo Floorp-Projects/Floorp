@@ -92,7 +92,7 @@
 
                 android:layout_height="52dp"
                 android:layout_gravity="center"
-                android:background="@drawable/button_background_action_photon_round"
+                android:background="@drawable/button_background_action_orange_round"
                 android:text="@string/tracking_protection_prompt_action_button"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
