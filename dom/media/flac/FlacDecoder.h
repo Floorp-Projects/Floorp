@@ -13,13 +13,22 @@ namespace mozilla {
 
 class MediaContainerType;
 
-class FlacDecoder
+class FlacDecoder : public ChannelMediaDecoder
 {
 public:
+  // MediaDecoder interface.
+  explicit FlacDecoder(MediaDecoderInit& aInit)
+    : ChannelMediaDecoder(aInit)
+  {
+  }
+
   // Returns true if the Flac backend is pref'ed on, and we're running on a
   // platform that is likely to have decoders for the format.
   static bool IsEnabled();
   static bool IsSupportedType(const MediaContainerType& aContainerType);
+
+private:
+  ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) override;
 };
 
 } // namespace mozilla

@@ -174,10 +174,10 @@ ChannelMediaDecoder::CanClone()
 already_AddRefed<ChannelMediaDecoder>
 ChannelMediaDecoder::Clone(MediaDecoderInit& aInit)
 {
-  if (!mResource || !DecoderTraits::IsSupportedType(aInit.mContainerType)) {
+  if (!mResource) {
     return nullptr;
   }
-  RefPtr<ChannelMediaDecoder> decoder = new ChannelMediaDecoder(aInit);
+  RefPtr<ChannelMediaDecoder> decoder = CloneImpl(aInit);
   if (!decoder) {
     return nullptr;
   }
