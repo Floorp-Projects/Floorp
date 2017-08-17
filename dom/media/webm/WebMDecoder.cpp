@@ -4,12 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebMDecoder.h"
 #include "mozilla/Preferences.h"
 #ifdef MOZ_AV1
 #include "AOMDecoder.h"
 #endif
 #include "MediaContainerType.h"
+#include "MediaFormatReader.h"
+#include "WebMDemuxer.h"
+#include "WebMDecoder.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -53,6 +56,14 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
     return false;
   }
   return true;
+}
+
+void
+WebMDecoder::GetMozDebugReaderData(nsACString& aString)
+{
+  if (mReader) {
+    mReader->GetMozDebugReaderData(aString);
+  }
 }
 
 } // namespace mozilla

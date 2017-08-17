@@ -10,6 +10,9 @@
 #include "mozilla/Preferences.h"
 #include "MediaContainerType.h"
 #include "MediaPrefs.h"
+#ifdef MOZ_FMP4
+#include "MP4Decoder.h"
+#endif
 #ifdef XP_WIN
 #include "WMFDecoderModule.h"
 #endif
