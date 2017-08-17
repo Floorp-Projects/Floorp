@@ -23,7 +23,7 @@
 #include "SystemPrincipal.h"
 #include "NullPrincipal.h"
 #include "DomainPolicy.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
 #include "nsDocShell.h"

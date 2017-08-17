@@ -8,7 +8,6 @@
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsXPIDLString.h"
 #include "nsEscape.h"
 #include "nsIParser.h"
 #include "nsIDTD.h"

@@ -105,7 +105,6 @@
 #include "nsGkAtoms.h"
 #include "nsCRT.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsXPIDLString.h"
 #include "nsWidgetsCID.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"

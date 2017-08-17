@@ -36,7 +36,7 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "rdf.h"
 #include "nsCycleCollectionParticipant.h"
 

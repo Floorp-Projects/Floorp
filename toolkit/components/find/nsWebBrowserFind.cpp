@@ -43,7 +43,7 @@
 
 #if DEBUG
 #include "nsIWebNavigation.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #endif
 
 nsWebBrowserFind::nsWebBrowserFind()

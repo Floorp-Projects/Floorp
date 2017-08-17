@@ -20,7 +20,7 @@
 #include "nsTemplateRule.h"
 #include "nsTemplateMap.h"
 #include "nsTArray.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"

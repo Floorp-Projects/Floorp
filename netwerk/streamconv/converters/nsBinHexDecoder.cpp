@@ -11,7 +11,7 @@
 #include "nsIPipe.h"
 #include "nsMimeTypes.h"
 #include "netCore.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "prnetdb.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
