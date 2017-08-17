@@ -933,6 +933,19 @@ const FORMATS = {
     throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative URL`);
   },
 
+  imageDataOrStrictRelativeUrl(string, context) {
+    // Do not accept a string which resolves as an absolute URL, or any
+    // protocol-relative URL, except PNG or JPG data URLs
+    if (!string.startsWith("data:image/png;base64,") && !string.startsWith("data:image/jpeg;base64,")) {
+      try {
+        return FORMATS.strictRelativeUrl(string, context);
+      } catch (e) {
+        throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative or PNG or JPG data:image URL`);
+      }
+    }
+    return string;
+  },
+
   contentSecurityPolicy(string, context) {
     let error = contentPolicyService.validateAddonCSP(string);
     if (error != null) {
