@@ -217,6 +217,7 @@ let json = [
              url: {type: "string", "format": "url", "optional": true},
              relativeUrl: {type: "string", "format": "relativeUrl", "optional": true},
              strictRelativeUrl: {type: "string", "format": "strictRelativeUrl", "optional": true},
+             imageDataOrStrictRelativeUrl: {type: "string", "format": "imageDataOrStrictRelativeUrl", "optional": true},
            },
          },
        ],
@@ -628,6 +629,7 @@ add_task(async function() {
 
   root.testing.format({hostname: "foo"});
   verify("call", "testing", "format", [{hostname: "foo",
+                                        imageDataOrStrictRelativeUrl: null,
                                         relativeUrl: null,
                                         strictRelativeUrl: null,
                                         url: null}]);
@@ -642,6 +644,7 @@ add_task(async function() {
   root.testing.format({url: "http://foo/bar",
                        relativeUrl: "http://foo/bar"});
   verify("call", "testing", "format", [{hostname: null,
+                                        imageDataOrStrictRelativeUrl: null,
                                         relativeUrl: "http://foo/bar",
                                         strictRelativeUrl: null,
                                         url: "http://foo/bar"}]);
@@ -649,9 +652,35 @@ add_task(async function() {
 
   root.testing.format({relativeUrl: "foo.html", strictRelativeUrl: "foo.html"});
   verify("call", "testing", "format", [{hostname: null,
+                                        imageDataOrStrictRelativeUrl: null,
                                         relativeUrl: `${wrapper.url}foo.html`,
                                         strictRelativeUrl: `${wrapper.url}foo.html`,
                                         url: null}]);
+  tallied = null;
+
+  root.testing.format({imageDataOrStrictRelativeUrl: "data:image/png;base64,A"});
+  verify("call", "testing", "format", [{hostname: null,
+                                        imageDataOrStrictRelativeUrl: "data:image/png;base64,A",
+                                        relativeUrl: null,
+                                        strictRelativeUrl: null,
+                                        url: null}]);
+  tallied = null;
+
+  root.testing.format({imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A"});
+  verify("call", "testing", "format", [{hostname: null,
+                                        imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A",
+                                        relativeUrl: null,
+                                        strictRelativeUrl: null,
+                                        url: null}]);
+  tallied = null;
+
+  root.testing.format({imageDataOrStrictRelativeUrl: "foo.html"});
+  verify("call", "testing", "format", [{hostname: null,
+                                        imageDataOrStrictRelativeUrl: `${wrapper.url}foo.html`,
+                                        relativeUrl: null,
+                                        strictRelativeUrl: null,
+                                        url: null}]);
+
   tallied = null;
 
   for (let format of ["url", "relativeUrl"]) {
@@ -665,6 +694,10 @@ add_task(async function() {
                   /must be a relative URL/,
                   "should throw for non-relative URL");
   }
+
+  Assert.throws(() => root.testing.format({imageDataOrStrictRelativeUrl: "data:image/svg+xml;utf8,A"}),
+                  /must be a relative or PNG or JPG data:image URL/,
+                  "should throw for non-relative or non PNG/JPG data URL");
 
   const dates = [
     "2016-03-04",

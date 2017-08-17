@@ -272,6 +272,11 @@
         "format": "strictRelativeUrl"
       },
       {
+        "id": "ImageDataOrExtensionURL",
+        "type": "string",
+        "format": "imageDataOrStrictRelativeUrl"
+      },
+      {
         "id": "ExtensionID",
         "choices": [
           {
