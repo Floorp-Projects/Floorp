@@ -309,6 +309,8 @@ public:
   // has not yet been popped with PopClip. Return Nothing() if the clip stack
   // is empty.
   Maybe<wr::WrClipId> TopmostClipId();
+  // Same as TopmostClipId() but for scroll layers.
+  Maybe<layers::FrameMetrics::ViewID> TopmostScrollId();
   // Returns the scroll id that was pushed just before the given scroll id. This
   // function returns Nothing() if the given scrollid has not been encountered,
   // or if it is the rootmost scroll id (and therefore has no ancestor).

@@ -744,12 +744,14 @@ DisplayListBuilder::PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aS
       aClipId ? Stringify(aClipId->id).c_str() : "none");
   wr_dp_push_clip_and_scroll_info(mWrState, aScrollId,
       aClipId ? &(aClipId->id) : nullptr);
+  mScrollIdStack.push_back(aScrollId);
 }
 
 void
 DisplayListBuilder::PopClipAndScrollInfo()
 {
   WRDL_LOG("PopClipAndScroll\n");
+  mScrollIdStack.pop_back();
   wr_dp_pop_clip_and_scroll_info(mWrState);
 }
 
@@ -986,6 +988,15 @@ DisplayListBuilder::TopmostClipId()
     return Nothing();
   }
   return Some(mClipIdStack.back());
+}
+
+Maybe<layers::FrameMetrics::ViewID>
+DisplayListBuilder::TopmostScrollId()
+{
+  if (mScrollIdStack.empty()) {
+    return Nothing();
+  }
+  return Some(mScrollIdStack.back());
 }
 
 Maybe<layers::FrameMetrics::ViewID>
