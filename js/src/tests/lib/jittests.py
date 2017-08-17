@@ -382,7 +382,8 @@ def run_test_remote(test, device, prefix, options):
 
 def check_output(out, err, rc, timed_out, test, options):
     if timed_out:
-        if test.relpath_tests in options.ignore_timeouts:
+        if os.path.normpath(test.relpath_tests).replace(os.sep, '/') \
+                in options.ignore_timeouts:
             return True
 
         # The shell sometimes hangs on shutdown on Windows 7 and Windows
