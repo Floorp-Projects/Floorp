@@ -35,6 +35,10 @@ interface nsISocketProvider : nsISupports
      *        The proxy port for this connection.
      * @param aFlags
      *        Control flags that govern this connection (see below.)
+     * @param aTlsFlags
+     *        An opaque flags for non-standard behavior of the TLS system.
+     *        It is unlikely this will need to be set outside of telemetry
+     *        studies relating to the TLS implementation.
      * @param aFileDesc
      *        The resulting PRFileDesc.
      * @param aSecurityInfo
@@ -48,6 +52,7 @@ interface nsISocketProvider : nsISupports
                    in nsIProxyInfo              aProxy,
                    in const_OriginAttributesRef aOriginAttributes,
                    in unsigned long             aFlags,
+                   in unsigned long             aTlsFlags,
                    out PRFileDescStar           aFileDesc, 
                    out nsISupports              aSecurityInfo);
 
@@ -68,6 +73,7 @@ interface nsISocketProvider : nsISupports
                      in nsIProxyInfo              aProxy,
                      in const_OriginAttributesRef aOriginAttributes,
                      in unsigned long             aFlags,
+                     in unsigned long             aTlsFlags,
                      in PRFileDescStar            aFileDesc, 
                      out nsISupports              aSecurityInfo);
 

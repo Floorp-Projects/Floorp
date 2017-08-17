@@ -10,12 +10,12 @@
 #include "nsIThreadPool.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
-#include "nsEventQueue.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/EventQueue.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
 
@@ -41,7 +41,7 @@ private:
   nsCOMArray<nsIThread> mThreads;
   mozilla::Mutex        mMutex;
   mozilla::CondVar      mEventsAvailable;
-  nsEventQueue          mEvents;
+  mozilla::EventQueue   mEvents;
   uint32_t              mThreadLimit;
   uint32_t              mIdleThreadLimit;
   uint32_t              mIdleThreadTimeout;

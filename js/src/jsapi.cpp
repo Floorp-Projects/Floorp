@@ -1477,6 +1477,14 @@ JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value)
     MOZ_ALWAYS_TRUE(cx->runtime()->gc.setParameter(key, value, lock));
 }
 
+JS_PUBLIC_API(void)
+JS_ResetGCParameter(JSContext* cx, JSGCParamKey key)
+{
+    cx->runtime()->gc.waitBackgroundSweepEnd();
+    AutoLockGC lock(cx->runtime());
+    cx->runtime()->gc.resetParameter(key, lock);
+}
+
 JS_PUBLIC_API(uint32_t)
 JS_GetGCParameter(JSContext* cx, JSGCParamKey key)
 {
@@ -5591,11 +5599,15 @@ JS::ReadableStreamBYOBReaderRead(JSContext* cx, HandleObject readerObj, HandleOb
 }
 
 JS_PUBLIC_API(void)
-JS::SetAsyncTaskCallbacks(JSContext* cx, JS::StartAsyncTaskCallback start,
-                          JS::FinishAsyncTaskCallback finish)
+JS::InitDispatchToEventLoop(JSContext* cx, JS::DispatchToEventLoopCallback callback, void* closure)
 {
-    cx->runtime()->startAsyncTaskCallback = start;
-    cx->runtime()->finishAsyncTaskCallback = finish;
+    cx->runtime()->offThreadPromiseState.ref().init(callback, closure);
+}
+
+JS_PUBLIC_API(void)
+JS::ShutdownAsyncTasks(JSContext* cx)
+{
+    cx->runtime()->offThreadPromiseState.ref().shutdown(cx);
 }
 
 JS_PUBLIC_API(void)
@@ -7398,8 +7410,8 @@ GetScriptedCallerActivationFast(JSContext* cx, Activation** activation)
     *activation = activationIter.activation();
 
     if (activationIter->isJit()) {
-        for (jit::JitFrameIterator iter(activationIter); !iter.done(); ++iter) {
-            if (iter.isScripted() && !iter.script()->selfHosted())
+        for (OnlyJSJitFrameIter iter(activationIter); !iter.done(); ++iter) {
+            if (iter.frame().isScripted() && !iter.frame().script()->selfHosted())
                 return true;
         }
     } else if (activationIter->isInterpreter()) {

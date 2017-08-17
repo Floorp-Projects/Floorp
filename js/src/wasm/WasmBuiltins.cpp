@@ -102,18 +102,18 @@ WasmHandleDebugTrap()
     MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
 
-    WasmFrameIter iter(activation);
-    MOZ_ASSERT(iter.debugEnabled());
-    const CallSite* site = iter.debugTrapCallsite();
+    WasmFrameIter frame(activation);
+    MOZ_ASSERT(frame.debugEnabled());
+    const CallSite* site = frame.debugTrapCallsite();
     MOZ_ASSERT(site);
     if (site->kind() == CallSite::EnterFrame) {
-        if (!iter.instance()->enterFrameTrapsEnabled())
+        if (!frame.instance()->enterFrameTrapsEnabled())
             return true;
-        DebugFrame* frame = iter.debugFrame();
-        frame->setIsDebuggee();
-        frame->observe(cx);
+        DebugFrame* debugFrame = frame.debugFrame();
+        debugFrame->setIsDebuggee();
+        debugFrame->observe(cx);
         // TODO call onEnterFrame
-        JSTrapStatus status = Debugger::onEnterFrame(cx, frame);
+        JSTrapStatus status = Debugger::onEnterFrame(cx, debugFrame);
         if (status == JSTRAP_RETURN) {
             // Ignoring forced return (JSTRAP_RETURN) -- changing code execution
             // order is not yet implemented in the wasm baseline.
@@ -124,17 +124,17 @@ WasmHandleDebugTrap()
         return status == JSTRAP_CONTINUE;
     }
     if (site->kind() == CallSite::LeaveFrame) {
-        DebugFrame* frame = iter.debugFrame();
-        frame->updateReturnJSValue();
-        bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, true);
-        frame->leave(cx);
+        DebugFrame* debugFrame = frame.debugFrame();
+        debugFrame->updateReturnJSValue();
+        bool ok = Debugger::onLeaveFrame(cx, debugFrame, nullptr, true);
+        debugFrame->leave(cx);
         return ok;
     }
 
-    DebugFrame* frame = iter.debugFrame();
-    DebugState& debug = iter.instance()->debug();
+    DebugFrame* debugFrame = frame.debugFrame();
+    DebugState& debug = frame.instance()->debug();
     MOZ_ASSERT(debug.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
-    if (debug.stepModeEnabled(frame->funcIndex())) {
+    if (debug.stepModeEnabled(debugFrame->funcIndex())) {
         RootedValue result(cx, UndefinedValue());
         JSTrapStatus status = Debugger::onSingleStep(cx, &result);
         if (status == JSTRAP_RETURN) {
@@ -176,6 +176,11 @@ WasmHandleThrow()
     // DebugFrame from being observed again after we just called onLeaveFrame
     // (which would lead to the frame being re-added to the map of live frames,
     // right as it becomes trash).
+    //
+    // TODO(bug 1360211): when JitActivation and WasmActivation get merged,
+    // we'll be able to switch to ion / other wasm state from here, and we'll
+    // need to do things differently.
+
     WasmFrameIter iter(activation, WasmFrameIter::Unwind::True);
     MOZ_ASSERT(!iter.done());
 

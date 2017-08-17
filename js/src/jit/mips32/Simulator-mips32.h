@@ -38,6 +38,9 @@
 #include "vm/MutexIDs.h"
 
 namespace js {
+
+class WasmActivation;
+
 namespace jit {
 
 class Simulator;
@@ -188,8 +191,11 @@ class Simulator {
     template <typename T>
     T get_pc_as() const { return reinterpret_cast<T>(get_pc()); }
 
-    void set_resume_pc(void* value) {
-        resume_pc_ = int32_t(value);
+    void trigger_wasm_interrupt() {
+        // This can be called several times if a single interrupt isn't caught
+        // and handled by the simulator, but this is fine; once the current
+        // instruction is done executing, the interrupt will be handled anyhow.
+        wasm_interrupt_ = true;
     }
 
     // Accessor to the internal simulator stack area.
@@ -284,6 +290,9 @@ class Simulator {
     void increaseStopCounter(uint32_t code);
     void printStopInfo(uint32_t code);
 
+    // Handle a wasm interrupt triggered by an async signal handler.
+    void handleWasmInterrupt();
+    void startInterrupt(WasmActivation* act);
 
     // Executes one instruction.
     void instructionDecode(SimInstruction* instr);
@@ -291,8 +300,6 @@ class Simulator {
     void branchDelayInstructionDecode(SimInstruction* instr);
 
   public:
-    static bool ICacheCheckingEnabled;
-
     static int StopSimAt;
 
     // Runtime call support.
@@ -336,7 +343,8 @@ class Simulator {
     int icount_;
     int break_count_;
 
-    int32_t resume_pc_;
+    // wasm async interrupt support
+    bool wasm_interrupt_;
 
     // Debugger input.
     char* lastDebuggerInput_;

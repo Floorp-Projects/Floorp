@@ -207,7 +207,7 @@ NS_IMETHODIMP _OldVisitCallbackWrapper::VisitEntry(const char * deviceID,
   *_retval = true;
 
   // Read all informative properties from the entry.
-  nsXPIDLCString clientId;
+  nsCString clientId;
   rv = entryInfo->GetClientID(getter_Copies(clientId));
   if (NS_FAILED(rv))
     return NS_OK;

@@ -455,7 +455,7 @@ function CanonicalizeLanguageTag(locale) {
         var extension = ArrayJoinRange(subtags, "-", extensionStart, i);
         _DefineDataProperty(extensions, extensions.length, extension);
     }
-    callFunction(std_Array_sort, extensions);
+    callFunction(ArraySort, extensions);
 
     // Private use sequences are left as is. "x-private"
     var privateUse = "";

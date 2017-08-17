@@ -50,6 +50,8 @@ private:
 
   void DeallocPCompositorManagerParent() override;
 
+  void DeferredDestroy();
+
   RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 
   AutoTArray<RefPtr<CompositorBridgeParent>, 1> mPendingCompositorBridges;

@@ -729,16 +729,23 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status. With OMTP, we have to wait for async paints
   // before we synchronize and it's done on the paint thread.
+  RefPtr<SyncObjectClient> syncObject = nullptr;
   if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
     if (mForwarder->GetSyncObject() &&
         mForwarder->GetSyncObject()->IsSyncObjectValid()) {
-      if (mTextureSyncOnPaintThread) {
-        // We have to wait for all async paints to finish to do this
-        PaintThread::Get()->SynchronizePaintTextures(mForwarder->GetSyncObject());
-      } else {
-        mForwarder->GetSyncObject()->Synchronize();
-      }
+      syncObject = mForwarder->GetSyncObject();
     }
+  }
+
+  // If there were async paints queued, then we need to notify the paint thread
+  // that we finished queuing async paints so it can schedule a runnable after
+  // all async painting is finished to do a texture sync and unblock the main
+  // thread if it is waiting before doing a new layer transaction.
+  if (mTextureSyncOnPaintThread) {
+    MOZ_ASSERT(PaintThread::Get());
+    PaintThread::Get()->EndLayerTransaction(syncObject);
+  } else if (syncObject) {
+    syncObject->Synchronize();
   }
 
   mPhase = PHASE_FORWARD;

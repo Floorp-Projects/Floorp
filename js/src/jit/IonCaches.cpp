@@ -89,14 +89,14 @@ CodeOffsetJump::fixup(MacroAssembler* masm)
 void*
 jit::GetReturnAddressToIonCode(JSContext* cx)
 {
-    JitFrameIterator iter(cx);
-    MOZ_ASSERT(iter.type() == JitFrame_Exit,
+    JSJitFrameIter frame(cx);
+    MOZ_ASSERT(frame.type() == JitFrame_Exit,
                "An exit frame is expected as update functions are called with a VMFunction.");
 
-    void* returnAddr = iter.returnAddress();
+    void* returnAddr = frame.returnAddress();
 #ifdef DEBUG
-    ++iter;
-    MOZ_ASSERT(iter.isIonJS());
+    ++frame;
+    MOZ_ASSERT(frame.isIonJS());
 #endif
     return returnAddr;
 }

@@ -73,7 +73,7 @@ nsStyleSheetService::RegisterFromEnumerator(nsICategoryManager  *aManager,
     nsAutoCString name;
     icStr->GetData(name);
 
-    nsXPIDLCString spec;
+    nsCString spec;
     aManager->GetCategoryEntry(aCategory, name.get(), getter_Copies(spec));
 
     nsCOMPtr<nsIURI> uri;

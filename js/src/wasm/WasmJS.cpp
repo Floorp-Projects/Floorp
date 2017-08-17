@@ -1910,7 +1910,7 @@ ResolveCompilation(JSContext* cx, Module& module, Handle<PromiseObject*> promise
     return PromiseObject::resolve(cx, promise, resolutionValue);
 }
 
-struct CompilePromiseTask : PromiseTask
+struct CompilePromiseTask : PromiseHelperTask
 {
     MutableBytes bytecode;
     CompileArgs  compileArgs;
@@ -1918,14 +1918,14 @@ struct CompilePromiseTask : PromiseTask
     SharedModule module;
 
     CompilePromiseTask(JSContext* cx, Handle<PromiseObject*> promise)
-      : PromiseTask(cx, promise)
+      : PromiseHelperTask(cx, promise)
     {}
 
     void execute() override {
         module = Compile(*bytecode, compileArgs, &error);
     }
 
-    bool finishPromise(JSContext* cx, Handle<PromiseObject*> promise) override {
+    bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
         return module
                ? ResolveCompilation(cx, *module, promise)
                : Reject(cx, compileArgs, Move(error), promise);
@@ -1956,6 +1956,16 @@ RejectWithPendingException(JSContext* cx, Handle<PromiseObject*> promise, CallAr
 }
 
 static bool
+EnsurePromiseSupport(JSContext* cx)
+{
+    if (!cx->runtime()->offThreadPromiseState.ref().initialized()) {
+        JS_ReportErrorASCII(cx, "WebAssembly Promise APIs not supported in this runtime.");
+        return false;
+    }
+    return true;
+}
+
+static bool
 GetBufferSource(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes* bytecode)
 {
     if (!callArgs.requireAtLeast(cx, name, 1))
@@ -1972,17 +1982,15 @@ GetBufferSource(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes
 static bool
 WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
 {
-    if (!cx->runtime()->startAsyncTaskCallback || !cx->runtime()->finishAsyncTaskCallback) {
-        JS_ReportErrorASCII(cx, "WebAssembly.compile not supported in this runtime.");
+    if (!EnsurePromiseSupport(cx))
         return false;
-    }
 
     Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
     if (!promise)
         return false;
 
     auto task = cx->make_unique<CompilePromiseTask>(cx, promise);
-    if (!task)
+    if (!task || !task->init(cx))
         return false;
 
     CallArgs callArgs = CallArgsFromVp(argc, vp);
@@ -1993,7 +2001,7 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
     if (!InitCompileArgs(cx, &task->compileArgs))
         return false;
 
-    if (!StartPromiseTask(cx, Move(task)))
+    if (!StartOffThreadPromiseHelperTask(cx, Move(task)))
         return false;
 
     callArgs.rval().setObject(*promise);
@@ -2029,16 +2037,24 @@ ResolveInstantiation(JSContext* cx, Module& module, HandleObject importObj,
     return PromiseObject::resolve(cx, promise, val);
 }
 
-struct InstantiatePromiseTask : CompilePromiseTask
+struct InstantiatePromiseTask : PromiseHelperTask
 {
+    MutableBytes           bytecode;
+    CompileArgs            compileArgs;
+    UniqueChars            error;
+    SharedModule           module;
     PersistentRootedObject importObj;
 
     InstantiatePromiseTask(JSContext* cx, Handle<PromiseObject*> promise, HandleObject importObj)
-      : CompilePromiseTask(cx, promise),
+      : PromiseHelperTask(cx, promise),
         importObj(cx, importObj)
     {}
 
-    bool finishPromise(JSContext* cx, Handle<PromiseObject*> promise) override {
+    void execute() override {
+        module = Compile(*bytecode, compileArgs, &error);
+    }
+
+    bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
         return module
                ? ResolveInstantiation(cx, *module, importObj, promise)
                : Reject(cx, compileArgs, Move(error), promise);
@@ -2065,10 +2081,8 @@ GetInstantiateArgs(JSContext* cx, CallArgs callArgs, MutableHandleObject firstAr
 static bool
 WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp)
 {
-    if (!cx->runtime()->startAsyncTaskCallback || !cx->runtime()->finishAsyncTaskCallback) {
-        JS_ReportErrorASCII(cx, "WebAssembly.instantiate not supported in this runtime.");
+    if (!EnsurePromiseSupport(cx))
         return false;
-    }
 
     Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
     if (!promise)
@@ -2092,7 +2106,7 @@ WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp)
             return false;
     } else {
         auto task = cx->make_unique<InstantiatePromiseTask>(cx, promise, importObj);
-        if (!task)
+        if (!task || !task->init(cx))
             return false;
 
         if (!GetBufferSource(cx, firstArg, JSMSG_WASM_BAD_BUF_MOD_ARG, &task->bytecode))
@@ -2101,7 +2115,7 @@ WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp)
         if (!InitCompileArgs(cx, &task->compileArgs))
             return false;
 
-        if (!StartPromiseTask(cx, Move(task)))
+        if (!StartOffThreadPromiseHelperTask(cx, Move(task)))
             return false;
     }
 

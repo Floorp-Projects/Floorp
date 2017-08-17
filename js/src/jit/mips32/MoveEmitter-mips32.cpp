@@ -46,6 +46,7 @@ MoveEmitterMIPS::breakCycle(const MoveOperand& from, const MoveOperand& to,
         break;
       case MoveOp::INT32:
         MOZ_ASSERT(sizeof(uintptr_t) == sizeof(int32_t));
+        MOZ_FALLTHROUGH;
       case MoveOp::GENERAL:
         if (to.isMemory()) {
             Register temp = tempReg();
@@ -96,6 +97,7 @@ MoveEmitterMIPS::completeCycle(const MoveOperand& from, const MoveOperand& to,
         break;
       case MoveOp::INT32:
         MOZ_ASSERT(sizeof(uintptr_t) == sizeof(int32_t));
+        MOZ_FALLTHROUGH;
       case MoveOp::GENERAL:
         MOZ_ASSERT(slotId == 0);
         if (to.isMemory()) {

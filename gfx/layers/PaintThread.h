@@ -67,21 +67,25 @@ public:
   static void Start();
   static void Shutdown();
   static PaintThread* Get();
+
+  // Helper for asserts.
+  static bool IsOnPaintThread();
+
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
 
-  // To be called on the main thread. Signifies that the current
+  // Must be called on the main thread. Signifies that the current
   // batch of CapturedPaintStates* for PaintContents have been recorded
   // and the main thread is finished recording this layer.
-  void FinishedLayerBatch();
+  void EndLayer();
 
-  // Must be called on the main thread. Tells the paint thread
-  // to schedule a sync textures after all async paints are done.
-  // NOTE: The other paint thread functions are on a per PAINT
-  // or per paint layer basis. This MUST be called at the end
-  // of a layer transaction as multiple paints can occur
-  // with multiple layers. We only have to do this once per transaction.
-  void SynchronizePaintTextures(SyncObjectClient* aSyncObject);
+  // Must be called on the main thread. Signifies that the current
+  // layer tree transaction has been finished and any async paints
+  // for it have been queued on the paint thread. This MUST be called
+  // at the end of a layer transaction as it will be used to do an optional
+  // texture sync and then unblock the main thread if it is waiting to paint
+  // a new frame.
+  void EndLayerTransaction(SyncObjectClient* aSyncObject);
 
   // Sync Runnables need threads to be ref counted,
   // But this thread lives through the whole process.
@@ -90,19 +94,17 @@ public:
   void Release();
   void AddRef();
 
-  // Helper for asserts.
-  static bool IsOnPaintThread();
-
 private:
   bool Init();
   void ShutdownOnPaintThread();
   void InitOnPaintThread();
-  void PaintContentsAsync(CompositorBridgeChild* aBridge,
+
+  void AsyncPaintContents(CompositorBridgeChild* aBridge,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
-  void EndAsyncPaintingLayer();
-  void SyncTextureData(CompositorBridgeChild* aBridge,
-                       SyncObjectClient* aSyncObject);
+  void AsyncEndLayer();
+  void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
+                                SyncObjectClient* aSyncObject);
 
   static StaticAutoPtr<PaintThread> sSingleton;
   static StaticRefPtr<nsIThread> sThread;

@@ -121,6 +121,10 @@ crashtest:
             android-4.3-arm7-api-15/debug: 10
             android.*: 4
             default: 1
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
     mozharness:
         by-test-platform:
             android.*:
@@ -296,6 +300,11 @@ jsreftest:
             linux64-qr/.*: 4
             macosx.*: 2
             default: 3
+    e10s:
+        by-test-platform:
+            linux64-jsdcov/opt: false
+            windows7-32/debug: both
+            default: true
     max-run-time:
         by-test-platform:
             android.*: 7200
@@ -436,6 +445,7 @@ mochitest:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
+            windows7-32/debug: both
             default: true
     max-run-time:
         by-test-platform:
@@ -538,6 +548,7 @@ mochitest-browser-chrome:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
+            windows7-32/debug: both
             default: true
     max-run-time:
         by-test-platform:
@@ -710,6 +721,10 @@ mochitest-clipboard:
             windows7-32.*: buildbot-bridge/buildbot-bridge
             windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
     mozharness:
         by-test-platform:
             android.*:
@@ -760,21 +775,14 @@ mochitest-devtools-chrome:
             default: 10
     run-on-projects:
         by-test-platform:
-            # Deactivate try on Buildbot, by default. We don't have enough machines
-            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
-            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
-            windows10.*: []
             linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
-    worker-type:
-        by-test-platform:
-            windows8-64.*: buildbot-bridge/buildbot-bridge
-            default: null
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
+            windows7-32/debug: both
             default: true
     mozharness:
         mochitest-flavor: chrome
@@ -824,6 +832,10 @@ mochitest-gpu:
         by-test-platform:
             windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
     mozharness:
         by-test-platform:
             android.*:
@@ -864,7 +876,6 @@ mochitest-jetpack:
     loopback-video: true
     e10s: false
     max-run-time: 5400
-    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         mochitest-flavor: jetpack-package
         script: desktop_unittest.py
@@ -1000,6 +1011,10 @@ mochitest-webgl:
         by-test-platform:
             android.*: 10
             default: 3
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
     loopback-video: true
     max-run-time:
         by-test-platform:
@@ -1076,6 +1091,10 @@ reftest:
             windows8-64.*/opt: 1
             windows8-64.*/debug: 2
             default: 8
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
     max-run-time:
         by-test-platform:
             android.*: 10800
@@ -1177,6 +1196,11 @@ reftest-no-accel:
             windows8-64.*/debug: 2
             windows8-64.*/opt: 1
             default: 8
+    e10s:
+        by-test-platform:
+            linux64-jsdcov/opt: false
+            windows7-32/debug: both
+            default: true
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -1202,7 +1226,6 @@ reftest-stylo:
     suite: reftest/reftest-stylo
     treeherder-symbol: tc-R(Rs)
     virtualization: virtual-with-gpu
-    docker-image: {"in-tree": "desktop1604-test"}
     chunks: 16
     run-on-projects:
         by-test-platform:
@@ -2012,6 +2035,36 @@ telemetry-tests-client:
                     - remove_executables.py
                 windows.*: []
 
+test-verify:
+    description: "Extra verification of tests modified on this push"
+    suite: test-verification
+    treeherder-symbol: tc(TV)
+    loopback-video: true
+    max-run-time: 5400
+    allow-software-gl-layers: false
+    run-on-projects: built-projects
+    tier: 3
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --verify
+    when:
+        files-changed:
+            - '**/*.js'
+            - '**/*.html'
+            - '**/*.xhtml'
+            - '**/*.xul'
 
 web-platform-tests:
     description: "Web platform test run"
@@ -2028,6 +2081,10 @@ web-platform-tests:
         by-test-platform:
             .*-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
@@ -2056,10 +2113,9 @@ web-platform-tests-headless:
     e10s:
         by-test-platform:
             macosx.*: true
-            default: both
+            default: true
     max-run-time: 7200
     instance-size: xlarge
-    docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects: [] # disabled pending releng approval
     mozharness:
         script: web_platform_tests.py
@@ -2100,6 +2156,10 @@ web-platform-tests-reftests:
         by-test-platform:
             .*-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
@@ -2128,9 +2188,8 @@ web-platform-tests-reftests-headless:
         default: 6
     e10s:
         by-test-platform:
-            macosx.*: true
-            default: both
-    docker-image: {"in-tree": "desktop1604-test"}
+            windows7-32/debug: both
+            default: true
     run-on-projects: [] # disabled pending releng approval
     mozharness:
         script: web_platform_tests.py
@@ -2181,7 +2240,6 @@ web-platform-tests-wdspec-headless:
     treeherder-symbol: tc-W(WdH)
     max-run-time: 5400
     instance-size: xlarge
-    docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects: [] # disabled pending releng approval
     mozharness:
         script: web_platform_tests.py

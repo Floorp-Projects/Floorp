@@ -1924,7 +1924,7 @@ Http2Session::CachePushCheckCallback::OnCacheEntryCheck(nsICacheEntry *entry, ns
   }
 
   // Get the method that was used to generate the cached response
-  nsXPIDLCString buf;
+  nsCString buf;
   rv = entry->GetMetaDataElement("request-method", getter_Copies(buf));
   if (NS_FAILED(rv)) {
     // Can't check request method, accept the push
@@ -1986,7 +1986,7 @@ Http2Session::CachePushCheckCallback::OnCacheEntryCheck(nsICacheEntry *entry, ns
     return NS_OK;
   }
 
-  nsXPIDLCString cachedAuth;
+  nsCString cachedAuth;
   rv = entry->GetMetaDataElement("auth", getter_Copies(cachedAuth));
   if (NS_SUCCEEDED(rv)) {
     uint32_t lastModifiedTime;

@@ -183,6 +183,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mResponseCouldBeSynthesized(false)
   , mBlockAuthPrompt(false)
   , mAllowStaleCacheContent(false)
+  , mTlsFlags(0)
   , mSuspendCount(0)
   , mInitialRwin(0)
   , mProxyResolveFlags(0)
@@ -2614,6 +2615,22 @@ HttpBaseChannel::SetBeConservative(bool aBeConservative)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetTlsFlags(uint32_t *aTlsFlags)
+{
+  NS_ENSURE_ARG_POINTER(aTlsFlags);
+
+  *aTlsFlags = mTlsFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetTlsFlags(uint32_t aTlsFlags)
+{
+  mTlsFlags = aTlsFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetApiRedirectToURI(nsIURI ** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -3184,7 +3201,7 @@ HttpBaseChannel::AddCookiesToRequest()
 
   bool useCookieService =
     (XRE_IsParentProcess());
-  nsXPIDLCString cookie;
+  nsCString cookie;
   if (useCookieService) {
     nsICookieService *cs = gHttpHandler->GetCookieService();
     if (cs) {
@@ -3419,6 +3436,8 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     rv = httpInternal->SetAllowAltSvc(mAllowAltSvc);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = httpInternal->SetBeConservative(mBeConservative);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = httpInternal->SetTlsFlags(mTlsFlags);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     RefPtr<nsHttpChannel> realChannel;

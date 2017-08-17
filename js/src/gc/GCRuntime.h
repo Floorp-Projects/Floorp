@@ -140,51 +140,63 @@ class BackgroundDecommitTask : public GCParallelTask
 class GCSchedulingTunables
 {
     /*
-     * Soft limit on the number of bytes we are allowed to allocate in the GC
-     * heap. Attempts to allocate gcthings over this limit will return null and
-     * subsequently invoke the standard OOM machinery, independent of available
-     * physical memory.
+     * JSGC_MAX_BYTES
+     *
+     * Maximum nominal heap before last ditch GC.
      */
     UnprotectedData<size_t> gcMaxBytes_;
 
     /*
+     * JSGC_MAX_NURSERY_BYTES
+     *
      * Maximum nursery size for each zone group.
-     * Initially DefaultNurseryBytes and can be set by
-     * javascript.options.mem.nursery.max_kb
      */
     ActiveThreadData<size_t> gcMaxNurseryBytes_;
 
     /*
-     * The base value used to compute zone->trigger.gcBytes(). When
-     * usage.gcBytes() surpasses threshold.gcBytes() for a zone, the zone may
-     * be scheduled for a GC, depending on the exact circumstances.
+     * JSGC_ALLOCATION_THRESHOLD
+     *
+     * The base value used to compute zone->threshold.gcTriggerBytes(). When
+     * usage.gcBytes() surpasses threshold.gcTriggerBytes() for a zone, the
+     * zone may be scheduled for a GC, depending on the exact circumstances.
      */
     ActiveThreadOrGCTaskData<size_t> gcZoneAllocThresholdBase_;
 
     /* Fraction of threshold.gcBytes() which triggers an incremental GC. */
-    UnprotectedData<double> zoneAllocThresholdFactor_;
+    UnprotectedData<float> zoneAllocThresholdFactor_;
     /* The same except when doing so would interrupt an already running GC. */
-    UnprotectedData<double> zoneAllocThresholdFactorAvoidInterrupt_;
+    UnprotectedData<float> zoneAllocThresholdFactorAvoidInterrupt_;
 
     /*
      * Number of bytes to allocate between incremental slices in GCs triggered
      * by the zone allocation threshold.
+     *
+     * This value does not have a JSGCParamKey parameter yet.
      */
     UnprotectedData<size_t> zoneAllocDelayBytes_;
 
     /*
+     * JSGC_DYNAMIC_HEAP_GROWTH
+     *
      * Totally disables |highFrequencyGC|, the HeapGrowthFactor, and other
      * tunables that make GC non-deterministic.
      */
     ActiveThreadData<bool> dynamicHeapGrowthEnabled_;
 
     /*
+     * JSGC_HIGH_FREQUENCY_TIME_LIMIT
+     *
      * We enter high-frequency mode if we GC a twice within this many
      * microseconds. This value is stored directly in microseconds.
      */
     ActiveThreadData<uint64_t> highFrequencyThresholdUsec_;
 
     /*
+     * JSGC_HIGH_FREQUENCY_LOW_LIMIT
+     * JSGC_HIGH_FREQUENCY_HIGH_LIMIT
+     * JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX
+     * JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN
+     *
      * When in the |highFrequencyGC| mode, these parameterize the per-zone
      * "HeapGrowthFactor" computation.
      */
@@ -194,53 +206,44 @@ class GCSchedulingTunables
     ActiveThreadData<double> highFrequencyHeapGrowthMin_;
 
     /*
+     * JSGC_LOW_FREQUENCY_HEAP_GROWTH
+     *
      * When not in |highFrequencyGC| mode, this is the global (stored per-zone)
      * "HeapGrowthFactor".
      */
     ActiveThreadData<double> lowFrequencyHeapGrowth_;
 
     /*
+     * JSGC_DYNAMIC_MARK_SLICE
+     *
      * Doubles the length of IGC slices when in the |highFrequencyGC| mode.
      */
     ActiveThreadData<bool> dynamicMarkSliceEnabled_;
 
     /*
+     * JSGC_REFRESH_FRAME_SLICES_ENABLED
+     *
      * Controls whether painting can trigger IGC slices.
      */
     ActiveThreadData<bool> refreshFrameSlicesEnabled_;
 
     /*
+     * JSGC_MIN_EMPTY_CHUNK_COUNT
+     * JSGC_MAX_EMPTY_CHUNK_COUNT
+     *
      * Controls the number of empty chunks reserved for future allocation.
      */
     UnprotectedData<uint32_t> minEmptyChunkCount_;
     UnprotectedData<uint32_t> maxEmptyChunkCount_;
 
   public:
-    GCSchedulingTunables()
-      : gcMaxBytes_(0),
-        gcMaxNurseryBytes_(0),
-        gcZoneAllocThresholdBase_(30 * 1024 * 1024),
-        zoneAllocThresholdFactor_(0.9),
-        zoneAllocThresholdFactorAvoidInterrupt_(0.9),
-        zoneAllocDelayBytes_(1024 * 1024),
-        dynamicHeapGrowthEnabled_(false),
-        highFrequencyThresholdUsec_(1000 * 1000),
-        highFrequencyLowLimitBytes_(100 * 1024 * 1024),
-        highFrequencyHighLimitBytes_(500 * 1024 * 1024),
-        highFrequencyHeapGrowthMax_(3.0),
-        highFrequencyHeapGrowthMin_(1.5),
-        lowFrequencyHeapGrowth_(1.5),
-        dynamicMarkSliceEnabled_(false),
-        refreshFrameSlicesEnabled_(true),
-        minEmptyChunkCount_(1),
-        maxEmptyChunkCount_(30)
-    {}
+    GCSchedulingTunables();
 
     size_t gcMaxBytes() const { return gcMaxBytes_; }
     size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
     size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
-    double zoneAllocThresholdFactor() const { return zoneAllocThresholdFactor_; }
-    double zoneAllocThresholdFactorAvoidInterrupt() const { return zoneAllocThresholdFactorAvoidInterrupt_; }
+    float zoneAllocThresholdFactor() const { return zoneAllocThresholdFactor_; }
+    float zoneAllocThresholdFactorAvoidInterrupt() const { return zoneAllocThresholdFactorAvoidInterrupt_; }
     size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
     bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
     uint64_t highFrequencyThresholdUsec() const { return highFrequencyThresholdUsec_; }
@@ -255,6 +258,13 @@ class GCSchedulingTunables
     unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
 
     MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock);
+    void resetParameter(JSGCParamKey key, const AutoLockGC& lock);
+
+private:
+    void setHighFrequencyLowLimit(uint64_t value);
+    void setHighFrequencyHighLimit(uint64_t value);
+    void setMinEmptyChunkCount(uint32_t value);
+    void setMaxEmptyChunkCount(uint32_t value);
 };
 
 /*
@@ -700,6 +710,7 @@ class GCRuntime
     void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 
     MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock);
+    void resetParameter(JSGCParamKey key, AutoLockGC& lock);
     uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
     MOZ_MUST_USE bool triggerGC(JS::gcreason::Reason reason);
@@ -1161,6 +1172,11 @@ class GCRuntime
     UnprotectedData<bool> chunkAllocationSinceLastGC;
     ActiveThreadData<int64_t> lastGCTime;
 
+    /*
+     * JSGC_MODE
+     * prefs: javascript.options.mem.gc_per_zone and
+     *   javascript.options.mem.gc_incremental.
+     */
     ActiveThreadData<JSGCMode> mode;
 
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> numActiveZoneIters;
@@ -1295,7 +1311,12 @@ class GCRuntime
      */
     ActiveThreadData<bool> interFrameGC;
 
-    /* Default budget for incremental GC slice. See js/SliceBudget.h. */
+    /*
+     * Default budget for incremental GC slice. See js/SliceBudget.h.
+     *
+     * JSGC_SLICE_TIME_BUDGET
+     * pref: javascript.options.mem.gc_incremental_slice_ms,
+     */
     ActiveThreadData<int64_t> defaultTimeBudget_;
 
     /*
@@ -1306,6 +1327,9 @@ class GCRuntime
 
     /*
      * Whether compacting GC can is enabled globally.
+     *
+     * JSGC_COMPACTING_ENABLED
+     * pref: javascript.options.mem.gc_compacting
      */
     ActiveThreadData<bool> compactingEnabled;
 

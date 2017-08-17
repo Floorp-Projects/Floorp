@@ -1112,6 +1112,12 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     return nullptr;
   }
 
+  nsAutoString remoteType;
+  if (!aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
+                              remoteType)) {
+    remoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+  }
+
   if (aNextTabParentId) {
     if (TabParent* parent =
           sNextTabParents.GetAndRemove(aNextTabParentId).valueOr(nullptr)) {
@@ -1130,12 +1136,6 @@ ContentParent::CreateBrowser(const TabContext& aContext,
   TabId openerTabId;
   if (docShell) {
     openerTabId = TabParent::GetTabIdFrom(docShell);
-  }
-
-  nsAutoString remoteType;
-  if (!aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
-                              remoteType)) {
-    remoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
   }
 
   bool isPreloadBrowser = false;
@@ -4595,8 +4595,10 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
       return IPC_OK();
     }
 
+    nsCOMPtr<nsIFrameLoaderOwner> opener = do_QueryInterface(frame);
+
     nsCOMPtr<nsIOpenURIInFrameParams> params =
-      new nsOpenURIInFrameParams(openerOriginAttributes);
+      new nsOpenURIInFrameParams(openerOriginAttributes, opener);
     params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
     MOZ_ASSERT(aTriggeringPrincipal, "need a valid triggeringPrincipal");
     params->SetTriggeringPrincipal(aTriggeringPrincipal);
