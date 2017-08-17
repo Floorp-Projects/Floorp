@@ -347,7 +347,6 @@
        type="arrow"
        noautofocus="true"
        position="bottomcenter topright"
-       photon="true"
        hidden="true">
   <photonpanelmultiview mainViewId="widget-overflow-mainView">
     <panelview id="widget-overflow-mainView"
