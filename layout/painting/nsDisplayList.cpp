@@ -9012,14 +9012,18 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
 
   Maybe<wr::WrImageMask> mask = aManager->BuildWrMaskImage(this, aBuilder, aSc, aDisplayListBuilder, bounds);
   if (mask) {
-    aBuilder.PushClip(aBuilder.DefineClip(
-        aSc.ToRelativeLayoutRect(bounds), nullptr, mask.ptr()));
+    wr::WrClipId clipId = aBuilder.DefineClip(
+        aSc.ToRelativeLayoutRect(bounds), nullptr, mask.ptr());
+    // Don't record this clip push in aBuilder's internal clip stack, because
+    // otherwise any nested ScrollingLayersHelper instances that are created
+    // will get confused about which clips are pushed.
+    aBuilder.PushClip(clipId, /*aRecordInStack*/ false);
   }
 
   nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aSc, aParentCommands, aManager, aDisplayListBuilder);
 
   if (mask) {
-    aBuilder.PopClip();
+    aBuilder.PopClip(/*aRecordInStack*/ false);
   }
 
   return true;
