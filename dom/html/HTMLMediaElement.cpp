@@ -3693,7 +3693,7 @@ MediaElementTableCount(HTMLMediaElement* aElement, nsIURI* aURI)
 void
 HTMLMediaElement::AddMediaElementToURITable()
 {
-  NS_ASSERTION(mDecoder && mDecoder->GetResource(), "Call this only with decoder Load called");
+  NS_ASSERTION(mDecoder, "Call this only with decoder Load called");
   NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
     "Should not have entry for element in element table before addition");
   if (!gElementTable) {

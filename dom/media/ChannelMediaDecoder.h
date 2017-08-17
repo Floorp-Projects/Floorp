@@ -67,8 +67,6 @@ protected:
 public:
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
 
-  MediaResource* GetResource() const override final;
-
   void Shutdown() override;
 
   bool CanClone();
@@ -85,6 +83,8 @@ public:
   void Resume() override;
 
 private:
+  MediaResource* GetResource() const override final;
+
   // Create a new state machine to run this decoder.
   MediaDecoderStateMachine* CreateStateMachine();
 
