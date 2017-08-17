@@ -82,8 +82,6 @@ public:
   virtual bool WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType) override;
   virtual bool NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
                                                  uint8_t aWidgetType) override;
-  virtual bool WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame, uint8_t aWidgetType,
-                                                          nscolor* aColor) override;
   virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
                                                        uint8_t aWidgetType) override;
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) override;

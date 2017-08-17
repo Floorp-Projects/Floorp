@@ -2697,16 +2697,6 @@ nsChildView::VibrancyFillColorForThemeGeometryType(nsITheme::ThemeGeometryType a
   return [NSColor whiteColor];
 }
 
-NSColor*
-nsChildView::VibrancyFontSmoothingBackgroundColorForThemeGeometryType(nsITheme::ThemeGeometryType aThemeGeometryType)
-{
-  if (VibrancyManager::SystemSupportsVibrancy()) {
-    return EnsureVibrancyManager().VibrancyFontSmoothingBackgroundColorForType(
-      ThemeGeometryTypeToVibrancyType(aThemeGeometryType));
-  }
-  return [NSColor clearColor];
-}
-
 mozilla::VibrancyManager&
 nsChildView::EnsureVibrancyManager()
 {
@@ -3722,14 +3712,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return [NSColor whiteColor];
   }
   return mGeckoChild->VibrancyFillColorForThemeGeometryType(aThemeGeometryType);
-}
-
-- (NSColor*)vibrancyFontSmoothingBackgroundColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType
-{
-  if (!mGeckoChild) {
-    return [NSColor clearColor];
-  }
-  return mGeckoChild->VibrancyFontSmoothingBackgroundColorForThemeGeometryType(aThemeGeometryType);
 }
 
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect

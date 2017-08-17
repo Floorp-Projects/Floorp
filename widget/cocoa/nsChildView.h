@@ -241,7 +241,6 @@ class WidgetRenderingContext;
 - (void)viewDidEndLiveResize;
 
 - (NSColor*)vibrancyFillColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType;
-- (NSColor*)vibrancyFontSmoothingBackgroundColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType;
 
 // Simple gestures support
 //
