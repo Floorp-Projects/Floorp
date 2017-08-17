@@ -1875,6 +1875,9 @@ typedef enum JSGCParamKey {
 extern JS_PUBLIC_API(void)
 JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value);
 
+extern JS_PUBLIC_API(void)
+JS_ResetGCParameter(JSContext* cx, JSGCParamKey key);
+
 extern JS_PUBLIC_API(uint32_t)
 JS_GetGCParameter(JSContext* cx, JSGCParamKey key);
 
