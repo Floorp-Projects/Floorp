@@ -1084,7 +1084,9 @@ class AutofillRecords {
   _clone(record) {
     let result = {};
     for (let key in record) {
-      if (!key.startsWith("_")) {
+      // Do not expose hidden fields and fields with empty value (mainly used
+      // as placeholders of the computed fields).
+      if (!key.startsWith("_") && record[key] !== "") {
         result[key] = record[key];
       }
     }
@@ -1173,8 +1175,8 @@ class Addresses extends AutofillRecords {
     // TODO: We only support US in MVP so hide the field if it's not. We
     //       are going to support more countries in bug 1370193.
     if (address.country && address.country != "US") {
-      address["country-name"] = "";
       delete address.country;
+      delete address["country-name"];
     }
   }
 
