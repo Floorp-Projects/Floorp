@@ -3985,13 +3985,6 @@ nsDisplayThemedBackground::IsUniform(nsDisplayListBuilder* aBuilder) const
   return Nothing();
 }
 
-bool
-nsDisplayThemedBackground::ProvidesFontSmoothingBackgroundColor(nscolor* aColor) const
-{
-  nsITheme* theme = mFrame->PresContext()->GetTheme();
-  return theme->WidgetProvidesFontSmoothingBackgroundColor(mFrame, mAppearance, aColor);
-}
-
 nsRect
 nsDisplayThemedBackground::GetPositioningArea() const
 {

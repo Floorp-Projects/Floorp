@@ -1954,11 +1954,6 @@ public:
     return false;
   }
 
-  virtual bool ProvidesFontSmoothingBackgroundColor(nscolor* aColor) const
-  {
-    return false;
-  }
-
   /**
    * Returns true if all layers that can be active should be forced to be
    * active. Requires setting the pref layers.force-active=true.
@@ -3488,7 +3483,6 @@ public:
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) const override;
   virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) const override;
-  virtual bool ProvidesFontSmoothingBackgroundColor(nscolor* aColor) const override;
   virtual bool MustPaintOnContentSide() const override { return true; }
 
   /**
