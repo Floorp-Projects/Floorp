@@ -94,12 +94,6 @@ public:
   NSColor* VibrancyFillColorForType(VibrancyType aType);
 
   /**
-   * Return the font smoothing background color that should be used for text
-   * drawn on top of the vibrant window parts.
-   */
-  NSColor* VibrancyFontSmoothingBackgroundColorForType(VibrancyType aType);
-
-  /**
    * Check whether the operating system supports vibrancy at all.
    * You may only create a VibrancyManager instance if this returns true.
    * @return Whether VibrancyManager can be used on this OS.
