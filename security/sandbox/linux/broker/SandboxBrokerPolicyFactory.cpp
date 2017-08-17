@@ -99,6 +99,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddPath(rdonly, "/proc/cpuinfo");
   policy->AddPath(rdonly, "/proc/meminfo");
   policy->AddDir(rdonly, "/lib");
+  policy->AddDir(rdonly, "/lib64");
   policy->AddDir(rdonly, "/etc");
   policy->AddDir(rdonly, "/usr/share");
   policy->AddDir(rdonly, "/usr/local/share");
