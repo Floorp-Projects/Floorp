@@ -6,16 +6,27 @@
 #if !defined(WaveDecoder_h_)
 #define WaveDecoder_h_
 
+#include "ChannelMediaDecoder.h"
+
 namespace mozilla {
 
 class MediaContainerType;
 
-class WaveDecoder
+class WaveDecoder : public ChannelMediaDecoder
 {
 public:
+  // MediaDecoder interface.
+  explicit WaveDecoder(MediaDecoderInit& aInit)
+    : ChannelMediaDecoder(aInit)
+  {
+  }
+
   // Returns true if the Wave backend is pref'ed on, and we're running on a
   // platform that is likely to have decoders for the format.
   static bool IsSupportedType(const MediaContainerType& aContainerType);
+
+private:
+  ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) override;
 };
 
 } // namespace mozilla

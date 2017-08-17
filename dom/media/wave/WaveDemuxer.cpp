@@ -11,13 +11,14 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include "mp4_demuxer/ByteReader.h"
 #include "nsAutoPtr.h"
 #include "VideoUtils.h"
 #include "TimeUnits.h"
+#include "prenv.h"
 
 using mozilla::media::TimeUnit;
 using mozilla::media::TimeIntervals;
+using mp4_demuxer::ByteReader;
 
 namespace mozilla {
 
