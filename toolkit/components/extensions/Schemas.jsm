@@ -1187,7 +1187,7 @@ class Type extends Entry {
     }
 
     let choice;
-    if (/^[aeiou]/.test(type)) {
+    if ("aeiou".includes(type[0])) {
       choice = `be an ${type} value`;
     } else {
       choice = `be a ${type} value`;
