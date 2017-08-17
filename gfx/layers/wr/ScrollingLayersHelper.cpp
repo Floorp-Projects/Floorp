@@ -51,7 +51,29 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
       PushLayerLocalClip(aStackingContext);
     }
 
-    PushScrollLayer(fm, aStackingContext);
+    if (!fm.IsScrollable()) {
+      continue;
+    }
+    LayerRect contentRect = ViewAs<LayerPixel>(
+        fm.GetExpandedScrollableRect() * fm.GetDevPixelsPerCSSPixel(),
+        PixelCastJustification::WebRenderHasUnitResolution);
+    // TODO: check coordinate systems are sane here
+    LayerRect clipBounds = ViewAs<LayerPixel>(
+        fm.GetCompositionBounds(),
+        PixelCastJustification::MovingDownToChildren);
+    // The content rect that we hand to PushScrollLayer should be relative to
+    // the same origin as the clipBounds that we hand to PushScrollLayer - that
+    // is, both of them should be relative to the stacking context `aStackingContext`.
+    // However, when we get the scrollable rect from the FrameMetrics, the origin
+    // has nothing to do with the position of the frame but instead represents
+    // the minimum allowed scroll offset of the scrollable content. While APZ
+    // uses this to clamp the scroll position, we don't need to send this to
+    // WebRender at all. Instead, we take the position from the composition
+    // bounds.
+    contentRect.MoveTo(clipBounds.TopLeft());
+    mBuilder->PushScrollLayer(fm.GetScrollId(),
+        aStackingContext.ToRelativeLayoutRect(contentRect),
+        aStackingContext.ToRelativeLayoutRect(clipBounds));
   }
 
   // The scrolled clip on the layer is "inside" all of the scrollable metadatas
@@ -139,36 +161,6 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
   MOZ_ASSERT(clipId);
   aBuilder.PushClip(clipId.value());
   mClipsPushed++;
-}
-
-bool
-ScrollingLayersHelper::PushScrollLayer(const FrameMetrics& aMetrics,
-                                       const StackingContextHelper& aStackingContext)
-{
-  if (!aMetrics.IsScrollable()) {
-    return false;
-  }
-  LayerRect contentRect = ViewAs<LayerPixel>(
-      aMetrics.GetExpandedScrollableRect() * aMetrics.GetDevPixelsPerCSSPixel(),
-      PixelCastJustification::WebRenderHasUnitResolution);
-  // TODO: check coordinate systems are sane here
-  LayerRect clipBounds = ViewAs<LayerPixel>(
-      aMetrics.GetCompositionBounds(),
-      PixelCastJustification::MovingDownToChildren);
-  // The content rect that we hand to PushScrollLayer should be relative to
-  // the same origin as the clipBounds that we hand to PushScrollLayer - that
-  // is, both of them should be relative to the stacking context `aStackingContext`.
-  // However, when we get the scrollable rect from the FrameMetrics, the origin
-  // has nothing to do with the position of the frame but instead represents
-  // the minimum allowed scroll offset of the scrollable content. While APZ
-  // uses this to clamp the scroll position, we don't need to send this to
-  // WebRender at all. Instead, we take the position from the composition
-  // bounds.
-  contentRect.MoveTo(clipBounds.TopLeft());
-  mBuilder->PushScrollLayer(aMetrics.GetScrollId(),
-      aStackingContext.ToRelativeLayoutRect(contentRect),
-      aStackingContext.ToRelativeLayoutRect(clipBounds));
-  return true;
 }
 
 void
