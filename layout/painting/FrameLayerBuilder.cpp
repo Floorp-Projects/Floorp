@@ -5875,6 +5875,46 @@ PredictScaleForContent(nsIFrame* aFrame, nsIFrame* aAncestorWithScale,
   return gfxSize(1.0, 1.0);
 }
 
+gfxSize
+FrameLayerBuilder::GetPaintedLayerScaleForFrame(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame, "need a frame");
+  nsIFrame* last = nullptr;
+  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    last = f;
+
+    if (nsLayoutUtils::IsPopup(f)) {
+      // Don't examine ancestors of a popup. It won't make sense to check
+      // the transform from some content inside the popup to some content
+      // which is an ancestor of the popup.
+      break;
+    }
+
+    const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
+
+    for (uint32_t i = 0; i < array.Length(); i++) {
+      Layer* layer = DisplayItemData::AssertDisplayItemData(array.ElementAt(i))->mLayer;
+      ContainerLayer* container = layer->AsContainerLayer();
+      if (!container ||
+          !layer->Manager()->IsWidgetLayerManager()) {
+        continue;
+      }
+      for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
+        PaintedDisplayItemLayerUserData* data =
+            static_cast<PaintedDisplayItemLayerUserData*>
+              (l->GetUserData(&gPaintedDisplayItemLayerUserData));
+        if (data) {
+          return PredictScaleForContent(aFrame, f, gfxSize(data->mXScale, data->mYScale));
+        }
+      }
+    }
+  }
+
+  float presShellResolution = last->PresContext()->PresShell()->GetResolution();
+  return PredictScaleForContent(aFrame, last,
+      gfxSize(presShellResolution, presShellResolution));
+}
+
 #ifdef MOZ_DUMP_PAINTING
 static void DebugPaintItem(DrawTarget& aDrawTarget,
                            nsPresContext* aPresContext,
