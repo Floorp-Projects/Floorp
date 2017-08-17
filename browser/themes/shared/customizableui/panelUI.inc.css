@@ -257,6 +257,7 @@ photonpanelmultiview .panel-subview-header {
 }
 
 #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
+#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent,
 panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
 }
@@ -1689,6 +1690,8 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 }
 
 .panel-mainview[panelid=customizationui-widget-panel],
+#customizationui-widget-multiview > .panel-viewcontainer,
+#customizationui-widget-multiview > .panel-viewcontainer > .panel-viewstack,
 #PanelUI-panicView > .panel-subview-body,
 #PanelUI-panicView {
   overflow: visible;
@@ -2026,6 +2029,10 @@ photonpanelmultiview .PanelUI-subView .panel-header > .subviewbutton-back {
 photonpanelmultiview .PanelUI-subView toolbarseparator {
   margin-inline-start: 0;
   margin-inline-end: 0;
+}
+
+photonpanelmultiview#customizationui-widget-multiview > .panel-viewcontainer {
+  overflow: hidden;
 }
 
 /* This is explicitly overriding the overflow properties set above. */
