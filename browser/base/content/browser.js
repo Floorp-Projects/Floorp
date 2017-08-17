@@ -6725,7 +6725,7 @@ function warnAboutClosingWindow() {
 
 var MailIntegration = {
   sendLinkForBrowser(aBrowser) {
-    this.sendMessage(aBrowser.currentURI.displaySpec, aBrowser.contentTitle);
+    this.sendMessage(gURLBar.makeURIReadable(aBrowser.currentURI).displaySpec, aBrowser.contentTitle);
   },
 
   sendMessage(aBody, aSubject) {
