@@ -206,10 +206,8 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
     MonitorAutoLock lock(mMonitor);
 
     // Drop any cached image so we don't start with a stale image on next
-    // usage.  Also, gfx gets very upset if these are held until this object
-    // is gc'd in final-cc during shutdown (bug 1374164)
+    // usage
     mImage = nullptr;
-    mImageContainer = nullptr;
 
     size_t i = mSources.IndexOf(aSource);
     if (i == mSources.NoIndex) {
