@@ -5,15 +5,11 @@
 
 package org.mozilla.gecko.activitystream.homepanel.stream;
 
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import org.mozilla.gecko.R;
-
-public class HighlightsTitle extends StreamViewHolder {
-    public static final int LAYOUT_ID = R.layout.activity_stream_main_highlightstitle;
-
-    public HighlightsTitle(final View itemView) {
+public abstract class StreamViewHolder extends RecyclerView.ViewHolder {
+    public StreamViewHolder(View itemView) {
         super(itemView);
     }
 }
-

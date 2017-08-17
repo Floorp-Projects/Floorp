@@ -17,11 +17,12 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
+import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItem;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsTitle;
-import org.mozilla.gecko.activitystream.homepanel.stream.StreamItem;
+import org.mozilla.gecko.activitystream.homepanel.stream.StreamViewHolder;
 import org.mozilla.gecko.activitystream.homepanel.stream.TopPanel;
 import org.mozilla.gecko.activitystream.homepanel.stream.WelcomePanel;
 import org.mozilla.gecko.util.StringUtils;
@@ -36,13 +37,13 @@ import java.util.List;
  *
  * Every item is in a single adapter: Top Sites, Welcome panel, Highlights.
  */
-public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> implements RecyclerViewClickSupport.OnItemClickListener,
+public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder> implements RecyclerViewClickSupport.OnItemClickListener,
         RecyclerViewClickSupport.OnItemLongClickListener, StreamHighlightItemContextMenuListener {
 
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + StreamRecyclerAdapter.class.getSimpleName(), 0, 23);
 
     private Cursor topSitesCursor;
-    private List<RowItem> recyclerViewModel; // List of item types backing this RecyclerView.
+    private List<RowModel> recyclerViewModel; // List of item types backing this RecyclerView.
 
     private final RowItemType[] FIXED_ROWS = {RowItemType.TOP_PANEL, RowItemType.WELCOME, RowItemType.HIGHLIGHTS_TITLE};
     private static final int HIGHLIGHTS_OFFSET = 3; // Topsites, Welcome, Highlights Title
@@ -52,10 +53,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
     private int tiles;
     private int tilesSize;
-
-    public interface RowItem {
-        RowItemType getRowItemType();
-    }
 
     public enum RowItemType {
         TOP_PANEL (-2), // RecyclerView.NO_ID is -1, so start hard-coded stableIds at -2.
@@ -74,8 +71,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         }
     }
 
-    private static RowItem makeRowItemFromType(final RowItemType type) {
-        return new RowItem() {
+    private static RowModel makeRowModelFromType(final RowItemType type) {
+        return new RowModel() {
             @Override
             public RowItemType getRowItemType() {
                 return type;
@@ -87,7 +84,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         setHasStableIds(true);
         recyclerViewModel = new LinkedList<>();
         for (RowItemType type : FIXED_ROWS) {
-            recyclerViewModel.add(makeRowItemFromType(type));
+            recyclerViewModel.add(makeRowModelFromType(type));
         }
     }
 
@@ -112,7 +109,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     }
 
     @Override
-    public StreamItem onCreateViewHolder(ViewGroup parent, final int type) {
+    public StreamViewHolder onCreateViewHolder(ViewGroup parent, final int type) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         if (type == RowItemType.TOP_PANEL.getViewType()) {
@@ -133,7 +130,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     }
 
     @Override
-    public void onBindViewHolder(StreamItem holder, int position) {
+    public void onBindViewHolder(StreamViewHolder holder, int position) {
         int type = getItemViewType(position);
         if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             final Highlight highlight = (Highlight) recyclerViewModel.get(position);

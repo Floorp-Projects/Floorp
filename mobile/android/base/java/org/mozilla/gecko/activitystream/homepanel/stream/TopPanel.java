@@ -17,7 +17,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPagerAdapter;
 import org.mozilla.gecko.home.HomePager;
 
-public class TopPanel extends StreamItem {
+public class TopPanel extends StreamViewHolder {
     public static final int LAYOUT_ID = R.layout.activity_stream_main_toppanel;
 
     private final ViewPager topSitesPager;
