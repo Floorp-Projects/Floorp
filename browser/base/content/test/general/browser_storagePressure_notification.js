@@ -79,3 +79,23 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.preferences.useOldOrganization", false]]});
   await testOverUsageThresholdNotification();
 });
+
+// Test not displaying the 2nd notification if one is already being displayed
+add_task(async function() {
+  const TEST_NOTIFICATION_INTERVAL_MS = 0;
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.pressureNotification.minIntervalMS", TEST_NOTIFICATION_INTERVAL_MS]]});
+
+  await notifyStoragePressure();
+  await notifyStoragePressure();
+  let notificationbox = document.getElementById("high-priority-global-notificationbox");
+  let allNotifications = notificationbox.allNotifications;
+  let pressureNotificationCount = 0;
+  allNotifications.forEach(notification => {
+    if (notification.getAttribute("value") == "storage-pressure-notification") {
+      pressureNotificationCount++;
+    }
+  });
+  is(pressureNotificationCount, 1, "Should not display the 2nd notification when there is already one");
+  notificationbox.removeAllNotifications();
+});
