@@ -15,7 +15,7 @@
 #include "nsIRDFLiteral.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsITimer.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsIDirIndexListener.h"
 #include "nsIFTPChannel.h"
 #include "nsCycleCollectionParticipant.h"

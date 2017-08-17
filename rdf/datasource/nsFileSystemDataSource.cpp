@@ -16,7 +16,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsIServiceManager.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsRDFCID.h"
 #include "rdfutil.h"
 #include "rdf.h"

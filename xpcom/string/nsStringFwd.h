@@ -45,6 +45,5 @@ class nsDependentCSubstring;
 class nsPromiseFlatCString;
 class nsCStringComparator;
 class nsDefaultCStringComparator;
-class nsXPIDLCString; // deprecated
 
 #endif /* !defined(nsStringFwd_h) */

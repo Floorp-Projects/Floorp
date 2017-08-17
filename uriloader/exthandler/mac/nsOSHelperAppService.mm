@@ -11,7 +11,6 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsIFile.h"
 #include "nsILocalFileMac.h"

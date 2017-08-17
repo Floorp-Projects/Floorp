@@ -45,7 +45,7 @@
 #include "nsParserCIID.h"
 #include "nsPIBoxObject.h"
 #include "mozilla/dom/BoxObject.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsXULCommandDispatcher.h"

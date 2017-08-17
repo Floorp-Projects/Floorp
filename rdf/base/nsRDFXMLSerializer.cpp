@@ -13,7 +13,6 @@
 #include "nsIRDFContainerUtils.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
 #include "nsTArray.h"
 #include "rdf.h"
 #include "rdfutil.h"

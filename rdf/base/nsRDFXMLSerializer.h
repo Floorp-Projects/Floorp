@@ -11,7 +11,7 @@
 #include "nsIRDFXMLSerializer.h"
 #include "nsIRDFXMLSource.h"
 #include "nsNameSpaceMap.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 #include "nsDataHashtable.h"
 #include "rdfITripleVisitor.h"
