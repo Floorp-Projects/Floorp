@@ -16,7 +16,7 @@ using mozilla::Runnable;
 class TestEvent final : public Runnable, nsIRunnablePriority
 {
 public:
-  explicit TestEvent(int* aCounter, std::function<void()> aCheck, uint32_t aPriority = nsIRunnablePriority::PRIORITY_NORMAL)
+  explicit TestEvent(int* aCounter, std::function<void()>&& aCheck, uint32_t aPriority = nsIRunnablePriority::PRIORITY_NORMAL)
     : Runnable("TestEvent")
     , mCounter(aCounter)
     , mCheck(Move(aCheck))
