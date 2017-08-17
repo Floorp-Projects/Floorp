@@ -33,7 +33,6 @@
 #include <algorithm>
 #include "nsProxyRelease.h"
 #include "nsIContentPolicy.h"
-#include "mozilla/ErrorNames.h"
 
 using mozilla::media::TimeUnit;
 
