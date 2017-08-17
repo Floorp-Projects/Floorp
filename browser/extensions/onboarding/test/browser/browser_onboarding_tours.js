@@ -18,22 +18,13 @@ function assertOnboardingDestroyed(browser) {
   });
 }
 
-function assertTourCompleted(tourId, expectComplete, browser) {
+function assertTourCompletedStyle(tourId, expectComplete, browser) {
   return ContentTask.spawn(browser, { tourId, expectComplete }, function(args) {
     let item = content.document.querySelector(`#${args.tourId}.onboarding-tour-item`);
-    let completedTextId = `onboarding-complete-${args.tourId}-text`;
-    let completedText = item.querySelector(`#${completedTextId}`);
     if (args.expectComplete) {
       ok(item.classList.contains("onboarding-complete"), `Should set the complete #${args.tourId} tour with the complete style`);
-      ok(completedText, "Text label should be present for a completed item");
-      is(completedText.id, completedTextId, "Text label node should have a unique id");
-      ok(completedText.getAttribute("aria-label"), "Text label node should have an aria-label attribute set");
-      is(item.getAttribute("aria-describedby"), completedTextId,
-        "Completed item should have aria-describedby attribute set to text label node's id");
     } else {
       ok(!item.classList.contains("onboarding-complete"), `Should not set the incomplete #${args.tourId} tour with the complete style`);
-      ok(!completedText, "Text label should not be present for an incomplete item");
-      ok(!item.hasAttribute("aria-describedby"), "Incomplete item should not have aria-describedby attribute set");
     }
   });
 }
@@ -88,9 +79,8 @@ add_task(async function test_click_action_button_to_set_tour_completed() {
 
   for (let i = tabs.length - 1; i >= 0; --i) {
     let tab = tabs[i];
-    await assertOverlaySemantics(tab.linkedBrowser);
     for (let id of tourIds) {
-      await assertTourCompleted(id, id == completedTourId, tab.linkedBrowser);
+      await assertTourCompletedStyle(id, id == completedTourId, tab.linkedBrowser);
     }
     await BrowserTestUtils.removeTab(tab);
   }
@@ -116,9 +106,8 @@ add_task(async function test_set_right_tour_completed_style_on_overlay() {
 
   for (let i = tabs.length - 1; i >= 0; --i) {
     let tab = tabs[i];
-    await assertOverlaySemantics(tab.linkedBrowser);
     for (let j = 0; j < tourIds.length; ++j) {
-      await assertTourCompleted(tourIds[j], j % 2 == 0, tab.linkedBrowser);
+      await assertTourCompletedStyle(tourIds[j], j % 2 == 0, tab.linkedBrowser);
     }
     await BrowserTestUtils.removeTab(tab);
   }
