@@ -1347,6 +1347,11 @@ nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv)
     return;
   }
 
+  // If the document is a cookie-averse Document... return the empty string.
+  if (IsCookieAverse()) {
+    return;
+  }
+
   // not having a cookie service isn't an error
   nsCOMPtr<nsICookieService> service = do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service) {
@@ -1397,6 +1402,11 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv)
   // is prohibited.
   if (mSandboxFlags & SANDBOXED_ORIGIN) {
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  // If the document is a cookie-averse Document... do nothing.
+  if (IsCookieAverse()) {
     return;
   }
 
