@@ -821,7 +821,8 @@ this.Extension = class extends ExtensionData {
 
     this.id = addonData.id;
     this.version = addonData.version;
-    this.baseURI = Services.io.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
+    this.baseURL = this.getURL("");
+    this.baseURI = Services.io.newURI(this.baseURL).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
     this.views = new Set();
     this._backgroundPageFrameLoader = null;
@@ -943,7 +944,17 @@ this.Extension = class extends ExtensionData {
     let uri = Services.io.newURI(url);
 
     let common = this.baseURI.getCommonBaseSpec(uri);
-    return common == this.baseURI.spec;
+    return common == this.baseURL;
+  }
+
+  checkLoadURL(url, options = {}) {
+    // As an optimization, f the URL starts with the extension's base URL,
+    // don't do any further checks. It's always allowed to load it.
+    if (url.startsWith(this.baseURL)) {
+      return true;
+    }
+
+    return ExtensionUtils.checkLoadURL(url, this.principal, options);
   }
 
   async promiseLocales(locale) {

@@ -652,7 +652,32 @@ class MessageManagerProxy {
   }
 }
 
+function checkLoadURL(url, principal, options) {
+  let ssm = Services.scriptSecurityManager;
+
+  let flags = ssm.STANDARD;
+  if (!options.allowScript) {
+    flags |= ssm.DISALLOW_SCRIPT;
+  }
+  if (!options.allowInheritsPrincipal) {
+    flags |= ssm.DISALLOW_INHERIT_PRINCIPAL;
+  }
+  if (options.dontReportErrors) {
+    flags |= ssm.DONT_REPORT_ERRORS;
+  }
+
+  try {
+    ssm.checkLoadURIWithPrincipal(principal,
+                                  Services.io.newURI(url),
+                                  flags);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
 this.ExtensionUtils = {
+  checkLoadURL,
   defineLazyGetter,
   flushJarCache,
   getConsole,
