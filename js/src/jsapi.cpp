@@ -1477,6 +1477,14 @@ JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value)
     MOZ_ALWAYS_TRUE(cx->runtime()->gc.setParameter(key, value, lock));
 }
 
+JS_PUBLIC_API(void)
+JS_ResetGCParameter(JSContext* cx, JSGCParamKey key)
+{
+    cx->runtime()->gc.waitBackgroundSweepEnd();
+    AutoLockGC lock(cx->runtime());
+    cx->runtime()->gc.resetParameter(key, lock);
+}
+
 JS_PUBLIC_API(uint32_t)
 JS_GetGCParameter(JSContext* cx, JSGCParamKey key)
 {

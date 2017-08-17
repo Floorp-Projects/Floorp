@@ -216,25 +216,7 @@ class GCSchedulingTunables
     UnprotectedData<uint32_t> maxEmptyChunkCount_;
 
   public:
-    GCSchedulingTunables()
-      : gcMaxBytes_(0),
-        gcMaxNurseryBytes_(0),
-        gcZoneAllocThresholdBase_(30 * 1024 * 1024),
-        zoneAllocThresholdFactor_(0.9f),
-        zoneAllocThresholdFactorAvoidInterrupt_(0.9f),
-        zoneAllocDelayBytes_(1024 * 1024),
-        dynamicHeapGrowthEnabled_(false),
-        highFrequencyThresholdUsec_(1000 * 1000),
-        highFrequencyLowLimitBytes_(100 * 1024 * 1024),
-        highFrequencyHighLimitBytes_(500 * 1024 * 1024),
-        highFrequencyHeapGrowthMax_(3.0),
-        highFrequencyHeapGrowthMin_(1.5),
-        lowFrequencyHeapGrowth_(1.5),
-        dynamicMarkSliceEnabled_(false),
-        refreshFrameSlicesEnabled_(true),
-        minEmptyChunkCount_(1),
-        maxEmptyChunkCount_(30)
-    {}
+    GCSchedulingTunables();
 
     size_t gcMaxBytes() const { return gcMaxBytes_; }
     size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
@@ -255,6 +237,13 @@ class GCSchedulingTunables
     unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
 
     MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock);
+    void resetParameter(JSGCParamKey key, const AutoLockGC& lock);
+
+private:
+    void setHighFrequencyLowLimit(uint64_t value);
+    void setHighFrequencyHighLimit(uint64_t value);
+    void setMinEmptyChunkCount(uint32_t value);
+    void setMaxEmptyChunkCount(uint32_t value);
 };
 
 /*
@@ -700,6 +689,7 @@ class GCRuntime
     void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 
     MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock);
+    void resetParameter(JSGCParamKey key, AutoLockGC& lock);
     uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
     MOZ_MUST_USE bool triggerGC(JS::gcreason::Reason reason);
