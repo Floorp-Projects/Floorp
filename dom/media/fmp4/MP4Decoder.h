@@ -42,6 +42,8 @@ public:
   static already_AddRefed<dom::Promise>
   IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlobalObject* aParent);
 
+  void GetMozDebugReaderData(nsACString& aString) override;
+
 private:
   ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) override
   {

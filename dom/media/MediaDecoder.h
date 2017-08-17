@@ -406,7 +406,7 @@ private:
 
   // Returns a string describing the state of the media player internal
   // data. Used for debugging purposes.
-  virtual void GetMozDebugReaderData(nsACString& aString);
+  virtual void GetMozDebugReaderData(nsACString& aString) { }
 
   virtual void DumpDebugInfo();
 
