@@ -27,8 +27,6 @@ class MediaSourceDecoder : public MediaDecoder
 public:
   explicit MediaSourceDecoder(MediaDecoderInit& aInit);
 
-  MediaResource* GetResource() const override final;
-
   nsresult Load(nsIPrincipal* aPrincipal);
   media::TimeIntervals GetSeekable() override;
   media::TimeIntervals GetBuffered() override;
@@ -64,6 +62,7 @@ public:
   void NotifyInitDataArrived();
 
 private:
+  MediaResource* GetResource() const override final;
   MediaDecoderStateMachine* CreateStateMachine();
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
