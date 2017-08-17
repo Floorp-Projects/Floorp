@@ -413,6 +413,12 @@ class ProxyContextParent extends BaseContext {
     return this.sandbox;
   }
 
+  runSafe(...args) {
+    // There's no need to clone when calling listeners for a proxied
+    // context.
+    return this.runSafeWithoutClone(...args);
+  }
+
   get xulBrowser() {
     return this.messageManagerProxy.eventTarget;
   }
@@ -725,7 +731,7 @@ ParentAPIManager = {
     };
 
     try {
-      let args = data.noClone ? data.args : Cu.cloneInto(data.args, context.sandbox);
+      let args = data.args;
       let pendingBrowser = context.pendingEventBrowser;
       let fun = await context.apiCan.asyncFindAPIPath(data.path);
       let result = context.withPendingBrowser(pendingBrowser,
@@ -781,7 +787,7 @@ ParentAPIManager = {
 
     context.listenerProxies.set(data.listenerId, listener);
 
-    let args = Cu.cloneInto(data.args, context.sandbox);
+    let args = data.args;
     let promise = context.apiCan.asyncFindAPIPath(data.path);
 
     // Store pending listener additions so we can be sure they're all
