@@ -136,7 +136,7 @@ const FlyWebPermissionPromptIntegration = (base) => ({
       get popupOptions() {
         return {
           learnMoreURL: "https://flyweb.github.io",
-          popupIconURL: "chrome://flyweb/skin/icon-64.png",
+          popupIconURL: "chrome://flyweb-shared/skin/icon.svg",
         };
       },
       get notificationID() {
@@ -152,13 +152,12 @@ const FlyWebPermissionPromptIntegration = (base) => ({
           let notificationIcon = chromeDoc.createElement("image");
           notificationIcon.id = kAnchorID;
           notificationIcon.setAttribute("src",
-                                        "chrome://flyweb/skin/icon-64.png");
+                                        "chrome://flyweb-shared/skin/icon.svg");
           notificationIcon.classList.add("notification-anchor-icon");
           notificationIcon.setAttribute("role", "button");
           notificationIcon.setAttribute("aria-label",
                                         "View the publish-server request");
-          notificationIcon.style.filter =
-            "url('chrome://global/skin/filters.svg#fill')";
+          notificationIcon.style.mozContextProperties = "fill";
           notificationIcon.style.fill = "currentcolor";
           notificationIcon.style.opacity = "0.4";
           notificationPopupBox.appendChild(notificationIcon);
