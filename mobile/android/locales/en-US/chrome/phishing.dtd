@@ -23,3 +23,5 @@
 <!ENTITY safeb.blocked.unwantedPage.shortDesc "This web page at <span id='unwanted_sitename'/> has been reported to contain unwanted software and has been blocked based on your security preferences.">
 <!ENTITY safeb.blocked.unwantedPage.longDesc "Unwanted software pages try to install software that can be deceptive and affect your system in unexpected ways.">
 
+<!ENTITY safeb.blocked.harmfulPage.title "The site ahead may contain malware">
+<!ENTITY safeb.blocked.harmfulPage.shortDesc "&brandShortName; blocked this page because it might try to install dangerous apps that steal or delete your information (for example, photos, passwords, messages and credit cards).">
