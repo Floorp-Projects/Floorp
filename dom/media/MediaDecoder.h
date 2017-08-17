@@ -203,6 +203,7 @@ public:
   // Must be called before Shutdown().
   bool OwnerHasError() const;
 
+public:
   // Returns true if this media supports random seeking. False for example with
   // chained ogg files.
   bool IsMediaSeekable();
