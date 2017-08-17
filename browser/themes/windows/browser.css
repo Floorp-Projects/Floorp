@@ -24,15 +24,6 @@
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
   --toolbarbutton-border-radius: 2px;
 
-  --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
-  --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
-  --urlbar-dropmarker-hover-region: rect(0px, 22px, 14px, 11px);
-  --urlbar-dropmarker-active-region: rect(0px, 33px, 14px, 22px);
-  --urlbar-dropmarker-2x-url: url("chrome://browser/skin/urlbar-history-dropmarker@2x.png");
-  --urlbar-dropmarker-2x-region: rect(0, 22px, 28px, 0);
-  --urlbar-dropmarker-hover-2x-region: rect(0, 44px, 28px, 22px);
-  --urlbar-dropmarker-active-2x-region: rect(0, 66px, 28px, 44px);
-
   --panel-separator-color: ThreeDLightShadow;
   --arrowpanel-dimmed: hsla(0,0%,80%,.3);
   --arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
@@ -629,47 +620,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 #identity-box:not(:active):-moz-focusring {
   outline: 1px dotted;
   outline-offset: -3px;
-}
-
-/* Location bar dropmarker */
-
-.urlbar-history-dropmarker {
-  -moz-appearance: none;
-  padding: 0 3px;
-  background-color: transparent;
-  border: none;
-  width: auto;
-  list-style-image: var(--urlbar-dropmarker-url);
-  -moz-image-region: var(--urlbar-dropmarker-region);
-}
-
-.urlbar-history-dropmarker:hover {
-  -moz-image-region: var(--urlbar-dropmarker-hover-region);
-}
-
-.urlbar-history-dropmarker:hover:active,
-.urlbar-history-dropmarker[open="true"] {
-  -moz-image-region: var(--urlbar-dropmarker-active-region);
-}
-
-@media (min-resolution: 1.1dppx) {
-  .urlbar-history-dropmarker {
-    list-style-image: var(--urlbar-dropmarker-2x-url);
-    -moz-image-region: var(--urlbar-dropmarker-2x-region);
-  }
-
-  .urlbar-history-dropmarker:hover {
-    -moz-image-region: var(--urlbar-dropmarker-hover-2x-region);
-  }
-
-  .urlbar-history-dropmarker[open="true"],
-  .urlbar-history-dropmarker:hover:active {
-    -moz-image-region: var(--urlbar-dropmarker-active-2x-region);
-  }
-
-  .urlbar-history-dropmarker > .dropmarker-icon {
-    width: 11px;
-  }
 }
 
 /* page proxy icon */

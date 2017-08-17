@@ -4,17 +4,6 @@
 
 %include ../shared/compacttheme.inc.css
 
-:root:-moz-lwtheme-darktext {
-  --urlbar-dropmarker-url: url("chrome://browser/skin/compacttheme/urlbar-history-dropmarker.svg");
-  --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
-  --urlbar-dropmarker-hover-region: rect(0, 22px, 14px, 11px);
-  --urlbar-dropmarker-active-region: rect(0px, 33px, 14px, 22px);
-  --urlbar-dropmarker-2x-url: url("chrome://browser/skin/compacttheme/urlbar-history-dropmarker.svg");
-  --urlbar-dropmarker-2x-region: rect(0px, 11px, 14px, 0px);
-  --urlbar-dropmarker-hover-2x-region: rect(0, 22px, 14px, 11px);
-  --urlbar-dropmarker-active-2x-region: rect(0px, 33px, 14px, 22px);
-}
-
 /* The menubar and tabs toolbar should match the devedition theme */
 #TabsToolbar,
 #toolbar-menubar {
@@ -27,10 +16,4 @@
   color: inherit;
 }
 
-.urlbar-history-dropmarker {
-  -moz-appearance: none;
-  padding: 0 3px;
-  list-style-image: var(--urlbar-dropmarker-url);
-  -moz-image-region: var(--urlbar-dropmarker-region);
-}
 
