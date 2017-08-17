@@ -81,22 +81,22 @@ public:
 
   nsINode* GetStartContainer() const
   {
-    return mStartContainer;
+    return mStart.Container();
   }
 
   nsINode* GetEndContainer() const
   {
-    return mEndContainer;
+    return mEnd.Container();
   }
 
   uint32_t StartOffset() const
   {
-    return mStartOffset;
+    return static_cast<uint32_t>(mStart.Offset());
   }
 
   uint32_t EndOffset() const
   {
-    return mEndOffset;
+    return static_cast<uint32_t>(mEnd.Offset());
   }
 
   bool IsPositioned() const
@@ -232,8 +232,8 @@ public:
 
   bool Collapsed() const
   {
-    return mIsPositioned && mStartContainer == mEndContainer &&
-           mStartOffset == mEndOffset;
+    return mIsPositioned && mStart.Container() == mEnd.Container() &&
+           mStart.Offset() == mEnd.Offset();
   }
   already_AddRefed<mozilla::dom::DocumentFragment>
   CreateContextualFragment(const nsAString& aString, ErrorResult& aError);
@@ -385,6 +385,210 @@ public:
 
   typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
 protected:
+
+  // This class has two specializations, one using reference counting
+  // pointers and one using raw pointers. This helps us avoid unnecessary
+  // AddRef/Release calls.
+  template<typename ParentType, typename RefType>
+  class RangeBoundaryBase
+  {
+    // This class will maintain a reference to the child immediately
+    // before the boundary's offset. We try to avoid computing the
+    // offset as much as possible and just ensure mRef points to the
+    // correct child.
+    //
+    // mParent
+    //    |
+    // [child0] [child1] [child2]
+    //            /      |
+    //         mRef    mOffset=2
+    //
+    // If mOffset == 0, mRef is null.
+    // For text nodes, mRef will always be null and the offset will
+    // be kept up-to-date.
+
+    // for cycle collecting mParent and mRef;
+    friend class nsRange;
+
+  public:
+    RangeBoundaryBase(nsINode* aContainer, nsIContent* aRef)
+      : mParent(aContainer)
+      , mRef(aRef)
+    {
+      if (!mRef) {
+        mOffset = mozilla::Some(0);
+      } else {
+        mOffset.reset();
+      }
+    }
+
+    RangeBoundaryBase(nsINode* aContainer, int32_t aOffset)
+      : mParent(aContainer)
+      , mRef(nullptr)
+      , mOffset(mozilla::Some(aOffset))
+    {
+      if (mParent && mParent->IsContainerNode()) {
+        // Find a reference node
+        if (aOffset == static_cast<int32_t>(aContainer->GetChildCount())) {
+          mRef = aContainer->GetLastChild();
+        } else if (aOffset != 0) {
+          mRef = mParent->GetChildAt(aOffset - 1);
+          MOZ_ASSERT(mRef);
+        }
+
+        MOZ_ASSERT_IF(!mRef, aOffset == 0);
+      }
+
+      MOZ_ASSERT_IF(mRef, mRef->GetParentNode() == mParent);
+    }
+
+    RangeBoundaryBase()
+      : mParent(nullptr)
+      , mRef(nullptr)
+    {
+    }
+
+    // Needed for initializing RawRangeBoundary from an existing RangeBoundary.
+    explicit RangeBoundaryBase(const RangeBoundaryBase<nsCOMPtr<nsINode>, nsCOMPtr<nsIContent>>& aOther)
+      : mParent(aOther.mParent)
+      , mRef(aOther.mRef)
+      , mOffset(aOther.mOffset)
+    {
+    }
+
+    nsIContent*
+    Ref() const
+    {
+      return mRef;
+    }
+
+    nsINode*
+    Container() const
+    {
+      return mParent;
+    }
+
+    nsIContent*
+    GetChildAtOffset() const
+    {
+      if (!mParent || !mParent->IsContainerNode()) {
+        return nullptr;
+      }
+      if (!mRef) {
+        MOZ_ASSERT(Offset() == 0);
+        return mParent->GetFirstChild();
+      }
+      MOZ_ASSERT(mParent->GetChildAt(Offset()) == mRef->GetNextSibling());
+      return mRef->GetNextSibling();
+    }
+
+    uint32_t
+    Offset() const
+    {
+      if (mOffset.isSome()) {
+        return mOffset.value();
+      }
+
+      if (!mParent) {
+        return 0;
+      }
+
+      MOZ_ASSERT(mRef);
+      MOZ_ASSERT(mRef->GetParentNode() == mParent);
+      mOffset = mozilla::Some(mParent->IndexOf(mRef) + 1);
+
+      return mOffset.value();
+    }
+
+    void
+    InvalidateOffset()
+    {
+      MOZ_ASSERT(mParent);
+      MOZ_ASSERT(mParent->IsContainerNode(), "Range is positioned on a text node!");
+
+      if (!mRef) {
+        MOZ_ASSERT(mOffset.isSome() && mOffset.value() == 0);
+        return;
+      }
+      mOffset.reset();
+    }
+
+    void
+    AdjustOffset(int32_t aDelta)
+    {
+      MOZ_ASSERT(mRef);
+      mOffset = mozilla::Some(Offset() + aDelta);
+    }
+
+    void
+    Set(nsINode* aContainer, int32_t aOffset)
+    {
+      mParent = aContainer;
+      if (mParent && mParent->IsContainerNode()) {
+        // Find a reference node
+        if (aOffset == static_cast<int32_t>(aContainer->GetChildCount())) {
+          mRef = aContainer->GetLastChild();
+        } else if (aOffset == 0) {
+          mRef = nullptr;
+        } else {
+          mRef = mParent->GetChildAt(aOffset - 1);
+          MOZ_ASSERT(mRef);
+        }
+
+        MOZ_ASSERT_IF(!mRef, aOffset == 0);
+      } else {
+        mRef = nullptr;
+      }
+
+      mOffset = mozilla::Some(aOffset);
+      MOZ_ASSERT_IF(mRef, mRef->GetParentNode() == mParent);
+    }
+
+    void
+    SetAfterRef(nsINode* aParent, nsIContent* aRef)
+    {
+      mParent = aParent;
+      mRef = aRef;
+      if (!mRef) {
+        mOffset = mozilla::Some(0);
+      } else {
+        mOffset.reset();
+      }
+    }
+
+    bool
+    IsSet() const
+    {
+      return mParent && (mRef || mOffset.isSome());
+    }
+
+    // Convenience methods for switching between the two types
+    // of RangeBoundary.
+    RangeBoundaryBase<nsINode*, nsIContent*>
+    AsRaw() const
+    {
+      return RangeBoundaryBase<nsINode*, nsIContent*>(*this);
+    }
+
+    template<typename A, typename B>
+    RangeBoundaryBase& operator=(const RangeBoundaryBase<A,B>& aOther)
+    {
+      mParent = aOther.mParent;
+      mRef = aOther.mRef;
+      mOffset = aOther.mOffset;
+      return *this;
+    }
+
+  private:
+    ParentType mParent;
+    RefType mRef;
+
+    mutable mozilla::Maybe<uint32_t> mOffset;
+  };
+
+  typedef RangeBoundaryBase<nsCOMPtr<nsINode>, nsCOMPtr<nsIContent>> RangeBoundary;
+  typedef RangeBoundaryBase<nsINode*, nsIContent*> RawRangeBoundary;
+
   void RegisterCommonAncestor(nsINode* aNode);
   void UnregisterCommonAncestor(nsINode* aNode);
   nsINode* IsValidBoundary(nsINode* aNode) const
@@ -411,9 +615,19 @@ protected:
   // and suppress re-registering a range common ancestor node since
   // the new text node of a splitText hasn't been inserted yet.
   // CharacterDataChanged does the re-registering when needed.
-  void DoSetRange(nsINode* aStartN, uint32_t aStartOffset,
-                  nsINode* aEndN, uint32_t aEndOffset,
+  void DoSetRange(const RawRangeBoundary& lowerBound,
+                  const RawRangeBoundary& upperBound,
                   nsINode* aRoot, bool aNotInsertedYet = false);
+
+  void DoSetRange(nsINode* aStartContainer, uint32_t aStartOffset,
+                  nsINode* aEndContainer, uint32_t aEndOffset,
+                  nsINode* aRoot, bool aNotInsertedYet = false)
+  {
+    RawRangeBoundary start(aStartContainer, aStartOffset);
+    RawRangeBoundary end(aEndContainer, aEndOffset);
+
+    DoSetRange(start, end, aRoot, aNotInsertedYet);
+  }
 
   /**
    * For a range for which IsInSelection() is true, return the common
@@ -482,22 +696,23 @@ protected:
 
   nsCOMPtr<nsIDocument> mOwner;
   nsCOMPtr<nsINode> mRoot;
-  nsCOMPtr<nsINode> mStartContainer;
-  nsCOMPtr<nsINode> mEndContainer;
   RefPtr<mozilla::dom::Selection> mSelection;
-  uint32_t mStartOffset;
-  uint32_t mEndOffset;
+
+  // These raw pointers are used to remember a child that is about
+  // to be inserted between a CharacterData call and a subsequent
+  // ContentInserted or ContentAppended call. It is safe to store
+  // these refs because the caller is guaranteed to trigger both
+  // notifications while holding a strong reference to the new child.
+  nsIContent* MOZ_NON_OWNING_REF mNextStartRef;
+  nsIContent* MOZ_NON_OWNING_REF mNextEndRef;
+
+  RangeBoundary mStart;
+  RangeBoundary mEnd;
 
   bool mIsPositioned : 1;
   bool mMaySpanAnonymousSubtrees : 1;
   bool mIsGenerated : 1;
-  bool mStartOffsetWasIncremented : 1;
-  bool mEndOffsetWasIncremented : 1;
   bool mCalledByJS : 1;
-#ifdef DEBUG
-  int32_t  mAssertNextInsertOrAppendIndex;
-  nsINode* mAssertNextInsertOrAppendNode;
-#endif
 };
 
 inline nsISupports*
