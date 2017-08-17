@@ -133,6 +133,19 @@ static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_ONLY_IF_CACHED == static_
 static_assert(6 == static_cast<uint32_t>(RequestCache::EndGuard_),
              "RequestCache enumeration value should match Necko Cache mode value.");
 
+static_assert(static_cast<uint16_t>(ServiceWorkerUpdateViaCache::Imports) ==
+              nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_IMPORTS,
+              "nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_*"
+              " should match ServiceWorkerUpdateViaCache enumeration.");
+static_assert(static_cast<uint16_t>(ServiceWorkerUpdateViaCache::All) ==
+              nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_ALL,
+              "nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_*"
+              " should match ServiceWorkerUpdateViaCache enumeration.");
+static_assert(static_cast<uint16_t>(ServiceWorkerUpdateViaCache::None) ==
+              nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_NONE,
+              "nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_*"
+              " should match ServiceWorkerUpdateViaCache enumeration.");
+
 static StaticRefPtr<ServiceWorkerManager> gInstance;
 
 struct ServiceWorkerManager::RegistrationDataPerPrincipal final
@@ -196,7 +209,8 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
       aRegistration->GetActive()->GetActivatedTime();
   }
 
-  aData.loadFlags() = aRegistration->GetLoadFlags();
+  aData.updateViaCache() =
+    static_cast<uint32_t>(aRegistration->GetUpdateViaCache());
 
   aData.lastUpdateTime() = aRegistration->GetLastUpdateTime();
 
@@ -804,7 +818,7 @@ NS_IMETHODIMP
 ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
                                nsIURI* aScopeURI,
                                nsIURI* aScriptURI,
-                               nsLoadFlags aLoadFlags,
+                               uint16_t aUpdateViaCache,
                                nsISupports** aPromise)
 {
   AssertIsOnMainThread();
@@ -929,9 +943,11 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
   MOZ_ALWAYS_SUCCEEDS(loadGroup->SetNotificationCallbacks(ir));
 
-  RefPtr<ServiceWorkerRegisterJob> job =
-    new ServiceWorkerRegisterJob(documentPrincipal, cleanedScope, spec,
-                                 loadGroup, aLoadFlags);
+  RefPtr<ServiceWorkerRegisterJob> job = new ServiceWorkerRegisterJob(
+    documentPrincipal, cleanedScope, spec, loadGroup,
+    static_cast<ServiceWorkerUpdateViaCache>(aUpdateViaCache)
+  );
+
   job->AppendResultCallback(cb);
   queue->ScheduleJob(job);
 
@@ -2036,8 +2052,12 @@ ServiceWorkerManager::LoadRegistration(
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(principal, aRegistration.scope());
   if (!registration) {
-    registration = CreateNewRegistration(aRegistration.scope(), principal,
-                                         aRegistration.loadFlags());
+    registration =
+      CreateNewRegistration(
+        aRegistration.scope(),
+        principal,
+        static_cast<ServiceWorkerUpdateViaCache>(aRegistration.updateViaCache())
+      );
   } else {
     // If active worker script matches our expectations for a "current worker",
     // then we are done. Since scripts with the same URL might have different
@@ -2053,6 +2073,12 @@ ServiceWorkerManager::LoadRegistration(
 
   registration->SetLastUpdateTime(aRegistration.lastUpdateTime());
 
+  nsLoadFlags importsLoadFlags = nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+  importsLoadFlags |=
+    aRegistration.updateViaCache() == static_cast<uint16_t>(ServiceWorkerUpdateViaCache::None)
+      ? nsIRequest::LOAD_NORMAL
+      : nsIRequest::VALIDATE_ALWAYS;
+
   const nsCString& currentWorkerURL = aRegistration.currentWorkerURL();
   if (!currentWorkerURL.IsEmpty()) {
     registration->SetActive(
@@ -2060,7 +2086,7 @@ ServiceWorkerManager::LoadRegistration(
                             registration->mScope,
                             currentWorkerURL,
                             aRegistration.cacheName(),
-                            registration->GetLoadFlags()));
+                            importsLoadFlags));
     registration->GetActive()->SetHandlesFetch(aRegistration.currentWorkerHandlesFetch());
     registration->GetActive()->SetInstalledTime(aRegistration.currentWorkerInstalledTime());
     registration->GetActive()->SetActivatedTime(aRegistration.currentWorkerActivatedTime());
@@ -3120,7 +3146,7 @@ ServiceWorkerManager::SoftUpdateInternal(const OriginAttributes& aOriginAttribut
   RefPtr<ServiceWorkerUpdateJob> job =
     new ServiceWorkerUpdateJob(principal, registration->mScope,
                                newest->ScriptSpec(), nullptr,
-                               registration->GetLoadFlags());
+                               registration->GetUpdateViaCache());
 
   RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
   job->AppendResultCallback(cb);
@@ -3203,7 +3229,7 @@ ServiceWorkerManager::UpdateInternal(nsIPrincipal* aPrincipal,
   RefPtr<ServiceWorkerUpdateJob> job =
     new ServiceWorkerUpdateJob(aPrincipal, registration->mScope,
                                newest->ScriptSpec(), nullptr,
-                               registration->GetLoadFlags());
+                               registration->GetUpdateViaCache());
 
   RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
   job->AppendResultCallback(cb);
@@ -3548,9 +3574,10 @@ ServiceWorkerManager::GetRegistration(const nsACString& aScopeKey,
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
-ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope,
-                                            nsIPrincipal* aPrincipal,
-                                            nsLoadFlags aLoadFlags)
+ServiceWorkerManager::CreateNewRegistration(
+    const nsCString& aScope,
+    nsIPrincipal* aPrincipal,
+    ServiceWorkerUpdateViaCache aUpdateViaCache)
 {
 #ifdef DEBUG
   AssertIsOnMainThread();
@@ -3564,7 +3591,8 @@ ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope,
 #endif
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    new ServiceWorkerRegistrationInfo(aScope, aPrincipal, aLoadFlags);
+    new ServiceWorkerRegistrationInfo(aScope, aPrincipal, aUpdateViaCache);
+
   // From now on ownership of registration is with
   // mServiceWorkerRegistrationInfos.
   AddScopeAndRegistration(aScope, registration);

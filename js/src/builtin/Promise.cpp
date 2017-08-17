@@ -3191,44 +3191,256 @@ PromiseObject::onSettled(JSContext* cx, Handle<PromiseObject*> promise)
     JS::dbg::onPromiseSettled(cx, promise);
 }
 
-PromiseTask::PromiseTask(JSContext* cx, Handle<PromiseObject*> promise)
+OffThreadPromiseTask::OffThreadPromiseTask(JSContext* cx, Handle<PromiseObject*> promise)
   : runtime_(cx->runtime()),
-    promise_(cx, promise)
-{}
-
-PromiseTask::~PromiseTask()
+    promise_(cx, promise),
+    registered_(false)
 {
-    MOZ_ASSERT(CurrentThreadCanAccessZone(promise_->zone()));
+    MOZ_ASSERT(runtime_ == promise->zone()->runtimeFromActiveCooperatingThread());
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+    MOZ_ASSERT(cx->runtime()->offThreadPromiseState.ref().initialized());
+}
+
+OffThreadPromiseTask::~OffThreadPromiseTask()
+{
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+
+    OffThreadPromiseRuntimeState& state = runtime_->offThreadPromiseState.ref();
+    MOZ_ASSERT(state.initialized());
+
+    if (registered_) {
+        LockGuard<Mutex> lock(state.mutex_);
+        state.live_.remove(this);
+    }
+}
+
+bool
+OffThreadPromiseTask::init(JSContext* cx)
+{
+    MOZ_ASSERT(cx->runtime() == runtime_);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+
+    OffThreadPromiseRuntimeState& state = runtime_->offThreadPromiseState.ref();
+    MOZ_ASSERT(state.initialized());
+
+    LockGuard<Mutex> lock(state.mutex_);
+
+    if (!state.live_.putNew(this)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    registered_ = true;
+    return true;
 }
 
 void
-PromiseTask::finish(JSContext* cx)
+OffThreadPromiseTask::run(JSContext* cx, MaybeShuttingDown maybeShuttingDown)
 {
     MOZ_ASSERT(cx->runtime() == runtime_);
-    {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+    MOZ_ASSERT(registered_);
+    MOZ_ASSERT(runtime_->offThreadPromiseState.ref().initialized());
+
+    if (maybeShuttingDown == JS::Dispatchable::NotShuttingDown) {
         // We can't leave a pending exception when returning to the caller so do
         // the same thing as Gecko, which is to ignore the error. This should
         // only happen due to OOM or interruption.
         AutoCompartment ac(cx, promise_);
-        if (!finishPromise(cx, promise_))
+        if (!resolve(cx, promise_))
             cx->clearPendingException();
     }
+
     js_delete(this);
 }
 
 void
-PromiseTask::cancel(JSContext* cx)
+OffThreadPromiseTask::dispatchResolve()
 {
-    MOZ_ASSERT(cx->runtime() == runtime_);
-    js_delete(this);
+    MOZ_ASSERT(registered_);
+
+    OffThreadPromiseRuntimeState& state = runtime_->offThreadPromiseState.ref();
+    MOZ_ASSERT(state.initialized());
+    MOZ_ASSERT((LockGuard<Mutex>(state.mutex_), state.live_.has(this)));
+
+    // If the dispatch succeeds, then we are guaranteed that run() will be
+    // called on an active JSContext of runtime_.
+    if (state.dispatchToEventLoopCallback_(state.dispatchToEventLoopClosure_, this))
+        return;
+
+    // We assume, by interface contract, that if the dispatch fails, it's
+    // because the embedding is in the process of shutting down the JSRuntime.
+    // Since JSRuntime destruction calls shutdown(), we can rely on shutdown()
+    // to delete the task on its active JSContext thread. shutdown() waits for
+    // numCanceled_ == live_.length, so we notify when this condition is
+    // reached.
+    LockGuard<Mutex> lock(state.mutex_);
+    state.numCanceled_++;
+    if (state.numCanceled_ == state.live_.count())
+        state.allCanceled_.notify_one();
+}
+
+OffThreadPromiseRuntimeState::OffThreadPromiseRuntimeState()
+  : dispatchToEventLoopCallback_(nullptr),
+    dispatchToEventLoopClosure_(nullptr),
+    mutex_(mutexid::OffThreadPromiseState),
+    numCanceled_(0),
+    internalDispatchQueueClosed_(false)
+{
+    AutoEnterOOMUnsafeRegion noOOM;
+    if (!live_.init())
+        noOOM.crash("OffThreadPromiseRuntimeState");
+}
+
+OffThreadPromiseRuntimeState::~OffThreadPromiseRuntimeState()
+{
+    MOZ_ASSERT(live_.empty());
+    MOZ_ASSERT(numCanceled_ == 0);
+    MOZ_ASSERT(internalDispatchQueue_.empty());
+    MOZ_ASSERT(!initialized());
+}
+
+void
+OffThreadPromiseRuntimeState::init(JS::DispatchToEventLoopCallback callback, void* closure)
+{
+    MOZ_ASSERT(!initialized());
+
+    dispatchToEventLoopCallback_ = callback;
+    dispatchToEventLoopClosure_ = closure;
+
+    MOZ_ASSERT(initialized());
+}
+
+/* static */ bool
+OffThreadPromiseRuntimeState::internalDispatchToEventLoop(void* closure, JS::Dispatchable* d)
+{
+    OffThreadPromiseRuntimeState& state = *reinterpret_cast<OffThreadPromiseRuntimeState*>(closure);
+    MOZ_ASSERT(state.usingInternalDispatchQueue());
+
+    LockGuard<Mutex> lock(state.mutex_);
+
+    if (state.internalDispatchQueueClosed_)
+        return false;
+
+    // The JS API contract is that 'false' means shutdown, so be infallible
+    // here (like Gecko).
+    AutoEnterOOMUnsafeRegion noOOM;
+    if (!state.internalDispatchQueue_.append(d))
+        noOOM.crash("internalDispatchToEventLoop");
+
+    // Wake up internalDrain() if it is waiting for a job to finish.
+    state.internalDispatchQueueAppended_.notify_one();
+    return true;
 }
 
 bool
-PromiseTask::executeAndFinish(JSContext* cx)
+OffThreadPromiseRuntimeState::usingInternalDispatchQueue() const
 {
-    MOZ_ASSERT(!CanUseExtraThreads());
-    execute();
-    return finishPromise(cx, promise_);
+    return dispatchToEventLoopCallback_ == internalDispatchToEventLoop;
+}
+
+void
+OffThreadPromiseRuntimeState::initInternalDispatchQueue()
+{
+    init(internalDispatchToEventLoop, this);
+    MOZ_ASSERT(usingInternalDispatchQueue());
+}
+
+bool
+OffThreadPromiseRuntimeState::initialized() const
+{
+    return !!dispatchToEventLoopCallback_;
+}
+
+void
+OffThreadPromiseRuntimeState::internalDrain(JSContext* cx)
+{
+    MOZ_ASSERT(usingInternalDispatchQueue());
+    MOZ_ASSERT(!internalDispatchQueueClosed_);
+
+    while (true) {
+        DispatchableVector dispatchQueue;
+        {
+            LockGuard<Mutex> lock(mutex_);
+
+            MOZ_ASSERT_IF(!internalDispatchQueue_.empty(), !live_.empty());
+            if (live_.empty())
+                return;
+
+            while (internalDispatchQueue_.empty())
+                internalDispatchQueueAppended_.wait(lock);
+
+            Swap(dispatchQueue, internalDispatchQueue_);
+            MOZ_ASSERT(internalDispatchQueue_.empty());
+        }
+
+        // Don't call run() with mutex_ held to avoid deadlock.
+        for (JS::Dispatchable* d : dispatchQueue)
+            d->run(cx, JS::Dispatchable::NotShuttingDown);
+    }
+}
+
+bool
+OffThreadPromiseRuntimeState::internalHasPending()
+{
+    MOZ_ASSERT(usingInternalDispatchQueue());
+    MOZ_ASSERT(!internalDispatchQueueClosed_);
+
+    LockGuard<Mutex> lock(mutex_);
+    MOZ_ASSERT_IF(!internalDispatchQueue_.empty(), !live_.empty());
+    return !live_.empty();
+}
+
+void
+OffThreadPromiseRuntimeState::shutdown(JSContext* cx)
+{
+    if (!initialized())
+        return;
+
+    // When the shell is using the internal event loop, we must simulate our
+    // requirement of the embedding that, before shutdown, all successfully-
+    // dispatched-to-event-loop tasks have been run.
+    if (usingInternalDispatchQueue()) {
+        DispatchableVector dispatchQueue;
+        {
+            LockGuard<Mutex> lock(mutex_);
+            Swap(dispatchQueue, internalDispatchQueue_);
+            MOZ_ASSERT(internalDispatchQueue_.empty());
+            internalDispatchQueueClosed_ = true;
+        }
+
+        // Don't call run() with mutex_ held to avoid deadlock.
+        for (JS::Dispatchable* d : dispatchQueue)
+            d->run(cx, JS::Dispatchable::ShuttingDown);
+    }
+
+    {
+        // Wait until all live OffThreadPromiseRuntimeState have been confirmed
+        // canceled by OffThreadPromiseTask::dispatchResolve().
+        LockGuard<Mutex> lock(mutex_);
+        while (live_.count() != numCanceled_) {
+            MOZ_ASSERT(numCanceled_ < live_.count());
+            allCanceled_.wait(lock);
+        }
+    }
+
+    // Now that all the tasks have stopped concurrent execution, we can just
+    // delete everything. We don't want each OffThreadPromiseTask to unregister
+    // itself (which would mutate live_ while we are iterating over it) so reset
+    // the tasks' internal registered_ flag.
+    for (OffThreadPromiseTaskSet::Range r = live_.all(); !r.empty(); r.popFront()) {
+        OffThreadPromiseTask* task = r.front();
+        MOZ_ASSERT(task->registered_);
+        task->registered_ = false;
+        js_delete(task);
+    }
+    live_.clear();
+    numCanceled_ = 0;
+
+    // After shutdown, there should be no OffThreadPromiseTask activity in this
+    // JSRuntime. Revert to the !initialized() state to catch bugs.
+    dispatchToEventLoopCallback_ = nullptr;
+    MOZ_ASSERT(!initialized());
 }
 
 static JSObject*

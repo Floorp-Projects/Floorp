@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for opening links in new tabs from extension frames</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function promiseObserved(topic, check) {
+  return new Promise(resolve => {
+    let obs = SpecialPowers.Services.obs;
+
+    function observer(subject, topic, data) {
+      subject = SpecialPowers.wrap(subject);
+      if (check(subject, data)) {
+        obs.removeObserver(observer, topic);
+        resolve({subject, data});
+      }
+    }
+    obs.addObserver(observer, topic);
+  });
+}
+
+add_task(async function test_target_blank_link() {
+  const linkURL = "http://example.com/";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_security_policy: "script-src 'self' 'unsafe-eval'; object-src 'self';",
+
+      web_accessible_resources: ["iframe.html"],
+    },
+    files: {
+      "iframe.html": `<!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8"></html>
+          <body>
+            <a href="${linkURL}" target="_blank" id="link">link</a>
+          </body>
+        </html>`,
+    },
+    background() {
+      browser.test.sendMessage("frame_url", browser.runtime.getURL("iframe.html"));
+    },
+  });
+
+  await extension.startup();
+
+  let url = await extension.awaitMessage("frame_url");
+
+  let iframe = document.createElement("iframe");
+  iframe.src = url;
+  document.body.appendChild(iframe);
+  await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+
+  let win = SpecialPowers.wrap(iframe).contentWindow;
+  let link = win.document.getElementById("link");
+
+  {
+    synthesizeMouseAtCenter(link, {}, iframe.contentWindow);
+    let {subject: doc} = await promiseObserved("document-element-inserted", doc => doc.documentURI === linkURL);
+    info("Link opened");
+    doc.defaultView.close();
+    info("Window closed");
+  }
+
+  {
+    let promise = promiseObserved("document-element-inserted", doc => doc.documentURI === linkURL);
+
+    let res = win.eval(`window.open("${linkURL}")`);
+    let {subject: doc} = await promise;
+    is(SpecialPowers.unwrap(res), SpecialPowers.unwrap(doc.defaultView), "window.open worked as expected");
+
+    doc.defaultView.close();
+  }
+
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

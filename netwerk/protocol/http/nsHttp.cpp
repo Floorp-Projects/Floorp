@@ -473,7 +473,7 @@ ValidationRequired(bool isForcedValid, nsHttpResponseHead *cachedResponseHead,
 nsresult
 GetHttpResponseHeadFromCacheEntry(nsICacheEntry *entry, nsHttpResponseHead *cachedResponseHead)
 {
-    nsXPIDLCString buf;
+    nsCString buf;
     // A "original-response-headers" metadata element holds network original headers,
     // i.e. the headers in the form as they arrieved from the network.
     // We need to get the network original headers first, because we need to keep them
@@ -532,7 +532,7 @@ DetermineFramingAndImmutability(nsICacheEntry *entry,
         nsHttpResponseHead *responseHead, bool isHttps,
         bool *weaklyFramed, bool *isImmutable)
 {
-    nsXPIDLCString framedBuf;
+    nsCString framedBuf;
     nsresult rv = entry->GetMetaDataElement("strongly-framed", getter_Copies(framedBuf));
     // describe this in terms of explicitly weakly framed so as to be backwards
     // compatible with old cache contents which dont have strongly-framed makers

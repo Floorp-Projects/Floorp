@@ -1326,8 +1326,8 @@ let IconDetails = {
   // This will throw an error if the URL is not allowed.
   _checkURL(url, principal) {
     try {
-      Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
-        principal, url,
+      Services.scriptSecurityManager.checkLoadURIWithPrincipal(
+        principal, Services.io.newURI(url),
         Services.scriptSecurityManager.DISALLOW_SCRIPT);
     } catch (e) {
       throw new ExtensionError(`Illegal URL ${url}`);

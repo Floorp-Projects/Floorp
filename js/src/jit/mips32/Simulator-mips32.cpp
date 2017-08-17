@@ -37,6 +37,8 @@
 
 #include "jit/mips32/Assembler-mips32.h"
 #include "vm/Runtime.h"
+#include "wasm/WasmInstance.h"
+#include "wasm/WasmSignalHandlers.h"
 
 #define I8(v)   static_cast<int8_t>(v)
 #define I16(v)  static_cast<int16_t>(v)
@@ -1260,7 +1262,7 @@ Simulator::Simulator()
     pc_modified_ = false;
     icount_ = 0;
     break_count_ = 0;
-    resume_pc_ = 0;
+    wasm_interrupt_ = false;
     break_pc_ = nullptr;
     break_instr_ = 0;
 
@@ -1622,6 +1624,18 @@ int32_t
 Simulator::get_pc() const
 {
     return registers_[pc];
+}
+
+void
+Simulator::startInterrupt(WasmActivation* activation)
+{
+    MOZ_CRASH("NIY");
+}
+
+void
+Simulator::handleWasmInterrupt()
+{
+    MOZ_CRASH("NIY");
 }
 
 // The MIPS cannot do unaligned reads and writes.  On some MIPS platforms an
@@ -2593,6 +2607,7 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 // Rounding modes are not yet supported.
                 MOZ_ASSERT((FCSR_ & 3) == 0);
                 // In rounding mode 0 it should behave like ROUND.
+                MOZ_FALLTHROUGH;
               case ff_round_w_fmt: { // Round double to word (round half to even).
                 float rounded = std::floor(fs_value + 0.5);
                 int32_t result = static_cast<int32_t>(rounded);
@@ -2738,6 +2753,7 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 // Rounding modes are not yet supported.
                 MOZ_ASSERT((FCSR_ & 3) == 0);
                 // In rounding mode 0 it should behave like ROUND.
+                MOZ_FALLTHROUGH;
               case ff_round_w_fmt: { // Round double to word (round half to even).
                 double rounded = std::floor(ds_value + 0.5);
                 int32_t result = static_cast<int32_t>(rounded);
@@ -2989,7 +3005,7 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
             // Ext instr leaves result in Rt, rather than Rd.
             setRegister(rt_reg, alu_out);
             break;
-          case ff_bshfl: 
+          case ff_bshfl:
             setRegister(rd_reg, alu_out);
             break;
           default:
@@ -3099,6 +3115,7 @@ Simulator::decodeTypeImmediate(SimInstruction* instr)
             } else {
                 next_pc = current_pc + kBranchReturnOffset;
             }
+            break;
           default:
             break;
         }
@@ -3402,7 +3419,6 @@ Simulator::execute()
     // Get the PC to simulate. Cannot use the accessor here as we need the
     // raw PC value and not the one used as input to arithmetic instructions.
     int program_counter = get_pc();
-    WasmActivation* activation = TlsContext.get()->wasmActivationStack();
 
     while (program_counter != end_sim_pc) {
         if (enableStopSimAt && (icount_ == Simulator::StopSimAt)) {
@@ -3413,12 +3429,9 @@ Simulator::execute()
             instructionDecode(instr);
             icount_++;
 
-            int32_t rpc = resume_pc_;
-            if (MOZ_UNLIKELY(rpc != 0)) {
-                // wasm signal handler ran and we have to adjust the pc.
-                activation->setResumePC((void*)get_pc());
-                set_pc(rpc);
-                resume_pc_ = 0;
+            if (MOZ_UNLIKELY(wasm_interrupt_)) {
+                handleWasmInterrupt();
+                wasm_interrupt_ = false;
             }
         }
         program_counter = get_pc();

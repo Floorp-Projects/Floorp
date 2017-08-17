@@ -664,8 +664,8 @@ HandleScript
 SharedStubInfo::outerScript(JSContext* cx)
 {
     if (!outerScript_) {
-        js::jit::JitActivationIterator iter(cx);
-        JitFrameIterator it(iter);
+        js::jit::JitActivationIterator actIter(cx);
+        JSJitFrameIter it(actIter->asJit());
         MOZ_ASSERT(it.isExitFrame());
         ++it;
         MOZ_ASSERT(it.isIonJS());

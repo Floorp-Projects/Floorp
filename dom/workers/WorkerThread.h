@@ -78,14 +78,6 @@ public:
   uint32_t
   RecursionDepth(const WorkerThreadFriendKey& aKey) const;
 
-  // Required for MinGW build #1336527 to handle compiler bug:
-  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=79582
-  NS_IMETHOD
-  RegisterIdlePeriod(already_AddRefed<nsIIdlePeriod> aIdlePeriod) override
-  {
-    return nsThread::RegisterIdlePeriod(already_AddRefed<nsIIdlePeriod>(aIdlePeriod.take()));
-  }
-
   NS_DECL_ISUPPORTS_INHERITED
 
 private:

@@ -1442,17 +1442,42 @@ pref("javascript.options.jit.full_debug_checks", true);
 // memory, but makes things like Function.prototype.toSource()
 // fail.
 pref("javascript.options.discardSystemSource", false);
-// This preference limits the memory usage of javascript.
+
+// Many of the the following preferences tune the SpiderMonkey GC, if you
+// change the defaults here please also consider changing them in
+// js/src/jsgc.cpp.  They're documented in js/src/jsapi.h.
+
+// JSGC_MAX_MALLOC_BYTES
+// This preference limits the malloc memory that javascript objects may use.
 // If you want to change these values for your device,
 // please find Bug 417052 comment 17 and Bug 456721
 // Comment 32 and Bug 613551.
+// Override the shell's default of 0xffffffff
 pref("javascript.options.mem.high_water_mark", 128);
+
+// JSGC_MAX_BYTES
+// SpiderMonkey defaults to 2^32-1 bytes, but this is measured in MB so that
+// cannot be represented directly in order to show it in about:config.
 pref("javascript.options.mem.max", -1);
-pref("javascript.options.mem.nursery.max_kb", -1);
+
+// JSGC_MAX_NURSERY_BYTES
+#if defined(ANDROID) || defined(XP_IOS) || defined(MOZ_B2G)
+pref("javascript.options.mem.nursery.max_kb", 4096);
+#else
+pref("javascript.options.mem.nursery.max_kb", 16384);
+#endif
+
+// JSGC_MODE
 pref("javascript.options.mem.gc_per_zone", true);
 pref("javascript.options.mem.gc_incremental", true);
+
+// JSGC_SLICE_TIME_BUDGET
+// Override the shell's default of unlimited slice time.
 pref("javascript.options.mem.gc_incremental_slice_ms", 5);
+
+// JSGC_COMPACTING_ENABLED
 pref("javascript.options.mem.gc_compacting", true);
+
 pref("javascript.options.mem.log", false);
 pref("javascript.options.mem.notify", false);
 pref("javascript.options.gc_on_memory_pressure", true);
@@ -1463,17 +1488,42 @@ pref("javascript.options.compact_on_user_inactive_delay", 15000); // ms
 pref("javascript.options.compact_on_user_inactive_delay", 300000); // ms
 #endif
 
+// JSGC_HIGH_FREQUENCY_TIME_LIMIT
 pref("javascript.options.mem.gc_high_frequency_time_limit_ms", 1000);
+
+// JSGC_HIGH_FREQUENCY_LOW_LIMIT
 pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 100);
+
+// JSGC_HIGH_FREQUENCY_HIGH_LIMIT
 pref("javascript.options.mem.gc_high_frequency_high_limit_mb", 500);
+
+// JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX
 pref("javascript.options.mem.gc_high_frequency_heap_growth_max", 300);
+
+// JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN
 pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 150);
+
+// JSGC_LOW_FREQUENCY_HEAP_GROWTH
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 150);
+
+// JSGC_DYNAMIC_HEAP_GROWTH
+// Override SpiderMonkey default (false).
 pref("javascript.options.mem.gc_dynamic_heap_growth", true);
+
+// JSGC_DYNAMIC_MARK_SLICE
+// Override SpiderMonkey default (false).
 pref("javascript.options.mem.gc_dynamic_mark_slice", true);
+
+// JSGC_REFRESH_FRAME_SLICES_ENABLED
 pref("javascript.options.mem.gc_refresh_frame_slices_enabled", true);
+
+// JSGC_ALLOCATION_THRESHOLD
 pref("javascript.options.mem.gc_allocation_threshold_mb", 30);
+
+// JSGC_MIN_EMPTY_CHUNK_COUNT
 pref("javascript.options.mem.gc_min_empty_chunk_count", 1);
+
+// JSGC_MAX_EMPTY_CHUNK_COUNT
 pref("javascript.options.mem.gc_max_empty_chunk_count", 30);
 
 pref("javascript.options.showInConsole", false);

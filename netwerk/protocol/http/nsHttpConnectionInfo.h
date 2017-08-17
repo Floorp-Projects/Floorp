@@ -122,6 +122,9 @@ public:
                                             { mHashKey.SetCharAt(aBeConservative ? 'C' : '.', 6); }
     bool          GetBeConservative() const { return mHashKey.CharAt(6) == 'C'; }
 
+    void          SetTlsFlags(uint32_t aTlsFlags);
+    uint32_t      GetTlsFlags() const { return mTlsFlags; }
+
     const nsCString &GetNetworkInterfaceId() const { return mNetworkInterfaceId; }
 
     const nsCString &GetNPNToken() { return mNPNToken; }
@@ -175,6 +178,8 @@ private:
     bool                   mUsingConnect;  // if will use CONNECT with http proxy
     nsCString              mNPNToken;
     OriginAttributes       mOriginAttributes;
+
+    uint32_t               mTlsFlags;
 
 // for RefPtr
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHttpConnectionInfo)

@@ -444,7 +444,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
             do_QueryElementAt(transferableFlavorList, j);
         if (!currentTransferableFlavor)
           continue;
-        nsXPIDLCString transferableFlavorStr;
+        nsCString transferableFlavorStr;
         currentTransferableFlavor->ToString(getter_Copies(transferableFlavorStr));
 
         for (uint32_t k = 0; k < aLength; k++) {

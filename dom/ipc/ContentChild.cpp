@@ -432,7 +432,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
   nsCOMPtr<nsIScriptError> scriptError = do_QueryInterface(aMessage);
   if (scriptError) {
     nsAutoString msg, sourceName, sourceLine;
-    nsXPIDLCString category;
+    nsCString category;
     uint32_t lineNum, colNum, flags;
 
     nsresult rv = scriptError->GetErrorMessage(msg);

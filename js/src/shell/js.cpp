@@ -3424,6 +3424,7 @@ struct WorkerInput
 };
 
 static void SetWorkerContextOptions(JSContext* cx);
+static bool ShellBuildId(JS::BuildIdCharVector* buildId);
 
 static void
 WorkerMain(void* arg)
@@ -3455,6 +3456,7 @@ WorkerMain(void* arg)
         sc->isWorker = true;
     JS_SetContextPrivate(cx, sc.get());
     SetWorkerContextOptions(cx);
+    JS::SetBuildIdOp(cx, ShellBuildId);
 
     Maybe<EnvironmentPreparer> environmentPreparer;
     if (input->parentRuntime) {
@@ -8053,7 +8055,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
         jit::Simulator::StopSimAt = stopAt;
 #elif defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
     if (op.getBoolOption("mips-sim-icache-checks"))
-        jit::Simulator::ICacheCheckingEnabled = true;
+        jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
 
     int32_t stopAt = op.getIntOption("mips-sim-stop-at");
     if (stopAt >= 0)

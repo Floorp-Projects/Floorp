@@ -102,6 +102,11 @@ interface nsISSLSocketControl : nsISupports {
      */
     readonly attribute uint32_t providerFlags;
 
+    /*
+     * The original TLS flags from the socket provider.
+     */
+    readonly attribute uint32_t providerTlsFlags;
+
     /* These values are defined by TLS. */
     const short SSL_VERSION_3   = 0x0300;
     const short TLS_VERSION_1   = 0x0301;

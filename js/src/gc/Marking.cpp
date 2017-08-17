@@ -2362,7 +2362,7 @@ MarkStackIter::saveValueArray(NativeObject* obj, uintptr_t index, HeapSlot::Kind
  */
 GCMarker::GCMarker(JSRuntime* rt)
   : JSTracer(rt, JSTracer::TracerKindTag::Marking, ExpandWeakMaps),
-    stack(size_t(-1)),
+    stack(),
     color(MarkColor::Black),
     unmarkedArenaStackTop(nullptr)
 #ifdef DEBUG

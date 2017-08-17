@@ -17,6 +17,7 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t       family,
                                    nsIProxyInfo *proxyInfo,
                                    int32_t       socksVersion,
                                    uint32_t      flags,
+                                   uint32_t      tlsFlags,
                                    PRFileDesc   *fd,
                                    nsISupports **info);
 

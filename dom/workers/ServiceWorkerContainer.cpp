@@ -199,13 +199,10 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     }
   }
 
-  // This is a quick fix for temporarily turning off script loading setting when
-  // registering a service worker. This should be removed in Bug 1353636.
-  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-
   // The spec says that the "client" passed to Register() must be the global
   // where the ServiceWorkerContainer was retrieved from.
-  aRv = swm->Register(GetOwner(), scopeURI, scriptURI, loadFlags,
+  aRv = swm->Register(GetOwner(), scopeURI, scriptURI,
+                      static_cast<uint16_t>(aOptions.mUpdateViaCache),
                       getter_AddRefs(promise));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

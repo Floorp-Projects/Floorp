@@ -19,7 +19,7 @@ struct ServiceWorkerRegistrationData
 
   PrincipalInfo principal;
 
-  uint32_t loadFlags;
+  uint16_t updateViaCache;
 
   int64_t currentWorkerInstalledTime;
   int64_t currentWorkerActivatedTime;

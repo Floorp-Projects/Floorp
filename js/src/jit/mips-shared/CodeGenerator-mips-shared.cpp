@@ -2090,8 +2090,6 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
         return;
     }
 
-    BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
-
     Label done, outOfRange;
     masm.ma_b(ptrReg, ScratchRegister, &outOfRange, Assembler::AboveOrEqual, ShortJump);
     // Offset is ok, let's load value.
@@ -2178,8 +2176,6 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         }
         return;
     }
-
-    BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
 
     Label outOfRange;
     masm.ma_b(ptrReg, ScratchRegister, &outOfRange, Assembler::AboveOrEqual, ShortJump);

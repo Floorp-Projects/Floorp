@@ -1887,16 +1887,12 @@ enum ComparatorMatchResult {
  * patterns: namely, |return x - y| and |return y - x|.
  */
 static ComparatorMatchResult
-MatchNumericComparator(JSContext* cx, const Value& v)
+MatchNumericComparator(JSContext* cx, JSObject* obj)
 {
-    if (!v.isObject())
+    if (!obj->is<JSFunction>())
         return Match_None;
 
-    JSObject& obj = v.toObject();
-    if (!obj.is<JSFunction>())
-        return Match_None;
-
-    RootedFunction fun(cx, &obj.as<JSFunction>());
+    RootedFunction fun(cx, &obj->as<JSFunction>());
     if (!fun->isInterpreted() || fun->isClassConstructor())
         return Match_None;
 
@@ -2099,48 +2095,41 @@ FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start, uint32_t coun
 }
 
 bool
-js::array_sort(JSContext* cx, unsigned argc, Value* vp)
+js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp)
 {
+    // This function is called from the self-hosted Array.prototype.sort
+    // implementation. It returns |true| if the array was sorted, otherwise it
+    // returns |false| to notify the self-hosted code to perform the sorting.
     CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
 
-    RootedValue fval(cx);
+    HandleValue fval = args[0];
+    MOZ_ASSERT(fval.isUndefined() || IsCallable(fval));
 
-    if (args.hasDefined(0)) {
-        if (!IsCallable(args[0])) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_SORT_ARG);
+    ComparatorMatchResult comp;
+    if (fval.isObject()) {
+        comp = MatchNumericComparator(cx, &fval.toObject());
+        if (comp == Match_Failure)
             return false;
+
+        if (comp == Match_None) {
+            // Non-optimized user supplied comparators perform much better when
+            // called from within a self-hosted sorting function.
+            args.rval().setBoolean(false);
+            return true;
         }
-        fval = args[0];     /* non-default compare function */
     } else {
-        fval.setNull();
+        comp = Match_None;
     }
 
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    ComparatorMatchResult comp = MatchNumericComparator(cx, fval);
-    if (comp == Match_Failure)
-        return false;
-
-    if (!fval.isNull() && comp == Match_None) {
-        /*
-         * Non-optimized user supplied comparators perform much better when
-         * called from within a self-hosted sorting function.
-         */
-        FixedInvokeArgs<1> args2(cx);
-        args2[0].set(fval);
-
-        RootedValue thisv(cx, ObjectValue(*obj));
-        return CallSelfHostedFunction(cx, cx->names().ArraySort, thisv, args2, args.rval());
-    }
+    RootedObject obj(cx, &args.thisv().toObject());
 
     uint64_t length;
     if (!GetLengthProperty(cx, obj, &length))
         return false;
     if (length < 2) {
         /* [] and [a] remain unchanged when sorted. */
-        args.rval().setObject(*obj);
+        args.rval().setBoolean(true);
         return true;
     }
 
@@ -2228,12 +2217,12 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
          */
         n = vec.length();
         if (n == 0 && undefs == 0) {
-            args.rval().setObject(*obj);
+            args.rval().setBoolean(true);
             return true;
         }
 
         /* Here len == n + undefs + number_of_holes. */
-        if (fval.isNull()) {
+        if (comp == Match_None) {
             /*
              * Sort using the default comparator converting all elements to
              * strings.
@@ -2282,7 +2271,7 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
         if (!CheckForInterrupt(cx) || !DeletePropertyOrThrow(cx, obj, --len))
             return false;
     }
-    args.rval().setObject(*obj);
+    args.rval().setBoolean(true);
     return true;
 }
 
@@ -3514,7 +3503,7 @@ static const JSFunctionSpec array_methods[] = {
     /* Perl-ish methods. */
     JS_INLINABLE_FN("join",     array_join,         1,0, ArrayJoin),
     JS_FN("reverse",            array_reverse,      0,0),
-    JS_FN("sort",               array_sort,         1,0),
+    JS_SELF_HOSTED_FN("sort",   "ArraySort",        1,0),
     JS_INLINABLE_FN("push",     array_push,         1,0, ArrayPush),
     JS_INLINABLE_FN("pop",      array_pop,          0,0, ArrayPop),
     JS_INLINABLE_FN("shift",    array_shift,        0,0, ArrayShift),
