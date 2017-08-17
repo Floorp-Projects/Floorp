@@ -357,6 +357,7 @@ public abstract class RepositorySession {
     // * Which of the two records is modified;
     // * Whether they are equal or congruent;
     // * The modified times of each record (interpreted through the lens of clock skew);
+    // * Whether localVersion==syncVersion or localVersion>syncVersion for localRecord
     // * ...
     boolean localIsMoreRecent = localRecord.lastModified > remoteRecord.lastModified;
     Logger.debug(LOG_TAG, "Local record is more recent? " + localIsMoreRecent);

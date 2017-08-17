@@ -63,6 +63,7 @@ import java.util.Collection;
     @Override
     public void performCleanup() {
         bufferStorage.clear();
+        inner.performCleanup();
     }
 
     @Override

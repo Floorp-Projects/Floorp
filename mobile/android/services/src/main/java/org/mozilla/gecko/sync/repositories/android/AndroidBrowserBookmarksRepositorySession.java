@@ -17,9 +17,11 @@ import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.ProfileDatabaseException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
+import org.mozilla.gecko.sync.repositories.VersioningDelegateHelper;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -84,25 +86,22 @@ public class AndroidBrowserBookmarksRepositorySession extends StoreTrackingRepos
    * must bump their modification time so as to cause them to be uploaded on the next
    * stage of syncing. The same applies to simple reordering.
    */
-
-
-
-
-
   private final AndroidBrowserBookmarksDataAccessor dataAccessor;
 
   private final BookmarksSessionHelper sessionHelper;
+
+  private final VersioningDelegateHelper versioningDelegateHelper;
 
   /**
    * An array of known-special GUIDs.
    */
   public static final String[] SPECIAL_GUIDS = new String[] {
-    // Mobile and desktop places roots have to come first.
-    "places",
-    "mobile",
-    "toolbar",
-    "menu",
-    "unfiled"
+          // Mobile and desktop places roots have to come first.
+          "places",
+          "mobile",
+          "toolbar",
+          "menu",
+          "unfiled"
   };
 
 
@@ -112,7 +111,7 @@ public class AndroidBrowserBookmarksRepositorySession extends StoreTrackingRepos
   // Oh, if only we could make this final and initialize it in the static initializer.
   public static Map<String, String> SPECIAL_GUIDS_MAP;
 
-  protected AndroidBrowserBookmarksRepositorySession(Repository repository, Context context) {
+  protected BookmarksRepositorySession(Repository repository, Context context) {
     super(repository);
 
     if (SPECIAL_GUIDS_MAP == null) {
@@ -136,34 +135,54 @@ public class AndroidBrowserBookmarksRepositorySession extends StoreTrackingRepos
 
     dataAccessor = new AndroidBrowserBookmarksDataAccessor(context);
     sessionHelper = new BookmarksSessionHelper(this, dataAccessor);
+    versioningDelegateHelper = new VersioningDelegateHelper(context, BrowserContractHelpers.BOOKMARKS_CONTENT_URI);
   }
 
   @Override
   public void fetchModified(RepositorySessionFetchRecordsDelegate delegate) {
-    this.fetchSince(getLastSyncTimestamp(), delegate);
-  }
-
-  @Override
-  public void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException {
-    executeDelegateCommand(sessionHelper.getFetchRunnable(guids, now(), null, delegate));
-  }
-
-  @Override
-  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
-    this.fetchSince(-1, delegate);
-  }
-
-  private void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate) {
     if (this.storeTracker == null) {
       throw new IllegalStateException("Store tracker not yet initialized!");
     }
 
-    Logger.debug(LOG_TAG, "Running fetchSince(" + timestamp + ").");
+    Logger.debug(LOG_TAG, "Running fetchModified.");
     delegateQueue.execute(
-            sessionHelper.getFetchSinceRunnable(
-                    timestamp, now(), this.storeTracker.getFilter(), delegate
+            sessionHelper.getFetchModifiedRunnable(
+                    now(),
+                    this.storeTracker.getFilter(),
+                    versioningDelegateHelper.getFetchDelegate(delegate)
             )
     );
+  }
+
+  @Override
+  public void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException {
+    executeDelegateCommand(sessionHelper.getFetchRunnable(
+            guids, now(), null, versioningDelegateHelper.getFetchDelegate(delegate))
+    );
+  }
+
+  @Override
+  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
+    if (this.storeTracker == null) {
+      throw new IllegalStateException("Store tracker not yet initialized!");
+    }
+
+    final long since = -1L;
+
+    Logger.debug(LOG_TAG, "Running fetchSince(" + since + ").");
+    delegateQueue.execute(
+            sessionHelper.getFetchSinceRunnable(
+                    since,
+                    now(),
+                    this.storeTracker.getFilter(),
+                    versioningDelegateHelper.getFetchDelegate(delegate)
+            )
+    );
+  }
+
+  @Override
+  public void setStoreDelegate(RepositorySessionStoreDelegate delegate) {
+    super.setStoreDelegate(versioningDelegateHelper.getStoreDelegate(delegate));
   }
 
   @Override
@@ -188,6 +207,12 @@ public class AndroidBrowserBookmarksRepositorySession extends StoreTrackingRepos
   public void wipe(RepositorySessionWipeDelegate delegate) {
     Runnable command = sessionHelper.getWipeRunnable(delegate);
     storeWorkQueue.execute(command);
+  }
+
+  @Override
+  public void performCleanup() {
+    versioningDelegateHelper.persistSyncVersions();
+    super.performCleanup();
   }
 
   @Override

@@ -30,7 +30,6 @@ import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepository;
-import org.mozilla.gecko.sync.repositories.android.BookmarksSessionHelper;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
@@ -713,7 +712,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
           }
 
           @Override
-          public void onRecordStoreReconciled(String guid) {
+          public void onRecordStoreReconciled(String guid, Integer newVersion) {
           }
 
           @Override
