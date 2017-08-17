@@ -112,6 +112,27 @@
         android:contentDescription="@string/content_description_stop"
         android:src="@drawable/ic_close" />
 
+    <!-- The contentDescription is supplied by other applications in the Custom Tab Intent, and
+         is therefore set programatically. -->
+    <ImageButton
+        tools:ignore="contentDescription"
+        android:id="@+id/customtab_actionbutton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:adjustViewBounds="true"
+        android:padding="4dp"
+        android:maxWidth="@dimen/customtabs_toolbar_icon_size"
+        android:maxHeight="@dimen/customtabs_toolbar_icon_size"
+        android:scaleType="centerInside"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:src="@drawable/ic_delete"
+        android:layout_gravity="center_vertical"
+        android:background="?android:attr/selectableItemBackgroundBorderless"/>
+
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
