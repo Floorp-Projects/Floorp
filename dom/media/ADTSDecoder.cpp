@@ -11,6 +11,15 @@
 
 namespace mozilla {
 
+ChannelMediaDecoder*
+ADTSDecoder::CloneImpl(MediaDecoderInit& aInit)
+{
+  if (!IsEnabled())
+    return nullptr;
+
+  return new ADTSDecoder(aInit);
+}
+
 /* static */ bool
 ADTSDecoder::IsEnabled()
 {

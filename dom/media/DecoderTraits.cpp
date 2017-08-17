@@ -233,8 +233,36 @@ InstantiateDecoder(MediaDecoderInit& aInit,
   RefPtr<ChannelMediaDecoder> decoder;
 
   const MediaContainerType& type = aInit.mContainerType;
-  if (DecoderTraits::IsSupportedType(type)) {
-    decoder = new ChannelMediaDecoder(aInit);
+
+#ifdef MOZ_FMP4
+  if (MP4Decoder::IsSupportedType(type, aDiagnostics)) {
+    decoder = new MP4Decoder(aInit);
+    return decoder.forget();
+  }
+#endif
+  if (MP3Decoder::IsSupportedType(type)) {
+    decoder = new MP3Decoder(aInit);
+    return decoder.forget();
+  }
+  if (ADTSDecoder::IsSupportedType(type)) {
+    decoder = new ADTSDecoder(aInit);
+    return decoder.forget();
+  }
+  if (OggDecoder::IsSupportedType(type)) {
+    decoder = new OggDecoder(aInit);
+    return decoder.forget();
+  }
+  if (WaveDecoder::IsSupportedType(type)) {
+    decoder = new WaveDecoder(aInit);
+    return decoder.forget();
+  }
+  if (FlacDecoder::IsSupportedType(type)) {
+    decoder = new FlacDecoder(aInit);
+    return decoder.forget();
+  }
+
+  if (WebMDecoder::IsSupportedType(type)) {
+    decoder = new WebMDecoder(aInit);
     return decoder.forget();
   }
 
