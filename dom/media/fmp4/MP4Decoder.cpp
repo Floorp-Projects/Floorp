@@ -25,6 +25,11 @@
 
 namespace mozilla {
 
+MP4Decoder::MP4Decoder(MediaDecoderInit& aInit)
+  : ChannelMediaDecoder(aInit)
+{
+}
+
 static bool
 IsWhitelistedH264Codec(const nsAString& aCodec)
 {
