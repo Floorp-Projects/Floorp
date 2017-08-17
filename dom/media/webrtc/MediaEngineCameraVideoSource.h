@@ -64,15 +64,10 @@ public:
   void Shutdown() override
   {
     MonitorAutoLock lock(mMonitor);
-    // Release mImage and it's resources just in case -- also we can be
-    // held by something in a CC chain, and not be deleted until final-cc,
-    // which is too late for releasing images.  (This should be null'd on
-    // Stop(), but apparently Stop() may not get called in this case
-    // somehow.) (Bug 1374164)
-
+    // really Stop() *should* be called before it gets here
     Unused << NS_WARN_IF(mImage);
-
     mImage = nullptr;
+    mImageContainer = nullptr;
   }
 
 protected:
