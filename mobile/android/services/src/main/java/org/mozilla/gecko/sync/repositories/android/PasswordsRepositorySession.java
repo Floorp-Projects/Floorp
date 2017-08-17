@@ -4,9 +4,6 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.DeletedColumns;
@@ -22,7 +19,6 @@ import org.mozilla.gecko.sync.repositories.android.RepoUtils.QueryHelper;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -71,61 +67,7 @@ public class PasswordsRepositorySession extends
   private static final String WHERE_GUID_IS = Passwords.GUID + " = ?";
   private static final String WHERE_DELETED_GUID_IS = DeletedPasswords.GUID + " = ?";
 
-  @Override
-  public void guidsSince(final long timestamp, final RepositorySessionGuidsSinceDelegate delegate) {
-    final Runnable guidsSinceRunnable = new Runnable() {
-      @Override
-      public void run() {
-
-        if (!isActive()) {
-          delegate.onGuidsSinceFailed(new InactiveSessionException());
-          return;
-        }
-
-        // Checks succeeded, now get GUIDs.
-        final List<String> guids = new ArrayList<String>();
-        try {
-          Logger.debug(LOG_TAG, "Fetching guidsSince from data table.");
-          final Cursor data = passwordsHelper.safeQuery(passwordsProvider, ".getGUIDsSince", GUID_COLS, dateModifiedWhere(timestamp), null, null);
-          try {
-            if (data.moveToFirst()) {
-              while (!data.isAfterLast()) {
-                guids.add(RepoUtils.getStringFromCursor(data, Passwords.GUID));
-                data.moveToNext();
-              }
-            }
-          } finally {
-            data.close();
-          }
-
-          // Fetch guids from deleted table.
-          Logger.debug(LOG_TAG, "Fetching guidsSince from deleted table.");
-          final Cursor deleted = deletedPasswordsHelper.safeQuery(passwordsProvider, ".getGUIDsSince", DELETED_GUID_COLS, dateModifiedWhereDeleted(timestamp), null, null);
-          try {
-            if (deleted.moveToFirst()) {
-              while (!deleted.isAfterLast()) {
-                guids.add(RepoUtils.getStringFromCursor(deleted, DeletedColumns.GUID));
-                deleted.moveToNext();
-              }
-            }
-          } finally {
-            deleted.close();
-          }
-        } catch (Exception e) {
-          Logger.error(LOG_TAG, "Exception in fetch.");
-          delegate.onGuidsSinceFailed(e);
-          return;
-        }
-        String[] guidStrings = new String[guids.size()];
-        delegate.onGuidsSinceSucceeded(guids.toArray(guidStrings));
-      }
-    };
-
-    delegateQueue.execute(guidsSinceRunnable);
-  }
-
-  @Override
-  public void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {
+  private void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {
     final RecordFilter filter = this.storeTracker.getFilter();
     final Runnable fetchSinceRunnable = new Runnable() {
       @Override
@@ -138,19 +80,19 @@ public class PasswordsRepositorySession extends
         final long end = now();
         try {
           // Fetch from data table.
-          Cursor data = passwordsHelper.safeQuery(passwordsProvider, ".fetchSince",
-                                                  getAllColumns(),
-                                                  dateModifiedWhere(timestamp),
-                                                  null, null);
+          Cursor data = passwordsHelper.safeQuery(passwordsProvider, ".fetchModified",
+                  getAllColumns(),
+                  dateModifiedWhere(timestamp),
+                  null, null);
           if (!fetchAndCloseCursorDeleted(data, false, filter, delegate)) {
             return;
           }
 
           // Fetch from deleted table.
-          Cursor deleted = deletedPasswordsHelper.safeQuery(passwordsProvider, ".fetchSince",
-                                                            getAllDeletedColumns(),
-                                                            dateModifiedWhereDeleted(timestamp),
-                                                            null, null);
+          Cursor deleted = deletedPasswordsHelper.safeQuery(passwordsProvider, ".fetchModified",
+                  getAllDeletedColumns(),
+                  dateModifiedWhereDeleted(timestamp),
+                  null, null);
           if (!fetchAndCloseCursorDeleted(deleted, true, filter, delegate)) {
             return;
           }
@@ -171,6 +113,16 @@ public class PasswordsRepositorySession extends
     };
 
     delegateQueue.execute(fetchSinceRunnable);
+  }
+
+  @Override
+  public void fetchModified(final RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(getLastSyncTimestamp(), delegate);
+  }
+
+  @Override
+  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(-1, delegate);
   }
 
   @Override
@@ -228,11 +180,6 @@ public class PasswordsRepositorySession extends
     };
 
     delegateQueue.execute(fetchRunnable);
-  }
-
-  @Override
-  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
-    fetchSince(0, delegate);
   }
 
   @Override
@@ -314,7 +261,7 @@ public class PasswordsRepositorySession extends
             // Note that while this counts as "reconciliation", we're probably over-counting.
             // Currently, locallyModified above is _always_ true if a record exists locally,
             // and so we'll consider any deletions of already present records as reconciliations.
-            storeDelegate.onRecordStoreReconciled(record.guid);
+            storeDelegate.onRecordStoreReconciled(record.guid, null);
             storeRecordDeletion(remoteRecord);
             return;
           }
@@ -393,7 +340,7 @@ public class PasswordsRepositorySession extends
         // of reconcileRecords.
         Logger.debug(LOG_TAG, "Calling delegate callback with guid " + replaced.guid +
                               "(" + replaced.androidID + ")");
-        storeDelegate.onRecordStoreReconciled(record.guid);
+        storeDelegate.onRecordStoreReconciled(record.guid, null);
         storeDelegate.onRecordStoreSucceeded(record.guid);
         return;
       }
@@ -721,5 +668,9 @@ public class PasswordsRepositorySession extends
     cv.put(BrowserContract.Passwords.TIME_PASSWORD_CHANGED, rec.timePasswordChanged);
     cv.put(BrowserContract.Passwords.TIMES_USED,            rec.timesUsed);
     return cv;
+  }
+
+  private static void trace(String message) {
+    Logger.trace(LOG_TAG, message);
   }
 }

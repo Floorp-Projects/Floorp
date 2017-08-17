@@ -6,15 +6,14 @@
 #include "MediaSourceDecoder.h"
 
 #include "mozilla/Logging.h"
-#include "mozilla/dom/HTMLMediaElement.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
 #include "MediaSource.h"
+#include "MediaSourceDemuxer.h"
 #include "MediaSourceResource.h"
 #include "MediaSourceUtils.h"
-#include "VideoUtils.h"
-#include "MediaSourceDemuxer.h"
 #include "SourceBufferList.h"
+#include "VideoUtils.h"
 #include <algorithm>
 
 extern mozilla::LogModule* GetMediaSourceLog();
@@ -296,7 +295,7 @@ MediaSourceDecoder::NextFrameBufferedStatus()
   TimeInterval interval(
     currentPosition,
     currentPosition + DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED);
-  return buffered.ContainsStrict(ClampIntervalToEnd(interval))
+  return buffered.ContainsWithStrictEnd(ClampIntervalToEnd(interval))
          ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
          : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 }
@@ -331,7 +330,7 @@ MediaSourceDecoder::CanPlayThroughImpl()
   TimeUnit timeAhead =
     std::min(duration, currentPosition + TimeUnit::FromSeconds(10));
   TimeInterval interval(currentPosition, timeAhead);
-  return buffered.ContainsStrict(ClampIntervalToEnd(interval));
+  return buffered.ContainsWithStrictEnd(ClampIntervalToEnd(interval));
 }
 
 TimeInterval

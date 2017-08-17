@@ -21,8 +21,8 @@ At a very high level, the process looks like this:
    for carrying out the named action, and may create new sub-tasks if necessary
    (for example, to re-trigger a task).
 
-Action Task Implementation
-==========================
+Defining Action Tasks
+---------------------
 
 There are two options for defining actions: creating a callback action, or
 creating a custom action task.  A callback action automatically defines an

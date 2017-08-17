@@ -17,7 +17,6 @@ import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 
 import static org.mockito.Mockito.mock;
@@ -112,7 +111,7 @@ public class PayloadUploadDelegateTest {
         }
 
         @Override
-        public void onRecordStoreReconciled(String guid) {
+        public void onRecordStoreReconciled(String guid, Integer newVersion) {
         }
 
         @Override

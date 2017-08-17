@@ -1,16 +1,6 @@
-/* Bug 1164419 - increase Pocket panel size to accomidate wider Russian text. */
-panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-viewstack > .panel-mainview:not([panelid="PanelUI-popup"]) {
-  max-width: 33em; /* standaloneSubviewWidth + 3 */
-}
-
-.cui-widget-panel[viewId="PanelUI-pocketView"] > .panel-arrowcontainer > .panel-arrowcontent {
+#pageActionActivatedActionPanel[actionID="pocket"] > .panel-arrowcontainer > .panel-arrowcontent {
   padding-top: 0;
   padding-bottom: 0;
-}
-
-#PanelUI-pocketView > .panel-subview-body,
-#PanelUI-pocketView {
-  overflow: visible;
 }
 
 #pocket-button {
@@ -45,7 +35,7 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
   }
 }
 
-#pocket-button-box > #pocket-animatable-box,
+#pocket-button-box[animate="true"] > #pocket-animatable-box,
 #pocket-button > .toolbarbutton-animatable-box {
   position: absolute;
   overflow: hidden;
@@ -63,13 +53,13 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
   max-height: 16px;
 }
 
-#pocket-button-box > #pocket-animatable-box {
+#pocket-button-box[animate="true"] > #pocket-animatable-box {
   /* .urlbar-icon has width 28px. Each frame is 20px wide. Set margin-inline-start
      to be half the difference, 4px. */
   margin-inline-start: 4px;
 }
 
-#pocket-button-box > #pocket-animatable-box > #pocket-animatable-image,
+#pocket-button-box[animate="true"] > #pocket-animatable-box > #pocket-animatable-image,
 #pocket-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
 }

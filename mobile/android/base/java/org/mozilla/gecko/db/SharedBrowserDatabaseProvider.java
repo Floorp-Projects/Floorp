@@ -7,6 +7,7 @@ package org.mozilla.gecko.db;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
+import org.mozilla.gecko.db.BrowserContract.VersionColumns;
 import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
 
 import android.content.Context;
@@ -89,11 +90,8 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
         // predefined max age. It's important not be too greedy here and
         // remove only a few old deleted records at a time.
 
-        // we cleanup records marked as deleted that are older than a
-        // predefined max age. It's important not be too greedy here and
-        // remove only a few old deleted records at a time.
-
         // Maximum age of deleted records to be cleaned up (20 days in ms)
+        // We probably shouldn't delete tombstones at all. See Bug 1388884.
         final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
 
         // Number of records marked as deleted to be removed
@@ -115,7 +113,24 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
             cursor.close();
         }
 
-        db.delete(tableName, inClause, null);
+        final int deletedExpired = db.delete(tableName, inClause, null);
+        Log.d(LOGTAG, "Dropped old deleted records: " + deletedExpired);
+
+        // Only bookmarks currently support sync versioning. See Bug 1364644.
+        if (!BrowserContract.Bookmarks.TABLE_NAME.equals(tableName)) {
+            return;
+        }
+
+        // For data types which support sync versioning, we can safely drop all deleted records
+        // that were never uploaded as far as our current Sync constellation is concerned.
+        // Other clients don't know about them, and don't need to know that we deleted them locally.
+        final int deletedNew = db.delete(tableName,
+                SyncColumns.IS_DELETED + " = 1 " +
+                        " AND " +
+                        VersionColumns.SYNC_VERSION + " = 0",
+                null
+        );
+        Log.d(LOGTAG, "Dropped non-synced deleted records: " + deletedNew);
     }
 
     // Override this, or override cleanUpSomeDeletedRecords.

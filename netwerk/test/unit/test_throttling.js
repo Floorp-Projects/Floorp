@@ -31,7 +31,6 @@ function run_test() {
                createInstance(Ci.nsIMIMEInputStream);
   mime.addHeader("Content-Type", "multipart/form-data; boundary=zzzzz");
   mime.setData(sstream);
-  mime.addContentLength = true;
 
   let tq = Cc["@mozilla.org/network/throttlequeue;1"]
       .createInstance(Ci.nsIInputChannelThrottleQueue);

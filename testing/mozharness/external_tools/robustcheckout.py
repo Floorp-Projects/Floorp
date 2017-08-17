@@ -18,6 +18,7 @@ import os
 import random
 import re
 import socket
+import ssl
 import time
 import urllib2
 
@@ -30,15 +31,31 @@ from mercurial import (
     extensions,
     cmdutil,
     hg,
+    registrar,
     scmutil,
     util,
 )
 
-testedwith = '3.7 3.8 3.9 4.0 4.1'
+testedwith = '3.7 3.8 3.9 4.0 4.1 4.2 4.3'
 minimumhgversion = '3.7'
 
 cmdtable = {}
-command = cmdutil.command(cmdtable)
+
+# Mercurial 4.3 introduced registrar.command as a replacement for
+# cmdutil.command.
+if util.safehasattr(registrar, 'command'):
+    command = registrar.command(cmdtable)
+else:
+    command = cmdutil.command(cmdtable)
+
+# Mercurial 4.2 introduced the vfs module and deprecated the symbol in
+# scmutil.
+def getvfs():
+    try:
+        from mercurial.vfs import vfs
+        return vfs
+    except ImportError:
+        return scmutil.vfs
 
 
 if os.name == 'nt':
@@ -176,7 +193,23 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
     ui.write('ensuring %s@%s is available at %s\n' % (url, revision or branch,
                                                       dest))
 
-    destvfs = scmutil.vfs(dest, audit=False, realpath=True)
+    # We assume that we're the only process on the machine touching the
+    # repository paths that we were told to use. This means our recovery
+    # scenario when things aren't "right" is to just nuke things and start
+    # from scratch. This is easier to implement than verifying the state
+    # of the data and attempting recovery. And in some scenarios (such as
+    # potential repo corruption), it is probably faster, since verifying
+    # repos can take a while.
+
+    destvfs = getvfs()(dest, audit=False, realpath=True)
+
+    def deletesharedstore(path=None):
+        storepath = path or destvfs.read('.hg/sharedpath').strip()
+        if storepath.endswith('.hg'):
+            storepath = os.path.dirname(storepath)
+
+        storevfs = getvfs()(storepath, audit=False)
+        storevfs.rmtree(forcibly=True)
 
     if destvfs.exists() and not destvfs.exists('.hg'):
         raise error.Abort('destination exists but no .hg directory')
@@ -193,23 +226,30 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         ui.write('(existing repository shared store: %s)\n' % storepath)
 
         if not os.path.exists(storepath):
-            ui.warn('(shared store does not exist; deleting)\n')
+            ui.warn('(shared store does not exist; deleting destination)\n')
             destvfs.rmtree(forcibly=True)
         elif not re.search('[a-f0-9]{40}/\.hg$', storepath.replace('\\', '/')):
             ui.warn('(shared store does not belong to pooled storage; '
-                    'deleting to improve efficiency)\n')
+                    'deleting destination to improve efficiency)\n')
             destvfs.rmtree(forcibly=True)
+
+        storevfs = getvfs()(storepath, audit=False)
+        if storevfs.isfileorlink('store/lock'):
+            ui.warn('(shared store has an active lock; assuming it is left '
+                    'over from a previous process and that the store is '
+                    'corrupt; deleting store and destination just to be '
+                    'sure)\n')
+            destvfs.rmtree(forcibly=True)
+            deletesharedstore(storepath)
 
         # FUTURE when we require generaldelta, this is where we can check
         # for that.
 
-    def deletesharedstore():
-        storepath = destvfs.read('.hg/sharedpath').strip()
-        if storepath.endswith('.hg'):
-            storepath = os.path.dirname(storepath)
-
-        storevfs = scmutil.vfs(storepath, audit=False)
-        storevfs.rmtree(forcibly=True)
+    if destvfs.isfileorlink('.hg/wlock'):
+        ui.warn('(dest has an active working directory lock; assuming it is '
+                'left over from a previous process and that the destination '
+                'is corrupt; deleting it just to be sure)\n')
+        destvfs.rmtree(forcibly=True)
 
     def handlerepoerror(e):
         if e.message == _('abandoned transaction found'):
@@ -267,6 +307,13 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                 # Will raise if failure limit reached.
                 handlenetworkfailure()
                 return True
+        elif isinstance(e, ssl.SSLError):
+            # Assume all SSL errors are due to the network, as Mercurial
+            # should convert non-transport errors like cert validation failures
+            # to error.Abort.
+            ui.warn('ssl error: %s\n' % e)
+            handlenetworkfailure()
+            return True
         elif isinstance(e, urllib2.URLError):
             if isinstance(e.reason, socket.error):
                 ui.warn('socket error: %s\n' % e.reason)
@@ -295,7 +342,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         try:
             res = hg.clone(ui, {}, cloneurl, dest=dest, update=False,
                            shareopts={'pool': sharebase, 'mode': 'identity'})
-        except (error.Abort, urllib2.URLError) as e:
+        except (error.Abort, ssl.SSLError, urllib2.URLError) as e:
             if handlepullerror(e):
                 return callself()
             raise
@@ -354,7 +401,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                 pullop = exchange.pull(repo, remote, heads=pullrevs)
                 if not pullop.rheads:
                     raise error.Abort('unable to pull requested revision')
-        except (error.Abort, urllib2.URLError) as e:
+        except (error.Abort, ssl.SSLError, urllib2.URLError) as e:
             if handlepullerror(e):
                 return callself()
             raise

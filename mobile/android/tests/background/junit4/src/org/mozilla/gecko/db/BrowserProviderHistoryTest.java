@@ -262,11 +262,14 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
 
     @Test
     public void testBulkHistoryInsert() throws Exception {
+        Bundle result;
+
         // Test basic error conditions.
         String historyTestUriArg = historyTestUri.toString();
-        Bundle result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUriArg, new Bundle());
-        assertNotNull(result);
-        assertNotNull(result.getSerializable(BrowserContract.METHOD_RESULT));
+        try {
+            result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUriArg, new Bundle());
+            fail();
+        } catch (IllegalArgumentException e) {}
 
         final Bundle data = new Bundle();
 

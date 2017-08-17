@@ -4,12 +4,13 @@
 
 package org.mozilla.gecko.tests;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.util.Log;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import com.robotium.solo.Condition;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,9 +19,18 @@ import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.FennecMochitestAssert;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import static org.mozilla.gecko.GeckoApp.PREFS_ALLOW_STATE_BUNDLE;
 import static org.mozilla.gecko.tests.components.AppMenuComponent.MenuItem;
 
 public abstract class SessionTest extends UITest {
+    private static final String PREFS_NAME = "GeckoApp";
+    protected final static int SESSION_TIMEOUT = 25000;
+
     /**
      * A generic session object representing a collection of items that has a
      * selected index.
@@ -121,6 +131,37 @@ public abstract class SessionTest extends UITest {
          * Callback executed for each forward step of the walk.
          */
         public void goForward() {}
+    }
+
+    protected Session createTestSession(int selectedTabIndex) {
+        PageInfo home = new PageInfo(StringHelper.STATIC_ABOUT_HOME_URL);
+        PageInfo page1 = new PageInfo("page1");
+        PageInfo page2 = new PageInfo("page2");
+        PageInfo page3 = new PageInfo("page3");
+        PageInfo page4 = new PageInfo("page4");
+        PageInfo page5 = new PageInfo("page5");
+        PageInfo page6 = new PageInfo("page6");
+
+        SessionTab tab1 = new SessionTab(0, home, page1, page2);
+        SessionTab tab2 = new SessionTab(1, home, page3, page4);
+        SessionTab tab3 = new SessionTab(2, home, page5, page6);
+
+        return new Session(selectedTabIndex, tab1, tab2, tab3);
+    }
+
+    protected void injectSessionToRestore(final Intent intent, Session session) {
+        String sessionString = buildSessionJSON(session);
+        writeProfileFile("sessionstore.js", sessionString);
+
+        // This feature is pref-protected to prevent other apps from injecting
+        // a state bundle, so enable it here.
+        SharedPreferences prefs = getInstrumentation().getTargetContext()
+                .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(PREFS_ALLOW_STATE_BUNDLE, true).apply();
+
+        Bundle bundle = new Bundle();
+        bundle.putString("privateSession", null);
+        intent.putExtra("stateBundle", bundle);
     }
 
     /**
@@ -249,6 +290,42 @@ public abstract class SessionTest extends UITest {
         return sessionString;
     }
 
+    protected class VerifyJSONCondition implements Condition {
+        private AssertException mLastException;
+        private final NonFatalAsserter mAsserter = new NonFatalAsserter();
+        private final Session mSession;
+
+        public VerifyJSONCondition(Session session) {
+            mSession = session;
+        }
+
+        @Override
+        public boolean isSatisfied() {
+            try {
+                String sessionString = readProfileFile("sessionstore.js");
+                if (sessionString == null) {
+                    mLastException = new AssertException("Could not read sessionstore.js");
+                    return false;
+                }
+
+                verifySessionJSON(mSession, sessionString, mAsserter);
+            } catch (AssertException e) {
+                mLastException = e;
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * Gets the last AssertException thrown by verifySessionJSON().
+         *
+         * This is useful to get the stack trace if the test fails.
+         */
+        public AssertException getLastException() {
+            return mLastException;
+        }
+    }
+
     /**
      * @see SessionTest#verifySessionJSON(Session, String, Assert)
      */
@@ -353,6 +430,13 @@ public abstract class SessionTest extends UITest {
             writeFile(new File(mProfile, filename), data);
         } catch (IOException e) {
             mAsserter.ok(false, "Error writing to " + filename, Log.getStackTraceString(e));
+        }
+    }
+
+    protected void deleteProfileFile(String filename) {
+        File fileToDelete = new File(mProfile, filename);
+        if (!fileToDelete.delete()) {
+            mAsserter.ok(false, "Error deleting " + filename, null);
         }
     }
 

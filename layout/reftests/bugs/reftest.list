@@ -327,7 +327,7 @@ random-if(d2d) == 299837-3.xul 299837-3-ref.xul # bug 587631
 == 301726-1.html 301726-1-ref.html
 fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 302379.html 302379-ref.html
-skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget) == 306630-1.html 306630-1-ref.html # Bug 1383845
+== 306630-1.html 306630-1-ref.html
 == 306660-1.html 306660-1-ref.html
 == 306660-2.html 306660-2-ref.html
 == 306660-3.html 306660-3-ref.html

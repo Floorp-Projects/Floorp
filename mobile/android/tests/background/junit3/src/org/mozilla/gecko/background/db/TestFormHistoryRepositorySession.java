@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutorService;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
 import org.mozilla.gecko.background.sync.helpers.ExpectFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectFetchSinceDelegate;
-import org.mozilla.gecko.background.sync.helpers.ExpectGuidsSinceDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectNoStoreDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectStoredDelegate;
 import org.mozilla.gecko.background.sync.helpers.SessionTestHelper;
@@ -222,7 +221,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     return new Runnable() {
       @Override
       public void run() {
-        session.fetchSince(timestamp, new ExpectFetchSinceDelegate(timestamp, expectedGuids));
+        session.fetchModified(new ExpectFetchSinceDelegate(timestamp, expectedGuids));
       }
     };
   }
@@ -295,30 +294,6 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
         after3, new String[] { deleted2.guid }));
     performWait(fetchSinceRunnable(session,
         after4, new String[] { }));
-
-    session.abort();
-  }
-
-  protected Runnable guidsSinceRunnable(final RepositorySession session, final long timestamp, final String[] expectedGuids) {
-    return new Runnable() {
-      @Override
-      public void run() {
-        session.guidsSince(timestamp, new ExpectGuidsSinceDelegate(expectedGuids));
-      }
-    };
-  }
-
-  public void testGuidsSince() throws NoContentProviderException, RemoteException {
-    final FormHistoryRepositorySession session = createAndBeginSession();
-
-    insertTwoRecords(session);
-
-    performWait(guidsSinceRunnable(session,
-        after0, new String[] { regular1.guid, deleted1.guid }));
-    performWait(guidsSinceRunnable(session,
-        after1, new String[] { deleted1.guid}));
-    performWait(guidsSinceRunnable(session,
-        after2, new String[] { }));
 
     session.abort();
   }

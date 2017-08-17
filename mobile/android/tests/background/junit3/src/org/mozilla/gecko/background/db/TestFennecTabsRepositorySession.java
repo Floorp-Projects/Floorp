@@ -148,7 +148,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     return new Runnable() {
       @Override
       public void run() {
-        session.fetchSince(timestamp, new ExpectFetchDelegate(expectedRecords));
+        session.fetchModified(new ExpectFetchDelegate(expectedRecords));
       }
     };
   }
@@ -270,7 +270,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
       }
 
       final FennecTabsRepositorySession session = createAndBeginSession();
-      performWait(AndroidBrowserRepositoryTestCase.storeRunnable(session, tabsRecord));
+      performWait(ThreadedRepositoryTestCase.storeRunnable(session, tabsRecord));
 
       session.abort();
 

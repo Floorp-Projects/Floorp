@@ -68,6 +68,7 @@ function startup(data) {
     // reset the sync related prefs incase the feature was previously available
     // but isn't now.
     Services.prefs.clearUserPref("services.sync.engine.addresses.available");
+    Services.telemetry.scalarSet("formautofill.availability", false);
     return;
   }
 
@@ -89,6 +90,7 @@ function startup(data) {
   // When it's true, "element.autocomplete" will return tokens we currently
   // support -- otherwise it'll return an empty string.
   Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
+  Services.telemetry.scalarSet("formautofill.availability", true);
 
   // This pref determines whether the "addresses" sync engine is available
   // (ie, whether it is shown in any UI etc) - it *does not* determine whether

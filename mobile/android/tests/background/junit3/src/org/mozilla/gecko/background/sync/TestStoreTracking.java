@@ -61,7 +61,7 @@ public class TestStoreTracking extends AndroidSyncTestCase {
       }
 
       @Override
-      public void onRecordStoreReconciled(String guid) {
+      public void onRecordStoreReconciled(String guid, Integer newVersion) {
         Logger.debug(getName(), "Reconciled " + guid);
         assertEq(expectedGUID, guid);
       }
@@ -82,7 +82,7 @@ public class TestStoreTracking extends AndroidSyncTestCase {
               Logger.debug(getName(), "Fetch completed at " + fetchEnd + ".");
 
               // But fetching by time returns nothing.
-              session.fetchSince(0, new SimpleSuccessFetchDelegate() {
+              session.fetchModified(new SimpleSuccessFetchDelegate() {
                 private AtomicBoolean fetched = new AtomicBoolean(false);
 
                 @Override
@@ -155,7 +155,7 @@ public class TestStoreTracking extends AndroidSyncTestCase {
             @Override
             public void onBeginSucceeded(final RepositorySession session) {
               // Now we get a result.
-              session.fetchSince(0, new SimpleSuccessFetchDelegate() {
+              session.fetchModified(new SimpleSuccessFetchDelegate() {
 
                 @Override
                 public void onFetchedRecord(Record record) {

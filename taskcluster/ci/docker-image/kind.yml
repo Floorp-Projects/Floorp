@@ -14,8 +14,6 @@ transforms:
 # generate tasks for every docker image in the directory, secure in the
 # knowledge that unnecessary images will be omitted from the target task graph
 jobs:
-  desktop-test:
-    symbol: I(dt)
   desktop1604-test:
     symbol: I(dt16t)
   desktop-build:

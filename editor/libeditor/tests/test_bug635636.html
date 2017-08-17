@@ -19,44 +19,44 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=635636
 
 /** Test for Bug 635636 **/
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  var w, d;
-
-  function b1()
+addLoadEvent(async function() {
+  function openNewWindow(aURL)
   {
-    w = window.open('file_bug635636.xhtml');
-    SimpleTest.waitForFocus(b2, w);
-  }
-
-  function b2()
-  {
-    w.document.designMode = 'on';
-    w.location = "data:text/plain,2";
-    d = w.document.getElementsByTagName("div")[0];
-    const Ci = SpecialPowers.Ci;
-    var mainWindow = SpecialPowers.wrap(w)
-                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebNavigation)
-                      .QueryInterface(Ci.nsIDocShellTreeItem)
-                      .rootTreeItem
-                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindow);
-    var browser = mainWindow.gBrowser.selectedBrowser;
-    browser.addEventListener("pageshow", function() {
-      setTimeout(b3, 0);
+    return new Promise(resolve => {
+      let contentWindow = window.open(aURL);
+      contentWindow.addEventListener("load", () => {
+        ok(true, aURL + " is loaded");
+        resolve(contentWindow);
+      }, { once: true });
     });
   }
 
-  function b3()
+  function unloadWindow(aWindow)
   {
-    d.remove();
-    ok(true, "Should not crash");
-    // Not needed for the crash
-    w.close();
-    SimpleTest.finish();
+    return new Promise(resolve => {
+      aWindow.addEventListener("unload", () => {
+        ok(true, "The window has been unloaded");
+        SimpleTest.executeSoon(() => { resolve(0); });
+      }, { once: true });
+      aWindow.location = "data:text/plain,2";
+    });
   }
 
-  b1();
+  let contentWindow = await openNewWindow("file_bug635636.xhtml");
+
+  contentWindow.addEventListener("load", () => { ok(true, "load"); });
+  contentWindow.addEventListener("pageshow", () => { ok(true, "pageshow"); });
+
+  let div = contentWindow.document.getElementsByTagName("div")[0];
+  contentWindow.document.designMode = 'on';
+
+  await unloadWindow(contentWindow);
+
+  div.remove();
+  ok(true, "Should not crash");
+  // Not needed for the crash
+  contentWindow.close();
+  SimpleTest.finish();
 });
 
 </script>

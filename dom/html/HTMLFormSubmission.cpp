@@ -309,7 +309,6 @@ FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
       mimeStream->AddHeader("Content-Type",
                             "application/x-www-form-urlencoded");
-      mimeStream->SetAddContentLength(true);
       mimeStream->SetData(dataStream);
 
       *aPostDataStream = mimeStream;
@@ -623,7 +622,6 @@ FSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
   nsAutoCString contentType;
   GetContentType(contentType);
   mimeStream->AddHeader("Content-Type", contentType.get());
-  mimeStream->SetAddContentLength(true);
   uint64_t unused;
   mimeStream->SetData(GetSubmissionBody(&unused));
 
@@ -765,7 +763,6 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     NS_ENSURE_SUCCESS(rv, rv);
 
     mimeStream->AddHeader("Content-Type", "text/plain");
-    mimeStream->SetAddContentLength(true);
     mimeStream->SetData(bodyStream);
     CallQueryInterface(mimeStream, aPostDataStream);
   }

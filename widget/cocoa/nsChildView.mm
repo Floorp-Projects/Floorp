@@ -196,7 +196,6 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 
 // Overlay drawing functions for traditional CGContext drawing
 - (void)drawTitleString;
-- (void)drawTitlebarHighlight;
 - (void)maskTopCornersInContext:(CGContextRef)aContext;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
@@ -2014,18 +2013,16 @@ nsChildView::ConfigureAPZControllerThread()
 LayoutDeviceIntRect
 nsChildView::RectContainingTitlebarControls()
 {
-  // Start with a thin strip at the top of the window for the highlight line.
-  NSRect rect = NSMakeRect(0, 0, [mView bounds].size.width,
-                           [(ChildView*)mView cornerRadius]);
+  NSRect rect = NSZeroRect;
 
-  // If we draw the titlebar title string, increase the height to the default
-  // titlebar height. This height does not necessarily include all the titlebar
-  // controls because we may have moved them further down, but at least it will
-  // include the whole title text.
+  // If we draw the titlebar title string, set the rect to the full window
+  // width times the default titlebar height. This height does not necessarily
+  // include all the titlebar controls because we may have moved them further
+  // down, but at least it will include the whole title text.
   BaseWindow* window = (BaseWindow*)[mView window];
   if ([window wantsTitleDrawn] && [window isKindOfClass:[ToolbarWindow class]]) {
     CGFloat defaultTitlebarHeight = [(ToolbarWindow*)window titlebarHeight];
-    rect.size.height = std::max(rect.size.height, defaultTitlebarHeight);
+    rect = NSMakeRect(0, 0, [mView bounds].size.width, defaultTitlebarHeight);
   }
 
   // Add the rects of the titlebar controls.
@@ -2089,6 +2086,7 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
 
   LayoutDeviceIntRegion updatedTitlebarRegion;
   updatedTitlebarRegion.And(mUpdatedTitlebarRegion, mTitlebarRect);
+  updatedTitlebarRegion.MoveBy(-mTitlebarRect.TopLeft());
   mUpdatedTitlebarRegion.SetEmpty();
 
   if (mTitlebarCGContext) {
@@ -2255,38 +2253,6 @@ nsChildView::MaybeDrawResizeIndicator(GLManager* aManager)
   mResizerImage->Draw(aManager, mResizeIndicatorRect.TopLeft());
 }
 
-// Draw the highlight line at the top of the titlebar.
-// This function draws into the current NSGraphicsContext and assumes flippedness.
-static void
-DrawTitlebarHighlight(NSSize aWindowSize, CGFloat aRadius, CGFloat aDevicePixelWidth)
-{
-  [NSGraphicsContext saveGraphicsState];
-
-  // Set up the clip path. We start with the outer rectangle and cut out a
-  // slightly smaller inner rectangle with rounded corners.
-  // The outer corners of the resulting path will be square, but they will be
-  // masked away in a later step.
-  NSBezierPath* path = [NSBezierPath bezierPath];
-  [path setWindingRule:NSEvenOddWindingRule];
-  NSRect pathRect = NSMakeRect(0, 0, aWindowSize.width, aRadius + 2);
-  [path appendBezierPathWithRect:pathRect];
-  pathRect = NSInsetRect(pathRect, aDevicePixelWidth, aDevicePixelWidth);
-  CGFloat innerRadius = aRadius - aDevicePixelWidth;
-  [path appendBezierPathWithRoundedRect:pathRect xRadius:innerRadius yRadius:innerRadius];
-  [path addClip];
-
-  // Now we fill the path with a subtle highlight gradient.
-  // We don't use NSGradient because it's 5x to 15x slower than the manual fill,
-  // as indicated by the performance test in bug 880620.
-  for (CGFloat y = 0; y < aRadius; y += aDevicePixelWidth) {
-    CGFloat t = y / aRadius;
-    [[NSColor colorWithDeviceWhite:1.0 alpha:0.4 * (1.0 - t)] set];
-    NSRectFillUsingOperation(NSMakeRect(0, y, aWindowSize.width, aDevicePixelWidth), NSCompositeSourceOver);
-  }
-
-  [NSGraphicsContext restoreGraphicsState];
-}
-
 static CGContextRef
 CreateCGContext(const LayoutDeviceIntSize& aSize)
 {
@@ -2346,6 +2312,8 @@ nsChildView::UpdateTitlebarCGContext()
   CGContextRef ctx = mTitlebarCGContext;
 
   CGContextSaveGState(ctx);
+
+  CGContextTranslateCTM(ctx, -mTitlebarRect.x, -mTitlebarRect.y);
 
   double scale = BackingScaleFactor();
   CGContextScaleCTM(ctx, scale, scale);
@@ -2428,9 +2396,6 @@ nsChildView::UpdateTitlebarCGContext()
 
   CGContextRestoreGState(ctx);
 
-  DrawTitlebarHighlight([frameView bounds].size, [(ChildView*)mView cornerRadius],
-                        DevPixelsToCocoaPoints(1));
-
   [NSGraphicsContext setCurrentContext:oldContext];
 
   CGContextRestoreGState(ctx);
@@ -2458,6 +2423,7 @@ nsChildView::MaybeDrawTitlebar(GLManager* aManager)
 
   LayoutDeviceIntRegion updatedTitlebarRegion;
   updatedTitlebarRegion.And(mUpdatedTitlebarRegion, mTitlebarRect);
+  updatedTitlebarRegion.MoveBy(-mTitlebarRect.TopLeft());
   mUpdatedTitlebarRegion.SetEmpty();
 
   if (!mTitlebarImage) {
@@ -3896,7 +3862,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   if ([self isCoveringTitlebar]) {
     [self drawTitleString];
-    [self drawTitlebarHighlight];
     [self maskTopCornersInContext:aContext];
   }
 
@@ -4084,12 +4049,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [frameView _drawTitleBar:[frameView bounds]];
   CGContextRestoreGState(ctx);
   [NSGraphicsContext setCurrentContext:oldContext];
-}
-
-- (void)drawTitlebarHighlight
-{
-  DrawTitlebarHighlight([self bounds].size, [self cornerRadius],
-                        mGeckoChild->DevPixelsToCocoaPoints(1));
 }
 
 - (void)viewWillDraw
