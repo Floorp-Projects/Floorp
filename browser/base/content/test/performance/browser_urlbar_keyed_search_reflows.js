@@ -55,7 +55,7 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "adjustHeight@chrome://global/content/bindings/autocomplete.xml",
       "_invalidate/this._adjustHeightTimeout<@chrome://global/content/bindings/autocomplete.xml",
     ],
-    times: 3, // This number should only ever go down - never up.
+    times: 36, // This number should only ever go down - never up.
   },
 
   {
@@ -67,7 +67,17 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "_invalidate@chrome://global/content/bindings/autocomplete.xml",
       "invalidate@chrome://global/content/bindings/autocomplete.xml"
     ],
-    times: 390, // This number should only ever go down - never up.
+    times: 1584, // This number should only ever go down - never up.
+  },
+
+  {
+    stack: [
+      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
+      "handleOverUnderflow@chrome://global/content/bindings/autocomplete.xml",
+      "_onChanged@chrome://global/content/bindings/autocomplete.xml",
+      "_appendCurrentResult/<@chrome://global/content/bindings/autocomplete.xml",
+    ],
+    times: 6,
   },
 
   {
@@ -92,69 +102,40 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
   },
 ];
 
-/* These reflows happen everytime the awesomebar panel opens. */
-const EXPECTED_REFLOWS_SECOND_OPEN = [
-  {
-    stack: [
-      "adjustHeight@chrome://global/content/bindings/autocomplete.xml",
-      "onxblpopupshown@chrome://global/content/bindings/autocomplete.xml"
-    ],
-    times: 3, // This number should only ever go down - never up.
-  },
+/**
+ * Returns a Promise that resolves once the AwesomeBar popup for a particular
+ * window has appeared after having done a search for its input text.
+ *
+ * @param win (browser window)
+ *        The window to do the search in.
+ * @returns Promise
+ */
+async function promiseSearchComplete(win) {
+  let URLBar = win.gURLBar;
+  if (URLBar.popup.state != "open") {
+    await BrowserTestUtils.waitForEvent(URLBar.popup, "popupshown");
+  }
+  await BrowserTestUtils.waitForCondition(() => {
+    return URLBar.controller.searchStatus >=
+      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
+  });
 
-  {
-    stack: [
-      "adjustHeight@chrome://global/content/bindings/autocomplete.xml",
-      "_invalidate/this._adjustHeightTimeout<@chrome://global/content/bindings/autocomplete.xml",
-    ],
-    times: 3, // This number should only ever go down - never up.
-  },
-
-  {
-    stack: [
-      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "handleOverUnderflow@chrome://global/content/bindings/autocomplete.xml",
-      "_reuseAcItem@chrome://global/content/bindings/autocomplete.xml",
-      "_appendCurrentResult@chrome://global/content/bindings/autocomplete.xml",
-      "_invalidate@chrome://global/content/bindings/autocomplete.xml",
-      "invalidate@chrome://global/content/bindings/autocomplete.xml"
-    ],
-    times: 444, // This number should only ever go down - never up.
-  },
-
-  // Bug 1384256
-  {
-    stack: [
-      "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openPopup@chrome://global/content/bindings/autocomplete.xml",
-      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
-    ],
-    times: 3, // This number should only ever go down - never up.
-  },
-
-  // Bug 1359989
-  {
-    stack: [
-      "openPopup@chrome://global/content/bindings/popup.xml",
-      "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openPopup@chrome://global/content/bindings/autocomplete.xml",
-      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
-    ],
-  },
-];
-
-const SEARCH_TERM = "urlbar-reflows";
+  // There are several setTimeout(fn, 0); calls inside autocomplete.xml
+  // that we need to wait for. Since those have higher priority than
+  // idle callbacks, we can be sure they will have run once this
+  // idle callback is called. The timeout seems to be required in
+  // automation - presumably because the machines can be pretty busy
+  // especially if it's GC'ing from previous tests.
+  await new Promise(resolve => win.requestIdleCallback(resolve, { timeout: 1000 }));
+}
 
 add_task(async function setup() {
   await addDummyHistoryEntries();
 });
 
 /**
- * This test ensures that there are no unexpected
- * uninterruptible reflows when typing into the URL bar
- * with the default values in Places.
+ * This test ensures that there are no unexpected uninterruptible reflows when
+ * typing into the URL bar with the default values in Places.
  */
 add_task(async function() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
@@ -164,8 +145,9 @@ add_task(async function() {
   let popup = URLBar.popup;
 
   URLBar.focus();
-  URLBar.value = SEARCH_TERM;
-  let testFn = async function(dirtyFrameFn) {
+  URLBar.value = "";
+
+  await withReflowObserver(async function(dirtyFrameFn) {
     let oldInvalidate = popup.invalidate.bind(popup);
     let oldResultsAdded = popup.onResultsAdded.bind(popup);
 
@@ -183,34 +165,19 @@ add_task(async function() {
       oldResultsAdded();
     };
 
-    URLBar.controller.startSearch(URLBar.value);
-    await BrowserTestUtils.waitForEvent(URLBar.popup, "popupshown");
-    await BrowserTestUtils.waitForCondition(() => {
-      return URLBar.controller.searchStatus >=
-        Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
-    });
-    let matchCount = URLBar.popup._matchCount;
-    await BrowserTestUtils.waitForCondition(() => {
-      return URLBar.popup.richlistbox.childNodes.length == matchCount;
-    });
-
-    URLBar.controller.stopSearch();
-    // There are several setTimeout(fn, 0); calls inside autocomplete.xml
-    // that we need to wait for. Since those have higher priority than
-    // idle callbacks, we can be sure they will have run once this
-    // idle callback is called. The timeout seems to be required in
-    // automation - presumably because the machines can be pretty busy
-    // especially if it's GC'ing from previous tests.
-    await new Promise(resolve => win.requestIdleCallback(resolve, { timeout: 1000 }));
+    // Only keying in 6 characters because the number of reflows triggered
+    // is so high that we risk timing out the test if we key in any more.
+    const SEARCH_TERM = "ows-10";
+    for (let i = 0; i < SEARCH_TERM.length; ++i) {
+      let char = SEARCH_TERM[i];
+      EventUtils.synthesizeKey(char, {}, win);
+      await promiseSearchComplete(win);
+    }
 
     let hiddenPromise = BrowserTestUtils.waitForEvent(URLBar.popup, "popuphidden");
     EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
     await hiddenPromise;
-  };
-
-  await withReflowObserver(testFn, EXPECTED_REFLOWS_FIRST_OPEN, win);
-
-  await withReflowObserver(testFn, EXPECTED_REFLOWS_SECOND_OPEN, win);
+  }, EXPECTED_REFLOWS_FIRST_OPEN, win);
 
   await BrowserTestUtils.closeWindow(win);
 });
