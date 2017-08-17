@@ -338,9 +338,14 @@ MediaDecodeTask::FinishDecode()
     resampledFrames += speex_resampler_get_output_latency(resampler);
   }
 
-  // Allocate the channel buffers.  Note that if we end up resampling, we may
-  // write fewer bytes than mResampledFrames to the output buffer, in which
-  // case writeIndex will tell us how many valid samples we have.
+  // Allocate contiguous channel buffers.  Note that if we end up resampling,
+  // we may write fewer bytes than mResampledFrames to the output buffer, in
+  // which case writeIndex will tell us how many valid samples we have.
+  mDecodeJob.mBuffer.mChannelData.SetLength(channelCount);
+#if AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_FLOAT32
+  // This buffer has separate channel arrays that could be transferred to
+  // JS_NewArrayBufferWithContents(), but AudioBuffer::RestoreJSChannelData()
+  // does not yet take advantage of this.
   RefPtr<ThreadSharedFloatArrayBufferList> buffer =
     ThreadSharedFloatArrayBufferList::
     Create(channelCount, resampledFrames, fallible);
@@ -348,19 +353,32 @@ MediaDecodeTask::FinishDecode()
     ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
     return;
   }
-  mDecodeJob.mBuffer.mChannelData.SetLength(channelCount);
   for (uint32_t i = 0; i < channelCount; ++i) {
     mDecodeJob.mBuffer.mChannelData[i] = buffer->GetData(i);
   }
+#else
+  RefPtr<SharedBuffer> buffer =
+    SharedBuffer::Create(sizeof(AudioDataValue) *
+                         resampledFrames * channelCount);
+  if (!buffer) {
+    ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
+    return;
+  }
+  auto data = static_cast<AudioDataValue*>(floatBuffer->Data());
+  for (uint32_t i = 0; i < channelCount; ++i) {
+    mDecodeJob.mBuffer.mChannelData[i] = data;
+    data += resampledFrames;
+  }
+#endif
   mDecodeJob.mBuffer.mBuffer = buffer.forget();
   mDecodeJob.mBuffer.mVolume = 1.0f;
-  mDecodeJob.mBuffer.mBufferFormat = AUDIO_FORMAT_FLOAT32;
+  mDecodeJob.mBuffer.mBufferFormat = AUDIO_OUTPUT_FORMAT;
 
   uint32_t writeIndex = 0;
   RefPtr<AudioData> audioData;
   while ((audioData = mAudioQueue.PopFront())) {
     audioData->EnsureAudioBuffer(); // could lead to a copy :(
-    AudioDataValue* bufferData = static_cast<AudioDataValue*>
+    const AudioDataValue* bufferData = static_cast<AudioDataValue*>
       (audioData->mAudioBuffer->Data());
 
     if (sampleRate != destSampleRate) {
@@ -369,8 +387,8 @@ MediaDecodeTask::FinishDecode()
       for (uint32_t i = 0; i < audioData->mChannels; ++i) {
         uint32_t inSamples = audioData->mFrames;
         uint32_t outSamples = maxOutSamples;
-        float* outData =
-          mDecodeJob.mBuffer.ChannelDataForWrite<float>(i) + writeIndex;
+        AudioDataValue* outData = mDecodeJob.mBuffer.
+          ChannelDataForWrite<AudioDataValue>(i) + writeIndex;
 
         WebAudioUtils::SpeexResamplerProcess(
             resampler, i, &bufferData[i * audioData->mFrames], &inSamples,
@@ -384,10 +402,10 @@ MediaDecodeTask::FinishDecode()
       }
     } else {
       for (uint32_t i = 0; i < audioData->mChannels; ++i) {
-        float* outData =
-          mDecodeJob.mBuffer.ChannelDataForWrite<float>(i) + writeIndex;
-        ConvertAudioSamples(&bufferData[i * audioData->mFrames],
-                            outData, audioData->mFrames);
+        AudioDataValue* outData = mDecodeJob.mBuffer.
+          ChannelDataForWrite<AudioDataValue>(i) + writeIndex;
+        PodCopy(outData, &bufferData[i * audioData->mFrames],
+                audioData->mFrames);
 
         if (i == audioData->mChannels - 1) {
           writeIndex += audioData->mFrames;
@@ -402,8 +420,8 @@ MediaDecodeTask::FinishDecode()
     for (uint32_t i = 0; i < channelCount; ++i) {
       uint32_t inSamples = inputLatency;
       uint32_t outSamples = maxOutSamples;
-      float* outData =
-        mDecodeJob.mBuffer.ChannelDataForWrite<float>(i) + writeIndex;
+      AudioDataValue* outData =
+        mDecodeJob.mBuffer.ChannelDataForWrite<AudioDataValue>(i) + writeIndex;
 
       WebAudioUtils::SpeexResamplerProcess(
           resampler, i, (AudioDataValue*)nullptr, &inSamples,
