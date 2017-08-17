@@ -37,6 +37,13 @@ public:
   ~ScrollingLayersHelper();
 
 private:
+  void DefineAndPushScrollLayers(nsDisplayItem* aItem,
+                                 const ActiveScrolledRoot* aAsr,
+                                 const DisplayItemClipChain* aChain,
+                                 wr::DisplayListBuilder& aBuilder,
+                                 int32_t aAppUnitsPerDevPixel,
+                                 const StackingContextHelper& aStackingContext,
+                                 WebRenderLayerManager::ClipIdMap& aCache);
   void DefineAndPushChain(const DisplayItemClipChain* aChain,
                           wr::DisplayListBuilder& aBuilder,
                           const StackingContextHelper& aStackingContext,
@@ -51,6 +58,7 @@ private:
   WebRenderLayer* mLayer;
   wr::DisplayListBuilder* mBuilder;
   bool mPushedLayerLocalClip;
+  bool mPushedClipAndScroll;
   std::vector<wr::ScrollOrClipId> mPushedClips;
 };
 
