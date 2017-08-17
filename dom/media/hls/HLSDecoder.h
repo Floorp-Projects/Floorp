@@ -21,8 +21,6 @@ public:
   {
   }
 
-  MediaResource* GetResource() const override final;
-
   void Shutdown() override;
 
   // Returns true if the HLS backend is pref'ed on.
@@ -43,6 +41,8 @@ public:
   void Resume() override;
 
 private:
+  MediaResource* GetResource() const override final;
+
   MediaDecoderStateMachine* CreateStateMachine();
 
   bool CanPlayThroughImpl() override final
