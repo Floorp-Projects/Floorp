@@ -133,7 +133,12 @@ add_task(async function testLeftRightKeys() {
   EventUtils.synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" });
   await promise;
 
+  focusedElement = document.commandDispatcher.focusedElement;
+  Assert.equal(focusedElement.id, kHelpButtonId,
+               "Help button should be focused again now that we're back in the main view");
+
   promise = promisePanelHidden(window);
   PanelUI.hide();
   await promise;
 });
+
