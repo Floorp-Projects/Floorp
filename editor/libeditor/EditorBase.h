@@ -905,6 +905,11 @@ public:
   }
 
   /**
+   * CollapseSelectionToEnd() collapses the selection to the end of the editor.
+   */
+  nsresult CollapseSelectionToEnd(Selection* aSelection);
+
+  /**
    * Helpers to add a node to the selection.
    * Used by table cell selection methods.
    */
