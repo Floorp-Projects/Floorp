@@ -12810,10 +12810,10 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   const bool checkForPopup = !nsContentUtils::LegacyIsCallerChromeOrNativeCode() &&
     !aDialog && !WindowExists(aName, forceNoOpener, !aCalledNoScript);
 
-  // Note: it's very important that this be an nsXPIDLCString, since we want
-  // .get() on it to return nullptr until we write stuff to it.  The window
-  // watcher expects a null URL string if there is no URL to load.
-  nsXPIDLCString url;
+  // Note: the Void handling here is very important, because the window watcher
+  // expects a null URL string (not an empty string) if there is no URL to load.
+  nsCString url;
+  url.SetIsVoid(true);
   nsresult rv = NS_OK;
 
   // It's important to do this security check before determining whether this
@@ -12828,7 +12828,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     //
     // If we're not navigating, we assume that whoever *does* navigate the
     // window will do a security check of their own.
-    if (url.get() && !aDialog && aNavigate)
+    if (!url.IsVoid() && !aDialog && aNavigate)
       rv = SecurityCheckURL(url.get());
   }
 
@@ -12892,7 +12892,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     if (!aCalledNoScript) {
       // We asserted at the top of this function that aNavigate is true for
       // !aCalledNoScript.
-      rv = pwwatch->OpenWindow2(AsOuter(), url.get(), name_ptr,
+      rv = pwwatch->OpenWindow2(AsOuter(), url.IsVoid() ? nullptr : url.get(),
+                                name_ptr,
                                 options_ptr, /* aCalledFromScript = */ true,
                                 aDialog, aNavigate, argv,
                                 isPopupSpamWindow,
@@ -12914,7 +12915,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         nojsapi.emplace();
       }
 
-      rv = pwwatch->OpenWindow2(AsOuter(), url.get(), name_ptr,
+      rv = pwwatch->OpenWindow2(AsOuter(), url.IsVoid() ? nullptr : url.get(),
+                                name_ptr,
                                 options_ptr, /* aCalledFromScript = */ false,
                                 aDialog, aNavigate, aExtraArgument,
                                 isPopupSpamWindow,
