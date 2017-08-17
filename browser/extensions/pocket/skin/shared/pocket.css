@@ -64,8 +64,9 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
 }
 
 #pocket-button-box > #pocket-animatable-box {
-  /* Match the 6px margin-inline-start of .urlbar-icon plus 1px for internal padding in the animation sprite. */
-  margin-inline-start: 7px;
+  /* .urlbar-icon has width 28px. Each frame is 20px wide. Set margin-inline-start
+     to be half the difference, 4px. */
+  margin-inline-start: 4px;
 }
 
 #pocket-button-box > #pocket-animatable-box > #pocket-animatable-image,

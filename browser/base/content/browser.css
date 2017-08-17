@@ -1046,11 +1046,6 @@ html|*#gcli-output-frame,
   transition: none;
 }
 
-panelview > .social-panel-frame {
-  width: auto;
-  height: auto;
-}
-
 /* Translation */
 notification[value="translation"] {
   -moz-binding: url("chrome://browser/content/translation-infobar.xml#translationbar");

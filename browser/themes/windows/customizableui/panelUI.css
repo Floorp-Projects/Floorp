@@ -97,14 +97,6 @@ menuitem[type="checkbox"].subviewbutton {
   padding-inline-start: 0;
 }
 
-/* subviewbutton entries for social sidebars have images that come from external
-/* sources, and are not guaranteed to be the size we want, so force the size on
-/* those icons. */
-toolbarbutton.social-provider-menuitem > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
-}
-
 .subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .restoreallitem, .bookmark-item)[checked="true"] > .toolbarbutton-icon {
   visibility: hidden;
 }

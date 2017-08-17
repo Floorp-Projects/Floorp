@@ -300,28 +300,6 @@ html|*#webRTC-previewVideo {
   }
 }
 
-/* SOCIAL API */
-
-.popup-notification-icon[popupid="servicesInstall"] {
-  list-style-image: url(chrome://browser/skin/social/services-64.png);
-}
-
-.service-icon {
-  list-style-image: url(chrome://browser/skin/social/services-16.png);
-}
-
-%ifdef XP_MACOSX
-@media (min-resolution: 1.1dppx) {
-  .popup-notification-icon[popupid="servicesInstall"] {
-    list-style-image: url(chrome://browser/skin/social/services-64@2x.png);
-  }
-
-  .service-icon {
-    list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
-  }
-}
-%endif
-
 /* TRANSLATION */
 
 .translation-icon {

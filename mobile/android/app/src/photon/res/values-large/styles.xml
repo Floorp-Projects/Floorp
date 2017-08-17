@@ -40,7 +40,7 @@
     <style name="Widget.MenuItemActionBar">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:background">@drawable/menu_item_button</item>
         <item name="drawableTintList">@color/action_bar_menu_item_colors</item>
         <item name="android:scaleType">center</item>
 
@@ -89,7 +89,6 @@
     <style name="TextAppearance.PrivateTab.Title" parent="TextAppearance.Large">
         <item name="android:textSize">26sp</item>
         <item name="android:maxWidth">300dp</item>
-        <item name="android:layout_marginTop">21dp</item>
         <item name="android:layout_marginBottom">16dp</item>
     </style>
 
