@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ADTSDecoder.h"
+#include "ADTSDemuxer.h"
 #include "MediaContainerType.h"
 #include "PDMFactory.h"
 
