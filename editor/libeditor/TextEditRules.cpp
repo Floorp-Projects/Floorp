@@ -518,7 +518,7 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
     return NS_OK;
   }
 
-  nsINode* nextNode = parentNode->GetChildAt(parentOffset + 1);
+  nsINode* nextNode = selNode->GetNextSibling();
   if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
     rv = aSelection->Collapse(parentNode, parentOffset + 1);
     if (NS_WARN_IF(NS_FAILED(rv))) {
