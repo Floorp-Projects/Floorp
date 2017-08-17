@@ -78,6 +78,18 @@
   @DIR_MACOS@updates/*
 #endif
 
+# bug 1391079 - remove this block before 57 uplift to beta
+#ifdef XP_MACOSX
+  @DIR_MACOS@._firefox-bin.sig
+  @DIR_MACOS@._firefox.sig
+  @DIR_MACOS@._XUL.sig
+  @DIR_MACOS@firefox-bin.sig
+  @DIR_MACOS@firefox.sig
+  @DIR_MACOS@plugin-container.app/Contents/MacOS/._plugin-container.sig
+  @DIR_MACOS@plugin-container.app/Contents/MacOS/plugin-container.sig
+  @DIR_MACOS@XUL.sig
+#endif
+
 # Common Directory removals
 @DIR_MACOS@chrome/
 #ifdef XP_UNIX
