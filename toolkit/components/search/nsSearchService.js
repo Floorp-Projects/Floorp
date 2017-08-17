@@ -1623,6 +1623,9 @@ Engine.prototype = {
 
       aEngine._shortName = sanitizeName(aEngine.name);
       aEngine._loadPath = aEngine.getAnonymizedLoadPath(null, aEngine._uri);
+      if (aEngine._extensionID) {
+        aEngine._loadPath += ":" + aEngine._extensionID;
+      }
       aEngine.setAttr("loadPathHash", getVerificationHash(aEngine._loadPath));
     }
 
@@ -4040,7 +4043,7 @@ SearchService.prototype = {
   },
 
   addEngine: function SRCH_SVC_addEngine(aEngineURL, aDataType, aIconURL,
-                                         aConfirm, aCallback) {
+                                         aConfirm, aCallback, aExtensionID) {
     LOG("addEngine: Adding \"" + aEngineURL + "\".");
     this._ensureInitialized();
     try {
@@ -4069,6 +4072,9 @@ SearchService.prototype = {
     }
     engine._setIcon(aIconURL, false);
     engine._confirm = aConfirm;
+    if (aExtensionID) {
+      engine._extensionID = aExtensionID;
+    }
   },
 
   removeEngine: function SRCH_SVC_removeEngine(aEngine) {
