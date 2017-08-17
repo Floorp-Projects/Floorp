@@ -15,6 +15,7 @@ All notable changes to this program is documented in this file.
 [`SetWindowRect`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.SetWindowRect
 
 ### Changed
+- To make sure no browser process is left behind when the [`New Session` command](https://docs.rs/webdriver/0.27.0/webdriver/command/enum.WebDriverCommand.html#variant.NewSession) fails, the process is closed immediately now.
 - The `proxyType` `noproxy` has been replaced with `direct` in accordance with recent WebDriver specification changes
 - `/moz/addon/install` command accepts an `addon` parameter, in lieu of `path`, containing an addon as a Base64 string
 

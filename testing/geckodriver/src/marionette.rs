@@ -548,7 +548,16 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
         match self.connection.lock() {
             Ok(ref mut connection) => {
                 match connection.as_mut() {
-                    Some(conn) => conn.send_command(resolved_capabilities, &msg),
+                    Some(conn) => {
+                        conn.send_command(resolved_capabilities, &msg)
+                            .map_err(|mut err| {
+                                // Shutdown the browser if no session can
+                                // be established due to errors.
+                                if let NewSession(_) = msg.command {
+                                    err.delete_session=true;
+                                }
+                                err})
+                    },
                     None => panic!("Connection missing")
                 }
             },

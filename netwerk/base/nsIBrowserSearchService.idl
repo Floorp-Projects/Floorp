@@ -314,11 +314,15 @@ interface nsIBrowserSearchService : nsISupports
    *        addition is complete, or if the addition fails. It will not be
    *        called if addEngine throws an exception.
    *
+   * @param extensionID [optional]
+   *        Optional: The correct extensionID if called by an add-on.
+   *
    * @throws NS_ERROR_FAILURE if the description file cannot be successfully
    *         loaded.
    */
   void addEngine(in AString engineURL, in long dataType, in AString iconURL,
-                 in boolean confirm, [optional] in nsISearchInstallCallback callback);
+                 in boolean confirm, [optional] in nsISearchInstallCallback callback,
+                 [optional] in AString extensionID);
 
   /**
    * Adds a new search engine, without asking the user for confirmation and

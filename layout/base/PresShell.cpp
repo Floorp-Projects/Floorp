@@ -9730,6 +9730,7 @@ PresShell::Observe(nsISupports* aSubject,
 
   if (!nsCRT::strcmp(aTopic, NS_WIDGET_WAKE_OBSERVER_TOPIC)) {
     mLastOSWake = TimeStamp::Now();
+    return NS_OK;
   }
 
   NS_WARNING("unrecognized topic in PresShell::Observe");
