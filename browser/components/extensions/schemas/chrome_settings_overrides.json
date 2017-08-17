@@ -46,8 +46,7 @@
                     "type": "string",
                     "optional": true,
                     "format": "url",
-                    "preprocess": "localize",
-                    "deprecated": "Unsupported on Firefox at this time."
+                    "preprocess": "localize"
                   },
                   "instant_url": {
                     "type": "string",
