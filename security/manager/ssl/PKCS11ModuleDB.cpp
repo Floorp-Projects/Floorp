@@ -152,48 +152,6 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
 }
 
 NS_IMETHODIMP
-PKCS11ModuleDB::GetInternal(nsIPKCS11Module** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  UniqueSECMODModule nssMod(
-    SECMOD_CreateModule(nullptr, SECMOD_INT_NAME, nullptr, SECMOD_INT_FLAGS));
-  if (!nssMod) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod.get());
-  module.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PKCS11ModuleDB::GetInternalFIPS(nsIPKCS11Module** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  UniqueSECMODModule nssMod(
-    SECMOD_CreateModule(nullptr, SECMOD_FIPS_NAME, nullptr, SECMOD_FIPS_FLAGS));
-  if (!nssMod) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod.get());
-  module.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PKCS11ModuleDB::FindModuleByName(const nsACString& name,
                          /*out*/ nsIPKCS11Module** _retval)
 {
@@ -216,40 +174,6 @@ PKCS11ModuleDB::FindModuleByName(const nsACString& name,
 
   nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(mod.get());
   module.forget(_retval);
-  return NS_OK;
-}
-
-/* This is essentially the same as nsIPK11Token::findTokenByName, except
- * that it returns an nsIPKCS11Slot, which may be desired.
- */
-NS_IMETHODIMP
-PKCS11ModuleDB::FindSlotByName(const nsACString& name,
-                       /*out*/ nsIPKCS11Slot** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsresult rv = BlockUntilLoadableRootsLoaded();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (name.IsEmpty()) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  UniquePK11SlotInfo slotInfo(
-    PK11_FindSlotByName(PromiseFlatCString(name).get()));
-  if (!slotInfo) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotInfo.get());
-  slot.forget(_retval);
   return NS_OK;
 }
 

@@ -11,14 +11,8 @@ function run_test() {
   let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
                   .getService(Ci.nsIPK11TokenDB);
 
-  let tokenListPreLoad = tokenDB.listTokens();
-  while (tokenListPreLoad.hasMoreElements()) {
-    let token = tokenListPreLoad.getNext().QueryInterface(Ci.nsIPK11Token);
-    notEqual(token.tokenLabel, "Test PKCS11 Tokeñ Label",
-             "Test PKCS11 Token 1 should not be listed prior to module load");
-    notEqual(token.tokenLabel, "Test PKCS11 Tokeñ 2 Label",
-             "Test PKCS11 Token 2 should not be listed prior to module load");
-  }
+  notEqual(tokenDB.getInternalKeyToken(), null,
+           "The internal token should be non-null");
 
   throws(() => tokenDB.findTokenByName("Test PKCS11 Tokeñ Label"),
          /NS_ERROR_FAILURE/,
@@ -31,15 +25,6 @@ function run_test() {
 
   // Test Token 1 is simulated to insert and remove itself in a tight loop, so
   // we don't bother testing that it's present.
-  let tokenListPostLoad = tokenDB.listTokens();
-  let foundTokenNames = [];
-  while (tokenListPostLoad.hasMoreElements()) {
-    let token = tokenListPostLoad.getNext().QueryInterface(Ci.nsIPK11Token);
-    foundTokenNames.push(token.tokenName);
-  }
-  ok(foundTokenNames.includes("Test PKCS11 Tokeñ 2 Label"),
-     "Test PKCS11 Token 2 should be listed after module load");
-
   notEqual(tokenDB.findTokenByName("Test PKCS11 Tokeñ 2 Label"), null,
            "Test token 2 should be findable by name after loading test module");
 
