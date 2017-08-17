@@ -84,12 +84,14 @@ ObjectActor.prototype = {
       "actor": this.actorID
     };
 
-    // If it's a proxy, lie and tell that it belongs to an invented
-    // "Proxy" class, and avoid calling the [[IsExtensible]] trap
-    if (this.obj.isProxy) {
+    // If it's a proxy, lie and tell that it belongs to an invented "Proxy" class.
+    // A proxy might have various non-opaque security wrappers. They need to be
+    // removed in order to detect it as a proxy and avoid calling its traps.
+    let proxy = unwrapProxy(this.obj);
+    if (proxy) {
       g.class = "Proxy";
-      g.proxyTarget = this.hooks.createValueGrip(this.obj.proxyTarget);
-      g.proxyHandler = this.hooks.createValueGrip(this.obj.proxyHandler);
+      g.proxyTarget = this.hooks.createValueGrip(proxy.proxyTarget);
+      g.proxyHandler = this.hooks.createValueGrip(proxy.proxyHandler);
     } else {
       try {
         g.class = this.obj.class;
@@ -320,7 +322,7 @@ ObjectActor.prototype = {
     let level = 0, i = 0;
 
     // Do not search safe getters in proxy objects.
-    if (obj.isProxy) {
+    if (unwrapProxy(obj)) {
       return safeGetterValues;
     }
 
@@ -335,7 +337,7 @@ ObjectActor.prototype = {
     }
 
     // Stop iterating when the prototype chain ends or a proxy is found.
-    while (obj && !obj.isProxy) {
+    while (obj && !unwrapProxy(obj)) {
       let getters = this._findSafeGetters(obj);
       for (let name of getters) {
         // Avoid overwriting properties from prototypes closer to this.obj. Also
@@ -2368,6 +2370,26 @@ function arrayBufferGrip(buffer, pool) {
   pool.addActor(actor);
   pool.arrayBufferActors.set(buffer, actor);
   return actor.grip();
+}
+
+/**
+ * Removes all the non-opaque security wrappers of a debuggee object
+ * and returns the debuggee object of underlying scripted proxy.
+ * If the underlying object is not a proxy, or if some wrapper is opaque
+ * or can't be removed, this function returns undefined.
+ *
+ * @param obj Debugger.Object
+ *        The debuggee object to be unwrapped.
+ */
+function unwrapProxy(obj) {
+  if (obj.isProxy) {
+    return obj;
+  } else if (obj.class !== "Opaque") {
+    let unwrapped = obj.unwrap();
+    if (unwrapped && unwrapped !== obj) {
+      return unwrapProxy(unwrapped);
+    }
+  }
 }
 
 exports.ObjectActor = ObjectActor;
