@@ -1047,16 +1047,15 @@ CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
 void
 CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-  auto entry = mJSHolderMap.LookupForAdd(aHolder);
-  if (entry) {
-    JSHolderInfo* info = entry.Data();
+  JSHolderInfo* info = nullptr;
+  if (mJSHolderMap.Get(aHolder, &info)) {
     MOZ_ASSERT(info->mHolder == aHolder);
     info->mTracer = aTracer;
     return;
   }
 
   mJSHolders.InfallibleAppend(JSHolderInfo {aHolder, aTracer});
-  entry.OrInsert([&] {return &mJSHolders.GetLast();});
+  mJSHolderMap.Put(aHolder, &mJSHolders.GetLast());
 }
 
 struct ClearJSHolder : public TraceCallbacks
@@ -1106,9 +1105,8 @@ struct ClearJSHolder : public TraceCallbacks
 void
 CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
 {
-  auto entry = mJSHolderMap.Lookup(aHolder);
-  if (entry) {
-    JSHolderInfo* info = entry.Data();
+  JSHolderInfo* info = nullptr;
+  if (mJSHolderMap.Get(aHolder, &info)) {
     MOZ_ASSERT(info->mHolder == aHolder);
     info->mTracer->Trace(aHolder, ClearJSHolder(), nullptr);
 
@@ -1119,7 +1117,7 @@ CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
     }
 
     mJSHolders.PopLast();
-    entry.Remove();
+    mJSHolderMap.Remove(aHolder);
   }
 }
 
