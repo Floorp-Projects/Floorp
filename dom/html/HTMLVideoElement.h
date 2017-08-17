@@ -11,9 +11,6 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 
 namespace mozilla {
-
-class FrameStatistics;
-
 namespace dom {
 
 class WakeLock;
