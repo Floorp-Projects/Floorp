@@ -194,12 +194,6 @@ pub trait DomTraversal<E: TElement> : Sync {
             // Invalidate our style, and the one of our siblings and descendants
             // as needed.
             data.invalidate_style_if_needed(root, shared_context);
-
-            // Make sure we don't have any stale RECONSTRUCTED_ANCESTOR bits from
-            // the last traversal (at a potentially-higher root). From the
-            // perspective of this traversal, the root cannot have reconstructed
-            // ancestors.
-            data.restyle.set_reconstructed_ancestor(false);
         };
 
         let parent = root.traversal_parent();
@@ -610,29 +604,27 @@ where
         data.clear_restyle_state();
     }
 
-    // Optionally clear the descendants bits.
-    if data.styles.is_display_none() {
-        // When this element is the root of a display:none subtree, we want to clear
-        // the bits even if the style didn't change (since, if the style did change,
-        // we'd have already cleared it above).
-        //
-        // This keeps the tree in a valid state without requiring the DOM to check
-        // display:none on the parent when inserting new children (which can be
-        // moderately expensive). Instead, DOM implementations can unconditionally
-        // set the dirty descendants bit on any styled parent, and let the traversal
-        // sort it out.
-        //
-        // Note that the NODE_DESCENDANTS_NEED_FRAMES bit should generally only be set
-        // when appending content beneath an element with a frame (i.e. not
-        // display:none), so clearing it here isn't strictly necessary, but good
-        // belt-and-suspenders.
-        unsafe { element.clear_descendants_bits(); }
-    } else if flags.for_animation_only() {
-        if flags.contains(ClearAnimationOnlyDirtyDescendants) {
-            unsafe { element.unset_animation_only_dirty_descendants(); }
-        }
-    } else if flags.contains(ClearDirtyDescendants) {
+    // There are two cases when we want to clear the dity descendants bit here
+    // after styling this element. The first case is when we were explicitly
+    // asked to clear the bit by the caller.
+    //
+    // The second case is when this element is the root of a display:none
+    // subtree, even if the style didn't change (since, if the style did change,
+    // we'd have already cleared it above).
+    //
+    // This keeps the tree in a valid state without requiring the DOM to check
+    // display:none on the parent when inserting new children (which can be
+    // moderately expensive). Instead, DOM implementations can unconditionally
+    // set the dirty descendants bit on any styled parent, and let the traversal
+    // sort it out.
+    if flags.contains(traversal_flags::ClearDirtyDescendants) ||
+       data.styles.is_display_none() {
         unsafe { element.unset_dirty_descendants(); }
+    }
+
+    // Similarly, check if we're supposed to clear the animation bit.
+    if flags.contains(traversal_flags::ClearAnimationOnlyDirtyDescendants) {
+        unsafe { element.unset_animation_only_dirty_descendants(); }
     }
 
     context.thread_local.end_element(element);
@@ -812,7 +804,9 @@ where
         if let Some(ref mut child_data) = child_data {
             // Propagate the parent restyle hint, that may make us restyle the whole
             // subtree.
-            child_data.restyle.set_reconstructed_ancestor(reconstructed_ancestor);
+            if reconstructed_ancestor {
+                child_data.restyle.set_reconstructed_ancestor();
+            }
 
             child_data.restyle.hint.insert(propagated_hint);
 
@@ -862,6 +856,7 @@ where
     }
 
     unsafe {
-        el.clear_descendants_bits();
+        el.unset_dirty_descendants();
+        el.unset_animation_only_dirty_descendants();
     }
 }
