@@ -6,7 +6,6 @@
 #ifndef GFX_WEBRENDERTYPES_H
 #define GFX_WEBRENDERTYPES_H
 
-#include "FrameMetrics.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Matrix.h"
@@ -15,7 +14,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
-#include "mozilla/Variant.h"
 #include "Units.h"
 #include "RoundedRect.h"
 #include "nsStyleConsts.h"
@@ -663,8 +661,6 @@ struct WrClipId {
     return id == other.id;
   }
 };
-
-typedef Variant<layers::FrameMetrics::ViewID, WrClipId> ScrollOrClipId;
 
 } // namespace wr
 } // namespace mozilla
