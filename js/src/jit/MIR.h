@@ -13444,11 +13444,12 @@ class MResumePoint final :
 
 class MIsCallable
   : public MUnaryInstruction,
-    public SingleObjectPolicy::Data
+    public BoxExceptPolicy<0, MIRType::Object>::Data
 {
     explicit MIsCallable(MDefinition* object)
       : MUnaryInstruction(object)
     {
+        MOZ_ASSERT(object->type() == MIRType::Object || object->type() == MIRType::Value);
         setResultType(MIRType::Boolean);
         setMovable();
     }
