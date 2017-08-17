@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#if defined(MOZILLA_INTERNAL_API)
+#include "mozilla/dom/ContentChild.h"
+#endif
+
 #if defined(ACCESSIBILITY)
 #include "mozilla/mscom/Registration.h"
 #if defined(MOZILLA_INTERNAL_API)
@@ -236,6 +240,31 @@ GUIDToString(REFGUID aGuid, nsAString& aOutString)
     // Truncate the terminator
     aOutString.SetLength(result - 1);
   }
+}
+
+bool
+IsCallerExternalProcess()
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  /**
+   * CoGetCallerTID() gives us the caller's thread ID when that thread resides
+   * in a single-threaded apartment. Since our chrome main thread does live
+   * inside an STA, we will therefore be able to check whether the caller TID
+   * equals our chrome main thread TID. This enables us to distinguish
+   * between our chrome thread vs other out-of-process callers. We check for
+   * S_FALSE to ensure that the caller is a different process from ours, which
+   * is the only scenario that we care about.
+   */
+  DWORD callerTid;
+  if (::CoGetCallerTID(&callerTid) != S_FALSE) {
+    return false;
+  }
+
+  // Now check whether the caller is our parent process main thread.
+  const DWORD parentMainTid =
+    dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
+  return callerTid != parentMainTid;
 }
 
 #endif // defined(MOZILLA_INTERNAL_API)
