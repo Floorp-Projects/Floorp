@@ -135,6 +135,7 @@ const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVer
 const PREF_CHECKCOMAT_THEMEOVERRIDE   = "extensions.checkCompatibility.temporaryThemeOverride_minAppVersion";
 
 const PREF_EM_HOTFIX_ID               = "extensions.hotfix.id";
+const PREF_EM_LAST_APP_BUILD_ID       = "extensions.lastAppBuildId";
 
 const OBSOLETE_PREFERENCES = [
   "extensions.bootstrappedAddons",
@@ -319,8 +320,17 @@ const LAZY_OBJECTS = ["XPIDatabase", "XPIDatabaseReconcile"];
 
 var gLazyObjectsLoaded = false;
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gStartupScanScopes",
-                                      PREF_EM_STARTUP_SCAN_SCOPES, 0);
+XPCOMUtils.defineLazyGetter(this, "gStartupScanScopes", () => {
+  let appBuildID = Services.appinfo.appBuildID;
+  let oldAppBuildID = Services.prefs.getCharPref(PREF_EM_LAST_APP_BUILD_ID, "");
+  Services.prefs.setCharPref(PREF_EM_LAST_APP_BUILD_ID, appBuildID);
+  if (appBuildID !== oldAppBuildID) {
+    // If the build id changed, scan all scopes
+    return AddonManager.SCOPE_ALL;
+  }
+
+  return Services.prefs.getIntPref(PREF_EM_STARTUP_SCAN_SCOPES, 0);
+});
 
 function loadLazyObjects() {
   let uri = "resource://gre/modules/addons/XPIProviderUtils.js";
