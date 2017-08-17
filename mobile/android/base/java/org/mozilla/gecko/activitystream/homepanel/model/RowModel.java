@@ -2,14 +2,10 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+package org.mozilla.gecko.activitystream.homepanel.model;
 
-package org.mozilla.gecko.activitystream.homepanel.stream;
+import org.mozilla.gecko.activitystream.homepanel.StreamRecyclerAdapter;
 
-import android.support.v7.widget.RecyclerView;
-import android.view.View;
-
-public abstract class StreamItem extends RecyclerView.ViewHolder {
-    public StreamItem(View itemView) {
-        super(itemView);
-    }
+public interface RowModel {
+    StreamRecyclerAdapter.RowItemType getRowItemType();
 }

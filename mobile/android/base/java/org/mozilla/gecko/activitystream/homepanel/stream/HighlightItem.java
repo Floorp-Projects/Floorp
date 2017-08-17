@@ -28,7 +28,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-public class HighlightItem extends StreamItem {
+public class HighlightItem extends StreamViewHolder {
     private static final String LOGTAG = "GeckoHighlightItem";
 
     public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
