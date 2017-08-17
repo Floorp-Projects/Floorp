@@ -195,9 +195,6 @@ def CommandProvider(cls):
         command.pass_context = pass_context
         parent = Registrar.command_handlers[command.name]
 
-        if parent._parser:
-            raise MachError('cannot declare sub commands against a command '
-                'that has a parser installed: %s' % command)
         if command.subcommand in parent.subcommand_handlers:
             raise MachError('sub-command already defined: %s' % command.subcommand)
 
