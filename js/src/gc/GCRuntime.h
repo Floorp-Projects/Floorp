@@ -162,9 +162,9 @@ class GCSchedulingTunables
     ActiveThreadOrGCTaskData<size_t> gcZoneAllocThresholdBase_;
 
     /* Fraction of threshold.gcBytes() which triggers an incremental GC. */
-    UnprotectedData<double> zoneAllocThresholdFactor_;
+    UnprotectedData<float> zoneAllocThresholdFactor_;
     /* The same except when doing so would interrupt an already running GC. */
-    UnprotectedData<double> zoneAllocThresholdFactorAvoidInterrupt_;
+    UnprotectedData<float> zoneAllocThresholdFactorAvoidInterrupt_;
 
     /*
      * Number of bytes to allocate between incremental slices in GCs triggered
@@ -220,8 +220,8 @@ class GCSchedulingTunables
       : gcMaxBytes_(0),
         gcMaxNurseryBytes_(0),
         gcZoneAllocThresholdBase_(30 * 1024 * 1024),
-        zoneAllocThresholdFactor_(0.9),
-        zoneAllocThresholdFactorAvoidInterrupt_(0.9),
+        zoneAllocThresholdFactor_(0.9f),
+        zoneAllocThresholdFactorAvoidInterrupt_(0.9f),
         zoneAllocDelayBytes_(1024 * 1024),
         dynamicHeapGrowthEnabled_(false),
         highFrequencyThresholdUsec_(1000 * 1000),
@@ -239,8 +239,8 @@ class GCSchedulingTunables
     size_t gcMaxBytes() const { return gcMaxBytes_; }
     size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
     size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
-    double zoneAllocThresholdFactor() const { return zoneAllocThresholdFactor_; }
-    double zoneAllocThresholdFactorAvoidInterrupt() const { return zoneAllocThresholdFactorAvoidInterrupt_; }
+    float zoneAllocThresholdFactor() const { return zoneAllocThresholdFactor_; }
+    float zoneAllocThresholdFactorAvoidInterrupt() const { return zoneAllocThresholdFactorAvoidInterrupt_; }
     size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
     bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
     uint64_t highFrequencyThresholdUsec() const { return highFrequencyThresholdUsec_; }
