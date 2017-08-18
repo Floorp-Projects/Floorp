@@ -624,7 +624,7 @@ DocAccessibleParent::MaybeInitWindowEmulation()
   }
 
   nsWinUtils::NativeWindowCreateProc onCreate([this](HWND aHwnd) -> void {
-    IDispatchHolder hWndAccHolder;
+    IAccessibleHolder hWndAccHolder;
 
     ::SetPropW(aHwnd, kPropNameDocAccParent, reinterpret_cast<HANDLE>(this));
 
@@ -634,7 +634,7 @@ DocAccessibleParent::MaybeInitWindowEmulation()
     if (SUCCEEDED(::AccessibleObjectFromWindow(aHwnd, OBJID_WINDOW,
                                                IID_IAccessible,
                                                (void**)&rawHWNDAcc))) {
-      hWndAccHolder.Set(IDispatchHolder::COMPtrType(rawHWNDAcc));
+      hWndAccHolder.Set(IAccessibleHolder::COMPtrType(rawHWNDAcc));
     }
 
     Unused << SendEmulatedWindow(reinterpret_cast<uintptr_t>(mEmulatedWindowHandle),
@@ -672,8 +672,8 @@ DocAccessibleParent::SendParentCOMProxy()
   outerDoc->GetNativeInterface((void**) &rawNative);
   MOZ_ASSERT(rawNative);
 
-  IDispatchHolder::COMPtrType ptr(rawNative);
-  IDispatchHolder holder(Move(ptr));
+  IAccessibleHolder::COMPtrType ptr(rawNative);
+  IAccessibleHolder holder(Move(ptr));
   if (!PDocAccessibleParent::SendParentCOMProxy(holder)) {
     return;
   }

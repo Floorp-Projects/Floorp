@@ -28,17 +28,17 @@ public:
   virtual void Shutdown() override;
 
   virtual ipc::IPCResult
-    RecvParentCOMProxy(const IDispatchHolder& aParentCOMProxy) override;
+    RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy) override;
   virtual ipc::IPCResult
     RecvEmulatedWindow(const WindowsHandle& aEmulatedWindowHandle,
-                       const IDispatchHolder& aEmulatedWindowCOMProxy) override;
+                       const IAccessibleHolder& aEmulatedWindowCOMProxy) override;
   virtual ipc::IPCResult
     RecvRestoreFocus() override;
 
   HWND GetNativeWindowHandle() const;
-  IDispatch* GetEmulatedWindowIAccessible() const { return mEmulatedWindowProxy.get(); }
+  IAccessible* GetEmulatedWindowIAccessible() const { return mEmulatedWindowProxy.get(); }
 
-  IDispatch* GetParentIAccessible() const { return mParentProxy.get(); }
+  IAccessible* GetParentIAccessible() const { return mParentProxy.get(); }
 
   bool SendEvent(const uint64_t& aID, const uint32_t& type);
   bool SendHideEvent(const uint64_t& aRootID, const bool& aFromUser);
@@ -344,8 +344,8 @@ private:
   };
 
   bool mIsRemoteConstructed;
-  mscom::ProxyUniquePtr<IDispatch> mParentProxy;
-  mscom::ProxyUniquePtr<IDispatch> mEmulatedWindowProxy;
+  mscom::ProxyUniquePtr<IAccessible> mParentProxy;
+  mscom::ProxyUniquePtr<IAccessible> mEmulatedWindowProxy;
   nsTArray<UniquePtr<DeferredEvent>> mDeferredEvents;
   HWND mEmulatedWindowHandle;
 };
