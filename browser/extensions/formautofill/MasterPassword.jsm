@@ -18,8 +18,97 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "cryptoSDR",
+                                   "@mozilla.org/login-manager/crypto/SDR;1",
+                                   Ci.nsILoginManagerCrypto);
 
 this.MasterPassword = {
+  get _token() {
+    let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(Ci.nsIPK11TokenDB);
+    return tokendb.getInternalKeyToken();
+  },
+
+  /**
+   * @returns {boolean} True if a master password is set and false otherwise.
+   */
+  get isEnabled() {
+    return this._token.hasPassword;
+  },
+
+  /**
+   * Display the master password login prompt no matter it's logged in or not.
+   * If an existing MP prompt is already open, the result from it will be used instead.
+   *
+   * @returns {Promise<boolean>} True if it's logged in or no password is set and false
+   *                             if it's still not logged in (prompt canceled or other error).
+   */
+  async prompt() {
+    if (!this.isEnabled) {
+      return true;
+    }
+
+    // If a prompt is already showing then wait for and focus it.
+    if (Services.logins.uiBusy) {
+      return this.waitForExistingDialog();
+    }
+
+    let token = this._token;
+    try {
+      // 'true' means always prompt for token password. User will be prompted until
+      // clicking 'Cancel' or entering the correct password.
+      token.login(true);
+    } catch (e) {
+      // An exception will be thrown if the user cancels the login prompt dialog.
+      // User is also logged out.
+    }
+
+    // If we triggered a master password prompt, notify observers.
+    if (token.isLoggedIn()) {
+      Services.obs.notifyObservers(null, "passwordmgr-crypto-login");
+    } else {
+      Services.obs.notifyObservers(null, "passwordmgr-crypto-loginCanceled");
+    }
+
+    return token.isLoggedIn();
+  },
+
+  /**
+   * Decrypts cipherText.
+   *
+   * @param   {string} cipherText Encrypted string including the algorithm details.
+   * @param   {boolean} reauth True if we want to force the prompt to show up
+   *                    even if the user is already logged in.
+   * @returns {Promise<string>} resolves to the decrypted string, or rejects otherwise.
+   */
+  async decrypt(cipherText, reauth = false) {
+    let loggedIn = false;
+    if (reauth) {
+      loggedIn = await this.prompt();
+    } else {
+      loggedIn = await this.waitForExistingDialog();
+    }
+
+    if (!loggedIn) {
+      throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
+    }
+
+    return cryptoSDR.decrypt(cipherText);
+  },
+
+  /**
+   * Encrypts a string and returns cipher text containing algorithm information used for decryption.
+   *
+   * @param   {string} plainText Original string without encryption.
+   * @returns {Promise<string>} resolves to the encrypted string (with algorithm), otherwise rejects.
+   */
+  async encrypt(plainText) {
+    if (Services.logins.uiBusy && !await this.waitForExistingDialog()) {
+      throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
+    }
+
+    return cryptoSDR.encrypt(plainText);
+  },
+
   /**
    * Resolve when master password dialogs are closed, immediately if none are open.
    *
