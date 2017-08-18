@@ -142,8 +142,8 @@ nsUserInfo::GetEmailAddress(char * *aEmailAddress)
     nsresult rv;
 
     nsAutoCString emailAddress;
-    nsCString username;
-    nsCString domain;
+    nsXPIDLCString username;
+    nsXPIDLCString domain;
 
     rv = GetUsername(getter_Copies(username));
     if (NS_FAILED(rv)) return rv;
@@ -152,9 +152,9 @@ nsUserInfo::GetEmailAddress(char * *aEmailAddress)
     if (NS_FAILED(rv)) return rv;
 
     if (!username.IsEmpty() && !domain.IsEmpty()) {
-        emailAddress = username.get();
+        emailAddress = (const char *)username;
         emailAddress += "@";
-        emailAddress += domain.get();
+        emailAddress += (const char *)domain;
     }
     else {
         return NS_ERROR_FAILURE;

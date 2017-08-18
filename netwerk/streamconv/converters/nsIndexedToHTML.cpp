@@ -685,7 +685,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     // We don't know the file's character set yet, so retrieve the raw bytes
     // which will be decoded by the HTML parser.
-    nsCString loc;
+    nsXPIDLCString loc;
     aIndex->GetLocation(getter_Copies(loc));
 
     // Adjust the length in case unescaping shortened the string.
@@ -715,7 +715,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
             break;
     }
     nsCString escaped;
-    escaped.Adopt(nsEscapeHTML(loc.get()));
+    escaped.Adopt(nsEscapeHTML(loc));
     pushBuffer.Append(escaped);
 
     pushBuffer.AppendLiteral("\"><table class=\"ellipsis\"><tbody><tr><td><a class=\"");

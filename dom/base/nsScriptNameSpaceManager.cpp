@@ -315,7 +315,7 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
     return NS_OK;
   }
 
-  nsCString contractId;
+  nsXPIDLCString contractId;
   rv = aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
                                           getter_Copies(contractId));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -325,7 +325,7 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCID *cidPtr;
-  rv = registrar->ContractIDToCID(contractId.get(), &cidPtr);
+  rv = registrar->ContractIDToCID(contractId, &cidPtr);
 
   if (NS_FAILED(rv)) {
     NS_WARNING("Bad contract id registed with the script namespace manager");
