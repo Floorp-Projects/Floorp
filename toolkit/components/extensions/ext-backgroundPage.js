@@ -22,11 +22,6 @@ class BackgroundPage extends HiddenExtensionPage {
     } else if (this.isGenerated) {
       this.url = this.extension.baseURI.resolve("_generated_background_page.html");
     }
-
-    if (!this.extension.isExtensionURL(this.url)) {
-      this.extension.manifestError("Background page must be a file within the extension");
-      this.url = this.extension.baseURI.resolve("_blank.html");
-    }
   }
 
   async build() {

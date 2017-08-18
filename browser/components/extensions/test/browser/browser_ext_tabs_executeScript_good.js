@@ -32,6 +32,12 @@ async function testHasPermission(params) {
     background: `(${background})(${contentSetup})`,
 
     files: {
+      "panel.html": `<!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8"></head>
+          <body>
+          </body>
+        </html>`,
       "script.js": function() {
         browser.runtime.sendMessage("script ran");
       },
@@ -185,11 +191,11 @@ add_task(async function testGoodPermissions() {
   await testHasPermission({
     manifest: {
       "permissions": ["activeTab"],
-      "browser_action": {"default_popup": "_blank.html"},
+      "browser_action": {"default_popup": "panel.html"},
     },
     setup: async extension => {
       await clickBrowserAction(extension);
-      return awaitExtensionPanel(extension, window, "_blank.html");
+      return awaitExtensionPanel(extension, window, "panel.html");
     },
     tearDown: closeBrowserAction,
   });
@@ -198,7 +204,7 @@ add_task(async function testGoodPermissions() {
   await testHasPermission({
     manifest: {
       "permissions": ["activeTab"],
-      "page_action": {"default_popup": "_blank.html"},
+      "page_action": {"default_popup": "panel.html"},
     },
     contentSetup: async () => {
       let [tab] = await browser.tabs.query({active: true, currentWindow: true});
