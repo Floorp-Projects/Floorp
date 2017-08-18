@@ -219,6 +219,7 @@ var BrowserPageActions = {
     panelNode.setAttribute("flip", "slide");
     panelNode.setAttribute("noautofocus", "true");
     panelNode.setAttribute("tabspecific", "true");
+    panelNode.setAttribute("photon", "true");
 
     let panelViewNode = null;
     let iframeNode = null;
