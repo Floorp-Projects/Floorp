@@ -256,6 +256,78 @@ def main(args):
     else:
         uid = gid = gids = None
 
+    # Validate caches.
+    #
+    # Taskgraph should pass in a list of paths that are caches via an
+    # environment variable (which we don't want to pass down to child
+    # processes). For each cache, we write out a special file denoting
+    # attributes and capabilities of run-task and the task being executed.
+    # These attributes are used by subsequent run-task invocations to
+    # validate that use of the cache is acceptable.
+    #
+    # We /could/ blow away the cache data on requirements mismatch.
+    # While this would be convenient, this could result in "competing" tasks
+    # effectively undoing the other's work. This would slow down task
+    # execution in aggregate. Without monitoring for this, people may not notice
+    # the problem and tasks would be slower than they could be. We follow the
+    # principle of "fail fast" to ensure optimal task execution.
+
+    if 'TASKCLUSTER_CACHES' in os.environ:
+        caches = os.environ['TASKCLUSTER_CACHES'].split(';')
+        del os.environ['TASKCLUSTER_CACHES']
+    else:
+        caches = []
+
+    our_requirements = {
+        # Include a version string that we can bump whenever to trigger
+        # fresh caches. The actual value is not relevant and doesn't need
+        # to follow any explicit order. Since taskgraph bakes this file's
+        # hash into cache names, any change to this file/version is sufficient
+        # to force the use of a new cache.
+        b'version=1',
+    }
+
+    for cache in caches:
+        if not os.path.isdir(cache):
+            print('cache %s is not a directory; this should never happen')
+            return 1
+
+        requires_path = os.path.join(cache, '.cacherequires')
+
+        # The cache is empty. No validation necessary. Just set up our
+        # requirements file.
+        if not os.listdir(cache):
+            with open(requires_path, 'wb') as fh:
+                fh.write(b'\n'.join(sorted(our_requirements)))
+
+            # And make it read-only as a precaution against deletion.
+            os.chmod(requires_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+        # The cache has content and we have a requirements file. Validate
+        # requirements alignment.
+        elif os.path.exists(requires_path):
+            with open(requires_path, 'rb') as fh:
+                wanted_requirements = set(fh.read().splitlines())
+
+                missing = wanted_requirements - our_requirements
+                if missing:
+                    print('requirements for populated cache %s differ from '
+                          'this task' % cache)
+                    print('cache requirements: %s' % ' '.join(sorted(
+                        wanted_requirements)))
+                    print('our requirements:   %s' % ' '.join(sorted(
+                        our_requirements)))
+                    return 1
+
+        # The cache has content and no requirements file. This shouldn't
+        # happen because run-task should be the first thing that touches a
+        # cache.
+        else:
+            print('cache %s is not empty and is missing a .cacherequires '
+                  'file; the cache names for this task are likely '
+                  'mis-configured')
+            return 1
+
     # Change ownership of requested paths.
     # FUTURE: parse argument values for user/group if we don't want to
     # use --user/--group.
