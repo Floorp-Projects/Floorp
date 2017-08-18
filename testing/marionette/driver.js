@@ -3150,10 +3150,13 @@ GeckoDriver.prototype.fullscreenWindow = async function(cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  await new Promise(resolve => {
-    win.addEventListener("sizemodechange", resolve, {once: true});
-    win.fullScreen = !win.fullScreen;
-  });
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Fullscreen) {
+    await new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
+      win.fullScreen = true;
+    });
+  }
 
   return this.curBrowser.rect;
 };
