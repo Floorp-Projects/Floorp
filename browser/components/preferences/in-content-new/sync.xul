@@ -54,7 +54,7 @@
     </hbox>
     <hbox id="fxaNoLoginStatus" align="center" flex="1">
       <vbox>
-        <image id="fxaProfileImage"/>
+        <image class="fxaProfileImage"/>
       </vbox>
       <vbox flex="1">
         <hbox align="center" flex="1">
@@ -96,7 +96,7 @@
 
             <!-- logged in and verified and all is good -->
             <hbox id="fxaLoginVerified" align="center" flex="1">
-              <image id="fxaProfileImage" class="actionable"
+              <image class="fxaProfileImage actionable"
                      role="button"
                      onclick="gSyncPane.openChangeProfileImage(event);"
                      onkeypress="gSyncPane.openChangeProfileImage(event);"
@@ -123,11 +123,11 @@
             <!-- logged in to an unverified account -->
             <hbox id="fxaLoginUnverified">
               <vbox>
-                <image id="fxaProfileImage"/>
+                <image class="fxaProfileImage"/>
               </vbox>
               <vbox flex="1">
                 <hbox>
-                  <vbox><image id="fxaLoginRejectedWarning"/></vbox>
+                  <vbox><image class="fxaLoginRejectedWarning"/></vbox>
                   <description flex="1">
                     &signedInUnverified.beforename.label;
                     <label id="fxaEmailAddress2"/>
@@ -144,11 +144,11 @@
             <!-- logged in locally but server rejected credentials -->
             <hbox id="fxaLoginRejected">
               <vbox>
-                <image id="fxaProfileImage"/>
+                <image class="fxaProfileImage"/>
               </vbox>
               <vbox flex="1">
                 <hbox>
-                  <vbox><image id="fxaLoginRejectedWarning"/></vbox>
+                  <vbox><image class="fxaLoginRejectedWarning"/></vbox>
                   <description flex="1">
                     &signedInLoginFailure.beforename.label;
                     <label id="fxaEmailAddress3"/>
