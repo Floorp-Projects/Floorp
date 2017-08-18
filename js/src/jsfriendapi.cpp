@@ -657,6 +657,12 @@ JS_SetAccumulateTelemetryCallback(JSContext* cx, JSAccumulateTelemetryDataCallba
     cx->runtime()->setTelemetryCallback(cx->runtime(), callback);
 }
 
+JS_FRIEND_API(void)
+JS_SetSetUseCounterCallback(JSContext* cx, JSSetUseCounterCallback callback)
+{
+    cx->runtime()->setUseCounterCallback(cx->runtime(), callback);
+}
+
 JS_FRIEND_API(JSObject*)
 JS_CloneObject(JSContext* cx, HandleObject obj, HandleObject protoArg)
 {
