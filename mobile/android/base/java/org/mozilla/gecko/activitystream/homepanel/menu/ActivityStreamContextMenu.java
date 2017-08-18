@@ -35,7 +35,8 @@ public abstract class ActivityStreamContextMenu
 
     public enum MenuMode {
         HIGHLIGHT,
-        TOPSITE
+        TOPSITE,
+        TOPSTORY
     }
 
     private final Context context;
