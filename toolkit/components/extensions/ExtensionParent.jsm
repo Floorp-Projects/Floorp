@@ -1220,8 +1220,6 @@ function extensionNameFromURI(uri) {
   return GlobalManager.getExtension(id).name;
 }
 
-const INTEGER = /^[1-9]\d*$/;
-
 // Manages icon details for toolbar buttons in the |pageAction| and
 // |browserAction| APIs.
 let IconDetails = {
@@ -1267,9 +1265,6 @@ let IconDetails = {
         }
 
         for (let size of Object.keys(imageData)) {
-          if (!INTEGER.test(size)) {
-            throw new ExtensionError(`Invalid icon size ${size}, must be an integer`);
-          }
           result[size] = imageData[size];
         }
       }
@@ -1282,10 +1277,6 @@ let IconDetails = {
         }
 
         for (let size of Object.keys(path)) {
-          if (!INTEGER.test(size)) {
-            throw new ExtensionError(`Invalid icon size ${size}, must be an integer`);
-          }
-
           let url = baseURI.resolve(path[size]);
 
           // The Chrome documentation specifies these parameters as
