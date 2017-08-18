@@ -349,6 +349,12 @@ public:
   already_AddRefed<Element> CreateHTMLContent(nsIAtom* aTag);
 
   /**
+   * Creates text node which is marked as "maybe modified frequently".
+   */
+  static already_AddRefed<nsTextNode> CreateTextNode(nsIDocument& aDocument,
+                                                     const nsAString& aData);
+
+  /**
    * IME event handlers.
    */
   virtual nsresult BeginIMEComposition(WidgetCompositionEvent* aEvent);
