@@ -43,7 +43,7 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  min-height: 29px;
+  min-height: 24px;
   border: 0px solid;
   border-bottom-width: 1px;
   padding: 0;
@@ -79,11 +79,9 @@
 /* Set flex attribute to Toolbox buttons and Picker container so,
    they don't overlap with the tab bar */
 #toolbox-buttons-start,
-#toolbox-buttons-end,
-#toolbox-option-container,
-#toolbox-controls,
-#toolbox-dock-buttons {
+#toolbox-buttons-end {
   display: flex;
+  align-items: stretch;
 }
 
 #toolbox-buttons-start {
@@ -264,6 +262,10 @@
 }
 
 /* Toolbox controls */
+
+#toolbox-controls, #toolbox-dock-buttons {
+  display: flex;
+}
 
 /* Save space in Firebug theme */
 .theme-firebug #toolbox-controls button {
