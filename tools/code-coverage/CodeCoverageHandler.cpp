@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "mozilla/CodeCoverageHandler.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/DebugOnly.h"
 #include "nsAppRunner.h"
 
 using namespace mozilla;
@@ -50,13 +51,15 @@ void CodeCoverageHandler::SetSignalHandlers()
   dump_sa.sa_handler = CodeCoverageHandler::DumpCounters;
   dump_sa.sa_flags = SA_RESTART;
   sigemptyset(&dump_sa.sa_mask);
-  MOZ_ASSERT(sigaction(SIGUSR1, &dump_sa, nullptr) == 0);
+  DebugOnly<int> r1 = sigaction(SIGUSR1, &dump_sa, nullptr);
+  MOZ_ASSERT(r1 == 0, "Failed to install GCOV SIGUSR1 handler");
 
   struct sigaction reset_sa;
   reset_sa.sa_handler = CodeCoverageHandler::ResetCounters;
   reset_sa.sa_flags = SA_RESTART;
   sigemptyset(&reset_sa.sa_mask);
-  MOZ_ASSERT(sigaction(SIGUSR2, &reset_sa, nullptr) == 0);
+  DebugOnly<int> r2 = sigaction(SIGUSR2, &reset_sa, nullptr);
+  MOZ_ASSERT(r2 == 0, "Failed to install GCOV SIGUSR2 handler");
 }
 
 CodeCoverageHandler::CodeCoverageHandler()

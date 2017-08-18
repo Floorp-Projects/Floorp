@@ -14,6 +14,8 @@ LOCAL_INCLUDES += [
 ]
 
 TEST_HARNESS_FILES.gtest += [
+    'pdfium_ref_x64.dll',
+    'pdfium_ref_x86.dll',
     'PrinterTestPage.pdf',
 ]
 

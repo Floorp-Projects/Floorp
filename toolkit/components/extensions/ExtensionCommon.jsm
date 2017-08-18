@@ -1262,7 +1262,6 @@ class SchemaAPIManager extends EventEmitter {
     XPCOMUtils.defineLazyModuleGetters(global, {
       ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
       XPCOMUtils: "resource://gre/modules/XPCOMUtils.jsm",
-      require: "resource://devtools/shared/Loader.jsm",
     });
 
     return global;

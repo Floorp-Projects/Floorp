@@ -1389,37 +1389,34 @@ var Search = {
     this.idleTimeout = setTimeout(() => Search.search(e.target.value), FILTER_IDLE_TIMEOUT);
   },
 
-  search(text) {
-    let selectedSection = document.querySelector("section.active");
-    if (selectedSection.id === "histograms-section") {
-      let histograms = selectedSection.getElementsByClassName("histogram");
+  search(text, section = null) {
+    if (!section) {
+      let sectionId = document.querySelector(".category.selected").getAttribute("value");
+      section = document.getElementById(sectionId);
+    }
+    if (section.id === "home-section") {
+      this.homeSearch(text);
+    } else if (section.id === "histograms-section") {
+      let histograms = section.getElementsByClassName("histogram");
       this.filterElements(histograms, text);
-    } else if (selectedSection.id === "keyed-histograms-section") {
+    } else if (section.id === "keyed-histograms-section") {
       let keyedElements = [];
-      let keyedHistograms = selectedSection.getElementsByClassName("keyed-histogram");
+      let keyedHistograms = section.getElementsByClassName("keyed-histogram");
       for (let key of keyedHistograms) {
         let datas = key.getElementsByClassName("histogram");
         keyedElements.push({key, datas});
       }
       this.filterKeyedElements(keyedElements, text);
-    } else if (selectedSection.id === "keyed-scalars-section") {
+    } else if (section.id === "keyed-scalars-section") {
       let keyedElements = [];
-      let keyedScalars = selectedSection.getElementsByClassName("keyed-scalar");
+      let keyedScalars = section.getElementsByClassName("keyed-scalar");
       for (let key of keyedScalars) {
         let datas = key.querySelector("table").rows;
         keyedElements.push({key, datas});
       }
       this.filterKeyedElements(keyedElements, text);
-    } else if (selectedSection.id === "thread-hang-stats-section") {
-      let keyedElements = [];
-      let threads = selectedSection.children[0].children;
-      for (let key of threads) {
-        let datas = key.getElementsByClassName("histogram");
-        keyedElements.push({key, datas});
-      }
-      this.filterKeyedElements(keyedElements, text);
     } else {
-      let tables = selectedSection.querySelectorAll("table");
+      let tables = section.querySelectorAll("table");
       for (let table of tables) {
         let allElementsHidden = this.filterElements(table.rows, text);
         if (table.caption) {
@@ -1428,6 +1425,32 @@ var Search = {
       }
     }
   },
+
+  resetHome() {
+    document.getElementById("main").classList.remove("search");
+    adjustHeaderState();
+    Array.from(document.querySelectorAll("section")).forEach((section) => {
+      section.classList.toggle("active", section.id == "home-section");
+    });
+  },
+
+  homeSearch(text) {
+    if (text === "") {
+      this.resetHome();
+      return;
+    }
+    document.getElementById("main").classList.add("search");
+    let title = bundle.formatStringFromName("resultsForSearch", [text], 1);
+    adjustHeaderState(title);
+    Array.from(document.querySelectorAll("section")).forEach((section) => {
+      if (section.id == "home-section" || section.id == "raw-payload-section") {
+        section.classList.remove("active");
+        return;
+      }
+      section.classList.add("active");
+      this.search(text, section);
+    });
+  }
 }
 
 /*
@@ -1630,14 +1653,14 @@ var AddonDetails = {
     }
 
     for (let provider in addonDetails) {
-      let providerSection = document.createElement("h2");
+      let providerSection = document.createElement("caption");
       let titleText = bundle.formatStringFromName("addonProvider", [provider], 1);
       providerSection.appendChild(document.createTextNode(titleText));
-      addonSection.appendChild(providerSection);
 
       let headingStrings = [this.tableIDTitle, this.tableDetailsTitle ]
       let table = GenericTable.render(explodeObject(addonDetails[provider]),
                                       headingStrings);
+      table.appendChild(providerSection);
       addonSection.appendChild(table);
     }
   },
@@ -1810,12 +1833,10 @@ function displayProcessesSelector(selectedSection) {
 }
 
 function adjustSearchState() {
-  let selectedSection = document.querySelector("section.active").id;
+  let selectedSection = document.querySelector(".category.selected").getAttribute("value");
   let blacklist = [
-    "home-section",
     "raw-payload-section"
   ];
-  // TODO: Implement global search for the Home section
   let search = document.getElementById("search");
   search.hidden = blacklist.includes(selectedSection);
   // Filter element on section change.
@@ -1829,6 +1850,15 @@ function adjustSection() {
   if (!selectedCategory.classList.contains("has-data")) {
     PingPicker._showStructuredPingData();
   }
+}
+
+function adjustHeaderState(title = null) {
+  let selected = document.querySelector(".category.selected .category-name");
+  let selectedTitle = selected.textContent.trim();
+  document.getElementById("sectionTitle").textContent = title ? title : selectedTitle;
+  let search = document.getElementById("search");
+  let placeholder = bundle.formatStringFromName("filterPlaceholder", [ selectedTitle ], 1);
+  search.setAttribute("placeholder", placeholder);
 }
 
 /**
@@ -1854,36 +1884,34 @@ function show(selected) {
     return;
   }
 
-  let current_button = document.querySelector(".category.selected");
-  current_button.classList.remove("selected");
-  if (current_button.classList.contains("has-subsection")) {
-    for (let subsection of current_button.children) {
+  let selected_section = document.getElementById(selectedValue);
+  let subsections = selected_section.querySelectorAll(".sub-section");
+  if (selected.classList.contains("has-subsection")) {
+    for (let subsection of selected.children) {
       subsection.classList.remove("selected");
     }
   }
-  selected.classList.add("selected");
-  // Hack because subsection text appear selected. See Bug 1375114.
-  document.getSelection().empty();
-
-  let current_section = document.querySelector("section.active");
-  let selected_section = document.getElementById(selectedValue);
-  let subsections = current_section.querySelectorAll(".sub-section");
   if (subsections) {
     for (let subsection of subsections) {
       subsection.hidden = false;
     }
   }
-  if (current_section == selected_section)
+
+  let current_button = document.querySelector(".category.selected");
+  if (current_button == selected)
     return;
-  current_section.classList.remove("active");
+  current_button.classList.remove("selected");
+  selected.classList.add("selected");
+
+  document.querySelectorAll("section").forEach((section) => {
+    section.classList.remove("active")
+  });
   selected_section.classList.add("active");
 
-  let title = selected.querySelector(".category-name").textContent.trim();
-  document.getElementById("sectionTitle").textContent = title;
+  // Hack because subsection text appear selected. See Bug 1375114.
+  document.getSelection().empty();
 
-  let search = document.getElementById("search");
-  let placeholder = bundle.formatStringFromName("filterPlaceholder", [ title ], 1);
-  search.setAttribute("placeholder", placeholder);
+  adjustHeaderState();
   displayProcessesSelector(selectedValue);
   adjustSearchState();
   changeUrlPath(selectedValue);
@@ -2034,6 +2062,8 @@ function onLoad() {
 
   // Render settings.
   Settings.render();
+
+  adjustHeaderState();
 
   // Update ping data when async Telemetry init is finished.
   Telemetry.asyncFetchTelemetryData(async () => {

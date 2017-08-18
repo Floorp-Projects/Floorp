@@ -61,6 +61,7 @@
 #include <algorithm>
 #include "SVGImageContext.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
+#include "TextDrawTarget.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -3803,7 +3804,8 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
 
   Float lineThickness = std::max(NS_round(aParams.lineSize.height), 1.0);
 
-  ColorPattern color(ToDeviceColor(aParams.color));
+  Color color = ToDeviceColor(aParams.color);
+  ColorPattern colorPat(color);
   StrokeOptions strokeOptions(lineThickness);
   DrawOptions drawOptions;
 
@@ -3881,7 +3883,12 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
     case NS_STYLE_TEXT_DECORATION_STYLE_DASHED: {
       Point p1 = rect.TopLeft();
       Point p2 = aParams.vertical ? rect.BottomLeft() : rect.TopRight();
-      aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
+      if (aParams.textDrawer) {
+        aParams.textDrawer->AppendDecoration(
+          p1, p2, lineThickness, aParams.vertical, color, aParams.style);
+      } else {
+        aDrawTarget.StrokeLine(p1, p2, colorPat, strokeOptions, drawOptions);
+      }
       return;
     }
     case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE: {
@@ -3899,9 +3906,8 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
        * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
        * +-------------------------------------------+
        */
-      Point p1 = rect.TopLeft();
-      Point p2 = aParams.vertical ? rect.BottomLeft() : rect.TopRight();
-      aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
+      Point p1a = rect.TopLeft();
+      Point p2a = aParams.vertical ? rect.BottomLeft() : rect.TopRight();
 
       if (aParams.vertical) {
         rect.width -= lineThickness;
@@ -3909,9 +3915,20 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
         rect.height -= lineThickness;
       }
 
-      p1 = aParams.vertical ? rect.TopRight() : rect.BottomLeft();
-      p2 = rect.BottomRight();
-      aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
+      Point p1b = aParams.vertical ? rect.TopRight() : rect.BottomLeft();
+      Point p2b = rect.BottomRight();
+
+      if (aParams.textDrawer) {
+        aParams.textDrawer->AppendDecoration(
+          p1a, p2a, lineThickness, aParams.vertical, color,
+          NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
+        aParams.textDrawer->AppendDecoration(
+          p1b, p2b, lineThickness, aParams.vertical, color,
+          NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
+      } else {
+        aDrawTarget.StrokeLine(p1a, p2a, colorPat, strokeOptions, drawOptions);
+        aDrawTarget.StrokeLine(p1b, p2b, colorPat, strokeOptions, drawOptions);
+      }
       return;
     }
     case NS_STYLE_TEXT_DECORATION_STYLE_WAVY: {
@@ -3947,6 +3964,8 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
        * directions in the above description.
        */
 
+      // TODO(gankro)
+
       Float& rectICoord = aParams.vertical ? rect.y : rect.x;
       Float& rectISize = aParams.vertical ? rect.height : rect.width;
       const Float rectBSize = aParams.vertical ? rect.width : rect.height;
@@ -3972,6 +3991,17 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
       }
 
       rectICoord += lineThickness / 2.0;
+
+      if (aParams.textDrawer) {
+        Point p1 = rect.TopLeft();
+        Point p2 = aParams.vertical ? rect.BottomLeft() : rect.TopRight();
+
+        aParams.textDrawer->AppendDecoration(
+          p1, p2, adv, aParams.vertical, color,
+          NS_STYLE_TEXT_DECORATION_STYLE_WAVY);
+        return;
+      }
+
       Point pt(rect.TopLeft());
       Float& ptICoord = aParams.vertical ? pt.y : pt.x;
       Float& ptBCoord = aParams.vertical ? pt.x : pt.y;
@@ -4006,7 +4036,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
           // stroke the current path and start again, to avoid pathological
           // behavior in cairo with huge numbers of path segments
           path = builder->Finish();
-          aDrawTarget.Stroke(path, color, strokeOptions, drawOptions);
+          aDrawTarget.Stroke(path, colorPat, strokeOptions, drawOptions);
           builder = aDrawTarget.CreatePathBuilder();
           builder->MoveTo(pt);
           iter = 0;
@@ -4022,7 +4052,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
         goDown = !goDown;
       }
       path = builder->Finish();
-      aDrawTarget.Stroke(path, color, strokeOptions, drawOptions);
+      aDrawTarget.Stroke(path, colorPat, strokeOptions, drawOptions);
       return;
     }
     default:

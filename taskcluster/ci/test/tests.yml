@@ -389,37 +389,25 @@ marionette-headless:
     description: "Marionette headless unittest run"
     suite: marionette
     treeherder-symbol: tc(MnH)
-    max-run-time:
-        by-test-platform:
-            default: 5400
-    instance-size:
-        by-test-platform:
-            default: default
-    tier:
-        by-test-platform:
-            default: default
-    chunks:
-        by-test-platform:
-            default: 1
+    max-run-time: 5400
+    instance-size: default
+    tier: default
+    chunks: 1
     mozharness:
-        by-test-platform:
-            default:
-                script: marionette.py
-                no-read-buildbot-config: true
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - marionette/windows_taskcluster_config.py
-                        macosx.*:
-                            - marionette/prod_config.py
-                            - marionette/mac_taskcluster_config.py
-                        default:
-                            - marionette/prod_config.py
-                            - remove_executables.py
-                extra-options:
-                    by-test-platform:
-                        default:
-                            - --headless
+        script: marionette.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - marionette/windows_taskcluster_config.py
+                macosx.*:
+                    - marionette/prod_config.py
+                    - marionette/mac_taskcluster_config.py
+                default:
+                    - marionette/prod_config.py
+                    - remove_executables.py
+        extra-options:
+            - --headless
 
 mochitest:
     description: "Mochitest plain run"
@@ -1146,32 +1134,24 @@ reftest-gpu:
         by-test-platform:
             windows7-32.*/debug: buildbot-bridge/buildbot-bridge
             default: null
-    instance-size:
-        by-test-platform:
-            default: default
+    instance-size: default
     virtualization: virtual-with-gpu
-    max-run-time:
-        by-test-platform:
-            default: 3600
+    max-run-time: 3600
     mozharness:
-        by-test-platform:
-            default:
-                script: desktop_unittest.py
-                no-read-buildbot-config: true
-                chunked:
-                  by-test-platform:
-                    default: false
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - unittests/win_taskcluster_unittest.py
-                        macosx.*:
-                            - unittests/mac_unittest.py
-                        linux.*:
-                            - unittests/linux_unittest.py
-                            - remove_executables.py
-                extra-options:
-                    - --reftest-suite=reftest-gpu
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: false
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --reftest-suite=reftest-gpu
     tier: default
 
 reftest-no-accel:
@@ -1897,6 +1877,7 @@ talos-tp6:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
+            macosx.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
             default: []
     max-run-time: 3600
     mozharness:

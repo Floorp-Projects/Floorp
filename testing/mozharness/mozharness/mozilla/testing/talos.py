@@ -405,8 +405,16 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             self.info("Skipping: mitmproxy is not required")
             return
 
-        # setup python 3.x virtualenv
-        self.setup_py3_virtualenv()
+        # tp6 is supported in production only on win and macosx
+        os_name = self.platform_name()
+        if 'win' not in os_name and os_name != 'macosx':
+            self.fatal("Aborting: this test is not supported on this platform.")
+
+        # on windows we need to install a pytyon 3 virtual env; on macosx we
+        # use a mitmdump pre-built binary that doesn't need an external python 3
+        if 'win' in os_name:
+            # setup python 3.x virtualenv
+            self.setup_py3_virtualenv()
 
         # install mitmproxy
         self.install_mitmproxy()
@@ -432,9 +440,18 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
 
     def install_mitmproxy(self):
         """Install the mitmproxy tool into the Python 3.x env"""
-        self.info("Installing mitmproxy")
-        self.py3_install_modules(modules=['mitmproxy'])
-        self.mitmdump = os.path.join(self.py3_path_to_executables(), 'mitmdump')
+        if 'win' in self.platform_name():
+            self.info("Installing mitmproxy")
+            self.py3_install_modules(modules=['mitmproxy'])
+            self.mitmdump = os.path.join(self.py3_path_to_executables(), 'mitmdump')
+        else:
+            # on macosx we use a prebuilt mitmproxy release binary
+            mitmproxy_bin_url = 'https://github.com/mitmproxy/mitmproxy/releases/download/v2.0.2/mitmproxy-2.0.2-osx.tar.gz'
+            mitmproxy_path = os.path.join(self.talos_path, 'talos', 'mitmproxy')
+            self.mitmdump = os.path.join(mitmproxy_path, 'mitmdump')
+            if not os.path.exists(self.mitmdump):
+                self.download_unpack(mitmproxy_bin_url, mitmproxy_path)
+            self.info('The mitmdump macosx binary is found at: %s' % self.mitmdump)
         self.run_command([self.mitmdump, '--version'], env=self.query_env())
 
     def query_mitmproxy_recording_set(self):

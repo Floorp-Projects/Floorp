@@ -8,7 +8,6 @@
 #include "MockMediaResource.h"
 #include "DecoderTraits.h"
 #include "MediaContainerType.h"
-#include "MP4Decoder.h"
 #include "MP4Demuxer.h"
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"

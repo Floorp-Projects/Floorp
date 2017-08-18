@@ -29,7 +29,6 @@ public:
 
   MediaResource* GetResource() const override final;
 
-  MediaDecoderStateMachine* CreateStateMachine() override;
   nsresult Load(nsIPrincipal* aPrincipal);
   media::TimeIntervals GetSeekable() override;
   media::TimeIntervals GetBuffered() override;
@@ -65,6 +64,7 @@ public:
   void NotifyInitDataArrived();
 
 private:
+  MediaDecoderStateMachine* CreateStateMachine();
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
   bool CanPlayThroughImpl() override;

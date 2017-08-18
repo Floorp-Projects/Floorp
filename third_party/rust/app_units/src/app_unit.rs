@@ -255,6 +255,11 @@ impl Au {
         let float = (px * AU_PER_PX as f64).round();
         Au::clamp_from_f64_au(float)
     }
+
+    #[inline]
+    pub fn abs(self) -> Self {
+        Au(self.0.abs())
+    }
 }
 
 #[test]
@@ -298,6 +303,11 @@ fn scale() {
     assert_eq!(Au(12).scale_by(1.5), Au(18));
     assert_eq!(Au(12).scale_by(1.7), Au(20));
     assert_eq!(Au(12).scale_by(1.8), Au(22));
+}
+
+#[test]
+fn abs() {
+    assert_eq!(Au(-10).abs(), Au(10));
 }
 
 #[test]

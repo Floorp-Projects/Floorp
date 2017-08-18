@@ -48,4 +48,27 @@ describe("Screenshots", () => {
       assert.equal(screenshot, null);
     });
   });
+
+  describe("#_bytesToString", () => {
+    it("should convert no bytes to empty string", () => {
+      assert.equal(Screenshots._bytesToString([]), "");
+    });
+    it("should convert bytes to a string", () => {
+      const str = Screenshots._bytesToString([104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100]);
+
+      assert.equal(str, "hello world");
+    });
+    it("should convert very many bytes to a long string", () => {
+      const bytes = [];
+      for (let i = 0; i < 1000 * 1000; i++) {
+        bytes.push(9);
+      }
+
+      const str = Screenshots._bytesToString(bytes);
+
+      assert.propertyVal(str, 0, "\t");
+      assert.propertyVal(str, "length", 1000000);
+      assert.propertyVal(str, 999999, "\u0009");
+    });
+  });
 });

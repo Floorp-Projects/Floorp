@@ -30,7 +30,7 @@ const promise = require("promise");
 const protocol = require("devtools/shared/protocol");
 const {Actor} = protocol;
 const {animationPlayerSpec, animationsSpec} = require("devtools/shared/specs/animation");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 
 // Types of animations.
 const ANIMATION_TYPES = {

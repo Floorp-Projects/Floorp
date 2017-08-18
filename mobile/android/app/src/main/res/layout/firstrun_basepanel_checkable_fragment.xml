@@ -36,7 +36,6 @@
                   android:layout_width="@dimen/firstrun_content_width"
                   android:layout_height="wrap_content"
                   android:paddingTop="20dp"
-                  android:paddingBottom="30dp"
                   android:gravity="center"
                   android:textAppearance="@style/TextAppearance.FirstrunRegular.Body"/>
 
@@ -53,6 +52,7 @@
                   android:padding="30dp"
                   android:gravity="center"
                   android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"
+                  android:textAllCaps="true"
                   android:text="@string/firstrun_button_next"/>
     </LinearLayout>
 </ScrollView>

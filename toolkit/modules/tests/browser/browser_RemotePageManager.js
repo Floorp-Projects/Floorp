@@ -59,6 +59,20 @@ function swapDocShells(browser1, browser2) {
   browser2.permanentKey = tmp;
 }
 
+add_task(async function initialProcessData() {
+  const includesTest = () => Services.cpmm.
+    initialProcessData["RemotePageManager:urls"].includes(TEST_URL);
+  is(includesTest(), false, "Shouldn't have test url in initial process data yet");
+
+  const loadedPort = waitForPort(TEST_URL);
+  is(includesTest(), true, "Should have test url when waiting for it to load");
+
+  await loadedPort;
+  is(includesTest(), false, "Should have test url removed when done listening");
+
+  gBrowser.removeCurrentTab();
+});
+
 // Test that opening a page creates a port, sends the load event and then
 // navigating to a new page sends the unload event. Going back should create a
 // new port

@@ -12,7 +12,7 @@
 
 const SOURCE_URL = "browser_dbg_promises-chrome-allocation-stack.js";
 const PromisesFront = require("devtools/shared/fronts/promises");
-var events = require("sdk/event/core");
+var events = require("devtools/shared/event-emitter");
 
 const STACK_DATA = [
   { functionDisplayName: "test/</<" },

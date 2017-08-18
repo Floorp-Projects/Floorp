@@ -430,7 +430,6 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       // scrollframe into the same layer (otherwise it thinks the thumb could
       // potentially move anywhere within the existing clip).
       DisplayListClipState::AutoSaveRestore thumbClipState(aBuilder);
-      aBuilder->GetCurrentReferenceFrame();
       thumbClipState.ClipContainingBlockDescendants(
           GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this));
 

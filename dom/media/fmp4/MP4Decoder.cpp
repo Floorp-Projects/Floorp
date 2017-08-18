@@ -8,27 +8,13 @@
 #include "MediaContainerType.h"
 #include "MediaFormatReader.h"
 #include "MP4Demuxer.h"
-#include "mozilla/Preferences.h"
-#include "nsCharSeparatedTokenizer.h"
-#include "mozilla/CDMProxy.h"
-#include "mozilla/Logging.h"
-#include "mozilla/SharedThreadPool.h"
 #include "nsMimeTypes.h"
+#include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
-
-#ifdef MOZ_WIDGET_ANDROID
-#include "nsIGfxInfo.h"
-#endif
-#include "mozilla/layers/LayersTypes.h"
 
 #include "PDMFactory.h"
 
 namespace mozilla {
-
-MP4Decoder::MP4Decoder(MediaDecoderInit& aInit)
-  : ChannelMediaDecoder(aInit)
-{
-}
 
 static bool
 IsWhitelistedH264Codec(const nsAString& aCodec)
@@ -53,6 +39,14 @@ IsWhitelistedH264Codec(const nsAString& aCodec)
           profile == H264_PROFILE_MAIN ||
           profile == H264_PROFILE_EXTENDED ||
           profile == H264_PROFILE_HIGH);
+}
+
+/* static */
+bool
+MP4Decoder::IsSupportedTypeWithoutDiagnostics(
+  const MediaContainerType& aContainerType)
+{
+  return IsSupportedType(aContainerType, nullptr);
 }
 
 /* static */
@@ -276,14 +270,6 @@ MP4Decoder::IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlo
            });
 
   return promise.forget();
-}
-
-void
-MP4Decoder::GetMozDebugReaderData(nsACString& aString)
-{
-  if (mReader) {
-    mReader->GetMozDebugReaderData(aString);
-  }
 }
 
 } // namespace mozilla

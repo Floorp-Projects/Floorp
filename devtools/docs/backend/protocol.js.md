@@ -487,7 +487,7 @@ Here's how you'd set it up in a spec:
 
 Here's how the implementation would look:
 
-    const event = require("sdk/event/core");
+    const event = require("devtools/shared/event-emitter");
 
     // In your protocol.ActorClassWithSpec definition:
     giveGoodNews: function (news) {

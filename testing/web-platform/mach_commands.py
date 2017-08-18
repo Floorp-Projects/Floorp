@@ -73,33 +73,15 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         kwargs = wptcommandline.check_args(kwargs)
 
+        return kwargs
+
     def kwargs_wptrun(self, kwargs):
         from wptrunner import wptcommandline
         here = os.path.join(self.topsrcdir, 'testing', 'web-platform')
 
-        sys.path.insert(0, os.path.join(here, "tests", "tools"))
-
-        import wptrun
-
-        product = kwargs["product"]
-
-        setup_func = {
-            "chrome": wptrun.setup_chrome,
-            "edge": wptrun.setup_edge,
-            "servo": wptrun.setup_servo,
-        }[product]
-
-        try:
-            wptrun.check_environ(product)
-
-            setup_func(wptrun.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root),
-                       kwargs,
-                       True)
-        except wptrun.WptrunError as e:
-            print(e.message, file=sys.stderr)
-            sys.exit(1)
-
         kwargs["tests_root"] = os.path.join(here, "tests")
+
+        sys.path.insert(0, kwargs["tests_root"])
 
         if kwargs["metadata_root"] is None:
             metadir = os.path.join(here, "products", kwargs["product"])
@@ -114,7 +96,16 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             with open(src_manifest) as src, open(dest_manifest, "w") as dest:
                 dest.write(src.read())
 
-        kwargs = wptcommandline.check_args(kwargs)
+        from tools.wpt import run
+
+        try:
+            kwargs = run.setup_wptrunner(run.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root),
+                                         **kwargs)
+        except run.WptrunError as e:
+            print(e.message, file=sys.stderr)
+            sys.exit(1)
+
+        return kwargs
 
     def setup_fonts_firefox(self):
         # Ensure the Ahem font is available

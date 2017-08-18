@@ -86,7 +86,7 @@ function loadSubScript(url) {
   }
 }
 
-loader.lazyRequireGetter(this, "events", "sdk/event/core");
+loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 
 var gRegisteredModules = Object.create(null);
 

@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
+Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
@@ -195,7 +196,22 @@ add_task(async function test_processIncoming_error_orderChildren() {
 });
 
 add_task(async function test_restorePromptsReupload() {
-  _("Ensure that restoring from a backup will reupload all records.");
+  await test_restoreOrImport(true);
+});
+
+add_task(async function test_importPromptsReupload() {
+  await test_restoreOrImport(false);
+});
+
+// Test a JSON restore or HTML import. Use JSON if `aReplace` is `true`, or
+// HTML otherwise.
+async function test_restoreOrImport(aReplace) {
+  let verb = aReplace ? "restore" : "import";
+  let verbing = aReplace ? "restoring" : "importing";
+  let bookmarkUtils = aReplace ? BookmarkJSONUtils : BookmarkHTMLUtils;
+
+  _(`Ensure that ${verbing} from a backup will reupload all records.`);
+
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store  = engine._store;
@@ -220,8 +236,7 @@ add_task(async function test_restorePromptsReupload() {
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
       folder1_id, fxuri, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
     let bmk1_guid = await store.GUIDForId(bmk1_id);
-    _("Get Firefox!: " + bmk1_id + ", " + bmk1_guid);
-
+    _(`Get Firefox!: ${bmk1_id}, ${bmk1_guid}`);
 
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
       .getService(Ci.nsIProperties);
@@ -231,14 +246,14 @@ add_task(async function test_restorePromptsReupload() {
     _("Make a backup.");
     backupFile.append("t_b_e_" + Date.now() + ".json");
 
-    _("Backing up to file " + backupFile.path);
-    await BookmarkJSONUtils.exportToFile(backupFile.path);
+    _(`Backing up to file ${backupFile.path}`);
+    await bookmarkUtils.exportToFile(backupFile.path);
 
     _("Create a different record and sync.");
     let bmk2_id = PlacesUtils.bookmarks.insertBookmark(
       folder1_id, tburi, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Thunderbird!");
     let bmk2_guid = await store.GUIDForId(bmk2_id);
-    _("Get Thunderbird!: " + bmk2_id + ", " + bmk2_guid);
+    _(`Get Thunderbird!: ${bmk2_id}, ${bmk2_guid}`);
 
     PlacesUtils.bookmarks.removeItem(bmk1_id);
 
@@ -259,32 +274,45 @@ add_task(async function test_restorePromptsReupload() {
     do_check_eq(wbos.length, 1);
     do_check_eq(wbos[0], bmk2_guid);
 
-    _("Now restore from a backup.");
-    await BookmarkJSONUtils.importFromFile(backupFile, true);
+    _(`Now ${verb} from a backup.`);
+    await bookmarkUtils.importFromFile(backupFile, aReplace);
+
+    let bookmarksCollection = server.user("foo").collection("bookmarks");
+    if (aReplace) {
+      _("Verify that we wiped the server.");
+      do_check_true(!bookmarksCollection);
+    } else {
+      _("Verify that we didn't wipe the server.");
+      do_check_true(!!bookmarksCollection);
+    }
 
     _("Ensure we have the bookmarks we expect locally.");
     let guids = await fetchAllSyncIds();
     _("GUIDs: " + JSON.stringify([...guids]));
-    let found = false;
+    let bookmarkGuids = new Map();
     let count = 0;
-    let newFX;
     for (let guid of guids) {
       count++;
       let id = await store.idForGUID(guid, true);
       // Only one bookmark, so _all_ should be Firefox!
       if (PlacesUtils.bookmarks.getItemType(id) == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
         let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
-        _("Found URI " + uri.spec + " for GUID " + guid);
-        do_check_eq(uri.spec, fxuri.spec);
-        newFX = guid;   // Save the new GUID after restore.
-        found = true;   // Only runs if the above check passes.
+        _(`Found URI ${uri.spec} for GUID ${guid}`);
+        bookmarkGuids.set(uri.spec, guid);
       }
     }
-    _("We found it: " + found);
-    do_check_true(found);
+    do_check_true(bookmarkGuids.has(fxuri.spec));
+    if (!aReplace) {
+      do_check_true(bookmarkGuids.has(tburi.spec));
+    }
 
     _("Have the correct number of IDs locally, too.");
-    do_check_eq(count, ["menu", "toolbar", "mobile", "unfiled", folder1_id, bmk1_id].length);
+    let expectedResults = ["menu", "toolbar", "mobile", "unfiled", folder1_id,
+                           bmk1_id];
+    if (!aReplace) {
+      expectedResults.push("toolbar", folder1_id, bmk2_id);
+    }
+    do_check_eq(count, expectedResults.length);
 
     _("Sync again. This'll wipe bookmarks from the server.");
     try {
@@ -295,28 +323,53 @@ add_task(async function test_restorePromptsReupload() {
     }
     do_check_true(!error);
 
-    _("Verify that there's only one bookmark on the server, and it's Firefox.");
+    _("Verify that there's the right bookmarks on the server.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
     let payloads     = server.user("foo").collection("bookmarks").payloads();
     let bookmarkWBOs = payloads.filter(function(wbo) {
                          return wbo.type == "bookmark";
                        });
+
     let folderWBOs   = payloads.filter(function(wbo) {
                          return ((wbo.type == "folder") &&
                                  (wbo.id != "menu") &&
                                  (wbo.id != "toolbar") &&
                                  (wbo.id != "unfiled") &&
-                                 (wbo.id != "mobile"));
+                                 (wbo.id != "mobile") &&
+                                 (wbo.parentid != "menu"));
                        });
 
-    do_check_eq(bookmarkWBOs.length, 1);
-    do_check_eq(bookmarkWBOs[0].id, newFX);
-    do_check_eq(bookmarkWBOs[0].bmkUri, fxuri.spec);
-    do_check_eq(bookmarkWBOs[0].title, "Get Firefox!");
+    let expectedFX = {
+      id: bookmarkGuids.get(fxuri.spec),
+      bmkUri: fxuri.spec,
+      title: "Get Firefox!"
+    };
+    let expectedTB = {
+      id: bookmarkGuids.get(tburi.spec),
+      bmkUri: tburi.spec,
+      title: "Get Thunderbird!"
+    };
+
+    let expectedBookmarks;
+    if (aReplace) {
+      expectedBookmarks = [expectedFX];
+    } else {
+      expectedBookmarks = [expectedTB, expectedFX];
+    }
+
+    doCheckWBOs(bookmarkWBOs, expectedBookmarks);
 
     _("Our old friend Folder 1 is still in play.");
-    do_check_eq(folderWBOs.length, 1);
-    do_check_eq(folderWBOs[0].title, "Folder 1");
+    let expectedFolder1 = { title: "Folder 1" };
+
+    let expectedFolders;
+    if (aReplace) {
+      expectedFolders = [expectedFolder1];
+    } else {
+      expectedFolders = [expectedFolder1, expectedFolder1];
+    }
+
+    doCheckWBOs(folderWBOs, expectedFolders);
 
   } finally {
     await store.wipe();
@@ -325,7 +378,24 @@ add_task(async function test_restorePromptsReupload() {
     await PlacesSyncUtils.bookmarks.reset();
     await promiseStopServer(server);
   }
-});
+}
+
+function doCheckWBOs(WBOs, expected) {
+  do_check_eq(WBOs.length, expected.length);
+  for (let i = 0; i < expected.length; i++) {
+    let lhs = WBOs[i];
+    let rhs = expected[i];
+    if ("id" in rhs) {
+      do_check_eq(lhs.id, rhs.id);
+    }
+    if ("bmkUri" in rhs) {
+      do_check_eq(lhs.bmkUri, rhs.bmkUri);
+    }
+    if ("title" in rhs) {
+      do_check_eq(lhs.title, rhs.title);
+    }
+  }
+}
 
 function FakeRecord(constructor, r) {
   constructor.call(this, "bookmarks", r.id);

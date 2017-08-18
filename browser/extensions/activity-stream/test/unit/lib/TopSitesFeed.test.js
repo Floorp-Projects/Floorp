@@ -1,16 +1,16 @@
 "use strict";
 const injector = require("inject!lib/TopSitesFeed.jsm");
-const {UPDATE_TIME, TOP_SITES_SHOWMORE_LENGTH} = require("lib/TopSitesFeed.jsm");
+const {UPDATE_TIME} = require("lib/TopSitesFeed.jsm");
 const {FakePrefs, GlobalOverrider} = require("test/unit/utils");
 const action = {meta: {fromTarget: {}}};
 const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
-const {insertPinned} = require("common/Reducers.jsm");
+const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = require("common/Reducers.jsm");
 const FAKE_LINKS = new Array(TOP_SITES_SHOWMORE_LENGTH).fill(null).map((v, i) => ({url: `http://www.site${i}.com`}));
 const FAKE_SCREENSHOT = "data123";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
-  init() {},
+  async init() {},
   processSite(site) { return site; }
 };
 
@@ -30,6 +30,10 @@ describe("Top Sites Feed", () => {
     globals = new GlobalOverrider();
     sandbox = globals.sandbox;
     fakeNewTabUtils = {
+      blockedLinks: {
+        links: [],
+        isBlocked: () => false
+      },
       activityStreamLinks: {getTopSites: sandbox.spy(() => Promise.resolve(links))},
       pinnedLinks: {
         links: [],
@@ -46,7 +50,7 @@ describe("Top Sites Feed", () => {
     ({TopSitesFeed, DEFAULT_TOP_SITES} = injector({
       "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
       "common/Dedupe.jsm": {Dedupe: fakeDedupe},
-      "common/Reducers.jsm": {insertPinned},
+      "common/Reducers.jsm": {insertPinned, TOP_SITES_SHOWMORE_LENGTH},
       "lib/Screenshots.jsm": {Screenshots: fakeScreenshot},
       "lib/TippyTopProvider.jsm": {TippyTopProvider: FakeTippyTopProvider},
       "common/ShortURL.jsm": {shortURL: shortURLStub}
@@ -102,8 +106,22 @@ describe("Top Sites Feed", () => {
       assert.deepEqual(result, reference);
       assert.calledOnce(global.NewTabUtils.activityStreamLinks.getTopSites);
     });
+    it("should filter out the defaults that have been blocked", async () => {
+      // make sure we only have one top site, and we block the only default site we have to show
+      const url = "www.myonlytopsite.com";
+      const topsite = {url, hostname: shortURLStub({url})};
+      const blockedDefaultSite = {url: "https://foo.com"};
+      fakeNewTabUtils.activityStreamLinks.getTopSites = () => [topsite];
+      fakeNewTabUtils.blockedLinks.isBlocked = site => (site.url === blockedDefaultSite.url);
+      const result = await feed.getLinksWithDefaults();
+
+      // what we should be left with is just the top site we added, and not the default site we blocked
+      assert.lengthOf(result, 1);
+      assert.deepEqual(result[0], topsite);
+      assert.notInclude(result, blockedDefaultSite);
+    });
     it("should call dedupe on the links", async () => {
-      const stub = sinon.stub(feed.dedupe, "group", id => id);
+      const stub = sinon.stub(feed.dedupe, "group").callsFake(id => id);
 
       await feed.getLinksWithDefaults();
 
@@ -144,7 +162,7 @@ describe("Top Sites Feed", () => {
       beforeEach(() => {
         ({TopSitesFeed, DEFAULT_TOP_SITES} = injector({
           "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
-          "common/Reducers.jsm": {insertPinned},
+          "common/Reducers.jsm": {insertPinned, TOP_SITES_SHOWMORE_LENGTH},
           "lib/Screenshots.jsm": {Screenshots: fakeScreenshot}
         }));
         feed = new TopSitesFeed();
@@ -157,7 +175,7 @@ describe("Top Sites Feed", () => {
 
         const sites = await feed.getLinksWithDefaults();
 
-        assert.lengthOf(sites, 12);
+        assert.lengthOf(sites, TOP_SITES_SHOWMORE_LENGTH);
         assert.equal(sites[0].url, fakeNewTabUtils.pinnedLinks.links[0].url);
         assert.equal(sites[1].url, fakeNewTabUtils.pinnedLinks.links[1].url);
         assert.equal(sites[0].hostname, sites[1].hostname);
@@ -179,13 +197,13 @@ describe("Top Sites Feed", () => {
         assert.lengthOf(sites, 2);
       });
       it("should return sites that have a title", async () => {
-        // Simulate a pinned link with no pinTitle.
+        // Simulate a pinned link with no title.
         fakeNewTabUtils.pinnedLinks.links = [{url: "https://github.com/mozilla/activity-stream"}];
 
         const sites = await feed.getLinksWithDefaults();
 
         for (const site of sites) {
-          assert.isDefined(site.pinTitle || site.hostname);
+          assert.isDefined(site.hostname);
         }
       });
       it("should check against null entries", async () => {
@@ -334,6 +352,11 @@ describe("Top Sites Feed", () => {
       await feed.refresh();
       assert.calledOnce(feed.store.dispatch);
       assert.propertyVal(feed.store.dispatch.firstCall.args[0], "type", at.TOP_SITES_UPDATED);
+    });
+    it("should call refresh on INIT action", async () => {
+      sinon.stub(feed, "refresh");
+      await feed.onAction({type: at.INIT});
+      assert.calledOnce(feed.refresh);
     });
   });
 });

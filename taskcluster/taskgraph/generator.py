@@ -280,7 +280,8 @@ class TaskGraphGenerator(object):
 
         yield 'optimized_task_graph', optimized_task_graph
 
-        morphed_task_graph, label_to_taskid = morph(optimized_task_graph, label_to_taskid)
+        morphed_task_graph, label_to_taskid = morph(
+            optimized_task_graph, label_to_taskid, self.parameters)
 
         yield 'label_to_taskid', label_to_taskid
         yield 'morphed_task_graph', morphed_task_graph

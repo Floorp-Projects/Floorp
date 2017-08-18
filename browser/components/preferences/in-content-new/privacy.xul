@@ -427,7 +427,7 @@
     <vbox flex="1">
       <description flex="1">
         <label id="totalSiteDataSize"></label>
-        <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
+        <label id="siteDataLearnMoreLink" class="learnMore text-link">&siteDataLearnMoreLink.label;</label>
       </description>
     </vbox>
     <vbox align="end">
@@ -536,6 +536,8 @@
 
 <!-- Permissions -->
 <groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true">
+  <caption class="search-header" hidden="true"><label>&permissions.label;</label></caption>
+
   <grid>
     <columns>
       <column flex="1"/>
@@ -677,11 +679,12 @@
 <!-- Firefox Data Collection and Use -->
 #ifdef MOZ_DATA_REPORTING
 <groupbox id="dataCollectionGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
-  <description>
-    &dataCollectionDesc.label;<label id="dataCollectionPrivacyNotice" class="learnMore text-link">&dataCollectionPrivacyNotice.label;</label>
-  </description>
+  <caption class="search-header" hidden="true"><label>&dataCollection.label;</label></caption>
 
   <vbox>
+    <description>
+      &dataCollectionDesc.label;<label id="dataCollectionPrivacyNotice" class="learnMore text-link">&dataCollectionPrivacyNotice.label;</label>
+    </description>
     <description flex="1">
       <checkbox id="submitHealthReportBox" label="&enableHealthReport1.label;"
                 accesskey="&enableHealthReport1.accesskey;"/>

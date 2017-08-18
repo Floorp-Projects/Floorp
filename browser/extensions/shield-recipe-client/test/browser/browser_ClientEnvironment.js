@@ -1,8 +1,12 @@
 "use strict";
 
+Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/AddonManager.jsm", this);
+Cu.import("resource://testing-common/AddonTestUtils.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
+
 
 add_task(async function testTelemetry() {
   // setup
@@ -110,15 +114,28 @@ add_task(async function testExperiments() {
   getAll.restore();
 });
 
+add_task(withDriver(Assert, async function testAddonsInContext(driver) {
+  // Create before install so that the listener is added before startup completes.
+  const startupPromise = AddonTestUtils.promiseWebExtensionStartup("normandydriver@example.com");
+  const addonId = await driver.addons.install(TEST_XPI_URL);
+  await startupPromise;
+
+  const environment = ClientEnvironment.getEnvironment();
+  const addons = await environment.addons;
+  Assert.deepEqual(addons[addonId], {
+    id: [addonId],
+    name: "normandy_fixture",
+    version: "1.0",
+    installDate: addons[addonId].installDate,
+    isActive: true,
+    type: "extension",
+  }, "addons should be available in context");
+
+  await driver.addons.uninstall(addonId);
+}));
+
 add_task(async function isFirstRun() {
-  let environment = ClientEnvironment.getEnvironment();
-
-  // isFirstRun is initially set to true
-  ok(environment.isFirstRun, "isFirstRun has a default value");
-
-  // isFirstRun is read from a preference
   await SpecialPowers.pushPrefEnv({set: [["extensions.shield-recipe-client.first_run", true]]});
-  environment = ClientEnvironment.getEnvironment();
+  const environment = ClientEnvironment.getEnvironment();
   ok(environment.isFirstRun, "isFirstRun is read from preferences");
 });
-

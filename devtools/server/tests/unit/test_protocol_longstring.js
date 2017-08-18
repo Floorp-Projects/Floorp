@@ -9,7 +9,7 @@
  */
 var protocol = require("devtools/shared/protocol");
 var {RetVal, Arg} = protocol;
-var events = require("sdk/event/core");
+var events = require("devtools/shared/event-emitter");
 var {LongStringActor} = require("devtools/server/actors/string");
 
 // The test implicitly relies on this.

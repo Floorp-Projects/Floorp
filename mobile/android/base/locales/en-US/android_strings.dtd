@@ -3,9 +3,14 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY firstrun_panel_title_welcome "Welcome">
-
-<!ENTITY firstrun_urlbar_message "Welcome to &brandShortName;">
-<!ENTITY firstrun_urlbar_subtext "Find things faster with helpful search suggestion shortcuts.">
+<!ENTITY firstrun_urlbar_message2 "Thanks for choosing &brandShortName;">
+<!ENTITY firstrun_urlbar_subtext2 "A modern mobile browser from Mozilla, the non-profit committed to a free and open web.">
+<!ENTITY firstrun_panel_title_privacy "Privacy">
+<!ENTITY firstrun_privacy_message "Browse like no one\'s watching">
+<!ENTITY firstrun_privacy_subtext "Private Browsing with Tracking Protection blocks trackers while you browse and won’t remember your history when you finish browsing.">
+<!ENTITY firstrun_panel_title_customize "Customize">
+<!ENTITY firstrun_customize_message "Make &brandShortName; your own.">
+<!ENTITY firstrun_customize_subtext "Customize &brandShortName; with add-ons. Block ads, add features, or choose a new theme to reflect your personality.">
 <!ENTITY firstrun_bookmarks_title "History">
 <!ENTITY firstrun_bookmarks_message "Your faves, front and center">
 <!ENTITY firstrun_bookmarks_subtext "Get results from your bookmarks and history when you search.">
@@ -13,8 +18,8 @@
 <!ENTITY firstrun_data_message "Less data, more savings">
 <!ENTITY firstrun_data_subtext2 "Turn off images to spend less data on every site you visit.">
 <!ENTITY firstrun_sync_title "Sync">
-<!ENTITY firstrun_sync_message "&brandShortName;, always by your side">
-<!ENTITY firstrun_sync_subtext "Sync your tabs, passwords, and more everywhere you use it.">
+<!ENTITY firstrun_sync_message2 "Pick up where you left off.">
+<!ENTITY firstrun_sync_subtext2 "Use Sync to find the bookmarks, passwords, and other things you save to &brandShortName; on all your devices.">
 <!ENTITY firstrun_signin_message "Get connected, get started">
 <!ENTITY firstrun_signin_button "Sign in to Sync">
 <!ENTITY  onboard_start_button_browser "Start Browsing">

@@ -7,7 +7,7 @@
 
 const { Cu, Cc, Ci } = require("chrome");
 
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const { CallWatcherActor } = require("devtools/server/actors/call-watcher");
 const { createValueGrip } = require("devtools/server/actors/object");

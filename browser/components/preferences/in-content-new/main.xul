@@ -752,6 +752,8 @@
 
 <!-- Update -->
 <groupbox id="updateApp" data-category="paneGeneral" hidden="true">
+  <caption class="search-header" hidden="true"><label>&updateApplication.label;</label></caption>
+
   <label>&updateApplicationDescription.label;</label>
   <hbox align="start">
     <vbox flex="1">
@@ -904,6 +906,8 @@
 
 <!-- Performance -->
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
+  <caption class="search-header" hidden="true"><label>&performance.label;</label></caption>
+
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
               label="&useRecommendedPerformanceSettings2.label;"
@@ -946,6 +950,8 @@
 
 <!-- Browsing -->
 <groupbox id="browsingGroup" data-category="paneGeneral" hidden="true">
+  <caption class="search-header" hidden="true"><label>&browsing.label;</label></caption>
+
   <checkbox id="useAutoScroll"
             label="&useAutoScroll.label;"
             accesskey="&useAutoScroll.accesskey;"
@@ -981,6 +987,8 @@
 
 <!-- Network Proxy-->
 <groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
+  <caption class="search-header" hidden="true"><label>&networkProxy.label;</label></caption>
+
   <hbox align="center">
     <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->

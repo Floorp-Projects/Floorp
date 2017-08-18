@@ -1,0 +1,70 @@
+diff --git a/gfx/ots/src/glat.cc b/gfx/ots/src/glat.cc
+--- a/gfx/ots/src/glat.cc
++++ b/gfx/ots/src/glat.cc
+@@ -5,7 +5,7 @@
+ #include "glat.h"
+ 
+ #include "gloc.h"
+-#include "lz4.h"
++#include "mozilla/Compression.h"
+ #include <list>
+ 
+ namespace ots {
+@@ -201,13 +201,15 @@ bool OpenTypeGLAT_v3::Parse(const uint8_t* data, size_t length,
+         return DropGraphite("Illegal nested compression");
+       }
+       std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE, 0);
+-      int ret = LZ4_decompress_safe(
+-          reinterpret_cast<const char*>(data + table.offset()),
+-          reinterpret_cast<char*>(decompressed.data()),
+-          table.remaining(),
+-          decompressed.size());
+-      if (ret < 0) {
+-        return DropGraphite("Decompression failed with error code %d", ret);
++      size_t outputSize = 0;
++      if (!mozilla::Compression::LZ4::decompress(
++            reinterpret_cast<const char*>(data + table.offset()),
++            table.remaining(),
++            reinterpret_cast<char*>(decompressed.data()),
++            decompressed.size(),
++            &outputSize) ||
++          outputSize != (this->compHead & FULL_SIZE)) {
++        return DropGraphite("Decompression failed");
+       }
+       return this->Parse(decompressed.data(), decompressed.size(), true);
+     }
+diff --git a/gfx/ots/src/silf.cc b/gfx/ots/src/silf.cc
+--- a/gfx/ots/src/silf.cc
++++ b/gfx/ots/src/silf.cc
+@@ -5,7 +5,7 @@
+ #include "silf.h"
+ 
+ #include "name.h"
+-#include "lz4.h"
++#include "mozilla/Compression.h"
+ #include <cmath>
+ 
+ namespace ots {
+@@ -39,13 +39,15 @@ bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
+           return DropGraphite("Illegal nested compression");
+         }
+         std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE, 0);
+-        int ret = LZ4_decompress_safe(
+-            reinterpret_cast<const char*>(data + table.offset()),
+-            reinterpret_cast<char*>(decompressed.data()),
+-            table.remaining(),
+-            decompressed.size());
+-        if (ret < 0) {
+-          return DropGraphite("Decompression failed with error code %d", ret);
++        size_t outputSize = 0;
++        if (!mozilla::Compression::LZ4::decompress(
++              reinterpret_cast<const char*>(data + table.offset()),
++              table.remaining(),
++              reinterpret_cast<char*>(decompressed.data()),
++              decompressed.size(),
++              &outputSize) ||
++            outputSize != (this->compHead & FULL_SIZE)) {
++          return DropGraphite("Decompression failed");
+         }
+         return this->Parse(decompressed.data(), decompressed.size(), true);
+       }

@@ -8,7 +8,6 @@ notification.heartbeat {
   background-color: #F1F1F1 !important;
   border-bottom: 1px solid #C1C1C1 !important;
   height: 40px;
-  color: #333 !important;
 }
 
 @keyframes pulse-onshow {
@@ -50,6 +49,7 @@ notification.heartbeat {
 }
 
 .messageText.heartbeat {
+  color: #333 !important;
   margin-inline-end: 12px !important; /* The !important is required to override OSX default style. */
   margin-inline-start: 0;
   text-shadow: none;

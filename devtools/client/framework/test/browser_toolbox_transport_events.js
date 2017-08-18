@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { on, off } = require("sdk/event/core");
+const { on, off } = require("devtools/shared/event-emitter");
 const { DebuggerClient } = require("devtools/shared/client/main");
 
 function test() {

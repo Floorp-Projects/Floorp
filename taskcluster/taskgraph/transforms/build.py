@@ -28,9 +28,10 @@ def set_defaults(config, jobs):
             extra = job.setdefault('extra', {})
             extra.setdefault('chainOfTrust', {})
             extra['chainOfTrust'].setdefault('inputs', {})
-            extra['chainOfTrust']['inputs']['docker-image'] = {
-                "task-reference": "<docker-image>"
-            }
+            if 'in-tree' in worker['docker-image']:
+                extra['chainOfTrust']['inputs']['docker-image'] = {
+                    "task-reference": "<docker-image>"
+                }
         elif worker_os == "windows":
             worker.setdefault('env', {})
             worker['chain-of-trust'] = True

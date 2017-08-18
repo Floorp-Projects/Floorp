@@ -108,10 +108,6 @@ public:
   // Safe to call from any thread.
   const MediaContainerType& ContainerType() const { return mContainerType; }
 
-  // Create a new state machine to run this decoder.
-  // Subclasses must implement this.
-  virtual MediaDecoderStateMachine* CreateStateMachine() = 0;
-
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.
   virtual void Shutdown();
@@ -207,7 +203,6 @@ public:
   // Must be called before Shutdown().
   bool OwnerHasError() const;
 
-public:
   // Returns true if this media supports random seeking. False for example with
   // chained ogg files.
   bool IsMediaSeekable();
@@ -411,7 +406,7 @@ private:
 
   // Returns a string describing the state of the media player internal
   // data. Used for debugging purposes.
-  virtual void GetMozDebugReaderData(nsACString& aString) { }
+  virtual void GetMozDebugReaderData(nsACString& aString);
 
   virtual void DumpDebugInfo();
 

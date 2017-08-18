@@ -1949,11 +1949,6 @@ if (AppConstants.platform == "macosx") {
     // initialize the private browsing UI
     gPrivateBrowsingUI.init();
 
-    // initialize the sync UI
-    requestIdleCallback(() => {
-      gSync.init();
-    }, {timeout: 1000 * 5});
-
     if (AppConstants.E10S_TESTING_ONLY) {
       gRemoteTabsUI.init();
     }
@@ -6726,7 +6721,7 @@ function warnAboutClosingWindow() {
 
 var MailIntegration = {
   sendLinkForBrowser(aBrowser) {
-    this.sendMessage(aBrowser.currentURI.displaySpec, aBrowser.contentTitle);
+    this.sendMessage(gURLBar.makeURIReadable(aBrowser.currentURI).displaySpec, aBrowser.contentTitle);
   },
 
   sendMessage(aBody, aSubject) {

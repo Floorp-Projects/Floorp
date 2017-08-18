@@ -9,7 +9,7 @@ const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const { cssUsageSpec } = require("devtools/shared/specs/csscoverage");
 

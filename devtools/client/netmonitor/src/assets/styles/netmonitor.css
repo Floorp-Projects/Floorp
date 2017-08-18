@@ -94,7 +94,7 @@ body,
 
 .requests-list-filter-buttons {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .learn-more-link {
@@ -804,6 +804,7 @@ body,
 .devtools-checkbox-label {
   margin-inline-start: 10px;
   margin-inline-end: 3px;
+  white-space: nowrap;
 }
 
 /* Empty notices in tab panels */

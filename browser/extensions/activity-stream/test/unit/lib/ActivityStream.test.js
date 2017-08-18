@@ -18,6 +18,7 @@ describe("ActivityStream", () => {
       "lib/NewTabInit.jsm": {NewTabInit: Fake},
       "lib/PlacesFeed.jsm": {PlacesFeed: Fake},
       "lib/PrefsFeed.jsm": {PrefsFeed: Fake},
+      "lib/SectionsManager.jsm": {SectionsFeed: Fake},
       "lib/SnippetsFeed.jsm": {SnippetsFeed: Fake},
       "lib/SystemTickFeed.jsm": {SystemTickFeed: Fake},
       "lib/TelemetryFeed.jsm": {TelemetryFeed: Fake},
@@ -135,6 +136,10 @@ describe("ActivityStream", () => {
     });
     it("should create a ManualMigration feed", () => {
       const feed = as.feeds.get("feeds.migration")();
+      assert.instanceOf(feed, Fake);
+    });
+    it("should create a SectionsFeed", () => {
+      const feed = as.feeds.get("feeds.sections")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a Snippets feed", () => {

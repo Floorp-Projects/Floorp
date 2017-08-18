@@ -217,10 +217,6 @@ a {
   border-color: #777;
 }
 
-.message:hover {
-  background-color: var(--theme-selection-background-semitransparent) !important;
-}
-
 .theme-light .message[severity=error],
 .theme-light .message.error {
   background-color: rgba(255, 150, 150, 0.3);
@@ -756,6 +752,15 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
+}
+
+.webconsole-output-wrapper .message {
+  --border-size: 3px;
+  border-inline-start: var(--border-size) solid transparent;
+}
+
+.webconsole-output-wrapper .message:hover {
+  border-inline-start-color: #0a84ff; /* Photon Design System Blue 50 */
 }
 
 .webconsole-output-wrapper .message-flex-body > .message-body {

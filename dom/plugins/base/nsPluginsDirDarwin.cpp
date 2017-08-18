@@ -101,13 +101,10 @@ static char* CFStringRefToUTF8Buffer(CFStringRef cfString)
     return PL_strdup(buffer);
   }
 
-  int bufferLength =
+  int64_t bufferLength =
     ::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(cfString),
                                         kCFStringEncodingUTF8) + 1;
   char* newBuffer = static_cast<char*>(moz_xmalloc(bufferLength));
-  if (!newBuffer) {
-    return nullptr;
-  }
 
   if (!::CFStringGetCString(cfString, newBuffer, bufferLength,
                             kCFStringEncodingUTF8)) {

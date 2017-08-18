@@ -878,7 +878,9 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
     // Allow the parallel traversal, unless we're traversing traversing one of
     // the native anonymous document style roots, which are tiny and not worth
     // parallelizing over.
-    if (!root->IsInNativeAnonymousSubtree()) {
+    //
+    // We only allow the parallel traversal in active (foreground) tabs.
+    if (!root->IsInNativeAnonymousSubtree() && mPresContext->PresShell()->IsActive()) {
       flags |= ServoTraversalFlags::ParallelTraversal;
     }
 
@@ -980,7 +982,8 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
   // styling with this API. Not clear how common that is, but we allow parallel
   // traversals in this case to preserve the old behavior (where Servo would
   // use the parallel traversal i.f.f. the traversal root was the document root).
-  if (aParent == aParent->OwnerDoc()->GetRootElement()) {
+  if (aParent == aParent->OwnerDoc()->GetRootElement() &&
+      mPresContext->PresShell()->IsActive()) {
     flags |= ServoTraversalFlags::ParallelTraversal;
   }
 

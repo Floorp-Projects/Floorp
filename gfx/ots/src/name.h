@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_set>
 
 #include "ots.h"
 
@@ -50,10 +51,12 @@ class OpenTypeNAME : public Table {
 
   bool Parse(const uint8_t *data, size_t length);
   bool Serialize(OTSStream *out);
+  bool IsValidNameId(uint16_t nameID, bool addIfMissing = false);
 
  private:
   std::vector<NameRecord> names;
   std::vector<std::string> lang_tags;
+  std::unordered_set<uint16_t> name_ids;
 };
 
 }  // namespace ots

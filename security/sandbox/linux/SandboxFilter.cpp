@@ -811,9 +811,6 @@ public:
     case __NR_fallocate:
       return Allow();
 
-    case __NR_get_mempolicy:
-      return Allow();
-
 #endif // DESKTOP
 
 #ifdef __NR_getrandom

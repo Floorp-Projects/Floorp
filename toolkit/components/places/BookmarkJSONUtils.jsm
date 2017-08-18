@@ -57,15 +57,15 @@ this.BookmarkJSONUtils = Object.freeze({
    */
   importFromURL: function BJU_importFromURL(aSpec, aReplace) {
     return (async function() {
-      notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN);
+      notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aReplace);
       try {
         let importer = new BookmarkImporter(aReplace);
         await importer.importFromURL(aSpec);
 
-        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS);
+        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
       } catch (ex) {
         Cu.reportError("Failed to restore bookmarks from " + aSpec + ": " + ex);
-        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
+        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
       }
     })();
   },
@@ -94,7 +94,7 @@ this.BookmarkJSONUtils = Object.freeze({
     }
 
     return (async function() {
-      notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN);
+      notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aReplace);
       try {
         if (!(await OS.File.exists(aFilePath)))
           throw new Error("Cannot restore from nonexisting json file");
@@ -105,10 +105,10 @@ this.BookmarkJSONUtils = Object.freeze({
         } else {
           await importer.importFromURL(OS.Path.toFileURI(aFilePath));
         }
-        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS);
+        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
       } catch (ex) {
         Cu.reportError("Failed to restore bookmarks from " + aFilePath + ": " + ex);
-        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
+        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
         throw ex;
       }
     })();
@@ -323,8 +323,8 @@ BookmarkImporter.prototype = {
   },
 };
 
-function notifyObservers(topic) {
-  Services.obs.notifyObservers(null, topic, "json");
+function notifyObservers(topic, replace) {
+  Services.obs.notifyObservers(null, topic, replace ? "json" : "json-append");
 }
 
 /**

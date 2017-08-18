@@ -1,0 +1,22 @@
+---
+$if: task.tags['kind'] == "build"
+then:
+    $merge:
+        - $eval: task
+        - extra:
+              $merge:
+                  - $eval: task.extra
+                  - treeherder:
+                        $merge:
+                            - $eval: task.extra.treeherder
+                            - symbol: Ba
+        - payload:
+              $merge:
+                  - $eval: task.payload
+                  - env:
+                        $merge:
+                            - $eval: task.payload.env
+                            - USE_ARTIFACT:
+                                  $eval: input.enabled
+else:
+    $eval: task
