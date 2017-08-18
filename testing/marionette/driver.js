@@ -1507,6 +1507,14 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
     });
   }
 
+  // Restore window and wait for the window state to change.
+  async function restoreWindow() {
+    return new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
+      win.restore();
+    });
+  }
+
   // Synchronous resize to |width| and |height| dimensions.
   async function resizeWindow(width, height) {
     return new Promise(resolve => {
@@ -1542,8 +1550,14 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
     });
   }
 
-  if (win.windowState == win.STATE_FULLSCREEN) {
-    await exitFullscreen();
+  switch (win.windowState) {
+    case win.STATE_FULLSCREEN:
+      await exitFullscreen();
+      break;
+
+    case win.STATE_MINIMIZED:
+      await restoreWindow();
+      break;
   }
 
   if (height != null && width != null) {
