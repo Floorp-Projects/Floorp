@@ -77,8 +77,8 @@ def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
 def support_vcs_checkout(config, job, taskdesc):
     """Update a job/task with parameters to enable a VCS checkout.
 
-    The configuration is intended for tasks using "run-task" and its
-    VCS checkout behavior.
+    This can only be used with ``run-task`` tasks, as the cache name is
+    reserved for ``run-task`` tasks.
     """
     level = config.params['level']
 
@@ -138,6 +138,9 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
 
     By default, only public tooltool access will be granted. Access to internal
     tooltool can be enabled via ``internal=True``.
+
+    This can only be used with ``run-task`` tasks, as the cache name is
+    reserved for use with ``run-task``.
     """
 
     assert job['worker']['implementation'] in ('docker-worker', 'docker-engine')
