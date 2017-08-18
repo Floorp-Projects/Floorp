@@ -20,7 +20,6 @@ def test_handle_user_prompt(session):
 
 
 def test_minimize(session):
-    before_size = session.window.size
     assert session.window.state == "normal"
 
     # step 4
@@ -31,7 +30,6 @@ def test_minimize(session):
 
 
 def test_payload(session):
-    before_size = session.window.size
     assert session.window.state == "normal"
 
     result = session.transport.send("POST", "session/%s/window/minimize" % session.session_id)
