@@ -171,7 +171,11 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
         NS_ASSERTION(defaultType == eFamily_serif ||
                      defaultType == eFamily_sans_serif,
                      "default type must be serif or sans-serif");
-        mDefaultVariableFont.fontlist = FontFamilyList(defaultType);
+        mDefaultVariableFont.fontlist = FontFamilyList();
+        mDefaultVariableFont.fontlist.SetDefaultFontType(defaultType);
+        // We create mDefaultVariableFont.fontlist with defaultType as the
+        // fallback font, and not as part of the font list proper. This way,
+        // it can be overwritten should there be a language change.
       }
       else {
         MAKE_FONT_PREF_KEY(pref, "font.default.", langGroup);
@@ -182,7 +186,11 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
           NS_ASSERTION(defaultType == eFamily_serif ||
                        defaultType == eFamily_sans_serif,
                        "default type must be serif or sans-serif");
-          mDefaultVariableFont.fontlist = FontFamilyList(defaultType);
+          mDefaultVariableFont.fontlist = FontFamilyList();
+          mDefaultVariableFont.fontlist.SetDefaultFontType(defaultType);
+          // We create mDefaultVariableFont.fontlist with defaultType as the
+          // (fallback) font, and not as part of the font list proper. This way,
+          // it can be overwritten should there be a language change.
         }
       }
     }
