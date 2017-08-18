@@ -268,7 +268,7 @@ class Window(object):
     @command
     def position(self, new_position):
         """Set window position by passing a tuple of `(x, y)`."""
-        data = x, y
+        x, y = new_position
         body = {"x": x, "y": y}
         self.session.send_session_command("POST", "window/rect", body)
 
