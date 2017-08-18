@@ -809,7 +809,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         add_old_configure_assignment(
             '%s_VERSION' % var, valid_compiler.version)
 
-    valid_compiler = compiler_class(valid_compiler)
+    valid_compiler = compiler_class(valid_compiler, host_or_target)
 
     def compiler_error():
         raise FatalCheckError('Failed compiling a simple %s source with %s'
