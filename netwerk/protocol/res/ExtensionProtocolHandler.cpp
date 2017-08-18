@@ -109,6 +109,7 @@ class ExtensionStreamGetter : public RefCounted<ExtensionStreamGetter>
       : mURI(aURI)
       , mLoadInfo(aLoadInfo)
       , mIsJarChannel(false)
+      , mIsCachedJar(false)
     {
       MOZ_ASSERT(aURI);
       MOZ_ASSERT(aLoadInfo);
@@ -126,11 +127,30 @@ class ExtensionStreamGetter : public RefCounted<ExtensionStreamGetter>
       , mJarChannel(Move(aJarChannel))
       , mJarFile(aJarFile)
       , mIsJarChannel(true)
+      , mIsCachedJar(false)
     {
       MOZ_ASSERT(aURI);
       MOZ_ASSERT(aLoadInfo);
       MOZ_ASSERT(mJarChannel);
       MOZ_ASSERT(aJarFile);
+
+      SetupEventTarget();
+    }
+
+    // To use when the request resolves to a JAR file that is already cached.
+    // Using a SimpleChannel with an ExtensionStreamGetter here (like the
+    // non-cached JAR case) isn't needed to load the extension resource
+    // because we don't need to ask the parent for an FD for the JAR, but
+    // wrapping the JARChannel in a SimpleChannel allows HTTP forwarding to
+    // moz-extension URI's to work because HTTP forwarding requires the
+    // target channel implement nsIChildChannel.
+    explicit
+      ExtensionStreamGetter(already_AddRefed<nsIJARChannel>&& aJarChannel)
+      : mJarChannel(Move(aJarChannel))
+      , mIsJarChannel(true)
+      , mIsCachedJar(true)
+    {
+      MOZ_ASSERT(mJarChannel);
 
       SetupEventTarget();
     }
@@ -167,6 +187,10 @@ class ExtensionStreamGetter : public RefCounted<ExtensionStreamGetter>
     nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
     bool mIsJarChannel;
+
+    // Indicates the JAR for this channel is cached
+    // and implies mIsJarChannel==true
+    bool mIsCachedJar;
 };
 
 class ExtensionJARFileOpener : public nsISupports
@@ -246,6 +270,14 @@ ExtensionStreamGetter::GetAsync(nsIStreamListener* aListener,
 
   mListener = aListener;
   mChannel = aChannel;
+
+  // We don't have to request an FD from the
+  // parent if the JAR is cached
+  if (mIsCachedJar) {
+    MOZ_ASSERT(mIsJarChannel);
+    mJarChannel->AsyncOpen2(mListener);
+    return Ok();
+  }
 
   // Serialize the URI to send to parent
   mozilla::ipc::URIParams uri;
@@ -371,6 +403,11 @@ ExtensionProtocolHandler::ExtensionProtocolHandler()
   , mAlreadyCheckedAppDir(false)
 #endif /* ! XP_WIN */
 {
+  // Note, extensions.webextensions.protocol.remote=false is for
+  // debugging purposes only. With process-level sandboxing, child
+  // processes (specifically content and extension processes), will
+  // not be able to load most moz-extension URI's when the pref is
+  // set to false.
   mUseRemoteFileChannels = IsNeckoChild() &&
     Preferences::GetBool("extensions.webextensions.protocol.remote");
 }
@@ -910,21 +947,26 @@ ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
   if (MOZ_LOG_TEST(gExtProtocolLog, LogLevel::Debug)) {
     Unused << LogCacheCheck(jarChannel, jarURI, isCached);
   }
+
+  RefPtr<ExtensionStreamGetter> streamGetter;
+
   if (isCached) {
-    return Ok();
+    streamGetter = new ExtensionStreamGetter(jarChannel.forget());
+  } else {
+    nsCOMPtr<nsIURI> innerFileURI;
+    NS_TRY(jarURI->GetJARFile(getter_AddRefs(innerFileURI)));
+
+    nsCOMPtr<nsIFileURL> innerFileURL = do_QueryInterface(innerFileURI, &rv);
+    NS_TRY(rv);
+
+    nsCOMPtr<nsIFile> jarFile;
+    NS_TRY(innerFileURL->GetFile(getter_AddRefs(jarFile)));
+
+    streamGetter = new ExtensionStreamGetter(aURI,
+                                             aLoadinfo,
+                                             jarChannel.forget(),
+                                             jarFile);
   }
-
-  nsCOMPtr<nsIURI> innerFileURI;
-  NS_TRY(jarURI->GetJARFile(getter_AddRefs(innerFileURI)));
-
-  nsCOMPtr<nsIFileURL> innerFileURL = do_QueryInterface(innerFileURI, &rv);
-  NS_TRY(rv);
-
-  nsCOMPtr<nsIFile> jarFile;
-  NS_TRY(innerFileURL->GetFile(getter_AddRefs(jarFile)));
-
-  RefPtr<ExtensionStreamGetter> streamGetter =
-    new ExtensionStreamGetter(aURI, aLoadinfo, jarChannel.forget(), jarFile);
 
   NewSimpleChannel(aURI, aLoadinfo, streamGetter, aRetVal);
   return Ok();
