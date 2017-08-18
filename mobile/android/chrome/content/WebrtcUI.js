@@ -5,9 +5,13 @@
 
 this.EXPORTED_SYMBOLS = ["WebrtcUI"];
 
+XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService", "@mozilla.org/mediaManagerService;1", "nsIMediaManagerService");
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls", "@mozilla.org/parental-controls-service;1", "nsIParentalControlsService");
 XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "DoorHanger",
+                                  "resource://gre/modules/Prompt.jsm");
 
 var WebrtcUI = {
   _notificationId: null,
@@ -133,7 +137,7 @@ var WebrtcUI = {
       function(devices) {
         if (!ParentalControls.isAllowed(ParentalControls.CAMERA_MICROPHONE)) {
           Services.obs.notifyObservers(null, "getUserMedia:response:deny", aSubject.callID);
-          WebrtcUI.showBlockMessage(devices);
+          WebrtcUI.showBlockMessage(contentWindow, devices);
           return;
         }
 
@@ -243,7 +247,7 @@ var WebrtcUI = {
     }
   },
 
-  showBlockMessage: function(aDevices) {
+  showBlockMessage: function(aWindow, aDevices) {
     let microphone = false;
     let camera = false;
 
@@ -265,7 +269,18 @@ var WebrtcUI = {
       message = Strings.browser.GetStringFromName("getUserMedia.blockedCameraAndMicrophoneAccess");
     }
 
-    NativeWindow.doorhanger.show(message, "webrtc-blocked", [], BrowserApp.selectedTab.id, {});
+    DoorHanger.show(aWindow, message, "webrtc-blocked");
+  },
+
+  getChromeWindow: function getChromeWindow(aWindow) {
+     let chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsIDocShellTreeItem)
+                            .rootTreeItem
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindow)
+                            .QueryInterface(Ci.nsIDOMChromeWindow);
+     return chromeWin;
   },
 
   prompt: function prompt(aContentWindow, aCallID, aAudioRequested,
@@ -296,9 +311,11 @@ var WebrtcUI = {
     else
       return;
 
+    let chromeWin = this.getChromeWindow(aContentWindow);
     let uri = aContentWindow.document.documentURIObject;
     let host = uri.host;
-    let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name + "'" : host;
+    let requestor = (chromeWin.BrowserApp && chromeWin.BrowserApp.manifest) ?
+          "'" + BrowserApp.manifest.name + "'" : host;
     let message = Strings.browser.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
 
     let options = { inputs: [] };
@@ -313,6 +330,6 @@ var WebrtcUI = {
 
     let buttons = this.getDeviceButtons(audioDevices, videoDevices, aCallID, uri);
 
-    NativeWindow.doorhanger.show(message, "webrtc-request", buttons, BrowserApp.selectedTab.id, options, "WEBRTC");
+    DoorHanger.show(aContentWindow, message, "webrtc-request", buttons, options, "WEBRTC");
   }
 }
