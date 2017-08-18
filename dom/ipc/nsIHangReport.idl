@@ -32,6 +32,7 @@ interface nsIHangReport : nsISupports
   // Only valid for SLOW_SCRIPT reports.
   readonly attribute nsIDOMElement scriptBrowser;
   readonly attribute ACString scriptFileName;
+  readonly attribute AString addonId;
 
   // For PLUGIN_HANGs, this field contains information about the plugin.
   // Only valid for PLUGIN_HANG reports.
