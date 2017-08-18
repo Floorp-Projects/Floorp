@@ -16,7 +16,7 @@
     <p>HAR POST data test</p>
 
     <script type="text/javascript">
-      /* exported executeTest, executeTest2 */
+      /* exported executeTest, executeTest2, executeTest3 */
       "use strict";
 
       function post(address, data) {
@@ -24,6 +24,12 @@
         xhr.open("POST", address, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send(data);
+      }
+
+      function get(address) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", address);
+        xhr.send();
       }
 
       function executeTest() {
@@ -37,6 +43,12 @@
         const data = "x".repeat(size);
         post(url, data);
       }
+
+      function executeTest3(size) {
+        const url = "html_har_post-data-test-page.html";
+        get(url);
+      }
+
     </script>
   </body>
 
