@@ -129,3 +129,35 @@ def docker_worker_setup_secrets(config, job, taskdesc):
     for sec in secrets:
         taskdesc['scopes'].append(SECRET_SCOPE.format(
             job['treeherder']['kind'], config.params['level'], sec))
+
+
+def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
+    """Give the task access to tooltool.
+
+    Enables the tooltool cache. Adds releng proxy. Configures scopes.
+
+    By default, only public tooltool access will be granted. Access to internal
+    tooltool can be enabled via ``internal=True``.
+    """
+
+    assert job['worker']['implementation'] in ('docker-worker', 'docker-engine')
+
+    taskdesc['worker'].setdefault('caches', []).append({
+        'type': 'persistent',
+        'name': 'tooltool-cache',
+        'mount-point': '/home/worker/tooltool-cache',
+    })
+
+    taskdesc['worker'].setdefault('env', {}).update({
+        'TOOLTOOL_CACHE': '/home/worker/tooltool-cache',
+    })
+
+    job['worker']['relengapi-proxy'] = True
+    taskdesc['scopes'].extend([
+        'docker-worker:relengapi-proxy:tooltool.download.public',
+    ])
+
+    if internal:
+        taskdesc['scopes'].extend([
+            'docker-worker:relengapi-proxy:tooltool.download.internal',
+        ])

@@ -17,6 +17,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_tc_vcs_cache,
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_add_public_artifacts,
+    docker_worker_add_tooltool,
     support_vcs_checkout,
 )
 from taskgraph.util.hash import hash_paths
@@ -96,7 +97,6 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     worker = taskdesc['worker']
     worker['artifacts'] = []
-    worker['caches'] = []
     worker['chain-of-trust'] = True
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
@@ -112,26 +112,9 @@ def docker_worker_toolchain(config, job, taskdesc):
         'MOZ_AUTOMATION': '1',
     })
 
-    # tooltool downloads.  By default we download using the API endpoint, but
-    # the job can optionally request relengapi-proxy (for example when downloading
-    # internal tooltool resources.  So we define the tooltool cache unconditionally.
-    worker['caches'].append({
-        'type': 'persistent',
-        'name': 'tooltool-cache',
-        'mount-point': '/home/worker/tooltool-cache',
-    })
-    env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
-
-    # tooltool downloads
-    worker['relengapi-proxy'] = False  # but maybe enabled for tooltool below
     if run['tooltool-downloads']:
-        worker['relengapi-proxy'] = True
-        taskdesc['scopes'].extend([
-            'docker-worker:relengapi-proxy:tooltool.download.public',
-        ])
-        if run['tooltool-downloads'] == 'internal':
-            taskdesc['scopes'].append(
-                'docker-worker:relengapi-proxy:tooltool.download.internal')
+        internal = run['tooltool-downloads'] == 'internal'
+        docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
 
     worker['command'] = [
         '/home/worker/bin/run-task',

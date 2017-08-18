@@ -15,6 +15,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_public_artifacts,
     generic_worker_add_public_artifacts,
     docker_worker_add_gecko_vcs_env_vars,
+    docker_worker_add_tooltool,
     support_vcs_checkout,
 )
 
@@ -46,6 +47,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         })
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
+    docker_worker_add_tooltool(config, job, taskdesc)
 
     env = worker.setdefault('env', {})
     env.update({
@@ -54,15 +56,6 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
     })
-
-    # tooltool downloads; note that this script downloads using the API
-    # endpoiint directly, rather than via relengapi-proxy
-    worker['caches'].append({
-        'type': 'persistent',
-        'name': 'tooltool-cache',
-        'mount-point': '/home/worker/tooltool-cache',
-    })
-    env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
 
     support_vcs_checkout(config, job, taskdesc)
 
