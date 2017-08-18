@@ -910,6 +910,9 @@ WebRenderLayerManager::ClearLayer(Layer* aLayer)
   if (aLayer->GetMaskLayer()) {
     aLayer->GetMaskLayer()->ClearCachedResources();
   }
+  for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
+    aLayer->GetAncestorMaskLayerAt(i)->ClearCachedResources();
+  }
   for (Layer* child = aLayer->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     ClearLayer(child);
