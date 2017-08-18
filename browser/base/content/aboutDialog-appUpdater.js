@@ -27,7 +27,7 @@ function onUnload(aEvent) {
 }
 
 
-function appUpdater() {
+function appUpdater(options = {}) {
   XPCOMUtils.defineLazyServiceGetter(this, "aus",
                                      "@mozilla.org/updates/update-service;1",
                                      "nsIApplicationUpdateService");
@@ -38,6 +38,7 @@ function appUpdater() {
                                      "@mozilla.org/updates/update-manager;1",
                                      "nsIUpdateManager");
 
+  this.options = options;
   this.updateDeck = document.getElementById("updateDeck");
 
   // Hide the update deck when the update window is already open and it's not
@@ -186,9 +187,15 @@ appUpdater.prototype =
         button.label = this.bundle.formatStringFromName("update.downloadAndInstallButton.label", [updateVersion], 1);
         button.accessKey = this.bundle.GetStringFromName("update.downloadAndInstallButton.accesskey");
       }
+      this.updateDeck.selectedPanel = panel;
+      if (this.options.buttonAutoFocus &&
+          (!document.commandDispatcher.focusedElement || // don't steal the focus
+           document.commandDispatcher.focusedElement.localName == "button")) { // except from the other buttons
+        button.focus();
+      }
+    } else {
+      this.updateDeck.selectedPanel = panel;
     }
-
-    this.updateDeck.selectedPanel = panel;
   },
 
   /**
