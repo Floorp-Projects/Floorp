@@ -35,12 +35,6 @@ interface WebExtensionPolicy {
   readonly attribute ByteString baseURL;
 
   /**
-   * The extension's user-visible name.
-   */
-  [Constant]
-  readonly attribute DOMString name;
-
-  /**
    * The content security policy string to apply to all pages loaded from the
    * extension's moz-extension: protocol.
    */
@@ -147,8 +141,6 @@ dictionary WebExtensionInit {
   required ByteString mozExtensionHostname;
 
   required DOMString baseURL;
-
-  DOMString name = "";
 
   required WebExtensionLocalizeCallback localizeCallback;
 

@@ -30,8 +30,6 @@ public:
 
   ContentPrincipal();
 
-  static PrincipalKind Kind() { return eCodebasePrincipal; }
-
   // Init() must be called before the principal is in a usable state.
   nsresult Init(nsIURI* aCodebase,
                 const mozilla::OriginAttributes& aOriginAttributes,
