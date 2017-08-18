@@ -15,7 +15,7 @@
 #elif defined(XP_MACOSX)
 #include <CoreFoundation/CoreFoundation.h>
 #elif defined(XP_WIN)
-#include <Objbase.h>
+#include <objbase.h>
 #endif
 
 #include "json/json.h"
