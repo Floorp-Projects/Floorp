@@ -468,13 +468,18 @@ class AuthRequestor {
   // nsIAuthPrompt2 asyncPromptAuth
   asyncPromptAuth(channel, callback, context, level, authInfo) {
     let uri = channel.URI;
+    let proxyInfo;
+    let isProxy = !!(authInfo.flags & authInfo.AUTH_PROXY);
+    if (isProxy && channel instanceof Ci.nsIProxiedChannel) {
+      proxyInfo = channel.proxyInfo;
+    }
     let data = {
       scheme: authInfo.authenticationScheme,
       realm: authInfo.realm,
-      isProxy: !!(authInfo.flags & authInfo.AUTH_PROXY),
+      isProxy,
       challenger: {
-        host: uri.host,
-        port: uri.port,
+        host: proxyInfo ? proxyInfo.host : uri.host,
+        port: proxyInfo ? proxyInfo.port : uri.port,
       },
     };
 
