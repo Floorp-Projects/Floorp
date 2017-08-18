@@ -54,21 +54,15 @@ int32_t nsUnescapeCount(char* aStr);
  * (result may contain \0's).
  */
 
-char*
-nsEscapeHTML(const char* aString);
-
-char16_t*
-nsEscapeHTML2(const char16_t* aSourceBuffer,
-              int32_t aSourceBufferLen = -1);
-/*
- * Escape problem char's for HTML display
- */
-
-
 #ifdef __cplusplus
 }
 #endif
 
+/**
+ * Infallibly append aSrc to aDst, escaping chars that are problematic for HTML
+ * display.
+ */
+void nsAppendEscapedHTML(const nsACString& aSrc, nsACString& aDst);
 
 /**
  * NS_EscapeURL/NS_UnescapeURL constants for |flags| parameter:
