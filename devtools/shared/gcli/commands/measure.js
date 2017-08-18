@@ -4,7 +4,7 @@
 
 "use strict";
 
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "CommandState",
   "devtools/shared/gcli/command-state", true);

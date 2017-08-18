@@ -7,28 +7,17 @@
 #ifndef ADTS_DECODER_H_
 #define ADTS_DECODER_H_
 
-#include "ChannelMediaDecoder.h"
-
 namespace mozilla {
 
 class MediaContainerType;
 
-class ADTSDecoder : public ChannelMediaDecoder
+class ADTSDecoder
 {
 public:
-  // MediaDecoder interface.
-  explicit ADTSDecoder(MediaDecoderInit& aInit)
-    : ChannelMediaDecoder(aInit)
-  {
-  }
-
   // Returns true if the ADTS backend is pref'ed on, and we're running on a
   // platform that is likely to have decoders for the format.
   static bool IsEnabled();
   static bool IsSupportedType(const MediaContainerType& aContainerType);
-
-private:
-  ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) override;
 };
 
 } // namespace mozilla

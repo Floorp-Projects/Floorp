@@ -12,7 +12,7 @@ const {getDefinedGeometryProperties} = require("devtools/server/actors/highlight
 const {parseNamedDeclarations} = require("devtools/shared/css/parsing-utils");
 const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 const {Task} = require("devtools/shared/task");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 
 // This will also add the "stylesheet" actor type for protocol.js to recognize
 const {UPDATE_PRESERVING_RULES, UPDATE_GENERAL} = require("devtools/server/actors/stylesheets");

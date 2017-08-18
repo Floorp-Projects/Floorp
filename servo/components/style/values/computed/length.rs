@@ -78,7 +78,8 @@ impl ComputeSquaredDistance for CalcLengthOrPercentage {
         // FIXME(nox): This looks incorrect to me, to add a distance between lengths
         // with a distance between percentages.
         Ok(
-            self.unclamped_length().compute_squared_distance(&other.unclamped_length())? +
+            self.unclamped_length().to_f64_px().compute_squared_distance(
+                &other.unclamped_length().to_f64_px())? +
             self.percentage().compute_squared_distance(&other.percentage())?,
         )
     }
@@ -194,11 +195,21 @@ impl From<LengthOrPercentageOrNone> for Option<CalcLengthOrPercentage> {
 
 impl ToCss for CalcLengthOrPercentage {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-        match (self.length, self.percentage) {
-            (l, Some(p)) if l == Au(0) => p.to_css(dest),
-            (l, Some(p)) => write!(dest, "calc({}px + {}%)", Au::to_px(l), p.0 * 100.),
-            (l, None) => write!(dest, "{}px", Au::to_px(l)),
-        }
+        use num_traits::Zero;
+
+        let (length, percentage) = match (self.length, self.percentage) {
+            (l, None) => return l.to_css(dest),
+            (l, Some(p)) if l == Au(0) => return p.to_css(dest),
+            (l, Some(p)) => (l, p),
+        };
+
+        dest.write_str("calc(")?;
+        percentage.to_css(dest)?;
+
+        dest.write_str(if length < Zero::zero() { " - " } else { " + " })?;
+        length.abs().to_css(dest)?;
+
+        dest.write_str(")")
     }
 }
 
@@ -603,6 +614,13 @@ impl From<LengthOrPercentage> for NonNegativeLengthOrPercentage {
     #[inline]
     fn from(lop: LengthOrPercentage) -> Self {
         NonNegative::<LengthOrPercentage>(lop)
+    }
+}
+
+impl From<NonNegativeLengthOrPercentage> for LengthOrPercentage {
+    #[inline]
+    fn from(lop: NonNegativeLengthOrPercentage) -> LengthOrPercentage {
+        lop.0
     }
 }
 

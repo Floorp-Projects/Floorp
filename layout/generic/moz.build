@@ -103,6 +103,7 @@ EXPORTS += [
     'RubyUtils.h',
     'ScrollbarActivity.h',
     'ScrollSnap.h',
+    'TextDrawTarget.h',
     'Visibility.h',
 ]
 

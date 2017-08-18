@@ -19,13 +19,17 @@ the graph.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import os
 import re
 
+import jsone
+import yaml
 from slugid import nice as slugid
 from .task import Task
 from .graph import Graph
 from .taskgraph import TaskGraph
 
+here = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 MAX_ROUTES = 10
 
@@ -241,11 +245,45 @@ def add_s3_uploader_task(taskgraph, label_to_taskid):
     return taskgraph, label_to_taskid
 
 
-def morph(taskgraph, label_to_taskid):
+class apply_jsone_templates(object):
+    """Apply a set of JSON-e templates to each task's `task` attribute.
+
+    :param templates: A dict with the template name as the key, and extra context
+                      to use (in addition to task.to_json()) as the value.
+    """
+    template_dir = os.path.join(here, 'templates')
+
+    def __init__(self, templates):
+        self.templates = templates
+
+    def __call__(self, taskgraph, label_to_taskid):
+        if not self.templates:
+            return taskgraph, label_to_taskid
+
+        for task in taskgraph.tasks.itervalues():
+            for template in sorted(self.templates):
+                context = {
+                    'task': task.task,
+                    'taskGroup': None,
+                    'taskId': task.task_id,
+                    'kind': task.kind,
+                    'input': self.templates[template],
+                }
+
+                template_path = os.path.join(self.template_dir, template + '.yml')
+                with open(template_path) as f:
+                    template = yaml.load(f)
+                task.task = jsone.render(template, context)
+
+        return taskgraph, label_to_taskid
+
+
+def morph(taskgraph, label_to_taskid, parameters):
     """Apply all morphs"""
     morphs = [
         add_index_tasks,
         add_s3_uploader_task,
+        apply_jsone_templates(parameters.get('morph_templates')),
     ]
     for m in morphs:
         taskgraph, label_to_taskid = m(taskgraph, label_to_taskid)

@@ -67,8 +67,6 @@ protected:
 public:
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
 
-  MediaDecoderStateMachine* CreateStateMachine() override;
-
   MediaResource* GetResource() const override final;
 
   void Shutdown() override;
@@ -87,7 +85,9 @@ public:
   void Resume() override;
 
 private:
-  virtual ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) = 0;
+  // Create a new state machine to run this decoder.
+  MediaDecoderStateMachine* CreateStateMachine();
+
   nsresult OpenResource(nsIStreamListener** aStreamListener);
   nsresult Load(BaseMediaResource* aOriginal);
 

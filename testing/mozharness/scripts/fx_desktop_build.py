@@ -125,7 +125,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
             else:
                 self.fatal("'stage_platform' not determined and is required in your config")
 
-        if self.try_message_has_flag('artifact'):
+        if self.try_message_has_flag('artifact') or os.environ.get('USE_ARTIFACT'):
             # Not all jobs that look like builds can be made into artifact
             # builds (for example, various SAN builds will not make sense as
             # artifact builds).  By default, only a vanilla debug or opt build
@@ -136,7 +136,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
             #
             # This is temporary, until we find a way to introduce an "artifact
             # build dimension" like "opt"/"debug" into the CI configurations.
-            self.info('Artifact build requested in try syntax.')
+            self.info('Artifact build requested by try push.')
 
             variant = None
 

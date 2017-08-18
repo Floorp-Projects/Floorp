@@ -30,7 +30,7 @@ public class FirstrunPanel extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         final ViewGroup root = (ViewGroup) inflater.inflate(R.layout.firstrun_basepanel_checkable_fragment, container, false);
-        Bundle args = getArguments();
+        final Bundle args = getArguments();
         if (args != null) {
             final int imageRes = args.getInt(FirstrunPagerConfig.KEY_IMAGE);
             final int textRes = args.getInt(FirstrunPagerConfig.KEY_TEXT);

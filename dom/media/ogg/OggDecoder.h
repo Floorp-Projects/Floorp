@@ -6,34 +6,17 @@
 #if !defined(OggDecoder_h_)
 #define OggDecoder_h_
 
-#include "ChannelMediaDecoder.h"
-
 namespace mozilla {
 
 class MediaContainerType;
 
-class OggDecoder : public ChannelMediaDecoder
+class OggDecoder
 {
 public:
-  explicit OggDecoder(MediaDecoderInit& aInit)
-    : ChannelMediaDecoder(aInit)
-  {}
-
-  MediaDecoderStateMachine* CreateStateMachine() override;
-
   // Returns true if aContainerType is an Ogg type that we think we can render
   // with an enabled platform decoder backend.
   // If provided, codecs are checked for support.
   static bool IsSupportedType(const MediaContainerType& aContainerType);
-
-private:
-  ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) override
-  {
-    if (!IsOggEnabled()) {
-      return nullptr;
-    }
-    return new OggDecoder(aInit);
-  }
 };
 
 } // namespace mozilla

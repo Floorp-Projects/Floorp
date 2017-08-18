@@ -23,6 +23,20 @@ logger = logging.getLogger(__name__)
     description="Add all Talos tasks to a push.",
     order=100,  # Useful for sheriffs, but not top of the list
     context=[],
+    schema={
+        'type': 'object',
+        'properties': {
+            'times': {
+                'type': 'integer',
+                'default': 1,
+                'minimum': 1,
+                'maximum': 6,
+                'title': 'Times',
+                'description': 'How many times to run each task.',
+            }
+        },
+        'additionalProperties': False
+    },
 )
 def add_all_talos(parameters, input, task_group_id, task_id, task):
     decision_task_id = find_decision_task(parameters)
@@ -31,9 +45,11 @@ def add_all_talos(parameters, input, task_group_id, task_id, task):
     _, full_task_graph = TaskGraph.from_json(full_task_graph)
     label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
 
-    to_run = [label
-              for label, entry
-              in full_task_graph.tasks.iteritems() if 'talos_try_name' in entry.attributes]
+    times = input.get('times', 1)
+    for i in xrange(times):
+        to_run = [label
+                  for label, entry
+                  in full_task_graph.tasks.iteritems() if 'talos_try_name' in entry.attributes]
 
-    create_tasks(to_run, full_task_graph, label_to_taskid, parameters, decision_task_id)
-    logger.info('Scheduled {} talos tasks'.format(len(to_run)))
+        create_tasks(to_run, full_task_graph, label_to_taskid, parameters, decision_task_id)
+        logger.info('Scheduled {} talos tasks (time {}/{})'.format(len(to_run), i+1, times))

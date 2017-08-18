@@ -8,8 +8,7 @@ const { Cc, Ci, Cu } = require("chrome");
 const { reportException } = require("devtools/shared/DevToolsUtils");
 const { Class } = require("sdk/core/heritage");
 const { expectState } = require("devtools/server/actors/common");
-loader.lazyRequireGetter(this, "events", "sdk/event/core");
-loader.lazyRequireGetter(this, "EventTarget", "sdk/event/target", true);
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm", true);
 loader.lazyRequireGetter(this, "StackFrameCache",
@@ -33,7 +32,7 @@ loader.lazyRequireGetter(this, "ChildProcessActor",
  * utilities like GC events and measuring memory consumption.
  */
 exports.Memory = Class({
-  extends: EventTarget,
+  extends: EventEmitter,
 
   /**
    * Requires a root actor and a StackFrameCache.
@@ -50,11 +49,11 @@ exports.Memory = Class({
     this._emitAllocations = this._emitAllocations.bind(this);
     this._onWindowReady = this._onWindowReady.bind(this);
 
-    events.on(this.parent, "window-ready", this._onWindowReady);
+    EventEmitter.on(this.parent, "window-ready", this._onWindowReady);
   },
 
   destroy: function () {
-    events.off(this.parent, "window-ready", this._onWindowReady);
+    EventEmitter.off(this.parent, "window-ready", this._onWindowReady);
 
     this._mgr = null;
     if (this.state === "attached") {
@@ -399,7 +398,7 @@ exports.Memory = Class({
    * Handler for GC events on the Debugger.Memory instance.
    */
   _onGarbageCollection: function (data) {
-    events.emit(this, "garbage-collection", data);
+    EventEmitter.emit(this, "garbage-collection", data);
 
     // If `drainAllocationsTimeout` set, fire an allocations event with the drained log,
     // which will restart the timer.
@@ -416,7 +415,7 @@ exports.Memory = Class({
    * Drains allocation log and emits as an event and restarts the timer.
    */
   _emitAllocations: function () {
-    events.emit(this, "allocations", this.getAllocations());
+    EventEmitter.emit(this, "allocations", this.getAllocations());
     this._poller.arm();
   },
 

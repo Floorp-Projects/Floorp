@@ -9,7 +9,7 @@
 
 var protocol = require("devtools/shared/protocol");
 var {Arg, Option, RetVal} = protocol;
-var events = require("sdk/event/core");
+var events = require("devtools/shared/event-emitter");
 
 function simpleHello() {
   return {

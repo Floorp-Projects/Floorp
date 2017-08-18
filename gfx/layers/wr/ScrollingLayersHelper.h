@@ -19,6 +19,7 @@ class DisplayListBuilder;
 
 namespace layers {
 
+struct FrameMetrics;
 struct LayerClip;
 class StackingContextHelper;
 class WebRenderLayer;
@@ -36,11 +37,20 @@ public:
   ~ScrollingLayersHelper();
 
 private:
+  void DefineAndPushScrollLayers(nsDisplayItem* aItem,
+                                 const ActiveScrolledRoot* aAsr,
+                                 const DisplayItemClipChain* aChain,
+                                 wr::DisplayListBuilder& aBuilder,
+                                 int32_t aAppUnitsPerDevPixel,
+                                 const StackingContextHelper& aStackingContext,
+                                 WebRenderLayerManager::ClipIdMap& aCache);
   void DefineAndPushChain(const DisplayItemClipChain* aChain,
                           wr::DisplayListBuilder& aBuilder,
                           const StackingContextHelper& aStackingContext,
                           int32_t aAppUnitsPerDevPixel,
                           WebRenderLayerManager::ClipIdMap& aCache);
+  bool PushScrollLayer(const FrameMetrics& aMetrics,
+                       const StackingContextHelper& aStackingContext);
   void PushLayerLocalClip(const StackingContextHelper& aStackingContext);
   void PushLayerClip(const LayerClip& aClip,
                      const StackingContextHelper& aSc);
@@ -48,7 +58,8 @@ private:
   WebRenderLayer* mLayer;
   wr::DisplayListBuilder* mBuilder;
   bool mPushedLayerLocalClip;
-  int mClipsPushed;
+  bool mPushedClipAndScroll;
+  std::vector<wr::ScrollOrClipId> mPushedClips;
 };
 
 } // namespace layers
