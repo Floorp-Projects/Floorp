@@ -483,23 +483,25 @@ separator.thin:not([orient="vertical"]) {
  * Sync
  */
 
-#fxaProfileImage {
+.fxaProfileImage {
   width: 80px;
   height: 80px;
+  border-radius: 50%;
+  border: 1px solid transparent;
   list-style-image: url("chrome://browser/skin/preferences/in-content-new/fxa-avatar.svg");
   margin-inline-end: 24px;
   -moz-user-focus: normal;
 }
 
-#fxaProfileImage.actionable {
+.fxaProfileImage.actionable {
   cursor: pointer;
 }
 
-#fxaProfileImage.actionable:hover {
+.fxaProfileImage.actionable:hover {
   border-color: #0095DD;
 }
 
-#fxaProfileImage.actionable:hover:active {
+.fxaProfileImage.actionable:hover:active {
   border-color: #ff9500;
 }
 
@@ -572,20 +574,13 @@ separator.thin:not([orient="vertical"]) {
   word-break: break-all;
 }
 
-.fxaFirefoxLogo {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/fxa-avatar.svg");
-  width: 80px;
-  height: 80px;
-  margin-inline-end: 14px;
-}
-
-#fxaLoginRejectedWarning {
+.fxaLoginRejectedWarning {
   list-style-image: url(chrome://browser/skin/warning.svg);
   filter: drop-shadow(0 1px 0 hsla(206, 50%, 10%, .15));
   margin: 4px 8px 0px 0px;
 }
 
-#fxaSyncEngines > checkbox {
+#fxaSyncEngines > vbox > checkbox {
   max-width: 224px;
 }
 

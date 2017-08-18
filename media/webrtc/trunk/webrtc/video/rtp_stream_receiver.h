@@ -91,6 +91,7 @@ class RtpStreamReceiver : public RtpData,
   int GetCsrcs(uint32_t* csrcs) const;
   void GetRID(char rid[256]) const;
 	bool SetReceiveRIDStatus(bool enable, int id);
+  bool SetReceiveMIdStatus(bool enable, int id);
 
   RtpReceiver* GetRtpReceiver() const;
   RtpRtcp* rtp_rtcp() const { return rtp_rtcp_.get(); }
@@ -187,6 +188,7 @@ class RtpStreamReceiver : public RtpData,
   uint8_t restored_packet_[IP_PACKET_SIZE] GUARDED_BY(receive_cs_);
   bool restored_packet_in_use_ GUARDED_BY(receive_cs_);
   bool receiving_rid_enabled_ GUARDED_BY(receive_cs_);
+  bool receiving_mid_enabled_ GUARDED_BY(receive_cs_);
   int64_t last_packet_log_ms_ GUARDED_BY(receive_cs_);
 
   const std::unique_ptr<RtpRtcp> rtp_rtcp_;

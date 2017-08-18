@@ -1622,6 +1622,14 @@ MediaDecoder::RequestDebugInfo()
 }
 
 void
+MediaDecoder::GetMozDebugReaderData(nsACString& aString)
+{
+  if (mReader) {
+    mReader->GetMozDebugReaderData(aString);
+  }
+}
+
+void
 MediaDecoder::NotifyAudibleStateChanged()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());

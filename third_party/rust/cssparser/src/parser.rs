@@ -268,6 +268,15 @@ impl<'i: 't, 't> Parser<'i, 't> {
         self.input.tokenizer.current_source_location()
     }
 
+    /// The source map URL, if known.
+    ///
+    /// The source map URL is extracted from a specially formatted
+    /// comment.  The last such comment is used, so this value may
+    /// change as parsing proceeds.
+    pub fn current_source_map_url(&self) -> Option<&str> {
+        self.input.tokenizer.current_source_map_url()
+    }
+
     /// Return the current internal state of the parser (including position within the input).
     ///
     /// This state can later be restored with the `Parser::reset` method.

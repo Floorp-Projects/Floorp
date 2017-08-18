@@ -103,7 +103,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "FEED_INIT", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_REGISTER", "SECTION_ROWS_UPDATE", "SET_PREF", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "FEED_INIT", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_REGISTER", "SECTION_ROWS_UPDATE", "SET_PREF", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_EDIT_CLOSE", "TOP_SITES_EDIT_OPEN", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -331,7 +331,7 @@ var _require2 = __webpack_require__(1);
 const ac = _require2.actionCreators;
 
 const linkMenuOptions = __webpack_require__(23);
-const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow"];
+const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
 
 class LinkMenu extends React.Component {
   getOptions() {
@@ -579,8 +579,11 @@ function addLocaleDataForReactIntl(_ref) {
 
 class Base extends React.Component {
   componentDidMount() {
-    // Also wait for the preloaded page to show, so the tab's title updates
-    addEventListener("visibilitychange", () => this.updateTitle(this.props.App), { once: true });
+    // Also wait for the preloaded page to show, so the tab's title and favicon updates
+    addEventListener("visibilitychange", () => {
+      this.updateTitle(this.props.App);
+      document.getElementById("favicon").href += "#";
+    }, { once: true });
   }
   componentWillUpdate(_ref2) {
     let App = _ref2.App;
@@ -595,7 +598,9 @@ class Base extends React.Component {
   updateTitle(_ref3) {
     let strings = _ref3.strings;
 
-    document.title = strings.newtab_page_title;
+    if (strings) {
+      document.title = strings.newtab_page_title;
+    }
   }
 
   render() {
@@ -606,7 +611,7 @@ class Base extends React.Component {
           initialized = _props$App.initialized;
 
     const prefs = props.Prefs.values;
-    if (!initialized) {
+    if (!initialized || !strings) {
       return null;
     }
 
@@ -1127,6 +1132,8 @@ var _require = __webpack_require__(1);
 const at = _require.actionTypes;
 
 
+const TOP_SITES_SHOWMORE_LENGTH = 12;
+
 const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
@@ -1134,7 +1141,7 @@ const INITIAL_STATE = {
     // The locale of the browser
     locale: "",
     // Localized strings with defaults
-    strings: {},
+    strings: null,
     // The version of the system-addon
     version: null
   },
@@ -1196,7 +1203,6 @@ function insertPinned(links, pinned) {
   newLinks = newLinks.map(link => {
     if (link && link.isPinned) {
       delete link.isPinned;
-      delete link.pinTitle;
       delete link.pinIndex;
     }
     return link;
@@ -1207,7 +1213,7 @@ function insertPinned(links, pinned) {
     if (!val) {
       return;
     }
-    let link = Object.assign({}, val, { isPinned: true, pinIndex: index, pinTitle: val.title });
+    let link = Object.assign({}, val, { isPinned: true, pinIndex: index });
     if (index > newLinks.length) {
       newLinks[index] = link;
     } else {
@@ -1277,7 +1283,7 @@ function TopSites() {
       return Object.assign({}, prevState, { rows: newRows });
     case at.PINNED_SITES_UPDATED:
       pinned = action.data;
-      newRows = insertPinned(prevState.rows, pinned);
+      newRows = insertPinned(prevState.rows, pinned).slice(0, TOP_SITES_SHOWMORE_LENGTH);
       return Object.assign({}, prevState, { rows: newRows });
     default:
       return prevState;
@@ -1410,7 +1416,8 @@ var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections };
 module.exports = {
   reducers,
   INITIAL_STATE,
-  insertPinned
+  insertPinned,
+  TOP_SITES_SHOWMORE_LENGTH
 };
 
 /***/ }),
@@ -1501,9 +1508,11 @@ class Card extends React.Component {
           eventSource = _props.eventSource;
 
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
-    var _cardContextTypes$lin = cardContextTypes[link.type];
-    const icon = _cardContextTypes$lin.icon,
-          intlID = _cardContextTypes$lin.intlID;
+
+    var _ref = link.type ? cardContextTypes[link.type] : {};
+
+    const icon = _ref.icon,
+          intlID = _ref.intlID;
 
 
     return React.createElement(
@@ -1518,15 +1527,15 @@ class Card extends React.Component {
           link.image && React.createElement("div", { className: "card-preview-image", style: { backgroundImage: `url(${link.image})` } }),
           React.createElement(
             "div",
-            { className: "card-details" },
-            React.createElement(
+            { className: `card-details${link.image ? "" : " no-image"}` },
+            link.hostname && React.createElement(
               "div",
               { className: "card-host-name" },
               link.hostname
             ),
             React.createElement(
               "div",
-              { className: `card-text${link.image ? "" : " full-height"}` },
+              { className: `card-text${link.image ? "" : " no-image"}${link.hostname ? "" : " no-host-name"}${icon ? "" : " no-context"}` },
               React.createElement(
                 "h4",
                 { className: "card-title", dir: "auto" },
@@ -1538,7 +1547,7 @@ class Card extends React.Component {
                 link.description
               )
             ),
-            React.createElement(
+            icon && React.createElement(
               "div",
               { className: "card-context" },
               React.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
@@ -2268,10 +2277,11 @@ class Section extends React.Component {
           infoOption = _props.infoOption,
           emptyState = _props.emptyState,
           dispatch = _props.dispatch,
-          maxCards = _props.maxCards,
+          maxRows = _props.maxRows,
           contextMenuOptions = _props.contextMenuOptions,
           intl = _props.intl;
 
+    const maxCards = 3 * maxRows;
     const initialized = rows && rows.length > 0;
     const shouldShowTopics = id === "TopStories" && this.props.topics && this.props.read_more_endpoint;
 
@@ -2296,8 +2306,8 @@ class Section extends React.Component {
         React.createElement(
           "h3",
           { className: "section-title" },
-          React.createElement("span", { className: `icon icon-small-spacer icon-${icon}` }),
-          React.createElement(FormattedMessage, title)
+          icon && icon.startsWith("moz-extension://") ? React.createElement("span", { className: "icon icon-small-spacer", style: { "background-image": `url('${icon}')` } }) : React.createElement("span", { className: `icon icon-small-spacer icon-${icon || "webextension"}` }),
+          this.getFormattedMessage(title)
         ),
         infoOption && React.createElement(
           "span",
@@ -2314,17 +2324,17 @@ class Section extends React.Component {
             infoOption.header && React.createElement(
               "div",
               { className: "info-option-header", role: "heading" },
-              React.createElement(FormattedMessage, infoOption.header)
+              this.getFormattedMessage(infoOption.header)
             ),
             infoOption.body && React.createElement(
               "p",
               { className: "info-option-body" },
-              React.createElement(FormattedMessage, infoOption.body)
+              this.getFormattedMessage(infoOption.body)
             ),
             infoOption.link && React.createElement(
               "a",
               { href: infoOption.link.href, target: "_blank", rel: "noopener noreferrer", className: "info-option-link" },
-              React.createElement(FormattedMessage, infoOption.link)
+              this.getFormattedMessage(infoOption.link.title || infoOption.link)
             )
           )
         )
@@ -2344,7 +2354,7 @@ class Section extends React.Component {
           React.createElement(
             "p",
             { className: "empty-state-message" },
-            React.createElement(FormattedMessage, emptyState.message)
+            this.getFormattedMessage(emptyState.message)
           )
         )
       ),
@@ -2389,7 +2399,8 @@ const connect = _require.connect;
 
 var _require2 = __webpack_require__(2);
 
-const FormattedMessage = _require2.FormattedMessage;
+const FormattedMessage = _require2.FormattedMessage,
+      injectIntl = _require2.injectIntl;
 
 const LinkMenu = __webpack_require__(4);
 
@@ -2412,6 +2423,8 @@ class TopSite extends React.Component {
     this.onLinkClick = this.onLinkClick.bind(this);
     this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
+    this.onDismissButtonClick = this.onDismissButtonClick.bind(this);
+    this.onPinButtonClick = this.onPinButtonClick.bind(this);
   }
   toggleContextMenu(event, index) {
     this.setState({
@@ -2419,12 +2432,20 @@ class TopSite extends React.Component {
       showContextMenu: true
     });
   }
-  onLinkClick() {
+  userEvent(event) {
     this.props.dispatch(ac.UserEvent({
-      event: "CLICK",
+      event,
       source: TOP_SITES_SOURCE,
       action_position: this.props.index
     }));
+  }
+  onLinkClick(ev) {
+    if (this.props.editMode) {
+      // Ignore clicks if we are in the edit modal.
+      ev.preventDefault();
+      return;
+    }
+    this.userEvent("CLICK");
   }
   onMenuButtonClick(event) {
     event.preventDefault();
@@ -2433,14 +2454,49 @@ class TopSite extends React.Component {
   onMenuUpdate(showContextMenu) {
     this.setState({ showContextMenu });
   }
-  render() {
+  onDismissButtonClick() {
+    const link = this.props.link;
+
+    if (link.isPinned) {
+      this.props.dispatch(ac.SendToMain({
+        type: at.TOP_SITES_UNPIN,
+        data: { site: { url: link.url } }
+      }));
+    }
+    this.props.dispatch(ac.SendToMain({
+      type: at.BLOCK_URL,
+      data: link.url
+    }));
+    this.userEvent("BLOCK");
+  }
+  onPinButtonClick() {
     var _props = this.props;
     const link = _props.link,
-          index = _props.index,
-          dispatch = _props.dispatch;
+          index = _props.index;
+
+    if (link.isPinned) {
+      this.props.dispatch(ac.SendToMain({
+        type: at.TOP_SITES_UNPIN,
+        data: { site: { url: link.url } }
+      }));
+      this.userEvent("UNPIN");
+    } else {
+      this.props.dispatch(ac.SendToMain({
+        type: at.TOP_SITES_PIN,
+        data: { site: { url: link.url }, index }
+      }));
+      this.userEvent("PIN");
+    }
+  }
+  render() {
+    var _props2 = this.props;
+    const link = _props2.link,
+          index = _props2.index,
+          dispatch = _props2.dispatch,
+          editMode = _props2.editMode;
 
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeTile === index;
-    const title = link.pinTitle || link.hostname;
+    const title = link.hostname;
     const topSiteOuterClassName = `top-site-outer${isContextMenuOpen ? " active" : ""}`;
     const tippyTopIcon = link.tippyTopIcon;
 
@@ -2483,26 +2539,44 @@ class TopSite extends React.Component {
           )
         )
       ),
-      React.createElement(
-        "button",
-        { className: "context-menu-button", onClick: this.onMenuButtonClick },
+      !editMode && React.createElement(
+        "div",
+        null,
         React.createElement(
-          "span",
-          { className: "sr-only" },
-          `Open context menu for ${title}`
-        )
+          "button",
+          { className: "context-menu-button", onClick: this.onMenuButtonClick },
+          React.createElement(
+            "span",
+            { className: "sr-only" },
+            `Open context menu for ${title}`
+          )
+        ),
+        React.createElement(LinkMenu, {
+          dispatch: dispatch,
+          index: index,
+          onUpdate: this.onMenuUpdate,
+          options: TOP_SITES_CONTEXT_MENU_OPTIONS,
+          site: link,
+          source: TOP_SITES_SOURCE,
+          visible: isContextMenuOpen })
       ),
-      React.createElement(LinkMenu, {
-        dispatch: dispatch,
-        index: index,
-        onUpdate: this.onMenuUpdate,
-        options: TOP_SITES_CONTEXT_MENU_OPTIONS,
-        site: link,
-        source: TOP_SITES_SOURCE,
-        visible: isContextMenuOpen })
+      editMode && React.createElement(
+        "div",
+        { className: "edit-menu" },
+        React.createElement("button", {
+          className: `icon icon-${link.isPinned ? "unpin" : "pin"}`,
+          title: this.props.intl.formatMessage({ id: `edit_topsites_${link.isPinned ? "unpin" : "pin"}_button` }),
+          onClick: this.onPinButtonClick }),
+        React.createElement("button", {
+          className: "icon icon-dismiss",
+          title: this.props.intl.formatMessage({ id: "edit_topsites_dismiss_button" }),
+          onClick: this.onDismissButtonClick })
+      )
     );
   }
 }
+
+TopSite.defaultProps = { editMode: false };
 
 /**
  * A proxy class that uses double requestAnimationFrame from
@@ -2613,7 +2687,7 @@ class TopSitesPerfTimer extends React.Component {
 
 const TopSites = props => React.createElement(
   "section",
-  null,
+  { className: "top-sites" },
   React.createElement(
     "h3",
     { className: "section-title" },
@@ -2627,14 +2701,92 @@ const TopSites = props => React.createElement(
       key: link.guid || link.url,
       dispatch: props.dispatch,
       link: link,
-      index: index }))
-  )
+      index: index,
+      intl: props.intl }))
+  ),
+  React.createElement(TopSitesEditIntl, props)
 );
+
+class TopSitesEdit extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { showEditModal: false };
+    this.onEditButtonClick = this.onEditButtonClick.bind(this);
+  }
+  onEditButtonClick() {
+    this.setState({ showEditModal: !this.state.showEditModal });
+    const event = this.state.showEditModal ? "TOP_SITES_EDIT_OPEN" : "TOP_SITES_EDIT_CLOSE";
+    this.props.dispatch(ac.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event
+    }));
+  }
+  render() {
+    return React.createElement(
+      "div",
+      { className: "edit-topsites-wrapper" },
+      React.createElement(
+        "div",
+        { className: "edit-topsites-button" },
+        React.createElement(
+          "button",
+          {
+            className: "edit",
+            title: this.props.intl.formatMessage({ id: "edit_topsites_button_label" }),
+            onClick: this.onEditButtonClick },
+          React.createElement(FormattedMessage, { id: "edit_topsites_button_text" })
+        )
+      ),
+      this.state.showEditModal && React.createElement(
+        "div",
+        { className: "edit-topsites" },
+        React.createElement("div", { className: "modal-overlay" }),
+        React.createElement(
+          "div",
+          { className: "modal" },
+          React.createElement(
+            "section",
+            { className: "edit-topsites-inner-wrapper" },
+            React.createElement(
+              "h3",
+              { className: "section-title" },
+              React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
+              React.createElement(FormattedMessage, { id: "header_top_sites" })
+            ),
+            React.createElement(
+              "ul",
+              { className: "top-sites-list" },
+              this.props.TopSites.rows.map((link, index) => link && React.createElement(TopSite, {
+                key: link.guid || link.url,
+                dispatch: this.props.dispatch,
+                link: link,
+                index: index,
+                intl: this.props.intl,
+                editMode: true }))
+            )
+          ),
+          React.createElement(
+            "section",
+            { className: "actions" },
+            React.createElement(
+              "button",
+              { className: "done", onClick: this.onEditButtonClick },
+              React.createElement(FormattedMessage, { id: "edit_topsites_done_button" })
+            )
+          )
+        )
+      )
+    );
+  }
+}
+
+const TopSitesEditIntl = injectIntl(TopSitesEdit);
 
 module.exports = connect(state => ({ TopSites: state.TopSites }))(TopSitesPerfTimer);
 module.exports._unconnected = TopSitesPerfTimer;
 module.exports.TopSite = TopSite;
 module.exports.TopSites = TopSites;
+module.exports.TopSitesEdit = TopSitesEdit;
 
 /***/ }),
 /* 22 */
@@ -2790,7 +2942,7 @@ module.exports = {
     icon: "pin",
     action: ac.SendToMain({
       type: at.TOP_SITES_PIN,
-      data: { site: { url: site.url, title: site.hostname }, index }
+      data: { site: { url: site.url }, index }
     }),
     userEvent: "PIN"
   }),

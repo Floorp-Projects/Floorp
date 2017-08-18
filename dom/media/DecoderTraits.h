@@ -65,6 +65,8 @@ public:
 
   // Returns true if aType is MIME type of hls.
   static bool IsHttpLiveStreamingType(const MediaContainerType& aType);
+
+  static bool IsSupportedType(const MediaContainerType& aType);
 };
 
 } // namespace mozilla

@@ -423,6 +423,19 @@
   opacity: 0.2;
 }
 
+%ifdef CAN_DRAW_IN_TITLEBAR
+%ifdef MENUBAR_CAN_AUTOHIDE
+:root[tabsintitlebar] #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::after,
+:root[tabsintitlebar] #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::before
+%else
+:root[tabsintitlebar] .tabbrowser-tab::after,
+:root[tabsintitlebar] .tabbrowser-tab::before
+%endif
+{
+  border-image: none;
+}
+%endif
+
 /* Also show separators beside the selected tab when dragging it. */
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
 .tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,

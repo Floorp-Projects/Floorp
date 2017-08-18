@@ -8,7 +8,7 @@ const protocol = require("devtools/shared/protocol");
 const { Memory } = require("devtools/server/performance/memory");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { memorySpec } = require("devtools/shared/specs/memory");
-loader.lazyRequireGetter(this, "events", "sdk/event/core");
+loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "StackFrameCache",
                          "devtools/server/actors/utils/stack", true);
 

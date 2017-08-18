@@ -979,3 +979,28 @@ fn parse_entirely_reports_first_error() {
     let result: Result<(), _> = parser.parse_entirely(|_| Err(ParseError::Custom(E::Foo)));
     assert_eq!(result, Err(ParseError::Custom(E::Foo)));
 }
+
+#[test]
+fn parse_comments() {
+    let tests = vec![
+        ("/*# sourceMappingURL=here*/", Some("here")),
+        ("/*# sourceMappingURL=here  */", Some("here")),
+        ("/*@ sourceMappingURL=here*/", Some("here")),
+        ("/*@ sourceMappingURL=there*/ /*# sourceMappingURL=here*/", Some("here")),
+        ("/*# sourceMappingURL=here there  */", Some("here")),
+        ("/*# sourceMappingURL=  here  */", Some("")),
+        ("/*# sourceMappingURL=*/", Some("")),
+        ("/*# sourceMappingUR=here  */", None),
+        ("/*! sourceMappingURL=here  */", None),
+        ("/*# sourceMappingURL = here  */", None),
+        ("/*   # sourceMappingURL=here   */", None)
+    ];
+
+    for test in tests {
+        let mut input = ParserInput::new(test.0);
+        let mut parser = Parser::new(&mut input);
+        while let Ok(_) = parser.next_including_whitespace() {
+        }
+        assert_eq!(parser.current_source_map_url(), test.1);
+    }
+}

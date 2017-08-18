@@ -150,39 +150,50 @@ class EventEmitter {
   static emit(target, type, ...rest) {
     logEvent(type, rest);
 
-    if (!(eventListeners in target) || !target[eventListeners].has(type)) {
+    if (!(eventListeners in target)) {
       return;
     }
 
-    // Creating a temporary Set with the original listeners, to avoiding side effects
-    // in emit.
-    let listenersForType = new Set(target[eventListeners].get(type));
+    if (target[eventListeners].has(type)) {
+      // Creating a temporary Set with the original listeners, to avoiding side effects
+      // in emit.
+      let listenersForType = new Set(target[eventListeners].get(type));
 
-    for (let listener of listenersForType) {
-      // If the object was destroyed during event emission, stop emitting.
-      if (!(eventListeners in target)) {
-        break;
-      }
+      for (let listener of listenersForType) {
+        // If the object was destroyed during event emission, stop emitting.
+        if (!(eventListeners in target)) {
+          break;
+        }
 
-      let events = target[eventListeners];
-      let listeners = events.get(type);
+        let events = target[eventListeners];
+        let listeners = events.get(type);
 
-      // If listeners were removed during emission, make sure the
-      // event handler we're going to fire wasn't removed.
-      if (listeners && listeners.has(listener)) {
-        try {
-          if (isEventHandler(listener)) {
-            listener[handler](type, ...rest);
-          } else {
-            listener.call(target, ...rest);
+        // If listeners were removed during emission, make sure the
+        // event handler we're going to fire wasn't removed.
+        if (listeners && listeners.has(listener)) {
+          try {
+            if (isEventHandler(listener)) {
+              listener[handler](type, ...rest);
+            } else {
+              listener.call(target, ...rest);
+            }
+          } catch (ex) {
+            // Prevent a bad listener from interfering with the others.
+            let msg = ex + ": " + ex.stack;
+            console.error(msg);
+            dump(msg + "\n");
           }
-        } catch (ex) {
-          // Prevent a bad listener from interfering with the others.
-          let msg = ex + ": " + ex.stack;
-          console.error(msg);
-          dump(msg + "\n");
         }
       }
+    }
+
+    // Backward compatibility with the SDK event-emitter: support wildcard listeners that
+    // will be called for any event. The arguments passed to the listener are the event
+    // type followed by the actual arguments.
+    // !!! This API will be removed by Bug 1391261.
+    let hasWildcardListeners = target[eventListeners].has("*");
+    if (type !== "*" && hasWildcardListeners) {
+      EventEmitter.emit(target, "*", type, ...rest);
     }
   }
 

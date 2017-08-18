@@ -166,6 +166,8 @@ def get_decision_parameters(options):
         'check_servo',
         'target_tasks_method',
     ]
+    parameters['target_task_labels'] = []
+    parameters['morph_templates'] = {}
 
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
     # case, fake it
@@ -186,6 +188,15 @@ def get_decision_parameters(options):
                        "PER_PROJECT_PARAMETERS in {} to customize behavior "
                        "for this project".format(project, __file__))
         parameters.update(PER_PROJECT_PARAMETERS['default'])
+
+    # morph_templates and target_task_labels are only used on try, so don't
+    # bother loading them elsewhere
+    task_config_file = os.path.join(GECKO, 'try_task_config.json')
+    if project == 'try' and os.path.isfile(task_config_file):
+        with open(task_config_file, 'r') as fh:
+            task_config = json.load(fh)
+        parameters['morph_templates'] = task_config.get('templates', {})
+        parameters['target_task_labels'] = task_config.get('tasks')
 
     # `target_tasks_method` has higher precedence than `project` parameters
     if options.get('target_tasks_method'):

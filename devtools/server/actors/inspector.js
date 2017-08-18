@@ -58,7 +58,7 @@ const {LongStringActor} = require("devtools/server/actors/string");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const {WalkerSearch} = require("devtools/server/actors/utils/walker-search");
 const {PageStyleActor, getFontPreviewData} = require("devtools/server/actors/styles");
 const {

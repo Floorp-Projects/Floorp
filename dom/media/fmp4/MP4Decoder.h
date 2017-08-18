@@ -6,25 +6,27 @@
 #if !defined(MP4Decoder_h_)
 #define MP4Decoder_h_
 
-#include "ChannelMediaDecoder.h"
+class nsACString;
 #include "mozilla/dom/Promise.h"
 #include "mozilla/layers/KnowsCompositor.h"
 
 namespace mozilla {
 
 class MediaContainerType;
+class DecoderDoctorDiagnostics;
 
 // Decoder that uses a bundled MP4 demuxer and platform decoders to play MP4.
-class MP4Decoder : public ChannelMediaDecoder
+class MP4Decoder
 {
 public:
-  explicit MP4Decoder(MediaDecoderInit& aInit);
-
   // Returns true if aContainerType is an MP4 type that we think we can render
   // with the a platform decoder backend.
   // If provided, codecs are checked for support.
   static bool IsSupportedType(const MediaContainerType& aContainerType,
                               DecoderDoctorDiagnostics* aDiagnostics);
+
+  static bool IsSupportedTypeWithoutDiagnostics(
+    const MediaContainerType& aContainerType);
 
   // Return true if aMimeType is a one of the strings used by our demuxers to
   // identify H264. Does not parse general content type strings, i.e. white
@@ -42,16 +44,6 @@ public:
   static already_AddRefed<dom::Promise>
   IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlobalObject* aParent);
 
-  void GetMozDebugReaderData(nsACString& aString) override;
-
-private:
-  ChannelMediaDecoder* CloneImpl(MediaDecoderInit& aInit) override
-  {
-    if (!IsEnabled()) {
-      return nullptr;
-    }
-    return new MP4Decoder(aInit);
-  }
 };
 
 } // namespace mozilla

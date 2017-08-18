@@ -236,7 +236,9 @@ test_description_schema = Schema({
             # a raw Docker image path (repo/image:tag)
             basestring,
             # an in-tree generated docker image (from `taskcluster/docker/<name>`)
-            {'in-tree': basestring}
+            {'in-tree': basestring},
+            # an indexed docker image
+            {'indexed': basestring},
         )
     ),
 

@@ -43,6 +43,11 @@ def syntax_parser():
     return parser
 
 
+def fuzzy_parser():
+    from tryselect.selectors.fuzzy import FuzzyParser
+    return FuzzyParser()
+
+
 @CommandProvider
 class TrySelect(MachCommandBase):
 
@@ -69,19 +74,8 @@ class TrySelect(MachCommandBase):
 
     @SubCommand('try',
                 'fuzzy',
-                description='Select tasks on try using a fuzzy finder')
-    @CommandArgument('-q', '--query', metavar='STR',
-                     help="Use the given query instead of entering the selection "
-                          "interface. Equivalent to typing <query><ctrl-a><enter> "
-                          "from the interface.")
-    @CommandArgument('-u', '--update', action='store_true', default=False,
-                     help="Update fzf before running.")
-    @CommandArgument('--full', action='store_true', default=False,
-                     help="Use the full set of tasks as input to fzf (instead of "
-                          "target tasks).")
-    @CommandArgument('-p', '--parameters', default=None,
-                     help="Use the given parameters.yml to generate tasks, "
-                          "defaults to latest parameters.yml from mozilla-central")
+                description='Select tasks on try using a fuzzy finder',
+                parser=fuzzy_parser)
     def try_fuzzy(self, *args, **kwargs):
         """Select which tasks to use with fzf.
 

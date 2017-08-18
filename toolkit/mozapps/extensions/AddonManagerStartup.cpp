@@ -137,31 +137,23 @@ IsNormalFile(nsIFile* file)
   return NS_SUCCEEDED(file->IsFile(&result)) && result;
 }
 
-static nsCString
-ReadFile(const char* path)
+static Result<nsCString, nsresult>
+ReadFile(nsIFile* file)
 {
   nsCString result;
 
-  FILE* fd = fopen(path, READ_BINARYMODE);
-  if (!fd) {
-    return result;
-  }
-  auto cleanup = MakeScopeExit([&] () {
-    fclose(fd);
-  });
+  AutoFDClose fd;
+  NS_TRY(file->OpenNSPRFileDesc(PR_RDONLY, 0, &fd.rwget()));
 
-  if (fseek(fd, 0, SEEK_END) != 0) {
-    return result;
-  }
-  size_t len = ftell(fd);
-  if (len <= 0 || fseek(fd, 0, SEEK_SET) != 0) {
-    return result;
-  }
+  auto size = PR_Seek64(fd, 0, PR_SEEK_END);
+  PR_Seek64(fd, 0, PR_SEEK_SET);
 
-  result.SetLength(len);
-  size_t rd = fread(result.BeginWriting(), sizeof(char), len, fd);
-  if (rd != len) {
-    result.Truncate();
+  result.SetLength(size);
+
+  auto len = PR_Read(fd, result.BeginWriting(), size);
+
+  if (size != len) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   return result;
@@ -235,15 +227,17 @@ static_assert(sizeof STRUCTURED_CLONE_MAGIC % 8 == 0,
  * file is treated as failure.
  */
 static Result<nsCString, nsresult>
-ReadFileLZ4(const char* path)
+ReadFileLZ4(nsIFile* file)
 {
   static const char MAGIC_NUMBER[] = "mozLz40";
 
   nsCString result;
 
-  nsCString lz4 = ReadFile(path);
+  nsCString lz4;
+  MOZ_TRY_VAR(lz4, ReadFile(file));
+
   if (lz4.IsEmpty()) {
-    return result;
+    return lz4;
   }
 
   return DecodeLZ4(lz4, MAGIC_NUMBER);
@@ -624,11 +618,8 @@ AddonManagerStartup::ReadStartupData(JSContext* cx, JS::MutableHandleValue locat
 
   nsCOMPtr<nsIFile> file = CloneAndAppend(ProfileDir(), "addonStartup.json.lz4");
 
-  nsCString path;
-  NS_TRY(file->GetNativePath(path));
-
   nsCString data;
-  MOZ_TRY_VAR(data, ReadFileLZ4(path.get()));
+  MOZ_TRY_VAR(data, ReadFileLZ4(file));
 
   if (data.IsEmpty() || !ParseJSON(cx, data, locations)) {
     return NS_OK;

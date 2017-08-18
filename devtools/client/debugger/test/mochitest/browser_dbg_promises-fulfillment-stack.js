@@ -11,7 +11,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_promise-get-fulfillment-stack.html";
 const { PromisesFront } = require("devtools/shared/fronts/promises");
-var events = require("sdk/event/core");
+var events = require("devtools/shared/event-emitter");
 
 const TEST_DATA = [
   {

@@ -23,9 +23,6 @@
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsContentTypeParser.h"
-#ifdef MOZ_FMP4
-#include "MP4Decoder.h"
-#endif
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
 #endif

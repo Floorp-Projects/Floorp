@@ -93,12 +93,25 @@ syntax or reading a project-specific configuration file).
     apply. This is usually defined internally, as filters are typically
     global.
 
+``target_task_labels``
+    List of task labels to select. Labels not listed will be filtered out.
+    Enabled on try only.
+
 ``target_tasks_method``
     The method to use to determine the target task set.  This is the suffix of
     one of the functions in ``taskcluster/taskgraph/target_tasks.py``.
 
 ``optimize_target_tasks``
-   If true, then target tasks are eligible for optimization.
+    If true, then target tasks are eligible for optimization.
 
 ``include_nightly``
-   If true, then nightly tasks are eligible for optimization.
+    If true, then nightly tasks are eligible for optimization.
+
+Morphed Set
+-----------
+
+``morph_templates``
+    Dict of JSON-e templates to apply to each task, keyed by template name.
+    Values are extra context that will be available to the template under the
+    ``input.<template>`` key. Available templates live in
+    ``taskcluster/taskgraph/templates``. Enabled on try only.

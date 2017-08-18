@@ -184,15 +184,20 @@ LookupCacheV4::SizeOfPrefixSet()
   return mVLPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
 }
 
-static void
+static nsresult
 AppendPrefixToMap(PrefixStringMap& prefixes, nsDependentCSubstring& prefix)
 {
-  if (!prefix.Length()) {
-    return;
+  uint32_t len = prefix.Length();
+  if (!len) {
+    return NS_OK;
   }
 
-  nsCString* prefixString = prefixes.LookupOrAdd(prefix.Length());
-  prefixString->Append(prefix.BeginReading(), prefix.Length());
+  nsCString* prefixString = prefixes.LookupOrAdd(len);
+  if (!prefixString->Append(prefix.BeginReading(), len, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
 }
 
 // Read prefix into a buffer and also update the hash which
@@ -284,14 +289,21 @@ LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
           numOldPrefixPicked == removalArray[removalIndex]) {
         removalIndex++;
       } else {
-        AppendPrefixToMap(aOutputMap, smallestOldPrefix);
+        rv = AppendPrefixToMap(aOutputMap, smallestOldPrefix);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
         UpdateChecksum(crypto, smallestOldPrefix);
       }
       smallestOldPrefix.SetLength(0);
     } else {
-      AppendPrefixToMap(aOutputMap, smallestAddPrefix);
-      UpdateChecksum(crypto, smallestAddPrefix);
+      rv = AppendPrefixToMap(aOutputMap, smallestAddPrefix);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
+      UpdateChecksum(crypto, smallestAddPrefix);
       smallestAddPrefix.SetLength(0);
     }
   }

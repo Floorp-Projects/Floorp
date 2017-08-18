@@ -519,7 +519,11 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
           aItem->GetBounds(aDisplayListBuilder, &dummy), appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
 
-  aManager->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aSc, destRect, destRect);
+  for (layers::GlyphArray& glyphs : mGlyphs) {
+    aManager->WrBridge()->PushGlyphs(aBuilder, glyphs.glyphs(), mFont,
+                                     glyphs.color().value(),
+                                     aSc, destRect, destRect);
+  }
 }
 
 class nsDisplayBullet final : public nsDisplayItem {

@@ -288,4 +288,32 @@ bool RepairedRtpStreamId::Write(uint8_t* data, const std::string& rsid) {
   return RtpStreamId::Write(data, rsid);
 }
 
+// MId
+constexpr RTPExtensionType MId::kId;
+constexpr const char* MId::kUri;
+
+bool MId::Parse(rtc::ArrayView<const uint8_t> data, StreamId* mid) {
+  return RtpStreamId::Parse(data, mid);
+}
+
+size_t MId::ValueSize(const StreamId& mid) {
+  return RtpStreamId::ValueSize(mid);
+}
+
+bool MId::Write(uint8_t* data, const StreamId& mid) {
+  return RtpStreamId::Write(data, mid);
+}
+
+bool MId::Parse(rtc::ArrayView<const uint8_t> data, std::string* mid) {
+  return RtpStreamId::Parse(data, mid);
+}
+
+size_t MId::ValueSize(const std::string& mid) {
+  return RtpStreamId::ValueSize(mid);
+}
+
+bool MId::Write(uint8_t* data, const std::string& mid) {
+  return RtpStreamId::Write(data, mid);
+}
+
 }  // namespace webrtc

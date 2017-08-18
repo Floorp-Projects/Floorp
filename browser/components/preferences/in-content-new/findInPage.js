@@ -239,6 +239,11 @@ var gSearchResultsPane = {
       let rootPreferencesChildren = document
         .querySelectorAll("#mainPrefPane > *:not([data-hidden-from-search])");
 
+      // Show all second level headers in search result
+      for (let element of document.querySelectorAll("caption.search-header")) {
+        element.hidden = false;
+      }
+
       if (subQuery) {
         // Since the previous query is a subset of the current query,
         // there is no need to check elements that is hidden already.
@@ -318,6 +323,11 @@ var gSearchResultsPane = {
       document.getElementById("sorry-message").textContent = "";
       // Going back to General when cleared
       gotoPref("paneGeneral");
+
+      // Hide some special second level headers in normal view
+      for (let element of document.querySelectorAll("caption.search-header")) {
+        element.hidden = true;
+      }
     }
 
     window.dispatchEvent(new CustomEvent("PreferencesSearchCompleted", { detail: query }));
