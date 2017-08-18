@@ -13,7 +13,6 @@
 
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const performanceSpec = require("devtools/shared/specs/performance-entries");
-const events = require("devtools/shared/event-emitter");
 
 var PerformanceEntriesActor = ActorClassWithSpec(performanceSpec, {
   listenerAdded: false,
@@ -56,7 +55,7 @@ var PerformanceEntriesActor = ActorClassWithSpec(performanceSpec, {
       origin: e.origin,
       epoch: e.epoch
     };
-    events.emit(this, "entry", emitDetail);
+    this.emit("entry", emitDetail);
   }
 });
 
