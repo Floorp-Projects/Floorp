@@ -20,6 +20,7 @@
 #include "nsDisplayList.h"
 #include "JustificationUtils.h"
 #include "RubyUtils.h"
+#include "TextDrawTarget.h"
 
 // Undo the windows.h damage
 #if defined(XP_WIN) && defined(DrawText)
@@ -48,6 +49,7 @@ class nsTextFrame : public nsFrame
   typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::Size Size;
+  typedef mozilla::layout::TextDrawTarget TextDrawTarget;
   typedef gfxTextRun::Range Range;
 
 public:
@@ -441,6 +443,7 @@ public:
   struct PaintTextParams
   {
     gfxContext* context;
+    TextDrawTarget* textDrawer;
     gfxPoint framePt;
     LayoutDeviceRect dirtyRect;
     mozilla::SVGContextPaint* contextPaint = nullptr;
@@ -457,7 +460,7 @@ public:
     };
     uint8_t state = PaintText;
     explicit PaintTextParams(gfxContext* aContext)
-      : context(aContext)
+      : context(aContext), textDrawer(nullptr)
     {
     }
 
@@ -480,6 +483,7 @@ public:
   struct DrawTextRunParams
   {
     gfxContext* context;
+    TextDrawTarget* textDrawer;
     PropertyProvider* provider = nullptr;
     gfxFloat* advanceWidth = nullptr;
     mozilla::SVGContextPaint* contextPaint = nullptr;
@@ -489,7 +493,7 @@ public:
     float textStrokeWidth = 0.0f;
     bool drawSoftHyphen = false;
     explicit DrawTextRunParams(gfxContext* aContext)
-      : context(aContext)
+      : context(aContext), textDrawer(nullptr)
     {}
   };
 
@@ -706,6 +710,7 @@ protected:
     gfxPoint framePt;
     gfxPoint textBaselinePt;
     gfxContext* context;
+    TextDrawTarget* textDrawer;
     nscolor foregroundColor = NS_RGBA(0, 0, 0, 0);
     const nsCharClipDisplayItem::ClipEdges* clipEdges = nullptr;
     PropertyProvider* provider = nullptr;
@@ -714,6 +719,7 @@ protected:
       : dirtyRect(aParams.dirtyRect)
       , framePt(aParams.framePt)
       , context(aParams.context)
+      , textDrawer(aParams.textDrawer)
     {
     }
   };

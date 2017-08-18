@@ -4,7 +4,7 @@
 
 "use strict";
 
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const { getCurrentZoom, getWindowDimensions,
   setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 const {

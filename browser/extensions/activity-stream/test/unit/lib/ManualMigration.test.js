@@ -97,7 +97,8 @@ describe("ManualMigration", () => {
     });
     it("should set migrationStatus when isMigrationMessageExpired is true", async () => {
       const setStatusStub = sinon.stub(instance, "expireMigration");
-      sinon.stub(instance, "isMigrationMessageExpired", () => new Promise(resolve => { resolve(true); }));
+      sinon.stub(instance, "isMigrationMessageExpired")
+        .returns(Promise.resolve(true));
 
       await instance.expireIfNecessary(false);
 

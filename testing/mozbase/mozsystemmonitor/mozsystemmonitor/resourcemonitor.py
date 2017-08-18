@@ -289,26 +289,45 @@ class SystemResourceMonitor(object):
         assert self._running
         assert not self._stopped
 
-        self._pipe.send(('terminate',))
+        try:
+            self._pipe.send(('terminate',))
+        except Exception:
+            pass
         self._running = False
         self._stopped = True
 
         self.measurements = []
 
-        done = False
-
         # The child process will send each data sample over the pipe
         # as a separate data structure. When it has finished sending
         # samples, it sends a special "done" message to indicate it
         # is finished.
-        while self._pipe.poll(1.0):
-            start_time, end_time, io_diff, cpu_diff, cpu_percent, virt_mem, \
-                swap_mem = self._pipe.recv()
+
+        # multiprocessing.Pipe is not actually a pipe on at least Linux.  that
+        # has an effect on the expected outcome of reading from it when the
+        # other end of the pipe dies, leading to possibly hanging on revc()
+        # below. So we must poll().
+        def poll():
+            try:
+                return self._pipe.poll(0.1)
+            except Exception:
+                # Poll might throw an exception even though there's still
+                # data to read. That happens when the underlying system call
+                # returns both POLLERR and POLLIN, but python doesn't tell us
+                # about it. So assume there is something to read, and we'll
+                # get an exception when trying to read the data.
+                return True
+        while poll():
+            try:
+                start_time, end_time, io_diff, cpu_diff, cpu_percent, virt_mem, \
+                    swap_mem = self._pipe.recv()
+            except Exception:
+                # Let's assume we're done here
+                break
 
             # There should be nothing after the "done" message so
             # terminate.
             if start_time == 'done':
-                done = True
                 break
 
             io = self._io_type(*io_diff)
@@ -325,11 +344,6 @@ class SystemResourceMonitor(object):
         if self._process.is_alive():
             self._process.terminate()
             self._process.join(10)
-        else:
-            # We should have received a "done" message from the
-            # child indicating it shut down properly. This only
-            # happens if the child shuts down cleanly.
-            assert done
 
         if len(self.measurements):
             self.start_time = self.measurements[0].start

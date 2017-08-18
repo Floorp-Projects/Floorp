@@ -60,6 +60,8 @@ browser.jar:
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
+* skin/classic/browser/notification-icons/geo-blocked.svg  (notification-icons/geo-blocked.svg)
+* skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
 * skin/classic/browser/places/places.css                    (places/places.css)
   skin/classic/browser/places/organizer.css                 (places/organizer.css)
@@ -114,6 +116,8 @@ browser.jar:
 % override chrome://browser/skin/feeds/audioFeedIcon16.png                 chrome://browser/skin/feeds/feedIcon16.png
 % override chrome://browser/skin/feeds/videoFeedIcon.png                   chrome://browser/skin/feeds/feedIcon.png
 % override chrome://browser/skin/feeds/videoFeedIcon16.png                 chrome://browser/skin/feeds/feedIcon16.png
+% override chrome://browser/skin/notification-icons/geo-detailed.svg       chrome://browser/skin/notification-icons/geo.svg
+
 % override chrome://browser/skin/menuPanel-customize.png                   chrome://browser/skin/yosemite/menuPanel-customize.png                  os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-customize@2x.png                chrome://browser/skin/yosemite/menuPanel-customize@2x.png               os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-exit.png                        chrome://browser/skin/yosemite/menuPanel-exit.png                       os=Darwin osversion>=10.10

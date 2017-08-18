@@ -890,6 +890,8 @@ struct RTPHeaderExtension {
   // TODO(danilchap): Update url from draft to release version.
   StreamId rtpStreamId;
   StreamId repairedRtpStreamId;
+
+  StreamId mId;
 };
 
 struct RTPHeader {

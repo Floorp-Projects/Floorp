@@ -15,17 +15,16 @@ function getExpectedTargets() {
     "addons",
     "appMenu",
     "backForward",
-    "bookmark-star-button",
     "customize",
     "devtools",
     "help",
     "home",
     "library",
     "pageActionButton",
-    "pageAction-panel-bookmark",
-    "pageAction-panel-copyURL",
-    "pageAction-panel-emailLink",
-    "pageAction-panel-sendToDevice",
+    "pageAction-bookmark",
+    "pageAction-copyURL",
+    "pageAction-emailLink",
+    "pageAction-sendToDevice",
       ...(hasPocket ? ["pocket"] : []),
     "privateWindow",
       ...(hasQuit ? ["quit"] : []),
@@ -43,7 +42,6 @@ add_UITour_task(async function test_availableTargets() {
   let data = await getConfigurationPromise("availableTargets");
   let expecteds = getExpectedTargets();
   ok_targets(data, expecteds);
-
   ok(UITour.availableTargetsCache.has(window),
      "Targets should now be cached");
 });
@@ -77,6 +75,44 @@ add_UITour_task(async function test_availableTargets_exceptionFromGetTarget() {
   CustomizableUI.reset();
 });
 
+add_UITour_task(async function test_availableTargets_removeUrlbarPageActionsAll() {
+  pageActionsHelper.setActionsUrlbarState(false);
+  UITour.clearAvailableTargetsCache();
+  let data = await getConfigurationPromise("availableTargets");
+  let expecteds = getExpectedTargets();
+  ok_targets(data, expecteds);
+  let expectedActions = [
+    [ "pocket", "pageAction-panel-pocket" ],
+    [ "pageAction-bookmark", "pageAction-panel-bookmark" ],
+    [ "pageAction-copyURL", "pageAction-panel-copyURL" ],
+    [ "pageAction-emailLink", "pageAction-panel-emailLink" ],
+    [ "pageAction-sendToDevice", "pageAction-panel-sendToDevice" ],
+  ];
+  for (let [ targetName, expectedNodeId ] of expectedActions) {
+    await assertTargetNode(targetName, expectedNodeId);
+  }
+  pageActionsHelper.restoreActionsUrlbarState();
+});
+
+add_UITour_task(async function test_availableTargets_addUrlbarPageActionsAll() {
+  pageActionsHelper.setActionsUrlbarState(true);
+  UITour.clearAvailableTargetsCache();
+  let data = await getConfigurationPromise("availableTargets");
+  let expecteds = getExpectedTargets();
+  ok_targets(data, expecteds);
+  let expectedActions = [
+    [ "pocket", "pocket-button-box" ],
+    [ "pageAction-bookmark", "star-button-box" ],
+    [ "pageAction-copyURL", "pageAction-urlbar-copyURL" ],
+    [ "pageAction-emailLink", "pageAction-urlbar-emailLink" ],
+    [ "pageAction-sendToDevice", "pageAction-urlbar-sendToDevice" ],
+  ];
+  for (let [ targetName, expectedNodeId ] of expectedActions) {
+    await assertTargetNode(targetName, expectedNodeId);
+  }
+  pageActionsHelper.restoreActionsUrlbarState();
+});
+
 function ok_targets(actualData, expectedTargets) {
   // Depending on how soon after page load this is called, the selected tab icon
   // may or may not be showing the loading throbber.  Check for its presence and
@@ -92,3 +128,28 @@ function ok_targets(actualData, expectedTargets) {
   is(actualData.targets.sort().toString(), expectedTargets.sort().toString(),
      "Targets should be as expected");
 }
+
+async function assertTargetNode(targetName, expectedNodeId) {
+  let target = await UITour.getTarget(window, targetName);
+  is(target.node.id, expectedNodeId, "UITour should get the right target node");
+}
+
+var pageActionsHelper = {
+  setActionsUrlbarState(inUrlbar) {
+    this._originalStates = [];
+    PageActions._actionsByID.forEach(action => {
+      this._originalStates.push([ action, action.shownInUrlbar ]);
+      action.shownInUrlbar = inUrlbar;
+    });
+  },
+
+  restoreActionsUrlbarState() {
+    if (!this._originalStates) {
+      return;
+    }
+    for (let [ action, originalState] of this._originalStates) {
+      action.shownInUrlbar = originalState;
+    }
+    this._originalStates = null;
+  }
+};

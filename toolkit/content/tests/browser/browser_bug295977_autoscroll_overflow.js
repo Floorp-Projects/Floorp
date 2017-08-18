@@ -1,10 +1,11 @@
 requestLongerTimeout(2);
 add_task(async function() {
-  function pushPref(name, value) {
-    return SpecialPowers.pushPrefEnv({"set": [[name, value]]});
+  function pushPrefs(prefs) {
+    return SpecialPowers.pushPrefEnv({"set": prefs});
   }
 
-  await pushPref("general.autoScroll", true);
+  await pushPrefs([["general.autoScroll", true],
+                   ["test.events.async.enabled", true]]);
 
   const expectScrollNone = 0;
   const expectScrollVert = 1;
@@ -98,7 +99,7 @@ body > div > div {width: 1000px;height: 1000px;}\
 
     let prefsChanged = (test.middlemousepastepref == false || test.middlemousepastepref == true);
     if (prefsChanged) {
-      await pushPref("middlemouse.paste", test.middlemousepastepref);
+      await pushPrefs([["middlemouse.paste", test.middlemousepastepref]]);
     }
 
     await BrowserTestUtils.synthesizeMouse("#" + test.elem, 50, 80, { button: 1 },

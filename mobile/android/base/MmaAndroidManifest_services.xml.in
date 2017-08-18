@@ -7,11 +7,11 @@
 
         <!-- Leanplum Local Push Notification Service-->
         <service android:name="com.leanplum.LeanplumLocalPushListenerService" android:exported="false"
-            android:enabled="false" />
+            android:enabled="true" />
 
         <!-- Leanplum GCM Instance ID Service -->
         <service android:name="com.leanplum.LeanplumPushInstanceIDService" android:exported="false"
-            android:enabled="false">
+            android:enabled="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>
@@ -19,4 +19,4 @@
 
         <!-- Leanplum GCM/FCM Registration Service -->
         <service android:name="com.leanplum.LeanplumPushRegistrationService" android:exported="false"
-            android:enabled="false" />
+            android:enabled="true" />

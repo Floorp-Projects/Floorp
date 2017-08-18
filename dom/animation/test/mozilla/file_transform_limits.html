@@ -7,7 +7,9 @@
 
 // We clamp +infinity or -inifinity value in floating point to
 // maximum floating point value or -maximum floating point value.
-const max_float = 3.40282e+38;
+const MAX_FLOAT = 3.40282e+38;
+const MAX_AU_PX = "1.78957e+7";
+const MAX_TRANSLATE_COMPONENT = isStyledByServo() ? MAX_AU_PX : MAX_FLOAT;
 
 test(function(t) {
   var div = addDiv(t);
@@ -19,7 +21,7 @@ test(function(t) {
   anim.pause();
   anim.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(div).transform,
-                'matrix(' + max_float + ', 0, 0, ' + max_float + ', 0, 0)');
+                'matrix(' + MAX_FLOAT + ', 0, 0, ' + MAX_FLOAT + ', 0, 0)');
 }, 'Test that the parameter of transform scale is clamped' );
 
 test(function(t) {
@@ -32,7 +34,7 @@ test(function(t) {
   anim.pause();
   anim.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(div).transform,
-                'matrix(1, 0, 0, 1, ' + max_float + ', 0)');
+                'matrix(1, 0, 0, 1, ' + MAX_TRANSLATE_COMPONENT + ', 0)');
 }, 'Test that the parameter of transform translate is clamped' );
 
 test(function(t) {
@@ -46,7 +48,7 @@ test(function(t) {
   anim.pause();
   anim.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(div).transform,
-                'matrix(2, 0, 0, 2, ' + max_float + ', 0)');
+                'matrix(2, 0, 0, 2, ' + MAX_FLOAT + ', 0)');
 }, 'Test that the parameter of transform matrix is clamped' );
 
 done();

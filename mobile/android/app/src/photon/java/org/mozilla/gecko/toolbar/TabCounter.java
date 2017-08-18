@@ -14,14 +14,14 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.widget.themed.ThemedFrameLayout;
+import org.mozilla.gecko.widget.themed.ThemedImageView;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 public class TabCounter extends ThemedRelativeLayout {
 
-    private final ThemedFrameLayout box;
-    private final ThemedFrameLayout bar;
+    private final ThemedImageView box;
+    private final ThemedImageView bar;
     private final ThemedTextView text;
 
     private final AnimatorSet animationSet;
@@ -44,8 +44,8 @@ public class TabCounter extends ThemedRelativeLayout {
         final LayoutInflater inflater = LayoutInflater.from(context);
         inflater.inflate(R.layout.tabs_counter, this);
 
-        box = (ThemedFrameLayout) findViewById(R.id.counter_box);
-        bar = (ThemedFrameLayout) findViewById(R.id.counter_bar);
+        box = (ThemedImageView) findViewById(R.id.counter_box);
+        bar = (ThemedImageView) findViewById(R.id.counter_bar);
         text = (ThemedTextView) findViewById(R.id.counter_text);
 
         animationSet = createAnimatorSet();

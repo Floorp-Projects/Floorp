@@ -12,6 +12,7 @@ import android.util.Log;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.gcm.GcmTokenClient;
+import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -54,6 +55,15 @@ public class PushManager {
         this.state = state;
         this.gcmClient = gcmClient;
         this.pushClientFactory = pushClientFactory;
+    }
+
+    public static String getSenderIds() {
+        final String mmaSenderId = MmaDelegate.getMmaSenderId();
+        if (mmaSenderId != null && mmaSenderId.length() > 0) {
+            return AppConstants.MOZ_ANDROID_GCM_SENDERID + "," + mmaSenderId;
+        } else {
+            return AppConstants.MOZ_ANDROID_GCM_SENDERID;
+        }
     }
 
     public PushRegistration registrationForSubscription(String chid) {
@@ -243,7 +253,7 @@ public class PushManager {
     }
 
     protected @NonNull PushRegistration advanceRegistration(final PushRegistration registration, final @NonNull String profileName, final long now) throws AutopushClientException, PushClient.LocalException, GcmTokenClient.NeedsGooglePlayServicesException, IOException {
-        final Fetched gcmToken = gcmClient.getToken(AppConstants.MOZ_ANDROID_GCM_SENDERID, registration.debug);
+        final Fetched gcmToken = gcmClient.getToken(getSenderIds(), registration.debug);
 
         final PushClient pushClient = pushClientFactory.getPushClient(registration.autopushEndpoint, registration.debug);
 
@@ -295,7 +305,7 @@ public class PushManager {
     public void startup(long now) {
         try {
             Log.i(LOG_TAG, "Startup: requesting GCM token.");
-            gcmClient.getToken(AppConstants.MOZ_ANDROID_GCM_SENDERID, false); // For side-effects.
+            gcmClient.getToken(getSenderIds(), false); // For side-effects.
         } catch (GcmTokenClient.NeedsGooglePlayServicesException e) {
             // Requires user intervention.  At App startup, we don't want to address this.  In
             // response to user activity, we do want to try to have the user address this.

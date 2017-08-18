@@ -5,7 +5,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, CC} = require("chrome");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");

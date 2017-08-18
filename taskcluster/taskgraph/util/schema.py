@@ -115,6 +115,14 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
         key = extra_values.get(keyed_by) if keyed_by in extra_values else item[keyed_by]
         alternatives = value.values()[0]
 
+        if len(alternatives) == 1 and 'default' in alternatives:
+            # Error out when only 'default' is specified as only alternatives,
+            # because we don't need to by-{keyed_by} there.
+            raise Exception(
+                "Keyed-by '{}' unnecessary with only value 'default' "
+                "found, when determining item '{}' in '{}'".format(
+                    keyed_by, field, item_name))
+
         matches = keymatch(alternatives, key)
         if len(matches) > 1:
             raise Exception(

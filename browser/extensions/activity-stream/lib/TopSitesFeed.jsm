@@ -8,7 +8,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {TippyTopProvider} = Cu.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
-const {insertPinned} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
+const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
 const {Dedupe} = Cu.import("resource://activity-stream/common/Dedupe.jsm", {});
 const {shortURL} = Cu.import("resource://activity-stream/common/ShortURL.jsm", {});
 
@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm");
 
-const TOP_SITES_SHOWMORE_LENGTH = 12;
 const UPDATE_TIME = 15 * 60 * 1000; // 15 minutes
 const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
@@ -26,7 +25,6 @@ this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this.lastUpdated = 0;
     this._tippyTopProvider = new TippyTopProvider();
-    this._tippyTopProvider.init();
     this.dedupe = new Dedupe(this._dedupeKey);
   }
   _dedupeKey(site) {
@@ -53,7 +51,8 @@ this.TopSitesFeed = class TopSitesFeed {
   }
   async getLinksWithDefaults(action) {
     let frecent = await NewTabUtils.activityStreamLinks.getTopSites();
-    const defaultUrls = DEFAULT_TOP_SITES.map(site => site.url);
+    const notBlockedDefaultSites = DEFAULT_TOP_SITES.filter(site => !NewTabUtils.blockedLinks.isBlocked({url: site.url}));
+    const defaultUrls = notBlockedDefaultSites.map(site => site.url);
     let pinned = NewTabUtils.pinnedLinks.links;
     pinned = pinned.map(site => site && Object.assign({}, site, {
       isDefault: defaultUrls.indexOf(site.url) !== -1,
@@ -68,7 +67,7 @@ this.TopSitesFeed = class TopSitesFeed {
 
     // Group together websites that require deduping.
     let topsitesGroup = [];
-    for (const group of [pinned, frecent, DEFAULT_TOP_SITES]) {
+    for (const group of [pinned, frecent, notBlockedDefaultSites]) {
       topsitesGroup.push(group.filter(site => site).map(site => Object.assign({}, site, {hostname: shortURL(site)})));
     }
 
@@ -137,8 +136,12 @@ this.TopSitesFeed = class TopSitesFeed {
       data: this._getPinnedWithData()
     }));
   }
-  onAction(action) {
+  async onAction(action) {
     switch (action.type) {
+      case at.INIT:
+        await this._tippyTopProvider.init();
+        this.refresh();
+        break;
       case at.NEW_TAB_LOAD:
         if (
           // When a new tab is opened, if the last time we refreshed the data
@@ -170,6 +173,5 @@ this.TopSitesFeed = class TopSitesFeed {
 };
 
 this.UPDATE_TIME = UPDATE_TIME;
-this.TOP_SITES_SHOWMORE_LENGTH = TOP_SITES_SHOWMORE_LENGTH;
 this.DEFAULT_TOP_SITES = DEFAULT_TOP_SITES;
-this.EXPORTED_SYMBOLS = ["TopSitesFeed", "UPDATE_TIME", "DEFAULT_TOP_SITES", "TOP_SITES_SHOWMORE_LENGTH"];
+this.EXPORTED_SYMBOLS = ["TopSitesFeed", "UPDATE_TIME", "DEFAULT_TOP_SITES"];

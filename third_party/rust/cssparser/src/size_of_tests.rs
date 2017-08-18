@@ -36,8 +36,8 @@ size_of_test!(token, Token, 32);
 size_of_test!(std_cow_str, Cow<'static, str>, 32);
 size_of_test!(cow_rc_str, CowRcStr, 16);
 
-size_of_test!(tokenizer, ::tokenizer::Tokenizer, 40);
-size_of_test!(parser_input, ::parser::ParserInput, 112);
+size_of_test!(tokenizer, ::tokenizer::Tokenizer, 56);
+size_of_test!(parser_input, ::parser::ParserInput, 128);
 size_of_test!(parser, ::parser::Parser, 16);
 size_of_test!(source_position, ::SourcePosition, 8);
 size_of_test!(parser_state, ::ParserState, 24);

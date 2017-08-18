@@ -705,7 +705,7 @@ BrowserPageActions.copyURL = {
     BrowserPageActions.panelNode.hidePopup();
     Cc["@mozilla.org/widget/clipboardhelper;1"]
       .getService(Ci.nsIClipboardHelper)
-      .copyString(gBrowser.selectedBrowser.currentURI.spec);
+      .copyString(gURLBar.makeURIReadable(gBrowser.selectedBrowser.currentURI).displaySpec);
   },
 };
 

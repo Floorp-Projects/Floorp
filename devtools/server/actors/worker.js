@@ -17,7 +17,7 @@ const {
 } = require("devtools/shared/specs/worker");
 
 loader.lazyRequireGetter(this, "ChromeUtils");
-loader.lazyRequireGetter(this, "events", "sdk/event/core");
+loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 
 XPCOMUtils.defineLazyServiceGetter(
   this, "swm",

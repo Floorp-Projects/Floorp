@@ -115,7 +115,13 @@ this.UITour = {
       // to automatically open the appMenu when annotating this target.
       widgetName: "appMenu-fxa-label",
     }],
-    ["addons",      {query: "#appMenu-addons-button"}],
+    ["addons",      {
+      query: (aDocument) => {
+        // select toolbar icon if exist, fallback to appMenu item
+        let node = aDocument.getElementById("add-ons-button");
+        return node ? node : aDocument.getElementById("appMenu-addons-button");
+      },
+    }],
     ["appMenu",     {
       addTargetListener: (aDocument, aCallback) => {
         let panelPopup = aDocument.defaultView.PanelUI.panel;
@@ -149,10 +155,24 @@ this.UITour = {
     }],
     ["help",        {query: "#appMenu-help-button"}],
     ["home",        {query: "#home-button"}],
-    ["library",     {query: "#appMenu-library-button"}],
+    ["library",     {
+      query: (aDocument) => {
+        // select toolbar icon if exist, fallback to appMenu item
+        let node = aDocument.getElementById("library-button");
+        return node ? node : aDocument.getElementById("appMenu-library-button");
+      },
+    }],
     ["pocket", {
       allowAdd: true,
-      query: "#pocket-button",
+      query: (aDocument) => {
+        // The pocket's urlbar page action button is pre-defined in the DOM.
+        // It would be hidden if toggled off from the urlbar.
+        let node = aDocument.getElementById("pocket-button-box");
+        if (node && node.hidden == false) {
+          return node;
+        }
+        return aDocument.getElementById("pageAction-panel-pocket");
+      },
     }],
     ["privateWindow", {query: "#appMenu-private-window-button"}],
     ["quit",        {query: "#appMenu-quit-button"}],
@@ -209,20 +229,34 @@ this.UITour = {
     ["pageActionButton", {
       query: "#pageActionButton"
     }],
-    ["pageAction-panel-bookmark", {
-      query: "#pageAction-panel-bookmark"
+    ["pageAction-bookmark", {
+      query: (aDocument) => {
+        // The bookmark's urlbar page action button is pre-defined in the DOM.
+        // It would be hidden if toggled off from the urlbar.
+        let node = aDocument.getElementById("star-button-box");
+        if (node && node.hidden == false) {
+          return node;
+        }
+        return aDocument.getElementById("pageAction-panel-bookmark");
+      },
     }],
-    ["pageAction-panel-copyURL", {
-      query: "#pageAction-panel-copyURL"
+    ["pageAction-copyURL", {
+      query: (aDocument) => {
+        return aDocument.getElementById("pageAction-urlbar-copyURL") ||
+               aDocument.getElementById("pageAction-panel-copyURL");
+      },
     }],
-    ["pageAction-panel-emailLink", {
-      query: "#pageAction-panel-emailLink"
+    ["pageAction-emailLink", {
+      query: (aDocument) => {
+        return aDocument.getElementById("pageAction-urlbar-emailLink") ||
+               aDocument.getElementById("pageAction-panel-emailLink");
+      },
     }],
-    ["pageAction-panel-sendToDevice", {
-      query: "#pageAction-panel-sendToDevice"
-    }],
-    ["bookmark-star-button", {
-      query: "#star-button"
+    ["pageAction-sendToDevice", {
+      query: (aDocument) => {
+        return aDocument.getElementById("pageAction-urlbar-sendToDevice") ||
+               aDocument.getElementById("pageAction-panel-sendToDevice");
+      },
     }]
   ]),
 

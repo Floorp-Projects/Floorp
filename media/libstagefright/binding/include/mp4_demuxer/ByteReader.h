@@ -6,7 +6,6 @@
 #define BYTE_READER_H_
 
 #include "mozilla/EndianUtils.h"
-#include "mozilla/Vector.h"
 #include "nsTArray.h"
 #include "MediaData.h"
 
@@ -16,10 +15,6 @@ class MOZ_RAII ByteReader
 {
 public:
   ByteReader() : mPtr(nullptr), mRemaining(0) {}
-  explicit ByteReader(const mozilla::Vector<uint8_t>& aData)
-    : mPtr(aData.begin()), mRemaining(aData.length()), mLength(aData.length())
-  {
-  }
   ByteReader(const uint8_t* aData, size_t aSize)
     : mPtr(aData), mRemaining(aSize), mLength(aSize)
   {
