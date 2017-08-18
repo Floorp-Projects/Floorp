@@ -33,6 +33,7 @@ namespace layers {
 WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   : mWidget(aWidget)
   , mLatestTransactionId(0)
+  , mLastAsr(nullptr)
   , mNeedsComposite(false)
   , mIsFirstPaint(false)
   , mEndTransactionWithoutLayers(false)
@@ -198,7 +199,6 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
                                                               wr::DisplayListBuilder& aBuilder)
 {
   bool apzEnabled = AsyncPanZoomEnabled();
-  const ActiveScrolledRoot* lastAsr = nullptr;
 
   nsDisplayList savedItems;
   nsDisplayItem* item;
@@ -253,8 +253,8 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       // display item than previously, so we can't squash the display items
       // into the same "layer".
       const ActiveScrolledRoot* asr = item->GetActiveScrolledRoot();
-      if (asr != lastAsr) {
-        lastAsr = asr;
+      if (asr != mLastAsr) {
+        mLastAsr = asr;
         forceNewLayerData = true;
       }
 
@@ -615,6 +615,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
       mScrollData = WebRenderScrollData();
       MOZ_ASSERT(mLayerScrollData.empty());
       mLastCanvasDatas.Clear();
+      mLastAsr = nullptr;
 
       CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder);
 
