@@ -12,6 +12,9 @@ function test() {
   // Check what version we're on:
   let CustomizableUIBSPass = Cu.import("resource:///modules/CustomizableUI.jsm", {});
 
+  let oldState = CustomizableUIBSPass.gSavedState;
+  registerCleanupFunction(() => CustomizableUIBSPass.gSavedState = oldState );
+
   is(CustomizableUIBSPass.gFuturePlacements.size, 0,
      "All future placements should be dealt with by now.");
 
@@ -93,12 +96,35 @@ function test() {
     is(placements[0], testWidgetNew.id, "Should have our test widget to be placed in nav-bar");
   }
 
-  gFuturePlacements.delete(CustomizableUI.AREA_NAVBAR);
+  // Now test that the builtin photon migrations work:
   CustomizableUIBSPass.kVersion--;
+
+  CustomizableUIBSPass.gSavedState = {
+    currentVersion: 6,
+    placements: {
+      "nav-bar": ["urlbar-container", "bookmarks-menu-button"],
+      "PanelUI-contents": ["panic-button", "edit-controls"],
+    },
+  };
+  CustomizableUIInternal._introduceNewBuiltinWidgets();
+  let navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
+  let springs = navbarPlacements.filter(id => id.includes("spring"));
+  is(springs.length, 2, "Should have 2 toolbarsprings in placements now");
+  navbarPlacements = navbarPlacements.filter(id => !id.includes("spring"));
+  is(navbarPlacements[0], "back-button", "Back button is in the right place.");
+  is(navbarPlacements[1], "forward-button", "Fwd button is in the right place.");
+  is(navbarPlacements[2], "stop-reload-button", "Stop/reload button is in the right place.");
+  is(navbarPlacements[3], "home-button", "Home button is in the right place.");
+  is(navbarPlacements[4], "urlbar-container", "URL bar is in the right place.");
+  is(navbarPlacements[5], "library-button", "Library button is in the right place.");
+  is(navbarPlacements[6], "sidebar-button", "Sidebar button is in the right place.");
+  is(navbarPlacements.length, 7, "Should have 7 items");
+
+  let overflowPlacements = CustomizableUIBSPass.gSavedState.placements["widget-overflow-fixed-list"];
+  Assert.deepEqual(overflowPlacements, ["panic-button"]);
+
+  gFuturePlacements.delete(CustomizableUI.AREA_NAVBAR);
   gPalette.delete(testWidgetNew.id);
   gPalette.delete(testWidgetOld.id);
-  if (!hadSavedState) {
-    CustomizableUIBSPass.gSavedState = null;
-  }
 }
 
