@@ -3175,6 +3175,21 @@ RecordedEvent::LoadEvent(S &aStream, EventType aType)
   }
 }
 
+#define DO_WITH_EVENT_TYPE(_typeenum, _class) \
+  case _typeenum: { auto e = _class(aStream); return f(&e); }
+
+template<class S, class F>
+bool
+RecordedEvent::DoWithEvent(S &aStream, EventType aType, F f)
+{
+  switch (aType) {
+    FOR_EACH_EVENT(DO_WITH_EVENT_TYPE)
+  default:
+    return false;
+  }
+}
+
+
 
 } // namespace gfx
 } // namespace mozilla
