@@ -35,7 +35,4 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-c++11-narrowing',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    DEFINES['ELFSIZE'] = 32
-
 DEFINES['NO_STABS_SUPPORT'] = True

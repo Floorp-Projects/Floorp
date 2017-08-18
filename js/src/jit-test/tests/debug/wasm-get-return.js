@@ -1,8 +1,11 @@
-// |jit-test| test-also-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline
 // Tests that wasm frame opPop event can access function resumption value.
 
 load(libdir + "wasm.js");
 load(libdir + 'eqArrayHelper.js');
+
+if (!wasmDebuggingIsSupported())
+  quit();
 
 function monitorFrameOnPopReturns(wast, expected) {
     var values = [];

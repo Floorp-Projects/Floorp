@@ -12,6 +12,10 @@ the promise of working across browsers and devices without needing extra
 layers of abstraction to paper over the gaps left by specification
 editors and implementors.
 
+Setting Up the Repo
+===================
+
+Clone or otherwise get https://github.com/w3c/web-platform-tests.
 
 Running the Tests
 =================

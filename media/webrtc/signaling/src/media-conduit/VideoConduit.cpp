@@ -620,8 +620,22 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(int width, int heig
     simulcastEncoding = mConduit->mCurSendCodecConfig->mSimulcastEncodings[idx];
     MOZ_ASSERT(simulcastEncoding.constraints.scaleDownBy >= 1.0);
 
-    // leave vector temporal_layer_thresholds_bps empty
-    video_stream.temporal_layer_thresholds_bps.clear();
+    // leave vector temporal_layer_thresholds_bps empty for non-simulcast
+    if (config.number_of_streams > 1) {
+      // Oddly, though this is a 'bps' array, nothing really looks at the
+      // values, just the size of the array to know the number of temporal
+      // layers.
+      video_stream.temporal_layer_thresholds_bps.resize(2);
+      // XXX Note: in simulcast.cc in upstream code, the array value is
+      // 3(-1) for all streams, though it's in an array, except for screencasts,
+      // which use 1 (i.e 2 layers).
+
+      // XXX Bug 1390215 investigate using more of
+      // simulcast.cc:GetSimulcastConfig() or our own algorithm to replace it
+    } else {
+      video_stream.temporal_layer_thresholds_bps.clear();
+    }
+
     // Calculate these first
     video_stream.max_bitrate_bps = MinIgnoreZero(simulcastEncoding.constraints.maxBr,
                                                  kDefaultMaxBitrate_bps);

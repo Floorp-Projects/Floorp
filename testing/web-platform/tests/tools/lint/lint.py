@@ -336,6 +336,12 @@ class ConsoleRegexp(Regexp):
     file_extensions = [".html", ".htm", ".js", ".xht", ".xhtml", ".svg"]
     description = "Console logging API used"
 
+class GenerateTestsRegexp(Regexp):
+    pattern = b"generate_tests\s*\("
+    error = "GENERATE_TESTS"
+    file_extensions = [".html", ".htm", ".js", ".xht", ".xhtml", ".svg"]
+    description = "generate_tests used"
+
 class PrintRegexp(Regexp):
     pattern = b"print(?:\s|\s*\()"
     error = "PRINT STATEMENT"
@@ -350,6 +356,7 @@ regexps = [item() for item in
             W3CTestOrgRegexp,
             Webidl2Regexp,
             ConsoleRegexp,
+            GenerateTestsRegexp,
             PrintRegexp]]
 
 def check_regexp_line(repo_root, path, f, css_mode):

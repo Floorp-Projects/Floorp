@@ -162,9 +162,18 @@ class GCSchedulingTunables
      */
     ActiveThreadOrGCTaskData<size_t> gcZoneAllocThresholdBase_;
 
-    /* Fraction of threshold.gcBytes() which triggers an incremental GC. */
+    /*
+     * JSGC_ALLOCATION_THRESHOLD_FACTOR
+     *
+     * Fraction of threshold.gcBytes() which triggers an incremental GC.
+     */
     UnprotectedData<float> zoneAllocThresholdFactor_;
-    /* The same except when doing so would interrupt an already running GC. */
+
+    /*
+     * JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT
+     *
+     * The same except when doing so would interrupt an already running GC.
+     */
     UnprotectedData<float> zoneAllocThresholdFactorAvoidInterrupt_;
 
     /*

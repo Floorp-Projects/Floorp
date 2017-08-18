@@ -24,6 +24,12 @@ WebRenderUserData::~WebRenderUserData()
 {
 }
 
+bool
+WebRenderUserData::IsDataValid(WebRenderLayerManager* aManager)
+{
+  return aManager == mWRManager;
+}
+
 WebRenderBridgeChild*
 WebRenderUserData::WrBridge() const
 {

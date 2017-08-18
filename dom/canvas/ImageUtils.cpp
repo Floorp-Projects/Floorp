@@ -236,7 +236,6 @@ private:
 };
 
 // TODO: optimize for other platforms.
-// For GONK: implement GrallocImageImpl, GrallocPlanarYCbCrImpl and GonkCameraImpl.
 // For Windows: implement D3D9RGB32TextureImpl and D3D11ShareHandleTextureImpl.
 // Others: SharedBGRImpl, MACIOSrufaceImpl, GLImageImpl, SurfaceTextureImpl
 //         EGLImageImpl and OverlayImegImpl.

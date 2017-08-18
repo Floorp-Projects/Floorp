@@ -335,9 +335,7 @@ endif
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
   OPTIMIZEJARS = 1
-  ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
-    DISABLE_JAR_COMPRESSION = 1
-  endif
+  DISABLE_JAR_COMPRESSION = 1
 endif
 
 # A js binary is needed to perform verification of JavaScript minification.
