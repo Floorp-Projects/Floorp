@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="application/javascript">
+      var editable = document.createElement('div');
+      document.documentElement.appendChild(editable);
+      editable.contentEditable = 'true';
+      var div = document.createElement('div');
+      document.documentElement.appendChild(div);
+      // Flush content
+      div.offsetLeft;
+      document.execCommand('styleWithCSS', false, true);
+
+      var range = new Range();
+      window.getSelection().addRange(range);
+      range.setStart(document.createTextNode(''), 0);
+      document.queryCommandState('backcolor');
+    </script>
+  </head>
+</html>
