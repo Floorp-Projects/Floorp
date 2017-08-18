@@ -99,8 +99,8 @@
 }
 
 .theme-firebug .devtools-tab-label {
-  /* Set the end padding on the label to make sure the label gets faded out properly */
-  padding-inline-end: 4px;
+  padding-inline-end: 0;
+  mask-image: none;
 }
 
 /* In order to hide bottom-border of side panel tabs we need
