@@ -3716,6 +3716,17 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, GeckoStyleContext* aContext,
       aFont->mFont.fontlist = aParentFont->mFont.fontlist;
       aFont->mFont.systemFont = aParentFont->mFont.systemFont;
       aFont->mGenericID = aParentFont->mGenericID;
+      MOZ_FALLTHROUGH;  // Fall through here to check for a lang change.
+    case eCSSUnit_Null:
+      // If we have inheritance (cases eCSSUnit_Inherit, eCSSUnit_Unset, and
+      // eCSSUnit_Null) and a (potentially different) language is explicitly
+      // specified, then we need to overwrite the inherited default generic font
+      // with the default generic from defaultVariableFont, which is computed
+      // using aFont->mLanguage above.
+      if (aRuleData->ValueForLang()->GetUnit() != eCSSUnit_Null) {
+        FixupNoneGeneric(&aFont->mFont, aPresContext, aGenericFontID,
+                         defaultVariableFont);
+      }
       break;
     case eCSSUnit_Initial:
       aFont->mFont.fontlist = defaultVariableFont->fontlist;
