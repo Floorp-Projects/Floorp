@@ -107,8 +107,6 @@ XPIDL_SOURCES += [
     'nsISocketTransportService.idl',
     'nsISpeculativeConnect.idl',
     'nsIStandardURL.idl',
-    'nsIStreamingProtocolController.idl',
-    'nsIStreamingProtocolService.idl',
     'nsIStreamListener.idl',
     'nsIStreamListenerTee.idl',
     'nsIStreamLoader.idl',
@@ -251,7 +249,6 @@ UNIFIED_SOURCES += [
     'SimpleBuffer.cpp',
     'SimpleChannel.cpp',
     'SimpleChannelParent.cpp',
-    'StreamingProtocolService.cpp',
     'TCPFastOpenLayer.cpp',
     'ThrottleQueue.cpp',
     'Tickler.cpp',
@@ -308,12 +305,6 @@ LOCAL_INCLUDES += [
     '/netwerk/socket',
     '/security/pkix/include'
 ]
-
-if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
-    LOCAL_INCLUDES += [
-        '/netwerk/protocol/rtsp/controller',
-        '/netwerk/protocol/rtsp/rtsp',
-    ]
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
