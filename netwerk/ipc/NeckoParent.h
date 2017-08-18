@@ -196,18 +196,6 @@ protected:
   virtual mozilla::ipc::IPCResult RecvPFileChannelConstructor(PFileChannelParent* aActor,
                                                               const uint32_t& channelId) override;
 
-  virtual PRtspControllerParent* AllocPRtspControllerParent() override;
-  virtual bool DeallocPRtspControllerParent(PRtspControllerParent*) override;
-
-  virtual PRtspChannelParent*
-    AllocPRtspChannelParent(const RtspChannelConnectArgs& aArgs)
-                            override;
-  virtual mozilla::ipc::IPCResult
-    RecvPRtspChannelConstructor(PRtspChannelParent* aActor,
-                                const RtspChannelConnectArgs& aArgs)
-                                override;
-  virtual bool DeallocPRtspChannelParent(PRtspChannelParent*) override;
-
   virtual PChannelDiverterParent*
   AllocPChannelDiverterParent(const ChannelDiverterArgs& channel) override;
   virtual mozilla::ipc::IPCResult

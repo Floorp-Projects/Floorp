@@ -9,16 +9,4 @@
 
 #undef NECKO_WIFI
 
-#undef NECKO_PROTOCOL_about
-#undef NECKO_PROTOCOL_data
-#undef NECKO_PROTOCOL_device
-#undef NECKO_PROTOCOL_file
-#undef NECKO_PROTOCOL_ftp
-#undef NECKO_PROTOCOL_http
-#undef NECKO_PROTOCOL_res
-#undef NECKO_PROTOCOL_rtsp
-#undef NECKO_PROTOCOL_viewsource
-#undef NECKO_PROTOCOL_websocket
-#undef NECKO_PROTOCOL_wyciwyg
-
 #endif

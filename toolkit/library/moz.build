@@ -230,11 +230,6 @@ if CONFIG['MOZ_ALSA']:
 if CONFIG['HAVE_CLOCK_MONOTONIC']:
     OS_LIBS += CONFIG['REALTIME_LIBS']
 
-if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
-    OS_LIBS += [
-        'stagefright_foundation',
-    ]
-
 OS_LIBS += CONFIG['ICONV_LIBS']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
