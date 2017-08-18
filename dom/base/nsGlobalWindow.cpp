@@ -125,6 +125,7 @@
 #include "nsIPrompt.h"
 #include "nsIPromptService.h"
 #include "nsIPromptFactory.h"
+#include "nsIAddonPolicyService.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserChrome.h"
@@ -11682,7 +11683,7 @@ nsGlobalWindow::HandleIdleActiveEvent()
 }
 
 nsGlobalWindow::SlowScriptResponse
-nsGlobalWindow::ShowSlowScriptDialog()
+nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
 {
   MOZ_ASSERT(IsInnerWindow());
 
@@ -11732,7 +11733,8 @@ nsGlobalWindow::ShowSlowScriptDialog()
     nsIDocShell* docShell = GetDocShell();
     nsCOMPtr<nsITabChild> child = docShell ? docShell->GetTabChild() : nullptr;
     action = monitor->NotifySlowScript(child,
-                                       filename.get());
+                                       filename.get(),
+                                       aAddonId);
     if (action == ProcessHangMonitor::Terminate) {
       return KillSlowScript;
     }
@@ -11772,61 +11774,57 @@ nsGlobalWindow::ShowSlowScriptDialog()
     }
   }
 
-  bool showDebugButton = !!debugCallback;
+  bool failed = false;
+  auto getString = [&] (const char* name,
+                        nsContentUtils::PropertiesFile propFile = nsContentUtils::eDOM_PROPERTIES) {
+    nsAutoString result;
+    nsresult rv = nsContentUtils::GetLocalizedString(
+      propFile, name, result);
+
+    // GetStringFromName can return NS_OK and still give nullptr string
+    failed = failed || NS_FAILED(rv) || result.IsEmpty();
+    return Move(result);
+  };
+
+  bool isAddonScript = !aAddonId.IsEmpty();
+  bool showDebugButton = debugCallback && !isAddonScript;
 
   // Get localizable strings
-  nsAutoString title, msg, stopButton, waitButton, debugButton, neverShowDlg;
 
-  rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                          "KillScriptTitle",
-                                          title);
+  nsAutoString title, debugButton, msg;
+  if (isAddonScript) {
+    title = getString("KillAddonScriptTitle");
 
-  nsresult tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                           "StopScriptButton",
-                                           stopButton);
-  if (NS_FAILED(tmp)) {
-    rv = tmp;
-  }
+    auto appName = getString("brandShortName", nsContentUtils::eBRAND_PROPERTIES);
 
-  tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                           "WaitForScriptButton",
-                                           waitButton);
-  if (NS_FAILED(tmp)) {
-    rv = tmp;
-  }
-
-  tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                           "DontAskAgain",
-                                           neverShowDlg);
-  if (NS_FAILED(tmp)) {
-    rv = tmp;
-  }
-
-  if (showDebugButton) {
-    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                             "DebugScriptButton",
-                                             debugButton);
-    if (NS_FAILED(tmp)) {
-      rv = tmp;
+    nsCOMPtr<nsIAddonPolicyService> aps = do_GetService("@mozilla.org/addons/policy-service;1");
+    nsString addonName;
+    if (!aps || NS_FAILED(aps->GetExtensionName(aAddonId, addonName))) {
+      addonName = aAddonId;
     }
 
-    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                             "KillScriptWithDebugMessage",
-                                             msg);
-    if (NS_FAILED(tmp)) {
-      rv = tmp;
-    }
-  }
-  else {
-    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                             "KillScriptMessage",
-                                             msg);
-    if (NS_FAILED(tmp)) {
-      rv = tmp;
+    const char16_t* params[] = {addonName.get(), appName.get()};
+    rv = nsContentUtils::FormatLocalizedString(
+        nsContentUtils::eDOM_PROPERTIES, "KillAddonScriptMessage",
+        params, msg);
+
+    failed = failed || NS_FAILED(rv);
+  } else {
+    title = getString("KillScriptTitle");
+
+    if (showDebugButton) {
+      debugButton = getString("DebugScriptButton");
+      msg = getString("KillScriptWithDebugMessage");
+    } else {
+      msg = getString("KillScriptMessage");
     }
   }
 
-  if (NS_FAILED(rv)) {
+  auto neverShowDlg = getString("DontAskAgain");
+  auto stopButton = getString("StopScriptButton");
+  auto waitButton = getString("WaitForScriptButton");
+
+  if (failed) {
     NS_ERROR("Failed to get localized strings.");
     return ContinueSlowScript;
   }
