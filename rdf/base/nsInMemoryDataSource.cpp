@@ -804,19 +804,19 @@ InMemoryDataSource::LogOperation(const char* aOperation,
     if (! MOZ_LOG_TEST(gLog, LogLevel::Debug))
         return;
 
-    nsCString uri;
+    nsXPIDLCString uri;
     aSource->GetValue(getter_Copies(uri));
     MOZ_LOG(gLog, LogLevel::Debug,
            ("InMemoryDataSource(%p): %s", this, aOperation));
 
     MOZ_LOG(gLog, LogLevel::Debug,
-           ("  [(%p)%s]--", aSource, uri.get()));
+           ("  [(%p)%s]--", aSource, (const char*) uri));
 
     aProperty->GetValue(getter_Copies(uri));
 
     char tv = (aTruthValue ? '-' : '!');
     MOZ_LOG(gLog, LogLevel::Debug,
-           ("  --%c[(%p)%s]--", tv, aProperty, uri.get()));
+           ("  --%c[(%p)%s]--", tv, aProperty, (const char*) uri));
 
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
@@ -824,7 +824,7 @@ InMemoryDataSource::LogOperation(const char* aOperation,
     if ((resource = do_QueryInterface(aTarget)) != nullptr) {
         resource->GetValue(getter_Copies(uri));
         MOZ_LOG(gLog, LogLevel::Debug,
-           ("  -->[(%p)%s]", aTarget, uri.get()));
+           ("  -->[(%p)%s]", aTarget, (const char*) uri));
     }
     else if ((literal = do_QueryInterface(aTarget)) != nullptr) {
         nsString value;

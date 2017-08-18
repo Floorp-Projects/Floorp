@@ -806,9 +806,9 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
                          getter_AddRefs(if_info));
 
       if (if_info) {
-        nsCString name;
+        nsXPIDLCString name;
         if_info->GetName(getter_Copies(name));
-        NS_ASSERTION(nsCRT::strcmp(CutPrefix(name.get()), mData->mClass.name) == 0,
+        NS_ASSERTION(nsCRT::strcmp(CutPrefix(name), mData->mClass.name) == 0,
                      "Class name and proto chain interface name mismatch!");
       }
     }
@@ -959,11 +959,11 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
 
   JS::Rooted<JS::Value> v(cx);
   for (i = parent_constant_count; i < constant_count; i++) {
-    nsCString name;
+    nsXPIDLCString name;
     rv = if_info->GetConstant(i, &v, getter_Copies(name));
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv), rv);
 
-    if (!::JS_DefineProperty(cx, obj, name.get(), v,
+    if (!::JS_DefineProperty(cx, obj, name, v,
                              JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT,
                              JS_STUBGETTER, JS_STUBSETTER)) {
       return NS_ERROR_UNEXPECTED;

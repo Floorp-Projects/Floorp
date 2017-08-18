@@ -1282,14 +1282,13 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
     if (NS_FAILED(rv))
       return rv;
-    nsCString contractID;
+    nsXPIDLCString contractID;
     rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", "application/vnd.mozilla.xul+xml",
                                   getter_Copies(contractID));
     if (NS_FAILED(rv))
       return rv;
 
-    nsCOMPtr<nsIDocumentLoaderFactory>
-      factory(do_GetService(contractID.get(), &rv));
+    nsCOMPtr<nsIDocumentLoaderFactory> factory(do_GetService(contractID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURI> uri;
@@ -1343,14 +1342,13 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  nsCString contractID;
+  nsXPIDLCString contractID;
   rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", "text/html",
                                 getter_Copies(contractID));
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDocumentLoaderFactory>
-    factory(do_GetService(contractID.get(), &rv));
+  nsCOMPtr<nsIDocumentLoaderFactory> factory(do_GetService(contractID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStreamListener> listener;

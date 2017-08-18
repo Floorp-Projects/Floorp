@@ -7134,12 +7134,12 @@ nsContentUtils::FindInternalContentViewer(const nsACString& aType,
 
   nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
 
-  nsCString contractID;
+  nsXPIDLCString contractID;
   nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers",
                                          PromiseFlatCString(aType).get(),
                                          getter_Copies(contractID));
   if (NS_SUCCEEDED(rv)) {
-    docFactory = do_GetService(contractID.get());
+    docFactory = do_GetService(contractID);
     if (docFactory && aLoaderType) {
       if (contractID.EqualsLiteral(CONTENT_DLF_CONTRACTID))
         *aLoaderType = TYPE_CONTENT;

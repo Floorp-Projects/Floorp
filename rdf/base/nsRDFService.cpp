@@ -1191,14 +1191,12 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, bool aReplace)
 
     nsresult rv;
 
-    nsCString uri;
+    nsXPIDLCString uri;
     rv = aDataSource->GetURI(getter_Copies(uri));
     if (NS_FAILED(rv)) return rv;
 
     PLHashEntry** hep =
-      PL_HashTableRawLookup(mNamedDataSources,
-                            (*mNamedDataSources->keyHash)(uri.get()),
-                            uri.get());
+        PL_HashTableRawLookup(mNamedDataSources, (*mNamedDataSources->keyHash)(uri), uri);
 
     if (*hep) {
         if (! aReplace)
@@ -1209,12 +1207,12 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, bool aReplace)
         // refcounts.
         MOZ_LOG(gLog, LogLevel::Debug,
                ("rdfserv    replace-datasource [%p] <-- [%p] %s",
-                (*hep)->value, aDataSource, uri.get()));
+                (*hep)->value, aDataSource, (const char*) uri));
 
         (*hep)->value = aDataSource;
     }
     else {
-        const char* key = PL_strdup(uri.get());
+        const char* key = PL_strdup(uri);
         if (! key)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1222,7 +1220,7 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, bool aReplace)
 
         MOZ_LOG(gLog, LogLevel::Debug,
                ("rdfserv   register-datasource [%p] %s",
-                aDataSource, uri.get()));
+                aDataSource, (const char*) uri));
 
         // N.B., we only hold a weak reference to the datasource, so don't
         // addref.
