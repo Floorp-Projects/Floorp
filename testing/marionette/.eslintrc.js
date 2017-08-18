@@ -13,6 +13,7 @@ module.exports = {
       "ignoreStrings": true,
       "ignoreUrls": true,
     }],
+    "no-fallthrough": "error",
     "no-new-object": "error",
     "no-undef-init": "error",
     "object-curly-spacing": ["error", "never"],
