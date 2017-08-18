@@ -17,7 +17,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.activitystream.homepanel.StreamHighlightItemRowContextMenuListener;
-import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
+import org.mozilla.gecko.activitystream.homepanel.model.WebpageRowModel;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.util.URIUtils;
@@ -28,22 +28,23 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-public class HighlightItemRow extends StreamViewHolder {
-    private static final String LOGTAG = "GeckoHighlightItem";
+public class WebpageItemRow extends StreamViewHolder {
+    private static final String LOGTAG = "GeckoWebpageItemRow";
 
     public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
     private static final double SIZE_RATIO = 0.75;
 
+    private WebpageRowModel webpageModel;
     private int position;
 
     private final StreamOverridablePageIconLayout pageIconLayout;
-    private final TextView pageTitleView;
-    private final TextView pageSourceView;
     private final TextView pageDomainView;
+    private final TextView pageTitleView;
     private final ImageView pageSourceIconView;
+    private final TextView pageSourceView;
     private final ImageView menuButton;
 
-    public HighlightItemRow(final View itemView, final StreamHighlightItemRowContextMenuListener contextMenuListener) {
+    public WebpageItemRow(final View itemView, final StreamHighlightItemRowContextMenuListener contextMenuListener) {
         super(itemView);
 
         pageTitleView = (TextView) itemView.findViewById(R.id.card_history_label);
@@ -60,17 +61,18 @@ public class HighlightItemRow extends StreamViewHolder {
         menuButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                contextMenuListener.openContextMenu(HighlightItemRow.this, position,
+                contextMenuListener.openContextMenu(WebpageItemRow.this, position,
                         ActivityStreamTelemetry.Contract.INTERACTION_MENU_BUTTON);
             }
         });
     }
 
-    public void bind(Highlight highlight, int position, int tilesWidth) {
+    public void bind(WebpageRowModel model, int position, int tilesWidth) {
+        this.webpageModel = model;
         this.position = position;
 
-        final String backendHightlightTitle = highlight.getTitle();
-        final String uiHighlightTitle = !TextUtils.isEmpty(backendHightlightTitle) ? backendHightlightTitle : highlight.getUrl();
+        final String backendHighlightTitle = model.getTitle();
+        final String uiHighlightTitle = !TextUtils.isEmpty(backendHighlightTitle) ? backendHighlightTitle : model.getUrl();
         pageTitleView.setText(uiHighlightTitle);
 
         ViewGroup.LayoutParams layoutParams = pageIconLayout.getLayoutParams();
@@ -78,12 +80,12 @@ public class HighlightItemRow extends StreamViewHolder {
         layoutParams.height = (int) Math.floor(tilesWidth * SIZE_RATIO);
         pageIconLayout.setLayoutParams(layoutParams);
 
-        updateUiForSource(highlight.getSource());
-        updatePageDomain(highlight);
-        pageIconLayout.updateIcon(highlight.getUrl(), highlight.getImageUrl());
+        updateUiForSource(model.getSource());
+        updatePageDomain();
+        pageIconLayout.updateIcon(model.getUrl(), model.getImageUrl());
     }
 
-    private void updateUiForSource(Utils.HighlightSource source) {
+    public void updateUiForSource(Utils.HighlightSource source) {
         switch (source) {
             case BOOKMARKED:
                 pageSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
@@ -95,6 +97,11 @@ public class HighlightItemRow extends StreamViewHolder {
                 pageSourceView.setVisibility(View.VISIBLE);
                 pageSourceIconView.setImageResource(R.drawable.ic_as_visited);
                 break;
+            case POCKET:
+                pageSourceView.setText(R.string.activity_stream_highlight_label_trending);
+                pageSourceView.setVisibility(View.VISIBLE);
+                pageSourceIconView.setImageResource(R.drawable.ic_as_trending);
+                break;
             default:
                 pageSourceView.setVisibility(View.INVISIBLE);
                 pageSourceIconView.setImageResource(0);
@@ -102,13 +109,13 @@ public class HighlightItemRow extends StreamViewHolder {
         }
     }
 
-    private void updatePageDomain(final Highlight highlight) {
+    private void updatePageDomain() {
         final URI highlightURI;
         try {
-            highlightURI = new URI(highlight.getUrl());
+            highlightURI = new URI(webpageModel.getUrl());
         } catch (final URISyntaxException e) {
             // If the URL is invalid, there's not much extra processing we can do on it.
-            pageDomainView.setText(highlight.getUrl());
+            pageDomainView.setText(webpageModel.getUrl());
             return;
         }
 

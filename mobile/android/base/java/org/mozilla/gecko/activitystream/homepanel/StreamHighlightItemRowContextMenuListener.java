@@ -5,7 +5,7 @@
 package org.mozilla.gecko.activitystream.homepanel;
 
 import android.support.annotation.NonNull;
-import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItemRow;
+import org.mozilla.gecko.activitystream.homepanel.stream.WebpageItemRow;
 
 /**
  * Provides a method to open the context menu for a highlight item.
@@ -14,5 +14,5 @@ import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItemRow;
  * (I don't understand why) so it's here instead.
  */
 public interface StreamHighlightItemRowContextMenuListener {
-    void openContextMenu(HighlightItemRow highlightItem, int position, @NonNull final String interactionExtra);
+    void openContextMenu(WebpageItemRow highlightItem, int position, @NonNull final String interactionExtra);
 }
