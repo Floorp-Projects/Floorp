@@ -21,7 +21,6 @@ const { Option, RetVal } = protocol;
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { Timeline } = require("devtools/server/performance/timeline");
 const { timelineSpec } = require("devtools/shared/specs/timeline");
-const events = require("devtools/shared/event-emitter");
 
 /**
  * The timeline actor pops and forwards timeline markers registered in docshells.
@@ -36,14 +35,14 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
     this.bridge = new Timeline(tabActor);
 
     this._onTimelineEvent = this._onTimelineEvent.bind(this);
-    events.on(this.bridge, "*", this._onTimelineEvent);
+    this.bridge.on("*", this._onTimelineEvent);
   },
 
   /**
    * Destroys this actor, stopping recording first.
    */
   destroy: function () {
-    events.off(this.bridge, "*", this._onTimelineEvent);
+    this.bridge.off("*", this._onTimelineEvent);
     this.bridge.destroy();
     this.bridge = null;
     this.tabActor = null;
@@ -55,7 +54,7 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
    * here.
    */
   _onTimelineEvent: function (eventName, ...args) {
-    events.emit(this, eventName, ...args);
+    this.emit(eventName, ...args);
   },
 
   isRecording: actorBridgeWithSpec("isRecording", {
