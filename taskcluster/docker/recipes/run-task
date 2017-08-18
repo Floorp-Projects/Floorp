@@ -80,6 +80,41 @@ def run_and_prefix_output(prefix, args, extra_env=None):
     return p.wait()
 
 
+WANTED_DIR_MODE = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
+
+
+def set_dir_permissions(path, uid, gid):
+    st = os.lstat(path)
+
+    if st.st_uid != uid or st.st_gid != gid:
+        os.chown(path, uid, gid)
+
+    # Also make sure dirs are writable in case we need to delete
+    # them.
+    if st.st_mode & WANTED_DIR_MODE != WANTED_DIR_MODE:
+        os.chmod(path, st.st_mode | WANTED_DIR_MODE)
+
+
+def chown_recursive(path, user, group, uid, gid):
+    print_line(b'chown',
+               b'recursively changing ownership of %s to %s:%s\n' %
+               (path, user, group))
+
+    set_dir_permissions(path, uid, gid)
+
+    for root, dirs, files in os.walk(path):
+        for d in dirs:
+            set_dir_permissions(os.path.join(root, d), uid, gid)
+
+        for f in files:
+            # File may be a symlink that points to nowhere. In which case
+            # os.chown() would fail because it attempts to follow the
+            # symlink. We only care about directory entries, not what
+            # they point to. So setting the owner of the symlink should
+            # be sufficient.
+            os.lchown(os.path.join(root, f), uid, gid)
+
+
 def vcs_checkout(source_repo, dest, store_path,
                  base_repo=None, revision=None, branch=None, fetch_hgfingerprint=False):
     # Specify method to checkout a revision. This defaults to revisions as
@@ -221,19 +256,6 @@ def main(args):
     else:
         uid = gid = gids = None
 
-    wanted_dir_mode = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
-
-    def set_dir_permissions(path, uid, gid):
-        st = os.lstat(path)
-
-        if st.st_uid != uid or st.st_gid != gid:
-            os.chown(path, uid, gid)
-
-        # Also make sure dirs are writable in case we need to delete
-        # them.
-        if st.st_mode & wanted_dir_mode != wanted_dir_mode:
-            os.chmod(path, st.st_mode | wanted_dir_mode)
-
     # Change ownership of requested paths.
     # FUTURE: parse argument values for user/group if we don't want to
     # use --user/--group.
@@ -251,22 +273,7 @@ def main(args):
             print_line(b'set_dir_permissions', b'--chown-recursive not allowed when not running as root')
             return 1
 
-        print_line(b'chown', b'recursively changing ownership of %s to %s:%s\n' %
-                   (path, user.pw_name, group.gr_name))
-
-        set_dir_permissions(path, uid, gid)
-
-        for root, dirs, files in os.walk(path):
-            for d in dirs:
-                set_dir_permissions(os.path.join(root, d), uid, gid)
-
-            for f in files:
-                # File may be a symlink that points to nowhere. In which case
-                # os.chown() would fail because it attempts to follow the
-                # symlink. We only care about directory entries, not what
-                # they point to. So setting the owner of the symlink should
-                # be sufficient.
-                os.lchown(os.path.join(root, f), uid, gid)
+        chown_recursive(path, user.pw_name, group.gr_name, uid, gid)
 
     def prepare_checkout_dir(checkout):
         if not checkout:
