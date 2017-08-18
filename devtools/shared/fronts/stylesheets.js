@@ -16,7 +16,6 @@ const {
 } = require("devtools/shared/specs/stylesheets");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
-const events = require("devtools/shared/event-emitter");
 
 /**
  * The client-side counterpart for an OriginalSourceActor.
@@ -55,7 +54,7 @@ const MediaRuleFront = FrontClassWithSpec(mediaRuleSpec, {
     Front.prototype.initialize.call(this, client, form);
 
     this._onMatchesChange = this._onMatchesChange.bind(this);
-    events.on(this, "matches-change", this._onMatchesChange);
+    this.on("matches-change", this._onMatchesChange);
   },
 
   _onMatchesChange: function (matches) {
@@ -101,11 +100,11 @@ const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
     Front.prototype.initialize.call(this, conn, form);
 
     this._onPropertyChange = this._onPropertyChange.bind(this);
-    events.on(this, "property-change", this._onPropertyChange);
+    this.on("property-change", this._onPropertyChange);
   },
 
   destroy: function () {
-    events.off(this, "property-change", this._onPropertyChange);
+    this.off("property-change", this._onPropertyChange);
     Front.prototype.destroy.call(this);
   },
 

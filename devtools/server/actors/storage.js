@@ -5,7 +5,6 @@
 "use strict";
 
 const {Cc, Ci, Cu, CC} = require("chrome");
-const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
@@ -192,8 +191,8 @@ StorageActors.defaults = function (typeName, observationTopics) {
       }
       this.onWindowReady = this.onWindowReady.bind(this);
       this.onWindowDestroyed = this.onWindowDestroyed.bind(this);
-      events.on(this.storageActor, "window-ready", this.onWindowReady);
-      events.on(this.storageActor, "window-destroyed", this.onWindowDestroyed);
+      this.storageActor.on("window-ready", this.onWindowReady);
+      this.storageActor.on("window-destroyed", this.onWindowDestroyed);
     },
 
     destroy() {
@@ -202,8 +201,8 @@ StorageActors.defaults = function (typeName, observationTopics) {
           Services.obs.removeObserver(this, observationTopic);
         });
       }
-      events.off(this.storageActor, "window-ready", this.onWindowReady);
-      events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
+      this.storageActor.off("window-ready", this.onWindowReady);
+      this.storageActor.off("window-destroyed", this.onWindowDestroyed);
 
       this.hostVsStores.clear();
 
@@ -454,8 +453,8 @@ StorageActors.createActor({
 
     this.onWindowReady = this.onWindowReady.bind(this);
     this.onWindowDestroyed = this.onWindowDestroyed.bind(this);
-    events.on(this.storageActor, "window-ready", this.onWindowReady);
-    events.on(this.storageActor, "window-destroyed", this.onWindowDestroyed);
+    this.storageActor.on("window-ready", this.onWindowReady);
+    this.storageActor.on("window-destroyed", this.onWindowDestroyed);
   },
 
   destroy() {
@@ -468,8 +467,8 @@ StorageActors.createActor({
       this.removeCookieObservers();
     }
 
-    events.off(this.storageActor, "window-ready", this.onWindowReady);
-    events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
+    this.storageActor.off("window-ready", this.onWindowReady);
+    this.storageActor.off("window-destroyed", this.onWindowDestroyed);
 
     this._pendingResponse = null;
 
@@ -1582,16 +1581,16 @@ StorageActors.createActor({
     this.onWindowReady = this.onWindowReady.bind(this);
     this.onWindowDestroyed = this.onWindowDestroyed.bind(this);
 
-    events.on(this.storageActor, "window-ready", this.onWindowReady);
-    events.on(this.storageActor, "window-destroyed", this.onWindowDestroyed);
+    this.storageActor.on("window-ready", this.onWindowReady);
+    this.storageActor.on("window-destroyed", this.onWindowDestroyed);
   },
 
   destroy() {
     this.hostVsStores.clear();
     this.objectsSize = null;
 
-    events.off(this.storageActor, "window-ready", this.onWindowReady);
-    events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
+    this.storageActor.off("window-ready", this.onWindowReady);
+    this.storageActor.off("window-destroyed", this.onWindowDestroyed);
 
     protocol.Actor.prototype.destroy.call(this);
 
@@ -2635,12 +2634,12 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     if (topic == "content-document-global-created" &&
         this.isIncludedInTopLevelWindow(subject)) {
       this.childWindowPool.add(subject);
-      events.emit(this, "window-ready", subject);
+      this.emit("window-ready", subject);
     } else if (topic == "inner-window-destroyed") {
       let window = this.getWindowFromInnerWindowID(subject);
       if (window) {
         this.childWindowPool.delete(window);
-        events.emit(this, "window-destroyed", window);
+        this.emit("window-destroyed", window);
       }
     }
     return null;
@@ -2666,12 +2665,12 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     let window = target.defaultView;
 
     if (type == "pagehide" && this.childWindowPool.delete(window)) {
-      events.emit(this, "window-destroyed", window);
+      this.emit("window-destroyed", window);
     } else if (type == "pageshow" && persisted && window.location.href &&
                window.location.href != "about:blank" &&
                this.isIncludedInTopLevelWindow(window)) {
       this.childWindowPool.add(window);
-      events.emit(this, "window-ready", window);
+      this.emit("window-ready", window);
     }
   },
 
@@ -2720,7 +2719,7 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
    */
   update(action, storeType, data) {
     if (action == "cleared") {
-      events.emit(this, "stores-cleared", { [storeType]: data });
+      this.emit("stores-cleared", { [storeType]: data });
       return null;
     }
 
@@ -2776,7 +2775,7 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
 
     this.batchTimer = setTimeout(() => {
       clearTimeout(this.batchTimer);
-      events.emit(this, "stores-update", this.boundUpdate);
+      this.emit("stores-update", this.boundUpdate);
       this.boundUpdate = {};
     }, BATCH_DELAY);
 

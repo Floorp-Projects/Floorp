@@ -8,8 +8,6 @@ const { Profiler } = require("devtools/server/performance/profiler");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { profilerSpec } = require("devtools/shared/specs/profiler");
 
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
-
 /**
  * This actor wraps the Profiler module at devtools/server/performance/profiler.js
  * and provides RDP definitions.
@@ -22,11 +20,11 @@ exports.ProfilerActor = ActorClassWithSpec(profilerSpec, {
     this._onProfilerEvent = this._onProfilerEvent.bind(this);
 
     this.bridge = new Profiler();
-    events.on(this.bridge, "*", this._onProfilerEvent);
+    this.bridge.on("*", this._onProfilerEvent);
   },
 
   destroy: function () {
-    events.off(this.bridge, "*", this._onProfilerEvent);
+    this.bridge.off("*", this._onProfilerEvent);
     this.bridge.destroy();
     Actor.prototype.destroy.call(this);
   },
@@ -47,6 +45,6 @@ exports.ProfilerActor = ActorClassWithSpec(profilerSpec, {
    * Pipe events from Profiler module to this actor.
    */
   _onProfilerEvent: function (eventName, ...data) {
-    events.emit(this, eventName, ...data);
+    this.emit(eventName, ...data);
   },
 });

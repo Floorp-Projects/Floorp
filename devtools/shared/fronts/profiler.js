@@ -11,8 +11,6 @@ const {
 } = require("devtools/shared/protocol");
 const { profilerSpec } = require("devtools/shared/specs/profiler");
 
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
-
 /**
  * This can be used on older Profiler implementations, but the methods cannot
  * be changed -- you must introduce a new method, and detect the server.
@@ -24,11 +22,11 @@ exports.ProfilerFront = FrontClassWithSpec(profilerSpec, {
     this.manage(this);
 
     this._onProfilerEvent = this._onProfilerEvent.bind(this);
-    events.on(this, "*", this._onProfilerEvent);
+    this.on("*", this._onProfilerEvent);
   },
 
   destroy: function () {
-    events.off(this, "*", this._onProfilerEvent);
+    this.off("*", this._onProfilerEvent);
     Front.prototype.destroy.call(this);
   },
 
@@ -58,7 +56,7 @@ exports.ProfilerFront = FrontClassWithSpec(profilerSpec, {
       // If this is `eventNotification`, this is coming from an older Gecko (<Fx42)
       // that doesn't use protocol.js style events. Massage it to emit a protocol.js
       // style event as well.
-      events.emit(this, data.topic, data);
+      this.emit(data.topic, data);
     } else {
       // Otherwise if a modern protocol.js event, emit it also as `eventNotification`
       // for compatibility reasons on the client (like for any add-ons/Gecko Profiler

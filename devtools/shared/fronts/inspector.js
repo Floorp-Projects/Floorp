@@ -23,7 +23,6 @@ const {
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
-const events = require("devtools/shared/event-emitter");
 const nodeConstants = require("devtools/shared/dom-node-constants.js");
 loader.lazyRequireGetter(this, "CommandUtils",
   "devtools/client/shared/developer-toolbar", true);
@@ -536,7 +535,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
   _createRootNodePromise: function () {
     this._rootNodeDeferred = defer();
     this._rootNodeDeferred.promise.then(() => {
-      events.emit(this, "new-root");
+      this.emit("new-root");
     });
   },
 
@@ -878,7 +877,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
         this._orphaned = new Set();
       }
 
-      events.emit(this, "mutations", emitMutations);
+      this.emit("mutations", emitMutations);
     });
   }, {
     impl: "_getMutations"
