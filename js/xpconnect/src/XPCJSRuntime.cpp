@@ -2668,10 +2668,10 @@ SetUseCounterCallback(JSObject* obj, JSUseCounter counter)
 {
     switch (counter) {
       case JSUseCounter::ASMJS:
-        SetDocumentAndPageUseCounter(nullptr, obj, eUseCounter_custom_JS_asmjs);
+        SetDocumentAndPageUseCounter(obj, eUseCounter_custom_JS_asmjs);
         break;
       case JSUseCounter::WASM:
-        SetDocumentAndPageUseCounter(nullptr, obj, eUseCounter_custom_JS_wasm);
+        SetDocumentAndPageUseCounter(obj, eUseCounter_custom_JS_wasm);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected JSUseCounter id");

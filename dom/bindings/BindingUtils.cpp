@@ -3747,8 +3747,7 @@ AssertReflectorHasGivenProto(JSContext* aCx, JSObject* aReflector,
 #endif // DEBUG
 
 void
-SetDocumentAndPageUseCounter(JSContext* aCx, JSObject* aObject,
-                             UseCounter aUseCounter)
+SetDocumentAndPageUseCounter(JSObject* aObject, UseCounter aUseCounter)
 {
   nsGlobalWindow* win = xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject));
   if (win && win->GetDocument()) {
