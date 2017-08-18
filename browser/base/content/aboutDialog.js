@@ -64,13 +64,7 @@ function init(aEvent) {
   }
 
   if (AppConstants.MOZ_UPDATER) {
-    gAppUpdater = new appUpdater();
-
-    let button = gAppUpdater.updateDeck.selectedPanel.querySelector("button");
-    if (button && (!document.commandDispatcher.focusedElement || // don't steal the focus
-                   document.commandDispatcher.focusedElement.localName == "button")) { // except from the other buttons
-      button.focus();
-    }
+    gAppUpdater = new appUpdater({ buttonAutoFocus: true });
 
     let channelLabel = document.getElementById("currentChannel");
     let currentChannelText = document.getElementById("currentChannelText");
