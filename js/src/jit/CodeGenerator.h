@@ -386,7 +386,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     };
     template <CallableOrConstructor mode>
     void emitIsCallableOrConstructor(Register object, Register output, Label* failure);
-    void visitIsCallable(LIsCallable* lir);
+    void visitIsCallableO(LIsCallableO* lir);
+    void visitIsCallableV(LIsCallableV* lir);
     void visitOutOfLineIsCallable(OutOfLineIsCallable* ool);
     void visitIsConstructor(LIsConstructor* lir);
     void visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool);

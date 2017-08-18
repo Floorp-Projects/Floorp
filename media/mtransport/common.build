@@ -28,11 +28,6 @@ mtransport_lcppsrcs = [
     'transportlayerprsock.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    mtransport_lcppsrcs += [
-        'gonk_addrs.cpp',
-    ]
-
 mtransport_cppsrcs = [
     '/media/mtransport/%s' % s for s in sorted(mtransport_lcppsrcs)
 ]

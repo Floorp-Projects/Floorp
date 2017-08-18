@@ -462,7 +462,7 @@ public:
     GetCanvasLayer(nsDisplayListBuilder* builder, Layer* oldLayer,
                    LayerManager* manager,
                    bool aMirror = false) override;
-    void
+    bool
     InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                              CanvasRenderer* aRenderer,
                              bool aMirror = false) override;

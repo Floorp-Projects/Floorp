@@ -39,7 +39,7 @@ function getAutocompleteValuesForFlag(flag, request) {
       values.push(request.cause.type);
       break;
     case "mime-type":
-      values.push(request.mimeType);
+      values.push(request.mimeType.replace(/;.+/, ""));
       break;
     case "set-cookie-name":
       values = responseCookies.map(c => c.name);

@@ -30,10 +30,10 @@ class WasmInstanceObject;
 
 namespace wasm {
 
-struct LinkData;
 struct LinkDataTier;
-struct Metadata;
 struct MetadataTier;
+class LinkData;
+class Metadata;
 
 // ShareableBytes is a reference-counted Vector of bytes.
 
@@ -348,11 +348,7 @@ typedef uint8_t ModuleHash[8];
 
 struct MetadataTier
 {
-    explicit MetadataTier(Tier tier)
-      : tier(tier)
-    {
-        MOZ_ASSERT(tier == Tier::Baseline || tier == Tier::Ion);
-    }
+    explicit MetadataTier(Tier tier) : tier(tier) {}
 
     const Tier            tier;
 
@@ -373,23 +369,35 @@ struct MetadataTier
 
 typedef UniquePtr<MetadataTier> UniqueMetadataTier;
 
-struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
+class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 {
-    // `tier_` will become more complicated when tiering is implemented.
-    UniqueMetadataTier tier_;
+    UniqueMetadataTier            metadata1_;
+    mutable UniqueMetadataTier    metadata2_;     // Access only when hasTier2() is true
+    mutable mozilla::Atomic<bool> hasTier2_;
 
-    Tiers tiers() const;
-    const MetadataTier& metadata(Tier t) const;
-    MetadataTier& metadata(Tier t);
-
+  public:
     explicit Metadata(UniqueMetadataTier tier, ModuleKind kind = ModuleKind::Wasm)
       : MetadataCacheablePod(kind),
-        tier_(Move(tier))
+        metadata1_(Move(tier))
     {}
     virtual ~Metadata() {}
 
     MetadataCacheablePod& pod() { return *this; }
     const MetadataCacheablePod& pod() const { return *this; }
+
+    void commitTier2() const;
+    bool hasTier2() const { return hasTier2_; }
+    void setTier2(UniqueMetadataTier metadata) const;
+    Tiers tiers() const;
+
+    const MetadataTier& metadata(Tier t) const;
+    MetadataTier& metadata(Tier t);
+
+    UniquePtr<MetadataTier> takeMetadata(Tier tier) {
+        MOZ_ASSERT(!hasTier2());
+        MOZ_ASSERT(metadata1_->tier == tier);
+        return Move(metadata1_);
+    }
 
     SigWithIdVector       sigIds;
     GlobalDescVector      globals;
@@ -436,6 +444,8 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 typedef RefPtr<Metadata> MutableMetadata;
 typedef RefPtr<const Metadata> SharedMetadata;
 
+typedef UniquePtr<uintptr_t, JS::FreePolicy> UniqueJumpTable;
+
 // Code objects own executable code and the metadata that describe it. A single
 // Code object is normally shared between a module and all its instances.
 //
@@ -443,18 +453,25 @@ typedef RefPtr<const Metadata> SharedMetadata;
 
 class Code : public ShareableBase<Code>
 {
-    // `tier_` will become more complicated when tiering is implemented.
-    UniqueConstCodeSegment              tier_;
+    UniqueConstCodeSegment              segment1_;
+    mutable UniqueConstCodeSegment      segment2_; // Access only when hasTier2() is true
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
+    UniqueJumpTable                     jumpTable_;
 
   public:
     Code();
+    Code(UniqueConstCodeSegment tier, const Metadata& metadata, UniqueJumpTable maybeJumpTable);
 
-    Code(UniqueConstCodeSegment tier, const Metadata& metadata);
+    uintptr_t* jumpTable() const { return jumpTable_.get(); }
 
-    Tier anyTier() const;
+    bool hasTier2() const { return metadata_->hasTier2(); }
+    void setTier2(UniqueConstCodeSegment segment) const;
     Tiers tiers() const;
+    bool hasTier(Tier t) const;
+
+    Tier stableTier() const;    // This is stable during a run
+    Tier bestTier() const;      // This may transition from Baseline -> Ion at any time
 
     const CodeSegment& segment(Tier tier) const;
     const MetadataTier& metadata(Tier tier) const { return metadata_->metadata(tier); }
@@ -492,7 +509,7 @@ class Code : public ShareableBase<Code>
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
     const uint8_t* deserialize(const uint8_t* cursor, const SharedBytes& bytecode,
-                               const LinkData& linkData, Metadata* maybeMetadata);
+                               const LinkData& linkData, Metadata& metadata);
 };
 
 typedef RefPtr<const Code> SharedCode;

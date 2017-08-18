@@ -1018,13 +1018,15 @@ AESContext *
 AES_AllocateContext(void)
 {
     /* aligned_alloc is C11 so we have to do it the old way. */
-    AESContext *ctx = PORT_ZAlloc(sizeof(AESContext) + 15);
-    if (ctx == NULL) {
+    AESContext *ctx, *ctxmem;
+    ctxmem = PORT_ZAlloc(sizeof(AESContext) + 15);
+    if (ctxmem == NULL) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         return NULL;
     }
-    ctx->mem = ctx;
-    return (AESContext *)(((uintptr_t)ctx + 15) & ~(uintptr_t)0x0F);
+    ctx = (AESContext *)(((uintptr_t)ctxmem + 15) & ~(uintptr_t)0x0F);
+    ctx->mem = ctxmem;
+    return ctx;
 }
 
 /*

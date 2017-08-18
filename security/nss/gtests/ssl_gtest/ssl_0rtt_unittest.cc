@@ -400,4 +400,88 @@ TEST_P(TlsConnectTls13, ReceiveTooMuchEarlyData) {
   }
 }
 
+class PacketCoalesceFilter : public PacketFilter {
+ public:
+  PacketCoalesceFilter() : packet_data_() {}
+
+  void SendCoalesced(std::shared_ptr<TlsAgent> agent) {
+    agent->SendDirect(packet_data_);
+  }
+
+ protected:
+  PacketFilter::Action Filter(const DataBuffer& input,
+                              DataBuffer* output) override {
+    packet_data_.Write(packet_data_.len(), input);
+    return DROP;
+  }
+
+ private:
+  DataBuffer packet_data_;
+};
+
+TEST_P(TlsConnectTls13, ZeroRttOrdering) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+
+  // Send out the ClientHello.
+  client_->Handshake();
+
+  // Now, coalesce the next three things from the client: early data, second
+  // flight and 1-RTT data.
+  auto coalesce = std::make_shared<PacketCoalesceFilter>();
+  client_->SetPacketFilter(coalesce);
+
+  // Send (and hold) early data.
+  static const std::vector<uint8_t> early_data = {3, 2, 1};
+  EXPECT_EQ(static_cast<PRInt32>(early_data.size()),
+            PR_Write(client_->ssl_fd(), early_data.data(), early_data.size()));
+
+  // Send (and hold) the second client handshake flight.
+  // The client sends EndOfEarlyData after seeing the server Finished.
+  ExpectAlert(client_, kTlsAlertEndOfEarlyData);
+  server_->Handshake();
+  client_->Handshake();
+
+  // Send (and hold) 1-RTT data.
+  static const std::vector<uint8_t> late_data = {7, 8, 9, 10};
+  EXPECT_EQ(static_cast<PRInt32>(late_data.size()),
+            PR_Write(client_->ssl_fd(), late_data.data(), late_data.size()));
+
+  // Now release them all at once.
+  coalesce->SendCoalesced(client_);
+
+  // Now ensure that the three steps are exposed in the right order on the
+  // server: delivery of early data, handshake callback, delivery of 1-RTT.
+  size_t step = 0;
+  server_->SetHandshakeCallback([&step](TlsAgent*) {
+    EXPECT_EQ(1U, step);
+    ++step;
+  });
+
+  std::vector<uint8_t> buf(10);
+  // The first read here blocks because there isn't any 0-RTT to deliver so it
+  // processes everything.  When the EndOfEarlyData message is read, it stalls
+  // out of the loop.  The second read should return the early data.
+  PRInt32 read = PR_Read(server_->ssl_fd(), buf.data(), buf.size());
+  EXPECT_GT(0, read);
+  EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
+  read = PR_Read(server_->ssl_fd(), buf.data(), buf.size());
+  ASSERT_EQ(static_cast<PRInt32>(early_data.size()), read);
+  buf.resize(read);
+  EXPECT_EQ(early_data, buf);
+  EXPECT_EQ(0U, step);
+  ++step;
+
+  // The third read should be after the handshake callback and should return the
+  // data that was sent after the handshake completed.
+  buf.resize(10);
+  read = PR_Read(server_->ssl_fd(), buf.data(), buf.size());
+  ASSERT_EQ(static_cast<PRInt32>(late_data.size()), read);
+  buf.resize(read);
+  EXPECT_EQ(late_data, buf);
+  EXPECT_EQ(2U, step);
+}
+
 }  // namespace nss_test

@@ -167,7 +167,7 @@
           },
         },
       }],
-      [ 'target_arch=="arm64" or target_arch=="aarch64"', {
+      [ 'target_arch=="arm64" or target_arch=="aarch64" or target_arch=="sparc64"', {
         'defines': [
           'NSS_USE_64',
         ],

@@ -5,6 +5,7 @@
 
 #include "WebRenderLayerManager.h"
 
+#include "BasicLayers.h"
 #include "gfxPrefs.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
@@ -14,6 +15,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/UpdateImageHelper.h"
+#include "nsDisplayList.h"
 #include "WebRenderCanvasLayer.h"
 #include "WebRenderCanvasRenderer.h"
 #include "WebRenderColorLayer.h"
@@ -104,6 +106,8 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
     mDiscardedCompositorAnimationsIds.Clear();
     WrBridge()->Destroy(aIsSync);
   }
+
+  mLastCanvasDatas.Clear();
 
   if (mTransactionIdAllocator) {
     // Make sure to notify the refresh driver just in case it's waiting on a
@@ -390,11 +394,33 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT, aOffset.ToUnknownPoint());
   MOZ_ASSERT(context);
 
-  if (aItem->GetType() == DisplayItemType::TYPE_MASK) {
+  switch (aItem->GetType()) {
+  case DisplayItemType::TYPE_MASK:
     context->SetMatrix(gfxMatrix::Translation(-aOffset.x, -aOffset.y));
     static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context);
-  } else {
+    break;
+  case DisplayItemType::TYPE_FILTER:
+    {
+      RefPtr<BasicLayerManager> tempManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
+      FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
+      layerBuilder->Init(aDisplayListBuilder, tempManager);
+
+      tempManager->BeginTransactionWithTarget(context);
+      ContainerLayerParameters param;
+      RefPtr<Layer> layer = aItem->BuildLayer(aDisplayListBuilder, tempManager, param);
+      if (layer) {
+        tempManager->SetRoot(layer);
+        static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder, context, tempManager);
+      }
+
+      if (tempManager->InTransaction()) {
+        tempManager->AbortTransaction();
+      }
+      break;
+    }
+  default:
     aItem->Paint(aDisplayListBuilder, context);
+    break;
   }
 
   if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
@@ -909,6 +935,9 @@ WebRenderLayerManager::ClearLayer(Layer* aLayer)
   aLayer->ClearCachedResources();
   if (aLayer->GetMaskLayer()) {
     aLayer->GetMaskLayer()->ClearCachedResources();
+  }
+  for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
+    aLayer->GetAncestorMaskLayerAt(i)->ClearCachedResources();
   }
   for (Layer* child = aLayer->GetFirstChild(); child;
        child = child->GetNextSibling()) {

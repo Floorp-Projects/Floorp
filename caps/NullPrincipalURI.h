@@ -52,8 +52,7 @@ private:
 
   nsresult Init();
 
-  char mPathBytes[NSID_LENGTH];
-  nsFixedCString mPath;
+  nsAutoCStringN<NSID_LENGTH> mPath;
 };
 
 #endif // __NullPrincipalURI_h__

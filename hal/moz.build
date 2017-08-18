@@ -95,7 +95,7 @@ else:
         'fallback/FallbackVibration.cpp',
     ]
 
-# Fallbacks for backends implemented on Gonk only.
+# Fallbacks for backends no longer implemented.
 UNIFIED_SOURCES += [
     'fallback/FallbackDiskSpaceWatcher.cpp',
     'fallback/FallbackProcessPriority.cpp',

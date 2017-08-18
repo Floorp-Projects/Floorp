@@ -1,10 +1,10 @@
-// |jit-test| test-also-wasm-baseline; error: TestComplete
+// |jit-test| test-also-no-wasm-baseline; error: TestComplete
 // Tests that wasm module scripts raises onEnterFrame and onLeaveFrame events.
 
 load(libdir + "asserts.js");
 
-if (!wasmIsSupported())
-     throw "TestComplete";
+if (!wasmDebuggingIsSupported())
+    throw "TestComplete";
 
 function runWasmWithDebugger(wast, lib, init, done) {
     let g = newGlobal('');

@@ -1,10 +1,10 @@
-// |jit-test| test-also-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline
 // Tests that wasm module scripts have text line to bytecode offset information
 // when source text is generated.
 
 load(libdir + "asserts.js");
 
-if (!wasmIsSupported())
+if (!wasmDebuggingIsSupported())
      quit();
 
 // Checking if experimental format generates internal source map to binary file

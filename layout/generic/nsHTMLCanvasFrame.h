@@ -52,7 +52,7 @@ public:
                                      LayerManager* aManager,
                                      nsDisplayItem* aItem,
                                      const ContainerLayerParameters& aContainerParameters);
-  void InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+  bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                 CanvasRenderer* aRenderer);
 
   /* get the size of the canvas's image */
