@@ -1074,8 +1074,6 @@ notification[value="translation"] {
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
-%include downloads/indicator.css
-
 /* Error counter */
 
 #developer-toolbar-toolbox-button[error-count]:before {
