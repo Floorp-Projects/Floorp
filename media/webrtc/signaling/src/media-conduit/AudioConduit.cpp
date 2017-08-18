@@ -164,6 +164,12 @@ bool WebrtcAudioConduit::SetLocalCNAME(const char* cname)
   return !mPtrRTP->SetRTCP_CNAME(mChannel, temp);
 }
 
+bool WebrtcAudioConduit::SetLocalMID(const std::string& mid)
+{
+  // !mjf! stubbed out for now
+  return false;
+}
+
 bool WebrtcAudioConduit::GetSendPacketTypeStats(
   webrtc::RtcpPacketTypeCounter* aPacketCounts)
 {

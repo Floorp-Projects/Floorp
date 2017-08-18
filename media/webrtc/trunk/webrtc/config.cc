@@ -98,7 +98,8 @@ bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
          uri == webrtc::RtpExtension::kPlayoutDelayUri ||
          uri == webrtc::RtpExtension::kRtpStreamIdUri ||
-         uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri;
+         uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri ||
+         uri == webrtc::RtpExtension::kMIdUri;
 }
 
 VideoStream::VideoStream()
