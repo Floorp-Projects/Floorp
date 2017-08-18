@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{FontInstanceKey, FontKey, FontRenderMode, GlyphDimensions};
+use api::{FontInstance, FontKey, FontRenderMode, GlyphDimensions};
 use api::{NativeFontHandle, SubpixelDirection};
 use api::{GlyphKey};
 use internal_types::FastHashMap;
@@ -123,7 +123,7 @@ impl FontContext {
     }
 
     fn load_glyph(&self,
-                  font: &FontInstanceKey,
+                  font: &FontInstance,
                   glyph: &GlyphKey) -> Option<FT_GlyphSlot> {
 
         debug_assert!(self.faces.contains_key(&font.font_key));
@@ -166,7 +166,7 @@ impl FontContext {
     // Get the bounding box for a glyph, accounting for sub-pixel positioning.
     fn get_bounding_box(&self,
                         slot: FT_GlyphSlot,
-                        font: &FontInstanceKey,
+                        font: &FontInstance,
                         glyph: &GlyphKey) -> FT_BBox {
         let mut cbox: FT_BBox = unsafe { mem::uninitialized() };
 
@@ -213,7 +213,7 @@ impl FontContext {
 
     fn get_glyph_dimensions_impl(&self,
                                  slot: FT_GlyphSlot,
-                                 font: &FontInstanceKey,
+                                 font: &FontInstance,
                                  glyph: &GlyphKey) -> Option<GlyphDimensions> {
         let metrics = unsafe { &(*slot).metrics };
 
@@ -249,7 +249,7 @@ impl FontContext {
     }
 
     pub fn get_glyph_dimensions(&mut self,
-                                font: &FontInstanceKey,
+                                font: &FontInstance,
                                 key: &GlyphKey) -> Option<GlyphDimensions> {
         let slot = self.load_glyph(font, key);
         slot.and_then(|slot| {
@@ -258,7 +258,7 @@ impl FontContext {
     }
 
     pub fn rasterize_glyph(&mut self,
-                           font: &FontInstanceKey,
+                           font: &FontInstance,
                            key: &GlyphKey)
                            -> Option<RasterizedGlyph> {
 

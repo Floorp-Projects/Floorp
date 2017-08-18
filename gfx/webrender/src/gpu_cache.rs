@@ -28,7 +28,8 @@ use device::FrameId;
 use internal_types::UvRect;
 use profiler::GpuCacheProfileCounters;
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
-use std::{mem, u32};
+use std::{mem, u16, u32};
+use std::ops::Add;
 use api::{ColorF, LayerRect};
 
 pub const GPU_CACHE_INITIAL_HEIGHT: u32 = 512;
@@ -138,6 +139,24 @@ impl GpuCacheAddress {
         GpuCacheAddress {
             u: u as u16,
             v: v as u16,
+        }
+    }
+
+    pub fn invalid() -> GpuCacheAddress {
+        GpuCacheAddress {
+            u: u16::MAX,
+            v: u16::MAX,
+        }
+    }
+}
+
+impl Add<usize> for GpuCacheAddress {
+    type Output = GpuCacheAddress;
+
+    fn add(self, other: usize) -> GpuCacheAddress {
+        GpuCacheAddress {
+            u: self.u + other as u16,
+            v: self.v,
         }
     }
 }

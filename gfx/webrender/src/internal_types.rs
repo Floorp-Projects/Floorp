@@ -15,7 +15,7 @@ use tiling;
 use renderer::BlendMode;
 use api::{ClipId, DevicePoint, DeviceUintRect, DocumentId, Epoch};
 use api::{ExternalImageData, ExternalImageId};
-use api::{ImageData, ImageFormat, PipelineId};
+use api::{ImageFormat, PipelineId};
 
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
 pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
@@ -43,10 +43,8 @@ pub enum SourceTexture {
     Invalid,
     TextureCache(CacheTextureId),
     External(ExternalImageData),
-    #[cfg_attr(not(feature = "webgl"), allow(dead_code))]
-    /// This is actually a gl::GLuint, with the shared texture id between the
-    /// main context and the WebGL context.
-    WebGL(u32),
+    CacheA8,
+    CacheRGBA8,
 }
 
 pub const ORTHO_NEAR_PLANE: f32 = -1000000.0;
@@ -91,6 +89,16 @@ impl BatchTextures {
             colors: [SourceTexture::Invalid; 3],
         }
     }
+
+    pub fn render_target_cache() -> Self {
+        BatchTextures {
+            colors: [
+                SourceTexture::CacheRGBA8,
+                SourceTexture::Invalid,
+                SourceTexture::Invalid,
+            ]
+        }
+    }
 }
 
 // In some places we need to temporarily bind a texture to any slot.
@@ -99,42 +107,31 @@ pub const DEFAULT_TEXTURE: TextureSampler = TextureSampler::Color0;
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum RenderTargetMode {
     None,
-    SimpleRenderTarget,
-    LayerRenderTarget(i32),      // Number of texture layers
+    RenderTarget,
+}
+
+#[derive(Debug)]
+pub enum TextureUpdateSource {
+    External { id: ExternalImageId, channel_index: u8 },
+    Bytes { data: Arc<Vec<u8>> },
 }
 
 #[derive(Debug)]
 pub enum TextureUpdateOp {
     Create {
-      width: u32,
-      height: u32,
-      format: ImageFormat,
-      filter: TextureFilter,
-      mode: RenderTargetMode,
-      data: Option<ImageData>,
-    },
-    Update {
-        page_pos_x: u32,    // the texture page position which we want to upload
-        page_pos_y: u32,
-        width: u32,
-        height: u32,
-        data: Arc<Vec<u8>>,
-        stride: Option<u32>,
-        offset: u32,
-    },
-    UpdateForExternalBuffer {
-        rect: DeviceUintRect,
-        id: ExternalImageId,
-        channel_index: u8,
-        stride: Option<u32>,
-        offset: u32,
-    },
-    Grow {
         width: u32,
         height: u32,
         format: ImageFormat,
         filter: TextureFilter,
         mode: RenderTargetMode,
+        layer_count: i32,
+    },
+    Update {
+        rect: DeviceUintRect,
+        stride: Option<u32>,
+        offset: u32,
+        layer_index: i32,
+        source: TextureUpdateSource,
     },
     Free,
 }
