@@ -13,6 +13,7 @@ from taskgraph.transforms.tests import (
     normpath
 )
 from taskgraph.transforms.job.common import (
+    docker_worker_add_tooltool,
     support_vcs_checkout,
 )
 import os
@@ -148,16 +149,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
     # handle some of the mozharness-specific options
 
     if mozharness['tooltool-downloads']:
-        worker['relengapi-proxy'] = True
-        worker['caches'].append({
-            'type': 'persistent',
-            'name': 'tooltool-cache',
-            'mount-point': '/home/worker/tooltool-cache',
-        })
-        taskdesc['scopes'].extend([
-            'docker-worker:relengapi-proxy:tooltool.download.internal',
-            'docker-worker:relengapi-proxy:tooltool.download.public',
-        ])
+        docker_worker_add_tooltool(config, job, taskdesc, internal=True)
 
     if test['reboot']:
         raise Exception('reboot: {} not supported on generic-worker'.format(test['reboot']))
