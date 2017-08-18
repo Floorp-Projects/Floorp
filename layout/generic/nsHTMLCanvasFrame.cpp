@@ -141,7 +141,10 @@ public:
           static_cast<WebRenderCanvasRendererAsync*>(canvasData->GetCanvasRenderer());
 
         if (isRecycled) {
-          static_cast<nsHTMLCanvasFrame*>(mFrame)->InitializeCanvasRenderer(aDisplayListBuilder, data);
+          nsHTMLCanvasFrame* canvasFrame = static_cast<nsHTMLCanvasFrame*>(mFrame);
+          if (!canvasFrame->InitializeCanvasRenderer(aDisplayListBuilder, data)) {
+            return true;
+          }
         }
 
         data->UpdateCompositableClient();
@@ -455,12 +458,12 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
-void
+bool
 nsHTMLCanvasFrame::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                             CanvasRenderer* aRenderer)
 {
   HTMLCanvasElement* element = static_cast<HTMLCanvasElement*>(GetContent());
-  element->InitializeCanvasRenderer(aBuilder, aRenderer);
+  return element->InitializeCanvasRenderer(aBuilder, aRenderer);
 }
 
 void
