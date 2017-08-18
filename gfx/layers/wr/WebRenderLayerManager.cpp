@@ -673,6 +673,12 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
       // Make a "root" layer data that has everything else as descendants
       mLayerScrollData.emplace_back();
       mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
+      if (aDisplayListBuilder->IsBuildingLayerEventRegions()) {
+        nsIPresShell* shell = aDisplayListBuilder->RootReferenceFrame()->PresContext()->PresShell();
+        if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(shell)) {
+          mLayerScrollData.back().SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
+        }
+      }
       // Append the WebRenderLayerScrollData items into WebRenderScrollData
       // in reverse order, from topmost to bottommost. This is in keeping with
       // the semantics of WebRenderScrollData.
