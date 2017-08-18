@@ -3018,7 +3018,9 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd, resp) {
 
 /**
  * Synchronously minimizes the user agent window as if the user pressed
- * the minimize button, or restores it if it is already minimized.
+ * the minimize button.
+ *
+ * No action is taken if the window is already minimized.
  *
  * Not supported on Fennec.
  *
@@ -3037,15 +3039,13 @@ GeckoDriver.prototype.minimizeWindow = async function(cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  await new Promise(resolve => {
-    win.addEventListener("sizemodechange", resolve, {once: true});
-
-    if (win.windowState == win.STATE_MINIMIZED) {
-      win.restore();
-    } else {
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Minimized) {
+    await new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
       win.minimize();
-    }
-  });
+    });
+  }
 
   return this.curBrowser.rect;
 };
