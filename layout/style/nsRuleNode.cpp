@@ -3692,37 +3692,38 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, GeckoStyleContext* aContext,
   const nsFont& systemFont = lazySystemFont.refOr(*defaultVariableFont);
 
   // font-family: font family list, enum, inherit
-  const nsCSSValue* familyValue = aRuleData->ValueForFontFamily();
-  NS_ASSERTION(eCSSUnit_Enumerated != familyValue->GetUnit(),
-               "system fonts should not be in mFamily anymore");
-  if (eCSSUnit_FontFamilyList == familyValue->GetUnit()) {
-    // set the correct font if we are using DocumentFonts OR we are overriding for XUL
-    // MJA: bug 31816
-    nsRuleNode::FixupNoneGeneric(&aFont->mFont, aPresContext,
-                                 aGenericFontID, defaultVariableFont);
+  switch (aRuleData->ValueForFontFamily()->GetUnit()) {
+    case eCSSUnit_FontFamilyList:
+      // set the correct font if we are using DocumentFonts OR we are overriding
+      // for XUL - MJA: bug 31816
+      nsRuleNode::FixupNoneGeneric(&aFont->mFont, aPresContext,
+                                   aGenericFontID, defaultVariableFont);
 
-    aFont->mFont.systemFont = false;
-    // Technically this is redundant with the code below, but it's good
-    // to have since we'll still want it once we get rid of
-    // SetGenericFont (bug 380915).
-    aFont->mGenericID = aGenericFontID;
-  }
-  else if (eCSSUnit_System_Font == familyValue->GetUnit()) {
-    aFont->mFont.fontlist = systemFont.fontlist;
-    aFont->mFont.systemFont = true;
-    aFont->mGenericID = kGenericFont_NONE;
-  }
-  else if (eCSSUnit_Inherit == familyValue->GetUnit() ||
-           eCSSUnit_Unset == familyValue->GetUnit()) {
-    aConditions.SetUncacheable();
-    aFont->mFont.fontlist = aParentFont->mFont.fontlist;
-    aFont->mFont.systemFont = aParentFont->mFont.systemFont;
-    aFont->mGenericID = aParentFont->mGenericID;
-  }
-  else if (eCSSUnit_Initial == familyValue->GetUnit()) {
-    aFont->mFont.fontlist = defaultVariableFont->fontlist;
-    aFont->mFont.systemFont = defaultVariableFont->systemFont;
-    aFont->mGenericID = kGenericFont_NONE;
+      aFont->mFont.systemFont = false;
+      // Technically this is redundant with the code below, but it's good
+      // to have since we'll still want it once we get rid of
+      // SetGenericFont (bug 380915).
+      aFont->mGenericID = aGenericFontID;
+      break;
+    case eCSSUnit_System_Font:
+      aFont->mFont.fontlist = systemFont.fontlist;
+      aFont->mFont.systemFont = true;
+      aFont->mGenericID = kGenericFont_NONE;
+      break;
+    case eCSSUnit_Inherit:
+    case eCSSUnit_Unset:
+      aConditions.SetUncacheable();
+      aFont->mFont.fontlist = aParentFont->mFont.fontlist;
+      aFont->mFont.systemFont = aParentFont->mFont.systemFont;
+      aFont->mGenericID = aParentFont->mGenericID;
+      break;
+    case eCSSUnit_Initial:
+      aFont->mFont.fontlist = defaultVariableFont->fontlist;
+      aFont->mFont.systemFont = defaultVariableFont->systemFont;
+      aFont->mGenericID = kGenericFont_NONE;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected unit for font-family");
   }
 
   // When we're in the loop in SetGenericFont, we must ensure that we
