@@ -109,7 +109,11 @@ add_task(async function () {
 
   // Check if mime-type has been correctly parsed out and values also get autocomplete
   EventUtils.synthesizeKey(" mime-type:text", {});
-  testAutocompleteContents(["mime-type:text/css", "mime-type:text/html", "mime-type:text/plain"], document);
+  testAutocompleteContents([
+    "mime-type:text/css",
+    "mime-type:text/html",
+    "mime-type:text/plain"
+  ], document);
 
   // The negative filter flags
   EventUtils.synthesizeKey(" -", {});
