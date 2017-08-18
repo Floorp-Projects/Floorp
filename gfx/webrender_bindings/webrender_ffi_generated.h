@@ -51,9 +51,10 @@ enum class ExtendMode : uint32_t {
 
 enum class ExternalImageType : uint32_t {
   Texture2DHandle = 0,
-  TextureRectHandle = 1,
-  TextureExternalHandle = 2,
-  ExternalBuffer = 3,
+  Texture2DArrayHandle = 1,
+  TextureRectHandle = 2,
+  TextureExternalHandle = 3,
+  ExternalBuffer = 4,
 
   Sentinel /* this must be last for serialization purposes. */
 };
