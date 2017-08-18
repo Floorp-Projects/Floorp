@@ -110,6 +110,16 @@ struct EventRegions {
   {
   }
 
+  // This constructor takes the maybe-hit region and uses it to update the
+  // hit region and dispatch-to-content region. It is useful from converting
+  // from the display item representation to the layer representation.
+  EventRegions(const nsIntRegion& aHitRegion,
+               const nsIntRegion& aMaybeHitRegion,
+               const nsIntRegion& aDispatchToContentRegion,
+               const nsIntRegion& aNoActionRegion,
+               const nsIntRegion& aHorizontalPanRegion,
+               const nsIntRegion& aVerticalPanRegion);
+
   bool operator==(const EventRegions& aRegions) const
   {
     return mHitRegion == aRegions.mHitRegion &&
