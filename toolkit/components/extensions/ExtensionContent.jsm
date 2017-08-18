@@ -436,8 +436,6 @@ class ContentScriptContextChild extends BaseContext {
       `, this.sandbox);
     }
 
-    DocumentManager.sandboxContexts.set(this.sandbox, this);
-
     Object.defineProperty(this, "principal", {
       value: Cu.getObjectPrincipal(this.sandbox),
       enumerable: true,
@@ -481,8 +479,6 @@ class ContentScriptContextChild extends BaseContext {
 
   close() {
     super.unload();
-
-    DocumentManager.sandboxContexts.delete(this.sandbox);
 
     if (this.contentWindow) {
       for (let script of this.scripts) {
@@ -532,8 +528,6 @@ DocumentManager = {
   // Map[windowId -> Map[ExtensionChild -> ContentScriptContextChild]]
   contexts: new Map(),
 
-  sandboxContexts: new WeakMap(),
-
   initialized: false,
 
   lazyInit() {
@@ -543,13 +537,11 @@ DocumentManager = {
     this.initialized = true;
 
     Services.obs.addObserver(this, "inner-window-destroyed");
-    Services.obs.addObserver(this, "kill-content-script-sandbox");
     Services.obs.addObserver(this, "memory-pressure");
   },
 
   uninit() {
     Services.obs.removeObserver(this, "inner-window-destroyed");
-    Services.obs.removeObserver(this, "kill-content-script-sandbox");
     Services.obs.removeObserver(this, "memory-pressure");
   },
 
@@ -567,13 +559,6 @@ DocumentManager = {
         }
 
         this.contexts.delete(windowId);
-      }
-    },
-    "kill-content-script-sandbox"(subject) {
-      let sandbox = subject.wrappedJSObject;
-      let context = this.sandboxContexts.get(sandbox);
-      if (context) {
-        context.close();
       }
     },
     "memory-pressure"(subject, topic, data) {

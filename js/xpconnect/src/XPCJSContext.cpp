@@ -61,8 +61,6 @@
 #include "nsIInputStream.h"
 #include "nsIXULRuntime.h"
 #include "nsJSPrincipals.h"
-#include "ExpandedPrincipal.h"
-#include "SystemPrincipal.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -229,7 +227,6 @@ class Watchdog
 
 #define PREF_MAX_SCRIPT_RUN_TIME_CONTENT "dom.max_script_run_time"
 #define PREF_MAX_SCRIPT_RUN_TIME_CHROME "dom.max_chrome_script_run_time"
-#define PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT "dom.max_ext_content_script_run_time"
 
 class WatchdogManager : public nsIObserver
 {
@@ -250,7 +247,6 @@ class WatchdogManager : public nsIObserver
         mozilla::Preferences::AddStrongObserver(this, "dom.use_watchdog");
         mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
         mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
-        mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT);
     }
 
   protected:
@@ -270,7 +266,6 @@ class WatchdogManager : public nsIObserver
         mozilla::Preferences::RemoveObserver(this, "dom.use_watchdog");
         mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
         mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
-        mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT);
     }
 
     NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
@@ -346,10 +341,7 @@ class WatchdogManager : public nsIObserver
             int32_t chromeTime = Preferences::GetInt(PREF_MAX_SCRIPT_RUN_TIME_CHROME, 20);
             if (chromeTime <= 0)
                 chromeTime = INT32_MAX;
-            int32_t extTime = Preferences::GetInt(PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT, 5);
-            if (extTime <= 0)
-                extTime = INT32_MAX;
-            mWatchdog->SetMinScriptRunTimeSeconds(std::min({contentTime, chromeTime, extTime}));
+            mWatchdog->SetMinScriptRunTimeSeconds(std::min(contentTime, chromeTime));
         }
     }
 
@@ -471,33 +463,6 @@ XPCJSContext::ActivityCallback(void* arg, bool active)
     self->mWatchdogManager->RecordContextActivity(active);
 }
 
-static inline bool
-IsWebExtensionPrincipal(nsIPrincipal* principal, nsAString& addonId)
-{
-    return (NS_SUCCEEDED(principal->GetAddonId(addonId)) &&
-            !addonId.IsEmpty());
-}
-
-static bool
-IsWebExtensionContentScript(BasePrincipal* principal, nsAString& addonId)
-{
-    if (!principal->Is<ExpandedPrincipal>()) {
-        return false;
-    }
-
-    auto expanded = principal->As<ExpandedPrincipal>();
-
-    nsTArray<nsCOMPtr<nsIPrincipal>>* principals;
-    expanded->GetWhiteList(&principals);
-    for (auto prin : *principals) {
-        if (IsWebExtensionPrincipal(prin, addonId)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 // static
 bool
 XPCJSContext::InterruptCallback(JSContext* cx)
@@ -527,23 +492,10 @@ XPCJSContext::InterruptCallback(JSContext* cx)
     // returning to the event loop. See how long it's been, and what the limit
     // is.
     TimeDuration duration = TimeStamp::NowLoRes() - self->mSlowScriptCheckpoint;
-    int32_t limit;
-
-    nsString addonId;
-    const char* prefName;
-
-    auto principal = BasePrincipal::Cast(nsContentUtils::SubjectPrincipal(cx));
-    bool chrome = principal->Is<SystemPrincipal>();
-    if (chrome) {
-        prefName = PREF_MAX_SCRIPT_RUN_TIME_CHROME;
-        limit = Preferences::GetInt(prefName, 20);
-    } else if (IsWebExtensionContentScript(principal, addonId)) {
-        prefName = PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT;
-        limit = Preferences::GetInt(prefName, 5);
-    } else {
-        prefName = PREF_MAX_SCRIPT_RUN_TIME_CONTENT;
-        limit = Preferences::GetInt(prefName, 10);
-    }
+    bool chrome = nsContentUtils::IsSystemCaller(cx);
+    const char* prefName = chrome ? PREF_MAX_SCRIPT_RUN_TIME_CHROME
+                                  : PREF_MAX_SCRIPT_RUN_TIME_CONTENT;
+    int32_t limit = Preferences::GetInt(prefName, chrome ? 20 : 10);
 
     // If there's no limit, or we're within the limit, let it go.
     if (limit == 0 || duration.ToSeconds() < limit / 2.0)
@@ -610,32 +562,10 @@ XPCJSContext::InterruptCallback(JSContext* cx)
     }
 
     // Show the prompt to the user, and kill if requested.
-    nsGlobalWindow::SlowScriptResponse response = win->ShowSlowScriptDialog(addonId);
+    nsGlobalWindow::SlowScriptResponse response = win->ShowSlowScriptDialog();
     if (response == nsGlobalWindow::KillSlowScript) {
         if (Preferences::GetBool("dom.global_stop_script", true))
             xpc::Scriptability::Get(global).Block();
-        return false;
-    }
-    if (response == nsGlobalWindow::KillScriptGlobal) {
-        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-
-        if (!IsSandbox(global) || !obs)
-            return false;
-
-        // Notify the extensions framework that the sandbox should be killed.
-        nsIXPConnect* xpc = nsContentUtils::XPConnect();
-        JS::RootedObject wrapper(cx, JS_NewPlainObject(cx));
-        nsCOMPtr<nsISupports> supports;
-
-        // Store the sandbox object on the wrappedJSObject property of the
-        // subject so that JS recipients can access the JS value directly.
-        if (!wrapper ||
-            !JS_DefineProperty(cx, wrapper, "wrappedJSObject", global, JSPROP_ENUMERATE) ||
-            NS_FAILED(xpc->WrapJS(cx, wrapper, NS_GET_IID(nsISupports), getter_AddRefs(supports)))) {
-            return false;
-        }
-
-        obs->NotifyObservers(supports, "kill-content-script-sandbox", nullptr);
         return false;
     }
 

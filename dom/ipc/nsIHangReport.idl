@@ -32,7 +32,6 @@ interface nsIHangReport : nsISupports
   // Only valid for SLOW_SCRIPT reports.
   readonly attribute nsIDOMElement scriptBrowser;
   readonly attribute ACString scriptFileName;
-  readonly attribute AString addonId;
 
   // For PLUGIN_HANGs, this field contains information about the plugin.
   // Only valid for PLUGIN_HANG reports.
@@ -45,11 +44,6 @@ interface nsIHangReport : nsISupports
   // Terminate the slow script if it is still running.
   // Only valid for SLOW_SCRIPT reports.
   void terminateScript();
-
-  // Terminate all scripts on the global that triggered the slow script
-  // warning.
-  // Only valid for SLOW_SCRIPT reports.
-  void terminateGlobal();
 
   // Terminate the plugin if it is still hung.
   // Only valid for PLUGIN_HANG reports.
