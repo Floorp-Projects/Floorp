@@ -3147,7 +3147,7 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.fullscreen = async function(cmd, resp) {
+GeckoDriver.prototype.fullscreenWindow = async function(cmd, resp) {
   assert.firefox();
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
@@ -3593,7 +3593,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:FindElement": GeckoDriver.prototype.findElement,
   "WebDriver:FindElements": GeckoDriver.prototype.findElements,
   "WebDriver:Forward": GeckoDriver.prototype.goForward,
-  "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreen,
+  "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreenWindow,
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,
   "WebDriver:GetActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "WebDriver:GetAlertText": GeckoDriver.prototype.getTextFromDialog,
@@ -3653,7 +3653,7 @@ GeckoDriver.prototype.commands = {
   "executeScript": GeckoDriver.prototype.executeScript,
   "findElement": GeckoDriver.prototype.findElement,
   "findElements": GeckoDriver.prototype.findElements,
-  "fullscreen": GeckoDriver.prototype.fullscreen,
+  "fullscreen": GeckoDriver.prototype.fullscreenWindow,
   "getActiveElement": GeckoDriver.prototype.getActiveElement,
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "getChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
