@@ -140,6 +140,9 @@ GPATH
 ^testing/talos/talos/tests/devtools/damp.manifest.develop
 ^talos-venv
 ^py3venv
+^testing/talos/talos/mitmproxy/mitmdump
+^testing/talos/talos/mitmproxy/mitmproxy
+^testing/talos/talos/mitmproxy/mitmweb
 
 # Ignore files created when running a reftest.
 ^lextab.py$

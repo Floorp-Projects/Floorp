@@ -31,35 +31,25 @@
 
   <string name="firstrun_panel_title_welcome">&firstrun_panel_title_welcome;</string>
 
-  <string name="firstrun_urlbar_message">&firstrun_urlbar_message;</string>
-  <string name="firstrun_urlbar_subtext">&firstrun_urlbar_subtext;</string>
-  <string name="firstrun_bookmarks_title">&firstrun_bookmarks_title;</string>
-  <string name="firstrun_bookmarks_message">&firstrun_bookmarks_message;</string>
-  <string name="firstrun_bookmarks_subtext">&firstrun_bookmarks_subtext;</string>
-  <string name="firstrun_data_title">&firstrun_data_title;</string>
-  <string name="firstrun_data_message">&firstrun_data_message;</string>
-  <string name="firstrun_data_subtext">&firstrun_data_subtext2;</string>
+  <string name="firstrun_urlbar_message">&firstrun_urlbar_message2;</string>
+  <string name="firstrun_urlbar_subtext">&firstrun_urlbar_subtext2;</string>
+  <string name="firstrun_panel_title_privacy">&firstrun_panel_title_privacy;</string>
+  <string name="firstrun_privacy_message">&firstrun_privacy_message;</string>
+  <string name="firstrun_privacy_subtext">&firstrun_privacy_subtext;</string>
+  <string name="firstrun_panel_title_customize">&firstrun_panel_title_customize;</string>
+  <string name="firstrun_customize_message">&firstrun_customize_message;</string>
+  <string name="firstrun_customize_subtext">&firstrun_customize_subtext;</string>
   <string name="firstrun_sync_title">&firstrun_sync_title;</string>
-  <string name="firstrun_sync_message">&firstrun_sync_message;</string>
-  <string name="firstrun_sync_subtext">&firstrun_sync_subtext;</string>
-  <string name="firstrun_signin_message">&firstrun_signin_message;</string>
+  <string name="firstrun_sync_message">&firstrun_sync_message2;</string>
+  <string name="firstrun_sync_subtext">&firstrun_sync_subtext2;</string>
   <string name="firstrun_signin_button">&firstrun_signin_button;</string>
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
-  <string name="firstrun_button_notnow">&firstrun_button_notnow;</string>
   <string name="firstrun_button_next">&firstrun_button_next;</string>
 
-  <string name="firstrun_tabqueue_title">&firstrun_tabqueue_title;</string>
   <string name="firstrun_tabqueue_message_off">&firstrun_tabqueue_message_off;</string>
   <string name="firstrun_tabqueue_subtext_off">&firstrun_tabqueue_subtext_off;</string>
   <string name="firstrun_tabqueue_message_on">&firstrun_tabqueue_message_on;</string>
   <string name="firstrun_tabqueue_subtext_on">&firstrun_tabqueue_subtext_on;</string>
-
-  <string name="firstrun_readerview_title">&firstrun_readerview_title;</string>
-  <string name="firstrun_readerview_message">&firstrun_readerview_message;</string>
-  <string name="firstrun_readerview_subtext">&firstrun_readerview_subtext;</string>
-
-  <string name="firstrun_account_title">&firstrun_account_title;</string>
-  <string name="firstrun_account_message">&firstrun_account_message;</string>
 
   <string name="firstrun_welcome_restricted">&onboard_start_restricted1;</string>
 

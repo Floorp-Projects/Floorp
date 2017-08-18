@@ -202,15 +202,6 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-SessionStorageManager::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
-                                                   const nsAString& aDocumentURI,
-                                                   bool aPrivate,
-                                                   nsIDOMStorage** aRetval)
-{
-  return NS_ERROR_UNEXPECTED;
-}
-
 void
 SessionStorageManager::ClearStorages(ClearStorageType aType,
                                      const OriginAttributesPattern& aPattern,

@@ -9,7 +9,7 @@ const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 
-loader.lazyRequireGetter(this, "events", "sdk/event/core");
+loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "PerformanceRecorder",
   "devtools/server/performance/recorder", true);

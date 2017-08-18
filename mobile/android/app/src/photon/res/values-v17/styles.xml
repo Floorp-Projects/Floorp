@@ -37,8 +37,9 @@
     <style name="UrlBar.TabCounter" parent="UrlBar.V17.TabCounter" />
 
     <style name="UrlBar.V17.TabCounter" parent="UrlBar.Base.TabCounter">
-
         <item name="android:layout_alignEnd">@id/tabs</item>
+        <item name="android:layout_alignStart">@id/tabs</item>
+        <item name="android:layout_toStartOf">@id/menu</item>
     </style>
 
     <style name="UrlBar.EditCancel" parent="UrlBar.V17.EditCancel" />

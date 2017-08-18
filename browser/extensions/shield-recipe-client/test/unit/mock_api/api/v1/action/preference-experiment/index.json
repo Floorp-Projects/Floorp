@@ -1,0 +1,86 @@
+{
+  "arguments_schema": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+      "branches": {
+        "description": "List of experimental branches",
+        "items": {
+          "properties": {
+            "ratio": {
+              "default": 1,
+              "description": "Ratio of users who should be grouped into this branch",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "slug": {
+              "description": "Unique identifier for this branch of the experiment",
+              "pattern": "^[A-Za-z0-9\\-_]+$",
+              "type": "string"
+            },
+            "value": {
+              "description": "Value to set the preference to for this branch",
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            }
+          },
+          "required": [
+            "slug",
+            "value",
+            "ratio"
+          ],
+          "type": "object"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "experimentDocumentUrl": {
+        "default": "",
+        "description": "URL of a document describing the experiment",
+        "format": "uri",
+        "type": "string"
+      },
+      "preferenceBranchType": {
+        "default": "default",
+        "descript": "Controls whether the default or user value of the preference is modified",
+        "enum": [
+          "user",
+          "default"
+        ],
+        "type": "string"
+      },
+      "preferenceName": {
+        "default": "",
+        "description": "Full dotted-path of the preference that controls this experiment",
+        "type": "string"
+      },
+      "preferenceType": {
+        "default": "boolean",
+        "description": "Data type of the preference that controls this experiment",
+        "enum": [
+          "string",
+          "integer",
+          "boolean"
+        ],
+        "type": "string"
+      },
+      "slug": {
+        "description": "Unique identifier for this experiment",
+        "pattern": "^[A-Za-z0-9\\-_]+$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "slug",
+      "preferenceName",
+      "preferenceType",
+      "branches"
+    ],
+    "title": "Run a feature experiment activated by a preference.",
+    "type": "object"
+  },
+  "implementation_url": "https://localhost:8443/api/v1/action/preference-experiment/implementation/sha384-KQgG38GQ7KZAb2VIB48ANQO6nBcxZoLm2ORzUviRT5nAvSywyPjZ5cJIElw6iXIt/",
+  "name": "preference-experiment"
+}

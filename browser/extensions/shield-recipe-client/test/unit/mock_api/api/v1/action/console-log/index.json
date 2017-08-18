@@ -14,6 +14,6 @@
     "title": "Log a message to the console",
     "type": "object"
   },
-  "implementation_url": "https://localhost:8000/api/v1/action/console-log/implementation/0765c6302db2846b85543eea743f959c19b42559/",
-  "name": "console-log"
+  "name": "console-log",
+  "implementation_url": "https://localhost:8443/api/v1/action/console-log/implementation/sha384-RGx3rydrSq53UfmW9kFcK0mQYra67XIvZvr4MhmAe--ljiiMQOtgM7Cmca48um3v/"
 }

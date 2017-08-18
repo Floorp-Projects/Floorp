@@ -17,6 +17,7 @@ import re
 from contextlib import contextmanager
 import sys
 import which
+from distutils.dir_util import copy_tree
 
 
 def symlink(source, link_name):
@@ -26,7 +27,7 @@ def symlink(source, link_name):
     else:
         if os.path.isdir(source):
             # Fall back to copying the directory :(
-            copy_dir_contents(source, link_name)
+            copy_tree(source, link_name)
 
 
 def check_run(args):
@@ -92,27 +93,6 @@ def build_tar_package(tar, name, base, directory):
                   name, directory])
 
 
-def copy_dir_contents(src, dest):
-    for f in glob.glob("%s/*" % src):
-        try:
-            destname = "%s/%s" % (dest, os.path.basename(f))
-            if os.path.isdir(f):
-                shutil.copytree(f, destname)
-            else:
-                shutil.copy2(f, destname)
-        except OSError as e:
-            if e.errno == errno.ENOTDIR:
-                shutil.copy2(f, destname)
-            elif e.errno == errno.EEXIST:
-                if os.path.isdir(f):
-                    copy_dir_contents(f, destname)
-                else:
-                    os.remove(destname)
-                    shutil.copy2(f, destname)
-            else:
-                raise Exception('Directory not copied. Error: %s' % e)
-
-
 def mkdir_p(path):
     try:
         os.makedirs(path)
@@ -140,13 +120,13 @@ def install_libgcc(gcc_dir, clang_dir):
                                  "x86_64-unknown-linux-gnu",
                                  os.path.basename(libgcc_dir))
     mkdir_p(clang_lib_dir)
-    copy_dir_contents(libgcc_dir, clang_lib_dir)
+    copy_tree(libgcc_dir, clang_lib_dir)
     libgcc_dir = os.path.join(gcc_dir, "lib64")
     clang_lib_dir = os.path.join(clang_dir, "lib")
-    copy_dir_contents(libgcc_dir, clang_lib_dir)
+    copy_tree(libgcc_dir, clang_lib_dir)
     include_dir = os.path.join(gcc_dir, "include")
     clang_include_dir = os.path.join(clang_dir, "include")
-    copy_dir_contents(include_dir, clang_include_dir)
+    copy_tree(include_dir, clang_include_dir)
 
 
 def install_import_library(build_dir, clang_dir):

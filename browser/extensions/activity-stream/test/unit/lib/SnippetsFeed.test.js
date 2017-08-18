@@ -3,6 +3,7 @@ const {actionTypes: at} = require("common/Actions.jsm");
 const {GlobalOverrider} = require("test/unit/utils");
 
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
+const searchData = {searchEngineIdentifier: "google", engines: ["searchEngine-google", "searchEngine-bing"]};
 
 let overrider = new GlobalOverrider();
 
@@ -57,6 +58,9 @@ describe("SnippetsFeed", () => {
     assert.propertyVal(action.data, "telemetryEnabled", true);
     assert.propertyVal(action.data, "onboardingFinished", false);
     assert.propertyVal(action.data, "fxaccount", true);
+    assert.property(action.data, "selectedSearchEngine");
+    assert.deepEqual(action.data.selectedSearchEngine, searchData);
+    assert.propertyVal(action.data, "defaultBrowser", true);
   });
   it("should call .init on an INIT aciton", () => {
     const feed = new SnippetsFeed();
@@ -82,5 +86,18 @@ describe("SnippetsFeed", () => {
     feed.uninit();
 
     assert.calledWith(feed.store.dispatch, {type: at.SNIPPETS_RESET});
+  });
+  it("should dispatch an update event when the Search observer is called", async () => {
+    const feed = new SnippetsFeed();
+    feed.store = {dispatch: sandbox.stub()};
+    sandbox.stub(feed, "getSelectedSearchEngine")
+      .returns(Promise.resolve(searchData));
+
+    await feed.observe(null, "browser-search-engine-modified");
+
+    assert.calledOnce(feed.store.dispatch);
+    const action = feed.store.dispatch.firstCall.args[0];
+    assert.equal(action.type, at.SNIPPETS_DATA);
+    assert.deepEqual(action.data, {selectedSearchEngine: searchData});
   });
 });

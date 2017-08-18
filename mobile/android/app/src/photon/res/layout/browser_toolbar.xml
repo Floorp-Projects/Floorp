@@ -5,6 +5,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
        xmlns:tools="http://schemas.android.com/tools"
        tools:layout_height="@dimen/browser_toolbar_height"
        tools:layout_width="match_parent"
@@ -56,7 +57,8 @@
         android:layout_centerVertical="true"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:gravity="center_horizontal"/>
+        android:gravity="center_horizontal"
+        gecko:drawableTintList="@color/url_bar_image_color"/>
 
     <!-- Note that the edit components are invisible so that the views
          depending on their location can properly layout. -->

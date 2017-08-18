@@ -72,13 +72,9 @@ this.ActionSandboxManager = class extends SandboxManager {
     }
 
     this.cloneIntoGlobal("callbackArgs", args);
-    try {
-      const result = await this.evalInSandbox(`
-        asyncCallbacks.get("${callbackName}")(sandboxedDriver, ...callbackArgs);
-      `);
-      return Cu.cloneInto(result, {});
-    } catch (err) {
-      throw new Error(Cu.cloneInto(err.message, {}));
-    }
+    const result = await this.evalInSandbox(`
+      asyncCallbacks.get("${callbackName}")(sandboxedDriver, ...callbackArgs);
+    `);
+    return Cu.cloneInto(result, {});
   }
 };

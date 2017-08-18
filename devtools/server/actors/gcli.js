@@ -6,7 +6,7 @@
 
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { gcliSpec } = require("devtools/shared/specs/gcli");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const { createSystem } = require("gcli/system");
 
 /**

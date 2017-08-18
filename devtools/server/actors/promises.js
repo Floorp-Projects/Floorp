@@ -9,7 +9,7 @@ const { promisesSpec } = require("devtools/shared/specs/promises");
 const { expectState, ActorPool } = require("devtools/server/actors/common");
 const { ObjectActor, createValueGrip } = require("devtools/server/actors/object");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-loader.lazyRequireGetter(this, "events", "sdk/event/core");
+loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 
 /**
  * The Promises Actor provides support for getting the list of live promises and

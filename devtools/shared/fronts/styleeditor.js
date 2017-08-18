@@ -11,7 +11,7 @@ const {
 } = require("devtools/shared/specs/styleeditor");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 
 /**
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.

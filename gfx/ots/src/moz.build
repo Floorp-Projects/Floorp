@@ -10,17 +10,8 @@ EXPORTS += [
 ]
 
 SOURCES += [
-    # don't unify sources that use a (file-specific) DROP_THIS_TABLE macro
-    'gasp.cc',
+    # needs to be separate because gpos.cc also defines kMaxClassDefValue
     'gdef.cc',
-    'gpos.cc',
-    'gsub.cc',
-    'hdmx.cc',
-    'kern.cc',
-    'ltsh.cc',
-    'math.cc',
-    'vdmx.cc',
-    'vorg.cc',
 ]
 
 UNIFIED_SOURCES += [
@@ -28,13 +19,23 @@ UNIFIED_SOURCES += [
     'cff_type2_charstring.cc',
     'cmap.cc',
     'cvt.cc',
+    'feat.cc',
     'fpgm.cc',
+    'gasp.cc',
+    'glat.cc',
+    'gloc.cc',
     'glyf.cc',
+    'gpos.cc',
+    'gsub.cc',
+    'hdmx.cc',
     'head.cc',
     'hhea.cc',
     'hmtx.cc',
+    'kern.cc',
     'layout.cc',
     'loca.cc',
+    'ltsh.cc',
+    'math.cc',
     'maxp.cc',
     'metrics.cc',
     'name.cc',
@@ -42,8 +43,13 @@ UNIFIED_SOURCES += [
     'ots.cc',
     'post.cc',
     'prep.cc',
+    'sile.cc',
+    'silf.cc',
+    'sill.cc',
+    'vdmx.cc',
     'vhea.cc',
     'vmtx.cc',
+    'vorg.cc',
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.
@@ -53,6 +59,7 @@ FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['PACKAGE_VERSION'] = '"moz"'
 DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
+DEFINES['OTS_GRAPHITE'] = 1
 
 USE_LIBS += [
     'brotli',

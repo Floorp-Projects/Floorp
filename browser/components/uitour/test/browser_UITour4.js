@@ -18,14 +18,14 @@ add_UITour_task(async function test_highligh_between_pageActionButtonOnUrlbar_an
   is(pageActionPanel.state, "closed", "Shouldn't open the page action panel while highlighting the pageActionButton");
   is(getShowHighlightTargetName(), "pageActionButton", "Should highlight the pageActionButton");
 
-  // Test switching the highlight to the bookmark button on the page action panel
+  // Test switching the highlight to the copyURL button on the page action panel
   let panelShownPromise = promisePanelElementShown(window, pageActionPanel);
   highlightVisiblePromise = elementVisiblePromise(highlight, "Should show highlight");
-  gContentAPI.showHighlight("pageAction-panel-bookmark");
+  gContentAPI.showHighlight("pageAction-copyURL");
   await highlightVisiblePromise;
   await panelShownPromise;
-  is(pageActionPanel.state, "open", "Should open the page action panel for highlighting the pageAction-panel-bookmark");
-  is(getShowHighlightTargetName(), "pageAction-panel-bookmark", "Should highlight the pageAction-panel-bookmark");
+  is(pageActionPanel.state, "open", "Should open the page action panel for highlighting the pageAction-copyURL");
+  is(getShowHighlightTargetName(), "pageAction-copyURL", "Should highlight the pageAction-copyURL");
 
   // Test hiding highlight
   let panelHiddenPromise = promisePanelElementHidden(window, pageActionPanel);
@@ -57,13 +57,13 @@ add_UITour_task(async function test_highligh_between_buttonOnAppMenu_and_buttonO
   let appMenuHiddenPromise = promisePanelElementHidden(window, appMenu);
   let pageActionPanelShownPromise = promisePanelElementShown(window, pageActionPanel);
   highlightVisiblePromise = elementVisiblePromise(highlight, "Should show highlight");
-  gContentAPI.showHighlight("pageAction-panel-copyURL");
+  gContentAPI.showHighlight("pageAction-copyURL");
   await appMenuHiddenPromise;
   await pageActionPanelShownPromise;
   await highlightVisiblePromise;
   is(appMenu.state, "closed", "Should close the app menu after no more highlight for the addons button");
   is(pageActionPanel.state, "open", "Should open the page action panel to highlight the copyURL button");
-  is(getShowHighlightTargetName(), "pageAction-panel-copyURL", "Should highlight the copyURL button on the page action panel");
+  is(getShowHighlightTargetName(), "pageAction-copyURL", "Should highlight the copyURL button on the page action panel");
 
   // Test hiding highlight
   let pageActionPanelHiddenPromise = promisePanelElementHidden(window, pageActionPanel);
@@ -85,12 +85,12 @@ add_UITour_task(async function test_showInfo_between_buttonOnPageActionPanel_and
   // Test showing info tooltip on the emailLink button on the page action panel
   let pageActionPanelShownPromise = promisePanelElementShown(window, pageActionPanel);
   let tooltipVisiblePromise = elementVisiblePromise(tooltip, "Should show info tooltip");
-  await showInfoPromise("pageAction-panel-emailLink", "title", "text");
+  await showInfoPromise("pageAction-emailLink", "title", "text");
   await pageActionPanelShownPromise;
   await tooltipVisiblePromise;
   is(appMenu.state, "closed", "Shouldn't open the app menu");
   is(pageActionPanel.state, "open", "Should open the page action panel to show info on the copyURL button");
-  is(getShowInfoTargetName(), "pageAction-panel-emailLink", "Should show info tooltip on the emailLink button on the page action panel");
+  is(getShowInfoTargetName(), "pageAction-emailLink", "Should show info tooltip on the emailLink button on the page action panel");
 
   // Test switching info tooltip to the customize button on the app menu
   let appMenuShownPromise = promisePanelElementShown(window, appMenu);
@@ -126,12 +126,12 @@ add_UITour_task(async function test_highlight_buttonOnPageActionPanel_and_showIn
   // Test highlighting the sendToDevice button on the page action panel
   let pageActionPanelShownPromise = promisePanelElementShown(window, pageActionPanel);
   let highlightVisiblePromise = elementVisiblePromise(highlight, "Should show highlight");
-  gContentAPI.showHighlight("pageAction-panel-sendToDevice");
+  gContentAPI.showHighlight("pageAction-sendToDevice");
   await pageActionPanelShownPromise;
   await highlightVisiblePromise;
   is(appMenu.state, "closed", "Shouldn't open the app menu");
   is(pageActionPanel.state, "open", "Should open the page action panel to highlight the sendToDevice button");
-  is(getShowHighlightTargetName(), "pageAction-panel-sendToDevice", "Should highlight the sendToDevice button on the page action panel");
+  is(getShowHighlightTargetName(), "pageAction-sendToDevice", "Should highlight the sendToDevice button on the page action panel");
 
   // Test showing info tooltip on the privateWindow button on the app menu
   let appMenuShownPromise = promisePanelElementShown(window, appMenu);
@@ -180,14 +180,14 @@ add_UITour_task(async function test_showInfo_buttonOnAppMenu_and_highlight_butto
   let highlightVisiblePromise = elementVisiblePromise(highlight, "Should show highlight");
   let appMenuHiddenPromise = promisePanelElementHidden(window, appMenu);
   let tooltipHiddenPromise = elementHiddenPromise(tooltip, "Should hide info");
-  gContentAPI.showHighlight("pageAction-panel-sendToDevice");
+  gContentAPI.showHighlight("pageAction-sendToDevice");
   await pageActionPanelShownPromise;
   await highlightVisiblePromise;
   await appMenuHiddenPromise;
   await tooltipHiddenPromise;
   is(appMenu.state, "closed", "Should close the app menu");
   is(pageActionPanel.state, "open", "Should open the page action panel to highlight the sendToDevice button");
-  is(getShowHighlightTargetName(), "pageAction-panel-sendToDevice", "Should highlight the sendToDevice button on the page action panel");
+  is(getShowHighlightTargetName(), "pageAction-sendToDevice", "Should highlight the sendToDevice button on the page action panel");
 
   // Test hiding highlight
   let pageActionPanelHiddenPromise = promisePanelElementHidden(window, pageActionPanel);
@@ -215,12 +215,12 @@ add_UITour_task(async function test_show_appMenu_and_highligh_buttonOnPageAction
   // Test highlighting the sendToDevice button on the page action panel
   let pageActionPanelShownPromise = promisePanelElementShown(window, pageActionPanel);
   let highlightVisiblePromise = elementVisiblePromise(highlight, "Should show highlight");
-  gContentAPI.showHighlight("pageAction-panel-sendToDevice");
+  gContentAPI.showHighlight("pageAction-sendToDevice");
   await pageActionPanelShownPromise;
   await highlightVisiblePromise;
   is(appMenu.state, "open", "Shouldn't close the app menu because it is opened explictly by api user.");
   is(pageActionPanel.state, "open", "Should open the page action panel to highlight the sendToDevice button");
-  is(getShowHighlightTargetName(), "pageAction-panel-sendToDevice", "Should highlight the sendToDevice button on the page action panel");
+  is(getShowHighlightTargetName(), "pageAction-sendToDevice", "Should highlight the sendToDevice button on the page action panel");
 
   // Test hiding the app menu wouldn't affect the highlight on the page action panel
   let appMenuHiddenPromise = promisePanelElementHidden(window, appMenu);
@@ -229,7 +229,7 @@ add_UITour_task(async function test_show_appMenu_and_highligh_buttonOnPageAction
   is_element_visible(highlight, "Highlight should still be visible");
   is(appMenu.state, "closed", "Should close the app menu");
   is(pageActionPanel.state, "open", "Shouldn't close the page action panel");
-  is(getShowHighlightTargetName(), "pageAction-panel-sendToDevice", "Should still highlight the sendToDevice button on the page action panel");
+  is(getShowHighlightTargetName(), "pageAction-sendToDevice", "Should still highlight the sendToDevice button on the page action panel");
 
   // Test hiding highlight
   let pageActionPanelHiddenPromise = promisePanelElementHidden(window, pageActionPanel);

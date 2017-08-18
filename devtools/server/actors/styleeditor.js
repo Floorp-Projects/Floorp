@@ -7,7 +7,7 @@
 const {Cc, Ci} = require("chrome");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const promise = require("promise");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const {fetch} = require("devtools/shared/DevToolsUtils");
 const {oldStyleSheetSpec, styleEditorSpec} = require("devtools/shared/specs/styleeditor");

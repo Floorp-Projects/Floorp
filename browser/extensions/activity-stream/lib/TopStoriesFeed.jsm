@@ -43,7 +43,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         icon: options.provider_icon,
         title: {id: "header_recommended_by", values: {provider: options.provider_name}},
         rows: [],
-        maxCards: 3,
+        maxRows: 1,
         contextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
         infoOption: {
           header: {id: "pocket_feedback_header"},

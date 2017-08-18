@@ -21,7 +21,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
   : mLayer(aLayer)
   , mBuilder(&aBuilder)
   , mPushedLayerLocalClip(false)
-  , mClipsPushed(0)
+  , mPushedClipAndScroll(false)
 {
   if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
     // If APZ is disabled then we don't need to push the scrolling clips. We
@@ -51,29 +51,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
       PushLayerLocalClip(aStackingContext);
     }
 
-    if (!fm.IsScrollable()) {
-      continue;
-    }
-    LayerRect contentRect = ViewAs<LayerPixel>(
-        fm.GetExpandedScrollableRect() * fm.GetDevPixelsPerCSSPixel(),
-        PixelCastJustification::WebRenderHasUnitResolution);
-    // TODO: check coordinate systems are sane here
-    LayerRect clipBounds = ViewAs<LayerPixel>(
-        fm.GetCompositionBounds(),
-        PixelCastJustification::MovingDownToChildren);
-    // The content rect that we hand to PushScrollLayer should be relative to
-    // the same origin as the clipBounds that we hand to PushScrollLayer - that
-    // is, both of them should be relative to the stacking context `aStackingContext`.
-    // However, when we get the scrollable rect from the FrameMetrics, the origin
-    // has nothing to do with the position of the frame but instead represents
-    // the minimum allowed scroll offset of the scrollable content. While APZ
-    // uses this to clamp the scroll position, we don't need to send this to
-    // WebRender at all. Instead, we take the position from the composition
-    // bounds.
-    contentRect.MoveTo(clipBounds.TopLeft());
-    mBuilder->PushScrollLayer(fm.GetScrollId(),
-        aStackingContext.ToRelativeLayoutRect(contentRect),
-        aStackingContext.ToRelativeLayoutRect(clipBounds));
+    PushScrollLayer(fm, aStackingContext);
   }
 
   // The scrolled clip on the layer is "inside" all of the scrollable metadatas
@@ -115,10 +93,96 @@ ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
   : mLayer(nullptr)
   , mBuilder(&aBuilder)
   , mPushedLayerLocalClip(false)
-  , mClipsPushed(0)
+  , mPushedClipAndScroll(false)
 {
+  int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+
+  // There are two ASR chains here that we need to be fully defined. One is the
+  // ASR chain pointed to by aItem->GetActiveScrolledRoot(). The other is the
+  // ASR chain pointed to by aItem->GetClipChain()->mASR. We pick the leafmost
+  // of these two chains because that one will include the other. And then we
+  // call DefineAndPushScrollLayers with it, which will recursively push all
+  // the necessary clips and scroll layer items for that ASR chain.
+  const ActiveScrolledRoot* leafmostASR = aItem->GetActiveScrolledRoot();
+  if (aItem->GetClipChain()) {
+    leafmostASR = ActiveScrolledRoot::PickDescendant(leafmostASR,
+        aItem->GetClipChain()->mASR);
+  }
+  DefineAndPushScrollLayers(aItem, leafmostASR,
+      aItem->GetClipChain(), aBuilder, auPerDevPixel, aStackingContext, aCache);
+
+  // Next, we push the leaf part of the clip chain that is scrolled by the
+  // leafmost ASR. All the clips outside the leafmost ASR were already pushed
+  // in the above call. This call may be a no-op if the item's ASR got picked
+  // as the leaftmostASR previously, because that means these clips were pushed
+  // already as being "outside" leafmostASR.
   DefineAndPushChain(aItem->GetClipChain(), aBuilder, aStackingContext,
-      aItem->Frame()->PresContext()->AppUnitsPerDevPixel(), aCache);
+      auPerDevPixel, aCache);
+
+  // Finally, if clip chain's ASR was the leafmost ASR, then the top of the
+  // scroll id stack right now will point to that, rather than the item's ASR
+  // which is what we want. So we override that by doing a PushClipAndScrollInfo
+  // call. This should generally only happen for fixed-pos type items, but we
+  // use code generic enough to handle other cases.
+  FrameMetrics::ViewID scrollId = aItem->GetActiveScrolledRoot()
+      ? nsLayoutUtils::ViewIDForASR(aItem->GetActiveScrolledRoot())
+      : FrameMetrics::NULL_SCROLL_ID;
+  if (aBuilder.TopmostScrollId() != Some(scrollId)) {
+    Maybe<wr::WrClipId> clipId = mBuilder->TopmostClipId();
+    mBuilder->PushClipAndScrollInfo(scrollId, clipId.ptrOr(nullptr));
+    mPushedClipAndScroll = true;
+  }
+}
+
+void
+ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
+                                                 const ActiveScrolledRoot* aAsr,
+                                                 const DisplayItemClipChain* aChain,
+                                                 wr::DisplayListBuilder& aBuilder,
+                                                 int32_t aAppUnitsPerDevPixel,
+                                                 const StackingContextHelper& aStackingContext,
+                                                 WebRenderLayerManager::ClipIdMap& aCache)
+{
+  if (!aAsr) {
+    return;
+  }
+  Maybe<ScrollMetadata> metadata = aAsr->mScrollableFrame->ComputeScrollMetadata(
+      nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+  MOZ_ASSERT(metadata);
+  FrameMetrics::ViewID scrollId = metadata->GetMetrics().GetScrollId();
+  if (aBuilder.TopmostScrollId() == Some(scrollId)) {
+    // it's already been pushed, so we don't need to recurse any further.
+    return;
+  }
+
+  // Find the first clip up the chain that's "outside" aAsr. Any clips
+  // that are "inside" aAsr (i.e. that are scrolled by aAsr) will need to be
+  // pushed onto the stack after aAsr has been pushed. On the recursive call
+  // we need to skip up the clip chain past these clips.
+  const DisplayItemClipChain* asrClippedBy = aChain;
+  while (asrClippedBy &&
+         ActiveScrolledRoot::PickAncestor(asrClippedBy->mASR, aAsr) == aAsr) {
+    asrClippedBy = asrClippedBy->mParent;
+  }
+
+  // Recurse up the ASR chain to make sure all ancestor scroll layers and their
+  // enclosing clips are defined and pushed onto the WR stack.
+  DefineAndPushScrollLayers(aItem, aAsr->mParent, asrClippedBy, aBuilder,
+      aAppUnitsPerDevPixel, aStackingContext, aCache);
+
+  // Once the ancestors are dealt with, we want to make sure all the clips
+  // enclosing aAsr are pushed. All the clips enclosing aAsr->mParent were
+  // already taken care of in the recursive call, so DefineAndPushChain will
+  // push exactly what we want.
+  DefineAndPushChain(asrClippedBy, aBuilder, aStackingContext,
+      aAppUnitsPerDevPixel, aCache);
+  // Finally, push the ASR itself as a scroll layer. Note that the
+  // implementation of wr_push_scroll_layer in bindings.rs makes sure the
+  // scroll layer doesn't get defined multiple times so we don't need to worry
+  // about that here.
+  if (PushScrollLayer(metadata->GetMetrics(), aStackingContext)) {
+    mPushedClips.push_back(wr::ScrollOrClipId(scrollId));
+  }
 }
 
 void
@@ -160,7 +224,37 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
   // Finally, push the clip onto the WR stack
   MOZ_ASSERT(clipId);
   aBuilder.PushClip(clipId.value());
-  mClipsPushed++;
+  mPushedClips.push_back(wr::ScrollOrClipId(clipId.value()));
+}
+
+bool
+ScrollingLayersHelper::PushScrollLayer(const FrameMetrics& aMetrics,
+                                       const StackingContextHelper& aStackingContext)
+{
+  if (!aMetrics.IsScrollable()) {
+    return false;
+  }
+  LayerRect contentRect = ViewAs<LayerPixel>(
+      aMetrics.GetExpandedScrollableRect() * aMetrics.GetDevPixelsPerCSSPixel(),
+      PixelCastJustification::WebRenderHasUnitResolution);
+  // TODO: check coordinate systems are sane here
+  LayerRect clipBounds = ViewAs<LayerPixel>(
+      aMetrics.GetCompositionBounds(),
+      PixelCastJustification::MovingDownToChildren);
+  // The content rect that we hand to PushScrollLayer should be relative to
+  // the same origin as the clipBounds that we hand to PushScrollLayer - that
+  // is, both of them should be relative to the stacking context `aStackingContext`.
+  // However, when we get the scrollable rect from the FrameMetrics, the origin
+  // has nothing to do with the position of the frame but instead represents
+  // the minimum allowed scroll offset of the scrollable content. While APZ
+  // uses this to clamp the scroll position, we don't need to send this to
+  // WebRender at all. Instead, we take the position from the composition
+  // bounds.
+  contentRect.MoveTo(clipBounds.TopLeft());
+  mBuilder->PushScrollLayer(aMetrics.GetScrollId(),
+      aStackingContext.ToRelativeLayoutRect(contentRect),
+      aStackingContext.ToRelativeLayoutRect(clipBounds));
+  return true;
 }
 
 void
@@ -205,10 +299,19 @@ ScrollingLayersHelper::PushLayerClip(const LayerClip& aClip,
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
   if (!mLayer) {
-    // For layers-free mode
-    while (mClipsPushed > 0) {
-      mBuilder->PopClip();
-      mClipsPushed--;
+    // For layers-free mode.
+    if (mPushedClipAndScroll) {
+      mBuilder->PopClipAndScrollInfo();
+    }
+    while (!mPushedClips.empty()) {
+      wr::ScrollOrClipId id = mPushedClips.back();
+      if (id.is<wr::WrClipId>()) {
+        mBuilder->PopClip();
+      } else {
+        MOZ_ASSERT(id.is<FrameMetrics::ViewID>());
+        mBuilder->PopScrollLayer();
+      }
+      mPushedClips.pop_back();
     }
     return;
   }

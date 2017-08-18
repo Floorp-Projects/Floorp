@@ -16,6 +16,18 @@
 }
 %endif
 
+/* Toolbar / content area border */
+
+#navigator-toolbox::after {
+  content: "";
+  display: -moz-box;
+  border-bottom: 1px solid var(--toolbox-border-bottom-color);
+}
+
+:root[customizing] #navigator-toolbox::after {
+  display: none;
+}
+
 /* Bookmark toolbar */
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {

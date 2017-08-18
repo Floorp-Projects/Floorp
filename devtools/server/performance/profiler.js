@@ -6,8 +6,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const { Class } = require("sdk/core/heritage");
-loader.lazyRequireGetter(this, "events", "sdk/event/core");
-loader.lazyRequireGetter(this, "EventTarget", "sdk/event/target", true);
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm", true);
 loader.lazyRequireGetter(this, "Task", "devtools/shared/task", true);
@@ -353,7 +352,7 @@ const ProfilerManager = (function () {
       });
 
       for (let subscriber of subscribers) {
-        events.emit(subscriber, eventName, data);
+        EventEmitter.emit(subscriber, eventName, data);
       }
     },
 
@@ -408,7 +407,7 @@ const ProfilerManager = (function () {
  * The profiler actor provides remote access to the built-in nsIProfiler module.
  */
 var Profiler = exports.Profiler = Class({
-  extends: EventTarget,
+  extends: EventEmitter,
 
   initialize: function () {
     this.subscribedEvents = new Set();

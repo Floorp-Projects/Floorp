@@ -197,11 +197,6 @@ public:
               aTag == TRUETYPE_TAG('H', 'V', 'A', 'R') ||
               aTag == TRUETYPE_TAG('M', 'V', 'A', 'R') ||
               aTag == TRUETYPE_TAG('V', 'V', 'A', 'R'))) ||
-            aTag == TRUETYPE_TAG('S', 'i', 'l', 'f') ||
-            aTag == TRUETYPE_TAG('S', 'i', 'l', 'l') ||
-            aTag == TRUETYPE_TAG('G', 'l', 'o', 'c') ||
-            aTag == TRUETYPE_TAG('G', 'l', 'a', 't') ||
-            aTag == TRUETYPE_TAG('F', 'e', 'a', 't') ||
             aTag == TRUETYPE_TAG('S', 'V', 'G', ' ') ||
             aTag == TRUETYPE_TAG('C', 'O', 'L', 'R') ||
             aTag == TRUETYPE_TAG('C', 'P', 'A', 'L')) {
