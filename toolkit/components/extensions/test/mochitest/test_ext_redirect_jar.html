@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script>
+"use strict";
+
+function getExtension() {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      "applications": {
+        "gecko": {
+          "id": "redirect-to-jar@mochi.test",
+        },
+      },
+      "permissions": [
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>",
+      ],
+      "web_accessible_resources": [
+        "finished.html",
+      ],
+    },
+    useAddonManager: "temporary",
+    files: {
+      "finished.html": `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <h1>redirected!</h1>
+          </body>
+        </html>
+      `,
+    },
+    background: async () => {
+      let redirectUrl = browser.extension.getURL("finished.html");
+      browser.webRequest.onBeforeRequest.addListener(details => {
+        return {redirectUrl};
+      }, {urls: ["*://*/intercept*"]}, ["blocking"]);
+
+      async function testSubFrameResource(tabId, code) {
+        let [result] = await browser.tabs.executeScript(tabId, {code: `
+          new Promise(resolve => {
+            var s = document.createElement('iframe');
+            s.src = "/intercept?r=" + Math.random();
+            s.onload = () => resolve(['loaded', s.contentWindow.location.href]);
+            s.onerror = () => resolve(['error']);
+            document.documentElement.appendChild(s);
+            setTimeout(() => resolve(['timed_out']), 2000);
+          });`,
+        });
+        return result;
+      }
+
+      let tab = await browser.tabs.create({url: "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_sample.html"});
+      let result = await testSubFrameResource(tab.id);
+      browser.test.assertEq("loaded", result[0], "frame 1 loaded");
+      browser.test.assertEq(redirectUrl, result[1], "frame 1 redirected");
+      // Bug 1390346 If jar caching breaks redirects, this next test will fail.
+      result = await testSubFrameResource(tab.id);
+      browser.test.assertEq("loaded", result[0], "frame 2 loaded");
+      browser.test.assertEq(redirectUrl, result[1], "frame 2 redirected");
+      await browser.tabs.remove(tab.id);
+      browser.test.sendMessage("requestsCompleted");
+    },
+  });
+}
+
+add_task(async function test_redirect_to_jar() {
+  let extension = getExtension();
+  await extension.startup();
+  await extension.awaitMessage("requestsCompleted");
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>
