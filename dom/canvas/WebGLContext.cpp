@@ -1085,7 +1085,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     //////
     // Initial setup.
 
-    gl->mImplicitMakeCurrent = true;
+    MakeContextCurrent();
 
     gl->fViewport(0, 0, mWidth, mHeight);
     mViewportX = mViewportY = 0;
@@ -1929,6 +1929,12 @@ WebGLContext::ForceRestoreContext()
 
     // Queue up a task, since we know the status changed.
     EnqueueUpdateContextLossStatus();
+}
+
+void
+WebGLContext::MakeContextCurrent() const
+{
+    gl->MakeCurrent();
 }
 
 already_AddRefed<mozilla::gfx::SourceSurface>
