@@ -15,6 +15,7 @@
 class nsIRunnable;
 class nsITabChild;
 class nsIThread;
+class nsString;
 
 namespace mozilla {
 
@@ -55,7 +56,8 @@ class ProcessHangMonitor final
     StartDebugger
   };
   SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
-                                    const char* aFileName);
+                                    const char* aFileName,
+                                    const nsString& aAddonId);
 
   void NotifyPluginHang(uint32_t aPluginId);
 
