@@ -69,6 +69,27 @@ interface ChromeUtils : ThreadSafeChromeUtils {
   [NewObject, Throws]
   static Promise<PrecompiledScript>
   compileScript(DOMString url, optional CompileScriptOptionsDictionary options);
+
+  /**
+   * Waive Xray on a given value. Identity op for primitives.
+   */
+  [Throws]
+  static any waiveXrays(any val);
+
+  /**
+   * Strip off Xray waivers on a given value. Identity op for primitives.
+   */
+  [Throws]
+  static any unwaiveXrays(any val);
+
+  /**
+   * Gets the name of the JSClass of the object.
+   *
+   * if |unwrap| is true, all wrappers are unwrapped first. Unless you're
+   * specifically trying to detect whether the object is a proxy, this is
+   * probably what you want.
+   */
+  static DOMString getClassName(object obj, optional boolean unwrap = true);
 };
 
 /**

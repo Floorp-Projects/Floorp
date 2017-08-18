@@ -5,6 +5,9 @@
 
 #include "ChromeUtils.h"
 
+#include "jsfriendapi.h"
+#include "WrapperFactory.h"
+
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 
@@ -124,6 +127,53 @@ ThreadSafeChromeUtils::Base64URLDecode(GlobalObject& aGlobal,
     return;
   }
   aRetval.set(buffer);
+}
+
+/* static */ void
+ChromeUtils::WaiveXrays(GlobalObject& aGlobal,
+                        JS::HandleValue aVal,
+                        JS::MutableHandleValue aRetval,
+                        ErrorResult& aRv)
+{
+  JS::RootedValue value(aGlobal.Context(), aVal);
+  if (!xpc::WrapperFactory::WaiveXrayAndWrap(aGlobal.Context(), &value)) {
+    aRv.NoteJSContextException(aGlobal.Context());
+  } else {
+    aRetval.set(value);
+  }
+}
+
+/* static */ void
+ChromeUtils::UnwaiveXrays(GlobalObject& aGlobal,
+                          JS::HandleValue aVal,
+                          JS::MutableHandleValue aRetval,
+                          ErrorResult& aRv)
+{
+  if (!aVal.isObject()) {
+      aRetval.set(aVal);
+      return;
+  }
+
+  JS::RootedObject obj(aGlobal.Context(), js::UncheckedUnwrap(&aVal.toObject()));
+  if (!JS_WrapObject(aGlobal.Context(), &obj)) {
+    aRv.NoteJSContextException(aGlobal.Context());
+  } else {
+    aRetval.setObject(*obj);
+  }
+}
+
+/* static */ void
+ChromeUtils::GetClassName(GlobalObject& aGlobal,
+                          JS::HandleObject aObj,
+                          bool aUnwrap,
+                          nsAString& aRetval)
+{
+  JS::RootedObject obj(aGlobal.Context(), aObj);
+  if (aUnwrap) {
+    obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
+  }
+
+  aRetval = NS_ConvertUTF8toUTF16(nsDependentCString(js::GetObjectClass(obj)->name));
 }
 
 /* static */ void
