@@ -15,7 +15,9 @@ import os
 import time
 from copy import deepcopy
 
+from mozbuild.util import memoize
 from taskgraph.util.attributes import TRUNK_PROJECTS
+from taskgraph.util.hash import hash_path
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema, Schema
@@ -24,6 +26,15 @@ from voluptuous import Any, Required, Optional, Extra
 from taskgraph import GECKO
 
 from .gecko_v2_whitelist import JOB_NAME_WHITELIST, JOB_NAME_WHITELIST_ERROR
+
+
+RUN_TASK = os.path.join(GECKO, 'taskcluster', 'docker', 'recipes', 'run-task')
+
+
+@memoize
+def _run_task_suffix():
+    """String to append to cache names under control of run-task."""
+    return hash_path(RUN_TASK)[0:20]
 
 
 # shortcut for a string where task references are allowed
@@ -656,9 +667,32 @@ def build_docker_worker_payload(config, task, task_def):
 
     if 'caches' in worker:
         caches = {}
+
+        # run-task knows how to validate caches.
+        #
+        # To help ensure new run-task features and bug fixes don't interfere
+        # with existing caches, we seed the hash of run-task into cache names.
+        # So, any time run-task changes, we should get a fresh set of caches.
+        # This means run-task can make changes to cache interaction at any time
+        # without regards for backwards or future compatibility.
+
+        run_task = payload.get('command', [''])[0].endswith('run-task')
+
+        if run_task:
+            suffix = '-%s' % _run_task_suffix()
+        else:
+            suffix = ''
+
         for cache in worker['caches']:
-            caches[cache['name']] = cache['mount-point']
-            task_def['scopes'].append('docker-worker:cache:' + cache['name'])
+            name = '%s%s' % (cache['name'], suffix)
+            caches[name] = cache['mount-point']
+            task_def['scopes'].append('docker-worker:cache:%s' % name)
+
+        # Assertion: only run-task is interested in this.
+        if run_task:
+            payload['env']['TASKCLUSTER_CACHES'] = ';'.join(sorted(
+                caches.values()))
+
         payload['cache'] = caches
 
     if features:
