@@ -3052,7 +3052,9 @@ GeckoDriver.prototype.minimizeWindow = async function(cmd, resp) {
 
 /**
  * Synchronously maximizes the user agent window as if the user pressed
- * the maximize button, or restores it if it is already maximized.
+ * the maximize button.
+ *
+ * No action is taken if the window is already maximized.
  *
  * Not supported on Fennec.
  *
@@ -3092,48 +3094,44 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
     });
   }
 
-  let modeChangeEv;
-  await new TimedPromise(resolve => {
-    modeChangeEv = resolve;
-    win.addEventListener("sizemodechange", modeChangeEv, {once: true});
-
-    if (win.windowState == win.STATE_MAXIMIZED) {
-      win.restore();
-    } else {
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Maximized) {
+    await new TimedPromise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
       win.maximize();
-    }
-  }, {throws: null});
-  win.removeEventListener("sizemodechange", modeChangeEv);
+    }, {throws: null});
 
-  // Transitioning into a window state is asynchronous on Linux, and we
-  // cannot rely on sizemodechange to accurately tell us when the
-  // transition has completed.
-  //
-  // To counter for this we wait for the window size to change, which
-  // it usually will.  On platforms where the transition is synchronous,
-  // the wait will have the cost of one iteration because the size will
-  // have changed as part of the transition.  Where the platform
-  // is asynchronous, the cost may be greater as we have to poll
-  // continuously until we see a change, but it ensures conformity in
-  // behaviour.
-  //
-  // Certain window managers, however, do not have a concept of maximised
-  // windows and here sizemodechange may never fire.  Indeed, if the
-  // window covers the maximum available screen real estate, the window
-  // size may also not change.  In this circumstance, which admittedly
-  // is a somewhat bizarre edge case, we assume that the timeout of
-  // waiting for sizemodechange to fire is sufficient to give the window
-  // enough time to transition itself into whatever form or shape the
-  // WM is programmed to give it.
-  await windowSizeChange();
+    // Transitioning into a window state is asynchronous on Linux,
+    // and we cannot rely on sizemodechange to accurately tell us when
+    // the transition has completed.
+    //
+    // To counter for this we wait for the window size to change, which
+    // it usually will.  On platforms where the transition is synchronous,
+    // the wait will have the cost of one iteration because the size
+    // will have changed as part of the transition.  Where the platform is
+    // asynchronous, the cost may be greater as we have to poll
+    // continuously until we see a change, but it ensures conformity in
+    // behaviour.
+    //
+    // Certain window managers, however, do not have a concept of
+    // maximised windows and here sizemodechange may never fire.  Indeed,
+    // if the window covers the maximum available screen real estate,
+    // the window size may also not change.  In this circumstance,
+    // which admittedly is a somewhat bizarre edge case, we assume that
+    // the timeout of waiting for sizemodechange to fire is sufficient
+    // to give the window enough time to transition itself into whatever
+    // form or shape the WM is programmed to give it.
+    await windowSizeChange();
+  }
 
   return this.curBrowser.rect;
 };
 
 /**
  * Synchronously sets the user agent window to full screen as if the user
- * had done "View > Enter Full Screen", or restores it if it is already
- * in full screen.
+ * had done "View > Enter Full Screen".
+ *
+ * No action is taken if the window is already in full screen mode.
  *
  * Not supported on Fennec.
  *
