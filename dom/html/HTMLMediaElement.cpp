@@ -5919,9 +5919,13 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
-      mWaitingForKey = NOT_WAITING_FOR_KEY;
       NotifyAboutPlaying();
     }
+  }
+
+  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
+      (!mPaused || mAutoplaying)) {
+    mWaitingForKey = NOT_WAITING_FOR_KEY;
   }
 
   CheckAutoplayDataReady();
