@@ -43,8 +43,9 @@ Workspace Caches
 Other
 =====
 
-``tooltool-cache``
-    Tooltool invocations should use this cache.  Tooltool will store files here
-    indexed by their hash, and will verify hashes before copying files from
-    this directory, so there is no concern with sharing the cache between jobs
-    of different levels.
+``level-{{level}}-tooltool-cache
+    Tooltool invocations should use this cache. Tooltool will store files here
+    indexed by their hash.
+
+``tooltool-cache`` (deprecated)
+    Legacy location for tooltool files. Use the per-level one instead.

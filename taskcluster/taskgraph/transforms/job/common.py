@@ -142,9 +142,11 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
 
     assert job['worker']['implementation'] in ('docker-worker', 'docker-engine')
 
+    level = config.params['level']
+
     taskdesc['worker'].setdefault('caches', []).append({
         'type': 'persistent',
-        'name': 'tooltool-cache',
+        'name': 'level-%s-tooltool-cache' % level,
         'mount-point': '/home/worker/tooltool-cache',
     })
 
