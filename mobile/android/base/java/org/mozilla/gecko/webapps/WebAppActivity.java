@@ -31,6 +31,7 @@ import org.json.JSONException;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
@@ -51,6 +52,7 @@ public class WebAppActivity extends AppCompatActivity
     private TextView mUrlView;
     private GeckoView mGeckoView;
     private PromptService mPromptService;
+    private DoorHangerPopup mDoorHangerPopup;
 
     private Uri mScope;
 
@@ -90,6 +92,7 @@ public class WebAppActivity extends AppCompatActivity
         mGeckoView.setNavigationListener(this);
 
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
+        mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
 
         final GeckoViewSettings settings = mGeckoView.getSettings();
         settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
@@ -104,7 +107,9 @@ public class WebAppActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
+        mDoorHangerPopup.destroy();
         mPromptService.destroy();
+
         super.onDestroy();
     }
 
