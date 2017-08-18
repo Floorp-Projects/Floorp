@@ -118,7 +118,7 @@ def make_repackage_signing_description(config, jobs):
         task = {
             'label': label,
             'description': description,
-            'worker-type': "scriptworker-prov-v1/signing-linux-v1",
+            'worker-type': _generate_worker_type(signing_cert_scope),
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': upstream_artifacts,
                        'max-run-time': 3600},
@@ -144,3 +144,8 @@ def make_repackage_signing_description(config, jobs):
             ]
 
         yield task
+
+
+def _generate_worker_type(signing_cert_scope):
+    worker_type = 'depsigning' if 'dep-signing' in signing_cert_scope else 'signing-linux-v1'
+    return 'scriptworker-prov-v1/{}'.format(worker_type)
