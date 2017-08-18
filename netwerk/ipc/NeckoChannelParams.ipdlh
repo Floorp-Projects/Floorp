@@ -150,6 +150,7 @@ struct HttpChannelOpenArgs
   TimeStamp                   dispatchFetchEventEnd;
   TimeStamp                   handleFetchEventStart;
   TimeStamp                   handleFetchEventEnd;
+  bool                        forceMainDocumentChannel;
 };
 
 struct HttpChannelConnectArgs

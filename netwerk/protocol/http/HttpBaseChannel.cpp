@@ -438,7 +438,6 @@ HttpBaseChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
   }
 
   mLoadFlags = aLoadFlags;
-  mForceMainDocumentChannel = (aLoadFlags & LOAD_DOCUMENT_URI);
   return NS_OK;
 }
 
@@ -2171,7 +2170,7 @@ NS_IMETHODIMP
 HttpBaseChannel::GetIsMainDocumentChannel(bool* aValue)
 {
   NS_ENSURE_ARG_POINTER(aValue);
-  *aValue = mForceMainDocumentChannel || (mLoadFlags & LOAD_DOCUMENT_URI);
+  *aValue = IsNavigation();
   return NS_OK;
 }
 
@@ -2963,7 +2962,7 @@ HttpBaseChannel::GetURIPrincipal()
 bool
 HttpBaseChannel::IsNavigation()
 {
-  return mForceMainDocumentChannel;
+  return mForceMainDocumentChannel || (mLoadFlags & LOAD_DOCUMENT_URI);
 }
 
 bool
