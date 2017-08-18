@@ -60,6 +60,7 @@ def _defines():
             DEFINES[var] = 1
 
     for var in ('MOZ_ANDROID_GCM_SENDERID',
+                'MOZ_MMA_GCM_SENDERID',
                 'MOZ_ANDROID_MAX_SDK_VERSION',
                 'MOZ_ANDROID_MIN_SDK_VERSION',
                 'MOZ_PKG_SPECIAL',
