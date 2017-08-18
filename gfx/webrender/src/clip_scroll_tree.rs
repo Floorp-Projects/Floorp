@@ -5,9 +5,9 @@
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState};
 use internal_types::{FastHashSet, FastHashMap};
 use print_tree::PrintTree;
-use api::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform};
-use api::{LayerToWorldTransform, PipelineId, ScrollClamping, ScrollEventPhase};
-use api::{LayerVector2D, ScrollLayerState, ScrollLocation, WorldPoint};
+use api::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform, LayerToWorldTransform};
+use api::{LayerVector2D, PipelineId, ScrollClamping, ScrollEventPhase, ScrollLayerState};
+use api::{ScrollLocation, StickyFrameInfo, WorldPoint};
 
 pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
 
@@ -35,6 +35,15 @@ pub struct ClipScrollTree {
     /// A set of pipelines which should be discarded the next time this
     /// tree is drained.
     pub pipelines_to_discard: FastHashSet<PipelineId>,
+}
+
+pub struct TransformUpdateState {
+    pub parent_reference_frame_transform: LayerToWorldTransform,
+    pub parent_combined_viewport_rect: LayerRect,
+    pub parent_scroll_offset: LayerVector2D,
+    pub parent_accumulated_scroll_offset: LayerVector2D,
+    pub nearest_scrolling_ancestor_offset: LayerVector2D,
+    pub nearest_scrolling_ancestor_viewport: LayerRect,
 }
 
 impl ClipScrollTree {
@@ -226,68 +235,62 @@ impl ClipScrollTree {
 
         let root_reference_frame_id = self.root_reference_frame_id();
         let root_viewport = self.nodes[&root_reference_frame_id].local_clip_rect;
-        self.update_node_transform(root_reference_frame_id,
-                                   &LayerToWorldTransform::create_translation(pan.x, pan.y, 0.0),
-                                   &root_viewport,
-                                   LayerVector2D::zero(),
-                                   LayerVector2D::zero());
+        let state = TransformUpdateState {
+            parent_reference_frame_transform:
+                LayerToWorldTransform::create_translation(pan.x, pan.y, 0.0),
+            parent_combined_viewport_rect: root_viewport,
+            parent_scroll_offset: LayerVector2D::zero(),
+            parent_accumulated_scroll_offset: LayerVector2D::zero(),
+            nearest_scrolling_ancestor_offset: LayerVector2D::zero(),
+            nearest_scrolling_ancestor_viewport: LayerRect::zero(),
+        };
+        self.update_node_transform(root_reference_frame_id, &state);
     }
 
-    fn update_node_transform(&mut self,
-                             layer_id: ClipId,
-                             parent_reference_frame_transform: &LayerToWorldTransform,
-                             parent_viewport_rect: &LayerRect,
-                             parent_scroll_offset: LayerVector2D,
-                             parent_accumulated_scroll_offset: LayerVector2D) {
+    fn update_node_transform(&mut self, layer_id: ClipId, state: &TransformUpdateState) {
         // TODO(gw): This is an ugly borrow check workaround to clone these.
         //           Restructure this to avoid the clones!
-        let (reference_frame_transform,
-             combined_local_viewport_rect,
-             scroll_offset,
-             accumulated_scroll_offset,
-             node_children) = {
-
+        let (state, node_children) = {
             let mut node = match self.nodes.get_mut(&layer_id) {
                 Some(node) => node,
                 None => return,
             };
-            node.update_transform(parent_reference_frame_transform,
-                                  parent_viewport_rect,
-                                  parent_scroll_offset,
-                                  parent_accumulated_scroll_offset);
+            node.update_transform(&state);
 
             // The transformation we are passing is the transformation of the parent
             // reference frame and the offset is the accumulated offset of all the nodes
             // between us and the parent reference frame. If we are a reference frame,
             // we need to reset both these values.
-            let (reference_frame_transform, scroll_offset, accumulated_scroll_offset) = match node.node_type {
-                NodeType::ReferenceFrame(..) =>
-                    (node.world_viewport_transform,
-                     LayerVector2D::zero(),
-                     LayerVector2D::zero()),
-                NodeType::Clip(..) =>
-                    (*parent_reference_frame_transform,
-                     LayerVector2D::zero(),
-                     parent_accumulated_scroll_offset),
-                NodeType::ScrollFrame(ref scrolling) =>
-                    (*parent_reference_frame_transform,
-                     scrolling.offset,
-                     scrolling.offset + parent_accumulated_scroll_offset),
+            let state = match node.node_type {
+                NodeType::ReferenceFrame(ref info) => TransformUpdateState {
+                    parent_reference_frame_transform: node.world_viewport_transform,
+                    parent_combined_viewport_rect: node.combined_local_viewport_rect,
+                    parent_scroll_offset: LayerVector2D::zero(),
+                    parent_accumulated_scroll_offset: LayerVector2D::zero(),
+                    nearest_scrolling_ancestor_viewport:
+                        state.nearest_scrolling_ancestor_viewport.translate(&info.origin_in_parent_reference_frame),
+                    ..*state
+                },
+                NodeType::Clip(..) | NodeType::StickyFrame(..) => TransformUpdateState {
+                    parent_combined_viewport_rect: node.combined_local_viewport_rect,
+                    parent_scroll_offset: LayerVector2D::zero(),
+                    ..*state
+                },
+                NodeType::ScrollFrame(ref scrolling) => TransformUpdateState {
+                    parent_combined_viewport_rect: node.combined_local_viewport_rect,
+                    parent_scroll_offset: scrolling.offset,
+                    parent_accumulated_scroll_offset: scrolling.offset + state.parent_accumulated_scroll_offset,
+                    nearest_scrolling_ancestor_offset: scrolling.offset,
+                    nearest_scrolling_ancestor_viewport: node.local_viewport_rect,
+                    ..*state
+                },
             };
 
-            (reference_frame_transform,
-             node.combined_local_viewport_rect,
-             scroll_offset,
-             accumulated_scroll_offset,
-             node.children.clone())
+            (state, node.children.clone())
         };
 
         for child_layer_id in node_children {
-            self.update_node_transform(child_layer_id,
-                                       &reference_frame_transform,
-                                       &combined_local_viewport_rect,
-                                       scroll_offset,
-                                       accumulated_scroll_offset);
+            self.update_node_transform(child_layer_id, &state);
         }
     }
 
@@ -320,6 +323,7 @@ impl ClipScrollTree {
     pub fn add_reference_frame(&mut self,
                                rect: &LayerRect,
                                transform: &LayerToScrollTransform,
+                               origin_in_parent_reference_frame: LayerVector2D,
                                pipeline_id: PipelineId,
                                parent_id: Option<ClipId>)
                                -> ClipId {
@@ -328,9 +332,22 @@ impl ClipScrollTree {
                                                        rect,
                                                        rect.size,
                                                        transform,
+                                                       origin_in_parent_reference_frame,
                                                        pipeline_id);
         self.add_node(node, reference_frame_id);
         reference_frame_id
+    }
+
+    pub fn add_sticky_frame(&mut self,
+                            id: ClipId,
+                            parent_id: ClipId,
+                            frame_rect: LayerRect,
+                            sticky_frame_info: StickyFrameInfo) {
+        let node = ClipScrollNode::new_sticky_frame(parent_id,
+                                                    frame_rect,
+                                                    sticky_frame_info,
+                                                    id.pipeline_id());
+        self.add_node(node, id);
     }
 
     pub fn add_node(&mut self, node: ClipScrollNode, id: ClipId) {
@@ -368,12 +385,16 @@ impl ClipScrollTree {
                 }
                 pt.end_level();
             }
-            NodeType::ReferenceFrame(ref transform) => {
-                pt.new_level(format!("ReferenceFrame {:?}", transform));
+            NodeType::ReferenceFrame(ref info) => {
+                pt.new_level(format!("ReferenceFrame {:?}", info.transform));
             }
             NodeType::ScrollFrame(scrolling_info) => {
                 pt.new_level(format!("ScrollFrame"));
                 pt.add_item(format!("scroll.offset: {:?}", scrolling_info.offset));
+            }
+            NodeType::StickyFrame(sticky_frame_info) => {
+                pt.new_level(format!("StickyFrame"));
+                pt.add_item(format!("sticky info: {:?}", sticky_frame_info));
             }
         }
 
