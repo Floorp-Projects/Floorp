@@ -72,8 +72,12 @@ SingleLineTextInputTypeBase::IsValueMissing() const
 bool
 SingleLineTextInputTypeBase::HasPatternMismatch() const
 {
+  if (!mInputElement->HasPatternAttribute()) {
+    return false;
+  }
+
   nsAutoString pattern;
- if (!mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::pattern, pattern)) {
+  if (!mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::pattern, pattern)) {
     return false;
   }
 
