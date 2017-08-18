@@ -2155,8 +2155,10 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
     }
 
     if (MoveChild(child, aOwner, insertIdx)) {
+      nsTArray<RefPtr<Accessible> >* relocated = mARIAOwnsHash.LookupOrAdd(aOwner);
+      MOZ_ASSERT(relocated == owned);
       child->SetRelocated(true);
-      owned->InsertElementAt(idx, child);
+      relocated->InsertElementAt(idx, child);
       idx++;
     }
   }
@@ -2222,7 +2224,8 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
     //    after load: $("list").setAttribute("aria-owns", "a b");
     //    later:      $("list").setAttribute("aria-owns", "");
     if (origContainer != owner || child->IndexInParent() != idxInParent) {
-      MoveChild(child, origContainer, idxInParent);
+      DebugOnly<bool> moved = MoveChild(child, origContainer, idxInParent);
+      MOZ_ASSERT(moved, "Failed to put child back.");
     } else {
       MOZ_ASSERT(!child->PrevSibling() || !child->PrevSibling()->IsRelocated(),
                  "No relocated child should appear before this one");
@@ -2242,6 +2245,10 @@ DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
   MOZ_ASSERT(aChild->Parent(), "No parent");
   MOZ_ASSERT(aIdxInParent <= static_cast<int32_t>(aNewParent->ChildCount()),
              "Wrong insertion point for a moving child");
+
+  if (!aNewParent->IsAcceptableChild(aChild->GetContent())) {
+    return false;
+  }
 
   Accessible* curParent = aChild->Parent();
 
@@ -2274,10 +2281,6 @@ DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
                       logging::eVerbose, curParent);
 #endif
     return true;
-  }
-
-  if (!aNewParent->IsAcceptableChild(aChild->GetContent())) {
-    return false;
   }
 
   MOZ_ASSERT(aIdxInParent <= static_cast<int32_t>(aNewParent->ChildCount()),
