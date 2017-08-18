@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1483471392954" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1500496563565" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -2288,6 +2288,12 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="11.2.202.643" minVersion="11.2.202.637" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="33147281-45b2-487e-9fea-f66c6517252d">
+      <match exp="Java\(TM\) Platform SE 8 U(7[6-9]|[8-9]\d|1([0-3]\d|40))(\s[^\d\._U]|$)" name="name"/>
+      <match exp="npjp2\.dll" name="filename"/>
+      <infoURL>https://java.com/</infoURL>
+      <versionRange severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p80">
       <match exp="\(TM\)" name="name"/>
       <match exp="(npjp2\.dll)|(libnpjp2\.so)" name="filename"/>
@@ -2360,6 +2366,12 @@
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="25.0.0.171" minVersion="25.0.0.163" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="427f5ec6-d1a7-4725-ac29-d5c5e51de537">
+      <match exp="Java\(TM\) Platform SE 7 U(97|98|99|1([0-4][0-9]|50))(\s[^\d\._U]|$)" name="name"/>
+      <match exp="npjp2\.dll" name="filename"/>
+      <infoURL>https://java.com/</infoURL>
+      <versionRange severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="43b45ad8-a373-42c1-89c6-64e2746885e5">
       <match exp="(nppdf32\.dll)|(AdobePDFViewerNPAPI\.plugin)" name="filename"/>
@@ -2775,6 +2787,12 @@
         </targetApplication>
       </versionRange>
     </pluginItem>
+    <pluginItem blockID="ab59635e-2e93-423a-9d57-871dde8ae675">
+      <match exp="Java(\(TM\))? Plug-in 11\.(7[6-9]|[8-9]\d|1([0-3]\d|40))(\.\d+)?([^\d\._]|$)" name="name"/>
+      <match exp="libnpjp2\.so" name="filename"/>
+      <infoURL>https://java.com/</infoURL>
+      <versionRange severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p129">
       <match exp="Silverlight\.plugin" name="filename"/>
       <versionRange maxVersion="5.0.99999" minVersion="0" severity="1"/>
@@ -3041,6 +3059,11 @@
         </targetApplication>
       </versionRange>
     </pluginItem>
+    <pluginItem blockID="d70fdf87-0441-479c-833f-2213b769eb40">
+      <match exp="JavaAppletPlugin\.plugin" name="filename"/>
+      <infoURL>https://java.com/</infoURL>
+      <versionRange maxVersion="Java 7 Update 150" minVersion="Java 7 Update 97" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p240">
       <match exp="DivXBrowserPlugin\.plugin" name="filename"/>
       <versionRange maxVersion="1.4" minVersion="0" severity="1"/>
@@ -3191,6 +3214,11 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="11.2.202.467" minVersion="11.2.202.442" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="f24ffd6f-e02b-4cf4-91d9-d54cd793e4bf">
+      <match exp="JavaAppletPlugin\.plugin" name="filename"/>
+      <infoURL>https://java.com/</infoURL>
+      <versionRange maxVersion="Java 8 Update 140" minVersion="Java 8 Update" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p906">
       <match exp="Java\(TM\) Platform SE 7 U(4[5-9]|(5|6)\d|7[0-8])(\s[^\d\._U]|$)" name="name"/>
       <match exp="npjp2\.dll" name="filename"/>
@@ -3232,6 +3260,12 @@
       <match exp="libflashplayer\.so" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="11.2.202.616" minVersion="11.2.202.577" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="fdc40de3-95ab-41a5-94cf-9b400221a713">
+      <match exp="Java(\(TM\))? Plug-in 10\.(97|98|99|1([0-4]\d|50))(\.\d+)?([^\d\._]|$)" name="name"/>
+      <match exp="libnpjp2\.so" name="filename"/>
+      <infoURL>https://java.com/</infoURL>
+      <versionRange severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
