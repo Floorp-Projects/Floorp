@@ -549,11 +549,6 @@ var DebuggerServer = {
       type: { tab: true }
     });
     if ("nsIProfiler" in Ci) {
-      this.registerModule("devtools/server/actors/profiler", {
-        prefix: "profiler",
-        constructor: "ProfilerActor",
-        type: { tab: true }
-      });
       this.registerModule("devtools/server/actors/performance", {
         prefix: "performance",
         constructor: "PerformanceActor",
