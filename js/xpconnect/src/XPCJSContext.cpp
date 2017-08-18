@@ -61,6 +61,8 @@
 #include "nsIInputStream.h"
 #include "nsIXULRuntime.h"
 #include "nsJSPrincipals.h"
+#include "ExpandedPrincipal.h"
+#include "SystemPrincipal.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -227,6 +229,7 @@ class Watchdog
 
 #define PREF_MAX_SCRIPT_RUN_TIME_CONTENT "dom.max_script_run_time"
 #define PREF_MAX_SCRIPT_RUN_TIME_CHROME "dom.max_chrome_script_run_time"
+#define PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT "dom.max_ext_content_script_run_time"
 
 class WatchdogManager : public nsIObserver
 {
@@ -247,6 +250,7 @@ class WatchdogManager : public nsIObserver
         mozilla::Preferences::AddStrongObserver(this, "dom.use_watchdog");
         mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
         mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
+        mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT);
     }
 
   protected:
@@ -266,6 +270,7 @@ class WatchdogManager : public nsIObserver
         mozilla::Preferences::RemoveObserver(this, "dom.use_watchdog");
         mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
         mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
+        mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT);
     }
 
     NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
@@ -341,7 +346,10 @@ class WatchdogManager : public nsIObserver
             int32_t chromeTime = Preferences::GetInt(PREF_MAX_SCRIPT_RUN_TIME_CHROME, 20);
             if (chromeTime <= 0)
                 chromeTime = INT32_MAX;
-            mWatchdog->SetMinScriptRunTimeSeconds(std::min(contentTime, chromeTime));
+            int32_t extTime = Preferences::GetInt(PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT, 5);
+            if (extTime <= 0)
+                extTime = INT32_MAX;
+            mWatchdog->SetMinScriptRunTimeSeconds(std::min({contentTime, chromeTime, extTime}));
         }
     }
 
@@ -463,6 +471,33 @@ XPCJSContext::ActivityCallback(void* arg, bool active)
     self->mWatchdogManager->RecordContextActivity(active);
 }
 
+static inline bool
+IsWebExtensionPrincipal(nsIPrincipal* principal, nsAString& addonId)
+{
+    return (NS_SUCCEEDED(principal->GetAddonId(addonId)) &&
+            !addonId.IsEmpty());
+}
+
+static bool
+IsWebExtensionContentScript(BasePrincipal* principal, nsAString& addonId)
+{
+    if (!principal->Is<ExpandedPrincipal>()) {
+        return false;
+    }
+
+    auto expanded = principal->As<ExpandedPrincipal>();
+
+    nsTArray<nsCOMPtr<nsIPrincipal>>* principals;
+    expanded->GetWhiteList(&principals);
+    for (auto prin : *principals) {
+        if (IsWebExtensionPrincipal(prin, addonId)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // static
 bool
 XPCJSContext::InterruptCallback(JSContext* cx)
@@ -492,10 +527,23 @@ XPCJSContext::InterruptCallback(JSContext* cx)
     // returning to the event loop. See how long it's been, and what the limit
     // is.
     TimeDuration duration = TimeStamp::NowLoRes() - self->mSlowScriptCheckpoint;
-    bool chrome = nsContentUtils::IsSystemCaller(cx);
-    const char* prefName = chrome ? PREF_MAX_SCRIPT_RUN_TIME_CHROME
-                                  : PREF_MAX_SCRIPT_RUN_TIME_CONTENT;
-    int32_t limit = Preferences::GetInt(prefName, chrome ? 20 : 10);
+    int32_t limit;
+
+    nsString addonId;
+    const char* prefName;
+
+    auto principal = BasePrincipal::Cast(nsContentUtils::SubjectPrincipal(cx));
+    bool chrome = principal->Is<SystemPrincipal>();
+    if (chrome) {
+        prefName = PREF_MAX_SCRIPT_RUN_TIME_CHROME;
+        limit = Preferences::GetInt(prefName, 20);
+    } else if (IsWebExtensionContentScript(principal, addonId)) {
+        prefName = PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT;
+        limit = Preferences::GetInt(prefName, 5);
+    } else {
+        prefName = PREF_MAX_SCRIPT_RUN_TIME_CONTENT;
+        limit = Preferences::GetInt(prefName, 10);
+    }
 
     // If there's no limit, or we're within the limit, let it go.
     if (limit == 0 || duration.ToSeconds() < limit / 2.0)
