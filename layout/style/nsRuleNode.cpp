@@ -425,8 +425,8 @@ nsRuleNode::FixupNoneGeneric(nsFont* aFont,
       (!useDocumentFonts && (aGenericFontID == kGenericFont_cursive ||
                              aGenericFontID == kGenericFont_fantasy))) {
     FontFamilyType defaultGeneric =
-      aDefaultVariableFont->fontlist.FirstGeneric();
-    MOZ_ASSERT(aDefaultVariableFont->fontlist.Length() == 1 &&
+      aDefaultVariableFont->fontlist.GetDefaultFontType();
+    MOZ_ASSERT(aDefaultVariableFont->fontlist.IsEmpty() &&
                (defaultGeneric == eFamily_serif ||
                 defaultGeneric == eFamily_sans_serif));
     if (defaultGeneric != eFamily_none) {
