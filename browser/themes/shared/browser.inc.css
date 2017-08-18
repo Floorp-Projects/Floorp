@@ -31,6 +31,16 @@
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
+#navigator-toolbox > toolbar[customizing]:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
+  outline: 1px dashed;
+  outline-offset: -4px;
+  -moz-outline-radius: 2px;
+  /* Avoid the toolbar having no height when there's no items in it */
+  min-height: 22px;
+  /* There's no border in customize mode, so we don't need extra padding. */
+  padding-bottom: 0;
+}
+
 /* Go button */
 .urlbar-go-button {
   padding: 0 3px;
