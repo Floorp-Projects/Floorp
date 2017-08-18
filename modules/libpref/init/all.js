@@ -4953,7 +4953,9 @@ pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org
 pref("extensions.webextensions.themes.enabled", false);
 pref("extensions.webextensions.themes.icons.enabled", false);
 pref("extensions.webextensions.remote", false);
-// Whether or not the moz-extension resource loads are remoted
+// Whether or not the moz-extension resource loads are remoted. For debugging
+// purposes only. Setting this to false will break moz-extension URI loading
+// unless other process sandboxing and extension remoting prefs are changed.
 pref("extensions.webextensions.protocol.remote", true);
 
 // Report Site Issue button
