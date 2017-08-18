@@ -174,6 +174,10 @@ impl SpecNewSessionParameters {
                 "httpProxy" => try!(SpecNewSessionParameters::validate_host(value)),
                 "sslProxy" => try!(SpecNewSessionParameters::validate_host(value)),
                 "socksProxy" => try!(SpecNewSessionParameters::validate_host(value)),
+                "socksVersion" => if !value.is_number() {
+                    return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                   "socksVersion was not a number"))
+                },
                 "socksUsername" => if !value.is_string() {
                     return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
                                                    "socksUsername was not a string"))
