@@ -137,74 +137,40 @@ geckodriver supports a number of
  <tr>
   <td><code>ftpProxy</code>
   <td>string
-  <td>Defines the proxy hostname for FTP traffic.
-   Should only be set then the <code>proxyType</code>
+  <td>Defines the proxy hostname with an optional port for FTP traffic.
+   This property should only be set when <code>proxyType</code>
    is set to <code>manual</code>.
- </tr>
-
- <tr>
-  <td><code>ftpProxyPort</code>
-  <td>number
-  <td>Defines the proxy port for FTP traffic.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
  </tr>
 
  <tr>
   <td><code>httpProxy</code>
   <td>string
-  <td>Defines the hostname for HTTP traffic.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
- </tr>
-
- <tr>
-  <td><code>httpProxyPort</code>
-  <td>number
-  <td>Defines the proxy port for HTTP traffic.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
+  <td>Defines the proxy hostname with an optional port for HTTP traffic.
+   This property should only be set when <code>proxyType</code>
+   is set to <code>manual</code>.
  </tr>
 
  <tr>
   <td><code>sslProxy</code>
   <td>string
-  <td>Defines the proxy hostname
-   for encrypted TLS traffic.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
- </tr>
-
- <tr>
-  <td><code>sslProxyPort</code>
-  <td>number
-  <td>Defines the proxy port for SSL traffic.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
+  <td>Defines the proxy hostname with an optional port for encrypted TLS traffic.
+   This property should only be set when <code>proxyType</code>
+   is set to <code>manual</code>.
  </tr>
 
  <tr>
   <td><code>socksProxy</code>
   <td>string
-  <td>Defines the proxy hostname for a SOCKS proxy.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
- </tr>
-
- <tr>
-  <td><code>socksProxyPort</code>
-  <td>number
-  <td>Defines the proxy port for a SOCKS proxy.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
+  <td>Defines the hostname with on optional port for a SOCKS proxy.
+   This property should only be set when <code>proxyType</code>
+   is set to <code>manual</code>.
  </tr>
 
  <tr>
   <td><code>socksVersion</code>
   <td>number
-  <td>Defines the SOCKS proxy version.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
+  <td>Defines the SOCKS proxy version. This property has only to be set
+   when <code>proxyType</code> is set to <code>manual</code>.
  </tr>
 
  <tr>
