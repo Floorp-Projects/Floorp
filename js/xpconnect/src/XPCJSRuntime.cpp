@@ -2664,6 +2664,21 @@ AccumulateTelemetryCallback(int id, uint32_t sample, const char* key)
 }
 
 static void
+SetUseCounterCallback(JSObject* obj, JSUseCounter counter)
+{
+    switch (counter) {
+      case JSUseCounter::ASMJS:
+        SetDocumentAndPageUseCounter(nullptr, obj, eUseCounter_custom_JS_asmjs);
+        break;
+      case JSUseCounter::WASM:
+        SetDocumentAndPageUseCounter(nullptr, obj, eUseCounter_custom_JS_wasm);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected JSUseCounter id");
+    }
+}
+
+static void
 CompartmentNameCallback(JSContext* cx, JSCompartment* comp,
                         char* buf, size_t bufsize)
 {
@@ -2865,6 +2880,7 @@ XPCJSRuntime::Initialize(JSContext* cx)
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);
     JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryCallback);
+    JS_SetSetUseCounterCallback(cx, SetUseCounterCallback);
     js::SetWindowProxyClass(cx, &OuterWindowProxyClass);
     js::SetXrayJitInfo(&gXrayJitInfo);
     JS::SetProcessLargeAllocationFailureCallback(OnLargeAllocationFailureCallback);
