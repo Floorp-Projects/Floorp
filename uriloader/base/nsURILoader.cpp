@@ -456,7 +456,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       nsCOMPtr<nsICategoryManager> catman =
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
       if (catman) {
-        nsCString contractidString;
+        nsXPIDLCString contractidString;
         rv = catman->GetCategoryEntry(NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
                                       mContentType.get(),
                                       getter_Copies(contractidString));
@@ -464,9 +464,9 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
           LOG(("  Listener contractid for '%s' is '%s'",
                mContentType.get(), contractidString.get()));
 
-          listener = do_CreateInstance(contractidString.get());
+          listener = do_CreateInstance(contractidString);
           LOG(("  Listener from category manager: 0x%p", listener.get()));
-
+          
           if (listener && TryContentListener(listener, aChannel)) {
             LOG(("  Listener from category manager likes this type"));
             return NS_OK;

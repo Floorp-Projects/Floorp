@@ -670,7 +670,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
   nsresult rv;
   uint32_t i, argCount = 0;
   nsCOMPtr<nsIStringBundle> bundle;
-  nsCString stringBundleURL;
+  nsXPIDLCString stringBundleURL;
 
   // XXX hack for mailnews who has already formatted their messages:
   if (aStatus == NS_OK && aStatusArg) {
@@ -713,7 +713,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
   rv = mErrorService->GetErrorStringBundle(NS_ERROR_GET_MODULE(aStatus),
                                            getter_Copies(stringBundleURL));
   if (NS_SUCCEEDED(rv)) {
-    getStringBundle(stringBundleURL.get(), getter_AddRefs(bundle));
+    getStringBundle(stringBundleURL, getter_AddRefs(bundle));
     rv = FormatWithBundle(bundle, aStatus, argCount, argArray, result);
   }
   if (NS_FAILED(rv)) {

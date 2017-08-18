@@ -2708,11 +2708,11 @@ nsPluginHost::RegisterWithCategoryManager(const nsCString& aMimeType,
     }
 
     // Only delete the entry if a plugin registered for it
-    nsCString value;
+    nsXPIDLCString value;
     nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers",
                                            aMimeType.get(),
                                            getter_Copies(value));
-    if (NS_SUCCEEDED(rv) && strcmp(value.get(), contractId) == 0) {
+    if (NS_SUCCEEDED(rv) && strcmp(value, contractId) == 0) {
       catMan->DeleteCategoryEntry("Gecko-Content-Viewers",
                                   aMimeType.get(),
                                   true);
