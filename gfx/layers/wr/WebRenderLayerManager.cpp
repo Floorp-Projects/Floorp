@@ -199,6 +199,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
                                                               wr::DisplayListBuilder& aBuilder)
 {
   bool apzEnabled = AsyncPanZoomEnabled();
+  EventRegions eventRegions;
 
   nsDisplayList savedItems;
   nsDisplayItem* item;
@@ -258,6 +259,44 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
         forceNewLayerData = true;
       }
 
+      // If we're creating a new layer data then flush whatever event regions
+      // we've collected onto the old layer.
+      if (forceNewLayerData && !eventRegions.IsEmpty()) {
+        // If eventRegions is non-empty then we must have a layer data already,
+        // because we (below) force one if we encounter an event regions item
+        // with an empty layer data list. Additionally, the most recently
+        // created layer data must have been created from an item whose ASR
+        // is the same as the ASR on the event region items that were collapsed
+        // into |eventRegions|. This is because any ASR change causes us to force
+        // a new layer data which flushes the eventRegions.
+        MOZ_ASSERT(!mLayerScrollData.empty());
+        mLayerScrollData.back().AddEventRegions(eventRegions);
+        eventRegions.SetEmpty();
+      }
+
+      // Collapse event region data into |eventRegions|, which will either be
+      // empty, or filled with stuff from previous display items with the same
+      // ASR.
+      if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
+        nsDisplayLayerEventRegions* regionsItem =
+            static_cast<nsDisplayLayerEventRegions*>(item);
+        int32_t auPerDevPixel = item->Frame()->PresContext()->AppUnitsPerDevPixel();
+        EventRegions regions(
+            regionsItem->HitRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
+            regionsItem->MaybeHitRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
+            regionsItem->DispatchToContentHitRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
+            regionsItem->NoActionRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
+            regionsItem->HorizontalPanRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel),
+            regionsItem->VerticalPanRegion().ScaleToOutsidePixels(1.0f, 1.0f, auPerDevPixel));
+
+        eventRegions.OrWith(regions);
+        if (mLayerScrollData.empty()) {
+          // If we don't have a layer data yet then create one because we will
+          // need it to store this event region information.
+          forceNewLayerData = true;
+        }
+      }
+
       // If we're going to create a new layer data for this item, stash the
       // ASR so that if we recurse into a sublist they will know where to stop
       // walking up their ASR chain when building scroll metadata.
@@ -291,6 +330,16 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
     }
   }
   aDisplayList->AppendToTop(&savedItems);
+
+  // If we have any event region info left over we need to flush it before we
+  // return. Again, at this point the layer data list must be non-empty, and
+  // the most recently created layer data will have been created by an item
+  // with matching ASRs.
+  if (!eventRegions.IsEmpty()) {
+    MOZ_ASSERT(apzEnabled);
+    MOZ_ASSERT(!mLayerScrollData.empty());
+    mLayerScrollData.back().AddEventRegions(eventRegions);
+  }
 }
 
 void

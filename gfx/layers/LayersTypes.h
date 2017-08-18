@@ -157,6 +157,26 @@ struct EventRegions {
     mVerticalPanRegion.Transform(aTransform);
   }
 
+  void OrWith(const EventRegions& aOther)
+  {
+    mHitRegion.OrWith(aOther.mHitRegion);
+    mDispatchToContentHitRegion.OrWith(aOther.mDispatchToContentHitRegion);
+    // See the comment in nsDisplayList::AddFrame, where the touch action regions
+    // are handled. The same thing applies here.
+    bool alreadyHadRegions = !mNoActionRegion.IsEmpty() ||
+        !mHorizontalPanRegion.IsEmpty() ||
+        !mVerticalPanRegion.IsEmpty();
+    mNoActionRegion.OrWith(aOther.mNoActionRegion);
+    mHorizontalPanRegion.OrWith(aOther.mHorizontalPanRegion);
+    mVerticalPanRegion.OrWith(aOther.mVerticalPanRegion);
+    if (alreadyHadRegions) {
+      nsIntRegion combinedActionRegions;
+      combinedActionRegions.Or(mHorizontalPanRegion, mVerticalPanRegion);
+      combinedActionRegions.OrWith(mNoActionRegion);
+      mDispatchToContentHitRegion.OrWith(combinedActionRegions);
+    }
+  }
+
   bool IsEmpty() const
   {
     return mHitRegion.IsEmpty()
@@ -164,6 +184,15 @@ struct EventRegions {
         && mNoActionRegion.IsEmpty()
         && mHorizontalPanRegion.IsEmpty()
         && mVerticalPanRegion.IsEmpty();
+  }
+
+  void SetEmpty()
+  {
+    mHitRegion.SetEmpty();
+    mDispatchToContentHitRegion.SetEmpty();
+    mNoActionRegion.SetEmpty();
+    mHorizontalPanRegion.SetEmpty();
+    mVerticalPanRegion.SetEmpty();
   }
 
   nsCString ToString() const

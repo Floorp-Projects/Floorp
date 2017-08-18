@@ -69,7 +69,10 @@ public:
   CSSTransformMatrix GetTransformTyped() const;
   void SetTransformIsPerspective(bool aTransformIsPerspective) { mTransformIsPerspective = aTransformIsPerspective; }
   bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
+
+  void AddEventRegions(const EventRegions& aRegions) { mEventRegions.OrWith(aRegions); }
   EventRegions GetEventRegions() const { return mEventRegions; }
+
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   void SetReferentId(uint64_t aReferentId) { mReferentId = Some(aReferentId); }
   Maybe<uint64_t> GetReferentId() const { return mReferentId; }
