@@ -2393,6 +2393,8 @@ JsepSessionImpl::SetupDefaultRtpExtensions()
                        SdpDirectionAttribute::Direction::kSendrecv);
   AddVideoRtpExtension(webrtc::RtpExtension::kTimestampOffsetUri,
                        SdpDirectionAttribute::Direction::kSendrecv);
+  AddVideoRtpExtension(webrtc::RtpExtension::kMIdUri,
+                       SdpDirectionAttribute::Direction::kSendrecv);
 }
 
 void

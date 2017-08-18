@@ -333,6 +333,10 @@ int32_t ModuleRtpRtcpImpl::SetRID(const char *rid) {
   return rtp_sender_.SetRID(rid);
 }
 
+int32_t ModuleRtpRtcpImpl::SetMID(const char *mid) {
+  return rtp_sender_.SetMId(mid);
+}
+
 // TODO(pbos): Handle media and RTX streams separately (separate RTCP
 // feedbacks).
 RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {

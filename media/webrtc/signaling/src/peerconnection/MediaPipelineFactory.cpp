@@ -868,6 +868,7 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
     }
 
     conduit->SetLocalCNAME(aTrack.GetCNAME().c_str());
+    conduit->SetLocalMID(aTrackPair.mRtpTransport->mTransportId);
 
     rv = ConfigureVideoCodecMode(aTrack, *conduit);
     if (NS_FAILED(rv)) {
@@ -877,6 +878,7 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
     if (!extmaps.empty()) {
       conduit->SetLocalRTPExtensions(true, extmaps);
     }
+
     auto error = conduit->ConfigureSendMediaCodec(configs.values[0]);
     if (error) {
       MOZ_MTLOG(ML_ERROR, "ConfigureSendMediaCodec failed: " << error);
