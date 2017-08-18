@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 flat varying vec4 vColor;
-varying vec2 vUv;
+varying vec3 vUv;
 flat varying vec4 vUvBorder;
 
 #ifdef WR_FEATURE_TRANSFORM

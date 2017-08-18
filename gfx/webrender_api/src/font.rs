@@ -145,7 +145,7 @@ pub struct GlyphOptions {
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]
-pub struct FontInstanceKey {
+pub struct FontInstance {
     pub font_key: FontKey,
     // The font size is in *device* pixels, not logical pixels.
     // It is stored as an Au since we need sub-pixel sizes, but
@@ -159,13 +159,13 @@ pub struct FontInstanceKey {
     pub subpx_dir: SubpixelDirection,
 }
 
-impl FontInstanceKey {
+impl FontInstance {
     pub fn new(font_key: FontKey,
                size: Au,
                mut color: ColorF,
                render_mode: FontRenderMode,
                glyph_options: Option<GlyphOptions>,
-               subpx_dir: SubpixelDirection) -> FontInstanceKey {
+               subpx_dir: SubpixelDirection) -> FontInstance {
         // In alpha/mono mode, the color of the font is irrelevant.
         // Forcing it to black in those cases saves rasterizing glyphs
         // of different colors when not needed.
@@ -173,7 +173,7 @@ impl FontInstanceKey {
             color = ColorF::new(0.0, 0.0, 0.0, 1.0);
         }
 
-        FontInstanceKey {
+        FontInstance {
             font_key,
             size,
             color: color.into(),
