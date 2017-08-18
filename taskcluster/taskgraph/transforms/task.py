@@ -12,6 +12,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import re
 import time
 from copy import deepcopy
 
@@ -1114,6 +1115,50 @@ def build_task(config, tasks):
             'attributes': attributes,
             'optimizations': task.get('optimizations', []),
         }
+
+
+@transforms.add
+def check_run_task_caches(config, tasks):
+    """Audit for caches requiring run-task.
+
+    run-task manages caches in certain ways. If a cache managed by run-task
+    is used by a non run-task task, it could cause problems. So we audit for
+    that and make sure certain cache names are exclusive to run-task.
+
+    IF YOU ARE TEMPTED TO MAKE EXCLUSIONS TO THIS POLICY, YOU ARE LIKELY
+    CONTRIBUTING TECHNICAL DEBT AND WILL HAVE TO SOLVE MANY OF THE PROBLEMS
+    THAT RUN-TASK ALREADY SOLVES. THINK LONG AND HARD BEFORE DOING THAT.
+    """
+    re_reserved_caches = re.compile('''^
+        (level-\d+-checkouts|level-\d+-tooltool-cache)
+    ''', re.VERBOSE)
+
+    suffix = _run_task_suffix()
+
+    for task in tasks:
+        payload = task['task'].get('payload', {})
+        command = payload.get('command') or ['']
+        command = command[0] if isinstance(command[0], basestring) else ''
+        run_task = command.endswith('run-task')
+
+        for cache in payload.get('cache', {}):
+            if not re_reserved_caches.match(cache):
+                continue
+
+            if not run_task:
+                raise Exception(
+                    '%s is using a cache (%s) reserved for run-task '
+                    'change the task to use run-task or use a different '
+                    'cache name' % (task['label'], cache))
+
+            if not cache.endswith(suffix):
+                raise Exception(
+                    '%s is using a cache (%s) reserved for run-task '
+                    'but the cache name is not dependent on the contents '
+                    'of run-task; change the cache name to conform to the '
+                    'naming requirements' % (task['label'], cache))
+
+        yield task
 
 
 # Check that the v2 route templates match those used by Mozharness.  This can
