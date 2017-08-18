@@ -8,7 +8,10 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 this.EXPORTED_SYMBOLS = ["RuntimePermissions"];
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
+                                  "resource://gre/modules/Messaging.jsm");
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html
 const ACCESS_FINE_LOCATION = "android.permission.ACCESS_FINE_LOCATION";
@@ -37,8 +40,7 @@ var RuntimePermissions = {
       shouldPrompt: true
     };
 
-    let window = Services.wm.getMostRecentWindow("navigator:browser");
-    return window.WindowEventDispatcher.sendRequestForResult(msg);
+    return EventDispatcher.instance.sendRequestForResult(msg);
   },
 
   /**
@@ -56,7 +58,6 @@ var RuntimePermissions = {
       shouldPrompt: false
     };
 
-    let window = Services.wm.getMostRecentWindow("navigator:browser");
-    return window.WindowEventDispatcher.sendRequestForResult(msg);
+    return EventDispatcher.instance.sendRequestForResult(msg);
   }
 };
