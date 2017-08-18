@@ -19,11 +19,10 @@ add_task(async function testInvalidIconSizes() {
           // helper function to run setIcon and check if it fails
           let assertSetIconThrows = function(detail, error, message) {
             detail.tabId = tabId;
-            promises.push(
-              browser.test.assertRejects(
-                browser[api].setIcon(detail),
-                /must be an integer/,
-                "setIcon with invalid icon size"));
+            browser.test.assertThrows(
+              () => browser[api].setIcon(detail),
+              /an unexpected .* property/,
+              "setIcon with invalid icon size");
           };
 
           let imageData = new ImageData(1, 1);
