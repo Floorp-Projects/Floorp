@@ -178,6 +178,8 @@ nsresult nsExtProtocolChannel::OpenURL()
     rv = extProtService->LoadURI(mUrl, aggCallbacks);
 
     if (NS_SUCCEEDED(rv) && mListener) {
+      Cancel(NS_ERROR_NO_CONTENT);
+
       RefPtr<nsExtProtocolChannel> self = this;
       nsCOMPtr<nsIStreamListener> listener = mListener;
       MessageLoop::current()->PostTask(
