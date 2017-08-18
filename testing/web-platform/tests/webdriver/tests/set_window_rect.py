@@ -104,7 +104,6 @@ def test_minimized(session):
     assert session.window.state == "minimized"
 
     response = set_window_rect(session, {"width": 400, "height": 400})
-    assert session.window.state != "minimized"
     rect = assert_success(response)
     assert rect["width"] == 400
     assert rect["height"] == 400
