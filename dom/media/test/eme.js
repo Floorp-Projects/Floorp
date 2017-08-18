@@ -197,21 +197,6 @@ function AppendTrack(test, ms, track, token)
     Log(token, track.name + ": addSourceBuffer(" + track.type + ")");
     sb = ms.addSourceBuffer(track.type);
     sb.addEventListener("updateend", function() {
-      if (ms.readyState == "ended") {
-        /* We can get another updateevent as a result of calling ms.endOfStream() if
-           the highest end time of our source buffers is different from that of the
-           media source duration. Due to bug 1065207 this can happen because of
-           inaccuracies in the frame duration calculations. Check if we are already
-           "ended" and ignore the update event */
-        Log(token, track.name + ": updateend when readyState already 'ended'");
-        if (!resolved) {
-          // Needed if decoder knows this was the last fragment and ended by itself.
-          Log(token, track.name + ": but promise not resolved yet -> end of track");
-          resolve();
-          resolved = true;
-        }
-        return;
-      }
       Log(token, track.name + ": updateend for " + fragmentFile + ", " + SourceBufferToString(sb));
       addNextFragment();
     });
