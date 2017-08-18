@@ -236,6 +236,18 @@ pub trait Gl {
                         format: GLenum,
                         ty: GLenum,
                         data: &[u8]);
+    fn tex_sub_image_3d_pbo(&self,
+                            target: GLenum,
+                            level: GLint,
+                            xoffset: GLint,
+                            yoffset: GLint,
+                            zoffset: GLint,
+                            width: GLsizei,
+                            height: GLsizei,
+                            depth: GLsizei,
+                            format: GLenum,
+                            ty: GLenum,
+                            offset: usize);
     fn get_integer_v(&self, name: GLenum) -> GLint;
     fn get_boolean_v(&self, name: GLenum) -> GLboolean;
     fn get_float_v(&self, name: GLenum) -> GLfloat;
