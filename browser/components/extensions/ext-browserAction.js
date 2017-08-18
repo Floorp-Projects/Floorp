@@ -177,7 +177,7 @@ this.browserAction = class extends ExtensionAPI {
         node.onmouseover = event => this.handleEvent(event);
         node.onmouseout = event => this.handleEvent(event);
 
-        this.updateButton(node, this.defaults);
+        this.updateButton(node, this.defaults, true);
       },
 
       onViewShowing: async event => {
@@ -429,10 +429,9 @@ this.browserAction = class extends ExtensionAPI {
 
   // Update the toolbar button |node| with the tab context data
   // in |tabData|.
-  updateButton(node, tabData) {
+  updateButton(node, tabData, sync = false) {
     let title = tabData.title || this.extension.name;
-
-    node.ownerGlobal.requestAnimationFrame(() => {
+    let callback = () => {
       node.setAttribute("tooltiptext", title);
       node.setAttribute("label", title);
 
@@ -467,7 +466,12 @@ this.browserAction = class extends ExtensionAPI {
       }
 
       node.setAttribute("style", style);
-    });
+    };
+    if (sync) {
+      callback();
+    } else {
+      node.ownerGlobal.requestAnimationFrame(callback);
+    }
   }
 
   getIconData(icons) {
