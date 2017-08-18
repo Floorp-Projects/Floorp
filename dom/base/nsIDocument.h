@@ -2740,6 +2740,7 @@ public:
   already_AddRefed<mozilla::dom::DocumentFragment>
     CreateDocumentFragment() const;
   already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData) const;
+  already_AddRefed<nsTextNode> CreateEmptyTextNode() const;
   already_AddRefed<mozilla::dom::Comment>
     CreateComment(const nsAString& aData) const;
   already_AddRefed<mozilla::dom::ProcessingInstruction>

@@ -878,7 +878,7 @@ TextEditRules::WillSetText(Selection& aSelection,
     if (NS_WARN_IF(!doc)) {
       return NS_OK;
     }
-    RefPtr<nsTextNode> newNode = doc->CreateTextNode(tString);
+    RefPtr<nsTextNode> newNode = EditorBase::CreateTextNode(*doc, tString);
     if (NS_WARN_IF(!newNode)) {
       return NS_OK;
     }
