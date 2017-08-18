@@ -167,7 +167,9 @@ task_description_schema = Schema({
             # a raw Docker image path (repo/image:tag)
             basestring,
             # an in-tree generated docker image (from `taskcluster/docker/<name>`)
-            {'in-tree': basestring}
+            {'in-tree': basestring},
+            # an indexed docker image
+            {'indexed': basestring},
         ),
 
         # worker features that should be enabled
@@ -574,13 +576,23 @@ def build_docker_worker_payload(config, task, task_def):
 
     image = worker['docker-image']
     if isinstance(image, dict):
-        docker_image_task = 'build-docker-image-' + image['in-tree']
-        task.setdefault('dependencies', {})['docker-image'] = docker_image_task
-        image = {
-            "path": "public/image.tar.zst",
-            "taskId": {"task-reference": "<docker-image>"},
-            "type": "task-image",
-        }
+        if 'in-tree' in image:
+            docker_image_task = 'build-docker-image-' + image['in-tree']
+            task.setdefault('dependencies', {})['docker-image'] = docker_image_task
+
+            image = {
+                "path": "public/image.tar.zst",
+                "taskId": {"task-reference": "<docker-image>"},
+                "type": "task-image",
+            }
+        elif 'indexed' in image:
+            image = {
+                "path": "public/image.tar.zst",
+                "namespace": image['indexed'],
+                "type": "indexed-image",
+            }
+        else:
+            raise Exception("unknown docker image type")
 
     features = {}
 
@@ -1009,7 +1021,10 @@ def build_task(config, tasks):
                 DEFAULT_BRANCH_PRIORITY)
 
         tags = task.get('tags', {})
-        tags.update({'createdForUser': config.params['owner']})
+        tags.update({
+            'createdForUser': config.params['owner'],
+            'kind': config.kind,
+        })
 
         task_def = {
             'provisionerId': provisioner_id,

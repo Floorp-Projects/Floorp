@@ -80,6 +80,10 @@ const char* RtpExtension::kRepairedRtpStreamIdUri =
     "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id";
 const int RtpExtension::kRepairedRtpStreamIdDefaultId = 8;
 
+const char* RtpExtension::kMIdUri =
+    "urn:ietf:params:rtp-hdrext:sdes:mid";
+const int RtpExtension::kMIdDefaultId = 9;
+
 bool RtpExtension::IsSupportedForAudio(const std::string& uri) {
   return uri == webrtc::RtpExtension::kAudioLevelUri ||
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||

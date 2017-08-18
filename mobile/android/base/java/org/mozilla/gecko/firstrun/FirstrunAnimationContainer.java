@@ -27,7 +27,8 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 public class FirstrunAnimationContainer extends LinearLayout {
     // See bug 1330714. Need NON_PREF_PREFIX to set from distribution.
     public static final String PREF_FIRSTRUN_ENABLED_OLD = "startpane_enabled";
-    public static final String PREF_FIRSTRUN_ENABLED = GeckoPreferences.NON_PREF_PREFIX + "startpane_enabled";
+    // After 57, the pref name will be changed. Thus all user since 57 will check this new pref.
+    public static final String PREF_FIRSTRUN_ENABLED = GeckoPreferences.NON_PREF_PREFIX + "startpane_enabled_after_57";
 
     public static interface OnFinishListener {
         public void onFinish();

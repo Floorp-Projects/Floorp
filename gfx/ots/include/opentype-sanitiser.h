@@ -176,7 +176,7 @@ class OTSStream {
 
 enum TableAction {
   TABLE_ACTION_DEFAULT,  // Use OTS's default action for that table
-  TABLE_ACTION_SANITIZE, // Sanitize the table, potentially droping it
+  TABLE_ACTION_SANITIZE, // Sanitize the table, potentially dropping it
   TABLE_ACTION_PASSTHRU, // Serialize the table unchanged
   TABLE_ACTION_DROP      // Drop the table
 };

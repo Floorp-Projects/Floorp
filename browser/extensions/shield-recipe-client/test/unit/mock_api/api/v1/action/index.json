@@ -15,8 +15,40 @@
       "title": "Log a message to the console",
       "type": "object"
     },
-    "implementation_url": "https://localhost:8000/api/v1/action/console-log/implementation/0765c6302db2846b85543eea743f959c19b42559/",
+    "implementation_url": "https://localhost:8443/api/v1/action/console-log/implementation/sha384-RGx3rydrSq53UfmW9kFcK0mQYra67XIvZvr4MhmAe--ljiiMQOtgM7Cmca48um3v/",
     "name": "console-log"
+  },
+  {
+    "arguments_schema": {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "properties": {
+        "addonUrl": {
+          "description": "URL of the add-on XPI file",
+          "format": "uri",
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "description": "User-facing description of the study",
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "description": "User-facing name of the study",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "addonUrl"
+      ],
+      "title": "Enroll a user in an opt-out SHIELD study",
+      "type": "object"
+    },
+    "implementation_url": "https://localhost:8443/api/v1/action/opt-out-study/implementation/sha384-HM_avYcD00o27ufwU1V7PIBtiuMAXML6MMwlYrDEqDX-XzGVuOfL52RCM680JExN/",
+    "name": "opt-out-study"
   },
   {
     "arguments_schema": {
@@ -53,6 +85,16 @@
           "description": "URL to redirect the user to after rating Firefox or clicking the engagement button",
           "type": "string"
         },
+        "repeatEvery": {
+          "default": null,
+          "description": "How often (in days) the action is displayed.",
+          "type": "number"
+        },
+        "repeatOption": {
+          "default": "once",
+          "description": "Determines how often an action executes. (once|nag|xdays)",
+          "type": "string"
+        },
         "surveyId": {
           "description": "Slug uniquely identifying this survey in telemetry",
           "type": "string"
@@ -71,7 +113,93 @@
       "title": "Show a Heartbeat survey.",
       "type": "object"
     },
-    "implementation_url": "https://localhost:8000/api/v1/action/show-heartbeat/implementation/448bbffce82ff27b3d532fd7196bcb190be5c067/",
+    "implementation_url": "https://localhost:8443/api/v1/action/show-heartbeat/implementation/sha384-dEGiyKPEln8Ns5cQHzGpMIGdirSAAX0X-Kwlu-U3sJ05yNbO-ANij_a6c5SyL7G4/",
     "name": "show-heartbeat"
+  },
+  {
+    "arguments_schema": {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "properties": {
+        "branches": {
+          "description": "List of experimental branches",
+          "items": {
+            "properties": {
+              "ratio": {
+                "default": 1,
+                "description": "Ratio of users who should be grouped into this branch",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "slug": {
+                "description": "Unique identifier for this branch of the experiment",
+                "pattern": "^[A-Za-z0-9\\-_]+$",
+                "type": "string"
+              },
+              "value": {
+                "description": "Value to set the preference to for this branch",
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            },
+            "required": [
+              "slug",
+              "value",
+              "ratio"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "experimentDocumentUrl": {
+          "default": "",
+          "description": "URL of a document describing the experiment",
+          "format": "uri",
+          "type": "string"
+        },
+        "preferenceBranchType": {
+          "default": "default",
+          "descript": "Controls whether the default or user value of the preference is modified",
+          "enum": [
+            "user",
+            "default"
+          ],
+          "type": "string"
+        },
+        "preferenceName": {
+          "default": "",
+          "description": "Full dotted-path of the preference that controls this experiment",
+          "type": "string"
+        },
+        "preferenceType": {
+          "default": "boolean",
+          "description": "Data type of the preference that controls this experiment",
+          "enum": [
+            "string",
+            "integer",
+            "boolean"
+          ],
+          "type": "string"
+        },
+        "slug": {
+          "description": "Unique identifier for this experiment",
+          "pattern": "^[A-Za-z0-9\\-_]+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slug",
+        "preferenceName",
+        "preferenceType",
+        "branches"
+      ],
+      "title": "Run a feature experiment activated by a preference.",
+      "type": "object"
+    },
+    "implementation_url": "https://localhost:8443/api/v1/action/preference-experiment/implementation/sha384-KQgG38GQ7KZAb2VIB48ANQO6nBcxZoLm2ORzUviRT5nAvSywyPjZ5cJIElw6iXIt/",
+    "name": "preference-experiment"
   }
 ]

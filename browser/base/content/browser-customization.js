@@ -38,7 +38,6 @@ var CustomizationHandler = {
 
     UpdateUrlbarSearchSplitterState();
 
-    CombinedStopReload.uninit();
     PlacesToolbarHelper.customizeStart();
     DownloadsButton.customizeStart();
   },
@@ -66,9 +65,6 @@ var CustomizationHandler = {
     PlacesToolbarHelper.customizeDone();
     DownloadsButton.customizeDone();
 
-    // The url bar splitter state is dependent on whether stop/reload
-    // and the location bar are combined, so we need this ordering
-    CombinedStopReload.init();
     UpdateUrlbarSearchSplitterState();
 
     // Update the urlbar

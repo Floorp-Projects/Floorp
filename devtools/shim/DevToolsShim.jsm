@@ -286,7 +286,6 @@ let addonSdkMethods = [
   "closeToolbox",
   "connectDebuggerServer",
   "createDebuggerClient",
-  "getTargetForTab",
   "getToolbox",
   "initBrowserToolboxProcessForAddon",
   "showToolbox",
@@ -299,7 +298,10 @@ let addonSdkMethods = [
  * therefore DevTools should always be available when they are called.
  */
 let webExtensionsMethods = [
+  "createWebExtensionInspectedWindowFront",
+  "getTargetForTab",
   "getTheme",
+  "openBrowserConsole",
 ];
 
 for (let method of [...addonSdkMethods, ...webExtensionsMethods]) {

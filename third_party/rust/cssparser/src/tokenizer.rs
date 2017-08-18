@@ -209,6 +209,7 @@ pub struct Tokenizer<'a> {
     current_line_number: u32,
     var_functions: SeenStatus,
     viewport_percentages: SeenStatus,
+    source_map_url: Option<&'a str>,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -234,6 +235,7 @@ impl<'a> Tokenizer<'a> {
             current_line_number: first_line_number,
             var_functions: SeenStatus::DontCare,
             viewport_percentages: SeenStatus::DontCare,
+            source_map_url: None,
         }
     }
 
@@ -298,6 +300,11 @@ impl<'a> Tokenizer<'a> {
             line: self.current_line_number,
             column: (self.position - self.current_line_start_position) as u32,
         }
+    }
+
+    #[inline]
+    pub fn current_source_map_url(&self) -> Option<&'a str> {
+        self.source_map_url
     }
 
     #[inline]
@@ -507,7 +514,9 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
         }
         b'/' => {
             if tokenizer.starts_with(b"/*") {
-                Comment(consume_comment(tokenizer))
+                let contents = consume_comment(tokenizer);
+                check_for_source_map(tokenizer, contents);
+                Comment(contents)
             } else {
                 tokenizer.advance(1);
                 Delim('/')
@@ -593,6 +602,20 @@ fn consume_whitespace<'a>(tokenizer: &mut Tokenizer<'a>, newline: bool, is_cr: b
     WhiteSpace(tokenizer.slice_from(start_position))
 }
 
+
+// Check for a sourceMappingURL comment and update the tokenizer appropriately.
+fn check_for_source_map<'a>(tokenizer: &mut Tokenizer<'a>, contents: &'a str) {
+    let directive = "# sourceMappingURL=";
+    let directive_old = "@ sourceMappingURL=";
+
+    // If there is a source map directive, extract the URL.
+    if contents.starts_with(directive) || contents.starts_with(directive_old) {
+        let contents = &contents[directive.len()..];
+        tokenizer.source_map_url = contents.split(|c| {
+            c == ' ' || c == '\t' || c == '\x0C' || c == '\r' || c == '\n'
+        }).next()
+    }
+}
 
 fn consume_comment<'a>(tokenizer: &mut Tokenizer<'a>) -> &'a str {
     tokenizer.advance(2);  // consume "/*"

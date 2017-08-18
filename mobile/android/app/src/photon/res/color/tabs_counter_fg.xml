@@ -6,9 +6,9 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <item android:color="@color/photon_tabs_counter_fg_private"
+    <item android:color="@color/menu_item_tint_private"
           gecko:state_private="true"/>
 
-    <item android:color="@color/photon_tabs_counter_fg"/>
+    <item android:color="@color/menu_item_tint"/>
 
 </selector>

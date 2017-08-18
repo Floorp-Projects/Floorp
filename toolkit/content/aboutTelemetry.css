@@ -20,6 +20,10 @@ body {
   overflow-y: auto;
 }
 
+.main-content.search > section > *:not(.data) {
+  display: none;
+}
+
 #category-raw {
   background-color: var(--in-content-page-background);
   box-sizing: border-box;

@@ -102,7 +102,7 @@ describe("ActivityStreamPrefs", () => {
         assert.calledWith(defaultPrefs.branch.setIntPref, "baz", 1);
       });
       it("should initialize a pref with value_local_dev if Firefox is a local build", () => {
-        sandbox.stub(global.Services.prefs, "getStringPref", () => "default"); // eslint-disable-line max-nested-callbacks
+        sandbox.stub(global.Services.prefs, "getStringPref").returns("default");
         defaultPrefs.init();
         assert.calledWith(defaultPrefs.branch.setStringPref, "qux", "foofoo");
       });

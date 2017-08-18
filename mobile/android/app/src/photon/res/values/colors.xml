@@ -67,9 +67,6 @@
     <color name="photon_toolbar_bg">#F7FAFC</color>
     <color name="photon_toolbar_bg_private">#38383D</color>
 
-    <color name="photon_tabs_counter_fg">#272727</color>
-    <color name="photon_tabs_counter_fg_private">#FFFFFF</color>
-
     <color name="photon_two_line_page_row_bg">#FFFFFF</color>
     <color name="photon_two_line_page_row_bg_private">#414146</color>
 
@@ -137,10 +134,15 @@
     <color name="affirmative_green">#6FBE4A</color>
     <color name="rejection_red">#D23228</color>
     <color name="action_orange">#E66000</color>
-    <color name="action_orange_pressed">#DC5600</color>
     <color name="link_blue">#0096DD</color>
     <color name="link_blue_pressed">#0082C6</color>
     <color name="private_browsing_purple">#CF68FF</color>
+
+    <!-- On boarding -->
+    <color name="ob_click">#0A84FF</color>
+    <color name="ob_press">#003EAA</color>
+    <color name="ob_title">#212121</color>
+    <color name="ob_subtitle">#737373</color>
 
     <color name="placeholder_active_grey">#222222</color>
     <color name="placeholder_grey">#777777</color>

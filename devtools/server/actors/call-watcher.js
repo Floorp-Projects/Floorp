@@ -6,7 +6,7 @@
 /* global XPCNativeWrapper */
 
 const {Ci, Cu} = require("chrome");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const {serializeStack, parseStack} = require("toolkit/loader");
 

@@ -65,7 +65,7 @@ describe("Top Stories Feed", () => {
         icon: "provider-icon",
         title: {id: "header_recommended_by", values: {provider: "test-provider"}},
         rows: [],
-        maxCards: 3,
+        maxRows: 1,
         contextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
         infoOption: {
           header: {id: "pocket_feedback_header"},

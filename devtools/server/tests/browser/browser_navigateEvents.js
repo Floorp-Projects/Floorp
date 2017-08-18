@@ -7,7 +7,7 @@
 const URL1 = MAIN_DOMAIN + "navigate-first.html";
 const URL2 = MAIN_DOMAIN + "navigate-second.html";
 
-var events = require("sdk/event/core");
+var events = require("devtools/shared/event-emitter");
 var client;
 
 SpecialPowers.pushPrefEnv(

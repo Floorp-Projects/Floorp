@@ -20,7 +20,7 @@ loader.lazyRequireGetter(this, "NetworkMonitor", "devtools/shared/webconsole/net
 loader.lazyRequireGetter(this, "NetworkMonitorChild", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsole/network-monitor", true);
-loader.lazyRequireGetter(this, "events", "sdk/event/core");
+loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "ServerLoggingListener", "devtools/shared/webconsole/server-logger", true);
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
 loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);

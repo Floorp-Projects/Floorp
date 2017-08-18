@@ -13,7 +13,7 @@
 
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const performanceSpec = require("devtools/shared/specs/performance-entries");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 
 var PerformanceEntriesActor = ActorClassWithSpec(performanceSpec, {
   listenerAdded: false,

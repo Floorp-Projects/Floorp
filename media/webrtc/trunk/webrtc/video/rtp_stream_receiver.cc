@@ -278,6 +278,22 @@ bool RtpStreamReceiver::SetReceiveRIDStatus(bool enable, int id) {
     kRtpExtensionRtpStreamId);
 }
 
+bool RtpStreamReceiver::SetReceiveMIdStatus(bool enable, int id) {
+  rtc::CritScope lock(&receive_cs_);
+  if (enable) {
+    if (rtp_header_parser_->RegisterRtpHeaderExtension(
+            kRtpExtensionMId, id)) {
+      receiving_mid_enabled_ = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+  receiving_mid_enabled_ = false;
+  return rtp_header_parser_->DeregisterRtpHeaderExtension(
+    kRtpExtensionMId);
+}
+
 int32_t RtpStreamReceiver::OnReceivedPayloadData(
     const uint8_t* payload_data,
     size_t payload_size,
@@ -394,6 +410,8 @@ bool RtpStreamReceiver::DeliverRtp(const uint8_t* rtp_packet,
         ss << ", rid: " << header.extension.rtpStreamId.data();
       if (!header.extension.repairedRtpStreamId.empty())
         ss << ", repaired rid: " << header.extension.repairedRtpStreamId.data();
+      if (!header.extension.mId.empty())
+        ss << ", mid: " << header.extension.mId.data();
       LOG(LS_INFO) << ss.str();
       last_packet_log_ms_ = now_ms;
     }

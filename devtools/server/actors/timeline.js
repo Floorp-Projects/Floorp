@@ -21,7 +21,7 @@ const { Option, RetVal } = protocol;
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { Timeline } = require("devtools/server/performance/timeline");
 const { timelineSpec } = require("devtools/shared/specs/timeline");
-const events = require("sdk/event/core");
+const events = require("devtools/shared/event-emitter");
 
 /**
  * The timeline actor pops and forwards timeline markers registered in docshells.

@@ -7,11 +7,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import json
 
 from taskgraph import try_option_syntax
 from taskgraph.util.attributes import match_run_on_projects
 
+here = os.path.abspath(os.path.dirname(__file__))
 _target_task_methods = {}
 
 
@@ -53,20 +53,11 @@ def standard_filter(task, parameters):
 
 
 def _try_task_config(full_task_graph, parameters):
-    task_config_file = os.path.join(os.getcwd(), 'try_task_config.json')
-
-    if not os.path.isfile(task_config_file):
+    if not parameters.get('target_task_labels'):
         return []
 
-    with open(task_config_file, 'r') as fh:
-        task_config = json.load(fh)
-
-    target_task_labels = []
-    for task in full_task_graph.tasks.itervalues():
-        if task.label in task_config:
-            target_task_labels.append(task.label)
-
-    return target_task_labels
+    return [t.label for t in full_task_graph.tasks.itervalues()
+            if t.label in parameters['target_task_labels']]
 
 
 def _try_option_syntax(full_task_graph, parameters):

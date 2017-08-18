@@ -25,8 +25,6 @@ public:
 
   void Shutdown() override;
 
-  MediaDecoderStateMachine* CreateStateMachine() override;
-
   // Returns true if the HLS backend is pref'ed on.
   static bool IsEnabled();
 
@@ -45,6 +43,8 @@ public:
   void Resume() override;
 
 private:
+  MediaDecoderStateMachine* CreateStateMachine();
+
   bool CanPlayThroughImpl() override final
   {
     // TODO: We don't know how to estimate 'canplaythrough' for this decoder.

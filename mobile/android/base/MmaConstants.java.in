@@ -28,6 +28,8 @@ public static final String MOZ_LEANPLUM_SDK_CLIENTID =
     null;
 //#endif
 
+public static final String MOZ_MMA_SENDER_ID = "242693410970";
+
     public static MmaInterface getMma() {
 //#ifdef MOZ_ANDROID_MMA
         return new MmaLeanplumImp();

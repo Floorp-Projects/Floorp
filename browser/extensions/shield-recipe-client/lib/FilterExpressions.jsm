@@ -9,21 +9,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://shield-recipe-client/lib/Sampling.jsm");
 Cu.import("resource://shield-recipe-client/lib/PreferenceFilters.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "mozjexl", "resource://shield-recipe-client-vendor/mozjexl.js");
+
 this.EXPORTED_SYMBOLS = ["FilterExpressions"];
 
-XPCOMUtils.defineLazyGetter(this, "nodeRequire", () => {
-  const {Loader, Require} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
-  const loader = new Loader({
-    paths: {
-      "": "resource://shield-recipe-client/node_modules/",
-    },
-  });
-  return new Require(loader, {});
-});
-
 XPCOMUtils.defineLazyGetter(this, "jexl", () => {
-  const {Jexl} = nodeRequire("jexl/lib/Jexl.js");
-  const jexl = new Jexl();
+  const jexl = new mozjexl.Jexl();
   jexl.addTransforms({
     date: dateString => new Date(dateString),
     stableSample: Sampling.stableSample,
@@ -31,7 +22,9 @@ XPCOMUtils.defineLazyGetter(this, "jexl", () => {
     preferenceValue: PreferenceFilters.preferenceValue,
     preferenceIsUserSet: PreferenceFilters.preferenceIsUserSet,
     preferenceExists: PreferenceFilters.preferenceExists,
+    keys,
   });
+  jexl.addBinaryOp("intersect", 40, operatorIntersect);
   return jexl;
 });
 
@@ -41,3 +34,32 @@ this.FilterExpressions = {
     return jexl.eval(onelineExpr, context);
   },
 };
+
+/**
+ * Return an array of the given object's own keys (specifically, its enumerable
+ * properties), or undefined if the argument isn't an object.
+ * @param {Object} obj
+ * @return {Array[String]|undefined}
+ */
+function keys(obj) {
+  if (typeof obj !== "object" || obj === null) {
+    return undefined;
+  }
+
+  return Object.keys(obj);
+}
+
+/**
+ * Find all the values that are present in both lists. Returns undefined if
+ * the arguments are not both Arrays.
+ * @param {Array} listA
+ * @param {Array} listB
+ * @return {Array|undefined}
+ */
+function operatorIntersect(listA, listB) {
+  if (!Array.isArray(listA) || !Array.isArray(listB)) {
+    return undefined;
+  }
+
+  return listA.filter(item => listB.includes(item));
+}

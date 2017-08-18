@@ -327,17 +327,6 @@ impl webrender_api::RenderNotifier for RenderNotifier {
     }
 }
 
-// Used to dispatch functions from webrender to the main thread's event loop.
-struct CompositorThreadDispatcher {
-    compositor_proxy: CompositorProxy
-}
-
-impl webrender_api::RenderDispatcher for CompositorThreadDispatcher {
-    fn dispatch(&self, f: Box<Fn() + Send>) {
-        self.compositor_proxy.send(Msg::Dispatch(f));
-    }
-}
-
 impl<Window: WindowMethods> IOCompositor<Window> {
     fn new(window: Rc<Window>, state: InitialCompositorState)
            -> IOCompositor<Window> {
@@ -394,15 +383,6 @@ impl<Window: WindowMethods> IOCompositor<Window> {
                                                   compositor.constellation_chan.clone());
         compositor.webrender.set_render_notifier(Box::new(render_notifier));
 
-        if cfg!(target_os = "windows") {
-            // Used to dispatch functions from webrender to the main thread's event loop.
-            // Required to allow WGL GLContext sharing in Windows.
-            let dispatcher = Box::new(CompositorThreadDispatcher {
-                compositor_proxy: compositor.channel_to_self.clone_compositor_proxy()
-            });
-            compositor.webrender.set_main_thread_dispatcher(dispatcher);
-        }
-
         // Set the size of the root layer.
         compositor.update_zoom_transform();
 
@@ -410,6 +390,10 @@ impl<Window: WindowMethods> IOCompositor<Window> {
         compositor.send_window_size(WindowSizeType::Initial);
 
         compositor
+    }
+
+    pub fn deinit(self) {
+        self.webrender.deinit();
     }
 
     fn start_shutting_down(&mut self) {
@@ -1615,7 +1599,6 @@ impl<Window: WindowMethods> IOCompositor<Window> {
         1.0
     }
 }
-
 
 /// Why we performed a composite. This is used for debugging.
 #[derive(Copy, Clone, PartialEq, Debug)]

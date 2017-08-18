@@ -1163,6 +1163,7 @@
   "en-US": {
     "newtab_page_title": "New Tab",
     "default_label_loading": "Loading…",
+    "home_page_title": "{build} Start Page",
     "header_top_sites": "Top Sites",
     "header_stories": "Top Stories",
     "header_visit_again": "Visit Again",

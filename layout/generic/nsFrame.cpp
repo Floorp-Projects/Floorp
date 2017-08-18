@@ -9055,6 +9055,20 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   ComputeAndIncludeOutlineArea(this, aOverflowAreas, aNewSize);
 
+  nsSize oldSize = mRect.Size();
+  bool sizeChanged = ((aOldSize ? *aOldSize : oldSize) != aNewSize);
+
+  // Our frame size may not have been computed and set yet, but code under
+  // functions such as ComputeEffectsRect (which we're about to call) use the
+  // values that are stored in our frame rect to compute their results.  We
+  // need the results from those functions to be based on the frame size that
+  // we *will* have, so we temporarily set our frame size here before calling
+  // those functions.
+  //
+  // XXX Someone should document here why we revert the frame size before we
+  // return rather than just leaving it set.
+  SetSize(aNewSize);
+
   // Nothing in here should affect scrollable overflow.
   aOverflowAreas.VisualOverflow() =
     ComputeEffectsRect(this, aOverflowAreas.VisualOverflow(), aNewSize);
@@ -9071,15 +9085,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   /* If we're transformed, transform the overflow rect by the current transformation. */
-  nsSize oldSize = mRect.Size();
-  bool sizeChanged = ((aOldSize ? *aOldSize : oldSize) != aNewSize);
-
-  /* Since our size might not actually have been computed yet, we need to make sure that we use the
-   * correct dimensions by overriding the stored bounding rectangle with the value the caller has
-   * ensured us we'll use.
-   */
-  SetSize(aNewSize);
-
   if (ChildrenHavePerspective(disp) && sizeChanged) {
     nsRect newBounds(nsPoint(0, 0), aNewSize);
     RecomputePerspectiveChildrenOverflow(this, effectSet);
