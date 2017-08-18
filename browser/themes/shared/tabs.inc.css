@@ -466,10 +466,6 @@
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.svg);
 }
 
-.tabs-newtab-button {
-  width: 36px;
-}
-
 @media (min-resolution: 1.1dppx) {
   .tab-throbber[busy] {
     list-style-image: url("chrome://browser/skin/tabbrowser/connecting@2x.png");
