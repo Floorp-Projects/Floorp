@@ -5903,6 +5903,13 @@ nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
 }
 
 already_AddRefed<nsTextNode>
+nsIDocument::CreateEmptyTextNode() const
+{
+  RefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
+  return text.forget();
+}
+
+already_AddRefed<nsTextNode>
 nsIDocument::CreateTextNode(const nsAString& aData) const
 {
   RefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
