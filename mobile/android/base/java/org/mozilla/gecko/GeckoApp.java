@@ -1504,7 +1504,7 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     protected void initializeChrome() {
-        mDoorHangerPopup = new DoorHangerPopup(this);
+        mDoorHangerPopup = new DoorHangerPopup(this, getAppEventDispatcher());
         mDoorHangerPopup.setOnVisibilityChangeListener(this);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
     }
