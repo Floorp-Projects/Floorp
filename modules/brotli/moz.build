@@ -54,7 +54,7 @@ HOST_SOURCES += [
     'tools/bro.c',
 ]
 
-if CONFIG['OS_TARGET'] != 'WINNT':
+if CONFIG['HOST_CC_TYPE'] not in ('msvc', 'clang-cl'):
     HOST_OS_LIBS += [
         'm' # for log2() function used by Brotli encoder
     ]
