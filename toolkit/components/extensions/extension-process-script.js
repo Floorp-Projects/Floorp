@@ -317,6 +317,7 @@ ExtensionManager = {
       policy = new WebExtensionPolicy({
         id: extension.id,
         mozExtensionHostname: extension.uuid,
+        name: extension.name,
         baseURL: extension.resourceURL,
 
         permissions: Array.from(extension.permissions),

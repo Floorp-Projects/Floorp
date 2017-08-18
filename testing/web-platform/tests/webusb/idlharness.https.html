@@ -23,7 +23,7 @@
       var usbEndpoint;
       var usbConnectionEvent;
 
-      promise_test(async () => {
+      usb_test(async () => {
         let response = await fetch('/interfaces/webusb.idl');
         let idl_text = await response.text();
         let idl_array = new IdlArray();
@@ -36,9 +36,25 @@
         idl_array.add_untested_idls('interface EventTarget {};');
         idl_array.add_untested_idls('interface Navigator {};');
 
+        let {device} = await getFakeDevice();
+
+        usbDevice = device;
+        usbConfiguration = usbDevice.configurations[0];
+        usbInterface = usbConfiguration.interfaces[0];
+        usbAlternateInterface = usbInterface.alternates[0];
+        usbEndpoint = usbAlternateInterface.endpoints[0];
+        usbConnectionEvent =
+            new USBConnectionEvent('connect', { device: usbDevice })
+
         idl_array.add_objects({
           Navigator: ['navigator'],
           USB: ['navigator.usb'],
+          USBAlternateInterface: ['usbAlternateInterface'],
+          USBConfiguration: ['usbConfiguration'],
+          USBConnectionEvent: ['usbConnectionEvent'],
+          USBDevice: ['usbDevice'],
+          USBEndpoint: ['usbEndpoint'],
+          USBInterface: ['usbInterface'],
           USBInTransferResult: ['new USBInTransferResult("ok")'],
           USBOutTransferResult: ['new USBOutTransferResult("ok")'],
           USBIsochronousInTransferResult: ['new USBIsochronousInTransferResult([])'],
@@ -46,34 +62,6 @@
           USBIsochronousInTransferPacket: ['new USBIsochronousInTransferPacket("ok")'],
           USBIsochronousOutTransferPacket: ['new USBIsochronousOutTransferPacket("ok")'],
         });
-
-        // If the WebUSB Test API is available then interfaces requiring an
-        // instance of USBDevice can be tested.
-        try {
-          await navigator.usb.test.initialize();
-          navigator.usb.test.addFakeDevice(fakeDeviceInit);
-          usbDevice = await new Promise(resolve => {
-            navigator.usb.onconnect = e => resolve(e.device);
-          });
-
-          usbConfiguration = usbDevice.configurations[0];
-          usbInterface = usbConfiguration.interfaces[0];
-          usbAlternateInterface = usbInterface.alternates[0];
-          usbEndpoint = usbAlternateInterface.endpoints[0];
-          usbConnectionEvent =
-              new USBConnectionEvent('connect', { device: usbDevice })
-
-          idl_array.add_objects({
-            USBAlternateInterface: ['usbAlternateInterface'],
-            USBConfiguration: ['usbConfiguration'],
-            USBConnectionEvent: ['usbConnectionEvent'],
-            USBDevice: ['usbDevice'],
-            USBEndpoint: ['usbEndpoint'],
-            USBInterface: ['usbInterface']
-          });
-        } catch (e) {
-          // Do nothing.
-        }
 
         idl_array.test();
       }, 'WebUSB IDL test');

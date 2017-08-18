@@ -971,6 +971,34 @@ policies and contribution forms [3].
     }
     expose(assert_array_equals, "assert_array_equals");
 
+    function assert_array_approx_equals(actual, expected, epsilon, description)
+    {
+        /*
+         * Test if two primitive arrays are equal withing +/- epsilon
+         */
+        assert(actual.length === expected.length,
+               "assert_array_approx_equals", description,
+               "lengths differ, expected ${expected} got ${actual}",
+               {expected:expected.length, actual:actual.length});
+
+        for (var i = 0; i < actual.length; i++) {
+            assert(actual.hasOwnProperty(i) === expected.hasOwnProperty(i),
+                   "assert_array_approx_equals", description,
+                   "property ${i}, property expected to be ${expected} but was ${actual}",
+                   {i:i, expected:expected.hasOwnProperty(i) ? "present" : "missing",
+                   actual:actual.hasOwnProperty(i) ? "present" : "missing"});
+            assert(typeof actual[i] === "number",
+                   "assert_array_approx_equals", description,
+                   "property ${i}, expected a number but got a ${type_actual}",
+                   {i:i, type_actual:typeof actual[i]});
+            assert(Math.abs(actual[i] - expected[i]) <= epsilon,
+                   "assert_array_approx_equals", description,
+                   "property ${i}, expected ${expected} +/- ${epsilon}, expected ${expected} but got ${actual}",
+                   {i:i, expected:expected[i], actual:actual[i]});
+        }
+    }
+    expose(assert_array_approx_equals, "assert_array_approx_equals");
+
     function assert_approx_equals(actual, expected, epsilon, description)
     {
         /*

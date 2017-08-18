@@ -3151,7 +3151,7 @@ js::ToPrimitiveSlow(JSContext* cx, JSType preferredType, MutableHandleValue vp)
         return false;
 
     // Step 6.
-    if (!method.isUndefined()) {
+    if (!method.isNullOrUndefined()) {
         // Step 6 of GetMethod. js::Call() below would do this check and throw a
         // TypeError anyway, but this produces a better error message.
         if (!IsCallable(method))

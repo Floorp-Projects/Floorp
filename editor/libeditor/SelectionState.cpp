@@ -647,6 +647,10 @@ RangeItem::~RangeItem()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION(RangeItem, mStartContainer, mEndContainer)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(RangeItem, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(RangeItem, Release)
+
 void
 RangeItem::StoreRange(nsRange* aRange)
 {
@@ -666,20 +670,6 @@ RangeItem::GetRange()
     return nullptr;
   }
   return range.forget();
-}
-
-void
-RangeItem::Unlink()
-{
-  ImplCycleCollectionUnlink(mStartContainer);
-  ImplCycleCollectionUnlink(mEndContainer);
-}
-
-void
-RangeItem::Traverse(nsCycleCollectionTraversalCallback& aCallback, uint32_t aFlags)
-{
-  CycleCollectionNoteChild(aCallback, mStartContainer.get(), "mStartContainer", aFlags);
-  CycleCollectionNoteChild(aCallback, mEndContainer.get(), "mEndContainer", aFlags);
 }
 
 } // namespace mozilla

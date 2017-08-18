@@ -293,6 +293,11 @@ public:
   static RecordedEvent *LoadEvent(S &aStream, EventType aType);
   static RecordedEvent *LoadEventFromStream(std::istream &aStream, EventType aType);
 
+  // An alternative to LoadEvent that avoids a heap allocation for the event.
+  // This accepts a callable `f' that will take a RecordedEvent* as a single parameter
+  template<class S, class F>
+  static bool DoWithEvent(S &aStream, EventType aType, F f);
+
   EventType GetType() { return (EventType)mType; }
 protected:
   friend class DrawEventRecorderPrivate;

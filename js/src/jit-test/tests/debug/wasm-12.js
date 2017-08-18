@@ -1,6 +1,7 @@
+// |jit-test| test-also-no-wasm-baseline
 // Tests that wasm module scripts have special URLs.
 
-if (!wasmIsSupported())
+if (!wasmDebuggingIsSupported())
   quit();
 
 var g = newGlobal();

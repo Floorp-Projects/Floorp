@@ -1322,9 +1322,6 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
                              LayerManager* manager,
                              bool aMirror /*= false*/)
 {
-    if (IsContextLost())
-        return nullptr;
-
     if (!mResetLayer && oldLayer &&
         oldLayer->HasUserData(aMirror ? &gWebGLMirrorLayerUserData : &gWebGLLayerUserData)) {
         RefPtr<layers::Layer> ret = oldLayer;
@@ -1345,7 +1342,9 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
     canvasLayer->SetUserData(aMirror ? &gWebGLMirrorLayerUserData : &gWebGLLayerUserData, userData);
 
     CanvasRenderer* canvasRenderer = canvasLayer->CreateOrGetCanvasRenderer();
-    InitializeCanvasRenderer(builder, canvasRenderer, aMirror);
+    if (!InitializeCanvasRenderer(builder, canvasRenderer, aMirror))
+      return nullptr;
+
     uint32_t flags = gl->Caps().alpha ? 0 : Layer::CONTENT_OPAQUE;
     canvasLayer->SetContentFlags(flags);
 
@@ -1358,11 +1357,14 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
     return canvasLayer.forget();
 }
 
-void
+bool
 WebGLContext::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                        CanvasRenderer* aRenderer,
                                        bool aMirror)
 {
+    if (IsContextLost())
+        return false;
+
     CanvasInitializeData data;
     if (aBuilder->IsPaintingToWindow() && mCanvasElement && !aMirror) {
         // Make the layer tell us whenever a transaction finishes (including
@@ -1391,6 +1393,7 @@ WebGLContext::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
 
     aRenderer->Initialize(data);
     aRenderer->SetDirty();
+    return true;
 }
 
 layers::LayersBackend

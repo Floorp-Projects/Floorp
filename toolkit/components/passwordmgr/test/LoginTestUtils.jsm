@@ -261,8 +261,9 @@ this.LoginTestUtils.masterPassword = {
       newPW = "";
     }
 
-    // Set master password. Note that this does not log you in, so the next
-    // invocation of pwmgr can trigger a MP prompt.
+    // Set master password. Note that this logs in the user if no password was
+    // set before. But after logging out the next invocation of pwmgr can
+    // trigger a MP prompt.
     let pk11db = Cc["@mozilla.org/security/pk11tokendb;1"]
                    .getService(Ci.nsIPK11TokenDB);
     let token = pk11db.getInternalKeyToken();
@@ -273,6 +274,7 @@ this.LoginTestUtils.masterPassword = {
       token.checkPassword(oldPW);
       dump("MP change from " + oldPW + " to " + newPW + "\n");
       token.changePassword(oldPW, newPW);
+      token.logoutSimple();
     }
   },
 

@@ -468,7 +468,7 @@ public:
                                          Layer* aOldLayer,
                                          LayerManager* aManager,
                                          bool aMirror = false) override;
-  void InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
+  bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                 CanvasRenderer* aRenderer,
                                 bool aMirror = false) override;
   virtual bool ShouldForceInactiveLayer(LayerManager* aManager) override;

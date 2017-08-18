@@ -347,6 +347,61 @@ ToCString(ValType type)
     return ToCString(ToExprType(type));
 }
 
+// Code can be compiled either with the Baseline compiler or the Ion compiler,
+// and tier-variant data are tagged with the Tier value.
+//
+// A tier value is used to request tier-variant aspects of code, metadata, or
+// linkdata.  The tiers are normally explicit (Baseline and Ion); implicit tiers
+// can be obtained through accessors on Code objects (eg, stableTier).
+
+enum class Tier
+{
+    Baseline,
+    Debug = Baseline,
+    Ion,
+    Serialized = Ion,
+};
+
+// The CompileMode controls how compilation of a module is performed (notably,
+// how many times we compile it).
+
+enum class CompileMode
+{
+    Once,
+    Tier1,
+    Tier2
+};
+
+// Iterator over tiers present in a tiered data structure.
+
+class Tiers
+{
+    Tier t_[2];
+    uint32_t n_;
+
+  public:
+    explicit Tiers() {
+        n_ = 0;
+    }
+    explicit Tiers(Tier t) {
+        t_[0] = t;
+        n_ = 1;
+    }
+    explicit Tiers(Tier t, Tier u) {
+        MOZ_ASSERT(t != u);
+        t_[0] = t;
+        t_[1] = u;
+        n_ = 2;
+    }
+
+    Tier* begin() {
+        return t_;
+    }
+    Tier* end() {
+        return t_ + n_;
+    }
+};
+
 // The Val class represents a single WebAssembly value of a given value type,
 // mostly for the purpose of numeric literals and initializers. A Val does not
 // directly map to a JS value since there is not (currently) a precise
@@ -681,21 +736,54 @@ typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
 // ElemSegment represents an element segment in the module where each element
 // describes both its function index and its code range.
+//
+// The codeRangeIndices are laid out in a nondeterminstic order as a result of
+// parallel compilation.
 
 struct ElemSegment
 {
     uint32_t tableIndex;
     InitExpr offset;
     Uint32Vector elemFuncIndices;
-    Uint32Vector elemCodeRangeIndices;
+    Uint32Vector elemCodeRangeIndices1_;
+    mutable Uint32Vector elemCodeRangeIndices2_;
 
     ElemSegment() = default;
     ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elemFuncIndices)
       : tableIndex(tableIndex), offset(offset), elemFuncIndices(Move(elemFuncIndices))
     {}
 
+    Uint32Vector& elemCodeRangeIndices(Tier t) {
+        switch (t) {
+          case Tier::Baseline:
+            return elemCodeRangeIndices1_;
+          case Tier::Ion:
+            return elemCodeRangeIndices2_;
+          default:
+            MOZ_CRASH("No such tier");
+        }
+    }
+
+    const Uint32Vector& elemCodeRangeIndices(Tier t) const {
+        switch (t) {
+          case Tier::Baseline:
+            return elemCodeRangeIndices1_;
+          case Tier::Ion:
+            return elemCodeRangeIndices2_;
+          default:
+            MOZ_CRASH("No such tier");
+        }
+    }
+
+    void setTier2(Uint32Vector&& elemCodeRangeIndices) const {
+        MOZ_ASSERT(elemCodeRangeIndices2_.length() == 0);
+        elemCodeRangeIndices2_ = Move(elemCodeRangeIndices);
+    }
+
     WASM_DECLARE_SERIALIZABLE(ElemSegment)
 };
+
+// The ElemSegmentVector is laid out in a deterministic order.
 
 typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
 
@@ -806,7 +894,8 @@ struct FuncOffsets : CallableOffsets
 {
     MOZ_IMPLICIT FuncOffsets()
       : CallableOffsets(),
-        normalEntry(0)
+        normalEntry(0),
+        tierEntry(0)
     {}
 
     // Function CodeRanges have a table entry which takes an extra signature
@@ -816,9 +905,16 @@ struct FuncOffsets : CallableOffsets
     // entry.
     uint32_t normalEntry;
 
+    // The tierEntry is the point within a function to which the patching code
+    // within a Tier-1 function jumps.  It could be the instruction following
+    // the jump in the Tier-1 function, or the point following the standard
+    // prologue within a Tier-2 function.
+    uint32_t tierEntry;
+
     void offsetBy(uint32_t offset) {
         CallableOffsets::offsetBy(offset);
         normalEntry += offset;
+        tierEntry += offset;
     }
 };
 
@@ -851,6 +947,7 @@ class CodeRange
     uint32_t funcIndex_;
     uint32_t funcLineOrBytecode_;
     uint8_t funcBeginToNormalEntry_;
+    uint8_t funcBeginToTierEntry_;
     Kind kind_ : 8;
 
   public:
@@ -910,6 +1007,10 @@ class CodeRange
     uint32_t funcNormalEntry() const {
         MOZ_ASSERT(isFunction());
         return begin_ + funcBeginToNormalEntry_;
+    }
+    uint32_t funcTierEntry() const {
+        MOZ_ASSERT(isFunction());
+        return begin_ + funcBeginToTierEntry_;
     }
     uint32_t funcIndex() const {
         MOZ_ASSERT(isFunction());
@@ -1178,56 +1279,6 @@ enum ModuleKind
     AsmJS
 };
 
-// Code can be compiled either with the Baseline compiler or the Ion compiler,
-// and tier-variant data are tagged with the Tier value.
-//
-// A tier value is used to request tier-variant aspects of code, metadata, or
-// linkdata.  The tiers are normally explicit (Baseline and Ion); implicit tiers
-// can be obtained through accessors on Code objects (eg, anyTier).
-
-enum class Tier
-{
-    Baseline,
-    Ion,
-
-    Debug,   // An alias for Baseline in calls to tier-variant accessors
-
-    TBD,     // A placeholder while tiering is being implemented
-};
-
-// Iterator over tiers present in a tiered data structure.
-
-class Tiers
-{
-    Tier t_[2];
-    uint32_t n_;
-
-  public:
-    explicit Tiers() {
-        n_ = 0;
-    }
-    explicit Tiers(Tier t) {
-        MOZ_ASSERT(t == Tier::Baseline || t == Tier::Ion);
-        t_[0] = t;
-        n_ = 1;
-    }
-    explicit Tiers(Tier t, Tier u) {
-        MOZ_ASSERT(t == Tier::Baseline || t == Tier::Ion);
-        MOZ_ASSERT(u == Tier::Baseline || u == Tier::Ion);
-        MOZ_ASSERT(t != u);
-        t_[0] = t;
-        t_[1] = u;
-        n_ = 2;
-    }
-
-    Tier* begin() {
-        return t_;
-    }
-    Tier* end() {
-        return t_ + n_;
-    }
-};
-
 // Represents the resizable limits of memories and tables.
 
 struct Limits
@@ -1303,6 +1354,10 @@ struct TlsData
 
     // Pointer that should be freed (due to padding before the TlsData).
     void* allocatedBase;
+
+    // When compiling with tiering, the jumpTable has one entry for each
+    // baseline-compiled function.
+    uintptr_t* jumpTable;
 
     // The globalArea must be the last field.  Globals for the module start here
     // and are inline in this structure.  16-byte alignment is required for SIMD

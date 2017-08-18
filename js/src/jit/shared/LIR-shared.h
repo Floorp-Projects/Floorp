@@ -8008,16 +8008,34 @@ class LCallInstanceOf : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
     static const size_t RHS = BOX_PIECES;
 };
 
-class LIsCallable : public LInstructionHelper<1, 1, 0>
+class LIsCallableO : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LIR_HEADER(IsCallable);
-    explicit LIsCallable(const LAllocation& object) {
+    LIR_HEADER(IsCallableO);
+    explicit LIsCallableO(const LAllocation& object) {
         setOperand(0, object);
     }
 
     const LAllocation* object() {
         return getOperand(0);
+    }
+    MIsCallable* mir() const {
+        return mir_->toIsCallable();
+    }
+};
+
+class LIsCallableV : public LInstructionHelper<1, BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(IsCallableV);
+    static const size_t Value = 0;
+
+    LIsCallableV(const LBoxAllocation& value, const LDefinition& temp) {
+        setBoxOperand(0, value);
+        setTemp(0, temp);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
     MIsCallable* mir() const {
         return mir_->toIsCallable();

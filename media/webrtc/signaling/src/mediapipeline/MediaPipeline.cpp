@@ -25,10 +25,6 @@
 #include "MediaStreamVideoSink.h"
 #include "VideoUtils.h"
 #include "VideoStreamTrack.h"
-#ifdef WEBRTC_GONK
-#include "GrallocImages.h"
-#include "mozilla/layers/GrallocTextureClient.h"
-#endif
 
 #include "nsError.h"
 #include "AudioSegment.h"

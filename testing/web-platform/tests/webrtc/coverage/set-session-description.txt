@@ -236,7 +236,5 @@ Coverage Report
 
   Tested        35
   Not Tested    15
-  Tested        30
-  Not Tested    20
   Untestable     8
   Total         58

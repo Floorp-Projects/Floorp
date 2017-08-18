@@ -27,9 +27,6 @@
 using namespace js;
 using namespace wasm;
 
-// With tiering, instances can have one or two code segments, and code that
-// searches the instance list will change.  Search for Tier::TBD below.
-
 Compartment::Compartment(Zone* zone)
   : mutatingInstances_(false)
 {}
@@ -52,10 +49,16 @@ struct InstanceComparator
         // Instances can share code, so the segments can be equal (though they
         // can't partially overlap).  If the codeBases are equal, we sort by
         // Instance address.  Thus a Code may map to many instances.
-        if (instance->codeBase(Tier::TBD) == target.codeBase(Tier::TBD))
+
+        // Compare by the first tier, always.
+
+        Tier instanceTier = instance->code().stableTier();
+        Tier targetTier = target.code().stableTier();
+
+        if (instance->codeBase(instanceTier) == target.codeBase(targetTier))
             return instance < &target ? -1 : 1;
 
-        return target.codeBase(Tier::TBD) < instance->codeBase(Tier::TBD) ? -1 : 1;
+        return target.codeBase(targetTier) < instance->codeBase(instanceTier) ? -1 : 1;
     }
 };
 
@@ -100,18 +103,6 @@ Compartment::unregisterInstance(Instance& instance)
     instances_.erase(instances_.begin() + index);
 }
 
-struct PCComparator
-{
-    const void* pc;
-    explicit PCComparator(const void* pc) : pc(pc) {}
-
-    int operator()(const Instance* instance) const {
-        if (instance->codeSegment(Tier::TBD).containsCodePC(pc))
-            return 0;
-        return pc < instance->codeBase(Tier::TBD) ? -1 : 1;
-    }
-};
-
 const Code*
 Compartment::lookupCode(const void* pc, const CodeSegment** segmentp) const
 {
@@ -122,14 +113,22 @@ Compartment::lookupCode(const void* pc, const CodeSegment** segmentp) const
     if (mutatingInstances_)
         return nullptr;
 
-    size_t index;
-    if (!BinarySearchIf(instances_, 0, instances_.length(), PCComparator(pc), &index))
-        return nullptr;
+    // Linear search because instances are only ordered by their first tiers,
+    // but may have two.  This code should not be hot anyway, we avoid
+    // lookupCode when we can.
+    for (auto i : instances_) {
+        const Code& code = i->code();
+        for (auto t : code.tiers()) {
+            const CodeSegment& segment = code.segment(t);
+            if (segment.containsCodePC(pc)) {
+                if (segmentp)
+                    *segmentp = &segment;
+                return &code;
+            }
+        }
+    }
 
-    const Code& code = instances_[index]->code();
-    if (segmentp)
-        *segmentp = &code.segment(Tier::TBD);
-    return &code;
+    return nullptr;
 }
 
 void

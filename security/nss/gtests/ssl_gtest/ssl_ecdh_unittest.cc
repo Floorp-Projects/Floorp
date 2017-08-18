@@ -551,7 +551,7 @@ class ECCServerKEXFilter : public TlsHandshakeFilter {
     // Replace the server key exchange message with an empty point
     output->Allocate(4);
     output->Write(0, 3U, 1);  // named curve
-    uint32_t curve;
+    uint32_t curve = 0;
     EXPECT_TRUE(input.Read(1, 2, &curve));  // get curve id
     output->Write(1, curve, 2);             // write curve id
     output->Write(3, 0U, 1);                // point length 0

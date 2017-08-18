@@ -6,7 +6,7 @@
   <box id="customization-content-container">
     <box flex="1" id="customization-palette-container">
       <label id="customization-header">
-        &customizeMode.menuAndToolbars.header2;
+        &customizeMode.menuAndToolbars.header3;
       </label>
       <hbox id="customization-empty" hidden="true">
         <label>&customizeMode.menuAndToolbars.empty;</label>

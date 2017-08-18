@@ -60,9 +60,8 @@ WasmFrameIter::WasmFrameIter(WasmActivation* activation, Unwind unwind)
     // but this is fine because CallSite is only used for line number for which
     // we can use the beginning of the function from the CodeRange instead.
 
-    code_ = activation_->compartment()->wasm.lookupCode(activation->unwindPC());
-    MOZ_ASSERT(code_);
-    MOZ_ASSERT(&fp_->tls->instance->code() == code_);
+    code_ = &fp_->tls->instance->code();
+    MOZ_ASSERT(code_ == activation->compartment()->wasm.lookupCode(activation->unwindPC()));
 
     codeRange_ = code_->lookupRange(activation->unwindPC());
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
@@ -124,8 +123,8 @@ WasmFrameIter::popFrame()
 
     void* returnAddress = prevFP->returnAddress;
 
-    code_ = activation_->compartment()->wasm.lookupCode(returnAddress);
-    MOZ_ASSERT(code_);
+    code_ = &fp_->tls->instance->code();
+    MOZ_ASSERT(code_ == activation_->compartment()->wasm.lookupCode(returnAddress));
 
     codeRange_ = code_->lookupRange(returnAddress);
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
@@ -318,7 +317,7 @@ LoadActivation(MacroAssembler& masm, Register dest)
 
 static void
 GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                         uint32_t* entry)
+                         uint32_t* entry, uint32_t* tierEntry, CompileMode mode, uint32_t funcIndex)
 {
     // ProfilingFrameIterator needs to know the offsets of several key
     // instructions from entry. To save space, we make these offsets static
@@ -341,6 +340,30 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
         masm.moveStackPtrTo(FramePointer);
         MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
+    }
+
+    // Tiering works as follows.  The Code owns a jumpTable, which has one
+    // pointer-sized element for each function up to the largest funcIndex in
+    // the module.  Each table element is an address into the Tier-1 or the
+    // Tier-2 function at that index; the elements are updated when Tier-2 code
+    // becomes available.  The Tier-1 function will unconditionally jump to this
+    // address.  The table elements are written racily but without tearing when
+    // Tier-2 compilation is finished.
+    //
+    // The address in the table is either to the instruction following the jump
+    // in Tier-1 code, or into the function prologue after the standard setup in
+    // Tier-2 code.  Effectively, Tier-1 code performs standard frame setup on
+    // behalf of whatever code it jumps to, and the target code allocates its
+    // own frame in whatever way it wants.
+
+    if (reason.isNone()) {
+        if (mode == CompileMode::Tier1) {
+            Register scratch = ABINonArgReg0;
+            masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, jumpTable)), scratch);
+            masm.jump(Address(scratch, funcIndex*sizeof(uintptr_t)));
+        }
+        if (tierEntry)
+            *tierEntry = masm.currentOffset();
     }
 
     if (!reason.isNone()) {
@@ -428,7 +451,7 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 
 void
 wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                               FuncOffsets* offsets)
+                               FuncOffsets* offsets, CompileMode mode, uint32_t funcIndex)
 {
     // Flush pending pools so they do not get dumped between the 'begin' and
     // 'normalEntry' offsets since the difference must be less than UINT8_MAX
@@ -461,7 +484,8 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
 
     // Generate normal entry:
     masm.nopAlign(CodeAlignment);
-    GenerateCallablePrologue(masm, framePushed, ExitReason::None(), &offsets->normalEntry);
+    GenerateCallablePrologue(masm, framePushed, ExitReason::None(), &offsets->normalEntry,
+                             &offsets->tierEntry, mode, funcIndex);
 
     masm.setFramePushed(framePushed);
 }
@@ -479,7 +503,8 @@ wasm::GenerateExitPrologue(MacroAssembler& masm, unsigned framePushed, ExitReaso
                            CallableOffsets* offsets)
 {
     masm.haltingAlign(CodeAlignment);
-    GenerateCallablePrologue(masm, framePushed, reason, &offsets->begin);
+    GenerateCallablePrologue(masm, framePushed, reason, &offsets->begin, nullptr,
+                             CompileMode::Once, 0);
     masm.setFramePushed(framePushed);
 }
 
@@ -800,17 +825,21 @@ ProfilingFrameIterator::operator++()
         return;
     }
 
-    code_ = activation_->compartment()->wasm.lookupCode(callerPC_);
-    MOZ_ASSERT(code_);
+    if (!callerFP_) {
+        codeRange_ = code_->lookupRange(callerPC_);
+        MOZ_ASSERT(codeRange_->kind() == CodeRange::Entry);
+        callerPC_ = nullptr;
+        MOZ_ASSERT(!done());
+        return;
+    }
+
+    code_ = &callerFP_->tls->instance->code();
+    MOZ_ASSERT(code_ == activation_->compartment()->wasm.lookupCode(callerPC_));
 
     codeRange_ = code_->lookupRange(callerPC_);
     MOZ_ASSERT(codeRange_);
 
     switch (codeRange_->kind()) {
-      case CodeRange::Entry:
-        MOZ_ASSERT(callerFP_ == nullptr);
-        callerPC_ = nullptr;
-        break;
       case CodeRange::Function:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
@@ -824,6 +853,8 @@ ProfilingFrameIterator::operator++()
         AssertMatchesCallSite(*activation_, callerPC_, callerFP_->callerFP);
         callerFP_ = callerFP_->callerFP;
         break;
+      case CodeRange::Entry:
+        MOZ_CRASH("should have had null caller fp");
       case CodeRange::Interrupt:
       case CodeRange::Throw:
         MOZ_CRASH("code range doesn't have frame");
@@ -993,7 +1024,7 @@ ProfilingFrameIterator::label() const
 }
 
 Instance*
-wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
+wasm::LookupFaultingInstance(const Code& code, void* pc, void* fp)
 {
     // Assume bug-caused faults can be raised at any PC and apply the logic of
     // ProfilingFrameIterator to reject any pc outside the (post-prologue,
@@ -1001,12 +1032,8 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
     // simulators which call this function at every load/store before even
     // knowing whether there is a fault.
 
-    const Code* code = activation->compartment()->wasm.lookupCode(pc);
-    if (!code)
-        return nullptr;
-
     const CodeSegment* codeSegment;
-    const CodeRange* codeRange = code->lookupRange(pc, &codeSegment);
+    const CodeRange* codeRange = code.lookupRange(pc, &codeSegment);
     if (!codeRange || !codeRange->isFunction())
         return nullptr;
 
@@ -1017,7 +1044,7 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
         return nullptr;
 
     Instance* instance = reinterpret_cast<Frame*>(fp)->tls->instance;
-    MOZ_RELEASE_ASSERT(&instance->code() == code);
+    MOZ_RELEASE_ASSERT(&instance->code() == &code);
     return instance;
 }
 

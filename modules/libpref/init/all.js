@@ -1428,6 +1428,7 @@ pref("javascript.options.baselinejit",      true);
 pref("javascript.options.ion",              true);
 pref("javascript.options.asmjs",            true);
 pref("javascript.options.wasm",             true);
+pref("javascript.options.wasm_ionjit",      true);
 pref("javascript.options.wasm_baselinejit", false);
 pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
@@ -1523,6 +1524,12 @@ pref("javascript.options.mem.gc_refresh_frame_slices_enabled", true);
 
 // JSGC_ALLOCATION_THRESHOLD
 pref("javascript.options.mem.gc_allocation_threshold_mb", 30);
+
+// JSGC_ALLOCATION_THRESHOLD_FACTOR
+pref("javascript.options.mem.gc_allocation_threshold_factor", 90);
+
+// JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT
+pref("javascript.options.mem.gc_allocation_threshold_factor_avoid_interrupt", 90);
 
 // JSGC_MIN_EMPTY_CHUNK_COUNT
 pref("javascript.options.mem.gc_min_empty_chunk_count", 1);
@@ -3164,6 +3171,7 @@ pref("editor.positioning.offset",            0);
 pref("dom.use_watchdog", true);
 pref("dom.max_chrome_script_run_time", 20);
 pref("dom.max_script_run_time", 10);
+pref("dom.max_ext_content_script_run_time", 5);
 
 // Stop all scripts in a compartment when the "stop script" dialog is used.
 pref("dom.global_stop_script", true);

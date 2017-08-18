@@ -428,7 +428,7 @@ event in a document. Therefore these worker tests always behave as if the
 event which is fired following the completion of [running the
 worker](https://html.spec.whatwg.org/multipage/workers.html#run-a-worker).
 
-## Generating tests ##
+## **DEPRECATED** Generating tests ##
 
 There are scenarios in which is is desirable to create a large number of
 (synchronous) tests that are internally similar but vary in the parameters
@@ -451,8 +451,14 @@ generate_tests(assert_equals, [
 Is equivalent to:
 
 ```js
-test(function() {assert_equals(1+1, 2)}, "Sum one and one")
-test(function() {assert_equals(1+0, 1)}, "Sum one and zero")
+var a_got = 1+1;
+var a_exp = 2;
+var a_nam = "Sum one and one";
+var b_got = 1+0;
+var b_exp = 1;
+var b_nam = "Sum one and zero";
+test(function() {assert_equals(a_got, a_exp)}, a_nam);
+test(function() {assert_equals(b_got, b_exp)}, b_nam);
 ```
 
 Note that the first item in each parameter list corresponds to the name of
@@ -460,6 +466,11 @@ the test.
 
 The properties argument is identical to that for `test()`. This may be a
 single object (used for all generated tests) or an array.
+
+This is deprecated because it runs all the tests outside of the test functions
+and as a result any test throwing an exception will result in no tests being
+run. In almost all cases, you should simply call test within the loop you would
+use to generate the parameter list array.
 
 ## Callback API ##
 
@@ -682,6 +693,11 @@ members i.e. `expected.indexOf(actual) != -1`
 asserts that `actual` and `expected` have the same
 length and the value of each indexed property in `actual` is the strictly equal
 to the corresponding property value in `expected`
+
+### `assert_array_approx_equals(actual, expected, epsilon, description)`
+asserts that `actual` and `expected` have the same
+length and each indexed property in `actual` is a number
+within ±`epsilon` of the corresponding property in `expected`
 
 ### `assert_approx_equals(actual, expected, epsilon, description)`
 asserts that `actual` is a number within ±`epsilon` of `expected`

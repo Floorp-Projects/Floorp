@@ -1,7 +1,8 @@
+// |jit-test| test-also-no-wasm-baseline
 // Test single-stepping where the TLS register can be evicted by a non-trivial
 // function body.
 
-if (!wasmIsSupported())
+if (!wasmDebuggingIsSupported())
   quit();
 
 var g = newGlobal();

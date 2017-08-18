@@ -206,7 +206,7 @@ public:
     nsIFrame::WebRenderUserDataTable* userDataTable =
       frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
     RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(aItem->GetPerFrameKey());
-    if (!data || (data->GetType() != T::Type())) {
+    if (!data || (data->GetType() != T::Type()) || !data->IsDataValid(this)) {
       data = new T(this);
       if (aOutIsRecycled) {
         *aOutIsRecycled = false;

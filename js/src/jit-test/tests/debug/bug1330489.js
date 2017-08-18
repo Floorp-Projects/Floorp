@@ -1,8 +1,8 @@
-// |jit-test| test-also-wasm-baseline; error: TestComplete
+// |jit-test| test-also-no-wasm-baseline; error: TestComplete
 
 load(libdir + "asserts.js");
 
-if (!wasmIsSupported())
+if (!wasmDebuggingIsSupported())
     throw "TestComplete";
 
 var g = newGlobal();

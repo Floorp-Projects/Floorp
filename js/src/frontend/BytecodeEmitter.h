@@ -105,10 +105,10 @@ struct CGYieldAndAwaitOffsetList {
     void finish(YieldAndAwaitOffsetArray& array, uint32_t prologueLength);
 };
 
-// Use zero inline elements because these go on the stack and affect how many
-// nested functions are possible.
-typedef Vector<jsbytecode, 0> BytecodeVector;
-typedef Vector<jssrcnote, 0> SrcNotesVector;
+// Have a few inline elements, so as to avoid heap allocation for tiny
+// sequences.  See bug 1390526.
+typedef Vector<jsbytecode, 64> BytecodeVector;
+typedef Vector<jssrcnote, 64> SrcNotesVector;
 
 // Linked list of jump instructions that need to be patched. The linked list is
 // stored in the bytes of the incomplete bytecode that will be patched, so no

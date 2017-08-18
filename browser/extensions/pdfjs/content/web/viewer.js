@@ -3980,11 +3980,10 @@ var _pdfjsLib = __webpack_require__(1);
 
 class PDFAttachmentViewer {
   constructor({ container, eventBus, downloadManager }) {
-    this.attachments = null;
     this.container = container;
     this.eventBus = eventBus;
     this.downloadManager = downloadManager;
-    this._renderedCapability = (0, _pdfjsLib.createPromiseCapability)();
+    this.reset();
     this.eventBus.on('fileattachmentannotation', this._appendAttachment.bind(this));
   }
   reset(keepRenderedCapability = false) {
@@ -3995,11 +3994,11 @@ class PDFAttachmentViewer {
     }
   }
   _dispatchEvent(attachmentsCount) {
+    this._renderedCapability.resolve();
     this.eventBus.dispatch('attachmentsloaded', {
       source: this,
       attachmentsCount
     });
-    this._renderedCapability.resolve();
   }
   _bindPdfLink(button, content, filename) {
     if (_pdfjsLib.PDFJS.disableCreateObjectURL) {
@@ -4735,11 +4734,10 @@ var _pdfjsLib = __webpack_require__(1);
 const DEFAULT_TITLE = '\u2013';
 class PDFOutlineViewer {
   constructor({ container, linkService, eventBus }) {
-    this.outline = null;
-    this.lastToggleIsShow = true;
     this.container = container;
     this.linkService = linkService;
     this.eventBus = eventBus;
+    this.reset();
   }
   reset() {
     this.outline = null;
@@ -5897,13 +5895,20 @@ class PDFSidebar {
       }
     });
     this.eventBus.on('attachmentsloaded', evt => {
-      let attachmentsCount = evt.attachmentsCount;
-      this.attachmentsButton.disabled = !attachmentsCount;
-      if (attachmentsCount) {
+      if (evt.attachmentsCount) {
+        this.attachmentsButton.disabled = false;
         this._showUINotification(SidebarView.ATTACHMENTS);
-      } else if (this.active === SidebarView.ATTACHMENTS) {
-        this.switchView(SidebarView.THUMBS);
+        return;
       }
+      Promise.resolve().then(() => {
+        if (this.attachmentsView.hasChildNodes()) {
+          return;
+        }
+        this.attachmentsButton.disabled = true;
+        if (this.active === SidebarView.ATTACHMENTS) {
+          this.switchView(SidebarView.THUMBS);
+        }
+      });
     });
     this.eventBus.on('presentationmodechanged', evt => {
       if (!evt.active && !evt.switchInProgress && this.isThumbnailViewVisible) {

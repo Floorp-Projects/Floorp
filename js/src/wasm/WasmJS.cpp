@@ -385,12 +385,12 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!DescribeScriptedCaller(cx, &scriptedCaller))
         return false;
 
-    CompileArgs compileArgs;
-    if (!compileArgs.initFromContext(cx, Move(scriptedCaller)))
+    MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
+    if (!compileArgs || !compileArgs->initFromContext(cx, Move(scriptedCaller)))
         return false;
 
     UniqueChars error;
-    SharedModule module = Compile(*bytecode, compileArgs, &error);
+    SharedModule module = Compile(*bytecode, *compileArgs, &error);
     if (!module) {
         if (error) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
@@ -653,7 +653,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
     if (!elems.reserve(module->imports().length()))
         return false;
 
-    const FuncImportVector& funcImports = module->metadata(module->code().anyTier()).funcImports;
+    const FuncImportVector& funcImports = module->metadata(module->code().stableTier()).funcImports;
 
     size_t numFuncImport = 0;
     for (const Import& import : module->imports()) {
@@ -716,7 +716,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
     if (!elems.reserve(module->exports().length()))
         return false;
 
-    const FuncExportVector& funcExports = module->metadata(module->code().anyTier()).funcExports;
+    const FuncExportVector& funcExports = module->metadata(module->code().stableTier()).funcExports;
 
     size_t numFuncExport = 0;
     for (const Export& exp : module->exports()) {
@@ -821,7 +821,7 @@ WasmModuleObject::create(JSContext* cx, Module& module, HandleObject proto)
     module.AddRef();
     // We account for the first tier here; the second tier, if different, will be
     // accounted for separately when it's been compiled.
-    cx->zone()->updateJitCodeMallocBytes(module.codeLength(module.code().anyTier()));
+    cx->zone()->updateJitCodeMallocBytes(module.codeLength(module.code().stableTier()));
     return obj;
 }
 
@@ -887,12 +887,12 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!GetBufferSource(cx, &callArgs[0].toObject(), JSMSG_WASM_BAD_BUF_ARG, &bytecode))
         return false;
 
-    CompileArgs compileArgs;
-    if (!InitCompileArgs(cx, &compileArgs))
+    MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
+    if (!compileArgs || !InitCompileArgs(cx, compileArgs.get()))
         return false;
 
     UniqueChars error;
-    SharedModule module = Compile(*bytecode, compileArgs, &error);
+    SharedModule module = Compile(*bytecode, *compileArgs, &error);
     if (!module) {
         if (error) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
@@ -1171,7 +1171,7 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     }
 
     const Instance& instance = instanceObj->instance();
-    unsigned numArgs = instance.metadata(instance.code().anyTier()).lookupFuncExport(funcIndex).sig().args().length();
+    unsigned numArgs = instance.metadata(instance.code().stableTier()).lookupFuncExport(funcIndex).sig().args().length();
 
     // asm.js needs to act like a normal JS function which means having the name
     // from the original source and being callable as a constructor.
@@ -1772,7 +1772,6 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
     if (value) {
         RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
         uint32_t funcIndex = ExportedFunctionToFuncIndex(value);
-        Tier tier = Tier::TBD;  // Perhaps the tier that the function is at?
 
 #ifdef DEBUG
         RootedFunction f(cx);
@@ -1781,6 +1780,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 #endif
 
         Instance& instance = instanceObj->instance();
+        Tier tier = instance.code().bestTier();
         const FuncExport& funcExport = instance.metadata(tier).lookupFuncExport(funcIndex);
         const CodeRange& codeRange = instance.metadata(tier).codeRanges[funcExport.codeRangeIndex()];
         void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
@@ -1899,7 +1899,8 @@ Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<Promise
 }
 
 static bool
-ResolveCompilation(JSContext* cx, Module& module, Handle<PromiseObject*> promise)
+ResolveCompilation(JSContext* cx, Module& module, const CompileArgs& compileArgs,
+                   Handle<PromiseObject*> promise)
 {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
     RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
@@ -1912,23 +1913,23 @@ ResolveCompilation(JSContext* cx, Module& module, Handle<PromiseObject*> promise
 
 struct CompilePromiseTask : PromiseHelperTask
 {
-    MutableBytes bytecode;
-    CompileArgs  compileArgs;
-    UniqueChars  error;
-    SharedModule module;
+    MutableBytes      bytecode;
+    SharedCompileArgs compileArgs;
+    UniqueChars       error;
+    SharedModule      module;
 
     CompilePromiseTask(JSContext* cx, Handle<PromiseObject*> promise)
       : PromiseHelperTask(cx, promise)
     {}
 
     void execute() override {
-        module = Compile(*bytecode, compileArgs, &error);
+        module = Compile(*bytecode, *compileArgs, &error);
     }
 
     bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
         return module
-               ? ResolveCompilation(cx, *module, promise)
-               : Reject(cx, compileArgs, Move(error), promise);
+               ? ResolveCompilation(cx, *module, *compileArgs, promise)
+               : Reject(cx, *compileArgs, Move(error), promise);
     }
 };
 
@@ -1998,8 +1999,10 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
     if (!GetBufferSource(cx, callArgs, "WebAssembly.compile", &task->bytecode))
         return RejectWithPendingException(cx, promise, callArgs);
 
-    if (!InitCompileArgs(cx, &task->compileArgs))
+    MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
+    if (!compileArgs || !InitCompileArgs(cx, compileArgs))
         return false;
+    task->compileArgs = compileArgs;
 
     if (!StartOffThreadPromiseHelperTask(cx, Move(task)))
         return false;
@@ -2009,8 +2012,8 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-ResolveInstantiation(JSContext* cx, Module& module, HandleObject importObj,
-                     Handle<PromiseObject*> promise)
+ResolveInstantiation(JSContext* cx, Module& module, const CompileArgs& compileArgs,
+                     HandleObject importObj, Handle<PromiseObject*> promise)
 {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
     RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
@@ -2040,24 +2043,26 @@ ResolveInstantiation(JSContext* cx, Module& module, HandleObject importObj,
 struct InstantiatePromiseTask : PromiseHelperTask
 {
     MutableBytes           bytecode;
-    CompileArgs            compileArgs;
+    SharedCompileArgs      compileArgs;
     UniqueChars            error;
     SharedModule           module;
     PersistentRootedObject importObj;
 
-    InstantiatePromiseTask(JSContext* cx, Handle<PromiseObject*> promise, HandleObject importObj)
+    InstantiatePromiseTask(JSContext* cx, Handle<PromiseObject*> promise,
+                           const CompileArgs& compileArgs, HandleObject importObj)
       : PromiseHelperTask(cx, promise),
+        compileArgs(&compileArgs),
         importObj(cx, importObj)
     {}
 
     void execute() override {
-        module = Compile(*bytecode, compileArgs, &error);
+        module = Compile(*bytecode, *compileArgs, &error);
     }
 
     bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
         return module
-               ? ResolveInstantiation(cx, *module, importObj, promise)
-               : Reject(cx, compileArgs, Move(error), promise);
+               ? ResolveInstantiation(cx, *module, *compileArgs, importObj, promise)
+               : Reject(cx, *compileArgs, Move(error), promise);
     }
 };
 
@@ -2105,15 +2110,16 @@ WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp)
         if (!PromiseObject::resolve(cx, promise, resolutionValue))
             return false;
     } else {
-        auto task = cx->make_unique<InstantiatePromiseTask>(cx, promise, importObj);
+        MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
+        if (!compileArgs || !InitCompileArgs(cx, compileArgs.get()))
+            return false;
+
+        auto task = cx->make_unique<InstantiatePromiseTask>(cx, promise, *compileArgs, importObj);
         if (!task || !task->init(cx))
             return false;
 
         if (!GetBufferSource(cx, firstArg, JSMSG_WASM_BAD_BUF_MOD_ARG, &task->bytecode))
             return RejectWithPendingException(cx, promise, callArgs);
-
-        if (!InitCompileArgs(cx, &task->compileArgs))
-            return false;
 
         if (!StartOffThreadPromiseHelperTask(cx, Move(task)))
             return false;

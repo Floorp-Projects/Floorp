@@ -64,8 +64,8 @@ ValueToIdPure(const Value& v, jsid* id)
         return true;
     }
 
-    if (js::IsSymbolOrSymbolWrapper(v)) {
-        *id = SYMBOL_TO_JSID(js::ToSymbolPrimitive(v));
+    if (v.isSymbol()) {
+        *id = SYMBOL_TO_JSID(v.toSymbol());
         return true;
     }
 
@@ -89,8 +89,8 @@ ValueToId(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
             return true;
         }
 
-        if (js::IsSymbolOrSymbolWrapper(v)) {
-            idp.set(SYMBOL_TO_JSID(js::ToSymbolPrimitive(v)));
+        if (v.isSymbol()) {
+            idp.set(SYMBOL_TO_JSID(v.toSymbol()));
             return true;
         }
     }

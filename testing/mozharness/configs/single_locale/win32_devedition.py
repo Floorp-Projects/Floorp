@@ -14,8 +14,9 @@ config = {
         "DIST": "%(abs_objdir)s",
         "L10NBASEDIR": "../../l10n",
         "MOZ_MAKE_COMPLETE_MAR": "1",
-        "PATH": 'C:\\mozilla-build\\nsis-3.01;'
-                '%s' % (os.environ.get('path')),
+        "PATH": '%(abs_objdir)s\\..\\xz-5.2.3\\bin_x86-64;'
+                'C:\\mozilla-build\\nsis-3.01;'
+                + '%s' % (os.environ.get('path')),
         'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
         'EN_US_PACKAGE_NAME': 'target.zip',
