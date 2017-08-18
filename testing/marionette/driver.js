@@ -772,20 +772,21 @@ GeckoDriver.prototype.newSession = async function(cmd, resp) {
   }
   this.sessionID = element.generateUUID();
   this.newSessionCommandId = cmd.id;
+
   try {
     this.capabilities = session.Capabilities.fromJSON(cmd.parameters);
+
+    if (!this.secureTLS) {
+      logger.warn("TLS certificate errors will be ignored for this session");
+      let acceptAllCerts = new cert.InsecureSweepingOverride();
+      cert.installOverride(acceptAllCerts);
+    }
+
+    if (this.proxy.init()) {
+      logger.info("Proxy settings initialised: " + JSON.stringify(this.proxy));
+    }
   } catch (e) {
     throw new SessionNotCreatedError(e);
-  }
-
-  if (!this.secureTLS) {
-    logger.warn("TLS certificate errors will be ignored for this session");
-    let acceptAllCerts = new cert.InsecureSweepingOverride();
-    cert.installOverride(acceptAllCerts);
-  }
-
-  if (this.proxy.init()) {
-    logger.info("Proxy settings initialised: " + JSON.stringify(this.proxy));
   }
 
   // If we are testing accessibility with marionette, start a11y service in
