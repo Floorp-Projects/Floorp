@@ -51,6 +51,7 @@ add_task(function* () {
   function hoverContainer(container) {
     let promise = inspector.toolbox.once("node-highlight");
 
+    container.tagLine.scrollIntoView();
     EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
         markupView.doc.defaultView);
 
