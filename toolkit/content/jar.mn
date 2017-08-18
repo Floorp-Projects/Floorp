@@ -55,6 +55,7 @@ toolkit.jar:
 *  content/global/finddialog.xul
    content/global/findUtils.js
 #endif
+   content/global/find-content.js
    content/global/filepicker.properties
    content/global/globalOverlay.js
    content/global/mozilla.xhtml
