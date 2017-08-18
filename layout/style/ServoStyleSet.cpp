@@ -81,9 +81,8 @@ ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManag
     }
   }
 
-  // We added prefilled stylesheets into mRawSet, so the stylist is dirty.
-  // The Stylist should be updated later when necessary.
-  SetStylistStyleSheetsDirty();
+  // No need to Servo_StyleSet_FlushStyleSheets because we just created the
+  // mRawSet, so there was nothing to flush.
 }
 
 void
