@@ -993,7 +993,6 @@ this.Extension = class extends ExtensionData {
     return {
       id: this.id,
       uuid: this.uuid,
-      name: this.name,
       instanceId: this.instanceId,
       manifest: this.manifest,
       resourceURL: this.resourceURL,

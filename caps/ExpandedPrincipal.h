@@ -20,8 +20,6 @@ public:
   Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
          const mozilla::OriginAttributes& aAttrs);
 
-  static PrincipalKind Kind() { return eExpandedPrincipal; }
-
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
 

@@ -53,12 +53,6 @@ interface nsIAddonPolicyService : nsISupports
   boolean addonMayLoadURI(in AString aAddonId, in nsIURI aURI, [optional] in boolean aExplicit);
 
   /**
-   * Returns the name of the WebExtension with the given ID, or the ID string
-   * if no matching add-on can be found.
-   */
-  AString getExtensionName(in AString aAddonId);
-
-  /**
    * Returns true if a given extension:// URI is web-accessible.
    */
   boolean extensionURILoadableByAnyone(in nsIURI aURI);

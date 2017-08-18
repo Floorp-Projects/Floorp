@@ -125,7 +125,6 @@
 #include "nsIPrompt.h"
 #include "nsIPromptService.h"
 #include "nsIPromptFactory.h"
-#include "nsIAddonPolicyService.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserChrome.h"
@@ -11683,7 +11682,7 @@ nsGlobalWindow::HandleIdleActiveEvent()
 }
 
 nsGlobalWindow::SlowScriptResponse
-nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
+nsGlobalWindow::ShowSlowScriptDialog()
 {
   MOZ_ASSERT(IsInnerWindow());
 
@@ -11733,13 +11732,9 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
     nsIDocShell* docShell = GetDocShell();
     nsCOMPtr<nsITabChild> child = docShell ? docShell->GetTabChild() : nullptr;
     action = monitor->NotifySlowScript(child,
-                                       filename.get(),
-                                       aAddonId);
+                                       filename.get());
     if (action == ProcessHangMonitor::Terminate) {
       return KillSlowScript;
-    }
-    if (action == ProcessHangMonitor::TerminateGlobal) {
-      return KillScriptGlobal;
     }
 
     if (action == ProcessHangMonitor::StartDebugger) {
@@ -11777,58 +11772,61 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
     }
   }
 
-  bool failed = false;
-  auto getString = [&] (const char* name,
-                        nsContentUtils::PropertiesFile propFile = nsContentUtils::eDOM_PROPERTIES) {
-    nsAutoString result;
-    nsresult rv = nsContentUtils::GetLocalizedString(
-      propFile, name, result);
-
-    // GetStringFromName can return NS_OK and still give nullptr string
-    failed = failed || NS_FAILED(rv) || result.IsEmpty();
-    return Move(result);
-  };
-
-  bool isAddonScript = !aAddonId.IsEmpty();
-  bool showDebugButton = debugCallback && !isAddonScript;
+  bool showDebugButton = !!debugCallback;
 
   // Get localizable strings
+  nsAutoString title, msg, stopButton, waitButton, debugButton, neverShowDlg;
 
-  nsAutoString title, checkboxMsg, debugButton, msg;
-  if (isAddonScript) {
-    title = getString("KillAddonScriptTitle");
-    checkboxMsg = getString("KillAddonScriptGlobalMessage");
+  rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                          "KillScriptTitle",
+                                          title);
 
-    auto appName = getString("brandShortName", nsContentUtils::eBRAND_PROPERTIES);
+  nsresult tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "StopScriptButton",
+                                           stopButton);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
 
-    nsCOMPtr<nsIAddonPolicyService> aps = do_GetService("@mozilla.org/addons/policy-service;1");
-    nsString addonName;
-    if (!aps || NS_FAILED(aps->GetExtensionName(aAddonId, addonName))) {
-      addonName = aAddonId;
+  tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "WaitForScriptButton",
+                                           waitButton);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+
+  tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "DontAskAgain",
+                                           neverShowDlg);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+
+  if (showDebugButton) {
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "DebugScriptButton",
+                                             debugButton);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
     }
 
-    const char16_t* params[] = {addonName.get(), appName.get()};
-    rv = nsContentUtils::FormatLocalizedString(
-        nsContentUtils::eDOM_PROPERTIES, "KillAddonScriptMessage",
-        params, msg);
-
-    failed = failed || NS_FAILED(rv);
-  } else {
-    title = getString("KillScriptTitle");
-    checkboxMsg = getString("DontAskAgain");
-
-    if (showDebugButton) {
-      debugButton = getString("DebugScriptButton");
-      msg = getString("KillScriptWithDebugMessage");
-    } else {
-      msg = getString("KillScriptMessage");
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "KillScriptWithDebugMessage",
+                                             msg);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+  }
+  else {
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "KillScriptMessage",
+                                             msg);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
     }
   }
 
-  auto stopButton = getString("StopScriptButton");
-  auto waitButton = getString("WaitForScriptButton");
-
-  if (failed) {
+  if (NS_FAILED(rv)) {
     NS_ERROR("Failed to get localized strings.");
     return ContinueSlowScript;
   }
@@ -11876,6 +11874,8 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
     }
   }
 
+  int32_t buttonPressed = 0; // In case the user exits dialog by clicking X.
+  bool neverShowDlgChk = false;
   uint32_t buttonFlags = nsIPrompt::BUTTON_POS_1_DEFAULT +
                          (nsIPrompt::BUTTON_TITLE_IS_STRING *
                           (nsIPrompt::BUTTON_POS_0 + nsIPrompt::BUTTON_POS_1));
@@ -11884,36 +11884,26 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
   if (showDebugButton)
     buttonFlags += nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2;
 
-  bool checkboxValue = false;
-  int32_t buttonPressed = 0; // In case the user exits dialog by clicking X.
   {
     // Null out the operation callback while we're re-entering JS here.
     AutoDisableJSInterruptCallback disabler(cx);
-
     // Open the dialog.
     rv = prompt->ConfirmEx(title.get(), msg.get(), buttonFlags,
                            waitButton.get(), stopButton.get(),
-                           debugButton.get(), checkboxMsg.get(),
-                           &checkboxValue, &buttonPressed);
+                           debugButton.get(), neverShowDlg.get(),
+                           &neverShowDlgChk, &buttonPressed);
   }
 
-  if (buttonPressed == 0) {
-    if (checkboxValue && !isAddonScript && NS_SUCCEEDED(rv))
-      return AlwaysContinueSlowScript;
-    return ContinueSlowScript;
+  if (NS_SUCCEEDED(rv) && (buttonPressed == 0)) {
+    return neverShowDlgChk ? AlwaysContinueSlowScript : ContinueSlowScript;
   }
-
   if (buttonPressed == 2) {
-    MOZ_RELEASE_ASSERT(debugCallback);
-
-    rv = debugCallback->HandleSlowScriptDebug(this);
-    return NS_SUCCEEDED(rv) ? ContinueSlowScript : KillSlowScript;
+    if (debugCallback) {
+      rv = debugCallback->HandleSlowScriptDebug(this);
+      return NS_SUCCEEDED(rv) ? ContinueSlowScript : KillSlowScript;
+    }
   }
-
   JS_ClearPendingException(cx);
-
-  if (checkboxValue && isAddonScript)
-    return KillScriptGlobal;
   return KillSlowScript;
 }
 

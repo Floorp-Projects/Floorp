@@ -65,14 +65,6 @@ var ProcessHangMonitor = {
   },
 
   /**
-   * Terminate Sandbox globals associated with the hang being reported
-   * for the selected browser in |win|.
-   */
-  terminateGlobal(win) {
-    this.handleUserInput(win, report => report.terminateGlobal());
-  },
-
-  /**
    * Start devtools debugger for JavaScript associated with the hang
    * being reported for the selected browser in |win|.
    */
@@ -115,23 +107,6 @@ var ProcessHangMonitor = {
         break;
       case report.PLUGIN_HANG:
         this.terminatePlugin(win);
-        break;
-    }
-  },
-
-  /**
-   * Stop all scripts from running in the Sandbox global attached to
-   * this window.
-   */
-  stopGlobal(win) {
-    let report = this.findActiveReport(win.gBrowser.selectedBrowser);
-    if (!report) {
-      return;
-    }
-
-    switch (report.hangType) {
-      case report.SLOW_SCRIPT:
-        this.terminateGlobal(win);
         break;
     }
   },
@@ -329,40 +304,6 @@ var ProcessHangMonitor = {
         }
       }];
 
-    let message = bundle.getString("processHang.label");
-    if (report.addonId) {
-      let aps = Cc["@mozilla.org/addons/policy-service;1"].getService(Ci.nsIAddonPolicyService);
-
-      let doc = win.document;
-      let brandBundle = doc.getElementById("bundle_brand");
-
-      let addonName = aps.getExtensionName(report.addonId);
-
-      let label = bundle.getFormattedString("processHang.add-on.label",
-                                            [addonName, brandBundle.getString("brandShortName")]);
-
-      let linkText = bundle.getString("processHang.add-on.learn-more.text");
-      let linkURL = bundle.getString("processHang.add-on.learn-more.url");
-
-      let link = doc.createElement("label");
-      link.setAttribute("class", "text-link");
-      link.setAttribute("role", "link");
-      link.setAttribute("onclick", `openUILinkIn(${JSON.stringify(linkURL)}, "tab")`);
-      link.setAttribute("value", linkText);
-
-      message = doc.createDocumentFragment();
-      message.appendChild(doc.createTextNode(label + " "));
-      message.appendChild(link);
-
-      buttons.unshift({
-        label: bundle.getString("processHang.button_stop_sandbox.label"),
-        accessKey: bundle.getString("processHang.button_stop_sandbox.accessKey"),
-        callback() {
-          ProcessHangMonitor.stopGlobal(win);
-        }
-      });
-    }
-
     if (AppConstants.MOZ_DEV_EDITION && report.hangType == report.SLOW_SCRIPT) {
       buttons.push({
         label: bundle.getString("processHang.button_debug.label"),
@@ -373,7 +314,8 @@ var ProcessHangMonitor = {
       });
     }
 
-    nb.appendNotification(message, "process-hang",
+    nb.appendNotification(bundle.getString("processHang.label"),
+                          "process-hang",
                           "chrome://browser/content/aboutRobots-icon.png",
                           nb.PRIORITY_WARNING_HIGH, buttons);
   },

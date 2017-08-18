@@ -324,24 +324,24 @@ PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
     if (nsXPConnect::SecurityManager()->IsSystemPrincipal(aPrincipal))
         return true;
 
-    auto principal = BasePrincipal::Cast(aPrincipal);
-
     // ExpandedPrincipal gets a free pass.
-    if (principal->Is<ExpandedPrincipal>()) {
+    nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
+    if (ep)
         return true;
-    }
-
-    // WebExtension principals get a free pass.
-    nsString addonId;
-    if (IsWebExtensionPrincipal(principal, addonId)) {
-        return true;
-    }
 
     // Check whether our URI is an "about:" URI that allows scripts.  If it is,
     // we need to allow JS to run.
     nsCOMPtr<nsIURI> principalURI;
     aPrincipal->GetURI(getter_AddRefs(principalURI));
     MOZ_ASSERT(principalURI);
+
+    // WebExtension principals gets a free pass.
+    nsString addonId;
+    aPrincipal->GetAddonId(addonId);
+    bool isWebExtension = !addonId.IsEmpty();
+    if (isWebExtension) {
+        return true;
+    }
 
     bool isAbout;
     nsresult rv = principalURI->SchemeIs("about", &isAbout);
