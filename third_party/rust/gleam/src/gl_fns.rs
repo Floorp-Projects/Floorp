@@ -550,6 +550,33 @@ impl Gl for GlFns {
         }
     }
 
+    fn tex_sub_image_3d_pbo(&self,
+                            target: GLenum,
+                            level: GLint,
+                            xoffset: GLint,
+                            yoffset: GLint,
+                            zoffset: GLint,
+                            width: GLsizei,
+                            height: GLsizei,
+                            depth: GLsizei,
+                            format: GLenum,
+                            ty: GLenum,
+                            offset: usize) {
+        unsafe {
+            self.ffi_gl_.TexSubImage3D(target,
+                                       level,
+                                       xoffset,
+                                       yoffset,
+                                       zoffset,
+                                       width,
+                                       height,
+                                       depth,
+                                       format,
+                                       ty,
+                                       offset as *const c_void);
+        }
+    }
+
     fn get_integer_v(&self, name: GLenum) -> GLint {
         let mut result: GLint = 0 as GLint;
         unsafe {
