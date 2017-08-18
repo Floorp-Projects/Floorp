@@ -5846,6 +5846,12 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
+  if (!mPaused || mAutoplaying) {
+    // We only want to reset mWaitingForKey if we have played all decoded data
+    // or if we haven't played anything yet.
+    mWaitingForKey = NOT_WAITING_FOR_KEY;
+  }
+
   // Now see if we should set HAVE_ENOUGH_DATA.
   // If it's something we don't know the size of, then we can't
   // make a real estimate, so we go straight to HAVE_ENOUGH_DATA once
@@ -5854,7 +5860,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
   // autoplay elements for live streams will never play. Otherwise we
   // move to HAVE_ENOUGH_DATA if we can play through the entire media
   // without stopping to buffer.
-  if (mWaitingForKey == NOT_WAITING_FOR_KEY && mDecoder->CanPlayThrough()) {
+  if (mDecoder->CanPlayThrough()) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Decoder can play through", this));
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
@@ -5921,11 +5927,6 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     if (!mPaused) {
       NotifyAboutPlaying();
     }
-  }
-
-  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
-      (!mPaused || mAutoplaying)) {
-    mWaitingForKey = NOT_WAITING_FOR_KEY;
   }
 
   CheckAutoplayDataReady();
