@@ -721,8 +721,6 @@ html|span.ac-emphasize-text-url {
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
-%include downloads/indicator.css
-
 .gcli-panel {
   padding: 0;
 }

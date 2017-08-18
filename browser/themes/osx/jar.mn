@@ -41,8 +41,6 @@ browser.jar:
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
 * skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
-  skin/classic/browser/downloads/download-glow-menuPanel.png (downloads/download-glow-menuPanel.png)
-  skin/classic/browser/downloads/download-glow-menuPanel@2x.png (downloads/download-glow-menuPanel@2x.png)
 * skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
