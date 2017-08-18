@@ -105,6 +105,8 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
     WrBridge()->Destroy(aIsSync);
   }
 
+  mLastCanvasDatas.Clear();
+
   if (mTransactionIdAllocator) {
     // Make sure to notify the refresh driver just in case it's waiting on a
     // pending transaction. Do this at the top of the event loop so we don't
