@@ -323,15 +323,24 @@ GLContextWGL::Init()
 }
 
 bool
-GLContextWGL::MakeCurrentImpl() const
+GLContextWGL::MakeCurrentImpl(bool aForce)
 {
-    const bool succeeded = sWGLLib.mSymbols.fMakeCurrent(mDC, mContext);
-    NS_ASSERTION(succeeded, "Failed to make GL context current!");
+    BOOL succeeded = true;
+
+    // wglGetCurrentContext seems to just pull the HGLRC out
+    // of its TLS slot, so no need to do our own tls slot.
+    // You would think that wglMakeCurrent would avoid doing
+    // work if mContext was already current, but not so much..
+    if (aForce || sWGLLib.mSymbols.fGetCurrentContext() != mContext) {
+        succeeded = sWGLLib.mSymbols.fMakeCurrent(mDC, mContext);
+        NS_ASSERTION(succeeded, "Failed to make GL context current!");
+    }
+
     return succeeded;
 }
 
 bool
-GLContextWGL::IsCurrentImpl() const
+GLContextWGL::IsCurrent()
 {
     return sWGLLib.mSymbols.fGetCurrentContext() == mContext;
 }
