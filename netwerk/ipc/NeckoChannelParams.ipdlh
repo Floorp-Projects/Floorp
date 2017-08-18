@@ -7,7 +7,6 @@
 
 include protocol PHttpChannel;
 include protocol PFTPChannel;
-include protocol PRtspChannel;
 include protocol PChildToParentStream;
 include BlobTypes;
 include URIParams;
@@ -212,16 +211,6 @@ struct CookieStruct
   int64_t   creationTime;
   bool      isSession;
   bool      isSecure;
-};
-
-//-----------------------------------------------------------------------------
-// RTSP IPDL structs
-//-----------------------------------------------------------------------------
-
-struct RtspChannelConnectArgs
-{
-  URIParams uri;
-  uint32_t channelId;
 };
 
 } // namespace ipc

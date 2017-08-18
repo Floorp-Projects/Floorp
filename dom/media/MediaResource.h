@@ -10,7 +10,6 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsISeekableStream.h"
-#include "nsIStreamingProtocolController.h"
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"

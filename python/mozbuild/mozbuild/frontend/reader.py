@@ -117,9 +117,6 @@ class EmptyConfig(object):
         # changing all the instances.
         b'MOZ_APP_NAME': b'empty',
         b'MOZ_CHILD_PROCESS_NAME': b'empty',
-        # Set manipulations are performed within the moz.build files. But
-        # set() is not an exposed symbol, so we can't create an empty set.
-        b'NECKO_PROTOCOLS': set(),
         # Needed to prevent js/src's config.status from loading.
         b'JS_STANDALONE': b'1',
     }
