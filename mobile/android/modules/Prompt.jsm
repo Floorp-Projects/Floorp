@@ -10,7 +10,7 @@ var Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/Messaging.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-this.EXPORTED_SYMBOLS = ["Prompt"];
+this.EXPORTED_SYMBOLS = ["Prompt", "DoorHanger"];
 
 function log(msg) {
   Services.console.logStringMessage(msg);
@@ -256,3 +256,58 @@ Prompt.prototype = {
   },
 
 }
+
+var DoorHanger = {
+  _getTabId: function(aWindow, aBrowserApp) {
+      let tab = aBrowserApp.getTabForWindow(aWindow.top) ||
+                aBrowserApp.selectedTab;
+      return tab ? tab.id : -1;
+  },
+
+  show: function(aWindow, aMessage, aValue, aButtons, aOptions, aCategory) {
+    let chromeWin = getRootWindow(aWindow);
+    if (chromeWin.BrowserApp) {
+      // We're dealing with browser.js.
+      return chromeWin.NativeWindow.doorhanger.show(
+          aMessage, aValue, aButtons, this._getTabId(aWindow, chromeWin.BrowserApp),
+          aOptions, aCategory);
+    }
+
+    // We're dealing with GeckoView (e.g. custom tabs).
+    aButtons = aButtons || [];
+
+    // Extract callbacks into a separate array, and replace each callback in
+    // the buttons array with an index into the callback array.
+    let callbacks = aButtons.map((aButton, aIndex) => {
+      let cb = aButton.callback;
+      aButton.callback = aIndex;
+      return cb;
+    });
+
+    EventDispatcher.for(chromeWin).sendRequestForResult({
+      type: "Doorhanger:Add",
+      message: aMessage,
+      value: aValue,
+      buttons: aButtons,
+      options: aOptions || {},
+      category: aCategory,
+    }).then(response => {
+      // Pass the value of the optional checkbox to the callback
+      callbacks[response.callback](response.checked, response.inputs);
+    });
+  },
+
+  hide: function(aWindow, aValue) {
+    let chromeWin = getRootWindow(aWindow);
+    if (chromeWin.BrowserApp) {
+      // We're dealing with browser.js.
+      return chromeWin.NativeWindow.doorhanger.hide(
+          aValue, this._getTabId(aWindow, chromeWin.BrowserApp));
+    }
+
+    EventDispatcher.for(chromeWin).sendRequest({
+      type: "Doorhanger:Remove",
+      value: aValue,
+    });
+  },
+};
