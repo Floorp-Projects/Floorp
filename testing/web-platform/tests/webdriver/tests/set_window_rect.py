@@ -88,17 +88,14 @@ def test_invalid_params(session, data):
 
 
 def test_fullscreened(session):
-    original = session.window.rect
-
     # step 10
     session.window.fullscreen()
     assert session.window.state == "fullscreen"
     response = set_window_rect(session, {"width": 400, "height": 400})
-    assert_success(response, {"x": original["x"],
-                              "y": original["y"],
-                              "width": 400.0,
-                              "height": 400.0,
-                              "state": "normal"})
+    assert_success(response)
+    assert rect["width"] == 400
+    assert rect["height"] == 400
+    assert rect["state"] == "normal"
 
 
 def test_minimized(session):
