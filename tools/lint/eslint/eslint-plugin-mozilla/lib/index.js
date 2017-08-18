@@ -52,6 +52,8 @@ module.exports = {
     "no-useless-parameters": require("../lib/rules/no-useless-parameters"),
     "no-useless-removeEventListener":
       require("../lib/rules/no-useless-removeEventListener"),
+    "no-useless-run-test":
+      require("../lib/rules/no-useless-run-test"),
     "reject-importGlobalProperties":
       require("../lib/rules/reject-importGlobalProperties"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
@@ -77,6 +79,7 @@ module.exports = {
     "no-import-into-var-and-global": "off",
     "no-task": "off",
     "no-useless-parameters": "off",
+    "no-useless-run-test": "off",
     "no-useless-removeEventListener": "off",
     "reject-importGlobalProperties": "off",
     "reject-some-requires": "off",
