@@ -826,7 +826,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY syncReAuthItem.accesskey     "R">
 <!ENTITY syncToolbarButton.label      "Sync">
 
-<!ENTITY customizeMode.menuAndToolbars.header2 "Additional Tools and Features">
+<!ENTITY customizeMode.menuAndToolbars.header3 "Drag your favorite items into the toolbar or overflow menu.">
 <!ENTITY customizeMode.menuAndToolbars.empty "Want more tools?">
 <!ENTITY customizeMode.menuAndToolbars.emptyLink "Choose from thousands of add-ons">
 <!ENTITY customizeMode.restoreDefaults "Restore Defaults">
