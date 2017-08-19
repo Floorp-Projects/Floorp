@@ -6567,8 +6567,11 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
     }
 
     try {
-      for (let promise in iterator) {
-        let entry = await promise;
+      for (;;) {
+        let {value: entry, done} = await iterator.next();
+        if (done) {
+          break;
+        }
 
         // Skip the directory currently in use
         if (this._directory && this._directory.path == entry.path) {
@@ -6581,16 +6584,16 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
         }
 
         if (entry.isDir) {
-           await OS.File.removeDir(entry.path, {
-             ignoreAbsent: true,
-             ignorePermissions: true,
-           });
-         } else {
-           await OS.File.remove(entry.path, {
-             ignoreAbsent: true,
-           });
-         }
-       }
+          await OS.File.removeDir(entry.path, {
+            ignoreAbsent: true,
+            ignorePermissions: true,
+          });
+        } else {
+          await OS.File.remove(entry.path, {
+            ignoreAbsent: true,
+          });
+        }
+      }
 
     } catch (e) {
       logger.error("Failed to clean updated system add-ons directories.", e);
