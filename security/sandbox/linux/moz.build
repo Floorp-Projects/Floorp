@@ -83,7 +83,7 @@ if CONFIG['MOZ_GMP_SANDBOX']:
 SOURCES['../chromium/base/strings/safe_sprintf.cc'].flags += ['-DNDEBUG']
 
 # Keep clang from warning about intentional 'switch' fallthrough in icu_utf.cc:
-if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
+if CONFIG['CLANG_CXX']:
     SOURCES['../chromium/base/third_party/icu/icu_utf.cc'].flags += ['-Wno-implicit-fallthrough']
 
 if CONFIG['GNU_CXX']:
