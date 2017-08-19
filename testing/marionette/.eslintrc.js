@@ -2,6 +2,7 @@
 
 module.exports = {
   "rules": {
+    "camelcase": "error",
     "comma-dangle": ["error", "always-multiline"],
     "indent": ["error", 2, {
       "CallExpression": {"arguments": 2},
