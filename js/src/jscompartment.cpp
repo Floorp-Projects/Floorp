@@ -60,6 +60,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     warnedAboutExprClosure(false),
     warnedAboutForEach(false),
     warnedAboutLegacyGenerator(false),
+    warnedAboutObjectWatch(false),
     warnedAboutStringGenericsMethods(0),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),
