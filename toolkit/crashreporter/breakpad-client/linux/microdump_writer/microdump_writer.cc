@@ -571,7 +571,7 @@ class MicrodumpWriter {
 
   void* Alloc(unsigned bytes) { return dumper_->allocator()->Alloc(bytes); }
 
-  const struct ucontext* const ucontext_;
+  const ucontext_t* const ucontext_;
 #if !defined(__ARM_EABI__) && !defined(__mips__)
   const google_breakpad::fpstate_t* const float_state_;
 #endif
