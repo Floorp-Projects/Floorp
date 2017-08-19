@@ -311,11 +311,11 @@ add_task(async function test_on_row_stop_iteration() {
   }
 
   let i = 0;
-  let hasResult = await c.execute("SELECT * FROM dirs", null, function onRow(row) {
+  let hasResult = await c.execute("SELECT * FROM dirs", null, function onRow(row, cancel) {
     i++;
 
     if (i == 5) {
-      throw StopIteration;
+      cancel();
     }
   });
 
