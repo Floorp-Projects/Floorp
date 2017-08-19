@@ -185,7 +185,7 @@ def get_repository_from_env():
                                 hg=buildconfig.substs['HG'])
         elif flavor == 'git':
             return GitRepository(buildconfig.topsrcdir,
-                                 git=buildconfig.subst['GIT'])
+                                 git=buildconfig.substs['GIT'])
         else:
             raise MissingVCSInfo('unknown VCS_CHECKOUT_TYPE value: %s' % flavor)
 
