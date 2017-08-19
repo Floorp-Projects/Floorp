@@ -1020,7 +1020,7 @@ NextWindowID();
 template<class T>
 nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
 : mFrameElement(nullptr), mDocShell(nullptr), mModalStateDepth(0),
-  mMutationBits(0), mIsDocumentLoaded(false),
+  mMutationBits(0), mActivePeerConnections(0), mIsDocumentLoaded(false),
   mIsHandlingResizeEvent(false), mIsInnerWindow(aOuterWindow != nullptr),
   mMayHavePaintEventListener(false), mMayHaveTouchEventListener(false),
   mMayHaveSelectionChangeEventListener(false),
@@ -4377,6 +4377,24 @@ void
 nsPIDOMWindowInner::SyncStateFromParentWindow()
 {
   nsGlobalWindow::Cast(this)->SyncStateFromParentWindow();
+}
+
+void
+nsPIDOMWindowInner::AddPeerConnection()
+{
+  nsGlobalWindow::Cast(this)->AddPeerConnection();
+}
+
+void
+nsPIDOMWindowInner::RemovePeerConnection()
+{
+  nsGlobalWindow::Cast(this)->RemovePeerConnection();
+}
+
+bool
+nsPIDOMWindowInner::HasActivePeerConnections()
+{
+  return nsGlobalWindow::Cast(this)->HasActivePeerConnections();
 }
 
 bool
@@ -12571,6 +12589,31 @@ nsGlobalWindow::SyncStateFromParentWindow()
   for (uint32_t i = 0; i < (parentSuspendDepth - parentFreezeDepth); ++i) {
     Suspend();
   }
+}
+
+void
+nsGlobalWindow::AddPeerConnection()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+  mActivePeerConnections++;
+}
+
+void
+nsGlobalWindow::RemovePeerConnection()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+  MOZ_ASSERT(mActivePeerConnections);
+  mActivePeerConnections--;
+}
+
+bool
+nsGlobalWindow::HasActivePeerConnections()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+  return mActivePeerConnections;
 }
 
 template<typename Method>

@@ -7,3 +7,4 @@
 varying vec3 vPos;
 flat varying vec4 vClipMaskUvRect;
 flat varying vec4 vClipMaskUvInnerRect;
+flat varying float vLayer;

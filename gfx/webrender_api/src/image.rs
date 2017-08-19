@@ -33,6 +33,7 @@ pub struct ExternalImageId(pub u64);
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum ExternalImageType {
     Texture2DHandle,        // gl TEXTURE_2D handle
+    Texture2DArrayHandle,   // gl TEXTURE_2D_ARRAY handle
     TextureRectHandle,      // gl TEXTURE_RECT handle
     TextureExternalHandle,  // gl TEXTURE_EXTERNAL handle
     ExternalBuffer,
@@ -131,6 +132,7 @@ impl ImageData {
             &ImageData::External(ext_data) => {
                 match ext_data.image_type {
                     ExternalImageType::Texture2DHandle => false,
+                    ExternalImageType::Texture2DArrayHandle => false,
                     ExternalImageType::TextureRectHandle => false,
                     ExternalImageType::TextureExternalHandle => false,
                     ExternalImageType::ExternalBuffer => true,

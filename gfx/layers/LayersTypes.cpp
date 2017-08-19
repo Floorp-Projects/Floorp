@@ -51,6 +51,26 @@ CSSFilter ToCSSFilter(const nsStyleFilter& filter)
   }
 }
 
+EventRegions::EventRegions(const nsIntRegion& aHitRegion,
+                           const nsIntRegion& aMaybeHitRegion,
+                           const nsIntRegion& aDispatchToContentRegion,
+                           const nsIntRegion& aNoActionRegion,
+                           const nsIntRegion& aHorizontalPanRegion,
+                           const nsIntRegion& aVerticalPanRegion)
+{
+  mHitRegion = aHitRegion;
+  mNoActionRegion = aNoActionRegion;
+  mHorizontalPanRegion = aHorizontalPanRegion;
+  mVerticalPanRegion = aVerticalPanRegion;
+  // Points whose hit-region status we're not sure about need to be dispatched
+  // to the content thread. If a point is in both maybeHitRegion and hitRegion
+  // then it's not a "maybe" any more, and doesn't go into the dispatch-to-
+  // content region.
+  mDispatchToContentHitRegion.Sub(aMaybeHitRegion, mHitRegion);
+  mDispatchToContentHitRegion.OrWith(aDispatchToContentRegion);
+  mHitRegion.OrWith(aMaybeHitRegion);
+}
+
 } // namespace layers
 } // namespace mozilla
 

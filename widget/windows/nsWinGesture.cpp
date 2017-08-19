@@ -24,21 +24,6 @@ using namespace mozilla::widget;
 
 extern mozilla::LazyLogModule gWindowsLog;
 
-const wchar_t nsWinGesture::kGestureLibraryName[] =  L"user32.dll";
-HMODULE nsWinGesture::sLibraryHandle = nullptr;
-nsWinGesture::GetGestureInfoPtr nsWinGesture::getGestureInfo = nullptr;
-nsWinGesture::CloseGestureInfoHandlePtr nsWinGesture::closeGestureInfoHandle = nullptr;
-nsWinGesture::GetGestureExtraArgsPtr nsWinGesture::getGestureExtraArgs = nullptr;
-nsWinGesture::SetGestureConfigPtr nsWinGesture::setGestureConfig = nullptr;
-nsWinGesture::GetGestureConfigPtr nsWinGesture::getGestureConfig = nullptr;
-nsWinGesture::BeginPanningFeedbackPtr nsWinGesture::beginPanningFeedback = nullptr;
-nsWinGesture::EndPanningFeedbackPtr nsWinGesture::endPanningFeedback = nullptr;
-nsWinGesture::UpdatePanningFeedbackPtr nsWinGesture::updatePanningFeedback = nullptr;
-
-nsWinGesture::RegisterTouchWindowPtr nsWinGesture::registerTouchWindow = nullptr;
-nsWinGesture::UnregisterTouchWindowPtr nsWinGesture::unregisterTouchWindow = nullptr;
-nsWinGesture::GetTouchInputInfoPtr nsWinGesture::getTouchInputInfo = nullptr;
-nsWinGesture::CloseTouchInputHandlePtr nsWinGesture::closeTouchInputHandle = nullptr;
 
 static bool gEnableSingleFingerPanEvents = false;
 
@@ -57,58 +42,6 @@ nsWinGesture::nsWinGesture() :
 
 bool nsWinGesture::InitLibrary()
 {
-  if (getGestureInfo) {
-    return true;
-  } else if (sLibraryHandle) {
-    return false;
-  }
-
-  sLibraryHandle = ::LoadLibraryW(kGestureLibraryName);
-  HMODULE hTheme = nsUXThemeData::GetThemeDLL();
-
-  // gesture interfaces
-  if (sLibraryHandle) {
-    getGestureInfo = (GetGestureInfoPtr)GetProcAddress(sLibraryHandle, "GetGestureInfo");
-    closeGestureInfoHandle = (CloseGestureInfoHandlePtr)GetProcAddress(sLibraryHandle, "CloseGestureInfoHandle");
-    getGestureExtraArgs = (GetGestureExtraArgsPtr)GetProcAddress(sLibraryHandle, "GetGestureExtraArgs");
-    setGestureConfig = (SetGestureConfigPtr)GetProcAddress(sLibraryHandle, "SetGestureConfig");
-    getGestureConfig = (GetGestureConfigPtr)GetProcAddress(sLibraryHandle, "GetGestureConfig");
-    registerTouchWindow = (RegisterTouchWindowPtr)GetProcAddress(sLibraryHandle, "RegisterTouchWindow");
-    unregisterTouchWindow = (UnregisterTouchWindowPtr)GetProcAddress(sLibraryHandle, "UnregisterTouchWindow");
-    getTouchInputInfo = (GetTouchInputInfoPtr)GetProcAddress(sLibraryHandle, "GetTouchInputInfo");
-    closeTouchInputHandle = (CloseTouchInputHandlePtr)GetProcAddress(sLibraryHandle, "CloseTouchInputHandle");
-  }
-
-  if (!getGestureInfo || !closeGestureInfoHandle || !getGestureExtraArgs ||
-    !setGestureConfig || !getGestureConfig) {
-    getGestureInfo         = nullptr;
-    closeGestureInfoHandle = nullptr;
-    getGestureExtraArgs    = nullptr;
-    setGestureConfig       = nullptr;
-    getGestureConfig       = nullptr;
-    return false;
-  }
-  
-  if (!registerTouchWindow || !unregisterTouchWindow || !getTouchInputInfo || !closeTouchInputHandle) {
-    registerTouchWindow   = nullptr;
-    unregisterTouchWindow = nullptr;
-    getTouchInputInfo     = nullptr;
-    closeTouchInputHandle = nullptr;
-  }
-
-  // panning feedback interfaces
-  if (hTheme) {
-    beginPanningFeedback = (BeginPanningFeedbackPtr)GetProcAddress(hTheme, "BeginPanningFeedback");
-    endPanningFeedback = (EndPanningFeedbackPtr)GetProcAddress(hTheme, "EndPanningFeedback");
-    updatePanningFeedback = (UpdatePanningFeedbackPtr)GetProcAddress(hTheme, "UpdatePanningFeedback");
-  }
-
-  if (!beginPanningFeedback || !endPanningFeedback || !updatePanningFeedback) {
-    beginPanningFeedback   = nullptr;
-    endPanningFeedback     = nullptr;
-    updatePanningFeedback  = nullptr;
-  }
-
   // Check to see if we want single finger gesture input. Only do this once
   // for the app so we don't have to look it up on every window create.
   gEnableSingleFingerPanEvents =
@@ -122,9 +55,6 @@ bool nsWinGesture::InitLibrary()
 bool nsWinGesture::SetWinGestureSupport(HWND hWnd,
                      WidgetGestureNotifyEvent::PanDirection aDirection)
 {
-  if (!getGestureInfo)
-    return false;
-
   GESTURECONFIG config[GCOUNT];
 
   memset(&config, 0, sizeof(config));
@@ -169,114 +99,11 @@ bool nsWinGesture::SetWinGestureSupport(HWND hWnd,
   config[4].dwID = GID_PRESSANDTAP;
   config[4].dwBlock = 0;
 
-  return SetGestureConfig(hWnd, GCOUNT, (PGESTURECONFIG)&config);
+  return SetGestureConfig(hWnd, 0, GCOUNT, (PGESTURECONFIG)&config,
+                          sizeof(GESTURECONFIG));
 }
 
 /* Helpers */
-
-bool nsWinGesture::IsAvailable()
-{
-  return getGestureInfo != nullptr;
-}
-
-bool nsWinGesture::RegisterTouchWindow(HWND hWnd)
-{
-  if (!registerTouchWindow)
-    return false;
-
-  return registerTouchWindow(hWnd, TWF_WANTPALM);
-}
-
-bool nsWinGesture::UnregisterTouchWindow(HWND hWnd)
-{
-  if (!unregisterTouchWindow)
-    return false;
-
-  return unregisterTouchWindow(hWnd);
-}
-
-bool nsWinGesture::GetTouchInputInfo(HTOUCHINPUT hTouchInput, uint32_t cInputs, PTOUCHINPUT pInputs)
-{
-  if (!getTouchInputInfo)
-    return false;
-
-  return getTouchInputInfo(hTouchInput, cInputs, pInputs, sizeof(TOUCHINPUT));
-}
-
-bool nsWinGesture::CloseTouchInputHandle(HTOUCHINPUT hTouchInput)
-{
-  if (!closeTouchInputHandle)
-    return false;
-
-  return closeTouchInputHandle(hTouchInput);
-}
-
-bool nsWinGesture::GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo)
-{
-  if (!getGestureInfo || !hGestureInfo || !pGestureInfo)
-    return false;
-
-  ZeroMemory(pGestureInfo, sizeof(GESTUREINFO));
-  pGestureInfo->cbSize = sizeof(GESTUREINFO);
-
-  return getGestureInfo(hGestureInfo, pGestureInfo);
-}
-
-bool nsWinGesture::CloseGestureInfoHandle(HGESTUREINFO hGestureInfo)
-{
-  if (!getGestureInfo || !hGestureInfo)
-    return false;
-
-  return closeGestureInfoHandle(hGestureInfo);
-}
-
-bool nsWinGesture::GetGestureExtraArgs(HGESTUREINFO hGestureInfo, UINT cbExtraArgs, PBYTE pExtraArgs)
-{
-  if (!getGestureInfo || !hGestureInfo || !pExtraArgs)
-    return false;
-
-  return getGestureExtraArgs(hGestureInfo, cbExtraArgs, pExtraArgs);
-}
-
-bool nsWinGesture::SetGestureConfig(HWND hWnd, UINT cIDs, PGESTURECONFIG pGestureConfig)
-{
-  if (!getGestureInfo || !pGestureConfig)
-    return false;
-
-  return setGestureConfig(hWnd, 0, cIDs, pGestureConfig, sizeof(GESTURECONFIG));
-}
-
-bool nsWinGesture::GetGestureConfig(HWND hWnd, DWORD dwFlags, PUINT pcIDs, PGESTURECONFIG pGestureConfig)
-{
-  if (!getGestureInfo || !pGestureConfig)
-    return false;
-
-  return getGestureConfig(hWnd, 0, dwFlags, pcIDs, pGestureConfig, sizeof(GESTURECONFIG));
-}
-
-bool nsWinGesture::BeginPanningFeedback(HWND hWnd)
-{
-  if (!beginPanningFeedback)
-    return false;
-
-  return beginPanningFeedback(hWnd);
-}
-
-bool nsWinGesture::EndPanningFeedback(HWND hWnd)
-{
-  if (!beginPanningFeedback)
-    return false;
-
-  return endPanningFeedback(hWnd, TRUE);
-}
-
-bool nsWinGesture::UpdatePanningFeedback(HWND hWnd, LONG offsetX, LONG offsetY, BOOL fInInertia)
-{
-  if (!beginPanningFeedback)
-    return false;
-
-  return updatePanningFeedback(hWnd, offsetX, offsetY, fInInertia);
-}
 
 bool nsWinGesture::IsPanEvent(LPARAM lParam)
 {
@@ -555,7 +382,7 @@ nsWinGesture::PanFeedbackFinalize(HWND hWnd, bool endFeedback)
     mXAxisFeedback = false;
     mYAxisFeedback = false;
     mPixelScrollOverflow = 0;
-    EndPanningFeedback(hWnd);
+    EndPanningFeedback(hWnd, TRUE);
     return;
   }
 

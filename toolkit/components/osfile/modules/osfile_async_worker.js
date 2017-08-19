@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env worker */
 
 if (this.Components) {
   throw new Error("This worker can only be loaded from a worker thread");
@@ -58,7 +59,7 @@ if (this.Components) {
    /**
     * Get a resource from its unique identifier.
     */
-   get: function(id) {
+   get(id) {
      let result = this._map.get(id);
      if (result == null) {
        return result;
@@ -68,7 +69,7 @@ if (this.Components) {
    /**
     * Remove a resource from its unique identifier.
     */
-   remove: function(id) {
+   remove(id) {
      if (!this._map.has(id)) {
        throw new Error("Cannot find resource id " + id);
      }
@@ -83,9 +84,9 @@ if (this.Components) {
     * @return {*} A unique identifier. For the moment, this is a number,
     * but this might not remain the case forever.
     */
-   add: function(resource, info) {
+   add(resource, info) {
      let id = this._idgen++;
-     this._map.set(id, {resource:resource, info:info});
+     this._map.set(id, {resource, info});
      return id;
    },
    /**
@@ -153,12 +154,12 @@ if (this.Components) {
   */
   let Agent = {
    // Update worker's OS.Shared.DEBUG flag message from controller.
-   SET_DEBUG: function(aDEBUG) {
+   SET_DEBUG(aDEBUG) {
      SharedAll.Config.DEBUG = aDEBUG;
    },
    // Return worker's current OS.Shared.DEBUG value to controller.
    // Note: This is used for testing purposes.
-   GET_DEBUG: function() {
+   GET_DEBUG() {
      return SharedAll.Config.DEBUG;
    },
    /**
@@ -167,7 +168,7 @@ if (this.Components) {
     * @param {bool} If |true|, kill the worker if this would not cause
     * leaks.
     */
-   Meta_shutdown: function(kill) {
+   Meta_shutdown(kill) {
      let result = {
        openedFiles: OpenedFiles.listOpenedResources(),
        openedDirectoryIterators: OpenedDirectoryIterators.listOpenedResources(),
@@ -268,7 +269,7 @@ if (this.Components) {
                              options
                             );
    },
-   removeDir: function(path, options) {
+   removeDir(path, options) {
      return File.removeDir(Type.path.fromMsg(path), options);
    },
    new_DirectoryIterator: function new_DirectoryIterator(path, options) {

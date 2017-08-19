@@ -36,7 +36,7 @@ add_task(async function test_uncompressed() {
   for (let i = 0; i < array.byteLength; ++i) {
     array[i] = i;
   }
-  let bytes = await OS.File.writeAtomic(path, array); // No compression
+  await OS.File.writeAtomic(path, array); // No compression
 
   let exn;
   // Force decompression, reading should fail
@@ -52,11 +52,11 @@ add_task(async function test_uncompressed() {
 
 add_task(async function test_no_header() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir, "no_header.tmp");
-  let array = new Uint8Array(8).fill(0,0);  // Small array with no header
+  let array = new Uint8Array(8).fill(0, 0);  // Small array with no header
 
   do_print("Writing data with no header");
 
-  let bytes = await OS.File.writeAtomic(path, array); // No compression
+  await OS.File.writeAtomic(path, array); // No compression
   let exn;
   // Force decompression, reading should fail
   try {
@@ -72,7 +72,7 @@ add_task(async function test_no_header() {
 add_task(async function test_invalid_content() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir, "invalid_content.tmp");
   let arr1 = new Uint8Array([109, 111, 122, 76, 122, 52, 48, 0]);
-  let arr2 = new Uint8Array(248).fill(1,0);
+  let arr2 = new Uint8Array(248).fill(1, 0);
 
   let array = new Uint8Array(arr1.length + arr2.length);
   array.set(arr1);
@@ -80,7 +80,7 @@ add_task(async function test_invalid_content() {
 
   do_print("Writing invalid data (with a valid header and only ones after that)");
 
-  let bytes = await OS.File.writeAtomic(path, array); // No compression
+  await OS.File.writeAtomic(path, array); // No compression
   let exn;
   // Force decompression, reading should fail
   try {

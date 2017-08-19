@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-importScripts('worker_test_osfile_shared.js');
+/* eslint-env mozilla/chrome-worker, node */
+
+importScripts("worker_test_osfile_shared.js");
 importScripts("resource://gre/modules/workers/require.js");
 
 var SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
@@ -50,8 +52,7 @@ function test_init() {
 /**
  * Test that we can open an existing file.
  */
-function test_open_existing_file()
-{
+function test_open_existing_file() {
   info("Starting test_open_existing");
   let file = OS.File.open("chrome/toolkit/components/osfile/tests/mochi/worker_test_osfile_unix.js");
   file.close();
@@ -60,12 +61,11 @@ function test_open_existing_file()
 /**
  * Test that opening a file that does not exist fails with the right error.
  */
-function test_open_non_existing_file()
-{
+function test_open_non_existing_file() {
   info("Starting test_open_non_existing");
   let exn;
   try {
-    let file = OS.File.open("/I do not exist");
+    OS.File.open("/I do not exist");
   } catch (x) {
     exn = x;
     info("test_open_non_existing_file: Exception detail " + exn);
@@ -79,8 +79,7 @@ function test_open_non_existing_file()
  * Test that to ensure that |foo.flush()| does not
  * cause an error, where |foo| is an open file.
  */
-function test_flush_open_file()
-{
+function test_flush_open_file() {
   info("Starting test_flush_open_file");
   let tmp = "test_flush.tmp";
   let file = OS.File.open(tmp, {create: true, write: true});
@@ -101,8 +100,7 @@ function test_flush_open_file()
  * @param {number=} prefix If specified, only compare the |prefix|
  * first bytes of |sourcePath| and |destPath|.
  */
-function compare_files(test, sourcePath, destPath, prefix)
-{
+function compare_files(test, sourcePath, destPath, prefix) {
   info(test + ": Comparing " + sourcePath + " and " + destPath);
   let source = OS.File.open(sourcePath);
   let dest = OS.File.open(destPath);
@@ -133,8 +131,7 @@ function compare_files(test, sourcePath, destPath, prefix)
 /**
  * Test that copying a file using |copy| works.
  */
-function test_copy_existing_file()
-{
+function test_copy_existing_file() {
   let src_file_name =
     OS.Path.join("chrome", "toolkit", "components", "osfile", "tests", "mochi",
                  "worker_test_osfile_front.js");
@@ -160,7 +157,7 @@ function test_copy_existing_file()
   let exn;
   try {
     OS.File.copy(src_file_name, tmp_file_name, {noOverwrite: true});
-  } catch(x) {
+  } catch (x) {
     exn = x;
   }
   ok(!!exn, "test_copy_existing: noOverwrite prevents overwriting existing files");
@@ -172,8 +169,7 @@ function test_copy_existing_file()
 /**
  * Test that moving a file works.
  */
-function test_move_file()
-{
+function test_move_file() {
   info("test_move_file: Starting");
   // 1. Copy file into a temporary file
   let src_file_name =
@@ -206,13 +202,12 @@ function test_move_file()
   OS.File.remove(tmp2_file_name);
 }
 
-function test_iter_dir()
-{
+function test_iter_dir() {
   info("test_iter_dir: Starting");
 
   // Create a file, to be sure that it exists
   let tmp_file_name = "test_osfile_front.tmp";
-  let tmp_file = OS.File.open(tmp_file_name, {write: true, trunc:true});
+  let tmp_file = OS.File.open(tmp_file_name, {write: true, trunc: true});
   tmp_file.close();
 
   let parent = OS.File.getCurrentDirectory();
@@ -327,7 +322,7 @@ function test_iter_dir()
   });
   iterator.close();
 
-  //test for prototype |OS.File.DirectoryIterator.unixAsFile|
+  // test for prototype |OS.File.DirectoryIterator.unixAsFile|
   if ("unixAsFile" in OS.File.DirectoryIterator.prototype) {
     info("testing property unixAsFile");
     let path = OS.Path.join("chrome", "toolkit", "components", "osfile", "tests", "mochi");
@@ -427,7 +422,7 @@ function test_info() {
   let SLOPPY_FILE_SYSTEM_ADJUSTMENT = 3000;
   let startMs = start.getTime() - SLOPPY_FILE_SYSTEM_ADJUSTMENT;
   let stopMs  = stop.getTime() + SLOPPY_FILE_SYSTEM_ADJUSTMENT;
-  info("Testing stat with bounds [ " + startMs + ", " + stopMs +" ]");
+  info("Testing stat with bounds [ " + startMs + ", " + stopMs + " ]");
 
   (function() {
     let birth;
@@ -474,7 +469,7 @@ function test_info() {
   // Round up/down as above
   startMs = start.getTime() - SLOPPY_FILE_SYSTEM_ADJUSTMENT;
   stopMs  = stop.getTime() + SLOPPY_FILE_SYSTEM_ADJUSTMENT;
-  info("Testing stat 2 with bounds [ " + startMs + ", " + stopMs +" ]");
+  info("Testing stat 2 with bounds [ " + startMs + ", " + stopMs + " ]");
 
   let access = stat.lastAccessDate;
   info("Testing lastAccessDate: " + access);
@@ -496,8 +491,7 @@ function test_info() {
 
 // Note that most of the features of path are tested in
 // worker_test_osfile_{unix, win}.js
-function test_path()
-{
+function test_path() {
   info("test_path: starting");
   let abcd = OS.Path.join("a", "b", "c", "d");
   is(OS.Path.basename(abcd), "d", "basename of a/b/c/d");
@@ -517,15 +511,14 @@ function test_path()
 /**
  * Test the file |exists| method.
  */
-function test_exists_file()
-{
-  let file_name = OS.Path.join("chrome", "toolkit", "components" ,"osfile",
+function test_exists_file() {
+  let file_name = OS.Path.join("chrome", "toolkit", "components", "osfile",
                                "tests", "mochi", "test_osfile_front.xul");
   info("test_exists_file: starting");
   ok(OS.File.exists(file_name), "test_exists_file: file exists (OS.File.exists)");
   ok(!OS.File.exists(file_name + ".tmp"), "test_exists_file: file does not exists (OS.File.exists)");
 
-  let dir_name = OS.Path.join("chrome", "toolkit", "components" ,"osfile",
+  let dir_name = OS.Path.join("chrome", "toolkit", "components", "osfile",
                                "tests", "mochi");
   ok(OS.File.exists(dir_name), "test_exists_file: directory exists");
   ok(!OS.File.exists(dir_name) + ".tmp", "test_exists_file: directory does not exist");
@@ -536,8 +529,7 @@ function test_exists_file()
 /**
  * Test the file |remove| method.
  */
-function test_remove_file()
-{
+function test_remove_file() {
   let absent_file_name = "test_osfile_front_absent.tmp";
 
   // Check that removing absent files is handled correctly

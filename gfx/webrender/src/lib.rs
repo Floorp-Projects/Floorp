@@ -80,16 +80,6 @@ mod texture_cache;
 mod tiling;
 mod util;
 
-#[doc(hidden)] // for benchmarks
-pub use texture_cache::TexturePage;
-
-#[cfg(feature = "webgl")]
-mod webgl_types;
-
-#[cfg(not(feature = "webgl"))]
-#[path = "webgl_stubs.rs"]
-mod webgl_types;
-
 mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
 }
@@ -140,8 +130,6 @@ extern crate num_traits;
 //extern crate notify;
 extern crate time;
 pub extern crate webrender_api;
-#[cfg(feature = "webgl")]
-extern crate offscreen_gl_context;
 extern crate byteorder;
 extern crate rayon;
 extern crate plane_split;

@@ -17,6 +17,8 @@
  * - opened from a chrome worker through require().
  */
 
+/* eslint-env node */
+
 "use strict";
 
 var SharedAll;
@@ -35,7 +37,7 @@ if (typeof Components != "undefined") {
   throw new Error("Please open this module with Component.utils.import or with require()");
 }
 
-var LOG = SharedAll.LOG.bind(SharedAll, "Win", "allthreads");
+SharedAll.LOG.bind(SharedAll, "Win", "allthreads");
 var Const = SharedAll.Constants.Win;
 
 // Open libc
@@ -51,14 +53,10 @@ var Scope = {};
 // Define Error
 libc.declareLazy(Scope, "FormatMessage",
                  "FormatMessageW", ctypes.winapi_abi,
-                 /*return*/ ctypes.uint32_t,
-                 /*flags*/  ctypes.uint32_t,
-                 /*source*/ ctypes.voidptr_t,
-                 /*msgid*/  ctypes.uint32_t,
-                 /*langid*/ ctypes.uint32_t,
-                 /*buf*/    ctypes.char16_t.ptr,
-                 /*size*/   ctypes.uint32_t,
-                 /*Arguments*/ctypes.voidptr_t);
+                 /* return*/ ctypes.uint32_t, ctypes.uint32_t,
+                 /* source*/ ctypes.voidptr_t, ctypes.uint32_t,
+                 /* langid*/ ctypes.uint32_t, ctypes.char16_t.ptr, ctypes.uint32_t,
+                 /* Arguments*/ctypes.voidptr_t);
 
 /**
  * A File-related error.
@@ -87,7 +85,6 @@ libc.declareLazy(Scope, "FormatMessage",
  */
 var OSError = function OSError(operation = "unknown operation",
                                lastError = ctypes.winLastError, path = "") {
-  operation = operation;
   SharedAll.OSError.call(this, operation, path);
   this.winLastError = lastError;
 };
@@ -99,10 +96,8 @@ OSError.prototype.toString = function toString() {
     Const.FORMAT_MESSAGE_IGNORE_INSERTS,
     null,
     /* The error number */ this.winLastError,
-    /* Default language */ 0,
-    /* Output buffer*/     buf,
-    /* Minimum size of buffer */ 1024,
-    /* Format args*/       null
+    /* Default language */ 0, buf,
+    /* Minimum size of buffer */ 1024, null
   );
   if (!result) {
     buf = "additional error " +
@@ -110,7 +105,7 @@ OSError.prototype.toString = function toString() {
       " while fetching system error message";
   }
   return "Win error " + this.winLastError + " during operation "
-    + this.operation + (this.path? " on file " + this.path : "") +
+    + this.operation + (this.path ? " on file " + this.path : "") +
     " (" + buf.readString() + ")";
 };
 OSError.prototype.toMsg = function toMsg() {
@@ -416,7 +411,7 @@ var EXPORTED_SYMBOLS = [
   "POS_END"
 ];
 
-//////////// Boilerplate
+// ////////// Boilerplate
 if (typeof Components != "undefined") {
   this.EXPORTED_SYMBOLS = EXPORTED_SYMBOLS;
   for (let symbol of EXPORTED_SYMBOLS) {

@@ -410,11 +410,6 @@ ExtensionProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
     return false;
   }
 
-  if (aPathname.EqualsLiteral("/_blank.html")) {
-    aResult.AssignLiteral("about:blank");
-    return true;
-  }
-
   if (aPathname.EqualsLiteral("/_generated_background_page.html")) {
     Unused << EPS().GetGeneratedBackgroundPageUrl(aHost, aResult);
     return !aResult.IsEmpty();

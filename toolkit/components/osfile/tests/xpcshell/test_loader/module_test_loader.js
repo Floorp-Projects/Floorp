@@ -6,4 +6,4 @@
 // Load OS.File from a module loaded with the CommonJS/addon-sdk loader
 
 var {Cu} = require("chrome");
-Cu.import('resource://gre/modules/osfile.jsm');
+Cu.import("resource://gre/modules/osfile.jsm");

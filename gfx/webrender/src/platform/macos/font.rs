@@ -17,7 +17,7 @@ use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
 use api::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
 use api::{GlyphKey};
-use api::{FontInstanceKey, NativeFontHandle};
+use api::{FontInstance, NativeFontHandle};
 use gamma_lut::{GammaLut, Color as ColorLut};
 use std::ptr;
 use std::sync::Arc;
@@ -238,7 +238,7 @@ impl FontContext {
     }
 
     pub fn get_glyph_dimensions(&mut self,
-                                font: &FontInstanceKey,
+                                font: &FontInstance,
                                 key: &GlyphKey) -> Option<GlyphDimensions> {
         self.get_ct_font(font.font_key, font.size).and_then(|ref ct_font| {
             let glyph = key.index as CGGlyph;
@@ -298,7 +298,7 @@ impl FontContext {
     }
 
     pub fn rasterize_glyph(&mut self,
-                           font: &FontInstanceKey,
+                           font: &FontInstance,
                            key: &GlyphKey)
                            -> Option<RasterizedGlyph> {
 

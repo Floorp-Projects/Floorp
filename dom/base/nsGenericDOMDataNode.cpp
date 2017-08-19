@@ -319,12 +319,18 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
   if (aOffset == 0 && endOffset == textLength) {
     // Replacing whole text or old text was empty.  Don't bother to check for
     // bidi in this string if the document already has bidi enabled.
-    bool ok = mText.SetTo(aBuffer, aLength, !document || !document->GetBidiEnabled());
+    // If this is marked as "maybe modified frequently", the text should be
+    // stored as char16_t since converting char* to char16_t* is expensive.
+    bool ok =
+      mText.SetTo(aBuffer, aLength, !document || !document->GetBidiEnabled(),
+                  HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY));
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }
   else if (aOffset == textLength) {
     // Appending to existing
-    bool ok = mText.Append(aBuffer, aLength, !document || !document->GetBidiEnabled());
+    bool ok =
+      mText.Append(aBuffer, aLength, !document || !document->GetBidiEnabled(),
+                   HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY));
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }
   else {
@@ -345,7 +351,11 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
       mText.CopyTo(to + aOffset + aLength, endOffset, textLength - endOffset);
     }
 
-    bool ok = mText.SetTo(to, newLength, !document || !document->GetBidiEnabled());
+    // If this is marked as "maybe modified frequently", the text should be
+    // stored as char16_t since converting char* to char16_t* is expensive.
+    bool ok =
+      mText.SetTo(to, newLength, !document || !document->GetBidiEnabled(),
+                  HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY));
 
     delete [] to;
 

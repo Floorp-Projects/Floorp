@@ -3,16 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::marker::PhantomData;
-use std::mem;
-
-// TODO(gw): Add a weak free list handle. This is like a strong
-//           free list handle below, but will contain an epoch
-//           field. Weak handles will use a get_opt style API
-//           which returns an Option<T> instead of T.
 
 // TODO(gw): Add an occupied list head, for fast
 //           iteration of the occupied list to implement
 //           retain() style functionality.
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+struct Epoch(u32);
 
 #[derive(Debug)]
 pub struct FreeListHandle<T> {
@@ -20,28 +17,27 @@ pub struct FreeListHandle<T> {
     _marker: PhantomData<T>,
 }
 
-enum SlotValue<T> {
-    Free,
-    Occupied(T),
-}
-
-impl<T> SlotValue<T> {
-    fn take(&mut self) -> T {
-        match mem::replace(self, SlotValue::Free) {
-            SlotValue::Free => unreachable!(),
-            SlotValue::Occupied(data) => data,
-        }
-    }
+#[derive(Debug)]
+pub struct WeakFreeListHandle<T> {
+    index: u32,
+    epoch: Epoch,
+    _marker: PhantomData<T>,
 }
 
 struct Slot<T> {
     next: Option<u32>,
-    value: SlotValue<T>,
+    epoch: Epoch,
+    value: Option<T>,
 }
 
 pub struct FreeList<T> {
     slots: Vec<Slot<T>>,
     free_list_head: Option<u32>,
+}
+
+pub enum UpsertResult<T> {
+    Updated(T),
+    Inserted(FreeListHandle<T>),
 }
 
 impl<T> FreeList<T> {
@@ -52,17 +48,63 @@ impl<T> FreeList<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get(&self, id: &FreeListHandle<T>) -> &T {
-        match self.slots[id.index as usize].value {
-            SlotValue::Free => unreachable!(),
-            SlotValue::Occupied(ref data) => data,
+        self.slots[id.index as usize]
+            .value
+            .as_ref()
+            .unwrap()
+    }
+
+    #[allow(dead_code)]
+    pub fn get_mut(&mut self, id: &FreeListHandle<T>) -> &mut T {
+        self.slots[id.index as usize]
+            .value
+            .as_mut()
+            .unwrap()
+    }
+
+    pub fn get_opt(&self, id: &WeakFreeListHandle<T>) -> Option<&T> {
+        let slot = &self.slots[id.index as usize];
+        if slot.epoch == id.epoch {
+            slot.value.as_ref()
+        } else {
+            None
         }
     }
 
-    pub fn get_mut(&mut self, id: &FreeListHandle<T>) -> &mut T {
-        match self.slots[id.index as usize].value {
-            SlotValue::Free => unreachable!(),
-            SlotValue::Occupied(ref mut data) => data,
+    pub fn get_opt_mut(&mut self, id: &WeakFreeListHandle<T>) -> Option<&mut T> {
+        let slot = &mut self.slots[id.index as usize];
+        if slot.epoch == id.epoch {
+            slot.value.as_mut()
+        } else {
+            None
+        }
+    }
+
+    pub fn create_weak_handle(&self, id: &FreeListHandle<T>) -> WeakFreeListHandle<T> {
+        let slot = &self.slots[id.index as usize];
+        WeakFreeListHandle {
+            index: id.index,
+            epoch: slot.epoch,
+            _marker: PhantomData,
+        }
+    }
+
+    // Perform a database style UPSERT operation. If the provided
+    // handle is a valid entry, update the value and return the
+    // previous data. If the provided handle is invalid, then
+    // insert the data into a new slot and return the new handle.
+    pub fn upsert(&mut self,
+                  id: &WeakFreeListHandle<T>,
+                  data: T) -> UpsertResult<T> {
+        if self.slots[id.index as usize].epoch == id.epoch {
+            let slot = &mut self.slots[id.index as usize];
+            let result = UpsertResult::Updated(slot.value.take().unwrap());
+            slot.value = Some(data);
+            result
+        } else {
+            UpsertResult::Inserted(self.insert(data))
         }
     }
 
@@ -74,7 +116,7 @@ impl<T> FreeList<T> {
                 // Remove from free list.
                 self.free_list_head = slot.next;
                 slot.next = None;
-                slot.value = SlotValue::Occupied(item);
+                slot.value = Some(item);
 
                 FreeListHandle {
                     index: free_index,
@@ -86,7 +128,8 @@ impl<T> FreeList<T> {
 
                 self.slots.push(Slot {
                     next: None,
-                    value: SlotValue::Occupied(item),
+                    epoch: Epoch(0),
+                    value: Some(item),
                 });
 
                 FreeListHandle {
@@ -100,7 +143,8 @@ impl<T> FreeList<T> {
     pub fn free(&mut self, id: FreeListHandle<T>) -> T {
         let slot = &mut self.slots[id.index as usize];
         slot.next = self.free_list_head;
+        slot.epoch = Epoch(slot.epoch.0 + 1);
         self.free_list_head = Some(id.index);
-        slot.value.take()
+        slot.value.take().unwrap()
     }
 }

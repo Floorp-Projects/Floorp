@@ -51,11 +51,6 @@ public:
 public:
   bool SetWinGestureSupport(HWND hWnd, mozilla::WidgetGestureNotifyEvent::PanDirection aDirection);
   bool ShutdownWinGestureSupport();
-  bool RegisterTouchWindow(HWND hWnd);
-  bool UnregisterTouchWindow(HWND hWnd);
-  bool GetTouchInputInfo(HTOUCHINPUT hTouchInput, uint32_t cInputs, PTOUCHINPUT pInputs);
-  bool CloseTouchInputHandle(HTOUCHINPUT hTouchInput);
-  bool IsAvailable();
 
   // Simple gesture process
   bool ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam, mozilla::WidgetSimpleGestureEvent& evt);
@@ -68,53 +63,9 @@ public:
   void UpdatePanFeedbackY(HWND hWnd, int32_t scrollOverflow, bool& endFeedback);
   void PanFeedbackFinalize(HWND hWnd, bool endFeedback);
 
-public:
-  // Helpers
-  bool GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
-  bool CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
-  bool GetGestureExtraArgs(HGESTUREINFO hGestureInfo, UINT cbExtraArgs, PBYTE pExtraArgs);
-  bool SetGestureConfig(HWND hWnd, UINT cIDs, PGESTURECONFIG pGestureConfig);
-  bool GetGestureConfig(HWND hWnd, DWORD dwFlags, PUINT pcIDs, PGESTURECONFIG pGestureConfig);
-  bool BeginPanningFeedback(HWND hWnd);
-  bool EndPanningFeedback(HWND hWnd);
-  bool UpdatePanningFeedback(HWND hWnd, LONG offsetX, LONG offsetY, BOOL fInInertia);
-
-protected:
-
 private:
-  // Function prototypes
-  typedef BOOL (WINAPI * GetGestureInfoPtr)(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
-  typedef BOOL (WINAPI * CloseGestureInfoHandlePtr)(HGESTUREINFO hGestureInfo);
-  typedef BOOL (WINAPI * GetGestureExtraArgsPtr)(HGESTUREINFO hGestureInfo, UINT cbExtraArgs, PBYTE pExtraArgs);
-  typedef BOOL (WINAPI * SetGestureConfigPtr)(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
-  typedef BOOL (WINAPI * GetGestureConfigPtr)(HWND hwnd, DWORD dwReserved, DWORD dwFlags, PUINT pcIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
-  typedef BOOL (WINAPI * BeginPanningFeedbackPtr)(HWND hWnd);
-  typedef BOOL (WINAPI * EndPanningFeedbackPtr)(HWND hWnd, BOOL fAnimateBack);
-  typedef BOOL (WINAPI * UpdatePanningFeedbackPtr)(HWND hWnd, LONG offsetX, LONG offsetY, BOOL fInInertia);
-  typedef BOOL (WINAPI * RegisterTouchWindowPtr)(HWND hWnd, ULONG flags);
-  typedef BOOL (WINAPI * UnregisterTouchWindowPtr)(HWND hWnd);
-  typedef BOOL (WINAPI * GetTouchInputInfoPtr)(HTOUCHINPUT hTouchInput, uint32_t cInputs, PTOUCHINPUT pInputs, int32_t cbSize);
-  typedef BOOL (WINAPI * CloseTouchInputHandlePtr)(HTOUCHINPUT hTouchInput);
-
-  // Static function pointers
-  static GetGestureInfoPtr getGestureInfo;
-  static CloseGestureInfoHandlePtr closeGestureInfoHandle;
-  static GetGestureExtraArgsPtr getGestureExtraArgs;
-  static SetGestureConfigPtr setGestureConfig;
-  static GetGestureConfigPtr getGestureConfig;
-  static BeginPanningFeedbackPtr beginPanningFeedback;
-  static EndPanningFeedbackPtr endPanningFeedback;
-  static UpdatePanningFeedbackPtr updatePanningFeedback;
-  static RegisterTouchWindowPtr registerTouchWindow;
-  static UnregisterTouchWindowPtr unregisterTouchWindow;
-  static GetTouchInputInfoPtr getTouchInputInfo;
-  static CloseTouchInputHandlePtr closeTouchInputHandle;
-
   // Delay load info 
   bool InitLibrary();
-
-  static HMODULE sLibraryHandle;
-  static const wchar_t kGestureLibraryName[];
 
   // Pan and feedback state
   nsPointWin mPanIntermediate;

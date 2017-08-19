@@ -1,12 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-importScripts('worker_test_osfile_shared.js');
+/* eslint-env mozilla/chrome-worker, node */
+
+
+importScripts("worker_test_osfile_shared.js");
 
 self.onmessage = function(msg) {
-  log("received message "+JSON.stringify(msg.data));
+  log("received message " + JSON.stringify(msg.data));
   self.onmessage = function(msg) {
-    log("ignored message "+JSON.stringify(msg.data));
+    log("ignored message " + JSON.stringify(msg.data));
   };
   test_init();
   test_getcwd();
@@ -28,7 +31,7 @@ function test_open_close() {
   is(typeof OS.Unix.File.open, "function", "OS.Unix.File.open is a function");
   let file = OS.Unix.File.open("chrome/toolkit/components/osfile/tests/mochi/worker_test_osfile_unix.js", OS.Constants.libc.O_RDONLY, 0);
   isnot(file, -1, "test_open_close: opening succeeded");
-  info("Close: "+OS.Unix.File.close.toSource());
+  info("Close: " + OS.Unix.File.close.toSource());
   let result = OS.Unix.File.close(file);
   is(result, 0, "test_open_close: close succeeded");
 
@@ -37,8 +40,7 @@ function test_open_close() {
   is(ctypes.errno, OS.Constants.libc.ENOENT, "test_open_close: error is ENOENT");
 }
 
-function test_create_file()
-{
+function test_create_file() {
   info("Starting test_create_file");
   let file = OS.Unix.File.open("test.tmp", OS.Constants.libc.O_RDWR
                                | OS.Constants.libc.O_CREAT
@@ -48,8 +50,7 @@ function test_create_file()
   OS.Unix.File.close(file);
 }
 
-function test_access()
-{
+function test_access() {
   info("Starting test_access");
   let file = OS.Unix.File.open("test1.tmp", OS.Constants.libc.O_RDWR
                                | OS.Constants.libc.O_CREAT
@@ -74,8 +75,7 @@ function test_access()
   OS.Unix.File.close(file);
 }
 
-function test_getcwd()
-{
+function test_getcwd() {
   let array = new (ctypes.ArrayType(ctypes.char, 32768))();
   let path = OS.Unix.File.getcwd(array, array.length);
   if (ctypes.char.ptr(path).isNull()) {
@@ -93,8 +93,7 @@ function test_getcwd()
   is(path.readString(), path2.readString(), "test_get_cwd: getcwd and getwd return the same path");
 }
 
-function test_read_write()
-{
+function test_read_write() {
   let output_name = "osfile_copy.tmp";
   // Copy file
   let input = OS.Unix.File.open(
@@ -119,7 +118,7 @@ function test_read_write()
       break;
     }
     while (bytes > 0) {
-      let ptr = array.addressOfElement(write_from);
+      array.addressOfElement(write_from);
       // Note: |write| launches an exception in case of error
       let written = OS.Unix.File.write(output, array, bytes);
       isnot(written, -1, "test_read_write: no write error");
@@ -149,7 +148,7 @@ function test_read_write()
     isnot(bytes, -1, "test_read_write: input read succeeded");
     bytes2 = OS.Unix.File.read(output, array2, 4096);
     isnot(bytes, -1, "test_read_write: output read succeeded");
-    is(bytes > 0, bytes2 > 0, "Both files contain data or neither does "+bytes+", "+bytes2);
+    is(bytes > 0, bytes2 > 0, "Both files contain data or neither does " + bytes + ", " + bytes2);
     if (bytes == 0) {
       break;
     }
@@ -168,7 +167,7 @@ function test_read_write()
     for (let i = 0; i < bytes; ++i) {
       if (array[i] != array2[i]) {
         ok(false, "Files do not match at position " + i
-           + " ("+array[i] + "/"+array2[i] + ")");
+           + " (" + array[i] + "/" + array2[i] + ")");
       }
     }
   }
@@ -182,17 +181,16 @@ function test_read_write()
   info("test_read_write cleanup complete");
 }
 
-function test_passing_undefined()
-{
+function test_passing_undefined() {
   info("Testing that an exception gets thrown when an FFI function is passed undefined");
   let exceptionRaised = false;
 
   try {
-    let file = OS.Unix.File.open(undefined, OS.Constants.libc.O_RDWR
-                                            | OS.Constants.libc.O_CREAT
-                                            | OS.Constants.libc.O_TRUNC,
-                                            OS.Constants.libc.S_IRWXU);
-  } catch(e) {
+    OS.Unix.File.open(undefined, OS.Constants.libc.O_RDWR
+                                 | OS.Constants.libc.O_CREAT
+                                 | OS.Constants.libc.O_TRUNC,
+                                   OS.Constants.libc.S_IRWXU);
+  } catch (e) {
     if (e instanceof TypeError && e.message.indexOf("open") > -1) {
       exceptionRaised = true;
     } else {

@@ -1133,27 +1133,36 @@ EditorBase::BeginningOfDocument()
 NS_IMETHODIMP
 EditorBase::EndOfDocument()
 {
+  RefPtr<Selection> selection = GetSelection();
+  return CollapseSelectionToEnd(selection);
+}
+
+nsresult
+EditorBase::CollapseSelectionToEnd(Selection* aSelection)
+{
   // XXX Why doesn't this check if the document is alive?
   if (NS_WARN_IF(!IsInitialized())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // get selection
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aSelection)) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   // get the root element
   nsINode* node = GetRoot();
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  nsINode* child = node->GetLastChild();
+  if (NS_WARN_IF(!node)) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  while (child && IsContainer(child->AsDOMNode())) {
+  nsINode* child = node->GetLastChild();
+  while (child && IsContainer(child)) {
     node = child;
     child = node->GetLastChild();
   }
 
   uint32_t length = node->Length();
-  return selection->Collapse(node, int32_t(length));
+  return aSelection->Collapse(node, static_cast<int32_t>(length));
 }
 
 NS_IMETHODIMP
@@ -2505,7 +2514,8 @@ EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
     CheckedInt<int32_t> newOffset;
     if (!node->IsNodeOfType(nsINode::eTEXT)) {
       // create a text node
-      RefPtr<nsTextNode> newNode = aDoc->CreateTextNode(EmptyString());
+      RefPtr<nsTextNode> newNode =
+        EditorBase::CreateTextNode(*aDoc, EmptyString());
       // then we insert it into the dom tree
       nsresult rv = InsertNode(*newNode, *node, offset);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2532,7 +2542,8 @@ EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
     } else {
       // we are inserting text into a non-text node.  first we have to create a
       // textnode (this also populates it with the text)
-      RefPtr<nsTextNode> newNode = aDoc->CreateTextNode(aStringToInsert);
+      RefPtr<nsTextNode> newNode =
+        EditorBase::CreateTextNode(*aDoc, aStringToInsert);
       // then we insert it into the dom tree
       nsresult rv = InsertNode(*newNode, *node, offset);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -3157,6 +3168,7 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
   return err.StealNSResult();
 }
 
+// static
 int32_t
 EditorBase::GetChildOffset(nsIDOMNode* aChild,
                            nsIDOMNode* aParent)
@@ -3167,9 +3179,36 @@ EditorBase::GetChildOffset(nsIDOMNode* aChild,
   nsCOMPtr<nsINode> child = do_QueryInterface(aChild);
   MOZ_ASSERT(parent && child);
 
-  int32_t idx = parent->IndexOf(child);
-  MOZ_ASSERT(idx != -1);
-  return idx;
+  return GetChildOffset(child, parent);
+}
+
+// static
+int32_t
+EditorBase::GetChildOffset(nsINode* aChild,
+                           nsINode* aParent)
+{
+  MOZ_ASSERT(aChild);
+  MOZ_ASSERT(aParent);
+
+  // nsINode::IndexOf() is expensive.  So, if we can return index without
+  // calling it, we should do that.
+
+  // If there is no previous siblings, it means that it's the first child.
+  if (aParent->GetFirstChild() == aChild) {
+    MOZ_ASSERT(aParent->IndexOf(aChild) == 0);
+    return 0;
+  }
+
+  // If there is no next siblings, it means that it's the last child.
+  if (aParent->GetLastChild() == aChild) {
+    int32_t lastChildIndex = static_cast<int32_t>(aParent->Length() - 1);
+    MOZ_ASSERT(aParent->IndexOf(aChild) == lastChildIndex);
+    return lastChildIndex;
+  }
+
+  int32_t index = aParent->IndexOf(aChild);
+  MOZ_ASSERT(index != -1);
+  return index;
 }
 
 // static
@@ -3200,7 +3239,7 @@ EditorBase::GetNodeLocation(nsINode* aChild,
 
   nsINode* parent = aChild->GetParentNode();
   if (parent) {
-    *aOffset = parent->IndexOf(aChild);
+    *aOffset = GetChildOffset(aChild, parent);
     MOZ_ASSERT(*aOffset != -1);
   } else {
     *aOffset = -1;
@@ -4691,6 +4730,18 @@ EditorBase::CreateHTMLContent(nsIAtom* aTag)
 
   return doc->CreateElem(nsDependentAtomString(aTag), nullptr,
                          kNameSpaceID_XHTML);
+}
+
+// static
+already_AddRefed<nsTextNode>
+EditorBase::CreateTextNode(nsIDocument& aDocument,
+                           const nsAString& aData)
+{
+  RefPtr<nsTextNode> text = aDocument.CreateEmptyTextNode();
+  text->MarkAsMaybeModifiedFrequently();
+  // Don't notify; this node is still being created.
+  text->SetText(aData, false);
+  return text.forget();
 }
 
 NS_IMETHODIMP

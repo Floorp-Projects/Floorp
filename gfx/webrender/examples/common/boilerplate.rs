@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use webrender;
 use webrender::api::*;
 use webrender::renderer::{PROFILER_DBG, RENDER_TARGET_DBG, TEXTURE_CACHE_DBG};
+use webrender::renderer::ExternalImageHandler;
 
 struct Notifier {
     window_proxy: glutin::WindowProxy,
@@ -64,6 +65,9 @@ pub trait Example {
                 event: glutin::Event,
                 api: &RenderApi,
                 document_id: DocumentId) -> bool;
+    fn get_external_image_handler(&self) -> Option<Box<ExternalImageHandler>> {
+        None
+    }
 }
 
 pub fn main_wrapper(example: &mut Example,
@@ -115,6 +119,10 @@ pub fn main_wrapper(example: &mut Example,
 
     let notifier = Box::new(Notifier::new(window.create_window_proxy()));
     renderer.set_render_notifier(notifier);
+
+    if let Some(external_image_handler) = example.get_external_image_handler() {
+        renderer.set_external_image_handler(external_image_handler);
+    }
 
     let epoch = Epoch(0);
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);

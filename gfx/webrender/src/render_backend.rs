@@ -5,7 +5,7 @@
 use frame::Frame;
 use frame_builder::FrameBuilderConfig;
 use gpu_cache::GpuCache;
-use internal_types::{FastHashMap, SourceTexture, ResultMsg, RendererFrame};
+use internal_types::{FastHashMap, ResultMsg, RendererFrame};
 use profiler::{BackendProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
@@ -17,19 +17,11 @@ use texture_cache::TextureCache;
 use time::precise_time_ns;
 use thread_profiler::register_thread_with_profiler;
 use rayon::ThreadPool;
-use webgl_types::{GLContextHandleWrapper, GLContextWrapper};
 use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
 use api::{ApiMsg, BlobImageRenderer, BuiltDisplayList, DeviceIntPoint};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, DocumentMsg};
-use api::{IdNamespace, LayerPoint, RenderDispatcher, RenderNotifier};
-use api::{VRCompositorCommand, VRCompositorHandler, WebGLCommand, WebGLContextId};
-
-#[cfg(feature = "webgl")]
-use offscreen_gl_context::GLContextDispatcher;
-
-#[cfg(not(feature = "webgl"))]
-use webgl_types::GLContextDispatcher;
+use api::{IdNamespace, LayerPoint, RenderNotifier};
 
 struct Document {
     scene: Scene,
@@ -102,59 +94,6 @@ impl Document {
     }
 }
 
-struct WebGL {
-    last_id: WebGLContextId,
-    contexts: FastHashMap<WebGLContextId, GLContextWrapper>,
-    active_id: Option<WebGLContextId>,
-}
-
-impl WebGL {
-    fn new() -> Self {
-        WebGL {
-            last_id: WebGLContextId(0),
-            contexts: FastHashMap::default(),
-            active_id: None,
-        }
-    }
-
-    fn register(&mut self, context: GLContextWrapper) -> WebGLContextId {
-        // Creating a new GLContext may make the current bound context_id dirty.
-        // Clear it to ensure that  make_current() is called in subsequent commands.
-        self.active_id = None;
-        self.last_id.0 += 1;
-        self.contexts.insert(self.last_id, context);
-        self.last_id
-    }
-
-    fn activate(&mut self, id: WebGLContextId) -> &mut GLContextWrapper {
-        let ctx = self.contexts.get_mut(&id).unwrap();
-        if Some(id) != self.active_id {
-            ctx.make_current();
-            self.active_id = Some(id);
-        }
-        ctx
-    }
-
-    fn flush(&mut self) {
-        if let Some(id) = self.active_id.take() {
-            self.contexts[&id].unbind();
-        }
-
-        // When running in OSMesa mode with texture sharing,
-        // a flush is required on any GL contexts to ensure
-        // that read-back from the shared texture returns
-        // valid data! This should be fine to have run on all
-        // implementations - a single flush for each webgl
-        // context at the start of a render frame should
-        // incur minimal cost.
-        for (_, context) in &self.contexts {
-            context.make_current();
-            context.apply_command(WebGLCommand::Flush);
-            context.unbind();
-        }
-    }
-}
-
 enum DocumentOp {
     Nop,
     Built,
@@ -184,12 +123,7 @@ pub struct RenderBackend {
     documents: FastHashMap<DocumentId, Document>,
 
     notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
-    webrender_context_handle: Option<GLContextHandleWrapper>,
     recorder: Option<Box<ApiRecordingReceiver>>,
-    main_thread_dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>,
-
-    vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>,
-    webgl: WebGL,
 
     enable_render_on_scroll: bool,
 }
@@ -204,19 +138,15 @@ impl RenderBackend {
         texture_cache: TextureCache,
         workers: Arc<ThreadPool>,
         notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
-        webrender_context_handle: Option<GLContextHandleWrapper>,
         frame_config: FrameBuilderConfig,
         recorder: Option<Box<ApiRecordingReceiver>>,
-        main_thread_dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>,
         blob_image_renderer: Option<Box<BlobImageRenderer>>,
-        vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>,
         enable_render_on_scroll: bool,
     ) -> RenderBackend {
 
         let resource_cache = ResourceCache::new(texture_cache,
                                                 workers,
-                                                blob_image_renderer,
-                                                frame_config.cache_expiry_frames);
+                                                blob_image_renderer);
 
         register_thread_with_profiler("Backend".to_string());
 
@@ -233,12 +163,7 @@ impl RenderBackend {
             documents: FastHashMap::default(),
             next_namespace_id: IdNamespace(1),
             notifier,
-            webrender_context_handle,
             recorder,
-            main_thread_dispatcher,
-
-            vr_compositor_handler,
-            webgl: WebGL::new(),
 
             enable_render_on_scroll,
         }
@@ -308,7 +233,6 @@ impl RenderBackend {
                 let display_list_received_time = precise_time_ns();
 
                 {
-                    self.webgl.flush();
                     let _timer = profile_counters.total_time.timer();
                     doc.scene.set_display_list(
                         pipeline_id,
@@ -344,7 +268,6 @@ impl RenderBackend {
 
                 doc.scene.set_root_pipeline_id(pipeline_id);
                 if doc.scene.display_lists.get(&pipeline_id).is_some() {
-                    self.webgl.flush();
                     let _timer = profile_counters.total_time.timer();
                     doc.build_scene(&mut self.resource_cache, self.hidpi_factor);
                     DocumentOp::Built
@@ -415,7 +338,6 @@ impl RenderBackend {
                 //           animated properties to not require a full
                 //           rebuild of the frame!
                 if let Some(property_bindings) = property_bindings {
-                    self.webgl.flush();
                     doc.scene.properties.set_properties(property_bindings);
                     doc.build_scene(&mut self.resource_cache, self.hidpi_factor);
                 }
@@ -511,63 +433,6 @@ impl RenderBackend {
                 ApiMsg::DeleteDocument(document_id) => {
                     self.documents.remove(&document_id);
                 }
-                ApiMsg::RequestWebGLContext(size, attributes, tx) => {
-                    if let Some(ref wrapper) = self.webrender_context_handle {
-                        let dispatcher: Option<Box<GLContextDispatcher>> = if cfg!(target_os = "windows") {
-                            Some(Box::new(WebRenderGLDispatcher {
-                                dispatcher: Arc::clone(&self.main_thread_dispatcher)
-                            }))
-                        } else {
-                            None
-                        };
-
-                        let result = wrapper.new_context(size, attributes, dispatcher);
-
-                        match result {
-                            Ok(ctx) => {
-                                let (real_size, texture_id, limits) = ctx.get_info();
-                                let id = self.webgl.register(ctx);
-
-                                self.resource_cache
-                                    .add_webgl_texture(id, SourceTexture::WebGL(texture_id),
-                                                       real_size);
-
-                                tx.send(Ok((id, limits))).unwrap();
-                            },
-                            Err(msg) => {
-                                tx.send(Err(msg.to_owned())).unwrap();
-                            }
-                        }
-                    } else {
-                        tx.send(Err("Not implemented yet".to_owned())).unwrap();
-                    }
-                }
-                ApiMsg::ResizeWebGLContext(context_id, size) => {
-                    let ctx = self.webgl.activate(context_id);
-                    match ctx.resize(&size) {
-                        Ok(_) => {
-                            // Update webgl texture size. Texture id may change too.
-                            let (real_size, texture_id, _) = ctx.get_info();
-                            self.resource_cache
-                                .update_webgl_texture(context_id, SourceTexture::WebGL(texture_id),
-                                                      real_size);
-                        },
-                        Err(msg) => {
-                            error!("Error resizing WebGLContext: {}", msg);
-                        }
-                    }
-                }
-                ApiMsg::WebGLCommand(context_id, command) => {
-                    // TODO: Buffer the commands and only apply them here if they need to
-                    // be synchronous.
-                    let ctx = self.webgl.activate(context_id);
-                    ctx.apply_command(command);
-                },
-
-                ApiMsg::VRCompositorCommand(context_id, command) => {
-                    self.webgl.activate(context_id);
-                    self.handle_vr_compositor_command(context_id, command);
-                }
                 ApiMsg::ExternalEvent(evt) => {
                     let notifier = self.notifier.lock();
                     notifier.unwrap()
@@ -639,33 +504,5 @@ impl RenderBackend {
         //           cleaner way to do this, or use the OnceMutex on crates.io?
         let mut notifier = self.notifier.lock();
         notifier.as_mut().unwrap().as_mut().unwrap().new_scroll_frame_ready(composite_needed);
-    }
-
-    fn handle_vr_compositor_command(&mut self, ctx_id: WebGLContextId, cmd: VRCompositorCommand) {
-        let texture = match cmd {
-            VRCompositorCommand::SubmitFrame(..) => {
-                    match self.resource_cache.get_webgl_texture(&ctx_id).id {
-                        SourceTexture::WebGL(texture_id) => {
-                            let size = self.resource_cache.get_webgl_texture_size(&ctx_id);
-                            Some((texture_id, size))
-                        },
-                        _=> None
-                    }
-            },
-            _ => None
-        };
-        let mut handler = self.vr_compositor_handler.lock();
-        handler.as_mut().unwrap().as_mut().unwrap().handle(cmd, texture);
-    }
-}
-
-struct WebRenderGLDispatcher {
-    dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>
-}
-
-impl GLContextDispatcher for WebRenderGLDispatcher {
-    fn dispatch(&self, f: Box<Fn() + Send>) {
-        let mut dispatcher = self.dispatcher.lock();
-        dispatcher.as_mut().unwrap().as_mut().unwrap().dispatch(f);
     }
 }

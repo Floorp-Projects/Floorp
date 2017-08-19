@@ -349,6 +349,12 @@ public:
   already_AddRefed<Element> CreateHTMLContent(nsIAtom* aTag);
 
   /**
+   * Creates text node which is marked as "maybe modified frequently".
+   */
+  static already_AddRefed<nsTextNode> CreateTextNode(nsIDocument& aDocument,
+                                                     const nsAString& aData);
+
+  /**
    * IME event handlers.
    */
   virtual nsresult BeginIMEComposition(WidgetCompositionEvent* aEvent);
@@ -658,9 +664,14 @@ public:
   /**
    * Return the offset of aChild in aParent.  Asserts fatally if parent or
    * child is null, or parent is not child's parent.
+   * FYI: aChild must not be being removed from aParent.  In such case, these
+   *      methods may return wrong index if aChild doesn't have previous
+   *      sibling or next sibling.
    */
   static int32_t GetChildOffset(nsIDOMNode* aChild,
                                 nsIDOMNode* aParent);
+  static int32_t GetChildOffset(nsINode* aChild,
+                                nsINode* aParent);
 
   /**
    * Set outOffset to the offset of aChild in the parent.
@@ -898,6 +909,11 @@ public:
     Selection* selection = sc->GetDOMSelection(ToRawSelectionType(aSelectionType));
     return selection;
   }
+
+  /**
+   * CollapseSelectionToEnd() collapses the selection to the end of the editor.
+   */
+  nsresult CollapseSelectionToEnd(Selection* aSelection);
 
   /**
    * Helpers to add a node to the selection.

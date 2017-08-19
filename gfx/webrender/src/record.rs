@@ -67,8 +67,7 @@ pub fn should_record_msg(msg: &ApiMsg) -> bool {
         ApiMsg::UpdateResources(..) |
         ApiMsg::AddDocument{..} |
         ApiMsg::UpdateDocument(..) |
-        ApiMsg::DeleteDocument(..) |
-        ApiMsg::WebGLCommand(..) =>
+        ApiMsg::DeleteDocument(..) =>
             true,
         _ => false
     }

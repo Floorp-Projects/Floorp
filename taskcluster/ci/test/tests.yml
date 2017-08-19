@@ -952,6 +952,7 @@ mochitest-valgrind:
     suite: mochitest/valgrind-plain
     treeherder-symbol: tc-M-V()
     run-on-projects: []
+    tier: 3
     loopback-video: true
     chunks: 40
     max-run-time: 14400
