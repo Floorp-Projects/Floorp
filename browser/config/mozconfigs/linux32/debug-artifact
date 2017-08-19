@@ -1,5 +1,4 @@
-MOZ_AUTOMATION_BUILD_SYMBOLS=0
-MOZ_AUTOMATION_L10N_CHECK=0
+. "$topsrcdir/build/mozconfig.artifact.automation"
 
 . "$topsrcdir/build/unix/mozconfig.linux32"
 . "$topsrcdir/build/mozconfig.common.override"

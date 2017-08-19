@@ -905,8 +905,14 @@ obj_watch(JSContext* cx, unsigned argc, Value* vp)
     if (!obj)
         return false;
 
-    if (!GlobalObject::warnOnceAboutWatch(cx, obj))
-        return false;
+    if (!cx->compartment()->warnedAboutObjectWatch) {
+        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                               JSMSG_OBJECT_WATCH_DEPRECATED))
+        {
+            return false;
+        }
+        cx->compartment()->warnedAboutObjectWatch = true;
+    }
 
     if (args.length() <= 1) {
         ReportMissingArg(cx, args.calleev(), 1);
@@ -937,8 +943,14 @@ obj_unwatch(JSContext* cx, unsigned argc, Value* vp)
     if (!obj)
         return false;
 
-    if (!GlobalObject::warnOnceAboutWatch(cx, obj))
-        return false;
+    if (!cx->compartment()->warnedAboutObjectWatch) {
+        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                               JSMSG_OBJECT_WATCH_DEPRECATED))
+        {
+            return false;
+        }
+        cx->compartment()->warnedAboutObjectWatch = true;
+    }
 
     RootedId id(cx);
     if (args.length() != 0) {
