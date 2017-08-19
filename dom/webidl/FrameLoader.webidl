@@ -12,6 +12,7 @@ interface nsIGroupedSHistory;
 interface nsIMessageSender;
 interface nsIPartialSHistory;
 interface nsIPrintSettings;
+interface nsIWebBrowserPersistDocumentReceiver;
 interface nsIWebProgressListener;
 
 [ChromeOnly]
@@ -271,3 +272,13 @@ interface FrameLoader {
   [Pure]
   readonly attribute boolean isDead;
 };
+
+[NoInterfaceObject]
+interface WebBrowserPersistable
+{
+  [Throws]
+  void startPersistence(unsigned long long aOuterWindowID,
+                        nsIWebBrowserPersistDocumentReceiver aRecv);
+};
+
+FrameLoader implements WebBrowserPersistable;

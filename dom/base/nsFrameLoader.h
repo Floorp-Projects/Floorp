@@ -100,6 +100,9 @@ public:
   mozilla::dom::EventTarget* GetTabChildGlobalAsEventTarget();
   nsresult CreateStaticClone(nsIFrameLoader* aDest);
 
+
+  // WebIDL methods
+
   already_AddRefed<nsIDocShell> GetDocShell(mozilla::ErrorResult& aRv);
 
   already_AddRefed<nsITabParent> GetTabParent();
@@ -159,6 +162,11 @@ public:
 
   already_AddRefed<nsIGroupedSHistory> EnsureGroupedSHistory(mozilla::ErrorResult& aRv);
 
+  void StartPersistence(uint64_t aOuterWindowID,
+                        nsIWebBrowserPersistDocumentReceiver* aRecv,
+                        mozilla::ErrorResult& aRv);
+
+  // WebIDL getters
 
   already_AddRefed<nsIMessageSender> GetMessageManager();
 
@@ -173,7 +181,6 @@ public:
   already_AddRefed<nsIPartialSHistory> GetPartialSHistory();
 
   already_AddRefed<nsIGroupedSHistory> GetGroupedSHistory();
-
 
   uint64_t ChildID() const { return mChildID; }
 
