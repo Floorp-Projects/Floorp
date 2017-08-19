@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
   this);
 
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
-var clipboard = require("sdk/clipboard");
+var clipboard = require("devtools/shared/platform/clipboard");
 var {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
 
 // If a test times out we want to see the complete log and not just the last few
@@ -297,7 +297,7 @@ function searchUsingSelectorSearch(selector, inspector) {
 var isEditingMenuDisabled = Task.async(
 function* (nodeFront, inspector, assert = true) {
   // To ensure clipboard contains something to paste.
-  clipboard.set("<p>test</p>", "html");
+  clipboard.copyString("<p>test</p>");
 
   yield selectNode(nodeFront, inspector);
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
@@ -329,7 +329,7 @@ function* (nodeFront, inspector, assert = true) {
 var isEditingMenuEnabled = Task.async(
 function* (nodeFront, inspector, assert = true) {
   // To ensure clipboard contains something to paste.
-  clipboard.set("<p>test</p>", "html");
+  clipboard.copyString("<p>test</p>");
 
   yield selectNode(nodeFront, inspector);
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
