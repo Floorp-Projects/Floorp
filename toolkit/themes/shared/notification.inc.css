@@ -1,0 +1,78 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+notification {
+  padding: 2px 0 3px;
+  padding-inline-start: 12px;
+  background: -moz-dialog;
+  color: -moz-dialogText;
+  border-color: ThreeDLightShadow;
+  border-style: solid;
+  border-width: 1px 0;
+  text-shadow: none;
+}
+
+notificationbox[notificationside="top"] > notification {
+  border-top-style: none;
+}
+
+notificationbox[notificationside="bottom"] > notification {
+  border-bottom-style: none;
+}
+
+notification[type="warning"],
+notification[type="critical"] {
+  border-color: rgba(12, 12, 13, 0.2);
+}
+
+notification[type="warning"] {
+  background: #ffe900;
+  color: #0c0c0d;
+}
+
+notification[type="critical"] {
+  background: #d70022;
+  color: #fff;
+}
+
+.messageText {
+  margin-inline-start: 12px !important;
+}
+
+.messageText > .text-link {
+  color: inherit !important;
+  text-decoration: underline;
+}
+
+.messageImage {
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.messageImage[type="info"] {
+  list-style-image: url("chrome://global/skin/icons/help.svg");
+}
+
+.messageImage[type="warning"] {
+  list-style-image: url("chrome://global/skin/icons/warning.svg");
+}
+
+.messageImage[type="critical"] {
+  list-style-image: url("chrome://global/skin/icons/error.svg");
+}
+
+.messageCloseButton {
+  margin: 0;
+  padding: 0;
+}
+
+/* Close button needs to be clickable from the edge of the window */
+.messageCloseButton > .toolbarbutton-icon {
+  margin-inline-end: 12px;
+}
+

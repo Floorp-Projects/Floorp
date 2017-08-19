@@ -73,17 +73,17 @@ void main(void) {
     // "The Y, Cb and Cr color channels within the 422 data are mapped into
     // the existing green, blue and red color channels."
     // https://www.khronos.org/registry/OpenGL/extensions/APPLE/APPLE_rgb_422.txt
-    yuv_value = TEX_SAMPLE(sColor0, st_y).gbr;
+    yuv_value = TEX_SAMPLE(sColor0, vec3(st_y, vLayers.x)).gbr;
 #elif defined(WR_FEATURE_NV12)
-    yuv_value.x = TEX_SAMPLE(sColor0, st_y).r;
-    yuv_value.yz = TEX_SAMPLE(sColor1, st_u).rg;
+    yuv_value.x = TEX_SAMPLE(sColor0, vec3(st_y, vLayers.x)).r;
+    yuv_value.yz = TEX_SAMPLE(sColor1, vec3(st_u, vLayers.y)).rg;
 #else
     // The yuv_planar format should have this third texture coordinate.
     vec2 st_v = vTextureOffsetV + uv_offset;
 
-    yuv_value.x = TEX_SAMPLE(sColor0, st_y).r;
-    yuv_value.y = TEX_SAMPLE(sColor1, st_u).r;
-    yuv_value.z = TEX_SAMPLE(sColor2, st_v).r;
+    yuv_value.x = TEX_SAMPLE(sColor0, vec3(st_y, vLayers.x)).r;
+    yuv_value.y = TEX_SAMPLE(sColor1, vec3(st_u, vLayers.y)).r;
+    yuv_value.z = TEX_SAMPLE(sColor2, vec3(st_v, vLayers.z)).r;
 #endif
 
     // See the YuvColorMatrix definition for an explanation of where the constants come from.

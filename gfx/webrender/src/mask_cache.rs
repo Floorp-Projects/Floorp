@@ -120,6 +120,10 @@ impl ClipAddressRange {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.item_count == 0
+    }
+
     pub fn get_count(&self) -> usize {
         self.item_count
     }

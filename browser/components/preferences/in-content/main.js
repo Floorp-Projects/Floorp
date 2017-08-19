@@ -597,14 +597,15 @@ var gMainPane = {
       // selected. folderListPref should be set to 3 if Save To Cloud Storage Provider
       // option is selected. If user switch back to 'Save To' custom path or system
       // default Downloads, check pref 'browser.download.dir' before setting respective
-      // folderListPref value
+      // folderListPref value. If currentDirPref is unspecified folderList should
+      // default to 1
       let folderListPref = document.getElementById("browser.download.folderList");
       let saveTo = document.getElementById("saveTo");
       if (saveWhere.selectedItem == saveToCloudRadio) {
         folderListPref.value = 3;
       } else if (saveWhere.selectedItem == saveTo) {
         let currentDirPref = document.getElementById("browser.download.dir");
-        folderListPref.value = await this._folderToIndex(currentDirPref.value);
+        folderListPref.value = currentDirPref.value ? await this._folderToIndex(currentDirPref.value) : 1;
       }
     }
   },
@@ -682,7 +683,8 @@ var gMainPane = {
       // When user has selected cloud storage, use value in currentDirPref to
       // compute index to display download folder label and icon to avoid
       // displaying blank downloadFolder label and icon on load of preferences UI
-      folderIndex = await this._folderToIndex(currentDirPref.value);
+      // Set folderIndex to 1 if currentDirPref is unspecified
+      folderIndex = currentDirPref.value ? await this._folderToIndex(currentDirPref.value) : 1;
     }
 
     // Display a 'pretty' label or the path in the UI.

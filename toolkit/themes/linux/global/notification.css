@@ -4,78 +4,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-notification {
-  color: -moz-gtk-info-bar-text;
-  -moz-appearance: -moz-gtk-info-bar;
-%if MOZ_WIDGET_GTK == 2
-  background-color: InfoBackground;
-%endif
-  text-shadow: none;
-}
-
-notification[type="info"] {
-  color: -moz-DialogText;
-  background-color: -moz-Dialog;
-  -moz-appearance: none;
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-}
-
-notificationbox[notificationside="top"] > notification[type="info"] {
-  border-top-style: none;
-}
-
-notificationbox[notificationside="bottom"] > notification[type="info"] {
-  border-bottom-style: none;
-}
-
-notification[type="critical"] {
-  color: white;
-  background-image: linear-gradient(rgb(212,0,0), rgb(152,0,0));
-  -moz-appearance: none;
-}
-
-.notification-inner {
-  padding-top: 1px;
-  padding-bottom: 1px;
-}
-
-.messageText {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-.messageText > .text-link {
-  color: inherit !important;
-  text-decoration: underline;
-}
-
-.messageImage {
-  width: 16px;
-  height: 16px;
-  margin-inline-start: 6px;
-  margin-inline-end: 1px;
-}
-
-/* Default icons for notifications */
-
-.messageImage[type="info"] {
-  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=menu");
-}
-
-.messageImage[type="warning"] {
-  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
-}
-
-.messageImage[type="critical"] {
-  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
-}
-
-.messageCloseButton {
-  padding-left: 11px;
-  padding-right: 11px;
-}
-
+%include ../../shared/notification.inc.css
 %include ../../shared/popupnotification.inc.css
 
 .popup-notification-button:-moz-focusring {

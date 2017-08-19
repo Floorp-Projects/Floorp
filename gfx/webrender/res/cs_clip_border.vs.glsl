@@ -21,8 +21,8 @@ struct BorderCorner {
     int clip_mode;
 };
 
-BorderCorner fetch_border_corner(int index) {
-    vec4 data[2] = fetch_from_resource_cache_2(index);
+BorderCorner fetch_border_corner(ivec2 address) {
+    vec4 data[2] = fetch_from_resource_cache_2_direct(address);
     return BorderCorner(RectWithSize(data[0].xy, data[0].zw),
                         data[1].xy,
                         int(data[1].z),
@@ -35,8 +35,8 @@ struct BorderClipDash {
     vec4 point_tangent_1;
 };
 
-BorderClipDash fetch_border_clip_dash(int index) {
-    vec4 data[2] = fetch_from_resource_cache_2(index);
+BorderClipDash fetch_border_clip_dash(ivec2 address, int segment) {
+    vec4 data[2] = fetch_from_resource_cache_2_direct(address + ivec2(2 + 2 * (segment - 1), 0));
     return BorderClipDash(data[0], data[1]);
 }
 
@@ -45,8 +45,8 @@ struct BorderClipDot {
     vec3 center_radius;
 };
 
-BorderClipDot fetch_border_clip_dot(int index) {
-    vec4 data = fetch_from_resource_cache_1(index);
+BorderClipDot fetch_border_clip_dot(ivec2 address, int segment) {
+    vec4 data = fetch_from_resource_cache_1_direct(address + ivec2(2 + (segment - 1), 0));
     return BorderClipDot(data.xyz);
 }
 
@@ -56,10 +56,10 @@ void main(void) {
     Layer layer = fetch_layer(cci.layer_index);
 
     // Fetch the header information for this corner clip.
-    BorderCorner corner = fetch_border_corner(cci.data_index);
+    BorderCorner corner = fetch_border_corner(cci.clip_data_address);
     vClipCenter = corner.clip_center;
 
-    if (cci.segment_index == 0) {
+    if (cci.segment == 0) {
         // The first segment is used to zero out the border corner.
         vAlphaMask = vec2(0.0);
         vDotParams = vec3(0.0);
@@ -85,7 +85,7 @@ void main(void) {
         switch (corner.clip_mode) {
             case CLIP_MODE_DASH: {
                 // Fetch the information about this particular dash.
-                BorderClipDash dash = fetch_border_clip_dash(cci.data_index + 2 + 2 * (cci.segment_index - 1));
+                BorderClipDash dash = fetch_border_clip_dash(cci.clip_data_address, cci.segment);
                 vPoint_Tangent0 = dash.point_tangent_0 * sign_modifier.xyxy;
                 vPoint_Tangent1 = dash.point_tangent_1 * sign_modifier.xyxy;
                 vDotParams = vec3(0.0);
@@ -93,7 +93,7 @@ void main(void) {
                 break;
             }
             case CLIP_MODE_DOT: {
-                BorderClipDot cdot = fetch_border_clip_dot(cci.data_index + 2 + (cci.segment_index - 1));
+                BorderClipDot cdot = fetch_border_clip_dot(cci.clip_data_address, cci.segment);
                 vPoint_Tangent0 = vec4(1.0);
                 vPoint_Tangent1 = vec4(1.0);
                 vDotParams = vec3(cdot.center_radius.xy * sign_modifier, cdot.center_radius.z);

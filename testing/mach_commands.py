@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import json
+import logging
 import os
 import sys
 import tempfile
@@ -173,7 +174,7 @@ TEST_FLAVORS = {
 }
 
 for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
-    TEST_SUITES['mochitest-%d' %i] = {
+    TEST_SUITES['mochitest-%d' % i] = {
         'aliases': ('M%d' % i, 'm%d' % i),
         'mach_command': 'mochitest',
         'kwargs': {
@@ -197,7 +198,8 @@ TEST_HELP = TEST_HELP.strip()
 
 @CommandProvider
 class Test(MachCommandBase):
-    @Command('test', category='testing', description='Run tests (detects the kind of test and runs it).')
+    @Command('test', category='testing',
+             description='Run tests (detects the kind of test and runs it).')
     @CommandArgument('what', default=None, nargs='*', help=TEST_HELP)
     def test(self, what):
         """Run tests from names or paths.
@@ -287,7 +289,8 @@ class Test(MachCommandBase):
                 run_tests += [t for t in resolver.resolve_tests(paths=paths)
                               if not (tags & set(t.get('tags', '').split()))]
             if flavors:
-                run_tests = [t for t in run_tests if t['flavor'] not in flavors]
+                run_tests = [
+                    t for t in run_tests if t['flavor'] not in flavors]
                 for flavor in flavors:
                     run_tests += list(resolver.resolve_tests(flavor=flavor))
 
@@ -327,8 +330,8 @@ class Test(MachCommandBase):
             kwargs['subsuite'] = subsuite
 
             res = self._mach_context.commands.dispatch(
-                    m['mach_command'], self._mach_context,
-                    test_objects=tests, **kwargs)
+                m['mach_command'], self._mach_context,
+                test_objects=tests, **kwargs)
             if res:
                 status = res
 
@@ -338,14 +341,12 @@ class Test(MachCommandBase):
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('cppunittest', category='testing',
-        description='Run cpp unit tests (C++ tests).')
+             description='Run cpp unit tests (C++ tests).')
     @CommandArgument('test_files', nargs='*', metavar='N',
-        help='Test to run. Can be specified as one or more files or ' \
-            'directories, or omitted. If omitted, the entire test suite is ' \
-            'executed.')
-
+                     help='Test to run. Can be specified as one or more files or '
+                     'directories, or omitted. If omitted, the entire test suite is '
+                     'executed.')
     def run_cppunit_test(self, **params):
-        import mozinfo
         from mozlog import commandline
         log = commandline.setup_logging("cppunittest",
                                         {},
@@ -360,7 +361,8 @@ class MachCommands(MachCommandBase):
         tests = params['test_files']
         if len(tests) == 0:
             tests = [os.path.join(self.distdir, 'cppunittests')]
-            manifest_path = os.path.join(self.topsrcdir, 'testing', 'cppunittest.ini')
+            manifest_path = os.path.join(
+                self.topsrcdir, 'testing', 'cppunittest.ini')
         else:
             manifest_path = None
 
@@ -419,14 +421,17 @@ class MachCommands(MachCommandBase):
 
         return 0 if result else 1
 
+
 def executable_name(name):
     return name + '.exe' if sys.platform.startswith('win') else name
 
+
 @CommandProvider
 class CheckSpiderMonkeyCommand(MachCommandBase):
-    @Command('check-spidermonkey', category='testing', description='Run SpiderMonkey tests (JavaScript engine).')
-    @CommandArgument('--valgrind', action='store_true', help='Run jit-test suite with valgrind flag')
-
+    @Command('check-spidermonkey', category='testing',
+             description='Run SpiderMonkey tests (JavaScript engine).')
+    @CommandArgument('--valgrind', action='store_true',
+                     help='Run jit-test suite with valgrind flag')
     def run_checkspidermonkey(self, **params):
         import subprocess
 
@@ -438,7 +443,8 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         print('Running jit-tests')
         jittest_cmd = [
             python,
-            os.path.join(self.topsrcdir, 'js', 'src', 'jit-test', 'jit_test.py'),
+            os.path.join(self.topsrcdir, 'js', 'src',
+                         'jit-test', 'jit_test.py'),
             js,
             '--no-slow',
             '--jitflags=all',
@@ -458,41 +464,46 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         jstest_result = subprocess.call(jstest_cmd)
 
         print('running jsapi-tests')
-        jsapi_tests_cmd = [os.path.join(self.bindir, executable_name('jsapi-tests'))]
+        jsapi_tests_cmd = [os.path.join(
+            self.bindir, executable_name('jsapi-tests'))]
         jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
 
         print('running check-style')
-        check_style_cmd = [python, os.path.join(self.topsrcdir, 'config', 'check_spidermonkey_style.py')]
-        check_style_result = subprocess.call(check_style_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
+        check_style_cmd = [python, os.path.join(
+            self.topsrcdir, 'config', 'check_spidermonkey_style.py')]
+        check_style_result = subprocess.call(
+            check_style_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
 
         print('running check-masm')
-        check_masm_cmd = [python, os.path.join(self.topsrcdir, 'config', 'check_macroassembler_style.py')]
-        check_masm_result = subprocess.call(check_masm_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
+        check_masm_cmd = [python, os.path.join(
+            self.topsrcdir, 'config', 'check_macroassembler_style.py')]
+        check_masm_result = subprocess.call(
+            check_masm_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
 
         print('running check-js-msg-encoding')
-        check_js_msg_cmd = [python, os.path.join(self.topsrcdir, 'config', 'check_js_msg_encoding.py')]
-        check_js_msg_result = subprocess.call(check_js_msg_cmd, cwd=self.topsrcdir)
+        check_js_msg_cmd = [python, os.path.join(
+            self.topsrcdir, 'config', 'check_js_msg_encoding.py')]
+        check_js_msg_result = subprocess.call(
+            check_js_msg_cmd, cwd=self.topsrcdir)
 
-        all_passed = jittest_result and jstest_result and jsapi_tests_result and check_style_result and check_masm_result and check_js_msg_result
+        all_passed = jittest_result and jstest_result and jsapi_tests_result and \
+            check_style_result and check_masm_result and check_js_msg_result
 
         return all_passed
+
 
 @CommandProvider
 class JsapiTestsCommand(MachCommandBase):
     @Command('jsapi-tests', category='testing', description='Run jsapi tests (JavaScript engine).')
     @CommandArgument('test_name', nargs='?', metavar='N',
-        help='Test to run. Can be a prefix or omitted. If omitted, the entire ' \
-             'test suite is executed.')
-
+                     help='Test to run. Can be a prefix or omitted. If omitted, the entire '
+                     'test suite is executed.')
     def run_jsapitests(self, **params):
         import subprocess
 
-        bin_suffix = ''
-        if sys.platform.startswith('win'):
-            bin_suffix = '.exe'
-
         print('running jsapi-tests')
-        jsapi_tests_cmd = [os.path.join(self.bindir, executable_name('jsapi-tests'))]
+        jsapi_tests_cmd = [os.path.join(
+            self.bindir, executable_name('jsapi-tests'))]
         if params['test_name']:
             jsapi_tests_cmd.append(params['test_name'])
 
@@ -500,6 +511,44 @@ class JsapiTestsCommand(MachCommandBase):
 
         return jsapi_tests_result
 
+
+@CommandProvider
+class CramTest(MachCommandBase):
+    @Command('cramtest', category='testing',
+             description="Mercurial style .t tests for command line applications.")
+    @CommandArgument('test_paths', nargs='*', metavar='N',
+                     help="Test paths to run. Each path can be a test file or directory. "
+                          "If omitted, the entire suite will be run.")
+    @CommandArgument('cram_args', nargs=argparse.REMAINDER,
+                     help="Extra arguments to pass down to the cram binary. See "
+                          "'./mach python -m cram -- -h' for a list of available options.")
+    def cramtest(self, cram_args=None, test_paths=None, test_objects=None):
+        self._activate_virtualenv()
+        import mozinfo
+        from manifestparser import TestManifest
+
+        if test_objects is None:
+            from mozbuild.testing import TestResolver
+            resolver = self._spawn(TestResolver)
+            if test_paths:
+                # If we were given test paths, try to find tests matching them.
+                test_objects = resolver.resolve_tests(paths=test_paths, flavor='cram')
+            else:
+                # Otherwise just run everything in CRAMTEST_MANIFESTS
+                test_objects = resolver.resolve_tests(flavor='cram')
+
+        if not test_objects:
+            message = 'No tests were collected, check spelling of the test paths.'
+            self.log(logging.WARN, 'cramtest', {}, message)
+            return 1
+
+        mp = TestManifest()
+        mp.tests.extend(test_objects)
+        tests = mp.active_tests(disabled=False, **mozinfo.info)
+
+        python = self.virtualenv_manager.python_path
+        cmd = [python, '-m', 'cram'] + cram_args + [t['relpath'] for t in tests]
+        return subprocess.call(cmd, cwd=self.topsrcdir)
 
 
 def get_parser(argv=None):
@@ -543,7 +592,8 @@ def get_parser(argv=None):
                         default=True)
 
     parser.add_argument('-p', '--platform',
-                        choices=['linux', 'linux64', 'mac', 'macosx64', 'win32', 'win64'],
+                        choices=['linux', 'linux64', 'mac',
+                                 'macosx64', 'win32', 'win64'],
                         dest='platform',
                         help="Platform for the chunk to find the test.",
                         default=None)
@@ -575,6 +625,7 @@ def download_mozinfo(platform=None, debug_build=False):
 
     subprocess.call(args)
     return temp_dir, temp_path
+
 
 @CommandProvider
 class ChunkFinder(MachCommandBase):
@@ -610,14 +661,16 @@ class ChunkFinder(MachCommandBase):
         if kwargs['platform'] or kwargs['debug']:
             self._activate_virtualenv()
             self.virtualenv_manager.install_pip_package('mozdownload==1.17')
-            temp_dir, temp_path = download_mozinfo(kwargs['platform'], kwargs['debug'])
+            temp_dir, temp_path = download_mozinfo(
+                kwargs['platform'], kwargs['debug'])
             args['extra_mozinfo_json'] = temp_path
 
         found = False
-        for this_chunk in range(1, total_chunks+1):
+        for this_chunk in range(1, total_chunks + 1):
             args['thisChunk'] = this_chunk
             try:
-                self._mach_context.commands.dispatch(suite_name, self._mach_context, flavor=flavor, resolve_tests=False, **args)
+                self._mach_context.commands.dispatch(
+                    suite_name, self._mach_context, flavor=flavor, resolve_tests=False, **args)
             except SystemExit:
                 pass
             except KeyboardInterrupt:
@@ -628,9 +681,11 @@ class ChunkFinder(MachCommandBase):
             for test in tests:
                 if test_path == test['path']:
                     if 'disabled' in test:
-                        print('The test %s for flavor %s is disabled on the given platform' % (test_path, flavor))
+                        print('The test %s for flavor %s is disabled on the given platform' % (
+                            test_path, flavor))
                     else:
-                        print('The test %s for flavor %s is present in chunk number: %d' % (test_path, flavor, this_chunk))
+                        print('The test %s for flavor %s is present in chunk number: %d' % (
+                            test_path, flavor, this_chunk))
                     found = True
                     break
 
@@ -648,30 +703,32 @@ class ChunkFinder(MachCommandBase):
 @CommandProvider
 class TestInfoCommand(MachCommandBase):
     from datetime import date, timedelta
-    @Command('test-info', category='testing',
-        description='Display historical test result summary.')
-    @CommandArgument('test_names', nargs=argparse.REMAINDER,
-        help='Test(s) of interest.')
-    @CommandArgument('--branches',
-        default='mozilla-central,mozilla-inbound,autoland',
-        help='Report for named branches (default: mozilla-central,mozilla-inbound,autoland)')
-    @CommandArgument('--start',
-        default=(date.today() - timedelta(7)).strftime("%Y-%m-%d"),
-        help='Start date (YYYY-MM-DD)')
-    @CommandArgument('--end',
-        default=date.today().strftime("%Y-%m-%d"),
-        help='End date (YYYY-MM-DD)')
-    @CommandArgument('--show-info', action='store_true',
-        help='Retrieve and display general test information.')
-    @CommandArgument('--show-results', action='store_true',
-        help='Retrieve and display ActiveData test result summary.')
-    @CommandArgument('--show-durations', action='store_true',
-        help='Retrieve and display ActiveData test duration summary.')
-    @CommandArgument('--show-bugs', action='store_true',
-        help='Retrieve and display related Bugzilla bugs.')
-    @CommandArgument('--verbose', action='store_true',
-        help='Enable debug logging.')
 
+    @Command('test-info', category='testing',
+             description='Display historical test result summary.')
+    @CommandArgument('test_names', nargs=argparse.REMAINDER,
+                     help='Test(s) of interest.')
+    @CommandArgument('--branches',
+                     default='mozilla-central,mozilla-inbound,autoland',
+                     help='Report for named branches '
+                          '(default: mozilla-central,mozilla-inbound,autoland)')
+    @CommandArgument('--start',
+                     default=(date.today() - timedelta(7)
+                              ).strftime("%Y-%m-%d"),
+                     help='Start date (YYYY-MM-DD)')
+    @CommandArgument('--end',
+                     default=date.today().strftime("%Y-%m-%d"),
+                     help='End date (YYYY-MM-DD)')
+    @CommandArgument('--show-info', action='store_true',
+                     help='Retrieve and display general test information.')
+    @CommandArgument('--show-results', action='store_true',
+                     help='Retrieve and display ActiveData test result summary.')
+    @CommandArgument('--show-durations', action='store_true',
+                     help='Retrieve and display ActiveData test duration summary.')
+    @CommandArgument('--show-bugs', action='store_true',
+                     help='Retrieve and display related Bugzilla bugs.')
+    @CommandArgument('--verbose', action='store_true',
+                     help='Enable debug logging.')
     def test_info(self, **params):
 
         import which
@@ -689,7 +746,7 @@ class TestInfoCommand(MachCommandBase):
         if (not self.show_info and
             not self.show_results and
             not self.show_durations and
-            not self.show_bugs):
+                not self.show_bugs):
             # by default, show everything
             self.show_info = True
             self.show_results = True
@@ -805,7 +862,7 @@ class TestInfoCommand(MachCommandBase):
         self.short_name = None
         name_idx = self.full_test_name.rfind('/')
         if name_idx > 0:
-            self.short_name = self.full_test_name[name_idx+1:]
+            self.short_name = self.full_test_name[name_idx + 1:]
 
         # robo_name is short_name without ".java" - for robocop
         self.robo_name = None
@@ -847,21 +904,21 @@ class TestInfoCommand(MachCommandBase):
                 {"lt": {"run.timestamp": {"date": self.end}}}
             ]}
         }
-        print("Querying ActiveData...") # Following query can take a long time
+        print("Querying ActiveData...")  # Following query can take a long time
         data = self.submit(query)
         if data and len(data) > 0:
             self.activedata_test_name = [
                 d['result']['test']
                 for p in simple_names + regex_names
                 for d in data
-                if re.match(p+"$", d['result']['test'])
+                if re.match(p + "$", d['result']['test'])
             ][0]  # first match is best match
         if self.activedata_test_name:
             print("Found records matching '%s' in ActiveData." %
-                self.activedata_test_name)
+                  self.activedata_test_name)
         else:
             print("Unable to find matching records in ActiveData; using %s!" %
-                self.test_name)
+                  self.test_name)
             self.activedata_test_name = self.test_name
 
     def get_platform(self, record):
@@ -912,7 +969,7 @@ class TestInfoCommand(MachCommandBase):
             ]}
         }
         print("\nTest results for %s on %s between %s and %s" %
-            (self.activedata_test_name, self.branches, self.start, self.end))
+              (self.activedata_test_name, self.branches, self.start, self.end))
         data = self.submit(query)
         if data and len(data) > 0:
             data.sort(key=self.get_platform)
@@ -935,37 +992,38 @@ class TestInfoCommand(MachCommandBase):
                 print("%-30s %6d failures in %6d runs" % (
                     platform, failures, runs))
             print("\nTotal: %d failures in %d runs or %.3f failures/run" %
-                (total_failures, total_runs, (float)(total_failures) / total_runs))
+                  (total_failures, total_runs, (float)(total_failures) / total_runs))
             if worst_failures > 0:
                 print("Worst rate on %s %d failures in %d runs or %.3f failures/run" %
-                    (worst_platform, worst_failures, worst_runs, worst_rate))
+                      (worst_platform, worst_failures, worst_runs, worst_rate))
         else:
             print("No test result data found.")
 
     def report_test_durations(self):
         # Report test durations summary from ActiveData
         query = {
-	    "from": "unittest",
+            "from": "unittest",
             "format": "list",
-	    "limit": 100,
-	    "groupby": ["build.platform","build.type","run.type"],
-	    "select": [
-		{"value":"result.duration","aggregate":"average","name":"average"},
-		{"value":"result.duration","aggregate":"min","name":"min"},
-		{"value":"result.duration","aggregate":"max","name":"max"},
-		{"aggregate":"count"}
-	    ],
-	    "where": {"and": [
+            "limit": 100,
+            "groupby": ["build.platform", "build.type", "run.type"],
+            "select": [
+                {"value": "result.duration",
+                    "aggregate": "average", "name": "average"},
+                {"value": "result.duration", "aggregate": "min", "name": "min"},
+                {"value": "result.duration", "aggregate": "max", "name": "max"},
+                {"aggregate": "count"}
+            ],
+            "where": {"and": [
                 {"eq": {"result.ok": "T"}},
-		{"eq": {"result.test": self.activedata_test_name}},
+                {"eq": {"result.test": self.activedata_test_name}},
                 {"in": {"build.branch": self.branches.split(',')}},
                 {"gt": {"run.timestamp": {"date": self.start}}},
                 {"lt": {"run.timestamp": {"date": self.end}}}
-	    ]}
+            ]}
         }
         data = self.submit(query)
         print("\nTest durations for %s on %s between %s and %s" %
-            (self.activedata_test_name, self.branches, self.start, self.end))
+              (self.activedata_test_name, self.branches, self.start, self.end))
         if data and len(data) > 0:
             data.sort(key=self.get_platform)
             for record in data:
@@ -987,7 +1045,7 @@ class TestInfoCommand(MachCommandBase):
         if self.robo_name:
             search = '%s,%s' % (search, self.robo_name)
         payload = {'quicksearch': search,
-                   'include_fields':'id,summary'}
+                   'include_fields': 'id,summary'}
         response = requests.get('https://bugzilla.mozilla.org/rest/bug',
                                 payload)
         response.raise_for_status()

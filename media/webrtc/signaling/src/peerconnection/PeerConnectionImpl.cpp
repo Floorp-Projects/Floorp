@@ -1,3 +1,4 @@
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -315,6 +316,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mTrickle(true) // TODO(ekr@rtfm.com): Use pref
   , mNegotiationNeeded(false)
   , mPrivateWindow(false)
+  , mActiveOnWindow(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   auto log = RLogConnector::CreateInstance();
@@ -324,6 +326,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       mPrivateWindow = true;
       log->EnterPrivateMode();
     }
+    mWindow->AddPeerConnection();
+    mActiveOnWindow = true;
   }
   CSFLogInfo(logTag, "%s: PeerConnectionImpl constructor for %s",
              __FUNCTION__, mHandle.c_str());
@@ -348,6 +352,14 @@ PeerConnectionImpl::~PeerConnectionImpl()
   }
   // This aborts if not on main thread (in Debug builds)
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
+  if (mWindow && mActiveOnWindow) {
+    mWindow->RemovePeerConnection();
+    // No code is supposed to observe the assignment below, but
+    // hopefully it makes looking at this object in a debugger
+    // make more sense.
+    mActiveOnWindow = false;
+  }
+
   if (mPrivateWindow) {
     auto * log = RLogConnector::GetInstance();
     if (log) {
@@ -3143,6 +3155,11 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
 
   if (mSignalingState == PCImplSignalingState::SignalingClosed) {
     CloseInt();
+    // Uncount this connection as active on the inner window upon close.
+    if (mWindow && mActiveOnWindow) {
+      mWindow->RemovePeerConnection();
+      mActiveOnWindow = false;
+    }
   }
 
   RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
@@ -3393,6 +3410,12 @@ void PeerConnectionImpl::IceConnectionStateChange(
     if (mMedia->IsIceRestarting()) {
       FinalizeIceRestart();
     }
+  }
+
+  // Uncount this connection as active on the inner window upon close.
+  if (mWindow && mActiveOnWindow && mIceConnectionState == PCImplIceConnectionState::Closed) {
+    mWindow->RemovePeerConnection();
+    mActiveOnWindow = false;
   }
 
   // Would be nice if we had a means of converting one of these dom enums

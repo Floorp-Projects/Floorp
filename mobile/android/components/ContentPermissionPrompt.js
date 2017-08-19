@@ -7,9 +7,14 @@ const Cr = Components.results;
 const Cu = Components.utils;
 const Cc = Components.classes;
 
-Cu.import("resource://gre/modules/RuntimePermissions.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions",
+                                  "resource://gre/modules/RuntimePermissions.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "DoorHanger",
+                                  "resource://gre/modules/Prompt.jsm");
 
 const kEntities = {
   "contacts": "contacts",
@@ -106,12 +111,6 @@ ContentPermissionPrompt.prototype = {
        return;
     }
 
-    let chromeWin = this.getChromeForRequest(request);
-    let tab = chromeWin.BrowserApp.getTabForWindow(request.window.top);
-    if (!tab) {
-      return;
-    }
-
     let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
     let entityName = kEntities[perm.type];
 
@@ -141,7 +140,9 @@ ContentPermissionPrompt.prototype = {
       positive: true
     }];
 
-    let requestor = chromeWin.BrowserApp.manifest ? "'" + chromeWin.BrowserApp.manifest.name + "'" : request.principal.URI.host;
+    let chromeWin = this.getChromeForRequest(request);
+    let requestor = (chromeWin.BrowserApp && chromeWin.BrowserApp.manifest) ?
+        "'" + chromeWin.BrowserApp.manifest.name + "'" : request.principal.URI.host;
     let message = browserBundle.formatStringFromName(entityName + ".ask", [requestor], 1);
     // desktopNotification doesn't have a checkbox
     let options;
@@ -156,7 +157,9 @@ ContentPermissionPrompt.prototype = {
       options = { checkbox: browserBundle.GetStringFromName(entityName + ".dontAskAgain") };
     }
 
-    chromeWin.NativeWindow.doorhanger.show(message, entityName + request.principal.URI.host, buttons, tab.id, options, entityName.toUpperCase());
+    DoorHanger.show(request.window || request.element.ownerGlobal,
+                    message, entityName + request.principal.URI.host,
+                    buttons, options, entityName.toUpperCase());
   }
 };
 

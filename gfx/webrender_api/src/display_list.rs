@@ -9,15 +9,15 @@ use serde::ser::{SerializeSeq, SerializeMap};
 use time::precise_time_ns;
 use {BorderDetails, BorderDisplayItem, BorderWidths, BoxShadowClipMode, BoxShadowDisplayItem};
 use {ClipAndScrollInfo, ClipDisplayItem, ClipId, ColorF, ComplexClipRegion, DisplayItem};
-use {ExtendMode, FilterOp, FontKey, GlyphIndex, GlyphInstance, GlyphOptions, Gradient};
-use {GradientDisplayItem, GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask};
-use {ImageRendering, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
-use {LineDisplayItem, LineOrientation, LineStyle, LocalClip, MixBlendMode, PipelineId};
-use {PropertyBinding, PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
-use {RectangleDisplayItem, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity};
-use {SpecificDisplayItem, StackingContext, TextDisplayItem, TextShadow, TransformStyle};
-use {WebGLContextId, WebGLDisplayItem, YuvColorSpace, YuvData, YuvImageDisplayItem};
-use {FastHashMap, FastHashSet};
+use {ExtendMode, FastHashMap, FastHashSet, FilterOp, FontKey, GlyphIndex, GlyphInstance};
+use {GlyphOptions, Gradient, GradientDisplayItem, GradientStop, IframeDisplayItem};
+use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayoutPoint, LayoutRect, LayoutSize};
+use {LayoutTransform, LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, LocalClip};
+use {MixBlendMode, PipelineId, PropertyBinding, PushStackingContextDisplayItem, RadialGradient};
+use {RadialGradientDisplayItem, RectangleDisplayItem, ScrollFrameDisplayItem, ScrollPolicy};
+use {ScrollSensitivity, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem};
+use {StickyFrameInfo, TextDisplayItem, TextShadow, TransformStyle};
+use {YuvColorSpace, YuvData, YuvImageDisplayItem};
 use std::marker::PhantomData;
 
 #[repr(C)]
@@ -597,16 +597,6 @@ impl DisplayListBuilder {
         self.push_item(item, rect, local_clip);
     }
 
-    pub fn push_webgl_canvas(&mut self,
-                             rect: LayoutRect,
-                             local_clip: Option<LocalClip>,
-                             context_id: WebGLContextId) {
-        let item = SpecificDisplayItem::WebGL(WebGLDisplayItem {
-            context_id,
-        });
-        self.push_item(item, rect, local_clip);
-    }
-
     pub fn push_text(&mut self,
                      rect: LayoutRect,
                      local_clip: Option<LocalClip>,
@@ -965,6 +955,21 @@ impl DisplayListBuilder {
 
         self.push_item(item, clip_rect, Some(LocalClip::from(clip_rect)));
         self.push_iter(complex_clips);
+        id
+    }
+
+    pub fn define_sticky_frame(&mut self,
+                               id: Option<ClipId>,
+                               frame_rect: LayoutRect,
+                               sticky_frame_info: StickyFrameInfo)
+                               -> ClipId {
+        let id = self.generate_clip_id(id);
+        let item = SpecificDisplayItem::StickyFrame(StickyFrameDisplayItem {
+            id,
+            sticky_frame_info,
+        });
+
+        self.push_item(item, frame_rect, None);
         id
     }
 

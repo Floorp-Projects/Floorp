@@ -195,17 +195,8 @@ static const char contentSandboxRules[] = R"(
      (allow mach-lookup (global-name "com.apple.xpcd")))
 
   (allow iokit-open
-      (iokit-user-client-class "IOHIDParamUserClient")
-      (iokit-user-client-class "IOAudioEngineUserClient")
-      (iokit-user-client-class "IGAccelDevice")
-      (iokit-user-client-class "nvDevice")
-      (iokit-user-client-class "nvSharedUserClient")
-      (iokit-user-client-class "nvFermiGLContext")
-      (iokit-user-client-class "IGAccelGLContext")
-      (iokit-user-client-class "IGAccelSharedUserClient")
-      (iokit-user-client-class "IGAccelVideoContextMain")
-      (iokit-user-client-class "IGAccelVideoContextMedia")
-      (iokit-user-client-class "IGAccelVideoContextVEBox"))
+     (iokit-user-client-class "IOHIDParamUserClient")
+     (iokit-user-client-class "IOAudioEngineUserClient"))
 
 ; depending on systems, the 1st, 2nd or both rules are necessary
   (allow-shared-preferences-read "com.apple.HIToolbox")

@@ -13,16 +13,15 @@
 
 in int aClipRenderTaskIndex;
 in int aClipLayerIndex;
-in int aClipDataIndex;
-in int aClipSegmentIndex;
-in int aClipResourceAddress;
+in int aClipSegment;
+in ivec4 aClipDataResourceAddress;
 
 struct CacheClipInstance {
     int render_task_index;
     int layer_index;
-    int data_index;
-    int segment_index;
-    int resource_address;
+    int segment;
+    ivec2 clip_data_address;
+    ivec2 resource_address;
 };
 
 CacheClipInstance fetch_clip_item(int index) {
@@ -30,9 +29,9 @@ CacheClipInstance fetch_clip_item(int index) {
 
     cci.render_task_index = aClipRenderTaskIndex;
     cci.layer_index = aClipLayerIndex;
-    cci.data_index = aClipDataIndex;
-    cci.segment_index = aClipSegmentIndex;
-    cci.resource_address = aClipResourceAddress;
+    cci.segment = aClipSegment;
+    cci.clip_data_address = aClipDataResourceAddress.xy;
+    cci.resource_address = aClipDataResourceAddress.zw;
 
     return cci;
 }
@@ -48,7 +47,7 @@ struct ClipVertexInfo {
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       Layer layer,
                                       ClipArea area,
-                                      int segment_index) {
+                                      int segment) {
 
     RectWithSize clipped_local_rect = intersect_rect(local_clip_rect,
                                                      layer.local_clip_rect);
@@ -59,7 +58,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     vec2 inner_p1 = area.inner_rect.zw;
 
     vec2 p0, p1;
-    switch (segment_index) {
+    switch (segment) {
         case SEGMENT_ALL:
             p0 = outer_p0;
             p1 = outer_p1;

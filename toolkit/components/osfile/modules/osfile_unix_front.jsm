@@ -9,6 +9,10 @@
  * This front-end is meant to be imported by a worker thread.
  */
 
+/* eslint-env mozilla/chrome-worker, node */
+/* global OS */
+
+// eslint-disable-next-line no-lone-blocks
 {
   if (typeof Components != "undefined") {
     // We do not wish osfile_unix_front.jsm to be used directly as a main thread
@@ -28,7 +32,7 @@
      let Path = require("resource://gre/modules/osfile/ospath.jsm");
      let SysAll = require("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
      exports.OS.Unix.File._init();
-     let LOG = SharedAll.LOG.bind(SharedAll, "Unix front-end");
+     SharedAll.LOG.bind(SharedAll, "Unix front-end");
      let Const = SharedAll.Constants.libc;
      let UnixFile = exports.OS.Unix.File;
      let Type = UnixFile.Type;
@@ -77,7 +81,7 @@
        if (this._closeResult) {
          throw this._closeResult;
        }
-       return;
+
      };
 
      /**
@@ -98,7 +102,7 @@
      File.prototype._read = function _read(buffer, nbytes, options = {}) {
       // Populate the page cache with data from a file so the subsequent reads
       // from that file will not block on disk I/O.
-       if (typeof(UnixFile.posix_fadvise) === 'function' &&
+       if (typeof(UnixFile.posix_fadvise) === "function" &&
            (options.sequential || !("sequential" in options))) {
          UnixFile.posix_fadvise(this.fd, 0, nbytes,
           OS.Constants.libc.POSIX_FADV_SEQUENTIAL);
@@ -219,7 +223,7 @@
       */
      if (SharedAll.Constants.Sys.Name != "Android") {
        File.prototype.setDates = function(accessDate, modificationDate) {
-         let {value, ptr} = datesToTimevals(accessDate, modificationDate);
+         let { /* value, */ ptr} = datesToTimevals(accessDate, modificationDate);
          throw_on_negative("setDates",
            UnixFile.futimes(this.fd, ptr),
            this._path);
@@ -338,9 +342,9 @@
      File.exists = function Unix_exists(path) {
        if (UnixFile.access(path, Const.F_OK) == -1) {
          return false;
-       } else {
-         return true;
        }
+         return true;
+
      };
 
      /**
@@ -396,7 +400,7 @@
        let fileSystemInfo = new Type.statvfs.implementation();
        let fileSystemInfoPtr = fileSystemInfo.address();
 
-       throw_on_negative("statvfs",  (UnixFile.statvfs || UnixFile.statfs)(sourcePath, fileSystemInfoPtr));
+       throw_on_negative("statvfs", (UnixFile.statvfs || UnixFile.statfs)(sourcePath, fileSystemInfoPtr));
 
        let bytes = new Type.uint64_t.implementation(
                         fileSystemInfo.f_frsize * fileSystemInfo.f_bavail);
@@ -552,7 +556,6 @@
          // Perform actual copy
          let total_read = 0;
          while (true) {
-           let chunk_size = Math.min(nbytes, bufSize);
            let bytes_just_read = read(pump_buffer, bufSize);
            if (bytes_just_read == 0) {
              return total_read;
@@ -602,7 +605,7 @@
                  "pump",
                  UnixFile.splice(pipe_read, null,
                    dest_fd, null, bytes_read,
-                     (bytes_read == chunk_size)?Const.SPLICE_F_MORE:0
+                     (bytes_read == chunk_size) ? Const.SPLICE_F_MORE : 0
                ));
                if (!bytes_written) {
                  // This should never happen
@@ -643,20 +646,19 @@
        // copy directories
        File.copy = function copy(sourcePath, destPath, options = {}) {
          let source, dest;
-         let result;
          try {
            source = File.open(sourcePath);
            // Need to open the output file with |append:false|, or else |splice|
            // won't work.
            if (options.noOverwrite) {
-             dest = File.open(destPath, {create:true, append:false});
+             dest = File.open(destPath, {create: true, append: false});
            } else {
-             dest = File.open(destPath, {trunc:true, append:false});
+             dest = File.open(destPath, {trunc: true, append: false});
            }
            if (options.unixUserland) {
-             result = pump_userland(source, dest, options);
+             pump_userland(source, dest, options);
            } else {
-             result = pump(source, dest, options);
+             pump(source, dest, options);
            }
          } catch (x) {
            if (dest) {
@@ -853,7 +855,7 @@
      let gStatData = new Type.stat.implementation();
      let gStatDataPtr = gStatData.address();
 
-     let MODE_MASK = 4095 /*= 07777*/;
+     let MODE_MASK = 4095 /* = 07777*/;
      File.Info = function Info(stat, path) {
        let isDir = (stat.st_mode & Const.S_IFMT) == Const.S_IFDIR;
        let isSymLink = (stat.st_mode & Const.S_IFMT) == Const.S_IFLNK;
@@ -999,7 +1001,7 @@
       * @throws {OS.File.Error} In case of I/O error.
       */
      File.setDates = function setDates(path, accessDate, modificationDate) {
-       let {value, ptr} = datesToTimevals(accessDate, modificationDate);
+       let {/* value, */ ptr} = datesToTimevals(accessDate, modificationDate);
        throw_on_negative("setDates",
                          UnixFile.utimes(path, ptr),
                          path);
@@ -1079,10 +1081,10 @@
       * Get/set the current directory.
       */
      Object.defineProperty(File, "curDir", {
-         set: function(path) {
+         set(path) {
            this.setCurrentDirectory(path);
          },
-         get: function() {
+         get() {
            return this.getCurrentDirectory();
          }
        }
@@ -1163,7 +1165,7 @@
                              "|Date| instance or number");
        }
        return date;
-     };
+     }
 
      /**
       * Helper used by both versions of setPermissions.

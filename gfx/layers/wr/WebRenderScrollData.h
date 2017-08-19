@@ -69,11 +69,15 @@ public:
   CSSTransformMatrix GetTransformTyped() const;
   void SetTransformIsPerspective(bool aTransformIsPerspective) { mTransformIsPerspective = aTransformIsPerspective; }
   bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
+
+  void AddEventRegions(const EventRegions& aRegions) { mEventRegions.OrWith(aRegions); }
   EventRegions GetEventRegions() const { return mEventRegions; }
+  void SetEventRegionsOverride(const EventRegionsOverride& aOverride) { mEventRegionsOverride = aOverride; }
+  EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
+
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   void SetReferentId(uint64_t aReferentId) { mReferentId = Some(aReferentId); }
   Maybe<uint64_t> GetReferentId() const { return mReferentId; }
-  EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
 
   void SetScrollThumbData(const ScrollThumbData& aData) { mScrollThumbData = aData; }
   const ScrollThumbData& GetScrollThumbData() const { return mScrollThumbData; }

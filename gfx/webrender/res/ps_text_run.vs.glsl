@@ -48,6 +48,6 @@ void main(void) {
     vec2 st1 = res.uv_rect.zw / texture_size;
 
     vColor = text.color;
-    vUv = mix(st0, st1, f);
+    vUv = vec3(mix(st0, st1, f), res.layer);
     vUvBorder = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
 }

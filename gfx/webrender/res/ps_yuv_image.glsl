@@ -13,6 +13,7 @@ flat varying vec2 vTextureSizeUv;  // Size of the u and v planes in the texture 
 flat varying vec2 vStretchSize;
 flat varying vec2 vHalfTexelY;     // Normalized length of the half of a Y texel.
 flat varying vec2 vHalfTexelUv;    // Normalized length of the half of u and v texels.
+flat varying vec3 vLayers;
 
 #ifdef WR_FEATURE_TRANSFORM
 varying vec3 vLocalPos;

@@ -891,7 +891,7 @@ pub extern "C" fn Servo_StyleSet_AppendStyleSheet(
     let data = &mut *data;
     let guard = global_style_data.shared_lock.read();
     let sheet = unsafe { GeckoStyleSheet::new(sheet) };
-    data.stylesheets.append_stylesheet(&data.stylist, sheet, &guard);
+    data.stylesheets.append_stylesheet(Some(data.stylist.device()), sheet, &guard);
 }
 
 #[no_mangle]
@@ -940,7 +940,7 @@ pub extern "C" fn Servo_StyleSet_PrependStyleSheet(
     let data = &mut *data;
     let guard = global_style_data.shared_lock.read();
     let sheet = unsafe { GeckoStyleSheet::new(sheet) };
-    data.stylesheets.prepend_stylesheet(&data.stylist, sheet, &guard);
+    data.stylesheets.prepend_stylesheet(Some(data.stylist.device()), sheet, &guard);
 }
 
 #[no_mangle]
@@ -955,7 +955,7 @@ pub extern "C" fn Servo_StyleSet_InsertStyleSheetBefore(
     let guard = global_style_data.shared_lock.read();
     let sheet = unsafe { GeckoStyleSheet::new(sheet) };
     data.stylesheets.insert_stylesheet_before(
-        &data.stylist,
+        Some(data.stylist.device()),
         sheet,
         unsafe { GeckoStyleSheet::new(before_sheet) },
         &guard,
@@ -972,7 +972,7 @@ pub extern "C" fn Servo_StyleSet_RemoveStyleSheet(
     let data = &mut *data;
     let guard = global_style_data.shared_lock.read();
     let sheet = unsafe { GeckoStyleSheet::new(sheet) };
-    data.stylesheets.remove_stylesheet(&data.stylist, sheet, &guard);
+    data.stylesheets.remove_stylesheet(Some(data.stylist.device()), sheet, &guard);
 }
 
 #[no_mangle]
@@ -1508,6 +1508,7 @@ pub extern "C" fn Servo_KeyframesRule_AppendRule(
     let css = unsafe { css.as_ref().unwrap().as_str_unchecked() };
     let contents = StylesheetContents::as_arc(&contents);
     let global_style_data = &*GLOBAL_STYLE_DATA;
+
     match Keyframe::parse(css, &contents, &global_style_data.shared_lock) {
         Ok(keyframe) => {
             write_locked_arc(rule, |rule: &mut KeyframesRule| {
@@ -2811,9 +2812,16 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
     if let Ok(cond) = cond {
         let url_data = unsafe { dummy_url_data() };
         let reporter = NullReporter;
-        let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Style),
-                                                   PARSING_MODE_DEFAULT,
-                                                   QuirksMode::NoQuirks);
+        // NOTE(emilio): The supports API is not associated to any stylesheet,
+        // so the fact that there are no namespace map here is fine.
+        let context =
+            ParserContext::new_for_cssom(
+                url_data,
+                &reporter,
+                Some(CssRuleType::Style),
+                PARSING_MODE_DEFAULT,
+                QuirksMode::NoQuirks,
+            );
         cond.eval(&context)
     } else {
         false

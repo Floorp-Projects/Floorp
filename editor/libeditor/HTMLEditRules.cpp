@@ -4613,7 +4613,8 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
     if (!mHTMLEditor->IsContainer(node)) {
       return NS_OK;
     }
-    OwningNonNull<Text> newNode = aDoc.CreateTextNode(EmptyString());
+    OwningNonNull<Text> newNode =
+      EditorBase::CreateTextNode(aDoc, EmptyString());
     NS_ENSURE_STATE(mHTMLEditor);
     nsresult rv = mHTMLEditor->InsertNode(*newNode, *node, offset);
     NS_ENSURE_SUCCESS(rv, rv);

@@ -43,7 +43,7 @@ add_task(async function test_basic() {
   // Make a directory
   await OS.File.makeDir(dir);
 
-  //check if the directory exists
+  // check if the directory exists
   await OS.File.stat(dir);
 
   // Make a directory that already exists, this should succeed
@@ -87,7 +87,7 @@ add_task(async function test_option_from() {
   // Make a directory
   await OS.File.makeDir(dir, {from: profileDir});
 
-  //check if the directory exists
+  // check if the directory exists
   await OS.File.stat(dir);
 
   // Make a directory that already exists, this should succeed

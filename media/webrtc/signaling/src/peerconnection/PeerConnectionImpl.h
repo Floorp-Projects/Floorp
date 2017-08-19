@@ -789,6 +789,9 @@ private:
 
   bool mPrivateWindow;
 
+  // Whether this PeerConnection is being counted as active by mWindow
+  bool mActiveOnWindow;
+
   // storage for Telemetry data
   uint16_t mMaxReceiving[SdpMediaSection::kMediaTypes];
   uint16_t mMaxSending[SdpMediaSection::kMediaTypes];

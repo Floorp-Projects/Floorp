@@ -136,7 +136,7 @@ TextEditRules::Init(TextEditor* aTextEditor)
   rv = selection->GetRangeCount(&rangeCount);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!rangeCount) {
-    rv = mTextEditor->EndOfDocument();
+    rv = mTextEditor->CollapseSelectionToEnd(selection);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -481,7 +481,7 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
   // This is usually performed in TextEditRules::Init(), however, if the
   // editor is reframed, this may be called by AfterEdit().
   if (!aSelection->RangeCount()) {
-    mTextEditor->EndOfDocument();
+    mTextEditor->CollapseSelectionToEnd(aSelection);
   }
 
   // if we are at the end of the textarea, we need to set the
@@ -504,22 +504,20 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
     return NS_OK;
   }
 
-  int32_t parentOffset;
-  nsINode* parentNode =
-    EditorBase::GetNodeLocation(selNode, &parentOffset);
-
   NS_ENSURE_STATE(mTextEditor);
   nsINode* root = mTextEditor->GetRoot();
   if (NS_WARN_IF(!root)) {
     return NS_ERROR_NULL_POINTER;
   }
+  nsINode* parentNode = selNode->GetParentNode();
   if (parentNode != root) {
     return NS_OK;
   }
 
-  nsINode* nextNode = parentNode->GetChildAt(parentOffset + 1);
+  nsINode* nextNode = selNode->GetNextSibling();
   if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
-    rv = aSelection->Collapse(parentNode, parentOffset + 1);
+    int32_t offsetInParent = EditorBase::GetChildOffset(selNode, parentNode);
+    rv = aSelection->Collapse(parentNode, offsetInParent + 1);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -880,7 +878,7 @@ TextEditRules::WillSetText(Selection& aSelection,
     if (NS_WARN_IF(!doc)) {
       return NS_OK;
     }
-    RefPtr<nsTextNode> newNode = doc->CreateTextNode(tString);
+    RefPtr<nsTextNode> newNode = EditorBase::CreateTextNode(*doc, tString);
     if (NS_WARN_IF(!newNode)) {
       return NS_OK;
     }

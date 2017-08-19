@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -41,6 +42,7 @@ import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.media.RemoteManager;
 import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.telemetry.TelemetryBackgroundReceiver;
@@ -281,6 +283,7 @@ public class GeckoApplication extends Application {
         final EventListener listener = new EventListener();
         EventDispatcher.getInstance().registerUiThreadListener(listener,
                 "Gecko:Exited",
+                "RuntimePermissions:Check",
                 null);
         EventDispatcher.getInstance().registerBackgroundThreadListener(listener,
                 "Profile:Create",
@@ -415,6 +418,30 @@ public class GeckoApplication extends Application {
                     restartIntent = null;
                 }
                 shutdown(restartIntent);
+
+            } else if ("RuntimePermissions:Check".equals(event)) {
+                final String[] permissions = message.getStringArray("permissions");
+                final boolean shouldPrompt = message.getBoolean("shouldPrompt", false);
+                final Activity currentActivity =
+                        GeckoActivityMonitor.getInstance().getCurrentActivity();
+                final Context context = (currentActivity != null) ?
+                        currentActivity : GeckoAppShell.getApplicationContext();
+
+                Permissions.from(context)
+                           .withPermissions(permissions)
+                           .doNotPromptIf(!shouldPrompt || currentActivity == null)
+                           .andFallback(new Runnable() {
+                               @Override
+                               public void run() {
+                                   callback.sendSuccess(false);
+                               }
+                           })
+                           .run(new Runnable() {
+                               @Override
+                               public void run() {
+                                   callback.sendSuccess(true);
+                               }
+                           });
             }
         }
     }

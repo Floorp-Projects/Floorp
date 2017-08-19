@@ -4,7 +4,9 @@ Use Counters
 
 Use counters are used to report Telemetry statistics on whether individual documents
 use a given WebIDL method or attribute (getters and setters are reported separately), CSS
-property and deprecated DOM operations.
+property and deprecated DOM operations.  Custom use counters can also be
+defined to test frequency of things that don't fall into one of those
+categories.
 
 The API
 =======
@@ -38,15 +40,20 @@ Use counters for WebIDL methods/attributes and CSS properties are registered in 
 
 1. a blank line
 2. a comment, which is a line that begins with ``//``
-3. one of three possible use counter declarations:
+3. one of four possible use counter declarations:
 
   * ``method <IDL interface name>.<IDL operation name>``
   * ``attribute <IDL interface name>.<IDL attribute name>``
   * ``property <CSS property method name>``
+  * ``custom <any valid identifier> <description>``
 
 CSS properties
 ~~~~~~~~~~~~~~
 The CSS property method name should be identical to the ``method`` argument of ``CSS_PROP()`` and related macros. The only differences are that all hyphens are removed and CamelCase naming is used.  See `nsCSSPropList.h <https://dxr.mozilla.org/mozilla-central/source/layout/style/nsCSSPropList.h>`_ for further details.
+
+Custom use counters
+~~~~~~~~~~~~~~~~~~~
+The <description> for custom counters will be appended to "When a document " or "When a page ", so phrase it appropriately.  For instance, "constructs a Foo object" or "calls Document.bar('some value')".  It may contain any character (including whitespace).  Custom counters are incremented when SetDocumentAndPageUseCounter(eUseCounter_custom_MyName) is called on an ns(I)Document object.
 
 WebIDL methods and attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

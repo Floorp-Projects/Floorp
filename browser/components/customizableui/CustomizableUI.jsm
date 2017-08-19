@@ -367,9 +367,10 @@ var CustomizableUIInternal = {
         defaultPlacements.push("characterencoding-button");
       }
 
-      savedPanelPlacements = savedPanelPlacements.filter(id => defaultPlacements.includes(id));
+      savedPanelPlacements = savedPanelPlacements.filter(id => !defaultPlacements.includes(id));
+
       if (savedPanelPlacements.length) {
-        gSavedState.placements[this.AREA_FIXED_OVERFLOW_PANEL] = savedPanelPlacements;
+        gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] = savedPanelPlacements;
       }
     }
 
@@ -1980,10 +1981,7 @@ var CustomizableUIInternal = {
   // Note that this does not populate gPlacements, which is done lazily so that
   // the legacy state can be migrated, which is only available once a browser
   // window is openned.
-  // The panel area is an exception here, since it has no legacy state and is
-  // built lazily - and therefore wouldn't otherwise result in restoring its
-  // state immediately when a browser window opens, which is important for
-  // other consumers of this API.
+  // The panel area is an exception here, since it has no legacy state.
   loadSavedState() {
     let state = Services.prefs.getCharPref(kPrefCustomizationState, "");
     if (!state) {

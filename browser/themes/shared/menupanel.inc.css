@@ -35,7 +35,7 @@
 }
 
 #appMenu-help-button {
-  list-style-image: url(chrome://browser/skin/help.svg);
+  list-style-image: url(chrome://global/skin/icons/help.svg);
 }
 
 #appMenu-cut-button {

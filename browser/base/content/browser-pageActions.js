@@ -48,7 +48,9 @@ var BrowserPageActions = {
    */
   init() {
     for (let action of PageActions.actions) {
-      this.placeAction(action, PageActions.insertBeforeActionIDInUrlbar(action));
+      this.placeAction(action,
+                       PageActions.insertBeforeActionIDInPanel(action),
+                       PageActions.insertBeforeActionIDInUrlbar(action));
     }
   },
 
@@ -65,10 +67,6 @@ var BrowserPageActions = {
    *         in the urlbar before which the given action should be inserted.
    */
   placeAction(action, panelInsertBeforeID, urlbarInsertBeforeID) {
-    if (action.__isSeparator) {
-      this._appendPanelSeparator(action);
-      return;
-    }
     action.onBeforePlacedInWindow(window);
     this.placeActionInPanel(action, panelInsertBeforeID);
     this.placeActionInUrlbar(action, urlbarInsertBeforeID);
@@ -81,7 +79,7 @@ var BrowserPageActions = {
    *         The action to place.
    * @param  insertBeforeID (string, required)
    *         The ID of the action in the panel before which the given action
-   *         action should be inserted.
+   *         action should be inserted.  Pass null to append.
    */
   placeActionInPanel(action, insertBeforeID) {
     let id = this._panelButtonNodeIDForActionID(action.id);
@@ -106,6 +104,11 @@ var BrowserPageActions = {
   },
 
   _makePanelButtonNodeForAction(action) {
+    if (action.__isSeparator) {
+      let node = document.createElement("toolbarseparator");
+      return [node, null];
+    }
+
     let buttonNode = document.createElement("toolbarbutton");
     buttonNode.classList.add(
       "subviewbutton",
@@ -216,6 +219,7 @@ var BrowserPageActions = {
     panelNode.setAttribute("flip", "slide");
     panelNode.setAttribute("noautofocus", "true");
     panelNode.setAttribute("tabspecific", "true");
+    panelNode.setAttribute("photon", "true");
 
     let panelViewNode = null;
     let iframeNode = null;
@@ -361,12 +365,6 @@ var BrowserPageActions = {
       action.onCommand(event, buttonNode);
     });
     return buttonNode;
-  },
-
-  _appendPanelSeparator(action) {
-    let node = document.createElement("toolbarseparator");
-    node.id = this._panelButtonNodeIDForActionID(action.id);
-    this.mainViewBodyNode.appendChild(node);
   },
 
   /**

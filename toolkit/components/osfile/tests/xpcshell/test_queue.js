@@ -16,7 +16,7 @@ add_task(async function check_init() {
 // after an operation is successful.
 add_task(async function check_success() {
   do_print("Attempting to open a file correctly");
-  let openedFile = await OS.File.open(OS.Path.join(do_get_cwd().path, "test_queue.js"));
+  await OS.File.open(OS.Path.join(do_get_cwd().path, "test_queue.js"));
   do_print("File opened correctly");
   await OS.File.queue;
   do_print("Function resolved");
@@ -32,7 +32,7 @@ add_task(async function check_failure() {
   } catch (err) {
     exception = err;
     await OS.File.queue;
-  }  
-  do_check_true(exception!=null);
+  }
+  do_check_true(exception != null);
   do_print("Function resolved");
 });

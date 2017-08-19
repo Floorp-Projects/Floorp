@@ -8,8 +8,8 @@ struct ClipRect {
     vec4 mode;
 };
 
-ClipRect fetch_clip_rect(int index) {
-    vec4 data[2] = fetch_from_resource_cache_2(index);
+ClipRect fetch_clip_rect(ivec2 address) {
+    vec4 data[2] = fetch_from_resource_cache_2_direct(address);
     return ClipRect(RectWithSize(data[0].xy, data[0].zw), data[1]);
 }
 
@@ -18,8 +18,9 @@ struct ClipCorner {
     vec4 outer_inner_radius;
 };
 
-ClipCorner fetch_clip_corner(int index) {
-    vec4 data[2] = fetch_from_resource_cache_2(index);
+ClipCorner fetch_clip_corner(ivec2 address, int index) {
+    address += ivec2(2 + 2 * index, 0);
+    vec4 data[2] = fetch_from_resource_cache_2_direct(address);
     return ClipCorner(RectWithSize(data[0].xy, data[0].zw), data[1]);
 }
 
@@ -31,14 +32,14 @@ struct ClipData {
     ClipCorner bottom_right;
 };
 
-ClipData fetch_clip(int index) {
+ClipData fetch_clip(ivec2 address) {
     ClipData clip;
 
-    clip.rect = fetch_clip_rect(index + 0);
-    clip.top_left = fetch_clip_corner(index + 2);
-    clip.top_right = fetch_clip_corner(index + 4);
-    clip.bottom_left = fetch_clip_corner(index + 6);
-    clip.bottom_right = fetch_clip_corner(index + 8);
+    clip.rect = fetch_clip_rect(address);
+    clip.top_left = fetch_clip_corner(address, 0);
+    clip.top_right = fetch_clip_corner(address, 1);
+    clip.bottom_left = fetch_clip_corner(address, 2);
+    clip.bottom_right = fetch_clip_corner(address, 3);
 
     return clip;
 }
@@ -47,13 +48,13 @@ void main(void) {
     CacheClipInstance cci = fetch_clip_item(gl_InstanceID);
     ClipArea area = fetch_clip_area(cci.render_task_index);
     Layer layer = fetch_layer(cci.layer_index);
-    ClipData clip = fetch_clip(cci.data_index);
+    ClipData clip = fetch_clip(cci.clip_data_address);
     RectWithSize local_rect = clip.rect.rect;
 
     ClipVertexInfo vi = write_clip_tile_vertex(local_rect,
                                                layer,
                                                area,
-                                               cci.segment_index);
+                                               cci.segment);
     vPos = vi.local_pos;
 
     vClipMode = clip.rect.mode.x;

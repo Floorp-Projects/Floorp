@@ -1853,6 +1853,10 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
       // if the node of interest is a text node, let's climb a level
       nodeToExamine = nodeToExamine->GetParentNode();
     }
+    // Return default value due to no parent node
+    if (!nodeToExamine) {
+      return NS_OK;
+    }
     do {
       // is the node to examine a block ?
       if (NodeIsBlockStatic(nodeToExamine)) {
