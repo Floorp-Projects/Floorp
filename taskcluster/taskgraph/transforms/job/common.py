@@ -87,15 +87,7 @@ def support_vcs_checkout(config, job, taskdesc):
     if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
         taskdesc['worker'].setdefault('caches', []).append({
             'type': 'persistent',
-            # History of versions:
-            #
-            # ``level-%s-checkouts`` was initially used and contained a number
-            # of backwards incompatible changes, such as moving HG_STORE_PATH
-            # from a separate cache to this cache.
-            #
-            # ``v1`` was introduced to provide a clean break from the unversioned
-            # cache.
-            'name': 'level-%s-checkouts-v1' % level,
+            'name': 'level-%s-checkouts' % level,
             'mount-point': '/home/worker/checkouts',
         })
 
