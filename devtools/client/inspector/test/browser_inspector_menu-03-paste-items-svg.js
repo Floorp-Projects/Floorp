@@ -10,7 +10,7 @@ const PASTE_AS_FIRST_CHILD = '<circle xmlns="http://www.w3.org/2000/svg" cx="42"
 const PASTE_AS_LAST_CHILD = '<circle xmlns="http://www.w3.org/2000/svg" cx="42" cy="42" r="15"/>';
 
 add_task(function* () {
-  let clipboard = require("sdk/clipboard");
+  let clipboard = require("devtools/shared/platform/clipboard");
 
   let { inspector, testActor } = yield openInspectorForURL(TEST_URL);
 
@@ -32,7 +32,7 @@ add_task(function* () {
       target: markupTagLine,
     });
     info(`Testing ${menuId} for ${clipboardData}`);
-    clipboard.set(clipboardData);
+    clipboard.copyString(clipboardData);
 
     let onMutation = inspector.once("markupmutation");
     allMenuItems.find(item => item.id === menuId).click();
