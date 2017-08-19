@@ -35,3 +35,6 @@ SOURCES += [
     'FuzzerUtilPosix.cpp',
     'FuzzerUtilWindows.cpp'
 ]
+
+if CONFIG['CLANG_CXX']:
+    CXXFLAGS += ['-Wno-unreachable-code-return']

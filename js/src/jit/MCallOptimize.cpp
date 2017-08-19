@@ -1617,8 +1617,7 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
     MDefinition* array = current->peek(-1);
 
     if (!initLength) {
-        if (!array->isResumePoint())
-            MOZ_TRY(resumeAfter(array->toNewArray()));
+        MOZ_TRY(resumeAfter(array->toNewArray()));
         return InliningStatus_Inlined;
     }
 

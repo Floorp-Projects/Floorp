@@ -275,6 +275,7 @@ class PrioritizedEventQueue<InnerQueueT>::EnablePrioritizationRunnable final
 public:
   explicit EnablePrioritizationRunnable(PrioritizedEventQueue<InnerQueueT>* aQueue)
     : Runnable("EnablePrioritizationRunnable")
+    , mQueue(aQueue)
   {}
 
   NS_IMETHOD Run() override
@@ -289,6 +290,8 @@ public:
   }
 
 private:
+  // This is a weak pointer. It's guaranteed to stay alive until this runnable
+  // runs since it functions as the event loop in which the runnable is posted.
   PrioritizedEventQueue<InnerQueueT>* mQueue;
 };
 

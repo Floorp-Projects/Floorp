@@ -57,7 +57,7 @@ endif
 	  '$(DIST)/$(COMPLETE_MAR)' \
 	  '$(PACKAGE_DIR)'
 ifdef MOZ_SIGN_CMD
-	$(MOZ_SIGN_CMD) -f mar '$(DIST)/$(COMPLETE_MAR)'
+	$(MOZ_SIGN_CMD) -f mar_sha384 '$(DIST)/$(COMPLETE_MAR)'
 endif
 
 partial-patch:: $(dir-stage)
@@ -69,5 +69,5 @@ partial-patch:: $(dir-stage)
 	  '$(SRC_BUILD)' \
 	  '$(DST_BUILD)'
 ifdef MOZ_SIGN_CMD
-	$(MOZ_SIGN_CMD) -f mar '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar'
+	$(MOZ_SIGN_CMD) -f mar_sha384 '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar'
 endif
