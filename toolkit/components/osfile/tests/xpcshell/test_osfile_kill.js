@@ -59,10 +59,10 @@ add_task(async function test_kill_race() {
   // We have chosen OS.File.exists for our tests because it does not trigger
   // a rejection and we absolutely do not care what the operation is other
   // than it does not invoke a native fast-path.
-  await OS.File.exists('foo.foo');
+  await OS.File.exists("foo.foo");
 
-  do_print('issuing first request');
-  let firstRequest = OS.File.exists('foo.bar');
+  do_print("issuing first request");
+  let firstRequest = OS.File.exists("foo.bar"); // eslint-disable-line no-unused-vars
   let secondRequest;
   let secondResolved = false;
 
@@ -72,14 +72,14 @@ add_task(async function test_kill_race() {
   // before we issue the kill request means we will get run before the `kill`
   // task resumes and allow us to precisely create the desired race.
   Scheduler.queue.then(function() {
-    do_print('issuing second request');
-    secondRequest = OS.File.exists('foo.baz');
+    do_print("issuing second request");
+    secondRequest = OS.File.exists("foo.baz");
     secondRequest.then(function() {
       secondResolved = true;
     });
   });
 
-  do_print('issuing kill request');
+  do_print("issuing kill request");
   let killRequest = Scheduler.kill({ reset: true, shutdown: false });
 
   // Wait on the killRequest so that we can schedule a new OS.File request
@@ -89,10 +89,10 @@ add_task(async function test_kill_race() {
   // worker (and this usage here should not be vulnerable even with the
   // bug present), so when this completes the secondRequest has either been
   // resolved or lost.
-  await OS.File.exists('foo.goz');
+  await OS.File.exists("foo.goz");
 
   ok(secondResolved,
-     'The second request was resolved so we avoided the bug. Victory!');
+     "The second request was resolved so we avoided the bug. Victory!");
 });
 
 function run_test() {

@@ -42,7 +42,7 @@ this.PageActions = {
 
     // Add the built-in actions, which are defined below in this file.
     for (let options of gBuiltInActions) {
-      if (options._isSeparator || !this.actionForID(options.id)) {
+      if (!this.actionForID(options.id)) {
         this.addAction(new Action(options));
       }
     }
@@ -65,13 +65,16 @@ this.PageActions = {
   get actions() {
     let actions = this.builtInActions;
     if (this.nonBuiltInActions.length) {
-      // There are non-built-in actions, so include them too.  Add a separator
-      // between the built-ins and non-built-ins so that the returned array
-      // looks like: [...built-ins, separator, ...non-built-ins]
-      actions.push(new Action({
-        id: ACTION_ID_BUILT_IN_SEPARATOR,
-        _isSeparator: true,
-      }));
+      // There are non-built-in actions, so include them too.
+      if (actions.length) {
+        // There are both built-in and non-built-in actions.  Add a separator
+        // between the two groups so that the returned array looks like:
+        // [...built-ins, separator, ...non-built-ins]
+        actions.push(new Action({
+          id: ACTION_ID_BUILT_IN_SEPARATOR,
+          _isSeparator: true,
+        }));
+      }
       actions.push(...this.nonBuiltInActions);
     }
     return actions;
@@ -125,89 +128,91 @@ this.PageActions = {
       return action;
     }
 
+    if (this.actionForID(action.id)) {
+      throw new Error(`Action with ID '${action.id}' already added`);
+    }
+    this._actionsByID.set(action.id, action);
+
     // The IDs of the actions in the panel and urlbar before which the new
     // action shoud be inserted.  null means at the end, or it's irrelevant.
     let panelInsertBeforeID = null;
     let urlbarInsertBeforeID = null;
 
-    let placeBuiltInSeparator = false;
+    let oldBuiltInCount = this._builtInActions.length;
+    let oldNonBuiltInCount = this._nonBuiltInActions.length;
 
-    if (action.__isSeparator) {
-      this._builtInActions.push(action);
-    } else {
-      if (this.actionForID(action.id)) {
-        throw new Error(`An Action with ID '${action.id}' has already been added.`);
-      }
-      this._actionsByID.set(action.id, action);
+    // Insert the action into the appropriate list, either _builtInActions or
+    // _nonBuiltInActions, and find panelInsertBeforeID.
 
-      // Insert the action into the appropriate list, either _builtInActions or
-      // _nonBuiltInActions, and find panelInsertBeforeID.
-
-      // Keep in mind that _insertBeforeActionID may be present but null, which
-      // means the action should be appended to the built-ins.
-      if ("__insertBeforeActionID" in action) {
-        // A "semi-built-in" action, probably an action from an extension
-        // bundled with the browser.  Right now we simply assume that no other
-        // consumers will use _insertBeforeActionID.
-        let index =
-          !action.__insertBeforeActionID ? -1 :
-          this._builtInActions.findIndex(a => {
-            return a.id == action.__insertBeforeActionID;
-          });
-        if (index < 0) {
-          // Append the action.
-          index = this._builtInActions.length;
-          if (this._nonBuiltInActions.length) {
-            panelInsertBeforeID = ACTION_ID_BUILT_IN_SEPARATOR;
-          }
-        } else {
-          panelInsertBeforeID = this._builtInActions[index].id;
-        }
-        this._builtInActions.splice(index, 0, action);
-      } else if (gBuiltInActions.find(a => a.id == action.id)) {
-        // A built-in action.  These are always added on init before all other
-        // actions, one after the other, so just push onto the array.
-        this._builtInActions.push(action);
+    // Keep in mind that _insertBeforeActionID may be present but null, which
+    // means the action should be appended to the built-ins.
+    if ("__insertBeforeActionID" in action) {
+      // A "semi-built-in" action, probably an action from an extension
+      // bundled with the browser.  Right now we simply assume that no other
+      // consumers will use _insertBeforeActionID.
+      let index =
+        !action.__insertBeforeActionID ? -1 :
+        this._builtInActions.findIndex(a => {
+          return a.id == action.__insertBeforeActionID;
+        });
+      if (index < 0) {
+        // Append the action.
+        index = this._builtInActions.length;
         if (this._nonBuiltInActions.length) {
           panelInsertBeforeID = ACTION_ID_BUILT_IN_SEPARATOR;
         }
       } else {
-        // A non-built-in action, like a non-bundled extension potentially.
-        // Keep this list sorted by title.
-        let index = BinarySearch.insertionIndexOf((a1, a2) => {
-          return a1.title.localeCompare(a2.title);
-        }, this._nonBuiltInActions, action);
-        if (index < this._nonBuiltInActions.length) {
-          panelInsertBeforeID = this._nonBuiltInActions[index].id;
-        }
-        // If this is the first non-built-in, then the built-in separator must
-        // be placed between the built-ins and non-built-ins.
-        if (!this._nonBuiltInActions.length) {
-          placeBuiltInSeparator = true;
-        }
-        this._nonBuiltInActions.splice(index, 0, action);
+        panelInsertBeforeID = this._builtInActions[index].id;
       }
-
-      if (this._persistedActions.ids[action.id]) {
-        // The action has been seen before.  Override its shownInUrlbar value
-        // with the persisted value.  Set the private version of that property
-        // so that onActionToggledShownInUrlbar isn't called, which happens when
-        // the public version is set.
-        action._shownInUrlbar =
-          this._persistedActions.idsInUrlbar.includes(action.id);
-      } else {
-        // The action is new.  Store it in the persisted actions.
-        this._persistedActions.ids[action.id] = true;
-        if (action.shownInUrlbar) {
-          this._persistedActions.idsInUrlbar.push(action.id);
-        }
-        this._storePersistedActions();
+      this._builtInActions.splice(index, 0, action);
+    } else if (gBuiltInActions.find(a => a.id == action.id)) {
+      // A built-in action.  These are always added on init before all other
+      // actions, one after the other, so just push onto the array.
+      this._builtInActions.push(action);
+      if (this._nonBuiltInActions.length) {
+        panelInsertBeforeID = ACTION_ID_BUILT_IN_SEPARATOR;
       }
-
-      if (action.shownInUrlbar) {
-        urlbarInsertBeforeID = this.insertBeforeActionIDInUrlbar(action);
+    } else {
+      // A non-built-in action, like a non-bundled extension potentially.
+      // Keep this list sorted by title.
+      let index = BinarySearch.insertionIndexOf((a1, a2) => {
+        return a1.title.localeCompare(a2.title);
+      }, this._nonBuiltInActions, action);
+      if (index < this._nonBuiltInActions.length) {
+        panelInsertBeforeID = this._nonBuiltInActions[index].id;
       }
+      this._nonBuiltInActions.splice(index, 0, action);
     }
+
+    if (this._persistedActions.ids[action.id]) {
+      // The action has been seen before.  Override its shownInUrlbar value
+      // with the persisted value.  Set the private version of that property
+      // so that onActionToggledShownInUrlbar isn't called, which happens when
+      // the public version is set.
+      action._shownInUrlbar =
+        this._persistedActions.idsInUrlbar.includes(action.id);
+    } else {
+      // The action is new.  Store it in the persisted actions.
+      this._persistedActions.ids[action.id] = true;
+      if (action.shownInUrlbar) {
+        this._persistedActions.idsInUrlbar.push(action.id);
+      }
+      this._storePersistedActions();
+    }
+
+    if (action.shownInUrlbar) {
+      urlbarInsertBeforeID = this.insertBeforeActionIDInUrlbar(action);
+    }
+
+    // If there are now both built-in and non-built-in actions, add a separator
+    // in the panel between the two groups.
+    let placeBuiltInSeparator =
+      (oldNonBuiltInCount == 0 &&
+       this._nonBuiltInActions.length &&
+       this._builtInActions.length) ||
+      (oldBuiltInCount == 0 &&
+       this._builtInActions.length &&
+       this._nonBuiltInActions.length);
 
     for (let win of browserWindows()) {
       if (placeBuiltInSeparator) {
@@ -215,7 +220,9 @@ this.PageActions = {
           id: ACTION_ID_BUILT_IN_SEPARATOR,
           _isSeparator: true,
         });
-        browserPageActions(win).placeAction(sep, null, null);
+        let sepPanelInsertBeforeID =
+          this._nonBuiltInActions.length ? this._nonBuiltInActions[0].id : null;
+        browserPageActions(win).placeAction(sep, sepPanelInsertBeforeID, null);
       }
       browserPageActions(win).placeAction(action, panelInsertBeforeID,
                                           urlbarInsertBeforeID);
@@ -227,6 +234,34 @@ this.PageActions = {
   _builtInActions: [],
   _nonBuiltInActions: [],
   _actionsByID: new Map(),
+
+  /**
+   * Returns the ID of the action among the actions in the panel before which
+   * the given action should be inserted.
+   *
+   * @return The ID of the action before which the given action should be
+   *         inserted.  If the given action should be inserted last, returns
+   *         null.
+   */
+  insertBeforeActionIDInPanel(action) {
+    let index = this._builtInActions.findIndex(a => {
+      return a.id == action.id;
+    });
+    if (index >= 0) {
+      return this._builtInActions[index + 1] ||
+             this._nonBuiltInActions.length ? ACTION_ID_BUILT_IN_SEPARATOR
+                                            : null;
+    }
+
+    index = this._nonBuiltInActions.findIndex(a => {
+      return a.id == action.id;
+    });
+    if (index >= 0) {
+      return this._nonBuiltInActions[index + 1] || null;
+    }
+
+    return null;
+  },
 
   /**
    * Returns the ID of the action among the current registered actions in the

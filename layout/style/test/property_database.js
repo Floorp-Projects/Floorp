@@ -660,6 +660,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-linear-gradient(left 35px, red, blue)",
     "-moz-linear-gradient(10% 10em, red, blue)",
     "-moz-linear-gradient(44px top, red, blue)",
+    "-moz-linear-gradient(left, red, blue)",
+    "-moz-linear-gradient(top, red, blue)",
 
     "-moz-linear-gradient(0px, red, blue)",
     "-moz-linear-gradient(0, red, blue)",

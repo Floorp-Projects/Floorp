@@ -7,10 +7,6 @@ varying vec4 vColor;
 
 void main(void)
 {
-#ifdef SERVO_ES2
-    float alpha = texture(sColor0, vColorTexCoord.xy).a;
-#else
-    float alpha = texture(sColor0, vColorTexCoord.xy).r;
-#endif
+    float alpha = texture(sColor0, vec3(vColorTexCoord.xy, 0.0)).r;
     oFragColor = vec4(vColor.xyz, vColor.w * alpha);
 }

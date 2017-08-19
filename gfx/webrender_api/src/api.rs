@@ -3,17 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use channel::{self, MsgSender, Payload, PayloadSenderHelperMethods, PayloadSender};
-#[cfg(feature = "webgl")]
-use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
-use {BuiltDisplayList, BuiltDisplayListDescriptor, ClipId, ColorF, DeviceIntPoint, DeviceIntSize};
+use {BuiltDisplayList, BuiltDisplayListDescriptor, ClipId, ColorF, DeviceIntPoint};
 use {DeviceUintRect, DeviceUintSize, FontKey, GlyphDimensions, GlyphKey};
 use {ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutVector2D, LayoutSize, LayoutTransform};
-use {FontInstanceKey, NativeFontHandle, WorldPoint};
-#[cfg(feature = "webgl")]
-use {WebGLCommand, WebGLContextId};
+use {FontInstance, NativeFontHandle, WorldPoint};
 
 pub type TileSize = u16;
 
@@ -148,7 +144,7 @@ pub enum ApiMsg {
     /// Add/remove/update images and fonts.
     UpdateResources(ResourceUpdates),
     /// Gets the glyph dimensions
-    GetGlyphDimensions(FontInstanceKey, Vec<GlyphKey>, MsgSender<Vec<Option<GlyphDimensions>>>),
+    GetGlyphDimensions(FontInstance, Vec<GlyphKey>, MsgSender<Vec<Option<GlyphDimensions>>>),
     /// Gets the glyph indices from a string
     GetGlyphIndices(FontKey, String, MsgSender<Vec<Option<u32>>>),
     /// Adds a new document namespace.
@@ -159,11 +155,6 @@ pub enum ApiMsg {
     UpdateDocument(DocumentId, DocumentMsg),
     /// Deletes an existing document.
     DeleteDocument(DocumentId),
-    RequestWebGLContext(DeviceIntSize, GLContextAttributes, MsgSender<Result<(WebGLContextId, GLLimits), String>>),
-    ResizeWebGLContext(WebGLContextId, DeviceIntSize),
-    WebGLCommand(WebGLContextId, WebGLCommand),
-    // WebVR commands that must be called in the WebGL render thread.
-    VRCompositorCommand(WebGLContextId, VRCompositorCommand),
     /// An opaque handle that must be passed to the render notifier. It is used by Gecko
     /// to forward gecko-specific messages to the render thread preserving the ordering
     /// within the other messages.
@@ -185,10 +176,6 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::AddDocument(..) => "ApiMsg::AddDocument",
             ApiMsg::UpdateDocument(..) => "ApiMsg::UpdateDocument",
             ApiMsg::DeleteDocument(..) => "ApiMsg::DeleteDocument",
-            ApiMsg::RequestWebGLContext(..) => "ApiMsg::RequestWebGLContext",
-            ApiMsg::ResizeWebGLContext(..) => "ApiMsg::ResizeWebGLContext",
-            ApiMsg::WebGLCommand(..) => "ApiMsg::WebGLCommand",
-            ApiMsg::VRCompositorCommand(..) => "ApiMsg::VRCompositorCommand",
             ApiMsg::ExternalEvent(..) => "ApiMsg::ExternalEvent",
             ApiMsg::ClearNamespace(..) => "ApiMsg::ClearNamespace",
             ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
@@ -200,24 +187,6 @@ impl fmt::Debug for ApiMsg {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Epoch(pub u32);
-
-#[cfg(not(feature = "webgl"))]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
-pub struct WebGLContextId(pub usize);
-
-#[cfg(not(feature = "webgl"))]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GLContextAttributes([u8; 0]);
-
-#[cfg(not(feature = "webgl"))]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GLLimits([u8; 0]);
-
-#[cfg(not(feature = "webgl"))]
-#[derive(Clone, Deserialize, Serialize)]
-pub enum WebGLCommand {
-    Flush,
-}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Ord, PartialOrd, Deserialize, Serialize)]
@@ -343,7 +312,7 @@ impl RenderApi {
     /// 'empty' textures (height or width = 0)
     /// This means that glyph dimensions e.g. for spaces (' ') will mostly be None.
     pub fn get_glyph_dimensions(&self,
-                                font: FontInstanceKey,
+                                font: FontInstance,
                                 glyph_keys: Vec<GlyphKey>)
                                 -> Vec<Option<GlyphDimensions>> {
         let (tx, rx) = channel::msg_channel().unwrap();
@@ -371,30 +340,10 @@ impl RenderApi {
 
     /// Adds an image identified by the `ImageKey`.
     pub fn update_resources(&self, resources: ResourceUpdates) {
+        if resources.updates.is_empty() {
+            return;
+        }
         self.api_sender.send(ApiMsg::UpdateResources(resources)).unwrap();
-    }
-
-    pub fn request_webgl_context(&self, size: &DeviceIntSize, attributes: GLContextAttributes)
-                                 -> Result<(WebGLContextId, GLLimits), String> {
-        let (tx, rx) = channel::msg_channel().unwrap();
-        let msg = ApiMsg::RequestWebGLContext(*size, attributes, tx);
-        self.api_sender.send(msg).unwrap();
-        rx.recv().unwrap()
-    }
-
-    pub fn resize_webgl_context(&self, context_id: WebGLContextId, size: &DeviceIntSize) {
-        let msg = ApiMsg::ResizeWebGLContext(context_id, *size);
-        self.api_sender.send(msg).unwrap();
-    }
-
-    pub fn send_webgl_command(&self, context_id: WebGLContextId, command: WebGLCommand) {
-        let msg = ApiMsg::WebGLCommand(context_id, command);
-        self.api_sender.send(msg).unwrap();
-    }
-
-    pub fn send_vr_compositor_command(&self, context_id: WebGLContextId, command: VRCompositorCommand) {
-        let msg = ApiMsg::VRCompositorCommand(context_id, command);
-        self.api_sender.send(msg).unwrap();
     }
 
     pub fn send_external_event(&self, evt: ExternalEvent) {
@@ -705,31 +654,9 @@ pub struct DynamicProperties {
     pub floats: Vec<PropertyValue<f32>>,
 }
 
-pub type VRCompositorId = u64;
-
-// WebVR commands that must be called in the WebGL render thread.
-#[derive(Clone, Deserialize, Serialize)]
-pub enum VRCompositorCommand {
-    Create(VRCompositorId),
-    SyncPoses(VRCompositorId, f64, f64, MsgSender<Result<Vec<u8>,()>>),
-    SubmitFrame(VRCompositorId, [f32; 4], [f32; 4]),
-    Release(VRCompositorId)
-}
-
-// Trait object that handles WebVR commands.
-// Receives the texture id and size associated to the WebGLContext.
-pub trait VRCompositorHandler: Send {
-    fn handle(&mut self, command: VRCompositorCommand, texture: Option<(u32, DeviceIntSize)>);
-}
-
 pub trait RenderNotifier: Send {
     fn new_frame_ready(&mut self);
     fn new_scroll_frame_ready(&mut self, composite_needed: bool);
     fn external_event(&mut self, _evt: ExternalEvent) { unimplemented!() }
     fn shut_down(&mut self) {}
-}
-
-/// Trait to allow dispatching functions to a specific thread or event loop.
-pub trait RenderDispatcher: Send {
-    fn dispatch(&self, Box<Fn() + Send>);
 }

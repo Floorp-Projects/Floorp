@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use debug_font_data;
-use device::{Device, GpuMarker, Program, VAOId, TextureId, VertexDescriptor};
+use device::{Device, GpuMarker, Program, VAO, TextureId, VertexDescriptor};
 use device::{TextureFilter, VertexAttribute, VertexUsageHint, VertexAttributeKind, TextureTarget};
 use euclid::{Transform3D, Point2D, Size2D, Rect};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, TextureSampler};
@@ -70,14 +70,14 @@ pub struct DebugRenderer {
     font_vertices: Vec<DebugFontVertex>,
     font_indices: Vec<u32>,
     font_program: Program,
-    font_vao: VAOId,
+    font_vao: VAO,
     font_texture_id: TextureId,
 
     tri_vertices: Vec<DebugColorVertex>,
     tri_indices: Vec<u32>,
-    tri_vao: VAOId,
+    tri_vao: VAO,
     line_vertices: Vec<DebugColorVertex>,
-    line_vao: VAOId,
+    line_vao: VAO,
     color_program: Program,
 }
 
@@ -90,13 +90,14 @@ impl DebugRenderer {
         let line_vao = device.create_vao(&DESC_COLOR, 32);
         let tri_vao = device.create_vao(&DESC_COLOR, 32);
 
-        let font_texture_id = device.create_texture_ids(1, TextureTarget::Default)[0];
+        let font_texture_id = device.create_texture_ids(1, TextureTarget::Array)[0];
         device.init_texture(font_texture_id,
                             debug_font_data::BMP_WIDTH,
                             debug_font_data::BMP_HEIGHT,
                             ImageFormat::A8,
                             TextureFilter::Linear,
                             RenderTargetMode::None,
+                            1,
                             Some(&debug_font_data::FONT_BITMAP));
 
         DebugRenderer {
@@ -114,9 +115,12 @@ impl DebugRenderer {
         }
     }
 
-    pub fn deinit(&mut self, device: &mut Device) {
-        device.delete_program(&mut self.font_program);
-        device.delete_program(&mut self.color_program);
+    pub fn deinit(self, device: &mut Device) {
+        device.delete_program(self.font_program);
+        device.delete_program(self.color_program);
+        device.delete_vao(self.tri_vao);
+        device.delete_vao(self.line_vao);
+        device.delete_vao(self.font_vao);
     }
 
     pub fn line_height(&self) -> f32 {
@@ -232,11 +236,11 @@ impl DebugRenderer {
         if !self.tri_vertices.is_empty() {
             device.bind_program(&self.color_program);
             device.set_uniforms(&self.color_program, &projection);
-            device.bind_vao(self.tri_vao);
-            device.update_vao_indices(self.tri_vao,
+            device.bind_vao(&self.tri_vao);
+            device.update_vao_indices(&self.tri_vao,
                                       &self.tri_indices,
                                       VertexUsageHint::Dynamic);
-            device.update_vao_main_vertices(self.tri_vao,
+            device.update_vao_main_vertices(&self.tri_vao,
                                             &self.tri_vertices,
                                             VertexUsageHint::Dynamic);
             device.draw_triangles_u32(0, self.tri_indices.len() as i32);
@@ -246,8 +250,8 @@ impl DebugRenderer {
         if !self.line_vertices.is_empty() {
             device.bind_program(&self.color_program);
             device.set_uniforms(&self.color_program, &projection);
-            device.bind_vao(self.line_vao);
-            device.update_vao_main_vertices(self.line_vao,
+            device.bind_vao(&self.line_vao);
+            device.update_vao_main_vertices(&self.line_vao,
                                             &self.line_vertices,
                                             VertexUsageHint::Dynamic);
             device.draw_nonindexed_lines(0, self.line_vertices.len() as i32);
@@ -258,11 +262,11 @@ impl DebugRenderer {
             device.bind_program(&self.font_program);
             device.set_uniforms(&self.font_program, &projection);
             device.bind_texture(TextureSampler::Color0, self.font_texture_id);
-            device.bind_vao(self.font_vao);
-            device.update_vao_indices(self.font_vao,
+            device.bind_vao(&self.font_vao);
+            device.update_vao_indices(&self.font_vao,
                                       &self.font_indices,
                                       VertexUsageHint::Dynamic);
-            device.update_vao_main_vertices(self.font_vao,
+            device.update_vao_main_vertices(&self.font_vao,
                                             &self.font_vertices,
                                             VertexUsageHint::Dynamic);
             device.draw_triangles_u32(0, self.font_indices.len() as i32);

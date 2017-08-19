@@ -626,7 +626,7 @@ separator.thin:not([orient="vertical"]) {
   position: fixed;
   left: 0;
   bottom: 36px;
-  background-image: url("chrome://browser/skin/preferences/in-content-new/help.svg");
+  background-image: url("chrome://global/skin/icons/help.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.8;

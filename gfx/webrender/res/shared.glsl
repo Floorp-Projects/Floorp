@@ -14,8 +14,8 @@
 // The textureLod() doesn't support sampler2DRect for WR_FEATURE_TEXTURE_RECT, too.
 //
 // Use texture() instead.
-#if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_RECT)
-#define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord)
+#if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_RECT) || defined(WR_FEATURE_TEXTURE_2D)
+#define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord.xy)
 #else
 // In normal case, we use textureLod(). We haven't used the lod yet. So, we always pass 0.0 now.
 #define TEX_SAMPLE(sampler, tex_coord) textureLod(sampler, tex_coord, 0.0)
@@ -52,7 +52,30 @@
 //======================================================================================
 // Shared shader uniforms
 //======================================================================================
-#ifdef WR_FEATURE_TEXTURE_RECT
+#if defined(GL_ES)
+    #if GL_ES == 1
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        precision highp sampler2DArray;
+        #else
+        precision mediump sampler2DArray;
+        #endif
+
+        // Sampler default precision is lowp on mobile GPUs.
+        // This causes RGBA32F texture data to be clamped to 16 bit floats on some GPUs (e.g. Mali-T880).
+        // Define highp precision macro to allow lossless FLOAT texture sampling.
+        #define HIGHP_SAMPLER_FLOAT highp
+    #else
+        #define HIGHP_SAMPLER_FLOAT
+    #endif
+#else
+    #define HIGHP_SAMPLER_FLOAT
+#endif
+
+#ifdef WR_FEATURE_TEXTURE_2D
+uniform sampler2D sColor0;
+uniform sampler2D sColor1;
+uniform sampler2D sColor2;
+#elif defined WR_FEATURE_TEXTURE_RECT
 uniform sampler2DRect sColor0;
 uniform sampler2DRect sColor1;
 uniform sampler2DRect sColor2;
@@ -61,9 +84,9 @@ uniform samplerExternalOES sColor0;
 uniform samplerExternalOES sColor1;
 uniform samplerExternalOES sColor2;
 #else
-uniform sampler2D sColor0;
-uniform sampler2D sColor1;
-uniform sampler2D sColor2;
+uniform sampler2DArray sColor0;
+uniform sampler2DArray sColor1;
+uniform sampler2DArray sColor2;
 #endif
 
 #ifdef WR_FEATURE_DITHERING

@@ -110,6 +110,16 @@ struct EventRegions {
   {
   }
 
+  // This constructor takes the maybe-hit region and uses it to update the
+  // hit region and dispatch-to-content region. It is useful from converting
+  // from the display item representation to the layer representation.
+  EventRegions(const nsIntRegion& aHitRegion,
+               const nsIntRegion& aMaybeHitRegion,
+               const nsIntRegion& aDispatchToContentRegion,
+               const nsIntRegion& aNoActionRegion,
+               const nsIntRegion& aHorizontalPanRegion,
+               const nsIntRegion& aVerticalPanRegion);
+
   bool operator==(const EventRegions& aRegions) const
   {
     return mHitRegion == aRegions.mHitRegion &&
@@ -147,6 +157,26 @@ struct EventRegions {
     mVerticalPanRegion.Transform(aTransform);
   }
 
+  void OrWith(const EventRegions& aOther)
+  {
+    mHitRegion.OrWith(aOther.mHitRegion);
+    mDispatchToContentHitRegion.OrWith(aOther.mDispatchToContentHitRegion);
+    // See the comment in nsDisplayList::AddFrame, where the touch action regions
+    // are handled. The same thing applies here.
+    bool alreadyHadRegions = !mNoActionRegion.IsEmpty() ||
+        !mHorizontalPanRegion.IsEmpty() ||
+        !mVerticalPanRegion.IsEmpty();
+    mNoActionRegion.OrWith(aOther.mNoActionRegion);
+    mHorizontalPanRegion.OrWith(aOther.mHorizontalPanRegion);
+    mVerticalPanRegion.OrWith(aOther.mVerticalPanRegion);
+    if (alreadyHadRegions) {
+      nsIntRegion combinedActionRegions;
+      combinedActionRegions.Or(mHorizontalPanRegion, mVerticalPanRegion);
+      combinedActionRegions.OrWith(mNoActionRegion);
+      mDispatchToContentHitRegion.OrWith(combinedActionRegions);
+    }
+  }
+
   bool IsEmpty() const
   {
     return mHitRegion.IsEmpty()
@@ -154,6 +184,15 @@ struct EventRegions {
         && mNoActionRegion.IsEmpty()
         && mHorizontalPanRegion.IsEmpty()
         && mVerticalPanRegion.IsEmpty();
+  }
+
+  void SetEmpty()
+  {
+    mHitRegion.SetEmpty();
+    mDispatchToContentHitRegion.SetEmpty();
+    mNoActionRegion.SetEmpty();
+    mHorizontalPanRegion.SetEmpty();
+    mVerticalPanRegion.SetEmpty();
   }
 
   nsCString ToString() const

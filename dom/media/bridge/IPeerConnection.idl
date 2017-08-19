@@ -4,19 +4,6 @@
 
 interface nsIDOMDataChannel;
 
-/*
- * Manager interface to PeerConnection.js so it is accessible from C++.
- */
-[scriptable, uuid(c2218bd2-2648-4701-8fa6-305d3379e9f8)]
-interface IPeerConnectionManager : nsISupports
-{
-  boolean hasActivePeerConnection(in unsigned long innerWindowID);
-};
-
-%{C++
-#define IPEERCONNECTION_MANAGER_CONTRACTID "@mozilla.org/dom/peerconnectionmanager;1"
-%}
-
 /* Do not confuse with nsIDOMRTCPeerConnection. This interface is purely for
  * communication between the PeerConnection JS DOM binding and the C++
  * implementation in SIPCC.

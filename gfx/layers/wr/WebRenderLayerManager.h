@@ -272,6 +272,7 @@ private:
   // need this so that WebRenderLayerScrollData items that deeper in the
   // tree don't duplicate scroll metadata that their ancestors already have.
   std::vector<const ActiveScrolledRoot*> mAsrStack;
+  const ActiveScrolledRoot* mLastAsr;
 
 public:
   // Note: two DisplayItemClipChain* A and B might actually be "equal" (as per

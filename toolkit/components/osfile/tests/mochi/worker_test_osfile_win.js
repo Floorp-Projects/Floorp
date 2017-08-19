@@ -1,11 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-importScripts('worker_test_osfile_shared.js');
+/* eslint-env mozilla/chrome-worker, node */
+
+importScripts("worker_test_osfile_shared.js");
 
 self.onmessage = function(msg) {
   self.onmessage = function(msg) {
-    log("ignored message "+JSON.stringify(msg.data));
+    log("ignored message " + JSON.stringify(msg.data));
   };
 
   test_init();
@@ -55,8 +57,7 @@ function test_OpenClose() {
   is(ctypes.winLastError, OS.Constants.Win.ERROR_FILE_NOT_FOUND, "test_OpenClose: error is ERROR_FILE_NOT_FOUND");
 }
 
-function test_CreateFile()
-{
+function test_CreateFile() {
   info("Starting test_CreateFile");
   let file = OS.Win.File.CreateFile(
     "test.tmp",
@@ -71,16 +72,14 @@ function test_CreateFile()
   isnot(result, 0, "test_CreateFile: close succeeded");
 }
 
-function test_GetCurrentDirectory()
-{
+function test_GetCurrentDirectory() {
   let array = new (ctypes.ArrayType(ctypes.char16_t, 4096))();
   let result = OS.Win.File.GetCurrentDirectory(4096, array);
   ok(result < array.length, "test_GetCurrentDirectory: length sufficient");
   ok(result > 0, "test_GetCurrentDirectory: length != 0");
 }
 
-function test_ReadWrite()
-{
+function test_ReadWrite() {
   info("Starting test_ReadWrite");
   let output_name = "osfile_copy.tmp";
   // Copy file
@@ -105,16 +104,16 @@ function test_ReadWrite()
   let array = new (ctypes.ArrayType(ctypes.char, 4096))();
   let bytes_read = new ctypes.uint32_t(0);
   let bytes_read_ptr = bytes_read.address();
-  log("We have a pointer for bytes read: "+bytes_read_ptr);
+  log("We have a pointer for bytes read: " + bytes_read_ptr);
   let bytes_written = new ctypes.uint32_t(0);
   let bytes_written_ptr = bytes_written.address();
-  log("We have a pointer for bytes written: "+bytes_written_ptr);
+  log("We have a pointer for bytes written: " + bytes_written_ptr);
   log("test_ReadWrite: buffer and pointers ready");
   let result;
   while (true) {
     log("test_ReadWrite: reading");
     result = OS.Win.File.ReadFile(input, array, 4096, bytes_read_ptr, null);
-    isnot (result, 0, "test_ReadWrite: read success");
+    isnot(result, 0, "test_ReadWrite: read success");
     let write_from = 0;
     let bytes_left = bytes_read;
     log("test_ReadWrite: read chunk complete " + bytes_left.value);
@@ -122,11 +121,11 @@ function test_ReadWrite()
       break;
     }
     while (bytes_left.value > 0) {
-      log("test_ReadWrite: writing "+bytes_left.value);
-      let ptr = array.addressOfElement(write_from);
+      log("test_ReadWrite: writing " + bytes_left.value);
+      array.addressOfElement(write_from);
       // Note: |WriteFile| launches an exception in case of error
       result = OS.Win.File.WriteFile(output, array, bytes_left, bytes_written_ptr, null);
-      isnot (result, 0, "test_ReadWrite: write success");
+      isnot(result, 0, "test_ReadWrite: write success");
       write_from += bytes_written;
       bytes_left -= bytes_written;
     }
@@ -135,10 +134,10 @@ function test_ReadWrite()
 
   // Compare files
   result = OS.Win.File.SetFilePointer(input, 0, null, OS.Constants.Win.FILE_BEGIN);
-  isnot (result, OS.Constants.Win.INVALID_SET_FILE_POINTER, "test_ReadWrite: input reset");
+  isnot(result, OS.Constants.Win.INVALID_SET_FILE_POINTER, "test_ReadWrite: input reset");
 
   result = OS.Win.File.SetFilePointer(output, 0, null, OS.Constants.Win.FILE_BEGIN);
-  isnot (result, OS.Constants.Win.INVALID_SET_FILE_POINTER, "test_ReadWrite: output reset");
+  isnot(result, OS.Constants.Win.INVALID_SET_FILE_POINTER, "test_ReadWrite: output reset");
 
   let array2 = new (ctypes.ArrayType(ctypes.char, 4096))();
   let bytes_read2 = new ctypes.uint32_t(0);
@@ -162,7 +161,7 @@ function test_ReadWrite()
       // remote file system, I believe.
       bytes = Math.min(bytes_read.value, bytes_read2.value);
       pos += bytes;
-      result = OS.Win.File.SetFilePointer(input,  pos, null, OS.Constants.Win.FILE_BEGIN);
+      result = OS.Win.File.SetFilePointer(input, pos, null, OS.Constants.Win.FILE_BEGIN);
       isnot(result, 0, "test_ReadWrite: input seek succeeded");
 
       result = OS.Win.File.SetFilePointer(output, pos, null, OS.Constants.Win.FILE_BEGIN);
@@ -175,7 +174,7 @@ function test_ReadWrite()
     for (let i = 0; i < bytes; ++i) {
       if (array[i] != array2[i]) {
         ok(false, "Files do not match at position " + i
-           + " ("+array[i] + "/"+array2[i] + ")");
+           + " (" + array[i] + "/" + array2[i] + ")");
       }
     }
   }
@@ -189,13 +188,12 @@ function test_ReadWrite()
   info("test_ReadWrite cleanup complete");
 }
 
-function test_passing_undefined()
-{
+function test_passing_undefined() {
   info("Testing that an exception gets thrown when an FFI function is passed undefined");
   let exceptionRaised = false;
 
   try {
-    let file = OS.Win.File.CreateFile(
+    OS.Win.File.CreateFile(
       undefined,
       OS.Constants.Win.GENERIC_READ,
       0,
@@ -203,7 +201,7 @@ function test_passing_undefined()
       OS.Constants.Win.OPEN_EXISTING,
       0,
       null);
-  } catch(e) {
+  } catch (e) {
     if (e instanceof TypeError && e.message.indexOf("CreateFile") > -1) {
       exceptionRaised = true;
     } else {

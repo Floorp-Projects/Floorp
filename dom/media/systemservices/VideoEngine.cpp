@@ -81,6 +81,7 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
     webrtc::CaptureDeviceInfo(mCaptureDevInfo.type).TypeName();
 
   if (mDeviceInfo) {
+    LOG(("Device cache available."));
     // Camera cache is invalidated by HW change detection elsewhere
     if (mCaptureDevInfo.type == webrtc::CaptureDeviceType::Camera) {
       LOG(("returning cached CaptureDeviceInfo of type %s", capDevTypeName));
@@ -88,6 +89,8 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
     }
     // Screen sharing cache is invalidated after the expiration time
     currentTime = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+    LOG(("Checking expiry, fetched current time of: %" PRId64, currentTime));
+    LOG(("device cache expiration is %" PRId64, mExpiryTimeInMs));
     if (currentTime <= mExpiryTimeInMs) {
       LOG(("returning cached CaptureDeviceInfo of type %s", capDevTypeName));
       return mDeviceInfo;
@@ -96,17 +99,21 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
 
   if (currentTime == 0) {
    currentTime = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+   LOG(("Fetched current time of: %" PRId64, currentTime));
   }
   mExpiryTimeInMs = currentTime + kCacheExpiryPeriodMs;
+  LOG(("new device cache expiration is %" PRId64, mExpiryTimeInMs));
   LOG(("creating a new VideoCaptureDeviceInfo of type %s", capDevTypeName));
 
   switch (mCaptureDevInfo.type) {
     case webrtc::CaptureDeviceType::Camera: {
       mDeviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo());
+      LOG(("webrtc::CaptureDeviceType::Camera: Finished creating new device."));
       break;
     }
     case webrtc::CaptureDeviceType::Browser: {
       mDeviceInfo.reset(webrtc::BrowserDeviceInfoImpl::CreateDeviceInfo());
+      LOG(("webrtc::CaptureDeviceType::Browser: Finished creating new device."));
       break;
     }
     // Window, Application, and Screen types are handled by DesktopCapture
@@ -115,6 +122,7 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
     case webrtc::CaptureDeviceType::Screen: {
 #if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
       mDeviceInfo.reset(webrtc::DesktopCaptureImpl::CreateDeviceInfo(mId,mCaptureDevInfo.type));
+      LOG(("screen capture: Finished creating new device."));
 #else
       MOZ_ASSERT("GetVideoCaptureDeviceInfo NO DESKTOP CAPTURE IMPL ON ANDROID" == nullptr);
       mDeviceInfo.reset();
@@ -122,6 +130,7 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
       break;
     }
   }
+  LOG(("EXIT %s", __PRETTY_FUNCTION__));
   return mDeviceInfo;
 }
 

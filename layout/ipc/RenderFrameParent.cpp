@@ -409,6 +409,7 @@ nsDisplayRemote::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
   if (aLayerData) {
     aLayerData->SetReferentId(GetRemoteLayersId());
     aLayerData->SetTransform(mozilla::gfx::Matrix4x4::Translation(mOffset.x, mOffset.y, 0.0));
+    aLayerData->SetEventRegionsOverride(mEventRegionsOverride);
   }
   return true;
 }

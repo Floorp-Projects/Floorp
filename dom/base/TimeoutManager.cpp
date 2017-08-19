@@ -20,10 +20,6 @@
 #include "mozilla/net/WebSocketEventService.h"
 #include "mozilla/MediaManager.h"
 
-#ifdef MOZ_WEBRTC
-#include "IPeerConnection.h"
-#endif // MOZ_WEBRTC
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1243,26 +1239,12 @@ TimeoutManager::BudgetThrottlingEnabled(bool aIsBackground) const
     return false;
   }
 
-  bool active = false;
-#if 0
-  // Check if we have active PeerConnections This doesn't actually
-  // work, since we sometimes call IsActive from Resume, which in turn
-  // is sometimes called from nsGlobalWindow::LeaveModalState. The
-  // problem here is that LeaveModalState can be called with pending
-  // exeptions on the js context, and the following call to
-  // HasActivePeerConnection is a JS call, which will assert on that
-  // exception. Also, calling JS is expensive so we should try to fix
-  // this in some other way.
-  nsCOMPtr<IPeerConnectionManager> pcManager =
-    do_GetService(IPEERCONNECTION_MANAGER_CONTRACTID);
-
-  if (pcManager && NS_SUCCEEDED(pcManager->HasActivePeerConnection(
-                     mWindow.WindowID(), &active)) &&
-      active) {
+  // Check if we have active PeerConnection
+  if (mWindow.AsInner()->HasActivePeerConnections()) {
     return false;
   }
-#endif // MOZ_WEBRTC
 
+  bool active;
   // Check if we have web sockets
   RefPtr<WebSocketEventService> eventService = WebSocketEventService::Get();
   if (eventService &&

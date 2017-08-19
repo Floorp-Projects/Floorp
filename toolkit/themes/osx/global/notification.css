@@ -5,78 +5,7 @@
 %include shared.inc
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-notification {
-  padding: 2px 3px 3px;
-  text-shadow: none;
-}
-
-notification[type="info"] {
-  color: rgba(255,255,255,0.95);
-  background: linear-gradient(#606060, #404040);
-  border-top: 1px solid #2a2a2a;
-  border-bottom: 1px solid #2a2a2a;
-}
-
-notification[type="warning"] {
-  color: rgba(0,0,0,0.95);
-  background: linear-gradient(#ffe13e, #ffc703);
-  border-top: 1px solid #bf8a01;
-  border-bottom: 1px solid #bf8a01;
-}
-
-notification[type="critical"] {
-  color: rgba(255,255,255,0.95);
-  background: linear-gradient(#d40000, #980000);
-  border-top: 1px solid #5d0000;
-  border-bottom: 1px solid #5d0000;
-}
-
-notificationbox[notificationside="top"] > notification {
-  border-top-style: none;
-}
-
-notificationbox[notificationside="bottom"] > notification {
-  border-bottom-style: none;
-}
-
-.messageText > .text-link {
-  color: inherit !important;
-  text-decoration: underline;
-}
-
-.messageImage {
-  width: 16px;
-  height: 16px;
-  margin: 0 4px;
-}
-
-/* Default icons for notifications */
-
-.messageImage[type="info"] {
-  list-style-image: url("chrome://global/skin/notification/info-icon.png");
-}
-
-.messageImage[type="warning"] {
-  list-style-image: url("chrome://global/skin/notification/warning-icon.png");
-}
-
-.messageImage[type="critical"] {
-  list-style-image: url("chrome://global/skin/notification/error-icon.png");
-}
-
-.messageText {
-  margin: 0 3px !important;
-  padding: 0;
-  font-weight: bold;
-}
-
-.messageCloseButton {
-  -moz-appearance: none;
-  padding: 0;
-  margin: 0 2px;
-  border: none;
-}
-
+%include ../../shared/notification.inc.css
 %include ../../shared/popupnotification.inc.css
 
 .popup-notification-button:-moz-focusring {

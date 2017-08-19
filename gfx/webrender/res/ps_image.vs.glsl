@@ -50,6 +50,7 @@ void main(void) {
     vec2 st0 = uv0 / texture_size_normalization_factor;
     vec2 st1 = uv1 / texture_size_normalization_factor;
 
+    vLayer = res.layer;
     vTextureSize = st1 - st0;
     vTextureOffset = st0;
     vTileSpacing = image.stretch_size_and_tile_spacing.zw;

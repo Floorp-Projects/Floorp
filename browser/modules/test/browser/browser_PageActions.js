@@ -654,6 +654,113 @@ add_task(async function multipleNonBuiltInOrdering() {
   );
 });
 
+// Makes sure the panel is correctly updated when a non-built-in action is
+// added before the built-in actions; and when all built-in actions are removed
+// and added back.
+add_task(async function nonBuiltFirst() {
+  let initialActions = PageActions.actions;
+
+  // Remove all actions.
+  for (let action of initialActions) {
+    action.remove();
+  }
+
+  // Check the actions.
+  Assert.deepEqual(PageActions.actions.map(a => a.id), [],
+                   "PageActions.actions should be empty");
+  Assert.deepEqual(PageActions.builtInActions.map(a => a.id), [],
+                   "PageActions.builtInActions should be empty");
+  Assert.deepEqual(PageActions.nonBuiltInActions.map(a => a.id), [],
+                   "PageActions.nonBuiltInActions should be empty");
+
+  // Check the panel.
+  Assert.equal(BrowserPageActions.mainViewBodyNode.childNodes.length, 0,
+               "All nodes should be gone");
+
+  // Add a non-built-in action.
+  let action = PageActions.addAction(new PageActions.Action({
+    id: "test-nonBuiltFirst",
+    title: "Test nonBuiltFirst",
+  }));
+
+  // Check the actions.
+  Assert.deepEqual(PageActions.actions.map(a => a.id), [action.id],
+                   "Action should be in PageActions.actions");
+  Assert.deepEqual(PageActions.builtInActions.map(a => a.id), [],
+                   "PageActions.builtInActions should be empty");
+  Assert.deepEqual(PageActions.nonBuiltInActions.map(a => a.id), [action.id],
+                   "Action should be in PageActions.nonBuiltInActions");
+
+  // Check the panel.
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    [BrowserPageActions._panelButtonNodeIDForActionID(action.id)],
+    "Action should be in panel"
+  );
+
+  // Now add back all the actions.
+  for (let a of initialActions) {
+    PageActions.addAction(a);
+  }
+
+  // Check the actions.
+  Assert.deepEqual(
+    PageActions.actions.map(a => a.id),
+    initialActions.map(a => a.id).concat(
+      [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
+      [action.id]
+    ),
+    "All actions should be in PageActions.actions"
+  );
+  Assert.deepEqual(
+    PageActions.builtInActions.map(a => a.id),
+    initialActions.map(a => a.id),
+    "PageActions.builtInActions should be initial actions"
+  );
+  Assert.deepEqual(
+    PageActions.nonBuiltInActions.map(a => a.id),
+    [action.id],
+    "PageActions.nonBuiltInActions should contain action"
+  );
+
+  // Check the panel.
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    initialActions.map(a => a.id).concat(
+      [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
+      [action.id]
+    ).map(id => BrowserPageActions._panelButtonNodeIDForActionID(id)),
+    "Panel should contain all actions"
+  );
+
+  // Remove the test action.
+  action.remove();
+
+  // Check the actions.
+  Assert.deepEqual(
+    PageActions.actions.map(a => a.id),
+    initialActions.map(a => a.id),
+    "Action should no longer be in PageActions.actions"
+  );
+  Assert.deepEqual(
+    PageActions.builtInActions.map(a => a.id),
+    initialActions.map(a => a.id),
+    "PageActions.builtInActions should be initial actions"
+  );
+  Assert.deepEqual(
+    PageActions.nonBuiltInActions.map(a => a.id),
+    [],
+    "Action should no longer be in PageActions.nonBuiltInActions"
+  );
+
+  // Check the panel.
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    initialActions.map(a => BrowserPageActions._panelButtonNodeIDForActionID(a.id)),
+    "Action should no longer be in panel"
+  );
+});
+
 
 function promisePageActionPanelOpen() {
   let button = document.getElementById("pageActionButton");

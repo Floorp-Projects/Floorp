@@ -658,6 +658,8 @@ protected:
   // These variables are only used on inner windows.
   uint32_t               mMutationBits;
 
+  uint32_t               mActivePeerConnections;
+
   bool                   mIsDocumentLoaded;
   bool                   mIsHandlingResizeEvent;
   bool                   mIsInnerWindow;
@@ -887,6 +889,21 @@ public:
   // Apply the parent window's suspend, freeze, and modal state to the current
   // window.
   void SyncStateFromParentWindow();
+
+  /**
+   * Increment active peer connection count.
+   */
+  void AddPeerConnection();
+
+  /**
+   * Decrement active peer connection count.
+   */
+  void RemovePeerConnection();
+
+  /**
+   * Check whether the active peer connection count is non-zero.
+   */
+  bool HasActivePeerConnections();
 
   bool IsPlayingAudio();
 

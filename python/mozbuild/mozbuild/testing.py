@@ -297,6 +297,7 @@ TEST_MANIFESTS = dict(
     FIREFOX_UI_UPDATE=('firefox-ui-update', 'firefox-ui', '.', False),
     PUPPETEER_FIREFOX=('firefox-ui-functional', 'firefox-ui', '.', False),
     PYTHON_UNITTEST=('python', 'python', '.', False),
+    CRAMTEST=('cram', 'cram', '.', False),
 
     # marionette tests are run from the srcdir
     # TODO(ato): make packaging work as for other test suites

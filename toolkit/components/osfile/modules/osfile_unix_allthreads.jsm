@@ -17,6 +17,8 @@
  * - opened from a chrome worker through require().
  */
 
+/* eslint-env node */
+
 "use strict";
 
 var SharedAll;
@@ -35,7 +37,7 @@ if (typeof Components != "undefined") {
   throw new Error("Please open this module with Component.utils.import or with require()");
 }
 
-var LOG = SharedAll.LOG.bind(SharedAll, "Unix", "allthreads");
+SharedAll.LOG.bind(SharedAll, "Unix", "allthreads");
 var Const = SharedAll.Constants.libc;
 
 // Open libc
@@ -51,8 +53,8 @@ exports.declareFFI = declareFFI;
 var LazyBindings = {};
 libc.declareLazy(LazyBindings, "strerror",
                  "strerror", ctypes.default_abi,
-                 /*return*/ ctypes.char.ptr,
-                 /*errnum*/ ctypes.int);
+                 /* return*/ ctypes.char.ptr,
+                 /* errnum*/ ctypes.int);
 
 /**
  * A File-related error.
@@ -88,7 +90,7 @@ OSError.prototype = Object.create(SharedAll.OSError.prototype);
 OSError.prototype.toString = function toString() {
   return "Unix error " + this.unixErrno +
     " during operation " + this.operation +
-    (this.path? " on file " + this.path : "") +
+    (this.path ? " on file " + this.path : "") +
     " (" + LazyBindings.strerror(this.unixErrno).readString() + ")";
 };
 OSError.prototype.toMsg = function toMsg() {
@@ -366,7 +368,7 @@ var EXPORTED_SYMBOLS = [
   "POS_END"
 ];
 
-//////////// Boilerplate
+// ////////// Boilerplate
 if (typeof Components != "undefined") {
   this.EXPORTED_SYMBOLS = EXPORTED_SYMBOLS;
   for (let symbol of EXPORTED_SYMBOLS) {

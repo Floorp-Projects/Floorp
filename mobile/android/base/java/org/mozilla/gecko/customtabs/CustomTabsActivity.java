@@ -31,6 +31,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
+import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
@@ -41,6 +42,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
@@ -71,6 +73,7 @@ public class CustomTabsActivity extends AppCompatActivity
 
     private GeckoView mGeckoView;
     private PromptService mPromptService;
+    private DoorHangerPopup mDoorHangerPopup;
 
     private boolean mCanGoBack = false;
     private boolean mCanGoForward = false;
@@ -108,6 +111,7 @@ public class CustomTabsActivity extends AppCompatActivity
         mGeckoView.setContentListener(this);
 
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
+        mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
 
         final GeckoViewSettings settings = mGeckoView.getSettings();
         settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
@@ -122,6 +126,7 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
+        mDoorHangerPopup.destroy();
         mPromptService.destroy();
 
         super.onDestroy();
@@ -132,6 +137,12 @@ public class CustomTabsActivity extends AppCompatActivity
         if (!ActivityHandlerHelper.handleActivityResult(requestCode, resultCode, data)) {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, final String[] permissions,
+                                           final int[] grantResults) {
+        Permissions.onRequestPermissionsResult(this, permissions, grantResults);
     }
 
     private void sendTelemetry() {

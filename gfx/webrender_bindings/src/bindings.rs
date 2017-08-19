@@ -589,7 +589,6 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         recorder: recorder,
         blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new(workers.clone()))),
         workers: Some(workers.clone()),
-        cache_expiry_frames: 60, // see https://github.com/servo/webrender/pull/1294#issuecomment-304318800
         enable_render_on_scroll: false,
         ..Default::default()
     };

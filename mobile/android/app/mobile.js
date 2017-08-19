@@ -562,6 +562,7 @@ pref("apz.fling_friction", "0.004");
 pref("apz.fling_stopped_threshold", "0.0");
 pref("apz.max_velocity_inches_per_ms", "0.07");
 pref("apz.overscroll.enabled", true);
+pref("apz.second_tap_tolerance", "0.3");
 pref("apz.touch_move_tolerance", "0.03");
 pref("apz.touch_start_tolerance", "0.06");
 

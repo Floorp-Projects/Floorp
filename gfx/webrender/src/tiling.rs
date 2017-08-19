@@ -4,11 +4,11 @@
 
 use border::{BorderCornerInstance, BorderCornerSide};
 use device::TextureId;
-use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheUpdateList};
+use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuCacheUpdateList};
 use internal_types::BatchTextures;
 use internal_types::{FastHashMap, SourceTexture};
 use mask_cache::MaskCacheInfo;
-use prim_store::{CLIP_DATA_GPU_BLOCKS, DeferredResolve, ImagePrimitiveKind, PrimitiveCacheKey};
+use prim_store::{CLIP_DATA_GPU_BLOCKS, DeferredResolve, PrimitiveCacheKey};
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
 use profiler::FrameProfileCounters;
 use render_task::{AlphaRenderItem, MaskGeometryKind, MaskSegment, RenderTask, RenderTaskData};
@@ -21,7 +21,7 @@ use std::{f32, i32, mem, usize};
 use texture_allocator::GuillotineAllocator;
 use util::{TransformedRect, TransformedRectKind};
 use api::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint, ImageKey};
-use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize, FontInstanceKey};
+use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize, FontInstance};
 use api::{ExternalImageType, FilterOp, FontRenderMode, ImageRendering, LayerRect};
 use api::{LayerToWorldTransform, MixBlendMode, PipelineId, PropertyBinding, TransformStyle};
 use api::{TileOffset, WorldToLayerTransform, YuvColorSpace, YuvFormat, LayerVector2D};
@@ -431,30 +431,22 @@ impl AlphaRenderItem {
                     PrimitiveKind::Image => {
                         let image_cpu = &ctx.prim_store.cpu_images[prim_metadata.cpu_prim_index.0];
 
-                        let (color_texture_id, uv_address) = match image_cpu.kind {
-                            ImagePrimitiveKind::Image(image_key, image_rendering, tile_offset, _) => {
-                                resolve_image(image_key,
-                                              image_rendering,
-                                              tile_offset,
-                                              ctx.resource_cache,
-                                              gpu_cache,
-                                              deferred_resolves)
-                            }
-                            ImagePrimitiveKind::WebGL(context_id) => {
-                                let webgl_texture = ctx.resource_cache.get_webgl_texture(&context_id);
-                                let uv_rect = [ 0.0,
-                                                webgl_texture.size.height as f32,
-                                                webgl_texture.size.width as f32,
-                                                0.0];
-                                let cache_handle = gpu_cache.push_per_frame_blocks(&[uv_rect.into()]);
-                                (webgl_texture.id, cache_handle)
-                            }
-                        };
+                        let (color_texture_id, uv_address) = resolve_image(image_cpu.image_key,
+                                                                           image_cpu.image_rendering,
+                                                                           image_cpu.tile_offset,
+                                                                           ctx.resource_cache,
+                                                                           gpu_cache,
+                                                                           deferred_resolves);
+
+                        if color_texture_id == SourceTexture::Invalid {
+                            return;
+                        }
 
                         let batch_kind = match color_texture_id {
                             SourceTexture::External(ext_image) => {
                                 match ext_image.image_type {
                                     ExternalImageType::Texture2DHandle => AlphaBatchKind::Image(ImageBufferKind::Texture2D),
+                                    ExternalImageType::Texture2DArrayHandle => AlphaBatchKind::Image(ImageBufferKind::Texture2DArray),
                                     ExternalImageType::TextureRectHandle => AlphaBatchKind::Image(ImageBufferKind::TextureRect),
                                     ExternalImageType::TextureExternalHandle => AlphaBatchKind::Image(ImageBufferKind::TextureExternal),
                                     ExternalImageType::ExternalBuffer => {
@@ -465,7 +457,7 @@ impl AlphaRenderItem {
                                 }
                             }
                             _ => {
-                                AlphaBatchKind::Image(ImageBufferKind::Texture2D)
+                                AlphaBatchKind::Image(ImageBufferKind::Texture2DArray)
                             }
                         };
 
@@ -484,12 +476,12 @@ impl AlphaRenderItem {
                         // TODO(gw): avoid / recycle this allocation in the future.
                         let mut instances = Vec::new();
 
-                        let font = FontInstanceKey::new(text_cpu.font_key,
-                                                        font_size_dp,
-                                                        text_cpu.color,
-                                                        text_cpu.normal_render_mode,
-                                                        text_cpu.glyph_options,
-                                                        text_cpu.subpx_dir);
+                        let font = FontInstance::new(text_cpu.font_key,
+                                                     font_size_dp,
+                                                     text_cpu.color,
+                                                     text_cpu.normal_render_mode,
+                                                     text_cpu.glyph_options,
+                                                     text_cpu.subpx_dir);
 
                         let texture_id = ctx.resource_cache.get_glyphs(font,
                                                                        &text_cpu.glyph_keys,
@@ -513,7 +505,8 @@ impl AlphaRenderItem {
                         let cache_task_id = prim_metadata.render_task.as_ref().expect("no render task!").id;
                         let cache_task_index = render_tasks.get_task_index(&cache_task_id,
                                                                            child_pass_index);
-                        let key = AlphaBatchKey::new(AlphaBatchKind::CacheImage, flags, blend_mode, no_textures);
+                        let textures = BatchTextures::render_target_cache();
+                        let key = AlphaBatchKey::new(AlphaBatchKind::CacheImage, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
                         batch.add_instance(base_instance.build(0, cache_task_index.0 as i32, 0));
                     }
@@ -552,6 +545,11 @@ impl AlphaRenderItem {
                                                                    ctx.resource_cache,
                                                                    gpu_cache,
                                                                    deferred_resolves);
+
+                            if texture == SourceTexture::Invalid {
+                                return;
+                            }
+
                             textures.colors[channel] = texture;
                             uv_rect_addresses[channel] = address.as_int(gpu_cache);
                         }
@@ -561,6 +559,7 @@ impl AlphaRenderItem {
                                 SourceTexture::External(ext_image) => {
                                     match ext_image.image_type {
                                         ExternalImageType::Texture2DHandle => ImageBufferKind::Texture2D,
+                                        ExternalImageType::Texture2DArrayHandle => ImageBufferKind::Texture2DArray,
                                         ExternalImageType::TextureRectHandle => ImageBufferKind::TextureRect,
                                         ExternalImageType::TextureExternalHandle => ImageBufferKind::TextureExternal,
                                         ExternalImageType::ExternalBuffer => {
@@ -571,7 +570,7 @@ impl AlphaRenderItem {
                                     }
                                 }
                                 _ => {
-                                    ImageBufferKind::Texture2D
+                                    ImageBufferKind::Texture2DArray
                                 }
                             }
                         };
@@ -702,82 +701,88 @@ impl ClipBatcher {
 
         for &(packed_layer_index, ref info) in clips.iter() {
             let instance = CacheClipInstance {
-                task_id: task_index.0 as i32,
+                render_task_index: task_index.0 as i32,
                 layer_index: packed_layer_index.0 as i32,
-                address: 0,
                 segment: 0,
-                resource_address: 0,
+                clip_data_address: GpuCacheAddress::invalid(),
+                resource_address: GpuCacheAddress::invalid(),
             };
 
-            for clip_index in 0 .. info.complex_clip_range.get_count() {
-                let gpu_address = info.complex_clip_range.location.as_int(gpu_cache) +
-                                  (CLIP_DATA_GPU_BLOCKS * clip_index) as i32;
-                match geometry_kind {
-                    MaskGeometryKind::Default => {
-                        self.rectangles.push(CacheClipInstance {
-                            address: gpu_address,
-                            segment: MaskSegment::All as i32,
-                            ..instance
-                        });
-                    }
-                    MaskGeometryKind::CornersOnly => {
-                        self.rectangles.extend_from_slice(&[
-                            CacheClipInstance {
-                                address: gpu_address,
-                                segment: MaskSegment::TopLeftCorner as i32,
+            if !info.complex_clip_range.is_empty() {
+                let base_gpu_address = gpu_cache.get_address(&info.complex_clip_range.location);
+
+                for clip_index in 0 .. info.complex_clip_range.get_count() {
+                    let gpu_address = base_gpu_address + CLIP_DATA_GPU_BLOCKS * clip_index;
+                    match geometry_kind {
+                        MaskGeometryKind::Default => {
+                            self.rectangles.push(CacheClipInstance {
+                                clip_data_address: gpu_address,
+                                segment: MaskSegment::All as i32,
                                 ..instance
-                            },
-                            CacheClipInstance {
-                                address: gpu_address,
-                                segment: MaskSegment::TopRightCorner as i32,
-                                ..instance
-                            },
-                            CacheClipInstance {
-                                address: gpu_address,
-                                segment: MaskSegment::BottomLeftCorner as i32,
-                                ..instance
-                            },
-                            CacheClipInstance {
-                                address: gpu_address,
-                                segment: MaskSegment::BottomRightCorner as i32,
-                                ..instance
-                            },
-                        ]);
+                            });
+                        }
+                        MaskGeometryKind::CornersOnly => {
+                            self.rectangles.extend_from_slice(&[
+                                CacheClipInstance {
+                                    clip_data_address: gpu_address,
+                                    segment: MaskSegment::TopLeftCorner as i32,
+                                    ..instance
+                                },
+                                CacheClipInstance {
+                                    clip_data_address: gpu_address,
+                                    segment: MaskSegment::TopRightCorner as i32,
+                                    ..instance
+                                },
+                                CacheClipInstance {
+                                    clip_data_address: gpu_address,
+                                    segment: MaskSegment::BottomLeftCorner as i32,
+                                    ..instance
+                                },
+                                CacheClipInstance {
+                                    clip_data_address: gpu_address,
+                                    segment: MaskSegment::BottomRightCorner as i32,
+                                    ..instance
+                                },
+                            ]);
+                        }
                     }
                 }
             }
 
-            for clip_index in 0 .. info.layer_clip_range.get_count() {
-                let gpu_address = info.layer_clip_range.location.as_int(gpu_cache) +
-                                  (CLIP_DATA_GPU_BLOCKS * clip_index) as i32;
-                self.rectangles.push(CacheClipInstance {
-                    address: gpu_address,
-                    segment: MaskSegment::All as i32,
-                    ..instance
-                });
+            if !info.layer_clip_range.is_empty() {
+                let base_gpu_address = gpu_cache.get_address(&info.layer_clip_range.location);
+
+                for clip_index in 0 .. info.layer_clip_range.get_count() {
+                    let gpu_address = base_gpu_address + CLIP_DATA_GPU_BLOCKS * clip_index;
+                    self.rectangles.push(CacheClipInstance {
+                        clip_data_address: gpu_address,
+                        segment: MaskSegment::All as i32,
+                        ..instance
+                    });
+                }
             }
 
-            if let Some((ref mask, gpu_location)) = info.image {
+            if let Some((ref mask, ref gpu_location)) = info.image {
                 let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto, None);
                 self.images.entry(cache_item.texture_id)
                            .or_insert(Vec::new())
                            .push(CacheClipInstance {
-                    address: gpu_location.as_int(gpu_cache),
-                    resource_address: cache_item.uv_rect_handle.as_int(gpu_cache),
+                    clip_data_address: gpu_cache.get_address(gpu_location),
+                    resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
                     ..instance
                 })
             }
 
-            for &(ref source, gpu_location) in &info.border_corners {
-                let gpu_address = gpu_location.as_int(gpu_cache);
+            for &(ref source, ref gpu_location) in &info.border_corners {
+                let gpu_address = gpu_cache.get_address(gpu_location);
                 self.border_clears.push(CacheClipInstance {
-                    address: gpu_address,
+                    clip_data_address: gpu_address,
                     segment: 0,
                     ..instance
                 });
                 for clip_index in 0..source.actual_clip_count {
                     self.borders.push(CacheClipInstance {
-                        address: gpu_address,
+                        clip_data_address: gpu_address,
                         segment: 1 + clip_index as i32,
                         ..instance
                     })
@@ -1058,12 +1063,12 @@ impl RenderTarget for ColorRenderTarget {
                                     let text = &ctx.prim_store.cpu_text_runs[sub_metadata.cpu_prim_index.0];
                                     let font_size_dp = text.logical_font_size.scale_by(ctx.device_pixel_ratio);
 
-                                    let font = FontInstanceKey::new(text.font_key,
-                                                                    font_size_dp,
-                                                                    text.color,
-                                                                    text.shadow_render_mode,
-                                                                    text.glyph_options,
-                                                                    text.subpx_dir);
+                                    let font = FontInstance::new(text.font_key,
+                                                                 font_size_dp,
+                                                                 text.color,
+                                                                 text.shadow_render_mode,
+                                                                 text.glyph_options,
+                                                                 text.subpx_dir);
 
                                     let texture_id = ctx.resource_cache.get_glyphs(font,
                                                                                    &text.glyph_keys,
@@ -1375,12 +1380,13 @@ pub struct BlurCommand {
 /// Could be an image or a rectangle, which defines the
 /// way `address` is treated.
 #[derive(Clone, Copy, Debug)]
+#[repr(C)]
 pub struct CacheClipInstance {
-    task_id: i32,
+    render_task_index: i32,
     layer_index: i32,
-    address: i32,
     segment: i32,
-    resource_address: i32,
+    clip_data_address: GpuCacheAddress,
+    resource_address: GpuCacheAddress,
 }
 
 // 32 bytes per instance should be enough for anyone!
@@ -1721,30 +1727,33 @@ fn resolve_image(image_key: ImageKey,
                  resource_cache: &ResourceCache,
                  gpu_cache: &mut GpuCache,
                  deferred_resolves: &mut Vec<DeferredResolve>) -> (SourceTexture, GpuCacheHandle) {
-    let image_properties = resource_cache.get_image_properties(image_key);
+    match resource_cache.get_image_properties(image_key) {
+        Some(image_properties) => {
+            // Check if an external image that needs to be resolved
+            // by the render thread.
+            match image_properties.external_image {
+                Some(external_image) => {
+                    // This is an external texture - we will add it to
+                    // the deferred resolves list to be patched by
+                    // the render thread...
+                    let cache_handle = gpu_cache.push_deferred_per_frame_blocks(1);
+                    deferred_resolves.push(DeferredResolve {
+                        image_properties,
+                        address: gpu_cache.get_address(&cache_handle),
+                    });
 
-    // Check if an external image that needs to be resolved
-    // by the render thread.
-    match image_properties.external_image {
-        Some(external_image) => {
-            // This is an external texture - we will add it to
-            // the deferred resolves list to be patched by
-            // the render thread...
-            let cache_handle = gpu_cache.push_deferred_per_frame_blocks(1);
-            deferred_resolves.push(DeferredResolve {
-                image_properties,
-                address: gpu_cache.get_address(&cache_handle),
-            });
+                    (SourceTexture::External(external_image), cache_handle)
+                }
+                None => {
+                    let cache_item = resource_cache.get_cached_image(image_key,
+                                                                     image_rendering,
+                                                                     tile_offset);
 
-            (SourceTexture::External(external_image), cache_handle)
+                    (cache_item.texture_id, cache_item.uv_rect_handle)
+                }
+            }
         }
-        None => {
-            let cache_item = resource_cache.get_cached_image(image_key,
-                                                             image_rendering,
-                                                             tile_offset);
-
-            (cache_item.texture_id, cache_item.uv_rect_handle)
-        }
+        None => (SourceTexture::Invalid, GpuCacheHandle::new()),
     }
 }
 

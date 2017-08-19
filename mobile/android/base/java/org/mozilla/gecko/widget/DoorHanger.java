@@ -24,6 +24,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import java.util.Locale;
@@ -87,6 +88,8 @@ public abstract class DoorHanger extends LinearLayout {
     protected boolean mPersistWhileVisible;
     protected int mPersistenceCount;
     protected long mTimeout;
+
+    public EventCallback callback;
 
     protected DoorHanger(Context context, DoorhangerConfig config, Type type) {
         super(context);
