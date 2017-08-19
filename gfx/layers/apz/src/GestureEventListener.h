@@ -145,7 +145,9 @@ private:
 
   void TriggerSingleTapConfirmedEvent();
 
-  bool MoveDistanceIsLarge();
+  bool MoveDistanceExceeds(ScreenCoord aThreshold) const;
+  bool MoveDistanceIsLarge() const;
+  bool SecondTapIsFar() const;
 
   /**
    * Returns current vertical span, counting from the where the user first put

@@ -178,7 +178,20 @@ nsEventStatus GestureEventListener::HandleInputTouchSingleStart()
     CreateMaxTapTimeoutTask();
     break;
   case GESTURE_FIRST_SINGLE_TOUCH_UP:
-    SetState(GESTURE_SECOND_SINGLE_TOUCH_DOWN);
+    if (SecondTapIsFar()) {
+      // If the second tap goes down far away from the first, then bail out
+      // of the gesture.
+      CancelLongTapTimeoutTask();
+      CancelMaxTapTimeoutTask();
+      mSingleTapSent = Nothing();
+      SetState(GESTURE_NONE);
+    } else {
+      // Otherwise, reset the touch start position so that, if this turns into
+      // a one-touch-pinch gesture, it uses the second tap's down position as
+      // the focus, rather than the first tap's.
+      mTouchStartPosition = mLastTouchInput.mTouches[0].mLocalScreenPoint;
+      SetState(GESTURE_SECOND_SINGLE_TOUCH_DOWN);
+    }
     break;
   default:
     NS_WARNING("Unhandled state upon single touch start");
@@ -240,12 +253,25 @@ nsEventStatus GestureEventListener::HandleInputTouchMultiStart()
   return rv;
 }
 
-bool GestureEventListener::MoveDistanceIsLarge()
+bool GestureEventListener::MoveDistanceExceeds(ScreenCoord aThreshold) const
 {
   const ParentLayerPoint start = mLastTouchInput.mTouches[0].mLocalScreenPoint;
   ParentLayerPoint delta = start - mTouchStartPosition;
   ScreenPoint screenDelta = mAsyncPanZoomController->ToScreenCoordinates(delta, start);
-  return (screenDelta.Length() > AsyncPanZoomController::GetTouchStartTolerance());
+  return (screenDelta.Length() > aThreshold);
+}
+
+bool GestureEventListener::MoveDistanceIsLarge() const
+{
+  return MoveDistanceExceeds(AsyncPanZoomController::GetTouchStartTolerance());
+}
+
+bool GestureEventListener::SecondTapIsFar() const
+{
+  // Allow a little more room here, because the is actually lifting their finger
+  // off the screen before replacing it, and that tends to have more error than
+  // wiggling the finger while on the screen.
+  return MoveDistanceExceeds(AsyncPanZoomController::GetSecondTapTolerance());
 }
 
 nsEventStatus GestureEventListener::HandleInputTouchMove()

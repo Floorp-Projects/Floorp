@@ -351,6 +351,14 @@ typedef GenericFlingAnimation FlingAnimation;
  * \li\b apz.record_checkerboarding
  * Whether or not to record detailed info on checkerboarding events.
  *
+ * \li\b apz.second_tap_tolerance
+ * Constant describing the tolerance in distance we use, multiplied by the
+ * device DPI, within which a second tap is counted as part of a gesture
+ * continuing from the first tap. Making this larger allows the user more
+ * distance between the first and second taps in a "double tap" or "one touch
+ * pinch" gesture.\n
+ * Units: (real-world, i.e. screen) inches
+ *
  * \li\b apz.test.logging_enabled
  * Enable logging of APZ test data (see bug 961289).
  *
@@ -820,6 +828,12 @@ AsyncPanZoomController::IsDestroyed() const
 AsyncPanZoomController::GetTouchStartTolerance()
 {
   return (gfxPrefs::APZTouchStartTolerance() * APZCTreeManager::GetDPI());
+}
+
+/* static */ScreenCoord
+AsyncPanZoomController::GetSecondTapTolerance()
+{
+  return (gfxPrefs::APZSecondTapTolerance() * APZCTreeManager::GetDPI());
 }
 
 /* static */AsyncPanZoomController::AxisLockMode AsyncPanZoomController::GetAxisLockMode()
