@@ -305,6 +305,10 @@ endif
 update-packaging:
 	$(MAKE) -C tools/update-packaging
 
+.PHONY: package-generated-sources
+package-generated-sources:
+	$(call py_action,package_generated_sources,'$(DIST)/$(PKG_PATH)$(GENERATED_SOURCE_FILE_PACKAGE)')
+
 #XXX: this is a hack, since we don't want to clobber for MSVC
 # PGO support, but we can't do this test in client.mk
 ifneq ($(OS_ARCH)_$(GNU_CC), WINNT_)

@@ -4132,7 +4132,7 @@ MResumePoint::Copy(TempAllocator& alloc, MResumePoint* src)
 }
 
 MResumePoint::MResumePoint(MBasicBlock* block, jsbytecode* pc, Mode mode)
-  : MNode(block),
+  : MNode(block, Kind::ResumePoint),
     pc_(pc),
     instruction_(nullptr),
     mode_(mode)
@@ -4149,7 +4149,7 @@ MResumePoint::init(TempAllocator& alloc)
 MResumePoint*
 MResumePoint::caller() const
 {
-    return block_->callerResumePoint();
+    return block()->callerResumePoint();
 }
 
 void

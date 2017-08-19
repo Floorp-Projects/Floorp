@@ -27,6 +27,7 @@ tier_MOZ_AUTOMATION_INSTALLER = installer
 tier_MOZ_AUTOMATION_PACKAGE = package
 tier_MOZ_AUTOMATION_PACKAGE_TESTS = package-tests
 tier_MOZ_AUTOMATION_UPDATE_PACKAGING = update-packaging
+tier_MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES = package-generated-sources
 tier_MOZ_AUTOMATION_UPLOAD_SYMBOLS = uploadsymbols
 tier_MOZ_AUTOMATION_UPLOAD = upload
 
@@ -41,6 +42,7 @@ moz_automation_symbols = \
   MOZ_AUTOMATION_PACKAGE \
   MOZ_AUTOMATION_INSTALLER \
   MOZ_AUTOMATION_UPDATE_PACKAGING \
+  MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES \
   MOZ_AUTOMATION_L10N_CHECK \
   MOZ_AUTOMATION_UPLOAD \
   $(NULL)
@@ -60,6 +62,7 @@ automation/upload: automation/package
 automation/upload: automation/package-tests
 automation/upload: automation/buildsymbols
 automation/upload: automation/update-packaging
+automation/upload: automation/package-generated-sources
 
 # The installer and packager all run stage-package, and may conflict
 # with each other.
