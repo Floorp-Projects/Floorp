@@ -483,106 +483,119 @@ this.ExtensionData = class {
     };
   }
 
-  parseManifest() {
-    return Promise.all([
+  async parseManifest() {
+    let [manifest] = await Promise.all([
       this.readJSON("manifest.json"),
       Management.lazyInit(),
-    ]).then(([manifest]) => {
-      this.manifest = manifest;
-      this.rawManifest = manifest;
+    ]);
 
-      if (manifest && manifest.default_locale) {
-        return this.initLocale();
+    this.manifest = manifest;
+    this.rawManifest = manifest;
+
+    if (manifest && manifest.default_locale) {
+      await this.initLocale();
+    }
+
+    let context = {
+      url: this.baseURI && this.baseURI.spec,
+
+      principal: this.principal,
+
+      logError: error => {
+        this.manifestWarning(error);
+      },
+
+      preprocessors: {},
+    };
+
+    if (this.manifest.theme) {
+      let invalidProps = validateThemeManifest(Object.getOwnPropertyNames(this.manifest));
+
+      if (invalidProps.length) {
+        let message = `Themes defined in the manifest may only contain static resources. ` +
+          `If you would like to use additional properties, please use the "theme" permission instead. ` +
+          `(the invalid properties found are: ${invalidProps})`;
+        this.manifestError(message);
       }
-    }).then(() => {
-      let context = {
-        url: this.baseURI && this.baseURI.spec,
+    }
 
-        principal: this.principal,
+    if (this.localeData) {
+      context.preprocessors.localize = (value, context) => this.localize(value);
+    }
 
-        logError: error => {
-          this.manifestWarning(error);
-        },
+    let normalized = Schemas.normalize(this.manifest, "manifest.WebExtensionManifest", context);
+    if (normalized.error) {
+      this.manifestError(normalized.error);
+      return null;
+    }
 
-        preprocessors: {},
-      };
+    manifest = normalized.value;
 
-      if (this.manifest.theme) {
-        let invalidProps = validateThemeManifest(Object.getOwnPropertyNames(this.manifest));
+    let id;
+    try {
+      if (manifest.applications.gecko.id) {
+        id = manifest.applications.gecko.id;
+      }
+    } catch (e) {
+      // Errors are handled by the type checks above.
+    }
 
-        if (invalidProps.length) {
-          let message = `Themes defined in the manifest may only contain static resources. ` +
-            `If you would like to use additional properties, please use the "theme" permission instead. ` +
-            `(the invalid properties found are: ${invalidProps})`;
-          this.manifestError(message);
+    if (!this.id) {
+      this.id = id;
+    }
+
+    let apiNames = new Set();
+    let dependencies = new Set();
+    let originPermissions = new Set();
+    let permissions = new Set();
+
+    for (let perm of manifest.permissions) {
+      if (perm === "geckoProfiler") {
+        const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
+        if (!acceptedExtensions.split(",").includes(id)) {
+          this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
+          continue;
         }
       }
 
-      if (this.localeData) {
-        context.preprocessors.localize = (value, context) => this.localize(value);
+      let type = classifyPermission(perm);
+      if (type.origin) {
+        let matcher = new MatchPattern(perm, {ignorePath: true});
+
+        perm = matcher.pattern;
+        originPermissions.add(perm);
+      } else if (type.api) {
+        apiNames.add(type.api);
       }
 
-      let normalized = Schemas.normalize(this.manifest, "manifest.WebExtensionManifest", context);
-      if (normalized.error) {
-        this.manifestError(normalized.error);
-        return null;
-      }
+      permissions.add(perm);
+    }
 
-      let manifest = normalized.value;
+    if (this.id) {
+      // An extension always gets permission to its own url.
+      let matcher = new MatchPattern(this.getURL(), {ignorePath: true});
+      originPermissions.add(matcher.pattern);
 
-      let id;
-      try {
-        if (manifest.applications.gecko.id) {
-          id = manifest.applications.gecko.id;
-        }
-      } catch (e) {
-        // Errors are handled by the type checks above.
-      }
-
-      let apiNames = new Set();
-      let dependencies = new Set();
-      let hostPermissions = new Set();
-      let permissions = new Set();
-
-      for (let perm of manifest.permissions) {
-        if (perm === "geckoProfiler") {
-          const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
-          if (!acceptedExtensions.split(",").includes(id)) {
-            this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
-            continue;
-          }
-        }
-
-        let type = classifyPermission(perm);
-        if (type.origin) {
-          let matcher = new MatchPattern(perm, {ignorePath: true});
-
-          perm = matcher.pattern;
-          hostPermissions.add(perm);
-        } else if (type.api) {
-          apiNames.add(type.api);
-        }
-
+      // Apply optional permissions
+      let perms = await ExtensionPermissions.get(this);
+      for (let perm of perms.permissions) {
         permissions.add(perm);
       }
-
-      // An extension always gets permission to its own url.
-      if (this.id) {
-        let matcher = new MatchPattern(this.getURL(), {ignorePath: true});
-        hostPermissions.add(matcher.pattern);
+      for (let origin of perms.origins) {
+        originPermissions.add(origin);
       }
+    }
 
-      for (let api of apiNames) {
-        dependencies.add(`${api}@experiments.addons.mozilla.org`);
-      }
+    for (let api of apiNames) {
+      dependencies.add(`${api}@experiments.addons.mozilla.org`);
+    }
 
-      // Normalize all patterns to contain a single leading /
-      let webAccessibleResources = (manifest.web_accessible_resources || [])
-          .map(path => path.replace(/^\/*/, "/"));
+    // Normalize all patterns to contain a single leading /
+    let webAccessibleResources = (manifest.web_accessible_resources || [])
+        .map(path => path.replace(/^\/*/, "/"));
 
-      return {apiNames, dependencies, hostPermissions, id, manifest, permissions,
-              webAccessibleResources};
-    });
+    return {apiNames, dependencies, originPermissions, id, manifest, permissions,
+            webAccessibleResources};
   }
 
   // Reads the extension's |manifest.json| file, and stores its
@@ -608,7 +621,7 @@ this.ExtensionData = class {
     this.permissions = manifestData.permissions;
 
     this.webAccessibleResources = manifestData.webAccessibleResources.map(res => new MatchGlob(res));
-    this.whiteListedHosts = new MatchPatternSet(manifestData.hostPermissions);
+    this.whiteListedHosts = new MatchPatternSet(manifestData.originPermissions);
 
     return this.manifest;
   }
@@ -821,7 +834,8 @@ this.Extension = class extends ExtensionData {
 
     this.id = addonData.id;
     this.version = addonData.version;
-    this.baseURI = Services.io.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
+    this.baseURL = this.getURL("");
+    this.baseURI = Services.io.newURI(this.baseURL).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
     this.views = new Set();
     this._backgroundPageFrameLoader = null;
@@ -849,12 +863,14 @@ this.Extension = class extends ExtensionData {
       if (permissions.origins.length > 0) {
         let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
 
-        this.whiteListedHosts = new MatchPatternSet([...patterns, ...permissions.origins],
+        this.whiteListedHosts = new MatchPatternSet(new Set([...patterns, ...permissions.origins]),
                                                     {ignorePath: true});
       }
 
       this.policy.permissions = Array.from(this.permissions);
       this.policy.allowedOrigins = this.whiteListedHosts;
+
+      this.cachePermissions();
     });
 
     this.on("remove-permissions", (ignoreEvent, permissions) => {
@@ -871,6 +887,8 @@ this.Extension = class extends ExtensionData {
 
       this.policy.permissions = Array.from(this.permissions);
       this.policy.allowedOrigins = this.whiteListedHosts;
+
+      this.cachePermissions();
     });
     /* eslint-enable mozilla/balanced-listeners */
   }
@@ -943,7 +961,17 @@ this.Extension = class extends ExtensionData {
     let uri = Services.io.newURI(url);
 
     let common = this.baseURI.getCommonBaseSpec(uri);
-    return common == this.baseURI.spec;
+    return common == this.baseURL;
+  }
+
+  checkLoadURL(url, options = {}) {
+    // As an optimization, f the URL starts with the extension's base URL,
+    // don't do any further checks. It's always allowed to load it.
+    if (url.startsWith(this.baseURL)) {
+      return true;
+    }
+
+    return ExtensionUtils.checkLoadURL(url, this.principal, options);
   }
 
   async promiseLocales(locale) {
@@ -961,9 +989,20 @@ this.Extension = class extends ExtensionData {
       });
   }
 
+  get manifestCacheKey() {
+    return [this.id, this.version, Services.locale.getAppLocaleAsLangTag()];
+  }
+
   parseManifest() {
-    return StartupCache.manifests.get([this.id, this.version, Services.locale.getAppLocaleAsLangTag()],
-                                      () => super.parseManifest());
+    return StartupCache.manifests.get(this.manifestCacheKey, () => super.parseManifest());
+  }
+
+  async cachePermissions() {
+    let manifestData = await this.parseManifest();
+
+    manifestData.originPermissions = this.whiteListedHosts.patterns.map(pat => pat.pattern);
+    manifestData.permissions = this.permissions;
+    return StartupCache.manifests.set(this.manifestCacheKey, manifestData);
   }
 
   async loadManifest() {
@@ -1171,10 +1210,7 @@ this.Extension = class extends ExtensionData {
 
     TelemetryStopwatch.start("WEBEXT_EXTENSION_STARTUP_MS", this);
     try {
-      let [perms] = await Promise.all([
-        ExtensionPermissions.get(this),
-        this.loadManifest(),
-      ]);
+      await this.loadManifest();
 
       if (!this.hasShutdown) {
         await this.initLocale();
@@ -1189,17 +1225,6 @@ this.Extension = class extends ExtensionData {
       }
 
       GlobalManager.init(this);
-
-      // Apply optional permissions
-      for (let perm of perms.permissions) {
-        this.permissions.add(perm);
-      }
-      if (perms.origins.length > 0) {
-        let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
-
-        this.whiteListedHosts = new MatchPatternSet([...patterns, ...perms.origins],
-                                                    {ignorePath: true});
-      }
 
       this.policy.active = false;
       this.policy = processScript.initExtension(this);
