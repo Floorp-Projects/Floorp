@@ -222,7 +222,7 @@ function AppendTrack(test, ms, track, token)
 
 //Returns a promise that is resolved when the media element is ready to have
 //its play() function called; when it's loaded MSE fragments.
-function LoadTest(test, elem, token)
+function LoadTest(test, elem, token, endOfStream = true)
 {
   if (!test.tracks) {
     ok(false, token + " test does not have a tracks list");
@@ -240,7 +240,9 @@ function LoadTest(test, elem, token)
         return AppendTrack(test, ms, track, token);
       })).then(function() {
         Log(token, "Tracks loaded, calling MediaSource.endOfStream()");
-        ms.endOfStream();
+        if (endOfStream) {
+          ms.endOfStream();
+        }
         resolve();
       }).catch(reject);
     }, {once: true});
