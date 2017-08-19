@@ -905,9 +905,6 @@ obj_watch(JSContext* cx, unsigned argc, Value* vp)
     if (!obj)
         return false;
 
-    if (!GlobalObject::warnOnceAboutWatch(cx, obj))
-        return false;
-
     if (args.length() <= 1) {
         ReportMissingArg(cx, args.calleev(), 1);
         return false;
@@ -935,9 +932,6 @@ obj_unwatch(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
-        return false;
-
-    if (!GlobalObject::warnOnceAboutWatch(cx, obj))
         return false;
 
     RootedId id(cx);
