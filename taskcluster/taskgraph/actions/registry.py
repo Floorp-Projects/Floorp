@@ -195,7 +195,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                     'name': 'Action: {}'.format(title),
                     'description': 'Task executing callback for action.\n\n---\n' + description,
                 },
-                'workerType': 'gecko-decision',
+                'workerType': 'gecko-{}-decision'.format(parameters['level']),
                 'provisionerId': 'aws-provisioner-v1',
                 'scopes': [
                     repo_scope,

@@ -1149,6 +1149,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
   , mPickerRunning(false)
   , mSelectionCached(true)
   , mIsPreviewEnabled(false)
+  , mHasPatternAttribute(false)
 {
   // If size is above 512, mozjemalloc allocates 1kB, see
   // memory/mozjemalloc/jemalloc.c
@@ -1457,8 +1458,15 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       UpdateTooLongValidityState();
     } else if (aName == nsGkAtoms::minlength) {
       UpdateTooShortValidityState();
-    } else if (aName == nsGkAtoms::pattern && mDoneCreating) {
-      UpdatePatternMismatchValidityState();
+    } else if (aName == nsGkAtoms::pattern) {
+      // Although pattern attribute only applies to single line text controls,
+      // we set this flag for all input types to save having to check the type
+      // here.
+      mHasPatternAttribute = !!aValue;
+
+      if (mDoneCreating) {
+        UpdatePatternMismatchValidityState();
+      }
     } else if (aName == nsGkAtoms::multiple) {
       UpdateTypeMismatchValidityState();
     } else if (aName == nsGkAtoms::max) {

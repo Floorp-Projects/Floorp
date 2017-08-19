@@ -4025,7 +4025,7 @@ fi
 AC_SUBST(MOZ_DISABLE_STARTUPCACHE)
 
 dnl ========================================================
-dnl = Enable Pico Speech Synthesis (Gonk usually)
+dnl = Enable Pico Speech Synthesis
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(synth-pico,
 [  --enable-synth-pico  Set compile flags necessary for compiling Pico Web Speech API ],

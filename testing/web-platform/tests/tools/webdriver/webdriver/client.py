@@ -614,7 +614,7 @@ class Element(object):
                 "value": selector}
 
         elem = self.send_element_command("POST", "element", body)
-        return self.session.element(elem)
+        return self.session._element(elem)
 
     @command
     def click(self):

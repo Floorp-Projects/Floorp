@@ -1150,7 +1150,8 @@ class JS_PUBLIC_API(ContextOptions) {
         ion_(true),
         asmJS_(true),
         wasm_(false),
-        wasmAlwaysBaseline_(false),
+        wasmBaseline_(false),
+        wasmIon_(false),
         throwOnAsmJSValidationFailure_(false),
         nativeRegExp_(true),
         unboxedArrays_(false),
@@ -1214,13 +1215,23 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
-    bool wasmAlwaysBaseline() const { return wasmAlwaysBaseline_; }
-    ContextOptions& setWasmAlwaysBaseline(bool flag) {
-        wasmAlwaysBaseline_ = flag;
+    bool wasmBaseline() const { return wasmBaseline_; }
+    ContextOptions& setWasmBaseline(bool flag) {
+        wasmBaseline_ = flag;
         return *this;
     }
-    ContextOptions& toggleWasmAlwaysBaseline() {
-        wasmAlwaysBaseline_ = !wasmAlwaysBaseline_;
+    ContextOptions& toggleWasmBaseline() {
+        wasmBaseline_ = !wasmBaseline_;
+        return *this;
+    }
+
+    bool wasmIon() const { return wasmIon_; }
+    ContextOptions& setWasmIon(bool flag) {
+        wasmIon_ = flag;
+        return *this;
+    }
+    ContextOptions& toggleWasmIon() {
+        wasmIon_ = !wasmIon_;
         return *this;
     }
 
@@ -1313,7 +1324,8 @@ class JS_PUBLIC_API(ContextOptions) {
     bool ion_ : 1;
     bool asmJS_ : 1;
     bool wasm_ : 1;
-    bool wasmAlwaysBaseline_ : 1;
+    bool wasmBaseline_ : 1;
+    bool wasmIon_ : 1;
     bool throwOnAsmJSValidationFailure_ : 1;
     bool nativeRegExp_ : 1;
     bool unboxedArrays_ : 1;
@@ -1973,6 +1985,23 @@ typedef enum JSGCParamKey {
      * Default: RefreshFrameSlicesEnabled
      */
     JSGC_REFRESH_FRAME_SLICES_ENABLED = 24,
+
+    /**
+     * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD
+     *
+     * Default: ZoneAllocThresholdFactorDefault
+     * Pref: None
+     */
+    JSGC_ALLOCATION_THRESHOLD_FACTOR = 25,
+
+    /**
+     * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD.
+     * Used if another GC (in different zones) is already running.
+     *
+     * Default: ZoneAllocThresholdFactorAvoidInterruptDefault
+     * Pref: None
+     */
+    JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT = 26,
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)

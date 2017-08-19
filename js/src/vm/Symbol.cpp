@@ -143,20 +143,6 @@ js::SymbolDescriptiveString(JSContext* cx, Symbol* sym, MutableHandleValue resul
     return true;
 }
 
-bool
-js::IsSymbolOrSymbolWrapper(const Value& v)
-{
-    return v.isSymbol() || (v.isObject() && v.toObject().is<SymbolObject>());
-}
-
-JS::Symbol*
-js::ToSymbolPrimitive(const Value& v)
-{
-    MOZ_ASSERT(IsSymbolOrSymbolWrapper(v));
-    return v.isSymbol() ? v.toSymbol() : v.toObject().as<SymbolObject>().unbox();
-}
-
-
 JS::ubi::Node::Size
 JS::ubi::Concrete<JS::Symbol>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {

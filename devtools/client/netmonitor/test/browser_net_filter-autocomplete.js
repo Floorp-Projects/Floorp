@@ -108,8 +108,12 @@ add_task(async function () {
     "Typing the exact value closes autocomplete");
 
   // Check if mime-type has been correctly parsed out and values also get autocomplete
-  EventUtils.synthesizeKey(" mime-type:au", {});
-  testAutocompleteContents(["mime-type:audio/ogg"], document);
+  EventUtils.synthesizeKey(" mime-type:text", {});
+  testAutocompleteContents([
+    "mime-type:text/css",
+    "mime-type:text/html",
+    "mime-type:text/plain"
+  ], document);
 
   // The negative filter flags
   EventUtils.synthesizeKey(" -", {});

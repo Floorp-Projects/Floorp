@@ -1182,7 +1182,7 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 
     /* set the slot flags to the current token values */
     slot->series++; /* allow other objects to detect that the
-                      * slot is different */
+                     * slot is different */
     slot->flags = slot->tokenInfo.flags;
     slot->needLogin = ((slot->tokenInfo.flags & CKF_LOGIN_REQUIRED) ? PR_TRUE : PR_FALSE);
     slot->readOnly = ((slot->tokenInfo.flags & CKF_WRITE_PROTECTED) ? PR_TRUE : PR_FALSE);
@@ -1470,6 +1470,9 @@ PK11_InitSlot(SECMODModule *mod, CK_SLOT_ID slotID, PK11SlotInfo *slot)
             }
             slot->hasRootCerts = PR_TRUE;
         }
+    }
+    if ((slotInfo.flags & CKF_USER_PIN_INITIALIZED) != 0) {
+        slot->flags |= CKF_USER_PIN_INITIALIZED;
     }
 }
 

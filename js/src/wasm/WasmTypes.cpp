@@ -385,7 +385,7 @@ ElemSegment::serializedSize() const
     return sizeof(tableIndex) +
            sizeof(offset) +
            SerializedPodVectorSize(elemFuncIndices) +
-           SerializedPodVectorSize(elemCodeRangeIndices);
+           SerializedPodVectorSize(elemCodeRangeIndices(Tier::Serialized));
 }
 
 uint8_t*
@@ -394,7 +394,7 @@ ElemSegment::serialize(uint8_t* cursor) const
     cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
     cursor = WriteBytes(cursor, &offset, sizeof(offset));
     cursor = SerializePodVector(cursor, elemFuncIndices);
-    cursor = SerializePodVector(cursor, elemCodeRangeIndices);
+    cursor = SerializePodVector(cursor, elemCodeRangeIndices(Tier::Serialized));
     return cursor;
 }
 
@@ -404,7 +404,7 @@ ElemSegment::deserialize(const uint8_t* cursor)
     (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
     (cursor = ReadBytes(cursor, &offset, sizeof(offset))) &&
     (cursor = DeserializePodVector(cursor, &elemFuncIndices)) &&
-    (cursor = DeserializePodVector(cursor, &elemCodeRangeIndices));
+    (cursor = DeserializePodVector(cursor, &elemCodeRangeIndices(Tier::Serialized)));
     return cursor;
 }
 
@@ -412,7 +412,7 @@ size_t
 ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return elemFuncIndices.sizeOfExcludingThis(mallocSizeOf) +
-           elemCodeRangeIndices.sizeOfExcludingThis(mallocSizeOf);
+           elemCodeRangeIndices(Tier::Serialized).sizeOfExcludingThis(mallocSizeOf);
 }
 
 Assumptions::Assumptions(JS::BuildIdCharVector&& buildId)
@@ -675,6 +675,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
     funcIndex_(0),
     funcLineOrBytecode_(0),
     funcBeginToNormalEntry_(0),
+    funcBeginToTierEntry_(0),
     kind_(kind)
 {
     MOZ_ASSERT(begin_ <= end_);
@@ -704,6 +705,7 @@ CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
     funcIndex_(0),
     funcLineOrBytecode_(0),
     funcBeginToNormalEntry_(0),
+    funcBeginToTierEntry_(0),
     kind_(kind)
 {
     MOZ_ASSERT(begin_ < ret_);
@@ -734,11 +736,13 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffset
     funcIndex_(funcIndex),
     funcLineOrBytecode_(funcLineOrBytecode),
     funcBeginToNormalEntry_(offsets.normalEntry - begin_),
+    funcBeginToTierEntry_(offsets.tierEntry - begin_),
     kind_(Function)
 {
     MOZ_ASSERT(begin_ < ret_);
     MOZ_ASSERT(ret_ < end_);
     MOZ_ASSERT(offsets.normalEntry - begin_ <= UINT8_MAX);
+    MOZ_ASSERT(offsets.tierEntry - begin_ <= UINT8_MAX);
 }
 
 const CodeRange*

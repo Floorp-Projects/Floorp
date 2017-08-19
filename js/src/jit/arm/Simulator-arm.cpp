@@ -1597,7 +1597,14 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
 
     void* pc = reinterpret_cast<void*>(get_pc());
     uint8_t* fp = reinterpret_cast<uint8_t*>(get_register(r11));
-    wasm::Instance* instance = wasm::LookupFaultingInstance(act, pc, fp);
+
+    // Cache the wasm::Code to avoid lookup on every load/store.
+    if (!wasm_code_ || !wasm_code_->containsCodePC(pc))
+        wasm_code_ = act->compartment()->wasm.lookupCode(pc);
+    if (!wasm_code_)
+        return false;
+
+    wasm::Instance* instance = wasm::LookupFaultingInstance(*wasm_code_, pc, fp);
     if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 

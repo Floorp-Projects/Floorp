@@ -2613,6 +2613,8 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.handleFetchEventStart()    = mHandleFetchEventStart;
   openArgs.handleFetchEventEnd()      = mHandleFetchEventEnd;
 
+  openArgs.forceMainDocumentChannel() = mForceMainDocumentChannel;
+
   // This must happen before the constructor message is sent. Otherwise messages
   // from the parent could arrive quickly and be delivered to the wrong event
   // target.

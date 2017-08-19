@@ -52,8 +52,8 @@
 // Pico's sample rate is always 16000
 #define PICO_SAMPLE_RATE 16000
 
-// The path to the language files in Gonk
-#define GONK_PICO_LANG_PATH "/system/tts/lang_pico"
+// The path to the language files in Android
+#define PICO_LANG_PATH "/system/tts/lang_pico"
 
 namespace mozilla {
 namespace dom {
@@ -514,11 +514,11 @@ nsPicoService::Init()
     return;
   }
 
-  // Use environment variable, or default android/b2g path
+  // Use environment variable, or default android path
   nsAutoCString langPath(PR_GetEnv("PICO_LANG_PATH"));
 
   if (langPath.IsEmpty()) {
-    langPath.AssignLiteral(GONK_PICO_LANG_PATH);
+    langPath.AssignLiteral(PICO_LANG_PATH);
   }
 
   nsCOMPtr<nsIFile> voicesDir;

@@ -221,7 +221,11 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         // fallback will not use them.
         if (mRequiresAAT && (FamilyName().EqualsLiteral("Songti SC") ||
                              FamilyName().EqualsLiteral("Songti TC") ||
-                             FamilyName().EqualsLiteral("STSong"))) {
+                             FamilyName().EqualsLiteral("STSong") ||
+        // Bug 1390980: on 10.11, the Kaiti fonts are also affected.
+                             FamilyName().EqualsLiteral("Kaiti SC") ||
+                             FamilyName().EqualsLiteral("Kaiti TC") ||
+                             FamilyName().EqualsLiteral("STKaiti"))) {
             charmap->ClearRange(0x0f8c, 0x0f8f);
         }
     }

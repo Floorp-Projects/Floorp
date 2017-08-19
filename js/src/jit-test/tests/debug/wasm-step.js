@@ -1,7 +1,10 @@
-// |jit-test| test-also-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline
 // Tests that wasm module scripts raises onEnterFrame and onLeaveFrame events.
 
 load(libdir + "wasm.js");
+
+if (!wasmDebuggingIsSupported())
+    quit();
 
 // Checking if we stop at every wasm instruction during step.
 var onEnterFrameCalled, onLeaveFrameCalled, onStepCalled;
@@ -62,4 +65,3 @@ wasmRunWithDebugger(
         assertEq(onStepCalled.length, 0);
     }
 );
-

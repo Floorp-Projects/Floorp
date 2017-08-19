@@ -13,7 +13,7 @@
 
 #include <assert.h>
 
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_GONK)
+#if defined(WEBRTC_ANDROID)
 #define OS_LINUX
 #endif
 #include "base/singleton.h"

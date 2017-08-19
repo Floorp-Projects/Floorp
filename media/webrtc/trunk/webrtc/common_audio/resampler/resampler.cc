@@ -23,7 +23,7 @@
 // TODO(jesup) better adjust per platform ability
 // Note: if these are changed (higher), you may need to change the
 // KernelDelay values in the unit tests here and in output_mixer.
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_GONK)
+#if defined(WEBRTC_ANDROID)
 #define RESAMPLER_QUALITY 2
 #else
 #define RESAMPLER_QUALITY 3

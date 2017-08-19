@@ -44,6 +44,8 @@ public:
 
   virtual UserDataType GetType() = 0;
 
+  bool IsDataValid(WebRenderLayerManager* aManager);
+
 protected:
   virtual ~WebRenderUserData();
 

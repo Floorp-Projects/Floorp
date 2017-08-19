@@ -6289,7 +6289,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   return canvasLayer.forget();
 }
 
-void
+bool
 CanvasRenderingContext2D::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                                    CanvasRenderer* aRenderer,
                                                    bool aMirror)
@@ -6316,6 +6316,7 @@ CanvasRenderingContext2D::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilde
 
   aRenderer->Initialize(data);
   aRenderer->SetDirty();
+  return true;
 }
 
 void

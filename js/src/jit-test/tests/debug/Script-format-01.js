@@ -1,6 +1,9 @@
 // Tests that JavaScript scripts have a "js" format and wasm scripts have a
 // "wasm" format.
 
+if (!wasmDebuggingIsSupported())
+    quit(0);
+
 var g = newGlobal();
 var dbg = new Debugger(g);
 

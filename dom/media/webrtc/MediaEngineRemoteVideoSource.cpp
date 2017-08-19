@@ -70,7 +70,6 @@ MediaEngineRemoteVideoSource::Shutdown()
   if (!mInitDone) {
     return;
   }
-  Super::Shutdown();
   if (mState == kStarted) {
     SourceMediaStream *source;
     bool empty;
@@ -96,6 +95,7 @@ MediaEngineRemoteVideoSource::Shutdown()
   }
 
   MOZ_ASSERT(mState == kReleased);
+  Super::Shutdown();
   mInitDone = false;
 }
 
@@ -206,8 +206,10 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
     MonitorAutoLock lock(mMonitor);
 
     // Drop any cached image so we don't start with a stale image on next
-    // usage
+    // usage.  Also, gfx gets very upset if these are held until this object
+    // is gc'd in final-cc during shutdown (bug 1374164)
     mImage = nullptr;
+    // we drop mImageContainer only in MediaEngineCaptureVideoSource::Shutdown()
 
     size_t i = mSources.IndexOf(aSource);
     if (i == mSources.NoIndex) {
@@ -387,42 +389,48 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer ,
   // Update the dimensions
   FrameSizeChange(aProps.width(), aProps.height());
 
-  // Create a video frame and append it to the track.
-  RefPtr<layers::PlanarYCbCrImage> image = mImageContainer->CreatePlanarYCbCrImage();
-
-  uint8_t* frame = static_cast<uint8_t*> (aBuffer);
-  const uint8_t lumaBpp = 8;
-  const uint8_t chromaBpp = 4;
-
-  // Take lots of care to round up!
   layers::PlanarYCbCrData data;
-  data.mYChannel = frame;
-  data.mYSize = IntSize(mWidth, mHeight);
-  data.mYStride = (mWidth * lumaBpp + 7)/ 8;
-  data.mCbCrStride = (mWidth * chromaBpp + 7) / 8;
-  data.mCbChannel = frame + mHeight * data.mYStride;
-  data.mCrChannel = data.mCbChannel + ((mHeight+1)/2) * data.mCbCrStride;
-  data.mCbCrSize = IntSize((mWidth+1)/ 2, (mHeight+1)/ 2);
-  data.mPicX = 0;
-  data.mPicY = 0;
-  data.mPicSize = IntSize(mWidth, mHeight);
-  data.mStereoMode = StereoMode::MONO;
+  RefPtr<layers::PlanarYCbCrImage> image;
+  {
+    // We grab the lock twice, but don't hold it across the (long) CopyData
+    MonitorAutoLock lock(mMonitor);
+    if (!mImageContainer) {
+      LOG(("DeliverFrame() called after Stop()!"));
+      return 0;
+    }
+    // Create a video frame and append it to the track.
+    image = mImageContainer->CreatePlanarYCbCrImage();
+
+    uint8_t* frame = static_cast<uint8_t*> (aBuffer);
+    const uint8_t lumaBpp = 8;
+    const uint8_t chromaBpp = 4;
+
+    // Take lots of care to round up!
+    data.mYChannel = frame;
+    data.mYSize = IntSize(mWidth, mHeight);
+    data.mYStride = (mWidth * lumaBpp + 7)/ 8;
+    data.mCbCrStride = (mWidth * chromaBpp + 7) / 8;
+    data.mCbChannel = frame + mHeight * data.mYStride;
+    data.mCrChannel = data.mCbChannel + ((mHeight+1)/2) * data.mCbCrStride;
+    data.mCbCrSize = IntSize((mWidth+1)/ 2, (mHeight+1)/ 2);
+    data.mPicX = 0;
+    data.mPicY = 0;
+    data.mPicSize = IntSize(mWidth, mHeight);
+    data.mStereoMode = StereoMode::MONO;
+  }
 
   if (!image->CopyData(data)) {
     MOZ_ASSERT(false);
     return 0;
   }
 
+  MonitorAutoLock lock(mMonitor);
 #ifdef DEBUG
   static uint32_t frame_num = 0;
   LOGFRAME(("frame %d (%dx%d); timeStamp %u, ntpTimeMs %" PRIu64 ", renderTimeMs %" PRIu64,
             frame_num++, mWidth, mHeight,
             aProps.timeStamp(), aProps.ntpTimeMs(), aProps.renderTimeMs()));
 #endif
-
-  // we don't touch anything in 'this' until here (except for snapshot,
-  // which has it's own lock)
-  MonitorAutoLock lock(mMonitor);
 
   // implicitly releases last image
   mImage = image.forget();

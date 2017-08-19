@@ -82,8 +82,6 @@ public:
   NS_IMETHOD
   OnSuccess(nsIVariant* aDevices) override
   {
-    // Cribbed from MediaPermissionGonk.cpp
-
     // Create array for nsIMediaDevice
     nsTArray<nsCOMPtr<nsIMediaDevice>> devices;
     // Contain the fumes

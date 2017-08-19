@@ -1,5 +1,5 @@
 
-if (!wasmIsSupported())
+if (!wasmDebuggingIsSupported())
     quit();
 
 var sandbox = newGlobal();

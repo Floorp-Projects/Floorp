@@ -87,6 +87,9 @@ matrix:
     - env:
         - secure: "YTSXPwI0DyCA1GhYrLT9KMEV6b7QQKuEeaQgeFDP38OTzJ1+cIj3CC4SRNqbnJ/6SJwPGcdqSxLuV8m4e5HFFnyCcQnJe6h8EMsTehZ7W3j/fP9UYrJqYqvGpe3Vj3xblO5pwBYmq7sg3jAmmuCgAgOW6VGf7cRMucrsmFeo7VM="
         - JOB=stability SCRIPT=tools/ci/ci_stability.sh PRODUCT=sauce:MicrosoftEdge:14.14393 PLATFORM='Windows 10'
+      env:
+        - secure: "YTSXPwI0DyCA1GhYrLT9KMEV6b7QQKuEeaQgeFDP38OTzJ1+cIj3CC4SRNqbnJ/6SJwPGcdqSxLuV8m4e5HFFnyCcQnJe6h8EMsTehZ7W3j/fP9UYrJqYqvGpe3Vj3xblO5pwBYmq7sg3jAmmuCgAgOW6VGf7cRMucrsmFeo7VM="
+        - JOB=stability SCRIPT=tools/ci/ci_stability.sh PRODUCT=sauce:safari:10.0 PLATFORM='macOS 10.12'
 script:
   - ./tools/ci/run.sh
 cache:
@@ -97,4 +100,4 @@ notifications:
   email:
     on_success: never
     on_failure: always
-  webhooks: https://w3c-test.org/prbuildbot.py
+  webhooks: https://pulls.web-platform-tests.org/api/build

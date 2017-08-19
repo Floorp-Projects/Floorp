@@ -8,7 +8,7 @@ metadata:
   name: "[tc] Action Task"
   description: Helps schedule new jobs without new push
 
-workerType: "gecko-decision"
+workerType: "gecko-{{level}}-decision"
 provisionerId: "aws-provisioner-v1"
 schedulerId: "gecko-level-{{level}}"
 
