@@ -29,7 +29,7 @@ elif CONFIG['GNU_CXX']:
         '-Wno-unused-but-set-variable',
     ]
 
-if not CONFIG['MSVC']:
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
     CXXFLAGS += [
         '-Wno-implicit-fallthrough',
         '-Wno-c++11-narrowing',
