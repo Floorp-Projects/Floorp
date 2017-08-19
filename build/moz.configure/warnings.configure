@@ -42,6 +42,7 @@ add_gcc_warning('-Wtype-limits')
 
 # catches some dead code
 add_gcc_warning('-Wunreachable-code')
+check_and_add_gcc_warning('-Wunreachable-code-return')
 
 # catches treating string literals as non-const
 add_gcc_warning('-Wwrite-strings', cxx_compiler)

@@ -899,6 +899,7 @@ pref("gfx.webrender.force-angle", true);
 pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.layers-free", false);
 pref("gfx.webrender.profiler.enabled", false);
+pref("gfx.webrender.blob-images", false);
 
 // Whether webrender should be used as much as possible.
 pref("gfx.webrendest.enabled", false);

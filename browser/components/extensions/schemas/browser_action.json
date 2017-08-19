@@ -151,7 +151,9 @@
                   { "$ref": "ImageDataType" },
                   {
                     "type": "object",
-                    "additionalProperties": {"$ref": "ImageDataType"}
+                    "patternProperties": {
+                      "^[1-9]\\d*$": {"$ref": "ImageDataType"}
+                    }
                   }
                 ],
                 "optional": true,
@@ -162,7 +164,9 @@
                   { "type": "string" },
                   {
                     "type": "object",
-                    "additionalProperties": {"type": "string"}
+                    "patternProperties": {
+                      "^[1-9]\\d*$": { "type": "string" }
+                    }
                   }
                 ],
                 "optional": true,

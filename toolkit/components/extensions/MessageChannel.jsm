@@ -522,6 +522,7 @@ this.MessageChannel = {
 
     let channelId = ExtensionUtils.getUniqueId();
     let message = {messageName, channelId, sender, recipient, data, responseType};
+    data = null;
 
     if (responseType == this.RESPONSE_NONE) {
       try {
@@ -561,6 +562,7 @@ this.MessageChannel = {
     } catch (e) {
       deferred.reject(e);
     }
+    message = null;
     return deferred.promise;
   },
 
@@ -595,6 +597,7 @@ this.MessageChannel = {
         return Promise.reject(e);
       }
     });
+    data = null;
     responses = responses.filter(response => response !== undefined);
 
     switch (responseType) {
@@ -634,6 +637,7 @@ this.MessageChannel = {
           Cu.reportError(e.stack ? `${e}\n${e.stack}` : e.message || e);
         });
       });
+      data = null;
       // Note: Unhandled messages are silently dropped.
       return;
     }
@@ -649,11 +653,12 @@ this.MessageChannel = {
       deferred.reject = reject;
 
       this._callHandlers(handlers, data).then(resolve, reject);
+      data = null;
     }).then(
       value => {
         let response = {
           result: this.RESULT_SUCCESS,
-          messageName: data.channelId,
+          messageName: deferred.channelId,
           recipient: {},
           value,
         };
@@ -673,7 +678,7 @@ this.MessageChannel = {
 
         let response = {
           result: this.RESULT_ERROR,
-          messageName: data.channelId,
+          messageName: deferred.channelId,
           recipient: {},
           error: {},
         };

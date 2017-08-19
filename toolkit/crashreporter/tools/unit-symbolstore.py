@@ -214,6 +214,28 @@ class TestGetVCSFilename(HelperMixin, unittest.TestCase):
                          symbolstore.GetVCSFilename(filename, [self.test_dir])[0])
 
 
+# SHA-512 of a zero-byte file
+EMPTY_SHA512 = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e'
+
+
+class TestGeneratedFilePath(HelperMixin, unittest.TestCase):
+    def setUp(self):
+        HelperMixin.setUp(self)
+
+    def tearDown(self):
+        HelperMixin.tearDown(self)
+
+    def test_generated_file_path(self):
+        # Make an empty generated file
+        g = os.path.join(self.test_dir, 'generated')
+        rel_path = 'a/b/generated'
+        with open(g, 'wb') as f:
+            pass
+        expected = 's3:bucket:{}/{}:'.format(EMPTY_SHA512,
+                                             rel_path)
+        self.assertEqual(expected, symbolstore.get_generated_file_s3_path(g, rel_path, 'bucket'))
+
+
 if target_platform() == 'WINNT':
     class TestFixFilenameCase(HelperMixin, unittest.TestCase):
         def test_fix_filename_case(self):
