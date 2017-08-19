@@ -1993,12 +1993,9 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   extraArgs.push_back(idStr);
   extraArgs.push_back(IsForBrowser() ? "-isForBrowser" : "-notForBrowser");
 
-  char boolBuf[1024];
-  char intBuf[1024];
-  char strBuf[1024];
-  nsFixedCString boolPrefs(boolBuf, 1024, 0);
-  nsFixedCString intPrefs(intBuf, 1024, 0);
-  nsFixedCString stringPrefs(strBuf, 1024, 0);
+  nsAutoCStringN<1024> boolPrefs;
+  nsAutoCStringN<1024> intPrefs;
+  nsAutoCStringN<1024> stringPrefs;
 
   size_t prefsLen;
   ContentPrefs::GetContentPrefs(&prefsLen);
@@ -5138,7 +5135,17 @@ ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild(nsIChannel* aChannel)
   MOZ_ASSERT(aChannel);
 
   nsresult rv;
-  if (!aChannel->IsDocument()) {
+  bool isDocument = aChannel->IsDocument();
+  if (!isDocument) {
+    // We may be looking at a nsIHttpChannel which has isMainDocumentChannel set
+    // (e.g. the internal http channel for a view-source: load.).
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    if (httpChannel) {
+      rv = httpChannel->GetIsMainDocumentChannel(&isDocument);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  if (!isDocument) {
     return NS_OK;
   }
 
@@ -5158,9 +5165,7 @@ ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild(nsIChannel* aChannel)
 
   nsLoadFlags newLoadFlags;
   aChannel->GetLoadFlags(&newLoadFlags);
-  bool isDocument = false;
-  aChannel->GetIsDocument(&isDocument);
-  if (newLoadFlags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE && isDocument) {
+  if (newLoadFlags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE) {
     UpdateCookieStatus(aChannel);
   }
 

@@ -142,9 +142,29 @@ If you would like to clone the canonical Mercurial repository, please
 enter the destination path below.
 
 (If you prefer to use Git, leave this blank.)
+'''
 
+CLONE_MERCURIAL_PROMPT = '''
 Destination directory for Mercurial clone (leave empty to not clone): '''.lstrip()
 
+CLONE_MERCURIAL_NOT_EMPTY = '''
+ERROR! Destination directory '{}' is not empty.
+
+Would you like to clone to '{}'?
+
+  1. Yes
+  2. No, let me enter another path
+  3. No, stop cloning
+
+Please enter your reply: '''.lstrip()
+
+CLONE_MERCURIAL_NOT_EMPTY_FALLBACK_FAILED = '''
+ERROR! Destination directory '{}' is not empty.
+'''
+
+CLONE_MERCURIAL_NOT_DIR = '''
+ERROR! Destination '{}' exists but is not a directory.
+'''
 
 DEBIAN_DISTROS = (
     'Debian',
@@ -224,6 +244,39 @@ class Bootstrapper(object):
 
         self.instance = cls(**args)
 
+    def input_clone_dest(self):
+        print(CLONE_MERCURIAL)
+
+        while True:
+            dest = raw_input(CLONE_MERCURIAL_PROMPT)
+            dest = dest.strip()
+            if not dest:
+                return ''
+
+            dest = os.path.expanduser(dest)
+            if not os.path.exists(dest):
+                return dest
+
+            if not os.path.isdir(dest):
+                print(CLONE_MERCURIAL_NOT_DIR.format(dest))
+                continue
+
+            if os.listdir(dest) == []:
+                return dest
+
+            newdest = os.path.join(dest, 'mozilla-unified')
+            if os.path.exists(newdest):
+                print(CLONE_MERCURIAL_NOT_EMPTY_FALLBACK_FAILED.format(dest))
+                continue
+
+            choice = self.instance.prompt_int(prompt=CLONE_MERCURIAL_NOT_EMPTY.format(dest, newdest),
+                                              low=1, high=3)
+            if choice == 1:
+                return newdest
+            if choice == 2:
+                continue
+            return ''
+
     def bootstrap(self):
         if self.choice is None:
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
@@ -290,10 +343,8 @@ class Bootstrapper(object):
         if checkout_type:
             have_clone = True
         elif hg_installed and not self.instance.no_interactive:
-            dest = raw_input(CLONE_MERCURIAL)
-            dest = dest.strip()
+            dest = self.input_clone_dest()
             if dest:
-                dest = os.path.expanduser(dest)
                 have_clone = clone_firefox(self.instance.which('hg'), dest)
                 checkout_root = dest
 

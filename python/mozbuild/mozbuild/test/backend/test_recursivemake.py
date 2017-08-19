@@ -899,6 +899,54 @@ class TestRecursiveMakeBackend(BackendTester):
                 '@bar@\n',
             ])
 
+    def test_prog_lib_c_only(self):
+        """Test that C-only binary artifacts are marked as such."""
+        env = self._consume('prog-lib-c-only', RecursiveMakeBackend)
+
+        # PROGRAM C-onlyness.
+        with open(os.path.join(env.topobjdir, 'c-program', 'backend.mk'), 'rb') as fh:
+            lines = fh.readlines()
+            lines = [line.rstrip() for line in lines]
+
+            self.assertIn('PROG_IS_C_ONLY_c_test_program := 1', lines)
+
+        with open(os.path.join(env.topobjdir, 'cxx-program', 'backend.mk'), 'rb') as fh:
+            lines = fh.readlines()
+            lines = [line.rstrip() for line in lines]
+
+            # Test for only the absence of the variable, not the precise
+            # form of the variable assignment.
+            for line in lines:
+                self.assertNotIn('PROG_IS_C_ONLY_cxx_test_program', line)
+
+        # SIMPLE_PROGRAMS C-onlyness.
+        with open(os.path.join(env.topobjdir, 'c-simple-programs', 'backend.mk'), 'rb') as fh:
+            lines = fh.readlines()
+            lines = [line.rstrip() for line in lines]
+
+            self.assertIn('PROG_IS_C_ONLY_c_simple_program := 1', lines)
+
+        with open(os.path.join(env.topobjdir, 'cxx-simple-programs', 'backend.mk'), 'rb') as fh:
+            lines = fh.readlines()
+            lines = [line.rstrip() for line in lines]
+
+            for line in lines:
+                self.assertNotIn('PROG_IS_C_ONLY_cxx_simple_program', line)
+
+        # Libraries C-onlyness.
+        with open(os.path.join(env.topobjdir, 'c-library', 'backend.mk'), 'rb') as fh:
+            lines = fh.readlines()
+            lines = [line.rstrip() for line in lines]
+
+            self.assertIn('LIB_IS_C_ONLY := 1', lines)
+
+        with open(os.path.join(env.topobjdir, 'cxx-library', 'backend.mk'), 'rb') as fh:
+            lines = fh.readlines()
+            lines = [line.rstrip() for line in lines]
+
+            for line in lines:
+                self.assertNotIn('LIB_IS_C_ONLY', line)
+
     def test_jar_manifests(self):
         env = self._consume('jar-manifests', RecursiveMakeBackend)
 

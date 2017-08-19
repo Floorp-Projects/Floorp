@@ -251,9 +251,9 @@ class JitTest:
                     elif name == 'test-also-noasmjs':
                         if options.asmjs_enabled:
                             test.test_also.append(['--no-asmjs'])
-                    elif name == 'test-also-wasm-baseline':
+                    elif name == 'test-also-no-wasm-baseline':
                         if options.wasm_enabled:
-                            test.test_also.append(['--wasm-always-baseline'])
+                            test.test_also.append(['--no-wasm-baseline'])
                     elif name == 'test-also-wasm-check-bce':
                         if options.wasm_enabled:
                             test.test_also.append(['--wasm-check-bce'])

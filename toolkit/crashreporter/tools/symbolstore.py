@@ -40,7 +40,6 @@ import concurrent.futures
 import multiprocessing
 
 from optparse import OptionParser
-from xml.dom.minidom import parse
 
 from mozpack.copier import FileRegistry
 from mozpack.manifests import (
@@ -377,7 +376,6 @@ class Dumper:
                  copy_debug=False,
                  vcsinfo=False,
                  srcsrv=False,
-                 repo_manifest=None,
                  file_mapping=None):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
@@ -391,8 +389,6 @@ class Dumper:
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
-        if repo_manifest:
-            self.parse_repo_manifest(repo_manifest)
         self.file_mapping = file_mapping or {}
         # Add a static mapping for Rust sources.
         target_os = buildconfig.substs['OS_ARCH']
@@ -408,56 +404,6 @@ class Dumper:
             Dumper.srcdirRepoInfo[rust_srcdir] = GitRepoInfo(rust_srcdir,
                                                              buildconfig.substs['RUSTC_COMMIT'],
                                                              'https://github.com/rust-lang/rust/')
-
-    def parse_repo_manifest(self, repo_manifest):
-        """
-        Parse an XML manifest of repository info as produced
-        by the `repo manifest -r` command.
-        """
-        doc = parse(repo_manifest)
-        if doc.firstChild.tagName != "manifest":
-            return
-        # First, get remotes.
-        def ensure_slash(u):
-            if not u.endswith("/"):
-                return u + "/"
-            return u
-        remotes = dict([(r.getAttribute("name"), ensure_slash(r.getAttribute("fetch"))) for r in doc.getElementsByTagName("remote")])
-        # And default remote.
-        default_remote = None
-        if doc.getElementsByTagName("default"):
-            default_remote = doc.getElementsByTagName("default")[0].getAttribute("remote")
-        # Now get projects. Assume they're relative to repo_manifest.
-        base_dir = os.path.abspath(os.path.dirname(repo_manifest))
-        for proj in doc.getElementsByTagName("project"):
-            # name is the repository URL relative to the remote path.
-            name = proj.getAttribute("name")
-            # path is the path on-disk, relative to the manifest file.
-            path = proj.getAttribute("path")
-            # revision is the changeset ID.
-            rev = proj.getAttribute("revision")
-            # remote is the base URL to use.
-            remote = proj.getAttribute("remote")
-            # remote defaults to the <default remote>.
-            if not remote:
-                remote = default_remote
-            # path defaults to name.
-            if not path:
-                path = name
-            if not (name and path and rev and remote):
-                print("Skipping project %s" % proj.toxml())
-                continue
-            remote = remotes[remote]
-            # Turn git URLs into http URLs so that urljoin works.
-            if remote.startswith("git:"):
-                remote = "http" + remote[3:]
-            # Add this project to srcdirs.
-            srcdir = os.path.join(base_dir, path)
-            self.srcdirs.append(srcdir)
-            # And cache its VCS file info. Currently all repos mentioned
-            # in a repo manifest are assumed to be git.
-            root = urlparse.urljoin(remote, name)
-            Dumper.srcdirRepoInfo[srcdir] = GitRepoInfo(srcdir, rev, root)
 
     # subclasses override this
     def ShouldProcess(self, file):
@@ -868,11 +814,6 @@ def main():
     parser.add_option("-i", "--source-index",
                       action="store_true", dest="srcsrv", default=False,
                       help="Add source index information to debug files, making them suitable for use in a source server.")
-    parser.add_option("--repo-manifest",
-                      action="store", dest="repo_manifest",
-                      help="""Get source information from this XML manifest
-produced by the `repo manifest -r` command.
-""")
     parser.add_option("--install-manifest",
                       action="append", dest="install_manifests",
                       default=[],
@@ -906,7 +847,6 @@ to canonical locations in the source repository. Specify
                                        srcdirs=options.srcdir,
                                        vcsinfo=options.vcsinfo,
                                        srcsrv=options.srcsrv,
-                                       repo_manifest=options.repo_manifest,
                                        file_mapping=file_mapping)
 
     dumper.Process(args[2])

@@ -73,16 +73,20 @@ InlineTranslator::TranslateRecording(char *aData, size_t aLen)
   int32_t eventType;
   ReadElement(reader, eventType);
   while (reader.good()) {
-    UniquePtr<RecordedEvent> recordedEvent(
-      RecordedEvent::LoadEvent(reader,
-      static_cast<RecordedEvent::EventType>(eventType)));
+    bool success = RecordedEvent::DoWithEvent(reader, static_cast<RecordedEvent::EventType>(eventType),
+                               [&] (RecordedEvent *recordedEvent) {
+                                 // Make sure that the whole event was read from the stream successfully.
+                                 if (!reader.good()) {
+                                     return false;
+                                 }
 
-    // Make sure that the whole event was read from the stream successfully.
-    if (!reader.good() || !recordedEvent) {
-      return false;
-    }
+                                 if (!recordedEvent->PlayEvent(this)) {
+                                     return false;
+                                 }
 
-    if (!recordedEvent->PlayEvent(this)) {
+                                 return true;
+                              });
+    if (!success) {
       return false;
     }
 

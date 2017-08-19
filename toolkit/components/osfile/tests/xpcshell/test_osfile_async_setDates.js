@@ -95,8 +95,8 @@ add_task(async function test_nonproto() {
 
 // Prototypical tests, operating on |File| handles.
 add_task(async function test_proto() {
-  if (OS.Constants.Sys.Name == "Android" || OS.Constants.Sys.Name == "Gonk") {
-    do_print("File.prototype.setDates is not implemented for Android/B2G");
+  if (OS.Constants.Sys.Name == "Android") {
+    do_print("File.prototype.setDates is not implemented for Android");
     do_check_eq(OS.File.prototype.setDates, undefined);
     return;
   }

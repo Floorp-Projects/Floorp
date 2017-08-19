@@ -4359,9 +4359,14 @@ LIRGenerator::visitIsTypedArray(MIsTypedArray* ins)
 void
 LIRGenerator::visitIsCallable(MIsCallable* ins)
 {
-    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
     MOZ_ASSERT(ins->type() == MIRType::Boolean);
-    define(new(alloc()) LIsCallable(useRegister(ins->object())), ins);
+
+    if (ins->object()->type() == MIRType::Object) {
+        define(new(alloc()) LIsCallableO(useRegister(ins->object())), ins);
+    } else {
+        MOZ_ASSERT(ins->object()->type() == MIRType::Value);
+        define(new(alloc()) LIsCallableV(useBox(ins->object()), temp()), ins);
+    }
 }
 
 void

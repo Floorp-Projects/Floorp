@@ -80,7 +80,7 @@
    */
   test(t => {
     const pc = new RTCPeerConnection();
-    assert_own_property(pc, 'addTransceiver');
+    assert_idl_attribute(pc, 'addTransceiver');
     assert_throws(new TypeError(), () => pc.addTransceiver('invalid'));
   }, 'addTransceiver() with string argument as invalid kind should throw TypeError');
 
@@ -126,7 +126,7 @@
   test(t => {
     const pc = new RTCPeerConnection();
 
-    assert_own_property(pc, 'addTransceiver');
+    assert_idl_attribute(pc, 'addTransceiver');
 
     const transceiver = pc.addTransceiver('audio');
     assert_true(transceiver instanceof RTCRtpTransceiver,
@@ -154,7 +154,7 @@
     assert_true(receiver instanceof RTCRtpReceiver,
       'Expect receiver to be instance of RTCRtpReceiver');
 
-    const track = receiver.track
+    const track = receiver.track;
     assert_true(track instanceof MediaStreamTrack,
       'Expect receiver.track to be instance of MediaStreamTrack');
 
@@ -171,7 +171,7 @@
   test(t => {
     const pc = new RTCPeerConnection();
 
-    assert_own_property(pc, 'addTransceiver');
+    assert_idl_attribute(pc, 'addTransceiver');
 
     const transceiver = pc.addTransceiver('video');
     assert_true(transceiver instanceof RTCRtpTransceiver,
@@ -198,7 +198,7 @@
     assert_true(receiver instanceof RTCRtpReceiver,
       'Expect receiver to be instance of RTCRtpReceiver');
 
-    const track = receiver.track
+    const track = receiver.track;
     assert_true(track instanceof MediaStreamTrack,
       'Expect receiver.track to be instance of MediaStreamTrack');
 
@@ -226,7 +226,7 @@
 
   test(t => {
     const pc = new RTCPeerConnection();
-    assert_own_property(pc, 'addTransceiver');
+    assert_idl_attribute(pc, 'addTransceiver');
     assert_throws(new TypeError(), () =>
       pc.addTransceiver('audio', { direction: 'invalid' }));
   }, `addTransceiver() with invalid direction should throw TypeError`);
@@ -252,7 +252,7 @@
     assert_equals(sender.track, track,
       'Expect sender.track should be the track that is added');
 
-    const receiverTrack = receiver.track
+    const receiverTrack = receiver.track;
     assert_true(receiverTrack instanceof MediaStreamTrack,
       'Expect receiver.track to be instance of MediaStreamTrack');
 
@@ -302,6 +302,109 @@
 
   }, 'addTransceiver(track) multiple times should create multiple transceivers');
 
+
+  /*
+    5.1.  addTransceiver
+      6.  Verify that each rid value in sendEncodings is composed only of
+          case-sensitive alphanumeric characters (a-z, A-Z, 0-9) up to a maximum
+          of 16 characters. If one of the RIDs does not meet these requirements,
+          throw a TypeError.
+   */
+  test(() => {
+    const pc = new RTCPeerConnection();
+    assert_idl_attribute(pc, 'addTransceiver');
+
+    assert_throws(new TypeError(), () =>
+      pc.addTransceiver('audio', {
+        sendEncodings: [{
+          rid: '@Invalid!'
+        }]
+      }));
+  }, 'addTransceiver() with rid containing invalid non-alphanumeric characters should throw TypeError');
+
+  test(() => {
+    const pc = new RTCPeerConnection();
+    assert_idl_attribute(pc, 'addTransceiver');
+
+    assert_throws(new TypeError(), () =>
+      pc.addTransceiver('audio', {
+        sendEncodings: [{
+          rid: 'a'.repeat(17)
+        }]
+      }));
+  }, 'addTransceiver() with rid longer than 16 characters should throw TypeError');
+
+  test(() => {
+    const pc = new RTCPeerConnection();
+    pc.addTransceiver('audio', {
+      sendEncodings: [{
+        rid: 'foo'
+      }]
+    });
+  }, `addTransceiver() with valid rid value should succeed`);
+
+  /*
+    5.1.  addTransceiver
+      7.  If any RTCRtpEncodingParameters dictionary in sendEncodings contains a
+          read-only parameter other than rid, throw an InvalidAccessError.
+
+      - The sendEncodings argument can be used to specify the number of offered
+        simulcast encodings, and optionally their RIDs and encoding parameters.
+        Aside from rid , all read-only parameters in the RTCRtpEncodingParameters
+        dictionaries, such as ssrc, must be left unset, or an error will be thrown.
+   */
+  test(() => {
+    const pc = new RTCPeerConnection();
+
+    assert_throws('InvalidAccessError', () =>
+      pc.addTransceiver('audio', {
+        sendEncodings: [{
+          ssrc: 2
+        }]
+      }));
+  }, `addTransceiver() with readonly ssrc set should throw InvalidAccessError`);
+
+  test(() => {
+    const pc = new RTCPeerConnection();
+
+    assert_throws('InvalidAccessError', () =>
+      pc.addTransceiver('audio', {
+        sendEncodings: [{
+          rtx: {
+            ssrc: 2
+          }
+        }]
+      }));
+  }, `addTransceiver() with readonly rtx set should throw InvalidAccessError`);
+
+  test(() => {
+    const pc = new RTCPeerConnection();
+
+    assert_throws('InvalidAccessError', () =>
+      pc.addTransceiver('audio', {
+        sendEncodings: [{
+          fec: {
+            ssrc: 2
+          }
+        }]
+      }));
+  }, `addTransceiver() with readonly fec set should throw InvalidAccessError`);
+
+  test(() => {
+    const pc = new RTCPeerConnection();
+    pc.addTransceiver('audio', {
+      sendEncodings: [{
+        dtx: 'enabled',
+        active: false,
+        priority: 'low',
+        ptime: 5,
+        maxBitrate: 8,
+        maxFramerate: 25,
+        rid: 'foo'
+      }]
+    });
+  }, `addTransceiver() with valid sendEncodings should succeed`);
+
   /*
     TODO
       5.1.  addTransceiver
@@ -312,24 +415,8 @@
         - Setting a new RTCSessionDescription may change mid to a non-null value,
           as defined in [JSEP] (section 5.5. and section 5.6.).
 
-        - The sendEncodings argument can be used to specify the number of offered
-          simulcast encodings, and optionally their RIDs and encoding parameters.
-          Aside from rid , all read-only parameters in the RTCRtpEncodingParameters
-          dictionaries, such as ssrc, must be left unset, or an error will be thrown.
-
         1.  If the dictionary argument is present, and it has a streams member, let
             streams be that list of MediaStream objects.
-
-        2.  If the dictionary argument is present, and it has a sendEncodings member,
-            let sendEncodings be that list of RTCRtpEncodingParameters objects.
-
-        6.  Verify that each rid value in sendEncodings is composed only of
-            case-sensitive alphanumeric characters (a-z, A-Z, 0-9) up to a maximum
-            of 16 characters. If one of the RIDs does not meet these requirements,
-            throw a TypeError.
-
-        7.  If any RTCRtpEncodingParameters dictionary in sendEncodings contains
-            a read-only parameter other than rid , throw an InvalidAccessError.
 
       5.2.  RTCRtpSender Interface
         Create an RTCRtpSender
@@ -378,11 +465,11 @@
 
     Coverage Report
                             Tested    Not-Tested  Non-Testable  Total
-      addTransceiver          11          4           3           18
+      addTransceiver          14          1           3           18
       Create Sender            3          4           0            7
       Create Receiver          8          1           0            9
       Create Transceiver       7          0           0            7
 
-      Total                   29          9           3           41
+      Total                   32          6           3           41
    */
 </script>

@@ -378,6 +378,17 @@ ExtensionPolicyService::AddonMayLoadURI(const nsAString& aAddonId,
 }
 
 nsresult
+ExtensionPolicyService::GetExtensionName(const nsAString& aAddonId,
+                                         nsAString& aName)
+{
+  if (WebExtensionPolicy* policy = GetByID(aAddonId)) {
+    aName.Assign(policy->Name());
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+nsresult
 ExtensionPolicyService::ExtensionURILoadableByAnyone(nsIURI* aURI, bool* aResult)
 {
   URLInfo url(aURI);

@@ -1,7 +1,7 @@
-// |jit-test| test-also-wasm-baseline; exitstatus: 3
+// |jit-test| test-also-no-wasm-baseline; exitstatus: 3
 // Checking in debug frame is initialized properly during stack overflow.
 
-if (!wasmIsSupported())
+if (!wasmDebuggingIsSupported())
     quit(3);
 
 var dbg;

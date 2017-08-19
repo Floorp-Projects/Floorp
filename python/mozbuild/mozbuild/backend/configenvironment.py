@@ -141,6 +141,7 @@ class ConfigEnvironment(object):
         else:
             self.import_prefix = self.dll_prefix
             self.import_suffix = self.dll_suffix
+        self.bin_suffix = self.substs.get('BIN_SUFFIX', '')
 
         global_defines = [name for name in self.defines
             if not name in self.non_global_defines]

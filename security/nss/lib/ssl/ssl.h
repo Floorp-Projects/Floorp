@@ -231,10 +231,17 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  * parameters.
  *
  * The transition between the 0-RTT and 1-RTT modes is marked by the
- * handshake callback.
+ * handshake callback.  However, it is possible to force the completion
+ * of the handshake (and cause the handshake callback to be called)
+ * prior to reading all 0-RTT data using SSL_ForceHandshake().  To
+ * ensure that all early data is read before the handshake callback, any
+ * time that SSL_ForceHandshake() returns a PR_WOULD_BLOCK_ERROR, use
+ * PR_Read() to read all available data.  If PR_Read() is called
+ * multiple times, this will result in the handshake completing, but the
+ * handshake callback will occur after early data has all been read.
  *
  * WARNING: 0-RTT data has different anti-replay and PFS properties than
- * the rest of the TLS data. See [draft-ietf-tls-tls13; Section 6.2.3]
+ * the rest of the TLS data. See [draft-ietf-tls-tls13; Section 8]
  * for more details.
  */
 #define SSL_ENABLE_0RTT_DATA 33

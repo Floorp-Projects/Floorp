@@ -372,11 +372,10 @@ TextEditRules::DocumentIsEmpty()
     return true;
   }
 
-  uint32_t childCount = rootElement->GetChildCount();
-  for (uint32_t i = 0; i < childCount; i++) {
-    nsINode* node = rootElement->GetChildAt(i);
-    if (!EditorBase::IsTextNode(node) ||
-        node->Length()) {
+  for (nsIContent* child = rootElement->GetFirstChild();
+       child; child = child->GetNextSibling()) {
+    if (!EditorBase::IsTextNode(child) ||
+        child->Length()) {
       return false;
     }
   }

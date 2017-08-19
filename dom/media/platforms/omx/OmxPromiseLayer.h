@@ -136,7 +136,7 @@ public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BufferData)
 
     // In most cases, the ID of this buffer is the pointer address of mBuffer.
-    // However, in platform like gonk, it is another value.
+    // However, on some platforms it may be another value.
     virtual BufferID ID()
     {
       return mBuffer;

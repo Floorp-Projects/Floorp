@@ -263,7 +263,8 @@ static bool enableWasm = false;
 static bool enableNativeRegExp = false;
 static bool enableUnboxedArrays = false;
 static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
-static bool enableWasmAlwaysBaseline = false;
+static bool enableWasmBaseline = false;
+static bool enableWasmIon = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
 #ifdef JS_GC_ZEAL
@@ -7811,7 +7812,8 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     enableWasm = !op.getBoolOption("no-wasm");
     enableNativeRegExp = !op.getBoolOption("no-native-regexp");
     enableUnboxedArrays = op.getBoolOption("unboxed-arrays");
-    enableWasmAlwaysBaseline = op.getBoolOption("wasm-always-baseline");
+    enableWasmBaseline = !op.getBoolOption("no-wasm-baseline");
+    enableWasmIon = !op.getBoolOption("no-wasm-ion");
     enableAsyncStacks = !op.getBoolOption("no-async-stacks");
     enableStreams = op.getBoolOption("enable-streams");
 
@@ -7819,7 +7821,8 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
                              .setIon(enableIon)
                              .setAsmJS(enableAsmJS)
                              .setWasm(enableWasm)
-                             .setWasmAlwaysBaseline(enableWasmAlwaysBaseline)
+                             .setWasmBaseline(enableWasmBaseline)
+                             .setWasmIon(enableWasmIon)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays)
                              .setAsyncStack(enableAsyncStacks)
@@ -8105,7 +8108,8 @@ SetWorkerContextOptions(JSContext* cx)
                              .setIon(enableIon)
                              .setAsmJS(enableAsmJS)
                              .setWasm(enableWasm)
-                             .setWasmAlwaysBaseline(enableWasmAlwaysBaseline)
+                             .setWasmBaseline(enableWasmBaseline)
+                             .setWasmIon(enableWasmIon)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays)
                              .setStreams(enableStreams);
@@ -8301,10 +8305,11 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
         || !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation")
         || !op.addBoolOption('\0', "no-wasm", "Disable WebAssembly compilation")
+        || !op.addBoolOption('\0', "no-wasm-baseline", "Disable wasm baseline compiler")
+        || !op.addBoolOption('\0', "no-wasm-ion", "Disable wasm ion compiler")
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
         || !op.addBoolOption('\0', "unboxed-arrays", "Allow creating unboxed arrays")
-        || !op.addBoolOption('\0', "wasm-always-baseline", "Enable wasm baseline compiler when possible")
         || !op.addBoolOption('\0', "wasm-check-bce", "Always generate wasm bounds check, even redundant ones.")
         || !op.addBoolOption('\0', "wasm-test-mode", "Enable wasm testing mode, creating synthetic "
                                    "objects for non-canonical NaNs and i64 returned from wasm.")

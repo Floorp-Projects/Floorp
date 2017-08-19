@@ -1,9 +1,9 @@
-// |jit-test| test-also-wasm-baseline; exitstatus: 3
+// |jit-test| test-also-no-wasm-baseline; exitstatus: 3
 
 load(libdir + "asserts.js");
 
-if (!wasmIsSupported())
-     quit(3);
+if (!wasmDebuggingIsSupported())
+    quit(3);
 
 var g = newGlobal();
 g.parent = this;

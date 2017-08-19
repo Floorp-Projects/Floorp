@@ -1,7 +1,7 @@
-// |jit-test| test-also-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline
 // Tests that wasm module sourceMappingURL section is parsed.
 
-if (!wasmIsSupported())
+if (!wasmDebuggingIsSupported())
   quit();
 
 load(libdir + "asserts.js");
