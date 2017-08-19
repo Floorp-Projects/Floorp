@@ -40,11 +40,11 @@ namespace google_breakpad {
 
 #if defined(__i386__)
 
-uintptr_t UContextReader::GetStackPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetStackPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.gregs[REG_ESP];
 }
 
-uintptr_t UContextReader::GetInstructionPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.gregs[REG_EIP];
 }
 
@@ -88,15 +88,15 @@ void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc,
 
 #elif defined(__x86_64)
 
-uintptr_t UContextReader::GetStackPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetStackPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.gregs[REG_RSP];
 }
 
-uintptr_t UContextReader::GetInstructionPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.gregs[REG_RIP];
 }
 
-void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc,
+void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
                                     const struct _libc_fpstate* fpregs) {
   const greg_t* regs = uc->uc_mcontext.gregs;
 
@@ -145,11 +145,11 @@ void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc,
 
 #elif defined(__ARM_EABI__)
 
-uintptr_t UContextReader::GetStackPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetStackPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.arm_sp;
 }
 
-uintptr_t UContextReader::GetInstructionPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.arm_pc;
 }
 
@@ -184,11 +184,11 @@ void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc) {
 
 #elif defined(__aarch64__)
 
-uintptr_t UContextReader::GetStackPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetStackPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.sp;
 }
 
-uintptr_t UContextReader::GetInstructionPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.pc;
 }
 
@@ -210,11 +210,11 @@ void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc,
 
 #elif defined(__mips__)
 
-uintptr_t UContextReader::GetStackPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetStackPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.gregs[MD_CONTEXT_MIPS_REG_SP];
 }
 
-uintptr_t UContextReader::GetInstructionPointer(const struct ucontext* uc) {
+uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.pc;
 }
 
