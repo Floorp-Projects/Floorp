@@ -130,7 +130,7 @@
                 onget="return this.webNavigation.document;"/>
       <property name="docShell" readonly="true">
         <getter><![CDATA[
-          let frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          let {frameLoader} = this;
           return frameLoader ? frameLoader.docShell : null;
         ]]></getter>
       </property>
@@ -168,11 +168,10 @@
                 readonly="true">
         <getter>
           <![CDATA[
-            var owner = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-            if (!owner.frameLoader) {
-              return null;
+            if (this.frameLoader) {
+              return this.frameLoader.messageManager;
             }
-            return owner.frameLoader.messageManager;
+            return null;
           ]]>
         </getter>
       </property>

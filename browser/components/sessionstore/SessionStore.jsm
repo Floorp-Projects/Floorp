@@ -4756,7 +4756,7 @@ var SessionStoreInternal = {
     if (options.tabData.storage) {
       for (let origin of Object.getOwnPropertyNames(options.tabData.storage)) {
         try {
-          let {frameLoader} = browser.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+          let {frameLoader} = browser;
           if (frameLoader.tabParent) {
             let attrs = browser.contentPrincipal.originAttributes;
             let dataPrincipal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
