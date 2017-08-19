@@ -17,8 +17,10 @@
 #include "nsIFrameLoader.h"
 #include "nsPoint.h"
 #include "nsSize.h"
+#include "nsWrapperCache.h"
 #include "nsIURI.h"
 #include "nsFrameMessageManager.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 #include "nsStubMutationObserver.h"
@@ -67,7 +69,8 @@ typedef struct _GtkWidget GtkWidget;
 class nsFrameLoader final : public nsIFrameLoader,
                             public nsIWebBrowserPersistable,
                             public nsStubMutationObserver,
-                            public mozilla::dom::ipc::MessageManagerCallback
+                            public mozilla::dom::ipc::MessageManagerCallback,
+                            public nsWrapperCache
 {
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
@@ -84,7 +87,7 @@ public:
                                int32_t aJSPluginID = nsFakePluginTag::NOT_JSPLUGIN);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
   NS_DECL_NSIFRAMELOADER
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIWEBBROWSERPERSISTABLE
@@ -96,6 +99,100 @@ public:
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
   mozilla::dom::EventTarget* GetTabChildGlobalAsEventTarget();
   nsresult CreateStaticClone(nsIFrameLoader* aDest);
+
+  already_AddRefed<nsIDocShell> GetDocShell(mozilla::ErrorResult& aRv);
+
+  already_AddRefed<nsITabParent> GetTabParent();
+
+  already_AddRefed<nsILoadContext> LoadContext();
+
+  void LoadFrame(mozilla::ErrorResult& aRv);
+
+  void LoadURI(nsIURI* aURI, mozilla::ErrorResult& aRv);
+
+  void SetIsPrerendered(mozilla::ErrorResult& aRv);
+
+  void MakePrerenderedLoaderActive(mozilla::ErrorResult& aRv);
+
+  already_AddRefed<mozilla::dom::Promise>
+  AppendPartialSHistoryAndSwap(nsIFrameLoader& aOther, mozilla::ErrorResult& aRv);
+
+  already_AddRefed<mozilla::dom::Promise>
+  RequestGroupedHistoryNavigation(uint32_t aGlobalIndex, mozilla::ErrorResult& aRv);
+
+  void AddProcessChangeBlockingPromise(mozilla::dom::Promise& aPromise, mozilla::ErrorResult& aRv);
+
+  void Destroy(mozilla::ErrorResult& aRv);
+
+  void ActivateRemoteFrame(mozilla::ErrorResult& aRv);
+
+  void DeactivateRemoteFrame(mozilla::ErrorResult& aRv);
+
+  void SendCrossProcessMouseEvent(const nsAString& aType,
+                                  float aX,
+                                  float aY,
+                                  int32_t aButton,
+                                  int32_t aClickCount,
+                                  int32_t aModifiers,
+                                  bool aIgnoreRootScrollFrame,
+                                  mozilla::ErrorResult& aRv);
+
+  void SendCrossProcessKeyEvent(const nsAString& aType,
+                                int32_t aKeyCode,
+                                int32_t aCharCode,
+                                int32_t aModifiers,
+                                bool aPreventDefault,
+                                mozilla::ErrorResult& aRv);
+
+  void ActivateFrameEvent(const nsAString& aType,
+                          bool aCapture,
+                          mozilla::ErrorResult& aRv);
+
+  void RequestNotifyAfterRemotePaint(mozilla::ErrorResult& aRv);
+
+  void RequestFrameLoaderClose(mozilla::ErrorResult& aRv);
+
+  void Print(uint64_t aOuterWindowID,
+             nsIPrintSettings* aPrintSettings,
+             nsIWebProgressListener* aProgressListener,
+             mozilla::ErrorResult& aRv);
+
+  already_AddRefed<nsIGroupedSHistory> EnsureGroupedSHistory(mozilla::ErrorResult& aRv);
+
+
+  already_AddRefed<nsIMessageSender> GetMessageManager();
+
+  uint32_t EventMode() const { return mEventMode; }
+
+  already_AddRefed<Element> GetOwnerElement();
+
+  uint32_t LazyWidth() const;
+
+  uint32_t LazyHeight() const;
+
+  already_AddRefed<nsIPartialSHistory> GetPartialSHistory();
+
+  already_AddRefed<nsIGroupedSHistory> GetGroupedSHistory();
+
+
+  uint64_t ChildID() const { return mChildID; }
+
+  bool ClampScrollPosition() const { return mClampScrollPosition; }
+
+  bool ClipSubdocument() const { return mClipSubdocument; }
+
+  bool DepthTooGreat() const { return mDepthTooGreat; }
+
+  bool IsDead() const { return mDestroyCalled; }
+
+  /**
+   * Is this a frame loader for a bona fide <iframe mozbrowser>?
+   * <xul:browser> is not a mozbrowser, so this is false for that case.
+   */
+  bool OwnerIsMozBrowserFrame();
+
+  nsIContent* GetParentObject() const { return mOwnerContent; }
+
 
   /**
    * MessageManagerCallback methods that we override.
@@ -231,6 +328,8 @@ public:
   RefPtr<nsFrameMessageManager> mMessageManager;
   nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
 
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+
 private:
   nsFrameLoader(mozilla::dom::Element* aOwner,
                 nsPIDOMWindowOuter* aOpener,
@@ -251,12 +350,6 @@ private:
   {
     return mJSPluginID != nsFakePluginTag::NOT_JSPLUGIN;
   }
-
-  /**
-   * Is this a frame loader for a bona fide <iframe mozbrowser>?
-   * <xul:browser> is not a mozbrowser, so this is false for that case.
-   */
-  bool OwnerIsMozBrowserFrame();
 
   /**
    * Is this a frame loader for an isolated <iframe mozbrowser>?
