@@ -1,66 +1,64 @@
 /* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-#include "nsISupports.idl"
-
-interface nsFrameLoader;
+interface LoadContext;
+interface TabParent;
+interface URI;
 interface nsIDocShell;
-interface nsIURI;
-interface nsIFrame;
-interface nsSubDocumentFrame;
+interface nsIGroupedSHistory;
 interface nsIMessageSender;
-interface nsIVariant;
-interface nsIDOMElement;
-interface nsITabParent;
-interface nsILoadContext;
+interface nsIPartialSHistory;
 interface nsIPrintSettings;
 interface nsIWebProgressListener;
-interface nsIGroupedSHistory;
-interface nsIPartialSHistory;
 
-[builtinclass, uuid(1645af04-1bc7-4363-8f2c-eb9679220ab1)]
-interface nsIFrameLoader : nsISupports
-{
+[ChromeOnly]
+interface FrameLoader {
   /**
    * Get the docshell from the frame loader.
    */
-  readonly attribute nsIDocShell docShell;
+  [GetterThrows]
+  readonly attribute nsIDocShell? docShell;
 
   /**
    * Get this frame loader's TabParent, if it has a remote frame.  Otherwise,
    * returns null.
    */
-  readonly attribute nsITabParent tabParent;
+  readonly attribute TabParent? tabParent;
 
   /**
    * Get an nsILoadContext for the top-level docshell. For remote
    * frames, a shim is returned that contains private browsing and app
    * information.
    */
-  readonly attribute nsILoadContext loadContext;
+  readonly attribute LoadContext loadContext;
 
   /**
    * Start loading the frame. This method figures out what to load
    * from the owner content in the frame loader.
    */
+  [Throws]
   void loadFrame();
 
   /**
    * Loads the specified URI in this frame. Behaves identically to loadFrame,
    * except that this method allows specifying the URI to load.
    */
-  void loadURI(in nsIURI aURI);
+  [Throws]
+  void loadURI(URI aURI);
 
   /**
    * Puts the frameloader in prerendering mode.
    */
+  [Throws]
   void setIsPrerendered();
 
   /**
    * Make the prerendered frameloader being active (and clear isPrerendered flag).
    */
+  [Throws]
   void makePrerenderedLoaderActive();
 
   /**
@@ -68,7 +66,8 @@ interface nsIFrameLoader : nsISupports
    *
    * @return A promise which will be resolved when the navigation is complete.
    */
-  nsISupports appendPartialSHistoryAndSwap(in nsIFrameLoader aOther);
+  [Throws]
+  Promise<void> appendPartialSHistoryAndSwap(FrameLoader aOther);
 
   /**
    * If grouped session history is applied, use this function to navigate to
@@ -76,20 +75,22 @@ interface nsIFrameLoader : nsISupports
    *
    * @return A promise which will be resolved when the navigation is complete.
    */
-  nsISupports requestGroupedHistoryNavigation(in unsigned long aGlobalIndex);
+  [Throws]
+  Promise<void> requestGroupedHistoryNavigation(unsigned long aGlobalIndex);
 
   /**
    * Adds a blocking promise for the current cross process navigation.
    * This method can only be called while the "BrowserWillChangeProcess" event
    * is being fired.
    */
-  [implicit_jscontext]
-  void addProcessChangeBlockingPromise(in jsval aPromise);
+  [Throws]
+  void addProcessChangeBlockingPromise(Promise<any> aPromise);
 
   /**
    * Destroy the frame loader and everything inside it. This will
    * clear the weak owner content reference.
    */
+  [Throws]
   void destroy();
 
   /**
@@ -97,65 +98,66 @@ interface nsIFrameLoader : nsISupports
    * the frame tree.  This can be used to decide what operations may
    * or may not be allowed on the loader's docshell.
    */
+  [Pure]
   readonly attribute boolean depthTooGreat;
-
-  /**
-   * Updates the position and size of the subdocument loaded by this frameloader.
-   *
-   *  @param aIFrame The nsIFrame for the content node that owns this frameloader
-   */
-  [noscript] void updatePositionAndSize(in nsSubDocumentFrame aIFrame);
 
   /**
    * Activate remote frame.
    * Throws an exception with non-remote frames.
    */
+  [Throws]
   void activateRemoteFrame();
 
   /**
    * Deactivate remote frame.
    * Throws an exception with non-remote frames.
    */
+  [Throws]
   void deactivateRemoteFrame();
 
   /**
    * @see nsIDOMWindowUtils sendMouseEvent.
    */
-  void sendCrossProcessMouseEvent(in AString aType,
-                                  in float aX,
-                                  in float aY,
-                                  in long aButton,
-                                  in long aClickCount,
-                                  in long aModifiers,
-                                  [optional] in boolean aIgnoreRootScrollFrame);
+  [Throws]
+  void sendCrossProcessMouseEvent(DOMString aType,
+                                  float aX,
+                                  float aY,
+                                  long aButton,
+                                  long aClickCount,
+                                  long aModifiers,
+                                  optional boolean aIgnoreRootScrollFrame = false);
 
   /**
    * Activate event forwarding from client (remote frame) to parent.
    */
-  void activateFrameEvent(in AString aType, in boolean capture);
+  [Throws]
+  void activateFrameEvent(DOMString aType, boolean capture);
 
   // Note, when frameloaders are swapped, also messageManagers are swapped.
-  readonly attribute nsIMessageSender messageManager;
+  readonly attribute nsIMessageSender? messageManager;
 
   /**
    * @see nsIDOMWindowUtils sendKeyEvent.
    */
-  void sendCrossProcessKeyEvent(in AString aType,
-                                in long aKeyCode,
-                                in long aCharCode,
-                                in long aModifiers,
-                                [optional] in boolean aPreventDefault);
+  [Throws]
+  void sendCrossProcessKeyEvent(DOMString aType,
+                                long aKeyCode,
+                                long aCharCode,
+                                long aModifiers,
+                                optional boolean aPreventDefault = false);
 
   /**
    * Request that the next time a remote layer transaction has been
    * received by the Compositor, a MozAfterRemoteFrame event be sent
    * to the window.
    */
+  [Throws]
   void requestNotifyAfterRemotePaint();
 
   /**
    * Close the window through the ownerElement.
    */
+  [Throws]
   void requestFrameLoaderClose();
 
   /**
@@ -166,13 +168,15 @@ interface nsIFrameLoader : nsISupports
    *                       set to prevent prompting.
    * @param aProgressListener optional print progress listener.
    */
-  void print(in unsigned long long aOuterWindowID,
-             in nsIPrintSettings aPrintSettings,
-             in nsIWebProgressListener aProgressListener);
+  [Throws]
+  void print(unsigned long long aOuterWindowID,
+             nsIPrintSettings aPrintSettings,
+             nsIWebProgressListener aProgressListener);
 
   /**
    * Ensure that the current nsIFrameLoader has a GroupedSHistory.
    */
+  [Throws]
   nsIGroupedSHistory ensureGroupedSHistory();
 
   /**
@@ -191,6 +195,7 @@ interface nsIFrameLoader : nsISupports
    */
   const unsigned long EVENT_MODE_DONT_FORWARD_TO_CHILD = 0x00000001;
 
+  [Pure]
   attribute unsigned long eventMode;
 
   /**
@@ -213,19 +218,22 @@ interface nsIFrameLoader : nsISupports
    * For example, if this is a frame loader for an <iframe>, this attribute
    * returns the iframe element.
    */
-  readonly attribute nsIDOMElement ownerElement;
+  [Pure]
+  readonly attribute Element? ownerElement;
 
 
   /**
    * Cached childID of the ContentParent owning the TabParent in this frame
    * loader. This can be used to obtain the childID after the TabParent died.
    */
+  [Pure]
   readonly attribute unsigned long long childID;
 
   /**
    * Find out whether the owner content really is a mozbrowser. <xul:browser>
    * is not considered to be a mozbrowser frame.
    */
+  [Pure]
   readonly attribute boolean ownerIsMozBrowserFrame;
 
   /**
@@ -234,6 +242,7 @@ interface nsIFrameLoader : nsISupports
    * should only be used in asynchronous APIs where values are not guaranteed
    * to be up-to-date when received.
    */
+  [Pure]
   readonly attribute unsigned long lazyWidth;
 
   /**
@@ -242,52 +251,23 @@ interface nsIFrameLoader : nsISupports
    * should only be used in asynchronous APIs where values are not guaranteed
    * to be up-to-date when received.
    */
+  [Pure]
   readonly attribute unsigned long lazyHeight;
 
   /**
    * The partial session history.
    */
-  readonly attribute nsIPartialSHistory partialSHistory;
+  readonly attribute nsIPartialSHistory? partialSHistory;
 
   /**
    * The grouped session history composed of multiple session history objects
    * across root docshells.
    */
-  readonly attribute nsIGroupedSHistory groupedSHistory;
+  readonly attribute nsIGroupedSHistory? groupedSHistory;
 
   /**
    * Is `true` if the frameloader is dead (destroy has been called on it)
    */
-  [infallible] readonly attribute boolean isDead;
-};
-
-%{C++
-class nsFrameLoader;
-%}
-
-native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
-
-[scriptable, uuid(adc1b3ba-8deb-4943-8045-e6de0044f2ce)]
-interface nsIFrameLoaderOwner : nsISupports
-{
-  /**
-   * The frame loader owned by this nsIFrameLoaderOwner
-   */
-  [binaryname(FrameLoaderXPCOM)] readonly attribute nsIFrameLoader frameLoader;
-  [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
-
-  /**
-   * Puts the FrameLoaderOwner in prerendering mode.
-   */
-  void setIsPrerendered();
-
-  /**
-   * This method is used internally by SwapFrameLoaders to set the frame loader
-   * on the target nsFrameLoader.
-   *
-   * Avoid using this method outside of that context, and instead prefer using
-   * SwapFrameLoaders.
-   */
-  [noscript, notxpcom] void
-  internalSetFrameLoader(in nsIFrameLoader aNewFrameLoader);
+  [Pure]
+  readonly attribute boolean isDead;
 };
