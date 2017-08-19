@@ -3873,6 +3873,17 @@ nsFrameLoader::DestroyBrowserFrameScripts()
   }
 }
 
+void
+nsFrameLoader::StartPersistence(uint64_t aOuterWindowID,
+                                nsIWebBrowserPersistDocumentReceiver* aRecv,
+                                ErrorResult& aRv)
+{
+  nsresult rv = StartPersistence(aOuterWindowID, aRecv);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
 NS_IMETHODIMP
 nsFrameLoader::StartPersistence(uint64_t aOuterWindowID,
                                 nsIWebBrowserPersistDocumentReceiver* aRecv)

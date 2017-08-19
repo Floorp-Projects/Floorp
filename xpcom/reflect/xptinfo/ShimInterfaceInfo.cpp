@@ -113,6 +113,7 @@
 #include "nsIScrollBoxObject.h"
 #include "nsISelection.h"
 #include "nsITreeBoxObject.h"
+#include "nsIWebBrowserPersistable.h"
 #include "nsIXMLHttpRequest.h"
 
 #include "mozilla/dom/AnimationEventBinding.h"
@@ -380,6 +381,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(TreeWalker),
   DEFINE_SHIM(UIEvent),
   DEFINE_SHIM(ValidityState),
+  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),
   DEFINE_SHIM(WheelEvent),
   DEFINE_SHIM(XMLDocument),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIXMLHttpRequestEventTarget, XMLHttpRequestEventTarget),
