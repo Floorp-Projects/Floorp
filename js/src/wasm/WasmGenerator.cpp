@@ -45,9 +45,11 @@ static const unsigned GENERATOR_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
-ModuleGenerator::ModuleGenerator(UniqueChars* error)
+ModuleGenerator::ModuleGenerator(UniqueChars* error, mozilla::Atomic<bool>* cancelled)
   : tier_(Tier(-1)),
+    compileMode_(CompileMode::Once),
     error_(error),
+    cancelled_(cancelled),
     linkDataTier_(nullptr),
     metadataTier_(nullptr),
     numSigs_(0),
@@ -76,17 +78,17 @@ ModuleGenerator::~ModuleGenerator()
         if (outstanding_) {
             AutoLockHelperThreadState lock;
             while (true) {
-                CompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock);
+                CompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock, compileMode_);
                 MOZ_ASSERT(outstanding_ >= worklist.length());
                 outstanding_ -= worklist.length();
                 worklist.clear();
 
-                CompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock);
+                CompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock, compileMode_);
                 MOZ_ASSERT(outstanding_ >= finished.length());
                 outstanding_ -= finished.length();
                 finished.clear();
 
-                uint32_t numFailed = HelperThreadState().harvestFailedWasmJobs(lock);
+                uint32_t numFailed = HelperThreadState().harvestFailedWasmJobs(lock, compileMode_);
                 MOZ_ASSERT(outstanding_ >= numFailed);
                 outstanding_ -= numFailed;
 
@@ -97,8 +99,8 @@ ModuleGenerator::~ModuleGenerator()
             }
         }
 
-        MOZ_ASSERT(HelperThreadState().wasmCompilationInProgress);
-        HelperThreadState().wasmCompilationInProgress = false;
+        MOZ_ASSERT(HelperThreadState().wasmCompilationInProgress(compileMode_));
+        HelperThreadState().wasmCompilationInProgress(compileMode_) = false;
     } else {
         MOZ_ASSERT(!outstanding_);
     }
@@ -111,7 +113,7 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
 {
     MOZ_ASSERT(env_->isAsmJS());
 
-    if (!linkData_.initTier(Tier::Ion))
+    if (!linkData_.initTier1(Tier::Ion, *asmJSMetadata))
         return false;
     linkDataTier_ = &linkData_.linkData(Tier::Ion);
 
@@ -141,15 +143,7 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 {
     MOZ_ASSERT(!env_->isAsmJS());
 
-    bool canBaseline = BaselineCanCompile();
-    bool debugEnabled = args.debugEnabled && canBaseline;
-    tier_ = ((args.alwaysBaseline || debugEnabled) && canBaseline)
-            ? Tier::Baseline
-            : Tier::Ion;
-
-    if (!linkData_.initTier(tier_))
-        return false;
-    linkDataTier_ = &linkData_.linkData(tier_);
+    tier_ = GetTier(args, compileMode_);
 
     auto metadataTier = js::MakeUnique<MetadataTier>(tier_);
     if (!metadataTier)
@@ -161,9 +155,13 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 
     metadataTier_ = &metadata_->metadata(tier_);
 
+    if (!linkData_.initTier1(tier_, *metadata_))
+        return false;
+    linkDataTier_ = &linkData_.linkData(tier_);
+
     MOZ_ASSERT(!isAsmJS());
 
-    metadata_->debugEnabled = debugEnabled;
+    metadata_->debugEnabled = GetDebugEnabled(args);
 
     // For wasm, the Vectors are correctly-sized and already initialized.
 
@@ -239,9 +237,10 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 
 bool
 ModuleGenerator::init(UniqueModuleEnvironment env, const CompileArgs& args,
-                      Metadata* maybeAsmJSMetadata)
+                      CompileMode compileMode, Metadata* maybeAsmJSMetadata)
 {
     env_ = Move(env);
+    compileMode_ = compileMode;
 
     if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcSigs.length()))
         return false;
@@ -283,17 +282,17 @@ ModuleGenerator::finishOutstandingTask()
         while (true) {
             MOZ_ASSERT(outstanding_ > 0);
 
-            if (HelperThreadState().wasmFailed(lock)) {
+            if (HelperThreadState().wasmFailed(lock, compileMode_)) {
                 if (error_) {
                     MOZ_ASSERT(!*error_, "Should have stopped earlier");
-                    *error_ = Move(HelperThreadState().harvestWasmError(lock));
+                    *error_ = Move(HelperThreadState().harvestWasmError(lock, compileMode_));
                 }
                 return false;
             }
 
-            if (!HelperThreadState().wasmFinishedList(lock).empty()) {
+            if (!HelperThreadState().wasmFinishedList(lock, compileMode_).empty()) {
                 outstanding_--;
-                task = HelperThreadState().wasmFinishedList(lock).popCopy();
+                task = HelperThreadState().wasmFinishedList(lock, compileMode_).popCopy();
                 break;
             }
 
@@ -888,14 +887,14 @@ ModuleGenerator::startFuncDefs()
     uint32_t numTasks;
     if (CanUseExtraThreads() &&
         threads.cpuCount > 1 &&
-        threads.wasmCompilationInProgress.compareExchange(false, true))
+        threads.wasmCompilationInProgress(compileMode_).compareExchange(false, true))
     {
 #ifdef DEBUG
         {
             AutoLockHelperThreadState lock;
-            MOZ_ASSERT(!HelperThreadState().wasmFailed(lock));
-            MOZ_ASSERT(HelperThreadState().wasmWorklist(lock).empty());
-            MOZ_ASSERT(HelperThreadState().wasmFinishedList(lock).empty());
+            MOZ_ASSERT(!HelperThreadState().wasmFailed(lock, compileMode_));
+            MOZ_ASSERT(HelperThreadState().wasmWorklist(lock, compileMode_).empty());
+            MOZ_ASSERT(HelperThreadState().wasmFinishedList(lock, compileMode_).empty());
         }
 #endif
         parallel_ = true;
@@ -906,8 +905,12 @@ ModuleGenerator::startFuncDefs()
 
     if (!tasks_.initCapacity(numTasks))
         return false;
-    for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(*env_, tier_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+    for (size_t i = 0; i < numTasks; i++) {
+        tasks_.infallibleEmplaceBack(*env_,
+                                     tier_,
+                                     compileMode_,
+                                     COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+    }
 
     if (!freeTasks_.reserve(numTasks))
         return false;
@@ -952,13 +955,16 @@ ModuleGenerator::launchBatchCompile()
 {
     MOZ_ASSERT(currentTask_);
 
+    if (cancelled_ && *cancelled_)
+        return false;
+
     currentTask_->setDebugEnabled(metadata_->debugEnabled);
 
     size_t numBatchedFuncs = currentTask_->units().length();
     MOZ_ASSERT(numBatchedFuncs);
 
     if (parallel_) {
-        if (!StartOffThreadWasmCompile(currentTask_))
+        if (!StartOffThreadWasmCompile(currentTask_, compileMode_))
             return false;
         outstanding_++;
     } else {
@@ -979,6 +985,7 @@ bool
 ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
 {
     MOZ_ASSERT(activeFuncDef_ == fg);
+    MOZ_ASSERT_IF(compileMode_ == CompileMode::Tier1, funcIndex < env_->numFuncs());
 
     UniqueFuncBytes func = Move(fg->funcBytes_);
     func->setFunc(funcIndex, &funcSig(funcIndex));
@@ -1064,7 +1071,7 @@ ModuleGenerator::finishFuncDefs()
     // that all functions have been compiled.
 
     for (ElemSegment& elems : env_->elemSegments) {
-        Uint32Vector& codeRangeIndices = elems.elemCodeRangeIndices;
+        Uint32Vector& codeRangeIndices = elems.elemCodeRangeIndices(tier_);
 
         MOZ_ASSERT(codeRangeIndices.empty());
         if (!codeRangeIndices.reserve(elems.elemFuncIndices.length()))
@@ -1113,7 +1120,7 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncInd
     if (!env_->elemSegments.emplaceBack(tableIndex, offset, Move(elemFuncIndices)))
         return false;
 
-    env_->elemSegments.back().elemCodeRangeIndices = Move(codeRangeIndices);
+    env_->elemSegments.back().elemCodeRangeIndices(tier_) = Move(codeRangeIndices);
     return true;
 }
 
@@ -1130,22 +1137,13 @@ ModuleGenerator::generateBytecodeHash(const ShareableBytes& bytecode)
     memcpy(metadata_->hash, hash, sizeof(ModuleHash));
 }
 
-SharedModule
-ModuleGenerator::finish(const ShareableBytes& bytecode)
+bool
+ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
 {
-    MOZ_ASSERT(!activeFuncDef_);
-    MOZ_ASSERT(finishedFuncDefs_);
-
-    if (!finishFuncExports())
-        return nullptr;
-
-    if (!finishCodegen())
-        return nullptr;
-
     // Convert the CallSiteAndTargetVector (needed during generation) to a
     // CallSiteVector (what is stored in the Module).
     if (!metadataTier_->callSites.appendAll(masm_.callSites()))
-        return nullptr;
+        return false;
 
     // The MacroAssembler has accumulated all the memory accesses during codegen.
     metadataTier_->memoryAccesses = masm_.extractMemoryAccesses();
@@ -1176,7 +1174,27 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     // For asm.js, the tables vector is over-allocated (to avoid resize during
     // parallel copilation). Shrink it back down to fit.
     if (isAsmJS() && !metadata_->tables.resize(numTables_))
-        return nullptr;
+        return false;
+
+    generateBytecodeHash(bytecode);
+
+    return true;
+}
+
+bool
+ModuleGenerator::finishCommon(const ShareableBytes& bytecode)
+{
+    MOZ_ASSERT(!activeFuncDef_);
+    MOZ_ASSERT(finishedFuncDefs_);
+
+    if (!finishFuncExports())
+        return false;
+
+    if (!finishCodegen())
+        return false;
+
+    if (!finishMetadata(bytecode))
+        return false;
 
     // Assert CodeRanges are sorted.
 #ifdef DEBUG
@@ -1197,9 +1215,40 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 #endif
 
     if (!finishLinkData())
+        return false;
+
+    return true;
+}
+
+UniqueJumpTable
+ModuleGenerator::createJumpTable(const CodeSegment& codeSegment)
+{
+    MOZ_ASSERT(compileMode_ == CompileMode::Tier1);
+    MOZ_ASSERT(!isAsmJS());
+
+    uint32_t tableSize = env_->numFuncImports() + env_->numFuncDefs();
+    uintptr_t* jumpTable = reinterpret_cast<uintptr_t*>(js_calloc(tableSize, sizeof(uintptr_t)));
+    if (!jumpTable)
         return nullptr;
 
-    generateBytecodeHash(bytecode);
+    UniqueJumpTable jumpTable_ = UniqueJumpTable(jumpTable, JS::FreePolicy());
+
+    uintptr_t codeBase = reinterpret_cast<uintptr_t>(codeSegment.base());
+    for (const CodeRange& codeRange : metadataTier_->codeRanges) {
+        if (codeRange.isFunction())
+            jumpTable[codeRange.funcIndex()] = codeBase + codeRange.funcTierEntry();
+    }
+
+    return jumpTable_;
+}
+
+SharedModule
+ModuleGenerator::finishModule(const ShareableBytes& bytecode)
+{
+    MOZ_ASSERT(compileMode_ == CompileMode::Once || compileMode_ == CompileMode::Tier1);
+
+    if (!finishCommon(bytecode))
+        return nullptr;
 
     UniqueConstCodeSegment codeSegment = CodeSegment::create(tier_,
                                                              masm_,
@@ -1209,8 +1258,16 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!codeSegment)
         return nullptr;
 
+    UniqueJumpTable maybeJumpTable;
+    if (compileMode_ == CompileMode::Tier1) {
+        maybeJumpTable = createJumpTable(*codeSegment);
+        if (!maybeJumpTable)
+            return nullptr;
+    }
+
     UniqueConstBytes maybeDebuggingBytes;
     if (metadata_->debugEnabled) {
+        MOZ_ASSERT(compileMode_ == CompileMode::Once);
         Bytes bytes;
         if (!bytes.resize(masm_.bytesNeeded()))
             return nullptr;
@@ -1220,11 +1277,12 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_);
+    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, Move(maybeJumpTable));
     if (!code)
         return nullptr;
 
-    return SharedModule(js_new<Module>(Move(assumptions_),
+    return SharedModule(js_new<Module>(compileMode_,
+                                       Move(assumptions_),
                                        *code,
                                        Move(maybeDebuggingBytes),
                                        Move(linkData_),
@@ -1233,6 +1291,35 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
                                        Move(env_->dataSegments),
                                        Move(env_->elemSegments),
                                        bytecode));
+}
+
+bool
+ModuleGenerator::finishTier2(const ShareableBytes& bytecode, SharedModule module)
+{
+    MOZ_ASSERT(compileMode_ == CompileMode::Tier2);
+    MOZ_ASSERT(tier_ == Tier::Ion);
+
+    if (cancelled_ && *cancelled_)
+        return false;
+
+    if (!finishCommon(bytecode))
+        return false;
+
+    UniqueConstCodeSegment codeSegment = CodeSegment::create(tier_,
+                                                             masm_,
+                                                             bytecode,
+                                                             *linkDataTier_,
+                                                             *metadata_);
+    if (!codeSegment)
+        return false;
+
+    MOZ_ASSERT(!metadata_->debugEnabled);
+
+    module->finishTier2Generator(linkData_.takeLinkData(tier_),
+                                 metadata_->takeMetadata(tier_),
+                                 Move(codeSegment),
+                                 Move(env_));
+    return true;
 }
 
 bool

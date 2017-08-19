@@ -58,13 +58,13 @@
  *   unprefixed, as well as duplication functions.
  *   Jemalloc-specific functions are also left unprefixed.
  *
- * - On Android and Gonk, all functions are left unprefixed. Additionally,
+ * - On Android all functions are left unprefixed. Additionally,
  *   C++ allocation functions (operator new/delete) are also exported and
  *   unprefixed.
  *
  * - On other systems (mostly Linux), all functions are left unprefixed.
  *
- * Only Android and Gonk add C++ allocation functions.
+ * Only Android adds C++ allocation functions.
  *
  * Proper exporting of the various functions is done with the MOZ_MEMORY_API
  * and MOZ_JEMALLOC_API macros. MOZ_MEMORY_API is meant to be used for malloc

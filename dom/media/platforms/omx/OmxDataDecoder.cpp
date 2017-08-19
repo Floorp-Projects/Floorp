@@ -300,8 +300,8 @@ OmxDataDecoder::FillBufferDone(BufferData* aData)
   MOZ_ASSERT(!aData || aData->mStatus == BufferData::BufferStatus::OMX_CLIENT);
 
   // Don't output sample when flush or shutting down, especially for video
-  // decoded frame. Because video decoded frame has a promise in BufferData
-  // waiting for layer to resolve it via recycle callback on Gonk, if other
+  // decoded frame. Because video decoded frame can have a promise in
+  // BufferData waiting for layer to resolve it via recycle callback, if other
   // module doesn't send it to layer, it will cause a unresolved promise and
   // waiting for resolve infinitely.
   if (mFlushing || mShuttingDown) {
@@ -336,8 +336,7 @@ OmxDataDecoder::Output(BufferData* aData)
 
   if (isPlatformData) {
     // If the MediaData is platform dependnet data, it's mostly a kind of
-    // limited resource, for example, GraphicBuffer on Gonk. So we use promise
-    // to notify when the resource is free.
+    // limited resource, so we use promise to notify when the resource is free.
     aData->mStatus = BufferData::BufferStatus::OMX_CLIENT_OUTPUT;
 
     MOZ_RELEASE_ASSERT(aData->mPromise.IsEmpty());

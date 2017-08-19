@@ -1,0 +1,31 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+DIRS += [
+    'c-program',
+    'cxx-program',
+    'c-simple-programs',
+    'cxx-simple-programs',
+    'c-library',
+    'cxx-library',
+]
+
+@template
+def Program(name):
+    PROGRAM = name
+
+@template
+def SimplePrograms(names, ext='.cpp'):
+    SIMPLE_PROGRAMS += names
+    SOURCES += ['%s%s' % (name, ext) for name in names]
+
+@template
+def Library(name):
+    LIBRARY_NAME = name
+
+@template
+def SharedLibrary(name):
+    Library(name)
+
+    FORCE_SHARED_LIB = True

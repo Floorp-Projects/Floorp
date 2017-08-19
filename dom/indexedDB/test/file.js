@@ -209,8 +209,8 @@ function verifyWasmModule(module1, module2)
   let getGlobalForObject = SpecialPowers.Cu.getGlobalForObject;
   let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
   let wasmExtractCode = SpecialPowers.unwrap(testingFunctions.wasmExtractCode);
-  let exp1 = wasmExtractCode(module1);
-  let exp2 = wasmExtractCode(module2);
+  let exp1 = wasmExtractCode(module1, "ion");
+  let exp2 = wasmExtractCode(module2, "ion");
   let code1 = exp1.code;
   let code2 = exp2.code;
   ok(code1 instanceof getGlobalForObject(code1).Uint8Array, "Instance of Uint8Array");

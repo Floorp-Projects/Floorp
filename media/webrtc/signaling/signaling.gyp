@@ -39,16 +39,6 @@
     'chromium_code': 1,
   },
 
-  'target_defaults': {
-    'conditions': [
-      ['moz_widget_toolkit_gonk==1', {
-        'defines' : [
-          'WEBRTC_GONK',
-       ],
-      }],
-    ],
-  },
-
   'targets': [
 
     #
@@ -296,7 +286,7 @@
           'cflags_mozilla': [
           ],
         }],
-        ['OS=="android" or moz_widget_toolkit_gonk==1', {
+        ['OS=="android"', {
           'cflags_mozilla': [
             # This warning complains about important MOZ_EXPORT attributes
             # on forward declarations for Android API types.

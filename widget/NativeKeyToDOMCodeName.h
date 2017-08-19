@@ -21,7 +21,7 @@
 #define CODE_MAP_MAC(aCPPCodeName, aNativeKey)
 // GTK and Qt on Linux
 #define CODE_MAP_X11(aCPPCodeName, aNativeKey)
-// Android and Gonk
+// Android
 #define CODE_MAP_ANDROID(aCPPCodeName, aNativeKey)
 
 #if defined(XP_WIN)

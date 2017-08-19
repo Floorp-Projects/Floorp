@@ -1289,7 +1289,7 @@ protected:
   struct MaskLayerKey;
   already_AddRefed<ImageLayer>
   CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey,
-                                   const std::function<void(Layer* aLayer)>& aSetUserData);
+                                   void(*aSetUserData)(Layer* aLayer));
   /**
    * Grabs all PaintedLayers and ColorLayers from the ContainerLayer and makes them
    * available for recycling.
@@ -2216,7 +2216,7 @@ ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aPainted)
 
 already_AddRefed<ImageLayer>
 ContainerState::CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey,
-                                                 const std::function<void(Layer* aLayer)>& aSetUserData)
+                                                 void(*aSetUserData)(Layer* aLayer))
 {
   RefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aKey);
   if (result) {
@@ -3871,6 +3871,13 @@ GetASRForPerspective(const ActiveScrolledRoot* aASR, nsIFrame* aPerspectiveFrame
 }
 
 void
+SetCSSMaskLayerUserData(Layer* aMaskLayer)
+{
+  aMaskLayer->SetUserData(&gCSSMaskLayerUserData,
+                          new CSSMaskLayerUserData());
+}
+
+void
 ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
                                          nsDisplayMask* aMaskItem)
 {
@@ -3878,12 +3885,7 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
 
   RefPtr<ImageLayer> maskLayer =
     CreateOrRecycleMaskImageLayerFor(MaskLayerKey(aLayer, Nothing()),
-      [](Layer* aMaskLayer)
-      {
-        aMaskLayer->SetUserData(&gCSSMaskLayerUserData,
-                                new CSSMaskLayerUserData());
-      }
-    );
+                                     SetCSSMaskLayerUserData);
 
   CSSMaskLayerUserData* oldUserData =
     static_cast<CSSMaskLayerUserData*>(maskLayer->GetUserData(&gCSSMaskLayerUserData));
@@ -6378,6 +6380,13 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
   SetClipCount(paintedData, aRoundedRectClipCount);
 }
 
+void
+SetMaskLayerUserData(Layer* aMaskLayer)
+{
+  aMaskLayer->SetUserData(&gMaskLayerUserData,
+                          new MaskLayerUserData());
+}
+
 already_AddRefed<Layer>
 ContainerState::CreateMaskLayer(Layer *aLayer,
                                const DisplayItemClip& aClip,
@@ -6394,13 +6403,7 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
   // check if we can re-use the mask layer
   MaskLayerKey recycleKey(aLayer, aForAncestorMaskLayer);
   RefPtr<ImageLayer> maskLayer =
-    CreateOrRecycleMaskImageLayerFor(recycleKey,
-      [](Layer* aMaskLayer)
-      {
-        aMaskLayer->SetUserData(&gMaskLayerUserData,
-                                new MaskLayerUserData());
-      }
-    );
+    CreateOrRecycleMaskImageLayerFor(recycleKey, SetMaskLayerUserData);
   MaskLayerUserData* userData = GetMaskLayerUserData(maskLayer);
 
   int32_t A2D = mContainerFrame->PresContext()->AppUnitsPerDevPixel();

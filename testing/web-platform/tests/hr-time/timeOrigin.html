@@ -10,19 +10,22 @@ const windowOrigin = performance.timeOrigin;
 
 test(() => {
   const startTime = Date.now();
-  assert_greater_than_equal(startTime, windowOrigin, 'Date.now() should be at least as large as the window timeOrigin.');
-  assert_less_than(startTime - windowOrigin, 500, 'Date.now() should be close to window timeOrigin.');
+  assert_greater_than_equal(startTime + 1, windowOrigin, 'Date.now() should be at least as large as the window timeOrigin.');
+  const startNow = performance.now();
+  assert_less_than_equal(startTime, windowOrigin + startNow + 1, 'Date.now() should be close to window timeOrigin.');
 }, 'Window timeOrigin is close to Date.now() when there is no system clock adjustment.');
 
 const workerScript = 'postMessage({timeOrigin: performance.timeOrigin})';
 const blob = new Blob([workerScript]);
 
 async_test(function(t) {
+  const beforeWorkerCreation = performance.now();
   const worker = new Worker(URL.createObjectURL(blob));
   worker.addEventListener('message', t.step_func_done(function(event) {
     const workerOrigin = event.data.timeOrigin;
-    assert_greater_than(workerOrigin, windowOrigin, 'Worker timeOrigin should be greater than the window timeOrigin.');
-    assert_less_than(workerOrigin - windowOrigin, 500, 'Window and worker timeOrigins should be close.');
+    assert_greater_than_equal(workerOrigin, windowOrigin + beforeWorkerCreation, 'Worker timeOrigin should be greater than the window timeOrigin.');
+    const afterWorkerCreation = performance.now();
+    assert_less_than_equal(workerOrigin - windowOrigin, afterWorkerCreation, 'Window and worker timeOrigins should be close.');
   }));
 }, 'Window and worker timeOrigins are close when created one after another.');
 
@@ -32,8 +35,7 @@ async_test(function(t) {
     const worker = new Worker(URL.createObjectURL(blob));
     worker.addEventListener('message', t.step_func_done(function(event) {
       const workerOrigin = event.data.timeOrigin;
-      assert_less_than(workerOrigin - windowOrigin - workerCreation, 100, 'Difference between worker and window timeOrigins should roughly be equal to performance.now() at time of creation.');
-      assert_greater_than(workerOrigin - windowOrigin, 200, 'We waited 200ms to spawn the second worker, so its timeOrigin should be much greater than that of the window.');
+      assert_greater_than_equal(workerOrigin - windowOrigin, 200, 'We waited 200ms to spawn the second worker, so its timeOrigin should be greater than that of the window.');
     }));
   }, 200);
 }, 'Window and worker timeOrigins differ when worker is created after a delay.');

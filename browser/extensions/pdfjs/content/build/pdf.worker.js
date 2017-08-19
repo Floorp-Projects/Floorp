@@ -2467,7 +2467,7 @@ var JpxStream = function JpxStreamClosure() {
     if (tileCount === 1) {
       this.buffer = jpxImage.tiles[0].items;
     } else {
-      var data = new Uint8Array(width * height * componentsCount);
+      var data = new Uint8ClampedArray(width * height * componentsCount);
       for (var k = 0; k < tileCount; k++) {
         var tileComponents = jpxImage.tiles[k];
         var tileWidth = tileComponents.width;
@@ -20860,7 +20860,7 @@ var JpxImage = function JpxImageClosure() {
         transformedTiles[c] = transformTile(context, tile, c);
       }
       var tile0 = transformedTiles[0];
-      var out = new Uint8Array(tile0.items.length * componentsCount);
+      var out = new Uint8ClampedArray(tile0.items.length * componentsCount);
       var result = {
         left: tile0.left,
         top: tile0.top,
@@ -20868,18 +20868,13 @@ var JpxImage = function JpxImageClosure() {
         height: tile0.height,
         items: out
       };
-      var shift, offset, max, min, maxK;
+      var shift, offset;
       var pos = 0,
           j,
           jj,
           y0,
           y1,
-          y2,
-          r,
-          g,
-          b,
-          k,
-          val;
+          y2;
       if (tile.codingStyleDefaultParameters.multipleComponentTransform) {
         var fourComponents = componentsCount === 4;
         var y0items = transformedTiles[0].items;
@@ -20888,9 +20883,6 @@ var JpxImage = function JpxImageClosure() {
         var y3items = fourComponents ? transformedTiles[3].items : null;
         shift = components[0].precision - 8;
         offset = (128 << shift) + 0.5;
-        max = 255 * (1 << shift);
-        maxK = max * 0.5;
-        min = -maxK;
         var component0 = tile.components[0];
         var alpha01 = componentsCount - 3;
         jj = y0items.length;
@@ -20899,30 +20891,24 @@ var JpxImage = function JpxImageClosure() {
             y0 = y0items[j] + offset;
             y1 = y1items[j];
             y2 = y2items[j];
-            r = y0 + 1.402 * y2;
-            g = y0 - 0.34413 * y1 - 0.71414 * y2;
-            b = y0 + 1.772 * y1;
-            out[pos++] = r <= 0 ? 0 : r >= max ? 255 : r >> shift;
-            out[pos++] = g <= 0 ? 0 : g >= max ? 255 : g >> shift;
-            out[pos++] = b <= 0 ? 0 : b >= max ? 255 : b >> shift;
+            out[pos++] = y0 + 1.402 * y2 >> shift;
+            out[pos++] = y0 - 0.34413 * y1 - 0.71414 * y2 >> shift;
+            out[pos++] = y0 + 1.772 * y1 >> shift;
           }
         } else {
           for (j = 0; j < jj; j++, pos += alpha01) {
             y0 = y0items[j] + offset;
             y1 = y1items[j];
             y2 = y2items[j];
-            g = y0 - (y2 + y1 >> 2);
-            r = g + y2;
-            b = g + y1;
-            out[pos++] = r <= 0 ? 0 : r >= max ? 255 : r >> shift;
-            out[pos++] = g <= 0 ? 0 : g >= max ? 255 : g >> shift;
-            out[pos++] = b <= 0 ? 0 : b >= max ? 255 : b >> shift;
+            let g = y0 - (y2 + y1 >> 2);
+            out[pos++] = g + y2 >> shift;
+            out[pos++] = g >> shift;
+            out[pos++] = g + y1 >> shift;
           }
         }
         if (fourComponents) {
           for (j = 0, pos = 3; j < jj; j++, pos += 4) {
-            k = y3items[j];
-            out[pos] = k <= min ? 0 : k >= maxK ? 255 : k + offset >> shift;
+            out[pos] = y3items[j] + offset >> shift;
           }
         }
       } else {
@@ -20930,11 +20916,8 @@ var JpxImage = function JpxImageClosure() {
           var items = transformedTiles[c].items;
           shift = components[c].precision - 8;
           offset = (128 << shift) + 0.5;
-          max = 127.5 * (1 << shift);
-          min = -max;
           for (pos = c, j = 0, jj = items.length; j < jj; j++) {
-            val = items[j];
-            out[pos] = val <= min ? 0 : val >= max ? 255 : val + offset >> shift;
+            out[pos] = items[j] + offset >> shift;
             pos += componentsCount;
           }
         }
@@ -32791,7 +32774,7 @@ var PDFImage = function PDFImageClosure() {
     }
     if (inverseDecode) {
       for (i = 0; i < actualLength; i++) {
-        data[i] = ~data[i];
+        data[i] ^= 0xFF;
       }
     }
     return {
@@ -34040,7 +34023,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
     onPageInformation: function SimpleSegmentVisitor_onPageInformation(info) {
       this.currentPageInfo = info;
       var rowSize = info.width + 7 >> 3;
-      var buffer = new Uint8Array(rowSize * info.height);
+      var buffer = new Uint8ClampedArray(rowSize * info.height);
       if (info.defaultPixelValue) {
         for (var i = 0, ii = buffer.length; i < ii; i++) {
           buffer[i] = 0xFF;
@@ -34652,9 +34635,6 @@ var JpegImage = function JpegImageClosure() {
     }
     return component.blockData;
   }
-  function clamp0to255(a) {
-    return a <= 0 ? 0 : a >= 255 ? 255 : a;
-  }
   function findNextFileMarker(data, currentPos, startPos) {
     function peekUint16(pos) {
       return data[pos] << 8 | data[pos + 1];
@@ -34932,7 +34912,7 @@ var JpegImage = function JpegImageClosure() {
       var output;
       var numComponents = this.components.length;
       var dataLength = width * height * numComponents;
-      var data = new Uint8Array(dataLength);
+      var data = new Uint8ClampedArray(dataLength);
       var xScaleBlockOffset = new Uint32Array(width);
       var mask3LSB = 0xfffffff8;
       for (i = 0; i < numComponents; i++) {
@@ -34986,9 +34966,9 @@ var JpegImage = function JpegImageClosure() {
         Y = data[i];
         Cb = data[i + 1];
         Cr = data[i + 2];
-        data[i] = clamp0to255(Y - 179.456 + 1.402 * Cr);
-        data[i + 1] = clamp0to255(Y + 135.459 - 0.344 * Cb - 0.714 * Cr);
-        data[i + 2] = clamp0to255(Y - 226.816 + 1.772 * Cb);
+        data[i] = Y - 179.456 + 1.402 * Cr;
+        data[i + 1] = Y + 135.459 - 0.344 * Cb - 0.714 * Cr;
+        data[i + 2] = Y - 226.816 + 1.772 * Cb;
       }
       return data;
     },
@@ -35000,12 +34980,9 @@ var JpegImage = function JpegImageClosure() {
         Cb = data[i + 1];
         Cr = data[i + 2];
         k = data[i + 3];
-        var r = -122.67195406894 + Cb * (-6.60635669420364e-5 * Cb + 0.000437130475926232 * Cr - 5.4080610064599e-5 * Y + 0.00048449797120281 * k - 0.154362151871126) + Cr * (-0.000957964378445773 * Cr + 0.000817076911346625 * Y - 0.00477271405408747 * k + 1.53380253221734) + Y * (0.000961250184130688 * Y - 0.00266257332283933 * k + 0.48357088451265) + k * (-0.000336197177618394 * k + 0.484791561490776);
-        var g = 107.268039397724 + Cb * (2.19927104525741e-5 * Cb - 0.000640992018297945 * Cr + 0.000659397001245577 * Y + 0.000426105652938837 * k - 0.176491792462875) + Cr * (-0.000778269941513683 * Cr + 0.00130872261408275 * Y + 0.000770482631801132 * k - 0.151051492775562) + Y * (0.00126935368114843 * Y - 0.00265090189010898 * k + 0.25802910206845) + k * (-0.000318913117588328 * k - 0.213742400323665);
-        var b = -20.810012546947 + Cb * (-0.000570115196973677 * Cb - 2.63409051004589e-5 * Cr + 0.0020741088115012 * Y - 0.00288260236853442 * k + 0.814272968359295) + Cr * (-1.53496057440975e-5 * Cr - 0.000132689043961446 * Y + 0.000560833691242812 * k - 0.195152027534049) + Y * (0.00174418132927582 * Y - 0.00255243321439347 * k + 0.116935020465145) + k * (-0.000343531996510555 * k + 0.24165260232407);
-        data[offset++] = clamp0to255(r);
-        data[offset++] = clamp0to255(g);
-        data[offset++] = clamp0to255(b);
+        data[offset++] = -122.67195406894 + Cb * (-6.60635669420364e-5 * Cb + 0.000437130475926232 * Cr - 5.4080610064599e-5 * Y + 0.00048449797120281 * k - 0.154362151871126) + Cr * (-0.000957964378445773 * Cr + 0.000817076911346625 * Y - 0.00477271405408747 * k + 1.53380253221734) + Y * (0.000961250184130688 * Y - 0.00266257332283933 * k + 0.48357088451265) + k * (-0.000336197177618394 * k + 0.484791561490776);
+        data[offset++] = 107.268039397724 + Cb * (2.19927104525741e-5 * Cb - 0.000640992018297945 * Cr + 0.000659397001245577 * Y + 0.000426105652938837 * k - 0.176491792462875) + Cr * (-0.000778269941513683 * Cr + 0.00130872261408275 * Y + 0.000770482631801132 * k - 0.151051492775562) + Y * (0.00126935368114843 * Y - 0.00265090189010898 * k + 0.25802910206845) + k * (-0.000318913117588328 * k - 0.213742400323665);
+        data[offset++] = -20.810012546947 + Cb * (-0.000570115196973677 * Cb - 2.63409051004589e-5 * Cr + 0.0020741088115012 * Y - 0.00288260236853442 * k + 0.814272968359295) + Cr * (-1.53496057440975e-5 * Cr - 0.000132689043961446 * Y + 0.000560833691242812 * k - 0.195152027534049) + Y * (0.00174418132927582 * Y - 0.00255243321439347 * k + 0.116935020465145) + k * (-0.000343531996510555 * k + 0.24165260232407);
       }
       return data;
     },
@@ -35015,28 +34992,24 @@ var JpegImage = function JpegImageClosure() {
         Y = data[i];
         Cb = data[i + 1];
         Cr = data[i + 2];
-        data[i] = clamp0to255(434.456 - Y - 1.402 * Cr);
-        data[i + 1] = clamp0to255(119.541 - Y + 0.344 * Cb + 0.714 * Cr);
-        data[i + 2] = clamp0to255(481.816 - Y - 1.772 * Cb);
+        data[i] = 434.456 - Y - 1.402 * Cr;
+        data[i + 1] = 119.541 - Y + 0.344 * Cb + 0.714 * Cr;
+        data[i + 2] = 481.816 - Y - 1.772 * Cb;
       }
       return data;
     },
     _convertCmykToRgb: function convertCmykToRgb(data) {
       var c, m, y, k;
       var offset = 0;
-      var min = -255 * 255 * 255;
-      var scale = 1 / 255 / 255;
+      var scale = 1 / 255;
       for (var i = 0, length = data.length; i < length; i += 4) {
-        c = data[i];
-        m = data[i + 1];
-        y = data[i + 2];
-        k = data[i + 3];
-        var r = c * (-4.387332384609988 * c + 54.48615194189176 * m + 18.82290502165302 * y + 212.25662451639585 * k - 72734.4411664936) + m * (1.7149763477362134 * m - 5.6096736904047315 * y - 17.873870861415444 * k - 1401.7366389350734) + y * (-2.5217340131683033 * y - 21.248923337353073 * k + 4465.541406466231) - k * (21.86122147463605 * k + 48317.86113160301);
-        var g = c * (8.841041422036149 * c + 60.118027045597366 * m + 6.871425592049007 * y + 31.159100130055922 * k - 20220.756542821975) + m * (-15.310361306967817 * m + 17.575251261109482 * y + 131.35250912493976 * k - 48691.05921601825) + y * (4.444339102852739 * y + 9.8632861493405 * k - 6341.191035517494) - k * (20.737325471181034 * k + 47890.15695978492);
-        var b = c * (0.8842522430003296 * c + 8.078677503112928 * m + 30.89978309703729 * y - 0.23883238689178934 * k - 3616.812083916688) + m * (10.49593273432072 * m + 63.02378494754052 * y + 50.606957656360734 * k - 28620.90484698408) + y * (0.03296041114873217 * y + 115.60384449646641 * k - 49363.43385999684) - k * (22.33816807309886 * k + 45932.16563550634);
-        data[offset++] = r >= 0 ? 255 : r <= min ? 0 : 255 + r * scale | 0;
-        data[offset++] = g >= 0 ? 255 : g <= min ? 0 : 255 + g * scale | 0;
-        data[offset++] = b >= 0 ? 255 : b <= min ? 0 : 255 + b * scale | 0;
+        c = data[i] * scale;
+        m = data[i + 1] * scale;
+        y = data[i + 2] * scale;
+        k = data[i + 3] * scale;
+        data[offset++] = 255 + c * (-4.387332384609988 * c + 54.48615194189176 * m + 18.82290502165302 * y + 212.25662451639585 * k - 285.2331026137004) + m * (1.7149763477362134 * m - 5.6096736904047315 * y - 17.873870861415444 * k - 5.497006427196366) + y * (-2.5217340131683033 * y - 21.248923337353073 * k + 17.5119270841813) - k * (21.86122147463605 * k + 189.48180835922747);
+        data[offset++] = 255 + c * (8.841041422036149 * c + 60.118027045597366 * m + 6.871425592049007 * y + 31.159100130055922 * k - 79.2970844816548) + m * (-15.310361306967817 * m + 17.575251261109482 * y + 131.35250912493976 * k - 190.9453302588951) + y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) - k * (20.737325471181034 * k + 187.80453709719578);
+        data[offset++] = 255 + c * (0.8842522430003296 * c + 8.078677503112928 * m + 30.89978309703729 * y - 0.23883238689178934 * k - 14.183576799673286) + m * (10.49593273432072 * m + 63.02378494754052 * y + 50.606957656360734 * k - 112.23884253719248) + y * (0.03296041114873217 * y + 115.60384449646641 * k - 193.58209356861505) - k * (22.33816807309886 * k + 180.12613974708367);
       }
       return data;
     },
@@ -35047,7 +35020,7 @@ var JpegImage = function JpegImageClosure() {
       var data = this._getLinearizedBlockData(width, height);
       if (this.numComponents === 1 && forceRGBoutput) {
         var dataLength = data.length;
-        var rgbData = new Uint8Array(dataLength * 3);
+        var rgbData = new Uint8ClampedArray(dataLength * 3);
         var offset = 0;
         for (var i = 0; i < dataLength; i++) {
           var grayColor = data[i];
@@ -39883,8 +39856,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.8.618';
-var pdfjsBuild = '21cc2c02';
+var pdfjsVersion = '1.9.441';
+var pdfjsBuild = '8c8d8fa2';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 

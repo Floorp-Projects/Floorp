@@ -11902,18 +11902,22 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty* ins)
 
 class OutOfLineIsCallable : public OutOfLineCodeBase<CodeGenerator>
 {
-    LIsCallable* ins_;
+    Register object_;
+    Register output_;
 
   public:
-    explicit OutOfLineIsCallable(LIsCallable* ins)
-      : ins_(ins)
+    OutOfLineIsCallable(Register object, Register output)
+      : object_(object), output_(output)
     { }
 
     void accept(CodeGenerator* codegen) {
         codegen->visitOutOfLineIsCallable(this);
     }
-    LIsCallable* ins() const {
-        return ins_;
+    Register object() const {
+        return object_;
+    }
+    Register output() const {
+        return output_;
     }
 };
 
@@ -11966,12 +11970,12 @@ CodeGenerator::emitIsCallableOrConstructor(Register object, Register output, Lab
 }
 
 void
-CodeGenerator::visitIsCallable(LIsCallable* ins)
+CodeGenerator::visitIsCallableO(LIsCallableO* ins)
 {
     Register object = ToRegister(ins->object());
     Register output = ToRegister(ins->output());
 
-    OutOfLineIsCallable* ool = new(alloc()) OutOfLineIsCallable(ins);
+    OutOfLineIsCallable* ool = new(alloc()) OutOfLineIsCallable(object, output);
     addOutOfLineCode(ool, ins->mir());
 
     emitIsCallableOrConstructor<Callable>(object, output, ool->entry());
@@ -11980,11 +11984,33 @@ CodeGenerator::visitIsCallable(LIsCallable* ins)
 }
 
 void
+CodeGenerator::visitIsCallableV(LIsCallableV* ins)
+{
+    ValueOperand val = ToValue(ins, LIsCallableV::Value);
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    Label notObject;
+    masm.branchTestObject(Assembler::NotEqual, val, &notObject);
+    masm.unboxObject(val, temp);
+
+    OutOfLineIsCallable* ool = new(alloc()) OutOfLineIsCallable(temp, output);
+    addOutOfLineCode(ool, ins->mir());
+
+    emitIsCallableOrConstructor<Callable>(temp, output, ool->entry());
+    masm.jump(ool->rejoin());
+
+    masm.bind(&notObject);
+    masm.move32(Imm32(0), output);
+
+    masm.bind(ool->rejoin());
+}
+
+void
 CodeGenerator::visitOutOfLineIsCallable(OutOfLineIsCallable* ool)
 {
-    LIsCallable* ins = ool->ins();
-    Register object = ToRegister(ins->object());
-    Register output = ToRegister(ins->output());
+    Register object = ool->object();
+    Register output = ool->output();
 
     saveVolatile(output);
     masm.setupUnalignedABICall(output);

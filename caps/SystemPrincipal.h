@@ -30,6 +30,8 @@ class SystemPrincipal final : public mozilla::BasePrincipal
 public:
   static already_AddRefed<SystemPrincipal> Create();
 
+  static PrincipalKind Kind() { return eSystemPrincipal; }
+
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;

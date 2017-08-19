@@ -60,7 +60,15 @@ const App = createClass({
           getStr("fontinspector.seeAll")
         )
       ),
-      FontList({ fonts })
+      fonts.length ?
+        FontList({ fonts })
+        :
+        dom.div(
+          {
+            className: "devtools-sidepanel-no-result"
+          },
+          getStr("fontinspector.noFontsOnSelectedElement")
+        )
     );
   }
 });

@@ -1,7 +1,10 @@
-// |jit-test| test-also-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline
 // Tests that wasm module scripts handles basic breakpoint operations.
 
 load(libdir + "wasm.js");
+
+if (!wasmDebuggingIsSupported())
+    quit();
 
 // Checking if we can stop at specified breakpoint.
 var onBreakpointCalled;

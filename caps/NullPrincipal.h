@@ -41,6 +41,8 @@ public:
   {
   }
 
+  static PrincipalKind Kind() { return eNullPrincipal; }
+
   NS_DECL_NSISERIALIZABLE
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
