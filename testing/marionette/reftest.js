@@ -293,6 +293,7 @@ min-width: 600px; min-height: 600px; max-width: 600px; max-height: 600px`;
       // For now the tbpl formatter only accepts one screenshot, so just
       // return the last one we took.
       let lastScreenshot = screenshotData[screenshotData.length - 1];
+      // eslint-disable-next-line camelcase
       result.extra.reftest_screenshots = lastScreenshot;
     }
 
