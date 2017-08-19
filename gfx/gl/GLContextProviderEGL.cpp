@@ -360,11 +360,6 @@ GLContextEGL::MakeCurrentImpl() const
 {
     const EGLSurface surface = (mSurfaceOverride != EGL_NO_SURFACE) ? mSurfaceOverride
                                                                     : mSurface;
-    if (surface == EGL_NO_SURFACE) {
-        MOZ_CRASH("EGL_NO_SURFACE");
-        return false;
-    }
-
     const bool succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), surface, surface,
                                                     mContext);
     if (!succeeded) {
