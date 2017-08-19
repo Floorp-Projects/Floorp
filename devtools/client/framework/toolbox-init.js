@@ -62,10 +62,9 @@ if (url.search.length > 1) {
         throw new Error("Unable to find the targeted iframe to debug");
       }
 
-      // Need to use a xray and query some interfaces to have
-      // attributes and behavior expected by devtools codebase
+      // Need to use a xray to have attributes and behavior expected by
+      // devtools codebase
       iframe = XPCNativeWrapper(iframe);
-      iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
 
       // Fake a xul:tab object as we don't have one.
       // linkedBrowser is the only one attribute being queried by client.getTab

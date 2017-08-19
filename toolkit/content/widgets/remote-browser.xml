@@ -212,8 +212,7 @@
 
       <property name="hasContentOpener">
         <getter><![CDATA[
-          let {frameLoader} = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-          return frameLoader.tabParent.hasContentOpener;
+          return this.frameLoader.tabParent.hasContentOpener;
         ]]></getter>
       </property>
 
@@ -232,14 +231,12 @@
       <property name="docShellIsActive">
         <getter>
           <![CDATA[
-            let {frameLoader} = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-            return frameLoader.tabParent.docShellIsActive;
+            return this.frameLoader.tabParent.docShellIsActive;
           ]]>
         </getter>
         <setter>
           <![CDATA[
-            let {frameLoader} = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-            frameLoader.tabParent.docShellIsActive = val;
+            this.frameLoader.tabParent.docShellIsActive = val;
             return val;
           ]]>
         </setter>
@@ -248,7 +245,7 @@
       <method name="preserveLayers">
         <parameter name="preserve"/>
         <body><![CDATA[
-          let {frameLoader} = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+          let {frameLoader} = this;
           if (frameLoader.tabParent) {
             frameLoader.tabParent.preserveLayers(preserve);
           }
@@ -284,8 +281,7 @@
       <method name="permitUnload">
         <body>
         <![CDATA[
-          let { frameLoader } = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-          let tabParent = frameLoader.tabParent;
+          let {tabParent} = this.frameLoader;
 
           if (!tabParent.hasBeforeUnload) {
             return { permitUnload: true, timedOut: false };
@@ -561,8 +557,7 @@
             // needed to create a document with the given principal.
             let permissionPrincipal =
               BrowserUtils.principalWithMatchingOA(aPrincipal, this.contentPrincipal);
-            let {frameLoader} = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-            frameLoader.tabParent.transmitPermissionsForPrincipal(permissionPrincipal);
+            this.frameLoader.tabParent.transmitPermissionsForPrincipal(permissionPrincipal);
 
             // Create the about blank content viewer in the content process
             this.messageManager.sendAsyncMessage("Browser:CreateAboutBlank", aPrincipal);

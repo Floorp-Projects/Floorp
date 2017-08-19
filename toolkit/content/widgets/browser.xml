@@ -251,7 +251,7 @@
           if (this._docShell)
             return this._docShell;
 
-          let frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          let {frameLoader} = this;
           if (!frameLoader)
             return null;
           this._docShell = frameLoader.docShell;
@@ -266,7 +266,7 @@
           if (this._loadContext)
             return this._loadContext;
 
-          let frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          let {frameLoader} = this;
           if (!frameLoader)
             return null;
           this._loadContext = frameLoader.loadContext;
@@ -347,11 +347,10 @@
                 readonly="true">
         <getter>
           <![CDATA[
-            var owner = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-            if (!owner.frameLoader) {
-              return null;
+            if (this.frameLoader) {
+              return this.frameLoader.messageManager;
             }
-            return owner.frameLoader.messageManager;
+            return null;
           ]]>
         </getter>
 
@@ -1569,14 +1568,13 @@
         <parameter name="aPrintProgressListener"/>
         <body>
           <![CDATA[
-            var owner = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-            if (!owner.frameLoader) {
+            if (!this.frameLoader) {
               throw Components.Exception("No frame loader.",
                                          Components.results.NS_ERROR_FAILURE);
             }
 
-            owner.frameLoader.print(aOuterWindowID, aPrintSettings,
-                                    aPrintProgressListener);
+            this.frameLoader.print(aOuterWindowID, aPrintSettings,
+                                   aPrintProgressListener);
           ]]>
         </body>
       </method>

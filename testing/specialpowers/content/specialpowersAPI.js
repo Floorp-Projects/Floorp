@@ -1804,9 +1804,7 @@ SpecialPowersAPI.prototype = {
    * Get the message manager associated with an <iframe mozbrowser>.
    */
   getBrowserFrameMessageManager(aFrameElement) {
-    return this.wrap(aFrameElement.QueryInterface(Ci.nsIFrameLoaderOwner)
-                                  .frameLoader
-                                  .messageManager);
+    return this.wrap(aFrameElement.frameLoader.messageManager);
   },
 
   _getPrincipalFromArg(arg) {
