@@ -325,7 +325,7 @@ MBasicBlock::NewWithResumePoint(MIRGraph& graph, const CompileInfo& info,
 
     MOZ_ASSERT(!resumePoint->instruction());
     resumePoint->block()->discardResumePoint(resumePoint, RefType_None);
-    resumePoint->block_ = block;
+    resumePoint->setBlock(block);
     block->addResumePoint(resumePoint);
     block->entryResumePoint_ = resumePoint;
 
@@ -927,9 +927,9 @@ void
 MBasicBlock::discardDef(MDefinition* at)
 {
     if (at->isPhi())
-        at->block_->discardPhi(at->toPhi());
+        at->block()->discardPhi(at->toPhi());
     else
-        at->block_->discard(at->toInstruction());
+        at->block()->discard(at->toInstruction());
 }
 
 void

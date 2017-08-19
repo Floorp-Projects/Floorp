@@ -301,37 +301,61 @@ typedef InlineList<MUse>::iterator MUseIterator;
 class MNode : public TempObject
 {
   protected:
-    MBasicBlock* block_;    // Containing basic block.
-
-  public:
-    enum Kind {
-        Definition,
+    enum class Kind {
+        Definition = 0,
         ResumePoint
     };
 
-    MNode()
-      : block_(nullptr)
+  private:
+    static const uintptr_t KindMask = 0x1;
+    uintptr_t blockAndKind_;
+
+    Kind kind() const {
+        return Kind(blockAndKind_ & KindMask);
+    }
+
+  protected:
+    explicit MNode(const MNode& other)
+      : blockAndKind_(other.blockAndKind_)
     { }
 
-    explicit MNode(MBasicBlock* block)
-      : block_(block)
-    { }
+    MNode(MBasicBlock* block, Kind kind)
+    {
+        setBlockAndKind(block, kind);
+    }
 
-    virtual Kind kind() const = 0;
+    void setBlockAndKind(MBasicBlock* block, Kind kind) {
+        blockAndKind_ = uintptr_t(block) | uintptr_t(kind);
+        MOZ_ASSERT(this->block() == block);
+    }
 
+    MBasicBlock* definitionBlock() const {
+        MOZ_ASSERT(isDefinition());
+        static_assert(unsigned(Kind::Definition) == 0, "Code below relies on low bit being 0");
+        return reinterpret_cast<MBasicBlock*>(blockAndKind_);
+    }
+    MBasicBlock* resumePointBlock() const {
+        MOZ_ASSERT(isResumePoint());
+        static_assert(unsigned(Kind::ResumePoint) == 1, "Code below relies on low bit being 1");
+        // Use a subtraction: if the caller does block()->foo, the compiler
+        // will be able to fold it with the load.
+        return reinterpret_cast<MBasicBlock*>(blockAndKind_ - 1);
+    }
+
+  public:
     // Returns the definition at a given operand.
     virtual MDefinition* getOperand(size_t index) const = 0;
     virtual size_t numOperands() const = 0;
     virtual size_t indexOf(const MUse* u) const = 0;
 
     bool isDefinition() const {
-        return kind() == Definition;
+        return kind() == Kind::Definition;
     }
     bool isResumePoint() const {
-        return kind() == ResumePoint;
+        return kind() == Kind::ResumePoint;
     }
     MBasicBlock* block() const {
-        return block_;
+        return reinterpret_cast<MBasicBlock*>(blockAndKind_ & ~KindMask);
     }
     MBasicBlock* caller() const;
 
@@ -515,16 +539,21 @@ class MDefinition : public MNode
         flags_ |= flags;
     }
 
+    // Calling isDefinition or isResumePoint on MDefinition is unnecessary.
+    bool isDefinition() const = delete;
+    bool isResumePoint() const = delete;
+
   protected:
     void setBlock(MBasicBlock* block) {
-        block_ = block;
+        setBlockAndKind(block, Kind::Definition);
     }
 
     static HashNumber addU32ToHash(HashNumber hash, uint32_t data);
 
   public:
     MDefinition()
-      : id_(0),
+      : MNode(nullptr, Kind::Definition),
+        id_(0),
         flags_(0),
         range_(nullptr),
         resultType_(MIRType::None),
@@ -535,7 +564,8 @@ class MDefinition : public MNode
 
     // Copying a definition leaves the list of uses and the block empty.
     explicit MDefinition(const MDefinition& other)
-      : id_(0),
+      : MNode(other),
+        id_(0),
         flags_(other.flags_),
         range_(other.range_),
         resultType_(other.resultType_),
@@ -564,6 +594,10 @@ class MDefinition : public MNode
     // hoisting floating-point constants out of containing loops isn't likely to
     // be worthwhile.
     virtual bool possiblyCalls() const { return false; }
+
+    MBasicBlock* block() const {
+        return definitionBlock();
+    }
 
     void setTrackedSite(const BytecodeSite* site) {
         MOZ_ASSERT(site);
@@ -700,12 +734,8 @@ class MDefinition : public MNode
     virtual void collectRangeInfoPreTrunc() {
     }
 
-    MNode::Kind kind() const override {
-        return MNode::Definition;
-    }
-
     uint32_t id() const {
-        MOZ_ASSERT(block_);
+        MOZ_ASSERT(block());
         return id_;
     }
     void setId(uint32_t id) {
@@ -13330,6 +13360,14 @@ class MResumePoint final :
     MResumePoint(MBasicBlock* block, jsbytecode* pc, Mode mode);
     void inherit(MBasicBlock* state);
 
+    void setBlock(MBasicBlock* block) {
+        setBlockAndKind(block, Kind::ResumePoint);
+    }
+
+    // Calling isDefinition or isResumePoint on MResumePoint is unnecessary.
+    bool isDefinition() const = delete;
+    bool isResumePoint() const = delete;
+
   protected:
     // Initializes operands_ to an empty array of a fixed length.
     // The array may then be filled in by inherit().
@@ -13354,9 +13392,10 @@ class MResumePoint final :
                              const MDefinitionVector& operands);
     static MResumePoint* Copy(TempAllocator& alloc, MResumePoint* src);
 
-    MNode::Kind kind() const override {
-        return MNode::ResumePoint;
+    MBasicBlock* block() const {
+        return resumePointBlock();
     }
+
     size_t numAllocatedOperands() const {
         return operands_.length();
     }
