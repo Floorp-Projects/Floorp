@@ -2973,12 +2973,9 @@ SearchService.prototype = {
                                                    { winPattern: "*.xml" });
       try {
         // Add dir to distDirs if it contains any files.
-        await checkForSyncCompletion(iterator.next());
-        distDirs.push(dir);
-      } catch (ex) {
-        // Catch for StopIteration exception.
-        if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
-          throw ex;
+        let {done} = await checkForSyncCompletion(iterator.next());
+        if (!done) {
+          distDirs.push(dir);
         }
       } finally {
         iterator.close();
@@ -2998,12 +2995,9 @@ SearchService.prototype = {
                                                    { winPattern: "*.xml" });
       try {
         // Add dir to otherDirs if it contains any files.
-        await checkForSyncCompletion(iterator.next());
-        otherDirs.push(dir);
-      } catch (ex) {
-        // Catch for StopIteration exception.
-        if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
-          throw ex;
+        let {done} = await checkForSyncCompletion(iterator.next());
+        if (!done) {
+          otherDirs.push(dir);
         }
       } finally {
         iterator.close();

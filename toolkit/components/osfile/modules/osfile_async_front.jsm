@@ -1245,64 +1245,45 @@ var DirectoryIterator = function DirectoryIterator(path, options) {
    * @type {Promise}
    * @resolves {*} A message accepted by the methods of DirectoryIterator
    * in the worker thread
-   * @rejects {StopIteration} If all entries have already been visited
-   * or the iterator has been closed.
    */
-  this.__itmsg = Scheduler.post(
+  this._itmsg = Scheduler.post(
     "new_DirectoryIterator", [Type.path.toMsg(path), options],
     path
   );
   this._isClosed = false;
 };
 DirectoryIterator.prototype = {
-  iterator() {
-    return this;
-  },
-  __iterator__() {
+  [Symbol.asyncIterator]() {
     return this;
   },
 
-  // Once close() is called, _itmsg should reject with a
-  // StopIteration. However, we don't want to create the promise until
-  // it's needed because it might never be used. In that case, we
-  // would get a warning on the console.
-  get _itmsg() {
-    if (!this.__itmsg) {
-      this.__itmsg = Promise.reject(StopIteration);
-    }
-    return this.__itmsg;
-  },
+  _itmsg: null,
 
   /**
    * Determine whether the directory exists.
    *
    * @resolves {boolean}
    */
-  exists: function exists() {
-    return this._itmsg.then(
-      function onSuccess(iterator) {
-        return Scheduler.post("DirectoryIterator_prototype_exists", [iterator]);
-      }
-    );
+  async exists() {
+    if (this._isClosed) {
+      return Promise.resolve(false);
+    }
+    let iterator = await this._itmsg;
+    return Scheduler.post("DirectoryIterator_prototype_exists", [iterator]);
   },
   /**
    * Get the next entry in the directory.
    *
    * @return {Promise}
-   * @resolves {OS.File.Entry}
-   * @rejects {StopIteration} If all entries have already been visited.
+   * @resolves By definition of the async iterator protocol, either
+   * `{value: {File.Entry}, done: false}` if there is an unvisited entry
+   * in the directory, or `{value: undefined, done: true}`, otherwise.
    */
-  next: function next() {
-    let self = this;
-    let promise = this._itmsg;
-
-    // Get the iterator, call _next
-    promise = promise.then(
-      function withIterator(iterator) {
-        return self._next(iterator);
-      });
-
-    return promise;
+  async next() {
+    if (this._isClosed) {
+      return {value: undefined, done: true};
+    }
+    return this._next(await this._itmsg);
   },
   /**
    * Get several entries at once.
@@ -1312,20 +1293,13 @@ DirectoryIterator.prototype = {
    * @return {Promise}
    * @resolves {Array} An array containing the |length| next entries.
    */
-  nextBatch: function nextBatch(size) {
+  async nextBatch(size) {
     if (this._isClosed) {
-      return Promise.resolve([]);
+      return [];
     }
-    let promise = this._itmsg;
-    promise = promise.then(
-      function withIterator(iterator) {
-        return Scheduler.post("DirectoryIterator_prototype_nextBatch", [iterator, size]);
-      });
-    promise = promise.then(
-      function withEntries(array) {
-        return array.map(DirectoryIterator.Entry.fromMsg);
-      });
-    return promise;
+    let iterator = await this._itmsg;
+    let array = await Scheduler.post("DirectoryIterator_prototype_nextBatch", [iterator, size]);
+    return array.map(DirectoryIterator.Entry.fromMsg);
   },
   /**
    * Apply a function to all elements of the directory sequentially.
@@ -1342,82 +1316,51 @@ DirectoryIterator.prototype = {
    * @return {Promise} A promise resolved once the loop has reached
    * its end.
    */
-  forEach: function forEach(cb, options) {
+  async forEach(cb, options) {
     if (this._isClosed) {
-      return Promise.resolve();
+      return undefined;
     }
-
-    let self = this;
     let position = 0;
-    let iterator;
-
-    // Grab iterator
-    let promise = this._itmsg.then(
-      function(aIterator) {
-        iterator = aIterator;
+    let iterator = await this._itmsg;
+    while (true) {
+      if (this._isClosed) {
+        return undefined;
       }
-    );
-
-    // Then iterate
-    let loop = function loop() {
-      if (self._isClosed) {
-        return Promise.resolve();
+      let {value, done} = await this._next(iterator);
+      if (done) {
+        return undefined;
       }
-      return self._next(iterator).then(
-        function onSuccess(value) {
-          return Promise.resolve(cb(value, position++, self)).then(loop);
-        },
-        function onFailure(reason) {
-          if (reason == StopIteration) {
-            return;
-          }
-          throw reason;
-        }
-      );
-    };
-
-    return promise.then(loop);
+      await cb(value, position++, this);
+    }
   },
   /**
    * Auxiliary method: fetch the next item
    *
-   * @rejects {StopIteration} If all entries have already been visited
-   * or the iterator has been closed.
+   * @resolves `{value: undefined, done: true}` If all entries have already
+   * been visited or the iterator has been closed.
    */
-  _next: function _next(iterator) {
+  async _next(iterator) {
     if (this._isClosed) {
-      return this._itmsg;
+      return {value: undefined, done: true};
     }
-    let self = this;
-    let promise = Scheduler.post("DirectoryIterator_prototype_next", [iterator]);
-    promise = promise.then(
-      DirectoryIterator.Entry.fromMsg,
-      function onReject(reason) {
-        if (reason == StopIteration) {
-          self.close();
-          throw StopIteration;
-        }
-        throw reason;
-      });
-    return promise;
+    let {value, done} = await Scheduler.post("DirectoryIterator_prototype_next", [iterator]);
+    if (done) {
+      this.close();
+      return {value: undefined, done: true};
+    }
+    return {value: DirectoryIterator.Entry.fromMsg(value), done: false};
   },
   /**
    * Close the iterator
    */
-  close: function close() {
+  async close() {
     if (this._isClosed) {
-      return Promise.resolve();
+      return undefined;
     }
     this._isClosed = true;
-    let self = this;
-    return this._itmsg.then(
-      function withIterator(iterator) {
-        // Set __itmsg to null so that the _itmsg getter returns a
-        // rejected StopIteration promise if it's ever used.
-        self.__itmsg = null;
-        return Scheduler.post("DirectoryIterator_prototype_close", [iterator]);
-      }
-    );
+    let iterator = this._itmsg;
+    this._itmsg = null;
+    return Scheduler.post("DirectoryIterator_prototype_close", [iterator]);
   }
 };
 
