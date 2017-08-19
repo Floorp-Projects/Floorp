@@ -2356,6 +2356,17 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
     mOwnerContent->RemoveMutationObserver(this);
   }
   mOwnerContent = aContent;
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+
+  JS::RootedObject wrapper(jsapi.cx(), GetWrapper());
+  if (wrapper) {
+    JSAutoCompartment ac(jsapi.cx(), wrapper);
+    nsresult rv = ReparentWrapper(jsapi.cx(), wrapper);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
+
   if (RenderFrameParent* rfp = GetCurrentRenderFrame()) {
     rfp->OwnerContentChanged(aContent);
   }
