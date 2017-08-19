@@ -44,10 +44,6 @@ elif CONFIG['GNU_CXX']:
 
 if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
     CXXFLAGS += [
-        '-Wno-c++11-narrowing',
-    ]
-
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL'] or CONFIG['GNU_CXX']:
-    CXXFLAGS += [
         '-Wno-implicit-fallthrough',
+        '-Wno-c++11-narrowing',
     ]
