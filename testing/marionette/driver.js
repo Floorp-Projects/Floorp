@@ -356,7 +356,7 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
   // is used for all chrome <-> content communication
   // this can be removed.
   if (commandID) {
-    payload.command_id = commandID;
+    payload.commandID = commandID;
   }
 
   if (!this.curBrowser.frameManager.currentRemoteFrame) {
@@ -1118,7 +1118,7 @@ GeckoDriver.prototype.get = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
@@ -1237,7 +1237,7 @@ GeckoDriver.prototype.goBack = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       lastSeenURL: lastURL.toString(),
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
@@ -1281,7 +1281,7 @@ GeckoDriver.prototype.goForward = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       lastSeenURL: lastURL.toString(),
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
@@ -1319,7 +1319,7 @@ GeckoDriver.prototype.refresh = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
@@ -1904,7 +1904,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd, resp) {
       // listener.
       this.switchToGlobalMessageManager();
     }
-    cmd.command_id = cmd.id;
+    cmd.commandID = cmd.id;
 
     let res = await this.listener.switchToFrame(cmd.parameters);
     if (res) {
@@ -2228,7 +2228,7 @@ GeckoDriver.prototype.clickElement = async function(cmd, resp) {
       this.curBrowser.pendingCommands.push(() => {
         let parameters = {
           // TODO(ato): Bug 1242595
-          command_id: this.listener.activeMessageId,
+          commandID: this.listener.activeMessageId,
           pageTimeout: this.timeouts.pageLoad,
           startTime: new Date().getTime(),
         };
