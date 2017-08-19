@@ -63,3 +63,30 @@ add_task(async function test_onboarding_notification_bar() {
 
   await BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_onboarding_overlay_dialog() {
+  resetOnboardingDefaultState();
+
+  info("Wait for onboarding overlay loaded");
+  let tab = await openTab(ABOUT_HOME_URL);
+  let browser = tab.linkedBrowser;
+  await promiseOnboardingOverlayLoaded(browser);
+
+  info("Test accessibility and semantics of the dialog overlay");
+  await assertModalDialog(browser, { visible: false });
+
+  info("Click on overlay button and check modal dialog state");
+  await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button",
+                                                 {}, browser);
+  await promiseOnboardingOverlayOpened(browser);
+  await assertModalDialog(browser,
+    { visible: true, focusedId: "onboarding-overlay-dialog" });
+
+  info("Close the dialog and check modal dialog state");
+  await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-close-btn",
+                                                 {}, browser);
+  await promiseOnboardingOverlayClosed(browser);
+  await assertModalDialog(browser, { visible: false });
+
+  await BrowserTestUtils.removeTab(tab);
+});
