@@ -406,8 +406,8 @@ function promiseObserved(topic, test = () => true) {
 }
 
 function getMessageManager(target) {
-  if (target instanceof Ci.nsIFrameLoaderOwner) {
-    return target.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+  if (target.frameLoader) {
+    return target.frameLoader.messageManager;
   }
   return target.QueryInterface(Ci.nsIMessageSender);
 }

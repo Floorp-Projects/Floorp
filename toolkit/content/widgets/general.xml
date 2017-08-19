@@ -87,7 +87,7 @@
     <implementation>
       <property name="docShell" readonly="true">
         <getter><![CDATA[
-          let frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          let {frameLoader} = this;
           return frameLoader ? frameLoader.docShell : null;
         ]]></getter>
       </property>
