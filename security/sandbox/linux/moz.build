@@ -82,7 +82,7 @@ if CONFIG['MOZ_GMP_SANDBOX']:
 # consistent.  See also the comment in SandboxLogging.h.
 SOURCES['../chromium/base/strings/safe_sprintf.cc'].flags += ['-DNDEBUG']
 
-if CONFIG['CLANG_CXX']:
+if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
     # Keep clang from warning about intentional 'switch' fallthrough in icu_utf.cc:
     SOURCES['../chromium/base/third_party/icu/icu_utf.cc'].flags += ['-Wno-implicit-fallthrough']
     SOURCES['../chromium/sandbox/linux/seccomp-bpf/trap.cc'].flags += ['-Wno-unreachable-code-return']

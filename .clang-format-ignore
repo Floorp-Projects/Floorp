@@ -1,13 +1,31 @@
-^build/clang-plugin/tests/.*
+^build/clang-plugin/.*
 ^config/gcc-stl-wrapper.template.h
 ^config/msvc-stl-wrapper.template.h
+^dom/base/test/.*
+^dom/bindings/test/.*
+^dom/media/gtest/.*
+^gfx/testsd/.*
+^image/test/.*
+^ipc/ipdl/test/.*
+^ipc/testshell/.*
 ^js/src/jsapi-tests/.*
+^layout/style/nsCSSPropAliasList.h
+^layout/style/nsCSSPropList.h
+^media/mtransport/test/.*
+^mfbt/tests/.*
+^storage/test/.*
+^testing/gtest/.*
+^tools/profiler/tests/.*
+^uriloader/exthandler/tests/.*
 ^widget/android/GeneratedJNINatives.h
 ^widget/android/GeneratedJNIWrappers.cpp
 ^widget/android/GeneratedJNIWrappers.h
 ^widget/android/fennec/FennecJNINatives.h
 ^widget/android/fennec/FennecJNIWrappers.cpp
 ^widget/android/fennec/FennecJNIWrappers.h
+^widget/tests/.*
+^xpcom/glue/tests/.*
+^xpcom/tests/.*
 
 # Generated from ./tools/rewriting/ThirdPartyPaths.txt
 # awk '{print "^"$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt
@@ -21,6 +39,7 @@
 ^gfx/harfbuzz/.*
 ^gfx/ots/.*
 ^gfx/qcms/.*
+^gfx/sfntly/.*
 ^gfx/skia/.*
 ^gfx/vr/openvr/.*
 ^gfx/webrender.*
@@ -67,6 +86,7 @@
 ^modules/freetype2/.*
 ^modules/libbz2/.*
 ^modules/libmar/.*
+^modules/pdfium/.*
 ^modules/woff2/.*
 ^modules/zlib/.*
 ^netwerk/sctp/src/.*
@@ -78,7 +98,10 @@
 ^security/sandbox/chromium/.*
 ^testing/gtest/gmock/.*
 ^testing/gtest/gtest/.*
+^testing/talos/talos/tests/canvasmark/.*
 ^testing/talos/talos/tests/dromaeo/.*
+^testing/talos/talos/tests/kraken/.*
+^testing/talos/talos/tests/v8_7/.*
 ^third_party/aom/.*
 ^third_party/python/blessings/.*
 ^third_party/python/configobj/.*
@@ -97,6 +120,8 @@
 ^third_party/python/requests/.*
 ^third_party/python/rsa/.*
 ^third_party/python/which/.*
+^third_party/rust/.*
 ^toolkit/components/jsoncpp/.*
 ^toolkit/components/protobuf/.*
 ^toolkit/crashreporter/google-breakpad/.*
+^tools/fuzzing/libfuzzer.*

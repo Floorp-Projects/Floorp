@@ -30,9 +30,13 @@ elif CONFIG['GNU_CXX']:
     ]
 
 if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
-    CXXFLAGS += [
-        '-Wno-implicit-fallthrough',
-        '-Wno-c++11-narrowing',
-    ]
+     CXXFLAGS += [
+         '-Wno-c++11-narrowing',
+     ]
+
+if not CONFIG['_MSC_VER']:
+     CXXFLAGS += [
+         '-Wno-implicit-fallthrough',
+     ]
 
 DEFINES['NO_STABS_SUPPORT'] = True
