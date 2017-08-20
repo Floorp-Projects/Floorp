@@ -43,16 +43,17 @@ extern "C" {
 char* nsEscape(const char* aStr, size_t aLength, size_t* aOutputLen,
                nsEscapeMask aMask);
 
+/**
+ * Decodes '%'-escaped hex codes into character values, modifies the parameter,
+ * returns the same buffer
+ */
 char* nsUnescape(char* aStr);
-/* decode % escaped hex codes into character values,
- * modifies the parameter, returns the same buffer
- */
 
-int32_t nsUnescapeCount(char* aStr);
-/* decode % escaped hex codes into character values,
- * modifies the parameter buffer, returns the length of the result
- * (result may contain \0's).
+/**
+ * Decodes '%'-escaped hex codes into character values, modifies the parameter
+ * buffer, returns the length of the result (result may contain \0's).
  */
+int32_t nsUnescapeCount(char* aStr);
 
 #ifdef __cplusplus
 }
