@@ -97,15 +97,21 @@ body,
   flex-wrap: wrap;
 }
 
-.learn-more-link {
-  color: var(--theme-highlight-blue);
-  cursor: pointer;
-  margin: 0 5px;
-  white-space: nowrap;
+/* Learn more links */
+
+.learn-more-link::before {
+  background-image: url(chrome://devtools/skin/images/help.svg);
 }
 
-.learn-more-link:hover {
-  text-decoration: underline;
+.tree-container .treeTable tr .learn-more-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+}
+
+.tree-container .treeTable tr:not(:hover) .learn-more-link {
+  opacity: 0.1;
 }
 
 /* Status bar */
@@ -856,6 +862,7 @@ body,
 
 .tree-container .treeTable tr {
   display: block;
+  position: relative;
 }
 
 /* Make right td fill available horizontal space */
@@ -983,10 +990,6 @@ body,
 
 .headers-summary .status-text {
     width: auto!important;
-}
-
-.headers-summary .learn-more-link {
-  flex-grow: 1;
 }
 
 /* Response tabpanel */
