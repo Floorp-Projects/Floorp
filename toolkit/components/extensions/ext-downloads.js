@@ -31,6 +31,8 @@ const DOWNLOAD_ITEM_FIELDS = ["id", "url", "referrer", "filename", "incognito",
                               "fileSize", "exists",
                               "byExtensionId", "byExtensionName"];
 
+const DOWNLOAD_DATE_FIELDS = ["startTime", "endTime", "estimatedEndTime"];
+
 // Fields that we generate onChanged events for.
 const DOWNLOAD_ITEM_CHANGE_FIELDS = ["endTime", "state", "paused", "canResume",
                                      "error", "exists"];
@@ -60,7 +62,14 @@ class DownloadItem {
   get mime() { return this.download.contentType; }
   get startTime() { return this.download.startTime; }
   get endTime() { return null; } // TODO
-  get estimatedEndTime() { return null; } // TODO
+  get estimatedEndTime() {
+    // Based on the code in summarizeDownloads() in DownloadsCommon.jsm
+    if (this.download.hasProgress && this.download.speed > 0) {
+      let sizeLeft = this.download.totalBytes - this.download.currentBytes;
+      let rawTimeLeft = sizeLeft / this.download.speed;
+      return new Date(Date.now() + rawTimeLeft);
+    }
+  }
   get state() {
     if (this.download.succeeded) {
       return "complete";
@@ -120,8 +129,10 @@ class DownloadItem {
     for (let field of DOWNLOAD_ITEM_FIELDS) {
       obj[field] = this[field];
     }
-    if (obj.startTime) {
-      obj.startTime = obj.startTime.toISOString();
+    for (let field of DOWNLOAD_DATE_FIELDS) {
+      if (obj[field]) {
+        obj[field] = obj[field].toISOString();
+      }
     }
     return obj;
   }
