@@ -3726,6 +3726,7 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
     , mFreeToUse(true)
     , mPrimaryStreamStatus(NS_OK)
     , mFastOpenInProgress(false)
+    , mFastOpenStatus(TFO_NOT_TRIED)
     , mEnt(ent)
 {
     MOZ_ASSERT(ent && trans, "constructor with null arguments");
@@ -4176,6 +4177,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
 
         mFastOpenInProgress = false;
         mConnectionNegotiatingFastOpen = nullptr;
+        mFastOpenStatus = TFO_FAILED_BACKUP_CONNECTION;
     }
 
     nsresult rv =  SetupConn(out, false);
@@ -4358,6 +4360,7 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
          // work around.
          (aError == NS_ERROR_FAILURE) ||
 #endif
+         (aError == NS_ERROR_PROXY_CONNECTION_REFUSED) ||
          (aError == NS_ERROR_NET_TIMEOUT))) {
         if (mEnt->mUseFastOpen) {
             gHttpHandler->IncrementFastOpenConsecutiveFailureCounter();
@@ -4396,6 +4399,14 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
         mSocketTransport->SetEventSink(this, nullptr);
         mSocketTransport->SetSecurityCallbacks(this);
         mStreamIn->AsyncWait(nullptr, 0, 0, nullptr);
+
+        if (aError == NS_ERROR_CONNECTION_REFUSED) {
+            mFastOpenStatus = TFO_FAILED_CONNECTION_REFUSED;
+        } else if (aError == NS_ERROR_NET_TIMEOUT) {
+            mFastOpenStatus = TFO_FAILED_NET_TIMEOUT;
+        } else {
+            mFastOpenStatus = TFO_FAILED_UNKNOW_ERROR;
+        }
 
     } else {
         // On success or other error we proceed with connection, we just need
@@ -4658,6 +4669,8 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
         } else {
             conn->SetFastOpen(false);
         }
+    } else {
+        conn->SetFastOpenStatus(mFastOpenStatus);
     }
 
     // If this halfOpenConn was speculative, but at the ende the conn got a
