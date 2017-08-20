@@ -1,10 +1,6 @@
 
 Components.utils.import("resource://gre/modules/addons/AddonSettings.jsm")
 
-function run_test() {
-  run_next_test();
-}
-
 let profileDir;
 add_task(async function setup() {
   profileDir = gProfD.clone();

@@ -6,10 +6,6 @@
  * Tests the marker utils methods.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function () {
   let { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
   let { PREFS } = require("devtools/client/performance/modules/global");

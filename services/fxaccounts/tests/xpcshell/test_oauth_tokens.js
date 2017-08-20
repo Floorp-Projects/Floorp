@@ -125,9 +125,6 @@ async function createMockFxA(mockGrantClient) {
 }
 
 // The tests.
-function run_test() {
-  run_next_test();
-}
 
 function MockFxAccountsOAuthGrantClient() {
   this.activeTokens = new Set();

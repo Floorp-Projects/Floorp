@@ -11,10 +11,6 @@ let { setFilterString, setFilterStringAndRefresh } = require("devtools/client/me
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 let { changeView } = require("devtools/client/memory/actions/view");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();

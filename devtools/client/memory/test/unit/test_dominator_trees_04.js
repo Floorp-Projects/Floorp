@@ -18,10 +18,6 @@ const {
   changeView
 } = require("devtools/client/memory/actions/view");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();

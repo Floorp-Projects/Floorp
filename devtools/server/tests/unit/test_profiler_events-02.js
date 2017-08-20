@@ -12,10 +12,6 @@ const MAX_PROFILER_ENTRIES = 10000000;
 const { ProfilerFront } = require("devtools/shared/fronts/profiler");
 const { waitForTime } = DevToolsUtils;
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let [client, form] = yield getChromeActors();
   let front = new ProfilerFront(client, form);

@@ -7,10 +7,6 @@
  * hasSuccessfulOutcome/isSuccessfulOutcome work as intended.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   let {
     JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome, SUCCESSFUL_OUTCOMES

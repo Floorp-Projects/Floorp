@@ -401,10 +401,6 @@ add_test(function errorTests() {
   run_next_test();
 });
 
-function run_test() {
-  run_next_test();
-}
-
 /**
  * Quick way to test the "FxAccountsProfileClient" constructor.
  *

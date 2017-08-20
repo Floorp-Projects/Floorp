@@ -55,10 +55,6 @@ function sleep(ms) {
   });
 }
 
-function run_test() {
-  run_next_test();
-}
-
 
 //
 // -----------  Don't add a test after this one, as it shuts down Sqlite.jsm

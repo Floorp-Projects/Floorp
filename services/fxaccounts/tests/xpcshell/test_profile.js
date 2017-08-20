@@ -454,10 +454,6 @@ add_test(function getProfile_fetchAndCacheProfile_throws() {
     });
 });
 
-function run_test() {
-  run_next_test();
-}
-
 function makeObserver(aObserveTopic, aObserveFunc) {
   let callback = function(aSubject, aTopic, aData) {
     log.debug("observed " + aTopic + " " + aData);

@@ -4,10 +4,6 @@
 
 // Test that the HeapAnalyses{Client,Worker} can get census individuals.
 
-function run_test() {
-  run_next_test();
-}
-
 const COUNT = { by: "count", count: true, bytes: true };
 
 const CENSUS_BREAKDOWN = {

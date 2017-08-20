@@ -7,10 +7,6 @@
 
 const { toggleDiffing } = require("devtools/client/memory/actions/diffing");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();

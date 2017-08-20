@@ -817,10 +817,6 @@ add_task(async function test_helpers_change_password_with_error() {
   }
 });
 
-function run_test() {
-  run_next_test();
-}
-
 function makeObserver(aObserveTopic, aObserveFunc) {
   let callback = function(aSubject, aTopic, aData) {
     log.debug("observed " + aTopic + " " + aData);

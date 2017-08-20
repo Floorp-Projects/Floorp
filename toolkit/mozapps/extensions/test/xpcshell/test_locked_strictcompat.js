@@ -557,7 +557,3 @@ add_task(async function run_test_1() {
   }
 });
 
-function run_test() {
-  run_next_test();
-}
-
